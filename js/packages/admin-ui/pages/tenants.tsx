@@ -1,0 +1,181 @@
+import { useState } from "react";
+import { createUseStyles } from "react-jss";
+import {
+  DataSourceIcon,
+  SettingsIcon,
+  ThemeType,
+  UsersIcon,
+} from "@openk9/search-ui-components";
+import ClayIcon from "@clayui/icon";
+import Link from "next/link";
+import useSWR from "swr";
+import { Layout } from "../components/Layout";
+
+const useStyles = createUseStyles((theme: ThemeType) => ({
+  root: {
+    margin: [theme.spacingUnit * 2, "auto"],
+    backgroundColor: "white",
+    boxShadow: theme.baseBoxShadow,
+    width: "100%",
+    maxWidth: 1000,
+    borderRadius: theme.borderRadius,
+    overflow: "auto",
+
+    "& thead": {
+      position: "sticky",
+      top: 0,
+      borderTopLeftRadius: theme.borderRadius,
+      borderTopRightRadius: theme.borderRadius,
+      zIndex: 1000,
+    },
+  },
+  actions: {
+    display: "flex",
+    justifyContent: "flex-end",
+  },
+}));
+
+function TBody({ searchValue }: { searchValue: string }) {
+  const classes = useStyles();
+
+  const { data } = useSWR(`/api/v2/tenant`, async () => {
+    const req = await fetch(`/api/v2/tenant`);
+    const data: {
+      tenantId: number;
+      name: string;
+      virtualHost: string;
+    }[] = await req.json();
+    return data;
+  });
+
+  if (!data) {
+    return <span className="loading-animation" />;
+  }
+
+  const filteredData = data.filter(
+    (d) =>
+      d.name.includes(searchValue) ||
+      d.tenantId.toString().includes(searchValue) ||
+      d.virtualHost.includes(searchValue),
+  );
+
+  return (
+    <tbody>
+      {filteredData.map((ten) => (
+        <tr key={ten.tenantId}>
+          <td>{ten.tenantId}</td>
+          <td className="table-cell-expand ">
+            <p className="table-list-title">{ten.name}</p>
+          </td>
+          <td className="table-cell-expand">{ten.virtualHost}</td>
+          <td>
+            <div className={classes.actions}>
+              <Link href={`/tenants/${ten.tenantId}/settings/`} passHref>
+                <a className="component-action quick-action-item" role="button">
+                  <SettingsIcon size={16} />
+                </a>
+              </Link>
+              <Link href={`/tenants/${ten.tenantId}/users/`} passHref>
+                <a className="component-action quick-action-item" role="button">
+                  <UsersIcon size={16} />
+                </a>
+              </Link>
+              <Link href={`/tenants/${ten.tenantId}/dataSources/`} passHref>
+                <a className="component-action quick-action-item" role="button">
+                  <DataSourceIcon size={16} />
+                </a>
+              </Link>
+              <a className="component-action" role="button">
+                <ClayIcon symbol="ellipsis-v" />
+              </a>
+            </div>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  );
+}
+
+function Controls({
+  searchValue,
+  setSearchValue,
+}: {
+  searchValue: string;
+  setSearchValue(s: string): void;
+}) {
+  return (
+    <ul className="navbar-nav" style={{ marginRight: 16 }}>
+      <div className="navbar-form navbar-form-autofit navbar-overlay navbar-overlay-sm-down">
+        <div className="container-fluid container-fluid-max-xl">
+          <div className="input-group">
+            <div className="input-group-item">
+              <input
+                className="form-control form-control input-group-inset input-group-inset-after"
+                type="text"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+              />
+              <span className="input-group-inset-item input-group-inset-item-after">
+                {searchValue && searchValue.length > 0 && (
+                  <button
+                    className="navbar-breakpoint-d-none btn btn-monospaced btn-unstyled"
+                    type="button"
+                    onClick={() => setSearchValue("")}
+                  >
+                    <ClayIcon symbol="times" />
+                  </button>
+                )}
+                <button
+                  className="btn btn-monospaced btn-unstyled"
+                  type="submit"
+                >
+                  <ClayIcon symbol="search" />
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <li className="nav-item">
+        <button
+          className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
+          type="button"
+        >
+          <ClayIcon symbol="plus" />
+        </button>
+      </li>
+    </ul>
+  );
+}
+
+function Tenants() {
+  const classes = useStyles();
+
+  const [searchValue, setSearchValue] = useState("");
+
+  return (
+    <Layout
+      breadcrumbsPath={[{ label: "Tenants", path: "/tenants" }]}
+      breadcrumbsControls={
+        <Controls searchValue={searchValue} setSearchValue={setSearchValue} />
+      }
+    >
+      <div className={classes.root}>
+        <table className="table table-autofit table-nowrap">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th className="table-cell-expand">Name</th>
+              <th className="table-cell-expand">VirtualHost</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <TBody searchValue={searchValue} />
+        </table>
+      </div>
+    </Layout>
+  );
+}
+
+export default Tenants;
