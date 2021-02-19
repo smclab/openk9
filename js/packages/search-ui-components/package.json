@@ -1,0 +1,37 @@
+{
+  "name": "@openk9/search-ui-components",
+  "version": "0.0.1",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint --ext js,ts,tsx src",
+    "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
+    "precommit": "lint-staged"
+  },
+  "dependencies": {
+    "@clayui/css": "^3.18.2",
+    "@clayui/icon": "^3.1.0",
+    "@clayui/modal": "^3.8.1",
+    "caret-pos": "^2.0.0",
+    "clsx": "^1.1.0",
+    "date-fns": "^2.17.0",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
+    "react-jss": "^10.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "@types/react-router-dom": "^5.1.3",
+    "@typescript-eslint/eslint-plugin": "^4.8.2",
+    "@typescript-eslint/parser": "^4.8.2",
+    "eslint": "^7.11.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-config-react-app": "^6.0.0",
+    "eslint-import-resolver-node": "^0.3.4",
+    "eslint-plugin-prettier": "^3.1.4",
+    "lint-staged": "^10.0.8",
+    "prettier": "^2.2.1",
+    "typescript": "^4.1.2"
+  }
+}
