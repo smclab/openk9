@@ -1,0 +1,26 @@
+{
+  "name": "openk9",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "husky": "^4.2.3",
+    "lerna": "^3.20.2",
+    "prettier": "^2.2.1"
+  },
+  "scripts": {
+    "build": "lerna run --stream build",
+    "docker-build": "lerna run --stream docker-build",
+    "publish": "lerna publish",
+    "format": "lerna run --stream format",
+    "lint": "lerna run --stream lint",
+    "test": "lerna run --stream test"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lerna run --concurrency 1 --stream precommit"
+    }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}
