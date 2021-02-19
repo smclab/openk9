@@ -1,6 +1,6 @@
 {
   "name": "@openk9/http-api",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.0",
   "author": "SMC",
   "description": "OpenK9 core type definitions, search and admin API",
   "main": "src/index.ts",
@@ -25,7 +25,6 @@
     "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
     "precommit": "lint-staged"
   },
-  "dependencies": {},
   "devDependencies": {
     "@babel/preset-typescript": "^7.12.1",
     "@types/jest": "^26.0.15",
