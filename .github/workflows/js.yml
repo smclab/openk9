@@ -3,6 +3,8 @@ name: JS Monorepo CI
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'js/*'
   pull_request:
     branches: [ main ]
 
