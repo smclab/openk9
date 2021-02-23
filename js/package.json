@@ -20,7 +20,15 @@
       "pre-commit": "lerna run --concurrency 1 --stream precommit"
     }
   },
-  "workspaces": [
-    "packages/*"
-  ]
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/react-scripts/**",
+      "**/@docusaurus/core/**",
+      "**/babel-loader",
+      "**/webpack"
+    ]
+  }
 }
