@@ -6,9 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --ext js,ts,tsx src",
+    "lint": "eslint --ext js,ts,tsx .",
     "test": "craco test --passWithNoTests",
-    "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
+    "format": "prettier --list-different --ignore-path ../../.gitignore --write \"./**/*.{js,md,tsx,ts,html,json}\"",
     "precommit": "lint-staged",
     "docker-build": "docker build -t openk9/admin-ui ."
   },
