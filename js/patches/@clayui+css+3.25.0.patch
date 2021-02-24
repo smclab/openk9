@@ -1,0 +1,31 @@
+diff --git a/node_modules/@clayui/css/lib/css/base.css b/node_modules/@clayui/css/lib/css/base.css
+index 7f33ec3..69d9c51 100644
+--- a/node_modules/@clayui/css/lib/css/base.css
++++ b/node_modules/@clayui/css/lib/css/base.css
+@@ -5697,20 +5697,20 @@ textarea.form-control-sm,
+   font-size: inherit;
+   line-height: 1.5;
+   margin-bottom: 0;
+-  padding-bottom: calc(0.375rem + 0.0625rem 0.0625rem 0.0625rem 0.0625rem);
+-  padding-top: calc(0.375rem + 0.0625rem 0.0625rem 0.0625rem 0.0625rem); }
++  padding-bottom: calc(0.375rem + 0.0625rem);
++  padding-top: calc(0.375rem + 0.0625rem); }
+ 
+ .col-form-label-lg {
+   font-size: 1.25rem;
+   line-height: 1.5;
+-  padding-bottom: calc(0.5rem + 0.0625rem 0.0625rem 0.0625rem 0.0625rem);
+-  padding-top: calc(0.5rem + 0.0625rem 0.0625rem 0.0625rem 0.0625rem); }
++  padding-bottom: calc(0.5rem + 0.0625rem);
++  padding-top: calc(0.5rem + 0.0625rem); }
+ 
+ .col-form-label-sm {
+   font-size: 0.875rem;
+   line-height: 1.5;
+-  padding-bottom: calc(0.25rem + 0.0625rem 0.0625rem 0.0625rem 0.0625rem);
+-  padding-top: calc(0.25rem + 0.0625rem 0.0625rem 0.0625rem 0.0625rem); }
++  padding-bottom: calc(0.25rem + 0.0625rem);
++  padding-top: calc(0.25rem + 0.0625rem); }
+ 
+ .form-row {
+   display: flex;

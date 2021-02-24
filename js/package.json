@@ -5,6 +5,8 @@
   "devDependencies": {
     "husky": "^4.2.3",
     "lerna": "^3.20.2",
+    "patch-package": "^6.2.2",
+    "postinstall-postinstall": "^2.1.0",
     "prettier": "^2.2.1"
   },
   "scripts": {
@@ -13,7 +15,8 @@
     "publish": "lerna publish",
     "format": "lerna run --stream format",
     "lint": "lerna run --stream lint",
-    "test": "lerna run --stream test"
+    "test": "lerna run --stream test",
+    "postinstall": "patch-package"
   },
   "husky": {
     "hooks": {
