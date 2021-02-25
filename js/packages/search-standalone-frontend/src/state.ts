@@ -28,7 +28,7 @@ export type StateType = {
   searchQuery: SearchQuery;
   setSearchQuery(query: SearchQuery): void;
   lastSearch: number;
-  results: SearchResult | null;
+  results: SearchResult<{}> | null;
   range: [number, number] | null;
   loading: boolean;
   doLoadMore(): void;

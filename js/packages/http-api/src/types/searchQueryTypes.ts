@@ -59,8 +59,8 @@ export interface SearchRequest {
 
 export type SearchQuery = SearchToken[];
 
-export type SearchResult<E extends GenericResultItem = GenericResultItem> = {
-  result: E[];
+export type SearchResult<E> = {
+  result: GenericResultItem<E>[];
   total: number;
   last: boolean;
 };

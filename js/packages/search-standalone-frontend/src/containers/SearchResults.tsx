@@ -9,8 +9,6 @@ import {
   ApplicationResultCard,
   DocumentResultCard,
   EmailResultCard,
-  ResultRenderersType,
-  SidebarRenderersType,
   ApplicationSidebar,
   DocumentSidebar,
   EmailSidebar,
@@ -19,6 +17,7 @@ import {
   ContactSidebar,
   CalendarSidebar,
 } from "@openk9/search-ui-components";
+import { ResultRenderersType, SidebarRenderersType } from "@openk9/http-api";
 import { config } from "../config";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
@@ -51,7 +50,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-export const resultRenderers: ResultRenderersType = {
+export const resultRenderers: ResultRenderersType<{}> = {
   email: EmailResultCard as any,
   file: DocumentResultCard as any,
   application: ApplicationResultCard as any,
@@ -60,7 +59,7 @@ export const resultRenderers: ResultRenderersType = {
   ...config.resultRenderers,
 };
 
-export const sidebarRenderers: SidebarRenderersType = {
+export const sidebarRenderers: SidebarRenderersType<{}> = {
   email: EmailSidebar as any,
   file: DocumentSidebar as any,
   application: ApplicationSidebar as any,

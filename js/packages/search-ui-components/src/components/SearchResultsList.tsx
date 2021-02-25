@@ -1,29 +1,22 @@
 import React, { useLayoutEffect } from "react";
 
-import { GenericResultItem, SearchResult } from "@openk9/http-api";
+import {
+  GenericResultItem,
+  ResultRenderersType,
+  SearchResult,
+} from "@openk9/http-api";
 import { arrOrEncapsulate } from "../utils";
 
-type RendererProps<E extends GenericResultItem> = {
-  data: E;
-  onSelect(): void;
-};
-
-export type ResultRenderersType<
-  E extends GenericResultItem = GenericResultItem
-> = {
-  [key: string]: React.FC<RendererProps<E>>;
-};
-
-function ResultDisplay<E extends GenericResultItem = GenericResultItem>({
+function ResultDisplay<E>({
   data,
   renderers,
   onSelect,
 }: {
-  data: E;
+  data: GenericResultItem<E>;
   renderers: ResultRenderersType<E>;
   onSelect(): void;
 }): JSX.Element | null {
-  const Renderer = arrOrEncapsulate(data.source.type)
+  const Renderer = arrOrEncapsulate(data.source.type as any)
     .map((k) => renderers[k])
     .filter(Boolean)[0];
   if (Renderer) {
@@ -34,16 +27,14 @@ function ResultDisplay<E extends GenericResultItem = GenericResultItem>({
   }
 }
 
-interface Props<E extends GenericResultItem = GenericResultItem> {
+interface Props<E> {
   renderers: ResultRenderersType<E>;
   searchResults: SearchResult<E>["result"];
   keyboardFocusEnabled?: boolean;
   onSelectResult(id: string | null): void;
 }
 
-export function SearchResultsList<
-  E extends GenericResultItem = GenericResultItem
->({
+export function SearchResultsList<E>({
   renderers,
   searchResults,
   keyboardFocusEnabled,

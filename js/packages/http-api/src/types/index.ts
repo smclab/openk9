@@ -2,6 +2,7 @@ export * from "./searchResults";
 export * from "./entityTypes";
 export * from "./searchQueryTypes";
 export * from "./suggestionTypes";
+export * from "./pluginTypes";
 
 type PathImpl<T, Key extends keyof T> = Key extends string
   ? T[Key] extends Record<string, any>

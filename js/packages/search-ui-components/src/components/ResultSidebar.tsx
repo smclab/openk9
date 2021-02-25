@@ -1,7 +1,7 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
 
-import { GenericResultItem } from "@openk9/http-api";
+import { GenericResultItem, SidebarRenderersType } from "@openk9/http-api";
 import { ThemeType } from "../theme";
 import { arrOrEncapsulate } from "../utils";
 
@@ -29,26 +29,14 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-type RendererProps<E extends GenericResultItem> = {
-  result: E;
-};
-
-export type SidebarRenderersType<
-  E extends GenericResultItem = GenericResultItem
-> = {
-  [key: string]: React.FC<RendererProps<E>>;
-};
-
-function SidebarContentDispatch<
-  E extends GenericResultItem = GenericResultItem
->({
+function SidebarContentDispatch<E>({
   result,
   renderers,
 }: {
-  result: E;
+  result: GenericResultItem<E>;
   renderers: SidebarRenderersType<E>;
 }): JSX.Element | null {
-  const Renderer = arrOrEncapsulate(result.source.type)
+  const Renderer = arrOrEncapsulate(result.source.type as any)
     .map((k) => renderers[k])
     .filter(Boolean)[0];
   if (Renderer) {
@@ -59,11 +47,11 @@ function SidebarContentDispatch<
   }
 }
 
-export function ResultSidebar<E extends GenericResultItem = GenericResultItem>({
+export function ResultSidebar<E>({
   result,
   renderers,
 }: {
-  result: E | null;
+  result: GenericResultItem<E> | null;
   renderers: SidebarRenderersType<E>;
 }) {
   const classes = useStyles();

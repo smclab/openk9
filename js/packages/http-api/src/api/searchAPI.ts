@@ -1,13 +1,13 @@
 import { GenericResultItem, SearchRequest } from "../types";
 import { apiBaseUrl } from "./common";
 
-export type SearchResults<E extends GenericResultItem = GenericResultItem> = {
-  result: E[];
+export type SearchResults<E> = {
+  result: GenericResultItem<E>[];
   total: number;
   last: boolean;
 };
 
-export async function doSearch<E extends GenericResultItem = GenericResultItem>(
+export async function doSearch<E>(
   searchRequest: SearchRequest,
 ): Promise<SearchResults<E>> {
   const fixedSearch = {
