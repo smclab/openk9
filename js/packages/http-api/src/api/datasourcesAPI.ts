@@ -11,15 +11,17 @@ export type DocumentType = {
   searchKeywords: SearchKeyword[];
 };
 
-export type DataSource = {
+export type SupportedDataSource = {
   name: string;
   active: boolean;
   documentTypes: DocumentType[];
   defaultDocumentType: DocumentType;
 };
 
-export async function getDataSources(): Promise<DataSource[]> {
+export async function getSupportedDataSources(): Promise<
+  SupportedDataSource[]
+> {
   const request = await fetch(`${apiBaseUrl}/supported-datasources`);
-  const response: DataSource[] = await request.json();
+  const response: SupportedDataSource[] = await request.json();
   return response;
 }
