@@ -21,7 +21,7 @@ export type GenericResultItem<E = {}> = {
   highlight: {
     [field in DeepKeys<
       Without<GenericResultItem<E>["source"], "type" | "entities">
-    >]: string[];
+    >]?: string[];
   };
 };
 

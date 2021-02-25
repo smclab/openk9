@@ -26,7 +26,7 @@ export function Highlight({
   inline,
 }: {
   text: string;
-  highlight: string[];
+  highlight?: string[];
   maxRows?: number;
   inline?: boolean;
 }) {
