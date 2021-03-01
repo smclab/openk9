@@ -1,0 +1,52 @@
+.iconTextItem {
+  padding-right: 16px;
+  width: 25%;
+}
+
+.left {
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+.titleIconItem {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.descriptionIconItem {
+  font-size: 16px;
+}
+
+.iconItem {
+  width: 80px;
+  height: 80px;
+}
+
+@media (max-width: 1200px) {
+  .iconTextItem {
+    width: 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .iconTextItem {
+    width: 100%;
+    padding-right: 0;
+  }
+
+  .titleIconItem {
+    font-size: 20px;
+  }
+  
+  .descriptionIconItem {
+    font-size: 14px;
+  }
+}

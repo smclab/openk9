@@ -1,0 +1,49 @@
+.heading {
+  max-width: 710px;
+  margin: 0 auto;
+  margin-bottom: 40px;
+}
+
+.left {
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+.titleHeading {
+  color: #d10019;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 26px;
+}
+
+.subtitleHeading {
+  font-size: 50px;
+  font-weight: 700;
+}
+
+.descriptionHeading {
+  font-size: 20px;
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .titleHeading {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  .subtitleHeading {
+    font-size: 36px;
+  }
+
+  .descriptionHeading {
+    font-size: 16px;
+  }
+}

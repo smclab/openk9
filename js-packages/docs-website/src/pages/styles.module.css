@@ -35,3 +35,13 @@
   height: 200px;
   width: 200px;
 }
+
+.funtionalFeatures {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.keyPoint {
+  position: relative;
+}
