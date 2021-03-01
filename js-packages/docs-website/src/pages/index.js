@@ -1,92 +1,160 @@
-import React from 'react';
-import clsx from 'clsx';
-import Layout from '@theme/Layout';
-import Link from '@docusaurus/Link';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import useBaseUrl from '@docusaurus/useBaseUrl';
-import styles from './styles.module.css';
+import React from "react";
+import clsx from "clsx";
+import Layout from "@theme/Layout";
+import Link from "@docusaurus/Link";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import useBaseUrl from "@docusaurus/useBaseUrl";
+import styles from "./styles.module.css";
+import { Heading } from "../components/Heading";
+import { IconTextItem } from "../components/IconTextItem";
+import { ScreenSection } from "../components/ScreenSection";
 
-const features = [
+const functionalCaratheristicsTitle = {
+  title: "Features",
+  subTitle: "Functional Caratheristics",
+  description: (
+    <>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
+      ipsum volutpat sem convallis aliquam. Praesent ut tellus eu risus accumsan
+      facilisis. Phasellus vulputate maximus elit sit amet maximus.
+    </>
+  ),
+  alignement: "center",
+};
+
+const functionalCaratheristics = [
   {
-    title: 'Easy to Use',
-    imageUrl: 'img/undraw_Web_search_re_efla.svg',
+    title: "Cloud Oriented",
+    iconSrc: "img/cloud.svg",
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
+        ipsum volutpat sem convallis aliquam.
       </>
     ),
+    align: "left",
   },
   {
-    title: 'Focus on What Matters',
-    imageUrl: 'img/undraw_file_analysis_8k9b.svg',
+    title: "Autoscaling",
+    iconSrc: "img/cloud.svg",
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
+        ipsum volutpat sem convallis aliquam.
       </>
     ),
+    align: "left",
   },
   {
-    title: 'Powered by React',
-    imageUrl: 'img/undraw_Data_trends_re_2cdy.svg',
+    title: "Monitorable",
+    iconSrc: "img/cloud.svg",
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
+        ipsum volutpat sem convallis aliquam.
       </>
     ),
+    align: "left",
+  },
+  {
+    title: "Polyglot parsers",
+    iconSrc: "img/cloud.svg",
+    description: (
+      <>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
+        ipsum volutpat sem convallis aliquam.
+      </>
+    ),
+    align: "left",
   },
 ];
 
-function Feature({imageUrl, title, description}) {
-  const imgUrl = useBaseUrl(imageUrl);
-  return (
-    <div className={clsx('col col--4', styles.feature)}>
-      {imgUrl && (
-        <div className="text--center">
-          <img className={styles.featureImage} src={imgUrl} alt={title} />
-        </div>
-      )}
-      <h3>{title}</h3>
-      <p>{description}</p>
-    </div>
-  );
-}
+const keyPoints = [
+  {
+    title: "Title",
+    subTitle: "Insert here the subtitle",
+    description: (
+      <>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
+        ipsum volutpat sem convallis aliquam.
+      </>
+    ),
+    imgSrc: "img/calendar.png",
+    isDxImage: true,
+  },
+  {
+    title: "Title 2",
+    subTitle: "Insert here the subtitle 2",
+    description: (
+      <>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
+        ipsum volutpat sem convallis aliquam.
+      </>
+    ),
+    imgSrc: "img/calendar.png",
+    isDxImage: false,
+  },
+  {
+    title: "Title 3",
+    subTitle: "Insert here the subtitle 3",
+    description: (
+      <>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
+        ipsum volutpat sem convallis aliquam.
+      </>
+    ),
+    imgSrc: "img/calendar.png",
+    isDxImage: true,
+  },
+];
 
 function Home() {
   const context = useDocusaurusContext();
-  const {siteConfig = {}} = context;
+  const { siteConfig = {} } = context;
   return (
-    <Layout
-      title="OpenK9"
-      description="Search. Everywhere.">
-      <header className={clsx('hero hero--primary', styles.heroBanner)}>
+    <Layout title="OpenK9" description="Search. Everywhere.">
+      <header className={clsx("hero hero--primary", styles.heroBanner)}>
         <div className="container">
           <h1 className="hero__title">{siteConfig.title}</h1>
           <p className="hero__subtitle">{siteConfig.tagline}</p>
           <div className={styles.buttons}>
             <Link
               className={clsx(
-                'button button--outline button--secondary button--lg',
+                "button button--outline button--secondary button--lg",
                 styles.getStarted,
               )}
-              to={useBaseUrl('docs/')}>
+              to={useBaseUrl("docs/")}
+            >
               Get Started
             </Link>
           </div>
         </div>
       </header>
       <main>
-        {features && features.length > 0 && (
-          <section className={styles.features}>
-            <div className="container">
-              <div className="row">
-                {features.map((props, idx) => (
-                  <Feature key={idx} {...props} />
+        {functionalCaratheristics && functionalCaratheristics.length > 0 && (
+          <section>
+            <div className="openK9-wrapper">
+              {functionalCaratheristicsTitle && (
+                <Heading {...functionalCaratheristicsTitle} />
+              )}
+              <div className={styles.funtionalFeatures}>
+                {functionalCaratheristics.map((props, idx) => (
+                  <IconTextItem key={idx} {...props} />
                 ))}
               </div>
             </div>
+          </section>
+        )}
+
+        {keyPoints && keyPoints.length > 0 && (
+          <section className={styles.keyPoints}>
+            {keyPoints.map((props, idx) => (
+              <div className={styles.keyPoint}>
+                <div className="openK9-wrapper">
+                  <ScreenSection key={idx} {...props} />
+                </div>
+              </div>
+            ))}
           </section>
         )}
       </main>
