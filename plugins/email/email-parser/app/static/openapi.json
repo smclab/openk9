@@ -1,0 +1,125 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Email IMAP Parser API",
+    "description": "An API to execute extraction and parsing from email IMAP server"
+  },
+  "paths": {
+    "/execute": {
+      "post": {
+        "tags": [
+          "Execute"
+        ],
+        "summary": "Launch email extraction in parser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mailServer": {
+                    "type": "string"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "default": 993
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "datasourceId": {
+                    "type": "integer"
+                  },
+                  "folder": {
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": ["mailServer", "username", "password", "timestamp", "datasourceId"],
+                "example": {
+                  "mailServer": "mail.smc.it",
+                  "port": 993,
+                  "username": "daniele.caldarini",
+                  "password": "blabla",
+                  "timestamp": 1604587008,
+                  "datasourceId": 1,
+                  "folder": "INBOX"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Extraction process started. OK"
+          },
+          "400": {
+            "description": "Bad request. Check form of json request."
+          },    
+          "5XX": {
+            "description": "Unexpected error. If Key error some json with specified parameter key is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "error": "Key Error",
+                    "status": "username"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "See status of extraction",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["RUNNING", "ERROR", "SUCCESS", "null"]
+                    }
+                  },
+                  "example": {
+                    "message": "[2020-11-06 10:02:57,390] INFO in imap_extraction: Extraction completed",
+                    "status": "SUCCESS"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
