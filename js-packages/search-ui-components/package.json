@@ -14,7 +14,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/smclab/openk9.git",
-    "directory": "js/packages/search-ui-components"
+    "directory": "js-packages/search-ui-components"
   },
   "license": "AGPL-3.0-or-later",
   "bugs": {
