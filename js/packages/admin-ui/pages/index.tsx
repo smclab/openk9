@@ -87,7 +87,7 @@ function ServiceStatusInside() {
 
   const services = [
     { id: "elasticsearch", label: "ElasticSearch" },
-    { id: "projectq-karaf", label: "Backend" },
+    { id: "openk9-karaf", label: "Backend" },
     { id: "search-standalone-frontend", label: "Frontend" },
     { id: "postgres", label: "Postgres" },
     { id: "rabbitmq", label: "Queue Service" },
