@@ -16,7 +16,7 @@ jobs:
       with:
         node-version: 14.x
     - run: yarn --frozen-lockfile  --check-files
-    - run: yarn build
+    - run: CI=false yarn build
     - uses: actions/cache@v1
       id: cache-build
       with:
