@@ -23,15 +23,17 @@ module.exports = {
   ...withTM(),
   basePath: "/admin",
   async rewrites() {
+    const basePathProxy = process.env.BASE_PROXY_PATH;
+    if (!basePathProxy) return [];
     return [
       {
         source: "/api/:path*",
-        destination: "http://dev-projectq.smc.it/api/:path*",
+        destination: `${basePathProxy}/api/:path*`,
         basePath: false,
       },
       {
         source: "/logs/:path*",
-        destination: "http://dev-projectq.smc.it/logs/:path*",
+        destination: `${basePathProxy}/logs/:path*`,
         basePath: false,
       },
     ];
