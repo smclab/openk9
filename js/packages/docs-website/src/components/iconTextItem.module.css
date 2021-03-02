@@ -1,6 +1,5 @@
 .iconTextItem {
   padding-right: 16px;
-  width: 25%;
 }
 
 .left {
@@ -26,19 +25,12 @@
 }
 
 .iconItem {
-  width: 80px;
   height: 80px;
-}
-
-@media (max-width: 1200px) {
-  .iconTextItem {
-    width: 50%;
-  }
+  margin-bottom: 16px;
 }
 
 @media (max-width: 768px) {
   .iconTextItem {
-    width: 100%;
     padding-right: 0;
   }
 

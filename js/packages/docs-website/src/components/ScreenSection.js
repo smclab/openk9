@@ -15,7 +15,7 @@ export function ScreenSection({
     title,
     subTitle,
     description,
-    alignment: isDxImage ? "left" : "right",
+    alignment: isDxImage ? "right" : "left",
   };
 
   const imageUrl = useBaseUrl(imgSrc);
@@ -27,7 +27,7 @@ export function ScreenSection({
         isDxImage ? styles.rightImage : styles.leftImage,
       )}
     >
-      <div className={styles.screenText}>
+      <div className={clsx(styles.screenText, isDxImage ? styles.leftText : styles.rightText)}>
         <Heading {...props} />
       </div>
       <div
