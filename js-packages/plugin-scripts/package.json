@@ -1,0 +1,70 @@
+{
+  "name": "@openk9/plugin-scripts",
+  "version": "0.1.0-alpha.1",
+  "author": "SMC",
+  "description": "OpenK9 plugin building scripts",
+  "main": "plugin-scripts.js",
+  "keywords": [
+    "plugin",
+    "scripts",
+    "build",
+    "template",
+    "openk9"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smclab/openk9.git",
+    "directory": "js-packages/build-scripts"
+  },
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/smclab/openk9/issues"
+  },
+  "homepage": "https://openk9.io/",
+  "bin": {
+    "plugin-scripts": "./plugin-scripts.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.13.1",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-transform-modules-commonjs": "7.10.4",
+    "@babel/plugin-transform-parameters": "7.10.5",
+    "@babel/plugin-transform-runtime": "7.11.0",
+    "@babel/plugin-transform-template-literals": "7.10.5",
+    "@babel/preset-env": "^7.13.5",
+    "@babel/preset-react": "^7.12.13",
+    "@babel/preset-typescript": "^7.13.0",
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-commonjs": "^15.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^11.2.0",
+    "@rollup/plugin-replace": "^2.4.1",
+    "@types/node": "^14.6.0",
+    "@types/react": "^17.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.8.2",
+    "@typescript-eslint/parser": "^4.8.2",
+    "eslint": "^7.11.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-config-react-app": "^6.0.0",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-import-resolver-node": "^0.3.4",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-react": "^7.20.5",
+    "eslint-plugin-react-hooks": "^4.0.8",
+    "fs-extra": "^9.1.0",
+    "husky": "^4.2.5",
+    "lint-staged": "^10.0.8",
+    "prettier": "^2.2.1",
+    "react-dev-utils": "^11.0.3",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.39.1",
+    "rollup-plugin-external-globals": "^0.6.1",
+    "rollup-plugin-terser": "^7.0.2",
+    "typescript": "^4.1.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false
+}
