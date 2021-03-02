@@ -24,7 +24,7 @@
   "bin": {
     "plugin-scripts": "./plugin-scripts.js"
   },
-  "devDependencies": {
+  "dependencies": {
     "@babel/core": "^7.13.1",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-transform-modules-commonjs": "7.10.4",
