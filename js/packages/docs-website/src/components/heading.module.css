@@ -1,6 +1,5 @@
 .heading {
   max-width: 710px;
-  margin: 0 auto;
   margin-bottom: 40px;
 }
 
@@ -10,6 +9,7 @@
 
 .center {
   text-align: center;
+  margin: 0 auto 40px auto;
 }
 
 .right {
@@ -17,7 +17,7 @@
 }
 
 .titleHeading {
-  color: #d10019;
+  color: var(--ifm-color-primary);
   text-transform: uppercase;
   font-weight: 600;
   font-size: 26px;
@@ -26,10 +26,12 @@
 .subtitleHeading {
   font-size: 50px;
   font-weight: 700;
+  line-height: 50px;
 }
 
 .descriptionHeading {
   font-size: 20px;
+  line-height: 28px;
   margin-bottom: 0;
 }
 
@@ -41,6 +43,7 @@
 
   .subtitleHeading {
     font-size: 36px;
+    line-height: 36px;
   }
 
   .descriptionHeading {

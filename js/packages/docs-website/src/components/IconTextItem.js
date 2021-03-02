@@ -18,8 +18,10 @@ export function IconTextItem({ iconSrc, title, description, align }) {
       )}
     >
       {iconUrl && <img alt={title} className={styles.iconItem} src={iconUrl} />}
-      <h4 className={styles.titleIconItem}>{title}</h4>
-      <p className={styles.descriptionIconItem}>{description}</p>
+      {title && <h4 className={styles.titleIconItem}>{title}</h4>}
+      {description && (
+        <p className={styles.descriptionIconItem}>{description}</p>
+      )}
     </div>
   );
 }

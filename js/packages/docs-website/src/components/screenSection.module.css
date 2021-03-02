@@ -1,35 +1,68 @@
 .screenSection {
-    display: flex;
-    margin-bottom: 40px;
-    height: 400px;
+  display: flex;
+  margin-bottom: 40px;
+  height: 400px;
 }
 
 .rightImage {
-    flex-direction: row-reverse;
+  flex-direction: row-reverse;
 }
 
 .screenText {
-    max-width: 468px;
-    display: flex;
-    align-items: center;
+  max-width: 468px;
+  display: flex;
+  align-items: center;
 }
 
 .screenImage {
-    background-repeat: no-repeat;
-    background-size: cover;
-    width: calc(100vw - 668px);
-    height: 100%;
-    position: absolute;
-    top: 0;
-    width: 60%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: calc(100vw - 668px);
+  height: 100%;
+  position: absolute;
+  top: 0;
+  width: 60%;
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 16%);
+}
+
+.leftText {
+  padding-right: 16px;
+}
+
+.rightText {
+  padding-left: 16px;
 }
 
 .imageToLeft {
-    left: 0;
-    border-radius: 0 20px 20px 0;
+  left: 0;
+  border-radius: 0 20px 20px 0;
 }
 
 .imageToRight {
-    right: 0;
-    border-radius: 20px 0 0 20px;
+  right: 0;
+  border-radius: 20px 0 0 20px;
+}
+
+@media (max-width: 1600px) {
+  .screenText {
+    max-width: 35%;
+  }
+}
+
+@media (max-width: 1330px) {
+  .screenText {
+    max-width: 100%;
+  }
+
+  .imageToLeft, 
+  .imageToRight {
+    position: relative;
+    width: 100%;
+    border-radius: 20px;
+  }
+
+  .leftImage,
+  .rightImage {
+    flex-direction: column;
+  }
 }

@@ -41,6 +41,7 @@
   max-width: 1436px;
   margin: 104px auto;
   padding: 0 16px;
+  overflow: hidden;
 }
 
 @media(max-width: 1500px) {

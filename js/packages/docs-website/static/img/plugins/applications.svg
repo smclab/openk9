@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="184" height="181" viewBox="0 0 184 181">
+  <defs>
+    <clipPath id="clip-path">
+      <rect width="184" height="181" fill="none"/>
+    </clipPath>
+  </defs>
+  <g id="Griglia_di_ripetizione_3" data-name="Griglia di ripetizione 3" clip-path="url(#clip-path)">
+    <g transform="translate(-2951 -8675)">
+      <rect id="Rettangolo_527" data-name="Rettangolo 527" width="80" height="80" rx="9" transform="translate(2951 8675)"/>
+    </g>
+    <g transform="translate(-2851 -8675)">
+      <rect id="Rettangolo_527-2" data-name="Rettangolo 527" width="80" height="80" rx="9" transform="translate(2951 8675)"/>
+    </g>
+    <g transform="translate(-2951 -8575)">
+      <rect id="Rettangolo_527-3" data-name="Rettangolo 527" width="80" height="80" rx="9" transform="translate(2951 8675)"/>
+    </g>
+    <g transform="translate(-2851 -8575)">
+      <rect id="Rettangolo_527-4" data-name="Rettangolo 527" width="80" height="80" rx="9" transform="translate(2951 8675)"/>
+    </g>
+  </g>
+</svg>
