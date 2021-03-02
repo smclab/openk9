@@ -2,3 +2,6 @@ Bundle-Name: [OpenK9 - Plugin] Liferay
 Bundle-SymbolicName: com.openk9.plugins.liferay
 
 -include: ${project.rootDir}/osgi/common.bnd
+
+OpenK9-Plugin: true
+OpenK9-Plugin-Web-Id: liferay-datasource
