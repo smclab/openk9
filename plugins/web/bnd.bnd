@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9 - Plugin] Web
+Bundle-SymbolicName: com.openk9.plugins.web
+
+-include: ${project.rootDir}/osgi/common.bnd
