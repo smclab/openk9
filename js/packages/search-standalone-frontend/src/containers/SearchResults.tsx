@@ -16,6 +16,8 @@ import {
   CalendarResultCard,
   ContactSidebar,
   CalendarSidebar,
+  getPluginResultRenderers,
+  getPluginSidebarRenderers,
 } from "@openk9/search-ui-components";
 import { ResultRenderersType, SidebarRenderersType } from "@openk9/http-api";
 import { config } from "../config";
@@ -50,7 +52,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-export const resultRenderers: ResultRenderersType<{}> = {
+export const staticResultRenderers: ResultRenderersType<{}> = {
   email: EmailResultCard as any,
   file: DocumentResultCard as any,
   application: ApplicationResultCard as any,
@@ -59,7 +61,7 @@ export const resultRenderers: ResultRenderersType<{}> = {
   ...config.resultRenderers,
 };
 
-export const sidebarRenderers: SidebarRenderersType<{}> = {
+export const staticSidebarRenderers: SidebarRenderersType<{}> = {
   email: EmailSidebar as any,
   file: DocumentSidebar as any,
   application: ApplicationSidebar as any,
@@ -75,6 +77,7 @@ export function SearchResults() {
   const suggestions = useStore((s) => s.suggestions);
   const selectedResult = useStore((s) => s.selectedResult);
   const setSelectedResult = useStore((s) => s.setSelectedResult);
+  const pluginInfos = useStore((s) => s.pluginInfos);
 
   const classes = useStyles();
 
@@ -82,6 +85,15 @@ export function SearchResults() {
     results &&
     selectedResult &&
     results.result.find((r) => r.source.id === selectedResult);
+
+  const resultRenderers = {
+    ...staticResultRenderers,
+    ...getPluginResultRenderers(pluginInfos),
+  };
+  const sidebarRenderers = {
+    ...staticSidebarRenderers,
+    ...getPluginSidebarRenderers(pluginInfos),
+  };
 
   // useLayoutEffect(() => {
   //   function onKeyDown(e: KeyboardEvent) {

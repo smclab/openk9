@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { Suspense, useLayoutEffect } from "react";
 import { ThemeProvider } from "react-jss";
 import { ClayIconSpriteContext } from "@clayui/icon";
 import { BrowserRouter as Router, Route } from "react-router-dom";
@@ -24,8 +24,12 @@ function App() {
           <Dockbar />
 
           <Route path={["/q/:query", "/"]}>
-            <SearchQueryInput />
-            <SearchResults />
+            <Suspense fallback={<span className="loading-animation" />}>
+              <SearchQueryInput />
+            </Suspense>
+            <Suspense fallback={<span className="loading-animation" />}>
+              <SearchResults />
+            </Suspense>
           </Route>
         </Router>
       </ClayIconSpriteContext.Provider>

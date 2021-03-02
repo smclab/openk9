@@ -6,10 +6,4 @@ window.config = {
     { id: "calendar", text: "calendar" },
     { id: "application", text: "application" },
   ],
-  resultRenderers: {
-    // email: () => "test",
-    // file: () => "test",
-    // application: () => "test",
-  },
-  sidebarRenderers: {},
 };
