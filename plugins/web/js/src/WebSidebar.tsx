@@ -18,8 +18,9 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
-import { WebResultItem } from "@openk9/http-api";
-import { ThemeType } from "../theme";
+import { ThemeType } from "@openk9/search-ui-components";
+
+import { WebResultItem } from "./types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   break: {

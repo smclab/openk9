@@ -20,4 +20,3 @@ export * from "./EmailResultCard";
 export * from "./ApplicationResultCard";
 export * from "./ContactResultCard";
 export * from "./CalendarResultCard";
-export * from "./WebResultCard";

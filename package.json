@@ -25,7 +25,8 @@
   },
   "workspaces": {
     "packages": [
-      "js-packages/*"
+      "js-packages/*",
+      "plugins/**/js"
     ],
     "nohoist": [
       "**/react-scripts/**",

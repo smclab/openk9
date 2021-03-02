@@ -20,4 +20,3 @@ export * from "./EmailSidebar";
 export * from "./ApplicationSidebar";
 export * from "./ContactSidebar";
 export * from "./CalendarSidebar";
-export * from "./WebSidebar";

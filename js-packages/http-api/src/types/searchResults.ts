@@ -122,12 +122,3 @@ export type CalendarResultItem = GenericResultItem<{
     titleCurrentValue: string; // real title
   };
 }>;
-
-export type WebResultItem = GenericResultItem<{
-  web: {
-    favicon: string;
-    title: string;
-    url: string;
-    content: string;
-  };
-}>;
