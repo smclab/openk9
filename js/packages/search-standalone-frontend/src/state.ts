@@ -13,8 +13,8 @@ import {
   undespaceString,
   InputSuggestionToken,
   getTokenSuggestions,
-  SupportedDataSource,
-  getSupportedDataSources,
+  PluginInfo,
+  getPlugins,
 } from "@openk9/http-api";
 
 const resultsChunkNumber = 8;
@@ -42,7 +42,7 @@ export type StateType = {
   setFocus(focus: "INPUT" | "RESULTS"): void;
   selectedResult: string | null;
   setSelectedResult(selectedResult: string | null): void;
-  dataSources: SupportedDataSource[];
+  pluginInfos: PluginInfo[];
   loadInitial(): Promise<void>;
 };
 
@@ -59,11 +59,11 @@ export const useStore = create<StateType>(
     suggestions: [],
     focusToken: null,
     selectedResult: null,
-    dataSources: [],
+    pluginInfos: [],
 
     async loadInitial() {
-      const dataSources = await getSupportedDataSources();
-      set((state) => ({ ...state, dataSources }));
+      const pluginInfos = await getPlugins();
+      set((state) => ({ ...state, pluginInfos }));
     },
 
     async setSearchQuery(searchQuery: SearchQuery) {

@@ -1,6 +1,17 @@
 import { GenericResultItem } from "./searchResults";
 
-export type PluginInfo<E> = {
+export type PluginInfo = {
+  pluginId: string;
+  bundleInfo: {
+    id: number;
+    lastModified: number;
+    state: string;
+    symbolicName: string;
+    version: string;
+  };
+};
+
+export type Plugin<E> = {
   pluginId: string;
   displayName: string;
   pluginType: ("DATASOURCE" | "SUGGESTION" | "ENRICH")[];

@@ -1,4 +1,5 @@
 export * from "./ellipseText";
+export * from "./dynamicPluginLoader";
 
 export function firstOrNull<T>(arr: T[] | null | undefined) {
   return arr ? arr[0] || null : null;

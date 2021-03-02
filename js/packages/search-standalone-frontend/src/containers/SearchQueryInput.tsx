@@ -45,7 +45,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 
 export function SearchQueryInput() {
   const [searchQuery, setSearchQuery] = useSearchQuery();
-  const dataSources = useStore((s) => s.dataSources);
   const focus = useStore((s) => s.focus);
   const setFocus = useStore((s) => s.setFocus);
   const suggestions = useStore((s) => s.suggestions);
