@@ -1,6 +1,6 @@
 {
   "name": "@openk9/search-ui-components",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "author": "SMC",
   "description": "OpenK9 search UI React components",
   "main": "src/index.ts",
@@ -34,9 +34,9 @@
     "caret-pos": "^2.0.0",
     "clsx": "^1.1.0",
     "date-fns": "^2.17.0",
+    "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-jss": "^10.4.0",
-    "react": "^17.0.0",
     "use-asset": "^1.0.2"
   },
   "devDependencies": {
