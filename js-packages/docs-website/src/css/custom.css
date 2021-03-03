@@ -18,6 +18,7 @@
   --ifm-color-primary-lightest: rgb(224, 146, 146);
   --ifm-code-font-size: 95%;
   --ifm-font-family-base: "Inter", helvetica neue, helvetica, arial, sans-serif;
+  --ifm-container-width: 1436px;
 }
 
 .docusaurus-highlight-code-line {
@@ -38,7 +39,7 @@
 }
 
 .openK9-wrapper {
-  max-width: 1436px;
+  max-width: var(--ifm-container-width);
   margin: 104px auto;
   padding: 0 16px;
   overflow: hidden;
@@ -69,4 +70,13 @@
 
 .button img {
   vertical-align: middle;
+}
+
+.center-row {
+  display: flex;
+  align-items: center;
+}
+
+.grow {
+  flex-grow: 1;
 }

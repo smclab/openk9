@@ -1,0 +1,31 @@
+.root {
+  /* width: 512px; */
+  height: 512px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.searchField {
+  display: flex;
+  align-items: center;
+  margin: 5px;
+  padding: 8px;
+  padding-left: 16px;
+  border-radius: 8px;
+  border: 2px solid #559fff;
+  box-shadow: 0 0 0 5px #559fff66;
+  min-width: 400px;
+  width: 60%;
+  color: #666;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.searchField svg {
+  margin-right: 16px;
+}
+
+.searchField span {
+  transition: opacity 0.5s;
+}
