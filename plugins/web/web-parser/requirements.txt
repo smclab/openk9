@@ -1,0 +1,6 @@
+Flask==1.1.2
+beautifulsoup4==4.9.3
+requests==2.25.1
+Scrapy==2.4.1
+scrapyd==1.2.1
+scrapyd-client==1.1.0
