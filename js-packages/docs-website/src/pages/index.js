@@ -10,6 +10,7 @@ import { IconTextItem } from "../components/IconTextItem";
 import { ScreenSection } from "../components/ScreenSection";
 import { FeatureCard } from "../components/FeatureCard";
 import { PricingCard } from "../components/PricingCard";
+import { SearchesAnimation } from "../components/SearchesAnimation";
 
 const tecnicalCaratheristicsTitle = {
   title: "Features",
@@ -295,29 +296,34 @@ function Home() {
   return (
     <Layout title="OpenK9" description="Search. Everywhere.">
       <header className={clsx("hero", styles.heroBanner)}>
-        <div className="container">
-          <p className={clsx("hero__subtitle", styles.subtitleHeroBanner)}>
-            {siteConfig.tagline}
-          </p>
-          <h1 className={clsx("hero__title", styles.titleHeroBanner)}>
-            The intelligent <span className={styles.primary}>Open Source</span>{" "}
-            Search Engine
-          </h1>
-          <div className={styles.descriptionHeroBanner}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-            porttitor ipsum volutpat sem convallis aliquam.
-          </div>
-          {/* <div className={styles.buttons}>
+        <div className="container center-row">
+          <div>
+            <p className={clsx("hero__subtitle", styles.subtitleHeroBanner)}>
+              {siteConfig.tagline}
+            </p>
+            <h1 className={clsx("hero__title", styles.titleHeroBanner)}>
+              The intelligent{" "}
+              <span className={styles.primary}>Open Source</span> Search Engine
+            </h1>
+            <div className={styles.descriptionHeroBanner}>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
+              porttitor ipsum volutpat sem convallis aliquam.
+            </div>
+            {/* <div className={styles.buttons}>
             <Link
-              className={clsx(
-                "button button--outline button--primary button--lg",
-                styles.getStarted,
+            className={clsx(
+              "button button--outline button--primary button--lg",
+              styles.getStarted,
               )}
               to={useBaseUrl("docs/")}
-            >
+              >
               Get Started
-            </Link>
-          </div> */}
+              </Link>
+            </div> */}
+          </div>
+          <div className="grow">
+            <SearchesAnimation />
+          </div>
         </div>
       </header>
       <main>

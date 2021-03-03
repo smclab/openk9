@@ -15,9 +15,14 @@
     "@docusaurus/core": "2.0.0-alpha.70",
     "@docusaurus/preset-classic": "2.0.0-alpha.70",
     "@mdx-js/react": "^1.6.21",
+    "@react-spring/core": "^9.0.0-rc.3",
+    "@react-spring/three": "^9.0.0-rc.3",
+    "@react-three/drei": "^3.9.0",
     "clsx": "^1.1.1",
+    "react-dom": "^17.0.0",
+    "react-three-fiber": "^5.3.15",
     "react": "^17.0.0",
-    "react-dom": "^17.0.0"
+    "three": "^0.126.1"
   },
   "browserslist": {
     "production": [
