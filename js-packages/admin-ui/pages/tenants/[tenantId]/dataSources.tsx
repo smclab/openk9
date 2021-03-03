@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { useMemo, useState } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import ClayIcon from "@clayui/icon";
@@ -27,16 +27,22 @@ import {
   DXPLogo,
   EmailIcon,
   firstOrString,
+  getPluginAdminRenderers,
   OSLogo,
+  pluginInfoLoader,
+  pluginLoader,
   SettingsIcon,
   ThemeType,
 } from "@openk9/search-ui-components";
 import {
   DataSourceInfo,
   getDataSources,
+  Plugin,
+  PluginInfo,
   triggerReindex,
 } from "@openk9/http-api";
 import { Layout } from "../../../components/Layout";
+import { isServer } from "../../../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -95,6 +101,8 @@ const dsConfig = {
 
 function DSItemRender({
   ds,
+  plugin,
+  pluginInfo,
   tenantId,
   selected,
   onSelect,
@@ -102,6 +110,8 @@ function DSItemRender({
   onToggle,
 }: {
   ds: DataSourceInfo;
+  plugin?: Plugin<any>;
+  pluginInfo?: PluginInfo;
   tenantId: string;
   selected: boolean;
   onSelect(): void;
@@ -110,10 +120,8 @@ function DSItemRender({
 }) {
   const classes = useStyles();
 
-  const dsInfo = dsConfig[ds.driverServiceName] || {
-    name: ds.driverServiceName,
-    icon: "",
-  };
+  const Icon =
+    plugin?.dataSourceAdminInterfacePath?.iconRenderer || (() => null);
 
   return (
     <li className="list-group-item list-group-item-flex">
@@ -133,7 +141,7 @@ function DSItemRender({
       <div className="autofit-col">
         <div className="sticker">
           <span className={clsx("inline-item", classes.icon)}>
-            {dsInfo.icon}
+            <Icon />
           </span>
         </div>
       </div>
@@ -146,7 +154,9 @@ function DSItemRender({
             <a>{ds.name}</a>
           </Link>
         </p>
-        <p className="list-group-subtitle text-truncate">{dsInfo.name}</p>
+        <p className="list-group-subtitle text-truncate">
+          {plugin?.displayName || ds.driverServiceName}
+        </p>
         <div className="list-group-detail">
           {ds.active ? (
             <span className="label label-success">
@@ -204,6 +214,8 @@ function Inside({
   onPerformAction(s: string): void;
 }) {
   const classes = useStyles();
+
+  const pluginInfos = pluginInfoLoader.read();
 
   const { data } = useSWR(`/api/v2/datasource`, getDataSources);
 
@@ -314,23 +326,32 @@ function Inside({
         </div>
       </li>
 
-      {filteredData.map((ds) => (
-        <DSItemRender
-          ds={ds}
-          key={ds.datasourceId}
-          tenantId={tenantId}
-          selected={selectedIds.includes(ds.datasourceId)}
-          onSelect={() =>
-            setSelectedIds((ss) =>
-              ss.includes(ds.datasourceId)
-                ? ss.filter((s) => s !== ds.datasourceId)
-                : [...ss, ds.datasourceId],
-            )
-          }
-          onReindex={() => reindex([ds.datasourceId])}
-          onToggle={() => toggle([ds.datasourceId])}
-        />
-      ))}
+      {filteredData.map((ds) => {
+        const pluginInfo = pluginInfos.find((p) =>
+          ds.driverServiceName.startsWith(p.bundleInfo.symbolicName),
+        );
+        const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
+
+        return (
+          <DSItemRender
+            ds={ds}
+            plugin={plugin}
+            pluginInfo={pluginInfo}
+            key={ds.datasourceId}
+            tenantId={tenantId}
+            selected={selectedIds.includes(ds.datasourceId)}
+            onSelect={() =>
+              setSelectedIds((ss) =>
+                ss.includes(ds.datasourceId)
+                  ? ss.filter((s) => s !== ds.datasourceId)
+                  : [...ss, ds.datasourceId],
+              )
+            }
+            onReindex={() => reindex([ds.datasourceId])}
+            onToggle={() => toggle([ds.datasourceId])}
+          />
+        );
+      })}
     </ul>
   );
 }
@@ -412,18 +433,22 @@ function DataSources() {
         }
       >
         <div className={classes.root}>
-          <Inside
-            tenantId={tenantId}
-            searchValue={searchValue}
-            selectedIds={selectedIds}
-            setSelectedIds={setSelectedIds}
-            onPerformAction={(label) =>
-              setToastItems((tt) => [
-                ...tt,
-                { label, key: Math.random().toFixed(5) },
-              ])
-            }
-          />
+          {!isServer && (
+            <Suspense fallback={<span className="loading-animation" />}>
+              <Inside
+                tenantId={tenantId}
+                searchValue={searchValue}
+                selectedIds={selectedIds}
+                setSelectedIds={setSelectedIds}
+                onPerformAction={(label) =>
+                  setToastItems((tt) => [
+                    ...tt,
+                    { label, key: Math.random().toFixed(5) },
+                  ])
+                }
+              />
+            </Suspense>
+          )}
         </div>
       </Layout>
 

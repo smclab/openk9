@@ -18,11 +18,16 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { ThemeProvider } from "react-jss";
-import { defaultTheme } from "@openk9/search-ui-components";
+import {
+  defaultTheme,
+  loadPluginDepsIntoGlobal,
+} from "@openk9/search-ui-components";
 
 import "@clayui/css/lib/css/base.css";
 import "../styles.css";
 import { ClayIconSpriteContext } from "@clayui/icon";
+
+loadPluginDepsIntoGlobal();
 
 export default function MyApp({ Component, pageProps }) {
   useEffect(() => {

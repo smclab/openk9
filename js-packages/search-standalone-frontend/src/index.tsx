@@ -15,21 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import ReactDOM from "react-dom";
+import { loadPluginDepsIntoGlobal } from "@openk9/search-ui-components";
+
 import App from "./App";
 
-import React from "react";
-import ReactDOM from "react-dom";
-import * as ok9Components from "@openk9/search-ui-components";
-import * as ok9API from "@openk9/http-api";
-import * as reactJSS from "react-jss";
-import clayIcon from "@clayui/icon";
-
-// Load global libraries for plugins
-(window as any).React = React;
-(window as any).ReactDOM = ReactDOM;
-(window as any).ok9API = ok9API;
-(window as any).ok9Components = ok9Components;
-(window as any).clayIcon = clayIcon;
-(window as any).reactJSS = reactJSS;
+loadPluginDepsIntoGlobal();
 
 ReactDOM.render(<App />, document.getElementById("root"));

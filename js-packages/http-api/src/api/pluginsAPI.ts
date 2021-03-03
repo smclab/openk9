@@ -25,9 +25,20 @@ export async function getPlugins(): Promise<PluginInfo[]> {
 }
 
 export async function loadPlugin<E>(id: string): Promise<Plugin<E>> {
-  const jsURL = `${apiBaseUrlStatic}/plugins/${id}/static/build/index.js`;
-  // @ts-ignore
-  const code = await import(/* webpackIgnore: true */ jsURL);
-  const plugin = code.plugin as Plugin<E>;
-  return plugin;
+  const defaultPlugin: Plugin<any> = {
+    pluginId: id,
+    displayName: id,
+    pluginType: [],
+  };
+
+  try {
+    const jsURL = `${apiBaseUrlStatic}/plugins/${id}/static/build/index.js`;
+    // @ts-ignore
+    const code = await import(/* webpackIgnore: true */ jsURL);
+    const plugin = code.plugin as Plugin<E>;
+    return plugin;
+  } catch (err) {
+    console.warn(err);
+    return defaultPlugin;
+  }
 }

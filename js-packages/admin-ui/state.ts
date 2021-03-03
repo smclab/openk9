@@ -18,6 +18,8 @@
 import create from "zustand";
 import { devtools, persist } from "zustand/middleware";
 
+export const isServer = typeof window === "undefined";
+
 const persistVersion = "v1";
 
 export type StateType = { sidebarOpen: boolean; toggleSidebar(): void };
