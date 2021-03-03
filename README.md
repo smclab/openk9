@@ -1,4 +1,17 @@
-# OpenK9
+<p align="center">
+  <a href="https://openk9.io/" rel="noopener" target="_blank"><img width="200" src="media/logo.svg" alt="OpenK9 logo"></a></p>
+</p>
+
+<h1 align="center">OpenK9</h1>
+
+<div align="center">
+
+OpenK9 is a new Cognitive Search Engine that allows you to build next generation search bars. It employs a scalable architecture and machine learning to enrich unstructured data and give the best user experience possible.
+
+[![license](https://img.shields.io/badge/license-AGPL-blue.svg)](https://github.com/smclab/OpenK9/blob/master/LICENSE)
+[![Follow on Twitter](https://img.shields.io/twitter/follow/OpenK9.svg?label=follow+OpenK9)](https://twitter.com/MaterialUI)
+
+</div>
 
 ## License
 
