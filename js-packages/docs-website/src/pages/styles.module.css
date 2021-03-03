@@ -7,14 +7,52 @@
 
 .heroBanner {
   padding: 4rem 0;
-  text-align: center;
   position: relative;
   overflow: hidden;
 }
 
+.titleHeroBanner {
+  color: initial;
+  font-size: 70px;
+  max-width: 500px;
+}
+
+.descriptionHeroBanner {
+  font-weight: 500;
+  font-size: 20px;
+  max-width: 500px;
+  color: initial;
+}
+
+@media screen and (max-width: 966px) {
+  .titleHeroBanner {
+    font-size: 52px;
+  }
+}
+
+@media (max-width: 768px) {
+  .titleHeroBanner {
+    font-size: 36px;
+  }
+
+  .descriptionHeroBanner {
+    font-size: 16px;
+  }
+}
+
+.subtitleHeroBanner {
+  color: var(--ifm-color-primary);
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.primary {
+  color: var(--ifm-color-primary);
+}
+
 @media screen and (max-width: 966px) {
   .heroBanner {
-    padding: 2rem;
+    padding: 0
   }
 }
 
@@ -75,6 +113,48 @@
   width: 20%;
 }
 
+.pricingCards {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.newsletter {
+  display: flex;
+  align-items: center;
+}
+
+.newsletterEmail {
+  width: 100%;
+  position: relative;
+}
+
+.inputNewsletter {
+  background-color: #efefef;
+  padding: 16px 32px;
+  width: 100%;
+  border-radius: 50px;
+  color: #676767;
+  border: none;
+  font-size: 22px;
+}
+
+.submitNewsletter {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+.submitNewsletterIcon {
+  height: 24px;
+}
+
+.newsletterHeader {
+  width: 80%;
+  margin-right: 40px;
+}
+
 @media (max-width: 1200px) {
   .feature {
     width: 50%;
@@ -83,11 +163,33 @@
   .plugin {
     width: 33%;
   }
+
+  .newsletterHeader {
+    width: auto;
+  }
+
+  .newsletter {
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 768px) {
   .plugin {
     width: 50%;
+  }
+
+  .newsletterHeader {
+    margin-right: 0;
+  }
+
+  .inputNewsletter {
+    font-size: 16px;
+    padding: 8px 16px;
+  }
+
+  .submitNewsletter {
+    position: relative;
+    margin-top: 8px;
   }
 }
 

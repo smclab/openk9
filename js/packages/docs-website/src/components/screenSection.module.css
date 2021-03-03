@@ -54,7 +54,7 @@
     max-width: 100%;
   }
 
-  .imageToLeft, 
+  .imageToLeft,
   .imageToRight {
     position: relative;
     width: 100%;
@@ -64,5 +64,13 @@
   .leftImage,
   .rightImage {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .rightText,
+  .leftText {
+    padding-left: 0;
+    padding-right: 0;
   }
 }

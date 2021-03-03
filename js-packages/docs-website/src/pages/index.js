@@ -9,7 +9,7 @@ import { Heading } from "../components/Heading";
 import { IconTextItem } from "../components/IconTextItem";
 import { ScreenSection } from "../components/ScreenSection";
 import { FeatureCard } from "../components/FeatureCard";
-import { Button } from "../components/Button";
+import { PricingCard } from "../components/PricingCard";
 
 const tecnicalCaratheristicsTitle = {
   title: "Features",
@@ -210,26 +210,114 @@ const plugins = [
   },
 ];
 
+const pricingTitle = {
+  title: "Pricing",
+  subTitle: "Discover our solutions",
+  description: (
+    <>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
+      ipsum volutpat sem convallis aliquam. Praesent ut tellus eu risus accumsan
+      facilisis. Phasellus vulputate maximus elit sit amet maximus.
+    </>
+  ),
+  alignment: "center",
+};
+
+const pricing = [
+  {
+    type: "Community",
+    price: "Free",
+    points: [
+      {
+        name: "Standard Base Product",
+        isChecked: true,
+      },
+      {
+        name: "Online Documentation",
+        isChecked: true,
+      },
+    ],
+    isDisabled: false,
+  },
+  {
+    type: "Enterprise",
+    price: "?",
+    points: [
+      {
+        name: "All community features plus:",
+        isChecked: false,
+      },
+      {
+        name: "H8x5 Support",
+        isChecked: true,
+      },
+      {
+        name: "EE plugins",
+        isChecked: true,
+      },
+    ],
+    isDisabled: true,
+  },
+  {
+    type: "Saas",
+    price: "?",
+    points: [
+      {
+        name: "All enterprise features plus:",
+        isChecked: false,
+      },
+      {
+        name: "H24 Support",
+        isChecked: true,
+      },
+      {
+        name: "Advanced Machine Learning features",
+        isChecked: true,
+      },
+      {
+        name: "Video & Image search",
+        isChecked: true,
+      },
+    ],
+    isDisabled: true,
+  },
+];
+
+const newsletterTitle = {
+  title: "Neswletter",
+  subTitle: "Subscribe out newsletter and get notification to stay update",
+  alignment: "left",
+};
+
 function Home() {
   const context = useDocusaurusContext();
   const { siteConfig = {} } = context;
   return (
     <Layout title="OpenK9" description="Search. Everywhere.">
-      <header className={clsx("hero hero--primary", styles.heroBanner)}>
+      <header className={clsx("hero", styles.heroBanner)}>
         <div className="container">
-          <h1 className="hero__title">{siteConfig.title}</h1>
-          <p className="hero__subtitle">{siteConfig.tagline}</p>
-          <div className={styles.buttons}>
+          <p className={clsx("hero__subtitle", styles.subtitleHeroBanner)}>
+            {siteConfig.tagline}
+          </p>
+          <h1 className={clsx("hero__title", styles.titleHeroBanner)}>
+            The intelligent <span className={styles.primary}>Open Source</span>{" "}
+            Search Engine
+          </h1>
+          <div className={styles.descriptionHeroBanner}>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
+            porttitor ipsum volutpat sem convallis aliquam.
+          </div>
+          {/* <div className={styles.buttons}>
             <Link
               className={clsx(
-                "button button--outline button--secondary button--lg",
+                "button button--outline button--primary button--lg",
                 styles.getStarted,
               )}
               to={useBaseUrl("docs/")}
             >
               Get Started
             </Link>
-          </div>
+          </div> */}
         </div>
       </header>
       <main>
@@ -292,28 +380,61 @@ function Home() {
                   </div>
                 ))}
               </div>
-              <Button
-                href="/plugins"
-                iconSrc="img/arrow_forward.svg"
-                target="_blank"
-              >
+              <button className="button button--primary button--lg">
                 Show Plugins
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  enable-background="new 0 0 24 24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  width="24"
-                >
-                  <path
-                    fill="#fff"
-                    d="M5,13h11.17l-4.88,4.88c-0.39,0.39-0.39,1.03,0,1.42l0,0c0.39,0.39,1.02,0.39,1.41,0l6.59-6.59 c0.39-0.39,0.39-1.02,0-1.41l-6.58-6.6c-0.39-0.39-1.02-0.39-1.41,0l0,0c-0.39,0.39-0.39,1.02,0,1.41L16.17,11H5 c-0.55,0-1,0.45-1,1l0,0C4,12.55,4.45,13,5,13z"
-                  />
-                </svg>
-              </Button>
+                <img
+                  src={useBaseUrl("img/arrow_forward.svg")}
+                  alt="show plugins button"
+                />
+              </button>
             </div>
           </section>
         )}
+
+        {pricing && pricing.length > 0 && (
+          <section>
+            <div className="openK9-wrapper">
+              {pricingTitle && <Heading {...pricingTitle} />}
+              <div className={styles.pricingCards}>
+                {pricing.map((props, idx) => (
+                  <PricingCard key={idx} {...props} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* TODO: add action subscribe to newsletter */}
+        <section>
+          <div className="openK9-wrapper">
+            <form>
+              <div className={styles.newsletter}>
+                <div className={styles.newsletterHeader}>
+                  {newsletterTitle && <Heading {...newsletterTitle} />}
+                </div>
+                <div className={styles.newsletterEmail}>
+                  <input
+                    type="text"
+                    placeholder="Enter your email address..."
+                    className={styles.inputNewsletter}
+                  />
+                  <button
+                    className={clsx(
+                      "button button--primary button--lg",
+                      styles.submitNewsletter,
+                    )}
+                  >
+                    <img
+                      className={styles.submitNewsletterIcon}
+                      src={useBaseUrl("img/paper-plane.svg")}
+                      alt="submit newsletter"
+                    />
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
       </main>
     </Layout>
   );

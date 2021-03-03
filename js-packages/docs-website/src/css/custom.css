@@ -62,3 +62,11 @@
     margin: 48px auto;
   }
 }
+
+.button {
+  border-radius: 50px;
+}
+
+.button img {
+  vertical-align: middle;
+}

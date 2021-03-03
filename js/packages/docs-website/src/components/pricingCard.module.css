@@ -1,0 +1,108 @@
+.pricingCard {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 16%);
+  padding: 24px;
+  width: calc(32% - 60px);
+  margin-bottom: 64px;
+  margin-right: 64px;
+}
+
+.disabledCard {
+  position: relative;
+  opacity: 0.4;
+  box-shadow: none;
+}
+
+.disabledCard::before {
+  display: block;
+  position: absolute;
+  content: "";
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 8px;
+  background-color: #bbb;
+  opacity: 0.3;
+}
+
+.type {
+  color: var(--ifm-color-primary);
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 26px;
+  text-align: right;
+}
+
+.disabledType {
+  color: initial;
+}
+
+.price {
+  display: inline;
+  text-transform: uppercase;
+}
+
+.amount {
+  font-weight: 600;
+  font-size: 76px;
+  display: inline;
+}
+
+.period {
+  font-weight: 600;
+  font-size: 26px;
+  margin-left: 8px;
+}
+
+.iconCheck {
+  height: 16px;
+  margin-right: 8px;
+}
+
+.points {
+  margin-top: 16px;
+  font-size: 20px;
+}
+
+@media (max-width: 1330px) {
+  .pricingCard {
+    width: calc(50% - 16px);
+    margin-bottom: 32px;
+    margin-right: 32px;
+  }
+
+  .pricingCard:nth-child(3n) {
+    margin-right: 32px;
+  }
+
+  .pricingCard:nth-child(2n) {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .pricingCard {
+    width: 100%;
+    margin-bottom: 24px;
+    margin-right: 0;
+  }
+
+  .pricingCard:nth-child(3n) {
+    margin-right: 0;
+  }
+
+  .type,
+  .period {
+    font-size: 20px;
+  }
+
+  .amount {
+    font-size: 36px;
+  }
+
+  .points {
+    font-size: 16px;
+  }
+}
