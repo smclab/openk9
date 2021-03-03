@@ -380,13 +380,17 @@ function Home() {
                   </div>
                 ))}
               </div>
-              <button className="button button--primary button--lg">
+
+              <Link
+                className="button button--primary button--lg"
+                to={useBaseUrl("/plugins")}
+              >
                 Show Plugins
                 <img
                   src={useBaseUrl("img/arrow_forward.svg")}
                   alt="show plugins button"
                 />
-              </button>
+              </Link>
             </div>
           </section>
         )}
