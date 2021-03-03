@@ -18,9 +18,9 @@
 import React from "react";
 import ClayIcon from "@clayui/icon";
 import { createUseStyles } from "react-jss";
-import { Highlight, ResultCard, ThemeType } from "@openk9/search-ui-components";
+import { ResultCard, Highlight, ThemeType } from "@openk9/search-ui-components";
 
-import { WebResultItem } from "./types";
+import { DocumentResultItem } from "./types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -60,42 +60,52 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-export function WebResultCard({
+export function DocumentResultCard({
   data,
   className,
   ...rest
 }: {
-  data: WebResultItem;
+  data: DocumentResultItem;
   onSelect?: () => void;
 } & React.AnchorHTMLAttributes<HTMLAnchorElement>): JSX.Element {
   const classes = useStyles();
 
   return (
     <ResultCard
-      href={data.source.web.url}
+      href={data.source.document.URL}
       target="_blank"
       className={classes.root}
       {...rest}
     >
       <div className={classes.iconArea}>
-        {data.source.web.favicon ? (
-          <img width={32} src={data.source.web.favicon} />
+        {data.source.document.previewUrl ? (
+          <img width={64} src={data.source.document.previewUrl} />
         ) : (
-          <ClayIcon symbol="document" />
+          <ClayIcon symbol="document-text" />
         )}
       </div>
       <div style={{ minWidth: 0 }}>
         <h4 className={classes.title}>
           <Highlight
-            text={data.source.web.title}
-            highlight={data.highlight["web.title"]}
-          />
+            text={data.source.document.title}
+            highlight={data.highlight["document.title"]}
+          />{" "}
+          {data.source.document.documentType && (
+            <div className={classes.badge}>
+              {data.source.document.documentType}
+            </div>
+          )}
         </h4>
-        <div className={classes.path}>{data.source.web.url}</div>
+        <div className={classes.path}>
+          <strong>
+            {data.source.spaces?.spaceName || "Documents and Media"}
+          </strong>
+          {data.source.file.path}
+        </div>
         <div className={classes.textArea}>
           <Highlight
-            text={data.source.web.content}
-            highlight={data.highlight["web.content"]}
+            text={data.source.document.content}
+            highlight={data.highlight["document.content"]}
           />
         </div>
       </div>

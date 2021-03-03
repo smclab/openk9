@@ -19,8 +19,9 @@ import React from "react";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import { format } from "date-fns";
-import { CalendarResultItem } from "@openk9/http-api";
-import { ThemeType } from "../theme";
+import { ThemeType } from "@openk9/search-ui-components";
+
+import { CalendarResultItem } from "./types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   row: {

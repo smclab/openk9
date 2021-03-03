@@ -17,9 +17,9 @@
 
 import React from "react";
 import { createUseStyles } from "react-jss";
-import { DocumentResultItem } from "@openk9/http-api";
-import { ImageSlider } from "../components/ImageSlider";
-import { ThemeType } from "../theme";
+import { ImageSlider, ThemeType } from "@openk9/search-ui-components";
+
+import { DocumentResultItem } from "./types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   break: {

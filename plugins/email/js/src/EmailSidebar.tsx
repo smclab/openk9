@@ -17,52 +17,42 @@
 
 import React from "react";
 import { createUseStyles } from "react-jss";
-import ClayIcon from "@clayui/icon";
 import { ThemeType } from "@openk9/search-ui-components";
 
-import { WebResultItem } from "./types";
+import { EmailResultItem } from "./types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
-  break: {
-    overflow: "hidden",
-    maxWidth: "100%",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  avatar: {
-    margin: theme.spacingUnit,
-    marginRight: theme.spacingUnit * 3,
-    width: 64,
-    height: 64,
-    fontSize: 64,
-    flexShrink: 0,
-    display: "flex",
-    justifyContent: "center",
-    color: theme.digitalLakeMainL2,
-  },
+  body: {},
 }));
 
-export function WebSidebar({ result }: { result: WebResultItem }) {
+export function EmailSidebar({ result }: { result: EmailResultItem }) {
   const classes = useStyles();
   return (
     <>
-      <h3>
-        <div className={classes.avatar}>
-          {result.source.web.favicon ? (
-            <img src={result.source.web.favicon} />
-          ) : (
-            <ClayIcon symbol="document" />
-          )}
-        </div>{" "}
-        {result.source.web.title}
-      </h3>
-      <div className={classes.break}>
-        <strong>URL:</strong>{" "}
-        <a href={result.source.web.url} target="_blank">
-          {result.source.web.url}
-        </a>
+      <h3>{result.source.email.subject}</h3>
+      <div>
+        <strong>Date:</strong>{" "}
+        {new Date(result.source.email.date).toLocaleString()}
       </div>
-      <div>{result.source.web.content}</div>
+      <div>
+        <strong>From:</strong> {result.source.email.from}
+      </div>
+      <div>
+        <strong>To:</strong> {result.source.email.to}
+      </div>
+      {result.source.email.cc && result.source.email.cc.length > 0 && (
+        <div>
+          <strong>CC:</strong> {result.source.email.cc}
+        </div>
+      )}
+
+      <iframe
+        frameBorder="0"
+        width="100%"
+        height="100%"
+        srcDoc={result.source.email.htmlBody}
+        className={classes.body}
+      />
     </>
   );
 }

@@ -24,15 +24,7 @@ import {
   SearchResultsList,
   ResultSidebar,
   ApplicationResultCard,
-  DocumentResultCard,
-  EmailResultCard,
   ApplicationSidebar,
-  DocumentSidebar,
-  EmailSidebar,
-  ContactResultCard,
-  CalendarResultCard,
-  ContactSidebar,
-  CalendarSidebar,
   getPluginResultRenderers,
   getPluginSidebarRenderers,
 } from "@openk9/search-ui-components";
@@ -70,20 +62,12 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 }));
 
 export const staticResultRenderers: ResultRenderersType<{}> = {
-  email: EmailResultCard as any,
-  file: DocumentResultCard as any,
   application: ApplicationResultCard as any,
-  user: ContactResultCard as any,
-  calendar: CalendarResultCard as any,
   ...config.resultRenderers,
 };
 
 export const staticSidebarRenderers: SidebarRenderersType<{}> = {
-  email: EmailSidebar as any,
-  file: DocumentSidebar as any,
   application: ApplicationSidebar as any,
-  user: ContactSidebar as any,
-  calendar: CalendarSidebar as any,
   ...config.sidebarRenderers,
 };
 

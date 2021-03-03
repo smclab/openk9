@@ -16,13 +16,16 @@
  */
 
 import React, { useState } from "react";
-import { createUseStyles } from "react-jss";
 import ClayModal, { useModal } from "@clayui/modal";
+import { createUseStyles } from "react-jss";
+import {
+  Highlight,
+  ResultCard,
+  ThemeType,
+  EmailIcon,
+} from "@openk9/search-ui-components";
 
-import { EmailResultItem } from "@openk9/http-api";
-import { ThemeType } from "../theme";
-import { EmailIcon } from "../icons/EmailIcon";
-import { ResultCard, Highlight } from "../components";
+import { EmailResultItem } from "./types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {

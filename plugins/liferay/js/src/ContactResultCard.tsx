@@ -18,11 +18,14 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
+import {
+  ResultCard,
+  Highlight,
+  ThemeType,
+  ChatIcon,
+} from "@openk9/search-ui-components";
 
-import { ContactResultItem } from "@openk9/http-api";
-import { ThemeType } from "../theme";
-import { ResultCard, Highlight } from "../components";
-import { ChatIcon } from "../icons";
+import { ContactResultItem } from "./types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {

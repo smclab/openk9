@@ -15,8 +15,4 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export * from "./DocumentResultCard";
-export * from "./EmailResultCard";
 export * from "./ApplicationResultCard";
-export * from "./ContactResultCard";
-export * from "./CalendarResultCard";
