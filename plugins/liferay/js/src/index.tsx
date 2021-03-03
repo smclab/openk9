@@ -16,7 +16,6 @@
  */
 
 import React from "react";
-import ClayIcon from "@clayui/icon";
 import { Plugin } from "@openk9/http-api";
 
 import { LiferayResultType } from "./types";
@@ -26,6 +25,7 @@ import { DocumentResultCard } from "./DocumentResultCard";
 import { DocumentSidebar } from "./DocumentSidebar";
 import { ContactResultCard } from "./ContactResultCard";
 import { ContactSidebar } from "./ContactSidebar";
+import { DXPLogo } from "@openk9/search-ui-components";
 
 export const plugin: Plugin<LiferayResultType> = {
   pluginId: "liferay-datasource",
@@ -50,8 +50,7 @@ export const plugin: Plugin<LiferayResultType> = {
 };
 
 function iconRenderer(props: any) {
-  console.log("iconRenderer", props);
-  return <ClayIcon symbol="document" />;
+  return <DXPLogo {...props} />;
 }
 
 function settingsRenderer(props: any) {

@@ -16,12 +16,12 @@
  */
 
 import React from "react";
-import ClayIcon from "@clayui/icon";
 import { Plugin } from "@openk9/http-api";
 
 import { EmailResultItem } from "./types";
 import { EmailResultCard } from "./EmailResultCard";
 import { EmailSidebar } from "./EmailSidebar";
+import { EmailIcon } from "@openk9/search-ui-components";
 
 export const plugin: Plugin<EmailResultItem> = {
   pluginId: "email-datasource",
@@ -42,8 +42,7 @@ export const plugin: Plugin<EmailResultItem> = {
 };
 
 function iconRenderer(props: any) {
-  console.log("iconRenderer", props);
-  return <ClayIcon symbol="document" />;
+  return <EmailIcon {...props} />;
 }
 
 function settingsRenderer(props: any) {

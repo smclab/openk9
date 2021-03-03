@@ -24,10 +24,10 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import useSWR from "swr";
 import {
+  DataSourceIcon,
   DXPLogo,
   EmailIcon,
   firstOrString,
-  getPluginAdminRenderers,
   OSLogo,
   pluginInfoLoader,
   pluginLoader,
@@ -121,7 +121,7 @@ function DSItemRender({
   const classes = useStyles();
 
   const Icon =
-    plugin?.dataSourceAdminInterfacePath?.iconRenderer || (() => null);
+    plugin?.dataSourceAdminInterfacePath?.iconRenderer || DataSourceIcon;
 
   return (
     <li className="list-group-item list-group-item-flex">
@@ -141,7 +141,7 @@ function DSItemRender({
       <div className="autofit-col">
         <div className="sticker">
           <span className={clsx("inline-item", classes.icon)}>
-            <Icon />
+            <Icon size={32} />
           </span>
         </div>
       </div>
@@ -231,7 +231,7 @@ function Inside({
   const filteredData = tenantDSs.filter(
     (d) =>
       d.name.includes(searchValue) ||
-      d.tenantId.toString().includes(searchValue) ||
+      d.datasourceId.toString().includes(searchValue) ||
       d.driverServiceName.includes(searchValue),
   );
 

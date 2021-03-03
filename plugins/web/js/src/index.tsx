@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 import React from "react";
 import ClayIcon from "@clayui/icon";
 import { Plugin } from "@openk9/http-api";
@@ -43,8 +42,7 @@ export const plugin: Plugin<WebResultItem> = {
 };
 
 function iconRenderer(props: any) {
-  console.log("iconRenderer", props);
-  return <ClayIcon symbol="document" />;
+  return <ClayIcon symbol="globe" {...props} />;
 }
 
 function settingsRenderer(props: any) {
