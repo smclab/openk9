@@ -12,9 +12,9 @@ import { FeatureCard } from "../components/FeatureCard";
 import { PricingCard } from "../components/PricingCard";
 import { SearchesAnimation } from "../components/SearchesAnimation";
 
-const tecnicalCaratheristicsTitle = {
+const tecnicalCharacteristicsTitle = {
   title: "Features",
-  subTitle: "Tecnical Caratheristics",
+  subTitle: "Tecnical Characteristics",
   description: (
     <>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
@@ -25,7 +25,7 @@ const tecnicalCaratheristicsTitle = {
   alignment: "center",
 };
 
-const tecnicalCaratheristics = [
+const tecnicalCharacteristics = [
   {
     title: "Cloud Oriented",
     iconSrc: "img/cloud.svg",
@@ -111,9 +111,9 @@ const keyPoints = [
   },
 ];
 
-const functionalCaratheristicsTitle = {
+const functionalCharacteristicsTitle = {
   title: "Features",
-  subTitle: "Functional Caratheristics",
+  subTitle: "Functional Characteristics",
   description: (
     <>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
@@ -124,7 +124,7 @@ const functionalCaratheristicsTitle = {
   alignment: "center",
 };
 
-const functionalCaratheristics = [
+const functionalCharacteristics = [
   {
     title: "Multi-tenant",
     imageSrc: "img/placeholder.png",
@@ -327,14 +327,14 @@ function Home() {
         </div>
       </header>
       <main>
-        {tecnicalCaratheristics && tecnicalCaratheristics.length > 0 && (
+        {tecnicalCharacteristics && tecnicalCharacteristics.length > 0 && (
           <section className={styles.sectionLandingPage}>
             <div className="openK9-wrapper">
-              {/* {tecnicalCaratheristicsTitle && (
-                <Heading {...tecnicalCaratheristicsTitle} />
+              {/* {tecnicalCharacteristicsTitle && (
+                <Heading {...tecnicalCharacteristicsTitle} />
               )} */}
               <div className={styles.tecnicalFeatures}>
-                {tecnicalCaratheristics.map((props, idx) => (
+                {tecnicalCharacteristics.map((props, idx) => (
                   <div className={styles.feature} key={idx}>
                     <IconTextItem {...props} />
                   </div>
@@ -358,16 +358,16 @@ function Home() {
           </section>
         )}
 
-        {functionalCaratheristics && functionalCaratheristics.length > 0 && (
+        {functionalCharacteristics && functionalCharacteristics.length > 0 && (
           <section
             className={clsx(styles.sectionLandingPage, styles.greySection)}
           >
             <div className="openK9-wrapper">
-              {functionalCaratheristicsTitle && (
-                <Heading {...functionalCaratheristicsTitle} />
+              {functionalCharacteristicsTitle && (
+                <Heading {...functionalCharacteristicsTitle} />
               )}
               <div className={styles.funtionalFeaturesContent}>
-                {functionalCaratheristics.map((props, idx) => (
+                {functionalCharacteristics.map((props, idx) => (
                   <FeatureCard key={idx} {...props} />
                 ))}
               </div>
