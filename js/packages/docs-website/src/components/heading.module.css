@@ -41,9 +41,13 @@
     margin-bottom: 4px;
   }
 
+  .right {
+    text-align: left;
+  }
+
   .subtitleHeading {
-    font-size: 36px;
-    line-height: 36px;
+    font-size: 32px;
+    line-height: 32px;
   }
 
   .descriptionHeading {
