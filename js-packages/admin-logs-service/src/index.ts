@@ -18,7 +18,7 @@
 import express from "express";
 import { spawn } from "child_process";
 
-const cmdPath = process.env.DOCKER_PATH || "/usr/local/bin/docker";
+const cmdPath = process.env.DOCKER_PATH || "/usr/bin/docker";
 
 async function execWithPromise(
   command: string,
