@@ -7,7 +7,7 @@
 	.st1{display:inline;}
 	.st2{fill:#D21317;}
 	.st3{fill:none;stroke:#D21317;stroke-width:4;stroke-miterlimit:10;}
-	.st4{enable-background:new    ;}
+	.st4{display:inline;enable-background:new    ;}
 </style>
 <g id="Livello_1" class="st0">
 	<g class="st1">
@@ -48,8 +48,8 @@
 		</g>
 	</g>
 </g>
-<g id="Livello_2" class="st0">
-	<g class="st1">
+<g id="Livello_2">
+	<g>
 		<g>
 			<g>
 				<path class="st2" d="M103.3,104.2c-10.3,0-18.6-8.4-18.6-18.6S93,67,103.3,67c10.3,0,18.6,8.4,18.6,18.6
@@ -119,7 +119,7 @@
 		</g>
 	</g>
 </g>
-<g id="Livello_4">
+<g id="Livello_4" class="st0">
 	<g id="Tracciato_1-5_1_" class="st4">
 		<path class="st2" d="M41.5,109.8c-10.2,0-19.1-7.6-20.7-17.7C20,86.5,21.3,81,24.6,76.5c2.8-3.9,6.8-6.6,11.4-7.9
 			C36.6,59.9,41.5,52,49,47.5c6.2-3.7,13.5-4.8,20.5-3c6.1,1.5,11.4,5.1,15.1,10.1c1.7-0.8,3.5-1.3,5.3-1.6

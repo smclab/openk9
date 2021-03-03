@@ -39,7 +39,7 @@ const tecnicalCharacteristics = [
   },
   {
     title: "Autoscaling",
-    iconSrc: "img/cloud.svg",
+    iconSrc: "img/autoscaling.svg",
     description: (
       <>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
@@ -50,7 +50,7 @@ const tecnicalCharacteristics = [
   },
   {
     title: "Monitorable",
-    iconSrc: "img/cloud.svg",
+    iconSrc: "img/monitorable.svg",
     description: (
       <>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
@@ -61,7 +61,7 @@ const tecnicalCharacteristics = [
   },
   {
     title: "Polyglot parsers",
-    iconSrc: "img/cloud.svg",
+    iconSrc: "img/polyglot.svg",
     description: (
       <>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
