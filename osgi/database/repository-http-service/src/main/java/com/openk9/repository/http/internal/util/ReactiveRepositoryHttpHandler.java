@@ -27,9 +27,9 @@ import com.openk9.http.web.HttpHandler;
 import com.openk9.http.web.HttpRequest;
 import com.openk9.http.web.HttpResponse;
 import com.openk9.json.api.JsonFactory;
+import com.openk9.repository.http.internal.http.HttpRequestUtil;
 import com.openk9.sql.api.client.Page;
 import com.openk9.sql.api.entity.ReactiveRepository;
-import com.openk9.repository.http.internal.http.HttpRequestUtil;
 import org.osgi.framework.BundleContext;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
@@ -70,7 +70,11 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 				"/{" + _reactiveRepository.primaryKeyName() + "}",
 				this::_delete),
 			HttpHandler.post(Strings.BLANK, this::_create),
-			HttpHandler.put(Strings.BLANK, this::_update)
+			HttpHandler.put(Strings.BLANK, this::_update),
+			HttpHandler.patch(
+				"/{" + _reactiveRepository.primaryKeyName() + "}",
+				this::_patch)
+
 		);
 
 	}
@@ -145,6 +149,32 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 				)
 			)
 				.toArray(Endpoint[]::new)
+		);
+
+	}
+
+	private Publisher<Void> _patch(
+		HttpRequest httpRequest, HttpResponse httpResponse) {
+
+		String primaryKey =
+			httpRequest.pathParam(_reactiveRepository.primaryKeyName());
+
+		Object PK = _reactiveRepository.parsePrimaryKey(primaryKey);
+
+		Publisher<String> body = httpRequest.aggregateBodyToString();
+
+		return _httpResponseWriter.write(
+			httpResponse,
+			Mono
+				.from(body)
+				.map(
+					json -> _jsonFactory
+						.fromJsonToJsonNode(json)
+						.toObjectNode()
+						.toMap()
+				)
+				.flatMap(map -> _reactiveRepository.patch(PK, map)
+			)
 		);
 
 	}

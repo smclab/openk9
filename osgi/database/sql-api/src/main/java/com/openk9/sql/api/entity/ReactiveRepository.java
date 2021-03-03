@@ -24,6 +24,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
+import java.util.Map;
 
 public interface ReactiveRepository<ENTITY, PK>
 	extends EntityDefinition<ENTITY, PK> {
@@ -31,6 +32,8 @@ public interface ReactiveRepository<ENTITY, PK>
 	Mono<ENTITY> insert(Mono<ENTITY> entity);
 
 	Mono<ENTITY> insert(ENTITY entity);
+
+	Mono<ENTITY> patch(PK pk, Map<String, Object> props);
 
 	Mono<ENTITY> update(Mono<ENTITY> entity);
 

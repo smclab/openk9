@@ -55,6 +55,25 @@ public abstract class BaseReactiveRepository<ENTITY, PK>
 	}
 
 	@Override
+	public Mono<ENTITY> patch(PK pk, Map<String, Object> props) {
+
+		return _databaseClient
+			.update()
+			.from(tableName())
+			.value(props)
+			.matching(
+				Criteria
+					.where(primaryKeyName())
+					.is(pk)
+			)
+			.map(entityMapping())
+			.first()
+			.doOnNext(e -> _entityEventBus.sendEvent(
+				EntityEvent.update(e.getClass(), e)));
+
+	}
+
+	@Override
 	public Mono<ENTITY> update(Mono<ENTITY> mono) {
 		return mono
 			.flatMap(entity ->
