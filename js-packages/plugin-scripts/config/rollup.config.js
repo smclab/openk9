@@ -22,6 +22,7 @@ const replace = require("@rollup/plugin-replace");
 const commonjs = require("@rollup/plugin-commonjs");
 const externalGlobals = require("rollup-plugin-external-globals");
 const { terser } = require("rollup-plugin-terser");
+const graph = require("rollup-plugin-graph");
 
 const extensions = [".js", ".jsx", ".ts", ".tsx", ".json"];
 
@@ -45,13 +46,14 @@ const getBabelOptions = ({ useESModules }, targets) => ({
 
 const externalGlobalsDefault = {
   react: "React",
+  "react-dom": "ReactDOM",
   "@openk9/http-api": "ok9API",
   "@openk9/search-ui-components": "ok9Components",
   "@clayui/icon": "clayIcon",
   "react-jss": "reactJSS",
 };
 
-module.exports = (srcPath, buildPath) => [
+module.exports = (srcPath, buildPath, buildGraph) => [
   {
     input: `${srcPath}/index.tsx`,
     output: { file: `${buildPath}/index.js`, format: "esm" },
@@ -72,6 +74,7 @@ module.exports = (srcPath, buildPath) => [
         preventAssignment: true,
       }),
       terser(),
+      buildGraph && graph(),
     ],
   },
   {

@@ -36,6 +36,9 @@ const fs = require("fs-extra");
 const printBuildError = require("react-dev-utils/printBuildError");
 const rollup = require("rollup");
 
+const argv = process.argv.slice(2);
+const buildGraph = argv.indexOf("--graph") !== -1;
+
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 const publicPath = resolveApp("public");
@@ -84,7 +87,12 @@ build()
 async function build() {
   console.log("Creating an optimized production build...");
 
-  const rollupConfig = require("../config/rollup.config")(srcPath, buildPath);
+  const rollupConfig = require("../config/rollup.config")(
+    srcPath,
+    buildPath,
+    buildGraph,
+  );
+
   await Promise.all(
     rollupConfig.map(async (config) => {
       const { output: outputOptions, ...inputOptions } = config;

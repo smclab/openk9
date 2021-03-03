@@ -5245,6 +5245,11 @@ browserify-zlib@^0.2.0:
   dependencies:
     pako "~1.0.5"
 
+browserslist-config-clay@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/browserslist-config-clay/-/browserslist-config-clay-3.0.0.tgz#31355b6bce2900a01dbc6253eeb943bfec85a6d3"
+  integrity sha512-s/Emuto6VCdRUuE97xYoUdtZVF/z/XSehrIbedRA/51sjXz7HvVzW60NmpssnARycGPPeSbMKm7fHU1CBJ6xgQ==
+
 browserslist@4.10.0:
   version "4.10.0"
   resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.10.0.tgz#f179737913eaf0d2b98e4926ac1ca6a15cbcc6a9"
@@ -15448,6 +15453,11 @@ rollup-plugin-external-globals@^0.6.1:
     estree-walker "^2.0.1"
     is-reference "^1.2.1"
     magic-string "^0.25.7"
+
+rollup-plugin-graph@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-graph/-/rollup-plugin-graph-2.0.0.tgz#f93702c8104ceaf80871c9efc990be381c03fb2f"
+  integrity sha512-0onCt3IIH8pQCQ0PAIH1aeXc0zMm29x+yviSjobkloVav2TK7gBRNZjhL9x/40sc4YAmLIpwnwPZLvuZ7u5q8A==
 
 rollup-plugin-terser@^5.3.1:
   version "5.3.1"

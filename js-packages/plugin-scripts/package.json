@@ -60,6 +60,7 @@
     "rimraf": "^3.0.2",
     "rollup": "^2.39.1",
     "rollup-plugin-external-globals": "^0.6.1",
+    "rollup-plugin-graph": "^2.0.0",
     "rollup-plugin-terser": "^7.0.2",
     "typescript": "^4.1.5"
   },
