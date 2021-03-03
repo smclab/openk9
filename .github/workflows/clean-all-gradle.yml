@@ -175,3 +175,162 @@ jobs:
       - uses: actions/delete-package-versions@v1
         with:
           package-name: com.openk9.release.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.plugins.liferay
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.plugins.web
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.plugins.email
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.metrics.ext
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.metrics.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.metrics.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.datasource.web
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.datasource.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.datasource.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.repository.http.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.sql.schduler
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.repository.http.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.sql.jdbc.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.sql.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.sql.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.sql.schduler.web
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.ingestion.logic.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.ingestion.driver.manager.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.ingestion.driver.manager.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9ingestion.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.ingestion.logic.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.ingestion.queue
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.ingestion.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.cache.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.cache.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.http.bundle.ext
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.http.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.http.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.documentation
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.plugin.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.plugin.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.plugin.web
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.search.enrich.mapper.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.search.enrich.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.search.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.search.client.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.search.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.search.enrich.mapper.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.search.client.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.search.enrich.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.json.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.osgi.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.json.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.reactor.agent
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.model
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.core.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.third.party
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.common.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.ext.http.response.serialization
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.web.schema-registry.avro
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.web.schema-registry.api
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.web.schema-registry.service
+      - uses: actions/delete-package-versions@v1
+        with:
+          package-name: com.openk9.com.openk9.release.api
