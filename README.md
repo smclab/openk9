@@ -10,7 +10,7 @@ OpenK9 is a new Cognitive Search Engine that allows you to build next generation
 
 [![license](https://img.shields.io/badge/license-AGPL-blue.svg)](https://github.com/smclab/OpenK9/blob/master/LICENSE)
 [![license](https://img.shields.io/github/v/release/smclab/openk9)](https://github.com/smclab/OpenK9/releases)
-[![Follow on Twitter](https://img.shields.io/twitter/follow/OpenK9Search.svg?label=follow+OpenK9Search)](https://twitter.com/OpenK9Search)
+[![Follow on Twitter](https://img.shields.io/twitter/follow/K9Open.svg?label=follow+K9Open)](https://twitter.com/K9Open)
 
 </div>
 
