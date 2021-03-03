@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9] Schema Registry Service
-Bundle-SymbolicName: com.openk9.web.schema-registry.service
+Bundle-SymbolicName: com.openk9.web.schema.registry.service
 
 Import-Package: *;resolution:=optional
 

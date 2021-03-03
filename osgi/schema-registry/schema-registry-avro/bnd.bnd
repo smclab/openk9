@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9] Schema Registry Avro
-Bundle-SymbolicName: com.openk9.web.schema-registry.avro
+Bundle-SymbolicName: com.openk9.web.schema.registry.avro
 
 Include-Resource: @avro-*.jar, @commons-compress-*.jar
 

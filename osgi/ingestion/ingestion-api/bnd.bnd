@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9] Ingestion API
-Bundle-SymbolicName: com.openk9ingestion.api
+Bundle-SymbolicName: com.openk9.ingestion.api
 
 Export-Package: com.openk9.ingestion.api
 
