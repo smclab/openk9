@@ -26,6 +26,7 @@ publishing {
 	publications {
 		gpr(MavenPublication) {
 			from(components.java)
+			artifactId = prop.getProperty("Bundle-SymbolicName")
 		}
 	}
 }
