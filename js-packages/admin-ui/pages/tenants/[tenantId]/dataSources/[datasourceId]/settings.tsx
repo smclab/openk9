@@ -24,7 +24,7 @@ import ClayNavigationBar from "@clayui/navigation-bar";
 import ClayIcon from "@clayui/icon";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { Layout } from "../../../../../components/Layout";
-import { DSItem } from "../../../../../types";
+import { getDataSourceInfo } from "@openk9/http-api";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -97,11 +97,7 @@ function Inner({
 
   const { data: datasource } = useSWR(
     `/api/v2/datasource/${datasourceId}`,
-    async () => {
-      const req = await fetch(`/api/v2/datasource/${datasourceId}`);
-      const data: DSItem = await req.json();
-      return data;
-    },
+    () => getDataSourceInfo(datasourceId),
   );
 
   if (!datasource) {

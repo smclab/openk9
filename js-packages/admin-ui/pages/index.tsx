@@ -21,6 +21,7 @@ import { add, format } from "date-fns";
 import Link from "next/link";
 import useSWR from "swr";
 import { ThemeType } from "@openk9/search-ui-components";
+import { getContainerStatus } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
@@ -87,16 +88,7 @@ function QuickStart() {
 function ServiceStatusInside() {
   const classes = useStyles();
 
-  const { data } = useSWR(`/logs/status`, async () => {
-    const req = await fetch(`/logs/status`);
-    const data: {
-      ID: string;
-      Image: string;
-      Names: string;
-      Status: string;
-    }[] = await req.json();
-    return data;
-  });
+  const { data } = useSWR(`/logs/status`, getContainerStatus);
 
   if (!data) {
     return <span className="loading-animation" />;

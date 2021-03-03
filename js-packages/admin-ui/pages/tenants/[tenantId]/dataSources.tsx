@@ -31,8 +31,12 @@ import {
   SettingsIcon,
   ThemeType,
 } from "@openk9/search-ui-components";
+import {
+  DataSourceInfo,
+  getDataSources,
+  triggerReindex,
+} from "@openk9/http-api";
 import { Layout } from "../../../components/Layout";
-import { DSItem } from "../../../types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -97,7 +101,7 @@ function DSItemRender({
   onReindex,
   onToggle,
 }: {
-  ds: DSItem;
+  ds: DataSourceInfo;
   tenantId: string;
   selected: boolean;
   onSelect(): void;
@@ -201,11 +205,7 @@ function Inside({
 }) {
   const classes = useStyles();
 
-  const { data } = useSWR(`/api/v2/datasource`, async () => {
-    const req = await fetch(`/api/v2/datasource`);
-    const data: DSItem[] = await req.json();
-    return data;
-  });
+  const { data } = useSWR(`/api/v2/datasource`, getDataSources);
 
   const tenantDSs = useMemo(
     () => data && data.filter((d) => String(d.tenantId) === tenantId),
@@ -233,6 +233,7 @@ function Inside({
   }
 
   const someSelected = selectedIds.length > 0;
+
   // async function reindex(ids: number[]) {
   //   // TODO: Can this be done without this call, using the ids directly?
   //   const schedulerJobsReq = await fetch(`/api/v1/scheduler`);
@@ -255,13 +256,9 @@ function Inside({
   //   console.log(resp);
   //   onPerformAction(`Reindex requested for ${ids.length} items.`);
   // }
+
   async function reindex(ids: number[]) {
-    const req = await fetch(`/api/v1/index/reindex`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ datasourceIds: ids }),
-    });
-    const resp = await req.text();
+    const resp = await triggerReindex(ids);
     console.log(resp);
     onPerformAction(`Reindex requested for ${ids.length} items.`);
   }

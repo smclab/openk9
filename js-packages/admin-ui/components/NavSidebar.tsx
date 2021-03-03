@@ -29,6 +29,7 @@ import {
   firstOrString,
   DataSourceIcon,
 } from "@openk9/search-ui-components";
+import { getTenant } from "@openk9/http-api";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -138,15 +139,9 @@ function MenuEntry({
 function TenantSubMenu({ tenantId }: { tenantId: number }) {
   const classes = useStyles();
 
-  const { data: tenant } = useSWR(`/api/v2/tenant/${tenantId}`, async () => {
-    const req = await fetch(`/api/v2/tenant/${tenantId}`);
-    const data: {
-      tenantId: number;
-      name: string;
-      virtualHost: string;
-    } = await req.json();
-    return data;
-  });
+  const { data: tenant } = useSWR(`/api/v2/tenant/${tenantId}`, () =>
+    getTenant(tenantId),
+  );
 
   if (!tenant) {
     return null;

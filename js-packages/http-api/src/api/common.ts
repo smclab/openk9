@@ -17,3 +17,5 @@
 
 export const apiBaseUrlStatic = "/api";
 export const apiBaseUrl = "/api/v1";
+export const apiBaseUrlV2 = "/api/v2";
+export const logsBaseUrl = "/logs";

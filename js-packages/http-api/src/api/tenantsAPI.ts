@@ -15,11 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export * from "./searchAPI";
-export * from "./entitiesAPI";
-export * from "./suggestionsAPI";
-export * from "./datasourcesAPI";
-export * from "./pluginsAPI";
-export * from "./tenantsAPI";
-export * from "./logsAPI";
-export * from "./common";
+import { apiBaseUrlV2 } from "./common";
+
+export type Tenant = {
+  tenantId: number;
+  name: string;
+  virtualHost: string;
+};
+
+export async function getTenants(): Promise<Tenant[]> {
+  const request = await fetch(`${apiBaseUrlV2}/tenant`);
+  const response: Tenant[] = await request.json();
+  return response;
+}
+
+export async function getTenant(tenantId: number): Promise<Tenant> {
+  const request = await fetch(`${apiBaseUrlV2}/tenant/${tenantId}`);
+  const response: Tenant = await request.json();
+  return response;
+}

@@ -17,15 +17,16 @@
 
 import { useState } from "react";
 import { createUseStyles } from "react-jss";
+import ClayIcon from "@clayui/icon";
+import Link from "next/link";
+import useSWR from "swr";
 import {
   DataSourceIcon,
   SettingsIcon,
   ThemeType,
   UsersIcon,
 } from "@openk9/search-ui-components";
-import ClayIcon from "@clayui/icon";
-import Link from "next/link";
-import useSWR from "swr";
+import { getTenants } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
@@ -55,15 +56,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 function TBody({ searchValue }: { searchValue: string }) {
   const classes = useStyles();
 
-  const { data } = useSWR(`/api/v2/tenant`, async () => {
-    const req = await fetch(`/api/v2/tenant`);
-    const data: {
-      tenantId: number;
-      name: string;
-      virtualHost: string;
-    }[] = await req.json();
-    return data;
-  });
+  const { data } = useSWR(`/api/v2/tenant`, getTenants);
 
   if (!data) {
     return <span className="loading-animation" />;

@@ -15,14 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type DSItem = {
-  datasourceId: number;
-  active: boolean;
-  description: string;
-  jsonConfig: string;
-  lastIngestionDate: number;
-  name: string;
-  tenantId: number;
-  scheduling: string;
-  driverServiceName: string;
+import { logsBaseUrl } from "./common";
+
+export type ContainerStatus = {
+  ID: string;
+  Image: string;
+  Names: string;
+  Status: string;
 };
+
+export async function getContainerStatus(): Promise<ContainerStatus[]> {
+  const request = await fetch(`${logsBaseUrl}/status`);
+  const response: ContainerStatus[] = await request.json();
+  return response;
+}
+
+export async function getContainerLogs(
+  id: string,
+  tail = 300,
+): Promise<string> {
+  const request = await fetch(`${logsBaseUrl}/status/${id}/${tail}`);
+  const response: string = await request.json();
+  return response;
+}

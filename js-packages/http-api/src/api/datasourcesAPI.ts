@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { apiBaseUrl } from "./common";
+import { apiBaseUrl, apiBaseUrlV2 } from "./common";
 
 export interface SearchKeyword {
   keyword: string;
@@ -35,10 +35,75 @@ export type SupportedDataSource = {
   defaultDocumentType: DocumentType;
 };
 
+export type DataSourceInfo = {
+  datasourceId: number;
+  active: boolean;
+  description: string;
+  jsonConfig: string;
+  lastIngestionDate: number;
+  name: string;
+  tenantId: number;
+  scheduling: string;
+  driverServiceName: string;
+};
+
+export type SchedulerItem = {
+  jobName: string;
+  datasourceId: number;
+  scheduling: string;
+  datasourceName: string;
+};
+
+type SchedulerRequestReturn = {
+  errors: string[];
+} & { [key: string]: boolean };
+
 export async function getSupportedDataSources(): Promise<
   SupportedDataSource[]
 > {
   const request = await fetch(`${apiBaseUrl}/supported-datasources`);
   const response: SupportedDataSource[] = await request.json();
+  return response;
+}
+
+export async function getDataSources(): Promise<DataSourceInfo[]> {
+  const request = await fetch(`${apiBaseUrlV2}/datasource`);
+  const response: DataSourceInfo[] = await request.json();
+  return response;
+}
+
+export async function getDataSourceInfo(
+  datasourceId: number,
+): Promise<DataSourceInfo> {
+  const request = await fetch(`${apiBaseUrlV2}/datasource/${datasourceId}`);
+  const response: DataSourceInfo = await request.json();
+  return response;
+}
+
+export async function getSchedulerItems(): Promise<SchedulerItem[]> {
+  const request = await fetch(`${apiBaseUrl}/scheduler`);
+  const response: SchedulerItem[] = await request.json();
+  return response;
+}
+
+export async function triggerScheduler(
+  schedulerJobs: string[],
+): Promise<SchedulerRequestReturn> {
+  const request = await fetch(`${apiBaseUrl}/scheduler/trigger`, {
+    method: "POST",
+    headers: { ContentType: "application/json" },
+    body: JSON.stringify(schedulerJobs),
+  });
+  const response: SchedulerRequestReturn = await request.json();
+  return response;
+}
+
+export async function triggerReindex(ids: number[]): Promise<string> {
+  const request = await fetch(`${apiBaseUrl}/index/reindex`, {
+    method: "POST",
+    headers: { ContentType: "application/json" },
+    body: JSON.stringify({ datasourceIds: ids }),
+  });
+  const response: string = await request.text();
   return response;
 }
