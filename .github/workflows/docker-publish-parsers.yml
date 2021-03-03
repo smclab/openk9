@@ -1,4 +1,4 @@
-name: Docker Images (Core)
+name: Docker Images (Parsers)
 
 on:
   push:
