@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Http Bundle Ext
+Bundle-SymbolicName: com.openk9.http.bundle.ext
+
+Bundle-Activator: com.openk9.http.bundle.ext.HttpBundleExtender
+
+-include: ${project.rootDir}/osgi/common.bnd

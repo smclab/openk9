@@ -1,0 +1,29 @@
+Bundle-Name: [OpenK9] Third Party
+Bundle-SymbolicName: com.openk9.third.party
+Bundle-Activator: com.openk9.third.party.Activator
+
+
+
+Include-Resource: \
+ @vavr-*.jar,\
+ @vavr-match-*.jar,\
+ @reactor-core-*.jar,\
+ @reactive-streams-*.jar,\
+ @jackson-*.jar, \
+ @micrometer-core-*.jar,\
+ @LatencyUtils-*.jar,\
+ @HdrHistogram-*.jar
+
+Export-Package: \
+ io.vavr, io.vavr.*,\
+ org.reactivestreams, org.reactivestreams.*,\
+ reactor, reactor.*, com.fasterxml.jackson.*,\
+ io.micrometer.*, \
+ org.HdrHistogram, \
+ org.LatencyUtils
+
+Import-Package: *;resolution:=optional
+
+-fixupmessages: Classes found in the wrong directory: ...;is:=ignore
+
+-include: ${project.rootDir}/osgi/common.bnd

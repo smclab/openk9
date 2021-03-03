@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Ingestion Logic Service
+Bundle-SymbolicName: com.openk9.ingestion.logic.service
+
+-include: ${project.rootDir}/osgi/common.bnd

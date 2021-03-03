@@ -1,0 +1,8 @@
+Bundle-Name: [OpenK9] Ingestion Queue
+Bundle-SymbolicName: com.openk9.ingestion.queue
+
+-include: ${project.rootDir}/osgi/common.bnd
+
+Rabbit-Exchange: openk9.direct
+Rabbit-Routing-Key: openk9
+Rabbit-Queue: data-ingestion

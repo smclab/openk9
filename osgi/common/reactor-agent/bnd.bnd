@@ -1,0 +1,18 @@
+Bundle-Name: [OpenK9] Reactor Agent
+Bundle-SymbolicName: com.openk9.reactor.agent
+
+
+
+Bundle-Activator: com.openk9.reactor.agent.Activator
+
+Include-Resource: \
+ @reactor-tools-*.jar,\
+ @byte-buddy-*.jar
+
+Import-Package: *;resolution:=optional
+
+DynamicImport-Package: *
+
+-fixupmessages: Classes found in the wrong directory: ...;is:=ignore
+
+-include: ${project.rootDir}/osgi/common.bnd

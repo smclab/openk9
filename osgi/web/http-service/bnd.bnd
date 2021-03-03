@@ -1,0 +1,8 @@
+Bundle-Name: [OpenK9] Http Service
+Bundle-SymbolicName: com.openk9.http.service
+
+Include-Resource: @netty-*.jar, @reactor-netty-*.jar
+
+Import-Package: *;resolution:=optional
+
+-include: ${project.rootDir}/osgi/common.bnd

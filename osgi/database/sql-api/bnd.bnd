@@ -1,0 +1,17 @@
+Bundle-Name: [OpenK9] SQL Api
+Bundle-SymbolicName: com.openk9.sql.api
+
+Include-Resource: @r2dbc-spi-*.jar, @reactor-pool-*.jar, @r2dbc-pool-*.jar
+
+Import-Package: *;resolution:=optional
+
+Export-Package: \
+ io.r2dbc.spi, \
+ io.r2dbc.pool, \
+ reactor.pool, \
+ com.openk9.sql.api, \
+ com.openk9.sql.api.entity, \
+ com.openk9.sql.api.event, \
+ com.openk9.sql.api.client
+
+-include: ${project.rootDir}/osgi/common.bnd

@@ -1,0 +1,4 @@
+dependencies {
+	compile group: 'io.projectreactor.netty', name: 'reactor-netty'
+	compile project(":osgi:web:http-api")
+}

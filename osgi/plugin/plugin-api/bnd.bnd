@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Plugin Api
+Bundle-SymbolicName: com.openk9.plugin.api
+
+Export-Package: com.openk9.plugin.api
+
+-include: ${project.rootDir}/osgi/common.bnd

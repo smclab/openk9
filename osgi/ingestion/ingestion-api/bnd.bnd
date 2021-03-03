@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Ingestion API
+Bundle-SymbolicName: com.openk9ingestion.api
+
+Export-Package: com.openk9.ingestion.api
+
+-include: ${project.rootDir}/osgi/common.bnd

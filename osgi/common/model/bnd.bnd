@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Common Model
+Bundle-SymbolicName: com.openk9.model
+
+Export-Package: com.openk9.model
+
+-include: ${project.rootDir}/osgi/common.bnd

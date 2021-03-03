@@ -1,0 +1,33 @@
+/*buildscript {
+	repositories {
+		mavenLocal()
+		mavenCentral()
+	}
+	dependencies {
+		classpath files("$rootDir/plugins/r2dbc-generator/build/libs/r2dbc-generator-1.0.0.jar")
+	}
+}
+
+apply plugin: 'r2dbc-generator'
+
+r2dbcGenerator {
+	serviceYml = "service.yml"
+	basePackage = "com.openk9.datasource"
+	baseApiPackage = basePackage
+	baseServicePackage = basePackage + ".internal"
+	modelPackage = "model"
+	initSqlPackage = baseServicePackage
+	repositoryPackage = "repository"
+	sqlFolder = ""
+	apiBundle = project(':osgi:datasource:datasource-api').projectDir
+	overwriteGeneratedFiles = true
+}*/
+
+dependencies {
+	compile project(':osgi:common:osgi-api')
+	compile project(':osgi:datasource:datasource-api')
+	compile project(':osgi:database:sql-api')
+	compile project(":osgi:database:repository-http-api")
+	compile group: 'org.apache.karaf.scheduler', name: 'org.apache.karaf.scheduler.core'
+
+}

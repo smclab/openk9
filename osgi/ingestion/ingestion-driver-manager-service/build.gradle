@@ -1,0 +1,7 @@
+dependencies {
+	compile project(":osgi:common:model")
+	compile project(":osgi:common:osgi-api")
+	compile project(":osgi:ingestion:ingestion-driver-manager-api")
+	compile project(":osgi:web:http-api")
+	compile group: 'org.apache.karaf.scheduler', name: 'org.apache.karaf.scheduler.core'
+}

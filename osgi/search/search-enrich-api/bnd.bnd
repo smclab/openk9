@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Search Enrich Api
+Bundle-SymbolicName: com.openk9.search.enrich.api
+
+Export-Package: com.openk9.search.enrich.api, com.openk9.search.enrich.api.dto
+
+-include: ${project.rootDir}/osgi/common.bnd

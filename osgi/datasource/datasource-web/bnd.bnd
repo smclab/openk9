@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Datasource Web
+Bundle-SymbolicName: com.openk9.datasource.web
+
+-include: ${project.rootDir}/osgi/common.bnd

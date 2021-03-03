@@ -1,0 +1,4 @@
+dependencies {
+	compile project(":osgi:common:model")
+	compile project(":osgi:ingestion:ingestion-logic-api")
+}

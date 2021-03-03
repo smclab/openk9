@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Plugin Service
+Bundle-SymbolicName: com.openk9.plugin.service
+
+-include: ${project.rootDir}/osgi/common.bnd

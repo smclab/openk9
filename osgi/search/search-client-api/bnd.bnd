@@ -1,0 +1,20 @@
+Bundle-Name: [OpenK9] Search Client Api
+Bundle-SymbolicName: com.openk9.search.client.api
+
+Include-Resource: \
+ @elasticsearch-*.jar
+
+Export-Package: \
+ org.elasticsearch.*, \
+ org.apache.lucene.*, \
+ org.apache.http.*, \
+ org.joda.time, \
+ org.joda.time.format, \
+ com.carrotsearch.*, \
+ com.openk9.search.client.api.*
+
+Import-Package: *;resolution:=optional
+
+-fixupmessages: Classes found in the wrong directory: ...;is:=ignore
+
+-include: ${project.rootDir}/osgi/common.bnd

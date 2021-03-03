@@ -1,0 +1,16 @@
+dependencies {
+	compile group: 'io.vavr', name: 'vavr', version: '0.10.3'
+	compile group: 'io.projectreactor', name: 'reactor-core'
+	compile group: 'org.reactivestreams', name: 'reactive-streams'
+	compile group: 'io.projectreactor.addons', name: 'reactor-extra'
+
+	compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor'
+	compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml'
+	compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-smile'
+	compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310'
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations'
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-core'
+
+	compile project(":osgi:common:common-api")
+
+}

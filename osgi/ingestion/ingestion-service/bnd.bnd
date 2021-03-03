@@ -1,0 +1,12 @@
+Bundle-Name: [OpenK9] Ingestion Service
+Bundle-SymbolicName: com.openk9.ingestion.service
+
+Include-Resource: \
+ @reactor-rabbitmq-*.jar,\
+ @amqp-client-*.jar
+
+Import-Package: *;resolution:=optional
+
+-include: ${project.rootDir}/osgi/common.bnd
+
+-metatype: com.openk9.ingestion.rabbitmq.configuration.BindingRabbitMQConfiguration

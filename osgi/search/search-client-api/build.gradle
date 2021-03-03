@@ -1,0 +1,4 @@
+dependencies {
+	compile project(':osgi:common:serialization-api')
+	compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '7.9.3'
+}

@@ -1,0 +1,7 @@
+Bundle-Name: [OpenK9] Http Api
+Bundle-SymbolicName: com.openk9.http.api
+
+Export-Package: \
+ com.openk9.http.*
+
+-include: ${project.rootDir}/osgi/common.bnd

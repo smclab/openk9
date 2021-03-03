@@ -1,0 +1,12 @@
+dependencies {
+	compile project(":osgi:plugin:plugin-api")
+	compile project(":osgi:common:common-api")
+	compile project(":osgi:search:search-enrich-api")
+	compile project(":osgi:search:search-enrich-mapper-api")
+	compile project(":osgi:ingestion:ingestion-driver-manager-api")
+	compile project(':osgi:common:serialization-api')
+	compile project(':osgi:common:osgi-api')
+	compile project(':osgi:database:sql-api')
+	compile project(':osgi:datasource:datasource-api')
+	compile project(":osgi:ingestion:ingestion-logic-api")
+}

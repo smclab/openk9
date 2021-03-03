@@ -1,0 +1,7 @@
+dependencies {
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
+
+	compile group: 'io.vavr', name: 'vavr', version: '0.10.3'
+	compile group: 'io.projectreactor', name: 'reactor-core'
+	compile group: 'org.reactivestreams', name: 'reactive-streams'
+}

@@ -1,0 +1,7 @@
+dependencies {
+	compile group: 'io.projectreactor', name: 'reactor-core'
+	compile group: 'io.projectreactor', name: 'reactor-tools'
+	compile 'net.bytebuddy:byte-buddy-agent:1.10.9'
+	compile 'net.bytebuddy:byte-buddy:1.10.9'
+	compile group: 'org.javassist', name: 'javassist', version: '3.27.0-GA'
+}

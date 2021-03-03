@@ -1,0 +1,93 @@
+{
+	"priority": 1,
+	"index_patterns": [
+		"*-*-data"
+	],
+	"template": {
+		"settings": {
+			"index": {
+				"number_of_shards": "1",
+				"number_of_replicas": "1"
+			},
+			"analysis" : {
+				"analyzer": {
+					"email": {
+						"tokenizer": "uax_url_email"
+					}
+				}
+			}
+		},
+		"mappings": {
+			"properties": {
+				"acl": {
+					"properties": {
+						"allow": {
+							"properties": {
+								"users": {
+									"type": "keyword"
+								}
+							}
+						}
+					}
+				},
+				"contentId": {
+					"type": "keyword",
+					"index": true
+				},
+				"datasourceId": {
+					"type": "text",
+					"index": true
+				},
+				"datasourceName": {
+					"type": "text",
+					"index": true
+				},
+				"type": {
+					"type": "text",
+					"index": true
+				},
+				"entities": {
+					"properties": {
+						"person": {
+							"type": "nested",
+							"properties": {
+								"context": {
+									"type": "keyword"
+								},
+								"id": {
+									"type": "keyword"
+								}
+							}
+						},
+						"organization": {
+							"type": "nested",
+							"properties": {
+								"context": {
+									"type": "keyword"
+								},
+								"id": {
+									"type": "keyword"
+								}
+							}
+						},
+						"email": {
+							"type": "nested",
+							"properties": {
+								"context": {
+									"type": "keyword"
+								},
+								"id": {
+									"type": "keyword"
+								}
+							}
+						}
+					}
+				},
+				"rawContent": {
+					"type": "text",
+					"index": false
+				}
+			}
+		}
+	}
+}

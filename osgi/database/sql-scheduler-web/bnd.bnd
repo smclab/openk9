@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] SQL Scheduler Web
+Bundle-SymbolicName: com.openk9.sql.schduler.web
+
+-include: ${project.rootDir}/osgi/common.bnd

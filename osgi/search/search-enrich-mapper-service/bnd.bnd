@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Search Enrich Mapper Service
+Bundle-SymbolicName: com.openk9.search.enrich.mapper.service
+
+-include: ${project.rootDir}/osgi/common.bnd

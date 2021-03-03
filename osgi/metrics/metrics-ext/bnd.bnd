@@ -1,0 +1,9 @@
+Bundle-Name: [OpenK9] Metrics Ext
+Bundle-SymbolicName: com.openk9.metrics.ext
+
+Include-Resource: \
+ @micrometer-registry-prometheus-*.jar,\
+ @simpleclient-*.jar,\
+ @simpleclient_common-*.jar
+
+-include: ${project.rootDir}/osgi/common.bnd

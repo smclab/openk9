@@ -1,0 +1,5 @@
+dependencies {
+	compile group: 'io.r2dbc', name: 'r2dbc-postgresql'
+	compile project(':osgi:common:osgi-api')
+	compile project(':osgi:database:sql-api')
+}

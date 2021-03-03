@@ -1,0 +1,3 @@
+dependencies {
+	compile group: 'com.hazelcast', name: 'hazelcast', version: '4.1'
+}

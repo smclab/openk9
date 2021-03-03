@@ -1,0 +1,185 @@
+entities:
+ - name: Datasource
+   columns:
+    - name: datasourceId
+      type:
+       length: -1
+       dataType: SERIAL
+      constraints:
+       - PRIMARY_KEY
+       - NOT_NULL
+    - name: name
+      type:
+        length: 255
+        dataType: VARCHAR
+      constraints:
+        - NOT_NULL
+    - name: tenantId
+      type:
+       length: -1
+       dataType: BIGINT
+      constraints:
+       - NOT_NULL
+    - name: active
+      type:
+       length: -1
+       dataType: BOOL
+      constraints:
+       - NOT_NULL
+    - name: description
+      type:
+       length: -1
+       dataType: TEXT
+      constraints:
+       - NOT_NULL
+    - name: driverName
+      type:
+       length: 255
+       dataType: VARCHAR
+      constraints:
+       - NOT_NULL
+    - name: jsonConfig
+      type:
+       length: -1
+       dataType: TEXT
+      constraints:
+       - NOT_NULL
+    - name: lastIngestionDate
+      type:
+       length: -1
+       dataType: TIMESTAMP
+      constraints:
+       - NOT_NULL
+    - name: scheduling
+      type:
+       length: 255
+       dataType: VARCHAR
+      constraints:
+       - NOT_NULL
+    - name: driverServiceName
+      type:
+       length: 255
+       dataType: VARCHAR
+      constraints:
+       - NOT_NULL
+   finders:
+    - unique: false
+      columnNames:
+       - 'tenantId'
+    - unique: true
+      columnNames:
+       - name
+ - name: Tenant
+   columns:
+    - name: tenantId
+      type:
+       length: -1
+       dataType: BIGINT
+      constraints:
+       - PRIMARY_KEY
+       - NOT_NULL
+    - name: name
+      type:
+       length: 255
+       dataType: VARCHAR
+      constraints:
+       - NOT_NULL
+    - name: virtualHost
+      type:
+       length: 255
+       dataType: VARCHAR
+      constraints:
+       - NOT_NULL
+   finders:
+    - unique: true
+      columnNames:
+       - 'virtualHost'
+ - name: EnrichItem
+   columns:
+    - name: enrichItemId
+      type:
+       length: -1
+       dataType: SERIAL
+      constraints:
+       - PRIMARY_KEY
+       - NOT_NULL
+    - name: enrichPipelineId
+      type:
+       length: -1
+       dataType: BIGINT
+      constraints:
+       - NOT_NULL
+    - name: name
+      type:
+       length: 255
+       dataType: VARCHAR
+      constraints:
+       - NOT_NULL
+    - name: active
+      type:
+       length: -1
+       dataType: BOOL
+      constraints:
+       - NOT_NULL
+    - name: _position
+      type:
+       length: -1
+       dataType: INT
+      constraints:
+       - NOT_NULL
+    - name: jsonConfig
+      type:
+       length: -1
+       dataType: TEXT
+      constraints:
+       - NOT_NULL
+    - name: serviceName
+      type:
+       length: 255
+       dataType: VARCHAR
+      constraints:
+       - NOT_NULL
+   finders:
+    - unique: false
+      columnNames:
+       - 'enrichPipelineId'
+       - '_position'
+    - unique: false
+      columnNames:
+       - 'enrichPipelineId'
+       - 'active'
+ - name: EnrichPipeline
+   columns:
+    - name: enrichPipelineId
+      type:
+       length: -1
+       dataType: SERIAL
+      constraints:
+       - PRIMARY_KEY
+       - NOT_NULL
+    - name: datasourceId
+      type:
+       length: -1
+       dataType: BIGINT
+      constraints:
+       - NOT_NULL
+    - name: name
+      type:
+       length: 255
+       dataType: VARCHAR
+      constraints:
+       - NOT_NULL
+    - name: active
+      type:
+       length: -1
+       dataType: BOOL
+      constraints:
+       - NOT_NULL
+   finders:
+    - unique: true
+      columnNames:
+       - 'enrichPipelineId'
+       - 'datasourceId'
+    - unique: true
+      columnNames:
+       - 'datasourceId'

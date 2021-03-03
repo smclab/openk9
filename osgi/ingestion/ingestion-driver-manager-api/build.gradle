@@ -1,0 +1,9 @@
+dependencies {
+	compile project(":osgi:common:model")
+	compile project(":osgi:common:common-api")
+	compile project(':osgi:datasource:datasource-api')
+	compile project(':osgi:web:http-api')
+	compile project(":osgi:search:search-client-api")
+
+	compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '7.9.3'
+}

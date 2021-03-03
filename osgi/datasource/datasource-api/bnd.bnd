@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Datasource Api
+Bundle-SymbolicName: com.openk9.datasource.api
+
+Export-Package: com.openk9.datasource.*
+
+-include: ${project.rootDir}/osgi/common.bnd
