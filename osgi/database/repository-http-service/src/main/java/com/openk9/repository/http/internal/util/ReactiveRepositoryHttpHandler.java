@@ -168,10 +168,7 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 			Mono
 				.from(body)
 				.map(
-					json -> _jsonFactory
-						.fromJsonToJsonNode(json)
-						.toObjectNode()
-						.toMap()
+					json -> _jsonFactory.fromJsonMap(json, Object.class)
 				)
 				.flatMap(map -> _reactiveRepository.patch(PK, map)
 			)
