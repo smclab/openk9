@@ -18,15 +18,6 @@ jobs:
     steps:
       - uses: actions/delete-package-versions@v1
         with:
-          package-name: com.openk9.plugins.liferay
-      - uses: actions/delete-package-versions@v1
-        with:
-          package-name: com.openk9.plugins.web
-      - uses: actions/delete-package-versions@v1
-        with:
-          package-name: com.openk9.plugins.email
-      - uses: actions/delete-package-versions@v1
-        with:
           package-name: com.openk9.metrics.ext
       - uses: actions/delete-package-versions@v1
         with:
