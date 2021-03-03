@@ -27,7 +27,12 @@ export function ScreenSection({
         isDxImage ? styles.rightImage : styles.leftImage,
       )}
     >
-      <div className={clsx(styles.screenText, isDxImage ? styles.leftText : styles.rightText)}>
+      <div
+        className={clsx(
+          styles.screenText,
+          isDxImage ? styles.leftText : styles.rightText,
+        )}
+      >
         <Heading {...props} />
       </div>
       <div
