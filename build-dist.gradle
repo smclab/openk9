@@ -1,0 +1,109 @@
+
+apply plugin: 'java'
+
+configurations {
+	dist {
+		transitive = false
+		visible = false
+	}
+	distExternal {
+		transitive = false
+		visible = false
+	}
+}
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+}
+
+dependencies {
+	dist project(path: ':osgi:ingestion:ingestion-api', configuration: 'archives')
+	dist project(path: ':osgi:ingestion:ingestion-logic-api', configuration: 'archives')
+	dist project(path: ':osgi:ingestion:ingestion-logic-service', configuration: 'archives')
+	dist project(path: ':osgi:ingestion:ingestion-driver-manager-api', configuration: 'archives')
+	dist project(path: ':osgi:ingestion:ingestion-driver-manager-service', configuration: 'archives')
+	dist project(path: ':osgi:ingestion:ingestion-service', configuration: 'archives')
+	dist project(path: ':osgi:ingestion:ingestion-queue', configuration: 'archives')
+	dist project(path: ':osgi:web:http-api', configuration: 'archives')
+	dist project(path: ':osgi:web:http-service', configuration: 'archives')
+	dist project(path: ':osgi:web:http-bundle-ext', configuration: 'archives')
+	dist project(path: ':osgi:web:open-api', configuration: 'archives')
+	dist project(path: ':osgi:common:third-party', configuration: 'archives')
+	dist project(path: ':osgi:common:osgi-api', configuration: 'archives')
+	dist project(path: ':osgi:common:serialization-api', configuration: 'archives')
+	dist project(path: ':osgi:plugin:plugin-api', configuration: 'archives')
+	dist project(path: ':osgi:plugin:plugin-service', configuration: 'archives')
+	dist project(path: ':osgi:plugin:plugin-web', configuration: 'archives')
+	dist project(path: ':osgi:common:serialization-service', configuration: 'archives')
+	dist project(path: ':osgi:common:model', configuration: 'archives')
+	dist project(path: ':osgi:common:http-serialization', configuration: 'archives')
+	dist project(path: ':osgi:common:core-api', configuration: 'archives')
+
+	//dist project(path: ':osgi:common:reactor-agent', configuration: 'archives')
+
+	dist project(path: ':osgi:common:common-api', configuration: 'archives')
+	dist project(path: ':osgi:database:sql-api:', configuration: 'archives')
+	dist project(path: ':osgi:database:sql-service:', configuration: 'archives')
+	dist project(path: ':osgi:database:sql-jdbc-service:', configuration: 'archives')
+	dist project(path: ':osgi:database:sql-scheduler:', configuration: 'archives')
+	dist project(path: ':osgi:database:sql-scheduler-web:', configuration: 'archives')
+
+	dist project(path: ':osgi:database:repository-http-api:', configuration: 'archives')
+	dist project(path: ':osgi:database:repository-http-service:', configuration: 'archives')
+
+	dist project(path: ':osgi:schema-registry:schema-registry-service', configuration: 'archives')
+	dist project(path: ':osgi:schema-registry:schema-registry-api', configuration: 'archives')
+	dist project(path: 'osgi:schema-registry:schema-registry-avro', configuration: 'archives')
+	dist project(path: ':osgi:datasource:datasource-api', configuration: 'archives')
+	dist project(path: ':osgi:datasource:datasource-service', configuration: 'archives')
+	dist project(path: ':osgi:datasource:datasource-web', configuration: 'archives')
+	dist project(path: ':osgi:search:search-api', configuration: 'archives')
+	dist project(path: ':osgi:search:search-service', configuration: 'archives')
+	dist project(path: ':osgi:search:search-client-api', configuration: 'archives')
+	dist project(path: ':osgi:search:search-client-service', configuration: 'archives')
+	dist project(path: ':osgi:search:search-enrich-service', configuration: 'archives')
+	dist project(path: ':osgi:search:search-enrich-api', configuration: 'archives')
+	dist project(path: ':osgi:search:search-enrich-mapper-service', configuration: 'archives')
+	dist project(path: ':osgi:search:search-enrich-mapper-api', configuration: 'archives')
+	dist project(path: ':osgi:metrics:metrics-api', configuration: 'archives')
+	dist project(path: ':osgi:metrics:metrics-service', configuration: 'archives')
+	dist project(path: ':osgi:metrics:metrics-ext', configuration: 'archives')
+
+	dist project(path: ':plugins:email', configuration: 'archives')
+	dist project(path: ':plugins:liferay', configuration: 'archives')
+	dist project(path: ':plugins:web', configuration: 'archives')
+
+	// felix dependency manager
+
+	distExternal group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager', version: '4.6.0' , transitive: false
+	distExternal group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.shell', version: '4.0.8' , transitive: false
+	distExternal group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
+}
+
+
+def allDependencies = configurations
+		.findAll({it.name.startsWith("dist")})
+		.collect({ it.dependencies})
+		.flatten()
+
+def conf = configurations.create("tmp")
+
+conf.dependencies.addAll(allDependencies)
+
+task buildDist(type: Copy) {
+	from(conf)
+	into "$rootDir/build/libs"
+}
+
+if (properties.get("karafDir") != null) {
+	task deployDist(type: Copy) {
+		from(conf)
+		into "$karafDir/deploy"
+	}
+}
+task cleanDist(type: Delete) {
+	delete("$rootDir/build")
+}
+
+clean.dependsOn(cleanDist)

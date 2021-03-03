@@ -1,14 +1,3 @@
-buildscript {
-	repositories {
-		maven {
-			url "https://plugins.gradle.org/m2/"
-		}
-	}
-	dependencies {
-		classpath "com.github.node-gradle:gradle-node-plugin:3.0.1"
-	}
-}
-
 dependencies {
 	compile project(":osgi:plugin:plugin-api")
 	compile project(":osgi:common:common-api")
@@ -17,31 +6,4 @@ dependencies {
 	compile project(":osgi:ingestion:ingestion-driver-manager-api")
 }
 
-apply plugin: 'com.github.node-gradle.node'
-node {
-	nodeProjectDir = file("${project.projectDir}/js")
-	download = true
-}
-
-task installDeps(type: YarnTask) {
-    args = ['install']
-}
-
-task buildJS(type: YarnTask) {
-    dependsOn installDeps
-    args = ['build']
-}
-
-task copyJS(type: Copy) {
-    dependsOn buildJS
-    from 'js/build'
-    into 'src/main/resources/build'
-}
-build.dependsOn(copyJS)
-
-task cleanJS(type: Delete) {
-	delete("${project.projectDir}/js/build")
-	delete("${project.projectDir}/js/node_modules")
-	delete("${project.projectDir}/src/main/resources/build")
-}
-clean.dependsOn(cleanJS)
+apply from: "$rootDir/build-js.gradle"

@@ -1,0 +1,13 @@
+apply plugin: 'maven-publish'
+
+def bndfile = file("$projectDir/bnd.bnd");
+
+def prop = new Properties()
+
+prop.load(bndfile.newInputStream())
+
+project.version = findProperty("project.version")
+
+project.group = findProperty("project.groupId")
+
+project.archivesBaseName = prop.getProperty("Bundle-SymbolicName")
