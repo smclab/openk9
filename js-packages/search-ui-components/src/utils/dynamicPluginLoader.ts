@@ -24,7 +24,6 @@ import clayIcon from "@clayui/icon";
 
 import { createAsset } from "use-asset";
 import {
-  DataSourceAdminInterface,
   getPlugins,
   loadPlugin,
   PluginInfo,

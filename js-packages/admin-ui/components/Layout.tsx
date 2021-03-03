@@ -70,7 +70,9 @@ export function Layout({
       <div className={classes.content}>
         <NavSidebar visible={sidebarOpen} />
         <div className={classes.contentMain}>
-          <Breadcrumbs path={breadcrumbsPath} children={breadcrumbsControls} />
+          <Breadcrumbs path={breadcrumbsPath}>
+            {breadcrumbsControls}
+          </Breadcrumbs>
           <div className={classes.children}>{children}</div>
         </div>
       </div>

@@ -110,8 +110,11 @@ function LogId() {
       <div className={classes.container}>
         <div className={classes.root}>
           <pre className={classes.code}>
-            {parsed.spans.map((s) => (
-              <span style={convertStylesStringToObject(s.css)}>
+            {parsed.spans.map((s, i) => (
+              <span
+                style={convertStylesStringToObject(s.css)}
+                key={s.text + "-" + i}
+              >
                 {ansicolor.strip(s.text)}
               </span>
             ))}
