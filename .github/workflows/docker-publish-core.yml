@@ -103,8 +103,6 @@ jobs:
 
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
-
-jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
