@@ -71,12 +71,3 @@
 .button img {
   vertical-align: middle;
 }
-
-.center-row {
-  display: flex;
-  align-items: center;
-}
-
-.grow {
-  flex-grow: 1;
-}

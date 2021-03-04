@@ -1,9 +1,17 @@
 .root {
   /* width: 512px; */
-  height: 512px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.anim {
+  max-width: 512px;
+  max-height: 460px;
+  width: calc(100vw - var(--ifm-spacing-horizontal) * 2);
+  height: calc(90vw - var(--ifm-spacing-horizontal) * 2);
 }
 
 .searchField {
@@ -15,10 +23,12 @@
   border-radius: 8px;
   border: 2px solid #559fff;
   box-shadow: 0 0 0 5px #559fff66;
-  min-width: 400px;
-  width: 60%;
+  /* min-width: 400px; */
+  /* width: 60%; */
+  width: 100%;
+  max-width: 512px;
   color: #666;
-  font-size: 18px;
+  font-size: 1rem;
   font-weight: 600;
 }
 
