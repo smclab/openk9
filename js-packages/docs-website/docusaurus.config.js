@@ -9,6 +9,18 @@ module.exports = {
   organizationName: "smc",
   projectName: "openk9",
   themeConfig: {
+    colorMode: {
+      disableSwitch: true,
+    },
+    metadatas: [{ name: "twitter:card", content: "summary" }],
+    announcementBar: {
+      id: "beta",
+      content:
+        "We are still in alpha phase, everything you see may change at every time. Feel free to try our product right now!",
+      backgroundColor: "#fafbfc",
+      textColor: "#091E42",
+      isCloseable: true,
+    },
     navbar: {
       title: "OpenK9",
       logo: {
