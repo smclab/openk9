@@ -122,26 +122,43 @@ jobs:
         name: Build and push Frontend image
         id: docker_build_frontend
         uses: docker/build-push-action@v2
+        run: |
+          IMAGE_NAME=search-standalone-frontend
+          IMAGE_ID=smclab/opnek9-$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "main" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
         with:
-          context: .
-          file: ./js-packages/search-standalone-frontend/Dockerfile
+          file: js-packages/$IMAGE_NAME/Dockerfile
           push: true
-          tags: smclab/openk9/search-standalone-frontend:latest
+          tags: $IMAGE_ID:$VERSION
       -
         name: Build and push Admin UI image
         id: docker_build_admin_ui
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./js-packages/admin-ui/Dockerfile
+          file: js-packages/admin-ui/Dockerfile
           push: true
-          tags: smclab/openk9/admin-ui:latest
+          tags: smclab/openk9-admin-ui:latest
       -
         name: Build and push Admin Logs Service image
         id: docker_build-admin_logs
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./js-packages/admin-logs-service/Dockerfile
+          file: js-packages/admin-logs-service/Dockerfile
           push: true
-          tags: smclab/openk9/admin-logs-service:latest
+          tags: smclab/openk9-admin-logs-service:latest
