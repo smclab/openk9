@@ -119,13 +119,26 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push
-        id: docker_build
+        name: Build and push Frontend image
+        id: docker_build_frontend
         uses: docker/build-push-action@v2
         with:
           file: js-packages/search-standalone-frontend/Dockerfile
           push: true
-          tags: smclab/openk9:latest
+          tags: smclab/openk9/search-standalone-frontend:latest
       -
-        name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+        name: Build and push Admin UI image
+        id: docker_build_admin_ui
+        uses: docker/build-push-action@v2
+        with:
+          file: js-packages/admin-ui/Dockerfile
+          push: true
+          tags: smclab/openk9/admin-ui:latest
+      -
+        name: Build and push Admin Logs Service image
+        id: docker_build-admin_logs
+        uses: docker/build-push-action@v2
+        with:
+          file: js-packages/admin-logs-service/Dockerfile
+          push: true
+          tags: smclab/openk9/admin-logs-service:latest
