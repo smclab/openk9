@@ -71,7 +71,7 @@ class WebSitemapSpider(SitemapSpider):
             title = "Unknown title"
         body = response.body.decode('utf-8', 'ignore')
         soup = BeautifulSoup(body, features="html.parser").get_text()
-        soup = soup.replace('\n', ' ').replace('\r', '').replace('\t', '').strip()
+        soup = soup.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
         soup = re.sub(' +', ' ', soup)
 
         datasource_payload = {
@@ -87,7 +87,7 @@ class WebSitemapSpider(SitemapSpider):
             "datasourceId": self.datasource_id,
             "contentId": hash(str(response.url)),
             "parsingDate": int(self.end_timestamp),
-            "rawContent": soup.lower(),
+            "rawContent": soup,
             "datasourcePayload": json.dumps(datasource_payload)
         }
         

@@ -95,7 +95,7 @@ class WebSpider(CrawlSpider):
             "datasourceId": self.datasource_id,
             "contentId": hash(str(response.url)),
             "parsingDate": int(self.end_timestamp),
-            "rawContent": soup.lower(),
+            "rawContent": soup,
             "datasourcePayload": json.dumps(datasource_payload)
         }
 
