@@ -95,7 +95,8 @@ const keyPoints = [
     subTitle: "Monitor and configure from a single panel",
     description: (
       <>
-        OpenK9 Administration Panel allow you to set up a new search environment in minutes.
+        OpenK9 Administration Panel allow you to set up a new search environment
+        in minutes.
       </>
     ),
     imgSrc: "img/admin1.png",
@@ -352,7 +353,10 @@ function Home() {
 
         <section className={styles.sectionLandingPage}>
           <div className={clsx("openK9-wrapper", styles.centering)}>
-            <Heading title="Architecture" subTitle="Enrich and Index your Data" />
+            <Heading
+              title="Architecture"
+              subTitle="Enrich and Index your Data"
+            />
             <img
               src="img/arch.svg"
               alt="OpenK9 Architecture"
