@@ -123,7 +123,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          context: js-packages/search-standalone-frontend/
+          file: js-packages/search-standalone-frontend/Dockerfile
           push: true
           tags: latest
       -
