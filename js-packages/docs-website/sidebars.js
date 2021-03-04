@@ -6,5 +6,6 @@ module.exports = {
     "Data Source Plugins": ['doc1'],
     "Enrich Plugins": ['doc1'],
     "Custom Plugins": ['doc1'],
+    "UI Components": ['doc1'],
   },
 };

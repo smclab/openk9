@@ -12,19 +12,6 @@ import { FeatureCard } from "../components/FeatureCard";
 import { PricingCard } from "../components/PricingCard";
 import { SearchesAnimation } from "../components/SearchesAnimation";
 
-const technicalCharacteristicsTitle = {
-  title: "Features",
-  subTitle: "technical Characteristics",
-  description: (
-    <>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
-      ipsum volutpat sem convallis aliquam. Praesent ut tellus eu risus accumsan
-      facilisis. Phasellus vulputate maximus elit sit amet maximus.
-    </>
-  ),
-  alignment: "center",
-};
-
 const technicalCharacteristics = [
   {
     title: "Cloud Oriented",
@@ -78,39 +65,40 @@ const technicalCharacteristics = [
 
 const keyPoints = [
   {
-    title: "Title",
-    subTitle: "Insert here the subtitle",
+    title: "multi–source",
+    subTitle: "Instant Search, everywhere",
     description: (
       <>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
-        ipsum volutpat sem convallis aliquam.
+        OpenK9 can handle lots of different data sources with different{" "}
+        <a href="/plugins">plugins</a>. This allows user to search inside
+        documents, emails, contacts, calendar events and even applications in an
+        instant.
       </>
     ),
-    imgSrc: "img/calendar.png",
+    imgSrc: "img/search1.png",
     isDxImage: true,
   },
   {
-    title: "Title 2",
-    subTitle: "Insert here the subtitle 2",
+    title: "Token–based Search",
+    subTitle: "Structured or Unstructured queries",
     description: (
       <>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
         ipsum volutpat sem convallis aliquam.
       </>
     ),
-    imgSrc: "img/calendar.png",
+    imgSrc: "img/tokens.png",
     isDxImage: false,
   },
   {
-    title: "Title 3",
-    subTitle: "Insert here the subtitle 3",
+    title: "Admin panel",
+    subTitle: "Monitor and configure from a single panel",
     description: (
       <>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
-        ipsum volutpat sem convallis aliquam.
+        OpenK9 Administration Panel allow you to set up a new search environment in minutes.
       </>
     ),
-    imgSrc: "img/calendar.png",
+    imgSrc: "img/admin1.png",
     isDxImage: true,
   },
 ];
@@ -202,11 +190,11 @@ const plugins = [
     title: "File System",
   },
   {
-    iconSrc: "img/plugins/webcrawler.svg",
+    iconSrc: "img/plugins/web-crawler.svg",
     title: "Web Crawler",
   },
   {
-    iconSrc: "img/plugins/liferay.png",
+    iconSrc: "img/plugins/liferay.svg",
     title: "Liferay",
   },
   {
@@ -364,7 +352,7 @@ function Home() {
 
         <section className={styles.sectionLandingPage}>
           <div className={clsx("openK9-wrapper", styles.centering)}>
-            <Heading title="Architecture" />
+            <Heading title="Architecture" subTitle="Enrich and Index your Data" />
             <img
               src="img/arch.svg"
               alt="OpenK9 Architecture"

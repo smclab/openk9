@@ -16,7 +16,7 @@ module.exports = {
     announcementBar: {
       id: "beta",
       content:
-        "We are still in alpha phase, everything you see may change at every time. Feel free to <a href='https://github.com/smclab/openk9'>try our product</a> right now!",
+        "We are still in <strong>alpha phase</strong>, everything you see may change at every time. Feel free to <a href='https://github.com/smclab/openk9'>try our product</a> right now!",
       backgroundColor: "#f9f9f9",
       textColor: "#505050",
       isCloseable: true,
@@ -29,7 +29,7 @@ module.exports = {
       },
       items: [
         {
-          to: "comingsoon/",
+          to: "docs/",
           activeBasePath: "docs",
           label: "Docs",
           position: "left",
