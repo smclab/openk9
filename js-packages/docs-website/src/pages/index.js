@@ -296,8 +296,8 @@ function Home() {
   return (
     <Layout title="OpenK9" description="Search. Everywhere.">
       <header className={clsx("hero", styles.heroBanner)}>
-        <div className="container center-row">
-          <div>
+        <div className={clsx("container", styles.heroRow)}>
+          <div className={styles.heroTextContainer}>
             <p className={clsx("hero__subtitle", styles.subtitleHeroBanner)}>
               {siteConfig.tagline}
             </p>
@@ -321,7 +321,7 @@ function Home() {
               </Link>
             </div> */}
           </div>
-          <div className="grow">
+          <div className={styles.bannerAnimation}>
             <SearchesAnimation />
           </div>
         </div>

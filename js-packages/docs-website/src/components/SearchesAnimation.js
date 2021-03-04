@@ -241,20 +241,22 @@ export function SearchesAnimation() {
 
   return (
     <div className={styles.root}>
-      <Canvas
-        colorManagement={false}
-        camera={{ position: [3, 4, 9], fov: 20 }}
-        shadowMap
-        invalidateFrameloop
-        pixelRatio={[1, 2]}
-        onCreated={({ camera }) => {
-          camera.lookAt(0, 1, 0);
-        }}
-      >
-        <Suspense fallback={null}>
-          <Scene trail={trail} query={query} />
-        </Suspense>
-      </Canvas>
+      <div className={styles.anim}>
+        <Canvas
+          colorManagement={false}
+          camera={{ position: [3, 4, 9], fov: 20 }}
+          shadowMap
+          invalidateFrameloop
+          pixelRatio={[1, 2]}
+          onCreated={({ camera }) => {
+            camera.lookAt(0, 1, 0);
+          }}
+        >
+          <Suspense fallback={null}>
+            <Scene trail={trail} query={query} />
+          </Suspense>
+        </Canvas>
+      </div>
       <div className={styles.searchField}>
         <SearchIcon />
         <span style={{ opacity: toggle ? 1 : 0 }}>{query && query.query}</span>
