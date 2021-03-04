@@ -1,7 +1,6 @@
 .screenSection {
   display: flex;
-  margin-bottom: 40px;
-  height: 400px;
+  margin-bottom: 300px;
 }
 
 .rightImage {
@@ -18,7 +17,7 @@
   background-repeat: no-repeat;
   background-size: cover;
   width: calc(100vw - 668px);
-  height: 100%;
+  height: 400px;
   position: absolute;
   top: 0;
   width: 60%;
@@ -27,9 +26,11 @@
 
 .leftText {
   padding-right: 16px;
+  padding-left: 16px;
 }
 
 .rightText {
+  padding-right: 16px;
   padding-left: 16px;
 }
 
@@ -64,6 +65,19 @@
   .leftImage,
   .rightImage {
     flex-direction: column;
+  }
+
+  .rightImage {
+    align-items: flex-end;
+  }
+  
+  .leftImage {
+    align-items: flex-start;
+  }
+
+  .screenSection {
+    display: flex;
+    margin-bottom: 100px;
   }
 }
 
