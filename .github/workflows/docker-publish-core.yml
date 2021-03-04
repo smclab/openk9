@@ -110,15 +110,15 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
-      name: Prepare
-      id: prep
-      run: |
-        VERSION=edge
-        if [[ $GITHUB_REF == refs/tags/* ]]; then
-          VERSION=${GITHUB_REF#refs/tags/}
-        else VERSION=latest
-        fi
-        echo ::set-output name=version::${VERSION}
+        name: Prepare
+        id: prep
+        run: |
+          VERSION=edge
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else VERSION=latest
+          fi
+          echo ::set-output name=version::${VERSION}
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
