@@ -223,7 +223,9 @@ public class EnrichPipelineProcessor {
 	@Reference
 	private CBORFactory _cborFactory;
 
-	@Reference
+	@Reference(
+		target = "(queue=data-ingestion)"
+	)
 	private BundleReceiver _bundleReceiver;
 
 	@Reference

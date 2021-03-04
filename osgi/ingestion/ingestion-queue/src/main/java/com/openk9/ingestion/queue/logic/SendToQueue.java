@@ -45,7 +45,9 @@ public class SendToQueue {
 
 	private Disposable _disposable;
 
-	@Reference
+	@Reference(
+		target = "(queue=data-ingestion)"
+	)
 	private BundleSender _bundleSender;
 
 	@Reference
