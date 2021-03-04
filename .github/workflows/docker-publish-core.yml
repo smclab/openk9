@@ -125,7 +125,7 @@ jobs:
         with:
           file: js-packages/search-standalone-frontend/Dockerfile
           push: true
-          tags: latest
+          tags: smclab/openk9:latest
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
