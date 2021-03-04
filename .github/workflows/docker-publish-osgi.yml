@@ -91,6 +91,7 @@ jobs:
         id: docker_build_openk9_karaf
         uses: docker/build-push-action@v2
         with:
+          context: .
           file: osgi/Dockerfile
           push: true
           tags: smclab/openk9-karaf:${{ steps.prep.outputs.version }}
