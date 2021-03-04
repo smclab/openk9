@@ -125,7 +125,7 @@ jobs:
         with:
           file: js-packages/search-standalone-frontend/Dockerfile
           push: true
-          tags: smclab/openk9/search-standalone-frontend:latest
+          tags: openk9/search-standalone-frontend:latest
       -
         name: Build and push Admin UI image
         id: docker_build_admin_ui
@@ -133,7 +133,7 @@ jobs:
         with:
           file: js-packages/admin-ui/Dockerfile
           push: true
-          tags: smclab/openk9/admin-ui:latest
+          tags: openk9/admin-ui:latest
       -
         name: Build and push Admin Logs Service image
         id: docker_build-admin_logs
@@ -141,4 +141,4 @@ jobs:
         with:
           file: js-packages/admin-logs-service/Dockerfile
           push: true
-          tags: smclab/openk9/admin-logs-service:latest
+          tags: openk9/admin-logs-service:latest
