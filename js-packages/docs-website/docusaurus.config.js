@@ -16,7 +16,7 @@ module.exports = {
     announcementBar: {
       id: "beta",
       content:
-        "We are still in alpha phase, everything you see may change at every time. Feel free to try our product right now!",
+        "We are still in alpha phase, everything you see may change at every time. Feel free to <a href='https://github.com/smclab/openk9'>try our product</a> right now!",
       backgroundColor: "#f9f9f9",
       textColor: "#505050",
       isCloseable: true,
@@ -28,25 +28,30 @@ module.exports = {
         src: "img/logo.svg",
       },
       items: [
-        { to: "features", label: "Features", position: "left" },
-        { to: "pricing", label: "Pricing", position: "left" },
         {
-          to: "docs/",
+          to: "comingsoon/",
           activeBasePath: "docs",
           label: "Docs",
           position: "left",
         },
         {
-          to: "api/",
+          to: "comingsoon/",
           activeBasePath: "api",
           label: "API",
           position: "left",
         },
         { to: "plugins", label: "Plugins", position: "left" },
         {
-          href: "https://github.com/smclab/openk9",
-          label: "GitHub",
+          href: "https://twitter.com/k9open",
           position: "right",
+          className: "header-twitter-link",
+          "aria-label": "Twitter profile",
+        },
+        {
+          href: "https://github.com/smclab/openk9",
+          position: "right",
+          className: "header-github-link",
+          "aria-label": "GitHub repository",
         },
       ],
     },

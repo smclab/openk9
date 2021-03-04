@@ -58,7 +58,7 @@ const plugins = [
   },
 ];
 
-function Home() {
+function Plugins() {
   return (
     <Layout title="OpenK9" description="Search. Everywhere.">
       <header>
@@ -96,4 +96,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Plugins;
