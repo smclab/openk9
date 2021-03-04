@@ -17,8 +17,8 @@ module.exports = {
       id: "beta",
       content:
         "We are still in alpha phase, everything you see may change at every time. Feel free to try our product right now!",
-      backgroundColor: "#fafbfc",
-      textColor: "#091E42",
+      backgroundColor: "#f9f9f9",
+      textColor: "#505050",
       isCloseable: true,
     },
     navbar: {

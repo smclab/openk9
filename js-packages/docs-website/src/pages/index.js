@@ -12,9 +12,9 @@ import { FeatureCard } from "../components/FeatureCard";
 import { PricingCard } from "../components/PricingCard";
 import { SearchesAnimation } from "../components/SearchesAnimation";
 
-const tecnicalCharacteristicsTitle = {
+const technicalCharacteristicsTitle = {
   title: "Features",
-  subTitle: "Tecnical Characteristics",
+  subTitle: "technical Characteristics",
   description: (
     <>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
@@ -25,14 +25,15 @@ const tecnicalCharacteristicsTitle = {
   alignment: "center",
 };
 
-const tecnicalCharacteristics = [
+const technicalCharacteristics = [
   {
     title: "Cloud Oriented",
     iconSrc: "img/cloud.svg",
     description: (
       <>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
-        ipsum volutpat sem convallis aliquam.
+        OpenK9 is Cloud Oriented’s solution. Flexible, fast and easy to
+        integrate in your IT achitecture and allow you to generate new business
+        opportunity.
       </>
     ),
     align: "left",
@@ -42,8 +43,9 @@ const tecnicalCharacteristics = [
     iconSrc: "img/autoscaling.svg",
     description: (
       <>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
-        ipsum volutpat sem convallis aliquam.
+        Our solutions for Enterprise Search Experience is built for relevance at
+        scale, easily able to support small businesses, the largest
+        multinationals, and everything in between.
       </>
     ),
     align: "left",
@@ -53,8 +55,9 @@ const tecnicalCharacteristics = [
     iconSrc: "img/monitorable.svg",
     description: (
       <>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
-        ipsum volutpat sem convallis aliquam.
+        OpenK9 allows easy control of server performance. Check directly from
+        the admin panel the server load, how much data it is indexing and get
+        alarm bells in case of problems.
       </>
     ),
     align: "left",
@@ -64,8 +67,9 @@ const tecnicalCharacteristics = [
     iconSrc: "img/polyglot.svg",
     description: (
       <>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed porttitor
-        ipsum volutpat sem convallis aliquam.
+        OpenK9 is able to decode multilingual o mixed input languages, using a
+        single unified model. This provides easy, fast research without any
+        without any language barrier.
       </>
     ),
     align: "left",
@@ -303,23 +307,27 @@ function Home() {
             </p>
             <h1 className={clsx("hero__title", styles.titleHeroBanner)}>
               The intelligent{" "}
-              <span className={styles.primary}>Open Source</span> Search Engine
+              <span className={clsx(styles.doNotBreak, styles.primary)}>
+                Open Source
+              </span>{" "}
+              Search Engine
             </h1>
             <div className={styles.descriptionHeroBanner}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-              porttitor ipsum volutpat sem convallis aliquam.
+              OpenK9 is a complete Cognitive Enterprise Search solution that
+              fits all your needs. Powerful, Modern and Flexible, it empowers
+              Machine Learning to enrich your data and give the best experience
+              possible.
             </div>
-            {/* <div className={styles.buttons}>
-            <Link
-            className={clsx(
-              "button button--outline button--primary button--lg",
-              styles.getStarted,
-              )}
-              to={useBaseUrl("docs/")}
+            <div className={styles.buttons}>
+              <Link
+                className={clsx(
+                  "button button--outline button--primary button--lg",
+                )}
+                to={useBaseUrl("docs/")}
               >
-              Get Started
+                Get Started
               </Link>
-            </div> */}
+            </div>
           </div>
           <div className={styles.bannerAnimation}>
             <SearchesAnimation />
@@ -327,14 +335,24 @@ function Home() {
         </div>
       </header>
       <main>
-        {tecnicalCharacteristics && tecnicalCharacteristics.length > 0 && (
-          <section className={styles.sectionLandingPage}>
-            <div className="openK9-wrapper">
-              {/* {tecnicalCharacteristicsTitle && (
-                <Heading {...tecnicalCharacteristicsTitle} />
+        {technicalCharacteristics && technicalCharacteristics.length > 0 && (
+          <section
+            className={clsx(
+              styles.sectionLandingPage,
+              styles.technicalCharacteristics,
+            )}
+          >
+            <div
+              className={clsx(
+                styles.technicalCharacteristicsWrapper,
+                "openK9-wrapper",
+              )}
+            >
+              {/* {technicalCharacteristicsTitle && (
+                <Heading {...technicalCharacteristicsTitle} />
               )} */}
-              <div className={styles.tecnicalFeatures}>
-                {tecnicalCharacteristics.map((props, idx) => (
+              <div className={styles.technicalFeatures}>
+                {technicalCharacteristics.map((props, idx) => (
                   <div className={styles.feature} key={idx}>
                     <IconTextItem {...props} />
                   </div>
@@ -343,6 +361,17 @@ function Home() {
             </div>
           </section>
         )}
+
+        <section className={styles.sectionLandingPage}>
+          <div className={clsx("openK9-wrapper", styles.centering)}>
+            <Heading title="Architecture" />
+            <img
+              src="img/arch.svg"
+              alt="OpenK9 Architecture"
+              className={styles.architecture}
+            />
+          </div>
+        </section>
 
         {keyPoints && keyPoints.length > 0 && (
           <section
