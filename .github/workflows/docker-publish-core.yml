@@ -16,7 +16,7 @@ on:
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
-  push:
+  push-js-to-github:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
 
@@ -103,7 +103,8 @@ jobs:
 
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
-  docker:
+  # Push image to Docker Hub.
+  push-js-to-docker:
     runs-on: ubuntu-latest
     steps:
       -
