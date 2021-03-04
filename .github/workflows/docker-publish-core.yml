@@ -107,8 +107,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+      name: Prepare
+      id: prep
+      run: |
+        VERSION=edge
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else VERSION=latest
+        fi
+        echo ::set-output name=version::${VERSION}
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -123,42 +133,22 @@ jobs:
         id: docker_build_frontend
         uses: docker/build-push-action@v2
         with:
-          file: js-packages/$IMAGE_NAME/Dockerfile
-          build-args: |
-            IMAGE_NAME=search-standalone-frontend
-            IMAGE_ID=smclab/opnek9-$IMAGE_NAME
-
-            # Change all uppercase to lowercase
-            IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
-            # Strip git ref prefix from version
-            VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-            # Strip "v" prefix from tag name
-            [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-            # Use Docker `latest` tag convention
-            [ "$VERSION" == "main" ] && VERSION=latest
-
-            echo IMAGE_ID=$IMAGE_ID
-            echo VERSION=$VERSION
+          file: js-packages/search-standalone-frontend/Dockerfile
           push: true
-          tags: $IMAGE_ID:$VERSION
+          tags: smclab/openk9-search-standalone-frontend:${{ steps.prep.outputs.version }}
       -
         name: Build and push Admin UI image
         id: docker_build_admin_ui
         uses: docker/build-push-action@v2
         with:
-          context: .
           file: js-packages/admin-ui/Dockerfile
           push: true
-          tags: smclab/openk9-admin-ui:latest
+          tags: smclab/openk9-admin-ui:${{ steps.prep.outputs.version }}
       -
         name: Build and push Admin Logs Service image
         id: docker_build-admin_logs
         uses: docker/build-push-action@v2
         with:
-          context: .
           file: js-packages/admin-logs-service/Dockerfile
           push: true
-          tags: smclab/openk9-admin-logs-service:latest
+          tags: smclab/openk9-admin-logs-service:${{ steps.prep.outputs.version }}
