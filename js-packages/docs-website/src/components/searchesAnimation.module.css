@@ -9,9 +9,9 @@
 
 .anim {
   max-width: 512px;
-  max-height: 460px;
-  width: calc(100vw - var(--ifm-spacing-horizontal) * 2);
-  height: calc(90vw - var(--ifm-spacing-horizontal) * 2);
+  max-height: 340px;
+  width: calc(100vw - var(--ifm-spacing-horizontal) * 4);
+  height: calc(70vw - var(--ifm-spacing-horizontal) * 4);
 }
 
 .searchField {
@@ -23,10 +23,8 @@
   border-radius: 8px;
   border: 2px solid #559fff;
   box-shadow: 0 0 0 5px #559fff66;
-  /* min-width: 400px; */
-  /* width: 60%; */
-  width: 100%;
-  max-width: 512px;
+  width: 95%;
+  max-width: 500px;
   color: #666;
   font-size: 1rem;
   font-weight: 600;
