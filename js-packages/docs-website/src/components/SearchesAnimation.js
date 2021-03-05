@@ -228,12 +228,12 @@ export function SearchesAnimation() {
       const query = randomArr(queries);
       setQuery(query);
 
-      await sleep(500);
+      await sleep(300);
       setToggle(true);
 
-      await sleep(4000);
+      await sleep(2000);
       setToggle(false);
-      await sleep(1000);
+      await sleep(900);
       anim();
     }
     anim();
