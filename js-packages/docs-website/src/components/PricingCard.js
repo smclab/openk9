@@ -13,8 +13,18 @@ export function PricingCard({ type, price, points, isDisabled }) {
         {type}
       </h4>
       <div className={styles.price}>
-        <h3 className={styles.amount}>{price}</h3>
-        {price !== "Free" && <span className={styles.period}>per month</span>}
+        {isDisabled ? (
+          <>
+            <h4 className={styles.comingSoon}>Coming Soon</h4>
+          </>
+        ) : (
+          <>
+            <h3 className={styles.amount}>{price}</h3>
+            {price !== "Free" && (
+              <span className={styles.period}>per month</span>
+            )}
+          </>
+        )}
       </div>
       <div className={styles.points}>
         {points &&

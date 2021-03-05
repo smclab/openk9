@@ -17,9 +17,10 @@ export function FeatureCard({ imageSrc, title, description, align }) {
           : styles.center,
       )}
     >
-      {imageUrl && (
-        <img alt={title} className={styles.featureCardImage} src={imageUrl} />
-      )}
+      <div
+        className={styles.featureCardImage}
+        style={{ backgroundImage: `url(${imageUrl})` }}
+      ></div>
       <div className={styles.featureCardText}>
         <h4 className={styles.featureCardTitle}>{title}</h4>
         <p className={styles.featureCardDescription}>{description}</p>

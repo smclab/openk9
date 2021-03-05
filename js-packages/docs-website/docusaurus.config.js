@@ -12,7 +12,39 @@ module.exports = {
     colorMode: {
       disableSwitch: true,
     },
-    metadatas: [{ name: "twitter:card", content: "summary" }],
+    googleAnalytics: {
+      trackingID: "UA-191444663-1",
+      anonymizeIP: true,
+    },
+    metadatas: [
+      {
+        name: "description",
+        content:
+          "OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it empowers Machine Learning to enrich your data and give the best experience possible.",
+      },
+      {
+        name: "keywords",
+        content:
+          "openk9,open,source,search,enterprise,ai,machine,learning,cognitive,intelligent,enrich",
+      },
+      { name: "twitter:image", content: "https://openk9.io/logo.png" },
+      { name: "twitter:image:alt", content: "OpenK9 Logo" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:site", content: "@K9Open" },
+      {
+        name: "twitter:description",
+        content:
+          "OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it empowers Machine Learning to enrich your data and give the best experience possible.",
+      },
+      { property: "og:title", content: "OpenK9 Cognitive Enterprise Search" },
+      {
+        property: "og:description",
+        content:
+          "OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it empowers Machine Learning to enrich your data and give the best experience possible.",
+      },
+      { property: "og:image", content: "https://openk9.io/logo.png" },
+      { property: "og:url", content: "https://openk9.io/" },
+    ],
     announcementBar: {
       id: "beta",
       content:
@@ -40,7 +72,12 @@ module.exports = {
           label: "API",
           position: "left",
         },
-        { to: "plugins", label: "Plugins", position: "left" },
+        {
+          to: "comingsoon/",
+          activeBasePath: "plugins",
+          label: "Plugins",
+          position: "left",
+        },
         {
           href: "https://twitter.com/k9open",
           position: "right",
@@ -57,38 +94,86 @@ module.exports = {
     },
     footer: {
       style: "dark",
+      logo: {
+        alt: "SMC Logo",
+        src: "img/smc.svg",
+        href: "https://smc.it",
+      },
       links: [
         {
-          title: "Docs",
+          title: "Company",
           items: [
             {
-              label: "Style Guide",
-              to: "docs/",
+              label: "SMC Corporate",
+              href: "https://smc.it",
             },
             {
-              label: "Second Doc",
-              to: "docs/doc2/",
+              label: "Liferay Partner of the Year",
+              href: "https://liferaypartneritalia.smc.it",
+            },
+            {
+              label: "Tech Blog",
+              href: "https://techblog.smc.it",
+            },
+            {
+              label: "Careers",
+              href: "https://www.smc.it/lavora-con-noi",
+            },
+            {
+              label: "Contact Us",
+              href: "https://www.smc.it/contact-us",
             },
           ],
         },
         {
-          title: "More",
+          title: "Product",
           items: [
             {
-              label: "Blog",
-              to: "blog",
+              label: "Docs",
+              to: "/docs",
             },
+            {
+              label: "API",
+              to: "/comingsoon",
+            },
+            {
+              label: "Plugins",
+              to: "/comingsoon",
+            },
+          ],
+        },
+        {
+          title: "Community",
+          items: [
             {
               label: "GitHub",
               href: "https://github.com/smclab/openk9",
             },
+            {
+              label: "Twitter",
+              href: "https://twitter.com/k9open",
+            },
+            {
+              label: "Privacy Policy",
+              to: "/privacy",
+            },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} SMC Treviso s.r.l.`,
+      copyright: `Copyright © ${new Date().getFullYear()} <a href="https://smc.it/" class="footer__link-item">SMC Treviso s.r.l.</a>`,
     },
   },
   presets: [
+    "@docusaurus/plugin-google-analytics",
+    [
+      "@docusaurus/plugin-sitemap",
+      {
+        cacheTime: 600 * 1000,
+        changefreq: "weekly",
+        priority: 0.5,
+        trailingSlash: false,
+      },
+    ],
     [
       "@docusaurus/preset-classic",
       {

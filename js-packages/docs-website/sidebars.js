@@ -1,11 +1,10 @@
 module.exports = {
   sidebar: {
-    OpenK9: ['intro'],
-    "Getting Started": ['doc1'],
-    "Configuration": ['doc1'],
-    "Data Source Plugins": ['doc1'],
-    "Enrich Plugins": ['doc1'],
-    "Custom Plugins": ['doc1'],
-    "UI Components": ['doc1'],
+    OpenK9: ["intro", "standalone-app", "headless-api"],
+    "Getting Started": ["using-docker"],
+    // Configuration: ["configuration"],
+    // "Data Source Plugins": ["datasource"],
+    // "Enrich Plugins": ["enrich"],
+    // "UI Components": ["ui"],
   },
 };

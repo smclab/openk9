@@ -3,18 +3,16 @@
   padding: 16px;
   border-radius: 8px;
   box-shadow: 0 4px 22px rgba(0, 0, 0, 16%);
-  max-width: calc(33% - 40px);
-  margin-bottom: 64px;
-  margin-right: 64px;
-}
-
-.featureCard:nth-child(3n) {
-  margin-right: 0;
+  max-width: calc(33% - 100px);
 }
 
 .featureCardImage {
   width: 100%;
+  height: 180px;
   border-radius: 8px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }
 
 .featureCardText {
@@ -34,16 +32,6 @@
 @media (max-width: 1330px) {
   .featureCard {
     max-width: calc(50% - 16px);
-    margin-bottom: 32px;
-    margin-right: 32px;
-  }
-
-  .featureCard:nth-child(3n) {
-    margin-right: 32px;
-  }
-
-  .featureCard:nth-child(2n) {
-    margin-right: 0;
   }
 }
 
@@ -51,10 +39,6 @@
   .featureCard {
     max-width: 100%;
     margin-bottom: 24px;
-    margin-right: 0;
-  }
-
-  .featureCard:nth-child(3n) {
     margin-right: 0;
   }
 
