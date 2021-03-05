@@ -7,7 +7,7 @@ RUN mkdir -p /app/js-packages/search-ui-components
 RUN mkdir -p /app/js-packages/search-standalone-frontend
 WORKDIR /app
 
-COPY ./patches/*.patch /app/patches
+COPY ./patches/*.patch /app/patches/
 COPY ./package*.json /app
 COPY ./js-packages/http-api/package*.json /app/js-packages/http-api
 COPY ./js-packages/search-ui-components/package*.json /app/js-packages/search-ui-components
