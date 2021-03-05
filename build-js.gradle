@@ -19,7 +19,7 @@ task copyJS(type: Copy) {
 	from 'js/build'
 	into 'src/main/resources/build'
 }
-build.dependsOn(copyJS)
+jar.dependsOn(copyJS)
 
 task cleanJS(type: Delete) {
 	delete("${project.projectDir}/js/build")
