@@ -1,0 +1,149 @@
+version: "3.5"
+services:
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq
+        hostname: rabbitmq
+        volumes:
+            - ./rabbitmq/data/:/var/lib/rabbitmq/
+            - ./rabbitmq/logs/:/var/log/rabbitmq/log
+        environment:
+            RABBITMQ_DEFAULT_USER: openk9
+            RABBITMQ_DEFAULT_PASS: openk9
+        ports:
+            - 5672:5672
+            - 15672:15672
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.9.3
+        container_name: elasticsearch
+        hostname: elasticsearch
+        environment:
+            - node.name=elasticsearch
+            - cluster.name=docker-cluster
+            - cluster.initial_master_nodes=elasticsearch
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        volumes:
+            - ./elasticsearch/data:/usr/share/elasticsearch/data
+    kibana:
+        image: docker.elastic.co/kibana/kibana:7.9.3
+        container_name: kibana
+        ports:
+            - "5601:5601"
+        environment:
+            ELASTICSEARCH_URL: http://elasticsearch:9200
+            ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    openk9-karaf:
+        image: smclab/openk9-karaf:latest
+        container_name: openk9-karaf
+        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        environment:
+            WAIT_HOSTS: postgres:5432, rabbitmq:5672, elasticsearch:9200
+            WAIT_HOSTS_TIMEOUT: 180
+            JAVA_DEBUG_PORT: '*:5005'
+        volumes:
+            - ./configs:/opt/apache-karaf/configs
+        expose:
+            - "1099"
+            - "8080"
+            - "44444"
+            - "8101"
+            - "8181"
+            - "5005"
+        ports:
+            - "8080:8080"
+            - "8101:8101"
+            - "1099:1099"
+            - "44444:44444"
+            - "8181:8181"
+            - "5000:5005"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.services.openk9-karaf-docker.loadbalancer.server.port=8080"
+            - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api"
+            - "traefik.http.routers.karaf.entrypoints=web"
+            - "traefik.http.routers.karaf.rule=PathPrefix(`/api`)"
+            - "traefik.http.middlewares.openk9-karaf_compress.compress=true"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
+            - "traefik.http.routers.karaf.middlewares=api-strip@docker,openk9-karaf_compress@docker,openk9-forwarded-host@docker"
+    kibana:
+        image: docker.elastic.co/kibana/kibana:7.9.3
+        container_name: kibana
+        ports:
+            - "5601:5601"
+        environment:
+            ELASTICSEARCH_URL: http://elasticsearch:9200
+            ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    postgres:
+        image: postgres:latest
+        container_name: postgres
+        hostname: postgres
+        volumes:
+            - ./postgres/db-data:/var/lib/postgresql/data
+            - ./postgres/scripts:/docker-entrypoint-initdb.d
+        environment:
+            - POSTGRES_PASSWORD=openk9
+            - POSTGRES_USER=openk9
+            - POSTGRES_MULTIPLE_DATABASES=openk9
+            - PGDATA=/var/lib/postgresql/data/pgdata
+    adminer:
+        image: adminer
+        restart: always
+        ports:
+            - 5050:8080
+    web-parser:
+        image: smclab/openk9-web-parser:latest
+        container_name: web-parser
+        environment:
+            INGESTION_URL: "http://openk9.io/api/v1/ingestion/"
+        ports:
+            - "5008:80"
+            - "6800:6800"
+    search-standalone-frontend:
+        image: smclab/openk9-search-standalone-frontend:latest
+        container_name: search-standalone-frontend
+        ports:
+            - "8081:80"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.frontend.entrypoints=web"
+            - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+    search-admin:
+        image: smclab/openk9-admin-ui:latest
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.admin.entrypoints=web"
+            - "traefik.http.routers.admin.rule=PathPrefix(`/admin`)"
+    reverse-proxy:
+        image: traefik:v2.3
+        command: --api.insecure=true --providers.docker --providers.docker.exposedbydefault=false --entrypoints.web.address=:80
+        networks:
+            default:
+                aliases:
+                    - openk9.io
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        ports:
+         - '8888:80'
+         - '8182:8080'
+    admin-logs-service:
+        image: smclab/openk9-admin-logs-service:latest
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /bin/docker:/bin/docker
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.middlewares.logs-strip.stripprefix.prefixes=/logs"
+            - "traefik.http.routers.logs.entrypoints=web"
+            - "traefik.http.routers.logs.rule=PathPrefix(`/logs`)"
+            - "traefik.http.routers.logs.middlewares=logs-strip@docker"
+            - "traefik.http.routers.traefik.middlewares=traefik-compress"
+            - "traefik.http.middlewares.traefik-compress.compress=true"
+    flair-ner-en:
+        image: smclab/flair-ner-en:latest
+        container_name: flair-ner-en
+        command: gunicorn -w 1 -t 600 -b 0.0.0.0:80 main:app
