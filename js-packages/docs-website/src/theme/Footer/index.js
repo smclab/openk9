@@ -87,7 +87,10 @@ function Footer() {
                           }}
                         />
                       ) : (
-                        <li key={item.href || item.to} className="footer__item">
+                        <li
+                          key={`${item.href || item.to}-${key}`}
+                          className="footer__item"
+                        >
                           <FooterLink {...item} />
                         </li>
                       ),
