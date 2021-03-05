@@ -24,4 +24,9 @@ def get_favicon(domain):
         if icon_link is None:
             base_url = urlparse(domain)
             return get_favicon(base_url.netloc)
-        return icon_link["href"]
+        if not icon_link["href"].startswith("http"):
+            base_url = urlparse(domain)
+            href = base_url.netloc + icon_link["href"]
+        else:
+            href = icon_link["href"]
+        return href
