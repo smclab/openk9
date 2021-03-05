@@ -104,6 +104,10 @@ def execute_web():
             follow = request.json["follow"]
         except KeyError:
             follow = True
+        try:
+            max_length = request.json["max_length"]
+        except KeyError:
+            max_length = 10000
 
         payload = {
             "project": "web_crawler",
@@ -116,7 +120,8 @@ def execute_web():
             "datasource_id": datasource_id,
             "ingestion_url": app.config["INGESTION_URL"],
             "setting": "DEPTH_LIMIT=" + str(depth),
-            "follow": follow
+            "follow": follow,
+            "max_length": max_length
         }
 
         if timestamp == 0:
@@ -164,6 +169,10 @@ def execute_sitemap():
             follow = request.json["follow"]
         except KeyError:
             follow = False
+        try:
+            max_length = request.json["max_length"]
+        except KeyError:
+            max_length = 10000
 
         payload = {
             "project": "web_crawler",
@@ -175,7 +184,8 @@ def execute_sitemap():
             "datasource_id": datasource_id,
             "ingestion_url": app.config["INGESTION_URL"],
             "setting": "DEPTH_LIMIT=" + str(depth),
-            "follow": follow
+            "follow": follow,
+            "max_length": max_length
         }
 
         if timestamp == 0:

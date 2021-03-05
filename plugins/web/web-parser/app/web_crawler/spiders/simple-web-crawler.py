@@ -32,7 +32,7 @@ class WebSpider(CrawlSpider):
     name = "SimpleWebCrawler"
 
     def __init__(self, timestamp, datasource_id, ingestion_url, allowed_domains, start_urls, allowed_paths,
-                 excluded_paths, follow, *args, **kwargs):
+                 excluded_paths, follow, max_length, *args, **kwargs):
         super(WebSpider, self).__init__(*args, **kwargs)
         self.allowed_domains = ast.literal_eval(allowed_domains)
         self.start_urls = ast.literal_eval(start_urls)
@@ -42,6 +42,7 @@ class WebSpider(CrawlSpider):
         self.datasource_id = datasource_id
         self.timestamp = int(timestamp)
         self.follow = str_to_bool(follow)
+        self.max_length = int(max_length)
 
         WebSpider.rules = (
             Rule(
@@ -86,7 +87,7 @@ class WebSpider(CrawlSpider):
             "web": {
                 "url": response.url,
                 "title": title,
-                "content": soup,
+                "content": soup[:self.max_length],
                 "favicon": get_favicon(response.url),
             }
         }
@@ -95,7 +96,7 @@ class WebSpider(CrawlSpider):
             "datasourceId": self.datasource_id,
             "contentId": hash(str(response.url)),
             "parsingDate": int(self.end_timestamp),
-            "rawContent": soup,
+            "rawContent": soup[:self.max_length],
             "datasourcePayload": json.dumps(datasource_payload)
         }
 

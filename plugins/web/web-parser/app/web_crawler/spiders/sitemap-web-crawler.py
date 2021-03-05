@@ -31,7 +31,7 @@ class WebSitemapSpider(SitemapSpider):
     name = "SitemapWebCrawler"
 
     def __init__(self, timestamp, datasource_id, ingestion_url, sitemap_urls, allowed_domains, sitemap_rules,
-                 follow, *args, **kwargs):
+                 follow, max_length, *args, **kwargs):
         super(WebSitemapSpider, self).__init__(*args, **kwargs)
         self.sitemap_urls = ast.literal_eval(sitemap_urls)
         self.allowed_domains = ast.literal_eval(allowed_domains)
@@ -40,6 +40,7 @@ class WebSitemapSpider(SitemapSpider):
         self.datasource_id = datasource_id
         self.timestamp = int(timestamp)
         self.follow = str_to_bool(follow)
+        self.max_length = int(max_length)
 
         start_datetime = datetime.fromtimestamp(self.timestamp/1000)
         start_date = datetime.strftime(start_datetime, "%d-%b-%Y")
@@ -78,7 +79,7 @@ class WebSitemapSpider(SitemapSpider):
             "web": {
                 "url": response.url,
                 "title": title,
-                "content": soup,
+                "content": soup[:self.max_length],
                 "favicon": get_favicon(response.url),
             }
         }
@@ -87,7 +88,7 @@ class WebSitemapSpider(SitemapSpider):
             "datasourceId": self.datasource_id,
             "contentId": hash(str(response.url)),
             "parsingDate": int(self.end_timestamp),
-            "rawContent": soup,
+            "rawContent": soup[:self.max_length],
             "datasourcePayload": json.dumps(datasource_payload)
         }
         
