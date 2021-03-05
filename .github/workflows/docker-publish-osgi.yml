@@ -41,7 +41,7 @@ jobs:
           java-version: 11
 
       - name: Build with Gradle
-        run: ./gradlew clean jar buildDist
+        run: ./gradlew clean buildDist
     
       - uses: actions/upload-artifact@v2
         with:
