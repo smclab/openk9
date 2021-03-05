@@ -208,7 +208,7 @@ function Dashboard() {
         <QuickStart />
       </div>
       <div className={classes.wrap}>
-        <GlobalStats />
+        {/* <GlobalStats /> */}
         <ServiceStatus />
         {/* <SystemLoadChart /> */}
       </div>
