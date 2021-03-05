@@ -41,10 +41,10 @@ jobs:
           java-version: 11
 
       - name: Build with Gradle
-        run: ./gradlew clean buildDist
+        run: gradle build
       
       - name: JAR with Gradle
-        run: ./gradlew jar
+        run: gradle jar
     
       - uses: actions/upload-artifact@v2
         with:
