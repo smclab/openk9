@@ -1,7 +1,6 @@
 import React from "react";
 import clsx from "clsx";
 import Layout from "@theme/Layout";
-import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
 import { PluginCard } from "../components/PluginCard";
 
@@ -60,7 +59,7 @@ const plugins = [
 
 function Plugins() {
   return (
-    <Layout title="OpenK9" description="Search. Everywhere.">
+    <Layout title="OpenK9 Plugins">
       <header>
         <div className="openK9-wrapper">
           <h1 className={styles.pageTitle}>

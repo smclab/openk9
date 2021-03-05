@@ -108,11 +108,16 @@
   margin: 80px auto;
 }
 
-.architecture {
-  max-width: 1200px;
-  text-align: center;
-  min-width: 0;
+.archScrollWrapper {
+  overflow: auto;
   width: 100vw;
+  max-width: 1400px;
+}
+
+.architecture {
+  min-width: 1000px;
+  max-width: 1400px;
+  width: 100%;
 }
 
 .centering {
@@ -148,9 +153,57 @@
   position: relative;
 }
 
-.funtionalFeaturesContent {
+.functionalFeaturesContent {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  /* gap: 32px; */
+}
+
+.gap-20px {
+  display: flex;
+  --gap: 16px;
+  --fgp-has-polyfil_gap-container: initial;
+  --fgp-gap_container_row: var(
+    --fgp-has-polyfil_gap-container,
+    calc(var(--fgp-gap_parent_row, 0px) - var(--gap))
+  ) !important;
+  pointer-events: none;
+  --fgp-gap_parent_row: initial;
+  --fgp-gap_item_row: initial;
+  --fgp-gap_row: var(--fgp-gap_container_row) !important;
+  padding-top: 0.016px;
+  --fgp-margin-top: calc(var(--fgp-gap_row) + 0px);
+  margin-top: var(--fgp-margin-top) !important;
+  --fgp-gap_container_column: var(
+    --fgp-has-polyfil_gap-container,
+    calc(var(--fgp-gap_parent_column, 0px) - var(--gap))
+  ) !important;
+  pointer-events: none;
+  --fgp-gap_parent_column: initial;
+  --fgp-gap_item_column: initial;
+  --fgp-gap_column: var(--fgp-gap_container_column) !important;
+  padding-top: 0.016px;
+  --fgp-margin-left: calc(var(--fgp-gap_column) + 0px);
+  margin-left: var(--fgp-margin-left) !important;
+}
+
+.gap-20px > * {
+  pointer-events: all;
+  --fgp-gap_container_row: initial;
+  --fgp-gap_item_row: var(--fgp-has-polyfil_gap-item, var(--gap)) !important;
+  --fgp-gap_row: var(--fgp-gap_item_row);
+  --fgp-gap_parent_row: var(--fgp-has-polyfil_gap-item, var(--gap)) !important;
+  margin-top: var(--fgp-gap_row);
+  pointer-events: all;
+  --fgp-gap_container_column: initial;
+  --fgp-gap_item_column: var(--fgp-has-polyfil_gap-item, var(--gap)) !important;
+  --fgp-gap_column: var(--fgp-gap_item_column);
+  --fgp-gap_parent_column: var(
+    --fgp-has-polyfil_gap-item,
+    var(--gap)
+  ) !important;
+  margin-left: var(--fgp-gap_column);
 }
 
 .greySection {

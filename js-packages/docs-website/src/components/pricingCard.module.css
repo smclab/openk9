@@ -33,6 +33,7 @@
   font-weight: 700;
   font-size: 26px;
   text-align: right;
+  letter-spacing: 0.1ch;
 }
 
 .disabledType {
@@ -47,6 +48,12 @@
 .amount {
   font-weight: 600;
   font-size: 76px;
+  display: inline;
+}
+
+.comingSoon {
+  font-weight: 600;
+  font-size: 55px;
   display: inline;
 }
 
@@ -99,6 +106,10 @@
   }
 
   .amount {
+    font-size: 36px;
+  }
+
+  .comingSoon {
     font-size: 36px;
   }
 

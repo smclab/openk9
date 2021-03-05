@@ -21,6 +21,15 @@
   --ifm-container-width: 1436px;
 }
 
+.footer--dark {
+  --ifm-footer-link-hover-color: var(--ifm-color-primary-lighter);
+}
+
+.footer__copyright {
+  margin-top: 2.5em;
+  text-align: center;
+}
+
 .docusaurus-highlight-code-line {
   background-color: rgb(72, 77, 91);
   display: block;

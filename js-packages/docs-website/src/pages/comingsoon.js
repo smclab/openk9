@@ -5,7 +5,7 @@ import styles from "./styles.module.css";
 
 function ComingSoon() {
   return (
-    <Layout title="OpenK9" description="Search. Everywhere.">
+    <Layout title="OpenK9">
       <header>
         <div className="openK9-wrapper">
           <h1 className={styles.pageTitle}>
