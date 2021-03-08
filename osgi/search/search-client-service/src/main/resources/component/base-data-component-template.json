@@ -76,6 +76,28 @@
 									"type": "keyword"
 								}
 							}
+						},
+						"product": {
+							"type": "nested",
+							"properties": {
+								"context": {
+									"type": "keyword"
+								},
+								"id": {
+									"type": "keyword"
+								}
+							}
+						},
+						"gpe": {
+							"type": "nested",
+							"properties": {
+								"context": {
+									"type": "keyword"
+								},
+								"id": {
+									"type": "keyword"
+								}
+							}
 						}
 					}
 				},
