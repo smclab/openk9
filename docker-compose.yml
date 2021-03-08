@@ -135,7 +135,7 @@ services:
             - "traefik.http.routers.logs.middlewares=logs-strip@docker"
             - "traefik.http.routers.traefik.middlewares=traefik-compress"
             - "traefik.http.middlewares.traefik-compress.compress=true"
-    flair-ner-en:
-        image: smclab/flair-ner-en:latest
-        container_name: flair-ner-en
-        command: gunicorn -w 1 -t 600 -b 0.0.0.0:80 main:app
+    ner-en:
+        image: smclab/spacy-ner-en-trf:latest
+        container_name: ner-en
+        command: gunicorn -w 2 -t 600 -b 0.0.0.0:80 main:app
