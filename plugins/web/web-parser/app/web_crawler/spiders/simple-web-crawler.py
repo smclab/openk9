@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
+from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 import json
 import requests
 from datetime import datetime
@@ -46,8 +46,8 @@ class WebSpider(CrawlSpider):
 
         WebSpider.rules = (
             Rule(
-                LinkExtractor(allow=(self.allowed_paths), deny=(self.excluded_paths)),
-                callback="parse", follow=self.follow),)
+                LxmlLinkExtractor(allow=(self.allowed_paths)),
+                callback="parse"),)
         super(WebSpider, self)._compile_rules()
 
         start_datetime = datetime.fromtimestamp(self.timestamp/1000)
@@ -69,42 +69,54 @@ class WebSpider(CrawlSpider):
             self.logger.error(str(e) + " during request at url: " + str(url))
             raise e
 
+    def exclude_url(self, url):
+
+        for path in self.excluded_paths:
+            if re.search(path, url) is not None:
+                return True
+        return False
+
+
     def parse(self, response, **kwargs):
 
         self.logger.info('Crawling of page with url: ' + str(response.url))
 
-        title = response.css('title::text').get()
-        if title is not None:
-            title = title.strip()
-        else:
-            title = "Unknown title"
-        body = response.body.decode('utf-8', 'ignore')
-        soup = BeautifulSoup(body, features="html.parser").get_text()
-        soup = soup.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
-        soup = re.sub(' +', ' ', soup)
+        if not self.exclude_url(response.url):
 
-        datasource_payload = {
-            "web": {
-                "url": response.url,
-                "title": title,
-                "content": soup[:self.max_length],
-                "favicon": get_favicon(response.url),
+            title = response.css('title::text').get()
+            if title is not None:
+                title = title.strip()
+            else:
+                title = "Unknown title"
+            body = response.text
+            soup = BeautifulSoup(body, features="html.parser").get_text()
+            soup = soup.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
+            soup = re.sub(' +', ' ', soup)
+
+            datasource_payload = {
+                "web": {
+                    "url": response.url,
+                    "title": title,
+                    "content": soup[:self.max_length],
+                    "favicon": get_favicon(response.url),
+                }
             }
-        }
 
-        payload = {
-            "datasourceId": self.datasource_id,
-            "contentId": hash(str(response.url)),
-            "parsingDate": int(self.end_timestamp),
-            "rawContent": soup[:self.max_length],
-            "datasourcePayload": json.dumps(datasource_payload)
-        }
+            payload = {
+                "datasourceId": self.datasource_id,
+                "contentId": hash(str(response.url)),
+                "parsingDate": int(self.end_timestamp),
+                "rawContent": soup[:self.max_length],
+                "datasourcePayload": json.dumps(datasource_payload)
+            }
 
-        self.post_message(self.ingestion_url, payload, 10)
-        self.logger.info('Page with url: ' + str(response.url) + ' ingestioned')
-        if self.follow:
-            for href in response.css('a::attr(href)'):
-                try:
-                    yield response.follow(href, callback=self.parse)
-                except ValueError:
-                    self.logger.info("Filtered url " + str(href))
+            self.post_message(self.ingestion_url, payload, 10)
+            self.logger.info('Page with url: ' + str(response.url) + ' ingestioned')
+            if self.follow:
+                for href in response.css('a::attr(href)'):
+                    try:
+                        yield response.follow(href, callback=self.parse)
+                    except ValueError:
+                        self.logger.info("Filtered url " + str(href))
+        else:
+            self.logger.info(str(response.url) + " excluded")
