@@ -70,14 +70,6 @@ services:
             - "traefik.http.middlewares.openk9-karaf_compress.compress=true"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
             - "traefik.http.routers.karaf.middlewares=api-strip@docker,openk9-karaf_compress@docker,openk9-forwarded-host@docker"
-    kibana:
-        image: docker.elastic.co/kibana/kibana:7.9.3
-        container_name: kibana
-        ports:
-            - "5601:5601"
-        environment:
-            ELASTICSEARCH_URL: http://elasticsearch:9200
-            ELASTICSEARCH_HOSTS: http://elasticsearch:9200
     postgres:
         image: postgres:latest
         container_name: postgres
@@ -96,7 +88,7 @@ services:
         ports:
             - 5050:8080
     web-parser:
-        image: smclab/openk9-web-parser:latest
+        image: web-parser:latest
         container_name: web-parser
         environment:
             INGESTION_URL: "http://openk9.io/api/v1/ingestion/"
