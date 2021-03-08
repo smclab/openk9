@@ -79,6 +79,9 @@ dependencies {
 	distExternal group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager', version: '4.6.0' , transitive: false
 	distExternal group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.shell', version: '4.0.8' , transitive: false
 	distExternal group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
+
+	dist project(path: ':osgi:init-data', configuration: 'archives')
+
 }
 
 

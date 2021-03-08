@@ -1,0 +1,9 @@
+{
+	"enrichItemId" : 1,
+	"enrichPipelineId" : 1,
+	"name" : "web-ner",
+	"_position" : 1,
+	"active" : true,
+	"serviceName" : "io.openk9.plugins.web.enrichprocessor.WebNerEnrichProcessor",
+	"jsonConfig" : "{\"entities\": [\"person\", \"organization\", \"gpe\", \"product\"], \"confidence\": 0.90}"
+}
