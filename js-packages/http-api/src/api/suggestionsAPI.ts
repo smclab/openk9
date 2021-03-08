@@ -217,6 +217,14 @@ const defaultTokens: TokenSuggestion[] = [
     outputTokenType: "DATASOURCE",
     outputKeywordKey: "dataSource",
   },
+  {
+    kind: "TOKEN",
+    id: "web",
+    alternatives: ["web"],
+    displayDescription: "web",
+    outputTokenType: "DATASOURCE",
+    outputKeywordKey: "dataSource",
+  },
 ];
 
 function findInDefault(query: string, noParams = false, exact = false) {
