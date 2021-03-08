@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 @Component(
 	immediate = true,
-	property = EntityMapper.ENTITY_MAPPER_PROPERTY + "=EnrichPipeline",
+	property = EntityMapper.ENTITY_MAPPER_PROPERTY + "=io.openk9.datasource.model.EnrichPipeline",
 	service = EntityMapper.class
 )
 public class EnrichPipelineEntityMapper implements EntityMapper {

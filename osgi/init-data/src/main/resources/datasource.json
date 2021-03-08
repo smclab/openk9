@@ -1,11 +1,11 @@
 {
-	"datasourceid" : 1,
+	"datasourceId" : 1,
 	"name" : "web-datasource",
 	"tenantId" : 1,
 	"active" : true,
-	"description" : "",
+	"description" : "web",
 	"jsonConfig" : " {\n \t\"startUrls\": [\"https://en.wikipedia.org/wiki/Apple_Inc.\"],\n \t\"allowedDomains\": [\"en.wikipedia.org\"],\n \t\"allowedPaths\": [],\n \t\"excludedPaths\": [\"^https://en.wikipedia.org/wiki/Category\", \"^https://en.wikipedia.org/wiki/Wikipedia\",\n \t\t\"^https://en.wikipedia.org/wiki/File\",\n \t\t\"^https://en.wikipedia.org/wiki/Template\"\n \t],\n \t\"datasourceId\": 1,\n \t\"timestamp\": 0,\n \t\"depth\": 3,\n \t\"max_length\": 4000\n }",
-	"lastIngestionDate" : "2021-03-01 17:12:20.913",
+	"lastIngestionDate" : 0,
 	"scheduling" : "0 */30 * ? * *",
 	"driverServiceName" : "io.openk9.plugins.web.driver.WebPluginDriver"
 }

@@ -22,6 +22,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.repository.EnrichItemRepository;
 import io.openk9.repository.http.api.RepositoryHttpExtender;
+import io.openk9.sql.api.InitSql;
 import io.openk9.sql.api.client.Criteria;
 import io.openk9.sql.api.client.DatabaseClient;
 import io.openk9.sql.api.client.Page;
@@ -204,6 +205,13 @@ public class EnrichItemRepositoryImpl
 	public void setEntityEventBus(EntityEventBus entityEventBus) {
 		_entityEventBus = entityEventBus;
 	}
+
+	@Reference(
+		service = InitSql.Executed.class,
+		target = "(init-sql=io.openk9.datasource.internal.InitSqlImpl)",
+		bind = "setExecuted"
+	)
+	public void setExecuted(InitSql.Executed executed) {}
 
 	public static final String TABLE_NAME = "ENRICHITEM";
 

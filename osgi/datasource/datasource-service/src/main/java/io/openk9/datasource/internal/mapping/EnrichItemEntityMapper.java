@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 @Component(
 	immediate = true,
-	property = EntityMapper.ENTITY_MAPPER_PROPERTY + "=EnrichItem",
+	property = EntityMapper.ENTITY_MAPPER_PROPERTY + "=io.openk9.datasource.model.EnrichItem",
 	service = EntityMapper.class
 )
 public class EnrichItemEntityMapper implements EntityMapper {

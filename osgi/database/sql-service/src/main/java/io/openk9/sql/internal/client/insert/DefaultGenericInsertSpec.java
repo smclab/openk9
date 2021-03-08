@@ -17,12 +17,12 @@
 
 package io.openk9.sql.internal.client.insert;
 
+import io.openk9.sql.api.client.DatabaseClient;
+import io.openk9.sql.api.client.FetchSpec;
 import io.openk9.sql.internal.client.util.DatabaseClientUtil;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-import io.openk9.sql.api.client.DatabaseClient;
-import io.openk9.sql.api.client.FetchSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -31,6 +31,7 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -175,10 +176,10 @@ public class DefaultGenericInsertSpec
 			Map<String, Object> fieldValue =
 				DefaultGenericInsertSpec.this._fieldValue;
 
-			StringBuilder values = new StringBuilder();
+			StringJoiner stringJoiner = new StringJoiner(",");
 
 			for (int i = 1; i <= fieldValue.size(); i++) {
-				values.append("$").append(i);
+				stringJoiner.add("$" + i);
 			}
 
 			String returning = _returning ? "RETURNING * " : "";
@@ -187,7 +188,7 @@ public class DefaultGenericInsertSpec
 				"INSERT INTO %s (%s) VALUES (%s) %s",
 				DefaultGenericInsertSpec.this._table,
 				String.join(",", fieldValue.keySet()),
-				values.toString(),
+				stringJoiner.toString(),
 				returning);
 		}
 

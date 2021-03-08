@@ -18,14 +18,51 @@
 package io.openk9.datasource.internal;
 
 import io.openk9.sql.api.InitSql;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+
+import java.util.Hashtable;
+import java.util.Map;
 
 @Component(
 	immediate = true,
 	service = InitSql.class
 )
 public class InitSqlImpl implements InitSql {
+
+	@Activate
+	void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
+	}
+
+	void deactivate() {
+		if (_serviceRegistration != null) {
+			_serviceRegistration.unregister();
+			_serviceRegistration = null;
+		}
+		_bundleContext = null;
+	}
+
 	public String initSqlFile() {
 		return "init.sql";
 	}
+
+	@Override
+	public void onAfterCreate() {
+		_serviceRegistration = _bundleContext.registerService(
+			InitSql.Executed.class,
+			Executed.INSTANCE, new Hashtable<>(
+				Map.of(
+					"init-sql", "io.openk9.datasource.internal.InitSqlImpl"
+				)
+			)
+		);
+	}
+
+	private BundleContext _bundleContext;
+
+	private ServiceRegistration _serviceRegistration;
+
 }

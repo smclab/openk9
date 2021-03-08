@@ -32,4 +32,8 @@ public interface InitSql {
 		return false;
 	}
 
+	interface Executed {
+		Executed INSTANCE = new Executed() {};
+	}
+
 }

@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 @Component(
 	immediate = true,
-	property = EntityMapper.ENTITY_MAPPER_PROPERTY + "=Datasource",
+	property = EntityMapper.ENTITY_MAPPER_PROPERTY + "=io.openk9.datasource.model.Datasource",
 	service = EntityMapper.class
 )
 public class DatasourceEntityMapper implements EntityMapper {

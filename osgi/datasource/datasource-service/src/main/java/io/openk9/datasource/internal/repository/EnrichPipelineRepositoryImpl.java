@@ -22,6 +22,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.repository.EnrichPipelineRepository;
 import io.openk9.repository.http.api.RepositoryHttpExtender;
+import io.openk9.sql.api.InitSql;
 import io.openk9.sql.api.client.Criteria;
 import io.openk9.sql.api.client.DatabaseClient;
 import io.openk9.sql.api.entity.BaseReactiveRepository;
@@ -176,6 +177,13 @@ public class EnrichPipelineRepositoryImpl
 	public void setEntityEventBus(EntityEventBus entityEventBus) {
 		_entityEventBus = entityEventBus;
 	}
+
+	@Reference(
+		service = InitSql.Executed.class,
+		target = "(init-sql=io.openk9.datasource.internal.InitSqlImpl)",
+		bind = "setExecuted"
+	)
+	public void setExecuted(InitSql.Executed executed) {}
 
 	public static final String TABLE_NAME = "ENRICHPIPELINE";
 

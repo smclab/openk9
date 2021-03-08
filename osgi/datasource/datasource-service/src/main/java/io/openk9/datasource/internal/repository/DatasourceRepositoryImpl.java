@@ -26,6 +26,7 @@ import io.openk9.datasource.repository.EnrichPipelineRepository;
 import io.openk9.datasource.repository.TenantRepository;
 import io.openk9.datasource.util.DatasourceContext;
 import io.openk9.repository.http.api.RepositoryHttpExtender;
+import io.openk9.sql.api.InitSql;
 import io.openk9.sql.api.client.Criteria;
 import io.openk9.sql.api.client.DatabaseClient;
 import io.openk9.sql.api.client.Page;
@@ -272,6 +273,13 @@ public class DatasourceRepositoryImpl
 
 	@Reference
 	private TenantRepository _tenantRepository;
+
+	@Reference(
+		service = InitSql.Executed.class,
+		target = "(init-sql=io.openk9.datasource.internal.InitSqlImpl)",
+		bind = "setExecuted"
+	)
+	public void setExecuted(InitSql.Executed executed) {}
 
 	public static final String TABLE_NAME = "DATASOURCE";
 

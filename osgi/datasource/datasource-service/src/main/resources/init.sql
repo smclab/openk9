@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS Datasource(
 	tenantId BIGINT NOT NULL,
 	active bool NOT NULL,
 	description TEXT NOT NULL,
-	driverName VARCHAR(255) NOT NULL,
 	jsonConfig TEXT NOT NULL,
 	lastIngestionDate TIMESTAMP NOT NULL,
 	scheduling VARCHAR(255) NOT NULL,
