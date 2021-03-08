@@ -1,6 +1,6 @@
 Bundle-Name: [OpenK9] Core Api
-Bundle-SymbolicName: com.openk9.core.api
+Bundle-SymbolicName: io.openk9.core.api
 
-Export-Package: com.openk9.core.api.constant
+Export-Package: io.openk9.core.api.constant
 
 -include: ${project.rootDir}/osgi/common.bnd

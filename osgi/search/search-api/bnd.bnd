@@ -1,6 +1,6 @@
 Bundle-Name: [OpenK9] Search API
-Bundle-SymbolicName: com.openk9.search.api
+Bundle-SymbolicName: io.openk9.search.api
 
-Export-Package: com.openk9.search.api.*
+Export-Package: io.openk9.search.api.*
 
 -include: ${project.rootDir}/osgi/common.bnd

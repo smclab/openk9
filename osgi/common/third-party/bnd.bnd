@@ -1,8 +1,6 @@
 Bundle-Name: [OpenK9] Third Party
-Bundle-SymbolicName: com.openk9.third.party
-Bundle-Activator: com.openk9.third.party.Activator
-
-
+Bundle-SymbolicName: io.openk9.third.party
+Bundle-Activator: io.openk9.third.party.Activator
 
 Include-Resource: \
  @vavr-*.jar,\

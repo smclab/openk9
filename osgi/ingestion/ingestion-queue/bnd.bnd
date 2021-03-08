@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9] Ingestion Queue
-Bundle-SymbolicName: com.openk9.ingestion.queue
+Bundle-SymbolicName: io.openk9.ingestion.queue
 
 -include: ${project.rootDir}/osgi/common.bnd
 

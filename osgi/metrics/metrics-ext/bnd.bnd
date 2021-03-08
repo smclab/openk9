@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9] Metrics Ext
-Bundle-SymbolicName: com.openk9.metrics.ext
+Bundle-SymbolicName: io.openk9.metrics.ext
 
 Include-Resource: \
  @micrometer-registry-prometheus-*.jar,\

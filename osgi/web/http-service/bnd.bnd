@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9] Http Service
-Bundle-SymbolicName: com.openk9.http.service
+Bundle-SymbolicName: io.openk9.http.service
 
 Include-Resource: @netty-*.jar, @reactor-netty-*.jar
 

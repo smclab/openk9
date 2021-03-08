@@ -1,6 +1,6 @@
 Bundle-Name: [OpenK9] Search Enrich Mapper Api
-Bundle-SymbolicName: com.openk9.search.enrich.mapper.api
+Bundle-SymbolicName: io.openk9.search.enrich.mapper.api
 
-Export-Package: com.openk9.search.enrich.mapper.api
+Export-Package: io.openk9.search.enrich.mapper.api
 
 -include: ${project.rootDir}/osgi/common.bnd

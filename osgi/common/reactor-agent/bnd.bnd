@@ -1,9 +1,7 @@
 Bundle-Name: [OpenK9] Reactor Agent
-Bundle-SymbolicName: com.openk9.reactor.agent
+Bundle-SymbolicName: io.openk9.reactor.agent
 
-
-
-Bundle-Activator: com.openk9.reactor.agent.Activator
+Bundle-Activator: io.openk9.reactor.agent.Activator
 
 Include-Resource: \
  @reactor-tools-*.jar,\

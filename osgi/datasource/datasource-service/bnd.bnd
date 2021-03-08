@@ -1,4 +1,4 @@
 Bundle-Name: [OpenK9] Datasource Service
-Bundle-SymbolicName: com.openk9.datasource.service
+Bundle-SymbolicName: io.openk9.datasource.service
 
 -include: ${project.rootDir}/osgi/common.bnd

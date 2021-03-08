@@ -1,4 +1,4 @@
 Bundle-Name: [OpenK9] Search Service
-Bundle-SymbolicName: com.openk9.search.service
+Bundle-SymbolicName: io.openk9.search.service
 
 -include: ${project.rootDir}/osgi/common.bnd

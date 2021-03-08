@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9 - Plugin] Email
-Bundle-SymbolicName: com.openk9.plugins.email
+Bundle-SymbolicName: io.openk9.plugins.email
 
 -include: ${project.rootDir}/osgi/common.bnd
 

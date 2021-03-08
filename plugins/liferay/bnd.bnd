@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9 - Plugin] Liferay
-Bundle-SymbolicName: com.openk9.plugins.liferay
+Bundle-SymbolicName: io.openk9.plugins.liferay
 
 -include: ${project.rootDir}/osgi/common.bnd
 

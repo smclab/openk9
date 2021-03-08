@@ -1,4 +1,4 @@
 Bundle-Name: [OpenK9] Metrics Service
-Bundle-SymbolicName: com.openk9.metrics.service
+Bundle-SymbolicName: io.openk9.metrics.service
 
 -include: ${project.rootDir}/osgi/common.bnd

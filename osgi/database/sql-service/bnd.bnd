@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9] SQL Service
-Bundle-SymbolicName: com.openk9.sql.service
+Bundle-SymbolicName: io.openk9.sql.service
 
 Include-Resource: @r2dbc-postgresql-*.jar, @netty-*.jar, @reactor-netty-*.jar
 

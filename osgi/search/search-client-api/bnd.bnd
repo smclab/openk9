@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9] Search Client Api
-Bundle-SymbolicName: com.openk9.search.client.api
+Bundle-SymbolicName: io.openk9.search.client.api
 
 Include-Resource: \
  @elasticsearch-*.jar
@@ -11,7 +11,7 @@ Export-Package: \
  org.joda.time, \
  org.joda.time.format, \
  com.carrotsearch.*, \
- com.openk9.search.client.api.*
+ io.openk9.search.client.api.*
 
 Import-Package: *;resolution:=optional
 

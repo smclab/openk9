@@ -1,5 +1,5 @@
 Bundle-Name: [OpenK9] Search Enrich Service
-Bundle-SymbolicName: com.openk9.search.enrich.service
+Bundle-SymbolicName: io.openk9.search.enrich.service
 
 Rabbit-Exchange: openk9.direct
 Rabbit-Routing-Key: openk9

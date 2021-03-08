@@ -34,7 +34,7 @@ example-plugin/
 - `bnd.bnd` identifies plugin as bundle
 ```aidl
 Bundle-Name: [OpenK9 - Plugin] Example
-Bundle-SymbolicName: com.openk9.plugins.example
+Bundle-SymbolicName: io.openk9.plugins.example
 
 Bundle-Version: 0.0.1
 
@@ -65,7 +65,7 @@ repositories {
 }
 
 dependencies {
-	compile 'com.openk9:com.openk9.release.api:OPENK9_VERSION'
+	compile 'io.openk9:io.openk9.release.api:OPENK9_VERSION'
 }
 ```
 - `ExamplePluginDriver.java` contains java code to enable plugin inside OpenK9.

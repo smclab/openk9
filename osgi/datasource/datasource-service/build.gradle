@@ -12,7 +12,7 @@ apply plugin: 'r2dbc-generator'
 
 r2dbcGenerator {
 	serviceYml = "service.yml"
-	basePackage = "com.openk9.datasource"
+	basePackage = "io.openk9.datasource"
 	baseApiPackage = basePackage
 	baseServicePackage = basePackage + ".internal"
 	modelPackage = "model"

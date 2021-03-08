@@ -1,4 +1,4 @@
 Bundle-Name: [OpenK9] SQL Scheduler
-Bundle-SymbolicName: com.openk9.sql.schduler
+Bundle-SymbolicName: io.openk9.sql.scheduler
 
 -include: ${project.rootDir}/osgi/common.bnd
