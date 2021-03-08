@@ -135,7 +135,7 @@ public class TenantRepositoryImpl
 
 	@Reference(
 		target = "(|" +
-				 "(entity.mapper=Tenant)" +
+				 "(entity.mapper=io.openk9.datasource.model.Tenant)" +
 				 "(entity.mapper=default)" +
 				 ")",
 		service = EntityMapper.class,

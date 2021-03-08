@@ -160,7 +160,7 @@ public class EnrichPipelineRepositoryImpl
 
 	@Reference(
 		target = "(|" +
-				 "(entity.mapper=EnrichPipeline)" +
+				 "(entity.mapper=io.openk9.datasource.model.EnrichPipeline)" +
 				 "(entity.mapper=default)" +
 				 ")",
 		service = EntityMapper.class,

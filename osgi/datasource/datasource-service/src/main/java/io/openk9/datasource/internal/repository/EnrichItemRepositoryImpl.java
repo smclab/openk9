@@ -188,7 +188,7 @@ public class EnrichItemRepositoryImpl
 
 	@Reference(
 		target = "(|" +
-				 "(entity.mapper=EnrichItem)" +
+				 "(entity.mapper=io.openk9.datasource.model.EnrichItem)" +
 				 "(entity.mapper=default)" +
 				 ")",
 		service = EntityMapper.class,

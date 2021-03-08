@@ -247,7 +247,7 @@ public class DatasourceRepositoryImpl
 
 	@Reference(
 		target = "(|" +
-				 "(entity.mapper=Datasource)" +
+				 "(entity.mapper=io.openk9.datasource.model.Datasource)" +
 				 "(entity.mapper=default)" +
 				 ")",
 		service = EntityMapper.class,
