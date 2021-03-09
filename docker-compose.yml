@@ -4,9 +4,6 @@ services:
         image: rabbitmq:3-management
         container_name: rabbitmq
         hostname: rabbitmq
-        volumes:
-            - ./rabbitmq/data/:/var/lib/rabbitmq/
-            - ./rabbitmq/logs/:/var/log/rabbitmq/log
         environment:
             RABBITMQ_DEFAULT_USER: openk9
             RABBITMQ_DEFAULT_PASS: openk9
@@ -37,13 +34,13 @@ services:
         environment:
             ELASTICSEARCH_URL: http://elasticsearch:9200
             ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-    openk9-karaf:
+    openk9-core:
         image: smclab/openk9-karaf:latest
-        container_name: openk9-karaf
+        container_name: openk9-core
         command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
         environment:
             WAIT_HOSTS: postgres:5432, rabbitmq:5672, elasticsearch:9200
-            WAIT_HOSTS_TIMEOUT: 180
+            WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
         volumes:
             - ./configs:/opt/apache-karaf/configs
@@ -74,13 +71,10 @@ services:
         image: postgres:latest
         container_name: postgres
         hostname: postgres
-        volumes:
-            - ./postgres/db-data:/var/lib/postgresql/data
-            - ./postgres/scripts:/docker-entrypoint-initdb.d
         environment:
             - POSTGRES_PASSWORD=openk9
             - POSTGRES_USER=openk9
-            - POSTGRES_MULTIPLE_DATABASES=openk9
+            - POSTGRES_DB=openk9
             - PGDATA=/var/lib/postgresql/data/pgdata
     adminer:
         image: adminer

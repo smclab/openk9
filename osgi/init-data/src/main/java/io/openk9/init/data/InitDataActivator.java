@@ -63,13 +63,7 @@ public class InitDataActivator {
 							_enrichPipelineRepository.insert(enrichPipeline)
 						)
 						.then(
-							Mono.from(
-								_pluginDriver.invokeDataParser(
-									datasource,
-									Date.from(Instant.EPOCH),
-									new Date()
-								)
-							)
+							Mono.empty()
 						)
 				)
 		.subscribe();
