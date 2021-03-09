@@ -108,6 +108,10 @@ def execute_web():
             max_length = request.json["max_length"]
         except KeyError:
             max_length = 10000
+        try:
+            page_count = request.json["page_count"]
+        except KeyError:
+            page_count = 1000
 
         payload = {
             "project": "web_crawler",
@@ -120,6 +124,7 @@ def execute_web():
             "datasource_id": datasource_id,
             "ingestion_url": app.config["INGESTION_URL"],
             "setting": "DEPTH_LIMIT=" + str(depth),
+            "setting": "CLOSESPIDER_PAGECOUNT=" + str(page_count),
             "follow": follow,
             "max_length": max_length
         }
@@ -173,6 +178,10 @@ def execute_sitemap():
             max_length = request.json["max_length"]
         except KeyError:
             max_length = 10000
+        try:
+            page_count = request.json["page_count"]
+        except KeyError:
+            page_count = 1000
 
         payload = {
             "project": "web_crawler",
@@ -184,6 +193,7 @@ def execute_sitemap():
             "datasource_id": datasource_id,
             "ingestion_url": app.config["INGESTION_URL"],
             "setting": "DEPTH_LIMIT=" + str(depth),
+            "setting": "CLOSESPIDER_PAGECOUNT=" + str(page_count),
             "follow": follow,
             "max_length": max_length
         }
