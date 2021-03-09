@@ -4,6 +4,7 @@
  * This is a general purpose Gradle build.
  * Learn more about Gradle by exploring our samples at https://docs.gradle.org/6.7/samples
  */
+
 buildscript {
 	repositories {
 		maven {
@@ -15,6 +16,7 @@ buildscript {
 		classpath 'net.saliman:gradle-properties-plugin:1.5.1'
 		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"
 		classpath "com.github.node-gradle:gradle-node-plugin:3.0.1"
+		classpath "io.freefair.gradle:lombok-plugin:5.3.0"
 	}
 }
 
@@ -29,6 +31,13 @@ subprojects {
 
 	apply plugin: 'java'
 	apply plugin: 'biz.aQute.bnd.builder'
+	apply plugin: "io.freefair.lombok"
+
+	lombok {
+		version = "1.18.18"
+	}
+
+	generateLombokConfig.enabled = false
 
 	jar {
 		ext.taskprop = 'prop.task'
@@ -76,8 +85,8 @@ subprojects {
 
 		compile group: 'org.slf4j', name: 'slf4j-api'
 
-		compileOnly 'org.projectlombok:lombok:1.18.16'
-		annotationProcessor 'org.projectlombok:lombok:1.18.16'
+		compileOnly 'org.projectlombok:lombok:1.18.18'
+		annotationProcessor 'org.projectlombok:lombok:1.18.18'
 
 		compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor'
 		compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml'

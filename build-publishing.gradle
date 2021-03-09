@@ -1,4 +1,5 @@
-apply plugin: 'maven-publish'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 def bndfile = file("$projectDir/bnd.bnd");
 
@@ -12,21 +13,93 @@ project.group = findProperty("project.groupId")
 
 project.archivesBaseName = prop.getProperty("Bundle-SymbolicName")
 
-publishing {
+javadoc {
+	source = delombok
+	failOnError = false
+}
+
+task javadocJar(type: Jar) {
+	classifier = 'javadoc'
+	from javadoc
+}
+
+task sourcesJar(type: Jar) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+artifacts {
+	archives javadocJar, sourcesJar
+}
+
+// Requirements:
+//
+// - Get public key ID `gpg --list-keys --keyid-format SHORT`
+// - Export key `gpg --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg`
+// - Add the following properties to ~/.gradle/gradle.properties
+//      signing.keyId=0ABCDEF
+//      signing.password=password
+//      signing.secretKeyRingFile=/absolute/path/to/.gnupg/secring.gpg
+// https://central.sonatype.org/pages/working-with-pgp-signatures.html
+// https://central.sonatype.org/pages/releasing-the-deployment.html
+signing {
+	required { !version.endsWith("-SNAPSHOT") }
+	sign configurations.archives
+}
+
+// Requirements:
+//
+// - Add the following properties to ~/.gradle/gradle.properties
+//     ossrhUsername=<username>
+//     ossrhPassword=<password>
+// - Or pass the credentials as command line parameters
+//     ./gradlew uploadArchives -PossrhUsername=<my-username> -PossrhPassword=<my-password>
+//
+uploadArchives {
 	repositories {
-		maven {
-			name = "GitHubPackages"
-			url = uri("https://maven.pkg.github.com/smclab/openk9")
-			credentials {
-				username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-				password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+		mavenDeployer {
+			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+			repository(url: "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
+				authentication(userName: ossrhUsername, password: ossrhPassword)
 			}
-		}
-	}
-	publications {
-		gpr(MavenPublication) {
-			from(components.java)
-			artifactId = prop.getProperty("Bundle-SymbolicName")
+
+			snapshotRepository(url: "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
+				authentication(userName: ossrhUsername, password: ossrhPassword)
+			}
+
+			pom.project {
+				name project.name
+				packaging 'jar'
+
+				description 'Open Source Enterprise Cognitive Search Engine'
+
+				artifactId  project.archivesBaseName
+				url 'https://openk9.io'
+
+				scm {
+					connection 'scm:git:https://github.com/smclab/openk9.git'
+					developerConnection 'scm:git:https://github.com/smclab/openk9.git'
+					url 'https://github.com/smclab/openk9/tree/main'
+				}
+
+				licenses {
+					license {
+						name 'The GNU Affero General Public License, Version 3'
+						url 'https://www.gnu.org/licenses/agpl-3.0.txt'
+					}
+				}
+
+				developers {
+					developer {
+						name = 'openk9'
+						email = 'openk9@smc.it'
+						organization = 'SMC'
+						organizationUrl = 'https://github.com/smclab'
+					}
+				}
+
+			}
 		}
 	}
 }
