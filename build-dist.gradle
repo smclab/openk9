@@ -70,8 +70,8 @@ dependencies {
 	dist project(path: ':osgi:metrics:metrics-service', configuration: 'archives')
 	dist project(path: ':osgi:metrics:metrics-ext', configuration: 'archives')
 
-	dist project(path: ':plugins:email', configuration: 'archives')
-	dist project(path: ':plugins:liferay', configuration: 'archives')
+	// dist project(path: ':plugins:email', configuration: 'archives')
+	// dist project(path: ':plugins:liferay', configuration: 'archives')
 	dist project(path: ':plugins:web', configuration: 'archives')
 
 	// felix dependency manager
