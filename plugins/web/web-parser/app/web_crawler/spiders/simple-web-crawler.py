@@ -88,16 +88,19 @@ class WebSpider(CrawlSpider):
                 title = title.strip()
             else:
                 title = "Unknown title"
-            body = response.text
-            soup = BeautifulSoup(body, features="html.parser").get_text()
-            soup = soup.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
-            soup = re.sub(' +', ' ', soup)
+            body = response.body
+            soup = BeautifulSoup(body, 'lxml')
+            content = ''
+            for p in soup.find_all("p"):
+                content = content + p.get_text()
+            content = content.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
+            content = re.sub(' +', ' ', content)
 
             datasource_payload = {
                 "web": {
                     "url": response.url,
                     "title": title,
-                    "content": soup[:self.max_length],
+                    "content": content[:self.max_length],
                     "favicon": get_favicon(response.url),
                 }
             }
@@ -106,7 +109,7 @@ class WebSpider(CrawlSpider):
                 "datasourceId": self.datasource_id,
                 "contentId": hash(str(response.url)),
                 "parsingDate": int(self.end_timestamp),
-                "rawContent": soup[:self.max_length],
+                "rawContent": content[:self.max_length],
                 "datasourcePayload": json.dumps(datasource_payload)
             }
 
