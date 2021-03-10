@@ -106,3 +106,5 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 #HTTPCACHE_POLICY = 'scrapy.extensions.httpcache.RFC2616Policy'
+
+REDIRECT_ENABLED = False
