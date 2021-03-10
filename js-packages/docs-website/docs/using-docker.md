@@ -59,3 +59,9 @@ Once the startup is finished, it will automatically start crawling pages from th
 Wait a few minutes for more documents to be indexed. Then access the OpenK9 search interface and try to search for results, specifying the filters and semantic entities of your interest.
 
 If you want to crawl and index pages from the site of your preference, go to Configuration section and learn how to configure your data source.
+
+### Named Entity Recognition
+
+In docker-comopose file is present a NER service based on very accurate english model. This model is also very heavy in computational terms, and would need a machine with a gpu to run quickly and efficiently. So, if you run OpenK9 with this model, be aware that content ingestion may not be as fast.
+
+In our [Docker Hub](https://hub.docker.com/u/smclab) different NER images are provided. Choose the best one for your needs and replace it in the docker-compose file for the service *ner-en*.
