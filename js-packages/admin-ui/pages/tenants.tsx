@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
@@ -29,6 +29,9 @@ import {
 } from "@openk9/search-ui-components";
 import { getTenants } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
+import ClayButton from "@clayui/button";
+import ClayModal, { useModal } from "@clayui/modal";
+import { ClayIconSpriteContext } from "@clayui/icon";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -141,6 +144,8 @@ function Controls({
   searchValue: string;
   setSearchValue(s: string): void;
 }) {
+  const [visible, setVisible] = useState(false);
+
   return (
     <ul className="navbar-nav" style={{ marginRight: 16 }}>
       <div className="navbar-form navbar-form-autofit navbar-overlay navbar-overlay-sm-down">
@@ -177,11 +182,13 @@ function Controls({
       <li className="nav-item">
         <ClayTooltipProvider>
           <div>
+        <AddModal visible={visible} handleClose={() => setVisible(false)} />
             <button
               className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
               type="button"
               data-tooltip-align="bottom"
               title="Add Tenant"
+              onClick={() => setVisible(true)}
             >
               <ClayIcon symbol="plus" />
             </button>
@@ -219,6 +226,39 @@ function Tenants() {
         </table>
       </div>
     </Layout>
+  );
+}
+
+function AddModal({ visible, handleClose }) {
+  const { observer, onClose } = useModal({
+    onClose: handleClose,
+  });
+
+  const spritemap = useContext(ClayIconSpriteContext);
+  return (
+    <>
+      {visible && (
+        <ClayModal
+          observer={observer}
+          size="lg"
+          spritemap={spritemap}
+          status="info"
+        >
+          <ClayModal.Header>{"Title"}</ClayModal.Header>
+          <ClayModal.Body>
+            <h1>{"Hello world!"}</h1>
+          </ClayModal.Body>
+          <ClayModal.Footer
+            first={
+              <ClayButton.Group spaced>
+                <ClayButton displayType="secondary">{"Cancel"}</ClayButton>
+              </ClayButton.Group>
+            }
+            last={<ClayButton onClick={onClose}>{"Save"}</ClayButton>}
+          />
+        </ClayModal>
+      )}
+    </>
   );
 }
 
