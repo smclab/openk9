@@ -1,0 +1,7 @@
+Bundle-Name: [OpenK9 - Plugin] Applications
+Bundle-SymbolicName: io.openk9.plugins.applications
+
+-include: ${project.rootDir}/osgi/common.bnd
+
+OpenK9-Plugin: true
+OpenK9-Plugin-Web-Id: applications-datasource
