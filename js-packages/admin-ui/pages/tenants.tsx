@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
@@ -31,7 +31,6 @@ import { getTenants } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
 import ClayButton from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
-import { ClayIconSpriteContext } from "@clayui/icon";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -234,16 +233,10 @@ function AddModal({ visible, handleClose }) {
     onClose: handleClose,
   });
 
-  const spritemap = useContext(ClayIconSpriteContext);
   return (
     <>
       {visible && (
-        <ClayModal
-          observer={observer}
-          size="lg"
-          spritemap={spritemap}
-          status="info"
-        >
+        <ClayModal observer={observer} size="lg" status="info">
           <ClayModal.Header>{"Title"}</ClayModal.Header>
           <ClayModal.Body>
             <h1>{"Hello world!"}</h1>
