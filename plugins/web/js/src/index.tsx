@@ -34,11 +34,11 @@ export const plugin: Plugin<WebResultType> = {
   pluginId: "web-datasource",
   displayName: "Web DataSource",
   pluginType: ["DATASOURCE", "ENRICH"],
-  dataSourceAdminInterfacePath: {
+  adminPlugin: {
     iconRenderer,
     settingsRenderer,
   },
-  dataSourceRenderingInterface: {
+  dsPlugin: {
     resultRenderers: {
       document: DocumentResultCard as any,
       web: PageResultCard as any,

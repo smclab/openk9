@@ -16,6 +16,7 @@
  */
 
 import { GenericResultItem } from "./searchResults";
+import { InputSuggestionToken } from "./suggestionTypes";
 
 export type PluginInfo = {
   pluginId: string;
@@ -32,11 +33,12 @@ export type Plugin<E> = {
   pluginId: string;
   displayName: string;
   pluginType: ("DATASOURCE" | "SUGGESTION" | "ENRICH")[];
-  dataSourceAdminInterfacePath?: DataSourceAdminInterface;
-  dataSourceRenderingInterface?: DataSourceRenderingInterface<E>;
+  adminPlugin?: AdminPlugin;
+  dsPlugin?: DataSourcePlugin<E>;
+  suggestionsPlugin?: SuggestionsPlugin;
 };
 
-export type DataSourceAdminInterface = {
+export type AdminPlugin = {
   iconRenderer: React.FC<{ size?: number } & any>;
   settingsRenderer: React.FC<{
     currentSettings: any;
@@ -61,7 +63,11 @@ export type SidebarRenderersType<E> = {
   [key: string]: React.FC<SidebarRendererProps<E>>;
 };
 
-export type DataSourceRenderingInterface<E> = {
+export type DataSourcePlugin<E> = {
   resultRenderers: ResultRenderersType<E>;
   sidebarRenderers: SidebarRenderersType<E>;
+};
+
+export type SuggestionsPlugin = {
+  renderSuggestionIcons?: React.FC<{ suggestion: InputSuggestionToken }>;
 };

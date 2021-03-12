@@ -61,7 +61,7 @@ export function getPluginResultRenderers(pluginInfos: PluginInfo[]) {
   plugins.forEach((plugin) => {
     resultRenderersPlugins = {
       ...resultRenderersPlugins,
-      ...plugin.dataSourceRenderingInterface?.resultRenderers,
+      ...plugin.dsPlugin?.resultRenderers,
     };
   });
 
@@ -77,7 +77,7 @@ export function getPluginSidebarRenderers(pluginInfos: PluginInfo[]) {
   plugins.forEach((plugin) => {
     sidebarRenderersPlugins = {
       ...sidebarRenderersPlugins,
-      ...plugin.dataSourceRenderingInterface?.sidebarRenderers,
+      ...plugin.dsPlugin?.sidebarRenderers,
     };
   });
 

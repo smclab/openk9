@@ -114,8 +114,7 @@ function DSItemRender({
     mutate(`/api/v2/datasource`);
   }
 
-  const Icon =
-    plugin?.dataSourceAdminInterfacePath?.iconRenderer || DataSourceIcon;
+  const Icon = plugin?.adminPlugin?.iconRenderer || DataSourceIcon;
 
   return (
     <li className="list-group-item list-group-item-flex">

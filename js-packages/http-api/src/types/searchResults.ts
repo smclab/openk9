@@ -41,12 +41,3 @@ export type GenericResultItem<E = {}> = {
     >]?: string[];
   };
 };
-
-export type ApplicationResultItem = GenericResultItem<{
-  application: {
-    icon: string;
-    description: string;
-    title: string;
-    URL: string;
-  };
-}>;

@@ -36,11 +36,11 @@ export const plugin: Plugin<LiferayResultType> = {
   pluginId: "liferay-datasource",
   displayName: "Liferay DataSource",
   pluginType: ["DATASOURCE", "ENRICH"],
-  dataSourceAdminInterfacePath: {
+  adminPlugin: {
     iconRenderer,
     settingsRenderer,
   },
-  dataSourceRenderingInterface: {
+  dsPlugin: {
     resultRenderers: {
       file: DocumentResultCard as any,
       user: ContactResultCard as any,

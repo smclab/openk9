@@ -32,11 +32,11 @@ export const plugin: Plugin<ApplicationResultItem> = {
   pluginId: "application-datasource",
   displayName: "Application DataSource",
   pluginType: ["DATASOURCE"],
-  dataSourceAdminInterfacePath: {
+  adminPlugin: {
     iconRenderer,
     settingsRenderer,
   },
-  dataSourceRenderingInterface: {
+  dsPlugin: {
     resultRenderers: {
       application: ApplicationResultCard as any,
     },
