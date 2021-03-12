@@ -27,11 +27,11 @@ export const plugin: Plugin<EmailResultItem> = {
   pluginId: "email-datasource",
   displayName: "Email DataSource",
   pluginType: ["DATASOURCE", "ENRICH"],
-  dataSourceAdminInterfacePath: {
+  adminPlugin: {
     iconRenderer,
     settingsRenderer,
   },
-  dataSourceRenderingInterface: {
+  dsPlugin: {
     resultRenderers: {
       email: EmailResultCard as any,
     },

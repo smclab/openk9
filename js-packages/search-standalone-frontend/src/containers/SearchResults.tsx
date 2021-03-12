@@ -23,8 +23,6 @@ import {
   ThemeType,
   SearchResultsList,
   ResultSidebar,
-  ApplicationResultCard,
-  ApplicationSidebar,
   getPluginResultRenderers,
   getPluginSidebarRenderers,
 } from "@openk9/search-ui-components";
@@ -62,12 +60,10 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 }));
 
 export const staticResultRenderers: ResultRenderersType<{}> = {
-  application: ApplicationResultCard as any,
   ...config.resultRenderers,
 };
 
 export const staticSidebarRenderers: SidebarRenderersType<{}> = {
-  application: ApplicationSidebar as any,
   ...config.sidebarRenderers,
 };
 

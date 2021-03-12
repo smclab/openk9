@@ -120,8 +120,7 @@ function DSItemRender({
 }) {
   const classes = useStyles();
 
-  const Icon =
-    plugin?.dataSourceAdminInterfacePath?.iconRenderer || DataSourceIcon;
+  const Icon = plugin?.adminPlugin?.iconRenderer || DataSourceIcon;
 
   return (
     <li className="list-group-item list-group-item-flex">
