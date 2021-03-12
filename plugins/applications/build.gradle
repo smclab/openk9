@@ -6,3 +6,5 @@ dependencies {
 	compile project(":osgi:ingestion:ingestion-driver-manager-api")
 	compile project(":osgi:ingestion:ingestion-logic-api")
 }
+
+apply from: "$rootDir/build-js.gradle"

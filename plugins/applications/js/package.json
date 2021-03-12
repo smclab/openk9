@@ -1,0 +1,22 @@
+{
+  "name": "@openk9/applications-datasource",
+  "version": "0.1.0-alpha.3",
+  "private": true,
+  "author": "SMC",
+  "description": "OpenK9 Applications Data Source Frontend Module",
+  "main": "build/index.js",
+  "license": "AGPL-3.0-or-later",
+  "homepage": "https://openk9.io/",
+  "scripts": {
+    "build": "plugin-scripts build"
+  },
+  "dependencies": {
+    "@clayui/icon": "^3.1.0",
+    "clsx": "^1.1.0",
+    "react": "^17.0.0",
+    "react-jss": "^10.4.0"
+  },
+  "devDependencies": {
+    "@openk9/plugin-scripts": "^0.1.0-alpha.3"
+  }
+}
