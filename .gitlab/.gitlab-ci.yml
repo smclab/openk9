@@ -6,9 +6,9 @@ stages:
   - deploy
 
 include:
-  - local: '.gitlab-ci-js.yml'
-  - local: '.gitlab-ci-parser.yml'
-  - local: '.gitlab-ci-osgi.yml'
+  - local: '/gitlab/.gitlab-ci-js.yml'
+  - local: '/gitlab/.gitlab-ci-parser.yml'
+  - local: '/gitlab/.gitlab-ci-osgi.yml'
 
 trigger_deploy:
   stage: deploy
