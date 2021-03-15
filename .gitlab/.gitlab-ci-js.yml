@@ -68,7 +68,7 @@ Build Latest JS Docker Images:
   stage: build-docker
   needs: [JS Format Lint Test and Build Check]
   rules:
-    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - js-packages/**/*
   before_script:

@@ -44,7 +44,7 @@ Build Latest OSGI Docker Image:
   image: docker:19.03.12
   stage: build-docker
   rules:
-    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - osgi/**/*
         - plugins/**/*
