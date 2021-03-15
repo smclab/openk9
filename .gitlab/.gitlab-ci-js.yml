@@ -78,7 +78,7 @@ Build Latest JS Docker Images:
     - docker tag search-standalone-frontend:latest $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
     - docker push $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
     
-    - docker build -t search-admin:latest -f js-packages/search-admin/Dockerfile .
+    - docker build -t search-admin:latest -f js-packages/admin-ui/Dockerfile .
     - docker tag search-admin:latest $CI_REGISTRY_NAME/openk9/search-admin:latest
     - docker push $CI_REGISTRY_NAME/openk9/search-admin:latest
     
