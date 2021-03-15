@@ -54,7 +54,7 @@ Build Tagged JS Docker Images:
     - docker tag search-standalone-frontend:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-standalone-frontend:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/search-standalone-frontend:${CI_COMMIT_REF_NAME}
     
-    - docker build -t search-admin:${CI_COMMIT_REF_NAME} -f js-packages/search-admin/Dockerfile .
+    - docker build -t search-admin:${CI_COMMIT_REF_NAME} -f js-packages/admin-ui/Dockerfile .
     - docker tag search-admin:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-admin:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/search-admin:${CI_COMMIT_REF_NAME}
     
