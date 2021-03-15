@@ -1,0 +1,88 @@
+variables:
+  YARN_CACHE_FOLDER: ../.yarn-cache
+
+cache:
+  paths:
+    - .yarn-cache/
+
+JS Format Lint Test and Build Check:
+  image: node:13.13
+  stage: quality
+  rules:
+    - changes:
+      - js/**/*
+  before_script:
+    - echo -e "$NPM_TOKEN" > ~/.npmrc
+    - chmod 600  ~/.npmrc
+    - cd openk9
+    - ls
+    - cd js-packages
+    - yarn install --prefer-offline --frozen-lockfile --cache-folder $YARN_CACHE_FOLDER
+  script:
+    - yarn format
+    - yarn lint
+    - yarn test
+    - yarn build
+  allow_failure: true
+
+Build and Publish to NPM:
+  image: node:13.13
+  stage: build
+  only:
+    - tags
+  before_script:
+    - echo -e "$NPM_TOKEN" > ~/.npmrc
+    - chmod 600  ~/.npmrc
+    - cd js-packages
+    - yarn install --prefer-offline --frozen-lockfile --cache-folder $YARN_CACHE_FOLDER
+  script:
+    - yarn build
+    - yarn format
+    - git fetch --tags
+    - yarn run publish --registry https://registry.smc.it/repository/npm-hosted --no-git-reset --no-commit-hooks --no-git-tag-version --no-push --yes from-package
+  allow_failure: false
+
+Build Tagged JS Docker Images:
+  image: docker:19.03.12
+  stage: build-docker
+  only:
+    - tags
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+  script:
+    - docker build -t search-standalone-frontend:${CI_COMMIT_REF_NAME} -f js-packages/search-standalone-frontend/Dockerfile .
+    - docker tag search-standalone-frontend:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-standalone-frontend:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/search-standalone-frontend:${CI_COMMIT_REF_NAME}
+    
+    - docker build -t search-admin:${CI_COMMIT_REF_NAME} -f js-packages/search-admin/Dockerfile .
+    - docker tag search-admin:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-admin:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/search-admin:${CI_COMMIT_REF_NAME}
+    
+    - docker build -t admin-logs-service:${CI_COMMIT_REF_NAME} -f js-packages/admin-logs-service/Dockerfile .
+    - docker tag admin-logs-service:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/admin-logs-service:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/admin-logs-service:${CI_COMMIT_REF_NAME}
+  allow_failure: false
+
+Build Latest JS Docker Images:
+  image: docker:19.03.12
+  stage: build-docker
+  needs: [JS Format Lint Test and Build Check]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+      changes:
+        - js-packages/**/*
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+  script:
+    - docker build -t search-standalone-frontend:latest -f js-packages/search-standalone-frontend/Dockerfile .
+    - docker tag search-standalone-frontend:latest $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
+    - docker push $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
+    
+    - docker build -t search-admin:latest -f js-packages/search-admin/Dockerfile .
+    - docker tag search-admin:latest $CI_REGISTRY_NAME/openk9/search-admin:latest
+    - docker push $CI_REGISTRY_NAME/openk9/search-admin:latest
+    
+    - docker build -t admin-logs-service:latest -f js-packages/admin-logs-service/Dockerfile .
+    - docker tag admin-logs-service:latest $CI_REGISTRY_NAME/openk9/admin-logs-service:latest
+    - docker push $CI_REGISTRY_NAME/openk9/admin-logs-service:latest
+  allow_failure: false

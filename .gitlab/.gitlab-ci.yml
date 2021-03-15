@@ -1,0 +1,16 @@
+stages:
+  - quality
+  - build
+  - test
+  - build-docker
+  - deploy
+
+include:
+  - local: '.gitlab-ci-js.yml'
+  - local: '.gitlab-ci-parser.yml'
+  - local: '.gitlab-ci-osgi.yml'
+
+trigger_deploy:
+  stage: deploy
+  script:
+    - "curl -X POST -F token=TOKEN -F ref=main https://git.smc.it/api/v4/projects/1136/trigger/pipeline"

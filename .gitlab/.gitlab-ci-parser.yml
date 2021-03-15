@@ -1,0 +1,45 @@
+Build Tagged Parser Docker Images:
+  image: docker:19.03.12
+  stage: build-docker
+  needs: []
+  only: 
+    - tags
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+  script:
+    - docker build -t web-parser:${CI_COMMIT_REF_NAME} -f plugins/web/web-parser/Dockerfile .
+    - docker tag web-parser:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/web-parser:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/web-parser:${CI_COMMIT_REF_NAME}
+    
+    - docker build -t email-parser:${CI_COMMIT_REF_NAME} -f plugins/email/email-parser/Dockerfile .
+    - docker tag email-parser:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/email-parser:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/email-parser:${CI_COMMIT_REF_NAME}
+    
+    - docker build -t liferay-parser:${CI_COMMIT_REF_NAME} -f plugins/liferay/liferay-parser/Dockerfile .
+    - docker tag liferay-parser:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/liferay-parser:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/liferay-parser:${CI_COMMIT_REF_NAME}
+
+Build Latest Parser Docker Images:
+  image: docker:19.03.12
+  stage: build-docker
+  needs: []
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - plugins/web/web-parser/**/*
+        - plugins/email/email-parser/**/*
+        - plugins/liferay/liferay-parser/**/*
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+  script:
+    - docker build -t web-parser:latest -f plugins/web/web-parser/Dockerfile .
+    - docker tag web-parser:latest $CI_REGISTRY_NAME/openk9/web-parser:latest
+    - docker push $CI_REGISTRY_NAME/openk9/web-parser:latest
+    
+    - docker build -t email-parser:latest -f plugins/email/email-parser/Dockerfile .
+    - docker tag email-parser:latest $CI_REGISTRY_NAME/openk9/email-parser:latest
+    - docker push $CI_REGISTRY_NAME/openk9/email-parser:latest
+    
+    - docker build -t liferay-parser:latest -f plugins/liferay/liferay-parser/Dockerfile .
+    - docker tag liferay-parser:latest $CI_REGISTRY_NAME/openk9/liferay-parser:latest
+    - docker push $CI_REGISTRY_NAME/openk9/liferay-parser:latest
