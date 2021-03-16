@@ -1633,6 +1633,16 @@
   resolved "https://registry.yarnpkg.com/@clayui/css/-/css-3.25.0.tgz#533c6da279960e63ec0ef31003020c41875a9363"
   integrity sha512-H1xrbx+OS2qisrZCv1dxsz7KE2WpIVnee0uM2awib0IqZqxeCpGYFloIptwcQ6gDUqB+NbntxWfU+gRmazAFOA==
 
+"@clayui/form@^3.14.4":
+  version "3.14.4"
+  resolved "https://registry.yarnpkg.com/@clayui/form/-/form-3.14.4.tgz#50725d4647a3e1fba3fc5449429f8baec694b2df"
+  integrity sha512-R5pm55qw0ooH5ItepehAebUwLrJoebe1xnbA5Pkk/rbL+SzbJRtXv1igMNjvT1hUhjbSG7s2ZKKnXnVdhnmm3w==
+  dependencies:
+    "@clayui/button" "^3.6.0"
+    "@clayui/icon" "^3.1.0"
+    "@clayui/shared" "^3.5.1"
+    classnames "^2.2.6"
+
 "@clayui/icon@^3.1.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@clayui/icon/-/icon-3.1.0.tgz#9e600f87194f8dacfb49ace121fbab25a2e82f03"
