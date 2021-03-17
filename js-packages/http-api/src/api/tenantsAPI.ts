@@ -36,7 +36,6 @@ export async function getTenant(tenantId: number): Promise<Tenant> {
 }
 
 export async function postTenant(data: {
-  tenantId: number;
   name: string;
   virtualHost: string;
 }): Promise<Tenant> {
