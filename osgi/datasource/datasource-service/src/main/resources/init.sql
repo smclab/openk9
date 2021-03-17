@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS Datasource(
 CREATE INDEX IF NOT EXISTS index_tenantId ON Datasource (tenantId);
 CREATE UNIQUE INDEX IF NOT EXISTS index_name ON Datasource (name);
 CREATE TABLE IF NOT EXISTS Tenant(
-	tenantId BIGINT PRIMARY KEY NOT NULL,
+	tenantId SERIAL PRIMARY KEY NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	virtualHost VARCHAR(255) NOT NULL);
 CREATE UNIQUE INDEX IF NOT EXISTS index_virtualHost ON Tenant (virtualHost);
