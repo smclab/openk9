@@ -235,7 +235,6 @@ function AddModal({ visible, handleClose }) {
   });
 
   const [newTenant, setNewTenant] = useState({
-    tenantId: 0,
     name: "",
     virtualHost: "",
   });
@@ -250,16 +249,14 @@ function AddModal({ visible, handleClose }) {
   };
 
   const handleSave = async () => {
-    const data = await getTenants();
-    newTenant.tenantId = data.length + 1;
-    console.log(data.length + 1);
     await postTenant(newTenant);
     mutate(`/api/v2/tenant`);
+
     setNewTenant((cs) => ({
-      tenantId: cs.tenantId + 1,
       name: "",
       virtualHost: "",
     }));
+
     onClose();
   };
 
