@@ -15,4 +15,4 @@ trigger_deploy:
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
-    - "curl -X POST -F token=$TOKEN -F ref=master https://git.smc.it/api/v4/projects/1136/trigger/pipeline"
+    - "curl -X POST -F token=$TOKEN -F ref=master $TRIGGER_URL"
