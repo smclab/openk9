@@ -41,7 +41,7 @@ public abstract class BaseReactiveRepository<ENTITY, PK>
 				_databaseClient
 					.insert()
 					.into(tableName())
-					.value(_updateMapper.apply(entity))
+					.value(_insertMapper.apply(entity))
 					.map(entityMapping())
 					.first()
 			)

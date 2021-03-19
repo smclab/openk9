@@ -57,7 +57,8 @@ public class TenantEntityMapper implements EntityMapper {
 
 			return Map.of(
 				"name", tenant.getName(),
-				"virtualHost", tenant.getVirtualHost()
+				"virtualHost", tenant.getVirtualHost(),
+				"jsonConfig", tenant.getJsonConfig()
 			);
 
 		};
