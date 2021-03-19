@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Auth Keycloak Query Parser
+Bundle-SymbolicName: io.openk9.auth.query.parser
+
+-include: ${project.rootDir}/osgi/common.bnd

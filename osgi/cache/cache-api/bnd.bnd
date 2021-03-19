@@ -2,3 +2,12 @@ Bundle-Name: [OpenK9] Cache Api
 Bundle-SymbolicName: io.openk9.cache.api
 
 -include: ${project.rootDir}/osgi/common.bnd
+
+Export-Package: \
+ com.github.benmanes.caffeine,\
+ com.github.benmanes.caffeine.base,\
+ com.github.benmanes.caffeine.cache,\
+ com.github.benmanes.caffeine.cache.stats,\
+ org.checkerframework.*,\
+ com.google.errorprone,\
+ com.google.errorprone.annotations

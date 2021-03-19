@@ -17,8 +17,44 @@
 
 package io.openk9.search.api.query;
 
-public interface QueryParser {
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Tenant;
+import io.openk9.http.web.HttpRequest;
+import io.openk9.ingestion.driver.manager.api.DocumentType;
+import io.openk9.ingestion.driver.manager.api.PluginDriver;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import reactor.core.publisher.Mono;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
+public interface QueryParser
+	extends Function<
+		QueryParser.Context, Mono<Consumer<BoolQueryBuilder>>> {
+
+	default QueryParser andThen(QueryParser after) {
+
+		Objects.requireNonNull(after, "after is null");
+
+		return (l) -> apply(l).flatMap(c1 -> after.apply(l).map(c1::andThen));
+
+	}
+
+	QueryParser NOTHING = (context) -> Mono.just((ignore) -> {});
+
+	@Data
+	@RequiredArgsConstructor(staticName = "of")
+	class Context {
+		final Tenant tenant;
+		final List<Datasource> datasourceList;
+		final List<Map.Entry<PluginDriver, List<DocumentType>>> pluginDriverDocumentTypeList;
+		final Map<String, List<SearchToken>> tokenTypeGroup;
+		final HttpRequest httpRequest;
+	}
 
 }

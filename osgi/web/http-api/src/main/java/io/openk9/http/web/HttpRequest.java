@@ -49,6 +49,10 @@ public interface HttpRequest {
 
 	Iterable<Map.Entry<String, String>> requestHeaders();
 
+	String getHeader(String name);
+
+	String getHeader(String name, String defaultValue);
+
 	Publisher<Map<String, List<String>>> bodyAttributes();
 
 	Publisher<Map<String, List<byte[]>>> bodyAttributesBytes();

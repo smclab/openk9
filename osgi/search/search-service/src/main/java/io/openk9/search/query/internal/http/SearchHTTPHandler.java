@@ -26,26 +26,23 @@ import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.HttpRequest;
 import io.openk9.http.web.HttpResponse;
-import io.openk9.json.api.JsonFactory;
-import io.openk9.search.api.query.SearchRequest;
-import io.openk9.search.api.query.SearchToken;
-import io.openk9.search.api.query.SearchTokenizer;
-import io.openk9.search.client.api.Search;
-import io.openk9.search.client.api.util.SearchUtil;
 import io.openk9.ingestion.driver.manager.api.DocumentType;
 import io.openk9.ingestion.driver.manager.api.DocumentTypeProvider;
 import io.openk9.ingestion.driver.manager.api.PluginDriver;
 import io.openk9.ingestion.driver.manager.api.PluginDriverRegistry;
 import io.openk9.ingestion.driver.manager.api.SearchKeyword;
+import io.openk9.json.api.JsonFactory;
+import io.openk9.search.api.query.QueryParser;
+import io.openk9.search.api.query.SearchRequest;
+import io.openk9.search.api.query.SearchToken;
+import io.openk9.search.api.query.SearchTokenizer;
+import io.openk9.search.client.api.Search;
+import io.openk9.search.client.api.util.SearchUtil;
 import io.openk9.search.query.internal.response.Response;
 import org.apache.lucene.search.TotalHits;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.Operator;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -54,6 +51,9 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,9 +67,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -98,19 +96,24 @@ public class SearchHTTPHandler implements HttpHandler {
 
 		String hostName = HttpUtil.getHostName(httpRequest);
 
-		return _tenantRepository
+		Mono<Tenant> tenant = _tenantRepository
 			.findByVirtualHost(hostName)
 			.switchIfEmpty(
 				Mono.error(
 					() -> new RuntimeException(
-						"tenant not found for virtualhost: " + hostName)))
-			.map(Tenant::getTenantId)
-			.zipWith(Mono.from(httpRequest.aggregateBodyToString()))
-			.flatMap(t2 -> _datasourceRepository.findByTenantIdAndIsActive(t2.getT1())
+						"tenant not found for virtualhost: " + hostName)));
+
+		return Mono.zip(tenant, Mono.from(httpRequest.aggregateBodyToString()))
+			.flatMap(t2 -> _datasourceRepository
+				.findByTenantIdAndIsActive(t2.getT1().getTenantId())
 				.collectList()
 				.flatMap(datasources -> _toQuerySearchRequest(
-					t2.getT1(), datasources,
-					_searchTokenizer.parse(t2.getT2()))))
+					t2.getT1(),
+					datasources,
+					_searchTokenizer.parse(t2.getT2()),
+					httpRequest
+					)
+				))
 			.map(SearchResponse::getHits)
 			.map(this::_searchHitToResponse)
 			.map(_jsonFactory::toJson)
@@ -168,22 +171,16 @@ public class SearchHTTPHandler implements HttpHandler {
 	}
 
 	private Mono<SearchResponse> _toQuerySearchRequest(
-		long tenantId, List<Datasource> datasources, SearchRequest searchRequest) {
+		Tenant tenant, List<Datasource> datasources, SearchRequest searchRequest,
+		HttpRequest httpRequest) {
 
-		return _search.search(factory -> {
 
-			BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
-
-			long[] ids = new long[datasources.size()];
+		return Mono.defer(() -> {
 
 			List<String> serviceDriverNames =
 				new ArrayList<>(datasources.size());
 
-			for (int i = 0; i < datasources.size(); i++) {
-
-				Datasource datasource = datasources.get(i);
-
-				ids[i] = datasource.getDatasourceId();
+			for (Datasource datasource : datasources) {
 
 				String driverServiceName = datasource.getDriverServiceName();
 
@@ -192,11 +189,6 @@ public class SearchHTTPHandler implements HttpHandler {
 				}
 
 			}
-
-			boolQuery.filter(
-				QueryBuilders
-					.termsQuery("datasourceId", ids)
-			);
 
 			Map<String, List<SearchToken>> tokenTypeGroup =
 				searchRequest
@@ -242,7 +234,7 @@ public class SearchHTTPHandler implements HttpHandler {
 
 			Stream<Map.Entry<PluginDriver, List<DocumentType>>>
 				documentTypeStream =
-					pluginDriverListDocumentType.entrySet().stream();
+				pluginDriverListDocumentType.entrySet().stream();
 
 			if (datasource != null) {
 
@@ -265,250 +257,118 @@ public class SearchHTTPHandler implements HttpHandler {
 			List<Map.Entry<PluginDriver, List<DocumentType>>> documentTypeList =
 				documentTypeStream.collect(Collectors.toList());
 
-			if (documentTypeList.isEmpty()) {
-				return SearchUtil.EMPTY_SEARCH_REQUEST;
-			}
+			QueryParser.Context.of(
+				tenant,
+				datasources,
+				documentTypeList,
+				tokenTypeGroup,
+				httpRequest
+			);
 
-			Stream.of(
-				tokenTypeGroup
-					.getOrDefault("ENTITY", Collections.emptyList())
+			QueryParser queryParser =
+				_queryParsers
 					.stream()
-					.map(this::_entityEnrichBoolQuery),
-				Stream.of(_docTypeBoolQuery(
-					tokenTypeGroup
-						.getOrDefault("DOCTYPE", Collections.emptyList()))),
-				this._textEntityQuery(
-					tokenTypeGroup.getOrDefault(
-						"TEXT", Collections.emptyList()), documentTypeList)
+					.reduce(QueryParser.NOTHING, QueryParser::andThen);
+
+			return queryParser.apply(
+				QueryParser.Context.of(
+					tenant,
+					datasources,
+					documentTypeList,
+					tokenTypeGroup,
+					httpRequest
 				)
-					.flatMap(Function.identity())
-					.reduce(Consumer::andThen)
-					.orElse(_DEFAULT_CONSUMER)
-					.accept(boolQuery);
+			).flatMap(boolQueryBuilderConsumer ->
+				_search.search(factory -> {
 
-			org.elasticsearch.action.search.SearchRequest elasticSearchQuery;
+					long tenantId = tenant.getTenantId();
 
-			if (datasource != null) {
+					if (documentTypeList.isEmpty()) {
+						return SearchUtil.EMPTY_SEARCH_REQUEST;
+					}
 
-				String[] indexNames = documentTypeList
-					.stream()
-					.map(Map.Entry::getKey)
-					.map(PluginDriver::getName)
-					.distinct()
-					.toArray(String[]::new);
+					BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
 
-				elasticSearchQuery =
-					factory.createSearchRequestData(tenantId, indexNames);
-			}
-			else {
-				elasticSearchQuery =
-					factory.createSearchRequestData(tenantId, "*");
-			}
+					boolQueryBuilderConsumer.accept(boolQuery);
 
-			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+					org.elasticsearch.action.search.SearchRequest elasticSearchQuery;
 
-			int[] range = searchRequest.getRange();
+					if (datasource != null) {
 
-			searchSourceBuilder.from(range[0]);
-			searchSourceBuilder.size(range[1]);
+						String[] indexNames = documentTypeList
+							.stream()
+							.map(Map.Entry::getKey)
+							.map(PluginDriver::getName)
+							.distinct()
+							.toArray(String[]::new);
 
-			searchSourceBuilder.query(boolQuery);
+						elasticSearchQuery =
+							factory.createSearchRequestData(
+								tenantId, indexNames);
+					}
+					else {
+						elasticSearchQuery =
+							factory.createSearchRequestData(tenantId, "*");
+					}
 
-			HighlightBuilder highlightBuilder = new HighlightBuilder();
+					SearchSourceBuilder searchSourceBuilder =
+						new SearchSourceBuilder();
 
-			documentTypeList
-				.stream()
-				.map(Map.Entry::getValue)
-				.flatMap(Collection::stream)
-				.map(DocumentType::getSearchKeywords)
-				.flatMap(Collection::stream)
-				.filter(SearchKeyword::isText)
-				.map(SearchKeyword::getKeyword)
-				.distinct()
-				.forEach(highlightBuilder::field);
+					int[] range = searchRequest.getRange();
 
-			highlightBuilder.forceSource(true);
+					searchSourceBuilder.from(range[0]);
+					searchSourceBuilder.size(range[1]);
 
-			highlightBuilder.tagsSchema("default");
+					searchSourceBuilder.query(boolQuery);
 
-			searchSourceBuilder.highlighter(highlightBuilder);
+					HighlightBuilder highlightBuilder = new HighlightBuilder();
 
-			if (_log.isDebugEnabled()) {
-				_log.debug(searchSourceBuilder.toString());
-			}
+					documentTypeList
+						.stream()
+						.map(Map.Entry::getValue)
+						.flatMap(Collection::stream)
+						.map(DocumentType::getSearchKeywords)
+						.flatMap(Collection::stream)
+						.filter(SearchKeyword::isText)
+						.map(SearchKeyword::getKeyword)
+						.distinct()
+						.forEach(highlightBuilder::field);
 
-			return elasticSearchQuery.source(searchSourceBuilder);
+					highlightBuilder.forceSource(true);
+
+					highlightBuilder.tagsSchema("default");
+
+					searchSourceBuilder.highlighter(highlightBuilder);
+
+					if (_log.isDebugEnabled()) {
+						_log.debug(searchSourceBuilder.toString());
+					}
+
+					return elasticSearchQuery.source(searchSourceBuilder);
+
+				}));
 
 		});
 
 	}
 
-	private Consumer<BoolQueryBuilder> _docTypeBoolQuery(
-		List<SearchToken> searchTokenList) {
-
-		if (searchTokenList.isEmpty()) {
-			return _DEFAULT_CONSUMER;
-		}
-
-		String[][] typeArray =
-			searchTokenList
-				.stream()
-				.map(SearchToken::getValues)
-				.toArray(String[][]::new);
-
-		return bool -> {
-
-			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-
-			for (String[] types : typeArray) {
-
-				BoolQueryBuilder shouldBool = QueryBuilders.boolQuery();
-
-				for (String type : types) {
-					shouldBool
-						.should(
-							QueryBuilders
-								.matchQuery("type", type)
-								.operator(Operator.AND)
-						);
-				}
-
-				boolQueryBuilder.must(shouldBool);
-
-			}
-
-			bool.filter(boolQueryBuilder);
-
-		};
+	@Reference(
+		service = QueryParser.class,
+		bind = "addQueryParser",
+		unbind = "removeQueryParser",
+		cardinality = ReferenceCardinality.MULTIPLE,
+		policyOption = ReferencePolicyOption.GREEDY,
+		policy = ReferencePolicy.DYNAMIC
+	)
+	protected void addQueryParser(QueryParser queryParser) {
+		_queryParsers.add(queryParser);
 	}
 
-	private Stream<Consumer<BoolQueryBuilder>> _textEntityQuery(
-		List<SearchToken> tokenTextList,
-		List<Map.Entry<PluginDriver, List<DocumentType>>> entityMapperList) {
-
-		return tokenTextList
-			.stream()
-			.map(searchToken -> _termQueryPrefixValues(
-				searchToken, entityMapperList));
+	protected void removeQueryParser(QueryParser queryParser) {
+		_queryParsers.remove(queryParser);
 	}
 
-	private Consumer<BoolQueryBuilder> _termQueryPrefixValues(
-		SearchToken tokenText,
-		List<Map.Entry<PluginDriver, List<DocumentType>>> entityMapperList) {
-
-		return query -> {
-
-			String[] values = tokenText.getValues();
-
-			if (values.length == 0) {
-				return;
-			}
-
-			String keywordKey = tokenText.getKeywordKey();
-
-			Predicate<SearchKeyword> keywordKeyPredicate =
-				searchKeyword -> keywordKey == null || keywordKey.isEmpty() ||
-								 searchKeyword.getKeyword().equals(keywordKey);
-
-			Map<String, Float> keywordBoostMap =
-				entityMapperList
-					.stream()
-					.map(Map.Entry::getValue)
-					.flatMap(Collection::stream)
-					.map(DocumentType::getSearchKeywords)
-					.flatMap(Collection::stream)
-					.filter(SearchKeyword::isText)
-					.distinct()
-					.filter(keywordKeyPredicate)
-					.map(SearchKeyword::getFieldBoost)
-					.collect(
-						Collectors.toMap(
-							Map.Entry::getKey, Map.Entry::getValue));
-
-
-			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-
-			for (String value : values) {
-
-				MultiMatchQueryBuilder multiMatchQueryBuilder =
-					new MultiMatchQueryBuilder(value);
-
-				multiMatchQueryBuilder.fields(keywordBoostMap);
-
-				boolQueryBuilder.should(multiMatchQueryBuilder);
-
-				multiMatchQueryBuilder =
-					new MultiMatchQueryBuilder(value);
-
-				multiMatchQueryBuilder.fields(keywordBoostMap);
-
-				multiMatchQueryBuilder.type(
-					MultiMatchQueryBuilder.Type.PHRASE);
-
-				multiMatchQueryBuilder.slop(2);
-
-				multiMatchQueryBuilder.boost(2.0f);
-
-				boolQueryBuilder.should(multiMatchQueryBuilder);
-
-			}
-
-			query.must(boolQueryBuilder);
-
-		};
-	}
-
-	private Consumer<BoolQueryBuilder> _entityEnrichBoolQuery(
-		SearchToken searchToken) {
-
-		return boolQueryBuilder -> {
-
-			String[] ids = searchToken.getValues();
-
-			String entityType = searchToken.getEntityType();
-
-			String nestEntityPath = ENTITIES + "." + entityType;
-
-			String nestIdPath = nestEntityPath + ".id";
-
-			BoolQueryBuilder innerNestBoolQuery = QueryBuilders
-				.boolQuery()
-				.must(_multiMatchValues(nestIdPath, ids));
-
-			String keywordKey = searchToken.getKeywordKey();
-
-			if (keywordKey != null && !keywordKey.isEmpty()) {
-				innerNestBoolQuery
-					.must(QueryBuilders.matchQuery(
-						nestEntityPath + ".context", keywordKey));
-			}
-
-			boolQueryBuilder.filter(
-				QueryBuilders.nestedQuery(
-					nestEntityPath,
-					innerNestBoolQuery,
-					ScoreMode.Max)
-			);
-
-		};
-	}
-
-	private QueryBuilder _multiMatchValues(String field, String[] ids) {
-
-		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
-
-		for (String id : ids) {
-			boolQuery.should(QueryBuilders.termQuery(field, id));
-		}
-
-		return boolQuery;
-
-	}
-
-	private static final Consumer<BoolQueryBuilder> _DEFAULT_CONSUMER =
-		(bool) -> {};
-
-	private static final String ENTITIES = "entities";
+	private final List<QueryParser> _queryParsers = new ArrayList<>();
 
 	@Reference
 	private TenantRepository _tenantRepository;

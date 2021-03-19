@@ -28,6 +28,8 @@ public interface JsonFactory {
 
 	<T> T fromJson(String json, Class<T> clazz);
 
+	<T> T fromJson(byte[] json, Class<T> clazz);
+
 	<T> List<T> fromJsonList(String jsonList, Class<T> clazz);
 
 	<T> T[] fromJsonArray(String jsonList, Class<T> clazz);

@@ -17,12 +17,14 @@
 
 package io.openk9.http.web.error;
 
+import io.openk9.http.exception.HttpException;
 import io.openk9.http.web.HttpResponse;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 public interface ErrorHandler extends
@@ -36,6 +38,23 @@ public interface ErrorHandler extends
 			if (_log.isErrorEnabled()) {
 				_log.error(throwable.getMessage(), throwable);
 			}
+
+			if (throwable instanceof HttpException) {
+				HttpException httpException = (HttpException) throwable;
+
+				Publisher<String> body = httpException.getBody();
+
+				String status = httpResponse.status(
+					httpException.getStatusCode(),
+					httpException.getReason());
+
+				return httpResponse.sendString(
+					Objects.requireNonNullElseGet(
+						body,
+						() -> Mono.just(status)));
+
+			}
+
 
 			return httpResponse.sendString(
 				Mono.just(

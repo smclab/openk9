@@ -72,6 +72,17 @@ public class JsonFactoryImpl implements JsonFactory {
 	}
 
 	@Override
+	public <T> T fromJson(byte[] json, Class<T> clazz) {
+		try {
+			return _objectMapperProvider
+				.getObjectMapper().readValue(json, clazz);
+		}
+		catch (IOException exception) {
+			throw new JsonException(exception);
+		}
+	}
+
+	@Override
 	public <T> List<T> fromJsonList(String jsonList, Class<T> clazz) {
 		try {
 			return _objectMapperProvider

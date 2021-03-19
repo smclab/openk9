@@ -1,0 +1,5 @@
+dependencies {
+	compile project(':osgi:web:http-api')
+	compile project(':osgi:search:search-api')
+	compile project(":osgi:auth:auth-keycloak-api")
+}

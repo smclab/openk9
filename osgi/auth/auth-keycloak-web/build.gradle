@@ -1,0 +1,11 @@
+dependencies {
+	compile project(":osgi:common:common-api")
+	compile project(':osgi:common:serialization-api')
+	compile project(':osgi:web:http-api')
+	compile project(':osgi:web:open-api')
+
+	compile project(":osgi:auth:auth-keycloak-api")
+
+	compile group: 'com.github.ben-manes.caffeine', name: 'caffeine', version: '2.8.8'
+
+}

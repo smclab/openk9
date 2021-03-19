@@ -17,17 +17,21 @@
 
 package io.openk9.internal.http.client;
 
-import io.openk9.http.client.HttpClient;
-import io.openk9.http.web.HttpHandler;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.openk9.http.client.HttpClient;
+import io.openk9.http.exception.HttpException;
+import io.openk9.http.web.HttpHandler;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufMono;
+import reactor.netty.http.client.HttpClientResponse;
 
 import java.util.Collections;
 import java.util.Map;
 
 class HttpClientImpl implements HttpClient {
+
 
 	HttpClientImpl(reactor.netty.http.client.HttpClient httpClient) {
 		_httpClient = httpClient;
@@ -64,7 +68,7 @@ class HttpClientImpl implements HttpClient {
 		return request
 			.send(ByteBufMono.fromString(Mono.just(dataRow)))
 			.uri(url)
-			.responseSingle((response, mono) -> mono.asByteArray());
+			.responseSingle(HttpClientImpl::_response);
 	}
 
 	@Override
@@ -96,7 +100,23 @@ class HttpClientImpl implements HttpClient {
 
 		return receiver
 			.uri(url)
-			.responseSingle((response, mono) -> mono.asByteArray());
+			.responseSingle(HttpClientImpl::_response);
+
+	}
+
+	private static Mono<byte[]> _response(
+		HttpClientResponse response, ByteBufMono mono) {
+
+		HttpResponseStatus status = response.status();
+
+		if (status.code() != 200) {
+			return Mono.error(
+				new HttpException(
+					status.code(), status.reasonPhrase(),
+					mono.asString()));
+		}
+
+		return mono.asByteArray();
 
 	}
 

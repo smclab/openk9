@@ -70,9 +70,18 @@ dependencies {
 	dist project(path: ':osgi:metrics:metrics-service', transitive: false)
 	dist project(path: ':osgi:metrics:metrics-ext', transitive: false)
 
+	dist project(path: ':osgi:cache:cache-api', transitive: false)
+
 	dist project(path: ':plugins:email', transitive: false)
 	dist project(path: ':plugins:liferay', transitive: false)
 	dist project(path: ':plugins:web', transitive: false)
+
+
+	// AUTH
+	dist project(path: ':osgi:auth:auth-keycloak-api', configuration: 'archives', transitive: false)
+	dist project(path: ':osgi:auth:auth-keycloak-service', configuration: 'archives', transitive: false)
+	dist project(path: ':osgi:auth:auth-keycloak-web', configuration: 'archives', transitive: false)
+	dist project(path: ':osgi:auth:auth-keycloak-query-parser', configuration: 'archives', transitive: false)
 
 	// felix dependency manager
 

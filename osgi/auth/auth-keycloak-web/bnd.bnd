@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Auth Keycloak Web
+Bundle-SymbolicName: io.openk9.auth.keycloak.web
+
+-include: ${project.rootDir}/osgi/common.bnd

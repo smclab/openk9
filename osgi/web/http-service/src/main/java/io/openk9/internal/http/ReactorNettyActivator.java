@@ -17,20 +17,21 @@
 
 package io.openk9.internal.http;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.openk9.http.socket.WebSocketHandler;
 import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
+import io.openk9.internal.http.util.HttpPredicateUtil;
 import io.openk9.internal.http.util.ServiceTrackerProcessor;
 import io.openk9.internal.http.util.UrlUtil;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import io.openk9.internal.http.util.HttpPredicateUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -140,15 +141,20 @@ public class ReactorNettyActivator {
 
 							HttpHandler httpHandler =(HttpHandler)service;
 
+							HttpHandler httpFilter =
+								_httpFilterRegistry.getHttpFilter(
+									path, (HttpHandler)service);
+
+
 							if (httpHandler.prefix()) {
 								return HttpEnpointRoutes.noWs(
-									(HttpHandler) service,
+									httpFilter,
 									HttpPredicateUtil.prefix(path)
 								);
 							}
 
 							return HttpEnpointRoutes.noWs(
-								(HttpHandler) service,
+								httpFilter,
 								HttpPredicateUtil
 									.getPredicate(httpHandler.method())
 									.apply(path)
@@ -238,6 +244,9 @@ public class ReactorNettyActivator {
 			.findFirst()
 			.orElseGet(res::sendNotFound);
 	}
+
+	@Reference
+	private HttpFilterRegistry _httpFilterRegistry;
 
 	private ServiceTracker<Endpoint, HttpEnpointRoutes> _serviceTracker;
 

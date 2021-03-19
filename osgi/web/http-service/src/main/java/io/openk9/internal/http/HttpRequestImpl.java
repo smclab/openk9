@@ -94,6 +94,16 @@ public class HttpRequestImpl implements HttpRequest {
 	}
 
 	@Override
+	public String getHeader(String name) {
+		return _httpServerRequest.requestHeaders().get(name);
+	}
+
+	@Override
+	public String getHeader(String name, String defaultValue) {
+		return _httpServerRequest.requestHeaders().get(name, defaultValue);
+	}
+
+	@Override
 	public Mono<Map<String, List<String>>> bodyAttributes() {
 		return bodyAttributes(Attribute::getValue);
 	}
