@@ -63,12 +63,13 @@ public class TenantRepositoryImpl
 	public Mono<Tenant> addTenant(Tenant tenant) {
         return super.insert(tenant);
 	}
-	public Mono<Tenant> addTenant(String name, String virtualHost) {
+	public Mono<Tenant> addTenant(String name, String virtualHost, String jsonConfig) {
 		return super.insert(
 			Tenant
 				.builder()
 				.name(name)
 				.virtualHost(virtualHost)
+				.jsonConfig(jsonConfig)
 				.build()
 		);
 	}
@@ -76,10 +77,10 @@ public class TenantRepositoryImpl
 		return super.update(tenant);
 	}
 	public Mono<Tenant> updateTenant(
-		String name, Long tenantId, String virtualHost) {
+		String name, Long tenantId, String virtualHost, String jsonConfig) {
 
 		return super.update(
-			Tenant.of(tenantId, name, virtualHost)
+			Tenant.of(tenantId, name, virtualHost, jsonConfig)
 		);
 	}
 
@@ -124,8 +125,9 @@ public class TenantRepositoryImpl
 			Long tenantId = row.get("tenantId", Long.class);
 			String name = row.get("name", String.class);
 			String virtualHost = row.get("virtualHost", String.class);
+			String jsonConfig = row.get("jsonConfig", String.class);
 
-			return Tenant.of(tenantId, name, virtualHost);
+			return Tenant.of(tenantId, name, virtualHost, jsonConfig);
 		};
 	}
 

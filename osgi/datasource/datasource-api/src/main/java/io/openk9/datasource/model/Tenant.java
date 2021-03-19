@@ -31,5 +31,6 @@ public class Tenant {
     private Long tenantId;
     private String name;
     private String virtualHost;
+    private String jsonConfig;
 
 }

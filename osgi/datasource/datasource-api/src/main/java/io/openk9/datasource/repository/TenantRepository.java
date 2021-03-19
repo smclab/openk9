@@ -29,9 +29,9 @@ public interface TenantRepository extends
 	public Mono<Tenant> removeTenant(Long tenantId);
 	public Mono<Tenant> findByVirtualHost(String virtualHost);
 	public Mono<Tenant> addTenant(Tenant tenant);
-	public Mono<Tenant> addTenant(String name, String virtualHost);
+	public Mono<Tenant> addTenant(String name, String virtualHost, String jsonConfig);
 	public Mono<Tenant> updateTenant(Tenant tenant);
-	public Mono<Tenant> updateTenant(String name, Long tenantId, String virtualHost);
+	public Mono<Tenant> updateTenant(String name, Long tenantId, String virtualHost, String jsonConfig);
 	public Mono<Tenant> removeTenant(Tenant tenant);
 	public Mono<Tenant> findByPrimaryKey(Long tenantId);
 	public Flux<Tenant> findAll();
