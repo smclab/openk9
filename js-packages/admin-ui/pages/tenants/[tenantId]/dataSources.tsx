@@ -182,7 +182,7 @@ function DSItemRender({
                   className="component-action quick-action-item"
                   role="button"
                   data-tooltip-align="top"
-                  title="Settings"
+                  title="Settings Data Source"
                 >
                   <SettingsIcon size={16} />
                 </a>
@@ -207,7 +207,7 @@ function DSItemRender({
                 className="component-action quick-action-item"
                 onClick={onToggle}
                 data-tooltip-align="top"
-                title="Logout"
+                title="Turn on/off"
               >
                 <ClayIcon symbol="logout" />
               </button>
