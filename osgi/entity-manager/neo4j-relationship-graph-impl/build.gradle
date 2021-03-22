@@ -1,0 +1,5 @@
+dependencies {
+	compile project(":osgi:entity-manager:relationship-graph-api")
+
+	implementation group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '4.2.3'
+}

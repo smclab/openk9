@@ -1,0 +1,7 @@
+Bundle-Name: [OpenK9] Neo4j Relationship Graph Impl
+Bundle-SymbolicName: io.openk9.neo4j.relationship.graph
+
+-include: ${project.rootDir}/osgi/common.bnd
+
+Include-Resource: \
+ @neo4j-java-driver-*.jar
