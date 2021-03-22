@@ -62,7 +62,7 @@ public class AuthQueryParser implements QueryParser {
 
 		boolQuery.must(
 			QueryBuilders
-				.matchQuery("acl.allow.roles","guest")
+				.matchQuery("acl.allow.roles","Guest")
 		);
 
 		if (userInfo == AuthVerifier.GUEST) {
