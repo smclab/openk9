@@ -12,6 +12,8 @@ include:
 
 trigger_deploy:
   stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
