@@ -195,7 +195,7 @@ function DSItemRender({
                 className="component-action quick-action-item"
                 onClick={onReindex}
                 data-tooltip-align="top"
-                title="Reload"
+                title="Reindex"
               >
                 <ClayIcon symbol="reload" />
               </button>

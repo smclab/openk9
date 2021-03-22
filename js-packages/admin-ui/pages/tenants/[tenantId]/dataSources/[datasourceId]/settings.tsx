@@ -84,7 +84,7 @@ function Controls() {
             <a
               className={clsx("btn btn-primary", classes.navActionButton)}
               data-tooltip-align="bottom"
-              title="Reload Data Source"
+              title="Reindex Data Source"
             >
               <ClayIcon symbol="reload" />
             </a>
