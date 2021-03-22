@@ -211,11 +211,11 @@ function DSItemRender({
               >
                 <ClayIcon symbol="logout" />
               </button>
-              <button className="component-action">
-                <ClayIcon symbol="ellipsis-v" />
-              </button>
             </div>
           </ClayTooltipProvider>
+          <button className="component-action">
+            <ClayIcon symbol="ellipsis-v" />
+          </button>
         </div>
       </div>
     </li>
