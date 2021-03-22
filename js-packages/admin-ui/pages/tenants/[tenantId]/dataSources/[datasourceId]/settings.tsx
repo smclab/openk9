@@ -25,6 +25,7 @@ import ClayIcon from "@clayui/icon";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { Layout } from "../../../../../components/Layout";
 import { getDataSourceInfo } from "@openk9/http-api";
+import { ClayTooltipProvider } from "@clayui/tooltip";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -78,9 +79,17 @@ function Controls() {
         <a className="nav-link">ACL</a>
       </ClayNavigationBar.Item>
       <ClayNavigationBar.Item>
-        <a className={clsx("btn btn-primary", classes.navActionButton)}>
-          <ClayIcon symbol="reload" />
-        </a>
+        <ClayTooltipProvider>
+          <div>
+            <a
+              className={clsx("btn btn-primary", classes.navActionButton)}
+              data-tooltip-align="bottom"
+              title="Reload Data Source"
+            >
+              <ClayIcon symbol="reload" />
+            </a>
+          </div>
+        </ClayTooltipProvider>
       </ClayNavigationBar.Item>
     </ClayNavigationBar>
   );

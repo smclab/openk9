@@ -20,6 +20,7 @@ import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import ClayIcon from "@clayui/icon";
 import ClayAlert from "@clayui/alert";
+import { ClayTooltipProvider } from "@clayui/tooltip";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import useSWR from "swr";
@@ -171,29 +172,50 @@ function DSItemRender({
       </div>
       <div className="autofit-col">
         <div className={classes.actions}>
-          <Link
-            href={`/tenants/${tenantId}/dataSources/${ds.datasourceId}/settings`}
-            passHref
-          >
-            <a className="component-action quick-action-item" role="button">
-              <SettingsIcon size={16} />
-            </a>
-          </Link>
-          <button
-            className="component-action quick-action-item"
-            onClick={onReindex}
-          >
-            <ClayIcon symbol="reload" />
-          </button>
-          <button
-            className="component-action quick-action-item"
-            onClick={onToggle}
-          >
-            <ClayIcon symbol="logout" />
-          </button>
-          <button className="component-action">
-            <ClayIcon symbol="ellipsis-v" />
-          </button>
+          <ClayTooltipProvider>
+            <div>
+              <Link
+                href={`/tenants/${tenantId}/dataSources/${ds.datasourceId}/settings`}
+                passHref
+              >
+                <a
+                  className="component-action quick-action-item"
+                  role="button"
+                  data-tooltip-align="top"
+                  title="Settings"
+                >
+                  <SettingsIcon size={16} />
+                </a>
+              </Link>
+            </div>
+          </ClayTooltipProvider>
+          <ClayTooltipProvider>
+            <div>
+              <button
+                className="component-action quick-action-item"
+                onClick={onReindex}
+                data-tooltip-align="top"
+                title="Reload"
+              >
+                <ClayIcon symbol="reload" />
+              </button>
+            </div>
+          </ClayTooltipProvider>
+          <ClayTooltipProvider>
+            <div>
+              <button
+                className="component-action quick-action-item"
+                onClick={onToggle}
+                data-tooltip-align="top"
+                title="Logout"
+              >
+                <ClayIcon symbol="logout" />
+              </button>
+              <button className="component-action">
+                <ClayIcon symbol="ellipsis-v" />
+              </button>
+            </div>
+          </ClayTooltipProvider>
         </div>
       </div>
     </li>
@@ -397,12 +419,18 @@ function Controls({
         </div>
       </div>
       <li className="nav-item">
-        <button
-          className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
-          type="button"
-        >
-          <ClayIcon symbol="plus" />
-        </button>
+        <ClayTooltipProvider>
+          <div>
+            <button
+              className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
+              type="button"
+              data-tooltip-align="bottom"
+              title="Add Data Source"
+            >
+              <ClayIcon symbol="plus" />
+            </button>
+          </div>
+        </ClayTooltipProvider>
       </li>
     </ul>
   );

@@ -21,3 +21,8 @@ body > div {
   height: 100%;
   margin: 0;
 }
+
+body style + div,
+body script + div {
+  height: auto;
+}

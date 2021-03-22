@@ -18,6 +18,7 @@
 import { useState } from "react";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
+import { ClayTooltipProvider } from "@clayui/tooltip";
 import Link from "next/link";
 import useSWR from "swr";
 import {
@@ -80,21 +81,48 @@ function TBody({ searchValue }: { searchValue: string }) {
           <td className="table-cell-expand">{ten.virtualHost}</td>
           <td>
             <div className={classes.actions}>
-              <Link href={`/tenants/${ten.tenantId}/settings/`} passHref>
-                <a className="component-action quick-action-item" role="button">
-                  <SettingsIcon size={16} />
-                </a>
-              </Link>
-              <Link href={`/tenants/${ten.tenantId}/users/`} passHref>
-                <a className="component-action quick-action-item" role="button">
-                  <UsersIcon size={16} />
-                </a>
-              </Link>
-              <Link href={`/tenants/${ten.tenantId}/dataSources/`} passHref>
-                <a className="component-action quick-action-item" role="button">
-                  <DataSourceIcon size={16} />
-                </a>
-              </Link>
+              <ClayTooltipProvider>
+                <div>
+                  <Link href={`/tenants/${ten.tenantId}/settings/`} passHref>
+                    <a
+                      className="component-action quick-action-item"
+                      role="button"
+                      data-tooltip-align="top"
+                      title="Tenant Settings"
+                    >
+                      <SettingsIcon size={16} />
+                    </a>
+                  </Link>
+                </div>
+              </ClayTooltipProvider>
+              <ClayTooltipProvider>
+                <div>
+                  <Link href={`/tenants/${ten.tenantId}/users/`} passHref>
+                    <a
+                      className="component-action quick-action-item"
+                      role="button"
+                      data-tooltip-align="top"
+                      title="Users"
+                    >
+                      <UsersIcon size={16} />
+                    </a>
+                  </Link>
+                </div>
+              </ClayTooltipProvider>
+              <ClayTooltipProvider>
+                <div>
+                  <Link href={`/tenants/${ten.tenantId}/dataSources/`} passHref>
+                    <a
+                      className="component-action quick-action-item"
+                      role="button"
+                      data-tooltip-align="top"
+                      title="Data Sources"
+                    >
+                      <DataSourceIcon size={16} />
+                    </a>
+                  </Link>
+                </div>
+              </ClayTooltipProvider>
               <a className="component-action" role="button">
                 <ClayIcon symbol="ellipsis-v" />
               </a>
@@ -147,12 +175,18 @@ function Controls({
         </div>
       </div>
       <li className="nav-item">
-        <button
-          className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
-          type="button"
-        >
-          <ClayIcon symbol="plus" />
-        </button>
+        <ClayTooltipProvider>
+          <div>
+            <button
+              className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
+              type="button"
+              data-tooltip-align="bottom"
+              title="Add Tenant"
+            >
+              <ClayIcon symbol="plus" />
+            </button>
+          </div>
+        </ClayTooltipProvider>
       </li>
     </ul>
   );

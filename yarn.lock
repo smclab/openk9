@@ -1688,6 +1688,16 @@
     "@clayui/button" "^3.6.0"
     "@clayui/link" "^3.2.0"
 
+"@clayui/tooltip@^3.4.5":
+  version "3.4.5"
+  resolved "https://registry.yarnpkg.com/@clayui/tooltip/-/tooltip-3.4.5.tgz#6f04480891062041b2174bd84f4119e8d0e80325"
+  integrity sha512-czFh8qMQXnMZwgKIxjHH1d61o9RXSPnGUB6e0kS3IsiGg1xdIX8S4rgFzZiUF8ZSk+LDfx/DoD02dBu+hNotfQ==
+  dependencies:
+    "@clayui/shared" "^3.5.1"
+    classnames "^2.2.6"
+    dom-align "^1.10.2"
+    warning "^4.0.3"
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"
@@ -7276,6 +7286,11 @@ doctrine@^3.0.0:
   integrity sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==
   dependencies:
     esutils "^2.0.2"
+
+dom-align@^1.10.2:
+  version "1.12.0"
+  resolved "https://registry.yarnpkg.com/dom-align/-/dom-align-1.12.0.tgz#56fb7156df0b91099830364d2d48f88963f5a29c"
+  integrity sha512-YkoezQuhp3SLFGdOlr5xkqZ640iXrnHAwVYcDg8ZKRUtO7mSzSC2BA5V0VuyAwPSJA4CLIc6EDDJh4bEsD2+zA==
 
 dom-converter@^0.2:
   version "0.2.0"
