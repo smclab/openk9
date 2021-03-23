@@ -44,6 +44,7 @@ import {
 } from "@openk9/http-api";
 import { Layout } from "../../../components/Layout";
 import { isServer } from "../../../state";
+import { ConfirmationModal } from "../../../components/ConfirmationModal";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -107,8 +108,8 @@ function DSItemRender({
   tenantId,
   selected,
   onSelect,
-  onReindex,
   onToggle,
+  setIdToReindex,
 }: {
   ds: DataSourceInfo;
   plugin?: Plugin<any>;
@@ -116,8 +117,8 @@ function DSItemRender({
   tenantId: string;
   selected: boolean;
   onSelect(): void;
-  onReindex(): void;
   onToggle(): void;
+  setIdToReindex(ids: number[]): void;
 }) {
   const classes = useStyles();
 
@@ -193,7 +194,7 @@ function DSItemRender({
             <div>
               <button
                 className="component-action quick-action-item"
-                onClick={onReindex}
+                onClick={() => setIdToReindex([ds.datasourceId])}
                 data-tooltip-align="top"
                 title="Reindex"
               >
@@ -228,12 +229,14 @@ function Inside({
   selectedIds,
   setSelectedIds,
   onPerformAction,
+  setIdToReindex,
 }: {
   tenantId: string;
   searchValue: string;
   selectedIds: number[];
   setSelectedIds: React.Dispatch<React.SetStateAction<number[]>>;
   onPerformAction(s: string): void;
+  setIdToReindex(ids: number[]): void;
 }) {
   const classes = useStyles();
 
@@ -291,12 +294,6 @@ function Inside({
   //   onPerformAction(`Reindex requested for ${ids.length} items.`);
   // }
 
-  async function reindex(ids: number[]) {
-    const resp = await triggerReindex(ids);
-    console.log(resp);
-    onPerformAction(`Reindex requested for ${ids.length} items.`);
-  }
-
   async function toggle(ids: number[]) {
     const selected = tenantDSs.filter((ds) => ids.includes(ds.datasourceId));
     const targetState =
@@ -327,7 +324,7 @@ function Inside({
               "component-action quick-action-item",
               !someSelected && "disabled",
             )}
-            onClick={() => reindex(selectedIds)}
+            onClick={() => setIdToReindex(selectedIds)}
           >
             <ClayIcon symbol="reload" />
           </button>
@@ -369,8 +366,8 @@ function Inside({
                   : [...ss, ds.datasourceId],
               )
             }
-            onReindex={() => reindex([ds.datasourceId])}
             onToggle={() => toggle([ds.datasourceId])}
+            setIdToReindex={setIdToReindex}
           />
         );
       })}
@@ -444,9 +441,21 @@ function DataSources() {
 
   const [searchValue, setSearchValue] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [idToReindex, setIdToReindex] = useState<number[]>([]);
+
   const [toastItems, setToastItems] = useState<
     { label: string; key: string }[]
   >([]);
+
+  function onPerformAction(label: string) {
+    setToastItems((tt) => [...tt, { label, key: Math.random().toFixed(5) }]);
+  }
+
+  async function reindex(ids: number[]) {
+    const resp = await triggerReindex(ids);
+    console.log(resp);
+    onPerformAction(`Reindex requested for ${ids.length} items.`);
+  }
 
   return (
     <>
@@ -468,12 +477,8 @@ function DataSources() {
                 searchValue={searchValue}
                 selectedIds={selectedIds}
                 setSelectedIds={setSelectedIds}
-                onPerformAction={(label) =>
-                  setToastItems((tt) => [
-                    ...tt,
-                    { label, key: Math.random().toFixed(5) },
-                  ])
-                }
+                onPerformAction={onPerformAction}
+                setIdToReindex={setIdToReindex}
               />
             </Suspense>
           )}
@@ -497,6 +502,17 @@ function DataSources() {
           </ClayAlert>
         ))}
       </ClayAlert.ToastContainer>
+
+      {idToReindex && idToReindex.length !== 0 && (
+        <ConfirmationModal
+          title={"Confirmation reindex"}
+          message={
+            "Are you sure you want to reindex the data sources selected?"
+          }
+          onCloseModal={() => setIdToReindex([])}
+          onConfirmModal={() => reindex(idToReindex)}
+        />
+      )}
     </>
   );
 }

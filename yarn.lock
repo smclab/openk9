@@ -1656,7 +1656,7 @@
   dependencies:
     classnames "^2.2.6"
 
-"@clayui/modal@^3.8.1":
+"@clayui/modal@^3.8.1", "@clayui/modal@^3.8.5":
   version "3.8.5"
   resolved "https://registry.yarnpkg.com/@clayui/modal/-/modal-3.8.5.tgz#6eacec122c9ecd8af0b100d34cb30c884d33e5cd"
   integrity sha512-U8o4eub5ujCUeFrVcfAgkxXv4ZX14LyUT5yYj/lDr7ihOE1LRXREnGmEWnINgP18TkUYobeQSj5F3YFnPXXnEg==
