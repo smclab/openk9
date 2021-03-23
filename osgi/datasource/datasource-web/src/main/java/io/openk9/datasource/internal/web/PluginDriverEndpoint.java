@@ -51,7 +51,7 @@ public class PluginDriverEndpoint implements HttpHandler {
 			_pluginDriverRegistry
 				.getPluginDriverList()
 				.stream()
-				.map(PluginDriver::getName)
+				.map(pluginDriver -> pluginDriver.getClass().getName())
 				.collect(Collectors.toList())
 		);
 
