@@ -35,6 +35,6 @@ export async function getContainerLogs(
   tail = 300,
 ): Promise<string> {
   const request = await fetch(`${logsBaseUrl}/status/${id}/${tail}`);
-  const response: string = await request.json();
+  const response: string = await request.text();
   return response;
 }
