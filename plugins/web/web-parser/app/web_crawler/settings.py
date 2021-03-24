@@ -107,4 +107,4 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 #HTTPCACHE_POLICY = 'scrapy.extensions.httpcache.RFC2616Policy'
 
-REDIRECT_ENABLED = False
+#REDIRECT_ENABLED = False
