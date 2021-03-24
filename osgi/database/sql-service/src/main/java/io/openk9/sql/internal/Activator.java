@@ -17,15 +17,16 @@
 
 package io.openk9.sql.internal;
 
+import io.openk9.core.api.async.Async;
+import io.openk9.osgi.util.AutoCloseables;
+import io.openk9.sql.api.InitSql;
+import io.openk9.sql.internal.tracker.InitSqlServiceTracker;
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.ConnectionFactoryProvider;
 import io.r2dbc.spi.Option;
-import io.openk9.osgi.util.AutoCloseables;
-import io.openk9.sql.api.InitSql;
-import io.openk9.sql.internal.tracker.InitSqlServiceTracker;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleWiring;
@@ -55,71 +56,78 @@ public class Activator {
 	@Activate
 	public void activate(BundleContext bundleContext, Config config) {
 
-		ClassLoader classLoader = bundleContext.getBundle().adapt(
-			BundleWiring.class).getClassLoader();
+		Async.run(() -> {
 
-		ServiceLoader<ConnectionFactoryProvider> connectionFactoryProviders =
-			AccessController.doPrivileged(
-				(PrivilegedAction<ServiceLoader<ConnectionFactoryProvider>>)
-					() -> ServiceLoader.load(
-						ConnectionFactoryProvider.class,
-						classLoader));
+			ClassLoader classLoader = bundleContext.getBundle().adapt(
+				BundleWiring.class).getClassLoader();
 
-		Iterator<ConnectionFactoryProvider> iterator =
-			connectionFactoryProviders.iterator();
+			ServiceLoader<ConnectionFactoryProvider> connectionFactoryProviders =
+				AccessController.doPrivileged(
+					(PrivilegedAction<ServiceLoader<ConnectionFactoryProvider>>)
+						() -> ServiceLoader.load(
+							ConnectionFactoryProvider.class,
+							classLoader));
 
-		ConnectionFactoryOptions connectionFactoryOptions =
-			ConnectionFactoryOptions.parse(config.uri())
-				.mutate()
-				.option(Option.valueOf("errorResponseLogLevel"), "ERROR")
-				.build();
+			Iterator<ConnectionFactoryProvider> iterator =
+				connectionFactoryProviders.iterator();
 
-		ConnectionFactoryProvider connectionFactoryProvider = iterator.next();
+			ConnectionFactoryOptions connectionFactoryOptions =
+				ConnectionFactoryOptions.parse(config.uri())
+					.mutate()
+					.option(Option.valueOf("errorResponseLogLevel"), "ERROR")
+					.build();
 
-		ConnectionFactory connectionFactory =
-			connectionFactoryProvider.create(connectionFactoryOptions);
+			ConnectionFactoryProvider connectionFactoryProvider = iterator.next();
 
-		ConnectionPoolConfiguration connectionPoolConfiguration =
-			ConnectionPoolConfiguration.builder(connectionFactory)
-				.maxSize(config.poolMaxSize())
-				.maxIdleTime(Duration.ofMillis(config.poolMaxIdleTime()))
-				.maxLifeTime(Duration.ofMillis(config.maxLifeTime()))
-				.build();
+			ConnectionFactory connectionFactory =
+				connectionFactoryProvider.create(connectionFactoryOptions);
 
-		ConnectionPool connectionPool =
-			new ConnectionPool(connectionPoolConfiguration);
+			ConnectionPoolConfiguration connectionPoolConfiguration =
+				ConnectionPoolConfiguration.builder(connectionFactory)
+					.maxSize(config.poolMaxSize())
+					.maxIdleTime(Duration.ofMillis(config.poolMaxIdleTime()))
+					.maxLifeTime(Duration.ofMillis(config.maxLifeTime()))
+					.build();
 
-		ServiceRegistration<ConnectionFactory>
-			connectionFactoryServiceRegistration =
-			bundleContext.registerService(
-				ConnectionFactory.class, connectionPool, null);
+			ConnectionPool connectionPool =
+				new ConnectionPool(connectionPoolConfiguration);
 
-		_autoCloseables.add(
-			AutoCloseables.mergeAutoCloseableToSafe(
-				connectionFactoryServiceRegistration::unregister,
-				connectionPool));
+			ServiceRegistration<ConnectionFactory>
+				connectionFactoryServiceRegistration =
+				bundleContext.registerService(
+					ConnectionFactory.class, connectionPool, null);
 
-		ServiceTracker<InitSql, InitSql> serviceTracker = new ServiceTracker<>(
-			bundleContext, InitSql.class, new InitSqlServiceTracker(
-			bundleContext,
-			connectionPool)
-		);
+			_autoCloseables.add(
+				AutoCloseables.mergeAutoCloseableToSafe(
+					connectionFactoryServiceRegistration::unregister,
+					connectionPool));
 
-		serviceTracker.open();
+			ServiceTracker<InitSql, InitSql> serviceTracker = new ServiceTracker<>(
+				bundleContext, InitSql.class, new InitSqlServiceTracker(
+				bundleContext,
+				connectionPool)
+			);
 
-		_autoCloseables.add(serviceTracker::close);
+			serviceTracker.open();
+
+			_autoCloseables.add(serviceTracker::close);
+
+		});
 
 	}
 
 	@Deactivate
 	public void deactivate() {
-		Iterator<AutoCloseables.AutoCloseableSafe> iterator =
-			_autoCloseables.iterator();
 
-		while (iterator.hasNext()) {
-			iterator.next().close();
-			iterator.remove();
-		}
+		Async.run(() -> {
+			Iterator<AutoCloseables.AutoCloseableSafe> iterator =
+				_autoCloseables.iterator();
+
+			while (iterator.hasNext()) {
+				iterator.next().close();
+				iterator.remove();
+			}
+		});
 
 	}
 
