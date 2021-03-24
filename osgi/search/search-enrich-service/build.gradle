@@ -6,9 +6,6 @@ dependencies {
 	compile project(':osgi:common:osgi-api')
 	compile project(':osgi:ingestion:ingestion-api')
 	compile project(':osgi:ingestion:ingestion-driver-manager-api')
-	compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '7.9.3'
-
-	compile group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager', version: '4.6.0'
-
-
+	compile libraries.elasticsearch
+	compile libraries.felix_dependencymanager
 }

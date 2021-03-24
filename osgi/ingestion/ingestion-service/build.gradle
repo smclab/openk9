@@ -1,4 +1,9 @@
 dependencies {
 	compile project(':osgi:ingestion:ingestion-api')
 	compile project(':osgi:common:osgi-api')
+
+	compile libraries.slf4j_api
+	compile libraries.osgi
+	compile libraries.reactor_rabbitmq
+
 }

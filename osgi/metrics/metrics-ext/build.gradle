@@ -1,12 +1,11 @@
 dependencies {
-	compile project(":osgi:metrics:metrics-api")
-	compile group: 'io.micrometer', name: 'micrometer-core'
-	compile group: 'io.micrometer', name: 'micrometer-registry-prometheus'
+	compile libraries.micrometer
+	compile libraries.micrometer_registry_prometheus
 
 	// PROMETHEUS
-	compile group: 'io.prometheus', name: 'simpleclient_common', version: '0.9.0'
-	compile group: 'io.prometheus', name: 'simpleclient', version: '0.9.0'
+	compile libraries.prometheus
 
 	compile project(':osgi:web:http-api')
+	compile project(":osgi:metrics:metrics-api")
 
 }

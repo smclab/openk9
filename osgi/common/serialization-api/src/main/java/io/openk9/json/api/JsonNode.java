@@ -17,15 +17,6 @@
 
 package io.openk9.json.api;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
@@ -60,11 +51,7 @@ public interface JsonNode extends Iterable<JsonNode> {
 
 	Iterator<String> fieldNames();
 
-	JsonNode at(JsonPointer ptr);
-
 	JsonNode at(String jsonPtrExpr);
-
-	JsonNodeType getNodeType();
 
 	boolean isPojo();
 
@@ -153,9 +140,6 @@ public interface JsonNode extends Iterable<JsonNode> {
 	JsonNode requiredAt(String pathExpr)
 		throws IllegalArgumentException;
 
-	JsonNode requiredAt(JsonPointer path)
-			throws IllegalArgumentException;
-
 	boolean has(String fieldName);
 
 	boolean has(int index);
@@ -191,24 +175,8 @@ public interface JsonNode extends Iterable<JsonNode> {
 
 	String toPrettyString();
 
-	JsonToken asToken();
-
-	JsonParser.NumberType numberType();
-
-	JsonParser traverse();
-
-	JsonParser traverse(ObjectCodec codec);
-
 	void forEach(Consumer<? super JsonNode> action);
 
-	boolean isEmpty(SerializerProvider serializers);
-
-	void serialize(JsonGenerator gen, SerializerProvider serializers)
-							throws java.io.IOException;
-
-	void serializeWithType(
-		JsonGenerator gen, SerializerProvider serializers,
-		TypeSerializer typeSer) throws java.io.IOException;
 
 	@Override
 	boolean equals(Object jsonNode);

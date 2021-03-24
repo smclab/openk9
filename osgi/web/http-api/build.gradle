@@ -1,3 +1,6 @@
 dependencies {
     compile project(':osgi:common:osgi-api')
+    compile libraries.reactivestreams
+    compile libraries.reactor
+    compile libraries.osgi
 }

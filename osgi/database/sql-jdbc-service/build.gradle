@@ -1,3 +1,4 @@
 dependencies {
-	compile group: 'org.apache.karaf.jdbc', name: 'org.apache.karaf.jdbc.core'
+	compile libraries.micrometer
+	compile libraries.karaf_jdbc_core
 }

@@ -3,4 +3,6 @@ dependencies {
 	compile project(":osgi:common:common-api")
 	compile project(":osgi:common:osgi-api")
 	compile project(':osgi:web:http-api')
+
+	compile libraries.slf4j_api
 }

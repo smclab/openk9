@@ -1,7 +1,5 @@
 dependencies {
-	compile group: 'io.r2dbc', name: 'r2dbc-spi'
-	compile group: 'io.r2dbc', name: 'r2dbc-pool'
-
+	compile libraries.r2dbc_spi
+	compile libraries.r2dbc_pool
 	compile project(":osgi:common:common-api")
-
 }

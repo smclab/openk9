@@ -17,7 +17,6 @@
 
 package io.openk9.cbor.internal;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.openk9.cbor.api.CBORFactory;
 import io.openk9.json.api.ArrayNode;
@@ -68,13 +67,6 @@ public class CBORFactoryImpl implements CBORFactory {
 		return _exec(
 			objectMapper ->
 				objectMapper.readerForMapOf(clazz).readValue(cbor));
-	}
-
-	@Override
-	public <T> T fromCBORMap(
-		byte[] cbor, TypeReference<T> typeReference) {
-		return _exec(
-			objectMapper -> objectMapper.readValue(cbor, typeReference));
 	}
 
 	private <T> T _exec(CheckedFunction1<ObjectMapper, T> function) {

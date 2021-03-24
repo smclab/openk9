@@ -7,6 +7,6 @@ dependencies {
 	compile project(':osgi:datasource:datasource-api')
 	compile project(":osgi:common:model")
 
-	compile group: 'io.swagger.core.v3', name: 'swagger-annotations', version: '2.1.6'
+	compile libraries.slf4j_api
 
 }

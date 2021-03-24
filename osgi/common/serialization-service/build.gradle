@@ -1,5 +1,5 @@
 dependencies {
-	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
-	compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor'
+	compile libraries.jackson
+	compile libraries.osgi
 	compile project(':osgi:common:serialization-api')
 }

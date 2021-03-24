@@ -17,9 +17,8 @@
 
 package io.openk9.cbor.api;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ArrayNode;
+import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
 
 import java.util.List;
@@ -36,8 +35,6 @@ public interface CBORFactory {
 	<T> T[] fromCBORArray(byte[] cbor, Class<T> clazz);
 
 	<T> Map<String, T> fromCBORMap(byte[] cbor, Class<T> clazz);
-
-	<T> T fromCBORMap(byte[] cbor, TypeReference<T> typeReference);
 
 	JsonNode fromCBORToJsonNode(String cbor);
 

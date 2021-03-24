@@ -5,5 +5,7 @@ dependencies {
 	compile project(':osgi:common:serialization-api')
 	compile project(':osgi:database:sql-api')
 	compile project(':osgi:schema-registry:schema-registry-api')
-	compile group: 'org.apache.avro', name: 'avro', version: '1.10.0'
+	compile libraries.avro
+
+	compile libraries.slf4j_api
 }
