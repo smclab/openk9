@@ -98,6 +98,28 @@
 									"type": "keyword"
 								}
 							}
+						},
+						"loc": {
+							"type": "nested",
+							"properties": {
+								"context": {
+									"type": "keyword"
+								},
+								"id": {
+									"type": "keyword"
+								}
+							}
+						},
+						"date": {
+							"type": "nested",
+							"properties": {
+								"context": {
+									"type": "keyword"
+								},
+								"id": {
+									"type": "keyword"
+								}
+							}
 						}
 					}
 				},
