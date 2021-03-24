@@ -34,7 +34,7 @@ NEWSPIDER_MODULE = 'web_crawler.spiders'
 #USER_AGENT = 'web_crawler (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -107,4 +107,4 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 #HTTPCACHE_POLICY = 'scrapy.extensions.httpcache.RFC2616Policy'
 
-#REDIRECT_ENABLED = False
+REDIRECT_ENABLED = False

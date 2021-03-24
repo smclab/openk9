@@ -7,8 +7,10 @@ build osgi:
   rules:
     - changes:
       - osgi/**/*
-      - plugins/**/*
       - build-dist.gradle
+      - plugins/web/src/**/*
+      - plugins/email/src/**/*
+      - plugins/liferay/src/**/*
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
     - export M2_HOME=`pwd`/.m2
@@ -45,10 +47,12 @@ Build Latest OSGI Docker Image:
   stage: build-docker
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
+      - changes:
         - osgi/**/*
-        - plugins/**/*
         - build-dist.gradle
+        - plugins/web/src/**/*
+        - plugins/email/src/**/*
+        - plugins/liferay/src/**/*
   needs: [build osgi]
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD  $CI_REGISTRY_NAME
