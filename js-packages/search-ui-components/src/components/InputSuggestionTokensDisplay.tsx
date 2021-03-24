@@ -79,6 +79,10 @@ function TokenIcon({ suggestion }: { suggestion: InputSuggestionToken }) {
         return <ClayIcon className={classes.icon} symbol="devices" />;
       case "gpe":
         return <ClayIcon className={classes.icon} symbol="geolocation" />;
+      case "loc":
+        return <ClayIcon className={classes.icon} symbol="geolocation" />;
+      case "date":
+        return <ClayIcon className={classes.icon} symbol="calendar" />;
       case "email":
         return <EmailIcon className={classes.icon} size={16} />;
     }
