@@ -47,7 +47,7 @@ Build Latest OSGI Docker Image:
   stage: build-docker
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      - changes:
+      changes:
         - osgi/**/*
         - build-dist.gradle
         - plugins/web/src/**/*
