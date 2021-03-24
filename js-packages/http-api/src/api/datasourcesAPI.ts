@@ -107,3 +107,9 @@ export async function triggerReindex(ids: number[]): Promise<string> {
   const response: string = await request.text();
   return response;
 }
+
+export async function getDriverServiceNames(): Promise<string[]> {
+  const request = await fetch(`${apiBaseUrl}/driver-service-names`);
+  const response: string[] = await request.json();
+  return response;
+}

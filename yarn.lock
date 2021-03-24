@@ -1620,6 +1620,16 @@
     "@clayui/layout" "^3.3.0"
     classnames "^2.2.6"
 
+"@clayui/autocomplete@^3.25.1":
+  version "3.25.1"
+  resolved "https://registry.yarnpkg.com/@clayui/autocomplete/-/autocomplete-3.25.1.tgz#b8b25e761c9f73481bd71df721416add174e8183"
+  integrity sha512-D7AKv8brPA0hvWhLx/YTHew8DHUJVvCa2YsYBWwcB+IIJTm+yrO/L4t2gMo3P1uTEuFJRgniRv6iKK4z72MjZA==
+  dependencies:
+    "@clayui/drop-down" "^3.25.1"
+    "@clayui/form" "^3.14.4"
+    "@clayui/loading-indicator" "^3.2.0"
+    fuzzy "^0.1.3"
+
 "@clayui/button@^3.6.0":
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/@clayui/button/-/button-3.6.0.tgz#ee9b53984abe0eb72ec9889db7aa644fc41212ad"
@@ -1632,6 +1642,31 @@
   version "3.25.0"
   resolved "https://registry.yarnpkg.com/@clayui/css/-/css-3.25.0.tgz#533c6da279960e63ec0ef31003020c41875a9363"
   integrity sha512-H1xrbx+OS2qisrZCv1dxsz7KE2WpIVnee0uM2awib0IqZqxeCpGYFloIptwcQ6gDUqB+NbntxWfU+gRmazAFOA==
+
+"@clayui/drop-down@^3.25.1":
+  version "3.25.1"
+  resolved "https://registry.yarnpkg.com/@clayui/drop-down/-/drop-down-3.25.1.tgz#33cf55885de9982ea10321fb96c1ade71cbcf239"
+  integrity sha512-teIMLEvs8CZY7oYwJuaTsUQIu7/veyqDhMqhi0oYxk0mwTkstJZEsAbyQCX50veXu11armincjxjqo/fcn3eMQ==
+  dependencies:
+    "@clayui/button" "^3.6.0"
+    "@clayui/form" "^3.14.4"
+    "@clayui/icon" "^3.1.0"
+    "@clayui/link" "^3.2.0"
+    "@clayui/shared" "^3.5.1"
+    classnames "^2.2.6"
+    dom-align "^1.10.2"
+    react-transition-group "^4.4.1"
+    warning "^4.0.3"
+
+"@clayui/form@^3.14.4":
+  version "3.14.4"
+  resolved "https://registry.yarnpkg.com/@clayui/form/-/form-3.14.4.tgz#50725d4647a3e1fba3fc5449429f8baec694b2df"
+  integrity sha512-R5pm55qw0ooH5ItepehAebUwLrJoebe1xnbA5Pkk/rbL+SzbJRtXv1igMNjvT1hUhjbSG7s2ZKKnXnVdhnmm3w==
+  dependencies:
+    "@clayui/button" "^3.6.0"
+    "@clayui/icon" "^3.1.0"
+    "@clayui/shared" "^3.5.1"
+    classnames "^2.2.6"
 
 "@clayui/icon@^3.1.0":
   version "3.1.0"
@@ -1653,6 +1688,13 @@
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@clayui/link/-/link-3.2.0.tgz#1d5fc80f574f18d3880bc3584cd2d83761b6ec78"
   integrity sha512-UjuEGGwE3X/XnB3Ul+JPPAveHj3d76OyRu8rwhKuw5VwyfQVadb7p8owqpohOPaD29ytljOfce8a6X0vGoXJig==
+  dependencies:
+    classnames "^2.2.6"
+
+"@clayui/loading-indicator@^3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@clayui/loading-indicator/-/loading-indicator-3.2.0.tgz#7a5565c5543b345d9e57d8b94b72b7ba83c4667f"
+  integrity sha512-c0R4NEa+5gITbsAgf3IxP6O4TjMzaWCT7rv3N4EFWT23lbChRFE/XCq5utXbQIM1M6b+1lYX2qoqsn9o4+63SA==
   dependencies:
     classnames "^2.2.6"
 
@@ -8693,6 +8735,11 @@ functional-red-black-tree@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
+
+fuzzy@^0.1.3:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/fuzzy/-/fuzzy-0.1.3.tgz#4c76ec2ff0ac1a36a9dccf9a00df8623078d4ed8"
+  integrity sha1-THbsL/CsGjap3M+aAN+GIweNTtg=
 
 gauge@~2.7.3:
   version "2.7.4"

@@ -25,10 +25,19 @@ import ClayNavigationBar from "@clayui/navigation-bar";
 import ClayIcon from "@clayui/icon";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { Layout } from "../../../../../components/Layout";
-import { getDataSourceInfo, triggerReindex } from "@openk9/http-api";
+import {
+  DataSourceInfo,
+  getDataSourceInfo,
+  getDriverServiceNames,
+  triggerReindex,
+} from "@openk9/http-api";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 import ClayAlert from "@clayui/alert";
+import { ClayToggle, ClayInput } from "@clayui/form";
 import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
+import { CronInput, CronInputType } from "../../../../../components/CronInput";
+import ClayAutocomplete from "@clayui/autocomplete";
+import ClayDropDown from "@clayui/drop-down";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -64,6 +73,24 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     "& .alert-autofit-row": {
       alignItems: "center",
     },
+  },
+  settingHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  editElement: {
+    marginBottom: "16px",
+  },
+  labelReadOnly: {
+    marginLeft: "8px",
+  },
+  buttons: {
+    display: "flex",
+    justifyContent: "flex-end",
+  },
+  closeButton: {
+    marginRight: "16px",
   },
 }));
 
@@ -108,6 +135,160 @@ function Controls({
   );
 }
 
+function EditInner({
+  datasource,
+  setIsEditMode,
+}: {
+  datasource: DataSourceInfo;
+  setIsEditMode(b: boolean): void;
+}) {
+  const classes = useStyles();
+
+  // TODO: check API to use
+  // Show also icon in the dropdown list?
+  const { data: enableDriverServiceName } = useSWR(
+    `/api/v1/driver-service-names`,
+    getDriverServiceNames,
+  );
+
+  const [isDataSourceEnabled, setIsDataSourceEnabled] = useState(
+    datasource.active || false,
+  );
+  const [description, setDescription] = useState(datasource.description || "");
+  const [name, setName] = useState(datasource.name || "");
+  const [driverServiceName, setDriverServiceName] = useState(
+    datasource && datasource.driverServiceName,
+  );
+
+  var schedulingArray = datasource && datasource.scheduling.split(" ");
+
+  const [schedulingValue, setSchedulingValue] = useState<CronInputType>({
+    minutesValue:
+      schedulingArray && schedulingArray.length > 0 ? schedulingArray[0] : "",
+    hoursValue:
+      schedulingArray && schedulingArray.length > 0 ? schedulingArray[1] : "",
+    daysOfMonthValue:
+      schedulingArray && schedulingArray.length > 0 ? schedulingArray[2] : "",
+    monthValue:
+      schedulingArray && schedulingArray.length > 0 ? schedulingArray[3] : "",
+    daysOfWeekValue:
+      schedulingArray && schedulingArray.length > 0 ? schedulingArray[4] : "",
+    yearValue:
+      schedulingArray && schedulingArray.length > 0 ? schedulingArray[5] : "",
+  });
+
+  function handleChangeInputDescription(event) {
+    setDescription(event.target.value);
+  }
+
+  function handleChangeInputName(event) {
+    setName(event.target.value);
+  }
+
+  function handleChangeInputDriverServiceName(event) {
+    setDriverServiceName(event.target.value);
+  }
+
+  const activeAutocomplete =
+    driverServiceName !== datasource.driverServiceName &&
+    driverServiceName.length > 0 &&
+    !(enableDriverServiceName.indexOf(driverServiceName) > -1);
+
+  return (
+    <>
+      <div className={classes.editElement}>
+        <strong>Name:</strong>{" "}
+        <ClayInput
+          id="dataSourceName"
+          placeholder="Insert here the name"
+          onChange={(event) => handleChangeInputName(event)}
+          value={name}
+          type="text"
+        />
+      </div>
+      <div className={classes.editElement}>
+        <strong>Status:</strong>
+        {"  "}
+        <ClayToggle
+          onToggle={setIsDataSourceEnabled}
+          toggled={isDataSourceEnabled}
+        />
+      </div>
+      <div className={classes.editElement}>
+        <strong>Description:</strong>
+        <ClayInput
+          id="dataSourceDescription"
+          placeholder="Insert here the description"
+          onChange={(event) => handleChangeInputDescription(event)}
+          value={description}
+          type="text"
+        />
+      </div>
+      <div className={classes.editElement}>
+        <strong>Driver Service Name:</strong>
+        <ClayAutocomplete>
+          <ClayAutocomplete.Input
+            id="dataSourceDriverServiceName"
+            onChange={(event) => handleChangeInputDriverServiceName(event)}
+            placeholder="Insert here the driver service name"
+            value={driverServiceName}
+          />
+          <ClayAutocomplete.DropDown active={activeAutocomplete}>
+            <ClayDropDown.ItemList>
+              {enableDriverServiceName &&
+                enableDriverServiceName.length !== 0 &&
+                enableDriverServiceName.map((dsn, id) => (
+                  <ClayAutocomplete.Item
+                    key={id}
+                    match={driverServiceName}
+                    value={dsn}
+                    onClick={() => setDriverServiceName(dsn)}
+                  />
+                ))}
+            </ClayDropDown.ItemList>
+          </ClayAutocomplete.DropDown>
+        </ClayAutocomplete>
+      </div>
+      <div className={classes.editElement}>
+        <strong>Tenant Id:</strong> {datasource.tenantId}
+        <span className={clsx("label label-info", classes.labelReadOnly)}>
+          <span className="label-item label-item-expand">READ ONLY</span>
+        </span>
+      </div>
+      <div className={classes.editElement}>
+        <strong>Last Ingestion Date:</strong>{" "}
+        {format(datasource.lastIngestionDate, "dd/MM/yyyy, HH:mm")}
+        <span className={clsx("label label-info", classes.labelReadOnly)}>
+          <span className="label-item label-item-expand">READ ONLY</span>
+        </span>
+      </div>
+      <div className={classes.editElement}>
+        <strong>Scheduling:</strong>
+        <CronInput
+          schedulingValue={schedulingValue}
+          setSchedulingValue={setSchedulingValue}
+        />
+      </div>
+      <div className={classes.buttons}>
+        <button
+          className={clsx("btn btn-secondary", classes.closeButton)}
+          type="button"
+          onClick={() => setIsEditMode(false)}
+        >
+          Close without Save
+        </button>
+        <button
+          className="btn btn-primary"
+          type="button"
+          onClick={() => setIsEditMode(false)}
+        >
+          Save Settings
+        </button>
+      </div>
+    </>
+  );
+}
+
 function Inner({
   tenantId,
   datasourceId,
@@ -122,50 +303,68 @@ function Inner({
     () => getDataSourceInfo(datasourceId),
   );
 
+  const [isEditMode, setIsEditMode] = useState(false);
+
   if (!datasource) {
     return <span className="loading-animation" />;
   }
 
   return (
     <>
-      <h2>
-        {datasource.datasourceId}: {datasource.name}
-      </h2>
-      <div className={classes.dataList}>
-        <div>
-          <strong>Status:</strong>{" "}
-          {datasource.active ? (
-            <span className="label label-success">
-              <span className="label-item label-item-expand">ENABLED</span>
-            </span>
-          ) : (
-            <span className="label label-warning">
-              <span className="label-item label-item-expand">DISABLED</span>
-            </span>
-          )}
-        </div>
-        <div>
-          <strong>Description:</strong> {datasource.description}
-        </div>
-        <div>
-          <strong>Driver Service Name:</strong> {datasource.driverServiceName}
-        </div>
-        <div>
-          <strong>Tenant Id:</strong> {datasource.tenantId}
-        </div>
-        <div>
-          <strong>Last Ingestion Date:</strong>{" "}
-          {format(datasource.lastIngestionDate, "dd/MM/yyyy, HH:mm")}
-        </div>
-        <div>
-          <strong>Scheduling:</strong> {datasource.scheduling}
-        </div>
-      </div>
+      {isEditMode ? (
+        <EditInner datasource={datasource} setIsEditMode={setIsEditMode} />
+      ) : (
+        <>
+          <div className={classes.settingHeader}>
+            <h2>
+              {datasource.datasourceId}: {datasource.name}
+            </h2>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => setIsEditMode(true)}
+            >
+              Edit Settings
+            </button>
+          </div>
+          <div className={classes.dataList}>
+            <div>
+              <strong>Status:</strong>{" "}
+              {datasource.active ? (
+                <span className="label label-success">
+                  <span className="label-item label-item-expand">ENABLED</span>
+                </span>
+              ) : (
+                <span className="label label-warning">
+                  <span className="label-item label-item-expand">DISABLED</span>
+                </span>
+              )}
+            </div>
+            <div>
+              <strong>Description:</strong> {datasource.description}
+            </div>
+            <div>
+              <strong>Driver Service Name:</strong>{" "}
+              {datasource.driverServiceName}
+            </div>
+            <div>
+              <strong>Tenant Id:</strong> {datasource.tenantId}
+            </div>
+            <div>
+              <strong>Last Ingestion Date:</strong>{" "}
+              {format(datasource.lastIngestionDate, "dd/MM/yyyy, HH:mm")}
+            </div>
+            <div>
+              <strong>Scheduling:</strong> {datasource.scheduling}
+            </div>
+          </div>
 
-      <h5>JSON Configuration</h5>
-      <pre className={classes.json}>
-        {JSON.stringify(JSON.parse(datasource.jsonConfig), null, 4)}
-      </pre>
+          <h5>JSON Configuration</h5>
+          <pre className={classes.json}>
+            {JSON.stringify(JSON.parse(datasource.jsonConfig), null, 4)}
+          </pre>
+        </>
+      )}
     </>
   );
 }
