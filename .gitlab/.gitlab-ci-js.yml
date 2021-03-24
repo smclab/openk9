@@ -10,7 +10,7 @@ JS Format Lint Test and Build Check:
   stage: quality
   rules:
     - changes:
-      - js/**/*
+      - js-packages/**/*
   before_script:
     - echo -e "$NPM_TOKEN" > ~/.npmrc
     - chmod 600  ~/.npmrc
