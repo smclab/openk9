@@ -75,7 +75,7 @@ dependencies {
 	dist project(path: ':plugins:email', transitive: false)
 	dist project(path: ':plugins:liferay', transitive: false)
 	dist project(path: ':plugins:web', transitive: false)
-
+	dist project(path: ':plugins:applications', transitive: false)
 
 	// AUTH
 	dist project(path: ':osgi:auth:auth-keycloak-api', configuration: 'archives', transitive: false)
