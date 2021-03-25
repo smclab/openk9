@@ -51,13 +51,21 @@ export async function postTenant(data: {
 }
 
 export async function putTenant(data: Tenant) {
-  console.log(data);
-  data.jsonConfig = "{}";
+  if (!data.jsonConfig) {
+    data.jsonConfig = "{}";
+  }
+
   await fetch(`${apiBaseUrlV2}/tenant`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
+  });
+}
+
+export async function deleteTenant(tenantId: number) {
+  await fetch(`${apiBaseUrlV2}/tenant/${tenantId}`, {
+    method: "DELETE",
   });
 }

@@ -31,7 +31,6 @@ import { getTenants, postTenant } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
 import ClayButton from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
-import { ClayInput } from "@clayui/form";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -182,7 +181,7 @@ function Controls({
       <li className="nav-item">
         <ClayTooltipProvider>
           <div>
-        <AddModal visible={visible} handleClose={() => setVisible(false)} />
+            <AddModal visible={visible} handleClose={() => setVisible(false)} />
             <button
               className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
               type="button"
@@ -268,28 +267,30 @@ function AddModal({ visible, handleClose }) {
         <ClayModal observer={observer} size="lg" status="info">
           <ClayModal.Header>{"New Tenant"}</ClayModal.Header>
           <ClayModal.Body>
-            <ClayInput.Group>
-              <ClayInput.GroupItem>
-                <label htmlFor="basicInputText">Name</label>
-                <ClayInput
-                  id="name"
-                  placeholder="Name"
-                  type="text"
-                  value={newTenant.name}
-                  onChange={handleChange}
-                />
-              </ClayInput.GroupItem>
-              <ClayInput.GroupItem>
-                <label htmlFor="basicInputText">VirtuaHost</label>
-                <ClayInput
-                  id="virtualHost"
-                  placeholder="VirtualHost"
-                  type="text"
-                  value={newTenant.virtualHost}
-                  onChange={handleChange}
-                />
-              </ClayInput.GroupItem>
-            </ClayInput.Group>
+            <div>
+              <div className="form-group-autofit">
+                <div className="form-group-item">
+                  <label>Name</label>
+                  <input
+                    className="form-control"
+                    id="name"
+                    placeholder="Name"
+                    type="text"
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-group-item">
+                  <label>VirtuaHost</label>
+                  <input
+                    className="form-control"
+                    id="virtualHost"
+                    placeholder="VirtualHost"
+                    type="text"
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            </div>
           </ClayModal.Body>
           <ClayModal.Footer
             first={

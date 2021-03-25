@@ -23,10 +23,9 @@ import { useRouter } from "next/router";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { Layout } from "../../../components/Layout";
 import { isServer } from "../../../state";
-import { getTenant, putTenant } from "@openk9/http-api";
+import { putTenant, deleteTenant } from "@openk9/http-api";
 import useSWR, { mutate } from "swr";
-import ClayForm, { ClayInput } from "@clayui/form";
-import ClayButton from "@clayui/button";
+import ClayAlert from "@clayui/alert";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -64,71 +63,8 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-function Controls({
-  searchValue,
-  setSearchValue,
-}: {
-  searchValue: string;
-  setSearchValue(s: string): void;
-}) {
-  return (
-    <ul className="navbar-nav" style={{ marginRight: 16 }}>
-      <div className="navbar-form navbar-form-autofit navbar-overlay navbar-overlay-sm-down">
-        <div className="container-fluid container-fluid-max-xl">
-          <div className="input-group">
-            <div className="input-group-item">
-              <input
-                className="form-control form-control input-group-inset input-group-inset-after"
-                type="text"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-              />
-              <span className="input-group-inset-item input-group-inset-item-after">
-                {searchValue && searchValue.length > 0 && (
-                  <button
-                    className="navbar-breakpoint-d-none btn btn-monospaced btn-unstyled"
-                    type="button"
-                    onClick={() => setSearchValue("")}
-                  >
-                    <ClayIcon symbol="times" />
-                  </button>
-                )}
-                <button
-                  className="btn btn-monospaced btn-unstyled"
-                  type="submit"
-                >
-                  <ClayIcon symbol="search" />
-                </button>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <li className="nav-item">
-        <ClayTooltipProvider>
-          <div>
-            <button
-              className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
-              type="button"
-              data-tooltip-align="bottom"
-              title="Add Data Source"
-            >
-              <ClayIcon symbol="plus" />
-            </button>
-          </div>
-        </ClayTooltipProvider>
-      </li>
-    </ul>
-  );
-}
-
-function Inside({ tenantId }) {
-  console.log(tenantId);
-
+function Inside({ tenantId, onPerformAction }) {
   const { data } = useSWR(`/api/v2/tenant/${tenantId}`);
-
-  console.log(data);
-
   const [tenant, setTenant] = useState({ ...data });
 
   useEffect(() => {
@@ -153,6 +89,13 @@ function Inside({ tenantId }) {
   const handleSave = async () => {
     await putTenant(tenant);
     mutate(`/api/v2/tenant`);
+    onPerformAction(["Success"]);
+  };
+
+  const handleDelete = async () => {
+    await deleteTenant(tenant.tenantId);
+    mutate(`/api/v2/tenant`);
+    onPerformAction(["Delete Success"]);
   };
 
   return (
@@ -184,6 +127,17 @@ function Inside({ tenantId }) {
                 />
               </div>
             </div>
+            <div className="form-group">
+              <label>UI Config</label>
+              <textarea
+                className="form-control"
+                id="jsonConfig"
+                name="jsonConfig"
+                placeholder="UI config"
+                value={tenant.jsonConfig}
+                onChange={handleChange}
+              ></textarea>
+            </div>
           </div>
           <div className="sheet-footer sheet-footer-btn-block-sm-down">
             <div className="btn-group">
@@ -194,6 +148,15 @@ function Inside({ tenantId }) {
                   onClick={handleSave}
                 >
                   {"Save"}
+                </button>
+              </div>
+              <div className="btn-group-item">
+                <button
+                  className="btn btn-danger c-focus-inset"
+                  type="button"
+                  onClick={handleDelete}
+                >
+                  {"Delete"}
                 </button>
               </div>
             </div>
@@ -209,6 +172,7 @@ function Settings() {
 
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
+  const [alerts, setAlerts] = useState([]);
 
   return (
     <>
@@ -224,13 +188,23 @@ function Settings() {
             <Suspense fallback={<span className="loading-animation" />}>
               <Inside
                 tenantId={tenantId}
-                /*onPerformAction={(label) =>
-                  setToastItems((tt) => [
-                    ...tt,
-                    { label, key: Math.random().toFixed(5) },
-                  ])
-                }*/
+                onPerformAction={(label) => setAlerts(label)}
               />
+              <ClayAlert.ToastContainer>
+                {alerts.map((alertItem) => (
+                  <ClayAlert
+                    autoClose={5000}
+                    key={alertItem}
+                    onClose={() => {
+                      setAlerts((prevItems) =>
+                        prevItems.filter((item) => item !== alertItem),
+                      );
+                    }}
+                  >
+                    {alertItem}
+                  </ClayAlert>
+                ))}
+              </ClayAlert.ToastContainer>
             </Suspense>
           )}
         </div>
