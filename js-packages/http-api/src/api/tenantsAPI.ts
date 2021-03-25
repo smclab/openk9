@@ -38,7 +38,8 @@ export async function getTenant(tenantId: number): Promise<Tenant> {
 export async function postTenant(data: {
   name: string;
   virtualHost: string;
-}): Promise<Tenant> {
+  jsonConfig: string;
+}) {
   const request = await fetch(`${apiBaseUrlV2}/tenant`, {
     method: "POST",
     headers: {
@@ -46,6 +47,4 @@ export async function postTenant(data: {
     },
     body: JSON.stringify(data),
   });
-  const response: Tenant = await request.json();
-  return response;
 }
