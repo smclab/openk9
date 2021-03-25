@@ -23,9 +23,15 @@ import { format } from "date-fns";
 import useSWR from "swr";
 import ClayNavigationBar from "@clayui/navigation-bar";
 import ClayIcon from "@clayui/icon";
-import { firstOrString, ThemeType } from "@openk9/search-ui-components";
+import {
+  firstOrString,
+  pluginInfoLoader,
+  pluginLoader,
+  ThemeType,
+} from "@openk9/search-ui-components";
 import { Layout } from "../../../../../components/Layout";
 import {
+  changeDataSourceInfo,
   DataSourceInfo,
   getDataSourceInfo,
   getDriverServiceNames,
@@ -136,13 +142,20 @@ function Controls({
 }
 
 function EditInner({
-  datasource,
+  datasourceId,
   setIsEditMode,
+  onPerformAction,
 }: {
-  datasource: DataSourceInfo;
+  datasourceId: number;
   setIsEditMode(b: boolean): void;
+  onPerformAction(l: string): void;
 }) {
   const classes = useStyles();
+
+  const { data: datasource } = useSWR(
+    `/api/v2/datasource/${datasourceId}`,
+    () => getDataSourceInfo(datasourceId),
+  );
 
   // TODO: check API to use
   // Show also icon in the dropdown list?
@@ -150,6 +163,17 @@ function EditInner({
     `/api/v1/driver-service-names`,
     getDriverServiceNames,
   );
+
+  const pluginInfos = pluginInfoLoader.read();
+  const pluginInfo = pluginInfos.find(
+    (p) =>
+      datasource &&
+      datasource.driverServiceName.startsWith(p.bundleInfo.symbolicName),
+  );
+  const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
+
+  const SettingsRenderer =
+    plugin?.dataSourceAdminInterfacePath?.settingsRenderer;
 
   const [isDataSourceEnabled, setIsDataSourceEnabled] = useState(
     datasource.active || false,
@@ -159,6 +183,7 @@ function EditInner({
   const [driverServiceName, setDriverServiceName] = useState(
     datasource && datasource.driverServiceName,
   );
+  const [json, setJson] = useState(datasource.jsonConfig || "");
 
   var schedulingArray = datasource && datasource.scheduling.split(" ");
 
@@ -193,6 +218,47 @@ function EditInner({
     driverServiceName !== datasource.driverServiceName &&
     driverServiceName.length > 0 &&
     !(enableDriverServiceName.indexOf(driverServiceName) > -1);
+
+  async function changeDatasource(datasourceId: number, datasource: any) {
+    var newDatasource = {};
+    var scheduling =
+      schedulingValue.minutesValue +
+      " " +
+      schedulingValue.hoursValue +
+      " " +
+      schedulingValue.daysOfMonthValue +
+      " " +
+      schedulingValue.monthValue +
+      " " +
+      schedulingValue.daysOfWeekValue +
+      " " +
+      schedulingValue.yearValue;
+    {
+      datasource.active !== isDataSourceEnabled &&
+        (datasource["active"] = isDataSourceEnabled);
+    }
+    {
+      datasource.description !== description &&
+        (newDatasource["description"] = description);
+    }
+    {
+      datasource.name !== name && (newDatasource["name"] = name);
+    }
+    {
+      datasource.driverServiceName !== driverServiceName &&
+        (newDatasource["driverServiceName"] = driverServiceName);
+    }
+    {
+      datasource.jsonConfig !== json && (newDatasource["jsonConfig"] = json);
+    }
+    {
+      datasource.scheduling !== scheduling &&
+        (newDatasource["scheduling"] = scheduling);
+    }
+
+    const resp = await changeDataSourceInfo(datasourceId, newDatasource);
+    onPerformAction(`The datasource is updated.`);
+  }
 
   return (
     <>
@@ -269,6 +335,11 @@ function EditInner({
           setSchedulingValue={setSchedulingValue}
         />
       </div>
+      <div className={classes.editElement}>
+        {SettingsRenderer && (
+          <SettingsRenderer settings={json} setSettings={setJson} />
+        )}
+      </div>
       <div className={classes.buttons}>
         <button
           className={clsx("btn btn-secondary", classes.closeButton)}
@@ -280,7 +351,10 @@ function EditInner({
         <button
           className="btn btn-primary"
           type="button"
-          onClick={() => setIsEditMode(false)}
+          onClick={() => {
+            changeDatasource(Number(datasource.datasourceId), datasource);
+            setIsEditMode(false);
+          }}
         >
           Save Settings
         </button>
@@ -292,9 +366,11 @@ function EditInner({
 function Inner({
   tenantId,
   datasourceId,
+  setIsEditMode,
 }: {
   tenantId: number;
   datasourceId: number;
+  setIsEditMode(l: boolean): void;
 }) {
   const classes = useStyles();
 
@@ -303,68 +379,59 @@ function Inner({
     () => getDataSourceInfo(datasourceId),
   );
 
-  const [isEditMode, setIsEditMode] = useState(false);
-
   if (!datasource) {
     return <span className="loading-animation" />;
   }
 
   return (
     <>
-      {isEditMode ? (
-        <EditInner datasource={datasource} setIsEditMode={setIsEditMode} />
-      ) : (
-        <>
-          <div className={classes.settingHeader}>
-            <h2>
-              {datasource.datasourceId}: {datasource.name}
-            </h2>
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={() => setIsEditMode(true)}
-            >
-              Edit Settings
-            </button>
-          </div>
-          <div className={classes.dataList}>
-            <div>
-              <strong>Status:</strong>{" "}
-              {datasource.active ? (
-                <span className="label label-success">
-                  <span className="label-item label-item-expand">ENABLED</span>
-                </span>
-              ) : (
-                <span className="label label-warning">
-                  <span className="label-item label-item-expand">DISABLED</span>
-                </span>
-              )}
-            </div>
-            <div>
-              <strong>Description:</strong> {datasource.description}
-            </div>
-            <div>
-              <strong>Driver Service Name:</strong>{" "}
-              {datasource.driverServiceName}
-            </div>
-            <div>
-              <strong>Tenant Id:</strong> {datasource.tenantId}
-            </div>
-            <div>
-              <strong>Last Ingestion Date:</strong>{" "}
-              {format(datasource.lastIngestionDate, "dd/MM/yyyy, HH:mm")}
-            </div>
-            <div>
-              <strong>Scheduling:</strong> {datasource.scheduling}
-            </div>
-          </div>
+      <div className={classes.settingHeader}>
+        <h2>
+          {datasource.datasourceId}: {datasource.name}
+        </h2>
+        <button
+          className="btn btn-primary"
+          type="button"
+          onClick={() => setIsEditMode(true)}
+        >
+          Edit Settings
+        </button>
+      </div>
+      <div className={classes.dataList}>
+        <div>
+          <strong>Status:</strong>{" "}
+          {datasource.active ? (
+            <span className="label label-success">
+              <span className="label-item label-item-expand">ENABLED</span>
+            </span>
+          ) : (
+            <span className="label label-warning">
+              <span className="label-item label-item-expand">DISABLED</span>
+            </span>
+          )}
+        </div>
+        <div>
+          <strong>Description:</strong> {datasource.description}
+        </div>
+        <div>
+          <strong>Driver Service Name:</strong> {datasource.driverServiceName}
+        </div>
+        <div>
+          <strong>Tenant Id:</strong> {datasource.tenantId}
+        </div>
+        <div>
+          <strong>Last Ingestion Date:</strong>{" "}
+          {format(datasource.lastIngestionDate, "dd/MM/yyyy, HH:mm")}
+        </div>
+        <div>
+          <strong>Scheduling:</strong> {datasource.scheduling}
+        </div>
+      </div>
 
-          <h5>JSON Configuration</h5>
-          <pre className={classes.json}>
-            {JSON.stringify(JSON.parse(datasource.jsonConfig), null, 4)}
-          </pre>
-        </>
-      )}
+      <h5>JSON Configuration</h5>
+      <pre className={classes.json}>
+        {JSON.stringify(JSON.parse(datasource.jsonConfig), null, 4)}
+      </pre>
     </>
   );
 }
@@ -376,6 +443,8 @@ function DSSettings() {
   const tenantId = query.tenantId && firstOrString(query.tenantId);
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
   const [isVisibleModal, setIsVisibleModal] = useState(false);
+
+  const [isEditMode, setIsEditMode] = useState(false);
 
   function onPerformAction(label: string) {
     setToastItems((tt) => [...tt, { label, key: Math.random().toFixed(5) }]);
@@ -404,10 +473,19 @@ function DSSettings() {
         breadcrumbsControls={<Controls setIsVisibleModal={setIsVisibleModal} />}
       >
         <div className={classes.root}>
-          <Inner
-            tenantId={parseInt(tenantId)}
-            datasourceId={parseInt(datasourceId)}
-          />
+          {isEditMode ? (
+            <EditInner
+              datasourceId={parseInt(datasourceId)}
+              setIsEditMode={setIsEditMode}
+              onPerformAction={onPerformAction}
+            />
+          ) : (
+            <Inner
+              tenantId={parseInt(tenantId)}
+              datasourceId={parseInt(datasourceId)}
+              setIsEditMode={setIsEditMode}
+            />
+          )}
         </div>
       </Layout>
 

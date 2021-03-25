@@ -80,6 +80,21 @@ export async function getDataSourceInfo(
   return response;
 }
 
+export async function changeDataSourceInfo(
+  datasourceId: number,
+  datasource: any,
+): Promise<DataSourceInfo> {
+  const request = await fetch(`${apiBaseUrlV2}/datasource/${datasourceId}`, {
+    method: "PATCH",
+    headers: {
+      "ContentType": "application/json"
+    },
+    body: JSON.stringify(datasource),
+  });
+  const response: any = await request.json();
+  return response;
+}
+
 export async function getSchedulerItems(): Promise<SchedulerItem[]> {
   const request = await fetch(`${apiBaseUrl}/scheduler`);
   const response: SchedulerItem[] = await request.json();
