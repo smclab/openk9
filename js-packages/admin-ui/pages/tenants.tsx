@@ -237,6 +237,7 @@ function AddModal({ visible, handleClose }) {
   const [newTenant, setNewTenant] = useState({
     name: "",
     virtualHost: "",
+    jsonConfig: "{}",
   });
 
   const handleChange = (e) => {
@@ -255,6 +256,7 @@ function AddModal({ visible, handleClose }) {
     setNewTenant((cs) => ({
       name: "",
       virtualHost: "",
+      jsonConfig: "{}",
     }));
 
     onClose();
