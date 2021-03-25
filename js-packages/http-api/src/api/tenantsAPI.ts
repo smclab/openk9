@@ -21,6 +21,7 @@ export type Tenant = {
   tenantId: number;
   name: string;
   virtualHost: string;
+  jsonConfig: String;
 };
 
 export async function getTenants(): Promise<Tenant[]> {
@@ -40,8 +41,20 @@ export async function postTenant(data: {
   virtualHost: string;
   jsonConfig: string;
 }) {
-  const request = await fetch(`${apiBaseUrlV2}/tenant`, {
+  await fetch(`${apiBaseUrlV2}/tenant`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function putTenant(data: Tenant) {
+  console.log(data);
+  data.jsonConfig = "{}";
+  await fetch(`${apiBaseUrlV2}/tenant`, {
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
     },
