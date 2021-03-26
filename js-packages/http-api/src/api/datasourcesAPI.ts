@@ -54,6 +54,23 @@ export type SchedulerItem = {
   datasourceName: string;
 };
 
+export type EnrichPipeline = {
+  active: boolean;
+  datasourceId: number;
+  enrichPipelineId: number;
+  name: string;
+};
+
+export type EnrichItem = {
+  active: boolean;
+  enrichItemId: number;
+  enrichPipelineId: number;
+  jsonConfig: string;
+  name: string;
+  serviceName: string;
+  _position: number;
+};
+
 type SchedulerRequestReturn = {
   errors: string[];
 } & { [key: string]: boolean };
@@ -126,5 +143,17 @@ export async function triggerReindex(ids: number[]): Promise<string> {
 export async function getDriverServiceNames(): Promise<string[]> {
   const request = await fetch(`${apiBaseUrl}/driver-service-names`);
   const response: string[] = await request.json();
+  return response;
+}
+
+export async function getEnrichItem(): Promise<EnrichItem[]> {
+  const request = await fetch(`${apiBaseUrlV2}/enrichItem`);
+  const response: EnrichItem[] = await request.json();
+  return response;
+}
+
+export async function getEnrichPipeline(): Promise<EnrichPipeline[]> {
+  const request = await fetch(`${apiBaseUrlV2}/enrichPipeline`);
+  const response: EnrichPipeline[] = await request.json();
   return response;
 }

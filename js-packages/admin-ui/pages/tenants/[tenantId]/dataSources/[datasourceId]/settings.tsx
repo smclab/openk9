@@ -44,6 +44,7 @@ import { CronInput, CronInputType } from "../../../../../components/CronInput";
 import ClayAutocomplete from "@clayui/autocomplete";
 import ClayDropDown from "@clayui/drop-down";
 import { isServer } from "../../../../../state";
+import Link from "next/link";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -102,8 +103,12 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 
 function Controls({
   setIsVisibleModal,
+  tenantId,
+  datasourceId,
 }: {
   setIsVisibleModal(b: boolean): void;
+  tenantId: number;
+  datasourceId: number;
 }) {
   const classes = useStyles();
   return (
@@ -115,7 +120,12 @@ function Controls({
         <a className="nav-link">Data Browser</a>
       </ClayNavigationBar.Item>
       <ClayNavigationBar.Item>
-        <a className="nav-link">Enrich</a>
+        <Link
+          href={`/tenants/${tenantId}/dataSources/${datasourceId}/enrich`}
+          passHref
+        >
+          <a className="nav-link">Enrich</a>
+        </Link>
       </ClayNavigationBar.Item>
       <ClayNavigationBar.Item>
         <a className="nav-link">Schedule</a>
@@ -165,15 +175,14 @@ function EditInner({
     `/api/v1/driver-service-names`,
     getDriverServiceNames,
   );
-  
-  const pluginInfo = pluginInfos.find(
-    (p) =>
-      datasource.driverServiceName.startsWith(p.bundleInfo.symbolicName),
+
+  const pluginInfo = pluginInfos.find((p) =>
+    datasource.driverServiceName.startsWith(p.bundleInfo.symbolicName),
   );
   const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
   const SettingsRenderer =
-    plugin && plugin?.dataSourceAdminInterfacePath?.settingsRenderer || null;
-    
+    (plugin && plugin?.dataSourceAdminInterfacePath?.settingsRenderer) || null;
+
   const [isDataSourceEnabled, setIsDataSourceEnabled] = useState(
     datasource.active || false,
   );
@@ -255,7 +264,7 @@ function EditInner({
         (newDatasource["scheduling"] = scheduling);
     }
 
-    if(Object.entries(newDatasource).length !== 0) {
+    if (Object.entries(newDatasource).length !== 0) {
       await changeDataSourceInfo(datasourceId, newDatasource);
       onPerformAction(`The datasource is updated.`);
     }
@@ -475,7 +484,13 @@ function DSSettings() {
           { label: datasourceId },
           { label: "Settings", path: `/tenants/${tenantId}/dataSources` },
         ]}
-        breadcrumbsControls={<Controls setIsVisibleModal={setIsVisibleModal} />}
+        breadcrumbsControls={
+          <Controls
+            setIsVisibleModal={setIsVisibleModal}
+            tenantId={parseInt(tenantId)}
+            datasourceId={parseInt(datasourceId)}
+          />
+        }
       >
         <div className={classes.root}>
           {isEditMode ? (

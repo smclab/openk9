@@ -28,6 +28,7 @@
     "next": "^10.0.5",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
+    "react-flow-renderer": "^9.3.2",
     "react-jss": "^10.4.0",
     "swr": "^0.4.1",
     "zustand": "^3.3.1"
