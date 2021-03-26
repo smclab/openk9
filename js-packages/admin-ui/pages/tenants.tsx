@@ -20,17 +20,18 @@ import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 import Link from "next/link";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import {
   DataSourceIcon,
   SettingsIcon,
   ThemeType,
   UsersIcon,
 } from "@openk9/search-ui-components";
-import { getTenants } from "@openk9/http-api";
+import { getTenants, postTenant } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
 import ClayButton from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
+import { ClayInput } from "@clayui/form";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -233,13 +234,63 @@ function AddModal({ visible, handleClose }) {
     onClose: handleClose,
   });
 
+  const [newTenant, setNewTenant] = useState({
+    tenantId: 0,
+    name: "",
+    virtualHost: "",
+  });
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    const id = e.target.id;
+    setNewTenant((cs) => ({
+      ...cs,
+      [id]: value,
+    }));
+  };
+
+  const handleSave = async () => {
+    const data = await getTenants();
+    newTenant.tenantId = data.length + 1;
+    console.log(data.length + 1);
+    await postTenant(newTenant);
+    mutate(`/api/v2/tenant`);
+    setNewTenant((cs) => ({
+      tenantId: cs.tenantId + 1,
+      name: "",
+      virtualHost: "",
+    }));
+    onClose();
+  };
+
   return (
     <>
       {visible && (
         <ClayModal observer={observer} size="lg" status="info">
-          <ClayModal.Header>{"Title"}</ClayModal.Header>
+          <ClayModal.Header>{"New Tenant"}</ClayModal.Header>
           <ClayModal.Body>
-            <h1>{"Hello world!"}</h1>
+            <ClayInput.Group>
+              <ClayInput.GroupItem>
+                <label htmlFor="basicInputText">Name</label>
+                <ClayInput
+                  id="name"
+                  placeholder="Name"
+                  type="text"
+                  value={newTenant.name}
+                  onChange={handleChange}
+                />
+              </ClayInput.GroupItem>
+              <ClayInput.GroupItem>
+                <label htmlFor="basicInputText">VirtuaHost</label>
+                <ClayInput
+                  id="virtualHost"
+                  placeholder="VirtualHost"
+                  type="text"
+                  value={newTenant.virtualHost}
+                  onChange={handleChange}
+                />
+              </ClayInput.GroupItem>
+            </ClayInput.Group>
           </ClayModal.Body>
           <ClayModal.Footer
             first={
@@ -247,7 +298,7 @@ function AddModal({ visible, handleClose }) {
                 <ClayButton displayType="secondary">{"Cancel"}</ClayButton>
               </ClayButton.Group>
             }
-            last={<ClayButton onClick={onClose}>{"Save"}</ClayButton>}
+            last={<ClayButton onClick={handleSave}>{"Save"}</ClayButton>}
           />
         </ClayModal>
       )}
