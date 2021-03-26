@@ -157,3 +157,22 @@ export async function getEnrichPipeline(): Promise<EnrichPipeline[]> {
   const response: EnrichPipeline[] = await request.json();
   return response;
 }
+
+export async function postDataSources(data: {
+  active: boolean;
+  description: string;
+  jsonConfig: string;
+  lastIngestionDate: number;
+  name: string;
+  tenantId: number;
+  scheduling: string;
+  driverServiceName: string;
+}): Promise<string> {
+  const request = await fetch(`${apiBaseUrlV2}/datasource`, {
+    method: "POST",
+    headers: { ContentType: "application/json" },
+    body: JSON.stringify(data),
+  });
+  const response: string = await request.text();
+  return response;
+}
