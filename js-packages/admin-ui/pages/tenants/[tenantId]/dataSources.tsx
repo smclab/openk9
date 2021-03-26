@@ -30,7 +30,7 @@ import { ClayToggle, ClayInput } from "@clayui/form";
 import ClayAutocomplete from "@clayui/autocomplete";
 import ClayDropDown from "@clayui/drop-down";
 import { CronInput, CronInputType } from "../../../components/CronInput";
-import { getDriverServiceNames, postDataSources } from "@openk9/http-api";
+import { getDriverServiceNames, postDataSource } from "@openk9/http-api";
 import { format } from "date-fns";
 
 import {
@@ -471,11 +471,11 @@ function AddModal({ visible, handleClose }) {
   }
 
   const handleSave = async () => {
-    await postDataSources({
+    await postDataSource({
       active: isDataSourceEnabled,
       description: description,
       jsonConfig: "{}",
-      lastIngestionDate: +new Date(),
+      lastIngestionDate: 0,
       name: name,
       tenantId: +tenantId,
       scheduling: [
@@ -491,15 +491,21 @@ function AddModal({ visible, handleClose }) {
 
     mutate(`/api/v2/datasource`);
 
+    setIsDataSourceEnabled(false);
+    setDescription("");
+    setName("");
+    setDriverServiceName("");
+    setSchedulingValue({
+      minutesValue: "",
+      hoursValue: "",
+      daysOfMonthValue: "",
+      monthValue: "",
+      daysOfWeekValue: "",
+      yearValue: "",
+    });
+
     onClose();
   };
-  /*m
-
-    setNewTenant((cs) => ({
-      name: "",
-      virtualHost: "",
-      jsonConfig: "{}",
-    }));*/
 
   const activeAutocomplete =
     driverServiceName.length > 0 &&
@@ -577,7 +583,9 @@ function AddModal({ visible, handleClose }) {
           <ClayModal.Footer
             first={
               <ClayButton.Group spaced>
-                <ClayButton displayType="secondary">{"Cancel"}</ClayButton>
+                <ClayButton displayType="secondary" onClick={onClose}>
+                  {"Cancel"}
+                </ClayButton>
               </ClayButton.Group>
             }
             last={<ClayButton onClick={handleSave}>{"Save"}</ClayButton>}

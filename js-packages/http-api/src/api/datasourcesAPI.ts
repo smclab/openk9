@@ -158,7 +158,7 @@ export async function getEnrichPipeline(): Promise<EnrichPipeline[]> {
   return response;
 }
 
-export async function postDataSources(data: {
+export async function postDataSource(data: {
   active: boolean;
   description: string;
   jsonConfig: string;
