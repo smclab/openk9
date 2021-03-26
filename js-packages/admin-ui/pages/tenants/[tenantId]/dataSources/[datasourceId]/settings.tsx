@@ -234,7 +234,7 @@ function EditInner({
       schedulingValue.yearValue;
     {
       datasource.active !== isDataSourceEnabled &&
-        (datasource["active"] = isDataSourceEnabled);
+        (newDatasource["active"] = isDataSourceEnabled);
     }
     {
       datasource.description !== description &&
@@ -255,11 +255,9 @@ function EditInner({
         (newDatasource["scheduling"] = scheduling);
     }
 
-    if(newDatasource !== {}) {
+    if(Object.entries(newDatasource).length !== 0) {
       await changeDataSourceInfo(datasourceId, newDatasource);
       onPerformAction(`The datasource is updated.`);
-    } else {
-      console.log("vuoto");
     }
   }
 
