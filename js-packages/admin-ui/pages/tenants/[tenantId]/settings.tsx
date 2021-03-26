@@ -15,10 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useState } from "react";
 import { createUseStyles } from "react-jss";
-import ClayIcon from "@clayui/icon";
-import { ClayTooltipProvider } from "@clayui/tooltip";
 import { useRouter } from "next/router";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { Layout } from "../../../components/Layout";
@@ -26,6 +24,8 @@ import { isServer } from "../../../state";
 import { putTenant, deleteTenant } from "@openk9/http-api";
 import useSWR, { mutate } from "swr";
 import ClayAlert from "@clayui/alert";
+import { ClayInput } from "@clayui/form";
+import clsx from "clsx";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -36,46 +36,52 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     maxWidth: 1000,
     borderRadius: theme.borderRadius,
     overflow: "auto",
-
-    "& thead": {
-      position: "sticky",
-      top: 0,
-      borderTopLeftRadius: theme.borderRadius,
-      borderTopRightRadius: theme.borderRadius,
-      zIndex: 1000,
-    },
+    padding: theme.spacingUnit * 2,
   },
   actions: {
     display: "flex",
     justifyContent: "flex-end",
-  },
-  list: {
-    marginBottom: 0,
-  },
-  icon: {
-    fill: "currentColor",
-    fontSize: 30,
   },
   alert: {
     "& .alert-autofit-row": {
       alignItems: "center",
     },
   },
+  settingHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  dataList: {
+    "& div": {
+      marginBottom: "0.2rem",
+    },
+    marginBottom: "1rem",
+  },
+  json: {
+    marginTop: "0.2rem",
+    backgroundColor: theme.digitalLakeMainL2,
+    color: "white",
+    padding: theme.spacingUnit * 2,
+    borderRadius: theme.borderRadius,
+  },
+  editElement: {
+    marginBottom: "16px",
+  },
+  buttons: {
+    display: "flex",
+    justifyContent: "flex-end",
+  },
+  closeButton: {
+    marginRight: "16px",
+  },
 }));
 
-function Inside({ tenantId, onPerformAction }) {
-  const { data } = useSWR(`/api/v2/tenant/${tenantId}`);
+function EditInside({ data, setIsEditMode, onPerformAction }) {
+  const classes = useStyles();
+  const router = useRouter();
+
   const [tenant, setTenant] = useState({ ...data });
-
-  useEffect(() => {
-    if (data) {
-      setTenant({ ...data });
-    }
-  }, [data, setTenant]);
-
-  if (!data) {
-    return <span className="loading-animation" />;
-  }
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -88,81 +94,117 @@ function Inside({ tenantId, onPerformAction }) {
 
   const handleSave = async () => {
     await putTenant(tenant);
-    mutate(`/api/v2/tenant`);
     onPerformAction(["Success"]);
+    setIsEditMode(false);
+    mutate(`/api/v2/tenant/${tenant.tenantId}`);
   };
 
   const handleDelete = async () => {
     await deleteTenant(tenant.tenantId);
     mutate(`/api/v2/tenant`);
     onPerformAction(["Delete Success"]);
+    router.push('/tenants');
   };
+
+  if (!data) {
+    return <span className="loading-animation" />;
+  }
 
   return (
     <>
-      {
-        <div className="sheet">
-          <div className="sheet-section">
-            <div className="form-group-autofit">
-              <div className="form-group-item">
-                <label>Name</label>
-                <input
-                  className="form-control"
-                  id="name"
-                  placeholder="Name"
-                  type="text"
-                  value={tenant.name}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group-item">
-                <label>VirtuaHost</label>
-                <input
-                  className="form-control"
-                  id="virtualHost"
-                  placeholder="VirtualHost"
-                  type="text"
-                  value={tenant.virtualHost}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>UI Config</label>
-              <textarea
-                className="form-control"
-                id="jsonConfig"
-                name="jsonConfig"
-                placeholder="UI config"
-                value={tenant.jsonConfig}
-                onChange={handleChange}
-              ></textarea>
+      <div className={classes.editElement}>
+        <strong>Name:</strong>{" "}
+        <ClayInput
+          id="name"
+          placeholder="Insert here the name"
+          onChange={(event) => handleChange(event)}
+          value={tenant.name}
+          type="text"
+        />
+      </div>
+      <div className={classes.editElement}>
+        <strong>Description:</strong>
+        <ClayInput
+          id="virtualHost"
+          placeholder="Insert here the VirtualHost"
+          onChange={(event) => handleChange(event)}
+          value={tenant.virtualHost}
+          type="text"
+        />
+      </div>
+      <div className={classes.editElement}>
+        <strong>JSON Configuration</strong>
+        <ClayInput
+          component="textarea"
+          id="jsonConfig"
+          placeholder="Insert your JSON config here"
+          type="text"
+          onChange={(event) => handleChange(event)}
+          value={tenant.jsonConfig}
+        />
+      </div>
+      <div className={classes.buttons}>
+        <button
+          className={clsx("btn btn-danger", classes.closeButton)}
+          type="button"
+          onClick={() => handleDelete()}
+        >
+          Delete
+        </button>
+        <button
+          className="btn btn-primary"
+          type="button"
+          onClick={() => handleSave()}
+        >
+          Save Settings
+        </button>
+      </div>
+    </>
+  );
+}
+
+function Inside({ tenantId, onPerformAction }) {
+  const classes = useStyles();
+
+  const { data } = useSWR(`/api/v2/tenant/${tenantId}`);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  if (!data) {
+    return <span className="loading-animation" />;
+  }
+
+  return (
+    <>
+      {isEditMode ? (
+        <EditInside
+          data={data}
+          setIsEditMode={setIsEditMode}
+          onPerformAction={onPerformAction}
+        />
+      ) : (
+        <>
+          <div className={classes.settingHeader}>
+            <h2>{data.name}</h2>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => setIsEditMode(true)}
+            >
+              Edit Settings
+            </button>
+          </div>
+          <div className={classes.dataList}>
+            <div>
+              <strong>VirtuaHost:</strong> {data.virtualHost}
             </div>
           </div>
-          <div className="sheet-footer sheet-footer-btn-block-sm-down">
-            <div className="btn-group">
-              <div className="btn-group-item">
-                <button
-                  className="btn btn-primary"
-                  type="button"
-                  onClick={handleSave}
-                >
-                  {"Save"}
-                </button>
-              </div>
-              <div className="btn-group-item">
-                <button
-                  className="btn btn-danger c-focus-inset"
-                  type="button"
-                  onClick={handleDelete}
-                >
-                  {"Delete"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
+
+          <h5>JSON Configuration</h5>
+          <pre className={classes.json}>
+            {data.jsonConfig}
+          </pre>
+        </>
+      )}
     </>
   );
 }
