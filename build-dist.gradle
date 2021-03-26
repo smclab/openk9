@@ -78,10 +78,10 @@ dependencies {
 	dist project(path: ':plugins:applications', transitive: false)
 
 	// AUTH
-	dist project(path: ':osgi:auth:auth-keycloak-api', configuration: 'archives', transitive: false)
-	dist project(path: ':osgi:auth:auth-keycloak-service', configuration: 'archives', transitive: false)
-	dist project(path: ':osgi:auth:auth-keycloak-web', configuration: 'archives', transitive: false)
-	dist project(path: ':osgi:auth:auth-keycloak-query-parser', configuration: 'archives', transitive: false)
+	dist project(path: ':osgi:auth:auth-keycloak-api', transitive: false)
+	dist project(path: ':osgi:auth:auth-keycloak-service', transitive: false)
+	dist project(path: ':osgi:auth:auth-keycloak-web', transitive: false)
+	dist project(path: ':osgi:auth:auth-keycloak-query-parser', transitive: false)
 
 	// felix dependency manager
 
