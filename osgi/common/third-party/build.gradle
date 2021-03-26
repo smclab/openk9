@@ -7,4 +7,5 @@ dependencies {
 	compile libraries.micrometer
 	compile libraries.hdrhistogram
 	compile libraries.latencyutils
+	compile libraries.osgi
 }

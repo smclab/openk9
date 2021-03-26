@@ -8,5 +8,6 @@ dependencies {
 
 	compile libraries.caffeine
 	compile libraries.slf4j_api
+	compile libraries.micrometer
 
 }

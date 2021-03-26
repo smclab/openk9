@@ -17,14 +17,6 @@
 
 package io.openk9.json.internal;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
@@ -127,18 +119,8 @@ public class JsonNodeWrapper implements JsonNode {
 	}
 
 	@Override
-	public JsonNode at(JsonPointer ptr) {
-		return new JsonNodeWrapper(this.delegate.at(ptr));
-	}
-
-	@Override
 	public JsonNode at(String jsonPtrExpr) {
 		return new JsonNodeWrapper(this.delegate.at(jsonPtrExpr));
-	}
-
-	@Override
-	public JsonNodeType getNodeType() {
-		return this.delegate.getNodeType();
 	}
 
 	@Override
@@ -358,12 +340,6 @@ public class JsonNodeWrapper implements JsonNode {
 	}
 
 	@Override
-	public JsonNode requiredAt(JsonPointer path)
-		throws IllegalArgumentException {
-		return new JsonNodeWrapper(this.delegate.requiredAt(path));
-	}
-
-	@Override
 	public boolean has(String fieldName) {
 		return this.delegate.has(fieldName);
 	}
@@ -441,26 +417,6 @@ public class JsonNodeWrapper implements JsonNode {
 	}
 
 	@Override
-	public JsonToken asToken() {
-		return this.delegate.asToken();
-	}
-
-	@Override
-	public JsonParser.NumberType numberType() {
-		return this.delegate.numberType();
-	}
-
-	@Override
-	public JsonParser traverse() {
-		return this.delegate.traverse();
-	}
-
-	@Override
-	public JsonParser traverse(ObjectCodec codec) {
-		return this.delegate.traverse(codec);
-	}
-
-	@Override
 	public Iterator<JsonNode> iterator() {
 		return StreamSupport
 			.stream(spliterator(), false)
@@ -480,24 +436,6 @@ public class JsonNodeWrapper implements JsonNode {
 	@Override
 	public void forEach(Consumer<? super JsonNode> action) {
 		this.iterator().forEachRemaining(action::accept);
-	}
-
-	@Override
-	public boolean isEmpty(SerializerProvider serializers) {
-		return this.delegate.isEmpty(serializers);
-	}
-
-	@Override
-	public void serialize(JsonGenerator gen, SerializerProvider serializers)
-		throws java.io.IOException {
-		this.delegate.serialize(gen, serializers);
-	}
-
-	@Override
-	public void serializeWithType(
-		JsonGenerator gen, SerializerProvider serializers,
-		TypeSerializer typeSer) throws java.io.IOException {
-		this.delegate.serializeWithType(gen, serializers, typeSer);
 	}
 
 	@Override
