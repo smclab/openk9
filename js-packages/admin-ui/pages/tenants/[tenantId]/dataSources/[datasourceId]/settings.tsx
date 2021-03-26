@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useState } from "react";
+import React, { Suspense, useState } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
@@ -32,7 +32,6 @@ import {
 import { Layout } from "../../../../../components/Layout";
 import {
   changeDataSourceInfo,
-  DataSourceInfo,
   getDataSourceInfo,
   getDriverServiceNames,
   triggerReindex,
@@ -44,6 +43,7 @@ import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
 import { CronInput, CronInputType } from "../../../../../components/CronInput";
 import ClayAutocomplete from "@clayui/autocomplete";
 import ClayDropDown from "@clayui/drop-down";
+import { isServer } from "../../../../../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -152,6 +152,8 @@ function EditInner({
 }) {
   const classes = useStyles();
 
+  const pluginInfos = pluginInfoLoader.read();
+
   const { data: datasource } = useSWR(
     `/api/v2/datasource/${datasourceId}`,
     () => getDataSourceInfo(datasourceId),
@@ -163,18 +165,15 @@ function EditInner({
     `/api/v1/driver-service-names`,
     getDriverServiceNames,
   );
-
-  const pluginInfos = pluginInfoLoader.read();
+  
   const pluginInfo = pluginInfos.find(
     (p) =>
-      datasource &&
       datasource.driverServiceName.startsWith(p.bundleInfo.symbolicName),
   );
   const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
-
   const SettingsRenderer =
-    plugin?.dataSourceAdminInterfacePath?.settingsRenderer;
-
+    plugin && plugin?.dataSourceAdminInterfacePath?.settingsRenderer || null;
+    
   const [isDataSourceEnabled, setIsDataSourceEnabled] = useState(
     datasource.active || false,
   );
@@ -256,8 +255,16 @@ function EditInner({
         (newDatasource["scheduling"] = scheduling);
     }
 
-    const resp = await changeDataSourceInfo(datasourceId, newDatasource);
-    onPerformAction(`The datasource is updated.`);
+    if(newDatasource !== {}) {
+      await changeDataSourceInfo(datasourceId, newDatasource);
+      onPerformAction(`The datasource is updated.`);
+    } else {
+      console.log("vuoto");
+    }
+  }
+
+  if (!datasource) {
+    return <span className="loading-animation" />;
   }
 
   return (
@@ -336,8 +343,8 @@ function EditInner({
         />
       </div>
       <div className={classes.editElement}>
-        {SettingsRenderer && (
-          <SettingsRenderer settings={json} setSettings={setJson} />
+        {SettingsRenderer && SettingsRenderer != null && (
+          <SettingsRenderer setter={json} setSetter={setJson} />
         )}
       </div>
       <div className={classes.buttons}>
@@ -474,11 +481,15 @@ function DSSettings() {
       >
         <div className={classes.root}>
           {isEditMode ? (
-            <EditInner
-              datasourceId={parseInt(datasourceId)}
-              setIsEditMode={setIsEditMode}
-              onPerformAction={onPerformAction}
-            />
+            !isServer && (
+              <Suspense fallback={<span className="loading-animation" />}>
+                <EditInner
+                  datasourceId={parseInt(datasourceId)}
+                  setIsEditMode={setIsEditMode}
+                  onPerformAction={onPerformAction}
+                />
+              </Suspense>
+            )
           ) : (
             <Inner
               tenantId={parseInt(tenantId)}

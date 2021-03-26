@@ -39,8 +39,8 @@ export type Plugin<E> = {
 export type DataSourceAdminInterface = {
   iconRenderer: React.FC<{ size?: number } & any>;
   settingsRenderer: React.FC<{
-    settings: any;
-    setSettings(a: any): void;
+    setter: any;
+    setSetter(a: any): void;
   }>;
 };
 

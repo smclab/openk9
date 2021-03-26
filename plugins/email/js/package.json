@@ -15,7 +15,8 @@
     "@clayui/modal": "^3.8.1",
     "clsx": "^1.1.0",
     "react": "^17.0.0",
-    "react-jss": "^10.4.0"
+    "react-jss": "^10.4.0",
+    "react-simple-code-editor": "^0.11.0"
   },
   "devDependencies": {
     "@openk9/plugin-scripts": "^0.1.0-alpha.3",
