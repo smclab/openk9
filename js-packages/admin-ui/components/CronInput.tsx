@@ -50,7 +50,7 @@ export function CronInput({
 }) {
   const classes = useStyles();
 
-  function handleChangeInputs(event) {
+  function handleChangeInputs(event: React.ChangeEvent<HTMLInputElement>) {
     const value = event.target.value;
     setSchedulingValue({
       ...schedulingValue,
