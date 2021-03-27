@@ -351,7 +351,10 @@ function EditInner({
       </div>
       <div className={classes.editElement}>
         {SettingsRenderer && SettingsRenderer != null && (
-          <SettingsRenderer setter={json} setSetter={setJson} />
+          <SettingsRenderer
+            currentSettings={json}
+            setCurrentSettings={setJson}
+          />
         )}
       </div>
       <div className={classes.buttons}>

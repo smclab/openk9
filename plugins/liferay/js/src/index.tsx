@@ -61,8 +61,8 @@ function iconRenderer(props: any) {
 function settingsRenderer(props: any) {
   console.log("settingsRenderer", props);
 
-  const json = props.setter;
-  const setJson = props.setSetter;
+  const json = props.currentSettings;
+  const setJson = props.setCurrentSettings;
 
   return (
     <>
