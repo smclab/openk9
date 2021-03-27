@@ -99,16 +99,16 @@ export async function getDataSourceInfo(
 
 export async function changeDataSourceInfo(
   datasourceId: number,
-  datasource: any,
+  datasource: Partial<DataSourceInfo>,
 ): Promise<DataSourceInfo> {
   const request = await fetch(`${apiBaseUrlV2}/datasource/${datasourceId}`, {
     method: "PATCH",
     headers: {
-      "ContentType": "application/json"
+      ContentType: "application/json",
     },
     body: JSON.stringify(datasource),
   });
-  const response: any = await request.json();
+  const response: DataSourceInfo = await request.json();
   return response;
 }
 
