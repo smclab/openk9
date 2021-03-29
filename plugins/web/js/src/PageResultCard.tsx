@@ -20,7 +20,7 @@ import ClayIcon from "@clayui/icon";
 import { createUseStyles } from "react-jss";
 import { Highlight, ResultCard, ThemeType } from "@openk9/search-ui-components";
 
-import { WebResultItem } from "./types";
+import { PageResultItem } from "./types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -60,12 +60,12 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-export function WebResultCard({
+export function PageResultCard({
   data,
   className,
   ...rest
 }: {
-  data: WebResultItem;
+  data: PageResultItem;
   onSelect?: () => void;
 } & React.AnchorHTMLAttributes<HTMLAnchorElement>): JSX.Element {
   const classes = useStyles();

@@ -20,7 +20,7 @@ import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import { ThemeType } from "@openk9/search-ui-components";
 
-import { WebResultItem } from "./types";
+import { PageResultItem } from "./types";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   break: {
@@ -42,7 +42,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-export function WebSidebar({ result }: { result: WebResultItem }) {
+export function PageSidebar({ result }: { result: PageResultItem }) {
   const classes = useStyles();
   return (
     <>

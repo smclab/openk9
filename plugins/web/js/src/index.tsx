@@ -19,11 +19,13 @@ import React from "react";
 import ClayIcon from "@clayui/icon";
 import { Plugin } from "@openk9/http-api";
 
-import { WebResultItem } from "./types";
-import { WebResultCard } from "./WebResultCard";
-import { WebSidebar } from "./WebSidebar";
+import { WebResultType } from "./types";
+import { PageResultCard } from "./PageResultCard";
+import { DocumentResultCard } from "./DocumentResultCard";
+import { DocumentSidebar } from "./DocumentSidebar";
+import { PageSidebar } from "./PageSidebar";
 
-export const plugin: Plugin<WebResultItem> = {
+export const plugin: Plugin<WebResultType> = {
   pluginId: "web-datasource",
   displayName: "Web DataSource",
   pluginType: ["DATASOURCE", "ENRICH"],
@@ -33,10 +35,12 @@ export const plugin: Plugin<WebResultItem> = {
   },
   dataSourceRenderingInterface: {
     resultRenderers: {
-      web: WebResultCard as any,
+      document: DocumentResultCard as any,
+      web: PageResultCard as any,
     },
     sidebarRenderers: {
-      web: WebSidebar as any,
+      web: PageSidebar as any,
+      document: DocumentSidebar as any,
     },
   },
 };

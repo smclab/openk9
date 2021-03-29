@@ -68,11 +68,10 @@ def get_docs():
     return render_template('swaggerui.html')
 
 
-@app.route("/execute-web-crawler", methods=["POST"])    
-def execute_web():
-    
+@app.route("/execute", methods=["POST"])
+def execute():
     if request.method == "POST":
-        
+
         try:
             start_urls = request.json["startUrls"]
         except KeyError:
@@ -88,135 +87,51 @@ def execute_web():
             allowed_paths = request.json["allowedPaths"]
         except KeyError:
             allowed_paths = []
-        
+
         try:
             excluded_paths = request.json["excludedPaths"]
         except KeyError:
             excluded_paths = []
-        
+
         try:
             depth = request.json["depth"]
         except KeyError:
-            depth = 10
-        timestamp = request.json["timestamp"]
-        datasource_id = request.json["datasourceId"]
-        try:
-            follow = request.json["follow"]
-        except KeyError:
-            follow = True
-        try:
-            max_length = request.json["max_length"]
-        except KeyError:
-            max_length = 10000
+            depth = 0
+
         try:
             page_count = request.json["page_count"]
         except KeyError:
-            page_count = 1000
+            page_count = 0
+
+        datasource_id = request.json["datasourceId"]
 
         payload = {
-            "project": "web_crawler",
-            "spider": "SimpleWebCrawler",
+            "project": "crawler",
+            "spider": "WebCrawler",
             "start_urls": json.dumps(start_urls),
             "allowed_domains": json.dumps(allowed_domains),
             "allowed_paths": json.dumps(allowed_paths),
             "excluded_paths": json.dumps(excluded_paths),
-            "timestamp": timestamp,
-            "datasource_id": datasource_id,
-            "ingestion_url": app.config["INGESTION_URL"],
-            "setting": "DEPTH_LIMIT=" + str(depth),
             "setting": "CLOSESPIDER_PAGECOUNT=" + str(page_count),
-            "follow": follow,
-            "max_length": max_length
+            "setting": "DEPTH_LIMIT=" + str(depth),
+            "datasource_id": datasource_id,
+            "ingestion_url": app.config["INGESTION_URL"]
         }
 
-        if timestamp == 0:
-            response = post_message("http://localhost:6800/schedule.json", payload, 10)
-            
-            if response["status"] == 'ok':
-                app.logger.info("Crawling process started with job " + str(response["jobid"]))
-                return "Crawling process started with job " + str(response["jobid"])
-            else:
-                app.logger.error(response)
-                return response
+        response = post_message("http://localhost:6800/schedule.json", payload, 10)
+
+        if response["status"] == 'ok':
+            app.logger.info("Crawling process started with job " + str(response["jobid"]))
+            return "Crawling process started with job " + str(response["jobid"])
         else:
-            app.logger.error("Timestamp bigger than 0")
-            return "Timestamp bigger than 0"
+            app.logger.error(response)
+            return response
 
 
-@app.route("/execute-sitemap-crawler", methods=["POST"])    
-def execute_sitemap():
-    
-    if request.method == "POST":
-        
-        try:
-            sitemap_urls = request.json["sitemapUrls"]
-        except KeyError:
-            app.logger.error("No sitemap founded")
-            return "No url from start crawling"
-
-        try:
-            allowed_domains = request.json["allowedDomains"]
-        except KeyError:
-            allowed_domains = []
-
-        try:
-            sitemap_rules = request.json["sitemapRules"]
-        except KeyError:
-            sitemap_rules = []
-        
-        try:
-            depth = request.json["depth"]
-        except KeyError:
-            depth = 10
-        timestamp = int(request.json["timestamp"])
-        datasource_id = request.json["datasourceId"]
-        try:
-            follow = request.json["follow"]
-        except KeyError:
-            follow = False
-        try:
-            max_length = request.json["max_length"]
-        except KeyError:
-            max_length = 10000
-        try:
-            page_count = request.json["page_count"]
-        except KeyError:
-            page_count = 1000
-
-        payload = {
-            "project": "web_crawler",
-            "spider": "SitemapWebCrawler",
-            "sitemap_urls": json.dumps(sitemap_urls),
-            "allowed_domains": json.dumps(allowed_domains),
-            "sitemap_rules": json.dumps(sitemap_rules),
-            "timestamp": timestamp,
-            "datasource_id": datasource_id,
-            "ingestion_url": app.config["INGESTION_URL"],
-            "setting": "DEPTH_LIMIT=" + str(depth),
-            "setting": "CLOSESPIDER_PAGECOUNT=" + str(page_count),
-            "follow": follow,
-            "max_length": max_length
-        }
-
-        if timestamp == 0:
-            response = post_message("http://localhost:6800/schedule.json", payload, 10)
-
-            if response["status"] == 'ok':
-                app.logger.info("Crawling process started with job " + str(response["jobid"]))
-                return "Crawling process started with job " + str(response["jobid"])
-            else:
-                app.logger.error(response)
-                return response
-        else:
-            app.logger.error("Timestamp bigger than 0")
-            return "Timestamp bigger than 0"
-
-
-@app.route("/cancel-job", methods=["POST"])    
+@app.route("/cancel-job", methods=["POST"])
 def cancel_job():
-
     if request.method == "POST":
-        
+
         try:
             job = request.json["job"]
         except KeyError:
@@ -224,9 +139,9 @@ def cancel_job():
             return "No job with this id founded"
 
         payload = {
-                "project": "web_crawler",
-                "job": str(job)
-            }
+            "project": "web_crawler",
+            "job": str(job)
+        }
 
         response = post_message("http://localhost:6800/cancel.json", payload, 10)
 
@@ -241,3 +156,4 @@ def cancel_job():
 if __name__ == "__main__":
     app.logger = logging.getLogger("status-logger")
     app.run(host="0.0.0.0", port=80)
+

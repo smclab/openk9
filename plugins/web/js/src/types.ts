@@ -18,7 +18,32 @@
 
 import { GenericResultItem } from "@openk9/http-api";
 
-export type WebResultItem = GenericResultItem<{
+export type WebResultType = 
+  | DocumentResultItem
+  | PageResultItem;
+
+export type DocumentResultItem = GenericResultItem<{
+  document: {
+    documentType?: string | null;
+    previewUrl: string;
+    previewURLs: string[];
+    title: string;
+    contentType: string;
+    content: string;
+    URL: string;
+  };
+  file: {
+    path: string;
+    lastModifiedDate: number;
+  };
+  spaces?: {
+    spaceName: string;
+    spaceId: string;
+    URL: string;
+  };
+}>;
+
+export type PageResultItem = GenericResultItem<{
   web: {
     favicon: string;
     title: string;

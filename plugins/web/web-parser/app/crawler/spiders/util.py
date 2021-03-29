@@ -18,7 +18,9 @@ def get_favicon(domain):
             domain = 'http://' + domain
         page = requests.get(domain)
         soup = BeautifulSoup(page.text, features="lxml")
-        icon_link = soup.find("link", rel="shortcut icon")
+        icon_link = soup.find("link", rel="Shortcut Icon")
+        if icon_link is None:
+            icon_link = soup.find("link", rel="shortcut icon")
         if icon_link is None:
             icon_link = soup.find("link", rel="icon")
         if icon_link is None:
@@ -30,3 +32,17 @@ def get_favicon(domain):
         else:
             href = icon_link["href"]
         return href
+
+
+def map_type(content_type, type_mapping):
+    try:
+        document_type = type_mapping[content_type]
+        return document_type
+    except KeyError:
+        return None
+
+
+def get_path(url):
+    base_url = urlparse(url)
+    return base_url.path
+

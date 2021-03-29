@@ -4,3 +4,6 @@ requests==2.25.1
 Scrapy==2.4.1
 scrapyd==1.2.1
 scrapyd-client==1.1.0
+tika==1.24
+Pillow==8.1.0
+pdf2image==1.14.0

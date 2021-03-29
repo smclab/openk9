@@ -1,0 +1,12 @@
+{
+    "TYPE_MAPPING": {
+      "application/pdf": "pdf",
+      "application/msword": "office-word",
+      "application/vnd.openxmlformats-officedocument.wordprocessingm": "office-word",
+      "application/vnd.ms-excel": "office-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "office-excel",
+      "application/vnd.ms-powerpoint": "office-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation": "office-powerpoint",
+      "text/plain": "document-plaintext"
+    }
+}

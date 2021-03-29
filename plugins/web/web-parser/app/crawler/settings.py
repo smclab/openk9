@@ -1,22 +1,4 @@
-"""
-Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-
-# Scrapy settings for web_crawler project
+# Scrapy settings for crawler project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -25,16 +7,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'web_crawler'
+BOT_NAME = 'crawler'
 
-SPIDER_MODULES = ['web_crawler.spiders']
-NEWSPIDER_MODULE = 'web_crawler.spiders'
+SPIDER_MODULES = ['crawler.spiders']
+NEWSPIDER_MODULE = 'crawler.spiders'
+
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'web_crawler (+http://www.yourdomain.com)'
+#USER_AGENT = 'crawler (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = False
+ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -62,27 +45,25 @@ ROBOTSTXT_OBEY = False
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'web_crawler.middlewares.WebCrawlerSpiderMiddleware': 543,
+#    'crawler.middlewares.CrawlerSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'web_crawler.middlewares.WebCrawlerDownloaderMiddleware': 543,
-#    'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware': 544
+#    'crawler.middlewares.CrawlerDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
 #EXTENSIONS = {
-#    'scrapy.extensions.telnet.TelnetConsole': 543,
-#    'scrapy.extensions.httpcache.RFC2616Policy': 543,
+#    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'web_crawler.pipelines.WebCrawlerPipeline': 300,
+#    'crawler.pipelines.CrawlerPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -105,6 +86,5 @@ ROBOTSTXT_OBEY = False
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
-#HTTPCACHE_POLICY = 'scrapy.extensions.httpcache.RFC2616Policy'
 
-REDIRECT_ENABLED = False
+#LOG_LEVEL = 'INFO'
