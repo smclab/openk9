@@ -1,5 +1,7 @@
 FROM smclab/apache-karaf:4.3.0
 
+RUN apt-get update && apt-get install dos2unix
+
 RUN mkdir -p /mnt/karaf/deploy
 
 ENV KARAF_MOUNT_DIR=/mnt/karaf
@@ -7,6 +9,8 @@ ENV KARAF_MOUNT_DIR=/mnt/karaf
 COPY ./build/libs/ opt/apache-karaf/deploy
 
 COPY /osgi/scripts/* /usr/local/bin/
+
+RUN dos2unix /usr/local/bin/*
 
 RUN chmod a+x /usr/local/bin/*
 
