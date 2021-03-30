@@ -6,7 +6,7 @@ ENV KARAF_MOUNT_DIR=/mnt/karaf
 
 COPY ./build/libs/ opt/apache-karaf/deploy
 
-COPY scripts/* /usr/local/bin/
+COPY /osgi/scripts/* /usr/local/bin/
 
 RUN chmod a+x /usr/local/bin/*
 
