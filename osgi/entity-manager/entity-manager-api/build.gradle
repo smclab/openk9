@@ -1,7 +1,5 @@
 dependencies {
 	compile libraries.reactor
+	compile project(":osgi:entity-manager:relationship-graph-api")
 	compile libraries.neo4j_cypher_dsl
-
-	compile group: 'com.querydsl', name: 'querydsl-core', version: '4.4.0'
-
 }

@@ -3,11 +3,15 @@ package io.openk9.neo4j.relationship.graph;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Record;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 
@@ -110,5 +114,37 @@ public class Neo4jGraphConnection {
 	}
 
 	private Driver _driver;
+
+	public static void main(String[] args) throws Exception {
+		Driver driver = GraphDatabase.driver(
+			"bolt://localhost:7687",
+			AuthTokens.basic(
+				"neo4j",
+				"s3cr3t"
+			)
+		);
+
+		String[] names = new String[] {"name1", "name2", "name3"};
+
+		Publisher<Record> recordPublisher = driver.rxSession().writeTransaction(
+			tx ->
+				Flux
+					.fromArray(names)
+					.flatMap(name ->
+						tx.run(
+							"CREATE (a:person {entityName: $entityName}) RETURN a;",
+							Map.of("entityName", name)
+						).records())
+
+		);
+
+		Flux.from(recordPublisher)
+			.doOnNext(record -> System.out.println(record))
+			.map(Record::asMap)
+			.subscribe(System.out::println);
+
+		Thread.sleep(10_000);
+
+	}
 
 }

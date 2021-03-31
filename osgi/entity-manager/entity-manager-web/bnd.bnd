@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Entity Manager Web
+Bundle-SymbolicName: io.openk9.entity.manager.web
+
+-include: ${project.rootDir}/osgi/common.bnd

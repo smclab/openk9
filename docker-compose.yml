@@ -39,11 +39,12 @@ services:
         container_name: openk9-core
         command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
         environment:
-            WAIT_HOSTS: postgres:5432, rabbitmq:5672, elasticsearch:9200
+            WAIT_HOSTS: neo4j:7687
             WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
         volumes:
             - ./configs:/opt/apache-karaf/configs
+            - ./deploy:/opt/apache-karaf/deploy
         expose:
             - "1099"
             - "8080"
@@ -57,7 +58,7 @@ services:
             - "1099:1099"
             - "44444:44444"
             - "8181:8181"
-            - "5000:5005"
+            - "5005:5005"
         labels:
             - "traefik.enable=true"
             - "traefik.http.services.openk9-karaf-docker.loadbalancer.server.port=8080"
@@ -166,3 +167,13 @@ services:
             - POSTGRES_USER=openk9
             - POSTGRES_DB=keycloak
             - PGDATA=/var/lib/postgresql/data/pgdata
+    neo4j:
+        image: neo4j:latest
+        container_name: neo4j
+        hostname: neo4j
+        environment:
+            - NEO4J_AUTH=neo4j/openk9
+            - NEO4JLABS_PLUGINS=["apoc"]
+        ports:
+        - '7474:7474'
+        - '7687:7687'

@@ -3,4 +3,20 @@ Bundle-SymbolicName: io.openk9.relationship.graph.api
 
 -include: ${project.rootDir}/osgi/common.bnd
 
-Export-Package: io.openk9.relationship.graph.api.*
+Import-Package: *;resolution:=optional
+
+Include-Resource: \
+ @guava-*.jar,\
+ @querydsl-core-*.jar,\
+ @mysema-commons-lang-*.jar,\
+ @apiguardian-api-*.jar,\
+ @neo4j-cypher-dsl-*.jar
+
+Export-Package: \
+ io.openk9.relationship.graph.api.*,\
+ org.neo4j.cypherdsl.core,\
+ org.neo4j.cypherdsl.core.*,\
+ com.querydsl.core.*,\
+ com.querydsl.core.types.dsl,\
+ com.querydsl.core,\
+ org.apiguardian.api

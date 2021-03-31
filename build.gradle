@@ -76,7 +76,9 @@ ext.libraries = [
 		],
 		elasticsearch: 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.9.3',
 		avro:  'org.apache.avro:avro:1.10.0',
-		felix_dependencymanager: 'org.apache.felix:org.apache.felix.dependencymanager:4.6.0'
+		felix_dependencymanager: 'org.apache.felix:org.apache.felix.dependencymanager:4.6.0',
+		neo4j_java_driver: 'org.neo4j.driver:neo4j-java-driver:4.2.3',
+		neo4j_cypher_dsl: 'org.neo4j:neo4j-cypher-dsl:2021.1.1'
 ]
 
 subprojects {

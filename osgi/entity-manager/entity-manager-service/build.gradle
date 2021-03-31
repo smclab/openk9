@@ -1,6 +1,4 @@
 dependencies {
+	compile project(":osgi:entity-manager:entity-manager-api")
 	compile project(":osgi:entity-manager:relationship-graph-api")
-
-	compile libraries.neo4j_java_driver
-	compile libraries.reactor
 }

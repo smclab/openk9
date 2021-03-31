@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Entity Manager Service
+Bundle-SymbolicName: io.openk9.entity.manager.service
+
+-include: ${project.rootDir}/osgi/common.bnd

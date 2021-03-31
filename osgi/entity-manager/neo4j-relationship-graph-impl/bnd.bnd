@@ -3,5 +3,7 @@ Bundle-SymbolicName: io.openk9.neo4j.relationship.graph
 
 -include: ${project.rootDir}/osgi/common.bnd
 
+Import-Package: *;resolution:=optional
+
 Include-Resource: \
  @neo4j-java-driver-*.jar

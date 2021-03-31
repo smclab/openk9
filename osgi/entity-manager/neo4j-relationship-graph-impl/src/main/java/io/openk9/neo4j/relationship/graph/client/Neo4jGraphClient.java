@@ -2,15 +2,15 @@ package io.openk9.neo4j.relationship.graph.client;
 
 import io.openk9.neo4j.relationship.graph.Neo4jGraphConnection;
 import io.openk9.relationship.graph.api.client.GraphClient;
+import io.openk9.relationship.graph.api.client.Record;
+import org.neo4j.cypherdsl.core.Statement;
 import org.neo4j.driver.Driver;
-import org.neo4j.driver.Record;
 import org.neo4j.driver.reactive.RxSession;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
-import java.util.Map;
 import java.util.function.Function;
 
 @Component(
@@ -20,65 +20,28 @@ import java.util.function.Function;
 public class Neo4jGraphClient implements GraphClient {
 
 	@Override
-	public Flux<io.openk9.relationship.graph.api.client.Record> read(
-		String query) {
-
-		Driver driver = _neo4jGraphConnection.getDriver();
-
-		return exec(
-			driver,
-			rxSession ->
-				rxSession.readTransaction(
-					tx -> tx.run(query).records()))
+	public Publisher<Record> write(Statement statement) {
+		return _exec(
+			_neo4jGraphConnection.getDriver(),
+			rxSession -> rxSession.writeTransaction(
+				tx -> tx.run(statement.getCypher()).records())
+		)
 			.map(RecordWrapper::new);
 	}
 
 	@Override
-	public Flux<io.openk9.relationship.graph.api.client.Record> read(
-		String query, Map<String, Object> params) {
-
-		Driver driver = _neo4jGraphConnection.getDriver();
-
-		return exec(
-			driver,
-			rxSession ->
-				rxSession.readTransaction(
-					tx -> tx.run(query, params).records()))
-			.map(RecordWrapper::new);
-
-	}
-
-	@Override
-	public Flux<io.openk9.relationship.graph.api.client.Record> write(
-		String query) {
-
-		Driver driver = _neo4jGraphConnection.getDriver();
-
-		return exec(
-			driver,
-			rxSession ->
-				rxSession.writeTransaction(
-					tx -> tx.run(query).records()))
-			.map(RecordWrapper::new);
-
-	}
-
-	@Override
-	public Flux<io.openk9.relationship.graph.api.client.Record> write(
-		String query, Map<String, Object> params) {
-
-		Driver driver = _neo4jGraphConnection.getDriver();
-
-		return exec(
-			driver,
-			rxSession ->
-				rxSession.writeTransaction(
-					tx -> tx.run(query, params).records()))
+	public Publisher<Record> read(Statement statement) {
+		return _exec(
+			_neo4jGraphConnection.getDriver(),
+			rxSession -> rxSession.readTransaction(
+				tx -> tx.run(statement.getCypher()).records())
+		)
 			.map(RecordWrapper::new);
 	}
 
-	private Flux<Record> exec(
-		Driver driver, Function<RxSession, Publisher<Record>> sourceSupplier) {
+	private Flux<org.neo4j.driver.Record> _exec(
+		Driver driver, Function<RxSession,
+		Publisher<org.neo4j.driver.Record>> sourceSupplier) {
 
 		return Flux.using(
 			driver::rxSession,

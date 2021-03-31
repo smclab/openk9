@@ -1,17 +1,12 @@
 package io.openk9.relationship.graph.api.client;
 
-import reactor.core.publisher.Flux;
-
-import java.util.Map;
+import org.neo4j.cypherdsl.core.Statement;
+import org.reactivestreams.Publisher;
 
 public interface GraphClient {
 
-	Flux<Record> read(String query);
+	Publisher<Record> write(Statement statement);
 
-	Flux<Record> read(String query, Map<String, Object> params);
-
-	Flux<Record> write(String query);
-
-	Flux<Record> write(String query, Map<String, Object> params);
+	Publisher<Record> read(Statement statement);
 
 }
