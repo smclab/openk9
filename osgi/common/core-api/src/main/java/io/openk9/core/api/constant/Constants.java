@@ -18,6 +18,9 @@
 package io.openk9.core.api.constant;
 
 public interface Constants {
+	String DATASOURCE_ID = "datasourceId";
+	String CONTENT_ID = "contentId";
+	String TENANT_ID = "tenantId";
 	String DATASOURCE_PAYLOAD = "datasourcePayload";
 	String CONTENT = "content";
 	String CONFIDENCE = "confidence";

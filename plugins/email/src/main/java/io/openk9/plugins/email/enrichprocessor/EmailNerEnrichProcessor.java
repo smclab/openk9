@@ -17,6 +17,7 @@
 
 package io.openk9.plugins.email.enrichprocessor;
 
+import io.openk9.entity.manager.client.api.EntityManagerClient;
 import io.openk9.http.client.HttpClientFactory;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.json.api.JsonFactory;
@@ -48,10 +49,8 @@ public class EmailNerEnrichProcessor extends BaseNerEnrichProcessor {
 	public void activate(Config config) {
 		_config = config;
 		setHttpClient(_httpClientFactory.getHttpClient(config.url()));
-		setEntityMapperProvider(_entityMapperProvider);
-		setIndex(_index);
-		setSearch(_search);
 		setJsonFactory(_jsonFactory);
+		setEntityManagerClient(_entityManagerClient);
 	}
 
 	@Modified
@@ -91,12 +90,6 @@ public class EmailNerEnrichProcessor extends BaseNerEnrichProcessor {
 	private JsonFactory _jsonFactory;
 
 	@Reference
-	private Search _search;
-
-	@Reference
-	private Index _index;
-
-	@Reference
-	private EntityMapperProvider _entityMapperProvider;
+	private EntityManagerClient _entityManagerClient;
 
 }

@@ -6,4 +6,5 @@ dependencies {
 	compile libraries.slf4j_api
 	compile libraries.reactor
 	compile libraries.reactor_tools
+	compile libraries.osgi
 }

@@ -2,10 +2,11 @@ package io.openk9.entity.manager.http;
 
 import io.openk9.entity.manager.api.EntityGraphRepository;
 import io.openk9.entity.manager.api.EntityNameCleanerProvider;
-import io.openk9.entity.manager.api.model.Entity;
-import io.openk9.entity.manager.payload.EntityRequest;
-import io.openk9.entity.manager.payload.RelationRequest;
-import io.openk9.entity.manager.payload.Request;
+import io.openk9.entity.manager.model.Entity;
+import io.openk9.entity.manager.model.payload.EntityRequest;
+import io.openk9.entity.manager.model.payload.RelationRequest;
+import io.openk9.entity.manager.model.payload.Request;
+import io.openk9.entity.manager.model.payload.Response;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
@@ -60,12 +61,12 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 		Mono<Request> request = _validateRequest(httpRequest);
 
-		Flux<Entity> entityFlux = request.flatMapMany(this::_getOrAddEntities);
+		Flux<Response> entityFlux = request.flatMapMany(this::_getOrAddEntities);
 
 		return _httpResponseWriter.write(httpResponse, entityFlux);
 	}
 
-	private Flux<Entity> _getOrAddEntities(Request request) {
+	private Flux<Response> _getOrAddEntities(Request request) {
 
 		long tenantId = request.getTenantId();
 
@@ -140,7 +141,7 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 							.flatMap(entry -> {
 
 								for (RelationRequest relation : relations) {
-									if (entry.getKey().getTmpId().equals(relation.getTo())) {
+									if (entry.getKey().getTmpId() == relation.getTo()) {
 										return Stream.of(
 											Tuples.of(
 												relation.getName(),
@@ -197,18 +198,30 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 				}
 
+				List<Response> response =
+					map
+						.entrySet()
+						.stream()
+						.map(t2 -> Response
+							.builder()
+							.entity(t2.getValue())
+							.tmpId(t2.getKey().getTmpId())
+							.build()
+						)
+						.collect(Collectors.toList());
+
 				if (statementList.size() > 1) {
 					return Flux.from(_graphClient.write(
 						Cypher.unionAll(statementList.toArray(new Statement[0]))
 					))
-						.thenMany(Flux.fromIterable(map.values()));
+						.thenMany(Flux.fromIterable(response));
 				}
 				else if (statementList.size() == 1) {
 					return Flux.from(_graphClient.write(statementList.get(0)))
-						.thenMany(Flux.fromIterable(map.values()));
+						.thenMany(Flux.fromIterable(response));
 				}
 				else {
-					return Flux.fromIterable(map.values());
+					return Flux.fromIterable(response);
 				}
 
 			});

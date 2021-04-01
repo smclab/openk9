@@ -17,14 +17,12 @@
 
 package io.openk9.plugins.web.enrichprocessor;
 
-import io.openk9.json.api.JsonFactory;
-import io.openk9.search.client.api.Index;
+import io.openk9.entity.manager.client.api.EntityManagerClient;
 import io.openk9.http.client.HttpClientFactory;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.search.client.api.Search;
+import io.openk9.json.api.JsonFactory;
 import io.openk9.search.enrich.api.BaseNerEnrichProcessor;
 import io.openk9.search.enrich.api.EnrichProcessor;
-import io.openk9.search.enrich.mapper.api.EntityMapperProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -48,10 +46,8 @@ public class WebNerEnrichProcessor extends BaseNerEnrichProcessor {
 	public void activate(Config config) {
 		_config = config;
 		setHttpClient(_httpClientFactory.getHttpClient(config.url()));
-		setEntityMapperProvider(_entityMapperProvider);
-		setIndex(_index);
-		setSearch(_search);
 		setJsonFactory(_jsonFactory);
+		setEntityManagerClient(_entityManagerClient);
 	}
 
 	@Modified
@@ -91,12 +87,6 @@ public class WebNerEnrichProcessor extends BaseNerEnrichProcessor {
 	private JsonFactory _jsonFactory;
 
 	@Reference
-	private Search _search;
-
-	@Reference
-	private Index _index;
-
-	@Reference
-	private EntityMapperProvider _entityMapperProvider;
+	private EntityManagerClient _entityManagerClient;
 
 }

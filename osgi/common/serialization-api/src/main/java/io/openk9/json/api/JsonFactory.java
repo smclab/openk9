@@ -38,6 +38,8 @@ public interface JsonFactory {
 
 	JsonNode fromJsonToJsonNode(String json);
 
+	JsonNode fromObjectToJsonNode(Object json);
+
 	JsonNode fromJsonToJsonNode(byte[] json);
 
 	Object toJsonClassDefinition(Class<?> clazz);

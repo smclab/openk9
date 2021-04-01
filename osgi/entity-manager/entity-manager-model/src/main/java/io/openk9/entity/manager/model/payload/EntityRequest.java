@@ -1,17 +1,19 @@
-package io.openk9.entity.manager.api.model;
+package io.openk9.entity.manager.model.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Entity {
-	private long id;
-	private long tenantId;
+public class EntityRequest {
 	private String entityName;
 	private String entityType;
+	private List<RelationRequest> relations;
+	private long tmpId;
 }

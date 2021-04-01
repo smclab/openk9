@@ -22,7 +22,7 @@ public class EntityNameCleanerProviderImpl
 	@Override
 	public EntityNameCleaner getEntityNameCleaner(String entityType) {
 		return _entityNameCleanerMap.getOrDefault(
-			entityType, _entityNameCleaner);
+			entityType, _defaultEntityNameCleaner);
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class EntityNameCleanerProviderImpl
 	@Reference(
 		target = "(component.name=io.openk9.entity.manager.internal.DefaultEntityNameCleaner)"
 	)
-	private EntityNameCleaner _entityNameCleaner;
+	private EntityNameCleaner _defaultEntityNameCleaner;
 
 	private final Map<String, EntityNameCleaner> _entityNameCleanerMap =
 		new HashMap<>();

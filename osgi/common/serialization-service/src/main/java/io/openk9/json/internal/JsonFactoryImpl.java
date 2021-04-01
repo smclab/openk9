@@ -127,6 +127,12 @@ public class JsonFactoryImpl implements JsonFactory {
 	}
 
 	@Override
+	public JsonNode fromObjectToJsonNode(Object json) {
+		return new JsonNodeWrapper(
+			_objectMapperProvider.getObjectMapper().valueToTree(json));
+	}
+
+	@Override
 	public JsonNode fromJsonToJsonNode(byte[] json) {
 		try {
 			return new JsonNodeWrapper(

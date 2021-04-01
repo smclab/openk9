@@ -88,7 +88,6 @@ public class EnrichPipelineProcessor {
 				return _datasourceRepository
 					.findContext(datasourceId)
 					.zipWith(Mono.just(objectNode.deepCopy()))
-					.map(t2 -> Tuples.of(t2.getT1(), t2.getT2()))
 					.map(this::_addPluginDriverData)
 					.map(this::_mapToEnrichProcessorContext)
 					.flatMap(_startEnrichProcessor::exec);

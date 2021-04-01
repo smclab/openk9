@@ -1,6 +1,6 @@
 package io.openk9.entity.manager.api;
 
-import io.openk9.entity.manager.api.model.Entity;
+import io.openk9.entity.manager.model.Entity;
 import org.neo4j.cypherdsl.core.Statement;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;

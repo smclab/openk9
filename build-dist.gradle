@@ -2,11 +2,11 @@
 apply plugin: 'java'
 
 configurations {
-	dist {
+	distCore {
 		transitive = false
 		visible = false
 	}
-	distExternal {
+	distEntityManager {
 		transitive = false
 		visible = false
 	}
@@ -18,104 +18,180 @@ repositories {
 }
 
 dependencies {
-	dist project(path: ':osgi:ingestion:ingestion-api', transitive: false)
-	dist project(path: ':osgi:ingestion:ingestion-logic-api', transitive: false)
-	dist project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
-	dist project(path: ':osgi:ingestion:ingestion-driver-manager-api', transitive: false)
-	dist project(path: ':osgi:ingestion:ingestion-driver-manager-service', transitive: false)
-	dist project(path: ':osgi:ingestion:ingestion-service', transitive: false)
-	dist project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
-	dist project(path: ':osgi:web:http-api', transitive: false)
-	dist project(path: ':osgi:web:http-service', transitive: false)
-	dist project(path: ':osgi:web:http-bundle-ext', transitive: false)
-	dist project(path: ':osgi:web:open-api', transitive: false)
-	dist project(path: ':osgi:common:third-party', transitive: false)
-	dist project(path: ':osgi:common:osgi-api', transitive: false)
-	dist project(path: ':osgi:common:serialization-api', transitive: false)
-	dist project(path: ':osgi:plugin:plugin-api', transitive: false)
-	dist project(path: ':osgi:plugin:plugin-service', transitive: false)
-	dist project(path: ':osgi:plugin:plugin-web', transitive: false)
-	dist project(path: ':osgi:common:serialization-service', transitive: false)
-	dist project(path: ':osgi:common:model', transitive: false)
-	dist project(path: ':osgi:common:http-serialization', transitive: false)
-	dist project(path: ':osgi:common:core-api', transitive: false)
+	distCore project(path: ':osgi:ingestion:ingestion-api', transitive: false)
+	distCore project(path: ':osgi:ingestion:ingestion-logic-api', transitive: false)
+	distCore project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
+	distCore project(path: ':osgi:ingestion:ingestion-driver-manager-api', transitive: false)
+	distCore project(path: ':osgi:ingestion:ingestion-driver-manager-service', transitive: false)
+	distCore project(path: ':osgi:ingestion:ingestion-service', transitive: false)
+	distCore project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
+	distCore project(path: ':osgi:web:http-api', transitive: false)
+	distCore project(path: ':osgi:web:http-service', transitive: false)
+	distCore project(path: ':osgi:web:http-bundle-ext', transitive: false)
+	distCore project(path: ':osgi:web:open-api', transitive: false)
+	distCore project(path: ':osgi:common:third-party', transitive: false)
+	distCore project(path: ':osgi:common:osgi-api', transitive: false)
+	distCore project(path: ':osgi:common:serialization-api', transitive: false)
+	distCore project(path: ':osgi:plugin:plugin-api', transitive: false)
+	distCore project(path: ':osgi:plugin:plugin-service', transitive: false)
+	distCore project(path: ':osgi:plugin:plugin-web', transitive: false)
+	distCore project(path: ':osgi:common:serialization-service', transitive: false)
+	distCore project(path: ':osgi:common:model', transitive: false)
+	distCore project(path: ':osgi:common:http-serialization', transitive: false)
+	distCore project(path: ':osgi:common:core-api', transitive: false)
 
-	//dist project(path: ':osgi:common:reactor-agent', transitive: false)
+	//distCore project(path: ':osgi:common:reactor-agent', transitive: false)
 
-	dist project(path: ':osgi:common:common-api', transitive: false)
-	dist project(path: ':osgi:database:sql-api:', transitive: false)
-	dist project(path: ':osgi:database:sql-service:', transitive: false)
-	dist project(path: ':osgi:database:sql-jdbc-service:', transitive: false)
-	dist project(path: ':osgi:database:sql-scheduler:', transitive: false)
-	dist project(path: ':osgi:database:sql-scheduler-web:', transitive: false)
+	distCore project(path: ':osgi:common:common-api', transitive: false)
+	distCore project(path: ':osgi:database:sql-api:', transitive: false)
+	distCore project(path: ':osgi:database:sql-service:', transitive: false)
+	distCore project(path: ':osgi:database:sql-jdbc-service:', transitive: false)
+	distCore project(path: ':osgi:database:sql-scheduler:', transitive: false)
+	distCore project(path: ':osgi:database:sql-scheduler-web:', transitive: false)
 
-	dist project(path: ':osgi:database:repository-http-api:', transitive: false)
-	dist project(path: ':osgi:database:repository-http-service:', transitive: false)
+	distCore project(path: ':osgi:database:repository-http-api:', transitive: false)
+	distCore project(path: ':osgi:database:repository-http-service:', transitive: false)
 
-	dist project(path: ':osgi:schema-registry:schema-registry-service', transitive: false)
-	dist project(path: ':osgi:schema-registry:schema-registry-api', transitive: false)
-	dist project(path: 'osgi:schema-registry:schema-registry-avro', transitive: false)
-	dist project(path: ':osgi:datasource:datasource-api', transitive: false)
-	dist project(path: ':osgi:datasource:datasource-service', transitive: false)
-	dist project(path: ':osgi:datasource:datasource-web', transitive: false)
-	dist project(path: ':osgi:search:search-api', transitive: false)
-	dist project(path: ':osgi:search:search-service', transitive: false)
-	dist project(path: ':osgi:search:search-client-api', transitive: false)
-	dist project(path: ':osgi:search:search-client-service', transitive: false)
-	dist project(path: ':osgi:search:search-enrich-service', transitive: false)
-	dist project(path: ':osgi:search:search-enrich-api', transitive: false)
-	dist project(path: ':osgi:search:search-enrich-mapper-service', transitive: false)
-	dist project(path: ':osgi:search:search-enrich-mapper-api', transitive: false)
-	dist project(path: ':osgi:metrics:metrics-api', transitive: false)
-	dist project(path: ':osgi:metrics:metrics-service', transitive: false)
-	dist project(path: ':osgi:metrics:metrics-ext', transitive: false)
+	distCore project(path: ':osgi:schema-registry:schema-registry-service', transitive: false)
+	distCore project(path: ':osgi:schema-registry:schema-registry-api', transitive: false)
+	distCore project(path: 'osgi:schema-registry:schema-registry-avro', transitive: false)
+	distCore project(path: ':osgi:datasource:datasource-api', transitive: false)
+	distCore project(path: ':osgi:datasource:datasource-service', transitive: false)
+	distCore project(path: ':osgi:datasource:datasource-web', transitive: false)
+	distCore project(path: ':osgi:search:search-api', transitive: false)
+	distCore project(path: ':osgi:search:search-service', transitive: false)
+	distCore project(path: ':osgi:search:search-client-api', transitive: false)
+	distCore project(path: ':osgi:search:search-client-service', transitive: false)
+	distCore project(path: ':osgi:search:search-enrich-service', transitive: false)
+	distCore project(path: ':osgi:search:search-enrich-api', transitive: false)
+	distCore project(path: ':osgi:search:search-enrich-mapper-service', transitive: false)
+	distCore project(path: ':osgi:search:search-enrich-mapper-api', transitive: false)
+	distCore project(path: ':osgi:metrics:metrics-api', transitive: false)
+	distCore project(path: ':osgi:metrics:metrics-service', transitive: false)
+	distCore project(path: ':osgi:metrics:metrics-ext', transitive: false)
 
-	dist project(path: ':osgi:cache:cache-api', transitive: false)
+	distCore project(path: ':osgi:cache:cache-api', transitive: false)
 
-	dist project(path: ':plugins:email', transitive: false)
-	dist project(path: ':plugins:liferay', transitive: false)
-	dist project(path: ':plugins:web', transitive: false)
-	dist project(path: ':plugins:applications', transitive: false)
+	distCore project(path: ':plugins:email', transitive: false)
+	distCore project(path: ':plugins:liferay', transitive: false)
+	distCore project(path: ':plugins:web', transitive: false)
+	distCore project(path: ':plugins:applications', transitive: false)
 
 	// AUTH
-	dist project(path: ':osgi:auth:auth-keycloak-api', transitive: false)
-	dist project(path: ':osgi:auth:auth-keycloak-service', transitive: false)
-	dist project(path: ':osgi:auth:auth-keycloak-web', transitive: false)
-	dist project(path: ':osgi:auth:auth-keycloak-query-parser', transitive: false)
+	distCore project(path: ':osgi:auth:auth-keycloak-api', transitive: false)
+	distCore project(path: ':osgi:auth:auth-keycloak-service', transitive: false)
+	distCore project(path: ':osgi:auth:auth-keycloak-web', transitive: false)
+	distCore project(path: ':osgi:auth:auth-keycloak-query-parser', transitive: false)
+
+	//ENTITY MANAGER CLIENT
+	distCore project(path: ':osgi:entity-manager:entity-manager-client-api', transitive: false)
+	distCore project(path: ':osgi:entity-manager:entity-manager-client-service', transitive: false)
+	distCore project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
+
+	distCore project(path: ':osgi:init-data', transitive: false)
 
 	// felix dependency manager
 
-	distExternal group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager', version: '4.6.0' , transitive: false
-	distExternal group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.shell', version: '4.0.8' , transitive: false
-	distExternal group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
+	distCore group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager', version: '4.6.0' , transitive: false
+	distCore group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.shell', version: '4.0.8' , transitive: false
+	distCore group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
 
-	dist project(path: ':osgi:init-data', transitive: false)
+	distEntityManager project(path: ':osgi:common:common-api', transitive: false)
+	distEntityManager project(path: ':osgi:common:core-api', transitive: false)
+	distEntityManager project(path: ':osgi:common:http-serialization', transitive: false)
+	distEntityManager project(path: ':osgi:common:model', transitive: false)
+	distEntityManager project(path: ':osgi:common:osgi-api', transitive: false)
+	distEntityManager project(path: ':osgi:common:serialization-api', transitive: false)
+	distEntityManager project(path: ':osgi:common:serialization-service', transitive: false)
+	distEntityManager project(path: ':osgi:common:third-party', transitive: false)
+
+	distEntityManager project(path: ':osgi:web:http-api', transitive: false)
+	distEntityManager project(path: ':osgi:web:http-service', transitive: false)
+	distEntityManager project(path: ':osgi:web:http-bundle-ext', transitive: false)
+	distEntityManager project(path: ':osgi:web:open-api', transitive: false)
+
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-api', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-service', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
 
 }
 
-
-def allDependencies = configurations
+def distConfigurations = configurations
 		.findAll({it.name.startsWith("dist")})
-		.collect({ it.dependencies})
-		.flatten()
+		.collect()
 
-def conf = configurations.create("tmp")
 
-conf.dependencies.addAll(allDependencies)
+distConfigurations
+		.forEach({conf ->
 
-task buildDist(type: Copy) {
-	from(conf)
-	into "$rootDir/build/libs"
+	def dependencies = conf.dependencies
+
+	def confTmp = configurations.create("confTmp-$conf.name")
+
+	confTmp.dependencies.addAll(dependencies)
+
+	def distName = toSnakeCase(conf.name.substring(4))
+
+	tasks.register("build${conf.name.substring(4)}", Copy, {
+			from(confTmp)
+			into "$rootDir/build/$distName/libs"
+	})
+
+	tasks.register("libsFolder${conf.name.substring(4)}", {
+		doLast {
+			println "$rootDir/build/$distName/libs"
+		}
+	})
+
+	if (properties.get("karafDir") != null) {
+
+		tasks.register("deploy${conf.name.substring(4)}", Copy, {
+			from(confTmp)
+			into "$karafDir/$distName/deploy"
+		})
+
+	}
+	def cleanDist = tasks.register("clean${conf.name.substring(4)}", Delete, {
+		delete("$rootDir/build/$distName")
+	})
+
+	clean.dependsOn(cleanDist)
+
+})
+
+task cleanDist {
+	def cleanDistTaskNames = distConfigurations
+			.collect({tasks.named("clean${it.name.substring(4)}")})
+	dependsOn(cleanDistTaskNames)
 }
 
-if (properties.get("karafDir") != null) {
-	task deployDist(type: Copy) {
-		from(conf)
-		into "$karafDir/deploy"
+task buildDist {
+	def buildDistTaskNames = distConfigurations
+			.collect({tasks.named("build${it.name.substring(4)}")})
+	dependsOn(buildDistTaskNames)
+}
+
+task deployDist {
+	def deployDistTaskNames = distConfigurations
+			.collect({tasks.named("deploy${it.name.substring(4)}")})
+	dependsOn(deployDistTaskNames)
+}
+
+task distList {
+	doLast {
+		distConfigurations
+				.forEach({conf -> println(toSnakeCase(conf.name.substring(4)))})
 	}
 }
-task cleanDist(type: Delete) {
-	delete("$rootDir/build")
+
+task distTasks {
+	doLast {
+		distConfigurations
+				.forEach({conf -> println("build${conf.name.substring(4)}")})
+	}
 }
 
-clean.dependsOn(cleanDist)
+static String toSnakeCase(String text ) {
+	text.replaceAll(/([A-Z])/, /-$1/).toLowerCase().replaceAll(/^-/, '')
+}
+

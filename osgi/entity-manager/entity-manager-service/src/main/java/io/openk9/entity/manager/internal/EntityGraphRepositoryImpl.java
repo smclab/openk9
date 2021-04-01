@@ -1,7 +1,7 @@
 package io.openk9.entity.manager.internal;
 
 import io.openk9.entity.manager.api.EntityGraphRepository;
-import io.openk9.entity.manager.api.model.Entity;
+import io.openk9.entity.manager.model.Entity;
 import io.openk9.relationship.graph.api.client.GraphClient;
 import io.openk9.relationship.graph.api.client.Record;
 import org.neo4j.cypherdsl.core.Cypher;

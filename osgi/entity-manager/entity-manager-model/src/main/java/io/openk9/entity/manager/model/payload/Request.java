@@ -1,4 +1,4 @@
-package io.openk9.entity.manager.payload;
+package io.openk9.entity.manager.model.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,11 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Request {
-
 	private long tenantId;
 	private long datasourceId;
 	private String contentId;
 	private List<EntityRequest> entities;
 	private String content;
-
 }
