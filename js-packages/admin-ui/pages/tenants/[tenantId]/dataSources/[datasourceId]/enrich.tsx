@@ -234,6 +234,10 @@ function Inner({ datasourceId }: { datasourceId: number }) {
     setEnrichItemToView(item);
   };
 
+  if (!datasource) {
+    return <span className="loading-animation" />;
+  }
+
   if (!dsEnrichPipeline) {
     return (
       <>
