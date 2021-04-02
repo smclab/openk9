@@ -26,6 +26,8 @@ public interface JsonFactory {
 
 	String toPrettyJson(Object o);
 
+	<T> T fromJsonNode(JsonNode jsonNode, Class<T> clazz);
+
 	<T> T fromJson(String json, Class<T> clazz);
 
 	<T> T fromJson(byte[] json, Class<T> clazz);

@@ -65,11 +65,17 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 					getMethod(), getPath(), request.toString(), getHeaders()))
 				.map(_jsonFactory::fromJsonToJsonNode)
 				.map(JsonNode::toObjectNode)
-				.flatMap(responseObj -> this._getEntityOrCreate(
-					responseObj.get(entitiesField()))
-					.map(jsonNodes -> responseObj.set(entitiesField(), jsonNodes))
-				)
-				.map(objectNode::merge);
+				.map(jsonNodes -> {
+
+					jsonNodes.put(Constants.TENANT_ID, context.getTenant().getTenantId());
+					jsonNodes.put(Constants.DATASOURCE_ID, context.getDatasource().getDatasourceId());
+					jsonNodes.put(Constants.CONTENT_ID, objectNode.get(Constants.CONTENT_ID));
+					jsonNodes.put(Constants.RAW_CONTENT, objectNode.get(Constants.RAW_CONTENT));
+
+					return jsonNodes;
+				})
+				.flatMap(this::_getEntityOrCreate)
+				.map(entities -> objectNode.set(entitiesField(), entities));
 
 		});
 
@@ -122,11 +128,11 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 	}
 
 
-	private Mono<ArrayNode> _getEntityOrCreate(JsonNode jsonNode) {
+	private Mono<ArrayNode> _getEntityOrCreate(ObjectNode jsonNode) {
 
 		return _entityManagerClient
 			.getOrAddEntities(
-				_jsonFactory.fromJson(jsonNode.toString(), Request.class))
+				_jsonFactory.fromJsonNode(jsonNode, Request.class))
 			.collectList()
 			.map(responseList -> {
 

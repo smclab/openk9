@@ -61,6 +61,19 @@ public class JsonFactoryImpl implements JsonFactory {
 	}
 
 	@Override
+	public <T> T fromJsonNode(JsonNode jsonNode, Class<T> clazz) {
+		try {
+			return _objectMapperProvider
+				.getObjectMapper()
+				.treeToValue(
+					((JsonNodeWrapper)jsonNode).getDelegate(), clazz);
+		}
+		catch (IOException exception) {
+			throw new JsonException(exception);
+		}
+	}
+
+	@Override
 	public <T> T fromJson(String json, Class<T> clazz) {
 		try {
 			return _objectMapperProvider

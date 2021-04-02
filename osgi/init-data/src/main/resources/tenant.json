@@ -1,5 +1,6 @@
 {
 	"tenantId" : 1,
 	"name": "openk9.io",
-	"virtualHost": "openk9.io"
+	"virtualHost": "openk9.io",
+	"jsonConfig": "{}"
 }
