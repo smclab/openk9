@@ -193,32 +193,26 @@ function EditInner({
   );
   const [json, setJson] = useState(datasource.jsonConfig || "");
 
-  var schedulingArray = datasource && datasource.scheduling.split(" ");
+  const [minutesValue, hoursValue, daysOfMonthValue, monthValue, daysOfWeekValue, yearValue] = datasource && datasource.scheduling.split(" ");
 
   const [schedulingValue, setSchedulingValue] = useState<CronInputType>({
-    minutesValue:
-      schedulingArray && schedulingArray.length > 0 ? schedulingArray[0] : "",
-    hoursValue:
-      schedulingArray && schedulingArray.length > 0 ? schedulingArray[1] : "",
-    daysOfMonthValue:
-      schedulingArray && schedulingArray.length > 0 ? schedulingArray[2] : "",
-    monthValue:
-      schedulingArray && schedulingArray.length > 0 ? schedulingArray[3] : "",
-    daysOfWeekValue:
-      schedulingArray && schedulingArray.length > 0 ? schedulingArray[4] : "",
-    yearValue:
-      schedulingArray && schedulingArray.length > 0 ? schedulingArray[5] : "",
+    minutesValue,
+    hoursValue,
+    daysOfMonthValue,
+    monthValue,
+    daysOfWeekValue,
+    yearValue,
   });
 
-  function handleChangeInputDescription(event) {
+  function handleChangeInputDescription(event: React.ChangeEvent<HTMLInputElement>) {
     setDescription(event.target.value);
   }
 
-  function handleChangeInputName(event) {
+  function handleChangeInputName(event: React.ChangeEvent<HTMLInputElement>) {
     setName(event.target.value);
   }
 
-  function handleChangeInputDriverServiceName(event) {
+  function handleChangeInputDriverServiceName(event: React.ChangeEvent<HTMLInputElement>) {
     setDriverServiceName(event.target.value);
   }
 
@@ -241,27 +235,24 @@ function EditInner({
       schedulingValue.daysOfWeekValue +
       " " +
       schedulingValue.yearValue;
-    {
-      datasource.active !== isDataSourceEnabled &&
-        (newDatasource["active"] = isDataSourceEnabled);
+      
+    if(datasource.active !== isDataSourceEnabled) {
+      newDatasource["active"] = isDataSourceEnabled;
     }
-    {
-      datasource.description !== description &&
-        (newDatasource["description"] = description);
+    if(datasource.description !== description) {
+      newDatasource["description"] = description;
     }
-    {
-      datasource.name !== name && (newDatasource["name"] = name);
+    if(datasource.name !== name) {
+      newDatasource["name"] = name; 
     }
-    {
-      datasource.driverServiceName !== driverServiceName &&
-        (newDatasource["driverServiceName"] = driverServiceName);
+    if(datasource.driverServiceName !== driverServiceName) {
+      newDatasource["driverServiceName"] = driverServiceName;
     }
-    {
-      datasource.jsonConfig !== json && (newDatasource["jsonConfig"] = json);
+    if(datasource.jsonConfig !== json) {
+      newDatasource["jsonConfig"] = json;
     }
-    {
-      datasource.scheduling !== scheduling &&
-        (newDatasource["scheduling"] = scheduling);
+    if(datasource.scheduling !== scheduling) {
+      newDatasource["scheduling"] = scheduling;
     }
 
     if (Object.entries(newDatasource).length !== 0) {

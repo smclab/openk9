@@ -90,7 +90,8 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 
 function getElementsReactFlow(dsEnrichItems) {
   const classes = useStyles();
-  const elements: any = [
+  var count = 0;
+  const elements = dsEnrichItems && [
     {
       id: "0",
       type: "input",
@@ -98,13 +99,11 @@ function getElementsReactFlow(dsEnrichItems) {
       sourcePosition: "right",
       position: { x: 20, y: 80 },
     },
-  ];
-  var count = 1;
-  dsEnrichItems &&
-    dsEnrichItems
+    ...dsEnrichItems
       .sort((a, b) => a._position - b._position)
       .map((item) => {
-        elements.push({
+        count++;
+        return {
           id: `${count}`,
           sourcePosition: "right",
           targetPosition: "left",
@@ -119,25 +118,27 @@ function getElementsReactFlow(dsEnrichItems) {
             enrichItemId: item.enrichItemId,
           },
           position: { x: count * 200 + 20, y: 79 },
-        });
-        count++;
-      });
-  elements.push({
-    id: `${count}`,
-    sourcePosition: "right",
-    targetPosition: "left",
-    type: "output",
-    data: { label: "OUTPUT" },
-    position: { x: count * 200 + 20, y: 80 },
-  });
+        };
+      }),
+    {
+      id: `${count + 1}`,
+      sourcePosition: "right",
+      targetPosition: "left",
+      type: "output",
+      data: { label: "OUTPUT" },
+      position: { x: (count + 1) * 200 + 20, y: 80 },
+    },
+  ];
 
-  for (var i = 1; i <= count; i++) {
-    elements.push({
-      id: `line-${i - 1}-${i}`,
-      source: `${i - 1}`,
-      target: `${i}`,
-      type: "smoothstep",
-    });
+  if (elements && elements.length !== 0) {
+    for (var i = 1; i <= count + 1; i++) {
+      elements.push({
+        id: `line-${i - 1}-${i}`,
+        source: `${i - 1}`,
+        target: `${i}`,
+        type: "smoothstep",
+      });
+    }
   }
 
   if (!dsEnrichItems) {
