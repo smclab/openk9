@@ -152,17 +152,18 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 
 					if (responseOptional.isPresent()) {
 
-						JsonNode responseJsonNode =
-							_jsonFactory.fromObjectToJsonNode(
-								responseOptional.get());
+						JsonNode context = node.get("context");
 
-						ObjectNode responseObjectNode =
-							responseJsonNode.toObjectNode();
+						Response response = responseOptional.get();
 
-						responseObjectNode.put(
-							"context", node.get("context"));
+						ObjectNode objectNode = _jsonFactory.createObjectNode();
 
-						resultEntities.add(responseObjectNode);
+						objectNode.put(
+							"id", response.getEntity().getId());
+
+						objectNode.put("context", context);
+
+						resultEntities.add(objectNode);
 
 					}
 
