@@ -133,7 +133,6 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 		return _entityManagerClient
 			.getOrAddEntities(
 				_jsonFactory.fromJsonNode(jsonNode, Request.class))
-			.collectList()
 			.map(responseList -> {
 
 				ArrayNode resultEntities = _jsonFactory.createArrayNode();

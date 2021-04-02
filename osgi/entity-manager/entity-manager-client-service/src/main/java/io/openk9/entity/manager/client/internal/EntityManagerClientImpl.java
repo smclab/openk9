@@ -13,7 +13,9 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 
 @Component(
@@ -49,8 +51,8 @@ public class EntityManagerClientImpl implements EntityManagerClient {
 	}
 
 	@Override
-	public Flux<Response> getOrAddEntities(Request request) {
-		return Flux
+	public Mono<List<Response>> getOrAddEntities(Request request) {
+		return Mono
 			.from(
 				_entityManagerHttpClient
 					.request(
@@ -60,7 +62,7 @@ public class EntityManagerClientImpl implements EntityManagerClient {
 						Map.of()
 					)
 			)
-			.map(bytes -> _jsonFactory.fromJson(bytes, Response.class));
+			.map(bytes -> _jsonFactory.fromJsonList(new String(bytes), Response.class));
 	}
 
 	private HttpClient _entityManagerHttpClient;

@@ -113,6 +113,9 @@ dependencies {
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-api', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-service', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-web', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:neo4j-relationship-graph-impl', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:relationship-graph-api', transitive: false)
 
 }
 
