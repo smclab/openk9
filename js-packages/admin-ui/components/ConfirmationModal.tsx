@@ -23,7 +23,7 @@ import { ThemeType } from "@openk9/search-ui-components";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   btnCloseModal: {
-    marginRight: "16px",
+    marginRight: theme.spacingUnit * 2,
   },
 }));
 
@@ -35,8 +35,8 @@ export function ConfirmationModal({
 }: {
   title: string;
   message: string;
-  onCloseModal: () => void;
-  onConfirmModal: () => void;
+  onCloseModal(): void;
+  onConfirmModal(): void;
 }) {
   const classes = useStyles();
 
