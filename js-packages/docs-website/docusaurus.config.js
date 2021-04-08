@@ -20,27 +20,27 @@ module.exports = {
       {
         name: "description",
         content:
-          "OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it empowers Machine Learning to enrich your data and give the best experience possible.",
+          "OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it employs Machine Learning to enrich your data and give the best experience possible.",
       },
       {
         name: "keywords",
         content:
           "openk9,open,source,search,enterprise,ai,machine,learning,cognitive,intelligent,enrich",
       },
-      { name: "twitter:image", content: "https://openk9.io/logo.png" },
+      { name: "twitter:image", content: "https://openk9.io/img/logo.png" },
       { name: "twitter:image:alt", content: "OpenK9 Logo" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@K9Open" },
       {
         name: "twitter:description",
         content:
-          "OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it empowers Machine Learning to enrich your data and give the best experience possible.",
+          "OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it employs Machine Learning to enrich your data and give the best experience possible.",
       },
       { property: "og:title", content: "OpenK9 Cognitive Enterprise Search" },
       {
         property: "og:description",
         content:
-          "OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it empowers Machine Learning to enrich your data and give the best experience possible.",
+          "OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it employs Machine Learning to enrich your data and give the best experience possible.",
       },
       { property: "og:image", content: "https://openk9.io/logo.png" },
       { property: "og:url", content: "https://openk9.io/" },

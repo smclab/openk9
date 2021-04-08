@@ -50,7 +50,7 @@ function Home() {
             </h1>
             <div className={styles.descriptionHeroBanner}>
               OpenK9 is a complete Cognitive Enterprise Search solution that
-              fits all your needs. Powerful, Modern and Flexible, it empowers
+              fits all your needs. Powerful, Modern and Flexible, it employs
               Machine Learning to enrich your data and give the best experience
               possible.
             </div>
