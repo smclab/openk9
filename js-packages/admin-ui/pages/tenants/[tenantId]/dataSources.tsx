@@ -82,25 +82,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-const dsConfig = {
-  "it.rios.projectq.plugins.email.driver.EmailPluginDriver": {
-    name: "Email Plugin",
-    icon: <EmailIcon size={30} />,
-  },
-  "it.rios.projectq.plugins.spaces.driver.SpacesPluginDriver": {
-    name: "Spaces Plugin",
-    icon: <OSLogo size={30} />,
-  },
-  "it.rios.projectq.plugins.applications.driver.ApplicationPluginDriver": {
-    name: "Applications Plugin",
-    icon: <ClayIcon symbol="desktop" />,
-  },
-  "it.rios.projectq.plugins.liferay.driver.LiferayPluginDriver": {
-    name: "Liferay Plugin",
-    icon: <DXPLogo size={32} />,
-  },
-};
-
 function DSItemRender({
   ds,
   plugin,
@@ -505,10 +486,10 @@ function DataSources() {
 
       {idToReindex && idToReindex.length !== 0 && (
         <ConfirmationModal
-          title={"Confirmation reindex"}
-          message={
-            "Are you sure you want to reindex the data sources selected?"
-          }
+          title="Reindex"
+          message="Are you sure you want to reindex the selected data sources? This will delete the previously indexed data and may take a long time."
+          abortText="Abort"
+          confirmText="Reindex"
           onCloseModal={() => setIdToReindex([])}
           onConfirmModal={() => reindex(idToReindex)}
         />

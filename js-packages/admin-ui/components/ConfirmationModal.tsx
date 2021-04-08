@@ -32,9 +32,13 @@ export function ConfirmationModal({
   message,
   onCloseModal,
   onConfirmModal,
+  abortText,
+  confirmText,
 }: {
-  title: string;
-  message: string;
+  title?: JSX.Element | string;
+  message: JSX.Element | string;
+  abortText?: JSX.Element | string;
+  confirmText?: JSX.Element | string;
   onCloseModal(): void;
   onConfirmModal(): void;
 }) {
@@ -53,10 +57,8 @@ export function ConfirmationModal({
 
   return (
     <ClayModal observer={observer} size="lg">
-      <ClayModal.Header>{title}</ClayModal.Header>
-      <ClayModal.Body>
-        <h6>{message}</h6>
-      </ClayModal.Body>
+      {title && <ClayModal.Header>{title}</ClayModal.Header>}
+      <ClayModal.Body>{message}</ClayModal.Body>
       <ClayModal.Footer
         last={
           <>
@@ -65,14 +67,14 @@ export function ConfirmationModal({
               type="button"
               onClick={onClose}
             >
-              Close
+              {abortText || "Close"}
             </button>
             <button
               className="btn btn-primary"
               type="button"
               onClick={onConfirm}
             >
-              Confirm
+              {confirmText || "Confirm"}
             </button>
           </>
         }
