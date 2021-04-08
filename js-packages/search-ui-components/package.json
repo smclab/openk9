@@ -28,7 +28,7 @@
     "precommit": "lint-staged"
   },
   "dependencies": {
-    "@clayui/css": "^3.25.0",
+    "@clayui/css": "^3.25.3",
     "@clayui/icon": "^3.1.0",
     "@clayui/modal": "^3.8.1",
     "caret-pos": "^2.0.0",
