@@ -20,31 +20,33 @@ import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import { format } from "date-fns";
-import useSWR from "swr";
-import ClayNavigationBar from "@clayui/navigation-bar";
+import useSWR, { mutate } from "swr";
+import ClayAlert from "@clayui/alert";
+import { ClayToggle, ClayInput } from "@clayui/form";
+import ClayAutocomplete from "@clayui/autocomplete";
+import ClayDropDown from "@clayui/drop-down";
 import ClayIcon from "@clayui/icon";
+
 import {
   firstOrString,
   pluginInfoLoader,
   pluginLoader,
   ThemeType,
 } from "@openk9/search-ui-components";
-import { Layout } from "../../../../../components/Layout";
 import {
   changeDataSourceInfo,
+  DataSourceInfo,
   getDataSourceInfo,
   getDriverServiceNames,
   triggerReindex,
 } from "@openk9/http-api";
-import { ClayTooltipProvider } from "@clayui/tooltip";
-import ClayAlert from "@clayui/alert";
-import { ClayToggle, ClayInput } from "@clayui/form";
+
 import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
 import { CronInput, CronInputType } from "../../../../../components/CronInput";
-import ClayAutocomplete from "@clayui/autocomplete";
-import ClayDropDown from "@clayui/drop-down";
+import { Layout } from "../../../../../components/Layout";
 import { isServer } from "../../../../../state";
-import Link from "next/link";
+import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
+import { AutocompleteItemIcon } from "../../../../../components/AutocompleteItemIcon";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -70,12 +72,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     padding: theme.spacingUnit * 2,
     borderRadius: theme.borderRadius,
   },
-  navMenu: {
-    backgroundColor: "transparent",
-  },
-  navActionButton: {
-    marginLeft: theme.spacingUnit,
-  },
   alert: {
     "& .alert-autofit-row": {
       alignItems: "center",
@@ -87,193 +83,94 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     alignItems: "center",
   },
   editElement: {
-    marginBottom: "16px",
+    marginBottom: theme.spacingUnit * 2,
   },
   labelReadOnly: {
-    marginLeft: "8px",
+    marginLeft: theme.spacingUnit,
   },
   buttons: {
     display: "flex",
     justifyContent: "flex-end",
   },
   closeButton: {
-    marginRight: "16px",
+    marginRight: theme.spacingUnit * 2,
+  },
+  acLine: {
+    display: "flex",
+    alignItems: "center",
+    paddingLeft: theme.spacingUnit,
   },
 }));
 
-function Controls({
-  setIsVisibleModal,
-  tenantId,
-  datasourceId,
-}: {
-  setIsVisibleModal(b: boolean): void;
-  tenantId: number;
-  datasourceId: number;
-}) {
-  const classes = useStyles();
-  return (
-    <ClayNavigationBar triggerLabel="Configuration" className={classes.navMenu}>
-      <ClayNavigationBar.Item active>
-        <a className="nav-link">Configuration</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <a className="nav-link">Data Browser</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <Link
-          href={`/tenants/${tenantId}/dataSources/${datasourceId}/enrich`}
-          passHref
-        >
-          <a className="nav-link">Enrich</a>
-        </Link>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <a className="nav-link">Schedule</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <a className="nav-link">ACL</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <ClayTooltipProvider>
-          <div>
-            <a
-              className={clsx("btn btn-primary", classes.navActionButton)}
-              data-tooltip-align="bottom"
-              title="Reindex Data Source"
-              onClick={() => setIsVisibleModal(true)}
-            >
-              <ClayIcon symbol="reload" />
-            </a>
-          </div>
-        </ClayTooltipProvider>
-      </ClayNavigationBar.Item>
-    </ClayNavigationBar>
-  );
-}
-
 function EditInner({
-  datasourceId,
-  setIsEditMode,
-  onPerformAction,
+  editingDataSource,
+  onChange,
+  onAbort,
+  onSave,
 }: {
-  datasourceId: number;
-  setIsEditMode(b: boolean): void;
-  onPerformAction(l: string): void;
+  editingDataSource: DataSourceInfo;
+  onChange: React.Dispatch<React.SetStateAction<DataSourceInfo>>;
+  onAbort(): void;
+  onSave(): void;
 }) {
   const classes = useStyles();
-
-  const pluginInfos = pluginInfoLoader.read();
-
-  const { data: datasource } = useSWR(
-    `/api/v2/datasource/${datasourceId}`,
-    () => getDataSourceInfo(datasourceId),
-  );
 
   // TODO: check API to use
   // Show also icon in the dropdown list?
-  const { data: enableDriverServiceName } = useSWR(
+  const { data: driverServiceNames } = useSWR(
     `/api/v1/driver-service-names`,
     getDriverServiceNames,
   );
 
-  const pluginInfo = pluginInfos.find((p) =>
-    datasource.driverServiceName.startsWith(p.bundleInfo.symbolicName),
+  const pluginInfos = pluginInfoLoader.read();
+  const plugins = pluginInfos.map(
+    (pi) =>
+      [
+        pi.pluginId,
+        pi.bundleInfo.symbolicName,
+        pluginLoader.read(pi.pluginId),
+      ] as const,
   );
-  const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
+
+  const currentPluginInfo = pluginInfos.find((p) =>
+    editingDataSource.driverServiceName.startsWith(p.bundleInfo.symbolicName),
+  );
+  const currentPlugin =
+    currentPluginInfo &&
+    plugins.find(([id]) => id === currentPluginInfo.pluginId)[2];
   const SettingsRenderer =
-    (plugin && plugin?.dataSourceAdminInterfacePath?.settingsRenderer) || null;
+    (currentPlugin &&
+      currentPlugin?.dataSourceAdminInterfacePath?.settingsRenderer) ||
+    null;
 
-  const [isDataSourceEnabled, setIsDataSourceEnabled] = useState(
-    datasource.active || false,
-  );
-  const [description, setDescription] = useState(datasource.description || "");
-  const [name, setName] = useState(datasource.name || "");
-  const [driverServiceName, setDriverServiceName] = useState(
-    datasource && datasource.driverServiceName,
-  );
-  const [json, setJson] = useState(datasource.jsonConfig || "");
-
-  const [minutesValue, hoursValue, daysOfMonthValue, monthValue, daysOfWeekValue, yearValue] = datasource && datasource.scheduling.split(" ");
-
-  const [schedulingValue, setSchedulingValue] = useState<CronInputType>({
+  const [
     minutesValue,
     hoursValue,
     daysOfMonthValue,
     monthValue,
     daysOfWeekValue,
     yearValue,
-  });
+  ] = editingDataSource && editingDataSource.scheduling.split(" ");
 
-  function handleChangeInputDescription(event: React.ChangeEvent<HTMLInputElement>) {
-    setDescription(event.target.value);
-  }
+  const schedulingValue: CronInputType = {
+    minutesValue,
+    hoursValue,
+    daysOfMonthValue,
+    monthValue,
+    daysOfWeekValue,
+    yearValue,
+  };
 
-  function handleChangeInputName(event: React.ChangeEvent<HTMLInputElement>) {
-    setName(event.target.value);
-  }
-
-  function handleChangeInputDriverServiceName(event: React.ChangeEvent<HTMLInputElement>) {
-    setDriverServiceName(event.target.value);
-  }
-
-  const activeAutocomplete =
-    driverServiceName !== datasource.driverServiceName &&
-    driverServiceName.length > 0 &&
-    !(enableDriverServiceName.indexOf(driverServiceName) > -1);
-
-  async function changeDatasource(datasourceId: number, datasource: any) {
-    var newDatasource = {};
-    var scheduling =
-      schedulingValue.minutesValue +
-      " " +
-      schedulingValue.hoursValue +
-      " " +
-      schedulingValue.daysOfMonthValue +
-      " " +
-      schedulingValue.monthValue +
-      " " +
-      schedulingValue.daysOfWeekValue +
-      " " +
-      schedulingValue.yearValue;
-      
-    if(datasource.active !== isDataSourceEnabled) {
-      newDatasource["active"] = isDataSourceEnabled;
-    }
-    if(datasource.description !== description) {
-      newDatasource["description"] = description;
-    }
-    if(datasource.name !== name) {
-      newDatasource["name"] = name; 
-    }
-    if(datasource.driverServiceName !== driverServiceName) {
-      newDatasource["driverServiceName"] = driverServiceName;
-    }
-    if(datasource.jsonConfig !== json) {
-      newDatasource["jsonConfig"] = json;
-    }
-    if(datasource.scheduling !== scheduling) {
-      newDatasource["scheduling"] = scheduling;
-    }
-
-    if (Object.entries(newDatasource).length !== 0) {
-      await changeDataSourceInfo(datasourceId, newDatasource);
-      onPerformAction(`The datasource is updated.`);
-    }
-  }
-
-  if (!datasource) {
-    return <span className="loading-animation" />;
-  }
+  const [activeAutocomplete, setActiveAutocomplete] = useState(false);
 
   return (
     <>
       <div className={classes.editElement}>
         <strong>Name:</strong>{" "}
         <ClayInput
-          id="dataSourceName"
-          placeholder="Insert here the name"
-          onChange={(event) => handleChangeInputName(event)}
-          value={name}
+          placeholder="Insert the name here"
+          onChange={(e) => onChange((ds) => ({ ...ds, name: e.target.value }))}
+          value={editingDataSource.name}
           type="text"
         />
       </div>
@@ -281,17 +178,27 @@ function EditInner({
         <strong>Status:</strong>
         {"  "}
         <ClayToggle
-          onToggle={setIsDataSourceEnabled}
-          toggled={isDataSourceEnabled}
+          onToggle={(e) => onChange((ds) => ({ ...ds, active: e }))}
+          toggled={editingDataSource.active}
         />
+        {editingDataSource.active ? (
+          <span className="label label-success">
+            <span className="label-item label-item-expand">ENABLED</span>
+          </span>
+        ) : (
+          <span className="label label-warning">
+            <span className="label-item label-item-expand">DISABLED</span>
+          </span>
+        )}
       </div>
       <div className={classes.editElement}>
         <strong>Description:</strong>
         <ClayInput
-          id="dataSourceDescription"
-          placeholder="Insert here the description"
-          onChange={(event) => handleChangeInputDescription(event)}
-          value={description}
+          placeholder="Insert the description here"
+          onChange={(e) =>
+            onChange((ds) => ({ ...ds, description: e.target.value }))
+          }
+          value={editingDataSource.description}
           type="text"
         />
       </div>
@@ -299,36 +206,53 @@ function EditInner({
         <strong>Driver Service Name:</strong>
         <ClayAutocomplete>
           <ClayAutocomplete.Input
-            id="dataSourceDriverServiceName"
-            onChange={(event) => handleChangeInputDriverServiceName(event)}
-            placeholder="Insert here the driver service name"
-            value={driverServiceName}
+            onChange={(e) =>
+              onChange((ds) => ({ ...ds, driverServiceName: e.target.value }))
+            }
+            placeholder="Insert the driver service name here"
+            value={editingDataSource.driverServiceName}
+            onFocus={() => setActiveAutocomplete(true)}
+            // Hack to make onClick work after blur
+            onBlur={() => setTimeout(() => setActiveAutocomplete(false), 300)}
           />
           <ClayAutocomplete.DropDown active={activeAutocomplete}>
             <ClayDropDown.ItemList>
-              {enableDriverServiceName &&
-                enableDriverServiceName.length !== 0 &&
-                enableDriverServiceName.map((dsn, id) => (
-                  <ClayAutocomplete.Item
-                    key={id}
-                    match={driverServiceName}
-                    value={dsn}
-                    onClick={() => setDriverServiceName(dsn)}
-                  />
-                ))}
+              {driverServiceNames &&
+                driverServiceNames.map((dsn) => {
+                  const pluginRecord = plugins.find(([, bi]) =>
+                    dsn.startsWith(bi),
+                  );
+                  const plugin = pluginRecord && pluginRecord[2];
+                  const displayName = plugin?.displayName;
+                  const Icon =
+                    plugin?.dataSourceAdminInterfacePath?.iconRenderer;
+                  return (
+                    <AutocompleteItemIcon
+                      key={dsn}
+                      icon={Icon && <Icon size={16} />}
+                      match={
+                        editingDataSource.driverServiceName + " " + displayName
+                      }
+                      value={displayName || dsn}
+                      onClick={() =>
+                        onChange((ds) => ({ ...ds, driverServiceName: dsn }))
+                      }
+                    />
+                  );
+                })}
             </ClayDropDown.ItemList>
           </ClayAutocomplete.DropDown>
         </ClayAutocomplete>
       </div>
       <div className={classes.editElement}>
-        <strong>Tenant Id:</strong> {datasource.tenantId}
+        <strong>Tenant Id:</strong> {editingDataSource.tenantId}
         <span className={clsx("label label-info", classes.labelReadOnly)}>
           <span className="label-item label-item-expand">READ ONLY</span>
         </span>
       </div>
       <div className={classes.editElement}>
         <strong>Last Ingestion Date:</strong>{" "}
-        {format(datasource.lastIngestionDate, "dd/MM/yyyy, HH:mm")}
+        {format(editingDataSource.lastIngestionDate, "dd/MM/yyyy, HH:mm")}
         <span className={clsx("label label-info", classes.labelReadOnly)}>
           <span className="label-item label-item-expand">READ ONLY</span>
         </span>
@@ -337,14 +261,28 @@ function EditInner({
         <strong>Scheduling:</strong>
         <CronInput
           schedulingValue={schedulingValue}
-          setSchedulingValue={setSchedulingValue}
+          setSchedulingValue={(e) =>
+            onChange((ds) => ({
+              ...ds,
+              scheduling: [
+                e.minutesValue,
+                e.hoursValue,
+                e.daysOfMonthValue,
+                e.monthValue,
+                e.daysOfWeekValue,
+                e.yearValue,
+              ].join(" "),
+            }))
+          }
         />
       </div>
       <div className={classes.editElement}>
         {SettingsRenderer && SettingsRenderer != null && (
           <SettingsRenderer
-            currentSettings={json}
-            setCurrentSettings={setJson}
+            currentSettings={editingDataSource.jsonConfig}
+            setCurrentSettings={(e) =>
+              onChange((ds) => ({ ...ds, jsonConfig: e }))
+            }
           />
         )}
       </div>
@@ -352,19 +290,15 @@ function EditInner({
         <button
           className={clsx("btn btn-secondary", classes.closeButton)}
           type="button"
-          onClick={() => setIsEditMode(false)}
+          onClick={onAbort}
         >
           Close without Save
         </button>
-        <button
-          className="btn btn-primary"
-          type="button"
-          onClick={() => {
-            changeDatasource(Number(datasource.datasourceId), datasource);
-            setIsEditMode(false);
-          }}
-        >
-          Save Settings
+        <button className="btn btn-primary" type="button" onClick={onSave}>
+          <span className="inline-item inline-item-before">
+            <ClayIcon symbol="disk" />
+          </span>
+          Save
         </button>
       </div>
     </>
@@ -374,21 +308,49 @@ function EditInner({
 function Inner({
   tenantId,
   datasourceId,
-  setIsEditMode,
+  onSaveDataSource,
 }: {
   tenantId: number;
   datasourceId: number;
-  setIsEditMode(l: boolean): void;
+  onSaveDataSource(
+    datasourceId: number,
+    prevDataSource: DataSourceInfo,
+    editingDataSource: DataSourceInfo,
+  ): Promise<DataSourceInfo>;
 }) {
   const classes = useStyles();
 
-  const { data: datasource } = useSWR(
+  const { data: datasource, mutate } = useSWR(
     `/api/v2/datasource/${datasourceId}`,
-    () => getDataSourceInfo(datasourceId),
+    () => !isNaN(datasourceId) && getDataSourceInfo(datasourceId),
   );
+
+  const [
+    editingDataSource,
+    setEditingDataSource,
+  ] = useState<DataSourceInfo | null>(null);
 
   if (!datasource) {
     return <span className="loading-animation" />;
+  }
+
+  async function handleSave() {
+    mutate(editingDataSource);
+    mutate(await onSaveDataSource(datasourceId, datasource, editingDataSource));
+    setEditingDataSource(null);
+  }
+
+  if (editingDataSource && !isServer) {
+    return (
+      <Suspense fallback={<span className="loading-animation" />}>
+        <EditInner
+          editingDataSource={editingDataSource}
+          onChange={setEditingDataSource}
+          onAbort={() => setEditingDataSource(null)}
+          onSave={handleSave}
+        />
+      </Suspense>
+    );
   }
 
   return (
@@ -398,11 +360,14 @@ function Inner({
           {datasource.datasourceId}: {datasource.name}
         </h2>
         <button
-          className="btn btn-primary"
+          className="btn btn-secondary"
           type="button"
-          onClick={() => setIsEditMode(true)}
+          onClick={() => setEditingDataSource(datasource)}
         >
-          Edit Settings
+          <span className="inline-item inline-item-before">
+            <ClayIcon symbol="pencil" />
+          </span>
+          Edit
         </button>
       </div>
       <div className={classes.dataList}>
@@ -452,8 +417,6 @@ function DSSettings() {
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
   const [isVisibleModal, setIsVisibleModal] = useState(false);
 
-  const [isEditMode, setIsEditMode] = useState(false);
-
   function onPerformAction(label: string) {
     setToastItems((tt) => [...tt, { label, key: Math.random().toFixed(5) }]);
   }
@@ -461,7 +424,29 @@ function DSSettings() {
   async function reindex(ids: number) {
     const resp = await triggerReindex([ids]);
     console.log(resp);
-    onPerformAction(`Reindex requested for 1 item.`);
+    onPerformAction(`Reindex requested for 1 item`);
+  }
+
+  async function saveDataSource(
+    datasourceId: number,
+    prevDataSource: DataSourceInfo,
+    editedDatasource: DataSourceInfo,
+  ) {
+    const newDatasource: Partial<DataSourceInfo> = {};
+
+    Object.keys(prevDataSource).forEach((key) => {
+      if (prevDataSource[key] !== editedDatasource[key]) {
+        newDatasource[key] = editedDatasource[key];
+      }
+    });
+
+    if (Object.entries(newDatasource).length !== 0) {
+      const saved = await changeDataSourceInfo(datasourceId, newDatasource);
+      onPerformAction(`The datasource has been updated`);
+      return saved;
+    }
+
+    return prevDataSource;
   }
 
   const [toastItems, setToastItems] = useState<
@@ -479,31 +464,19 @@ function DSSettings() {
           { label: "Settings", path: `/tenants/${tenantId}/dataSources` },
         ]}
         breadcrumbsControls={
-          <Controls
-            setIsVisibleModal={setIsVisibleModal}
+          <DataSourceNavBar
+            onReindex={() => setIsVisibleModal(true)}
             tenantId={parseInt(tenantId)}
             datasourceId={parseInt(datasourceId)}
           />
         }
       >
         <div className={classes.root}>
-          {isEditMode ? (
-            !isServer && (
-              <Suspense fallback={<span className="loading-animation" />}>
-                <EditInner
-                  datasourceId={parseInt(datasourceId)}
-                  setIsEditMode={setIsEditMode}
-                  onPerformAction={onPerformAction}
-                />
-              </Suspense>
-            )
-          ) : (
-            <Inner
-              tenantId={parseInt(tenantId)}
-              datasourceId={parseInt(datasourceId)}
-              setIsEditMode={setIsEditMode}
-            />
-          )}
+          <Inner
+            tenantId={parseInt(tenantId)}
+            datasourceId={parseInt(datasourceId)}
+            onSaveDataSource={saveDataSource}
+          />
         </div>
       </Layout>
 
@@ -527,10 +500,10 @@ function DSSettings() {
 
       {isVisibleModal && (
         <ConfirmationModal
-          title={"Confirmation reindex"}
-          message={
-            "Are you sure you want to reindex the data sources selected?"
-          }
+          title="Reindex"
+          message="Are you sure you want to reindex this data source? This will delete the previously indexed data and may take a long time."
+          abortText="Abort"
+          confirmText="Reindex"
           onCloseModal={() => setIsVisibleModal(false)}
           onConfirmModal={() => reindex(Number(datasourceId))}
         />
