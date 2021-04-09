@@ -72,7 +72,7 @@ export function DocumentResultCard({
 
   return (
     <ResultCard
-      href={data.source.spaces.URL || data.source.document.URL}
+      href={data.source.spaces?.URL || data.source.document.URL}
       target="_blank"
       className={classes.root}
       {...rest}
