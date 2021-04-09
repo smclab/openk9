@@ -19,11 +19,12 @@ import React, { Suspense, useMemo, useState } from "react";
 import { createUseStyles } from "react-jss";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import clsx from "clsx";
 import ClayIcon from "@clayui/icon";
 import ClayAlert from "@clayui/alert";
 import { ClayTooltipProvider } from "@clayui/tooltip";
+import ClayDropDown from "@clayui/drop-down";
 
 import {
   DataSourceIcon,
@@ -35,6 +36,7 @@ import {
 } from "@openk9/search-ui-components";
 import {
   DataSourceInfo,
+  deleteDataSource,
   getDataSources,
   Plugin,
   PluginInfo,
@@ -103,6 +105,14 @@ function DSItemRender({
   setIdToReindex(ids: number[]): void;
 }) {
   const classes = useStyles();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    await deleteDataSource(ds.datasourceId);
+    mutate(`/api/v2/datasource`);
+  }
 
   const Icon =
     plugin?.dataSourceAdminInterfacePath?.iconRenderer || DataSourceIcon;
@@ -196,9 +206,33 @@ function DSItemRender({
               </button>
             </div>
           </ClayTooltipProvider>
-          <button className="component-action">
-            <ClayIcon symbol="ellipsis-v" />
-          </button>
+
+          <ClayDropDown
+            trigger={
+              <button className="component-action">
+                <ClayIcon symbol="ellipsis-v" />
+              </button>
+            }
+            active={menuOpen}
+            onActiveChange={setMenuOpen}
+            alignmentPosition={3}
+          >
+            <ClayDropDown.ItemList>
+              <ClayDropDown.Item onClick={() => setDeleting(true)}>
+                Delete
+              </ClayDropDown.Item>
+              {deleting && (
+                <ConfirmationModal
+                  title="Delete Data Source"
+                  message="Are you sure you want to delete this data source?"
+                  abortText="Abort"
+                  confirmText="Delete"
+                  onCloseModal={() => setDeleting(false)}
+                  onConfirmModal={handleDelete}
+                />
+              )}
+            </ClayDropDown.ItemList>
+          </ClayDropDown>
         </div>
       </div>
     </li>

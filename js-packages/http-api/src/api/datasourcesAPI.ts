@@ -112,6 +112,33 @@ export async function changeDataSourceInfo(
   return response;
 }
 
+export async function postDataSource(data: {
+  active: boolean;
+  description: string;
+  jsonConfig: string;
+  lastIngestionDate: number;
+  name: string;
+  tenantId: number;
+  scheduling: string;
+  driverServiceName: string;
+}): Promise<DataSourceInfo> {
+  const request = await fetch(`${apiBaseUrlV2}/datasource`, {
+    method: "POST",
+    headers: { ContentType: "application/json" },
+    body: JSON.stringify(data),
+  });
+  const response: DataSourceInfo = await request.json();
+  return response;
+}
+
+export async function deleteDataSource(datasourceId: number): Promise<string> {
+  const request = await fetch(`${apiBaseUrlV2}/datasource/${datasourceId}`, {
+    method: "DELETE",
+  });
+  const response: string = await request.text();
+  return response;
+}
+
 export async function getSchedulerItems(): Promise<SchedulerItem[]> {
   const request = await fetch(`${apiBaseUrl}/scheduler`);
   const response: SchedulerItem[] = await request.json();
@@ -155,24 +182,5 @@ export async function getEnrichItem(): Promise<EnrichItem[]> {
 export async function getEnrichPipeline(): Promise<EnrichPipeline[]> {
   const request = await fetch(`${apiBaseUrlV2}/enrichPipeline`);
   const response: EnrichPipeline[] = await request.json();
-  return response;
-}
-
-export async function postDataSource(data: {
-  active: boolean;
-  description: string;
-  jsonConfig: string;
-  lastIngestionDate: number;
-  name: string;
-  tenantId: number;
-  scheduling: string;
-  driverServiceName: string;
-}): Promise<DataSourceInfo> {
-  const request = await fetch(`${apiBaseUrlV2}/datasource`, {
-    method: "POST",
-    headers: { ContentType: "application/json" },
-    body: JSON.stringify(data),
-  });
-  const response: DataSourceInfo = await request.json();
   return response;
 }
