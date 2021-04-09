@@ -17,28 +17,17 @@
 
 import React, { Suspense, useMemo, useState } from "react";
 import { createUseStyles } from "react-jss";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import useSWR from "swr";
 import clsx from "clsx";
 import ClayIcon from "@clayui/icon";
 import ClayAlert from "@clayui/alert";
 import { ClayTooltipProvider } from "@clayui/tooltip";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import useSWR, { mutate } from "swr";
-import ClayModal, { useModal } from "@clayui/modal";
-import ClayButton from "@clayui/button";
-import { ClayToggle, ClayInput } from "@clayui/form";
-import ClayAutocomplete from "@clayui/autocomplete";
-import ClayDropDown from "@clayui/drop-down";
-import { CronInput, CronInputType } from "../../../components/CronInput";
-import { getDriverServiceNames, postDataSource } from "@openk9/http-api";
-import { format } from "date-fns";
 
 import {
   DataSourceIcon,
-  DXPLogo,
-  EmailIcon,
   firstOrString,
-  OSLogo,
   pluginInfoLoader,
   pluginLoader,
   SettingsIcon,
@@ -90,7 +79,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     },
   },
   editElement: {
-    marginBottom: "16px",
+    marginBottom: theme.spacingUnit * 2,
   },
 }));
 
@@ -369,14 +358,14 @@ function Inside({
 }
 
 function Controls({
+  tenantId,
   searchValue,
   setSearchValue,
 }: {
+  tenantId: string;
   searchValue: string;
   setSearchValue(s: string): void;
 }) {
-  const [visible, setVisible] = useState(false);
-
   return (
     <ul className="navbar-nav" style={{ marginRight: 16 }}>
       <div className="navbar-form navbar-form-autofit navbar-overlay navbar-overlay-sm-down">
@@ -413,186 +402,19 @@ function Controls({
       <li className="nav-item">
         <ClayTooltipProvider>
           <div>
-            <AddModal visible={visible} handleClose={() => setVisible(false)} />
-            <button
-              className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
-              type="button"
-              data-tooltip-align="bottom"
-              title="Add Data Source"
-              onClick={() => setVisible(true)}
-            >
-              <ClayIcon symbol="plus" />
-            </button>
+            <Link passHref href={`/tenants/${tenantId}/addDataSource`}>
+              <a
+                className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
+                data-tooltip-align="bottom"
+                title="Add Data Source"
+              >
+                <ClayIcon symbol="plus" />
+              </a>
+            </Link>
           </div>
         </ClayTooltipProvider>
       </li>
     </ul>
-  );
-}
-
-function AddModal({ visible, handleClose }) {
-  const { query } = useRouter();
-  const tenantId = query.tenantId && firstOrString(query.tenantId);
-
-  const { observer, onClose } = useModal({
-    onClose: handleClose,
-  });
-  const classes = useStyles();
-
-  const { data: enableDriverServiceName } = useSWR(
-    `/api/v1/driver-service-names`,
-    getDriverServiceNames,
-  );
-
-  const [isDataSourceEnabled, setIsDataSourceEnabled] = useState(false);
-  const [description, setDescription] = useState("");
-  const [name, setName] = useState("");
-  const [driverServiceName, setDriverServiceName] = useState("");
-
-  const [schedulingValue, setSchedulingValue] = useState<CronInputType>({
-    minutesValue: "",
-    hoursValue: "",
-    daysOfMonthValue: "",
-    monthValue: "",
-    daysOfWeekValue: "",
-    yearValue: "",
-  });
-
-  function handleChangeInputDescription(event) {
-    setDescription(event.target.value);
-  }
-
-  function handleChangeInputName(event) {
-    setName(event.target.value);
-  }
-
-  function handleChangeInputDriverServiceName(event) {
-    setDriverServiceName(event.target.value);
-  }
-
-  const handleSave = async () => {
-    await postDataSource({
-      active: isDataSourceEnabled,
-      description: description,
-      jsonConfig: "{}",
-      lastIngestionDate: 0,
-      name: name,
-      tenantId: +tenantId,
-      scheduling: [
-        schedulingValue.minutesValue,
-        schedulingValue.hoursValue,
-        schedulingValue.daysOfMonthValue,
-        schedulingValue.monthValue,
-        schedulingValue.daysOfWeekValue,
-        schedulingValue.yearValue,
-      ].join(" "),
-      driverServiceName: driverServiceName,
-    });
-
-    mutate(`/api/v2/datasource`);
-
-    setIsDataSourceEnabled(false);
-    setDescription("");
-    setName("");
-    setDriverServiceName("");
-    setSchedulingValue({
-      minutesValue: "",
-      hoursValue: "",
-      daysOfMonthValue: "",
-      monthValue: "",
-      daysOfWeekValue: "",
-      yearValue: "",
-    });
-
-    onClose();
-  };
-
-  const activeAutocomplete =
-    driverServiceName.length > 0 &&
-    !(enableDriverServiceName.indexOf(driverServiceName) > -1);
-
-  return (
-    <>
-      {visible && (
-        <ClayModal observer={observer} size="lg" status="info">
-          <ClayModal.Header>{"New Data Source"}</ClayModal.Header>
-          <ClayModal.Body>
-            <div className={classes.editElement}>
-              <strong>Name:</strong>{" "}
-              <ClayInput
-                id="dataSourceName"
-                placeholder="Insert here the name"
-                onChange={(event) => handleChangeInputName(event)}
-                value={name}
-                type="text"
-              />
-            </div>
-            <div className={classes.editElement}>
-              <strong>Status:</strong>
-              {"  "}
-              <ClayToggle
-                onToggle={setIsDataSourceEnabled}
-                toggled={isDataSourceEnabled}
-              />
-            </div>
-            <div className={classes.editElement}>
-              <strong>Description:</strong>
-              <ClayInput
-                id="dataSourceDescription"
-                placeholder="Insert here the description"
-                onChange={(event) => handleChangeInputDescription(event)}
-                value={description}
-                type="text"
-              />
-            </div>
-            <div className={classes.editElement}>
-              <strong>Driver Service Name:</strong>
-              <ClayAutocomplete>
-                <ClayAutocomplete.Input
-                  id="dataSourceDriverServiceName"
-                  onChange={(event) =>
-                    handleChangeInputDriverServiceName(event)
-                  }
-                  placeholder="Insert here the driver service name"
-                  value={driverServiceName}
-                />
-                <ClayAutocomplete.DropDown active={activeAutocomplete}>
-                  <ClayDropDown.ItemList>
-                    {enableDriverServiceName &&
-                      enableDriverServiceName.length !== 0 &&
-                      enableDriverServiceName.map((dsn, id) => (
-                        <ClayAutocomplete.Item
-                          key={id}
-                          match={driverServiceName}
-                          value={dsn}
-                          onClick={() => setDriverServiceName(dsn)}
-                        />
-                      ))}
-                  </ClayDropDown.ItemList>
-                </ClayAutocomplete.DropDown>
-              </ClayAutocomplete>
-            </div>
-            <div className={classes.editElement}>
-              <strong>Scheduling:</strong>
-              <CronInput
-                schedulingValue={schedulingValue}
-                setSchedulingValue={setSchedulingValue}
-              />
-            </div>
-          </ClayModal.Body>
-          <ClayModal.Footer
-            first={
-              <ClayButton.Group spaced>
-                <ClayButton displayType="secondary" onClick={onClose}>
-                  {"Cancel"}
-                </ClayButton>
-              </ClayButton.Group>
-            }
-            last={<ClayButton onClick={handleSave}>{"Save"}</ClayButton>}
-          />
-        </ClayModal>
-      )}
-    </>
   );
 }
 
@@ -629,7 +451,11 @@ function DataSources() {
           { label: "DataSources", path: `/tenants/${tenantId}/dataSources` },
         ]}
         breadcrumbsControls={
-          <Controls searchValue={searchValue} setSearchValue={setSearchValue} />
+          <Controls
+            tenantId={tenantId}
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
+          />
         }
       >
         <div className={classes.root}>

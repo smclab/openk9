@@ -167,12 +167,12 @@ export async function postDataSource(data: {
   tenantId: number;
   scheduling: string;
   driverServiceName: string;
-}): Promise<string> {
+}): Promise<DataSourceInfo> {
   const request = await fetch(`${apiBaseUrlV2}/datasource`, {
     method: "POST",
     headers: { ContentType: "application/json" },
     body: JSON.stringify(data),
   });
-  const response: string = await request.text();
+  const response: DataSourceInfo = await request.json();
   return response;
 }

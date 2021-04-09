@@ -151,10 +151,10 @@ function TenantSubMenu({ tenantId }: { tenantId: number }) {
     <div className={classes.inner}>
       <div className={classes.sectionTitle}>{tenant.name}</div>
       <MenuEntry
-        text="Data Sources"
-        path={`/tenants/${tenantId}/dataSources/`}
-        route={`/tenants/[tenantId]/dataSources`}
-        icon={<DataSourceIcon />}
+        text="Tenant Settings"
+        path={`/tenants/${tenantId}/settings/`}
+        route={`/tenants/[tenantId]/settings`}
+        icon={<SettingsIcon />}
       />
       <MenuEntry
         text="Users"
@@ -163,10 +163,10 @@ function TenantSubMenu({ tenantId }: { tenantId: number }) {
         icon={<TenantsIcon />}
       />
       <MenuEntry
-        text="Tenant Settings"
-        path={`/tenants/${tenantId}/settings/`}
-        route={`/tenants/[tenantId]/settings`}
-        icon={<SettingsIcon />}
+        text="Data Sources"
+        path={`/tenants/${tenantId}/dataSources/`}
+        route={`/tenants/[tenantId]/dataSources`}
+        icon={<DataSourceIcon />}
       />
     </div>
   );
