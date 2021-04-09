@@ -39,12 +39,12 @@ services:
         container_name: openk9-core
         command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
         environment:
-            WAIT_HOSTS: neo4j:7687
+            WAIT_HOSTS: postgres:5432, rabbitmq:5672, elasticsearch:9200
             WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
         volumes:
             - ./configs:/opt/apache-karaf/configs
-            - ./deploy:/opt/apache-karaf/deploy
+            - ./core/deploy:/opt/apache-karaf/deploy
         expose:
             - "1099"
             - "8080"
@@ -68,15 +68,51 @@ services:
             - "traefik.http.middlewares.openk9-karaf_compress.compress=true"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
             - "traefik.http.routers.karaf.middlewares=api-strip@docker,openk9-karaf_compress@docker,openk9-forwarded-host@docker"
+    entity-manager:
+        image: smclab/apache-karaf:4.3.0
+        container_name: openk9-entity-manager
+        command: sh -c "cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        environment:
+            JAVA_DEBUG_PORT: '*:5005'
+        volumes:
+            - ./entity-manager/configs:/opt/apache-karaf/configs
+            - ./entity-manager/deploy:/opt/apache-karaf/deploy
+        expose:
+            - "1099"
+            - "8080"
+            - "44444"
+            - "8101"
+            - "8181"
+            - "5005"
+        ports:
+            - "8082:8080"
+            - "8102:8101"
+            - "1100:1099"
+            - "44445:44444"
+            - "8183:8181"
+            - "5032:5005"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.services.entity-manager-docker.loadbalancer.server.port=8080"
+            - "traefik.http.middlewares.entity-manager-strip.stripprefix.prefixes=/entity-manager"
+            - "traefik.http.routers.entity-manager.entrypoints=web"
+            - "traefik.http.routers.entity-manager.rule=PathPrefix(`/entity-manager`)"
+            - "traefik.http.middlewares.entity-manager_compress.compress=true"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
+            - "traefik.http.routers.entity-manager.middlewares=entity-manager-strip@docker,entity-manager_compress@docker,openk9-forwarded-host@docker"
     postgres:
         image: postgres:latest
         container_name: postgres
         hostname: postgres
+        volumes:
+            - ./postgres/db-data:/var/lib/postgresql/data
         environment:
             - POSTGRES_PASSWORD=openk9
             - POSTGRES_USER=openk9
             - POSTGRES_DB=openk9
             - PGDATA=/var/lib/postgresql/data/pgdata
+        ports:
+            - "5432:5432"
     adminer:
         image: adminer
         restart: always
@@ -90,6 +126,14 @@ services:
         ports:
             - "5008:80"
             - "6800:6800"
+    spaces-parser:
+        image: spaces-parser:latest
+        container_name: spaces-parser
+        command: gunicorn -w 1 -t 120 -b 0.0.0.0:80 main:app
+        ports:
+            - "5006:80"
+        environment:
+            INGESTION_URL: "http://openk9.io/api/v1/ingestion/"
     search-standalone-frontend:
         image: smclab/openk9-search-standalone-frontend:latest
         container_name: search-standalone-frontend
@@ -131,9 +175,11 @@ services:
             - "traefik.http.routers.traefik.middlewares=traefik-compress"
             - "traefik.http.middlewares.traefik-compress.compress=true"
     ner-en:
-        image: smclab/spacy-ner-en-trf:latest
+        image: flair_flair-ner-relations:latest
         container_name: ner-en
         command: gunicorn -w 2 -t 600 -b 0.0.0.0:80 main:app
+        ports:
+            - 5009:80
     keycloak:
         image: quay.io/keycloak/keycloak:12.0.2
         environment:
@@ -157,7 +203,7 @@ services:
             - 7070:8080
         depends_on:
             - postgres-keycloak
-            - rabbitmq
+            - rabbitmq    
     postgres-keycloak:
         image: postgres:latest
         container_name: postgres-keycloak
@@ -173,7 +219,10 @@ services:
         hostname: neo4j
         environment:
             - NEO4J_AUTH=neo4j/openk9
-            - NEO4JLABS_PLUGINS=["apoc"]
+            - NEO4JLABS_PLUGINS=["apoc", "graph-data-science"]
+        volumes:
+            - ./neo4j/data:/data
+            - ./conf:/conf
         ports:
         - '7474:7474'
         - '7687:7687'

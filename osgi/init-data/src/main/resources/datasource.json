@@ -4,7 +4,7 @@
 	"tenantId" : 1,
 	"active" : true,
 	"description" : "web",
-	"jsonConfig" : " {\n \t\"startUrls\": [\"https://it.wikipedia.org/wiki/Apple_Inc.\"],\n \t\"allowedDomains\": [\"it.wikipedia.org\"],\n \t\"allowedPaths\": [],\n \t\"excludedPaths\": [\"^https://it.wikipedia.org/wiki/Category\", \"^https://it.wikipedia.org/wiki/Wikipedia\",\n \t\t\"^https://it.wikipedia.org/wiki/File\",\n \t\t\"^https://it.wikipedia.org/wiki/Template\"\n \t],\n \t\"datasourceId\": 1,\n \t\"timestamp\": 0,\n \t\"depth\": 2,\n \t\"max_length\": 4000,\n \t\"page_count\": 100\n }",
+	"jsonConfig" : " {\n \t\"startUrls\": [\"https://it.wikipedia.org/wiki/Apple_Inc.\"],\n \t\"allowedDomains\": [\"it.wikipedia.org\"],\n \t\"allowedPaths\": [],\n \t\"excludedPaths\": [\"^https://it.wikipedia.org/wiki/Category\", \"^https://it.wikipedia.org/wiki/Wikipedia\",\n \t\t\"^https://it.wikipedia.org/wiki/File\",\n \t\t\"^https://it.wikipedia.org/wiki/Template\"\n \t],\n \t\"datasourceId\": 1,\n \t\"timestamp\": 0,\n \t\"depth\": 2,\n \t\"max_length\": 4000,\n \t\"page_count\": 200\n }",
 	"lastIngestionDate" : 0,
 	"scheduling" : "0 11 11 11 11 ?",
 	"driverServiceName" : "io.openk9.plugins.web.driver.WebPluginDriver"

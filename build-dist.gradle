@@ -76,6 +76,7 @@ dependencies {
 	distCore project(path: ':plugins:liferay', transitive: false)
 	distCore project(path: ':plugins:web', transitive: false)
 	distCore project(path: ':plugins:applications', transitive: false)
+	distCore project(path: ':plugins:spaces', transitive: false)
 
 	// AUTH
 	distCore project(path: ':osgi:auth:auth-keycloak-api', transitive: false)

@@ -250,7 +250,7 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 					literalOf(entityRequest.getId())))
 				.call("apoc.path.expand").withArgs(
 					entityAliased.getDelegate(), literalOf(null),
-					literalOf(null), literalOf(1), literalOf(5))
+					literalOf(null), literalOf(1), literalOf(2))
 				.yield(path)
 				.returning(
 					Functions.last(Functions.nodes(path)).as("node"),
