@@ -16,21 +16,23 @@
  */
 
 import { useState } from "react";
+import clsx from "clsx";
 import { createUseStyles } from "react-jss";
-import ClayIcon from "@clayui/icon";
-import { ClayTooltipProvider } from "@clayui/tooltip";
 import Link from "next/link";
 import useSWR, { mutate } from "swr";
+import ClayIcon from "@clayui/icon";
+import { ClayTooltipProvider } from "@clayui/tooltip";
+import ClayButton from "@clayui/button";
+import ClayModal, { useModal } from "@clayui/modal";
 import {
   DataSourceIcon,
   SettingsIcon,
   ThemeType,
   UsersIcon,
 } from "@openk9/search-ui-components";
-import { getTenants, postTenant } from "@openk9/http-api";
+import { getTenants, postTenant, Tenant } from "@openk9/http-api";
+
 import { Layout } from "../components/Layout";
-import ClayButton from "@clayui/button";
-import ClayModal, { useModal } from "@clayui/modal";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -55,6 +57,111 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     justifyContent: "flex-end",
   },
 }));
+
+function AddModal({ visible, handleClose }) {
+  const { observer, onClose } = useModal({
+    onClose: handleClose,
+  });
+
+  const [newTenant, setNewTenant] = useState<Omit<Tenant, "tenantId">>({
+    name: "",
+    virtualHost: "",
+    jsonConfig: "{}",
+  });
+
+  const [errorState, setErrorState] = useState(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const id = e.target.id;
+    setNewTenant((cs) => ({
+      ...cs,
+      [id]: value,
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!newTenant.name || !newTenant.virtualHost) {
+      setErrorState(true);
+      return;
+    }
+
+    await postTenant(newTenant);
+    mutate(`/api/v2/tenant`);
+
+    setNewTenant(() => ({
+      name: "",
+      virtualHost: "",
+      jsonConfig: "{}",
+    }));
+
+    onClose();
+  };
+
+  if (!visible) return null;
+
+  return (
+    <ClayModal observer={observer} size="lg" status="info">
+      <ClayModal.Header>Add New Tenant</ClayModal.Header>
+      <ClayModal.Body>
+        <div>
+          <div className="form-group-autofit">
+            <div
+              className={clsx(
+                "form-group-item",
+                errorState && !newTenant.name && "has-error",
+              )}
+            >
+              <label>Name</label>
+              <input
+                className="form-control"
+                id="name"
+                placeholder="Test"
+                type="text"
+                onChange={handleChange}
+                value={newTenant.name}
+              />
+              {errorState && !newTenant.name && (
+                <div className="form-feedback-group">
+                  <div className="form-feedback-item">Cannot be empty</div>
+                </div>
+              )}
+            </div>
+            <div
+              className={clsx(
+                "form-group-item",
+                errorState && !newTenant.virtualHost && "has-error",
+              )}
+            >
+              <label>Virtual Host</label>
+              <input
+                className="form-control"
+                id="virtualHost"
+                placeholder="test.com"
+                type="text"
+                onChange={handleChange}
+                value={newTenant.virtualHost}
+              />
+              {errorState && !newTenant.virtualHost && (
+                <div className="form-feedback-group">
+                  <div className="form-feedback-item">Cannot be empty</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </ClayModal.Body>
+      <ClayModal.Footer
+        last={
+          <ClayButton.Group spaced>
+            <ClayButton displayType="secondary">Cancel</ClayButton>
+            <ClayButton onClick={handleSave}>Add</ClayButton>
+          </ClayButton.Group>
+        }
+      />
+    </ClayModal>
+  );
+}
 
 function TBody({ searchValue }: { searchValue: string }) {
   const classes = useStyles();
@@ -143,7 +250,7 @@ function Controls({
   searchValue: string;
   setSearchValue(s: string): void;
 }) {
-  const [visible, setVisible] = useState(false);
+  const [addDialogVisible, setAddDialogVisible] = useState(false);
 
   return (
     <ul className="navbar-nav" style={{ marginRight: 16 }}>
@@ -181,13 +288,16 @@ function Controls({
       <li className="nav-item">
         <ClayTooltipProvider>
           <div>
-            <AddModal visible={visible} handleClose={() => setVisible(false)} />
+            <AddModal
+              visible={addDialogVisible}
+              handleClose={() => setAddDialogVisible(false)}
+            />
             <button
               className="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
               type="button"
               data-tooltip-align="bottom"
               title="Add Tenant"
-              onClick={() => setVisible(true)}
+              onClick={() => setAddDialogVisible(true)}
             >
               <ClayIcon symbol="plus" />
             </button>
@@ -225,84 +335,6 @@ function Tenants() {
         </table>
       </div>
     </Layout>
-  );
-}
-
-function AddModal({ visible, handleClose }) {
-  const { observer, onClose } = useModal({
-    onClose: handleClose,
-  });
-
-  const [newTenant, setNewTenant] = useState({
-    name: "",
-    virtualHost: "",
-    jsonConfig: "{}",
-  });
-
-  const handleChange = (e) => {
-    const value = e.target.value;
-    const id = e.target.id;
-    setNewTenant((cs) => ({
-      ...cs,
-      [id]: value,
-    }));
-  };
-
-  const handleSave = async () => {
-    await postTenant(newTenant);
-    mutate(`/api/v2/tenant`);
-
-    setNewTenant((cs) => ({
-      name: "",
-      virtualHost: "",
-      jsonConfig: "{}",
-    }));
-
-    onClose();
-  };
-
-  return (
-    <>
-      {visible && (
-        <ClayModal observer={observer} size="lg" status="info">
-          <ClayModal.Header>{"New Tenant"}</ClayModal.Header>
-          <ClayModal.Body>
-            <div>
-              <div className="form-group-autofit">
-                <div className="form-group-item">
-                  <label>Name</label>
-                  <input
-                    className="form-control"
-                    id="name"
-                    placeholder="Name"
-                    type="text"
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="form-group-item">
-                  <label>VirtuaHost</label>
-                  <input
-                    className="form-control"
-                    id="virtualHost"
-                    placeholder="VirtualHost"
-                    type="text"
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-            </div>
-          </ClayModal.Body>
-          <ClayModal.Footer
-            first={
-              <ClayButton.Group spaced>
-                <ClayButton displayType="secondary">{"Cancel"}</ClayButton>
-              </ClayButton.Group>
-            }
-            last={<ClayButton onClick={handleSave}>{"Save"}</ClayButton>}
-          />
-        </ClayModal>
-      )}
-    </>
   );
 }
 

@@ -21,7 +21,7 @@ export type Tenant = {
   tenantId: number;
   name: string;
   virtualHost: string;
-  jsonConfig: String;
+  jsonConfig: string;
 };
 
 export async function getTenants(): Promise<Tenant[]> {
