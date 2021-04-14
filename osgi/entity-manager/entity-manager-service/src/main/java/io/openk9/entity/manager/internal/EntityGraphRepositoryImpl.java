@@ -156,8 +156,8 @@ public class EntityGraphRepositoryImpl implements EntityGraphRepository {
 					.score(score)
 					.name(String.valueOf(entityName))
 					.type(String.valueOf(entityType))
-					.id(((Number)id).longValue())
-					.tenantId(((Number)tenantId).longValue())
+					.id(_objectToLong(id))
+					.tenantId(_objectToLong(tenantId))
 					.build()
 			);
 
@@ -181,6 +181,18 @@ public class EntityGraphRepositoryImpl implements EntityGraphRepository {
 				.type(_getFirstEntry(node.labels()))
 				.build()
 			);
+	}
+
+	private long _objectToLong(Object obj) {
+		if (obj instanceof String) {
+			return Long.parseLong((String)obj);
+		}
+		else if (obj instanceof Number) {
+			return ((Number)obj).longValue();
+		}
+		else {
+			return -1;
+		}
 	}
 
 	@Reference
