@@ -154,7 +154,9 @@ function AddModal({ visible, handleClose }) {
       <ClayModal.Footer
         last={
           <ClayButton.Group spaced>
-            <ClayButton displayType="secondary">Cancel</ClayButton>
+            <ClayButton displayType="secondary" onClick={onClose}>
+              Cancel
+            </ClayButton>
             <ClayButton onClick={handleSave}>Add</ClayButton>
           </ClayButton.Group>
         }
