@@ -89,7 +89,7 @@ export const useStore = create<StateType>(
       // TODO getCurrentTenantConfig
       const tenants = await getTenants();
       const tenant = tenants.find(
-        (tenant) => location.host == tenant.virtualHost,
+        (tenant) => window.location.host == tenant.virtualHost,
       );
       const tenantConfig =
         (tenant?.jsonConfig && JSON.parse(tenant?.jsonConfig)) ||
