@@ -1,0 +1,7 @@
+dependencies {
+	compile project(":osgi:ingestion:ingestion-api")
+	compile project(":osgi:common:serialization-api")
+	compile project(":osgi:search:search-client-api")
+	compile libraries.osgi
+	compile libraries.slf4j_api
+}

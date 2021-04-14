@@ -3,4 +3,5 @@ dependencies {
 	compile project(":osgi:entity-manager:relationship-graph-api")
 	compile project(":osgi:entity-manager:entity-manager-model")
 	compile libraries.neo4j_cypher_dsl
+	compile libraries.elasticsearch
 }

@@ -20,7 +20,7 @@ import java.util.function.Function;
 public class Neo4jGraphClient implements GraphClient {
 
 	@Override
-	public Publisher<Record> write(Statement statement) {
+	public Flux<Record> write(Statement statement) {
 		return _exec(
 			_neo4jGraphConnection.getDriver(),
 			rxSession -> rxSession.writeTransaction(
@@ -30,7 +30,7 @@ public class Neo4jGraphClient implements GraphClient {
 	}
 
 	@Override
-	public Publisher<Record> read(Statement statement) {
+	public Flux<Record> read(Statement statement) {
 		return _exec(
 			_neo4jGraphConnection.getDriver(),
 			rxSession -> rxSession.readTransaction(

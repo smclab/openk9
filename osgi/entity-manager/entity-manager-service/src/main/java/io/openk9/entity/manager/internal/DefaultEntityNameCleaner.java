@@ -1,13 +1,12 @@
 package io.openk9.entity.manager.internal;
 
+import io.openk9.entity.manager.api.Constants;
 import io.openk9.entity.manager.api.EntityNameCleaner;
-import org.neo4j.cypherdsl.core.Cypher;
-import org.neo4j.cypherdsl.core.Node;
-import org.neo4j.cypherdsl.core.Property;
-import org.neo4j.cypherdsl.core.Statement;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Component;
-
-import static org.neo4j.cypherdsl.core.Cypher.literalOf;
 
 @Component(
 	immediate = true,
@@ -21,27 +20,20 @@ public class DefaultEntityNameCleaner implements EntityNameCleaner {
 	}
 
 	@Override
-	public Statement cleanEntityName(long tenantId, String entityName) {
+	public SearchRequest cleanEntityName(long tenantId, String entityName) {
 
-		Node entity = Cypher.anyNode("entity");
+		SearchRequest searchRequest = new SearchRequest(tenantId + Constants.ENTITY_INDEX_SUFFIX);
 
-		Property entityNameProperty = entity.property("entityName");
-		Property tenantIdProperty = entity.property("tenantId");
+		SearchSourceBuilder builder = new SearchSourceBuilder();
 
-		return Cypher
-			.match(entity)
-			.where(
-				tenantIdProperty
-					.eq(literalOf(tenantId))
-					.and(
-						entityNameProperty
-							.eq(literalOf(entityName)
-						)
-					)
-			)
-			.returning(entity)
-			.build();
+		builder.query(createQueryBuilder(cleanEntityName(entityName)));
 
+		return searchRequest.source(builder);
+
+	}
+
+	protected QueryBuilder createQueryBuilder(String entityName) {
+		return QueryBuilders.matchQuery(Constants.ENTITY_NAME_FIELD, entityName);
 	}
 
 }

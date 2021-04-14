@@ -18,7 +18,7 @@
 package io.openk9.search.client.internal.componenttemplate;
 
 import io.openk9.search.client.api.RestHighLevelClientProvider;
-import io.openk9.search.client.internal.indextemplate.IndexTemplateService;
+import io.openk9.search.client.api.indextemplate.IndexTemplateService;
 import org.elasticsearch.client.ClusterClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.PutComponentTemplateRequest;

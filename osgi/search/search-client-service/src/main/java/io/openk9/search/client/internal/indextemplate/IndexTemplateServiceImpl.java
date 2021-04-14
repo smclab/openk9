@@ -18,6 +18,7 @@
 package io.openk9.search.client.internal.indextemplate;
 
 import io.openk9.search.client.api.RestHighLevelClientProvider;
+import io.openk9.search.client.api.indextemplate.IndexTemplateService;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.ComposableIndexTemplateExistRequest;
@@ -36,7 +37,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Component(immediate = true, service = IndexTemplateService.class)
-public class IndexTemplateService {
+public class IndexTemplateServiceImpl implements IndexTemplateService {
 
 	public void createOrUpdateIndexTemplate(
 		String indexTemplateName, String settings, List<String> indexPatterns,

@@ -15,17 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.search.client.internal.plugin;
+package io.openk9.ingestion.driver.manager.search.internal;
 
+import io.openk9.ingestion.driver.manager.api.DocumentTypeFactory.DefaultDocumentTypeFactory;
+import io.openk9.ingestion.driver.manager.api.DocumentTypeFactoryCustomizer;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
 import io.openk9.search.client.api.componenttemplate.ComponentTemplateProvider;
+import io.openk9.search.client.api.indextemplate.IndexTemplateService;
 import io.openk9.search.client.api.mapping.Field;
 import io.openk9.search.client.api.mapping.FieldType;
-import io.openk9.search.client.internal.indextemplate.IndexTemplateService;
-import io.openk9.ingestion.driver.manager.api.DocumentTypeFactory.DefaultDocumentTypeFactory;
-import io.openk9.ingestion.driver.manager.api.DocumentTypeFactoryCustomizer;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;

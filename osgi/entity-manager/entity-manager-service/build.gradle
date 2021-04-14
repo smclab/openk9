@@ -1,5 +1,9 @@
 dependencies {
+	compile project(':osgi:common:serialization-api')
+	compile project(':osgi:ingestion:ingestion-api')
 	compile project(":osgi:entity-manager:entity-manager-api")
 	compile project(":osgi:entity-manager:relationship-graph-api")
+	compile project(':osgi:search:search-api')
 	compile libraries.vavr
+	compile libraries.elasticsearch
 }

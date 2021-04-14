@@ -18,23 +18,15 @@
 package io.openk9.search.enrich.internal;
 
 import io.openk9.cbor.api.CBORFactory;
-import io.openk9.json.api.ObjectNode;
-import io.openk9.search.client.api.DocWriteRequestFactory;
-import io.openk9.search.client.api.IndexBus;
-import io.openk9.search.client.api.Search;
-import io.openk9.search.client.api.util.SearchUtil;
+import io.openk9.common.api.constant.Strings;
+import io.openk9.ingestion.api.OutboundMessage;
+import io.openk9.ingestion.api.OutboundMessageFactory;
+import io.openk9.ingestion.api.SenderReactor;
 import io.openk9.search.enrich.api.EndEnrichProcessor;
 import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
-import org.elasticsearch.action.DocWriteRequest;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Mono;
 
@@ -43,6 +35,22 @@ import reactor.core.publisher.Mono;
 	service = EndEnrichProcessor.class
 )
 public class EndEnrichProcessorImpl implements EndEnrichProcessor {
+
+	@interface Config {
+		String exchange() default "index-writer-topic";
+		String routingKeySuffix() default "data";
+	}
+
+	@Activate
+	void activate(Config config) {
+		_exchange = config.exchange();
+		_routingKeySuffix = config.routingKeySuffix();
+	}
+
+	@Modified
+	void modified(Config config) {
+		activate(config);
+	}
 
 	@Override
 	public String name() {
@@ -53,78 +61,45 @@ public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 	public Mono<Void> exec(
 		EnrichProcessorContext enrichProcessorContext) {
 
-		return _createDocWriterRequest(enrichProcessorContext)
-			.doOnNext(_indexBus::sendRequest)
-			.then();
+		return _senderReactor.sendMono(
+			Mono.fromSupplier(() -> {
+
+				Long tenantId =
+					enrichProcessorContext
+						.getDatasourceContext()
+						.getTenant()
+						.getTenantId();
+
+				String pluginDriverName =
+					enrichProcessorContext.getPluginDriverName();
+
+				return _outboundMessageFactory.createOutboundMessage(
+						builder -> builder
+							.exchange(_exchange)
+							.routingKey(
+								String.join(
+									Strings.DASH,
+									tenantId.toString(),
+									pluginDriverName,
+									_routingKeySuffix))
+							.body(_cborFactory.toCBOR(enrichProcessorContext))
+					);
+				}
+			)
+		);
 
 	}
 
-	private Mono<DocWriteRequest> _createDocWriterRequest(
-		EnrichProcessorContext enrichProcessorContext) {
-
-		return Mono.defer(() -> {
-
-			ObjectNode objectNode =
-				_cborFactory.treeNode(
-					enrichProcessorContext.getObjectNode()).toObjectNode();
-
-			long tenantId = objectNode.get("tenantId").asLong();
-
-			String contentId = objectNode.get("contentId").asText();
-
-			String pluginDriverName = enrichProcessorContext.
-				getPluginDriverName();
-
-			return _search
-				.search(factory -> {
-
-					SearchRequest searchRequest =
-						factory.createSearchRequestData(
-							tenantId, pluginDriverName);
-
-					MatchQueryBuilder matchQueryBuilder =
-						QueryBuilders.matchQuery("contentId", contentId);
-
-					SearchSourceBuilder searchSourceBuilder =
-						new SearchSourceBuilder();
-
-					searchSourceBuilder.query(matchQueryBuilder);
-
-					return searchRequest.source(searchSourceBuilder);
-				})
-				.onErrorReturn(SearchUtil.EMPTY_SEARCH_RESPONSE)
-				.filter(e -> e.getHits().getHits().length > 0)
-				.flatMapIterable(SearchResponse::getHits)
-				.next()
-				.map(e -> {
-					UpdateRequest updateRequest =
-						_docWriteRequestFactory.createDataUpdateRequest(
-							tenantId, pluginDriverName, e.getId());
-					return updateRequest.doc(
-						objectNode.toString(), XContentType.JSON);
-				})
-				.cast(DocWriteRequest.class)
-				.switchIfEmpty(
-					Mono.fromSupplier(() -> {
-						IndexRequest indexRequest =
-							_docWriteRequestFactory.createDataIndexRequest(
-								tenantId, pluginDriverName);
-						return indexRequest.source(
-							objectNode.toString(), XContentType.JSON);
-					}));
-		});
-	}
+	private String _routingKeySuffix;
+	private String _exchange;
 
 	@Reference
-	private Search _search;
-
-	@Reference
-	private DocWriteRequestFactory _docWriteRequestFactory;
+	private SenderReactor _senderReactor;
 
 	@Reference
 	private CBORFactory _cborFactory;
 
 	@Reference
-	private IndexBus _indexBus;
+	private OutboundMessageFactory _outboundMessageFactory;
 
 }

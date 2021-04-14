@@ -10,6 +10,10 @@ configurations {
 		transitive = false
 		visible = false
 	}
+	distIndexWriter {
+		transitive = false
+		visible = false
+	}
 }
 
 repositories {
@@ -18,11 +22,15 @@ repositories {
 }
 
 dependencies {
+
+	// <CORE>
+
 	distCore project(path: ':osgi:ingestion:ingestion-api', transitive: false)
 	distCore project(path: ':osgi:ingestion:ingestion-logic-api', transitive: false)
 	distCore project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
 	distCore project(path: ':osgi:ingestion:ingestion-driver-manager-api', transitive: false)
 	distCore project(path: ':osgi:ingestion:ingestion-driver-manager-service', transitive: false)
+	distCore project(path: ':osgi:ingestion:ingestion-driver-manager-search-service', transitive: false)
 	distCore project(path: ':osgi:ingestion:ingestion-service', transitive: false)
 	distCore project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
 	distCore project(path: ':osgi:web:http-api', transitive: false)
@@ -34,6 +42,7 @@ dependencies {
 	distCore project(path: ':osgi:common:serialization-api', transitive: false)
 	distCore project(path: ':osgi:plugin:plugin-api', transitive: false)
 	distCore project(path: ':osgi:plugin:plugin-service', transitive: false)
+	distCore project(path: ':osgi:plugin:plugin-search-service', transitive: false)
 	distCore project(path: ':osgi:plugin:plugin-web', transitive: false)
 	distCore project(path: ':osgi:common:serialization-service', transitive: false)
 	distCore project(path: ':osgi:common:model', transitive: false)
@@ -76,7 +85,6 @@ dependencies {
 	distCore project(path: ':plugins:liferay', transitive: false)
 	distCore project(path: ':plugins:web', transitive: false)
 	distCore project(path: ':plugins:applications', transitive: false)
-	distCore project(path: ':plugins:spaces', transitive: false)
 
 	// AUTH
 	distCore project(path: ':osgi:auth:auth-keycloak-api', transitive: false)
@@ -97,6 +105,10 @@ dependencies {
 	distCore group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.shell', version: '4.0.8' , transitive: false
 	distCore group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
 
+	// </CORE>
+
+	// <ENTITY MANAGER>
+
 	distEntityManager project(path: ':osgi:common:common-api', transitive: false)
 	distEntityManager project(path: ':osgi:common:core-api', transitive: false)
 	distEntityManager project(path: ':osgi:common:http-serialization', transitive: false)
@@ -111,12 +123,46 @@ dependencies {
 	distEntityManager project(path: ':osgi:web:http-bundle-ext', transitive: false)
 	distEntityManager project(path: ':osgi:web:open-api', transitive: false)
 
+	distEntityManager project(path: ':osgi:search:search-client-api', transitive: false)
+	distEntityManager project(path: ':osgi:search:search-client-service', transitive: false)
+
+	distEntityManager project(path: ':osgi:metrics:metrics-api', transitive: false)
+	distEntityManager project(path: ':osgi:metrics:metrics-service', transitive: false)
+
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-api', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-service', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-web', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:neo4j-relationship-graph-impl', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:relationship-graph-api', transitive: false)
+
+	distEntityManager project(path: ':osgi:ingestion:ingestion-api', transitive: false)
+	distEntityManager project(path: ':osgi:ingestion:ingestion-service', transitive: false)
+
+	// </ENTITY MANAGER>
+
+	// <INDEX WRITER>
+
+	distIndexWriter project(path: ':osgi:index-writer:index-writer-service', transitive: false)
+
+	distIndexWriter project(path: ':osgi:search:search-client-api', transitive: false)
+	distIndexWriter project(path: ':osgi:search:search-client-service', transitive: false)
+
+	distIndexWriter project(path: ':osgi:metrics:metrics-api', transitive: false)
+	distIndexWriter project(path: ':osgi:metrics:metrics-service', transitive: false)
+
+	distIndexWriter project(path: ':osgi:common:common-api', transitive: false)
+	distIndexWriter project(path: ':osgi:common:core-api', transitive: false)
+	distIndexWriter project(path: ':osgi:common:model', transitive: false)
+	distIndexWriter project(path: ':osgi:common:osgi-api', transitive: false)
+	distIndexWriter project(path: ':osgi:common:serialization-api', transitive: false)
+	distIndexWriter project(path: ':osgi:common:serialization-service', transitive: false)
+	distIndexWriter project(path: ':osgi:common:third-party', transitive: false)
+
+	distIndexWriter project(path: ':osgi:ingestion:ingestion-api', transitive: false)
+	distIndexWriter project(path: ':osgi:ingestion:ingestion-service', transitive: false)
+
+	// </INDEX WRITER>
 
 }
 
@@ -147,14 +193,11 @@ distConfigurations
 		}
 	})
 
-	if (properties.get("karafDir") != null) {
+	tasks.register("deploy${conf.name.substring(4)}", Copy, {
+		from(confTmp)
+		into "$rootDir/$distName/deploy"
+	})
 
-		tasks.register("deploy${conf.name.substring(4)}", Copy, {
-			from(confTmp)
-			into "$karafDir/$distName/deploy"
-		})
-
-	}
 	def cleanDist = tasks.register("clean${conf.name.substring(4)}", Delete, {
 		delete("$rootDir/build/$distName")
 	})

@@ -1,4 +1,0 @@
-Bundle-Name: [OpenK9] Cache Service
-Bundle-SymbolicName: io.openk9.cache.service
-
--include: ${project.rootDir}/osgi/common.bnd

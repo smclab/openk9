@@ -106,8 +106,6 @@ subprojects {
 		mavenCentral()
 	}
 
-	def karafDir = properties.get("karafDir", "karaf")
-
 	sourceCompatibility = 11
 	targetCompatibility = 11
 
@@ -124,15 +122,6 @@ subprojects {
 		dependsOn(jar)
 		from(zipTree(tasks.jar.outputs.files.singleFile))
 		into "$buildDir/bundleDir"
-	}
-
-	if (properties.get("karafDir") != null) {
-		task deploy(type: Copy) {
-			dependsOn(jar)
-			from(tasks.jar.outputs.files.singleFile)
-
-			into "$karafDir/deploy"
-		}
 	}
 
 }

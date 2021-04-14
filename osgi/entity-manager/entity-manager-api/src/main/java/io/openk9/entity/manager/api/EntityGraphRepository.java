@@ -1,6 +1,8 @@
 package io.openk9.entity.manager.api;
 
+import io.openk9.entity.manager.model.DocumentEntity;
 import io.openk9.entity.manager.model.Entity;
+import org.elasticsearch.action.search.SearchRequest;
 import org.neo4j.cypherdsl.core.Statement;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -15,6 +17,8 @@ public interface EntityGraphRepository {
 
 	Flux<Entity> getEntities(long tenantId, String entityType);
 
-	Publisher<Entity> getEntities(Statement statement);
+	Flux<Entity> getEntities(Statement statement);
+
+	Flux<DocumentEntity> getEntities(SearchRequest searchRequest);
 
 }

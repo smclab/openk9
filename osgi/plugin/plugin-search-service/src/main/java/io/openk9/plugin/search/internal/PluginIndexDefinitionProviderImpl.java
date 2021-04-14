@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.search.client.internal.plugin;
+package io.openk9.plugin.search.internal;
 
-import io.openk9.search.client.internal.indextemplate.IndexTemplateService;
 import io.openk9.plugin.api.PluginIndexDefinition;
 import io.openk9.plugin.api.PluginIndexDefinitionProvider;
+import io.openk9.search.client.api.indextemplate.IndexTemplateService;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;

@@ -1,11 +1,15 @@
 package io.openk9.entity.manager.api;
 
-import org.neo4j.cypherdsl.core.Statement;
+import org.elasticsearch.action.search.SearchRequest;
 
 public interface EntityNameCleaner {
 
 	String getEntityType();
 
-	Statement cleanEntityName(long tenantId, String entityName);
+	SearchRequest cleanEntityName(long tenantId, String entityName);
+
+	default String cleanEntityName(String entityName) {
+		return entityName.trim();
+	}
 
 }

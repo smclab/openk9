@@ -1,0 +1,4 @@
+dependencies {
+	compile project(":osgi:plugin:plugin-api")
+	compile project(":osgi:search:search-client-api")
+}

@@ -12,8 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EntityRequest {
-	private String entityName;
-	private String entityType;
+	private String name;
+	private String type;
 	private List<RelationRequest> relations;
 	private long tmpId;
 }

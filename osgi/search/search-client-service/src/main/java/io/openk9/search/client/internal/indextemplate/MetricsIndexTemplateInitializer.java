@@ -17,6 +17,7 @@
 
 package io.openk9.search.client.internal.indextemplate;
 
+import io.openk9.search.client.api.indextemplate.IndexTemplateService;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;

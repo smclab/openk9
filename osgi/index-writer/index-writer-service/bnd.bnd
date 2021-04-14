@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Index Writer Service
+Bundle-SymbolicName: io.openk9.index.writer.service
+
+-include: ${project.rootDir}/osgi/common.bnd
+
+Import-Package: *;resolution:=optional

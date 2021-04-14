@@ -17,6 +17,7 @@
 
 package io.openk9.search.client.internal.indextemplate;
 
+import io.openk9.search.client.api.indextemplate.IndexTemplateService;
 import org.elasticsearch.cluster.metadata.ComposableIndexTemplate;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;

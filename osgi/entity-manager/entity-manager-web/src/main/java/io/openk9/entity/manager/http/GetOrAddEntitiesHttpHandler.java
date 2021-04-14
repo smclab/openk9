@@ -2,6 +2,7 @@ package io.openk9.entity.manager.http;
 
 import io.openk9.entity.manager.api.EntityGraphRepository;
 import io.openk9.entity.manager.api.EntityNameCleanerProvider;
+import io.openk9.entity.manager.model.DocumentEntity;
 import io.openk9.entity.manager.model.Entity;
 import io.openk9.entity.manager.model.payload.EntityRequest;
 import io.openk9.entity.manager.model.payload.RelationRequest;
@@ -14,13 +15,16 @@ import io.openk9.http.web.HttpRequest;
 import io.openk9.http.web.HttpResponse;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.relationship.graph.api.client.GraphClient;
+import org.elasticsearch.action.search.SearchRequest;
 import org.neo4j.cypherdsl.core.AliasedExpression;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Functions;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
 import org.neo4j.cypherdsl.core.SymbolicName;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -31,6 +35,7 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -66,24 +71,44 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 		return _httpResponseWriter.write(httpResponse, entityFlux);
 	}
 
+	@interface Config {
+		double scoreThreshold() default 0.9;
+	    int minHops() default 1;
+		int maxHops() default 2;
+	}
+
+	@Activate
+	void activate(Config config) {
+		_maxHops = config.maxHops();
+		_minHops = config.minHops();
+		_scoreThreshold = config.scoreThreshold();
+	}
+
+	@Modified
+	void modified(Config config) {
+		activate(config);
+	}
+
 	private Flux<Response> _getOrAddEntities(Request request) {
 
 		long tenantId = request.getTenantId();
 
 		List<EntityRequest> entityRequests = request.getEntities();
 
-		Mono<Map<EntityRequest, List<Entity>>> entityMap =
+		Mono<Map<EntityRequest, List<DocumentEntity>>> entityMap =
 			Flux
 				.fromIterable(entityRequests)
 				.concatMap(er -> {
 
-						Statement statement = _entityNameCleanerProvider
-							.getEntityNameCleaner(er.getEntityType())
-							.cleanEntityName(tenantId, er.getEntityName());
+					SearchRequest searchRequest = _entityNameCleanerProvider
+						.getEntityNameCleaner(er.getType())
+						.cleanEntityName(tenantId, er.getName());
 
-						return Mono.zip(
+					return Mono.zip(
 							Mono.just(er),
-							Flux.from(_entityGraphRepository.getEntities(statement)).collectList(),
+							_entityGraphRepository
+								.getEntities(searchRequest)
+								.collectList(),
 							Map::entry);
 					}
 				)
@@ -92,13 +117,13 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 		return entityMap.flatMapMany(map -> {
 
-			List<Mono<Tuple2<EntityRequest, Entity>>> result = new ArrayList<>();
+			List<Mono<Tuple2<EntityRequest, DocumentEntity>>> result = new ArrayList<>();
 
-			for (Map.Entry<EntityRequest, List<Entity>> entry : map.entrySet()) {
+			for (Map.Entry<EntityRequest, List<DocumentEntity>> entry : map.entrySet()) {
 
 				EntityRequest currentEntityRequest = entry.getKey();
 
-				List<Entity> entityRequestListWithoutCurrentEntityRequest =
+				List<DocumentEntity> entityRequestListWithoutCurrentEntityRequest =
 					map
 						.entrySet()
 						.stream()
@@ -108,10 +133,44 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 						.flatMap(Collection::stream)
 						.collect(Collectors.toList());
 
-				result.add(_disambiguate(
-					entry.getValue(), entityRequestListWithoutCurrentEntityRequest,
-					tenantId, currentEntityRequest)
-				);
+				Mono<Tuple2<EntityRequest, DocumentEntity>>
+					entityRequestDocumentEntityMono;
+
+				List<DocumentEntity> candidates = entry.getValue();
+
+				if (_checkDisambiguate(currentEntityRequest, candidates)) {
+
+					if (_log.isInfoEnabled()) {
+						_log.info("doing disambiguation");
+					}
+
+					entityRequestDocumentEntityMono =
+						_disambiguate(
+							candidates,
+							entityRequestListWithoutCurrentEntityRequest,
+							tenantId, currentEntityRequest);
+				}
+				else {
+
+					DocumentEntity documentEntity = candidates.get(0);
+
+					if (_log.isInfoEnabled()) {
+						_log.info(
+							"found candidate with " +
+							"id: " + documentEntity.getId() + " " +
+							"score: " + documentEntity.getScore());
+					}
+
+					entityRequestDocumentEntityMono =
+						Mono.just(
+							Tuples.of(
+								currentEntityRequest,
+								documentEntity
+							)
+						);
+				}
+
+				result.add(entityRequestDocumentEntityMono);
 
 			}
 
@@ -123,7 +182,7 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 				List<Statement> statementList = new ArrayList<>();
 
-				for (Map.Entry<EntityRequest, Entity> entrySet : map.entrySet()) {
+				for (Map.Entry<EntityRequest, DocumentEntity> entrySet : map.entrySet()) {
 
 					List<RelationRequest> relations =
 						entrySet.getKey().getRelations();
@@ -132,9 +191,9 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 						continue;
 					}
 
-					Entity currentEntity = entrySet.getValue();
+					DocumentEntity currentEntity = entrySet.getValue();
 
-					List<Tuple2<String, Entity>> entityRelations =
+					List<Tuple2<String, DocumentEntity>> entityRelations =
 						map
 							.entrySet()
 							.stream()
@@ -157,7 +216,7 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 					Node currentEntityNode =
 						Cypher
-							.node(currentEntity.getEntityType())
+							.node(currentEntity.getType())
 							.named("a");
 
 					List<Statement> currentStatementList =
@@ -165,11 +224,11 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 							.stream()
 							.map(t2 -> {
 
-								Entity entityRelation = t2.getT2();
+								DocumentEntity entityRelation = t2.getT2();
 
 								Node entityRelationNode =
 									Cypher
-										.node(entityRelation.getEntityType())
+										.node(entityRelation.getType())
 										.named("b");
 
 								return Cypher
@@ -204,20 +263,28 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 						.stream()
 						.map(t2 -> Response
 							.builder()
-							.entity(t2.getValue())
+							.entity(
+								Entity
+									.builder()
+									.name(t2.getValue().getName())
+									.id(t2.getValue().getId())
+									.tenantId(t2.getValue().getTenantId())
+									.type(t2.getValue().getType())
+									.build()
+							)
 							.tmpId(t2.getKey().getTmpId())
 							.build()
 						)
 						.collect(Collectors.toList());
 
 				if (statementList.size() > 1) {
-					return Flux.from(_graphClient.write(
-						Cypher.unionAll(statementList.toArray(new Statement[0]))
-					))
+					return _graphClient
+						.write(Cypher.unionAll(statementList.toArray(new Statement[0])))
 						.thenMany(Flux.fromIterable(response));
 				}
 				else if (statementList.size() == 1) {
-					return Flux.from(_graphClient.write(statementList.get(0)))
+					return _graphClient
+						.write(statementList.get(0))
 						.thenMany(Flux.fromIterable(response));
 				}
 				else {
@@ -227,63 +294,166 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 			});
 	}
 
-	private Mono<Tuple2<EntityRequest, Entity>> _disambiguate(
-		List<Entity> candidates, List<Entity> entityRequestList,
-		long tenantId, EntityRequest currentEntityRequest) {
+	private boolean _checkDisambiguate(
+		EntityRequest entityRequest,
+		List<DocumentEntity> candidates) {
 
-		Statement[] statements = new Statement[entityRequestList.size()];
+		if (!candidates.isEmpty()) {
 
-		for (int i = 0; i < entityRequestList.size(); i++) {
+			DocumentEntity documentEntity = candidates.get(0);
 
-			Entity entityRequest = entityRequestList.get(i);
+			double bestScore;
 
-			Node nodeEntity =
-				Cypher.node(entityRequest.getEntityType()).named("entity");
+			if (candidates.size() > 1) {
 
-			AliasedExpression entityAliased = nodeEntity.as("entity");
+				if (_log.isDebugEnabled()) {
+					_log.debug("softmax");
+				}
 
-			SymbolicName path = Cypher.name("path");
+				double[] scores = candidates
+					.stream()
+					.mapToDouble(DocumentEntity::getScore)
+					.toArray();
 
-			Statement statement = Cypher
-				.match(nodeEntity)
-				.where(Functions.id(nodeEntity).eq(
-					literalOf(entityRequest.getId())))
-				.call("apoc.path.expand").withArgs(
-					entityAliased.getDelegate(), literalOf(null),
-					literalOf(null), literalOf(1), literalOf(2))
-				.yield(path)
-				.returning(
-					Functions.last(Functions.nodes(path)).as("node"),
-					Functions.size(Functions.nodes(path)).subtract(
-						literalOf(1)).as("hops"))
-				.build();
+				bestScore = _softmax(documentEntity.getScore(), scores);
 
-			statements[i] = statement;
+			}
+			else {
+
+				if (_log.isDebugEnabled()) {
+					_log.debug("levenshtein");
+				}
+
+				bestScore = _levenshteinDistance(
+					documentEntity.getName(),
+					_entityNameCleanerProvider
+						.getEntityNameCleaner(entityRequest.getType())
+						.cleanEntityName(entityRequest.getName())
+				);
+
+			}
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"current score: " + bestScore + " score threshold: " + _scoreThreshold);
+			}
+
+			return bestScore < _scoreThreshold;
 
 		}
+
+		return true;
+	}
+
+	private static double _levenshteinDistance(String x, String y) {
+
+		int xLength = x.length();
+		int yLength = y.length();
+
+		int[][] dp = new int[xLength + 1][yLength + 1];
+
+		for (int i = 0; i <= xLength; i++) {
+			for (int j = 0; j <= yLength; j++) {
+				if (i == 0) {
+					dp[i][j] = j;
+				}
+				else if (j == 0) {
+					dp[i][j] = i;
+				}
+				else {
+					dp[i][j] = _min(dp[i - 1][j - 1]
+									+ _costOfSubstitution(x.charAt(i - 1), y.charAt(j - 1)),
+						dp[i - 1][j] + 1,
+						dp[i][j - 1] + 1);
+				}
+			}
+		}
+
+		return 1 - ((double)dp[xLength][yLength] / Math.max(xLength, yLength));
+	}
+
+	public static int _min(int... numbers) {
+		return Arrays.stream(numbers)
+			.min().orElse(Integer.MAX_VALUE);
+	}
+
+	public static int _costOfSubstitution(char a, char b) {
+		return a == b ? 0 : 1;
+	}
+
+	private static double _softmax(double input, double[] neuronValues) {
+
+		double total = Arrays
+			.stream(neuronValues)
+			.map(Math::exp)
+			.sum();
+
+		return Math.exp(input) / total;
+	}
+
+	private Mono<Tuple2<EntityRequest, DocumentEntity>> _disambiguate(
+		List<DocumentEntity> candidates, List<DocumentEntity> entityRequestList,
+		long tenantId, EntityRequest currentEntityRequest) {
 
 		Flux<Entity> entityFlux = Flux.empty();
 
-		if (statements.length == 1) {
-			Statement entityRequestListStatement =
-				Cypher
-					.call(statements[0])
-					.returning("node", "hops")
-					.orderBy(Cypher.name("hops"))
+		if (!candidates.isEmpty()) {
+
+			Statement[] statements = new Statement[entityRequestList.size()];
+
+			for (int i = 0; i < entityRequestList.size(); i++) {
+
+				DocumentEntity entityRequest = entityRequestList.get(i);
+
+				Node nodeEntity =
+					Cypher.node(entityRequest.getType()).named(ENTITY);
+
+				AliasedExpression entityAliased = nodeEntity.as(ENTITY);
+
+				SymbolicName path = Cypher.name(PATH);
+
+				Statement statement = Cypher
+					.match(nodeEntity)
+					.where(Functions.id(nodeEntity).eq(
+						literalOf(entityRequest.getId())))
+					.call(APOC_PATH_EXPAND).withArgs(
+						entityAliased.getDelegate(), literalOf(null),
+						literalOf(null), literalOf(_minHops), literalOf(_maxHops))
+					.yield(path)
+					.returning(
+						Functions.last(Functions.nodes(path)).as(NODE),
+						Functions.size(Functions.nodes(path)).subtract(
+							literalOf(1)).as(HOPS))
 					.build();
 
-			entityFlux = Flux.from(_entityGraphRepository.getEntities(entityRequestListStatement));
+				statements[i] = statement;
 
-		}
-		else if (statements.length > 1) {
-			Statement entityRequestListStatement =
-				Cypher
-					.call(Cypher.unionAll(statements))
-					.returning("node", "hops")
-					.orderBy(Cypher.name("hops"))
-					.build();
+			}
 
-			entityFlux = Flux.from(_entityGraphRepository.getEntities(entityRequestListStatement));
+			if (statements.length == 1) {
+				Statement entityRequestListStatement =
+					Cypher
+						.call(statements[0])
+						.returning(NODE, HOPS)
+						.orderBy(Cypher.name(HOPS))
+						.build();
+
+				entityFlux = _entityGraphRepository.getEntities(
+					entityRequestListStatement);
+
+			}
+			else if (statements.length > 1) {
+				Statement entityRequestListStatement =
+					Cypher
+						.call(Cypher.unionAll(statements))
+						.returning(NODE, HOPS)
+						.orderBy(Cypher.name(HOPS))
+						.build();
+
+				entityFlux = _entityGraphRepository.getEntities(
+					entityRequestListStatement);
+			}
+
 		}
 
 		return entityFlux
@@ -292,9 +462,20 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 				.anyMatch(entity1 -> entity1.getId() == entity.getId()))
 			.next()
 			.switchIfEmpty(Mono.defer(() -> _entityGraphRepository.addEntity(
-				tenantId, currentEntityRequest.getEntityName(),
-				currentEntityRequest.getEntityType())))
-			.map(entity -> Tuples.of(currentEntityRequest, entity));
+				tenantId, currentEntityRequest.getName(),
+				currentEntityRequest.getType())))
+			.map(entity -> Tuples.of(
+				currentEntityRequest,
+				DocumentEntity
+					.builder()
+					.tenantId(entity.getTenantId())
+					.type(entity.getType())
+					.name(entity.getName())
+					.id(entity.getId())
+					.score(1L)
+					.build()
+				)
+			);
 
 	}
 
@@ -305,6 +486,11 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 			.map(bytes -> _jsonFactory.fromJson(bytes, Request.class));
 	}
 
+	private double _scoreThreshold;
+
+	private int _minHops;
+
+	private int _maxHops;
 
 	@Reference
 	private JsonFactory _jsonFactory;
@@ -320,6 +506,12 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 	@Reference
 	private GraphClient _graphClient;
+
+	private static final String ENTITY = "entity";
+	private static final String PATH = "path";
+	private static final String APOC_PATH_EXPAND = "apoc.path.expand";
+	private static final String NODE = "node";
+	private static final String HOPS = "hops";
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		GetOrAddEntitiesHttpHandler.class);

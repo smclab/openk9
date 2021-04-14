@@ -24,4 +24,6 @@ public interface SenderReactor extends Sender {
 
 	Mono<Void> send(Flux<OutboundMessage> publisher);
 
+	Mono<Void> sendMono(Mono<OutboundMessage> publisher);
+
 }

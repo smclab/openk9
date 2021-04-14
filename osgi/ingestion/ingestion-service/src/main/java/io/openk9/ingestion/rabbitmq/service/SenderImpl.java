@@ -45,6 +45,14 @@ public class SenderImpl implements SenderReactor {
 	}
 
 	@Override
+	public Mono<Void> sendMono(Mono<OutboundMessage> publisher) {
+		return _senderProvider.get().send(
+			publisher
+				.cast(OutboundMessageWrapper.class)
+				.map(OutboundMessageWrapper::getDelegate));
+	}
+
+	@Override
 	public Mono<Void> send(
 		Flux<OutboundMessage> publisher) {
 
@@ -54,6 +62,8 @@ public class SenderImpl implements SenderReactor {
 				.map(OutboundMessageWrapper::getDelegate));
 
 	}
+
+
 
 	@Reference(target = "(rabbit=sender)")
 	private Supplier<reactor.rabbitmq.Sender> _senderProvider;

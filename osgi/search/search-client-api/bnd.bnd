@@ -11,6 +11,7 @@ Export-Package: \
  org.joda.time, \
  org.joda.time.format, \
  com.carrotsearch.*, \
+ io.openk9.search.client.api, \
  io.openk9.search.client.api.*
 
 Import-Package: *;resolution:=optional

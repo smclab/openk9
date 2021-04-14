@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class Entity {
 	private long id;
 	private long tenantId;
-	private String entityName;
-	private String entityType;
+	private String name;
+	private String type;
 }
