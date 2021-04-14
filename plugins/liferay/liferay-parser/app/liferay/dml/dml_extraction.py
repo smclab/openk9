@@ -200,6 +200,8 @@ class AsyncDmlExtraction(threading.Thread):
                         else:
                             base64_preview_url = ''
 
+                        preview_urls = [element.replace("http://localhost:8080", "http://dev-projectq.smc.it/liferay") for element in preview_urls]
+
                         file_values = {
                             "lastModifiedDate": document['modifiedDate'],
                             "path": document['path']
@@ -211,7 +213,7 @@ class AsyncDmlExtraction(threading.Thread):
                             "content": text['content'],
                             "previewURLs": preview_urls,
                             "previewUrl": base64_preview_url,
-                            "URL": document['URL'].replace("http://localhost:8085", "http://liferay-portal:8080")
+                            "URL": document['URL'].replace("http://localhost:8080", "http://dev-projectq.smc.it/liferay")
                         }
 
                         acl_values = {
