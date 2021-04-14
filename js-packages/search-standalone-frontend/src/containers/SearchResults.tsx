@@ -23,13 +23,9 @@ import {
   ThemeType,
   SearchResultsList,
   ResultSidebar,
-  ApplicationResultCard,
-  ApplicationSidebar,
   getPluginResultRenderers,
   getPluginSidebarRenderers,
 } from "@openk9/search-ui-components";
-import { ResultRenderersType, SidebarRenderersType } from "@openk9/http-api";
-import { config } from "../config";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: { display: "flex" },
@@ -61,16 +57,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-export const staticResultRenderers: ResultRenderersType<{}> = {
-  application: ApplicationResultCard as any,
-  ...config.resultRenderers,
-};
-
-export const staticSidebarRenderers: SidebarRenderersType<{}> = {
-  application: ApplicationSidebar as any,
-  ...config.sidebarRenderers,
-};
-
 export function SearchResults() {
   const results = useStore((s) => s.results);
   const handleLoadMore = useStore((s) => s.doLoadMore);
@@ -87,14 +73,8 @@ export function SearchResults() {
     selectedResult &&
     results.result.find((r) => r.source.id === selectedResult);
 
-  const resultRenderers = {
-    ...staticResultRenderers,
-    ...getPluginResultRenderers(pluginInfos),
-  };
-  const sidebarRenderers = {
-    ...staticSidebarRenderers,
-    ...getPluginSidebarRenderers(pluginInfos),
-  };
+  const resultRenderers = getPluginResultRenderers(pluginInfos);
+  const sidebarRenderers = getPluginSidebarRenderers(pluginInfos);
 
   // useLayoutEffect(() => {
   //   function onKeyDown(e: KeyboardEvent) {

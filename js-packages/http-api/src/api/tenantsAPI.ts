@@ -15,14 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { Tenant } from "../types";
 import { apiBaseUrlV2 } from "./common";
-
-export type Tenant = {
-  tenantId: number;
-  name: string;
-  virtualHost: string;
-  jsonConfig: string;
-};
 
 export async function getTenants(): Promise<Tenant[]> {
   const request = await fetch(`${apiBaseUrlV2}/tenant`);

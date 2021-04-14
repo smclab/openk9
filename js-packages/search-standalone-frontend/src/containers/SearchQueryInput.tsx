@@ -29,7 +29,6 @@ import {
   firstOrNull,
   SearchQueryField,
 } from "@openk9/search-ui-components";
-import { config } from "../config";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -62,6 +61,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 
 export function SearchQueryInput() {
   const [searchQuery, setSearchQuery] = useSearchQuery();
+  const tenantConfig = useStore((s) => s.tenantConfig);
   const focus = useStore((s) => s.focus);
   const setFocus = useStore((s) => s.setFocus);
   const suggestions = useStore((s) => s.suggestions);
@@ -109,7 +109,7 @@ export function SearchQueryInput() {
           >
             All
           </MultipleSelectionBarItem>
-          {config.querySourceBarShortcuts.map((dt) => (
+          {tenantConfig.querySourceBarShortcuts.map((dt) => (
             <MultipleSelectionBarItem
               key={dt.id}
               selected={selectedDataType === dt.id}

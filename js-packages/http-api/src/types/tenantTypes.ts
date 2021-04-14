@@ -15,12 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ResultRenderersType, SidebarRenderersType } from "@openk9/http-api";
+export type Tenant = {
+  tenantId: number;
+  name: string;
+  virtualHost: string;
+  jsonConfig: string;
+};
 
-export interface Config {
+export type TenantJSONConfig = {
   querySourceBarShortcuts: { id: string; text: string }[];
-  resultRenderers?: ResultRenderersType<{}>;
-  sidebarRenderers?: SidebarRenderersType<{}>;
-}
+};
 
-export const config: Config = (window as any).config;
+export const emptyTenantJSONConfig: TenantJSONConfig = {
+  querySourceBarShortcuts: [],
+};

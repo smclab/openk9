@@ -32,6 +32,9 @@ import {
   getTokenSuggestions,
   PluginInfo,
   getPlugins,
+  TenantJSONConfig,
+  emptyTenantJSONConfig,
+  getTenants,
 } from "@openk9/http-api";
 
 const resultsChunkNumber = 8;
@@ -60,6 +63,7 @@ export type StateType = {
   selectedResult: string | null;
   setSelectedResult(selectedResult: string | null): void;
   pluginInfos: PluginInfo[];
+  tenantConfig: TenantJSONConfig;
   loadInitial(): Promise<void>;
 };
 
@@ -77,10 +81,21 @@ export const useStore = create<StateType>(
     focusToken: null,
     selectedResult: null,
     pluginInfos: [],
+    tenantConfig: emptyTenantJSONConfig,
 
     async loadInitial() {
       const pluginInfos = await getPlugins();
-      set((state) => ({ ...state, pluginInfos }));
+
+      // TODO getCurrentTenantConfig
+      const tenants = await getTenants();
+      const tenant = tenants.find(
+        (tenant) => location.host == tenant.virtualHost,
+      );
+      const tenantConfig =
+        (tenant?.jsonConfig && JSON.parse(tenant?.jsonConfig)) ||
+        emptyTenantJSONConfig;
+
+      set((state) => ({ ...state, pluginInfos, tenantConfig }));
     },
 
     async setSearchQuery(searchQuery: SearchQuery) {

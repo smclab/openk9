@@ -20,6 +20,7 @@ export * from "./entityTypes";
 export * from "./searchQueryTypes";
 export * from "./suggestionTypes";
 export * from "./pluginTypes";
+export * from "./tenantTypes";
 
 type PathImpl<T, Key extends keyof T> = Key extends string
   ? T[Key] extends Record<string, any>

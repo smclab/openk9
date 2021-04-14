@@ -83,7 +83,7 @@ function EditInside({ data, setIsEditMode, onPerformAction }) {
 
   const [tenant, setTenant] = useState({ ...data });
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const id = e.target.id;
     setTenant((cs) => ({
@@ -103,7 +103,7 @@ function EditInside({ data, setIsEditMode, onPerformAction }) {
     await deleteTenant(tenant.tenantId);
     mutate(`/api/v2/tenant`);
     onPerformAction(["Delete Success"]);
-    router.push('/tenants');
+    router.push("/tenants");
   };
 
   if (!data) {
@@ -135,7 +135,7 @@ function EditInside({ data, setIsEditMode, onPerformAction }) {
       <div className={classes.editElement}>
         <strong>JSON Configuration</strong>
         <ClayInput
-          component="textarea"
+          component={"textarea" as any}
           id="jsonConfig"
           placeholder="Insert your JSON config here"
           type="text"
@@ -163,7 +163,13 @@ function EditInside({ data, setIsEditMode, onPerformAction }) {
   );
 }
 
-function Inside({ tenantId, onPerformAction }) {
+function Inside({
+  tenantId,
+  onPerformAction,
+}: {
+  tenantId: string;
+  onPerformAction(s: string): void;
+}) {
   const classes = useStyles();
 
   const { data } = useSWR(`/api/v2/tenant/${tenantId}`);
@@ -195,21 +201,19 @@ function Inside({ tenantId, onPerformAction }) {
           </div>
           <div className={classes.dataList}>
             <div>
-              <strong>VirtuaHost:</strong> {data.virtualHost}
+              <strong>Virtual Host:</strong> {data.virtualHost}
             </div>
           </div>
 
-          <h5>JSON Configuration</h5>
-          <pre className={classes.json}>
-            {data.jsonConfig}
-          </pre>
+          <h5>Tenant Configuration</h5>
+          <pre className={classes.json}>{data.jsonConfig}</pre>
         </>
       )}
     </>
   );
 }
 
-function Settings() {
+function TenantSettings() {
   const classes = useStyles();
 
   const { query } = useRouter();
@@ -255,4 +259,4 @@ function Settings() {
   );
 }
 
-export default Settings;
+export default TenantSettings;
