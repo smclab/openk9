@@ -201,7 +201,7 @@ export function NavSidebar({ visible }: { visible: boolean }) {
           route="/plugins"
           icon={<ClayIcon symbol="plug" />}
         />
-        <MenuEntry
+        {/* <MenuEntry
           text="Metrics"
           path="/metrics"
           route="/metrics"
@@ -212,7 +212,7 @@ export function NavSidebar({ visible }: { visible: boolean }) {
           path="/settings"
           route="/settings"
           icon={<SettingsIcon />}
-        />
+        /> */}
         <MenuEntry
           text="Logs"
           path="/logs"
