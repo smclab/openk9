@@ -48,6 +48,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     minHeight: 0,
     display: "flex",
     flexDirection: "column",
+    overflow: "auto",
   },
 }));
 
@@ -55,16 +56,19 @@ export function Layout({
   breadcrumbsPath,
   breadcrumbsControls,
   children,
-}: React.PropsWithChildren<{
-  breadcrumbsPath: { label: string; path?: string }[];
-  breadcrumbsControls?: JSX.Element;
-}>) {
+  ...rest
+}: React.PropsWithChildren<
+  {
+    breadcrumbsPath: { label: string; path?: string }[];
+    breadcrumbsControls?: JSX.Element;
+  } & React.HTMLAttributes<HTMLDivElement>
+>) {
   const classes = useStyles();
   const sidebarOpen = useStore((s) => s.sidebarOpen);
   const toggleSidebar = useStore((s) => s.toggleSidebar);
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} {...rest}>
       <Dockbar onHamburgerAction={toggleSidebar} />
 
       <div className={classes.content}>
