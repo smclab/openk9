@@ -22,4 +22,5 @@ export * from "./datasourcesAPI";
 export * from "./pluginsAPI";
 export * from "./tenantsAPI";
 export * from "./logsAPI";
+export * from "./authAPI";
 export * from "./common";
