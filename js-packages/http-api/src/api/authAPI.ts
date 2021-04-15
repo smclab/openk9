@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { promiseTimeoutReject } from "../utilities";
 import { apiBaseUrl } from "./common";
 
 export type LoginInfo = {
@@ -53,16 +54,26 @@ export type UserInfo = {
   active: boolean;
 };
 
-export async function doLogin(payload: {
-  username: string;
-  password: string;
-}): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
-  try {
+export async function doLogin(
+  payload: {
+    username: string;
+    password: string;
+  },
+  timeout = 4000,
+): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
+  async function innerLogin() {
     const request = await fetch(`${apiBaseUrl}/auth/login`, {
       method: "POST",
       body: JSON.stringify(payload),
     });
-    const response = await request.json();
+    return [request, await request.json()] as const;
+  }
+
+  try {
+    const [request, response] = await promiseTimeoutReject(
+      innerLogin(),
+      timeout,
+    );
     return { ok: request.ok, response };
   } catch (err) {
     return { ok: false, response: err };

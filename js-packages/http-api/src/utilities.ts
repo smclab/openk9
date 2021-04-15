@@ -82,3 +82,13 @@ export function setQueryParamToken({
     return [...query, item];
   }
 }
+
+export function abortTimeout<T>(ms: number) {
+  return new Promise<T>((resolve, reject) =>
+    setTimeout(() => reject("timeout"), ms),
+  );
+}
+
+export function promiseTimeoutReject<T>(promise: Promise<T>, ms: number) {
+  return Promise.race([promise, abortTimeout<T>(ms)]);
+}
