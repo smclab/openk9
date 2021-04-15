@@ -16,7 +16,7 @@
  */
 
 import { promiseTimeoutReject } from "../utilities";
-import { apiBaseUrl } from "./common";
+import { apiBaseUrl, authFetch } from "./common";
 
 export type LoginInfo = {
   access_token: string;
@@ -96,28 +96,38 @@ export async function doLogout(payload: {
   }
 }
 
-export async function doLoginRefresh(payload: {
-  refreshToken: string;
-}): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
-  try {
+export async function doLoginRefresh(
+  payload: {
+    refreshToken: string;
+  },
+  timeout = 4000,
+): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
+  async function innerRefresh() {
     const request = await fetch(`${apiBaseUrl}/auth/refresh`, {
       method: "POST",
       body: JSON.stringify(payload),
     });
-    const response: LoginInfo = await request.json();
+    return [request, await request.json()] as const;
+  }
+
+  try {
+    const [request, response] = await promiseTimeoutReject(
+      innerRefresh(),
+      timeout,
+    );
     return { ok: request.ok, response };
   } catch (err) {
     return { ok: false, response: err };
   }
 }
 
-export async function getUserInfo(payload: {
-  accessToken: string;
-}): Promise<{ ok: true; response: UserInfo } | { ok: false; response: any }> {
+export async function getUserInfo(
+  loginInfo: LoginInfo,
+): Promise<{ ok: true; response: UserInfo } | { ok: false; response: any }> {
   try {
-    const request = await fetch(`${apiBaseUrl}/auth/user-info`, {
+    const request = await authFetch(`${apiBaseUrl}/auth/user-info`, loginInfo, {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: "",
     });
     const response: UserInfo = await request.json();
     return { ok: request.ok, response };

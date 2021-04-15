@@ -15,7 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { LoginInfo } from "./authAPI";
+
 export const apiBaseUrlStatic = "/api";
 export const apiBaseUrl = "/api/v1";
 export const apiBaseUrlV2 = "/api/v2";
 export const logsBaseUrl = "/logs";
+
+export function authFetch(
+  input: RequestInfo,
+  loginInfo: LoginInfo | null,
+  init: RequestInit = {},
+) {
+  return fetch(input, {
+    ...init,
+    headers: loginInfo
+      ? {
+          Authorization: `Bearer ${loginInfo.access_token}`,
+          ...init.headers,
+        }
+      : init.headers,
+  });
+}

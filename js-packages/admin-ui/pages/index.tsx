@@ -23,6 +23,7 @@ import useSWR from "swr";
 import { ThemeType } from "@openk9/search-ui-components";
 import { getContainerStatus } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
+import { useLogin } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   wrap: {
@@ -202,6 +203,10 @@ function SystemLoadChart() {
 
 function Dashboard() {
   const classes = useStyles();
+
+  const { loginValid } = useLogin();
+  if (!loginValid) return <span className="loading-animation" />;
+
   return (
     <Layout breadcrumbsPath={[{ label: "Dashboard", path: "/" }]}>
       <div className={classes.wrap}>
