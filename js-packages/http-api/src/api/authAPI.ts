@@ -80,12 +80,15 @@ export async function doLogin(
   }
 }
 
-export async function doLogout(payload: {
-  username: string;
-  password: string;
-}): Promise<{ ok: boolean; response: any }> {
+export async function doLogout(
+  payload: {
+    accessToken: string;
+    refreshToken: string;
+  },
+  loginInfo: LoginInfo,
+): Promise<{ ok: boolean; response: any }> {
   try {
-    const request = await fetch(`${apiBaseUrl}/auth/logout`, {
+    const request = await authFetch(`${apiBaseUrl}/auth/logout`, loginInfo, {
       method: "POST",
       body: JSON.stringify(payload),
     });
