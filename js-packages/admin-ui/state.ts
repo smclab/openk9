@@ -61,7 +61,12 @@ export const useStore = create<StateType>(
   ),
 );
 
-export function useLogin({ isLoginPage } = { isLoginPage: false }) {
+export function useLoginInfo() {
+  const loginInfo = useStore((s) => s.loginInfo);
+  return loginInfo;
+}
+
+export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
   const router = useRouter();
 
   const loginInfo = useStore((s) => s.loginInfo);

@@ -21,6 +21,7 @@ import {
   SearchToken,
   TokenSuggestion,
 } from "../types";
+import { LoginInfo } from "./authAPI";
 import { doSearchEntities } from "./entitiesAPI";
 
 const defaultParams: ParamSuggestion[] = [
@@ -260,6 +261,7 @@ function findInDefault(query: string, noParams = false, exact = false) {
 
 export async function getTokenSuggestions(
   writingToken: SearchToken,
+  loginInfo: LoginInfo | null,
   noParams?: boolean,
 ): Promise<InputSuggestionToken[]> {
   const writingText = writingToken.values[0];
@@ -268,7 +270,7 @@ export async function getTokenSuggestions(
   const keywordKey = writingToken.keywordKey;
 
   if (entityId) {
-    const foundEntities = await doSearchEntities({ entityId });
+    const foundEntities = await doSearchEntities({ entityId }, loginInfo);
     return foundEntities.result.map((e) => ({
       kind: "ENTITY",
       id: e.entityId,
@@ -284,7 +286,10 @@ export async function getTokenSuggestions(
     : [];
 
   if (writingText && writingText.length > 0) {
-    const foundEntities = await doSearchEntities({ all: writingText });
+    const foundEntities = await doSearchEntities(
+      { all: writingText },
+      loginInfo,
+    );
     const entities = foundEntities.result.map((e) => ({
       kind: "ENTITY",
       id: e.entityId,

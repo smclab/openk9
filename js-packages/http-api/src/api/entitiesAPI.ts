@@ -16,12 +16,14 @@
  */
 
 import { EntityLookupRequest, EntityLookupResponse } from "../types";
-import { apiBaseUrl } from "./common";
+import { LoginInfo } from "./authAPI";
+import { apiBaseUrl, authFetch } from "./common";
 
 export async function doSearchEntities(
   query: EntityLookupRequest,
+  loginInfo: LoginInfo | null,
 ): Promise<EntityLookupResponse> {
-  const request = await fetch(`${apiBaseUrl}/entity`, {
+  const request = await authFetch(`${apiBaseUrl}/entity`, loginInfo, {
     method: "POST",
     body: JSON.stringify(query),
   });

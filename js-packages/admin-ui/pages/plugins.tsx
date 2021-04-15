@@ -26,6 +26,7 @@ import { ClayTooltipProvider } from "@clayui/tooltip";
 import { ThemeType } from "@openk9/search-ui-components";
 import { getPlugins } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
+import { useLoginCheck, useLoginInfo } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -180,7 +181,9 @@ function Controls({
 function TBody({ searchValue }: { searchValue: string }) {
   const classes = useStyles();
 
-  const { data } = useSWR(`/plugins`, getPlugins);
+  const loginInfo = useLoginInfo();
+
+  const { data } = useSWR(`/plugins`, () => getPlugins(loginInfo));
 
   if (!data) {
     return <span className="loading-animation" />;
@@ -243,6 +246,9 @@ function Plugins() {
   const classes = useStyles();
 
   const [searchValue, setSearchValue] = useState("");
+
+  const { loginValid } = useLoginCheck();
+  if (!loginValid) return <span className="loading-animation" />;
 
   return (
     <Layout

@@ -29,7 +29,6 @@ import ClayDropDown from "@clayui/drop-down";
 import {
   DataSourceIcon,
   firstOrString,
-  pluginInfoLoader,
   pluginLoader,
   SettingsIcon,
   ThemeType,
@@ -38,12 +37,13 @@ import {
   DataSourceInfo,
   deleteDataSource,
   getDataSources,
+  getPlugins,
   Plugin,
   PluginInfo,
   triggerReindex,
 } from "@openk9/http-api";
 import { Layout } from "../../../components/Layout";
-import { isServer } from "../../../state";
+import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
 import { ConfirmationModal } from "../../../components/ConfirmationModal";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
@@ -93,6 +93,7 @@ function DSItemRender({
   selected,
   onSelect,
   onToggle,
+  onDelete,
   setIdToReindex,
 }: {
   ds: DataSourceInfo;
@@ -102,17 +103,13 @@ function DSItemRender({
   selected: boolean;
   onSelect(): void;
   onToggle(): void;
+  onDelete(): void;
   setIdToReindex(ids: number[]): void;
 }) {
   const classes = useStyles();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  async function handleDelete() {
-    await deleteDataSource(ds.datasourceId);
-    mutate(`/api/v2/datasource`);
-  }
 
   const Icon = plugin?.adminPlugin?.iconRenderer || DataSourceIcon;
 
@@ -227,7 +224,7 @@ function DSItemRender({
                   abortText="Abort"
                   confirmText="Delete"
                   onCloseModal={() => setDeleting(false)}
-                  onConfirmModal={handleDelete}
+                  onConfirmModal={onDelete}
                 />
               )}
             </ClayDropDown.ItemList>
@@ -255,9 +252,15 @@ function Inside({
 }) {
   const classes = useStyles();
 
-  const pluginInfos = pluginInfoLoader.read();
+  const loginInfo = useLoginInfo();
 
-  const { data } = useSWR(`/api/v2/datasource`, getDataSources);
+  const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
+    getPlugins(loginInfo),
+  );
+
+  const { data } = useSWR(`/api/v2/datasource`, () =>
+    getDataSources(loginInfo),
+  );
 
   const tenantDSs = useMemo(
     () => data && data.filter((d) => String(d.tenantId) === tenantId),
@@ -319,6 +322,11 @@ function Inside({
     );
   }
 
+  async function handleDelete(dsId: number) {
+    await deleteDataSource(dsId, loginInfo);
+    mutate(`/api/v2/datasource`);
+  }
+
   return (
     <ul className={clsx("list-group", classes.list)}>
       <li className="list-group-header">
@@ -361,7 +369,7 @@ function Inside({
       </li>
 
       {filteredData.map((ds) => {
-        const pluginInfo = pluginInfos.find((p) =>
+        const pluginInfo = (pluginInfos || []).find((p) =>
           ds.driverServiceName.startsWith(p.bundleInfo.symbolicName),
         );
         const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
@@ -382,6 +390,7 @@ function Inside({
               )
             }
             onToggle={() => toggle([ds.datasourceId])}
+            onDelete={() => handleDelete(ds.datasourceId)}
             setIdToReindex={setIdToReindex}
           />
         );
@@ -465,12 +474,15 @@ function DataSources() {
     { label: string; key: string }[]
   >([]);
 
+  const { loginValid, loginInfo } = useLoginCheck();
+  if (!loginValid) return <span className="loading-animation" />;
+
   function onPerformAction(label: string) {
     setToastItems((tt) => [...tt, { label, key: Math.random().toFixed(5) }]);
   }
 
   async function reindex(ids: number[]) {
-    const resp = await triggerReindex(ids);
+    const resp = await triggerReindex(ids, loginInfo);
     console.log(resp);
     onPerformAction(`Reindex requested for ${ids.length} items.`);
   }

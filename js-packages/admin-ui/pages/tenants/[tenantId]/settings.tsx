@@ -20,8 +20,8 @@ import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { Layout } from "../../../components/Layout";
-import { isServer } from "../../../state";
-import { putTenant, deleteTenant } from "@openk9/http-api";
+import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
+import { putTenant, deleteTenant, getTenant } from "@openk9/http-api";
 import useSWR, { mutate } from "swr";
 import ClayAlert from "@clayui/alert";
 import { ClayInput } from "@clayui/form";
@@ -83,6 +83,8 @@ function EditInside({ data, setIsEditMode, onPerformAction }) {
 
   const [tenant, setTenant] = useState({ ...data });
 
+  const loginInfo = useLoginInfo();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const id = e.target.id;
@@ -93,14 +95,14 @@ function EditInside({ data, setIsEditMode, onPerformAction }) {
   };
 
   const handleSave = async () => {
-    await putTenant(tenant);
+    await putTenant(tenant, loginInfo);
     onPerformAction(["Success"]);
     setIsEditMode(false);
     mutate(`/api/v2/tenant/${tenant.tenantId}`);
   };
 
   const handleDelete = async () => {
-    await deleteTenant(tenant.tenantId);
+    await deleteTenant(tenant.tenantId, loginInfo);
     mutate(`/api/v2/tenant`);
     onPerformAction(["Delete Success"]);
     router.push("/tenants");
@@ -167,12 +169,16 @@ function Inside({
   tenantId,
   onPerformAction,
 }: {
-  tenantId: string;
-  onPerformAction(s: string): void;
+  tenantId: number;
+  onPerformAction(s: string[]): void;
 }) {
   const classes = useStyles();
 
-  const { data } = useSWR(`/api/v2/tenant/${tenantId}`);
+  const loginInfo = useLoginInfo();
+
+  const { data } = useSWR(`/api/v2/tenant/${tenantId}`, () =>
+    getTenant(tenantId, loginInfo),
+  );
   const [isEditMode, setIsEditMode] = useState(false);
 
   if (!data) {
@@ -218,7 +224,10 @@ function TenantSettings() {
 
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
-  const [alerts, setAlerts] = useState([]);
+  const [alerts, setAlerts] = useState<string[]>([]);
+
+  const { loginValid } = useLoginCheck();
+  if (!loginValid) return <span className="loading-animation" />;
 
   return (
     <>
@@ -233,7 +242,7 @@ function TenantSettings() {
           {!isServer && (
             <Suspense fallback={<span className="loading-animation" />}>
               <Inside
-                tenantId={tenantId}
+                tenantId={parseInt(tenantId)}
                 onPerformAction={(label) => setAlerts(label)}
               />
               <ClayAlert.ToastContainer>

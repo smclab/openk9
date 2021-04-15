@@ -20,7 +20,7 @@ import { createUseStyles } from "react-jss";
 import ClayForm, { ClayInput } from "@clayui/form";
 import { ThemeType, Brand } from "@openk9/search-ui-components";
 import { doLogin, getUserInfo } from "@openk9/http-api";
-import { useLogin, useStore } from "../state";
+import { useLoginCheck, useStore } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -58,7 +58,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
-  const { loginValid } = useLogin({ isLoginPage: true });
+  const { loginValid } = useLoginCheck({ isLoginPage: true });
 
   const setLoginInfo = useStore((s) => s.setLoginInfo);
 

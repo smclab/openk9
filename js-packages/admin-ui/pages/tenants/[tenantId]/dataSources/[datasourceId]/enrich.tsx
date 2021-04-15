@@ -36,6 +36,7 @@ import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
 import Link from "next/link";
 import ClayAlert from "@clayui/alert";
 import useSWR from "swr";
+import { useLoginCheck, useLoginInfo } from "../../../../../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -201,17 +202,19 @@ function Inner({ datasourceId }: { datasourceId: number }) {
   const classes = useStyles();
   const [enrichItemToView, setEnrichItemToView] = useState<EnrichItem>();
 
+  const loginInfo = useLoginInfo();
+
   const { data: datasource } = useSWR(
     `/api/v2/datasource/${datasourceId}`,
-    () => getDataSourceInfo(datasourceId),
+    () => getDataSourceInfo(datasourceId, loginInfo),
   );
 
   const { data: enrichPipelines } = useSWR(`/api/v2/enrichPipeline`, () =>
-    getEnrichPipeline(),
+    getEnrichPipeline(loginInfo),
   );
 
   const { data: enrichItem } = useSWR(`/api/v2/enrichItem`, () =>
-    getEnrichItem(),
+    getEnrichItem(loginInfo),
   );
 
   const dsEnrichPipeline =
@@ -306,19 +309,22 @@ function DSEnrich() {
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
   const [isVisibleModal, setIsVisibleModal] = useState(false);
 
+  const [toastItems, setToastItems] = useState<
+    { label: string; key: string }[]
+  >([]);
+
+  const { loginValid, loginInfo } = useLoginCheck();
+  if (!loginValid) return <span className="loading-animation" />;
+
   function onPerformAction(label: string) {
     setToastItems((tt) => [...tt, { label, key: Math.random().toFixed(5) }]);
   }
 
   async function reindex(ids: number) {
-    const resp = await triggerReindex([ids]);
+    const resp = await triggerReindex([ids], loginInfo);
     console.log(resp);
     onPerformAction(`Reindex requested for 1 item.`);
   }
-
-  const [toastItems, setToastItems] = useState<
-    { label: string; key: string }[]
-  >([]);
 
   return (
     <>

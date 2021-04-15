@@ -84,10 +84,10 @@ export const useStore = create<StateType>(
     tenantConfig: emptyTenantJSONConfig,
 
     async loadInitial() {
-      const pluginInfos = await getPlugins();
+      const pluginInfos = await getPlugins(null);
 
       // TODO getCurrentTenantConfig
-      const tenants = await getTenants();
+      const tenants = await getTenants(null);
       const tenant = tenants.find(
         (tenant) => window.location.host == tenant.virtualHost,
       );
@@ -125,7 +125,7 @@ export const useStore = create<StateType>(
           searchQuery,
           range: [0, resultsChunkNumber],
         };
-        const results = await doSearch(request);
+        const results = await doSearch(request, null);
         set((state) => ({
           ...state,
           results: isSearchQueryEmpty(searchQuery) ? null : results,
@@ -143,7 +143,7 @@ export const useStore = create<StateType>(
           searchQuery: prev.searchQuery,
           range: [prev.range[0], prev.range[1] + resultsChunkNumber],
         };
-        const results = await doSearch(request);
+        const results = await doSearch(request, null);
         set((state) => ({
           ...state,
           results,
@@ -177,7 +177,7 @@ export const useStore = create<StateType>(
         await sleep(suggTimeoutDebounce);
       }
       if (token && get().suggestionsRequestTime <= startTime) {
-        const suggestions = await getTokenSuggestions(token);
+        const suggestions = await getTokenSuggestions(token, null);
         if (get().suggestionsRequestTime === startTime) {
           set((state) => ({ ...state, suggestions }));
         }

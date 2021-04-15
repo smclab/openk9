@@ -469,7 +469,7 @@ export function SearchQueryField({
     Promise.all(
       searchQuery.map(async (token) => {
         if (token.tokenType !== "TEXT" || token.keywordKey) {
-          const suggestions = await getTokenSuggestions(token);
+          const suggestions = await getTokenSuggestions(token, null);
           const pairs = suggestions.map(
             (s) => [s.id, s.displayDescription] as [string, string],
           );

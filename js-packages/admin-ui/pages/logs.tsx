@@ -22,6 +22,7 @@ import useSWR from "swr";
 import { ThemeType } from "@openk9/search-ui-components";
 import { getContainerStatus } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
+import { useLoginCheck, useLoginInfo } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -54,7 +55,9 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 function TBody() {
   const classes = useStyles();
 
-  const { data } = useSWR(`/logs/status`, getContainerStatus);
+  const loginInfo = useLoginInfo();
+
+  const { data } = useSWR(`/logs/status`, () => getContainerStatus(loginInfo));
 
   if (!data) {
     return <span className="loading-animation" />;
@@ -101,6 +104,10 @@ function TBody() {
 
 function Logs() {
   const classes = useStyles();
+
+  const { loginValid } = useLoginCheck();
+  if (!loginValid) return <span className="loading-animation" />;
+
   return (
     <Layout breadcrumbsPath={[{ label: "Logs", path: "/logs" }]}>
       <div className={classes.root}>

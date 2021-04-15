@@ -21,7 +21,7 @@ import { useRouter } from "next/router";
 import { mutate } from "swr";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { DataSourceInfo, postDataSource } from "@openk9/http-api";
-import { isServer } from "../../../state";
+import { isServer, useLoginCheck } from "../../../state";
 import { Layout } from "../../../components/Layout";
 import { EditDataSource } from "../../../components/EditDataSource";
 
@@ -62,8 +62,11 @@ function AddDataSource() {
     tenantId: parseInt(tenantId),
   };
 
+  const { loginValid, loginInfo } = useLoginCheck();
+  if (!loginValid) return <span className="loading-animation" />;
+
   async function handleSave() {
-    await postDataSource(fullDataSourceInfo);
+    await postDataSource(fullDataSourceInfo, loginInfo);
     mutate(`/api/v2/datasource`);
     push(`/tenants/${tenantId}/dataSources`);
   }

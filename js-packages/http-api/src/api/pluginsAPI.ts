@@ -16,10 +16,13 @@
  */
 
 import { PluginInfo, Plugin } from "../types";
-import { apiBaseUrl, apiBaseUrlStatic } from "./common";
+import { LoginInfo } from "./authAPI";
+import { apiBaseUrl, apiBaseUrlStatic, authFetch } from "./common";
 
-export async function getPlugins(): Promise<PluginInfo[]> {
-  const request = await fetch(`${apiBaseUrl}/plugin`);
+export async function getPlugins(
+  loginInfo: LoginInfo | null,
+): Promise<PluginInfo[]> {
+  const request = await authFetch(`${apiBaseUrl}/plugin`, loginInfo);
   const response: PluginInfo[] = await request.json();
   return response;
 }

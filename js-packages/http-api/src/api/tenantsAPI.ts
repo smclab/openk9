@@ -16,26 +16,38 @@
  */
 
 import { Tenant } from "../types";
-import { apiBaseUrlV2 } from "./common";
+import { LoginInfo } from "./authAPI";
+import { apiBaseUrlV2, authFetch } from "./common";
 
-export async function getTenants(): Promise<Tenant[]> {
-  const request = await fetch(`${apiBaseUrlV2}/tenant`);
+export async function getTenants(
+  loginInfo: LoginInfo | null,
+): Promise<Tenant[]> {
+  const request = await authFetch(`${apiBaseUrlV2}/tenant`, loginInfo);
   const response: Tenant[] = await request.json();
   return response;
 }
 
-export async function getTenant(tenantId: number): Promise<Tenant> {
-  const request = await fetch(`${apiBaseUrlV2}/tenant/${tenantId}`);
+export async function getTenant(
+  tenantId: number,
+  loginInfo: LoginInfo | null,
+): Promise<Tenant> {
+  const request = await authFetch(
+    `${apiBaseUrlV2}/tenant/${tenantId}`,
+    loginInfo,
+  );
   const response: Tenant = await request.json();
   return response;
 }
 
-export async function postTenant(data: {
-  name: string;
-  virtualHost: string;
-  jsonConfig: string;
-}) {
-  await fetch(`${apiBaseUrlV2}/tenant`, {
+export async function postTenant(
+  data: {
+    name: string;
+    virtualHost: string;
+    jsonConfig: string;
+  },
+  loginInfo: LoginInfo | null,
+) {
+  await authFetch(`${apiBaseUrlV2}/tenant`, loginInfo, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -44,12 +56,12 @@ export async function postTenant(data: {
   });
 }
 
-export async function putTenant(data: Tenant) {
+export async function putTenant(data: Tenant, loginInfo: LoginInfo | null) {
   if (!data.jsonConfig) {
     data.jsonConfig = "{}";
   }
 
-  await fetch(`${apiBaseUrlV2}/tenant`, {
+  await authFetch(`${apiBaseUrlV2}/tenant`, loginInfo, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -58,8 +70,11 @@ export async function putTenant(data: Tenant) {
   });
 }
 
-export async function deleteTenant(tenantId: number) {
-  await fetch(`${apiBaseUrlV2}/tenant/${tenantId}`, {
+export async function deleteTenant(
+  tenantId: number,
+  loginInfo: LoginInfo | null,
+) {
+  await authFetch(`${apiBaseUrlV2}/tenant/${tenantId}`, loginInfo, {
     method: "DELETE",
   });
 }

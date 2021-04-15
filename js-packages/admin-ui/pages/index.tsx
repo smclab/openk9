@@ -23,7 +23,7 @@ import useSWR from "swr";
 import { ThemeType } from "@openk9/search-ui-components";
 import { getContainerStatus } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
-import { useLogin } from "../state";
+import { useLoginCheck, useLoginInfo } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   wrap: {
@@ -89,7 +89,9 @@ function QuickStart() {
 function ServiceStatusInside() {
   const classes = useStyles();
 
-  const { data } = useSWR(`/logs/status`, getContainerStatus);
+  const loginInfo = useLoginInfo();
+
+  const { data } = useSWR(`/logs/status`, () => getContainerStatus(loginInfo));
 
   if (!data) {
     return <span className="loading-animation" />;
@@ -204,7 +206,7 @@ function SystemLoadChart() {
 function Dashboard() {
   const classes = useStyles();
 
-  const { loginValid } = useLogin();
+  const { loginValid } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
 
   return (

@@ -24,17 +24,11 @@ import clayIcon from "@clayui/icon";
 
 import { createAsset } from "use-asset";
 import {
-  getPlugins,
   loadPlugin,
   PluginInfo,
   ResultRenderersType,
   SidebarRenderersType,
 } from "@openk9/http-api";
-
-export const pluginInfoLoader = createAsset(async () => {
-  const plugins = await getPlugins();
-  return plugins;
-});
 
 export const pluginLoader = createAsset(async (id) => {
   const plugin = await loadPlugin(id);

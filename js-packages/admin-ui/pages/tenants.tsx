@@ -33,6 +33,7 @@ import {
 import { getTenants, postTenant, Tenant } from "@openk9/http-api";
 
 import { Layout } from "../components/Layout";
+import { useLoginCheck, useLoginInfo } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -71,6 +72,8 @@ function AddModal({ visible, handleClose }) {
 
   const [errorState, setErrorState] = useState(null);
 
+  const loginInfo = useLoginInfo();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const id = e.target.id;
@@ -86,7 +89,7 @@ function AddModal({ visible, handleClose }) {
       return;
     }
 
-    await postTenant(newTenant);
+    await postTenant(newTenant, loginInfo);
     mutate(`/api/v2/tenant`);
 
     setNewTenant(() => ({
@@ -168,7 +171,9 @@ function AddModal({ visible, handleClose }) {
 function TBody({ searchValue }: { searchValue: string }) {
   const classes = useStyles();
 
-  const { data } = useSWR(`/api/v2/tenant`, getTenants);
+  const loginInfo = useLoginInfo();
+
+  const { data } = useSWR(`/api/v2/tenant`, () => getTenants(loginInfo));
 
   if (!data) {
     return <span className="loading-animation" />;
@@ -314,6 +319,9 @@ function Tenants() {
   const classes = useStyles();
 
   const [searchValue, setSearchValue] = useState("");
+
+  const { loginValid } = useLoginCheck();
+  if (!loginValid) return <span className="loading-animation" />;
 
   return (
     <Layout

@@ -24,14 +24,15 @@ import { ClayToggle, ClayInput } from "@clayui/form";
 import ClayAutocomplete from "@clayui/autocomplete";
 import ClayDropDown from "@clayui/drop-down";
 import ClayIcon from "@clayui/icon";
+import { pluginLoader, ThemeType } from "@openk9/search-ui-components";
 import {
-  pluginInfoLoader,
-  pluginLoader,
-  ThemeType,
-} from "@openk9/search-ui-components";
-import { DataSourceInfo, getDriverServiceNames } from "@openk9/http-api";
+  DataSourceInfo,
+  getDriverServiceNames,
+  getPlugins,
+} from "@openk9/http-api";
 import { CronInput, CronInputType } from "./CronInput";
 import { AutocompleteItemIcon } from "./AutocompleteItemIcon";
+import { useLoginInfo } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   editElement: {
@@ -62,15 +63,19 @@ export function EditDataSource<T extends Partial<DataSourceInfo>>({
 }) {
   const classes = useStyles();
 
+  const loginInfo = useLoginInfo();
+
   // TODO: check API to use
   // Show also icon in the dropdown list?
   const { data: driverServiceNames } = useSWR(
     `/api/v1/driver-service-names`,
-    getDriverServiceNames,
+    () => getDriverServiceNames(loginInfo),
   );
 
-  const pluginInfos = pluginInfoLoader.read();
-  const plugins = pluginInfos.map(
+  const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
+    getPlugins(loginInfo),
+  );
+  const plugins = (pluginInfos || []).map(
     (pi) =>
       [
         pi.pluginId,
@@ -79,7 +84,7 @@ export function EditDataSource<T extends Partial<DataSourceInfo>>({
       ] as const,
   );
 
-  const currentPluginInfo = pluginInfos.find((p) =>
+  const currentPluginInfo = (pluginInfos || []).find((p) =>
     editingDataSource.driverServiceName.startsWith(p.bundleInfo.symbolicName),
   );
   const currentPlugin =

@@ -15,7 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { apiBaseUrl, apiBaseUrlV2 } from "./common";
+import { LoginInfo } from "./authAPI";
+import { apiBaseUrl, apiBaseUrlV2, authFetch } from "./common";
 
 export interface SearchKeyword {
   keyword: string;
@@ -75,24 +76,33 @@ type SchedulerRequestReturn = {
   errors: string[];
 } & { [key: string]: boolean };
 
-export async function getSupportedDataSources(): Promise<
-  SupportedDataSource[]
-> {
-  const request = await fetch(`${apiBaseUrl}/supported-datasources`);
+export async function getSupportedDataSources(
+  loginInfo: LoginInfo | null,
+): Promise<SupportedDataSource[]> {
+  const request = await authFetch(
+    `${apiBaseUrl}/supported-datasources`,
+    loginInfo,
+  );
   const response: SupportedDataSource[] = await request.json();
   return response;
 }
 
-export async function getDataSources(): Promise<DataSourceInfo[]> {
-  const request = await fetch(`${apiBaseUrlV2}/datasource`);
+export async function getDataSources(
+  loginInfo: LoginInfo | null,
+): Promise<DataSourceInfo[]> {
+  const request = await authFetch(`${apiBaseUrlV2}/datasource`, loginInfo);
   const response: DataSourceInfo[] = await request.json();
   return response;
 }
 
 export async function getDataSourceInfo(
   datasourceId: number,
+  loginInfo: LoginInfo | null,
 ): Promise<DataSourceInfo> {
-  const request = await fetch(`${apiBaseUrlV2}/datasource/${datasourceId}`);
+  const request = await authFetch(
+    `${apiBaseUrlV2}/datasource/${datasourceId}`,
+    loginInfo,
+  );
   const response: DataSourceInfo = await request.json();
   return response;
 }
@@ -100,29 +110,37 @@ export async function getDataSourceInfo(
 export async function changeDataSourceInfo(
   datasourceId: number,
   datasource: Partial<DataSourceInfo>,
+  loginInfo: LoginInfo | null,
 ): Promise<DataSourceInfo> {
-  const request = await fetch(`${apiBaseUrlV2}/datasource/${datasourceId}`, {
-    method: "PATCH",
-    headers: {
-      ContentType: "application/json",
+  const request = await authFetch(
+    `${apiBaseUrlV2}/datasource/${datasourceId}`,
+    loginInfo,
+    {
+      method: "PATCH",
+      headers: {
+        ContentType: "application/json",
+      },
+      body: JSON.stringify(datasource),
     },
-    body: JSON.stringify(datasource),
-  });
+  );
   const response: DataSourceInfo = await request.json();
   return response;
 }
 
-export async function postDataSource(data: {
-  active: boolean;
-  description: string;
-  jsonConfig: string;
-  lastIngestionDate: number;
-  name: string;
-  tenantId: number;
-  scheduling: string;
-  driverServiceName: string;
-}): Promise<DataSourceInfo> {
-  const request = await fetch(`${apiBaseUrlV2}/datasource`, {
+export async function postDataSource(
+  data: {
+    active: boolean;
+    description: string;
+    jsonConfig: string;
+    lastIngestionDate: number;
+    name: string;
+    tenantId: number;
+    scheduling: string;
+    driverServiceName: string;
+  },
+  loginInfo: LoginInfo | null,
+): Promise<DataSourceInfo> {
+  const request = await authFetch(`${apiBaseUrlV2}/datasource`, loginInfo, {
     method: "POST",
     headers: { ContentType: "application/json" },
     body: JSON.stringify(data),
@@ -131,34 +149,51 @@ export async function postDataSource(data: {
   return response;
 }
 
-export async function deleteDataSource(datasourceId: number): Promise<string> {
-  const request = await fetch(`${apiBaseUrlV2}/datasource/${datasourceId}`, {
-    method: "DELETE",
-  });
+export async function deleteDataSource(
+  datasourceId: number,
+  loginInfo: LoginInfo | null,
+): Promise<string> {
+  const request = await authFetch(
+    `${apiBaseUrlV2}/datasource/${datasourceId}`,
+    loginInfo,
+    {
+      method: "DELETE",
+    },
+  );
   const response: string = await request.text();
   return response;
 }
 
-export async function getSchedulerItems(): Promise<SchedulerItem[]> {
-  const request = await fetch(`${apiBaseUrl}/scheduler`);
+export async function getSchedulerItems(
+  loginInfo: LoginInfo | null,
+): Promise<SchedulerItem[]> {
+  const request = await authFetch(`${apiBaseUrl}/scheduler`, loginInfo);
   const response: SchedulerItem[] = await request.json();
   return response;
 }
 
 export async function triggerScheduler(
   schedulerJobs: string[],
+  loginInfo: LoginInfo | null,
 ): Promise<SchedulerRequestReturn> {
-  const request = await fetch(`${apiBaseUrl}/scheduler/trigger`, {
-    method: "POST",
-    headers: { ContentType: "application/json" },
-    body: JSON.stringify(schedulerJobs),
-  });
+  const request = await authFetch(
+    `${apiBaseUrl}/scheduler/trigger`,
+    loginInfo,
+    {
+      method: "POST",
+      headers: { ContentType: "application/json" },
+      body: JSON.stringify(schedulerJobs),
+    },
+  );
   const response: SchedulerRequestReturn = await request.json();
   return response;
 }
 
-export async function triggerReindex(ids: number[]): Promise<string> {
-  const request = await fetch(`${apiBaseUrl}/index/reindex`, {
+export async function triggerReindex(
+  ids: number[],
+  loginInfo: LoginInfo | null,
+): Promise<string> {
+  const request = await authFetch(`${apiBaseUrl}/index/reindex`, loginInfo, {
     method: "POST",
     headers: { ContentType: "application/json" },
     body: JSON.stringify({ datasourceIds: ids }),
@@ -167,20 +202,29 @@ export async function triggerReindex(ids: number[]): Promise<string> {
   return response;
 }
 
-export async function getDriverServiceNames(): Promise<string[]> {
-  const request = await fetch(`${apiBaseUrl}/driver-service-names`);
+export async function getDriverServiceNames(
+  loginInfo: LoginInfo | null,
+): Promise<string[]> {
+  const request = await authFetch(
+    `${apiBaseUrl}/driver-service-names`,
+    loginInfo,
+  );
   const response: string[] = await request.json();
   return response;
 }
 
-export async function getEnrichItem(): Promise<EnrichItem[]> {
-  const request = await fetch(`${apiBaseUrlV2}/enrichItem`);
+export async function getEnrichItem(
+  loginInfo: LoginInfo | null,
+): Promise<EnrichItem[]> {
+  const request = await authFetch(`${apiBaseUrlV2}/enrichItem`, loginInfo);
   const response: EnrichItem[] = await request.json();
   return response;
 }
 
-export async function getEnrichPipeline(): Promise<EnrichPipeline[]> {
-  const request = await fetch(`${apiBaseUrlV2}/enrichPipeline`);
+export async function getEnrichPipeline(
+  loginInfo: LoginInfo | null,
+): Promise<EnrichPipeline[]> {
+  const request = await authFetch(`${apiBaseUrlV2}/enrichPipeline`, loginInfo);
   const response: EnrichPipeline[] = await request.json();
   return response;
 }

@@ -35,7 +35,7 @@ import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 import { EditDataSource } from "../../../../../components/EditDataSource";
 import { Layout } from "../../../../../components/Layout";
-import { isServer } from "../../../../../state";
+import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -88,9 +88,11 @@ function Inner({
 }) {
   const classes = useStyles();
 
+  const loginInfo = useLoginInfo();
+
   const { data: datasource, mutate } = useSWR(
     `/api/v2/datasource/${datasourceId}`,
-    () => !isNaN(datasourceId) && getDataSourceInfo(datasourceId),
+    () => !isNaN(datasourceId) && getDataSourceInfo(datasourceId, loginInfo),
   );
 
   const [
@@ -185,12 +187,19 @@ function DSSettings() {
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
   const [isVisibleModal, setIsVisibleModal] = useState(false);
 
+  const [toastItems, setToastItems] = useState<
+    { label: string; key: string }[]
+  >([]);
+
+  const { loginValid, loginInfo } = useLoginCheck();
+  if (!loginValid) return <span className="loading-animation" />;
+
   function onPerformAction(label: string) {
     setToastItems((tt) => [...tt, { label, key: Math.random().toFixed(5) }]);
   }
 
   async function reindex(ids: number) {
-    const resp = await triggerReindex([ids]);
+    const resp = await triggerReindex([ids], loginInfo);
     console.log(resp);
     onPerformAction(`Reindex requested for 1 item`);
   }
@@ -209,17 +218,17 @@ function DSSettings() {
     });
 
     if (Object.entries(newDatasource).length !== 0) {
-      const saved = await changeDataSourceInfo(datasourceId, newDatasource);
+      const saved = await changeDataSourceInfo(
+        datasourceId,
+        newDatasource,
+        loginInfo,
+      );
       onPerformAction(`The datasource has been updated`);
       return saved;
     }
 
     return prevDataSource;
   }
-
-  const [toastItems, setToastItems] = useState<
-    { label: string; key: string }[]
-  >([]);
 
   return (
     <>

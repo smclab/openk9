@@ -15,7 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { logsBaseUrl } from "./common";
+import { LoginInfo } from "./authAPI";
+import { authFetch, logsBaseUrl } from "./common";
 
 export type ContainerStatus = {
   ID: string;
@@ -24,8 +25,10 @@ export type ContainerStatus = {
   Status: string;
 };
 
-export async function getContainerStatus(): Promise<ContainerStatus[]> {
-  const request = await fetch(`${logsBaseUrl}/status`);
+export async function getContainerStatus(
+  loginInfo: LoginInfo | null,
+): Promise<ContainerStatus[]> {
+  const request = await authFetch(`${logsBaseUrl}/status`, loginInfo);
   const response: ContainerStatus[] = await request.json();
   return response;
 }
@@ -33,8 +36,12 @@ export async function getContainerStatus(): Promise<ContainerStatus[]> {
 export async function getContainerLogs(
   id: string,
   tail = 300,
+  loginInfo: LoginInfo | null,
 ): Promise<string> {
-  const request = await fetch(`${logsBaseUrl}/status/${id}/${tail}`);
+  const request = await authFetch(
+    `${logsBaseUrl}/status/${id}/${tail}`,
+    loginInfo,
+  );
   const response: string = await request.text();
   return response;
 }

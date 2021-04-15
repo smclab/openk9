@@ -30,6 +30,7 @@ import {
   DataSourceIcon,
 } from "@openk9/search-ui-components";
 import { getTenant } from "@openk9/http-api";
+import { useLoginInfo } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -139,8 +140,10 @@ function MenuEntry({
 function TenantSubMenu({ tenantId }: { tenantId: number }) {
   const classes = useStyles();
 
+  const loginInfo = useLoginInfo();
+
   const { data: tenant } = useSWR(`/api/v2/tenant/${tenantId}`, () =>
-    getTenant(tenantId),
+    getTenant(tenantId, loginInfo),
   );
 
   if (!tenant) {
