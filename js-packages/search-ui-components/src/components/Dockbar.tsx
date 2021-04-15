@@ -18,8 +18,8 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
 import { HamburgerIcon } from "../icons/HamburgerIcon";
-import { BrandLogo } from "../icons/BrandLogo";
 import { ThemeType } from "../theme";
+import { Brand } from "./Brand";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -90,10 +90,7 @@ export function Dockbar({
         </button>
       )}
 
-      <div className={classes.brand}>
-        <BrandLogo size={28} className={classes.brandLogo} />
-        Open<span>K9</span>
-      </div>
+      <Brand badge />
 
       <div className={classes.spacer} />
 

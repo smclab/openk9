@@ -23,3 +23,4 @@ export * from "./ResultCard";
 export * from "./Highlight";
 export * from "./ImageSlider";
 export * from "./ResultSidebar";
+export * from "./Brand";
