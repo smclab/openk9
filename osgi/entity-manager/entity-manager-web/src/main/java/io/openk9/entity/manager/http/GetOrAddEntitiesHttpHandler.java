@@ -136,39 +136,17 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 				Mono<Tuple2<EntityRequest, DocumentEntity>>
 					entityRequestDocumentEntityMono;
 
-				List<DocumentEntity> candidates = entry.getValue();
+				List<DocumentEntity> candidates = cleanCandidates(currentEntityRequest, entry.getValue());
 
-				if (_checkDisambiguate(currentEntityRequest, candidates)) {
-
-					if (_log.isInfoEnabled()) {
-						_log.info("doing disambiguation");
-					}
-
-					entityRequestDocumentEntityMono =
-						_disambiguate(
-							candidates,
-							entityRequestListWithoutCurrentEntityRequest,
-							tenantId, currentEntityRequest);
+				if (_log.isInfoEnabled()) {
+					_log.info("doing disambiguation");
 				}
-				else {
 
-					DocumentEntity documentEntity = candidates.get(0);
-
-					if (_log.isInfoEnabled()) {
-						_log.info(
-							"found candidate with " +
-							"id: " + documentEntity.getId() + " " +
-							"score: " + documentEntity.getScore());
-					}
-
-					entityRequestDocumentEntityMono =
-						Mono.just(
-							Tuples.of(
-								currentEntityRequest,
-								documentEntity
-							)
-						);
-				}
+				entityRequestDocumentEntityMono =
+					_disambiguate(
+						candidates,
+						entityRequestListWithoutCurrentEntityRequest,
+						tenantId, currentEntityRequest);
 
 				result.add(entityRequestDocumentEntityMono);
 
@@ -294,9 +272,16 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 			});
 	}
 
-	private boolean _checkDisambiguate(
+	private List<DocumentEntity> cleanCandidates(
 		EntityRequest entityRequest,
 		List<DocumentEntity> candidates) {
+
+		List<DocumentEntity> cleanedCandidates = new ArrayList<>();
+		
+		if (_log.isDebugEnabled()) {
+				_log.debug(
+					"entity " + entityRequest.getName() + " candidates: " + candidates);
+			}
 
 		if (!candidates.isEmpty()) {
 
@@ -335,14 +320,23 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					"current score: " + bestScore + " score threshold: " + _scoreThreshold);
+					"current score: " + bestScore + " score threshold: " + _scoreThreshold + " for entity " + entityRequest.getName());
 			}
 
-			return bestScore < _scoreThreshold;
+			if (bestScore > _scoreThreshold) {
+				cleanedCandidates.add(documentEntity);
+			}
+			else {
+				cleanedCandidates.addAll(candidates);
+			}
 
 		}
 
-		return true;
+		if (_log.isDebugEnabled()) {
+					_log.debug("candidates empty");
+				}
+
+		return cleanedCandidates;
 	}
 
 	private static double _levenshteinDistance(String x, String y) {
