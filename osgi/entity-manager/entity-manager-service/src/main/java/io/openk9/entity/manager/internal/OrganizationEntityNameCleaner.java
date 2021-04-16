@@ -18,7 +18,7 @@ import org.osgi.service.component.annotations.Modified;
 public class OrganizationEntityNameCleaner extends DefaultEntityNameCleaner {
 
 	@interface Config {
-		String[] stopWords() default {"spa", "s.p.a.", "srl", "s.r.l."};
+		String[] stopWords() default {"spa", "s.p.a.", "srl", "s.r.l.", "s.r.l", "s.p.a"};
 	}
 
 	@Activate
