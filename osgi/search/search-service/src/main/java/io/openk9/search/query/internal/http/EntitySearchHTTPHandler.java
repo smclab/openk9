@@ -110,7 +110,7 @@ public class EntitySearchHTTPHandler implements HttpHandler {
 			Map<String, Object> sourceMap =
 				new HashMap<>(hit.getSourceAsMap());
 
-			sourceMap.put("entityId", sourceMap.get("id"));
+			sourceMap.put("entityId", String.valueOf(sourceMap.get("id")));
 
 			result.add(sourceMap);
 
