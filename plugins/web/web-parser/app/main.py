@@ -103,6 +103,11 @@ def execute():
         except KeyError:
             page_count = 0
 
+        try:
+            timestamp = int(request.json["timestamp"])
+        except KeyError:
+            timestamp = 0
+
         datasource_id = request.json["datasourceId"]
 
         payload = {
@@ -112,13 +117,18 @@ def execute():
             "allowed_domains": json.dumps(allowed_domains),
             "allowed_paths": json.dumps(allowed_paths),
             "excluded_paths": json.dumps(excluded_paths),
-            "setting": "CLOSESPIDER_PAGECOUNT=" + str(page_count),
-            "setting": "DEPTH_LIMIT=" + str(depth),
+            "setting": ["CLOSESPIDER_PAGECOUNT=%s"% page_count, "DEPTH_LIMIT=%s"%depth],
             "datasource_id": datasource_id,
             "ingestion_url": app.config["INGESTION_URL"]
         }
 
-        response = post_message("http://localhost:6800/schedule.json", payload, 10)
+        if timestamp == 0:
+            response = post_message("http://localhost:6800/schedule.json", payload, 10)
+        else:
+            response = {
+                "status": "error",
+                "message": "timestamp greater than zero"
+            }
 
         if response["status"] == 'ok':
             app.logger.info("Crawling process started with job " + str(response["jobid"]))
@@ -139,7 +149,7 @@ def cancel_job():
             return "No job with this id founded"
 
         payload = {
-            "project": "web_crawler",
+            "project": "crawler",
             "job": str(job)
         }
 
