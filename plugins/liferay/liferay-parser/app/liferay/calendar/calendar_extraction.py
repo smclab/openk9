@@ -184,7 +184,7 @@ class AsyncCalendarExtraction(threading.Thread):
                                 "contentId": str(calendar_booking['calendarBookingId']),
                                 "parsingDate": int(end_timestamp),
                                 "rawContent": str(calendar_booking['titleCurrentValue']
-                                                  + calendar_booking['description']),
+                                                  + " " + calendar_booking['description']),
                                 "datasourcePayload": json.dumps(datasource_payload)
                             }
                             

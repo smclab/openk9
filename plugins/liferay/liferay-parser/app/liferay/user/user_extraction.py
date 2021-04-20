@@ -250,7 +250,7 @@ class AsyncUserExtraction(threading.Thread):
                             "datasourceId": self.datasource_id,
                             "contentId": str(user['userId']),
                             "parsingDate": int(end_timestamp),
-                            "rawContent": user_info['firstName'] + " " + user_info['lastName'],
+                            "rawContent": user_info['firstName'] + " " + user_info['lastName'] + " <" + user_info['emailAddress'] + ">",
                             "datasourcePayload": json.dumps(datasource_payload)
                         }
 
