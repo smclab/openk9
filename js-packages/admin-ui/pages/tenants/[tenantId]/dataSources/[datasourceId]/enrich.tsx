@@ -17,24 +17,18 @@
 
 import React, { useState } from "react";
 import ReactFlow from "react-flow-renderer";
-import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import ClayNavigationBar from "@clayui/navigation-bar";
-import ClayIcon from "@clayui/icon";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { Layout } from "../../../../../components/Layout";
 import {
   getDataSourceInfo,
   getEnrichItem,
-  triggerReindex,
   getEnrichPipeline,
   EnrichItem,
 } from "@openk9/http-api";
-import { ClayTooltipProvider } from "@clayui/tooltip";
-import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
 import Link from "next/link";
-import ClayAlert from "@clayui/alert";
 import useSWR from "swr";
 import { useLoginCheck, useLoginInfo } from "../../../../../state";
 
@@ -149,11 +143,9 @@ function getElementsReactFlow(dsEnrichItems) {
 }
 
 function Controls({
-  setIsVisibleModal,
   tenantId,
   datasourceId,
 }: {
-  setIsVisibleModal(b: boolean): void;
   tenantId: number;
   datasourceId: number;
 }) {
@@ -179,20 +171,6 @@ function Controls({
       </ClayNavigationBar.Item>
       <ClayNavigationBar.Item>
         <a className="nav-link">ACL</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <ClayTooltipProvider>
-          <div>
-            <a
-              className={clsx("btn btn-primary", classes.navActionButton)}
-              data-tooltip-align="bottom"
-              title="Reindex Data Source"
-              onClick={() => setIsVisibleModal(true)}
-            >
-              <ClayIcon symbol="reload" />
-            </a>
-          </div>
-        </ClayTooltipProvider>
       </ClayNavigationBar.Item>
     </ClayNavigationBar>
   );
@@ -248,12 +226,12 @@ function Inner({ datasourceId }: { datasourceId: number }) {
         <h2>
           {datasource.datasourceId}: {datasource.name}
         </h2>
-        <ClayAlert
+        {/* <ClayAlert
           displayType="warning"
           className={clsx(classes.alert, classes.alertWarning)}
         >
           {"There aren't items in Enrich Pipeline for this Data Source"}
-        </ClayAlert>
+        </ClayAlert> */}
       </>
     );
   }
@@ -307,24 +285,9 @@ function DSEnrich() {
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
-  const [isVisibleModal, setIsVisibleModal] = useState(false);
-
-  const [toastItems, setToastItems] = useState<
-    { label: string; key: string }[]
-  >([]);
 
   const { loginValid, loginInfo } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
-
-  function onPerformAction(label: string) {
-    setToastItems((tt) => [...tt, { label, key: Math.random().toFixed(5) }]);
-  }
-
-  async function reindex(ids: number) {
-    const resp = await triggerReindex([ids], loginInfo);
-    console.log(resp);
-    onPerformAction(`Reindex requested for 1 item.`);
-  }
 
   return (
     <>
@@ -338,7 +301,6 @@ function DSEnrich() {
         ]}
         breadcrumbsControls={
           <Controls
-            setIsVisibleModal={setIsVisibleModal}
             tenantId={parseInt(tenantId)}
             datasourceId={parseInt(datasourceId)}
           />
@@ -348,35 +310,6 @@ function DSEnrich() {
           <Inner datasourceId={parseInt(datasourceId)} />
         </div>
       </Layout>
-
-      <ClayAlert.ToastContainer>
-        {toastItems.map((value) => (
-          <ClayAlert
-            displayType="success"
-            className={classes.alert}
-            autoClose={5000}
-            key={value.key}
-            onClose={() => {
-              setToastItems((prevItems) =>
-                prevItems.filter((item) => item.key !== value.key),
-              );
-            }}
-          >
-            {value.label}
-          </ClayAlert>
-        ))}
-      </ClayAlert.ToastContainer>
-
-      {isVisibleModal && (
-        <ConfirmationModal
-          title={"Confirmation reindex"}
-          message={
-            "Are you sure you want to reindex the data sources selected?"
-          }
-          onCloseModal={() => setIsVisibleModal(false)}
-          onConfirmModal={() => reindex(Number(datasourceId))}
-        />
-      )}
     </>
   );
 }

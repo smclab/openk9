@@ -21,11 +21,10 @@ import { useRouter } from "next/router";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { Layout } from "../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
-import { putTenant, deleteTenant, getTenant } from "@openk9/http-api";
+import { putTenant, getTenant } from "@openk9/http-api";
 import useSWR, { mutate } from "swr";
-import ClayAlert from "@clayui/alert";
 import { ClayInput } from "@clayui/form";
-import clsx from "clsx";
+import { useToast } from "../../_app";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -41,11 +40,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   actions: {
     display: "flex",
     justifyContent: "flex-end",
-  },
-  alert: {
-    "& .alert-autofit-row": {
-      alignItems: "center",
-    },
   },
   settingHeader: {
     display: "flex",
@@ -77,8 +71,9 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-function EditInside({ data, setIsEditMode, onPerformAction }) {
+function EditInside({ data, setIsEditMode }) {
   const classes = useStyles();
+  const { pushToast } = useToast();
   const router = useRouter();
 
   const [tenant, setTenant] = useState({ ...data });
@@ -96,16 +91,9 @@ function EditInside({ data, setIsEditMode, onPerformAction }) {
 
   const handleSave = async () => {
     await putTenant(tenant, loginInfo);
-    onPerformAction(["Success"]);
+    pushToast("Success");
     setIsEditMode(false);
     mutate(`/api/v2/tenant/${tenant.tenantId}`);
-  };
-
-  const handleDelete = async () => {
-    await deleteTenant(tenant.tenantId, loginInfo);
-    mutate(`/api/v2/tenant`);
-    onPerformAction(["Delete Success"]);
-    router.push("/tenants");
   };
 
   if (!data) {
@@ -147,13 +135,6 @@ function EditInside({ data, setIsEditMode, onPerformAction }) {
       </div>
       <div className={classes.buttons}>
         <button
-          className={clsx("btn btn-danger", classes.closeButton)}
-          type="button"
-          onClick={() => handleDelete()}
-        >
-          Delete
-        </button>
-        <button
           className="btn btn-primary"
           type="button"
           onClick={() => handleSave()}
@@ -165,13 +146,7 @@ function EditInside({ data, setIsEditMode, onPerformAction }) {
   );
 }
 
-function Inside({
-  tenantId,
-  onPerformAction,
-}: {
-  tenantId: number;
-  onPerformAction(s: string[]): void;
-}) {
+function Inside({ tenantId }: { tenantId: number }) {
   const classes = useStyles();
 
   const loginInfo = useLoginInfo();
@@ -188,11 +163,7 @@ function Inside({
   return (
     <>
       {isEditMode ? (
-        <EditInside
-          data={data}
-          setIsEditMode={setIsEditMode}
-          onPerformAction={onPerformAction}
-        />
+        <EditInside data={data} setIsEditMode={setIsEditMode} />
       ) : (
         <>
           <div className={classes.settingHeader}>
@@ -224,7 +195,6 @@ function TenantSettings() {
 
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
-  const [alerts, setAlerts] = useState<string[]>([]);
 
   const { loginValid } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
@@ -241,25 +211,7 @@ function TenantSettings() {
         <div className={classes.root}>
           {!isServer && (
             <Suspense fallback={<span className="loading-animation" />}>
-              <Inside
-                tenantId={parseInt(tenantId)}
-                onPerformAction={(label) => setAlerts(label)}
-              />
-              <ClayAlert.ToastContainer>
-                {alerts.map((alertItem) => (
-                  <ClayAlert
-                    autoClose={5000}
-                    key={alertItem}
-                    onClose={() => {
-                      setAlerts((prevItems) =>
-                        prevItems.filter((item) => item !== alertItem),
-                      );
-                    }}
-                  >
-                    {alertItem}
-                  </ClayAlert>
-                ))}
-              </ClayAlert.ToastContainer>
+              <Inside tenantId={parseInt(tenantId)} />
             </Suspense>
           )}
         </div>

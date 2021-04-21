@@ -159,12 +159,12 @@ function TenantSubMenu({ tenantId }: { tenantId: number }) {
         route={`/tenants/[tenantId]/settings`}
         icon={<SettingsIcon />}
       />
-      <MenuEntry
+      {/* <MenuEntry
         text="Users"
         path={`/tenants/${tenantId}/users/`}
         route={`/tenants/[tenantId]/users`}
         icon={<TenantsIcon />}
-      />
+      /> */}
       <MenuEntry
         text="Data Sources"
         path={`/tenants/${tenantId}/dataSources/`}

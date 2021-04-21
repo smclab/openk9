@@ -15,19 +15,51 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useRouter } from "next/router";
-import { ThemeProvider } from "react-jss";
+import { createUseStyles, ThemeProvider } from "react-jss";
+import { ClayIconSpriteContext } from "@clayui/icon";
+import ClayAlert from "@clayui/alert";
 import {
   defaultTheme,
   loadPluginDepsIntoGlobal,
+  ThemeType,
 } from "@openk9/search-ui-components";
 
 import "@clayui/css/lib/css/atlas.css";
 import "../styles.css";
-import { ClayIconSpriteContext } from "@clayui/icon";
 
 loadPluginDepsIntoGlobal();
+
+const useStyles = createUseStyles((theme: ThemeType) => ({
+  alert: {
+    "& .alert-autofit-row": {
+      alignItems: "center",
+    },
+  },
+}));
+
+const ToastContext = createContext<{
+  pushToast(label: string): void;
+  toastItems: { label: string; key: string }[];
+} | null>(null);
+
+export function useToast() {
+  const ctxValue = useContext(ToastContext);
+  if (!ctxValue) {
+    throw new Error(
+      "Error! You are trying to use Toast without its context! <Layout/> provides that.",
+    );
+  }
+
+  return ctxValue;
+}
 
 export default function MyApp({ Component, pageProps }) {
   useEffect(() => {
@@ -37,12 +69,51 @@ export default function MyApp({ Component, pageProps }) {
     }
   });
 
+  const classes = useStyles();
+
+  const [toastItems, setToastItems] = useState<
+    { label: string; key: string }[]
+  >([]);
+
+  const toastContextValue = useMemo(
+    () => ({
+      pushToast(label: string) {
+        setToastItems((ts) => [
+          ...ts,
+          { label, key: Math.random().toFixed(5) },
+        ]);
+      },
+      toastItems,
+    }),
+    [toastItems],
+  );
+
   const { basePath } = useRouter();
   return (
-    <ThemeProvider theme={defaultTheme}>
-      <ClayIconSpriteContext.Provider value={basePath + "/icons.svg"}>
-        <Component {...pageProps} />
-      </ClayIconSpriteContext.Provider>
-    </ThemeProvider>
+    <ToastContext.Provider value={toastContextValue}>
+      <ThemeProvider theme={defaultTheme}>
+        <ClayIconSpriteContext.Provider value={basePath + "/icons.svg"}>
+          <Component {...pageProps} />
+
+          <ClayAlert.ToastContainer>
+            {toastItems.map((value) => (
+              <ClayAlert
+                displayType="success"
+                className={classes.alert}
+                autoClose={5000}
+                key={value.key}
+                onClose={() => {
+                  setToastItems((prevItems) =>
+                    prevItems.filter((item) => item.key !== value.key),
+                  );
+                }}
+              >
+                {value.label}
+              </ClayAlert>
+            ))}
+          </ClayAlert.ToastContainer>
+        </ClayIconSpriteContext.Provider>
+      </ThemeProvider>
+    </ToastContext.Provider>
   );
 }

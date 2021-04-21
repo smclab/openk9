@@ -22,7 +22,6 @@ import { useRouter } from "next/router";
 import useSWR, { mutate } from "swr";
 import clsx from "clsx";
 import ClayIcon from "@clayui/icon";
-import ClayAlert from "@clayui/alert";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 import ClayDropDown from "@clayui/drop-down";
 
@@ -45,6 +44,7 @@ import {
 import { Layout } from "../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
 import { ConfirmationModal } from "../../../components/ConfirmationModal";
+import { useToast } from "../../_app";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -74,11 +74,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   icon: {
     fill: "currentColor",
     fontSize: 30,
-  },
-  alert: {
-    "& .alert-autofit-row": {
-      alignItems: "center",
-    },
   },
   editElement: {
     marginBottom: theme.spacingUnit * 2,
@@ -240,17 +235,16 @@ function Inside({
   searchValue,
   selectedIds,
   setSelectedIds,
-  onPerformAction,
   setIdToReindex,
 }: {
   tenantId: string;
   searchValue: string;
   selectedIds: number[];
   setSelectedIds: React.Dispatch<React.SetStateAction<number[]>>;
-  onPerformAction(s: string): void;
   setIdToReindex(ids: number[]): void;
 }) {
   const classes = useStyles();
+  const { pushToast } = useToast();
 
   const loginInfo = useLoginInfo();
 
@@ -317,9 +311,7 @@ function Inside({
     const targetState =
       selected.map((ds) => ds.active).filter(Boolean).length <=
       selected.length / 2;
-    onPerformAction(
-      `${ids.length} items turned ${targetState ? "on" : "off"}.`,
-    );
+    pushToast(`${ids.length} items turned ${targetState ? "on" : "off"}.`);
   }
 
   async function handleDelete(dsId: number) {
@@ -470,21 +462,15 @@ function DataSources() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [idToReindex, setIdToReindex] = useState<number[]>([]);
 
-  const [toastItems, setToastItems] = useState<
-    { label: string; key: string }[]
-  >([]);
-
   const { loginValid, loginInfo } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
 
-  function onPerformAction(label: string) {
-    setToastItems((tt) => [...tt, { label, key: Math.random().toFixed(5) }]);
-  }
+  const { pushToast } = useToast();
 
   async function reindex(ids: number[]) {
     const resp = await triggerReindex(ids, loginInfo);
     console.log(resp);
-    onPerformAction(`Reindex requested for ${ids.length} items.`);
+    pushToast(`Reindex requested for ${ids.length} items.`);
   }
 
   return (
@@ -511,31 +497,12 @@ function DataSources() {
                 searchValue={searchValue}
                 selectedIds={selectedIds}
                 setSelectedIds={setSelectedIds}
-                onPerformAction={onPerformAction}
                 setIdToReindex={setIdToReindex}
               />
             </Suspense>
           )}
         </div>
       </Layout>
-
-      <ClayAlert.ToastContainer>
-        {toastItems.map((value) => (
-          <ClayAlert
-            displayType="success"
-            className={classes.alert}
-            autoClose={5000}
-            key={value.key}
-            onClose={() => {
-              setToastItems((prevItems) =>
-                prevItems.filter((item) => item.key !== value.key),
-              );
-            }}
-          >
-            {value.label}
-          </ClayAlert>
-        ))}
-      </ClayAlert.ToastContainer>
 
       {idToReindex && idToReindex.length !== 0 && (
         <ConfirmationModal

@@ -20,7 +20,6 @@ import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import { format } from "date-fns";
 import useSWR from "swr";
-import ClayAlert from "@clayui/alert";
 import ClayIcon from "@clayui/icon";
 
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
@@ -36,6 +35,7 @@ import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 import { EditDataSource } from "../../../../../components/EditDataSource";
 import { Layout } from "../../../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
+import { useToast } from "../../../../_app";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -187,21 +187,15 @@ function DSSettings() {
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
   const [isVisibleModal, setIsVisibleModal] = useState(false);
 
-  const [toastItems, setToastItems] = useState<
-    { label: string; key: string }[]
-  >([]);
+  const { pushToast } = useToast();
 
   const { loginValid, loginInfo } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
 
-  function onPerformAction(label: string) {
-    setToastItems((tt) => [...tt, { label, key: Math.random().toFixed(5) }]);
-  }
-
   async function reindex(ids: number) {
     const resp = await triggerReindex([ids], loginInfo);
     console.log(resp);
-    onPerformAction(`Reindex requested for 1 item`);
+    pushToast(`Reindex requested for 1 item`);
   }
 
   async function saveDataSource(
@@ -223,7 +217,7 @@ function DSSettings() {
         newDatasource,
         loginInfo,
       );
-      onPerformAction(`The datasource has been updated`);
+      pushToast(`The datasource has been updated`);
       return saved;
     }
 
@@ -256,24 +250,6 @@ function DSSettings() {
           />
         </div>
       </Layout>
-
-      <ClayAlert.ToastContainer>
-        {toastItems.map((value) => (
-          <ClayAlert
-            displayType="success"
-            className={classes.alert}
-            autoClose={5000}
-            key={value.key}
-            onClose={() => {
-              setToastItems((prevItems) =>
-                prevItems.filter((item) => item.key !== value.key),
-              );
-            }}
-          >
-            {value.label}
-          </ClayAlert>
-        ))}
-      </ClayAlert.ToastContainer>
 
       {isVisibleModal && (
         <ConfirmationModal
