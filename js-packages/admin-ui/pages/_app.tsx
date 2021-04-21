@@ -23,7 +23,7 @@ import {
   loadPluginDepsIntoGlobal,
 } from "@openk9/search-ui-components";
 
-import "@clayui/css/lib/css/base.css";
+import "@clayui/css/lib/css/atlas.css";
 import "../styles.css";
 import { ClayIconSpriteContext } from "@clayui/icon";
 
