@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -68,7 +69,9 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 		Flux<Response> entityFlux = request.flatMapMany(this::_getOrAddEntities);
 
-		return _httpResponseWriter.write(httpResponse, entityFlux);
+		return _httpResponseWriter.write(
+			httpResponse,
+			entityFlux.subscribeOn(Schedulers.single()));
 	}
 
 	@interface Config {
@@ -113,7 +116,6 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 					}
 				)
 				.collectMap(Map.Entry::getKey, Map.Entry::getValue);
-
 
 		return entityMap.flatMapMany(map -> {
 
