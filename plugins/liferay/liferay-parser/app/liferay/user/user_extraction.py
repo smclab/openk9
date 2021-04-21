@@ -246,13 +246,19 @@ class AsyncUserExtraction(threading.Thread):
 
                         datasource_payload = {"user": user_values}
 
+                        raw_content = user_info['firstName'] + " " + user_info['lastName'] + " <" + user_info['emailAddress'] + ">"
+                        if len(addresses_list) > 0:
+                            raw_content = raw_content + " "  + address_info["city"] + " " + country_info["name"]
+
                         payload = {
                             "datasourceId": self.datasource_id,
                             "contentId": str(user['userId']),
                             "parsingDate": int(end_timestamp),
-                            "rawContent": user_info['firstName'] + " " + user_info['lastName'] + " <" + user_info['emailAddress'] + ">",
+                            "rawContent": raw_content,
                             "datasourcePayload": json.dumps(datasource_payload)
                         }
+
+                        self.status_logger.info(raw_content)
 
                         try:
                             self.post_message(self.ingestion_url, payload, 10)
