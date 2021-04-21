@@ -18,6 +18,8 @@
 import { promiseTimeoutReject } from "../utilities";
 import { apiBaseUrl, authFetch } from "./common";
 
+const AUTH_TIMEOUT = 6000;
+
 export type LoginInfo = {
   access_token: string;
   expires_in: number;
@@ -59,7 +61,7 @@ export async function doLogin(
     username: string;
     password: string;
   },
-  timeout = 4000,
+  timeout = AUTH_TIMEOUT,
 ): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
   async function innerLogin() {
     const request = await fetch(`${apiBaseUrl}/auth/login`, {
@@ -103,7 +105,7 @@ export async function doLoginRefresh(
   payload: {
     refreshToken: string;
   },
-  timeout = 4000,
+  timeout = AUTH_TIMEOUT,
 ): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
   async function innerRefresh() {
     const request = await fetch(`${apiBaseUrl}/auth/refresh`, {
