@@ -61,12 +61,6 @@ export function DataSourceNavBar({
         </Link>
       </ClayNavigationBar.Item>
       <ClayNavigationBar.Item>
-        <a className="nav-link">Schedule</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <a className="nav-link">ACL</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
         <ClayTooltipProvider>
           <div>
             <a
