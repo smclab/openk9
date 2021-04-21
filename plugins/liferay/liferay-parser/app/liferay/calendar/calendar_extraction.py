@@ -183,11 +183,13 @@ class AsyncCalendarExtraction(threading.Thread):
                                 "datasourceId": self.datasourceId,
                                 "contentId": str(calendar_booking['calendarBookingId']),
                                 "parsingDate": int(end_timestamp),
-                                "rawContent": str(calendar_booking['titleCurrentValue']
-                                                  + " " + calendar_booking['description']),
+                                "rawContent": str(calendar_booking['titleCurrentValue'])
+                                                  + " " + str(calendar_booking['description']),
                                 "datasourcePayload": json.dumps(datasource_payload)
                             }
                             
+                            self.status_logger.info(str(calendar_booking['titleCurrentValue'])
+                                                  + " " + str(calendar_booking['description']))
                             try:
                                 self.post_message(self.ingestion_url, payload, 10)
                             except requests.RequestException:
