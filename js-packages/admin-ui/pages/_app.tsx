@@ -23,31 +23,31 @@ import React, {
   useState,
 } from "react";
 import { useRouter } from "next/router";
-import { createUseStyles, ThemeProvider } from "react-jss";
+import { ThemeProvider } from "react-jss";
 import { ClayIconSpriteContext } from "@clayui/icon";
-import ClayAlert from "@clayui/alert";
 import {
   defaultTheme,
   loadPluginDepsIntoGlobal,
-  ThemeType,
 } from "@openk9/search-ui-components";
 
 import "@clayui/css/lib/css/atlas.css";
 import "../styles.css";
+import { Toasts } from "../components/Toasts";
+import { isServer } from "../state";
 
 loadPluginDepsIntoGlobal();
-
-const useStyles = createUseStyles((theme: ThemeType) => ({
-  alert: {
-    "& .alert-autofit-row": {
-      alignItems: "center",
-    },
-  },
-}));
 
 const ToastContext = createContext<{
   pushToast(label: string): void;
   toastItems: { label: string; key: string }[];
+  setToastItems: React.Dispatch<
+    React.SetStateAction<
+      {
+        label: string;
+        key: string;
+      }[]
+    >
+  >;
 } | null>(null);
 
 export function useToast() {
@@ -69,8 +69,6 @@ export default function MyApp({ Component, pageProps }) {
     }
   });
 
-  const classes = useStyles();
-
   const [toastItems, setToastItems] = useState<
     { label: string; key: string }[]
   >([]);
@@ -84,6 +82,7 @@ export default function MyApp({ Component, pageProps }) {
         ]);
       },
       toastItems,
+      setToastItems,
     }),
     [toastItems],
   );
@@ -94,24 +93,7 @@ export default function MyApp({ Component, pageProps }) {
       <ThemeProvider theme={defaultTheme}>
         <ClayIconSpriteContext.Provider value={basePath + "/icons.svg"}>
           <Component {...pageProps} />
-
-          <ClayAlert.ToastContainer>
-            {toastItems.map((value) => (
-              <ClayAlert
-                displayType="success"
-                className={classes.alert}
-                autoClose={5000}
-                key={value.key}
-                onClose={() => {
-                  setToastItems((prevItems) =>
-                    prevItems.filter((item) => item.key !== value.key),
-                  );
-                }}
-              >
-                {value.label}
-              </ClayAlert>
-            ))}
-          </ClayAlert.ToastContainer>
+          {!isServer && <Toasts />}
         </ClayIconSpriteContext.Provider>
       </ThemeProvider>
     </ToastContext.Provider>
