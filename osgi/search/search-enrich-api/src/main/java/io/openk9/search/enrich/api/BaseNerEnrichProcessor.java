@@ -166,13 +166,14 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 							objectNode.set(entity.getType(), arrayNode);
 						}
 
-						arrayNode.toArrayNode().add(
-							_jsonFactory
-								.createObjectNode()
-								.put(
-									"id", entity.getId())
-								.put("context", context)
-						);
+						ObjectNode result = _jsonFactory
+							.createObjectNode();
+
+						result.put("id", entity.getId());
+
+						result.put("context", context);
+
+						arrayNode.toArrayNode().add(result);
 
 					}
 
