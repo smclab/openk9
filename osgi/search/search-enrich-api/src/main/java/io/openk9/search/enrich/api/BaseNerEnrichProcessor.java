@@ -21,6 +21,7 @@ import io.openk9.core.api.constant.Constants;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.util.DatasourceContext;
 import io.openk9.entity.manager.client.api.EntityManagerClient;
+import io.openk9.entity.manager.model.Entity;
 import io.openk9.entity.manager.model.payload.Request;
 import io.openk9.entity.manager.model.payload.Response;
 import io.openk9.http.client.HttpClient;
@@ -128,21 +129,21 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 	}
 
 
-	private Mono<ArrayNode> _getEntityOrCreate(ObjectNode jsonNode) {
+	private Mono<ObjectNode> _getEntityOrCreate(ObjectNode jsonNode) {
 
 		return _entityManagerClient
 			.getOrAddEntities(
 				_jsonFactory.fromJsonNode(jsonNode, Request.class))
 			.map(responseList -> {
 
-				ArrayNode resultEntities = _jsonFactory.createArrayNode();
-
 				JsonNode entitiesJsonNode = jsonNode.get(entitiesField());
 
 				ArrayNode entitiesArrayNode = entitiesJsonNode.toArrayNode();
 
-				for (JsonNode node : entitiesArrayNode) {
+				ObjectNode objectNode = _jsonFactory.createObjectNode();
 
+				for (JsonNode node : entitiesArrayNode) {
+					
 					Optional<Response> responseOptional =
 						responseList
 							.stream()
@@ -156,20 +157,28 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 
 						Response response = responseOptional.get();
 
-						ObjectNode objectNode = _jsonFactory.createObjectNode();
+						Entity entity = response.getEntity();
 
-						objectNode.put(
-							"id", response.getEntity().getId());
+						JsonNode arrayNode = objectNode.get(entity.getType());
 
-						objectNode.put("context", context);
+						if (arrayNode == null) {
+							arrayNode = _jsonFactory.createArrayNode();
+							objectNode.set(entity.getType(), arrayNode);
+						}
 
-						resultEntities.add(objectNode);
+						((ArrayNode)arrayNode).add(
+							_jsonFactory
+								.createObjectNode()
+								.put(
+									"id", entity.getId())
+								.put("context", context)
+						);
 
 					}
 
 				}
 
-				return resultEntities;
+				return objectNode;
 
 			});
 
