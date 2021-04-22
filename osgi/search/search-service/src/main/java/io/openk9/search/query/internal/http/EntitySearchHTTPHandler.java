@@ -110,7 +110,7 @@ public class EntitySearchHTTPHandler implements HttpHandler {
 			Map<String, Object> sourceMap =
 				new HashMap<>(hit.getSourceAsMap());
 
-			sourceMap.put("entityId", String.valueOf(sourceMap.get("id")));
+			sourceMap.put("entityId", sourceMap.get("id"));
 
 			result.add(sourceMap);
 
@@ -141,20 +141,21 @@ public class EntitySearchHTTPHandler implements HttpHandler {
 	}
 
 	private BoolQueryBuilder _getBoolQueryBuilder(ObjectNode jsonNodes) {
-
 		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
 
 		for (Map.Entry<String, JsonNode> jsonField : jsonNodes.fields()) {
 
 			String key = jsonField.getKey();
-			String value = jsonField.getValue().asText();
 
 			switch (key) {
 				case ENTITY_ID: {
-					boolQuery.must(QueryBuilders.idsQuery().addIds(value));
+					long value = jsonField.getValue().asLong();
+					boolQuery.must(QueryBuilders.matchQuery("id", value));
 					break;
 				}
 				case ALL: {
+
+					String value = jsonField.getValue().asText();
 
 					BoolQueryBuilder allQuery = QueryBuilders.boolQuery();
 
@@ -173,6 +174,9 @@ public class EntitySearchHTTPHandler implements HttpHandler {
 					break;
 				}
 				default: {
+
+					String value = jsonField.getValue().asText();
+
 					boolQuery.must(
 						QueryBuilders.matchBoolPrefixQuery(
 							key, value.toLowerCase()));

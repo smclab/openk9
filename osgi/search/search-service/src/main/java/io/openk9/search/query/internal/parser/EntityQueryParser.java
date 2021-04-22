@@ -34,23 +34,28 @@ public class EntityQueryParser implements QueryParser {
 
 					String entityType = searchToken.getEntityType();
 
-					String EntityPath = "entities";
+					String nestEntityPath = "entities." + entityType;
 
-					String IdPath = EntityPath + ".id";
+					String nestIdPath = nestEntityPath + ".id";
 
-					BoolQueryBuilder boolQuery = QueryBuilders
+					BoolQueryBuilder innerNestBoolQuery = QueryBuilders
 						.boolQuery()
-						.must(_multiMatchValues(IdPath, ids));
+						.must(_multiMatchValues(nestIdPath, ids));
 
 					String keywordKey = searchToken.getKeywordKey();
 
 					if (keywordKey != null && !keywordKey.isEmpty()) {
-						boolQuery
+						innerNestBoolQuery
 							.must(QueryBuilders.matchQuery(
-								EntityPath + ".context", keywordKey));
+								nestEntityPath + ".context", keywordKey));
 					}
 
-					bool.filter(boolQuery);
+					bool.filter(
+						QueryBuilders.nestedQuery(
+							nestEntityPath,
+							innerNestBoolQuery,
+							ScoreMode.Max)
+					);
 
 				}
 			};
