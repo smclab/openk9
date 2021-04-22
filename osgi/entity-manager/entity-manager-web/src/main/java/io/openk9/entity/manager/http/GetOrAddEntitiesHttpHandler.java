@@ -38,6 +38,7 @@ import reactor.util.function.Tuples;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -111,7 +112,10 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 							Mono.just(er),
 							_entityGraphRepository
 								.getEntities(searchRequest)
-								.collectList(),
+								.collectList()
+								.map(candidates ->
+									cleanCandidates(er, candidates)
+								),
 							Map::entry);
 					}
 				)
@@ -138,15 +142,13 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 				Mono<Tuple2<EntityRequest, DocumentEntity>>
 					entityRequestDocumentEntityMono;
 
-				List<DocumentEntity> candidates = cleanCandidates(currentEntityRequest, entry.getValue());
-
 				if (_log.isInfoEnabled()) {
 					_log.info("doing disambiguation");
 				}
 
 				entityRequestDocumentEntityMono =
 					_disambiguate(
-						candidates,
+						entry.getValue(),
 						entityRequestListWithoutCurrentEntityRequest,
 						tenantId, currentEntityRequest);
 
@@ -278,12 +280,10 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 		EntityRequest entityRequest,
 		List<DocumentEntity> candidates) {
 
-		List<DocumentEntity> cleanedCandidates = new ArrayList<>();
-		
 		if (_log.isDebugEnabled()) {
-				_log.debug(
-					"entity " + entityRequest.getName() + " candidates: " + candidates);
-			}
+			_log.debug(
+				"entity " + entityRequest.getName() + " candidates: " + candidates);
+		}
 
 		if (!candidates.isEmpty()) {
 
@@ -326,19 +326,17 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 			}
 
 			if (bestScore > _scoreThreshold) {
-				cleanedCandidates.add(documentEntity);
-			}
-			else {
-				cleanedCandidates.addAll(candidates);
+				return Collections.singletonList(documentEntity);
 			}
 
 		}
 
-		if (_log.isDebugEnabled()) {
-					_log.debug("candidates empty");
-				}
+		if (candidates.isEmpty() && _log.isDebugEnabled()) {
+			_log.debug("candidates empty");
+		}
 
-		return cleanedCandidates;
+		return candidates;
+
 	}
 
 	private static double _levenshteinDistance(String x, String y) {
