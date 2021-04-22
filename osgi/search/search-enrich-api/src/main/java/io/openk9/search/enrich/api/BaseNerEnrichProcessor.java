@@ -143,7 +143,7 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 				ObjectNode objectNode = _jsonFactory.createObjectNode();
 
 				for (JsonNode node : entitiesArrayNode) {
-					
+
 					Optional<Response> responseOptional =
 						responseList
 							.stream()
@@ -166,7 +166,7 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 							objectNode.set(entity.getType(), arrayNode);
 						}
 
-						((ArrayNode)arrayNode).add(
+						arrayNode.toArrayNode().add(
 							_jsonFactory
 								.createObjectNode()
 								.put(
