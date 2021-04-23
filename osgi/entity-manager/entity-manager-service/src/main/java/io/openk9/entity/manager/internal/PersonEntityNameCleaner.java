@@ -28,7 +28,7 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 		String entityName) {
 
 		return QueryBuilders.boolQuery()
-			.must(QueryBuilders.matchQuery(Constants.ENTITY_NAME_FIELD, entityName).operator(Operator.AND))
+			.must(QueryBuilders.matchQuery(Constants.ENTITY_NAME_FIELD, entityName))
 			.must(QueryBuilders.matchQuery(Constants.ENTITY_TYPE_FIELD, getEntityType()));
 	}
 }
