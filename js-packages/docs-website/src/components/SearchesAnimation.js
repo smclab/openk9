@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useState } from "react";
-import { Canvas, useLoader } from "react-three-fiber";
+import { Canvas, useLoader } from "@react-three/fiber";
 import { softShadows } from "@react-three/drei";
 import { useTrail } from "@react-spring/core";
 import { a } from "@react-spring/three";
@@ -243,11 +243,11 @@ export function SearchesAnimation() {
     <div className={styles.root}>
       <div className={styles.anim}>
         <Canvas
-          colorManagement={false}
+          linear={true}
           camera={{ position: [3, 4, 9], fov: 20 }}
-          shadowMap
-          invalidateFrameloop
-          pixelRatio={[1, 2]}
+          shadows
+          frameloop="demand"
+          dpr={[1, 2]}
           onCreated={({ camera }) => {
             camera.lookAt(0, 1, 0);
           }}

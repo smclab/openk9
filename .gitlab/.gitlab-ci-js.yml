@@ -54,6 +54,10 @@ Build Tagged JS Docker Images:
     - docker tag search-standalone-frontend:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-standalone-frontend:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/search-standalone-frontend:${CI_COMMIT_REF_NAME}
     
+    - docker build -t docs-website:${CI_COMMIT_REF_NAME} -f js-packages/docs-website/Dockerfile .
+    - docker tag docs-website:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/docs-website:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/docs-website:${CI_COMMIT_REF_NAME}
+    
     - docker build -t search-admin:${CI_COMMIT_REF_NAME} -f js-packages/admin-ui/Dockerfile .
     - docker tag search-admin:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-admin:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/search-admin:${CI_COMMIT_REF_NAME}
@@ -77,6 +81,10 @@ Build Latest JS Docker Images:
     - docker build -t search-standalone-frontend:latest -f js-packages/search-standalone-frontend/Dockerfile .
     - docker tag search-standalone-frontend:latest $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
     - docker push $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
+    
+    - docker build -t docs-website:latest -f js-packages/docs-website/Dockerfile .
+    - docker tag docs-website:latest $CI_REGISTRY_NAME/openk9/docs-website:latest
+    - docker push $CI_REGISTRY_NAME/openk9/docs-website:latest
     
     - docker build -t search-admin:latest -f js-packages/admin-ui/Dockerfile .
     - docker tag search-admin:latest $CI_REGISTRY_NAME/openk9/search-admin:latest
