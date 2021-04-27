@@ -153,3 +153,11 @@ jobs:
           file: js-packages/admin-logs-service/Dockerfile
           push: true
           tags: smclab/openk9-admin-logs-service:${{ steps.prep.outputs.version }}
+      -
+        name: Build and push Docs Website image
+        id: docker_build_docs_website
+        uses: docker/build-push-action@v2
+        with:
+          file: js-packages/docs-website/Dockerfile
+          push: true
+          tags: smclab/openk9-docs-website:${{ steps.prep.outputs.version }}
