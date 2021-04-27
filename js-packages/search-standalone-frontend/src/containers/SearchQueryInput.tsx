@@ -102,23 +102,25 @@ export function SearchQueryInput() {
   return (
     <div className={clsx(classes.root, open && classes.rootOpen)}>
       <div className={classes.centering}>
-        <MultipleSelectionBar>
-          <MultipleSelectionBarItem
-            selected={selectedDataType === "any"}
-            onClick={() => setSelectedDataType("any")}
-          >
-            All
-          </MultipleSelectionBarItem>
-          {tenantConfig.querySourceBarShortcuts.map((dt) => (
+        {tenantConfig.querySourceBarShortcuts && (
+          <MultipleSelectionBar>
             <MultipleSelectionBarItem
-              key={dt.id}
-              selected={selectedDataType === dt.id}
-              onClick={() => setSelectedDataType(dt.id)}
+              selected={selectedDataType === "any"}
+              onClick={() => setSelectedDataType("any")}
             >
-              {dt.text}
+              All
             </MultipleSelectionBarItem>
-          ))}
-        </MultipleSelectionBar>
+            {tenantConfig.querySourceBarShortcuts.map((dt) => (
+              <MultipleSelectionBarItem
+                key={dt.id}
+                selected={selectedDataType === dt.id}
+                onClick={() => setSelectedDataType(dt.id)}
+              >
+                {dt.text}
+              </MultipleSelectionBarItem>
+            ))}
+          </MultipleSelectionBar>
+        )}
 
         <div className="input-group">
           <div className={"input-group-item"}>

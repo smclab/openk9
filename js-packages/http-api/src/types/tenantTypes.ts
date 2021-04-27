@@ -23,9 +23,7 @@ export type Tenant = {
 };
 
 export type TenantJSONConfig = {
-  querySourceBarShortcuts: { id: string; text: string }[];
+  querySourceBarShortcuts?: { id: string; text: string }[];
 };
 
-export const emptyTenantJSONConfig: TenantJSONConfig = {
-  querySourceBarShortcuts: [],
-};
+export const emptyTenantJSONConfig: TenantJSONConfig = {};
