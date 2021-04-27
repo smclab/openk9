@@ -46,7 +46,6 @@ export function DataSourceNavBar({
   const classes = useStyles();
 
   const { route } = useRouter();
-  console.log(route.endsWith("/settings"));
 
   return (
     <ClayNavigationBar triggerLabel="Configuration" className={classes.navMenu}>

@@ -55,15 +55,19 @@ function AddDataSource() {
     driverServiceName: "",
   });
 
+  const { loginValid, loginInfo } = useLoginCheck();
+  if (!loginValid) return <span className="loading-animation" />;
+
+  if (!tenantId) {
+    return null;
+  }
+
   const fullDataSourceInfo: DataSourceInfo = {
     ...editingDataSource,
     datasourceId: -1,
     lastIngestionDate: 0,
     tenantId: parseInt(tenantId),
   };
-
-  const { loginValid, loginInfo } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
 
   async function handleSave() {
     await postDataSource(fullDataSourceInfo, loginInfo);

@@ -118,8 +118,10 @@ function MenuEntry({
   noSub?: boolean;
 }) {
   const classes = useStyles();
-  const enabled = useRouter().route === route;
-  const subEnabled = useRouter().route.startsWith(route) && !enabled && !noSub;
+  const { route: currentRoute } = useRouter();
+  const enabled = currentRoute === route;
+  const subEnabled =
+    route && currentRoute.startsWith(route) && !enabled && !noSub;
 
   return (
     <Link href={path} passHref>

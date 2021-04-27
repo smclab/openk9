@@ -62,7 +62,13 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-function AddModal({ visible, handleClose }) {
+function AddModal({
+  visible,
+  handleClose,
+}: {
+  visible: boolean;
+  handleClose(): void;
+}) {
   const { observer, onClose } = useModal({
     onClose: handleClose,
   });
@@ -73,7 +79,7 @@ function AddModal({ visible, handleClose }) {
     jsonConfig: "{}",
   });
 
-  const [errorState, setErrorState] = useState(null);
+  const [errorState, setErrorState] = useState<any>(null);
 
   const loginInfo = useLoginInfo();
 

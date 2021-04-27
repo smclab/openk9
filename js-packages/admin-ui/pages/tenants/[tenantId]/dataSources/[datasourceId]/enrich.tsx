@@ -77,7 +77,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-function getElementsReactFlow(dsEnrichItems, classes) {
+function getElementsReactFlow(dsEnrichItems: any, classes: any) {
   let count = 0;
   const elements = dsEnrichItems && [
     {
@@ -88,8 +88,8 @@ function getElementsReactFlow(dsEnrichItems, classes) {
       position: { x: 20, y: 80 },
     },
     ...dsEnrichItems
-      .sort((a, b) => a._position - b._position)
-      .map((item) => {
+      .sort((a: any, b: any) => a._position - b._position)
+      .map((item: any) => {
         count++;
         return {
           id: `${count}`,
@@ -161,19 +161,18 @@ function Inner({ datasourceId }: { datasourceId: number }) {
   const dsEnrichItems =
     enrichItem &&
     dsEnrichPipeline &&
-    dsEnrichPipeline.enrichPipelineId &&
     enrichItem.filter(
       (e) => e.enrichPipelineId === dsEnrichPipeline.enrichPipelineId,
     );
 
   const elements = getElementsReactFlow(dsEnrichItems, classes);
 
-  const onElementClick = (event, element) => {
-    console.log(element.data.enrichItemId);
-    let id = element.data.enrichItemId && element.data.enrichItemId;
+  function onElementClick(event: any, element: any) {
+    if (!dsEnrichItems) return;
+    const id = element.data.enrichItemId && element.data.enrichItemId;
     const item = dsEnrichItems.filter((item) => item.enrichItemId === id)[0];
     setEnrichItemToView(item);
-  };
+  }
 
   if (!datasource) {
     return <span className="loading-animation" />;
@@ -248,6 +247,8 @@ function DSEnrich() {
   const { loginValid, loginInfo } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
 
+  if (!tenantId || !datasourceId) return null;
+
   return (
     <>
       <Layout
@@ -260,7 +261,6 @@ function DSEnrich() {
         ]}
         breadcrumbsControls={
           <DataSourceNavBar
-            // onReindex={() => setIsVisibleModal(true)}
             onReindex={() => {}}
             tenantId={parseInt(tenantId)}
             datasourceId={parseInt(datasourceId)}

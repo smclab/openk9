@@ -22,6 +22,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { AppPropsType } from "next/dist/next-server/lib/utils";
 import { useRouter } from "next/router";
 import { ThemeProvider } from "react-jss";
 import { ClayIconSpriteContext } from "@clayui/icon";
@@ -61,10 +62,10 @@ export function useToast() {
   return ctxValue;
 }
 
-export default function MyApp({ Component, pageProps }) {
+export default function MyApp({ Component, pageProps }: AppPropsType) {
   useEffect(() => {
     const style = document.getElementById("server-side-styles");
-    if (style) {
+    if (style && style.parentNode) {
       style.parentNode.removeChild(style);
     }
   });

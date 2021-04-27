@@ -16,6 +16,7 @@
  */
 
 import { useState } from "react";
+import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayForm, { ClayInput } from "@clayui/form";
 import { ThemeType, Brand } from "@openk9/search-ui-components";
@@ -87,7 +88,7 @@ function Login() {
         <Brand className={classes.logo} size={40} />
 
         <ClayForm onSubmit={handleSubmit} style={{ alignSelf: "stretch" }}>
-          <ClayForm.Group className={error && "has-error"}>
+          <ClayForm.Group className={clsx(error && "has-error")}>
             <label htmlFor="username">Username</label>
             <ClayInput
               id="username"
@@ -97,7 +98,7 @@ function Login() {
             />
           </ClayForm.Group>
 
-          <ClayForm.Group className={error && "has-error"}>
+          <ClayForm.Group className={clsx(error && "has-error")}>
             <label htmlFor="password">Password</label>
             <ClayInput
               id="password"

@@ -56,9 +56,11 @@ function Inner({
 
   const loginInfo = useLoginInfo();
 
-  const { data: datasource, mutate } = useSWR(
-    `/api/v2/datasource/${datasourceId}`,
-    () => !isNaN(datasourceId) && getDataSourceInfo(datasourceId, loginInfo),
+  const {
+    data: datasource,
+    mutate,
+  } = useSWR(`/api/v2/datasource/${datasourceId}`, () =>
+    getDataSourceInfo(datasourceId, loginInfo),
   );
 
   if (!datasource) {
@@ -82,9 +84,14 @@ function DSDataBrowser() {
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
+  const dataSourceInt = parseInt(datasourceId || "NaN");
 
   const { loginValid, loginInfo } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
+
+  if (isNaN(dataSourceInt) || !tenantId || !datasourceId) {
+    return null;
+  }
 
   return (
     <>
@@ -103,15 +110,12 @@ function DSDataBrowser() {
           <DataSourceNavBar
             onReindex={() => {}}
             tenantId={parseInt(tenantId)}
-            datasourceId={parseInt(datasourceId)}
+            datasourceId={dataSourceInt}
           />
         }
       >
         <div className={classes.root}>
-          <Inner
-            tenantId={parseInt(tenantId)}
-            datasourceId={parseInt(datasourceId)}
-          />
+          <Inner tenantId={parseInt(tenantId)} datasourceId={dataSourceInt} />
         </div>
       </Layout>
     </>

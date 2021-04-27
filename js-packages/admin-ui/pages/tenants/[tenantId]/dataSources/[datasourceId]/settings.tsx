@@ -85,9 +85,11 @@ function Inner({
 
   const loginInfo = useLoginInfo();
 
-  const { data: datasource, mutate } = useSWR(
-    `/api/v2/datasource/${datasourceId}`,
-    () => !isNaN(datasourceId) && getDataSourceInfo(datasourceId, loginInfo),
+  const {
+    data: datasource,
+    mutate,
+  } = useSWR(`/api/v2/datasource/${datasourceId}`, () =>
+    getDataSourceInfo(datasourceId, loginInfo),
   );
 
   const [
@@ -100,9 +102,13 @@ function Inner({
   }
 
   async function handleSave() {
-    mutate(editingDataSource);
-    mutate(await onSaveDataSource(datasourceId, datasource, editingDataSource));
-    setEditingDataSource(null);
+    if (editingDataSource && datasource) {
+      mutate(editingDataSource);
+      mutate(
+        await onSaveDataSource(datasourceId, datasource, editingDataSource),
+      );
+      setEditingDataSource(null);
+    }
   }
 
   if (editingDataSource && !isServer) {
@@ -180,12 +186,18 @@ function DSSettings() {
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
+  const datasourceInt = parseInt(datasourceId || "NaN");
+
   const [isVisibleModal, setIsVisibleModal] = useState(false);
 
   const { pushToast } = useToast();
 
   const { loginValid, loginInfo } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
+
+  if (isNaN(datasourceInt) || !tenantId || !datasourceId) {
+    return null;
+  }
 
   async function reindex(ids: number) {
     const resp = await triggerReindex([ids], loginInfo);
@@ -201,8 +213,12 @@ function DSSettings() {
     const newDatasource: Partial<DataSourceInfo> = {};
 
     Object.keys(prevDataSource).forEach((key) => {
-      if (prevDataSource[key] !== editedDatasource[key]) {
-        newDatasource[key] = editedDatasource[key];
+      if (
+        prevDataSource[key as keyof DataSourceInfo] !==
+        editedDatasource[key as keyof DataSourceInfo]
+      ) {
+        (newDatasource as any)[key] =
+          editedDatasource[key as keyof DataSourceInfo];
       }
     });
 
@@ -233,14 +249,14 @@ function DSSettings() {
           <DataSourceNavBar
             onReindex={() => setIsVisibleModal(true)}
             tenantId={parseInt(tenantId)}
-            datasourceId={parseInt(datasourceId)}
+            datasourceId={datasourceInt}
           />
         }
       >
         <div className={classes.root}>
           <Inner
             tenantId={parseInt(tenantId)}
-            datasourceId={parseInt(datasourceId)}
+            datasourceId={datasourceInt}
             onSaveDataSource={saveDataSource}
           />
         </div>

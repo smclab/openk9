@@ -50,7 +50,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-export function EditDataSource<T extends Partial<DataSourceInfo>>({
+export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
   editingDataSource,
   onChange,
   onAbort,
@@ -89,11 +89,9 @@ export function EditDataSource<T extends Partial<DataSourceInfo>>({
   );
   const currentPlugin =
     currentPluginInfo &&
-    plugins.find(([id]) => id === currentPluginInfo.pluginId)[2];
+    plugins.find(([id]) => id === currentPluginInfo.pluginId);
   const SettingsRenderer =
-    (currentPlugin &&
-      currentPlugin?.dataSourceAdminInterfacePath?.settingsRenderer) ||
-    null;
+    (currentPlugin && currentPlugin[2].adminPlugin?.settingsRenderer) || null;
 
   const [
     minutesValue,
@@ -176,8 +174,7 @@ export function EditDataSource<T extends Partial<DataSourceInfo>>({
                   );
                   const plugin = pluginRecord && pluginRecord[2];
                   const displayName = plugin?.displayName;
-                  const Icon =
-                    plugin?.dataSourceAdminInterfacePath?.iconRenderer;
+                  const Icon = plugin?.adminPlugin?.iconRenderer;
                   return (
                     <AutocompleteItemIcon
                       key={dsn}

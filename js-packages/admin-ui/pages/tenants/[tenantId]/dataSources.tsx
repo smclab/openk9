@@ -261,7 +261,7 @@ function Inside({
     [data, tenantId],
   );
 
-  if (!data) {
+  if (!data || !tenantDSs) {
     return <span className="loading-animation" />;
   }
 
@@ -273,10 +273,10 @@ function Inside({
   );
 
   function selectAll() {
-    const selectedAll = selectedIds.length === tenantDSs.length;
+    const selectedAll = selectedIds.length === tenantDSs?.length;
     if (selectedAll) {
       setSelectedIds([]);
-    } else {
+    } else if (tenantDSs) {
       setSelectedIds(tenantDSs.map((d) => d.datasourceId));
     }
   }
@@ -307,6 +307,9 @@ function Inside({
   // }
 
   async function toggle(ids: number[]) {
+    if (!tenantDSs) return;
+    // await deleteDataSource(dsId, loginInfo);
+    // mutate(`/api/v2/datasource`);
     const selected = tenantDSs.filter((ds) => ids.includes(ds.datasourceId));
     const targetState =
       selected.map((ds) => ds.active).filter(Boolean).length <=
@@ -465,6 +468,8 @@ function DataSources() {
 
   const { loginValid, loginInfo } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
+
+  if (!tenantId) return null;
 
   async function reindex(ids: number[]) {
     const resp = await triggerReindex(ids, loginInfo);

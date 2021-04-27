@@ -18,12 +18,12 @@
 import React, { Suspense, useState } from "react";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
-import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { Layout } from "../../../components/Layout";
-import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
-import { putTenant, getTenant } from "@openk9/http-api";
 import useSWR, { mutate } from "swr";
 import { ClayInput } from "@clayui/form";
+import { firstOrString, ThemeType } from "@openk9/search-ui-components";
+import { putTenant, getTenant, Tenant } from "@openk9/http-api";
+import { Layout } from "../../../components/Layout";
+import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
 import { useToast } from "../../_app";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
@@ -71,7 +71,13 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-function EditInside({ data, setIsEditMode }) {
+function EditInside({
+  data,
+  setIsEditMode,
+}: {
+  data: Tenant;
+  setIsEditMode(mode: boolean): void;
+}) {
   const classes = useStyles();
   const { pushToast } = useToast();
   const router = useRouter();
@@ -198,6 +204,8 @@ function TenantSettings() {
 
   const { loginValid } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
+
+  if (!tenantId) return null;
 
   return (
     <>

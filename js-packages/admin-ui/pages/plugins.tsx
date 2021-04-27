@@ -67,7 +67,13 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-function AddModal({ visible, handleClose }) {
+function AddModal({
+  visible,
+  handleClose,
+}: {
+  visible: boolean;
+  handleClose(): void;
+}) {
   const classes = useStyles();
 
   const { observer, onClose } = useModal({

@@ -22,8 +22,9 @@ import ansicolor from "ansicolor";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import { getContainerLogs, getContainerStatus } from "@openk9/http-api";
 import { Layout } from "../../components/Layout";
+import { useLoginCheck } from "../../state";
 
-const convertStylesStringToObject = (stringStyles) =>
+const convertStylesStringToObject = (stringStyles: string) =>
   typeof stringStyles === "string"
     ? stringStyles.split(";").reduce((acc, style) => {
         const colonPosition = style.indexOf(":");
@@ -88,15 +89,19 @@ function LogId() {
   const { query } = useRouter();
   const contId = query.id && firstOrString(query.id);
 
+  const { loginValid, loginInfo } = useLoginCheck();
+
   const { data: info } = useSWR(`/logs/status`, getContainerStatus, {
     refreshInterval: 10000,
   });
 
   const { data: log } = useSWR(
     `/logs/status/${contId}/${N}`,
-    () => getContainerLogs(contId, N),
+    () => getContainerLogs(contId || "", N, loginInfo),
     { refreshInterval: 5000 },
   );
+
+  if (!loginValid || !log) return <span className="loading-animation" />;
 
   const parsed = ansicolor.parse(log);
 
@@ -104,7 +109,7 @@ function LogId() {
     <Layout
       breadcrumbsPath={[
         { label: "Logs", path: "/logs" },
-        { label: (info || []).find((e) => e.ID === contId)?.Names },
+        { label: (info || []).find((e) => e.ID === contId)?.Names || "" },
       ]}
     >
       <div className={classes.container}>
