@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docs-website-deployment
+  namespace: k9-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docs-website
+  template:
+    metadata:
+      labels:
+        app: docs-website
+    spec:
+      containers:
+      - name: docs-website
+        image: smclab/openk9-docs-website:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docs-website-entrypoint
+  namespace: k9-staging
+spec:
+  type: LoadBalancer
+  selector:
+    app: docs-website
+  ports:
+  - port: 80
+    targetPort: 80
