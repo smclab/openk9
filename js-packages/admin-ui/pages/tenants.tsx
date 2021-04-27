@@ -118,7 +118,7 @@ function AddModal({ visible, handleClose }) {
                 errorState && !newTenant.name && "has-error",
               )}
             >
-              <label>Name</label>
+              <label htmlFor="name">Name</label>
               <input
                 className="form-control"
                 id="name"
@@ -139,7 +139,7 @@ function AddModal({ visible, handleClose }) {
                 errorState && !newTenant.virtualHost && "has-error",
               )}
             >
-              <label>Virtual Host</label>
+              <label htmlFor="virtualHost">Virtual Host</label>
               <input
                 className="form-control"
                 id="virtualHost"

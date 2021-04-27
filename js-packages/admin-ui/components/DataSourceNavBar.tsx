@@ -95,14 +95,14 @@ export function DataSourceNavBar({
       <ClayNavigationBar.Item active={route.endsWith("/enrich")}>
         <ClayTooltipProvider>
           <div>
-            <a
+            <button
               className={clsx("btn btn-primary", classes.navActionButton)}
               data-tooltip-align="bottom"
               title="Reindex Data Source"
               onClick={onReindex}
             >
               <ClayIcon symbol="reload" />
-            </a>
+            </button>
           </div>
         </ClayTooltipProvider>
       </ClayNavigationBar.Item>

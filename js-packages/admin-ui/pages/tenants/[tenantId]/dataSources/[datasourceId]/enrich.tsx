@@ -77,9 +77,8 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-function getElementsReactFlow(dsEnrichItems) {
-  const classes = useStyles();
-  var count = 0;
+function getElementsReactFlow(dsEnrichItems, classes) {
+  let count = 0;
   const elements = dsEnrichItems && [
     {
       id: "0",
@@ -120,7 +119,7 @@ function getElementsReactFlow(dsEnrichItems) {
   ];
 
   if (elements && elements.length !== 0) {
-    for (var i = 1; i <= count + 1; i++) {
+    for (let i = 1; i <= count + 1; i++) {
       elements.push({
         id: `line-${i - 1}-${i}`,
         source: `${i - 1}`,
@@ -167,11 +166,11 @@ function Inner({ datasourceId }: { datasourceId: number }) {
       (e) => e.enrichPipelineId === dsEnrichPipeline.enrichPipelineId,
     );
 
-  const elements = getElementsReactFlow(dsEnrichItems);
+  const elements = getElementsReactFlow(dsEnrichItems, classes);
 
   const onElementClick = (event, element) => {
     console.log(element.data.enrichItemId);
-    var id = element.data.enrichItemId && element.data.enrichItemId;
+    let id = element.data.enrichItemId && element.data.enrichItemId;
     const item = dsEnrichItems.filter((item) => item.enrichItemId === id)[0];
     setEnrichItemToView(item);
   };

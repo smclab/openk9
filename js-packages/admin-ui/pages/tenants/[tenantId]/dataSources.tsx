@@ -454,6 +454,7 @@ function Controls({
 
 function DataSources() {
   const classes = useStyles();
+  const { pushToast } = useToast();
 
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
@@ -464,8 +465,6 @@ function DataSources() {
 
   const { loginValid, loginInfo } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
-
-  const { pushToast } = useToast();
 
   async function reindex(ids: number[]) {
     const resp = await triggerReindex(ids, loginInfo);
