@@ -17,7 +17,7 @@
 
 import create from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { useLayoutEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/router";
 import {
   doLoginRefresh,
@@ -83,7 +83,7 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
   //
   // Login page redirect logic
   //
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (isLoginPage && loginValid) {
       // login page and login already done, redirect
       if (decodeURIComponent(redirect).startsWith("/login")) {
@@ -100,7 +100,7 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
   //
   // Refresh loop logic
   //
-  useLayoutEffect(() => {
+  useEffect(() => {
     let refreshTimeout: ReturnType<typeof setTimeout> | null;
 
     async function refreshStep() {
