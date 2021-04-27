@@ -18,6 +18,7 @@
 import React from "react";
 import clsx from "clsx";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { createUseStyles } from "react-jss";
 import ClayNavigationBar from "@clayui/navigation-bar";
 import ClayIcon from "@clayui/icon";
@@ -44,23 +45,54 @@ export function DataSourceNavBar({
 }) {
   const classes = useStyles();
 
+  const { route } = useRouter();
+  console.log(route.endsWith("/settings"));
+
   return (
     <ClayNavigationBar triggerLabel="Configuration" className={classes.navMenu}>
-      <ClayNavigationBar.Item active>
-        <a className="nav-link">Configuration</a>
+      <ClayNavigationBar.Item>
+        <Link
+          href={`/tenants/${tenantId}/dataSources/${datasourceId}/settings`}
+          passHref
+        >
+          <a
+            className={clsx(
+              "nav-link",
+              route.endsWith("/settings") && "active",
+            )}
+          >
+            Configuration
+          </a>
+        </Link>
       </ClayNavigationBar.Item>
       <ClayNavigationBar.Item>
-        <a className="nav-link">Data Browser</a>
+        <Link
+          href={`/tenants/${tenantId}/dataSources/${datasourceId}/dataBrowser`}
+          passHref
+        >
+          <a
+            className={clsx(
+              "nav-link",
+              route.endsWith("/dataBrowser") && "active",
+            )}
+          >
+            Data Browser
+          </a>
+        </Link>
       </ClayNavigationBar.Item>
       <ClayNavigationBar.Item>
         <Link
           href={`/tenants/${tenantId}/dataSources/${datasourceId}/enrich`}
           passHref
         >
-          <a className="nav-link">Enrich</a>
+          <a
+            className={clsx("nav-link", route.endsWith("/enrich") && "active")}
+          >
+            Enrich
+          </a>
         </Link>
       </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
+      <ClayNavigationBar.Item active={route.endsWith("/enrich")}>
         <ClayTooltipProvider>
           <div>
             <a

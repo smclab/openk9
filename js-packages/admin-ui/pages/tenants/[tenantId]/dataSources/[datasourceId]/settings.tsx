@@ -61,11 +61,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     padding: theme.spacingUnit * 2,
     borderRadius: theme.borderRadius,
   },
-  alert: {
-    "& .alert-autofit-row": {
-      alignItems: "center",
-    },
-  },
   settingHeader: {
     display: "flex",
     justifyContent: "space-between",

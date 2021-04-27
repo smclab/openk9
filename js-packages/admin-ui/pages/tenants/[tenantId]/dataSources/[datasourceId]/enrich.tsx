@@ -16,21 +16,20 @@
  */
 
 import React, { useState } from "react";
-import ReactFlow from "react-flow-renderer";
+import useSWR from "swr";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
-import ClayNavigationBar from "@clayui/navigation-bar";
+import ReactFlow from "react-flow-renderer";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { Layout } from "../../../../../components/Layout";
 import {
   getDataSourceInfo,
   getEnrichItem,
   getEnrichPipeline,
   EnrichItem,
 } from "@openk9/http-api";
-import Link from "next/link";
-import useSWR from "swr";
+import { Layout } from "../../../../../components/Layout";
 import { useLoginCheck, useLoginInfo } from "../../../../../state";
+import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -48,11 +47,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
   navMenu: {
     backgroundColor: "transparent",
-  },
-  alert: {
-    "& .alert-autofit-row": {
-      alignItems: "center",
-    },
   },
   reactFlowContainer: {
     height: "200px",
@@ -140,40 +134,6 @@ function getElementsReactFlow(dsEnrichItems) {
     return [];
   }
   return elements;
-}
-
-function Controls({
-  tenantId,
-  datasourceId,
-}: {
-  tenantId: number;
-  datasourceId: number;
-}) {
-  const classes = useStyles();
-  return (
-    <ClayNavigationBar triggerLabel="Configuration" className={classes.navMenu}>
-      <ClayNavigationBar.Item>
-        <Link
-          href={`/tenants/${tenantId}/dataSources/${datasourceId}/settings`}
-          passHref
-        >
-          <a className="nav-link">Configuration</a>
-        </Link>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <a className="nav-link">Data Browser</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item active>
-        <a className="nav-link">Enrich</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <a className="nav-link">Schedule</a>
-      </ClayNavigationBar.Item>
-      <ClayNavigationBar.Item>
-        <a className="nav-link">ACL</a>
-      </ClayNavigationBar.Item>
-    </ClayNavigationBar>
-  );
 }
 
 function Inner({ datasourceId }: { datasourceId: number }) {
@@ -300,7 +260,9 @@ function DSEnrich() {
           { label: "Enrich", path: `/tenants/${tenantId}/dataSources/enrich` },
         ]}
         breadcrumbsControls={
-          <Controls
+          <DataSourceNavBar
+            // onReindex={() => setIsVisibleModal(true)}
+            onReindex={() => {}}
             tenantId={parseInt(tenantId)}
             datasourceId={parseInt(datasourceId)}
           />
