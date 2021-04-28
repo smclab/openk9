@@ -51,7 +51,7 @@ function AddDataSource() {
     description: "",
     jsonConfig: "{}",
     name: "",
-    scheduling: "* */30 * 1 1 *",
+    scheduling: "0 */30 * ? * *",
     driverServiceName: "",
   });
 
