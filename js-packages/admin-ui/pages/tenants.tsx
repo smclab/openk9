@@ -31,7 +31,13 @@ import {
   ThemeType,
   UsersIcon,
 } from "@openk9/search-ui-components";
-import { deleteTenant, getTenants, postTenant, Tenant } from "@openk9/http-api";
+import {
+  deleteTenant,
+  getTenants,
+  LoginInfo,
+  postTenant,
+  Tenant,
+} from "@openk9/http-api";
 
 import { Layout } from "../components/Layout";
 import { useLoginCheck, useLoginInfo } from "../state";
@@ -177,12 +183,109 @@ function AddModal({
   );
 }
 
-function TBody({ searchValue }: { searchValue: string }) {
+function TRow({
+  ten,
+  loginInfo,
+}: {
+  ten: Tenant;
+  loginInfo: LoginInfo | null;
+}) {
   const classes = useStyles();
   const { pushToast } = useToast();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  async function handleDelete(tenantId: number) {
+    await deleteTenant(tenantId, loginInfo);
+    mutate(`/api/v2/tenant`);
+    pushToast("Delete Success");
+  }
+
+  return (
+    <tr>
+      <td>{ten.tenantId}</td>
+      <td className="table-cell-expand ">
+        <p className="table-list-title">{ten.name}</p>
+      </td>
+      <td className="table-cell-expand">{ten.virtualHost}</td>
+      <td>
+        <div className={classes.actions}>
+          {/* <ClayTooltipProvider>
+        <div>
+          <Link href={`/tenants/${ten.tenantId}/users/`} passHref>
+            <a
+              className="component-action quick-action-item"
+              role="button"
+              data-tooltip-align="top"
+              title="Users"
+            >
+              <UsersIcon size={16} />
+            </a>
+          </Link>
+        </div>
+      </ClayTooltipProvider> */}
+          <ClayTooltipProvider>
+            <div>
+              <Link href={`/tenants/${ten.tenantId}/dataSources/`} passHref>
+                <a
+                  className="component-action quick-action-item"
+                  role="button"
+                  data-tooltip-align="top"
+                  title="Data Sources"
+                >
+                  <DataSourceIcon size={16} />
+                </a>
+              </Link>
+            </div>
+          </ClayTooltipProvider>
+          <ClayTooltipProvider>
+            <div>
+              <Link href={`/tenants/${ten.tenantId}/settings/`} passHref>
+                <a
+                  className="component-action quick-action-item"
+                  role="button"
+                  data-tooltip-align="top"
+                  title="Tenant Settings"
+                >
+                  <SettingsIcon size={16} />
+                </a>
+              </Link>
+            </div>
+          </ClayTooltipProvider>
+          <ClayDropDown
+            trigger={
+              <button className="component-action">
+                <ClayIcon symbol="ellipsis-v" />
+              </button>
+            }
+            active={menuOpen}
+            onActiveChange={setMenuOpen}
+            alignmentPosition={3}
+          >
+            <ClayDropDown.ItemList>
+              <ClayDropDown.Item onClick={() => setDeleting(true)}>
+                Delete
+              </ClayDropDown.Item>
+              {deleting && (
+                <ConfirmationModal
+                  title="Delete Tenant"
+                  message="Are you sure you want to delete this tenant? All data will be lost!"
+                  abortText="Abort"
+                  confirmText="Delete"
+                  onCloseModal={() => setDeleting(false)}
+                  onConfirmModal={() => handleDelete(ten.tenantId)}
+                />
+              )}
+            </ClayDropDown.ItemList>
+          </ClayDropDown>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function TBody({ searchValue }: { searchValue: string }) {
   const loginInfo = useLoginInfo();
 
   const { data } = useSWR(`/api/v2/tenant`, () => getTenants(loginInfo));
@@ -198,94 +301,10 @@ function TBody({ searchValue }: { searchValue: string }) {
       d.virtualHost.includes(searchValue),
   );
 
-  async function handleDelete(tenantId: number) {
-    await deleteTenant(tenantId, loginInfo);
-    mutate(`/api/v2/tenant`);
-    pushToast("Delete Success");
-  }
-
   return (
     <tbody>
       {filteredData.map((ten) => (
-        <tr key={ten.tenantId}>
-          <td>{ten.tenantId}</td>
-          <td className="table-cell-expand ">
-            <p className="table-list-title">{ten.name}</p>
-          </td>
-          <td className="table-cell-expand">{ten.virtualHost}</td>
-          <td>
-            <div className={classes.actions}>
-              {/* <ClayTooltipProvider>
-                <div>
-                  <Link href={`/tenants/${ten.tenantId}/users/`} passHref>
-                    <a
-                      className="component-action quick-action-item"
-                      role="button"
-                      data-tooltip-align="top"
-                      title="Users"
-                    >
-                      <UsersIcon size={16} />
-                    </a>
-                  </Link>
-                </div>
-              </ClayTooltipProvider> */}
-              <ClayTooltipProvider>
-                <div>
-                  <Link href={`/tenants/${ten.tenantId}/dataSources/`} passHref>
-                    <a
-                      className="component-action quick-action-item"
-                      role="button"
-                      data-tooltip-align="top"
-                      title="Data Sources"
-                    >
-                      <DataSourceIcon size={16} />
-                    </a>
-                  </Link>
-                </div>
-              </ClayTooltipProvider>
-              <ClayTooltipProvider>
-                <div>
-                  <Link href={`/tenants/${ten.tenantId}/settings/`} passHref>
-                    <a
-                      className="component-action quick-action-item"
-                      role="button"
-                      data-tooltip-align="top"
-                      title="Tenant Settings"
-                    >
-                      <SettingsIcon size={16} />
-                    </a>
-                  </Link>
-                </div>
-              </ClayTooltipProvider>
-              <ClayDropDown
-                trigger={
-                  <button className="component-action">
-                    <ClayIcon symbol="ellipsis-v" />
-                  </button>
-                }
-                active={menuOpen}
-                onActiveChange={setMenuOpen}
-                alignmentPosition={3}
-              >
-                <ClayDropDown.ItemList>
-                  <ClayDropDown.Item onClick={() => setDeleting(true)}>
-                    Delete
-                  </ClayDropDown.Item>
-                  {deleting && (
-                    <ConfirmationModal
-                      title="Delete Tenant"
-                      message="Are you sure you want to delete this tenant? All data will be lost!"
-                      abortText="Abort"
-                      confirmText="Delete"
-                      onCloseModal={() => setDeleting(false)}
-                      onConfirmModal={() => handleDelete(ten.tenantId)}
-                    />
-                  )}
-                </ClayDropDown.ItemList>
-              </ClayDropDown>
-            </div>
-          </td>
-        </tr>
+        <TRow key={ten.tenantId} ten={ten} loginInfo={loginInfo} />
       ))}
     </tbody>
   );
