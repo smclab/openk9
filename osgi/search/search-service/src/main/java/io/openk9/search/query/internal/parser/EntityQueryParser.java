@@ -51,10 +51,12 @@ public class EntityQueryParser implements QueryParser {
 					}
 
 					bool.filter(
-						QueryBuilders.nestedQuery(
-							nestEntityPath,
-							innerNestBoolQuery,
-							ScoreMode.Max)
+						QueryBuilders
+							.nestedQuery(
+								nestEntityPath,
+								innerNestBoolQuery,
+								ScoreMode.Max)
+							.ignoreUnmapped(true)
 					);
 
 				}
