@@ -17,6 +17,7 @@ buildscript {
 		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"
 		classpath "com.github.node-gradle:gradle-node-plugin:3.0.1"
 		classpath "io.freefair.gradle:lombok-plugin:5.3.0"
+		classpath "com.bmuschko:gradle-docker-plugin:6.6.0"
 	}
 }
 
@@ -127,3 +128,139 @@ subprojects {
 }
 
 apply from: "build-dist.gradle"
+
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
+
+if (System.getenv("CI_REGISTRY_NAME") != null) {
+	docker {
+		registryCredentials {
+			url.set(System.getenv("CI_REGISTRY_NAME"))
+			username.set(System.getenv("CI_REGISTRY_USERNAME"))
+			password.set(System.getenv("CI_REGISTRY_PASSWORD"))
+		}
+	}
+}
+
+def distConfigurations = configurations
+		.findAll({it.name.startsWith("dist")})
+		.collect()
+
+distConfigurations
+		.forEach({conf ->
+
+			def dependencies = conf.dependencies
+
+			def confTmp = configurations.create("confTmp-$conf.name")
+
+			confTmp.dependencies.addAll(dependencies)
+
+			def distPrimaryName = conf.name.substring(4)
+
+			def distName = toSnakeCase(distPrimaryName)
+
+			def buildDistTask = tasks.register("build${distPrimaryName}", Copy, {
+				from(confTmp)
+				into "$rootDir/build/$distName/libs"
+			})
+
+			tasks.register("createDockerFile${distPrimaryName}", Dockerfile, {
+				dependsOn(buildDistTask)
+				from('smclab/apache-karaf:4.3.0')
+				copyFile("libs/", "opt/apache-karaf/deploy")
+				destFile.set(file("$rootDir/build/$distName/docker/Dockerfile"))
+			})
+
+			tasks.register("buildImage${distPrimaryName}", DockerBuildImage, {
+				dependsOn("createDockerFile${distPrimaryName}")
+				inputDir.set(file("$rootDir/build/$distName"))
+				dockerFile.set(file("$rootDir/build/$distName/docker/Dockerfile"))
+				images.add("openk9-$distName:latest")
+			})
+
+			tasks.register("removeImage${distPrimaryName}", DockerRemoveImage, {
+				force.set(true)
+				targetImageId "openk9-$distName:latest"
+			})
+
+			if (System.getenv("CI_REGISTRY_NAME") != null) {
+				tasks.register("pushImage${distPrimaryName}", DockerPushImage, {
+					dependsOn("createDockerFile${distPrimaryName}")
+					finalizedBy("removeImage${distPrimaryName}")
+					images.add("openk9-$distName:latest")
+				})
+			}
+
+			tasks.register("libsFolder${distPrimaryName}", {
+				doLast {
+					println "$rootDir/build/$distName/libs"
+				}
+			})
+
+			tasks.register("deploy${distPrimaryName}", Copy, {
+				from(confTmp)
+				into "$rootDir/$distName/deploy"
+			})
+
+			def cleanDist = tasks.register("clean${distPrimaryName}", Delete, {
+				delete("$rootDir/build/$distName")
+			})
+
+			clean.dependsOn(cleanDist)
+
+		})
+
+task cleanDist {
+	def cleanDistTaskNames = distConfigurations
+			.collect({tasks.named("clean${it.name.substring(4)}")})
+	dependsOn(cleanDistTaskNames)
+}
+
+task buildDist {
+	def buildDistTaskNames = distConfigurations
+			.collect({tasks.named("build${it.name.substring(4)}")})
+	dependsOn(buildDistTaskNames)
+}
+
+task buildImages {
+	def buildImageTaskNames = distConfigurations
+			.collect({tasks.named("buildImage${it.name.substring(4)}")})
+	dependsOn(buildImageTaskNames)
+}
+
+if (System.getenv("CI_REGISTRY_NAME") != null) {
+	task pushImages {
+		def pushImageTaskNames = distConfigurations
+				.collect({tasks.named("pushImage${it.name.substring(4)}")})
+		dependsOn(pushImageTaskNames)
+	}
+}
+
+task deployDist {
+	def deployDistTaskNames = distConfigurations
+			.collect({tasks.named("deploy${it.name.substring(4)}")})
+	dependsOn(deployDistTaskNames)
+}
+
+task distList {
+	doLast {
+		distConfigurations
+				.forEach({conf -> println(toSnakeCase(conf.name.substring(4)))})
+	}
+}
+
+task distTasks {
+	doLast {
+		distConfigurations
+				.forEach({conf -> println("build${conf.name.substring(4)}")})
+	}
+}
+
+static String toSnakeCase(String text ) {
+	text.replaceAll(/([A-Z])/, /-$1/).toLowerCase().replaceAll(/^-/, '')
+}
+
