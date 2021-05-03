@@ -79,6 +79,8 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 		double scoreThreshold() default 0.9;
 	    int minHops() default 1;
 		int maxHops() default 2;
+		String[] uniqueEntities() default "email";
+		String labelFilter() default "-date";
 	}
 
 	@Activate
@@ -86,6 +88,8 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 		_maxHops = config.maxHops();
 		_minHops = config.minHops();
 		_scoreThreshold = config.scoreThreshold();
+		_uniqueEntities = config.uniqueEntities();
+		_labelFilter = config.labelFilter();
 	}
 
 	@Modified
@@ -391,7 +395,13 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 		Flux<Entity> entityFlux = Flux.empty();
 
-		if (!candidates.isEmpty()) {
+		String currentEntityRequestType = currentEntityRequest.getType();
+
+		if (!candidates.isEmpty() && !_containsValue(_uniqueEntities, currentEntityRequestType)) {
+
+			if (_log.isInfoEnabled()) {
+					_log.info("disambiguating with search entity with type " + currentEntityRequestType);
+				}
 
 			Statement[] statements = new Statement[entityRequestList.size()];
 
@@ -412,7 +422,7 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 						literalOf(entityRequest.getId())))
 					.call(APOC_PATH_EXPAND).withArgs(
 						entityAliased.getDelegate(), literalOf(null),
-						literalOf(null), literalOf(_minHops), literalOf(_maxHops))
+						literalOf(_labelFilter), literalOf(_minHops), literalOf(_maxHops))
 					.yield(path)
 					.returning(
 						Functions.last(Functions.nodes(path)).as(NODE),
@@ -450,6 +460,18 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 		}
 
+		if (!candidates.isEmpty() && _containsValue(_uniqueEntities, currentEntityRequestType)) {
+
+			if (_log.isInfoEnabled()) {
+					_log.info("disambiguating entity with type " + currentEntityRequestType);
+				}
+
+			DocumentEntity candidate = candidates.get(0);
+
+			entityFlux = _entityGraphRepository.getEntity(
+					candidate.getId()).flux();
+		}
+
 		return entityFlux
 			.filter(entity -> candidates
 				.stream()
@@ -480,11 +502,24 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 			.map(bytes -> _jsonFactory.fromJson(bytes, Request.class));
 	}
 
+	private boolean _containsValue(String[] array, String value) {
+		for (String entry : array) {
+			if (value.equals(entry)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private double _scoreThreshold;
 
 	private int _minHops;
 
 	private int _maxHops;
+
+	private String[] _uniqueEntities;
+
+	private String _labelFilter;
 
 	@Reference
 	private JsonFactory _jsonFactory;
