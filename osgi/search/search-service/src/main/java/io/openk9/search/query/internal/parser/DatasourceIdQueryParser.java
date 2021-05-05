@@ -1,13 +1,12 @@
 package io.openk9.search.query.internal.parser;
 
-import io.openk9.datasource.model.Datasource;
+import io.openk9.model.Datasource;
 import io.openk9.search.api.query.QueryParser;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.osgi.service.component.annotations.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 

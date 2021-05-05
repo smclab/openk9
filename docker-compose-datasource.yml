@@ -1,0 +1,45 @@
+version: "3.5"
+services:
+    datasource:
+        image: openk9-datasource:latest
+        container_name: openk9-datasource
+        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        environment:
+            WAIT_HOSTS: postgres:5432, rabbitmq:5672
+            WAIT_HOSTS_TIMEOUT: 300
+            JAVA_DEBUG_PORT: '*:5005'
+        volumes:
+            - ./datasource/configs:/opt/apache-karaf/configs
+        expose:
+            - "1099"
+            - "8080"
+            - "44444"
+            - "8101"
+            - "8181"
+            - "5005"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.services.datasource-docker.loadbalancer.server.port=8080"
+            - "traefik.http.middlewares.datasource-strip.stripprefix.prefixes=/datasource"
+            - "traefik.http.routers.datasource.entrypoints=web"
+            - "traefik.http.routers.datasource.rule=PathPrefix(`/datasource`)"
+            - "traefik.http.middlewares.datasource_compress.compress=true"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
+            - "traefik.http.routers.datasource.middlewares=datasource-strip@docker,datasource_compress@docker,openk9-forwarded-host@docker"
+    postgres:
+        image: postgres:latest
+        container_name: postgres
+        hostname: postgres
+        environment:
+            - POSTGRES_PASSWORD=openk9
+            - POSTGRES_USER=openk9
+            - POSTGRES_DB=openk9
+            - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - ./postgres/db-data:/var/lib/postgresql/data
+    adminer:
+        image: adminer
+        restart: always
+        ports:
+            - 5050:8080
+

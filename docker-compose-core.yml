@@ -1,0 +1,28 @@
+version: "3.5"
+services:
+    core:
+        image: openk9-core:latest
+        container_name: openk9-core
+        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        environment:
+            #WAIT_HOSTS: rabbitmq:5672
+            WAIT_HOSTS_TIMEOUT: 300
+            JAVA_DEBUG_PORT: '*:5005'
+        volumes:
+            - ./core/configs:/opt/apache-karaf/configs
+        expose:
+            - "1099"
+            - "8080"
+            - "44444"
+            - "8101"
+            - "8181"
+            - "5005"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.services.core-docker.loadbalancer.server.port=8080"
+            - "traefik.http.middlewares.core-strip.stripprefix.prefixes=/core"
+            - "traefik.http.routers.core.entrypoints=web"
+            - "traefik.http.routers.core.rule=PathPrefix(`/core`)"
+            - "traefik.http.middlewares.core_compress.compress=true"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
+            - "traefik.http.routers.core.middlewares=core-strip@docker,core_compress@docker,openk9-forwarded-host@docker"

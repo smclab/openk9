@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.internal.web;
 
-import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.model.EnrichPipeline;
 import io.openk9.datasource.repository.EnrichPipelineRepository;
 import io.openk9.http.util.BaseEndpointRegister;
 import io.openk9.http.web.HttpHandler;

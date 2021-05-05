@@ -28,15 +28,23 @@ import io.openk9.http.web.HttpRequest;
 import io.openk9.http.web.HttpResponse;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.repository.http.internal.http.HttpRequestUtil;
+import io.openk9.sql.api.client.Criteria;
 import io.openk9.sql.api.client.Page;
 import io.openk9.sql.api.entity.ReactiveRepository;
 import org.osgi.framework.BundleContext;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
@@ -73,9 +81,112 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 			HttpHandler.put(Strings.BLANK, this::_update),
 			HttpHandler.patch(
 				"/{" + _reactiveRepository.primaryKeyName() + "}",
-				this::_patch)
-
+				this::_patch),
+			HttpHandler.post("/filter", this::_filter)
 		);
+
+	}
+
+	private Publisher<Void> _filter(
+		HttpRequest httpRequest, HttpResponse httpResponse) {
+
+		Publisher<String> body = httpRequest.aggregateBodyToString();
+
+		return _httpResponseWriter.write(
+			httpResponse,
+			Mono
+				.from(body)
+				.map(json -> _jsonFactory.fromJsonMap(json, Object.class))
+				.map(this::_createCriteria)
+				.flatMapMany(_reactiveRepository::findBy)
+		);
+
+	}
+
+	private Criteria _createCriteria(Map<String, Object> fieldValues) {
+
+		Set<Map.Entry<String, Object>> entries = fieldValues.entrySet();
+
+		Criteria criteria = Criteria.empty();
+
+		for (Map.Entry<String, Object> entry : entries) {
+
+			Object value = entry.getValue();
+
+			String key = entry.getKey();
+
+			boolean not = false;
+
+			if (key.endsWith("_not")) {
+				not = true;
+				key = key.replace("_not", Strings.BLANK);
+			}
+
+			Criteria.CriteriaStep where = Criteria.where(key);
+
+			Criteria innerCriteria;
+
+			if (not) {
+				innerCriteria = _getNotCriteria(value, where);
+			}
+			else {
+				innerCriteria = _getCriteria(value, where);
+			}
+
+			if (criteria.isEmpty()) {
+				criteria = innerCriteria;
+			}
+			else {
+				criteria = criteria.and(innerCriteria);
+			}
+
+		}
+
+		return criteria;
+	}
+
+	private Criteria _getCriteria(Object value, Criteria.CriteriaStep where) {
+
+		if (value == null) {
+			return where.isNull();
+		}
+		else if (value instanceof Boolean) {
+			return ((Boolean) value)
+				? where.isTrue()
+				: where.isFalse();
+		}
+		else if (value instanceof Object[]) {
+			return where.in(Arrays.asList((Object[]) value));
+		}
+		else if (value instanceof Collection) {
+			return where.in((Collection<?>) value);
+		}
+		else {
+			return where.is(value);
+		}
+
+	}
+
+	private Criteria _getNotCriteria(
+		Object value, Criteria.CriteriaStep where) {
+
+		if (value == null) {
+			return where.isNotNull();
+		}
+		else if (value instanceof Boolean) {
+			return ((Boolean) value)
+				? where.isFalse()
+				: where.isTrue();
+		}
+		else if (value instanceof Object[]) {
+			return where.notIn(Arrays.asList((Object[]) value));
+		}
+		else if (value instanceof Collection) {
+			return where.notIn((Collection<?>) value);
+		}
+		else {
+			return where.not(value);
+		}
 
 	}
 

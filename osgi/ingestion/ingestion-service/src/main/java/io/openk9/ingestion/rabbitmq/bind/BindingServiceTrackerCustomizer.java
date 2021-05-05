@@ -36,9 +36,11 @@ import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Sender;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,19 +74,30 @@ public class BindingServiceTrackerCustomizer
 
 		Binding.Exchange.Type exchangeType = exchangeDTO.getType();
 
-		BindingSpecification binding =
-			BindingSpecification.binding(exchange, routingKey, queue);
-
 		Mono<AMQP.Exchange.DeclareOk> mono1 = _sender.declareExchange(
 			ExchangeSpecification.exchange(exchange).type(exchangeType.name())
 		);
 
-		Mono<AMQP.Queue.DeclareOk> mono2 = _sender.declareQueue(
-			QueueSpecification.queue(queue));
+		List<AutoCloseable> autoCloseables = new ArrayList<>();
 
-		Mono<AMQP.Queue.BindOk> mono3 = _sender.bind(binding);
+		if (queue != null) {
 
-		Mono.zip(mono1, mono2, mono3).block();
+			Mono<AMQP.Queue.DeclareOk> mono2 = _sender.declareQueue(
+				QueueSpecification.queue(queue));
+
+			BindingSpecification binding =
+				BindingSpecification.binding(exchange, routingKey, queue);
+
+			autoCloseables.add(() -> _sender.unbind(binding).subscribe());
+
+			Mono<AMQP.Queue.BindOk> mono3 = _sender.bind(binding);
+
+			Mono.zip(mono1, mono2, mono3).block();
+
+		}
+		else {
+			mono1.block();
+		}
 
 		_log.info(
 			String.format(
@@ -96,8 +109,14 @@ public class BindingServiceTrackerCustomizer
 		Dictionary<String, Object> senderProps = new Hashtable<>();
 
 		senderProps.put("exchange", exchange);
-		senderProps.put("routingKey", routingKey);
-		senderProps.put("queue", queue);
+
+		if (routingKey != null) {
+			senderProps.put("routingKey", routingKey);
+		}
+
+		if (queue != null) {
+			senderProps.put("queue", queue);
+		}
 		senderProps.put("exchangeType", exchangeType.name());
 
 		ServiceRegistration<BundleSender> bundleSenderRegistration =
@@ -108,20 +127,27 @@ public class BindingServiceTrackerCustomizer
 					new BundleSenderImpl(
 						_sender, exchange, routingKey), senderProps);
 
-		ServiceRegistration<BundleReceiver> bundleReceiverRegistration =
-			bundle
-				.getBundleContext()
-				.registerService(
-					BundleReceiver.class,
-					new BundleReceiverImpl(
-						_receiverReactor, queue),
-					new Hashtable<>(Collections.singletonMap("queue", queue)));
+		autoCloseables.add(bundleSenderRegistration::unregister);
+
+		if (queue != null) {
+
+			ServiceRegistration<BundleReceiver> bundleReceiverRegistration =
+				bundle
+					.getBundleContext()
+					.registerService(
+						BundleReceiver.class,
+						new BundleReceiverImpl(
+							_receiverReactor, queue),
+						new Hashtable<>(
+							Collections.singletonMap("queue", queue)));
+
+			autoCloseables.add(bundleReceiverRegistration::unregister);
+
+		}
 
 		_registrationMap.put(
-			bundle, AutoCloseables.mergeAutoCloseableToSafe(
-				bundleSenderRegistration::unregister,
-				bundleReceiverRegistration::unregister,
-				() -> _sender.unbind(binding).subscribe()));
+			bundle, AutoCloseables.mergeAutoCloseableToSafe(autoCloseables)
+		);
 
 		return null;
 	}

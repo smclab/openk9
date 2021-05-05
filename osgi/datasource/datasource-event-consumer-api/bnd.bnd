@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Datasource Event Consumer Api
+Bundle-SymbolicName: io.openk9.datasource.event.consumer.api
+
+Export-Package: io.openk9.datasource.event.consumer.api
+
+-include: ${project.rootDir}/osgi/common.bnd

@@ -1,0 +1,4 @@
+dependencies {
+	compile project(':osgi:metrics:metrics-api')
+	compile libraries.micrometer_registry_elastic
+}

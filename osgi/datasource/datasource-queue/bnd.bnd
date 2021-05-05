@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Datasource Queue
+Bundle-SymbolicName: io.openk9.datasource.queue
+
+-include: ${project.rootDir}/osgi/common.bnd

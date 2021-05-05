@@ -1,6 +1,6 @@
 package io.openk9.plugins.applications.driver;
 
-import io.openk9.datasource.model.Datasource;
+import io.openk9.model.Datasource;
 import io.openk9.ingestion.logic.api.IngestionLogic;
 import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;

@@ -17,7 +17,6 @@
 
 package io.openk9.ingestion.driver.manager.api;
 
-import io.openk9.search.client.api.mapping.Field;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;

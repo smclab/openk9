@@ -18,8 +18,8 @@
 package io.openk9.datasource.internal.repository;
 
 
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.EnrichItem;
+import io.openk9.model.Datasource;
+import io.openk9.model.EnrichItem;
 import io.openk9.datasource.repository.EnrichItemRepository;
 import io.openk9.repository.http.api.RepositoryHttpExtender;
 import io.openk9.sql.api.InitSql;
@@ -189,7 +189,7 @@ public class EnrichItemRepositoryImpl
 
 	@Reference(
 		target = "(|" +
-				 "(entity.mapper=io.openk9.datasource.model.EnrichItem)" +
+				 "(entity.mapper=io.openk9.model.EnrichItem)" +
 				 "(entity.mapper=default)" +
 				 ")",
 		service = EntityMapper.class,

@@ -1,0 +1,4 @@
+dependencies {
+	compile libraries.reactor
+	compile project(':osgi:common:model')
+}

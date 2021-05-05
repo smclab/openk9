@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Ingestion Driver Manager Datasource Service
+Bundle-SymbolicName: io.openk9.ingestion.driver.manager.datasource.service
+
+-include: ${project.rootDir}/osgi/common.bnd

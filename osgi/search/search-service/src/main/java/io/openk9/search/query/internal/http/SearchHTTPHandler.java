@@ -17,10 +17,7 @@
 
 package io.openk9.search.query.internal.http;
 
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Tenant;
-import io.openk9.datasource.repository.DatasourceRepository;
-import io.openk9.datasource.repository.TenantRepository;
+import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
@@ -32,6 +29,11 @@ import io.openk9.ingestion.driver.manager.api.PluginDriver;
 import io.openk9.ingestion.driver.manager.api.PluginDriverRegistry;
 import io.openk9.ingestion.driver.manager.api.SearchKeyword;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.model.Datasource;
+import io.openk9.model.Tenant;
+import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchToken;
@@ -76,7 +78,8 @@ import java.util.stream.Stream;
 	service = Endpoint.class,
 	property = {
 		"base.path=/v1/search"
-	}
+	},
+	enabled = false
 )
 public class SearchHTTPHandler implements HttpHandler {
 
@@ -96,7 +99,7 @@ public class SearchHTTPHandler implements HttpHandler {
 
 		String hostName = HttpUtil.getHostName(httpRequest);
 
-		Mono<Tenant> tenant = _tenantRepository
+		Mono<Tenant> tenant = _datasourceClient
 			.findByVirtualHost(hostName)
 			.switchIfEmpty(
 				Mono.error(
@@ -104,7 +107,7 @@ public class SearchHTTPHandler implements HttpHandler {
 						"tenant not found for virtualhost: " + hostName)));
 
 		return Mono.zip(tenant, Mono.from(httpRequest.aggregateBodyToString()))
-			.flatMap(t2 -> _datasourceRepository
+			.flatMap(t2 -> _datasourceClient
 				.findByTenantIdAndIsActive(t2.getT1().getTenantId())
 				.collectList()
 				.flatMap(datasources -> _toQuerySearchRequest(
@@ -190,47 +193,19 @@ public class SearchHTTPHandler implements HttpHandler {
 
 			}
 
+			return _pluginDriverManagerClient.getPluginDriverList(serviceDriverNames);
+		}).flatMap(pluginDriverList -> {
+
+			List<PluginDriverDTO> pluginDriverDTOList =
+					pluginDriverList.getPluginDriverDTOList();
+
 			Map<String, List<SearchToken>> tokenTypeGroup =
-				searchRequest
-					.getSearchQuery()
-					.stream()
-					.collect(Collectors.groupingBy(SearchToken::getTokenType));
+			searchRequest
+				.getSearchQuery()
+				.stream()
+				.collect(Collectors.groupingBy(SearchToken::getTokenType));
 
 			List<SearchToken> datasource = tokenTypeGroup.get("DATASOURCE");
-
-			Collection<PluginDriver> pluginDriverList =
-				_pluginDriverRegistry.getPluginDriverList(serviceDriverNames);
-
-			Map<PluginDriver, List<DocumentType>> pluginDriverListDocumentType =
-				pluginDriverList
-					.stream()
-					.collect(
-						Collectors.toMap(
-							Function.identity(),
-							pd -> {
-
-								List<DocumentType> supportedDocumentTypes =
-									_documentTypeProvider.getDocumentTypeList(
-										pd.getName());
-
-								if (supportedDocumentTypes.isEmpty()) {
-									return Collections.singletonList(
-										_documentTypeProvider
-											.getDefaultDocumentType(
-												pd.getName())
-									);
-								}
-
-								return supportedDocumentTypes;
-							},
-							(o1, o2) -> {
-								throw new IllegalStateException(
-									String.format("Duplicate key %s", o1));
-							},
-							IdentityHashMap::new
-						)
-					);
-
 
 			Stream<Map.Entry<PluginDriver, List<DocumentType>>>
 				documentTypeStream =
@@ -257,13 +232,6 @@ public class SearchHTTPHandler implements HttpHandler {
 			List<Map.Entry<PluginDriver, List<DocumentType>>> documentTypeList =
 				documentTypeStream.collect(Collectors.toList());
 
-			QueryParser.Context.of(
-				tenant,
-				datasources,
-				documentTypeList,
-				tokenTypeGroup,
-				httpRequest
-			);
 
 			QueryParser queryParser =
 				_queryParsers
@@ -371,10 +339,7 @@ public class SearchHTTPHandler implements HttpHandler {
 	private final List<QueryParser> _queryParsers = new ArrayList<>();
 
 	@Reference
-	private TenantRepository _tenantRepository;
-
-	@Reference
-	private DatasourceRepository _datasourceRepository;
+	private DatasourceClient _datasourceClient;
 
 	@Reference
 	private Search _search;
@@ -383,10 +348,7 @@ public class SearchHTTPHandler implements HttpHandler {
 	private SearchTokenizer _searchTokenizer;
 
 	@Reference
-	private PluginDriverRegistry _pluginDriverRegistry;
-
-	@Reference
-	private DocumentTypeProvider _documentTypeProvider;
+	private PluginDriverManagerClient _pluginDriverManagerClient;
 
 	@Reference
 	private JsonFactory _jsonFactory;

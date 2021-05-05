@@ -1,0 +1,31 @@
+version: "3.5"
+services:
+    searcher:
+        image: openk9-searcher:latest
+        container_name: openk9-searcher
+        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        environment:
+            WAIT_HOSTS: elasticsearch:5432
+            WAIT_HOSTS_TIMEOUT: 300
+            JAVA_DEBUG_PORT: '*:5005'
+        volumes:
+            - ./searcher/configs:/opt/apache-karaf/configs
+        expose:
+            - "1099"
+            - "8080"
+            - "44444"
+            - "8101"
+            - "8181"
+            - "5005"
+        ports:
+            - 8080:8080
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.services.searcher-docker.loadbalancer.server.port=8080"
+            - "traefik.http.middlewares.searcher-strip.stripprefix.prefixes=/searcher"
+            - "traefik.http.routers.searcher.entrypoints=web"
+            - "traefik.http.routers.searcher.rule=PathPrefix(`/searcher`)"
+            - "traefik.http.middlewares.searcher_compress.compress=true"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
+            - "traefik.http.routers.searcher.middlewares=searcher-strip@docker,searcher_compress@docker,openk9-forwarded-host@docker"
+

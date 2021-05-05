@@ -1,9 +1,9 @@
 package io.openk9.init.data;
 
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.model.Datasource;
+import io.openk9.model.EnrichItem;
+import io.openk9.model.EnrichPipeline;
+import io.openk9.model.Tenant;
 import io.openk9.datasource.repository.DatasourceRepository;
 import io.openk9.datasource.repository.EnrichItemRepository;
 import io.openk9.datasource.repository.EnrichPipelineRepository;
@@ -21,8 +21,6 @@ import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.time.Instant;
-import java.util.Date;
 
 @Component(
 	immediate = true,

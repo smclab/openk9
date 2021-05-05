@@ -5,6 +5,8 @@
  * Learn more about Gradle by exploring our samples at https://docs.gradle.org/6.7/samples
  */
 
+import aQute.bnd.gradle.Bundle
+
 buildscript {
 	repositories {
 		maven {
@@ -12,17 +14,21 @@ buildscript {
 		}
 	}
 	dependencies {
-		classpath "biz.aQute.bnd:biz.aQute.bnd.gradle:5.2.0"
+		classpath "biz.aQute.bnd:biz.aQute.bnd.gradle:5.3.0"
 		classpath 'net.saliman:gradle-properties-plugin:1.5.1'
 		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"
 		classpath "com.github.node-gradle:gradle-node-plugin:3.0.1"
 		classpath "io.freefair.gradle:lombok-plugin:5.3.0"
 		classpath "com.bmuschko:gradle-docker-plugin:6.6.0"
+		classpath 'de.undercouch:gradle-download-task:4.1.1'
 	}
 }
 
 apply plugin: 'net.saliman.properties'
 apply plugin: 'org.sonarqube'
+apply plugin: 'de.undercouch.download'
+
+def karafVersion = findProperty("karaf.version")
 
 ext.libraries = [
 		vavr: 'io.vavr:vavr:0.10.3',
@@ -64,23 +70,31 @@ ext.libraries = [
 				'io.projectreactor.netty:reactor-netty:1.0.5'
 		],
 		osgi: 'org.osgi:osgi.core:7.0.0',
+		metatype: [
+				'org.osgi:org.osgi.service.metatype.annotations:1.4.0',
+				'org.osgi:org.osgi.service.metatype:1.4.0'
+		],
 		osgi_service_cm: 'org.osgi:org.osgi.service.cm:1.6.0',
 		reactor_rabbitmq: 'io.projectreactor.rabbitmq:reactor-rabbitmq:1.5.2',
 		karaf_scheduler: [
-				'org.apache.karaf.scheduler:org.apache.karaf.scheduler.core:4.3.0'
+				"org.apache.karaf.scheduler:org.apache.karaf.scheduler.core:$karafVersion"
 		],
 		karaf_features: [
-				'org.apache.karaf.features:org.apache.karaf.features.core:4.3.0'
+				"org.apache.karaf.features:org.apache.karaf.features.core:$karafVersion"
 		],
 		karaf_jdbc_core: [
-				'org.apache.karaf.jdbc:org.apache.karaf.jdbc.core:4.3.0'
+				"org.apache.karaf.jdbc:org.apache.karaf.jdbc.core:$karafVersion"
 		],
 		elasticsearch: 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.9.3',
 		avro:  'org.apache.avro:avro:1.10.0',
 		felix_dependencymanager: 'org.apache.felix:org.apache.felix.dependencymanager:4.6.0',
 		neo4j_java_driver: 'org.neo4j.driver:neo4j-java-driver:4.2.3',
 		neo4j_cypher_dsl: 'org.neo4j:neo4j-cypher-dsl:2021.1.1'
+
 ]
+
+def projectVersion = findProperty("project.version")
+def projectGroupId = findProperty("project.groupId")
 
 subprojects {
 	def bndfile = file("$projectDir/bnd.bnd");
@@ -110,10 +124,12 @@ subprojects {
 	sourceCompatibility = 11
 	targetCompatibility = 11
 
-
 	dependencies {
 		compileOnly 'org.osgi:org.osgi.service.component.annotations:1.3.0'
 		compileOnly 'org.projectlombok:lombok:1.18.18'
+		compileOnly group: 'org.osgi', name: 'org.osgi.annotation.bundle', version: '1.1.0'
+		compileOnly group: 'org.osgi', name: 'org.osgi.namespace.extender', version: '1.0.1'
+		compileOnly libraries.metatype
 		annotationProcessor 'org.projectlombok:lombok:1.18.18'
 	}
 
@@ -146,6 +162,35 @@ if (System.getenv("CI_REGISTRY_NAME") != null) {
 	}
 }
 
+task downloadKaraf(type: Download) {
+	src "http://archive.apache.org/dist/karaf/${karafVersion}/apache-karaf-${karafVersion}.tar.gz"
+	dest "$rootDir/build/karaf/apache-karaf.tar.gz"
+	overwrite false
+	onlyIfModified true
+}
+
+task createDockerFileKaraf(type: Dockerfile) {
+	from("adoptopenjdk:11-jdk-hotspot")
+	environmentVariable("KARAF_INSTALL_PATH", "/opt")
+	environmentVariable("KARAF_HOME", '$KARAF_INSTALL_PATH/apache-karaf')
+	environmentVariable("KARAF_EXEC", "exec")
+	environmentVariable("PATH", '$PATH:$KARAF_HOME/bin')
+
+	arg("karaf_dist=apache-karaf.tar.gz")
+	addFile('$karaf_dist', '$KARAF_INSTALL_PATH')
+	runCommand('set -x && ln -s $KARAF_INSTALL_PATH/apache-karaf* $KARAF_HOME')
+	exposePort(8101, 1099, 44444, 8181, 9999, 8080)
+	defaultCommand("karaf", "run")
+	destFile.set(file("$rootDir/build/karaf/docker/Dockerfile"))
+}
+
+task buildKarafImage(type: DockerBuildImage) {
+	dependsOn(downloadKaraf, createDockerFileKaraf)
+	inputDir.set(file("$rootDir/build/karaf"))
+	dockerFile.set(file("$rootDir/build/karaf/docker/Dockerfile"))
+	images.add("openk9-karaf:$karafVersion")
+}
+
 def distConfigurations = configurations
 		.findAll({it.name.startsWith("dist")})
 		.collect()
@@ -168,15 +213,44 @@ distConfigurations
 				into "$rootDir/build/$distName/libs"
 			})
 
-			tasks.register("createDockerFile${distPrimaryName}", Dockerfile, {
+			def unTarKaraf = tasks.register("unTarKaraf${distPrimaryName}", Copy, {
+				dependsOn(downloadKaraf)
+				from(tarTree("$rootDir/build/karaf/apache-karaf.tar.gz"))
+				into("$rootDir/build/$distName/karaf")
+			})
+
+			def createKaraf = tasks.register("createKaraf${distPrimaryName}", Copy, {
+				dependsOn(unTarKaraf, buildDistTask)
+				from("$rootDir/build/$distName/libs")
+				include '*.jar'
+				into("$rootDir/build/$distName/karaf/apache-karaf-$karafVersion/deploy")
+			})
+
+			tasks.register("distTar${distPrimaryName}", Tar, {
+				dependsOn(createKaraf)
+				archiveName("$projectGroupId-$distName-${projectVersion}.tar")
+				from "$rootDir/build/$distName/karaf/apache-karaf-$karafVersion"
+				destinationDir(file("$rootDir/build/$distName/karaf"))
+			})
+
+			tasks.register("distZip${distPrimaryName}", Zip, {
+				dependsOn(createKaraf)
+				archiveName("$projectGroupId-$distName-${projectVersion}.zip")
+				from "$rootDir/build/$distName/karaf/apache-karaf-$karafVersion"
+				destinationDir(file("$rootDir/build/$distName/karaf"))
+			})
+
+			def createDockerFile = tasks.register("createDockerFile${distPrimaryName}", Dockerfile, {
 				dependsOn(buildDistTask)
-				from('smclab/apache-karaf:4.3.0')
+				from("openk9-karaf:$karafVersion")
 				copyFile("libs/", "opt/apache-karaf/deploy")
+				addFile("https://github.com/ufoscout/docker-compose-wait/releases/download/2.8.0/wait", "/wait")
+				runCommand("chmod +x /wait")
 				destFile.set(file("$rootDir/build/$distName/docker/Dockerfile"))
 			})
 
 			tasks.register("buildImage${distPrimaryName}", DockerBuildImage, {
-				dependsOn("createDockerFile${distPrimaryName}")
+				dependsOn(buildKarafImage, createDockerFile)
 				inputDir.set(file("$rootDir/build/$distName"))
 				dockerFile.set(file("$rootDir/build/$distName/docker/Dockerfile"))
 				images.add("openk9-$distName:latest")
@@ -232,6 +306,18 @@ task buildImages {
 	dependsOn(buildImageTaskNames)
 }
 
+task distTar {
+	def buildImageTaskNames = distConfigurations
+			.collect({tasks.named("distTar${it.name.substring(4)}")})
+	dependsOn(buildImageTaskNames)
+}
+
+task distZip {
+	def buildImageTaskNames = distConfigurations
+			.collect({tasks.named("distZip${it.name.substring(4)}")})
+	dependsOn(buildImageTaskNames)
+}
+
 if (System.getenv("CI_REGISTRY_NAME") != null) {
 	task pushImages {
 		def pushImageTaskNames = distConfigurations
@@ -263,4 +349,3 @@ task distTasks {
 static String toSnakeCase(String text ) {
 	text.replaceAll(/([A-Z])/, /-$1/).toLowerCase().replaceAll(/^-/, '')
 }
-

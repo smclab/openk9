@@ -17,8 +17,8 @@
 
 package io.openk9.search.enrich.api;
 
-import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.util.DatasourceContext;
+import io.openk9.model.EnrichItem;
+import io.openk9.model.DatasourceContext;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
 import reactor.core.publisher.Mono;

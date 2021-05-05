@@ -21,6 +21,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Optional;
+
 public interface Binding {
 
 	String RABBIT_EXCHANGE = "Rabbit-Exchange";
@@ -31,7 +33,9 @@ public interface Binding {
 
 	String getRoutingKey();
 
-	String getQueue();
+	default String getQueue() {
+		return null;
+	}
 
 	static Binding of(
 		Exchange exchange, String routingKey, String queue) {

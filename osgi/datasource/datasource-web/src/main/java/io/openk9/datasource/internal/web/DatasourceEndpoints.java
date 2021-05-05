@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.internal.web;
 
-import io.openk9.datasource.model.Datasource;
+import io.openk9.model.Datasource;
 import io.openk9.datasource.repository.DatasourceRepository;
 import io.openk9.http.util.BaseEndpointRegister;
 import io.openk9.http.web.HttpHandler;

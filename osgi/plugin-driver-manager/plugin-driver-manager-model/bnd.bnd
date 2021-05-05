@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Plugin Driver Manager Model
+Bundle-SymbolicName: io.openk9.plugin.driver.manager.model
+
+Export-Package: io.openk9.plugin.driver.manager.model
+
+-include: ${project.rootDir}/osgi/common.bnd

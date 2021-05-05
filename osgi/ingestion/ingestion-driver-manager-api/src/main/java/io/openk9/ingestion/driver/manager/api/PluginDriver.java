@@ -17,7 +17,7 @@
 
 package io.openk9.ingestion.driver.manager.api;
 
-import io.openk9.datasource.model.Datasource;
+import io.openk9.model.Datasource;
 import org.reactivestreams.Publisher;
 
 import java.util.Date;

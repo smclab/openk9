@@ -17,16 +17,12 @@
 
 package io.openk9.ingestion.queue;
 
-import io.openk9.datasource.repository.DatasourceRepository;
-import io.openk9.datasource.repository.TenantRepository;
-import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.HttpRequest;
 import io.openk9.http.web.HttpResponse;
 import io.openk9.ingestion.logic.api.IngestionLogic;
 import io.openk9.ingestion.queue.exception.AttributeException;
-import io.openk9.ingestion.queue.exception.ResourceException;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.IngestionPayload;
 import org.osgi.service.component.annotations.Component;
@@ -59,8 +55,6 @@ public class IngestionEndpoint implements HttpHandler {
 	public Publisher<Void> apply(
 		HttpRequest httpRequest, HttpResponse httpResponse) {
 
-		String hostName = HttpUtil.getHostName(httpRequest);
-
 		Mono<String> monoResponse =
 			Mono.from(httpRequest.bodyAttributesFirst())
 				.<Map<String, String>>handle((map, synchronousSink) -> {
@@ -79,7 +73,7 @@ public class IngestionEndpoint implements HttpHandler {
 					synchronousSink.next(map);
 
 				})
-				.flatMap(map -> {
+				.map(map -> {
 
 					String datasourceIdAttribute = map.get("datasourceId");
 					String contentId = map.get("contentId");
@@ -98,29 +92,17 @@ public class IngestionEndpoint implements HttpHandler {
 						.toObjectNode()
 						.toMap();
 
-					return _datasourceRepository
-						.findByPrimaryKey(datasourceId)
-						.filterWhen(datasource ->
-							_tenantRepository
-								.findByVirtualHost(
-									hostName)
-								.hasElement())
-						.map(row -> IngestionPayload.of(
-							row.getDatasourceId(),
+					return IngestionPayload.of(
+							datasourceId,
 							contentId,
 							parsingDate,
 							rawContent,
 							datasourcePayloadMap,
-							row.getTenantId(),
+							-1,
 							datasourcePayloadMap
 								.keySet()
 								.toArray(new String[0])
-						))
-						.switchIfEmpty(
-							Mono.error(
-								() -> new ResourceException(
-									"datasource not found with datasourceId: "
-									+ datasourceId + " and virtualHost: " + hostName)));
+						);
 				})
 				.doOnNext(_ingestionLogicSender::send)
 				.map(ignore -> "{}")
@@ -150,12 +132,6 @@ public class IngestionEndpoint implements HttpHandler {
 
 	@Reference
 	private JsonFactory _jsonFactory;
-
-	@Reference
-	private DatasourceRepository _datasourceRepository;
-
-	@Reference
-	private TenantRepository _tenantRepository;
 
 	@Reference
 	private IngestionLogic _ingestionLogicSender;

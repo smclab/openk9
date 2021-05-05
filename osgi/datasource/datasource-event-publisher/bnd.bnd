@@ -1,0 +1,7 @@
+Bundle-Name: [OpenK9] Datasource Event Publisher
+Bundle-SymbolicName: io.openk9.datasource.event.publisher
+
+-include: ${project.rootDir}/osgi/common.bnd
+
+# https://github.com/bndtools/bnd/issues/2770
+Include-Resource: @io.openk9.datasource.event.configuration-*.jar

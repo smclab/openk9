@@ -3,7 +3,9 @@ dependencies {
 	compile project(':osgi:search:search-api')
 	compile project(':osgi:search:search-client-api')
 	compile project(":osgi:search:search-enrich-mapper-api")
-	compile project(":osgi:ingestion:ingestion-driver-manager-api")
-	compile project(':osgi:datasource:datasource-api')
 	compile project(':osgi:web:http-api')
+
+	compile project(':osgi:datasource:datasource-client-api')
+	compile project(":osgi:plugin-driver-manager:plugin-driver-manager-client-api")
+
 }

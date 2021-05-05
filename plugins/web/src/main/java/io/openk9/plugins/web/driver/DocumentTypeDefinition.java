@@ -25,8 +25,8 @@ import io.openk9.ingestion.driver.manager.api.DocumentTypeFactoryRegistryAware;
 import io.openk9.ingestion.driver.manager.api.PluginDriver;
 import io.openk9.ingestion.driver.manager.api.SearchKeyword;
 import io.openk9.osgi.util.AutoCloseables;
-import io.openk9.search.client.api.mapping.Field;
-import io.openk9.search.client.api.mapping.FieldType;
+import io.openk9.ingestion.driver.manager.api.Field;
+import io.openk9.ingestion.driver.manager.api.FieldType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 

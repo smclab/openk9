@@ -18,21 +18,20 @@
 package io.openk9.search.enrich.internal;
 
 import io.openk9.cbor.api.CBORFactory;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.repository.DatasourceRepository;
-import io.openk9.datasource.util.DatasourceContext;
 import io.openk9.http.osgi.constants.Constants;
 import io.openk9.ingestion.api.BundleReceiver;
-import io.openk9.ingestion.api.Delivery;
-import io.openk9.json.api.JsonFactory;
-import io.openk9.json.api.JsonNode;
-import io.openk9.json.api.ObjectNode;
-import io.openk9.osgi.util.AutoCloseables;
 import io.openk9.ingestion.driver.manager.api.DocumentType;
 import io.openk9.ingestion.driver.manager.api.DocumentTypeProvider;
 import io.openk9.ingestion.driver.manager.api.PluginDriver;
 import io.openk9.ingestion.driver.manager.api.PluginDriverRegistry;
+import io.openk9.json.api.JsonFactory;
+import io.openk9.json.api.JsonNode;
+import io.openk9.json.api.ObjectNode;
+import io.openk9.model.Datasource;
+import io.openk9.model.DatasourceContext;
+import io.openk9.model.EnrichItem;
+import io.openk9.model.IngestionDatasourcePayload;
+import io.openk9.osgi.util.AutoCloseables;
 import io.openk9.search.enrich.api.StartEnrichProcessor;
 import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
 import org.osgi.service.component.annotations.Activate;
@@ -44,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.util.concurrent.Queues;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
@@ -76,22 +74,21 @@ public class EnrichPipelineProcessor {
 	private Disposable _erichProcessorSubscriber() {
 		return _bundleReceiver
 			.consumeAutoAck(Queues.XS_BUFFER_SIZE)
-			.map(Delivery::getBody)
-			.map(_cborFactory::fromCBORToJsonNode)
-			.map(JsonNode::toObjectNode)
-			.concatMap(objectNode -> {
-
-				JsonNode datasourceIdNode = objectNode.get("datasourceId");
-
-				long datasourceId = datasourceIdNode.asLong();
-
-				return _datasourceRepository
-					.findContext(datasourceId)
-					.zipWith(Mono.just(objectNode.deepCopy()))
-					.map(this::_addPluginDriverData)
-					.map(this::_mapToEnrichProcessorContext)
-					.flatMap(_startEnrichProcessor::exec);
-			})
+			.map(delivery -> _cborFactory.fromCBOR(
+				delivery.getBody(), IngestionDatasourcePayload.class))
+			.map(idp ->
+				_mapToEnrichProcessorContext(
+					_addPluginDriverData(
+						Tuples.of(
+							idp.getDatasourceContext(),
+							_cborFactory
+								.treeNode(idp.getIngestionPayload())
+								.toObjectNode()
+						)
+					)
+				)
+			)
+			.flatMap(_startEnrichProcessor::exec)
 			.transform(this::_manageExceptions)
 			.subscribe();
 	}
@@ -116,8 +113,8 @@ public class EnrichPipelineProcessor {
 	}
 
 	private Tuple3<
-			DatasourceContext,
-			ObjectNode, PluginDriver> _addPluginDriverData(
+		DatasourceContext,
+		ObjectNode, PluginDriver> _addPluginDriverData(
 		Tuple2<
 			DatasourceContext,
 			ObjectNode> t3) {
@@ -228,9 +225,6 @@ public class EnrichPipelineProcessor {
 	private BundleReceiver _bundleReceiver;
 
 	@Reference
-	private DatasourceRepository _datasourceRepository;
-
-	@Reference
 	private PluginDriverRegistry _pluginDriverProvider;
 
 	@Reference
@@ -243,3 +237,4 @@ public class EnrichPipelineProcessor {
 		EnrichPipelineProcessor.class);
 
 }
+

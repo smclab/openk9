@@ -2,4 +2,4 @@ Bundle-Version: ${project.version}
 
 -noimportjava: true
 -outputmask: ${@bsn}-${@version}.jar
-
+-metatypeannotations: *

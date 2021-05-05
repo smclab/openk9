@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.repository;
 
-import io.openk9.datasource.model.Tenant;
+import io.openk9.model.Tenant;
 import io.openk9.sql.api.client.Page;
 import io.openk9.sql.api.entity.ReactiveRepository;
 import reactor.core.publisher.Flux;

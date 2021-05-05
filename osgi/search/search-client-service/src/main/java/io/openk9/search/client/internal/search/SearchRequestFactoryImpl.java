@@ -18,8 +18,8 @@
 package io.openk9.search.client.internal.search;
 
 import io.openk9.search.client.api.SearchRequestFactory;
-import io.openk9.search.client.internal.configuration.ElasticSearchConfiguration;
-import io.openk9.search.client.internal.util.IndexUtil;
+import io.openk9.search.client.api.configuration.ElasticSearchConfiguration;
+import io.openk9.search.client.api.util.IndexUtil;
 import org.elasticsearch.action.search.SearchRequest;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

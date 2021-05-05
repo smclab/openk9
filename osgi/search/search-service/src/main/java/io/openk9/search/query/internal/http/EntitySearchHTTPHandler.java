@@ -17,8 +17,8 @@
 
 package io.openk9.search.query.internal.http;
 
-import io.openk9.datasource.model.Tenant;
-import io.openk9.datasource.repository.TenantRepository;
+import io.openk9.datasource.client.api.DatasourceClient;
+import io.openk9.model.Tenant;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.Endpoint;
@@ -78,7 +78,7 @@ public class EntitySearchHTTPHandler implements HttpHandler {
 		String hostName = HttpUtil.getHostName(httpRequest);
 
 		Mono<Response> response =
-			_tenantRepository
+			_datasourceClient
 				.findByVirtualHost(hostName)
 				.switchIfEmpty(
 					Mono.error(
@@ -199,7 +199,7 @@ public class EntitySearchHTTPHandler implements HttpHandler {
 	private HttpResponseWriter _httpResponseWriter;
 
 	@Reference
-	private TenantRepository _tenantRepository;
+	private DatasourceClient _datasourceClient;
 
 	@Reference
 	private SearchRequestFactory _searchRequestFactory;

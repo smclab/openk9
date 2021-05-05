@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.internal.mapping;
 
-import io.openk9.datasource.model.EnrichItem;
+import io.openk9.model.EnrichItem;
 import io.openk9.sql.api.entity.EntityMapper;
 import org.osgi.service.component.annotations.Component;
 
@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 @Component(
 	immediate = true,
-	property = EntityMapper.ENTITY_MAPPER_PROPERTY + "=io.openk9.datasource.model.EnrichItem",
+	property = EntityMapper.ENTITY_MAPPER_PROPERTY + "=io.openk9.model.EnrichItem",
 	service = EntityMapper.class
 )
 public class EnrichItemEntityMapper implements EntityMapper {

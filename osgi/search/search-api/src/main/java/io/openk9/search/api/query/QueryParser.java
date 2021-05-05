@@ -17,8 +17,8 @@
 
 package io.openk9.search.api.query;
 
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.model.Datasource;
+import io.openk9.model.Tenant;
 import io.openk9.http.web.HttpRequest;
 import io.openk9.ingestion.driver.manager.api.DocumentType;
 import io.openk9.ingestion.driver.manager.api.PluginDriver;

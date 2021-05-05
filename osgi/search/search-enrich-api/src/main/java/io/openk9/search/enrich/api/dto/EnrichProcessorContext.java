@@ -17,7 +17,7 @@
 
 package io.openk9.search.enrich.api.dto;
 
-import io.openk9.datasource.util.DatasourceContext;
+import io.openk9.model.DatasourceContext;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

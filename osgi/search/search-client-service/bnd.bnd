@@ -1,6 +1,4 @@
 Bundle-Name: [OpenK9] Search Client Service
 Bundle-SymbolicName: io.openk9.search.client.service
 
-Include-Resource: @micrometer-registry-elastic-*.jar
-
 -include: ${project.rootDir}/osgi/common.bnd

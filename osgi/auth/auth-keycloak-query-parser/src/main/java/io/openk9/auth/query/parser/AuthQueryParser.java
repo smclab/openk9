@@ -2,7 +2,7 @@ package io.openk9.auth.query.parser;
 
 import io.openk9.auth.keycloak.api.AuthVerifier;
 import io.openk9.auth.keycloak.api.UserInfo;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.model.Tenant;
 import io.openk9.http.web.HttpRequest;
 import io.openk9.search.api.query.QueryParser;
 import org.elasticsearch.index.query.BoolQueryBuilder;

@@ -25,6 +25,8 @@ public interface HttpClient {
 
 	Publisher<byte[]> request(int method, String url);
 
+	Publisher<byte[]> request(int method, String url, String dataRow);
+
 	Publisher<byte[]> request(
 		int method, String url, Map<String, String> formDataAttr);
 

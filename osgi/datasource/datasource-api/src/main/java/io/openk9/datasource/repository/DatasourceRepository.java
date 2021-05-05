@@ -17,10 +17,10 @@
 
 package io.openk9.datasource.repository;
 
-import io.openk9.datasource.model.Datasource;
+import io.openk9.model.Datasource;
+import io.openk9.model.DatasourceContext;
 import io.openk9.sql.api.client.Page;
 import io.openk9.sql.api.entity.ReactiveRepository;
-import io.openk9.datasource.util.DatasourceContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

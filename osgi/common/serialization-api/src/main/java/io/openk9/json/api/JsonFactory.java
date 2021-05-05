@@ -34,6 +34,8 @@ public interface JsonFactory {
 
 	<T> List<T> fromJsonList(String jsonList, Class<T> clazz);
 
+	<T> List<T> fromJsonList(byte[] jsonList, Class<T> clazz);
+
 	<T> T[] fromJsonArray(String jsonList, Class<T> clazz);
 
 	<T> Map<String, T> fromJsonMap(String jsonList, Class<T> clazz);

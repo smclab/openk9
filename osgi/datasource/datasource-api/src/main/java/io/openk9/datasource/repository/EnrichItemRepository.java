@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.repository;
 
-import io.openk9.datasource.model.EnrichItem;
+import io.openk9.model.EnrichItem;
 import io.openk9.sql.api.client.Page;
 import io.openk9.sql.api.client.Sort;
 import io.openk9.sql.api.entity.ReactiveRepository;

@@ -1,0 +1,3 @@
+dependencies {
+	compile project(':osgi:plugin-driver-manager:plugin-driver-manager-model')
+}

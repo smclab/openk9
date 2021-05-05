@@ -43,6 +43,12 @@ class HttpClientImpl implements HttpClient {
 	}
 
 	@Override
+	public Publisher<byte[]> request(
+		int method, String url, String dataRow) {
+		return request(method, url, dataRow, Collections.emptyMap());
+	}
+
+	@Override
 	public Mono<byte[]> request(
 		int method, String url, Map<String, String> formDataAttr) {
 		return request(method, url, formDataAttr, Collections.emptyMap());

@@ -3,5 +3,4 @@ dependencies {
 	compile project(':osgi:datasource:datasource-api')
 	compile project(':osgi:web:http-api')
 	compile project(':osgi:common:serialization-api')
-	compile project(":osgi:ingestion:ingestion-driver-manager-api")
 }

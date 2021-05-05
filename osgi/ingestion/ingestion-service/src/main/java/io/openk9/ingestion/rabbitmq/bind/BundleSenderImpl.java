@@ -30,7 +30,7 @@ public class BundleSenderImpl implements BundleSender {
 		Sender sender,
 		String exchange, String routingKey) {
 		_sender = sender;
-		_excenge = exchange;
+		_exchange = exchange;
 		_routingKey = routingKey;
 	}
 
@@ -43,18 +43,18 @@ public class BundleSenderImpl implements BundleSender {
 	public Mono<Void> send(Flux<byte[]> publisher) {
 
 		return _sender.send(publisher
-			.map(bytes -> new OutboundMessage(_excenge, _routingKey, bytes)));
+			.map(bytes -> new OutboundMessage(_exchange, _routingKey, bytes)));
 
 	}
 
 	@Override
 	public Mono<Void> send(Mono<byte[]> publisher) {
 		return _sender.send(publisher
-			.map(bytes -> new OutboundMessage(_excenge, _routingKey, bytes)));
+			.map(bytes -> new OutboundMessage(_exchange, _routingKey, bytes)));
 	}
 
 	private final Sender _sender;
-	private final String _excenge;
+	private final String _exchange;
 	private final String _routingKey;
 
 }

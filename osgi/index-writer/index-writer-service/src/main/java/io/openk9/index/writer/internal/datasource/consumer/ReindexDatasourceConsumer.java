@@ -1,0 +1,118 @@
+package io.openk9.index.writer.internal.datasource.consumer;
+
+import io.openk9.datasource.event.consumer.api.DatasourceEventConsumer;
+import io.openk9.ingestion.driver.manager.api.PluginDriverRegistry;
+import io.openk9.search.client.api.ReactorActionListener;
+import io.openk9.search.client.api.RestHighLevelClientProvider;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import reactor.core.Disposable;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
+
+import java.time.Instant;
+
+@Component(
+	immediate = true,
+	service = ReindexDatasourceConsumer.class
+)
+public class ReindexDatasourceConsumer {
+
+	@Activate
+	void activate() {
+
+		RestHighLevelClient restHighLevelClient =
+			_restHighLevelClientProvider.get();
+
+		_disposable =
+			_datasourceEventConsumer
+				.datasourceUpdateEvents()
+				.map(datasource ->
+					Tuples.of(
+						datasource,
+						datasource.getTenantId() +
+							  "-" +
+							  _pluginDriverRegistry
+							.getPluginDriver(
+								datasource.getDriverServiceName())
+							.get()
+							.getName() +
+							  "-data"
+					)
+				)
+				.filterWhen(t2 ->
+					Mono.create(sink ->
+						restHighLevelClient
+							.indices()
+							.existsAsync(
+								new GetIndexRequest(t2.getT2()),
+								RequestOptions.DEFAULT,
+								new ReactorActionListener<>(sink)
+							))
+				)
+				.flatMap(t2 ->
+					Mono.<GetSettingsResponse>create(sink ->
+						restHighLevelClient
+							.indices()
+							.getSettingsAsync(
+								new GetSettingsRequest()
+									.indices(t2.getT2())
+									.names("index.creation_date"),
+								RequestOptions.DEFAULT,
+								new ReactorActionListener<>(sink)
+							))
+					.map(response -> Tuples.of(
+						t2.getT1(),
+						t2.getT2(),
+						Instant.ofEpochMilli(
+							response
+								.getIndexToSettings()
+								.get("index")
+								.getAsLong(
+									"index.creation_date",
+									Instant.EPOCH.toEpochMilli()
+								)
+							)
+						)
+					)
+				)
+				.log()
+				.filter(t3 -> t3.getT1().getLastIngestionDate().isBefore(t3.getT3()))
+				.flatMap(t3 -> Mono.<AcknowledgedResponse>create(sink ->
+					restHighLevelClient
+						.indices()
+						.deleteAsync(
+							new DeleteIndexRequest(t3.getT2()),
+							RequestOptions.DEFAULT,
+							new ReactorActionListener<>(sink)
+						))
+				)
+				.subscribe();
+	}
+
+	@Deactivate
+	void deactivate() {
+		_disposable.dispose();
+	}
+
+	private Disposable _disposable;
+
+	@Reference
+	private PluginDriverRegistry _pluginDriverRegistry;
+
+	@Reference
+	private DatasourceEventConsumer _datasourceEventConsumer;
+
+	@Reference
+	private RestHighLevelClientProvider _restHighLevelClientProvider;
+
+}

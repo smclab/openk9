@@ -1,4 +1,5 @@
 dependencies {
 	compile libraries.reactor
 	compile project(':osgi:database:sql-api')
+	compile project(':osgi:common:model')
 }

@@ -47,7 +47,7 @@ public class BindingBundleTrackerCustomizer
 		String routingKey = headers.get(Constants.RABBIT_ROUTING_KEY);
 		String queue = headers.get(Constants.RABBIT_QUEUE);
 
-		if (exchange == null || routingKey == null || queue == null) {
+		if (exchange == null) {
 			return null;
 		}
 
@@ -58,8 +58,15 @@ public class BindingBundleTrackerCustomizer
 		Dictionary<String, Object> senderProps = new Hashtable<>();
 
 		senderProps.put("exchange", exchange);
-		senderProps.put("routingKey", routingKey);
-		senderProps.put("queue", queue);
+
+		if (routingKey != null) {
+			senderProps.put("routingKey", routingKey);
+		}
+
+		if (queue != null) {
+			senderProps.put("queue", queue);
+		}
+
 		senderProps.put("exchangeType", type.name());
 
 		ServiceRegistration<Binding> serviceRegistration =

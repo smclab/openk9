@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Datasource Client Service
+Bundle-SymbolicName: io.openk9.datasource.client.service
+
+-include: ${project.rootDir}/osgi/common.bnd

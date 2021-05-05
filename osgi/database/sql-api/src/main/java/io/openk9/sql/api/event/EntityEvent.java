@@ -19,6 +19,10 @@ package io.openk9.sql.api.event;
 
 public abstract class EntityEvent<T> {
 
+	public enum Type {
+		INSERT,UPDATE,DELETE
+	}
+
 	private EntityEvent(Class<?> entityClass) {
 		_entityClass = entityClass;
 	}
@@ -28,6 +32,20 @@ public abstract class EntityEvent<T> {
 	}
 
 	public abstract T getValue();
+
+	public abstract Type getType();
+
+	public boolean isInsert() {
+		return false;
+	}
+
+	public boolean isUpdate() {
+		return false;
+	}
+
+	public boolean isDelete() {
+		return false;
+	}
 
 	public static class InsertEvent<T> extends EntityEvent<T> {
 
@@ -43,6 +61,16 @@ public abstract class EntityEvent<T> {
 		@Override
 		public T getValue() {
 			return getNewEntity();
+		}
+
+		@Override
+		public Type getType() {
+			return Type.INSERT;
+		}
+
+		@Override
+		public boolean isInsert() {
+			return true;
 		}
 
 		private final T _newEntity;
@@ -65,6 +93,16 @@ public abstract class EntityEvent<T> {
 			return getDeletedEntity();
 		}
 
+		@Override
+		public Type getType() {
+			return Type.DELETE;
+		}
+
+		@Override
+		public boolean isDelete() {
+			return true;
+		}
+
 		private final T _deletedEntity;
 
 	}
@@ -85,6 +123,16 @@ public abstract class EntityEvent<T> {
 		@Override
 		public T getValue() {
 			return getUpdatedEntity();
+		}
+
+		@Override
+		public Type getType() {
+			return Type.UPDATE;
+		}
+
+		@Override
+		public boolean isUpdate() {
+			return true;
 		}
 
 		private final T _updatedEntity;

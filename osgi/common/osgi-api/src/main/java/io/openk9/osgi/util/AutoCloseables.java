@@ -20,6 +20,7 @@ package io.openk9.osgi.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Objects;
 
 public class AutoCloseables {
@@ -57,6 +58,24 @@ public class AutoCloseables {
 		};
 	}
 
+	public static AutoCloseableSafe mergeAutoCloseableToSafe(
+		Collection<AutoCloseable> autoCloseables) {
+
+		return () -> {
+
+			for (AutoCloseable autoCloseable : autoCloseables) {
+				try {
+					autoCloseable.close();
+				}
+				catch (Exception e) {
+					_log.warn(e.getMessage(), e);
+				}
+			}
+
+
+		};
+	}
+
 	public interface AutoCloseableSafe {
 
 		void close();
@@ -67,6 +86,8 @@ public class AutoCloseables {
 		}
 
 	}
+
+	public static final AutoCloseableSafe NOTHING = () -> {};
 
 	private static final Logger _log =
 		LoggerFactory.getLogger(AutoCloseables.class);

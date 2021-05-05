@@ -17,7 +17,7 @@
 
 package io.openk9.ingestion.driver.manager.api;
 
-import io.openk9.datasource.model.Datasource;
+import io.openk9.model.Datasource;
 import io.openk9.http.client.HttpClient;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;

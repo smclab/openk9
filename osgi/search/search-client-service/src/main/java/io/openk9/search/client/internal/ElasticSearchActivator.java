@@ -19,7 +19,7 @@ package io.openk9.search.client.internal;
 
 import io.openk9.osgi.util.AutoCloseables;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
-import io.openk9.search.client.internal.configuration.ElasticSearchConfiguration;
+import io.openk9.search.client.api.configuration.ElasticSearchConfiguration;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;

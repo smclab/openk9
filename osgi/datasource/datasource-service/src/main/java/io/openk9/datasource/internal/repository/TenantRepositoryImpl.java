@@ -18,8 +18,8 @@
 package io.openk9.datasource.internal.repository;
 
 
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.model.Datasource;
+import io.openk9.model.Tenant;
 import io.openk9.datasource.repository.TenantRepository;
 import io.openk9.repository.http.api.RepositoryHttpExtender;
 import io.openk9.sql.api.InitSql;
@@ -138,7 +138,7 @@ public class TenantRepositoryImpl
 
 	@Reference(
 		target = "(|" +
-				 "(entity.mapper=io.openk9.datasource.model.Tenant)" +
+				 "(entity.mapper=io.openk9.model.Tenant)" +
 				 "(entity.mapper=default)" +
 				 ")",
 		service = EntityMapper.class,

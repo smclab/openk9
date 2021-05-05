@@ -19,8 +19,8 @@ package io.openk9.plugins.email.driver;
 
 import io.openk9.common.api.constant.Strings;
 import io.openk9.osgi.util.AutoCloseables;
-import io.openk9.search.client.api.mapping.Field;
-import io.openk9.search.client.api.mapping.FieldType;
+import io.openk9.ingestion.driver.manager.api.Field;
+import io.openk9.ingestion.driver.manager.api.FieldType;
 import io.openk9.ingestion.driver.manager.api.DocumentType;
 import io.openk9.ingestion.driver.manager.api.DocumentTypeFactory;
 import io.openk9.ingestion.driver.manager.api.DocumentTypeFactoryRegistry;

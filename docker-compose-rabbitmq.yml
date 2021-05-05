@@ -1,0 +1,11 @@
+version: "3.5"
+services:
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq
+        hostname: rabbitmq
+        environment:
+            RABBITMQ_DEFAULT_USER: openk9
+            RABBITMQ_DEFAULT_PASS: openk9
+        ports:
+            - 15672:15672

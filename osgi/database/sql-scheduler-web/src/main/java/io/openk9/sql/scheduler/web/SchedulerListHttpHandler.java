@@ -17,7 +17,7 @@
 
 package io.openk9.sql.scheduler.web;
 
-import io.openk9.datasource.model.Datasource;
+import io.openk9.model.Datasource;
 import io.openk9.datasource.repository.DatasourceRepository;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.web.Endpoint;

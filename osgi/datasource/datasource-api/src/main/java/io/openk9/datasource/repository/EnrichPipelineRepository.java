@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.repository;
 
-import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.model.EnrichPipeline;
 import io.openk9.sql.api.entity.ReactiveRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

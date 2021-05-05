@@ -18,8 +18,8 @@
 package io.openk9.search.enrich.api;
 
 import io.openk9.core.api.constant.Constants;
-import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.util.DatasourceContext;
+import io.openk9.model.EnrichItem;
+import io.openk9.model.DatasourceContext;
 import io.openk9.entity.manager.client.api.EntityManagerClient;
 import io.openk9.entity.manager.model.Entity;
 import io.openk9.entity.manager.model.payload.Request;
