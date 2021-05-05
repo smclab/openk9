@@ -16,6 +16,7 @@
  */
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 import clsx from "clsx";
 import { format } from "date-fns";
 import useSWR from "swr";
@@ -33,7 +34,11 @@ import {
 } from "@openk9/http-api";
 import { CronInput, CronInputType } from "./CronInput";
 import { AutocompleteItemIcon } from "./AutocompleteItemIcon";
-import { useLoginInfo } from "../state";
+import { isServer, useLoginInfo } from "../state";
+
+const DefaultSettingsEditor = dynamic(() => import("./DefaultSettingsEditor"), {
+  ssr: false,
+});
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   editElement: {
@@ -100,7 +105,10 @@ export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
       ps.driverServiceName === editingDataSource.driverServiceName,
   ) as DataSourcePlugin | null;
 
-  const SettingsRenderer = dataSourcePlugin?.settingsRenderer || null;
+  const SettingsRenderer =
+    dataSourcePlugin?.settingsRenderer ||
+    (!isServer && DefaultSettingsEditor) ||
+    null;
 
   const [
     minutesValue,
