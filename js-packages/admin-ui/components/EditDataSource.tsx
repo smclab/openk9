@@ -27,6 +27,7 @@ import ClayIcon from "@clayui/icon";
 import { pluginLoader, ThemeType } from "@openk9/search-ui-components";
 import {
   DataSourceInfo,
+  DataSourcePlugin,
   getDriverServiceNames,
   getPlugins,
 } from "@openk9/http-api";
@@ -90,8 +91,16 @@ export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
   const currentPlugin =
     currentPluginInfo &&
     plugins.find(([id]) => id === currentPluginInfo.pluginId);
-  const SettingsRenderer =
-    (currentPlugin && currentPlugin[2].adminPlugin?.settingsRenderer) || null;
+
+  const dataSourcePlugin = (
+    currentPlugin && currentPlugin[2]
+  )?.pluginServices.find(
+    (ps) =>
+      ps.type === "DATASOURCE" &&
+      ps.driverServiceName === editingDataSource.driverServiceName,
+  ) as DataSourcePlugin | null;
+
+  const SettingsRenderer = dataSourcePlugin?.settingsRenderer || null;
 
   const [
     minutesValue,
@@ -173,8 +182,14 @@ export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
                     dsn.startsWith(bi),
                   );
                   const plugin = pluginRecord && pluginRecord[2];
-                  const displayName = plugin?.displayName;
-                  const Icon = plugin?.adminPlugin?.iconRenderer;
+                  const dataSourcePlugin = plugin?.pluginServices.find(
+                    (ps) =>
+                      ps.type === "DATASOURCE" &&
+                      ps.driverServiceName ===
+                        editingDataSource.driverServiceName,
+                  ) as DataSourcePlugin | null;
+                  const displayName = dataSourcePlugin?.displayName;
+                  const Icon = dataSourcePlugin?.iconRenderer;
                   return (
                     <AutocompleteItemIcon
                       key={dsn}

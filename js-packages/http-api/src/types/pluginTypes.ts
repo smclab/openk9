@@ -32,17 +32,22 @@ export type PluginInfo = {
 export type Plugin<E> = {
   pluginId: string;
   displayName: string;
-  pluginType: ("DATASOURCE" | "SUGGESTION" | "ENRICH")[];
-  adminPlugin?: AdminPlugin;
-  dsPlugin?: DataSourcePlugin<E>;
-  suggestionsPlugin?: SuggestionsPlugin;
+  pluginServices: (
+    | DataSourcePlugin
+    | SuggestionsPlugin
+    | ResultRendererPlugin<E>
+  )[];
 };
 
-export type AdminPlugin = {
-  iconRenderer: React.FC<{ size?: number } & any>;
-  settingsRenderer: React.FC<{
-    currentSettings: any;
-    setCurrentSettings(a: any): void;
+export type DataSourcePlugin = {
+  type: "DATASOURCE";
+  displayName: string;
+  driverServiceName: string;
+  iconRenderer?: React.FC<{ size?: number } & any>;
+  initialSettings: string;
+  settingsRenderer?: React.FC<{
+    currentSettings: string;
+    setCurrentSettings(a: string): void;
   }>;
 };
 
@@ -51,23 +56,19 @@ export type ResultRendererProps<E> = {
   onSelect(): void;
 };
 
-export type ResultRenderersType<E> = {
-  [key: string]: React.FC<ResultRendererProps<E>>;
-};
-
 export type SidebarRendererProps<E> = {
   result: GenericResultItem<E>;
 };
 
-export type SidebarRenderersType<E> = {
-  [key: string]: React.FC<SidebarRendererProps<E>>;
-};
-
-export type DataSourcePlugin<E> = {
-  resultRenderers: ResultRenderersType<E>;
-  sidebarRenderers: SidebarRenderersType<E>;
+export type ResultRendererPlugin<E> = {
+  type: "RESULT_RENDERER";
+  priority?: number;
+  resultType: string;
+  resultRenderer: React.FC<ResultRendererProps<E>>;
+  sidebarRenderer: React.FC<SidebarRendererProps<E>>;
 };
 
 export type SuggestionsPlugin = {
+  type: "SUGGESTIONS";
   renderSuggestionIcons?: React.FC<{ suggestion: InputSuggestionToken }>;
 };

@@ -31,7 +31,7 @@ export async function loadPlugin<E>(id: string): Promise<Plugin<E>> {
   const defaultPlugin: Plugin<any> = {
     pluginId: id,
     displayName: id,
-    pluginType: [],
+    pluginServices: [],
   };
 
   try {

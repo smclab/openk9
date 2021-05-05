@@ -17,12 +17,8 @@
 
 import React, { useLayoutEffect } from "react";
 
-import {
-  GenericResultItem,
-  ResultRenderersType,
-  SearchResult,
-} from "@openk9/http-api";
-import { arrOrEncapsulate } from "../utils";
+import { GenericResultItem, SearchResult } from "@openk9/http-api";
+import { arrOrEncapsulate, ResultRenderersType } from "../utils";
 
 function ResultDisplay<E>({
   data,

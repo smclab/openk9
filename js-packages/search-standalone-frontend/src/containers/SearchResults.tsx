@@ -24,7 +24,6 @@ import {
   SearchResultsList,
   ResultSidebar,
   getPluginResultRenderers,
-  getPluginSidebarRenderers,
 } from "@openk9/search-ui-components";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
@@ -73,8 +72,9 @@ export function SearchResults() {
     selectedResult &&
     results.result.find((r) => r.source.id === selectedResult);
 
-  const resultRenderers = getPluginResultRenderers(pluginInfos);
-  const sidebarRenderers = getPluginSidebarRenderers(pluginInfos);
+  const { resultRenderers, sidebarRenderers } = getPluginResultRenderers(
+    pluginInfos,
+  );
 
   // useLayoutEffect(() => {
   //   function onKeyDown(e: KeyboardEvent) {

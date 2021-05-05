@@ -26,8 +26,9 @@ import { createAsset } from "use-asset";
 import {
   loadPlugin,
   PluginInfo,
-  ResultRenderersType,
-  SidebarRenderersType,
+  ResultRendererPlugin,
+  ResultRendererProps,
+  SidebarRendererProps,
 } from "@openk9/http-api";
 
 export const pluginLoader = createAsset(async (id) => {
@@ -46,34 +47,42 @@ export function loadPluginDepsIntoGlobal() {
   }
 }
 
+export type ResultRenderersType<E> = {
+  [key: string]: React.FC<ResultRendererProps<E>>;
+};
+
+export type SidebarRenderersType<E> = {
+  [key: string]: React.FC<SidebarRendererProps<E>>;
+};
+
 export function getPluginResultRenderers(pluginInfos: PluginInfo[]) {
   const plugins = pluginInfos
     .map((pI) => pluginLoader.read(pI.pluginId))
     .filter(Boolean);
 
-  let resultRenderersPlugins: ResultRenderersType<any> = {};
-  plugins.forEach((plugin) => {
-    resultRenderersPlugins = {
-      ...resultRenderersPlugins,
-      ...plugin.dsPlugin?.resultRenderers,
-    };
+  const resultRendererPluginServices = plugins
+    .flatMap((p) => p.pluginServices)
+    .filter(
+      (ps) => ps.type === "RESULT_RENDERER",
+    ) as ResultRendererPlugin<unknown>[];
+  const resultTypes = [
+    ...new Set(resultRendererPluginServices.map((ps) => ps.resultType)),
+  ];
+
+  const resultRenderers: ResultRenderersType<any> = {};
+  const sidebarRenderers: SidebarRenderersType<any> = {};
+  resultTypes.forEach((type) => {
+    resultRenderers[type] = resultRendererPluginServices
+      .filter((ps) => ps.resultType === type)
+      .sort(
+        (a, b) => (a.priority || -1) - (b.priority || -1),
+      )[0].resultRenderer;
+    sidebarRenderers[type] = resultRendererPluginServices
+      .filter((ps) => ps.resultType === type)
+      .sort(
+        (a, b) => (a.priority || -1) - (b.priority || -1),
+      )[0].sidebarRenderer;
   });
 
-  return resultRenderersPlugins;
-}
-
-export function getPluginSidebarRenderers(pluginInfos: PluginInfo[]) {
-  const plugins = pluginInfos
-    .map((pI) => pluginLoader.read(pI.pluginId))
-    .filter(Boolean);
-
-  let sidebarRenderersPlugins: SidebarRenderersType<any> = {};
-  plugins.forEach((plugin) => {
-    sidebarRenderersPlugins = {
-      ...sidebarRenderersPlugins,
-      ...plugin.dsPlugin?.sidebarRenderers,
-    };
-  });
-
-  return sidebarRenderersPlugins;
+  return { resultRenderers, sidebarRenderers };
 }

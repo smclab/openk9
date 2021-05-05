@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { createUseStyles } from "react-jss";
 import Link from "next/link";
 import useSWR from "swr";
@@ -23,10 +23,10 @@ import ClayIcon from "@clayui/icon";
 import ClayButton from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import { ClayTooltipProvider } from "@clayui/tooltip";
-import { ThemeType } from "@openk9/search-ui-components";
-import { getPlugins } from "@openk9/http-api";
+import { pluginLoader, ThemeType } from "@openk9/search-ui-components";
+import { getPlugins, PluginInfo } from "@openk9/http-api";
 import { Layout } from "../components/Layout";
-import { useLoginCheck, useLoginInfo } from "../state";
+import { isServer, useLoginCheck, useLoginInfo } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -184,9 +184,56 @@ function Controls({
   );
 }
 
-function TBody({ searchValue }: { searchValue: string }) {
+function TRow({ pluginInfo }: { pluginInfo: PluginInfo }) {
   const classes = useStyles();
 
+  const plugin = pluginLoader.read(pluginInfo.pluginId);
+
+  return (
+    <tr>
+      <td className="table-cell-expand">{plugin.displayName}</td>
+      <td className="table-cell-expand">{pluginInfo.pluginId}</td>
+      <td className="table-cell-expand">
+        <p className="table-list-title">{pluginInfo.bundleInfo.symbolicName}</p>
+      </td>
+      <td>
+        {pluginInfo.bundleInfo.state.startsWith("ACTIVE") ? (
+          <span className="label label-success">
+            <span className="label-item label-item-expand">
+              {pluginInfo.bundleInfo.state}
+            </span>
+          </span>
+        ) : (
+          <span className="label label-warning">
+            <span className="label-item label-item-expand">
+              {pluginInfo.bundleInfo.state}
+            </span>
+          </span>
+        )}
+      </td>
+      <td>
+        <div className={classes.actions}>
+          <ClayTooltipProvider>
+            <div>
+              <Link href={`/plugins/${pluginInfo.pluginId}/`} passHref>
+                <a
+                  className="disabled component-action quick-action-item"
+                  role="button"
+                  data-tooltip-align="top"
+                  title="Delete Plugin"
+                >
+                  <ClayIcon symbol="trash" />
+                </a>
+              </Link>
+            </div>
+          </ClayTooltipProvider>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function TBody({ searchValue }: { searchValue: string }) {
   const loginInfo = useLoginInfo();
 
   const { data } = useSWR(`/plugins`, () => getPlugins(loginInfo));
@@ -203,47 +250,13 @@ function TBody({ searchValue }: { searchValue: string }) {
 
   return (
     <tbody>
-      {filteredData.map((plugin) => (
-        <tr key={plugin.pluginId}>
-          <td className="table-cell-expand">{plugin.pluginId}</td>
-          <td className="table-cell-expand">
-            <p className="table-list-title">{plugin.bundleInfo.symbolicName}</p>
-          </td>
-          <td>
-            {plugin.bundleInfo.state.startsWith("ACTIVE") ? (
-              <span className="label label-success">
-                <span className="label-item label-item-expand">
-                  {plugin.bundleInfo.state}
-                </span>
-              </span>
-            ) : (
-              <span className="label label-warning">
-                <span className="label-item label-item-expand">
-                  {plugin.bundleInfo.state}
-                </span>
-              </span>
-            )}
-          </td>
-          <td>
-            <div className={classes.actions}>
-              <ClayTooltipProvider>
-                <div>
-                  <Link href={`/plugins/${plugin.pluginId}/`} passHref>
-                    <a
-                      className="disabled component-action quick-action-item"
-                      role="button"
-                      data-tooltip-align="top"
-                      title="Delete Plugin"
-                    >
-                      <ClayIcon symbol="trash" />
-                    </a>
-                  </Link>
-                </div>
-              </ClayTooltipProvider>
-            </div>
-          </td>
-        </tr>
-      ))}
+      {filteredData.map((pluginInfo) =>
+        isServer ? null : (
+          <Suspense fallback={<span className="loading-animation" />}>
+            <TRow key={pluginInfo.pluginId} pluginInfo={pluginInfo} />
+          </Suspense>
+        ),
+      )}
     </tbody>
   );
 }
@@ -267,6 +280,7 @@ function Plugins() {
         <table className="table table-autofit table-nowrap">
           <thead>
             <tr>
+              <th className="table-cell-expand">Display Name</th>
               <th className="table-cell-expand">Plugin ID</th>
               <th className="table-cell-expand">Symbolic Name</th>
               <th>Status</th>

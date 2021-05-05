@@ -18,9 +18,9 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
 
-import { GenericResultItem, SidebarRenderersType } from "@openk9/http-api";
+import { GenericResultItem } from "@openk9/http-api";
 import { ThemeType } from "../theme";
-import { arrOrEncapsulate } from "../utils";
+import { arrOrEncapsulate, SidebarRenderersType } from "../utils";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {

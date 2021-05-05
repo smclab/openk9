@@ -34,6 +34,7 @@ import {
 } from "@openk9/search-ui-components";
 import {
   DataSourceInfo,
+  DataSourcePlugin,
   deleteDataSource,
   getDataSources,
   getPlugins,
@@ -106,7 +107,12 @@ function DSItemRender({
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const Icon = plugin?.adminPlugin?.iconRenderer || DataSourceIcon;
+  const dataSourcePlugin = plugin?.pluginServices.find(
+    (ps) =>
+      ps.type === "DATASOURCE" && ps.driverServiceName === ds.driverServiceName,
+  ) as DataSourcePlugin | null;
+
+  const Icon = dataSourcePlugin?.iconRenderer || DataSourceIcon;
 
   return (
     <li className="list-group-item list-group-item-flex">
