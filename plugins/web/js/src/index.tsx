@@ -23,6 +23,7 @@ import { WebResultType } from "./types";
 import { PageResultCard } from "./PageResultCard";
 import { DocumentResultCard } from "./DocumentResultCard";
 import { DocumentSidebar } from "./DocumentSidebar";
+import { PageSidebar } from "./PageSidebar";
 
 export const plugin: Plugin<WebResultType> = {
   pluginId: "web-datasource",
@@ -45,7 +46,7 @@ export const plugin: Plugin<WebResultType> = {
       type: "RESULT_RENDERER",
       resultType: "web",
       resultRenderer: PageResultCard as any,
-      sidebarRenderer: DocumentSidebar as any,
+      sidebarRenderer: PageSidebar as any,
     },
   ],
 };
