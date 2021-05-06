@@ -33,7 +33,7 @@ export const plugin: Plugin<LiferayResultType> = {
   pluginServices: [
     {
       type: "DATASOURCE",
-      displayName: "Application DataSource",
+      displayName: "Liferay DataSource",
       driverServiceName: "io.openk9.plugins.liferay.driver.LiferayPluginDriver",
       iconRenderer,
       initialSettings: `

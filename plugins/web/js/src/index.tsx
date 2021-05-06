@@ -31,7 +31,7 @@ export const plugin: Plugin<WebResultType> = {
   pluginServices: [
     {
       type: "DATASOURCE",
-      displayName: "Application DataSource",
+      displayName: "Web DataSource",
       driverServiceName: "io.openk9.plugins.web.driver.WebPluginDriver",
       iconRenderer,
       initialSettings: `

@@ -29,7 +29,7 @@ export const plugin: Plugin<EmailResultItem> = {
   pluginServices: [
     {
       type: "DATASOURCE",
-      displayName: "Application DataSource",
+      displayName: "Email DataSource",
       driverServiceName: "io.openk9.plugins.email.driver.EmailPluginDriver",
       iconRenderer,
       initialSettings: `
