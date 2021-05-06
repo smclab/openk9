@@ -17,6 +17,7 @@
 
 import React, { Suspense, useState } from "react";
 import { createUseStyles } from "react-jss";
+import clsx from "clsx";
 import { useRouter } from "next/router";
 import useSWR, { mutate } from "swr";
 import { ClayInput } from "@clayui/form";
@@ -141,11 +142,18 @@ function EditInside({
       </div>
       <div className={classes.buttons}>
         <button
+          className={clsx("btn btn-secondary", classes.closeButton)}
+          type="button"
+          onClick={() => setIsEditMode(false)}
+        >
+          Close without Save
+        </button>
+        <button
           className="btn btn-primary"
           type="button"
           onClick={() => handleSave()}
         >
-          Save Settings
+          Save
         </button>
       </div>
     </>
