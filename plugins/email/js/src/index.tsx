@@ -30,9 +30,24 @@ export const plugin: Plugin<EmailResultItem> = {
     {
       type: "DATASOURCE",
       displayName: "Application DataSource",
-      driverServiceName: "",
+      driverServiceName: "io.openk9.plugins.email.driver.EmailPluginDriver",
       iconRenderer,
-      initialSettings: "{}",
+      initialSettings: `
+        {
+          "entities": [
+              "person",
+              "email",
+              "organization"
+          ],
+          "confidence": 0.9,
+          "mailServer": "172.20.20.1",
+          "port": "993",
+          "username": "test",
+          "password": "test",
+          "datasourceId": 99,
+          "folder": "INBOX"
+        }
+      `,
     },
     {
       type: "RESULT_RENDERER",

@@ -32,9 +32,21 @@ export const plugin: Plugin<WebResultType> = {
     {
       type: "DATASOURCE",
       displayName: "Application DataSource",
-      driverServiceName: "",
+      driverServiceName: "io.openk9.plugins.web.driver.WebPluginDriver",
       iconRenderer,
-      initialSettings: "{}",
+      initialSettings: `
+        {
+          "startUrls": ["https://www.google.com/"],
+          "allowedDomains": ["google.com"],
+          "allowedPaths": ["https://www.google.com/"],
+          "excludedPaths": [".pdf"],
+          "datasourceId": 99,
+          "timestamp": 0,
+          "depth": 2,
+          "max_length": 5000,
+          "page_count": 3000
+        }
+      `,
     },
     {
       type: "RESULT_RENDERER",

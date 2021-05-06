@@ -34,9 +34,18 @@ export const plugin: Plugin<LiferayResultType> = {
     {
       type: "DATASOURCE",
       displayName: "Application DataSource",
-      driverServiceName: "",
+      driverServiceName: "io.openk9.plugins.liferay.driver.LiferayPluginDriver",
       iconRenderer,
-      initialSettings: "{}",
+      initialSettings: `
+      {
+        "domain": "http://liferay-portal:8080",
+        "username": "test@liferay.com",
+        "password": "test",
+        "timestamp": ,
+        "companyId": 20097,
+        "datasourceId": 99
+      }
+      `,
     },
     {
       type: "RESULT_RENDERER",
