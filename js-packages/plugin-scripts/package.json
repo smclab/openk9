@@ -1,6 +1,6 @@
 {
   "name": "@openk9/plugin-scripts",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0",
   "author": "SMC",
   "description": "OpenK9 plugin building scripts",
   "main": "plugin-scripts.js",

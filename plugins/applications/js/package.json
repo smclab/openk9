@@ -1,6 +1,6 @@
 {
   "name": "@openk9/applications-datasource",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0",
   "private": true,
   "author": "SMC",
   "description": "OpenK9 Applications Data Source Frontend Module",
@@ -17,6 +17,6 @@
     "react-jss": "^10.4.0"
   },
   "devDependencies": {
-    "@openk9/plugin-scripts": "^0.1.0-alpha.3"
+    "@openk9/plugin-scripts": "^0.1.0"
   }
 }
