@@ -45,3 +45,9 @@ export async function loadPlugin<E>(id: string): Promise<Plugin<E>> {
     return defaultPlugin;
   }
 }
+
+export function getServices<E>(plugins: Plugin<E>[]) {
+  return plugins.flatMap((p) =>
+    p.pluginServices.map((ps) => ({ ...ps, pluginId: p.pluginId })),
+  );
+}

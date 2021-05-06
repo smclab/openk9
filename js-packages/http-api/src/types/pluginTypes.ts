@@ -29,14 +29,15 @@ export type PluginInfo = {
   };
 };
 
+export type PluginService<E> =
+  | DataSourcePlugin
+  | SuggestionsPlugin
+  | ResultRendererPlugin<E>;
+
 export type Plugin<E> = {
   pluginId: string;
   displayName: string;
-  pluginServices: (
-    | DataSourcePlugin
-    | SuggestionsPlugin
-    | ResultRendererPlugin<E>
-  )[];
+  pluginServices: PluginService<E>[];
 };
 
 export type DataSourcePlugin = {

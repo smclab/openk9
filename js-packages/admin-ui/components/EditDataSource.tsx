@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import clsx from "clsx";
 import { format } from "date-fns";
@@ -31,6 +31,9 @@ import {
   DataSourcePlugin,
   getDriverServiceNames,
   getPlugins,
+  getServices,
+  Plugin,
+  PluginInfo,
 } from "@openk9/http-api";
 import { CronInput, CronInputType } from "./CronInput";
 import { AutocompleteItemIcon } from "./AutocompleteItemIcon";
@@ -56,50 +59,28 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
+function Inner<T>({
   editingDataSource,
   onChange,
   onAbort,
   onSave,
+  pluginInfos,
+  plugins,
+  driverServiceNames,
 }: {
   editingDataSource: DataSourceInfo;
   onChange: React.Dispatch<React.SetStateAction<T>>;
   onAbort(): void;
   onSave(): void;
+  pluginInfos: PluginInfo[];
+  plugins: Plugin<unknown>[];
+  driverServiceNames: string[];
 }) {
   const classes = useStyles();
 
-  const loginInfo = useLoginInfo();
+  const pluginServices = getServices(plugins);
 
-  // TODO: check API to use
-  // Show also icon in the dropdown list?
-  const { data: driverServiceNames } = useSWR(
-    `/api/v1/driver-service-names`,
-    () => getDriverServiceNames(loginInfo),
-  );
-
-  const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
-    getPlugins(loginInfo),
-  );
-  const plugins = (pluginInfos || []).map(
-    (pi) =>
-      [
-        pi.pluginId,
-        pi.bundleInfo.symbolicName,
-        pluginLoader.read(pi.pluginId),
-      ] as const,
-  );
-
-  const currentPluginInfo = (pluginInfos || []).find((p) =>
-    editingDataSource.driverServiceName.startsWith(p.bundleInfo.symbolicName),
-  );
-  const currentPlugin =
-    currentPluginInfo &&
-    plugins.find(([id]) => id === currentPluginInfo.pluginId);
-
-  const dataSourcePlugin = (
-    currentPlugin && currentPlugin[2]
-  )?.pluginServices.find(
+  const dataSourcePlugin = pluginServices.find(
     (ps) =>
       ps.type === "DATASOURCE" &&
       ps.driverServiceName === editingDataSource.driverServiceName,
@@ -129,6 +110,23 @@ export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
   };
 
   const [activeAutocomplete, setActiveAutocomplete] = useState(false);
+
+  const [dsSettings, setDsSettings] = useState<{ [dsn: string]: string }>({});
+  useLayoutEffect(() => {
+    const result: { [dsn: string]: string } = {};
+    result[editingDataSource.driverServiceName] = editingDataSource.jsonConfig;
+
+    driverServiceNames?.forEach((dsn) => {
+      const ps = pluginServices.find(
+        (ps) => ps.type === "DATASOURCE" && ps.driverServiceName === dsn,
+      ) as DataSourcePlugin | null;
+
+      if (ps && !result[dsn]) {
+        result[dsn] = ps.initialSettings;
+      }
+    });
+    setDsSettings(result);
+  }, [driverServiceNames, pluginInfos]);
 
   return (
     <>
@@ -186,15 +184,9 @@ export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
             <ClayDropDown.ItemList>
               {driverServiceNames &&
                 driverServiceNames.map((dsn) => {
-                  const pluginRecord = plugins.find(([, bi]) =>
-                    dsn.startsWith(bi),
-                  );
-                  const plugin = pluginRecord && pluginRecord[2];
-                  const dataSourcePlugin = plugin?.pluginServices.find(
+                  const dataSourcePlugin = pluginServices.find(
                     (ps) =>
-                      ps.type === "DATASOURCE" &&
-                      ps.driverServiceName ===
-                        editingDataSource.driverServiceName,
+                      ps.type === "DATASOURCE" && ps.driverServiceName === dsn,
                   ) as DataSourcePlugin | null;
                   const displayName = dataSourcePlugin?.displayName;
                   const Icon = dataSourcePlugin?.iconRenderer;
@@ -202,9 +194,7 @@ export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
                     <AutocompleteItemIcon
                       key={dsn}
                       icon={Icon && <Icon size={16} />}
-                      match={
-                        editingDataSource.driverServiceName + " " + displayName
-                      }
+                      match={dsn + " " + displayName}
                       value={displayName || dsn}
                       onClick={() =>
                         onChange((ds) => ({ ...ds, driverServiceName: dsn }))
@@ -251,10 +241,14 @@ export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
       <div className={classes.editElement}>
         {SettingsRenderer && SettingsRenderer != null && (
           <SettingsRenderer
-            currentSettings={editingDataSource.jsonConfig}
-            setCurrentSettings={(e) =>
-              onChange((ds) => ({ ...ds, jsonConfig: e }))
-            }
+            currentSettings={dsSettings[editingDataSource.driverServiceName]}
+            setCurrentSettings={(e) => {
+              onChange((ds) => ({ ...ds, jsonConfig: e }));
+              setDsSettings((cfg) => ({
+                ...cfg,
+                [editingDataSource.driverServiceName]: e,
+              }));
+            }}
           />
         )}
       </div>
@@ -274,5 +268,41 @@ export function EditDataSource<T extends Partial<DataSourceInfo> | null>({
         </button>
       </div>
     </>
+  );
+}
+
+export function EditDataSource<
+  T extends Partial<DataSourceInfo> | null
+>(props: {
+  editingDataSource: DataSourceInfo;
+  onChange: React.Dispatch<React.SetStateAction<T>>;
+  onAbort(): void;
+  onSave(): void;
+}) {
+  const loginInfo = useLoginInfo();
+
+  const { data: driverServiceNames } = useSWR(
+    `/api/v1/driver-service-names`,
+    () => getDriverServiceNames(loginInfo),
+  );
+
+  const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
+    getPlugins(loginInfo),
+  );
+  const plugins = (pluginInfos || []).map((pi) =>
+    pluginLoader.read(pi.pluginId),
+  );
+
+  if (!pluginInfos || !driverServiceNames) {
+    return <span className="loading-animation" />;
+  }
+
+  return (
+    <Inner
+      pluginInfos={pluginInfos}
+      plugins={plugins}
+      driverServiceNames={driverServiceNames}
+      {...props}
+    />
   );
 }
