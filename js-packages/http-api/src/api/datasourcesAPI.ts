@@ -164,6 +164,14 @@ export async function deleteDataSource(
   return response;
 }
 
+export async function toggleDataSource(
+  datasourceId: number,
+  loginInfo: LoginInfo | null,
+  active: boolean,
+): Promise<DataSourceInfo> {
+  return changeDataSourceInfo(datasourceId, { active }, loginInfo);
+}
+
 export async function getSchedulerItems(
   loginInfo: LoginInfo | null,
 ): Promise<SchedulerItem[]> {

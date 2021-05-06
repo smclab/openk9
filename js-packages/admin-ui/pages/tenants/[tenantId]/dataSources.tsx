@@ -40,6 +40,7 @@ import {
   getPlugins,
   Plugin,
   PluginInfo,
+  toggleDataSource,
   triggerReindex,
 } from "@openk9/http-api";
 import { Layout } from "../../../components/Layout";
@@ -314,8 +315,18 @@ function Inside({
 
   async function toggle(ids: number[]) {
     if (!tenantDSs) return;
-    // await deleteDataSource(dsId, loginInfo);
-    // mutate(`/api/v2/datasource`);
+    await Promise.all(
+      ids.map((dsId) =>
+        toggleDataSource(
+          dsId,
+          loginInfo,
+          !(
+            filteredData.find((ds) => ds.datasourceId === dsId)?.active || false
+          ),
+        ),
+      ),
+    );
+    mutate(`/api/v2/datasource`);
     const selected = tenantDSs.filter((ds) => ids.includes(ds.datasourceId));
     const targetState =
       selected.map((ds) => ds.active).filter(Boolean).length <=
