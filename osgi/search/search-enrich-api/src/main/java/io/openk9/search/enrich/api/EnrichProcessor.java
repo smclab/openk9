@@ -21,17 +21,18 @@ import io.openk9.model.EnrichItem;
 import io.openk9.model.DatasourceContext;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import reactor.core.publisher.Mono;
 
 public interface EnrichProcessor {
 
 	Mono<ObjectNode> process(
 		ObjectNode objectNode, DatasourceContext datasourceContext,
-		EnrichItem enrichItem, String pluginDriverName);
+		EnrichItem enrichItem, PluginDriverDTO pluginDriverDTO);
 
 	default Mono<ObjectNode> process(
 		ObjectNode objectNode, DatasourceContext datasourceContext,
-		String pluginDriverName) {
+		PluginDriverDTO pluginDriverDTO) {
 
 		EnrichItem enrichItem = datasourceContext
 			.getEnrichItems()
@@ -40,7 +41,7 @@ public interface EnrichProcessor {
 			.findFirst().orElseThrow(IllegalStateException::new);
 
 		return process(
-			objectNode, datasourceContext, enrichItem, pluginDriverName);
+			objectNode, datasourceContext, enrichItem, pluginDriverDTO);
 
 	}
 
@@ -50,7 +51,9 @@ public interface EnrichProcessor {
 		@Override
 		public Mono<ObjectNode> process(
 			ObjectNode objectNode, DatasourceContext datasourceContext,
-			EnrichItem enrichItem, String pluginDriverName) {
+			EnrichItem enrichItem, PluginDriverDTO pluginDriverDTO) {
+
+			String pluginDriverName = pluginDriverDTO.getName();
 
 			if (objectNode.hasNonNull(pluginDriverName)) {
 

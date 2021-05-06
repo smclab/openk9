@@ -1,0 +1,6 @@
+dependencies {
+	compile project(':osgi:common:serialization-api')
+	compile project(':osgi:ingestion:ingestion-api')
+	compile project(":osgi:index-writer:index-writer-model")
+	compile project(":osgi:index-writer:index-writer-mappings-publisher-api")
+}

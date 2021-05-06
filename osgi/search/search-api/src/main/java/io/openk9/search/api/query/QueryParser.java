@@ -17,11 +17,10 @@
 
 package io.openk9.search.api.query;
 
+import io.openk9.http.web.HttpRequest;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.ingestion.driver.manager.api.DocumentType;
-import io.openk9.ingestion.driver.manager.api.PluginDriver;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -52,7 +51,7 @@ public interface QueryParser
 	class Context {
 		final Tenant tenant;
 		final List<Datasource> datasourceList;
-		final List<Map.Entry<PluginDriver, List<DocumentType>>> pluginDriverDocumentTypeList;
+		final List<PluginDriverDTO> pluginDriverDocumentTypeList;
 		final Map<String, List<SearchToken>> tokenTypeGroup;
 		final HttpRequest httpRequest;
 	}

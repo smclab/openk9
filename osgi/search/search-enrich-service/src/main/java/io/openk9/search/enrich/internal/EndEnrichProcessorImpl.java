@@ -19,7 +19,6 @@ package io.openk9.search.enrich.internal;
 
 import io.openk9.cbor.api.CBORFactory;
 import io.openk9.common.api.constant.Strings;
-import io.openk9.ingestion.api.OutboundMessage;
 import io.openk9.ingestion.api.OutboundMessageFactory;
 import io.openk9.ingestion.api.SenderReactor;
 import io.openk9.search.enrich.api.EndEnrichProcessor;
@@ -37,7 +36,7 @@ import reactor.core.publisher.Mono;
 public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 
 	@interface Config {
-		String exchange() default "index-writer-topic";
+		String exchange() default "index-writer.topic";
 		String routingKeySuffix() default "data";
 	}
 
@@ -71,7 +70,7 @@ public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 						.getTenantId();
 
 				String pluginDriverName =
-					enrichProcessorContext.getPluginDriverName();
+					enrichProcessorContext.getPluginDriverDTO().getName();
 
 				return _outboundMessageFactory.createOutboundMessage(
 						builder -> builder

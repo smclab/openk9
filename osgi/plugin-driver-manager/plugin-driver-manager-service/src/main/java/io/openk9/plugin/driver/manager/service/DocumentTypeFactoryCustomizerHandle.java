@@ -17,23 +17,22 @@
 
 package io.openk9.plugin.driver.manager.service;
 
-import io.openk9.osgi.util.AutoCloseables;
-import io.openk9.plugin.driver.manager.api.DocumentTypeFactory;
-import io.openk9.plugin.driver.manager.api.DocumentTypeFactory.DefaultDocumentTypeFactory;
 import io.openk9.plugin.driver.manager.api.DocumentTypeFactoryCustomizer;
+import io.openk9.plugin.driver.manager.api.DocumentTypeProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 
-import java.util.function.BiFunction;
+import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
@@ -44,140 +43,65 @@ public class DocumentTypeFactoryCustomizerHandle {
 	@Activate
 	public void activate(BundleContext bundleContext) {
 
-		Sinks.Many<DefaultDocumentTypeFactory> documentTypeFactoryBus =
-			Sinks.many().unicast().onBackpressureBuffer();
-
-		Sinks.Many<DocumentTypeFactoryCustomizer>
-			documentTypeFactoryCustomizerBus =
-				Sinks.many().unicast().onBackpressureBuffer();
-
-		ServiceTracker<DocumentTypeFactory, DocumentTypeFactory>
-			documentTypeFactoryServiceTracker = new ServiceTracker<>(
-			bundleContext, DocumentTypeFactory.class,
-			_createServiceTrackerCustomizer(
-				bundleContext,
-				(t, tServiceReference) -> {
-					if (t instanceof DefaultDocumentTypeFactory) {
-						return (DefaultDocumentTypeFactory) t;
-					}
-					return DefaultDocumentTypeFactory.of(
-						(String)tServiceReference.getProperty(
-							DocumentTypeFactory.PLUGIN_DRIVER_NAME),
-						_objToBoolean(
-							tServiceReference
-								.getProperty(DocumentTypeFactory.DEFAULT)),
-						t.getDocumentType()
-					);
-				},
-				documentTypeFactoryBus));
-
-		documentTypeFactoryServiceTracker.open();
-
-		ServiceTracker<DocumentTypeFactoryCustomizer, DocumentTypeFactoryCustomizer>
-			documentTypeFactoryCustomizerServiceTracker = new ServiceTracker<>(
+		_serviceTracker = new ServiceTracker<>(
 			bundleContext, DocumentTypeFactoryCustomizer.class,
-			_createServiceTrackerCustomizer(
-				bundleContext,
-				documentTypeFactoryCustomizerBus));
+			new ServiceTrackerCustomizer<>() {
+				@Override
+				public DocumentTypeFactoryCustomizer addingService(
+					ServiceReference<DocumentTypeFactoryCustomizer> reference) {
 
-		documentTypeFactoryCustomizerServiceTracker.open();
+					DocumentTypeFactoryCustomizer service =
+						bundleContext.getService(reference);
 
-		Flux<DefaultDocumentTypeFactory> documentTypeFactoryFlux =
-			documentTypeFactoryBus
-				.asFlux()
-				.cache();
+					List<Mono<Void>> collect =
+						_documentTypeProvider
+							.getDocumentTypeMap()
+							.entrySet()
+							.stream()
+							.map(service)
+							.collect(Collectors.toList());
 
-		Flux<DocumentTypeFactoryCustomizer> documentTypeFactoryCustomizerFlux =
-			documentTypeFactoryCustomizerBus
-				.asFlux();
+					Flux.concat(collect).blockLast(Duration.ofSeconds(10));
 
-		Disposable subscribe = documentTypeFactoryCustomizerFlux
-			.flatMap(dtfc ->
-				documentTypeFactoryFlux
-					.flatMap(dtf -> Mono.fromRunnable(() -> dtfc.accept(dtf))))
-			.subscribe();
+					return service;
 
-		_autoClosableSafe = AutoCloseables.mergeAutoCloseableToSafe(
-			documentTypeFactoryServiceTracker::close,
-			documentTypeFactoryCustomizerServiceTracker::close,
-			subscribe::dispose,
-			() -> documentTypeFactoryBus.emitComplete(Sinks.EmitFailureHandler.FAIL_FAST),
-			() -> documentTypeFactoryCustomizerBus.emitComplete(Sinks.EmitFailureHandler.FAIL_FAST)
-		);
+				}
 
+				@Override
+				public void modifiedService(
+					ServiceReference<DocumentTypeFactoryCustomizer> reference,
+					DocumentTypeFactoryCustomizer service) {
+
+					removedService(reference, service);
+
+					addingService(reference);
+
+				}
+
+				@Override
+				public void removedService(
+					ServiceReference<DocumentTypeFactoryCustomizer> reference,
+					DocumentTypeFactoryCustomizer service) {
+
+					bundleContext.ungetService(reference);
+
+				}
+			});
+
+		_serviceTracker.open(true);
 
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_autoClosableSafe.close();
+		_serviceTracker.close();
 	}
 
-	private boolean _objToBoolean(Object obj) {
+	private ServiceTracker<
+		DocumentTypeFactoryCustomizer, DocumentTypeFactoryCustomizer>
+			_serviceTracker;
 
-		if (obj == null) {
-			return false;
-		}
-
-		if (obj instanceof Boolean) {
-			return(boolean)obj;
-		}
-
-		if (obj instanceof String) {
-			return Boolean.parseBoolean((String)obj);
-		}
-
-		return false;
-
-	}
-
-	private <T> ServiceTrackerCustomizer<T, T> _createServiceTrackerCustomizer(
-		BundleContext context, Sinks.Many<T> sink) {
-
-		return _createServiceTrackerCustomizer(
-			context, (t, tServiceReference) -> t, sink);
-
-	}
-
-	private <T, R> ServiceTrackerCustomizer<T, T>
-		_createServiceTrackerCustomizer(
-			BundleContext context,
-			BiFunction<T, ServiceReference<T>, R> function,
-			Sinks.Many<R> sink) {
-
-		return new ServiceTrackerCustomizer<T, T>() {
-			@Override
-			public T addingService(ServiceReference<T> reference) {
-
-				T service = context.getService(reference);
-
-				sink.emitNext(
-					function.apply(service, reference),
-					Sinks.EmitFailureHandler.FAIL_FAST);
-
-				return service;
-			}
-
-			@Override
-			public void modifiedService(
-				ServiceReference<T> reference, T service) {
-
-				removedService(reference, service);
-
-				addingService(reference);
-
-			}
-
-			@Override
-			public void removedService(
-				ServiceReference<T> reference, T service) {
-
-				context.ungetService(reference);
-
-			}
-		};
-	}
-
-	private AutoCloseables.AutoCloseableSafe _autoClosableSafe;
+	@Reference
+	private DocumentTypeProvider _documentTypeProvider;
 
 }

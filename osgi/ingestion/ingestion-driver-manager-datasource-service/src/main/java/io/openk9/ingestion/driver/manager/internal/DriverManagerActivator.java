@@ -17,11 +17,11 @@
 
 package io.openk9.ingestion.driver.manager.internal;
 
-import io.openk9.ingestion.driver.manager.api.PluginDriver;
-import io.openk9.ingestion.driver.manager.api.PluginDriverRegistry;
-import io.openk9.model.Datasource;
 import io.openk9.datasource.repository.DatasourceRepository;
+import io.openk9.model.Datasource;
 import io.openk9.osgi.util.AutoCloseables;
+import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
+import io.openk9.plugin.driver.manager.model.SchedulerEnabledDTO;
 import io.openk9.sql.api.event.EntityEvent;
 import io.openk9.sql.api.event.EntityEventBus;
 import org.apache.karaf.scheduler.Job;
@@ -39,8 +39,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component(
 	immediate = true,
@@ -92,13 +90,6 @@ public class DriverManagerActivator {
 
 	@Deactivate
 	public void deactivate() throws SchedulerError {
-
-		for (Disposable disposable : _disposables) {
-			if (!disposable.isDisposed()) {
-				disposable.dispose();
-			}
-			_disposables.remove(disposable);
-		}
 
 		_unschedule();
 
@@ -165,25 +156,31 @@ public class DriverManagerActivator {
 
 		return (context) -> {
 
-			Optional<PluginDriver> pluginDriver =
-				_pluginDriverRegistry.getPluginDriver(serviceName)
-					.filter(PluginDriver::schedulerEnabled);
+			Boolean schedulerEnabled =
+				_pluginDriverManagerClient
+					.schedulerEnabled(serviceName)
+					.map(SchedulerEnabledDTO::isSchedulerEnabled)
+					.doOnError(this::_logError)
+					.onErrorReturn(Boolean.FALSE)
+					.block();
 
-			if (pluginDriver.isPresent()) {
+			if (schedulerEnabled) {
 
-				_disposables.add(
+				Datasource newDatasource =
 					_datasourceRepository
 						.findByPrimaryKey(datasourceId)
-						.flatMap(newDatasource ->
-							Mono.from(
-								pluginDriver
-									.get()
-									.invokeDataParser(
-										newDatasource,
-										Date.from(newDatasource.getLastIngestionDate()),
-										new Date())))
-						.subscribe()
-				);
+						.block();
+
+				_pluginDriverManagerClient
+					.invokeDataParser(
+						serviceName,
+						newDatasource,
+						Date.from(newDatasource.getLastIngestionDate()),
+						new Date()
+					)
+					.doOnError(this::_logError)
+					.onErrorContinue((throwable, o) -> _logError(throwable))
+					.block();
 			}
 			else {
 				if (_log.isWarnEnabled()) {
@@ -197,8 +194,11 @@ public class DriverManagerActivator {
 		};
 	}
 
-	private final CopyOnWriteArrayList<Disposable> _disposables =
-		new CopyOnWriteArrayList<>();
+	private void _logError(Throwable throwable) {
+		if (_log.isErrorEnabled()) {
+			_log.error(throwable.getMessage(), throwable);
+		}
+	}
 
 	private AutoCloseables.AutoCloseableSafe _autoClosableSafe;
 
@@ -209,7 +209,7 @@ public class DriverManagerActivator {
 	private DatasourceRepository _datasourceRepository;
 
 	@Reference
-	private PluginDriverRegistry _pluginDriverRegistry;
+	private PluginDriverManagerClient _pluginDriverManagerClient;
 
 	@Reference
 	private EntityEventBus _entityEventBus;

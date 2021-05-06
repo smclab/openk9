@@ -1,7 +1,7 @@
 package io.openk9.index.writer.internal.datasource.consumer;
 
 import io.openk9.datasource.event.consumer.api.DatasourceEventConsumer;
-import io.openk9.ingestion.driver.manager.api.PluginDriverRegistry;
+import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.search.client.api.ReactorActionListener;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -15,6 +15,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
@@ -36,18 +38,23 @@ public class ReindexDatasourceConsumer {
 		_disposable =
 			_datasourceEventConsumer
 				.datasourceUpdateEvents()
-				.map(datasource ->
-					Tuples.of(
-						datasource,
-						datasource.getTenantId() +
-							  "-" +
-							  _pluginDriverRegistry
-							.getPluginDriver(
-								datasource.getDriverServiceName())
-							.get()
-							.getName() +
-							  "-data"
-					)
+				.flatMap(datasource ->
+					_pluginDriverManagerClient
+						.getPluginDriver(
+							datasource.getDriverServiceName())
+						.onErrorResume(throwable -> {
+							if (_log.isErrorEnabled()) {
+								_log.error(throwable.getMessage());
+							}
+							return Mono.empty();
+						})
+						.map(pluginDriverDTO -> Tuples.of(
+							datasource,
+							datasource.getTenantId() +
+							"-" +
+							pluginDriverDTO.getName() +
+							"-data"
+						))
 				)
 				.filterWhen(t2 ->
 					Mono.create(sink ->
@@ -107,12 +114,15 @@ public class ReindexDatasourceConsumer {
 	private Disposable _disposable;
 
 	@Reference
-	private PluginDriverRegistry _pluginDriverRegistry;
+	private PluginDriverManagerClient _pluginDriverManagerClient;
 
 	@Reference
 	private DatasourceEventConsumer _datasourceEventConsumer;
 
 	@Reference
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
+
+	private static final Logger _log =
+		LoggerFactory.getLogger(ReindexDatasourceConsumer.class);
 
 }

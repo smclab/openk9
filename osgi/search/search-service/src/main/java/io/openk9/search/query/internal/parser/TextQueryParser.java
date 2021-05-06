@@ -1,8 +1,9 @@
 package io.openk9.search.query.internal.parser;
 
-import io.openk9.ingestion.driver.manager.api.DocumentType;
-import io.openk9.ingestion.driver.manager.api.PluginDriver;
-import io.openk9.ingestion.driver.manager.api.SearchKeyword;
+import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
+import io.openk9.plugin.driver.manager.model.FieldBoostDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
+import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchToken;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -41,7 +42,7 @@ public class TextQueryParser implements QueryParser {
 
 	private void _textEntityQuery(
 		List<SearchToken> tokenTextList, BoolQueryBuilder query,
-		List<Map.Entry<PluginDriver, List<DocumentType>>> entityMapperList) {
+		List<PluginDriverDTO> entityMapperList) {
 
 		for (SearchToken searchToken : tokenTextList) {
 			_termQueryPrefixValues(searchToken, query, entityMapperList);
@@ -50,7 +51,7 @@ public class TextQueryParser implements QueryParser {
 
 	private void _termQueryPrefixValues(
 		SearchToken tokenText, BoolQueryBuilder query,
-		List<Map.Entry<PluginDriver, List<DocumentType>>> entityMapperList) {
+		List<PluginDriverDTO> entityMapperList) {
 
 		String[] values = tokenText.getValues();
 
@@ -60,24 +61,24 @@ public class TextQueryParser implements QueryParser {
 
 		String keywordKey = tokenText.getKeywordKey();
 
-		Predicate<SearchKeyword> keywordKeyPredicate =
+		Predicate<SearchKeywordDTO> keywordKeyPredicate =
 			searchKeyword -> keywordKey == null || keywordKey.isEmpty() ||
 							 searchKeyword.getKeyword().equals(keywordKey);
 
 		Map<String, Float> keywordBoostMap =
 			entityMapperList
 				.stream()
-				.map(Map.Entry::getValue)
+				.map(PluginDriverDTO::getDocumentTypes)
 				.flatMap(Collection::stream)
-				.map(DocumentType::getSearchKeywords)
+				.map(DocumentTypeDTO::getSearchKeywords)
 				.flatMap(Collection::stream)
-				.filter(SearchKeyword::isText)
+				.filter(SearchKeywordDTO::isText)
 				.distinct()
 				.filter(keywordKeyPredicate)
-				.map(SearchKeyword::getFieldBoost)
+				.map(SearchKeywordDTO::getFieldBoost)
 				.collect(
 					Collectors.toMap(
-						Map.Entry::getKey, Map.Entry::getValue));
+						FieldBoostDTO::getKeyword, FieldBoostDTO::getBoost));
 
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();

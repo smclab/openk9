@@ -36,7 +36,7 @@ public class DatasourceConsumer {
 	@Reference
 	private CBORFactory _cborFactory;
 
-	@Reference(target = "(queue=datasource)")
+	@Reference(target = "(queue=ingestion)")
 	private BundleReceiver _bundleReceiver;
 
 	@Reference

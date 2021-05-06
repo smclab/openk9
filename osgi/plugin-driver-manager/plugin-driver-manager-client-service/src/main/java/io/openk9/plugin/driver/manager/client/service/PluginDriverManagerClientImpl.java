@@ -4,9 +4,12 @@ import io.openk9.http.client.HttpClient;
 import io.openk9.http.client.HttpClientFactory;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.model.Datasource;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
+import io.openk9.plugin.driver.manager.model.InvokeDataParserDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
+import io.openk9.plugin.driver.manager.model.SchedulerEnabledDTO;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -15,6 +18,7 @@ import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 @Component(
@@ -43,6 +47,50 @@ public class PluginDriverManagerClientImpl
 
 		activate(config);
 
+	}
+
+	@Deactivate
+	void deactivate() {
+		_pluginDriverManagerClient = null;
+	}
+
+	@Override
+	public Mono<Void> invokeDataParser(
+		String serviceDriverName, Datasource datasource, Date fromDate,
+		Date toDate) {
+
+		return Mono
+			.from(
+				_pluginDriverManagerClient
+					.request(
+						HttpHandler.POST,
+						"/v1/plugin-driver/invoke-data-parser/",
+						_jsonFactory.toJson(
+							InvokeDataParserDTO
+								.builder()
+								.serviceDriverName(serviceDriverName)
+								.datasource(datasource)
+								.fromDate(fromDate)
+								.toDate(toDate)
+								.build()
+						),
+						Map.of()
+					)
+			)
+			.then();
+	}
+
+	@Override
+	public Mono<SchedulerEnabledDTO> schedulerEnabled(String serviceDriverName) {
+		return Mono
+			.from(
+				_pluginDriverManagerClient
+					.request(
+						HttpHandler.GET,
+						"/v1/plugin-driver/scheduler-enabled/" + serviceDriverName
+					)
+			)
+			.map(bytes -> _jsonFactory.fromJson(bytes, SchedulerEnabledDTO.class));
 	}
 
 	@Override
@@ -87,11 +135,6 @@ public class PluginDriverManagerClientImpl
 			)
 			.map(bytes -> _jsonFactory.fromJson(bytes, PluginDriverDTOList.class));
 
-	}
-
-	@Deactivate
-	void deactivate() {
-		_pluginDriverManagerClient = null;
 	}
 
 	private HttpClient _pluginDriverManagerClient;

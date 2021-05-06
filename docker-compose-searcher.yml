@@ -5,7 +5,7 @@ services:
         container_name: openk9-searcher
         command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
         environment:
-            WAIT_HOSTS: elasticsearch:5432
+            WAIT_HOSTS: elasticsearch:9200
             WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
         volumes:

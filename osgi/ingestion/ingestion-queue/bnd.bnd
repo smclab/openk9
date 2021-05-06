@@ -3,5 +3,5 @@ Bundle-SymbolicName: io.openk9.ingestion.queue
 
 -include: ${project.rootDir}/osgi/common.bnd
 
-Rabbit-Exchange: openk9.topic
-Rabbit-Routing-Key: io.openk9
+Rabbit-Exchange: io.openk9.ingestion.topic
+Rabbit-Routing-Key: io.openk9.ingestion

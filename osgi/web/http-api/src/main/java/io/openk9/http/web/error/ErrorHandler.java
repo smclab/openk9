@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
-import java.util.Objects;
 import java.util.function.BiFunction;
 
 public interface ErrorHandler extends
@@ -42,19 +41,13 @@ public interface ErrorHandler extends
 			if (throwable instanceof HttpException) {
 				HttpException httpException = (HttpException) throwable;
 
-				Publisher<String> body = httpException.getBody();
-
 				String status = httpResponse.status(
 					httpException.getStatusCode(),
 					httpException.getReason());
 
-				return httpResponse.sendString(
-					Objects.requireNonNullElseGet(
-						body,
-						() -> Mono.just(status)));
+				return httpResponse.sendString(Mono.just(status));
 
 			}
-
 
 			return httpResponse.sendString(
 				Mono.just(

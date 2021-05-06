@@ -20,18 +20,15 @@ package io.openk9.search.enrich.internal;
 import io.openk9.cbor.api.CBORFactory;
 import io.openk9.http.osgi.constants.Constants;
 import io.openk9.ingestion.api.BundleReceiver;
-import io.openk9.ingestion.driver.manager.api.DocumentType;
-import io.openk9.ingestion.driver.manager.api.DocumentTypeProvider;
-import io.openk9.ingestion.driver.manager.api.PluginDriver;
-import io.openk9.ingestion.driver.manager.api.PluginDriverRegistry;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
-import io.openk9.model.Datasource;
 import io.openk9.model.DatasourceContext;
 import io.openk9.model.EnrichItem;
-import io.openk9.model.IngestionDatasourcePayload;
+import io.openk9.plugin.driver.manager.model.IngestionDatasourcePluginDriverPayload;
 import io.openk9.osgi.util.AutoCloseables;
+import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.enrich.api.StartEnrichProcessor;
 import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
 import org.osgi.service.component.annotations.Activate;
@@ -44,13 +41,11 @@ import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.util.concurrent.Queues;
-import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component(immediate = true, service = EnrichPipelineProcessor.class)
@@ -75,15 +70,16 @@ public class EnrichPipelineProcessor {
 		return _bundleReceiver
 			.consumeAutoAck(Queues.XS_BUFFER_SIZE)
 			.map(delivery -> _cborFactory.fromCBOR(
-				delivery.getBody(), IngestionDatasourcePayload.class))
+				delivery.getBody(), IngestionDatasourcePluginDriverPayload.class))
 			.map(idp ->
 				_mapToEnrichProcessorContext(
-					_addPluginDriverData(
+					_adaptIngestionPayload(
 						Tuples.of(
 							idp.getDatasourceContext(),
 							_cborFactory
 								.treeNode(idp.getIngestionPayload())
-								.toObjectNode()
+								.toObjectNode(),
+							idp.getPluginDriverDTO()
 						)
 					)
 				)
@@ -94,7 +90,7 @@ public class EnrichPipelineProcessor {
 	}
 
 	private EnrichProcessorContext _mapToEnrichProcessorContext(
-		Tuple3<DatasourceContext, ObjectNode, PluginDriver> t3) {
+		Tuple3<DatasourceContext, ObjectNode, PluginDriverDTO> t3) {
 
 		List<String> dependencies = t3
 			.getT1()
@@ -108,32 +104,21 @@ public class EnrichPipelineProcessor {
 			.dependencies(dependencies)
 			.datasourceContext(t3.getT1())
 			.objectNode(t3.getT2().toMap())
-			.pluginDriverName(t3.getT3().getName())
+			.pluginDriverDTO(t3.getT3())
 			.build();
 	}
 
 	private Tuple3<
 		DatasourceContext,
-		ObjectNode, PluginDriver> _addPluginDriverData(
-		Tuple2<
+		ObjectNode, PluginDriverDTO> _adaptIngestionPayload(
+		Tuple3<
 			DatasourceContext,
-			ObjectNode> t3) {
+			ObjectNode,
+			PluginDriverDTO> t3) {
 
 		ObjectNode ingestionPayload = t3.getT2();
 
-		Datasource datasource = t3.getT1().getDatasource();
-
-		String driverServiceName = datasource.getDriverServiceName();
-
-		Optional<PluginDriver> pluginDriverOptional =
-			_pluginDriverProvider
-				.getPluginDriver(driverServiceName);
-
-		PluginDriver pluginDriver =
-			pluginDriverOptional.orElseThrow(
-				() -> new RuntimeException(
-					"pluginDriver not found for driverServiceName: "
-					+ driverServiceName));
+		PluginDriverDTO pluginDriverDTO = t3.getT3();
 
 		ObjectNode newIngestionPayload = ingestionPayload;
 
@@ -162,7 +147,7 @@ public class EnrichPipelineProcessor {
 				.deepCopy()
 				.put(
 					Constants.DATASOURCE_NAME,
-					pluginDriver.getName());
+					pluginDriverDTO.getName());
 		}
 
 		if (
@@ -173,13 +158,12 @@ public class EnrichPipelineProcessor {
 			return Tuples.of(
 				t3.getT1(),
 				t3.getT2(),
-				pluginDriver
+				pluginDriverDTO
 			);
 		}
 
-		DocumentType documentType =
-			_documentTypeProvider.getDefaultDocumentType(
-				pluginDriver.getName());
+		DocumentTypeDTO documentType =
+			pluginDriverDTO.getDefaultDocumentType();
 
 		return Tuples.of(
 			t3.getT1(),
@@ -189,7 +173,7 @@ public class EnrichPipelineProcessor {
 					_jsonFactory
 						.createArrayNode()
 						.add(documentType.getName())),
-			pluginDriver
+			pluginDriverDTO
 		);
 
 
@@ -225,13 +209,7 @@ public class EnrichPipelineProcessor {
 	private BundleReceiver _bundleReceiver;
 
 	@Reference
-	private PluginDriverRegistry _pluginDriverProvider;
-
-	@Reference
 	private StartEnrichProcessor _startEnrichProcessor;
-
-	@Reference
-	private DocumentTypeProvider _documentTypeProvider;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		EnrichPipelineProcessor.class);

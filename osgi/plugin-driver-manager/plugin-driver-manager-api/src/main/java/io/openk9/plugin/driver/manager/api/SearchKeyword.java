@@ -19,11 +19,8 @@ package io.openk9.plugin.driver.manager.api;
 
 import io.openk9.common.api.constant.Strings;
 import lombok.EqualsAndHashCode;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.Map;
-import java.util.function.BiFunction;
 
 @EqualsAndHashCode
 public abstract class SearchKeyword {
@@ -52,15 +49,6 @@ public abstract class SearchKeyword {
 
 	public Map.Entry<String, Float> getFieldBoost() {
 		return Map.entry(getKeyword(), 1.0f);
-	}
-
-	public QueryBuilder process(
-		String value, BiFunction<String, Object, QueryBuilder> biFunction) {
-		return biFunction.apply(value, getKeyword());
-	}
-
-	public QueryBuilder process(String value) {
-		return process(value, QueryBuilders::matchBoolPrefixQuery);
 	}
 
 	public static SearchKeyword boostText(String keyword, float boost) {
@@ -119,14 +107,6 @@ public abstract class SearchKeyword {
 
 		public Map.Entry<String, Float> getFieldBoost() {
 			return Map.entry(getKeyword(), boost);
-		}
-
-		@Override
-		public QueryBuilder process(
-			String value,
-			BiFunction<String, Object, QueryBuilder> biFunction) {
-
-			return super.process(value, biFunction).boost(boost);
 		}
 
 		private final float boost;

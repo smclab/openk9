@@ -46,7 +46,7 @@ public class SendToQueue {
 	private Disposable _disposable;
 
 	@Reference(
-		target = "(routingKey=io.openk9)"
+		target = "(routingKey=io.openk9.ingestion)"
 	)
 	private BundleSender _bundleSender;
 

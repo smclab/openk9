@@ -22,7 +22,7 @@ import reactor.core.publisher.Sinks;
 public class ElasticSearchWriterBus {
 
 	@interface Config {
-		String exchange() default "index-writer-topic";
+		String exchange() default "index-writer.topic";
 		String routingKey() default "entity";
 	}
 

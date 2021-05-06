@@ -18,11 +18,11 @@
 package io.openk9.plugins.web.driver;
 
 import io.openk9.json.api.JsonFactory;
-import io.openk9.ingestion.driver.manager.api.BasePluginDriver;
-import io.openk9.ingestion.driver.manager.api.PluginDriver;
 import io.openk9.http.client.HttpClient;
 import io.openk9.http.client.HttpClientFactory;
 import io.openk9.http.web.HttpHandler;
+import io.openk9.plugin.driver.manager.api.BasePluginDriver;
+import io.openk9.plugin.driver.manager.api.PluginDriver;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

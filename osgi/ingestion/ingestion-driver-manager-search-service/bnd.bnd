@@ -1,4 +1,0 @@
-Bundle-Name: [OpenK9] Ingestion Driver Manager Search Service
-Bundle-SymbolicName: io.openk9.ingestion.driver.manager.search.service
-
--include: ${project.rootDir}/osgi/common.bnd

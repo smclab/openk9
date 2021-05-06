@@ -1,11 +1,9 @@
 dependencies {
 	compile project(":osgi:search:search-enrich-api")
-	compile project(":osgi:search:search-client-api")
 	compile project(':osgi:common:serialization-api')
 	compile project(':osgi:common:model')
 	compile project(':osgi:common:osgi-api')
 	compile project(':osgi:ingestion:ingestion-api')
-	compile project(':osgi:ingestion:ingestion-driver-manager-api')
 	compile libraries.elasticsearch
 	compile libraries.felix_dependencymanager
 }

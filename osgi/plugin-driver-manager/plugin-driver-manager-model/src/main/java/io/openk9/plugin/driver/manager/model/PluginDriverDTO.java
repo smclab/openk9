@@ -13,5 +13,7 @@ import java.util.List;
 @Builder
 public class PluginDriverDTO {
 	private String name;
+	private boolean schedulerEnabled;
 	private List<DocumentTypeDTO> documentTypes;
+	private DocumentTypeDTO defaultDocumentType;
 }

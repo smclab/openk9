@@ -56,6 +56,25 @@ public class DatasourceClientImpl implements DatasourceClient {
 					_jsonFactory
 						.createObjectNode()
 						.put("tenantId", tenantId)
+						.put("active", true)
+						.toString()
+				)
+		)
+			.flatMapIterable(
+				response -> _jsonFactory.fromJsonList(
+					response, Datasource.class));
+	}
+
+	@Override
+	public Flux<Datasource> findByTenantId(long tenantId) {
+		return Mono.from(
+			_httpClient
+				.request(
+					HttpHandler.POST,
+					"/v2/datasource/filter",
+					_jsonFactory
+						.createObjectNode()
+						.put("tenantId", tenantId)
 						.toString()
 				)
 		)

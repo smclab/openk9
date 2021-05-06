@@ -11,6 +11,8 @@ public interface DatasourceClient {
 
 	Flux<Datasource> findByTenantIdAndIsActive(long tenantId);
 
+	Flux<Datasource> findByTenantId(long tenantId);
+
 	Mono<Tenant> findByVirtualHost(String virtualHost);
 
 }

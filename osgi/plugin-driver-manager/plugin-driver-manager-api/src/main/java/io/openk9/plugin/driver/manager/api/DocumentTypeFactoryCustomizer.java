@@ -17,8 +17,12 @@
 
 package io.openk9.plugin.driver.manager.api;
 
-import java.util.function.Consumer;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 public interface DocumentTypeFactoryCustomizer
-	extends Consumer<DocumentTypeFactory.DefaultDocumentTypeFactory> {
+	extends Function<Map.Entry<String, List<DocumentType>>, Mono<Void>> {
 }

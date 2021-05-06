@@ -12,5 +12,7 @@ import java.util.List;
 @AllArgsConstructor(staticName = "of")
 @Builder
 public class DocumentTypeDTO {
+	private String name;
+	private String icon;
 	private List<SearchKeywordDTO> searchKeywords;
 }

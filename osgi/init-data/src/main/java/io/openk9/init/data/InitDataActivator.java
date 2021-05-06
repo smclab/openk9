@@ -1,15 +1,14 @@
 package io.openk9.init.data;
 
-import io.openk9.model.Datasource;
-import io.openk9.model.EnrichItem;
-import io.openk9.model.EnrichPipeline;
-import io.openk9.model.Tenant;
 import io.openk9.datasource.repository.DatasourceRepository;
 import io.openk9.datasource.repository.EnrichItemRepository;
 import io.openk9.datasource.repository.EnrichPipelineRepository;
 import io.openk9.datasource.repository.TenantRepository;
-import io.openk9.ingestion.driver.manager.api.PluginDriver;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.model.Datasource;
+import io.openk9.model.EnrichItem;
+import io.openk9.model.EnrichPipeline;
+import io.openk9.model.Tenant;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -101,10 +100,5 @@ public class InitDataActivator {
 
 	@Reference
 	private JsonFactory _jsonFactory;
-
-	@Reference(
-		target = "(component.name=io.openk9.plugins.web.driver.WebPluginDriver)"
-	)
-	private PluginDriver _pluginDriver;
 
 }

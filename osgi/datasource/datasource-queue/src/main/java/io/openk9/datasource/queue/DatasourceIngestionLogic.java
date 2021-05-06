@@ -48,7 +48,7 @@ public class DatasourceIngestionLogic {
 								), context)
 					)
 					.map(_cborFactory::toCBOR)
-					.transform(_bundleReceiver::send)
+					.transform(_bundleSender::send)
 					.thenReturn(ingestionPayload))
 				.groupBy(IngestionPayload::getDatasourceId)
 				.flatMap(group -> group
@@ -91,8 +91,8 @@ public class DatasourceIngestionLogic {
 	@Reference
 	private DatasourceRepository _datasourceRepository;
 
-	@Reference(target = "(routingKey=io.openk9.ingestion)")
-	private BundleSender _bundleReceiver;
+	@Reference(target = "(routingKey=io.openk9.ingestion.datasource)")
+	private BundleSender _bundleSender;
 
 	@Reference
 	private DatasourceHotFlux _datasourceHotFlux;

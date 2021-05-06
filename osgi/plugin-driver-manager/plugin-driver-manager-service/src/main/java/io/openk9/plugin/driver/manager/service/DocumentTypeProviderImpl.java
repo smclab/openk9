@@ -28,7 +28,9 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +42,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 	immediate = true,
 	service = DocumentTypeProvider.class
 )
-public class  DocumentTypeProviderImpl implements DocumentTypeProvider {
+public class DocumentTypeProviderImpl implements DocumentTypeProvider {
 
 	@Override
 	public DocumentType getDefaultDocumentType(String pluginDriverName) {
@@ -49,16 +51,21 @@ public class  DocumentTypeProviderImpl implements DocumentTypeProvider {
 
 	@Override
 	public List<DocumentType> getDocumentTypeList(String pluginDriverName) {
-		return Collections.unmodifiableList(
+		return new ArrayList<>(
 			_documentTypeMap.getOrDefault(
 				pluginDriverName, Collections.emptyList()));
+	}
+
+	@Override
+	public Map<String, List<DocumentType>> getDocumentTypeMap() {
+		return new HashMap<>(_documentTypeMap);
 	}
 
 	@Reference(
 		service = DocumentTypeFactory.class,
 		bind = "addDocumentTypeFactory",
 		unbind = "removeDocumentTypeFactory",
-		policy = ReferencePolicy.DYNAMIC,
+		policy = ReferencePolicy.STATIC,
 		policyOption = ReferencePolicyOption.GREEDY,
 		cardinality = ReferenceCardinality.MULTIPLE
 	)

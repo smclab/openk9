@@ -19,14 +19,14 @@ package io.openk9.plugins.email.driver;
 
 import io.openk9.common.api.constant.Strings;
 import io.openk9.osgi.util.AutoCloseables;
-import io.openk9.ingestion.driver.manager.api.Field;
-import io.openk9.ingestion.driver.manager.api.FieldType;
-import io.openk9.ingestion.driver.manager.api.DocumentType;
-import io.openk9.ingestion.driver.manager.api.DocumentTypeFactory;
-import io.openk9.ingestion.driver.manager.api.DocumentTypeFactoryRegistry;
-import io.openk9.ingestion.driver.manager.api.DocumentTypeFactoryRegistryAware;
-import io.openk9.ingestion.driver.manager.api.PluginDriver;
-import io.openk9.ingestion.driver.manager.api.SearchKeyword;
+import io.openk9.plugin.driver.manager.api.DocumentType;
+import io.openk9.plugin.driver.manager.api.DocumentTypeFactory;
+import io.openk9.plugin.driver.manager.api.DocumentTypeFactoryRegistry;
+import io.openk9.plugin.driver.manager.api.DocumentTypeFactoryRegistryAware;
+import io.openk9.plugin.driver.manager.api.Field;
+import io.openk9.plugin.driver.manager.api.FieldType;
+import io.openk9.plugin.driver.manager.api.PluginDriver;
+import io.openk9.plugin.driver.manager.api.SearchKeyword;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 

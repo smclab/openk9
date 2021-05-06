@@ -11,12 +11,17 @@ public class IngestionBinding implements Binding {
 
 	@Override
 	public Exchange getExchange() {
-		return Exchange.of("openk9.topic", Exchange.Type.topic);
+		return Exchange.of("io.openk9.ingestion.topic", Exchange.Type.topic);
 	}
 
 	@Override
 	public String getRoutingKey() {
 		return "io.openk9.ingestion";
+	}
+
+	@Override
+	public String getQueue() {
+		return "ingestion";
 	}
 
 }

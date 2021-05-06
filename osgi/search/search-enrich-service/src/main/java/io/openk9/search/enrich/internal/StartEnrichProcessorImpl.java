@@ -69,8 +69,8 @@ public class StartEnrichProcessorImpl implements StartEnrichProcessor {
 							.builder()
 							.dependencies(dependencies)
 							.objectNode(enrichProcessorContext.getObjectNode())
-							.pluginDriverName(
-								enrichProcessorContext.getPluginDriverName())
+							.pluginDriverDTO(
+								enrichProcessorContext.getPluginDriverDTO())
 							.datasourceContext(
 								enrichProcessorContext.getDatasourceContext())
 							.build()

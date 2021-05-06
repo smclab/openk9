@@ -1,0 +1,28 @@
+version: "3.5"
+services:
+    plugin-driver-manager:
+        image: openk9-plugin-driver-manager:latest
+        container_name: openk9-plugin-driver-manager
+        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        environment:
+            WAIT_HOSTS: rabbitmq:5672
+            WAIT_HOSTS_TIMEOUT: 300
+            JAVA_DEBUG_PORT: '*:5005'
+        volumes:
+            - ./plugin-driver-manager/configs:/opt/apache-karaf/configs
+        expose:
+            - "1099"
+            - "8080"
+            - "44444"
+            - "8101"
+            - "8181"
+            - "5005"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.services.plugin-driver-manager-docker.loadbalancer.server.port=8080"
+            - "traefik.http.middlewares.plugin-driver-manager-strip.stripprefix.prefixes=/plugin-driver-manager"
+            - "traefik.http.routers.plugin-driver-manager.entrypoints=web"
+            - "traefik.http.routers.plugin-driver-manager.rule=PathPrefix(`/plugin-driver-manager`)"
+            - "traefik.http.middlewares.plugin-driver-manager_compress.compress=true"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
+            - "traefik.http.routers.plugin-driver-manager.middlewares=plugin-driver-manager-strip@docker,plugin-driver-manager_compress@docker,openk9-forwarded-host@docker"

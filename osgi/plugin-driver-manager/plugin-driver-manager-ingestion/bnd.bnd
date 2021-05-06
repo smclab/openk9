@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Plugin Driver Manager Ingestion
+Bundle-SymbolicName: io.openk9.plugin.driver.manager.ingestion
+
+-include: ${project.rootDir}/osgi/common.bnd

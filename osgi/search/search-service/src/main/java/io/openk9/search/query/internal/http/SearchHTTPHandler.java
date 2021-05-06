@@ -23,17 +23,13 @@ import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.HttpRequest;
 import io.openk9.http.web.HttpResponse;
-import io.openk9.ingestion.driver.manager.api.DocumentType;
-import io.openk9.ingestion.driver.manager.api.DocumentTypeProvider;
-import io.openk9.ingestion.driver.manager.api.PluginDriver;
-import io.openk9.ingestion.driver.manager.api.PluginDriverRegistry;
-import io.openk9.ingestion.driver.manager.api.SearchKeyword;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
+import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
-import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
+import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchToken;
@@ -64,12 +60,9 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -194,22 +187,22 @@ public class SearchHTTPHandler implements HttpHandler {
 			}
 
 			return _pluginDriverManagerClient.getPluginDriverList(serviceDriverNames);
+
 		}).flatMap(pluginDriverList -> {
 
 			List<PluginDriverDTO> pluginDriverDTOList =
 					pluginDriverList.getPluginDriverDTOList();
 
 			Map<String, List<SearchToken>> tokenTypeGroup =
-			searchRequest
-				.getSearchQuery()
-				.stream()
-				.collect(Collectors.groupingBy(SearchToken::getTokenType));
+				searchRequest
+					.getSearchQuery()
+					.stream()
+					.collect(Collectors.groupingBy(SearchToken::getTokenType));
 
 			List<SearchToken> datasource = tokenTypeGroup.get("DATASOURCE");
 
-			Stream<Map.Entry<PluginDriver, List<DocumentType>>>
-				documentTypeStream =
-				pluginDriverListDocumentType.entrySet().stream();
+			Stream<PluginDriverDTO> documentTypeStream =
+				pluginDriverDTOList.stream();
 
 			if (datasource != null) {
 
@@ -222,16 +215,14 @@ public class SearchHTTPHandler implements HttpHandler {
 
 				documentTypeStream =
 					documentTypeStream
-						.filter(
-							entry ->
-								datasourceValues.contains(
-									entry.getKey().getName()));
+						.filter(entry ->
+							datasourceValues.contains(entry.getName()));
 
 			}
 
-			List<Map.Entry<PluginDriver, List<DocumentType>>> documentTypeList =
-				documentTypeStream.collect(Collectors.toList());
-
+			List<PluginDriverDTO> documentTypeList =
+				documentTypeStream
+					.collect(Collectors.toList());
 
 			QueryParser queryParser =
 				_queryParsers
@@ -265,8 +256,7 @@ public class SearchHTTPHandler implements HttpHandler {
 
 						String[] indexNames = documentTypeList
 							.stream()
-							.map(Map.Entry::getKey)
-							.map(PluginDriver::getName)
+							.map(PluginDriverDTO::getName)
 							.distinct()
 							.toArray(String[]::new);
 
@@ -293,12 +283,12 @@ public class SearchHTTPHandler implements HttpHandler {
 
 					documentTypeList
 						.stream()
-						.map(Map.Entry::getValue)
+						.map(PluginDriverDTO::getDocumentTypes)
 						.flatMap(Collection::stream)
-						.map(DocumentType::getSearchKeywords)
+						.map(DocumentTypeDTO::getSearchKeywords)
 						.flatMap(Collection::stream)
-						.filter(SearchKeyword::isText)
-						.map(SearchKeyword::getKeyword)
+						.filter(SearchKeywordDTO::isText)
+						.map(SearchKeywordDTO::getKeyword)
 						.distinct()
 						.forEach(highlightBuilder::field);
 

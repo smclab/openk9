@@ -5,6 +5,7 @@ dependencies {
 	compile project(":osgi:common:osgi-api")
 	compile project(':osgi:web:http-api')
 
-	compile libraries.elasticsearch
+	compile project(':osgi:plugin-driver-manager:plugin-driver-manager-model')
+
 	compile libraries.slf4j_api
 }

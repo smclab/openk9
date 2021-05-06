@@ -29,6 +29,7 @@ import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -42,7 +43,7 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 	@Override
 	public Mono<ObjectNode> process(
 		ObjectNode objectNode, DatasourceContext context,
-		EnrichItem enrichItem, String pluginDriverName) {
+		EnrichItem enrichItem, PluginDriverDTO pluginDriverName) {
 
 		return Mono.defer(() -> {
 
@@ -84,7 +85,7 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 
 	protected ObjectNode prepareRequestRawContent(
 		ObjectNode objectNode, ObjectNode datasourceConfiguration,
-		DatasourceContext context, String pluginDriverName) {
+		DatasourceContext context, PluginDriverDTO pluginDriverDTO) {
 
 		JsonNode entitiesNode = datasourceConfiguration.get(entitiesField());
 

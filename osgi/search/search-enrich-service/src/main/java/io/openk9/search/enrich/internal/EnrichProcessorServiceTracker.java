@@ -185,7 +185,7 @@ class EnrichProcessorServiceTracker
 					return _enrichProcessor.process(
 						objectNode,
 						context.getDatasourceContext(),
-						context.getPluginDriverName()
+						context.getPluginDriverDTO()
 					)
 						.flatMap(
 							jsonNode -> {
@@ -196,7 +196,7 @@ class EnrichProcessorServiceTracker
 											EnrichProcessorContext.of(
 												jsonNode.toMap(),
 												context.getDatasourceContext(),
-												context.getPluginDriverName(),
+												context.getPluginDriverDTO(),
 												Collections.emptyList()
 											)
 										);
@@ -221,7 +221,7 @@ class EnrichProcessorServiceTracker
 									EnrichProcessorContext.of(
 										jsonNode.toMap(),
 										context.getDatasourceContext(),
-										context.getPluginDriverName(),
+										context.getPluginDriverDTO(),
 										linkedList
 									);
 

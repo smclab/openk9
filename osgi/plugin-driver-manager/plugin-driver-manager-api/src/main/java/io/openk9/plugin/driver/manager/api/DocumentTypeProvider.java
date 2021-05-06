@@ -18,11 +18,14 @@
 package io.openk9.plugin.driver.manager.api;
 
 import java.util.List;
+import java.util.Map;
 
 public interface DocumentTypeProvider {
 
 	DocumentType getDefaultDocumentType(String pluginDriverName);
 
 	List<DocumentType> getDocumentTypeList(String pluginDriverName);
+
+	Map<String, List<DocumentType>> getDocumentTypeMap();
 
 }

@@ -1,10 +1,6 @@
 apply plugin: 'java'
 
 configurations {
-	distCore {
-		transitive = false
-		visible = false
-	}
 	distEntityManager {
 		transitive = false
 		visible = false
@@ -25,6 +21,10 @@ configurations {
 		transitive = false
 		visible = false
 	}
+	distPluginDriverManager {
+		transitive = false
+		visible = false
+	}
 }
 
 repositories {
@@ -33,63 +33,7 @@ repositories {
 }
 
 dependencies {
-
-	// <CORE>
-
-	distCore project(path: ':osgi:web:http-api', transitive: false)
-	distCore project(path: ':osgi:web:http-service', transitive: false)
-	distCore project(path: ':osgi:web:http-bundle-ext', transitive: false)
-	distCore project(path: ':osgi:web:open-api', transitive: false)
-	distCore project(path: ':osgi:common:third-party', transitive: false)
-	distCore project(path: ':osgi:common:osgi-api', transitive: false)
-	distCore project(path: ':osgi:common:serialization-api', transitive: false)
-	distCore project(path: ':osgi:plugin:plugin-api', transitive: false)
-	distCore project(path: ':osgi:plugin:plugin-service', transitive: false)
-	distCore project(path: ':osgi:plugin:plugin-search-service', transitive: false)
-	distCore project(path: ':osgi:plugin:plugin-web', transitive: false)
-	distCore project(path: ':osgi:common:serialization-service', transitive: false)
-	distCore project(path: ':osgi:common:model', transitive: false)
-	distCore project(path: ':osgi:common:http-serialization', transitive: false)
-	distCore project(path: ':osgi:common:core-api', transitive: false)
-
-	//distCore project(path: ':osgi:common:reactor-agent', transitive: false)
-
-	distCore project(path: ':osgi:search:search-enrich-service', transitive: false)
-	distCore project(path: ':osgi:search:search-enrich-api', transitive: false)
-
-	distCore project(path: ':osgi:ingestion:ingestion-api', transitive: false)
-	distCore project(path: ':osgi:ingestion:ingestion-service', transitive: false)
-
-	distCore project(path: ':osgi:metrics:metrics-api', transitive: false)
-	distCore project(path: ':osgi:metrics:metrics-service', transitive: false)
-	distCore project(path: ':osgi:metrics:metrics-ext', transitive: false)
-
-	distCore project(path: ':osgi:cache:cache-api', transitive: false)
-
-	distCore project(path: ':plugins:email', transitive: false)
-	distCore project(path: ':plugins:liferay', transitive: false)
-	distCore project(path: ':plugins:web', transitive: false)
-	distCore project(path: ':plugins:applications', transitive: false)
-
-	// AUTH
-	distCore project(path: ':osgi:auth:auth-keycloak-api', transitive: false)
-	distCore project(path: ':osgi:auth:auth-keycloak-service', transitive: false)
-	distCore project(path: ':osgi:auth:auth-keycloak-web', transitive: false)
-
-	//ENTITY MANAGER CLIENT
-	distCore project(path: ':osgi:entity-manager:entity-manager-client-api', transitive: false)
-	distCore project(path: ':osgi:entity-manager:entity-manager-client-service', transitive: false)
-	distCore project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
-
-	// felix dependency manager
-
-	distCore group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager', version: '4.6.0' , transitive: false
-	distCore group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.shell', version: '4.0.8' , transitive: false
-	distCore group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
-
-
-	// </CORE>
-
+	
 	// <ENTITY MANAGER>
 
 	distEntityManager project(path: ':osgi:common:common-api', transitive: false)
@@ -101,6 +45,8 @@ dependencies {
 	distEntityManager project(path: ':osgi:common:serialization-service', transitive: false)
 	distEntityManager project(path: ':osgi:common:third-party', transitive: false)
 
+	distEntityManager project(path: ':osgi:index-writer:index-writer-model', transitive: false)
+
 	distEntityManager project(path: ':osgi:web:http-api', transitive: false)
 	distEntityManager project(path: ':osgi:web:http-service', transitive: false)
 	distEntityManager project(path: ':osgi:web:http-bundle-ext', transitive: false)
@@ -111,6 +57,7 @@ dependencies {
 
 	distEntityManager project(path: ':osgi:metrics:metrics-api', transitive: false)
 	distEntityManager project(path: ':osgi:metrics:metrics-service', transitive: false)
+	distEntityManager project(path: ':osgi:metrics:metrics-ext', transitive: false)
 
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-api', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-service', transitive: false)
@@ -127,6 +74,8 @@ dependencies {
 	// <INDEX WRITER>
 
 	distIndexWriter project(path: ':osgi:index-writer:index-writer-service', transitive: false)
+	distIndexWriter project(path: ':osgi:index-writer:index-writer-mappings-consumer', transitive: false)
+	distIndexWriter project(path: ':osgi:index-writer:index-writer-model', transitive: false)
 
 	distIndexWriter project(path: ':osgi:search:search-client-api', transitive: false)
 	distIndexWriter project(path: ':osgi:search:search-client-service', transitive: false)
@@ -135,6 +84,7 @@ dependencies {
 
 	distIndexWriter project(path: ':osgi:metrics:metrics-api', transitive: false)
 	distIndexWriter project(path: ':osgi:metrics:metrics-service', transitive: false)
+	distIndexWriter project(path: ':osgi:metrics:metrics-ext', transitive: false)
 
 	distIndexWriter project(path: ':osgi:common:common-api', transitive: false)
 	distIndexWriter project(path: ':osgi:common:core-api', transitive: false)
@@ -146,9 +96,6 @@ dependencies {
 
 	distIndexWriter project(path: ':osgi:ingestion:ingestion-api', transitive: false)
 	distIndexWriter project(path: ':osgi:ingestion:ingestion-service', transitive: false)
-	distIndexWriter project(path: ':osgi:ingestion:ingestion-driver-manager-api', transitive: false)
-	distIndexWriter project(path: ':osgi:ingestion:ingestion-driver-manager-search-service', transitive: false)
-	distIndexWriter project(path: ':osgi:ingestion:ingestion-driver-manager-service', transitive: false)
 
 	distIndexWriter project(path: ':osgi:web:http-api', transitive: false)
 	distIndexWriter project(path: ':osgi:web:http-service', transitive: false)
@@ -158,19 +105,10 @@ dependencies {
 	distIndexWriter project(path: ':osgi:datasource:datasource-event-consumer-api', transitive: false)
 	distIndexWriter project(path: ':osgi:datasource:datasource-event-consumer-service', transitive: false)
 
-	distIndexWriter project(path: ':osgi:entity-manager:entity-manager-client-api', transitive: false)
-	distIndexWriter project(path: ':osgi:entity-manager:entity-manager-client-service', transitive: false)
-	distIndexWriter project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
+	distIndexWriter project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-api', transitive: false)
+	distIndexWriter project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-service', transitive: false)
+	distIndexWriter project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
 
-	distIndexWriter project(path: ':osgi:search:search-enrich-api', transitive: false)
-
-	distIndexWriter project(path: ':osgi:ingestion:ingestion-logic-api', transitive: false)
-	distIndexWriter project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
-
-	distIndexWriter project(path: ':plugins:email', transitive: false)
-	distIndexWriter project(path: ':plugins:liferay', transitive: false)
-	distIndexWriter project(path: ':plugins:web', transitive: false)
-	distIndexWriter project(path: ':plugins:applications', transitive: false)
 
 	// </INDEX WRITER>
 
@@ -183,6 +121,7 @@ dependencies {
 
 	distDatasource project(path: ':osgi:metrics:metrics-api', transitive: false)
 	distDatasource project(path: ':osgi:metrics:metrics-service', transitive: false)
+	distDatasource project(path: ':osgi:metrics:metrics-ext', transitive: false)
 
 	distDatasource project(path: ':osgi:common:common-api', transitive: false)
 	distDatasource project(path: ':osgi:common:core-api', transitive: false)
@@ -193,6 +132,8 @@ dependencies {
 	distDatasource project(path: ':osgi:common:third-party', transitive: false)
 	distDatasource project(path: ':osgi:common:http-serialization', transitive: false)
 
+	distDatasource project(path: ':osgi:index-writer:index-writer-model', transitive: false)
+
 	distDatasource project(path: ':osgi:auth:auth-keycloak-api', transitive: false)
 	distDatasource project(path: ':osgi:auth:auth-keycloak-service', transitive: false)
 	distDatasource project(path: ':osgi:auth:auth-keycloak-web', transitive: false)
@@ -201,6 +142,7 @@ dependencies {
 
 	distDatasource project(path: ':osgi:ingestion:ingestion-api', transitive: false)
 	distDatasource project(path: ':osgi:ingestion:ingestion-service', transitive: false)
+	distDatasource project(path: ':osgi:ingestion:ingestion-driver-manager-datasource-service', transitive: false)
 
 	distDatasource project(path: ':osgi:database:sql-api:', transitive: false)
 	distDatasource project(path: ':osgi:database:sql-service:', transitive: false)
@@ -216,6 +158,10 @@ dependencies {
 	distDatasource project(path: ':osgi:datasource:datasource-web', transitive: false)
 	distDatasource project(path: ':osgi:datasource:datasource-queue', transitive: false)
 	distDatasource project(path: ':osgi:datasource:datasource-event-publisher', transitive: false)
+
+	distDatasource project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-api', transitive: false)
+	distDatasource project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-service', transitive: false)
+	distDatasource project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
 
 	distDatasource project(path: ':osgi:init-data', transitive: false)
 
@@ -240,6 +186,8 @@ dependencies {
 	distIngestion project(path: ':osgi:common:third-party', transitive: false)
 	distIngestion project(path: ':osgi:common:http-serialization', transitive: false)
 
+	distIngestion project(path: ':osgi:index-writer:index-writer-model', transitive: false)
+
 	distIngestion project(path: ':osgi:ingestion:ingestion-api', transitive: false)
 	distIngestion project(path: ':osgi:ingestion:ingestion-logic-api', transitive: false)
 	distIngestion project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
@@ -248,7 +196,7 @@ dependencies {
 
 	// </INGESTION>
 
-	// <WEB>
+	// <SEARCHER>
 
 	distSearcher project(path: ':osgi:web:http-api', transitive: false)
 	distSearcher project(path: ':osgi:web:http-service', transitive: false)
@@ -267,6 +215,8 @@ dependencies {
 	distSearcher project(path: ':osgi:common:third-party', transitive: false)
 	distSearcher project(path: ':osgi:common:http-serialization', transitive: false)
 
+	distSearcher project(path: ':osgi:index-writer:index-writer-model', transitive: false)
+
 	distSearcher project(path: ':osgi:search:search-api', transitive: false)
 	distSearcher project(path: ':osgi:search:search-service', transitive: false)
 	distSearcher project(path: ':osgi:search:search-client-api', transitive: false)
@@ -284,13 +234,76 @@ dependencies {
 	distSearcher project(path: ':osgi:auth:auth-keycloak-query-parser', transitive: false)
 	distSearcher project(path: ':osgi:auth:auth-keycloak-web', transitive: false)
 
-	distSearcher project(path: ':osgi:ingestion:ingestion-driver-manager-api', transitive: false)
+	distSearcher project(path: ':osgi:ingestion:ingestion-api', transitive: false)
+	distSearcher project(path: ':osgi:ingestion:ingestion-service', transitive: false)
 
-	distSearcher project(path: ':plugins:email', transitive: false)
-	distSearcher project(path: ':plugins:liferay', transitive: false)
-	distSearcher project(path: ':plugins:web', transitive: false)
-	distSearcher project(path: ':plugins:applications', transitive: false)
+	distSearcher project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-api', transitive: false)
+	distSearcher project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-service', transitive: false)
+	distSearcher project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
 
-	// </WEB>
+	distSearcher project(path: ':osgi:cache:cache-api', transitive: false)
+
+	// </SEARCHER>
+
+	// <PluginDriverManager>
+
+	distPluginDriverManager project(path: ':osgi:web:http-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:web:http-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:web:http-bundle-ext', transitive: false)
+	distPluginDriverManager project(path: ':osgi:web:open-api', transitive: false)
+
+	distPluginDriverManager project(path: ':osgi:metrics:metrics-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:metrics:metrics-service', transitive: false)
+
+	distPluginDriverManager project(path: ':osgi:common:common-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:common:core-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:common:model', transitive: false)
+	distPluginDriverManager project(path: ':osgi:common:osgi-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:common:serialization-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:common:serialization-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:common:third-party', transitive: false)
+	distPluginDriverManager project(path: ':osgi:common:http-serialization', transitive: false)
+
+	distPluginDriverManager project(path: ':osgi:index-writer:index-writer-model', transitive: false)
+	distPluginDriverManager project(path: ':osgi:index-writer:index-writer-mappings-publisher-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:index-writer:index-writer-mappings-publisher-service', transitive: false)
+
+	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-ingestion', transitive: false)
+	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
+	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-search-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-web', transitive: false)
+
+	distPluginDriverManager project(path: ':osgi:search:search-enrich-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:search:search-enrich-api', transitive: false)
+
+	distPluginDriverManager project(path: ':osgi:plugin:plugin-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:plugin:plugin-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:plugin:plugin-web', transitive: false)
+
+	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-logic-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
+
+	distPluginDriverManager project(path: ':plugins:email', transitive: false)
+	distPluginDriverManager project(path: ':plugins:liferay', transitive: false)
+	distPluginDriverManager project(path: ':plugins:web', transitive: false)
+	distPluginDriverManager project(path: ':plugins:applications', transitive: false)
+
+	// felix dependency manager
+
+	distPluginDriverManager group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager', version: '4.6.0' , transitive: false
+	distPluginDriverManager group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.shell', version: '4.0.8' , transitive: false
+	distPluginDriverManager group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
+
+	//ENTITY MANAGER CLIENT
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
+
+	// </PluginDriverManager>
 
 }

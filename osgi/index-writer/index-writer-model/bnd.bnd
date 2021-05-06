@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Index Writer Model
+Bundle-SymbolicName: io.openk9.index.writer.model
+
+Export-Package: io.openk9.index.writer.model
+
+-include: ${project.rootDir}/osgi/common.bnd

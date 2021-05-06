@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Ingestion Driver Manager Api
-Bundle-SymbolicName: io.openk9.ingestion.driver.manager.api
-
-Export-Package: io.openk9.ingestion.driver.manager.api
-
--include: ${project.rootDir}/osgi/common.bnd

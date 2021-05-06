@@ -18,6 +18,7 @@
 package io.openk9.search.enrich.api.dto;
 
 import io.openk9.model.DatasourceContext;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,7 +35,7 @@ public class EnrichProcessorContext {
 
 	private Map<String, Object> objectNode;
 	private DatasourceContext datasourceContext;
-	private String pluginDriverName;
+	private PluginDriverDTO pluginDriverDTO;
 	private List<String> dependencies;
 
 }

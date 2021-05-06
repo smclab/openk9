@@ -12,7 +12,7 @@ public class IndexWriterBinding implements Binding {
 	@Override
 	public Exchange getExchange() {
 		return Exchange.of(
-			"index-writer-topic",
+			"index-writer.topic",
 			Exchange.Type.topic);
 	}
 

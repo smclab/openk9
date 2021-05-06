@@ -53,7 +53,7 @@ public class BindingBundleTrackerCustomizer
 
 		String[] split = exchange.split("\\.");
 
-		Binding.Exchange.Type type = Binding.Exchange.Type.valueOf(split[1]);
+		Binding.Exchange.Type type = Binding.Exchange.Type.valueOf(split[split.length - 1]);
 
 		Dictionary<String, Object> senderProps = new Hashtable<>();
 
