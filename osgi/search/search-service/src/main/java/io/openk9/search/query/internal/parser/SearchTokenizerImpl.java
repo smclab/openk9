@@ -23,7 +23,10 @@ import io.openk9.search.api.query.SearchTokenizer;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = SearchTokenizer.class)
+@Component(
+	immediate = true,
+	service = SearchTokenizer.class
+)
 public class SearchTokenizerImpl implements SearchTokenizer {
 
 	@Override
