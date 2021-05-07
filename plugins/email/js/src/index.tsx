@@ -51,7 +51,7 @@ export const plugin: Plugin<EmailResultItem> = {
     },
     {
       type: "RESULT_RENDERER",
-      resultType: "application",
+      resultType: "email",
       resultRenderer: EmailResultCard as any,
       sidebarRenderer: EmailSidebar as any,
     },
