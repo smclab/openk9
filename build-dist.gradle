@@ -76,6 +76,7 @@ dependencies {
 	distIndexWriter project(path: ':osgi:index-writer:index-writer-service', transitive: false)
 	distIndexWriter project(path: ':osgi:index-writer:index-writer-mappings-consumer', transitive: false)
 	distIndexWriter project(path: ':osgi:index-writer:index-writer-model', transitive: false)
+	distIndexWriter project(path: ':osgi:index-writer:index-writer-mappings-pub-sub', transitive: false)
 
 	distIndexWriter project(path: ':osgi:search:search-client-api', transitive: false)
 	distIndexWriter project(path: ':osgi:search:search-client-service', transitive: false)
@@ -267,6 +268,7 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:index-writer:index-writer-model', transitive: false)
 	distPluginDriverManager project(path: ':osgi:index-writer:index-writer-mappings-publisher-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:index-writer:index-writer-mappings-publisher-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:index-writer:index-writer-mappings-pub-sub', transitive: false)
 
 	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-service', transitive: false)

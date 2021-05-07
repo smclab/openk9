@@ -2,6 +2,7 @@ package io.openk9.index.writer.mappings.publisher.publisher;
 
 import io.openk9.index.writer.mappings.publisher.api.IndexWriterEventPublisher;
 import io.openk9.index.writer.model.IndexTemplateDTO;
+import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.OutboundMessageFactory;
 import io.openk9.ingestion.api.SenderReactor;
 import io.openk9.json.api.JsonFactory;
@@ -54,6 +55,9 @@ public class IndexWriterEventPublisherImpl implements
 
 	@Reference
 	private JsonFactory _jsonFactory;
+
+	@Reference(target = "(component.name=io.openk9.index.writer.mappings.pub.sub.binding.MappingsBinding)")
+	private Binding _binding;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		IndexWriterEventPublisherImpl.class);

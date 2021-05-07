@@ -1,6 +1,7 @@
 package io.openk9.index.writer.mappings.consumer;
 
 import io.openk9.index.writer.model.IndexTemplateDTO;
+import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.ReceiverReactor;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.search.client.api.indextemplate.IndexTemplateService;
@@ -58,6 +59,9 @@ public class IndexWriterEventConsumerImpl {
 
 	@Reference
 	private IndexTemplateService _indexTemplateService;
+
+	@Reference(target = "(component.name=io.openk9.index.writer.mappings.pub.sub.binding.MappingsBinding)")
+	private Binding _binding;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		IndexWriterEventConsumerImpl.class);

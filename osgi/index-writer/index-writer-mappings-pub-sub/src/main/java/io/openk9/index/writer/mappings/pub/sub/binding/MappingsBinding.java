@@ -1,4 +1,4 @@
-package io.openk9.index.writer.mappings.publisher.binding;
+package io.openk9.index.writer.mappings.pub.sub.binding;
 
 import io.openk9.ingestion.api.Binding;
 import org.osgi.service.component.annotations.Component;
