@@ -1,0 +1,8 @@
+version: "3.5"
+services:
+    ner-en:
+        image: flair_flair-ner-relations:latest
+        container_name: ner-en
+        command: gunicorn -w 1 -t 600 -b 0.0.0.0:80 main:app
+        ports:
+            - 5009:80
