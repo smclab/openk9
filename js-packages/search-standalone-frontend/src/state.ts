@@ -18,7 +18,7 @@
 import { useCallback, useEffect } from "react";
 import create from "zustand";
 import { devtools } from "zustand/middleware";
-import { useHistory, useParams } from "react-router-dom";
+import { useHistory, useLocation, useParams } from "react-router-dom";
 
 import {
   isSearchQueryEmpty,
@@ -35,11 +35,17 @@ import {
   TenantJSONConfig,
   emptyTenantJSONConfig,
   getTenants,
+  LoginInfo,
+  UserInfo,
+  doLoginRefresh,
+  getUserInfo,
 } from "@openk9/http-api";
 
 const resultsChunkNumber = 8;
 const timeoutDebounce = 500;
 const suggTimeoutDebounce = 300;
+
+const localStorageLoginPersistKey = "openk9-login-info";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -65,6 +71,10 @@ export type StateType = {
   pluginInfos: PluginInfo[];
   tenantConfig: TenantJSONConfig;
   loadInitial(): Promise<void>;
+  loginInfo: LoginInfo | null;
+  userInfo: UserInfo | null;
+  setLoginInfo(info: LoginInfo, userInfo: UserInfo): void;
+  invalidateLogin(): void;
 };
 
 export const useStore = create<StateType>(
@@ -95,7 +105,18 @@ export const useStore = create<StateType>(
         (tenant?.jsonConfig && JSON.parse(tenant?.jsonConfig)) ||
         emptyTenantJSONConfig;
 
-      set((state) => ({ ...state, pluginInfos, tenantConfig }));
+      const { loginInfo, userInfo } = JSON.parse(
+        localStorage.getItem(localStorageLoginPersistKey) ||
+          JSON.stringify({ loginInfo: null, userInfo: null }),
+      );
+
+      set((state) => ({
+        ...state,
+        pluginInfos,
+        tenantConfig,
+        loginInfo,
+        userInfo,
+      }));
     },
 
     async setSearchQuery(searchQuery: SearchQuery) {
@@ -125,7 +146,7 @@ export const useStore = create<StateType>(
           searchQuery,
           range: [0, resultsChunkNumber],
         };
-        const results = await doSearch(request, null);
+        const results = await doSearch(request, get().loginInfo);
         set((state) => ({
           ...state,
           results: isSearchQueryEmpty(searchQuery) ? null : results,
@@ -143,7 +164,7 @@ export const useStore = create<StateType>(
           searchQuery: prev.searchQuery,
           range: [prev.range[0], prev.range[1] + resultsChunkNumber],
         };
-        const results = await doSearch(request, null);
+        const results = await doSearch(request, get().loginInfo);
         set((state) => ({
           ...state,
           results,
@@ -177,13 +198,36 @@ export const useStore = create<StateType>(
         await sleep(suggTimeoutDebounce);
       }
       if (token && get().suggestionsRequestTime <= startTime) {
-        const suggestions = await getTokenSuggestions(token, null);
+        const suggestions = await getTokenSuggestions(token, get().loginInfo);
         if (get().suggestionsRequestTime === startTime) {
           set((state) => ({ ...state, suggestions }));
         }
       } else {
         set((state) => ({ ...state, suggestions: [] }));
       }
+    },
+
+    loginInfo: null,
+    userInfo: null,
+    setLoginInfo(loginInfo: LoginInfo, userInfo: UserInfo) {
+      set((state) => ({ ...state, loginInfo, userInfo }));
+      localStorage.setItem(
+        localStorageLoginPersistKey,
+        JSON.stringify({
+          loginInfo,
+          userInfo,
+        }),
+      );
+    },
+    invalidateLogin() {
+      set((state) => ({ ...state, loginInfo: null, userInfo: null }));
+      localStorage.setItem(
+        localStorageLoginPersistKey,
+        JSON.stringify({
+          loginInfo: null,
+          userInfo: null,
+        }),
+      );
     },
   })),
 );
@@ -215,4 +259,79 @@ export function useSearchQuery() {
   );
 
   return [storedSearchQuery || [], setSearchQuery] as const;
+}
+
+export function useLoginInfo() {
+  const loginInfo = useStore((s) => s.loginInfo);
+  return loginInfo;
+}
+
+export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
+  const history = useHistory();
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+
+  const loginInfo = useStore((s) => s.loginInfo);
+  const userInfo = useStore((s) => s.userInfo);
+  const setLoginInfo = useStore((s) => s.setLoginInfo);
+  const invalidateLogin = useStore((s) => s.invalidateLogin);
+
+  const currentTimeSec = new Date().getTime() / 1000;
+  const loginValid = loginInfo && userInfo && currentTimeSec < userInfo.exp;
+
+  const redirect = query.get("redirect") || "/";
+
+  //
+  // Login page redirect logic
+  //
+  useEffect(() => {
+    if (isLoginPage && loginValid) {
+      // login page and login already done, redirect
+      if (decodeURIComponent(redirect).startsWith("/login")) {
+        history.push("/");
+      } else {
+        history.push(decodeURIComponent(redirect));
+      }
+    } else if (!loginValid) {
+      // protected page ad no login, redirect to login
+      history.push(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+    }
+  }, [loginValid, isLoginPage]);
+
+  //
+  // Refresh loop logic
+  //
+  useEffect(() => {
+    let refreshTimeout: ReturnType<typeof setTimeout> | null;
+
+    async function refreshStep() {
+      const { loginInfo } = useStore.getState();
+
+      if (loginInfo) {
+        const loginRefresh = await doLoginRefresh({
+          refreshToken: loginInfo.refresh_token,
+        });
+        const userInfo =
+          loginRefresh.ok && (await getUserInfo(loginRefresh.response));
+
+        if (loginRefresh.ok && userInfo && userInfo.ok) {
+          setLoginInfo(loginRefresh.response, userInfo.response);
+        } else {
+          invalidateLogin();
+        }
+      }
+
+      refreshTimeout = setTimeout(
+        refreshStep,
+        (loginInfo?.expires_in || 1) * 700,
+      );
+    }
+
+    refreshTimeout = setTimeout(refreshStep, 300);
+    return () => {
+      if (refreshTimeout) clearTimeout(refreshTimeout);
+    };
+  }, []);
+
+  return { loginInfo, userInfo, loginValid };
 }

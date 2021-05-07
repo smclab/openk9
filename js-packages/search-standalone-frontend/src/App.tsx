@@ -18,15 +18,15 @@
 import { Suspense, useLayoutEffect } from "react";
 import { ThemeProvider } from "react-jss";
 import { ClayIconSpriteContext } from "@clayui/icon";
-import { BrowserRouter as Router, Route } from "react-router-dom";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 import "@clayui/css/lib/css/base.css";
 import "./styles.css";
 
-import { Dockbar, defaultTheme } from "@openk9/search-ui-components";
-import { SearchQueryInput } from "./containers/SearchQueryInput";
-import { SearchResults } from "./containers/SearchResults";
+import { defaultTheme } from "@openk9/search-ui-components";
 import { useStore } from "./state";
+import { LoginPage } from "./pages/LoginPage";
+import { SearchPage } from "./pages/SearchPage";
 
 function App() {
   const loadInitial = useStore((s) => s.loadInitial);
@@ -38,16 +38,16 @@ function App() {
     <ThemeProvider theme={defaultTheme}>
       <ClayIconSpriteContext.Provider value="/icons.svg">
         <Router>
-          <Dockbar />
-
-          <Route path={["/q/:query", "/"]}>
-            <Suspense fallback={<span className="loading-animation" />}>
-              <SearchQueryInput />
-            </Suspense>
-            <Suspense fallback={<span className="loading-animation" />}>
-              <SearchResults />
-            </Suspense>
-          </Route>
+          <Switch>
+            <Route path={["/login"]}>
+              <Suspense fallback={<span className="loading-animation" />}>
+                <LoginPage />
+              </Suspense>
+            </Route>
+            <Route path={["/q/:query", "/"]}>
+              <SearchPage />
+            </Route>
+          </Switch>
         </Router>
       </ClayIconSpriteContext.Provider>
     </ThemeProvider>
