@@ -79,7 +79,7 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 		double scoreThreshold() default 0.9;
 	    int minHops() default 1;
 		int maxHops() default 2;
-		String[] uniqueEntities() default "email";
+		String[] uniqueEntities() default {"date", "organization"};
 		String labelFilter() default "-date";
 	}
 
@@ -460,7 +460,7 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 		}
 
-		if (!candidates.isEmpty() && _containsValue(_uniqueEntities, currentEntityRequestType)) {
+		if (candidates.size() == 1 && _containsValue(_uniqueEntities, currentEntityRequestType)) {
 
 			if (_log.isInfoEnabled()) {
 					_log.info("disambiguating entity with type " + currentEntityRequestType);
