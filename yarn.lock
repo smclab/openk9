@@ -2053,6 +2053,16 @@
     "@clayui/shared" "^3.5.1"
     classnames "^2.2.6"
 
+"@clayui/form@^3.27.0":
+  version "3.27.0"
+  resolved "https://registry.yarnpkg.com/@clayui/form/-/form-3.27.0.tgz#2383f9f80223e0523c1a8f6f1ff1beb6315061b3"
+  integrity sha512-f/oxvW1XKlv/iEttpa288FP8haQL2vLPQ9p3NKPORHiN+BB4ieNcaeQF7yTEuYArJSyNFefJaLKmp4szlES4HA==
+  dependencies:
+    "@clayui/button" "^3.6.0"
+    "@clayui/icon" "^3.1.0"
+    "@clayui/shared" "^3.27.0"
+    classnames "^2.2.6"
+
 "@clayui/icon@^3.1.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@clayui/icon/-/icon-3.1.0.tgz#9e600f87194f8dacfb49ace121fbab25a2e82f03"
@@ -2106,6 +2116,14 @@
     classnames "^2.2.6"
     react-transition-group "^4.4.1"
     warning "^4.0.3"
+
+"@clayui/shared@^3.27.0":
+  version "3.27.0"
+  resolved "https://registry.yarnpkg.com/@clayui/shared/-/shared-3.27.0.tgz#5793d905536aa992f8c8a3e57c823e217ae25d11"
+  integrity sha512-MwsclWz9ah/dpQZs/6PHeStEwB2bUewmqSzpuKvKLaruJvU/3TJSK7OIsOnQyFUKUQgXQEUqxNPsHbxoI7/ofg==
+  dependencies:
+    "@clayui/button" "^3.6.0"
+    "@clayui/link" "^3.2.0"
 
 "@clayui/shared@^3.5.1":
   version "3.5.1"
