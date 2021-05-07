@@ -81,14 +81,9 @@ public class ReindexDatasourceConsumer {
 						t2.getT1(),
 						t2.getT2(),
 						Instant.ofEpochMilli(
-							response
-								.getIndexToSettings()
-								.get("index")
-								.getAsLong(
-									"index.creation_date",
-									Instant.EPOCH.toEpochMilli()
-								)
-							)
+							Long.parseLong(
+								response.getSetting(
+									t2.getT2(), "index.creation_date")))
 						)
 					)
 				)

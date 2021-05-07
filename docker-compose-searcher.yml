@@ -19,6 +19,7 @@ services:
             - "5005"
         ports:
             - 8080:8080
+            - 8181:8181
         labels:
             - "traefik.enable=true"
             - "traefik.http.services.searcher-docker.loadbalancer.server.port=8080"
