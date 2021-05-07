@@ -17,12 +17,12 @@
 
 import { Tenant } from "../types";
 import { LoginInfo } from "./authAPI";
-import { apiBaseUrlV2, authFetch } from "./common";
+import { authFetch } from "./common";
 
 export async function getTenants(
   loginInfo: LoginInfo | null,
 ): Promise<Tenant[]> {
-  const request = await authFetch(`${apiBaseUrlV2}/tenant`, loginInfo);
+  const request = await authFetch(`/api/datasource/v2/tenant`, loginInfo);
   const response: Tenant[] = await request.json();
   return response;
 }
@@ -32,7 +32,7 @@ export async function getTenant(
   loginInfo: LoginInfo | null,
 ): Promise<Tenant> {
   const request = await authFetch(
-    `${apiBaseUrlV2}/tenant/${tenantId}`,
+    `/api/datasource/v2/tenant/${tenantId}`,
     loginInfo,
   );
   const response: Tenant = await request.json();
@@ -47,7 +47,7 @@ export async function postTenant(
   },
   loginInfo: LoginInfo | null,
 ) {
-  await authFetch(`${apiBaseUrlV2}/tenant`, loginInfo, {
+  await authFetch(`/api/datasource/v2/tenant`, loginInfo, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export async function putTenant(data: Tenant, loginInfo: LoginInfo | null) {
     data.jsonConfig = "{}";
   }
 
-  await authFetch(`${apiBaseUrlV2}/tenant`, loginInfo, {
+  await authFetch(`/api/datasource/v2/tenant`, loginInfo, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -74,7 +74,7 @@ export async function deleteTenant(
   tenantId: number,
   loginInfo: LoginInfo | null,
 ) {
-  await authFetch(`${apiBaseUrlV2}/tenant/${tenantId}`, loginInfo, {
+  await authFetch(`/api/datasource/v2/tenant/${tenantId}`, loginInfo, {
     method: "DELETE",
   });
 }

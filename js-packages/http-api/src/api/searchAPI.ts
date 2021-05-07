@@ -17,7 +17,7 @@
 
 import { GenericResultItem, SearchRequest } from "../types";
 import { LoginInfo } from "./authAPI";
-import { apiBaseUrl, authFetch } from "./common";
+import { authFetch } from "./common";
 
 export type SearchResults<E> = {
   result: GenericResultItem<E>[];
@@ -36,7 +36,7 @@ export async function doSearch<E>(
       i.tokenType === "TEXT-TOKEN" ? { ...i, tokenType: "TEXT" } : i,
     ),
   };
-  const request = await authFetch(`${apiBaseUrl}/search`, loginInfo, {
+  const request = await authFetch(`/api/searcher/v1/search`, loginInfo, {
     method: "POST",
     body: JSON.stringify(fixedSearch),
   });

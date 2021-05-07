@@ -17,12 +17,15 @@
 
 import { PluginInfo, Plugin } from "../types";
 import { LoginInfo } from "./authAPI";
-import { apiBaseUrl, apiBaseUrlStatic, authFetch } from "./common";
+import { authFetch } from "./common";
 
 export async function getPlugins(
   loginInfo: LoginInfo | null,
 ): Promise<PluginInfo[]> {
-  const request = await authFetch(`${apiBaseUrl}/plugin`, loginInfo);
+  const request = await authFetch(
+    `/api/plugin-driver-manager/v1/plugin`,
+    loginInfo,
+  );
   const response: PluginInfo[] = await request.json();
   return response;
 }
@@ -35,7 +38,7 @@ export async function loadPlugin<E>(id: string): Promise<Plugin<E>> {
   };
 
   try {
-    const jsURL = `${apiBaseUrlStatic}/plugins/${id}/static/build/index.js`;
+    const jsURL = `/api/plugin-driver-manager/plugins/${id}/static/build/index.js`;
     // @ts-ignore
     const code = await import(/* webpackIgnore: true */ jsURL);
     const plugin = code.plugin as Plugin<E>;

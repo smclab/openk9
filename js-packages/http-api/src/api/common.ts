@@ -17,11 +17,6 @@
 
 import { LoginInfo } from "./authAPI";
 
-export const apiBaseUrlStatic = "/api";
-export const apiBaseUrl = "/api/v1";
-export const apiBaseUrlV2 = "/api/v2";
-export const logsBaseUrl = "/logs";
-
 export function authFetch(
   input: RequestInfo,
   loginInfo: LoginInfo | null,

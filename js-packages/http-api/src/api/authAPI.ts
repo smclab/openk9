@@ -16,7 +16,7 @@
  */
 
 import { promiseTimeoutReject } from "../utilities";
-import { apiBaseUrl, authFetch } from "./common";
+import { authFetch } from "./common";
 
 const AUTH_TIMEOUT = 6000;
 
@@ -64,7 +64,7 @@ export async function doLogin(
   timeout = AUTH_TIMEOUT,
 ): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
   async function innerLogin() {
-    const request = await fetch(`${apiBaseUrl}/auth/login`, {
+    const request = await fetch(`/api/searcher/v1/auth/login`, {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -90,7 +90,7 @@ export async function doLogout(
   loginInfo: LoginInfo,
 ): Promise<{ ok: boolean; response: any }> {
   try {
-    const request = await authFetch(`${apiBaseUrl}/auth/logout`, loginInfo, {
+    const request = await authFetch(`/api/searcher/v1/auth/logout`, loginInfo, {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -108,7 +108,7 @@ export async function doLoginRefresh(
   timeout = AUTH_TIMEOUT,
 ): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
   async function innerRefresh() {
-    const request = await fetch(`${apiBaseUrl}/auth/refresh`, {
+    const request = await fetch(`/api/searcher/v1/auth/refresh`, {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -130,10 +130,14 @@ export async function getUserInfo(
   loginInfo: LoginInfo,
 ): Promise<{ ok: true; response: UserInfo } | { ok: false; response: any }> {
   try {
-    const request = await authFetch(`${apiBaseUrl}/auth/user-info`, loginInfo, {
-      method: "POST",
-      body: "",
-    });
+    const request = await authFetch(
+      `/api/searcher/v1/auth/user-info`,
+      loginInfo,
+      {
+        method: "POST",
+        body: "",
+      },
+    );
     const response: UserInfo = await request.json();
     return { ok: request.ok, response };
   } catch (err) {
