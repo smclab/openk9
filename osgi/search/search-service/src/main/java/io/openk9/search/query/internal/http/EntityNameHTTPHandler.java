@@ -71,6 +71,7 @@ public class EntityNameHTTPHandler implements HttpHandler {
 
 		Mono<Response> response = _datasourceClient
 			.findByVirtualHost(hostName)
+			.next()
 			.switchIfEmpty(
 				Mono.error(
 					() -> new RuntimeException(

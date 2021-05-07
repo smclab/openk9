@@ -65,6 +65,7 @@ public class SupportedDatasourcesEndpoint implements HttpHandler {
 		Flux<SupportedDatasourcesResponse> response =
 			_datasourceClient
 				.findByVirtualHost(hostName)
+				.next()
 				.switchIfEmpty(
 					Mono.error(
 						() -> new RuntimeException(

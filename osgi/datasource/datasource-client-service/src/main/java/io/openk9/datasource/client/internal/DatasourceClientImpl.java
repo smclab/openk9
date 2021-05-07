@@ -84,7 +84,7 @@ public class DatasourceClientImpl implements DatasourceClient {
 	}
 
 	@Override
-	public Mono<Tenant> findByVirtualHost(String virtualHost) {
+	public Flux<Tenant> findByVirtualHost(String virtualHost) {
 		return Mono.from(
 			_httpClient
 				.request(
@@ -96,7 +96,7 @@ public class DatasourceClientImpl implements DatasourceClient {
 						.toString()
 				)
 		)
-			.map(response -> _jsonFactory.fromJson(response, Tenant.class));
+			.flatMapIterable(response -> _jsonFactory.fromJsonList(response, Tenant.class));
 	}
 
 	private HttpClient _httpClient;

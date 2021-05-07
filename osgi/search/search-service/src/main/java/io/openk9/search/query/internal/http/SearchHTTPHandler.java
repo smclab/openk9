@@ -71,8 +71,7 @@ import java.util.stream.Stream;
 	service = Endpoint.class,
 	property = {
 		"base.path=/v1/search"
-	},
-	enabled = false
+	}
 )
 public class SearchHTTPHandler implements HttpHandler {
 
@@ -94,6 +93,7 @@ public class SearchHTTPHandler implements HttpHandler {
 
 		Mono<Tenant> tenant = _datasourceClient
 			.findByVirtualHost(hostName)
+			.next()
 			.switchIfEmpty(
 				Mono.error(
 					() -> new RuntimeException(
