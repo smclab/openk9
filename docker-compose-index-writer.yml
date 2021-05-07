@@ -20,9 +20,9 @@ services:
         labels:
             - "traefik.enable=true"
             - "traefik.http.services.index-writer-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.index-writer-strip.stripprefix.prefixes=/index-writer"
+            - "traefik.http.middlewares.index-writer-strip.stripprefix.prefixes=/api/index-writer"
             - "traefik.http.routers.index-writer.entrypoints=web"
-            - "traefik.http.routers.index-writer.rule=PathPrefix(`/index-writer`)"
+            - "traefik.http.routers.index-writer.rule=PathPrefix(`/api/index-writer`)"
             - "traefik.http.middlewares.index-writer_compress.compress=true"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
             - "traefik.http.routers.index-writer.middlewares=index-writer-strip@docker,index-writer_compress@docker,openk9-forwarded-host@docker"

@@ -23,9 +23,9 @@ services:
         labels:
             - "traefik.enable=true"
             - "traefik.http.services.searcher-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.searcher-strip.stripprefix.prefixes=/searcher"
+            - "traefik.http.middlewares.searcher-strip.stripprefix.prefixes=/api/searcher"
             - "traefik.http.routers.searcher.entrypoints=web"
-            - "traefik.http.routers.searcher.rule=PathPrefix(`/searcher`)"
+            - "traefik.http.routers.searcher.rule=PathPrefix(`/api/searcher`)"
             - "traefik.http.middlewares.searcher_compress.compress=true"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
             - "traefik.http.routers.searcher.middlewares=searcher-strip@docker,searcher_compress@docker,openk9-forwarded-host@docker"

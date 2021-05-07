@@ -20,9 +20,9 @@ services:
         labels:
             - "traefik.enable=true"
             - "traefik.http.services.datasource-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.datasource-strip.stripprefix.prefixes=/datasource"
+            - "traefik.http.middlewares.datasource-strip.stripprefix.prefixes=/api/datasource"
             - "traefik.http.routers.datasource.entrypoints=web"
-            - "traefik.http.routers.datasource.rule=PathPrefix(`/datasource`)"
+            - "traefik.http.routers.datasource.rule=PathPrefix(`/api/datasource`)"
             - "traefik.http.middlewares.datasource_compress.compress=true"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
             - "traefik.http.routers.datasource.middlewares=datasource-strip@docker,datasource_compress@docker,openk9-forwarded-host@docker"

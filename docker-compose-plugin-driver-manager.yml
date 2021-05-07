@@ -20,9 +20,9 @@ services:
         labels:
             - "traefik.enable=true"
             - "traefik.http.services.plugin-driver-manager-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.plugin-driver-manager-strip.stripprefix.prefixes=/plugin-driver-manager"
+            - "traefik.http.middlewares.plugin-driver-manager-strip.stripprefix.prefixes=/api/plugin-driver-manager"
             - "traefik.http.routers.plugin-driver-manager.entrypoints=web"
-            - "traefik.http.routers.plugin-driver-manager.rule=PathPrefix(`/plugin-driver-manager`)"
+            - "traefik.http.routers.plugin-driver-manager.rule=PathPrefix(`/api/plugin-driver-manager`)"
             - "traefik.http.middlewares.plugin-driver-manager_compress.compress=true"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
             - "traefik.http.routers.plugin-driver-manager.middlewares=plugin-driver-manager-strip@docker,plugin-driver-manager_compress@docker,openk9-forwarded-host@docker"

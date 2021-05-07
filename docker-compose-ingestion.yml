@@ -20,9 +20,9 @@ services:
         labels:
             - "traefik.enable=true"
             - "traefik.http.services.ingestion-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.ingestion-strip.stripprefix.prefixes=/ingestion"
+            - "traefik.http.middlewares.ingestion-strip.stripprefix.prefixes=/api/ingestion"
             - "traefik.http.routers.ingestion.entrypoints=web"
-            - "traefik.http.routers.ingestion.rule=PathPrefix(`/ingestion`)"
+            - "traefik.http.routers.ingestion.rule=PathPrefix(`/api/ingestion`)"
             - "traefik.http.middlewares.ingestion_compress.compress=true"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
             - "traefik.http.routers.ingestion.middlewares=ingestion-strip@docker,ingestion_compress@docker,openk9-forwarded-host@docker"
