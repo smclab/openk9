@@ -22,9 +22,9 @@ services:
             - /bin/docker:/bin/docker
         labels:
             - "traefik.enable=true"
-            - "traefik.http.middlewares.logs-strip.stripprefix.prefixes=/logs"
+            - "traefik.http.middlewares.logs-strip.stripprefix.prefixes=/api/logs"
             - "traefik.http.routers.logs.entrypoints=web"
-            - "traefik.http.routers.logs.rule=PathPrefix(`/logs`)"
+            - "traefik.http.routers.logs.rule=PathPrefix(`/api/logs`)"
             - "traefik.http.routers.logs.middlewares=logs-strip@docker"
             - "traefik.http.routers.traefik.middlewares=traefik-compress"
             - "traefik.http.middlewares.traefik-compress.compress=true"

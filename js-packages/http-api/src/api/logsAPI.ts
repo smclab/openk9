@@ -16,7 +16,7 @@
  */
 
 import { LoginInfo } from "./authAPI";
-import { authFetch, logsBaseUrl } from "./common";
+import { authFetch } from "./common";
 
 export type ContainerStatus = {
   ID: string;
@@ -28,7 +28,7 @@ export type ContainerStatus = {
 export async function getContainerStatus(
   loginInfo: LoginInfo | null,
 ): Promise<ContainerStatus[]> {
-  const request = await authFetch(`${logsBaseUrl}/status`, loginInfo);
+  const request = await authFetch(`/api/logs/status`, loginInfo);
   const response: ContainerStatus[] = await request.json();
   return response;
 }
@@ -38,10 +38,7 @@ export async function getContainerLogs(
   tail = 300,
   loginInfo: LoginInfo | null,
 ): Promise<string> {
-  const request = await authFetch(
-    `${logsBaseUrl}/status/${id}/${tail}`,
-    loginInfo,
-  );
+  const request = await authFetch(`/api/logs/status/${id}/${tail}`, loginInfo);
   const response: string = await request.text();
   return response;
 }
