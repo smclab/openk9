@@ -17,7 +17,7 @@ build osgi:
     - echo "$GRADLE_USER_HOME"
     - echo "$M2_HOME"
   script:
-    ./gradlew clean buildCore
+    ./gradlew clean buildDist
   cache:
     key: build-cache
     paths:
@@ -28,20 +28,7 @@ build osgi:
       - build/core/libs/*.jar
     expire_in: 1 week
 
-Build Tagged OSGI Docker Image:
-  image: docker:19.03.12
-  stage: build-docker
-  only: 
-    - tags
-  needs: [build osgi]
-  before_script:
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD  $CI_REGISTRY_NAME
-  script:
-    - docker build -t openk9-core:latest -f osgi/Dockerfile.core .
-    - docker tag openk9-core:latest $CI_REGISTRY_NAME/openk9/openk9-core:$CI_COMMIT_REF_NAME
-    - docker push $CI_REGISTRY_NAME/openk9/openk9-core:$CI_COMMIT_REF_NAME
-
-Build Latest OSGI Docker Image:
+Build Latest OSGI Docker Images:
   image: docker:19.03.12
   stage: build-docker
   rules:
@@ -53,9 +40,10 @@ Build Latest OSGI Docker Image:
         - plugins/email/src/**/*
         - plugins/liferay/src/**/*
   needs: [build osgi]
-  before_script:
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD  $CI_REGISTRY_NAME
   script:
-    - docker build -t openk9-core:latest -f osgi/Dockerfile.core .
-    - docker tag openk9-core:latest $CI_REGISTRY_NAME/openk9/openk9-core:latest
-    - docker push $CI_REGISTRY_NAME/openk9/openk9-core:latest
+    - ./gradlew pushImages
+  cache:
+    key: build-docker-cache
+    paths:
+      - $CI_PROJECT_DIR/.m2/**/*
+      - $CI_PROJECT_DIR/.gradle/**/*
