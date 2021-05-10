@@ -262,8 +262,8 @@ distConfigurations
 			})
 
 			if (System.getenv("CI_REGISTRY_NAME") != null) {
-				tasks.register("buildImage${distPrimaryName}", DockerPushImage, {
-					dependsOn("createDockerFile${distPrimaryName}")
+				tasks.register("pushImage${distPrimaryName}", DockerPushImage, {
+					dependsOn("buildImage${distPrimaryName}")
 					finalizedBy("removeImage${distPrimaryName}")
 					images.add("openk9-$distName:latest")
 				})
