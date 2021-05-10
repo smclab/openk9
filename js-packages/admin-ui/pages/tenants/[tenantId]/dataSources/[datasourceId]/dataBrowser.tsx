@@ -108,7 +108,6 @@ function DSDataBrowser() {
         ]}
         breadcrumbsControls={
           <DataSourceNavBar
-            onReindex={() => {}}
             tenantId={parseInt(tenantId)}
             datasourceId={dataSourceInt}
           />

@@ -38,10 +38,12 @@ import {
   deleteDataSource,
   getDataSources,
   getPlugins,
+  getSchedulerItems,
   Plugin,
   PluginInfo,
   toggleDataSource,
   triggerReindex,
+  triggerScheduler,
 } from "@openk9/http-api";
 import { Layout } from "../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
@@ -90,8 +92,9 @@ function DSItemRender({
   selected,
   onSelect,
   onToggle,
-  onDelete,
   setIdToReindex,
+  setIdToSchedule,
+  setIdToDelete,
 }: {
   ds: DataSourceInfo;
   plugin?: Plugin<any>;
@@ -100,13 +103,13 @@ function DSItemRender({
   selected: boolean;
   onSelect(): void;
   onToggle(): void;
-  onDelete(): void;
   setIdToReindex(ids: number[]): void;
+  setIdToSchedule(ids: number[]): void;
+  setIdToDelete(ids: number[]): void;
 }) {
   const classes = useStyles();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const dataSourcePlugin = plugin?.pluginServices.find(
     (ps) =>
@@ -184,9 +187,9 @@ function DSItemRender({
             <div>
               <button
                 className="component-action quick-action-item"
-                onClick={() => setIdToReindex([ds.datasourceId])}
+                onClick={() => setIdToSchedule([ds.datasourceId])}
                 data-tooltip-align="top"
-                title="Reindex"
+                title="Trigger Scheduler"
               >
                 <ClayIcon symbol="reload" />
               </button>
@@ -216,19 +219,22 @@ function DSItemRender({
             alignmentPosition={3}
           >
             <ClayDropDown.ItemList>
-              <ClayDropDown.Item onClick={() => setDeleting(true)}>
-                Delete
+              <ClayDropDown.Item
+                onClick={() => setIdToSchedule([ds.datasourceId])}
+              >
+                Trigger Scheduler
               </ClayDropDown.Item>
-              {deleting && (
-                <ConfirmationModal
-                  title="Delete Data Source"
-                  message="Are you sure you want to delete this data source?"
-                  abortText="Abort"
-                  confirmText="Delete"
-                  onCloseModal={() => setDeleting(false)}
-                  onConfirmModal={onDelete}
-                />
-              )}
+              <ClayDropDown.Item
+                onClick={() => setIdToReindex([ds.datasourceId])}
+              >
+                Full Reindex
+              </ClayDropDown.Item>
+              <ClayDropDown.Divider />
+              <ClayDropDown.Item
+                onClick={() => setIdToDelete([ds.datasourceId])}
+              >
+                Delete DataSource
+              </ClayDropDown.Item>
             </ClayDropDown.ItemList>
           </ClayDropDown>
         </div>
@@ -243,12 +249,16 @@ function Inside({
   selectedIds,
   setSelectedIds,
   setIdToReindex,
+  setIdToSchedule,
+  setIdToDelete,
 }: {
   tenantId: string;
   searchValue: string;
   selectedIds: number[];
   setSelectedIds: React.Dispatch<React.SetStateAction<number[]>>;
   setIdToReindex(ids: number[]): void;
+  setIdToSchedule(ids: number[]): void;
+  setIdToDelete(ids: number[]): void;
 }) {
   const classes = useStyles();
   const { pushToast } = useToast();
@@ -267,6 +277,8 @@ function Inside({
     () => data && data.filter((d) => String(d.tenantId) === tenantId),
     [data, tenantId],
   );
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (!data || !tenantDSs) {
     return <span className="loading-animation" />;
@@ -290,29 +302,6 @@ function Inside({
 
   const someSelected = selectedIds.length > 0;
 
-  // async function reindex(ids: number[]) {
-  //   // TODO: Can this be done without this call, using the ids directly?
-  //   const schedulerJobsReq = await fetch(`/api/v1/scheduler`);
-  //   const schedulerJobsResp: {
-  //     jobName: string;
-  //     datasourceId: number;
-  //     scheduling: string;
-  //     datasourceName: string;
-  //   }[] = await schedulerJobsReq.json();
-  //   const schedulerJobs = schedulerJobsResp
-  //     .filter((job) => ids.includes(job.datasourceId))
-  //     .map((job) => job.jobName);
-
-  //   const req = await fetch(`/api/v1/scheduler/trigger`, {
-  //     method: "POST",
-  //     headers: { ContentType: "application/json" },
-  //     body: JSON.stringify(schedulerJobs),
-  //   });
-  //   const resp = await req.json();
-  //   console.log(resp);
-  //   onPerformAction(`Reindex requested for ${ids.length} items.`);
-  // }
-
   async function toggle(ids: number[]) {
     if (!tenantDSs) return;
     await Promise.all(
@@ -334,11 +323,6 @@ function Inside({
     pushToast(`${ids.length} items turned ${targetState ? "on" : "off"}.`);
   }
 
-  async function handleDelete(dsId: number) {
-    await deleteDataSource(dsId, loginInfo);
-    mutate(`/api/v2/datasource`);
-  }
-
   return (
     <ul className={clsx("list-group", classes.list)}>
       <li className="list-group-header">
@@ -354,29 +338,65 @@ function Inside({
           </label>
         </div>
         <div className={classes.actions}>
-          <button
-            className={clsx(
-              "component-action quick-action-item",
-              !someSelected && "disabled",
-            )}
-            onClick={() => setIdToReindex(selectedIds)}
+          <ClayTooltipProvider>
+            <div>
+              <button
+                className={clsx(
+                  "component-action quick-action-item",
+                  !someSelected && "disabled",
+                )}
+                onClick={() => setIdToSchedule(selectedIds)}
+                data-tooltip-align="top"
+                title="Trigger Scheduler"
+              >
+                <ClayIcon symbol="reload" />
+              </button>
+            </div>
+          </ClayTooltipProvider>
+          <ClayTooltipProvider>
+            <div>
+              <button
+                className={clsx(
+                  "component-action quick-action-item",
+                  !someSelected && "disabled",
+                )}
+                onClick={() => toggle(selectedIds)}
+                data-tooltip-align="top"
+                title="Turn on/off"
+              >
+                <ClayIcon symbol="logout" />
+              </button>
+            </div>
+          </ClayTooltipProvider>
+
+          <ClayDropDown
+            trigger={
+              <button
+                className={clsx(
+                  "component-action",
+                  !someSelected && "disabled",
+                )}
+              >
+                <ClayIcon symbol="ellipsis-v" />
+              </button>
+            }
+            active={menuOpen}
+            onActiveChange={setMenuOpen}
+            alignmentPosition={3}
           >
-            <ClayIcon symbol="reload" />
-          </button>
-          <button
-            className={clsx(
-              "component-action quick-action-item",
-              !someSelected && "disabled",
-            )}
-            onClick={() => toggle(selectedIds)}
-          >
-            <ClayIcon symbol="logout" />
-          </button>
-          <button
-            className={clsx("component-action", !someSelected && "disabled")}
-          >
-            <ClayIcon symbol="ellipsis-v" />
-          </button>
+            <ClayDropDown.ItemList>
+              <ClayDropDown.Item onClick={() => setIdToSchedule(selectedIds)}>
+                Trigger Scheduler
+              </ClayDropDown.Item>
+              <ClayDropDown.Item onClick={() => setIdToReindex(selectedIds)}>
+                Full Reindex
+              </ClayDropDown.Item>
+              <ClayDropDown.Divider />
+              <ClayDropDown.Item onClick={() => setIdToDelete(selectedIds)}>
+                Delete DataSource
+              </ClayDropDown.Item>
+            </ClayDropDown.ItemList>
+          </ClayDropDown>
         </div>
       </li>
 
@@ -402,8 +422,9 @@ function Inside({
               )
             }
             onToggle={() => toggle([ds.datasourceId])}
-            onDelete={() => handleDelete(ds.datasourceId)}
             setIdToReindex={setIdToReindex}
+            setIdToSchedule={setIdToSchedule}
+            setIdToDelete={setIdToDelete}
           />
         );
       })}
@@ -481,17 +502,39 @@ function DataSources() {
 
   const [searchValue, setSearchValue] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
   const [idToReindex, setIdToReindex] = useState<number[]>([]);
+  const [idToSchedule, setIdToSchedule] = useState<number[]>([]);
+  const [idToDelete, setIdToDelete] = useState<number[]>([]);
 
   const { loginValid, loginInfo } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
 
   if (!tenantId) return null;
 
+  async function schedule(ids: number[]) {
+    const schedulerItems = await getSchedulerItems(loginInfo);
+    const schedulerItemsToRestart = schedulerItems
+      .filter((job) => ids.includes(job.datasourceId))
+      .map((job) => job.jobName);
+    const resp = await triggerScheduler(schedulerItemsToRestart, loginInfo);
+    console.log(resp);
+    pushToast(`Reindex requested for ${ids.length} item`);
+  }
+
   async function reindex(ids: number[]) {
     const resp = await triggerReindex(ids, loginInfo);
     console.log(resp);
-    pushToast(`Reindex requested for ${ids.length} items.`);
+    pushToast(`Full reindex requested for ${ids.length} item`);
+  }
+
+  async function doDelete(ids: number[]) {
+    const resp = await Promise.all(
+      ids.map((id) => deleteDataSource(id, loginInfo)),
+    );
+    console.log(resp);
+    pushToast(`${ids.length} DataSources Deleted`);
+    mutate(`/api/v2/datasource`);
   }
 
   return (
@@ -519,20 +562,42 @@ function DataSources() {
                 selectedIds={selectedIds}
                 setSelectedIds={setSelectedIds}
                 setIdToReindex={setIdToReindex}
+                setIdToSchedule={setIdToSchedule}
+                setIdToDelete={setIdToDelete}
               />
             </Suspense>
           )}
         </div>
       </Layout>
 
+      {idToSchedule && idToSchedule.length !== 0 && (
+        <ConfirmationModal
+          title="Trigger Scheduler"
+          message="Are you sure you want to trigger the scheduler for the selected data sources? This will look for new data and may take some time."
+          abortText="Abort"
+          confirmText="Trigger"
+          onCloseModal={() => setIdToSchedule([])}
+          onConfirmModal={() => schedule(idToSchedule)}
+        />
+      )}
       {idToReindex && idToReindex.length !== 0 && (
         <ConfirmationModal
-          title="Reindex"
-          message="Are you sure you want to reindex the selected data sources? This will delete the previously indexed data and may take a long time."
+          title="Full Reindex"
+          message="Are you sure you want to reindex the selected data sources? This will delete ALL the previously indexed data and may take a long time."
           abortText="Abort"
           confirmText="Reindex"
           onCloseModal={() => setIdToReindex([])}
           onConfirmModal={() => reindex(idToReindex)}
+        />
+      )}
+      {idToDelete && idToDelete.length !== 0 && (
+        <ConfirmationModal
+          title="Delete"
+          message="Are you sure you want to delete the selected data sources? This will delete ALL the previously indexed data."
+          abortText="Abort"
+          confirmText="Delete"
+          onCloseModal={() => setIdToDelete([])}
+          onConfirmModal={() => doDelete(idToDelete)}
         />
       )}
     </>

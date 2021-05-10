@@ -261,7 +261,6 @@ function DSEnrich() {
         ]}
         breadcrumbsControls={
           <DataSourceNavBar
-            onReindex={() => {}}
             tenantId={parseInt(tenantId)}
             datasourceId={parseInt(datasourceId)}
           />

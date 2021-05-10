@@ -27,10 +27,8 @@ import {
   changeDataSourceInfo,
   DataSourceInfo,
   getDataSourceInfo,
-  triggerReindex,
 } from "@openk9/http-api";
 
-import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 import { EditDataSource } from "../../../../../components/EditDataSource";
 import { Layout } from "../../../../../components/Layout";
@@ -188,8 +186,6 @@ function DSSettings() {
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
   const datasourceInt = parseInt(datasourceId || "NaN");
 
-  const [isVisibleModal, setIsVisibleModal] = useState(false);
-
   const { pushToast } = useToast();
 
   const { loginValid, loginInfo } = useLoginCheck();
@@ -197,12 +193,6 @@ function DSSettings() {
 
   if (isNaN(datasourceInt) || !tenantId || !datasourceId) {
     return null;
-  }
-
-  async function reindex(ids: number) {
-    const resp = await triggerReindex([ids], loginInfo);
-    console.log(resp);
-    pushToast(`Reindex requested for 1 item`);
   }
 
   async function saveDataSource(
@@ -247,7 +237,6 @@ function DSSettings() {
         ]}
         breadcrumbsControls={
           <DataSourceNavBar
-            onReindex={() => setIsVisibleModal(true)}
             tenantId={parseInt(tenantId)}
             datasourceId={datasourceInt}
           />
@@ -261,17 +250,6 @@ function DSSettings() {
           />
         </div>
       </Layout>
-
-      {isVisibleModal && (
-        <ConfirmationModal
-          title="Reindex"
-          message="Are you sure you want to reindex this data source? This will delete the previously indexed data and may take a long time."
-          abortText="Abort"
-          confirmText="Reindex"
-          onCloseModal={() => setIsVisibleModal(false)}
-          onConfirmModal={() => reindex(Number(datasourceId))}
-        />
-      )}
     </>
   );
 }
