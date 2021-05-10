@@ -52,6 +52,8 @@ public class RabbitMQActivator {
 
 		ConnectionFactory connectionFactory = new ConnectionFactory();
 
+		connectionFactory.useNio();
+
 		connectionFactory.setUri(config.uri());
 
 		_registerService(
