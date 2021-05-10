@@ -141,6 +141,7 @@ hs_err_pid*
 
 # shared volumes
 postgres
+postgres-keycloak
 rabbitmq
 elasticsearch
 neo4j

@@ -316,7 +316,9 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 				}
 
 				bestScore = _levenshteinDistance(
-					documentEntity.getName(),
+					_entityNameCleanerProvider
+						.getEntityNameCleaner(documentEntity.getType())
+						.cleanEntityName(documentEntity.getName()),
 					_entityNameCleanerProvider
 						.getEntityNameCleaner(entityRequest.getType())
 						.cleanEntityName(entityRequest.getName())

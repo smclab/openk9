@@ -32,3 +32,5 @@ services:
             - POSTGRES_USER=openk9
             - POSTGRES_DB=keycloak
             - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - ./postgres-keycloak/db-data:/var/lib/postgresql/data
