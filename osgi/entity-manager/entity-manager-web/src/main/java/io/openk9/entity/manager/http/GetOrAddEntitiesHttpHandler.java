@@ -90,6 +90,10 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 		_scoreThreshold = config.scoreThreshold();
 		_uniqueEntities = config.uniqueEntities();
 		_labelFilter = config.labelFilter();
+
+		if (_log.isInfoEnabled()) {
+					_log.info(Arrays.toString(_uniqueEntities));
+				}
 	}
 
 	@Modified
@@ -332,6 +336,8 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 			}
 
 			if (bestScore > _scoreThreshold) {
+				_log.debug(
+					"filtered with treshold");
 				return Collections.singletonList(documentEntity);
 			}
 
@@ -398,6 +404,8 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 		Flux<Entity> entityFlux = Flux.empty();
 
 		String currentEntityRequestType = currentEntityRequest.getType();
+
+		_log.info(Arrays.toString(_uniqueEntities));
 
 		if (!candidates.isEmpty() && !_containsValue(_uniqueEntities, currentEntityRequestType)) {
 

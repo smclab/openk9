@@ -1,8 +1,11 @@
 version: "3.5"
 services:
     ner-en:
-        image: flair_flair-ner-relations:latest
+        image: flair_flair-ner-rel-fast:latest
         container_name: ner-en
-        command: gunicorn -w 1 -t 600 -b 0.0.0.0:80 main:app
         ports:
             - 5009:80
+        environment:
+            - WORKERS_PER_CORE=0.1
+            - GRACEFUL_TIMEOUT=300
+            - TIMEOUT=600

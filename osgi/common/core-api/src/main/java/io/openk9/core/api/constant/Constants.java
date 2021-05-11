@@ -26,6 +26,7 @@ public interface Constants {
 	String CONFIDENCE = "confidence";
 	String RAW_CONTENT = "rawContent";
 	String ENTITIES = "entities";
+	String RELATIONS = "relations";
 	String TYPE = "type";
 	String NAME = "name";
 	String ID = "id";

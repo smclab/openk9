@@ -89,6 +89,8 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 
 		JsonNode entitiesNode = datasourceConfiguration.get(entitiesField());
 
+		JsonNode relationsNode = datasourceConfiguration.get(relationsField());
+
 		JsonNode rawContentNode = objectNode.get(Constants.RAW_CONTENT);
 
 		JsonNode confidenceNode =
@@ -97,6 +99,8 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 		ObjectNode request = _jsonFactory.createObjectNode();
 
 		request.put(entitiesField(), entitiesNode);
+
+		request.put(relationsField(), relationsNode);
 
 		request.put(Constants.CONFIDENCE, confidenceNode);
 
@@ -202,6 +206,10 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 
 	protected String entitiesField() {
 		return Constants.ENTITIES;
+	}
+
+	protected String relationsField() {
+		return Constants.RELATIONS;
 	}
 
 	protected String idField() {
