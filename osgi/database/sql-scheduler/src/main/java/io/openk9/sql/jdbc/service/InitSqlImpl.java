@@ -19,6 +19,7 @@ package io.openk9.sql.jdbc.service;
 
 import io.openk9.sql.api.InitSql;
 import org.apache.karaf.features.FeaturesService;
+import org.apache.karaf.system.SystemService;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import reactor.core.Exceptions;
@@ -36,7 +37,7 @@ public class InitSqlImpl implements InitSql {
 	@Override
 	public void onAfterCreate() {
 		try {
-			_featuresService.installFeature("scheduler", "4.3.0");
+			_featuresService.installFeature("scheduler", _systemService.getVersion());
 		}
 		catch (Exception exception) {
 			throw Exceptions.bubble(exception);
@@ -45,5 +46,8 @@ public class InitSqlImpl implements InitSql {
 
 	@Reference
 	private FeaturesService _featuresService;
+
+	@Reference
+	private SystemService _systemService;
 
 }

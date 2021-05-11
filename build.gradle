@@ -85,6 +85,9 @@ ext.libraries = [
 		karaf_jdbc_core: [
 				"org.apache.karaf.jdbc:org.apache.karaf.jdbc.core:$karafVersion"
 		],
+		karaf_system: [
+				"org.apache.karaf.system:org.apache.karaf.system.core:$karafVersion"
+		],
 		elasticsearch: 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.9.3',
 		avro:  'org.apache.avro:avro:1.10.0',
 		felix_dependencymanager: 'org.apache.felix:org.apache.felix.dependencymanager:4.6.0',

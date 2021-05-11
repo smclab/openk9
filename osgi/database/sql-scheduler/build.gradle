@@ -1,4 +1,5 @@
 dependencies {
     compile project(':osgi:datasource:datasource-api')
     compile libraries.karaf_features
+    compile libraries.karaf_system
 }
