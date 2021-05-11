@@ -170,6 +170,8 @@ task downloadKaraf(type: Download) {
 	dest "$rootDir/build/karaf/apache-karaf.tar.gz"
 	overwrite false
 	onlyIfModified true
+	connectTimeout 30
+	readTimeout 0
 }
 
 task createDockerFileKaraf(type: Dockerfile) {
