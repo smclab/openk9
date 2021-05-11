@@ -91,7 +91,7 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
       } else {
         router.push(decodeURIComponent(redirect));
       }
-    } else if (!loginValid) {
+    } else if (!loginValid && !isLoginPage) {
       // protected page ad no login, redirect to login
       router.push(`/login?redirect=${encodeURIComponent(router.pathname)}`);
     }

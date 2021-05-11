@@ -77,6 +77,11 @@ export type StateType = {
   invalidateLogin(): void;
 };
 
+const { loginInfo, userInfo } = JSON.parse(
+  localStorage.getItem(localStorageLoginPersistKey) ||
+    JSON.stringify({ loginInfo: null, userInfo: null }),
+);
+
 export const useStore = create<StateType>(
   devtools((set, get) => ({
     initial: true,
@@ -92,6 +97,8 @@ export const useStore = create<StateType>(
     selectedResult: null,
     pluginInfos: [],
     tenantConfig: emptyTenantJSONConfig,
+    loginInfo,
+    userInfo,
 
     async loadInitial() {
       const pluginInfos = await getPlugins(null);
@@ -105,17 +112,10 @@ export const useStore = create<StateType>(
         (tenant?.jsonConfig && JSON.parse(tenant?.jsonConfig)) ||
         emptyTenantJSONConfig;
 
-      const { loginInfo, userInfo } = JSON.parse(
-        localStorage.getItem(localStorageLoginPersistKey) ||
-          JSON.stringify({ loginInfo: null, userInfo: null }),
-      );
-
       set((state) => ({
         ...state,
         pluginInfos,
         tenantConfig,
-        loginInfo,
-        userInfo,
       }));
     },
 
@@ -207,8 +207,6 @@ export const useStore = create<StateType>(
       }
     },
 
-    loginInfo: null,
-    userInfo: null,
     setLoginInfo(loginInfo: LoginInfo, userInfo: UserInfo) {
       set((state) => ({ ...state, loginInfo, userInfo }));
       localStorage.setItem(
@@ -292,7 +290,7 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
       } else {
         history.push(decodeURIComponent(redirect));
       }
-    } else if (!loginValid) {
+    } else if (!loginValid && !isLoginPage) {
       // protected page ad no login, redirect to login
       history.push(`/login?redirect=${encodeURIComponent(location.pathname)}`);
     }
