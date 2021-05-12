@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9 - Fix] Karaf Json Config Fix
+Bundle-SymbolicName: io.openk9.karaf.json.config.fix
+
+-include: ${project.rootDir}/osgi/common.bnd

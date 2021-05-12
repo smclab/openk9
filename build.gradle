@@ -70,11 +70,18 @@ ext.libraries = [
 				'io.projectreactor.netty:reactor-netty:1.0.5'
 		],
 		osgi: 'org.osgi:osgi.core:7.0.0',
+		osgi_cmpn: 'org.osgi:osgi.cmpn:7.0.0',
+		osgi_cm: 'org.osgi:org.osgi.service.cm:1.6.0',
 		metatype: [
 				'org.osgi:org.osgi.service.metatype.annotations:1.4.0',
 				'org.osgi:org.osgi.service.metatype:1.4.0'
 		],
 		osgi_service_cm: 'org.osgi:org.osgi.service.cm:1.6.0',
+		felix_file_install: 'org.apache.felix:org.apache.felix.fileinstall:3.6.8',
+		felix_cm_json: [
+				'org.apache.felix:org.apache.felix.cm.json:1.0.2',
+				'org.apache.geronimo.specs:geronimo-json_1.1_spec:1.2'
+		],
 		reactor_rabbitmq: 'io.projectreactor.rabbitmq:reactor-rabbitmq:1.5.2',
 		karaf_scheduler: [
 				"org.apache.karaf.scheduler:org.apache.karaf.scheduler.core:$karafVersion"
@@ -87,6 +94,9 @@ ext.libraries = [
 		],
 		karaf_system: [
 				"org.apache.karaf.system:org.apache.karaf.system.core:$karafVersion"
+		],
+		karaf_util: [
+				"org.apache.karaf:org.apache.karaf.util:$karafVersion"
 		],
 		elasticsearch: 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.9.3',
 		avro:  'org.apache.avro:avro:1.10.0',

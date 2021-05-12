@@ -68,6 +68,7 @@ dependencies {
 
 	distEntityManager project(path: ':osgi:ingestion:ingestion-api', transitive: false)
 	distEntityManager project(path: ':osgi:ingestion:ingestion-service', transitive: false)
+	distEntityManager project(path: ':osgi:fix:karaf-json-config-fix', transitive: false)
 
 	// </ENTITY MANAGER>
 
@@ -110,6 +111,7 @@ dependencies {
 	distIndexWriter project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-service', transitive: false)
 	distIndexWriter project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
 
+	distIndexWriter project(path: ':osgi:fix:karaf-json-config-fix', transitive: false)
 
 	// </INDEX WRITER>
 
@@ -166,6 +168,8 @@ dependencies {
 
 	distDatasource project(path: ':osgi:init-data', transitive: false)
 
+	distDatasource project(path: ':osgi:fix:karaf-json-config-fix', transitive: false)
+
 	// </DATASOURCE>
 
 	// <INGESTION>
@@ -194,6 +198,8 @@ dependencies {
 	distIngestion project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
 	distIngestion project(path: ':osgi:ingestion:ingestion-service', transitive: false)
 	distIngestion project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
+
+	distIngestion project(path: ':osgi:fix:karaf-json-config-fix', transitive: false)
 
 	// </INGESTION>
 
@@ -243,6 +249,8 @@ dependencies {
 	distSearcher project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
 
 	distSearcher project(path: ':osgi:cache:cache-api', transitive: false)
+
+	distSearcher project(path: ':osgi:fix:karaf-json-config-fix', transitive: false)
 
 	// </SEARCHER>
 
@@ -305,6 +313,8 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
+
+	distPluginDriverManager project(path: ':osgi:fix:karaf-json-config-fix', transitive: false)
 
 	// </PluginDriverManager>
 

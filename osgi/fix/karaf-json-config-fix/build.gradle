@@ -1,0 +1,7 @@
+dependencies {
+	compileOnly libraries.osgi_cmpn
+	compileOnly libraries.felix_file_install
+	compileOnly libraries.karaf_util
+	compileOnly libraries.osgi
+	compileOnly libraries.felix_cm_json
+}
