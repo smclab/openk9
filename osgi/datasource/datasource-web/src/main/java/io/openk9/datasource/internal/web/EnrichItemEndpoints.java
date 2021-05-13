@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.internal.web;
 
+import io.openk9.http.exception.HttpException;
 import io.openk9.model.EnrichItem;
 import io.openk9.datasource.repository.EnrichItemRepository;
 import io.openk9.http.util.BaseEndpointRegister;
@@ -24,6 +25,7 @@ import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.HttpRequest;
 import io.openk9.http.web.HttpResponse;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.sql.api.client.Criteria;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -33,6 +35,10 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Component(immediate = true, service = EnrichItemEndpoints.class)
 public class EnrichItemEndpoints extends BaseEndpointRegister {
 
@@ -41,61 +47,67 @@ public class EnrichItemEndpoints extends BaseEndpointRegister {
 		setBundleContext(bundleContext);
 
 		this.registerEndpoint(
-			HttpHandler.post("/", this::_addDatasource),
-			HttpHandler.delete("/{id}", this::_deleteDatasource),
-			HttpHandler.get("/{id}", this::_getDatasourceById),
-			HttpHandler.get("/", this::_findAll),
-			HttpHandler.put("/", this::_updateDatasource)
+			HttpHandler.post("/reorder", this::_reorder)
 		);
 
+	}
+
+	private Publisher<Void> _reorder(
+		HttpRequest httpRequest, HttpResponse httpResponse) {
+
+		Mono<List<Long>> body =
+			Mono
+				.from(httpRequest.aggregateBodyToString())
+				.map(json -> _jsonFactory.fromJsonList(json, Long.class));
+
+		body
+			.flatMapMany(ids ->
+				_enrichItemRepository
+					.findByPrimaryKeys(ids)
+					.collectList()
+					.map(
+						enrichItemList ->
+							ids
+								.stream()
+								.map(id -> enrichItemList
+									.stream()
+									.filter(enrichItem ->
+										enrichItem
+											.getEnrichItemId()
+											.equals(id))
+									.findFirst()
+									.orElseThrow(() -> new HttpException(500, "EnrichItem for id: " + id + " not found"))
+								)
+						.collect(Collectors.toList())
+					)
+					.flatMap(
+						enrichItemListOrdered ->
+							Flux.zip(
+								Flux.fromStream(Stream.iterate(1, x -> x + 1).limit(enrichItemListOrdered.size())),
+								Flux.fromIterable(enrichItemListOrdered)
+							)
+							.map(t2 -> EnrichItem
+								.builder()
+								.enrichItemId(t2.getT2().getEnrichItemId())
+								._position(t2.getT1())
+								.active(t2.getT2().getActive())
+								.enrichPipelineId(t2.getT2().getEnrichPipelineId())
+								.jsonConfig(t2.getT2().getJsonConfig())
+								.serviceName(t2.getT2().getServiceName())
+								.name(t2.getT2().getName())
+								.build()
+							)
+							.flatMap(_enrichItemRepository::update)
+							.then()
+					)
+			);
+
+		return null;
 	}
 
 	@Deactivate
 	public void deactivate() {
 		this.close();
-	}
-
-	private Publisher<Void> _findAll(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
-
-		Flux<String> response =
-			_enrichItemRepository
-				.findAll()
-				.map(_jsonFactory::toJson);
-
-		return httpResponse.sendString(response);
-	}
-
-	private Publisher<Void> _updateDatasource(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
-
-		Mono<String> jsonResponse =
-			_getDatasourceFromBodyAttribute(httpRequest)
-				.flatMap(_enrichItemRepository::updateEnrichItem)
-				.map(_jsonFactory::toJson);
-
-		return httpResponse.sendString(jsonResponse);
-	}
-
-	private Publisher<Void> _getDatasourceById(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
-		String id = httpRequest.pathParam("id");
-
-		Mono<String> response = _enrichItemRepository
-			.findByPrimaryKey(Long.valueOf(id))
-			.map(_jsonFactory::toJson);
-
-		return httpResponse.sendString(response);
-	}
-
-	private Publisher<Void> _deleteDatasource(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
-
-		String id = httpRequest.pathParam("id");
-
-		return _enrichItemRepository
-			.removeEnrichItem(Long.valueOf(id))
-			.then((Mono<Void>)httpResponse.sendString(Mono.just("{}")));
 	}
 
 	private Publisher<Void> _addDatasource(
