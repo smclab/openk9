@@ -18,7 +18,6 @@
 package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
-import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.HttpRequest;
@@ -56,6 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,16 +68,13 @@ import java.util.stream.Stream;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class,
-	property = {
-		"base.path=/v1/search"
-	}
+	service = Endpoint.class
 )
-public class SearchHTTPHandler extends BaseSearchHTTPHandler {
+public class SearchByDatasourceHTTPHandler extends BaseSearchHTTPHandler {
 
 	@Override
 	public String getPath() {
-		return "";
+		return "/v1/search/{datasourceId}";
 	}
 
 	@Override
@@ -88,18 +85,16 @@ public class SearchHTTPHandler extends BaseSearchHTTPHandler {
 	@Override
 	protected Mono<Tuple2<Tenant, List<Datasource>>> _getTenantAndDatasourceList(
 		HttpRequest httpRequest, HttpResponse httpResponse) {
-		String hostName = HttpUtil.getHostName(httpRequest);
+
+		long datasourceId =
+			Long.parseLong(httpRequest.pathParam("datasourceId"));
 
 		return _datasourceClient
-			.findTenantByVirtualHost(hostName)
-			.next()
-			.switchIfEmpty(
-				Mono.error(
-					() -> new RuntimeException(
-						"tenant not found for virtualhost: " + hostName)))
-			.zipWhen(tenant -> _datasourceClient
-				.findDatasourceByTenantIdAndIsActive(tenant.getTenantId())
-				.collectList());
+			.findTenantAndDatasourceByDatasourceId(datasourceId)
+			.map(tenantDatasource -> Tuples.of(
+				tenantDatasource.getTenant(),
+				List.of(tenantDatasource.getDatasource()))
+			);
 	}
 
 	@Reference(

@@ -70,7 +70,7 @@ public class EntityNameHTTPHandler implements HttpHandler {
 		String hostName = HttpUtil.getHostName(httpRequest);
 
 		Mono<Response> response = _datasourceClient
-			.findByVirtualHost(hostName)
+			.findTenantByVirtualHost(hostName)
 			.next()
 			.switchIfEmpty(
 				Mono.error(

@@ -79,7 +79,7 @@ public class EntitySearchHTTPHandler implements HttpHandler {
 
 		Mono<Response> response =
 			_datasourceClient
-				.findByVirtualHost(hostName)
+				.findTenantByVirtualHost(hostName)
 				.next()
 				.switchIfEmpty(
 					Mono.error(

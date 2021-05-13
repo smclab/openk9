@@ -7,6 +7,7 @@ import io.openk9.http.web.HttpHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
+import io.openk9.model.TenantDatasource;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -35,6 +36,16 @@ public class DatasourceClientImpl implements DatasourceClient {
 	}
 
 	@Override
+	public Mono<TenantDatasource> findTenantAndDatasourceByDatasourceId(
+		long datasourceId) {
+		return findDatasource(datasourceId)
+			.zipWhen(
+				datasource -> findTenant(datasource.getTenantId()),
+				TenantDatasource::of
+			);
+	}
+
+	@Override
 	public Mono<Datasource> findDatasource(long datasourceId) {
 		return Mono.from(
 			_httpClient
@@ -47,7 +58,7 @@ public class DatasourceClientImpl implements DatasourceClient {
 	}
 
 	@Override
-	public Flux<Datasource> findByTenantIdAndIsActive(long tenantId) {
+	public Flux<Datasource> findDatasourceByTenantIdAndIsActive(long tenantId) {
 		return Mono.from(
 			_httpClient
 				.request(
@@ -66,7 +77,7 @@ public class DatasourceClientImpl implements DatasourceClient {
 	}
 
 	@Override
-	public Flux<Datasource> findByTenantId(long tenantId) {
+	public Flux<Datasource> findDatasourceByTenantId(long tenantId) {
 		return Mono.from(
 			_httpClient
 				.request(
@@ -84,7 +95,7 @@ public class DatasourceClientImpl implements DatasourceClient {
 	}
 
 	@Override
-	public Flux<Tenant> findByVirtualHost(String virtualHost) {
+	public Flux<Tenant> findTenantByVirtualHost(String virtualHost) {
 		return Mono.from(
 			_httpClient
 				.request(
@@ -97,6 +108,18 @@ public class DatasourceClientImpl implements DatasourceClient {
 				)
 		)
 			.flatMapIterable(response -> _jsonFactory.fromJsonList(response, Tenant.class));
+	}
+
+	@Override
+	public Mono<Tenant> findTenant(long tenantId) {
+		return Mono.from(
+			_httpClient
+				.request(
+					HttpHandler.GET,
+					"/v2/tenant/" + tenantId
+				)
+		)
+			.map(response -> _jsonFactory.fromJson(response, Tenant.class));
 	}
 
 	private HttpClient _httpClient;

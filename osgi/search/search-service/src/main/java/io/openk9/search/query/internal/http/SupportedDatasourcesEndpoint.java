@@ -64,14 +64,14 @@ public class SupportedDatasourcesEndpoint implements HttpHandler {
 
 		Flux<SupportedDatasourcesResponse> response =
 			_datasourceClient
-				.findByVirtualHost(hostName)
+				.findTenantByVirtualHost(hostName)
 				.next()
 				.switchIfEmpty(
 					Mono.error(
 						() -> new RuntimeException(
 							"tenant not found for virtualhost: " + hostName)))
 				.map(Tenant::getTenantId)
-				.flatMapMany(_datasourceClient::findByTenantId)
+				.flatMapMany(_datasourceClient::findDatasourceByTenantId)
 				.flatMap(datasource -> _pluginDriverManagerClient
 					.getPluginDriver(datasource.getDriverServiceName())
 					.onErrorResume(throwable -> {
