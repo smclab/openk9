@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -76,8 +75,8 @@ public class JsonConfigInstallerFix implements ArtifactInstaller {
 			for (String key : old.keySet()) {
 				Object oldValue = old.get(key);
 				Object propertiesValue = properties.get(key);
-				if (oldValue instanceof Object[] && propertiesValue instanceof Object[]) {
-					updated = !Arrays.deepEquals((Object[]) oldValue, (Object[]) propertiesValue);
+				if (isArray(oldValue) && isArray(propertiesValue)) {
+					updated = !Objects.deepEquals(oldValue, propertiesValue);
 				} else {
 					updated = !oldValue.equals(propertiesValue);
 				}
@@ -147,6 +146,10 @@ public class JsonConfigInstallerFix implements ArtifactInstaller {
 			replaceAll("[)]", "\\\\)").
 			replaceAll("[=]", "\\\\=").
 			replaceAll("[\\*]", "\\\\*");
+	}
+
+	public static boolean isArray(Object obj) {
+		return obj!=null && obj.getClass().isArray();
 	}
 
 	@Reference
