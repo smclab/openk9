@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Env Variable Propagation
+Bundle-SymbolicName: io.openk9.env.variable.propagation
+
+-include: ${project.rootDir}/osgi/common.bnd
