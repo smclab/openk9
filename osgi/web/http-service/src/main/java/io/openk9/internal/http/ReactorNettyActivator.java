@@ -37,7 +37,7 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.netty.DisposableServer;
-import reactor.netty.ReactorNetty;
+import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -59,17 +59,15 @@ public class ReactorNettyActivator {
 		int workerCount() default -1;
 		boolean daemon() default true;
 		boolean wiretap() default true;
+		boolean accessLog() default true;
 		String contextPath() default "/";
 		boolean compress() default false;
 		boolean forwarded() default true;
+		HttpProtocol httpProtocol() default HttpProtocol.HTTP11;
 	}
 
 	@Activate
 	public void init(BundleContext bundleContext, Config config) {
-
-		if (config.wiretap()) {
-			System.setProperty(ReactorNetty.ACCESS_LOG_ENABLED, "true");
-		}
 
 		LoopResources loopResources = LoopResources
 			.create(
@@ -80,18 +78,25 @@ public class ReactorNettyActivator {
 					: config.workerCount(),
 				config.daemon());
 
-		DisposableServer disposableServer = HttpServer
-			.create()
-			.metrics(true, Function.identity())
-			.forwarded(config.forwarded())
-			.wiretap(config.wiretap())
-			.runOn(loopResources)
-			.compress(config.compress())
-			.handle(this::_handle)
-			.port(config.port())
+		HttpServer httpServer =
+			HttpServer
+				.create()
+				.metrics(true, Function.identity())
+				.accessLog(config.accessLog())
+				.forwarded(config.forwarded())
+				.wiretap(config.wiretap())
+				.runOn(loopResources)
+				.compress(config.compress())
+				.handle(this::_handle)
+				.port(config.port())
+				.protocol(config.httpProtocol());
+
+		httpServer.warmup().block();
+
+		DisposableServer disposableServer = httpServer
 			.bindNow();
 
-		_dispose = disposableServer::dispose;
+		_dispose = disposableServer::disposeNow;
 
 		_serviceTracker =
 			ServiceTrackerProcessor
@@ -175,7 +180,6 @@ public class ReactorNettyActivator {
 		_dispose = _EMPTY_RUNNABLE;
 		_serviceTracker.close();
 		_serviceTracker = null;
-		System.setProperty(ReactorNetty.ACCESS_LOG_ENABLED, "false");
 	}
 
 	@Modified
@@ -253,9 +257,6 @@ public class ReactorNettyActivator {
 	private Runnable _dispose = _EMPTY_RUNNABLE;
 
 	private static final Runnable _EMPTY_RUNNABLE = () -> {};
-
-	private static final HttpEnpointRoutes[] _EMPTY_WEBSOCKET_HANDLER_ARRAY =
-		{};
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		ReactorNettyActivator.class.getName());

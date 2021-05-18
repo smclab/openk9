@@ -22,7 +22,7 @@ import io.openk9.model.IngestionPayload;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import reactor.core.publisher.Flux;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Sinks;
 
 @Component(
@@ -49,7 +49,7 @@ public class IngestionLogicImpl implements IngestionLogic {
 	}
 
 	@Override
-	public Flux<IngestionPayload> flux() {
+	public Publisher<IngestionPayload> genericFlux() {
 		return _many.asFlux();
 	}
 

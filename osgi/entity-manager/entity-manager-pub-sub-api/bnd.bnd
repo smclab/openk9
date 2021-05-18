@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Entity Manager Pub Sub Api
+Bundle-SymbolicName: io.openk9.entity.manager.pub.sub.api
+
+Export-Package: io.openk9.entity.manager.pub.sub.api
+
+-include: ${project.rootDir}/osgi/common.bnd

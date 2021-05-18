@@ -2,15 +2,9 @@ package io.openk9.entity.manager.internal;
 
 import io.openk9.entity.manager.api.Constants;
 import io.openk9.entity.manager.api.EntityNameCleaner;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.index.query.Operator;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
+
+import java.util.Map;
 
 @Component(
 	immediate = true,
@@ -24,11 +18,11 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 	}
 
 	@Override
-	protected QueryBuilder createQueryBuilder(
+	protected Map<String, Object> createQueryBuilder(
 		String entityName) {
 
-		return QueryBuilders.boolQuery()
-			.must(QueryBuilders.matchQuery(Constants.ENTITY_NAME_FIELD, entityName))
-			.must(QueryBuilders.matchQuery(Constants.ENTITY_TYPE_FIELD, getEntityType()));
+		return Map.of(
+			Constants.ENTITY_NAME_FIELD, entityName,
+			Constants.ENTITY_TYPE_FIELD, getEntityType());
 	}
 }

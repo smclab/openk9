@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Index Writer Entity Client Service
+Bundle-SymbolicName: io.openk9.index.writer.entity.client.service
+
+-include: ${project.rootDir}/osgi/common.bnd

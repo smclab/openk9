@@ -38,6 +38,7 @@ public class DatasourceIngestionLogic {
 					.map(context ->
 							IngestionDatasourcePayload.of(
 								IngestionPayload.of(
+									ingestionPayload.getIngestionId(),
 									context.getDatasource().getDatasourceId(),
 									ingestionPayload.getContentId(),
 									ingestionPayload.getParsingDate(),

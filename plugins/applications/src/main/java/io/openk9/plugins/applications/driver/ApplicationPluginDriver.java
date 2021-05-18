@@ -15,6 +15,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Component(
 	immediate = true,
@@ -64,6 +65,7 @@ public class ApplicationPluginDriver implements PluginDriver {
 				_ingestionLogicSender.send(
 					IngestionPayload
 						.builder()
+						.ingestionId(UUID.randomUUID().toString())
 						.datasourceId(datasource.getDatasourceId())
 						.rawContent(node.toString())
 						.contentId(Integer.toString(i))

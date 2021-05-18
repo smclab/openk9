@@ -2,3 +2,5 @@ Bundle-Name: [OpenK9] Search Client Service
 Bundle-SymbolicName: io.openk9.search.client.service
 
 -include: ${project.rootDir}/osgi/common.bnd
+
+Import-Package: org.reactivestreams, *

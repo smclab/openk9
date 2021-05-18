@@ -2,4 +2,6 @@ dependencies {
     compile project(':osgi:datasource:datasource-api')
     compile libraries.karaf_features
     compile libraries.karaf_system
+    compileOnly group: 'org.apache.karaf.config', name: 'org.apache.karaf.config.core', version: '4.3.1'
+
 }

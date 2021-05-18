@@ -17,7 +17,8 @@
 
 package io.openk9.plugins.web.enrichprocessor;
 
-import io.openk9.entity.manager.client.api.EntityManagerClient;
+import io.openk9.entity.manager.publisher.api.EntityManagerRequestPublisher;
+import io.openk9.entity.manager.subscriber.api.EntityManagerResponseConsumer;
 import io.openk9.http.client.HttpClientFactory;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.json.api.JsonFactory;
@@ -47,7 +48,8 @@ public class WebNerEnrichProcessor extends BaseNerEnrichProcessor {
 		_config = config;
 		setHttpClient(_httpClientFactory.getHttpClient(config.url()));
 		setJsonFactory(_jsonFactory);
-		setEntityManagerClient(_entityManagerClient);
+		setEntityManagerResponseConsumer(_entityManagerResponseConsumer);
+		setEntityManagerRequestPublisher(_entityManagerRequestPublisher);
 	}
 
 	@Modified
@@ -87,6 +89,9 @@ public class WebNerEnrichProcessor extends BaseNerEnrichProcessor {
 	private JsonFactory _jsonFactory;
 
 	@Reference
-	private EntityManagerClient _entityManagerClient;
+	private EntityManagerRequestPublisher _entityManagerRequestPublisher;
+
+	@Reference
+	private EntityManagerResponseConsumer _entityManagerResponseConsumer;
 
 }

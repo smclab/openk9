@@ -2,7 +2,7 @@ package io.openk9.entity.manager.client.internal;
 
 import io.openk9.entity.manager.client.api.EntityManagerClient;
 import io.openk9.entity.manager.model.payload.Request;
-import io.openk9.entity.manager.model.payload.Response;
+import io.openk9.entity.manager.model.payload.ResponseList;
 import io.openk9.http.client.HttpClient;
 import io.openk9.http.client.HttpClientFactory;
 import io.openk9.http.web.HttpHandler;
@@ -12,10 +12,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Map;
 
 @Component(
@@ -51,7 +49,7 @@ public class EntityManagerClientImpl implements EntityManagerClient {
 	}
 
 	@Override
-	public Mono<List<Response>> getOrAddEntities(Request request) {
+	public Mono<ResponseList> getOrAddEntities(Request request) {
 		return Mono
 			.from(
 				_entityManagerHttpClient
@@ -62,7 +60,7 @@ public class EntityManagerClientImpl implements EntityManagerClient {
 						Map.of()
 					)
 			)
-			.map(bytes -> _jsonFactory.fromJsonList(new String(bytes), Response.class));
+			.map(bytes -> _jsonFactory.fromJson(new String(bytes), ResponseList.class));
 	}
 
 	private HttpClient _entityManagerHttpClient;

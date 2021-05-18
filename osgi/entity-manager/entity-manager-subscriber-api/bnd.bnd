@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Entity Manager Subscriber Api
+Bundle-SymbolicName: io.openk9.entity.manager.subscriber.api
+
+Export-Package: io.openk9.entity.manager.subscriber.api
+
+-include: ${project.rootDir}/osgi/common.bnd

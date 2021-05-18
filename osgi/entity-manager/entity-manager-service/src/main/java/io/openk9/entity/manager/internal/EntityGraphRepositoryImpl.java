@@ -2,16 +2,9 @@ package io.openk9.entity.manager.internal;
 
 import io.openk9.entity.manager.api.Constants;
 import io.openk9.entity.manager.api.EntityGraphRepository;
-import io.openk9.entity.manager.internal.queue.ElasticSearchWriterBus;
-import io.openk9.entity.manager.model.DocumentEntity;
 import io.openk9.entity.manager.model.Entity;
 import io.openk9.relationship.graph.api.client.GraphClient;
 import io.openk9.relationship.graph.api.client.Record;
-import io.openk9.search.client.api.Search;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Functions;
 import org.neo4j.cypherdsl.core.Node;
@@ -23,11 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 import static org.neo4j.cypherdsl.core.Cypher.literalOf;
 
@@ -58,8 +46,7 @@ public class EntityGraphRepositoryImpl implements EntityGraphRepository {
 
 		return Mono
 			.from(_graphClient.write(statement))
-			.transform(this::_recordToEntity)
-			.doOnNext(_elasticSearchWriterBus::send);
+			.transform(this::_recordToEntity);
 
 	}
 
@@ -109,63 +96,6 @@ public class EntityGraphRepositoryImpl implements EntityGraphRepository {
 			.concatMap(recordMono -> _recordToEntity(Mono.just(recordMono)));
 	}
 
-	@Override
-	public Flux<DocumentEntity> getEntities(SearchRequest searchRequest) {
-
-		return Flux
-			.from(_search.search(searchRequest))
-			.doOnNext(searchResponse -> {
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"query: " + searchRequest.source().query().toString());
-				}
-			})
-			.map(this::_documentToEntity)
-			.flatMapIterable(Function.identity())
-			.onErrorResume(throwable -> {
-				if (_log.isErrorEnabled()) {
-					_log.error(throwable.getMessage(), throwable);
-				}
-				return Flux.empty();
-			})
-			//.sort(Comparator.comparing(DocumentEntity::getScore).reversed())
-			;
-
-	}
-
-	private List<DocumentEntity> _documentToEntity(SearchResponse searchResponse) {
-
-		SearchHits hits = searchResponse.getHits();
-
-		List<DocumentEntity> result = new ArrayList<>();
-
-		for (SearchHit hit : hits.getHits()) {
-
-			Map<String, Object> sourceAsMap = hit.getSourceAsMap();
-
-			Object id = sourceAsMap.get(Constants.ENTITY_ID_FIELD);
-			Object tenantId = sourceAsMap.get(Constants.ENTITY_TENANT_ID_FIELD);
-			Object entityName = sourceAsMap.get(Constants.ENTITY_NAME_FIELD);
-			Object entityType = sourceAsMap.get(Constants.ENTITY_TYPE_FIELD);
-
-			float score = hit.getScore();
-
-			result.add(
-				DocumentEntity
-					.builder()
-					.score(score)
-					.name(String.valueOf(entityName))
-					.type(String.valueOf(entityType))
-					.id(_objectToLong(id))
-					.tenantId(_objectToLong(tenantId))
-					.build()
-			);
-
-		}
-
-		return result;
-	}
-
 	private String _getFirstEntry(Iterable<String> iterable) {
 		return iterable.iterator().next();
 	}
@@ -196,13 +126,7 @@ public class EntityGraphRepositoryImpl implements EntityGraphRepository {
 	}
 
 	@Reference
-	private Search _search;
-
-	@Reference
 	private GraphClient _graphClient;
-
-	@Reference
-	private ElasticSearchWriterBus _elasticSearchWriterBus;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		EntityGraphRepositoryImpl.class);

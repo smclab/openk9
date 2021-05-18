@@ -18,10 +18,15 @@
 package io.openk9.ingestion.logic.api;
 
 import io.openk9.model.IngestionPayload;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
 public interface IngestionLogicReceiver {
 
-	Flux<IngestionPayload> flux();
+	Publisher<IngestionPayload> genericFlux();
+
+	default Flux<IngestionPayload> flux() {
+		return Flux.from(genericFlux());
+	}
 
 }

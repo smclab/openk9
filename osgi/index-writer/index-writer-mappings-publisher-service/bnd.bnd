@@ -1,4 +1,6 @@
 Bundle-Name: [OpenK9] Index Writer Mappings Publisher Service
 Bundle-SymbolicName: io.openk9.index.writer.mappings.publisher.service
 
+Import-Package: org.reactivestreams, *
+
 -include: ${project.rootDir}/osgi/common.bnd

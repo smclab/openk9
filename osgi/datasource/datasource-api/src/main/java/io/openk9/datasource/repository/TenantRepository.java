@@ -26,6 +26,7 @@ import reactor.core.publisher.Mono;
 public interface TenantRepository extends
 	ReactiveRepository<Tenant, Long> {
 
+	public Mono<String> findNameByVirtualHost(String virtualHost);
 	public Mono<Tenant> removeTenant(Long tenantId);
 	public Mono<Tenant> findByVirtualHost(String virtualHost);
 	public Mono<Tenant> addTenant(Tenant tenant);

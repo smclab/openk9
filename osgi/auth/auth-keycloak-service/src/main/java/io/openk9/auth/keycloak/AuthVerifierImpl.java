@@ -31,6 +31,7 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Supplier;
 
 @Component(
 	immediate = true,
@@ -152,8 +153,13 @@ public class AuthVerifierImpl implements AuthVerifier {
 
 	@Override
 	public Mono<UserInfo> getUserInfo(HttpRequest httpRequest) {
+		return getUserInfo(
+			httpRequest, Mono.just(HttpUtil.getHostName(httpRequest)));
+	}
 
-		String hostName = HttpUtil.getHostName(httpRequest);
+	@Override
+	public Mono<UserInfo> getUserInfo(
+		HttpRequest httpRequest, Mono<String> nameSupplier) {
 
 		String token = httpRequest.getHeader("Authorization");
 
@@ -161,10 +167,14 @@ public class AuthVerifierImpl implements AuthVerifier {
 			return Mono.just(GUEST);
 		}
 
-		return Mono.fromFuture(
-			_userTokenUserInfoAsyncLoadingCache
-				.get(UserToken.of(hostName, token.substring(7))))
-			.defaultIfEmpty(GUEST);
+		return
+			nameSupplier
+				.flatMap(name ->
+					Mono.fromFuture(
+						_userTokenUserInfoAsyncLoadingCache
+							.get(UserToken.of(name, token.substring(7))))
+						.defaultIfEmpty(GUEST)
+				);
 	}
 
 	private AsyncLoadingCache<UserToken, UserInfo>

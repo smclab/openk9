@@ -1,0 +1,4 @@
+dependencies {
+	compile project(":osgi:index-writer:index-writer-entity-model")
+	compile libraries.reactor
+}

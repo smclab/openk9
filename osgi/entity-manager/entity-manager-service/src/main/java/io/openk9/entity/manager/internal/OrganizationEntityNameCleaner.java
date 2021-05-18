@@ -3,13 +3,12 @@ package io.openk9.entity.manager.internal;
 import io.openk9.common.api.constant.Strings;
 import io.openk9.entity.manager.api.Constants;
 import io.openk9.entity.manager.api.EntityNameCleaner;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
+
+import java.util.Map;
 
 @Component(
 	immediate = true,
@@ -46,7 +45,7 @@ public class OrganizationEntityNameCleaner extends DefaultEntityNameCleaner {
 	}
 
 	@Override
-	public SearchRequest cleanEntityName(long tenantId, String entityName) {
+	public Map<String, Object> cleanEntityName(long tenantId, String entityName) {
 		return super.cleanEntityName(tenantId, entityName);
 	}
 
@@ -61,10 +60,10 @@ public class OrganizationEntityNameCleaner extends DefaultEntityNameCleaner {
 	}
 
 	@Override
-	protected QueryBuilder createQueryBuilder(String entityName) {
-		return QueryBuilders.boolQuery()
-			.must(QueryBuilders.matchQuery(Constants.ENTITY_NAME_FIELD, entityName))
-			.must(QueryBuilders.matchQuery(Constants.ENTITY_TYPE_FIELD, getEntityType()));
+	protected Map<String, Object> createQueryBuilder(String entityName) {
+		return Map.of(
+			Constants.ENTITY_NAME_FIELD, entityName,
+			Constants.ENTITY_TYPE_FIELD, getEntityType());
 	}
 
 	private String[] _stopWords;

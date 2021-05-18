@@ -18,9 +18,9 @@
 package io.openk9.datasource.internal.repository;
 
 
+import io.openk9.datasource.repository.TenantRepository;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
-import io.openk9.datasource.repository.TenantRepository;
 import io.openk9.repository.http.api.RepositoryHttpExtender;
 import io.openk9.sql.api.InitSql;
 import io.openk9.sql.api.client.Criteria;
@@ -52,6 +52,16 @@ public class TenantRepositoryImpl
 	@Override
 	public ReactiveRepository getReactiveRepository() {
 		return this;
+	}
+
+	@Override
+	public Mono<String> findNameByVirtualHost(String virtualHost) {
+		return _databaseClient
+			.select()
+			.from(tableName())
+			.matching(Criteria.where("virtualHost").is(virtualHost))
+			.map(row -> row.get("name", String.class))
+			.one();
 	}
 
 	public Mono<Tenant> removeTenant(Long tenantId) {

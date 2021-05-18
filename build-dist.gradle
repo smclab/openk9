@@ -46,14 +46,14 @@ dependencies {
 	distEntityManager project(path: ':osgi:common:third-party', transitive: false)
 
 	distEntityManager project(path: ':osgi:index-writer:index-writer-model', transitive: false)
+	distEntityManager project(path: ':osgi:index-writer:index-writer-entity-model', transitive: false)
+	distEntityManager project(path: ':osgi:index-writer:index-writer-entity-client-api', transitive: false)
+	distEntityManager project(path: ':osgi:index-writer:index-writer-entity-client-service', transitive: false)
 
 	distEntityManager project(path: ':osgi:web:http-api', transitive: false)
 	distEntityManager project(path: ':osgi:web:http-service', transitive: false)
 	distEntityManager project(path: ':osgi:web:http-bundle-ext', transitive: false)
 	distEntityManager project(path: ':osgi:web:open-api', transitive: false)
-
-	distEntityManager project(path: ':osgi:search:search-client-api', transitive: false)
-	distEntityManager project(path: ':osgi:search:search-client-service', transitive: false)
 
 	distEntityManager project(path: ':osgi:metrics:metrics-api', transitive: false)
 	distEntityManager project(path: ':osgi:metrics:metrics-service', transitive: false)
@@ -62,7 +62,13 @@ dependencies {
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-api', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-service', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-web', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-logic', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-pub-sub-api', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-pub-sub-binding', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-publisher-api', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-publisher-service', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-subscriber-api', transitive: false)
+	distEntityManager project(path: ':osgi:entity-manager:entity-manager-subscriber-service', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:neo4j-relationship-graph-impl', transitive: false)
 	distEntityManager project(path: ':osgi:entity-manager:relationship-graph-api', transitive: false)
 
@@ -80,6 +86,8 @@ dependencies {
 	distIndexWriter project(path: ':osgi:index-writer:index-writer-service', transitive: false)
 	distIndexWriter project(path: ':osgi:index-writer:index-writer-mappings-consumer', transitive: false)
 	distIndexWriter project(path: ':osgi:index-writer:index-writer-model', transitive: false)
+	distIndexWriter project(path: ':osgi:index-writer:index-writer-entity-model', transitive: false)
+	distIndexWriter project(path: ':osgi:index-writer:index-writer-entity-web', transitive: false)
 	distIndexWriter project(path: ':osgi:index-writer:index-writer-mappings-pub-sub', transitive: false)
 
 	distIndexWriter project(path: ':osgi:search:search-client-api', transitive: false)
@@ -98,6 +106,7 @@ dependencies {
 	distIndexWriter project(path: ':osgi:common:serialization-api', transitive: false)
 	distIndexWriter project(path: ':osgi:common:serialization-service', transitive: false)
 	distIndexWriter project(path: ':osgi:common:third-party', transitive: false)
+	distIndexWriter project(path: ':osgi:common:http-serialization', transitive: false)
 
 	distIndexWriter project(path: ':osgi:ingestion:ingestion-api', transitive: false)
 	distIndexWriter project(path: ':osgi:ingestion:ingestion-service', transitive: false)
@@ -205,6 +214,8 @@ dependencies {
 	distIngestion project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
 	distIngestion project(path: ':osgi:ingestion:ingestion-service', transitive: false)
 	distIngestion project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
+	distIngestion project(path: ':osgi:ingestion:ingestion-identifier-generator-api', transitive: false)
+	distIngestion project(path: ':osgi:ingestion:ingestion-identifier-generator-service', transitive: false)
 
 	distIngestion project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
 
@@ -308,6 +319,8 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
+	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-identifier-generator-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-identifier-generator-service', transitive: false)
 
 	distPluginDriverManager project(path: ':plugins:email', transitive: false)
 	distPluginDriverManager project(path: ':plugins:liferay', transitive: false)
@@ -321,9 +334,13 @@ dependencies {
 	distPluginDriverManager group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
 
 	//ENTITY MANAGER CLIENT
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-api', transitive: false)
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-pub-sub-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-pub-sub-binding', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-publisher-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-publisher-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-subscriber-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-subscriber-service', transitive: false)
 
 	distPluginDriverManager project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
 

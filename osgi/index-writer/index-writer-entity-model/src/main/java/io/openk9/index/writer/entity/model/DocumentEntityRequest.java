@@ -9,10 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DocumentEntity {
+public class DocumentEntityRequest {
 	private long id;
 	private long tenantId;
 	private String name;
 	private String type;
-	private double score;
 }

@@ -29,6 +29,7 @@ import java.util.Map;
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 public class IngestionPayload {
+	private String ingestionId;
 	private long datasourceId;
 	private String contentId;
 	private long parsingDate;

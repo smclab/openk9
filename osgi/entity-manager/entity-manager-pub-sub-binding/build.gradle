@@ -1,0 +1,5 @@
+dependencies {
+	compile project(":osgi:ingestion:ingestion-api")
+	compile project(':osgi:entity-manager:entity-manager-publisher-api')
+	compile project(':osgi:entity-manager:entity-manager-subscriber-api')
+}

@@ -1,12 +1,12 @@
 package io.openk9.entity.manager.api;
 
-import org.elasticsearch.action.search.SearchRequest;
+import java.util.Map;
 
 public interface EntityNameCleaner {
 
 	String getEntityType();
 
-	SearchRequest cleanEntityName(long tenantId, String entityName);
+	Map<String, Object> cleanEntityName(long tenantId, String entityName);
 
 	default String cleanEntityName(String entityName) {
 		return entityName.trim();

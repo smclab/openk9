@@ -18,20 +18,25 @@
 package io.openk9.search.enrich.api;
 
 import io.openk9.core.api.constant.Constants;
-import io.openk9.model.EnrichItem;
-import io.openk9.model.DatasourceContext;
-import io.openk9.entity.manager.client.api.EntityManagerClient;
 import io.openk9.entity.manager.model.Entity;
 import io.openk9.entity.manager.model.payload.Request;
 import io.openk9.entity.manager.model.payload.Response;
+import io.openk9.entity.manager.model.payload.ResponseList;
+import io.openk9.entity.manager.pub.sub.api.MessageRequest;
+import io.openk9.entity.manager.pub.sub.api.MessageResponse;
+import io.openk9.entity.manager.publisher.api.EntityManagerRequestPublisher;
+import io.openk9.entity.manager.subscriber.api.EntityManagerResponseConsumer;
 import io.openk9.http.client.HttpClient;
 import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
+import io.openk9.model.DatasourceContext;
+import io.openk9.model.EnrichItem;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -73,6 +78,7 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 					jsonNodes.put(Constants.DATASOURCE_ID, context.getDatasource().getDatasourceId());
 					jsonNodes.put(Constants.CONTENT_ID, objectNode.get(Constants.CONTENT_ID));
 					jsonNodes.put(Constants.RAW_CONTENT, objectNode.get(Constants.RAW_CONTENT));
+					jsonNodes.put(Constants.INGESTION_ID, objectNode.get(Constants.INGESTION_ID));
 
 					return jsonNodes;
 				})
@@ -136,10 +142,13 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 
 	private Mono<ObjectNode> _getEntityOrCreate(ObjectNode jsonNode) {
 
-		return _entityManagerClient
-			.getOrAddEntities(
-				_jsonFactory.fromJsonNode(jsonNode, Request.class))
-			.map(responseList -> {
+		return _bridgePubSub(
+			MessageRequest.of(_jsonFactory.fromJsonNode(jsonNode, Request.class)))
+			.map(messageResponse -> {
+
+				ResponseList messageContent = messageResponse.getResponse();
+
+				List<Response> responseList = messageContent.getResponse();
 
 				JsonNode entitiesJsonNode = jsonNode.get(entitiesField());
 
@@ -190,6 +199,16 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 
 	}
 
+	private Mono<MessageResponse> _bridgePubSub(MessageRequest messageRequest) {
+
+		return _entityManagerRequestPublisher
+			.publish(messageRequest)
+			.then(
+				_entityManagerResponseConsumer
+					.stream(1, messageRequest.getRequest().getIngestionId()));
+
+	}
+
 	protected abstract Map<String, Object> getHeaders();
 
 	protected abstract int getMethod();
@@ -216,11 +235,6 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 		return Constants.ID;
 	}
 
-	protected void setEntityManagerClient(
-		EntityManagerClient entityManagerClient) {
-		_entityManagerClient = entityManagerClient;
-	}
-
 	protected void setHttpClient(HttpClient httpClient) {
 		_httpClient = httpClient;
 	}
@@ -229,10 +243,22 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 		_jsonFactory = jsonFactory;
 	}
 
+	protected void setEntityManagerRequestPublisher(
+		EntityManagerRequestPublisher entityManagerRequestPublisher) {
+		_entityManagerRequestPublisher = entityManagerRequestPublisher;
+	}
+
+	protected void setEntityManagerResponseConsumer(
+		EntityManagerResponseConsumer entityManagerResponseConsumer) {
+		_entityManagerResponseConsumer = entityManagerResponseConsumer;
+	}
+
 	private HttpClient _httpClient;
 
 	private JsonFactory _jsonFactory;
 
-	private EntityManagerClient _entityManagerClient;
+	private EntityManagerRequestPublisher _entityManagerRequestPublisher;
+
+	private EntityManagerResponseConsumer _entityManagerResponseConsumer;
 
 }

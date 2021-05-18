@@ -25,6 +25,7 @@ public interface Constants {
 	String CONTENT = "content";
 	String CONFIDENCE = "confidence";
 	String RAW_CONTENT = "rawContent";
+	String INGESTION_ID = "ingestionId";
 	String ENTITIES = "entities";
 	String RELATIONS = "relations";
 	String TYPE = "type";

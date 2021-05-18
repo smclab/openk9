@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Ingestion Identifier Generator API
+Bundle-SymbolicName: io.openk9.ingestion.identifier.generator.api
+
+Export-Package: io.openk9.ingestion.identifier.generator.api
+
+-include: ${project.rootDir}/osgi/common.bnd

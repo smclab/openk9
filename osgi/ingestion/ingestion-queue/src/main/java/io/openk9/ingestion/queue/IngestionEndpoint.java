@@ -21,6 +21,7 @@ import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.HttpRequest;
 import io.openk9.http.web.HttpResponse;
+import io.openk9.ingestion.identifier.generator.api.IdentifierGenerator;
 import io.openk9.ingestion.logic.api.IngestionLogic;
 import io.openk9.ingestion.queue.exception.AttributeException;
 import io.openk9.json.api.JsonFactory;
@@ -93,16 +94,17 @@ public class IngestionEndpoint implements HttpHandler {
 						.toMap();
 
 					return IngestionPayload.of(
-							datasourceId,
-							contentId,
-							parsingDate,
-							rawContent,
-							datasourcePayloadMap,
-							-1,
-							datasourcePayloadMap
-								.keySet()
-								.toArray(new String[0])
-						);
+						_identifierGenerator.create(),
+						datasourceId,
+						contentId,
+						parsingDate,
+						rawContent,
+						datasourcePayloadMap,
+						-1,
+						datasourcePayloadMap
+							.keySet()
+							.toArray(new String[0])
+					);
 				})
 				.doOnNext(_ingestionLogicSender::send)
 				.map(ignore -> "{}")
@@ -135,5 +137,8 @@ public class IngestionEndpoint implements HttpHandler {
 
 	@Reference
 	private IngestionLogic _ingestionLogicSender;
+
+	@Reference
+	private IdentifierGenerator _identifierGenerator;
 
 }

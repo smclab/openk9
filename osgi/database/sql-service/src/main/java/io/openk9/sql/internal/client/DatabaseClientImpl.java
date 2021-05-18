@@ -17,12 +17,12 @@
 
 package io.openk9.sql.internal.client;
 
+import io.openk9.sql.api.client.DatabaseClient;
 import io.openk9.sql.internal.client.delete.DefaultDeleteFromSpec;
 import io.openk9.sql.internal.client.insert.DefaultInsertFromSpec;
 import io.openk9.sql.internal.client.select.DefaultSelectFromSpec;
 import io.openk9.sql.internal.client.update.DefaultUpdateFromSpec;
 import io.r2dbc.spi.ConnectionFactory;
-import io.openk9.sql.api.client.DatabaseClient;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 

@@ -1,0 +1,3 @@
+dependencies {
+	compile project(":osgi:entity-manager:entity-manager-model")
+}

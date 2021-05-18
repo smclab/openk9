@@ -1,0 +1,13 @@
+dependencies {
+	compile project(':osgi:entity-manager:entity-manager-publisher-api')
+	compile project(':osgi:entity-manager:entity-manager-subscriber-api')
+	compile project(':osgi:entity-manager:entity-manager-api')
+	compile project(":osgi:index-writer:index-writer-entity-client-api")
+	compile project(':osgi:common:serialization-api')
+
+	compile libraries.reactor
+	compile libraries.osgi
+	compile libraries.slf4j_api
+
+	compile group: 'org.neo4j', name: 'neo4j-cypher-dsl', version: '2021.1.1'
+}

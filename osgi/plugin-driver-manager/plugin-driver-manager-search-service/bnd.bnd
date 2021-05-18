@@ -1,4 +1,6 @@
 Bundle-Name: [OpenK9] Plugin Driver Manager Search Service
 Bundle-SymbolicName: io.openk9.plugin.driver.manager.search.service
 
+Import-Package: org.reactivestreams, *
+
 -include: ${project.rootDir}/osgi/common.bnd

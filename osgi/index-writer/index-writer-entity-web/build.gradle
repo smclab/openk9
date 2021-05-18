@@ -1,0 +1,8 @@
+dependencies {
+	compile project(":osgi:web:http-api")
+	compile project(":osgi:common:serialization-api")
+	compile project(':osgi:search:search-client-api')
+	compile project(":osgi:index-writer:index-writer-entity-model")
+	compile libraries.osgi
+	compile libraries.slf4j_api
+}
