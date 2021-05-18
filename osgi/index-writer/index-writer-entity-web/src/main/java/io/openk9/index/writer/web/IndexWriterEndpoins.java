@@ -28,10 +28,10 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component(immediate = true, service = IndexWriterEndpoins.class)
@@ -88,14 +88,18 @@ public class IndexWriterEndpoins extends BaseEndpointRegister {
 
 		long tenantId = Long.parseLong(httpRequest.pathParam("tenantId"));
 
-		Flux<Map<String, Object>> response =
+		Mono<List<Map<String, Object>>> response =
 			Mono
 				.from(httpRequest.aggregateBodyToString())
 				.map(json -> _jsonFactory.fromJsonMap(json, Object.class))
 				.map(this::_toQuery)
 				.flatMap(queryBuilder -> _executeQuery(tenantId, queryBuilder))
 				.flatMapIterable(SearchResponse::getHits)
-				.map(this::_hitToResponse);
+				.map(this::_hitToResponse)
+				.collectList()
+				.defaultIfEmpty(List.of())
+				.doOnError(Throwable::printStackTrace)
+				.onErrorReturn(List.of());
 
 		return _httpResponseWriter.write(httpResponse, response);
 
