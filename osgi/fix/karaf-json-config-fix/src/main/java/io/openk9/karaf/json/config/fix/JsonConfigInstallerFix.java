@@ -30,7 +30,7 @@ import java.util.Set;
 @Component(
 	immediate = true,
 	property = {
-		Constants.SERVICE_RANKING + "=1000"
+		Constants.SERVICE_RANKING + ":Integer=1000"
 	},
 	service = ArtifactInstaller.class
 )
@@ -53,7 +53,7 @@ public class JsonConfigInstallerFix implements ArtifactInstaller {
 
 	@Override
 	public boolean canHandle(File artifact) {
-		return artifact.getName().endsWith(".json");
+		return artifact.getName().endsWith(".k9");
 	}
 
 	private void setConfig(File artifact) throws Exception {
