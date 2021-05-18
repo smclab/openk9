@@ -44,10 +44,10 @@ ext.libraries = [
 				'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.11.3'
 		],
 		slf4j_api: 'org.slf4j:slf4j-api:1.7.29',
-		r2dbc_spi: 'io.r2dbc:r2dbc-spi:0.8.4.RELEASE',
-		r2dbc_pool: 'io.r2dbc:r2dbc-pool:0.8.6.RELEASE',
-		r2dbc_proxy: 'io.r2dbc:r2dbc-spi:r2dbc-proxy:0.8.5.RELEASE',
-		r2dbc_postgresql: 'io.r2dbc:r2dbc-postgresql:0.8.7.RELEASE',
+		r2dbc_spi: 'io.r2dbc:r2dbc-spi:0.8.5.RELEASE',
+		r2dbc_pool: 'io.r2dbc:r2dbc-pool:0.8.7.RELEASE',
+		r2dbc_proxy: 'io.r2dbc:r2dbc-spi:r2dbc-proxy:0.8.6.RELEASE',
+		r2dbc_postgresql: 'io.r2dbc:r2dbc-postgresql:0.8.8.RELEASE',
 		micrometer: 'io.micrometer:micrometer-core:1.6.2',
 		micrometer_registry_prometheus: 'io.micrometer:micrometer-registry-prometheus:1.6.2',
 		micrometer_registry_elastic: 'io.micrometer:micrometer-registry-elastic:1.6.2',
@@ -62,12 +62,12 @@ ext.libraries = [
 		checkerframework_checker_qual: 'org.checkerframework:checker-qual:3.8.0',
 		google_errorprone_error_prone_annotations: 'com.google.errorprone:error_prone_annotations:2.4.0',
 		reactor: [
-		        'io.projectreactor:reactor-core:3.4.4',
-				'io.projectreactor.addons:reactor-extra:3.4.2'
+		        'io.projectreactor:reactor-core:3.4.6',
+				'io.projectreactor.addons:reactor-extra:3.4.3'
 		],
-		reactor_tools: 'io.projectreactor:reactor-tools:3.4.4',
+		reactor_tools: 'io.projectreactor:reactor-tools:3.4.6',
 		reactor_netty: [
-				'io.projectreactor.netty:reactor-netty:1.0.5'
+				'io.projectreactor.netty:reactor-netty:1.0.7'
 		],
 		osgi: 'org.osgi:osgi.core:7.0.0',
 		osgi_cmpn: 'org.osgi:osgi.cmpn:7.0.0',
@@ -228,6 +228,11 @@ distConfigurations
 				into "$rootDir/build/$distName/libs"
 			})
 
+			def copyConfigs = tasks.register("copyConfigs${distPrimaryName}", Copy, {
+				from(file("$rootDir/$distName/configs"))
+				into "$rootDir/build/$distName/configs"
+			})
+
 			def unTarKaraf = tasks.register("unTarKaraf${distPrimaryName}", Copy, {
 				dependsOn(downloadKaraf)
 				from(tarTree("$rootDir/build/karaf/apache-karaf.tar.gz"))
@@ -256,9 +261,12 @@ distConfigurations
 			})
 
 			def createDockerFile = tasks.register("createDockerFile${distPrimaryName}", Dockerfile, {
-				dependsOn(buildDistTask)
+				dependsOn(copyConfigs, buildDistTask)
 				from("openk9-karaf:$karafVersion")
+				environmentVariable("EXTRA_JAVA_OPTS", "-javaagent:/reactor-tools.jar")
+				addFile("https://repo1.maven.org/maven2/io/projectreactor/reactor-tools/3.4.6/reactor-tools-3.4.6.jar", "/reactor-tools.jar")
 				copyFile("libs/", "opt/apache-karaf/deploy")
+				copyFile("configs/", "opt/apache-karaf/etc")
 				addFile("https://github.com/ufoscout/docker-compose-wait/releases/download/2.8.0/wait", "/wait")
 				runCommand("chmod +x /wait")
 				destFile.set(file("$rootDir/build/$distName/docker/Dockerfile"))
