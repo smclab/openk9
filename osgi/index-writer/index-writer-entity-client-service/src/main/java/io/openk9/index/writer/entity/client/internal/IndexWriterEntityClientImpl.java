@@ -56,7 +56,7 @@ public class IndexWriterEntityClientImpl implements IndexWriterEntityClient {
 				_indexWriterHttpClient
 					.request(
 						HttpHandler.POST,
-						"/v1/" + documentEntityRequest.getTenantId(),
+						"/v1/",
 						_jsonFactory.toJson(documentEntityRequest),
 						Map.of()
 					)
@@ -65,13 +65,13 @@ public class IndexWriterEntityClientImpl implements IndexWriterEntityClient {
 	}
 
 	@Override
-	public Mono<List<DocumentEntityResponse>> getEntities(Map<String, Object> request) {
+	public Mono<List<DocumentEntityResponse>> getEntities(long tenantId, Map<String, Object> request) {
 		return Mono
 			.from(
 				_indexWriterHttpClient
 					.request(
 						HttpHandler.POST,
-						"/v1/get-entities",
+						"/v1/get-entities/" + tenantId,
 						_jsonFactory.toJson(request),
 						Map.of()
 					)

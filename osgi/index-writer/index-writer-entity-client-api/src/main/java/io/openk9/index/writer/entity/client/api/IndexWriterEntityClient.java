@@ -11,6 +11,6 @@ public interface IndexWriterEntityClient {
 
 	Mono<Void> insertEntity(DocumentEntityRequest documentEntityRequest);
 
-	Mono<List<DocumentEntityResponse>> getEntities(Map<String, Object> request);
+	Mono<List<DocumentEntityResponse>> getEntities(long tenantId, Map<String, Object> request);
 
 }

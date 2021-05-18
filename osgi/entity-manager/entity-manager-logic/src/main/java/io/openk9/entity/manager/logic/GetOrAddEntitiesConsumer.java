@@ -106,7 +106,7 @@ public class GetOrAddEntitiesConsumer {
 						return Mono.zip(
 							Mono.just(er),
 							_indexWriterEntityClient
-								.getEntities(stringObjectMap)
+								.getEntities(tenantId, stringObjectMap)
 								.map(candidates ->
 									cleanCandidates(er, candidates)
 								),
