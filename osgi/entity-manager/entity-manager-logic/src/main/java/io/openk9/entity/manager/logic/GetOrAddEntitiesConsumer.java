@@ -71,12 +71,14 @@ public class GetOrAddEntitiesConsumer {
 		_entityManagerRequestConsumer
 			.stream(1)
 			.flatMap(this::_handleMessage)
-			.doOnNext(list -> _entityManagerResponsePublisher.publish(
-				MessageResponse
-					.builder()
-					.response(list)
-					.build()
-			))
+			.concatMap(list ->
+				_entityManagerResponsePublisher.publish(
+					MessageResponse
+						.builder()
+						.response(list)
+						.build()
+				)
+			)
 			.subscribe();
 	}
 
