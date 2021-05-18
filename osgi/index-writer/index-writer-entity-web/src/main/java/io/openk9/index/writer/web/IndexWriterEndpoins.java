@@ -29,6 +29,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
@@ -99,9 +101,13 @@ public class IndexWriterEndpoins extends BaseEndpointRegister {
 				.flatMapIterable(SearchResponse::getHits)
 				.map(this::_hitToResponse)
 				.collectList()
-				.defaultIfEmpty(List.of())
-				.doOnError(Throwable::printStackTrace)
-				.onErrorReturn(List.of());
+				.onErrorResume(throwable -> {
+					if (_log.isErrorEnabled()) {
+						_log.error(throwable.getMessage(), throwable);
+					}
+					return Mono.empty();
+				})
+				.defaultIfEmpty(List.of());
 
 		return _httpResponseWriter.write(httpResponse, response);
 
@@ -178,5 +184,8 @@ public class IndexWriterEndpoins extends BaseEndpointRegister {
 
 	@Reference
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
+
+	private static final Logger _log = LoggerFactory.getLogger(
+		IndexWriterEndpoins.class);
 
 }
