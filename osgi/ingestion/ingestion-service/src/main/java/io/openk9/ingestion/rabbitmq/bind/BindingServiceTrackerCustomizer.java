@@ -31,6 +31,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.QueueSpecification;
@@ -92,11 +93,21 @@ public class BindingServiceTrackerCustomizer
 
 			Mono<AMQP.Queue.BindOk> mono3 = _sender.bind(binding);
 
-			Mono.zip(mono1, mono2, mono3).block();
+			if (Schedulers.isInNonBlockingThread()) {
+				Mono.zip(mono1, mono2, mono3).subscribe();
+			}
+			else {
+				Mono.zip(mono1, mono2, mono3).block();
+			}
 
 		}
 		else {
-			mono1.block();
+			if (Schedulers.isInNonBlockingThread()) {
+				mono1.subscribe();
+			}
+			else {
+				mono1.block();
+			}
 		}
 
 		_log.info(
