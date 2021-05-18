@@ -17,6 +17,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -67,7 +68,8 @@ public class IndexWriterEndpoins extends BaseEndpointRegister {
 					IndexRequest indexRequest =
 						new IndexRequest(entity.getTenantId() + "-entity");
 
-					indexRequest.source(_jsonFactory.toJson(entity));
+					indexRequest.source(
+						_jsonFactory.toJson(entity), XContentType.JSON);
 
 					indexRequest.setRefreshPolicy(
 						WriteRequest.RefreshPolicy.WAIT_UNTIL);
