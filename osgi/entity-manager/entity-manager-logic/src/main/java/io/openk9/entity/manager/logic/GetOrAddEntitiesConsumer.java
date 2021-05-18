@@ -477,16 +477,19 @@ public class GetOrAddEntitiesConsumer {
 			.next()
 			.switchIfEmpty(
 				Mono.defer(() ->
-					Mono.zip(
-						_entityGraphRepository.addEntity(
-							tenantId, currentEntityRequest.getName(),
-							currentEntityRequest.getType()),
-						_indexWriterEntityClient
-							.insertEntity(
-								DocumentEntityRequest
-									.builder()
-									.build())
-						, (entity, unused) -> entity
+					_entityGraphRepository.addEntity(
+						tenantId, currentEntityRequest.getName(),
+						currentEntityRequest.getType())
+					.flatMap(entity -> _indexWriterEntityClient
+						.insertEntity(
+							DocumentEntityRequest
+								.builder()
+								.tenantId(entity.getTenantId())
+								.name(entity.getName())
+								.type(entity.getType())
+								.id(entity.getId())
+								.build())
+						.thenReturn(entity)
 					)
 				)
 			)
