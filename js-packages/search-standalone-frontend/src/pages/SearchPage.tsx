@@ -5,12 +5,12 @@ import { SearchResults } from "../containers/SearchResults";
 import { useLoginCheck } from "../state";
 
 export function SearchPage() {
-  const { loginValid } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
+  const { canEnter, isGuest, goToLogin } = useLoginCheck();
+  if (!canEnter) return <span className="loading-animation" />;
 
   return (
     <>
-      <Dockbar />
+      <Dockbar onLoginAction={(isGuest && goToLogin) || undefined} />
       <Suspense fallback={<span className="loading-animation" />}>
         <SearchQueryInput />
       </Suspense>

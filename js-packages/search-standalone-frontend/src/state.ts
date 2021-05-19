@@ -273,11 +273,19 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
   const userInfo = useStore((s) => s.userInfo);
   const setLoginInfo = useStore((s) => s.setLoginInfo);
   const invalidateLogin = useStore((s) => s.invalidateLogin);
+  const tenantConfig = useStore((s) => s.tenantConfig);
 
   const currentTimeSec = new Date().getTime() / 1000;
+  const allowGuest = !tenantConfig.requireLogin;
   const loginValid = loginInfo && userInfo && currentTimeSec < userInfo.exp;
+  const isGuest = allowGuest && !loginValid;
+  const canEnter = isGuest || loginValid;
 
   const redirect = query.get("redirect") || "/";
+
+  function goToLogin() {
+    history.push(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+  }
 
   //
   // Login page redirect logic
@@ -290,11 +298,11 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
       } else {
         history.push(decodeURIComponent(redirect));
       }
-    } else if (!loginValid && !isLoginPage) {
+    } else if (!canEnter && !isLoginPage) {
       // protected page ad no login, redirect to login
-      history.push(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+      goToLogin();
     }
-  }, [loginValid, isLoginPage]);
+  }, [canEnter, loginValid, isLoginPage]);
 
   //
   // Refresh loop logic
@@ -331,5 +339,5 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
     };
   }, []);
 
-  return { loginInfo, userInfo, loginValid };
+  return { loginInfo, userInfo, canEnter, isGuest, goToLogin, loginValid };
 }

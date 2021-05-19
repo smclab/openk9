@@ -77,8 +77,10 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 
 export function Dockbar({
   onHamburgerAction,
+  onLoginAction,
 }: {
   onHamburgerAction?: () => void;
+  onLoginAction?: () => void;
 }) {
   const classes = useStyles();
 
@@ -95,8 +97,16 @@ export function Dockbar({
       <div className={classes.spacer} />
 
       <div className={classes.endButtons}>
-        <div className={classes.notifications} />
-        <div className={classes.user} />
+        {onLoginAction ? (
+          <button className="btn btn-secondary" onClick={onLoginAction}>
+            Login
+          </button>
+        ) : (
+          <>
+            <div className={classes.notifications} />
+            <div className={classes.user} />
+          </>
+        )}
       </div>
     </div>
   );
