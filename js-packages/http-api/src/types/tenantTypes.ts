@@ -24,6 +24,7 @@ export type Tenant = {
 
 export type TenantJSONConfig = {
   querySourceBarShortcuts?: { id: string; text: string }[];
+  requireLogin?: boolean;
 };
 
 export const emptyTenantJSONConfig: TenantJSONConfig = {};
