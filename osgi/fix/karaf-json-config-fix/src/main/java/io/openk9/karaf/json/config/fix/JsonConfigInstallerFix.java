@@ -6,6 +6,8 @@ import org.apache.felix.fileinstall.internal.DirectoryWatcher;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -13,6 +15,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Dictionary;
@@ -32,9 +39,13 @@ import java.util.Set;
 	property = {
 		Constants.SERVICE_RANKING + ":Integer=1000"
 	},
-	service = ArtifactInstaller.class
+	service = {
+		ArtifactInstaller.class,
+		ConfigurationListener.class
+	}
 )
-public class JsonConfigInstallerFix implements ArtifactInstaller {
+public class JsonConfigInstallerFix
+	implements ArtifactInstaller, ConfigurationListener {
 
 	@Override
 	public void install(File artifact) throws Exception {
@@ -54,6 +65,47 @@ public class JsonConfigInstallerFix implements ArtifactInstaller {
 	@Override
 	public boolean canHandle(File artifact) {
 		return artifact.getName().endsWith(".k9");
+	}
+
+	@Override
+	public void configurationEvent(ConfigurationEvent event) {
+		if (event.getType() == ConfigurationEvent.CM_DELETED) {
+			File file = new File(System.getProperty("karaf.etc"), event.getPid() + ".k9");
+			if (file.exists()) {
+				file.delete();
+			}
+		} else if (event.getType() == ConfigurationEvent.CM_UPDATED) {
+			try {
+				Configuration configuration = _configurationAdmin.getConfiguration(event.getPid(), null);
+				Dictionary<String, Object> dictionary = configuration.getProcessedProperties(null);
+				File file = null;
+				if (dictionary.get(DirectoryWatcher.FILENAME) != null) {
+					file = getCfgFileFromProperty(configuration.getProperties().get(DirectoryWatcher.FILENAME));
+				}
+				if (file != null && canHandle(file)) {
+					dictionary.remove(DirectoryWatcher.FILENAME);
+					dictionary.remove(Constants.SERVICE_PID);
+					dictionary.remove(ConfigurationAdmin.SERVICE_FACTORYPID);
+					Configurations.buildWriter().build(new FileWriter(file)).writeConfiguration(dictionary);
+				}
+			} catch (Exception e) {
+				_log.warn("Can't update json configuration file", e);
+			}
+		}
+	}
+
+	private File getCfgFileFromProperty(Object val) throws URISyntaxException,
+		MalformedURLException {
+		if (val instanceof URL) {
+			return new File(((URL) val).toURI());
+		}
+		if (val instanceof URI) {
+			return new File((URI) val);
+		}
+		if (val instanceof String) {
+			return new File(new URL((String) val).toURI());
+		}
+		return null;
 	}
 
 	private void setConfig(File artifact) throws Exception {
