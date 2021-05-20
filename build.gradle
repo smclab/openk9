@@ -278,10 +278,11 @@ distConfigurations
 				dockerFile.set(file("$rootDir/build/$distName/docker/Dockerfile"))
 				images.add("openk9-$distName:latest")
 				if (System.getenv("CI_REGISTRY_NAME") != null) {
+					def dockerTagTemplate = findProperty("docker.tag.template")
 					images.add(
-						System.getenv("CI_REGISTRY_NAME")
-							.replace("https://", "")
-							.replace("http://", "") + "/openk9/openk9-$distName:latest"
+						dockerTagTemplate
+							.replace("{CI_REGISTRY_NAME}", System.getenv("CI_REGISTRY_NAME"))
+							.replace("{IMAGE_ID}", "openk9-$distName:latest")
 					)
 				}
 			})
