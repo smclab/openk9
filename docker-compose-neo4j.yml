@@ -1,0 +1,14 @@
+version: "3.5"
+services:
+    neo4j:
+        image: neo4j:latest
+        container_name: neo4j
+        hostname: neo4j
+        environment:
+            - NEO4J_AUTH=neo4j/openk9
+            - NEO4JLABS_PLUGINS=["apoc"]
+        volumes:
+            - ./neo4j/data:/data
+        ports:
+            - '7474:7474'
+            - '7687:7687'

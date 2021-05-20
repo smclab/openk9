@@ -29,4 +29,3 @@ services:
             - "traefik.http.middlewares.searcher_compress.compress=true"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
             - "traefik.http.routers.searcher.middlewares=searcher-strip@docker,searcher_compress@docker,openk9-forwarded-host@docker"
-

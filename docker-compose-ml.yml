@@ -6,6 +6,6 @@ services:
         ports:
             - 5009:80
         environment:
-            - WORKERS_PER_CORE=0.1
+            - WORKERS_PER_CORE=0.05
             - GRACEFUL_TIMEOUT=300
             - TIMEOUT=600

@@ -2,6 +2,5 @@
     "scoreThreshold" : 0.8,
     "minHops" : 1,
     "maxHops" : 2,
-    "labelFilter" : "-date",
-    "uniqueEntities" : ["date","organization"]
+    "labelFilter" : "-date"
 }

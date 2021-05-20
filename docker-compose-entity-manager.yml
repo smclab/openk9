@@ -17,6 +17,8 @@ services:
             - "8101"
             - "8181"
             - "5005"
+        ports:
+            - 8185:8181
         labels:
             - "traefik.enable=true"
             - "traefik.http.services.entity-manager-docker.loadbalancer.server.port=8080"
@@ -26,15 +28,3 @@ services:
             - "traefik.http.middlewares.entity-manager_compress.compress=true"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
             - "traefik.http.routers.entity-manager.middlewares=entity-manager-strip@docker,entity-manager_compress@docker,openk9-forwarded-host@docker"
-    neo4j:
-        image: neo4j:latest
-        container_name: neo4j
-        hostname: neo4j
-        environment:
-            - NEO4J_AUTH=neo4j/openk9
-            - NEO4JLABS_PLUGINS=["apoc"]
-        volumes:
-            - ./neo4j/data:/data
-        ports:
-            - '7474:7474'
-            - '7687:7687'
