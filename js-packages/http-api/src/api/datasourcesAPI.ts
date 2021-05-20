@@ -233,12 +233,116 @@ export async function getEnrichItem(
   return response;
 }
 
+export async function postEnrichItem(
+  enrichItem: Partial<EnrichItem>,
+  loginInfo: LoginInfo | null,
+): Promise<EnrichItem[]> {
+  const request = await authFetch(`${apiBaseUrlV2}/enrichItem/`, loginInfo, {
+    method: "POST",
+    headers: {
+      ContentType: "application/json",
+    },
+    body: JSON.stringify(enrichItem),
+  });
+  const response: EnrichItem[] = await request.json();
+  return response;
+}
+
+export async function changeEnrichItem(
+  enrichItemId: number,
+  enrichItem: Omit<EnrichItem, "enrichItemId">,
+  loginInfo: LoginInfo | null,
+): Promise<EnrichItem[]> {
+  const request = await authFetch(
+    `${apiBaseUrlV2}/enrichItem/${enrichItemId}`,
+    loginInfo,
+    {
+      method: "PATCH",
+      headers: {
+        ContentType: "application/json",
+      },
+      body: JSON.stringify(enrichItem),
+    },
+  );
+  const response: EnrichItem[] = await request.json();
+  return response;
+}
+
+export async function deleteEnrichItem(
+  enrichItemId: number,
+  loginInfo: LoginInfo | null,
+): Promise<EnrichItem[]> {
+  const request = await authFetch(
+    `${apiBaseUrlV2}/enrichItem/${enrichItemId}`,
+    loginInfo,
+    {
+      method: "DELETE",
+    },
+  );
+  const response: EnrichItem[] = await request.json();
+  return response;
+}
+
 export async function getEnrichPipeline(
   loginInfo: LoginInfo | null,
 ): Promise<EnrichPipeline[]> {
   const request = await authFetch(
     `/api/datasource/v2/enrichPipeline`,
     loginInfo,
+  );
+  const response: EnrichPipeline[] = await request.json();
+  return response;
+}
+
+export async function postEnrichPipeline(
+  enrichPipeline: Omit<EnrichPipeline, "enrichPipelineId">,
+  loginInfo: LoginInfo | null,
+): Promise<EnrichPipeline[]> {
+  const request = await authFetch(
+    `${apiBaseUrlV2}/enrichPipeline/`,
+    loginInfo,
+    {
+      method: "POST",
+      headers: {
+        ContentType: "application/json",
+      },
+      body: JSON.stringify(enrichPipeline),
+    },
+  );
+  const response: EnrichPipeline[] = await request.json();
+  return response;
+}
+
+export async function changeEnrichPipeline(
+  enrichPipelineId: number,
+  enrichPipeline: Partial<EnrichPipeline>,
+  loginInfo: LoginInfo | null,
+): Promise<EnrichPipeline[]> {
+  const request = await authFetch(
+    `${apiBaseUrlV2}/enrichPipeline/${enrichPipelineId}`,
+    loginInfo,
+    {
+      method: "PATCH",
+      headers: {
+        ContentType: "application/json",
+      },
+      body: JSON.stringify(enrichPipeline),
+    },
+  );
+  const response: EnrichPipeline[] = await request.json();
+  return response;
+}
+
+export async function deleteEnrichPipeline(
+  enrichPipelineId: number,
+  loginInfo: LoginInfo | null,
+): Promise<EnrichPipeline[]> {
+  const request = await authFetch(
+    `${apiBaseUrlV2}/enrichPipeline/${enrichPipelineId}`,
+    loginInfo,
+    {
+      method: "DELETE",
+    },
   );
   const response: EnrichPipeline[] = await request.json();
   return response;
