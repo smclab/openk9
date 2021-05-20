@@ -10,6 +10,27 @@ include:
   - local: '/.gitlab/.gitlab-ci-parser.yml'
   - local: '/.gitlab/.gitlab-ci-core.yml'
 
+sonarqube-check:
+  stage: quality
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  before_script:
+    - mkdir /tmp/empty
+  script:
+    - sonar-scanner -Dsonar.qualitygate.wait=true
+  allow_failure: true
+  only:
+    - merge_requests
+    - develop
+    
 trigger_deploy:
   stage: deploy
   rules:

@@ -1,33 +1,6 @@
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
-build osgi:
-  image: gradle:6.8.2-jdk11
-  stage: build
-  rules:
-    - changes:
-      - osgi/**/*
-      - build-dist.gradle
-      - plugins/web/src/**/*
-      - plugins/email/src/**/*
-      - plugins/liferay/src/**/*
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
-    - export M2_HOME=`pwd`/.m2
-    - echo "$GRADLE_USER_HOME"
-    - echo "$M2_HOME"
-  script:
-    ./gradlew clean buildDist
-  cache:
-    key: build-cache
-    paths:
-      - $CI_PROJECT_DIR/.m2/**/*
-      - $CI_PROJECT_DIR/.gradle/**/*
-  artifacts:
-    paths:
-      - build/core/libs/*.jar
-    expire_in: 1 week
-
 Build Latest OSGI Docker Images:
   image: smclab/docker-java-11:latest
   stage: build-docker
