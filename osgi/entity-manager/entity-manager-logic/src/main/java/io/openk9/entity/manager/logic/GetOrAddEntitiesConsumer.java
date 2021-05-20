@@ -69,9 +69,9 @@ public class GetOrAddEntitiesConsumer {
 		_labelFilter = config.labelFilter();
 
 		_entityManagerRequestConsumer
-			.stream(1)
-			.flatMap(this::_handleMessage)
-			.concatMap(list ->
+			.stream()
+			.concatMap(this::_handleMessage)
+			.flatMap(list ->
 				_entityManagerResponsePublisher.publish(
 					MessageResponse
 						.builder()
