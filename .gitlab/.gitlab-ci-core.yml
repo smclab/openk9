@@ -12,7 +12,6 @@ Build Latest OSGI Docker Images:
         - plugins/web/src/**/*
         - plugins/email/src/**/*
         - plugins/liferay/src/**/*
-  needs: [build osgi]
   script:
     - ./gradlew pushImages
   cache:
