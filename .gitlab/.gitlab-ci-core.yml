@@ -29,7 +29,7 @@ build osgi:
     expire_in: 1 week
 
 Build Latest OSGI Docker Images:
-  image: docker:19.03.12
+  image: smclab/docker-java:latest
   stage: build-docker
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
