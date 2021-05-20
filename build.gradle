@@ -277,6 +277,13 @@ distConfigurations
 				inputDir.set(file("$rootDir/build/$distName"))
 				dockerFile.set(file("$rootDir/build/$distName/docker/Dockerfile"))
 				images.add("openk9-$distName:latest")
+				if (System.getenv("CI_REGISTRY_NAME") != null) {
+					images.add(
+						System.getenv("CI_REGISTRY_NAME")
+							.replace("https://", "")
+							.replace("http://", "") + "/openk9/openk9-$distName:latest"
+					)
+				}
 			})
 
 			tasks.register("removeImage${distPrimaryName}", DockerRemoveImage, {
@@ -285,10 +292,16 @@ distConfigurations
 			})
 
 			if (System.getenv("CI_REGISTRY_NAME") != null) {
+
+				def dockerTagTemplate = findProperty("docker.tag.template")
+
 				tasks.register("pushImage${distPrimaryName}", DockerPushImage, {
 					dependsOn("buildImage${distPrimaryName}")
-					finalizedBy("removeImage${distPrimaryName}")
-					images.add("openk9-$distName:latest")
+					images.add(
+						dockerTagTemplate
+							.replace("{CI_REGISTRY_NAME}", System.getenv("CI_REGISTRY_NAME"))
+							.replace("{IMAGE_ID}", "openk9-$distName:latest")
+					)
 				})
 			}
 
