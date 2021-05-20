@@ -237,7 +237,7 @@ export async function postEnrichItem(
   enrichItem: Partial<EnrichItem>,
   loginInfo: LoginInfo | null,
 ): Promise<EnrichItem[]> {
-  const request = await authFetch(`${apiBaseUrlV2}/enrichItem/`, loginInfo, {
+  const request = await authFetch(`/api/datasource/v2/enrichItem/`, loginInfo, {
     method: "POST",
     headers: {
       ContentType: "application/json",
@@ -254,7 +254,7 @@ export async function changeEnrichItem(
   loginInfo: LoginInfo | null,
 ): Promise<EnrichItem[]> {
   const request = await authFetch(
-    `${apiBaseUrlV2}/enrichItem/${enrichItemId}`,
+    `/api/datasource/v2/enrichItem/${enrichItemId}`,
     loginInfo,
     {
       method: "PATCH",
@@ -273,7 +273,7 @@ export async function deleteEnrichItem(
   loginInfo: LoginInfo | null,
 ): Promise<EnrichItem[]> {
   const request = await authFetch(
-    `${apiBaseUrlV2}/enrichItem/${enrichItemId}`,
+    `/api/datasource/v2/enrichItem/${enrichItemId}`,
     loginInfo,
     {
       method: "DELETE",
@@ -299,7 +299,7 @@ export async function postEnrichPipeline(
   loginInfo: LoginInfo | null,
 ): Promise<EnrichPipeline[]> {
   const request = await authFetch(
-    `${apiBaseUrlV2}/enrichPipeline/`,
+    `/api/datasource/v2/enrichPipeline/`,
     loginInfo,
     {
       method: "POST",
@@ -319,7 +319,7 @@ export async function changeEnrichPipeline(
   loginInfo: LoginInfo | null,
 ): Promise<EnrichPipeline[]> {
   const request = await authFetch(
-    `${apiBaseUrlV2}/enrichPipeline/${enrichPipelineId}`,
+    `/api/datasource/v2/enrichPipeline/${enrichPipelineId}`,
     loginInfo,
     {
       method: "PATCH",
@@ -338,7 +338,7 @@ export async function deleteEnrichPipeline(
   loginInfo: LoginInfo | null,
 ): Promise<EnrichPipeline[]> {
   const request = await authFetch(
-    `${apiBaseUrlV2}/enrichPipeline/${enrichPipelineId}`,
+    `/api/datasource/v2/enrichPipeline/${enrichPipelineId}`,
     loginInfo,
     {
       method: "DELETE",

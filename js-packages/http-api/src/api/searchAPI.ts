@@ -43,3 +43,27 @@ export async function doSearch<E>(
   const response: SearchResults<E> = await request.json();
   return response;
 }
+
+export async function doSearchDatasource<E>(
+  searchRequest: SearchRequest,
+  datasourceId: number,
+  loginInfo: LoginInfo | null,
+): Promise<SearchResults<E>> {
+  const fixedSearch = {
+    ...searchRequest,
+    range: [searchRequest.range[0], searchRequest.range[1] * 2],
+    searchQuery: searchRequest.searchQuery.map((i) =>
+      i.tokenType === "TEXT-TOKEN" ? { ...i, tokenType: "TEXT" } : i,
+    ),
+  };
+  const request = await authFetch(
+    `/api/searcher/v1/search/${datasourceId}`,
+    loginInfo,
+    {
+      method: "POST",
+      body: JSON.stringify(fixedSearch),
+    },
+  );
+  const response: SearchResults<E> = await request.json();
+  return response;
+}
