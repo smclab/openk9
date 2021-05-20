@@ -48,6 +48,14 @@ export const plugin: Plugin<LiferayResultType> = {
       `,
     },
     {
+      type: "ENRICH",
+      displayName: "Liferay NER",
+      serviceName:
+        "io.openk9.plugins.liferay.enrichprocessor.LiferayNerEnrichProcessor",
+      iconRenderer,
+      initialSettings: `{"entities": ["person", "organization", "loc"], "confidence": 0.50}`,
+    },
+    {
       type: "RESULT_RENDERER",
       resultType: "file",
       resultRenderer: DocumentResultCard as any,

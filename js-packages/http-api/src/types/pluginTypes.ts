@@ -31,6 +31,7 @@ export type PluginInfo = {
 
 export type PluginService<E> =
   | DataSourcePlugin
+  | EnrichPlugin
   | SuggestionsPlugin
   | ResultRendererPlugin<E>;
 
@@ -44,6 +45,18 @@ export type DataSourcePlugin = {
   type: "DATASOURCE";
   displayName: string;
   driverServiceName: string;
+  iconRenderer?: React.FC<{ size?: number } & any>;
+  initialSettings: string;
+  settingsRenderer?: React.FC<{
+    currentSettings: string;
+    setCurrentSettings(a: string): void;
+  }>;
+};
+
+export type EnrichPlugin = {
+  type: "ENRICH";
+  displayName: string;
+  serviceName: string;
   iconRenderer?: React.FC<{ size?: number } & any>;
   initialSettings: string;
   settingsRenderer?: React.FC<{

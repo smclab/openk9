@@ -50,6 +50,14 @@ export const plugin: Plugin<EmailResultItem> = {
       `,
     },
     {
+      type: "ENRICH",
+      displayName: "Email NER",
+      serviceName:
+        "io.openk9.plugins.email.enrichprocessor.EmailNerEnrichProcessor",
+      iconRenderer,
+      initialSettings: `{"entities": ["person", "email","organization"], "confidence": 0.90}`,
+    },
+    {
       type: "RESULT_RENDERER",
       resultType: "email",
       resultRenderer: EmailResultCard as any,

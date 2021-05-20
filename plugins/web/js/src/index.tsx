@@ -49,6 +49,14 @@ export const plugin: Plugin<WebResultType> = {
       `,
     },
     {
+      type: "ENRICH",
+      displayName: "Web NER",
+      serviceName:
+        "io.openk9.plugins.web.enrichprocessor.WebNerEnrichProcessor",
+      iconRenderer,
+      initialSettings: `{"entities": ["person", "organization"], "confidence": 0.90}`,
+    },
+    {
       type: "RESULT_RENDERER",
       resultType: "document",
       resultRenderer: DocumentResultCard as any,
