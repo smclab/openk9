@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Fragment, useState } from "react";
+import { useState, forwardRef } from "react";
 import clsx from "clsx";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -43,6 +43,11 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     marginLeft: theme.spacingUnit,
   },
 }));
+
+// Warning silencer to fix ClayUI dropdown
+const DumbFragment = forwardRef(
+  ({ children }, ref) => (void ref, (<>{children}</>)),
+);
 
 export function DataSourceNavBar({
   tenantId,
@@ -161,7 +166,7 @@ export function DataSourceNavBar({
                 }
                 active={dropdownOpen}
                 onActiveChange={setDropdownOpen}
-                containerElement={Fragment}
+                containerElement={DumbFragment}
               >
                 <ClayDropDown.ItemList>
                   <ClayDropDown.Item onClick={() => setScheduleModalV(true)}>
