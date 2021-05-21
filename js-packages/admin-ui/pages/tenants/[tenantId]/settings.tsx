@@ -16,6 +16,7 @@
  */
 
 import React, { Suspense, useState } from "react";
+import dynamic from "next/dynamic";
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import { useRouter } from "next/router";
@@ -27,6 +28,13 @@ import { Layout } from "../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
 import { useToast } from "../../_app";
 import { JSONView } from "../../../components/JSONView";
+
+const DefaultSettingsEditor = dynamic(
+  () => import("./../../../components/DefaultSettingsEditor"),
+  {
+    ssr: false,
+  },
+);
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -75,7 +83,6 @@ function EditInside({
 }) {
   const classes = useStyles();
   const { pushToast } = useToast();
-  const router = useRouter();
 
   const [tenant, setTenant] = useState({ ...data });
 
@@ -125,13 +132,14 @@ function EditInside({
       </div>
       <div className={classes.editElement}>
         <strong>JSON Configuration</strong>
-        <ClayInput
-          component={"textarea" as any}
-          id="jsonConfig"
-          placeholder="Insert your JSON config here"
-          type="text"
-          onChange={(event) => handleChange(event)}
-          value={tenant.jsonConfig}
+        <DefaultSettingsEditor
+          currentSettings={tenant.jsonConfig}
+          setCurrentSettings={(jsonConfig) =>
+            setTenant((cs) => ({
+              ...cs,
+              jsonConfig,
+            }))
+          }
         />
       </div>
       <div className={classes.buttons}>
