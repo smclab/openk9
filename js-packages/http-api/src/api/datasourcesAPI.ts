@@ -218,7 +218,7 @@ export async function getDriverServiceNames(
   loginInfo: LoginInfo | null,
 ): Promise<string[]> {
   const request = await authFetch(
-    `/api/datasource/v1/driver-service-names`,
+    `/api/searcher/v1/driver-service-names`,
     loginInfo,
   );
   const response: string[] = await request.json();
