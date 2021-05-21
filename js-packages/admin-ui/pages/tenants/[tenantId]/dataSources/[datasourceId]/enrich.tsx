@@ -15,20 +15,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from "react";
+import React, { forwardRef, HTMLAttributes, Suspense, useState } from "react";
+import clsx from "clsx";
 import useSWR from "swr";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
-import ReactFlow from "react-flow-renderer";
-import { firstOrString, ThemeType } from "@openk9/search-ui-components";
+import ClayIcon from "@clayui/icon";
+import { ParentSize } from "@vx/responsive";
 import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+  DraggableProvidedDragHandleProps,
+  DraggableProvidedDraggableProps,
+} from "react-beautiful-dnd";
+import {
+  firstOrString,
+  pluginLoader,
+  ThemeType,
+} from "@openk9/search-ui-components";
+import {
+  DataSourceInfo,
+  EnrichItem,
+  EnrichPipeline,
+  EnrichPlugin,
   getDataSourceInfo,
   getEnrichItem,
   getEnrichPipeline,
-  EnrichItem,
+  getPlugins,
+  PluginInfo,
+  postEnrichPipeline,
+  reorderEnrichItems,
 } from "@openk9/http-api";
 import { Layout } from "../../../../../components/Layout";
-import { useLoginCheck, useLoginInfo } from "../../../../../state";
+import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
@@ -42,31 +63,52 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     overflow: "auto",
     padding: theme.spacingUnit * 2,
   },
-  navActionButton: {
-    marginLeft: theme.spacingUnit,
+  respWrap: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: theme.spacingUnit * 3,
+    marginTop: "2em",
   },
-  navMenu: {
-    backgroundColor: "transparent",
+  enrichStack: {
+    minWidth: 200,
+    maxWidth: 300,
   },
-  reactFlowContainer: {
-    height: "200px",
+  stackColumns: {
+    display: "flex",
+  },
+  stackVertArrow: {
+    width: 24,
+    flexShrink: 0,
+    marginLeft: 4,
+  },
+  stackContainer: {
+    flexGrow: 1,
+  },
+  enrichItem: {
+    margin: [theme.spacingUnit, 0],
+    padding: [theme.spacingUnit, theme.spacingUnit * 2],
+    border: "1px solid rgba(0,0,0,0.25)",
     borderRadius: theme.borderRadius,
-    backgroundColor: theme.digitalLakeGrayLighter,
-    marginTop: "4px",
+    boxShadow: theme.shortBoxShadow,
+    backgroundColor: "white",
   },
-  title: {
-    marginTop: "24px",
+  enrichItemInput: {
+    opacity: 0.5,
+    padding: [theme.spacingUnit / 1, theme.spacingUnit * 2],
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.1ch",
   },
-  position: {
-    position: "absolute",
-    top: "4px",
-    left: "8px",
+  enrichItemOutput: {
+    opacity: 0.5,
+    padding: [theme.spacingUnit / 1, theme.spacingUnit * 2],
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.1ch",
   },
-  nameEnrich: {
-    marginBottom: "0",
-  },
-  alertWarning: {
-    marginTop: "16px",
+  enrichItemSelected: {
+    backgroundColor: theme.digitalLakePrimaryD2,
+    color: "white",
   },
   json: {
     marginTop: "0.2rem",
@@ -77,67 +119,229 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-function getElementsReactFlow(dsEnrichItems: any, classes: any) {
-  let count = 0;
-  const elements = dsEnrichItems && [
-    {
-      id: "0",
-      type: "input",
-      data: { label: "INPUT" },
-      sourcePosition: "right",
-      position: { x: 20, y: 80 },
-    },
-    ...dsEnrichItems
-      .sort((a: any, b: any) => a._position - b._position)
-      .map((item: any) => {
-        count++;
-        return {
-          id: `${count}`,
-          sourcePosition: "right",
-          targetPosition: "left",
-          type: "default",
-          data: {
-            label: (
-              <div>
-                <small className={classes.position}>{item._position}</small>
-                <h6 className={classes.nameEnrich}>{item.name}</h6>
-              </div>
-            ),
-            enrichItemId: item.enrichItemId,
-          },
-          position: { x: count * 200 + 20, y: 79 },
-        };
-      }),
-    {
-      id: `${count + 1}`,
-      sourcePosition: "right",
-      targetPosition: "left",
-      type: "output",
-      data: { label: "OUTPUT" },
-      position: { x: (count + 1) * 200 + 20, y: 80 },
-    },
-  ];
+function NoEnrichPipelineMessage({
+  datasource,
+  mutateEnrichPipeline,
+}: {
+  datasource: DataSourceInfo;
+  mutateEnrichPipeline: (
+    data: (d: EnrichPipeline[] | undefined) => EnrichPipeline[],
+  ) => void;
+}) {
+  const loginInfo = useLoginInfo();
+  async function createEnrichPipeline() {
+    if (!datasource) return;
 
-  if (elements && elements.length !== 0) {
-    for (let i = 1; i <= count + 1; i++) {
-      elements.push({
-        id: `line-${i - 1}-${i}`,
-        source: `${i - 1}`,
-        target: `${i}`,
-        type: "smoothstep",
-      });
-    }
+    const newPipeline: Omit<EnrichPipeline, "enrichPipelineId"> = {
+      active: true,
+      datasourceId: datasource.datasourceId,
+      name: `${datasource.datasourceId}-${datasource.name}-pipeline`,
+    };
+    postEnrichPipeline(newPipeline, loginInfo);
+    mutateEnrichPipeline((pipelines) =>
+      pipelines
+        ? [...pipelines, { ...newPipeline, enrichPipelineId: -1 }]
+        : [{ ...newPipeline, enrichPipelineId: -1 }],
+    );
+  }
+  return (
+    <>
+      <h2>
+        {datasource.datasourceId}: {datasource.name}
+      </h2>
+      <p>This datasource currently doesn't have an enrich pipeline.</p>
+      <button className="btn btn-primary" onClick={createEnrichPipeline}>
+        Create a new one
+      </button>
+    </>
+  );
+}
+
+const EnrichItemBlock = forwardRef<
+  HTMLDivElement,
+  {
+    item: EnrichItem;
+    selected: boolean;
+    onSelect(): void;
+    pluginInfos: PluginInfo[];
+  } & DraggableProvidedDraggableProps &
+    (DraggableProvidedDragHandleProps | {}) &
+    HTMLAttributes<HTMLDivElement>
+>(function EnrichItemBlock(
+  { item, selected, onSelect, pluginInfos, ...rest },
+  ref,
+) {
+  const classes = useStyles();
+
+  const pluginInfo = (pluginInfos || []).find((p) =>
+    item.serviceName.startsWith(p.bundleInfo.symbolicName),
+  );
+  const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
+
+  const enrichPlugin = plugin?.pluginServices.find(
+    (ps) => ps.type === "ENRICH" && ps.serviceName === item.serviceName,
+  ) as EnrichPlugin | null;
+
+  const displayName =
+    enrichPlugin?.displayName || item.serviceName.split(".").slice(-1)[0];
+  const Icon = enrichPlugin?.iconRenderer || (() => null);
+
+  return (
+    <div
+      className={clsx(
+        classes.enrichItem,
+        selected && classes.enrichItemSelected,
+      )}
+      onClick={onSelect}
+      {...rest}
+      ref={ref}
+    >
+      <ClayIcon symbol="drag" /> <Icon size={32} /> {displayName}
+    </div>
+  );
+});
+
+function EnrichPipelineReorderStack({
+  dsEnrichItems,
+  selectedEnrichId,
+  setSelectedEnrichId,
+  pluginInfos,
+  mutateEnrichItems,
+}: {
+  dsEnrichItems: EnrichItem[];
+  selectedEnrichId: number | null;
+  setSelectedEnrichId(v: number | null): void;
+  pluginInfos: PluginInfo[];
+  mutateEnrichItems: (
+    data?: (d: EnrichItem[] | undefined) => EnrichItem[],
+  ) => void;
+}) {
+  const classes = useStyles();
+
+  const loginInfo = useLoginInfo();
+
+  async function dragEnd(result: DropResult) {
+    if (!dsEnrichItems || !result.destination) return dsEnrichItems;
+
+    const sorted = [...dsEnrichItems].sort((a, b) => a._position - b._position);
+    const [removed] = sorted.splice(result.source.index, 1);
+    sorted.splice(result.destination.index, 0, removed);
+    const reordered = sorted.map((s, i) => ({ ...s, _position: i }));
+
+    await reorderEnrichItems(
+      reordered.map((e) => e.enrichItemId),
+      loginInfo,
+    );
+
+    mutateEnrichItems();
   }
 
-  if (!dsEnrichItems) {
-    return [];
-  }
-  return elements;
+  return (
+    <div className={classes.enrichStack}>
+      <h5>Enrich Pipeline</h5>
+
+      <div className={classes.stackColumns}>
+        <div className={classes.stackContainer}>
+          <DragDropContext onDragEnd={dragEnd}>
+            <Droppable droppableId="droppable">
+              {(droppableProvided) => (
+                <div ref={droppableProvided.innerRef}>
+                  <div
+                    className={clsx(
+                      classes.enrichItem,
+                      classes.enrichItemInput,
+                    )}
+                  >
+                    Input
+                  </div>
+                  {dsEnrichItems
+                    ?.sort((a, b) => a._position - b._position)
+                    .map((item) => (
+                      <Draggable
+                        key={item.enrichItemId}
+                        draggableId={item.enrichItemId.toString()}
+                        index={item._position}
+                      >
+                        {(draggableProvided) => (
+                          <EnrichItemBlock
+                            item={item}
+                            selected={item.enrichItemId == selectedEnrichId}
+                            onSelect={() =>
+                              setSelectedEnrichId(item.enrichItemId)
+                            }
+                            pluginInfos={pluginInfos}
+                            style={draggableProvided.draggableProps.style}
+                            ref={draggableProvided.innerRef}
+                            {...draggableProvided.draggableProps}
+                            {...draggableProvided.dragHandleProps}
+                          />
+                        )}
+                      </Draggable>
+                    ))}
+                  {droppableProvided.placeholder}
+                  <div
+                    className={clsx(
+                      classes.enrichItem,
+                      classes.enrichItemOutput,
+                    )}
+                  >
+                    Output
+                  </div>
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </div>
+
+        <div className={classes.stackVertArrow}>
+          <ParentSize>
+            {({ width, height }) => (
+              <svg width={width} height={height}>
+                <defs>
+                  <marker
+                    id="arrowhead"
+                    markerWidth={12}
+                    markerHeight={8}
+                    refX={12 / 2}
+                    refY={8}
+                  >
+                    <polygon points={`0,0 ${12},${0} ${12 / 2},${8}`} />
+                  </marker>
+                </defs>
+                <line
+                  x1={12 / 2}
+                  y1={8}
+                  x2={12 / 2}
+                  y2={height - 8}
+                  stroke="black"
+                  opacity={0.5}
+                  strokeDasharray="4"
+                  markerEnd="url(#arrowhead)"
+                />
+                <text
+                  x={-height / 2}
+                  y={width - 5}
+                  fill="black"
+                  transform="rotate(-90,0,0)"
+                  fontSize={12}
+                  textAnchor="middle"
+                  opacity={0.5}
+                  letterSpacing={0.8}
+                  fontWeight={600}
+                >
+                  DATA
+                </text>
+              </svg>
+            )}
+          </ParentSize>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function Inner({ datasourceId }: { datasourceId: number }) {
   const classes = useStyles();
-  const [enrichItemToView, setEnrichItemToView] = useState<EnrichItem>();
 
   const loginInfo = useLoginInfo();
 
@@ -146,94 +350,101 @@ function Inner({ datasourceId }: { datasourceId: number }) {
     () => getDataSourceInfo(datasourceId, loginInfo),
   );
 
-  const { data: enrichPipelines } = useSWR(`/api/v2/enrichPipeline`, () =>
-    getEnrichPipeline(loginInfo),
+  const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
+    getPlugins(loginInfo),
   );
 
-  const { data: enrichItem } = useSWR(`/api/v2/enrichItem`, () =>
-    getEnrichItem(loginInfo),
-  );
+  const {
+    data: enrichPipelines,
+    mutate: mutateEnrichPipeline,
+  } = useSWR(`/api/v2/enrichPipeline`, () => getEnrichPipeline(loginInfo));
+
+  const {
+    data: enrichItem,
+    mutate: mutateEnrichItems,
+  } = useSWR(`/api/v2/enrichItem`, () => getEnrichItem(loginInfo));
+
+  const [selectedEnrichId, setSelectedEnrichId] = useState<number | null>(null);
+
+  if (!datasource || !pluginInfos || !enrichItem) {
+    return <span className="loading-animation" />;
+  }
 
   const dsEnrichPipeline =
     enrichPipelines &&
     enrichPipelines.filter((e) => e.datasourceId === datasourceId)[0];
 
+  if (!dsEnrichPipeline) {
+    return (
+      <NoEnrichPipelineMessage
+        datasource={datasource}
+        mutateEnrichPipeline={mutateEnrichPipeline}
+      />
+    );
+  }
+
   const dsEnrichItems =
-    enrichItem &&
     dsEnrichPipeline &&
     enrichItem.filter(
       (e) => e.enrichPipelineId === dsEnrichPipeline.enrichPipelineId,
     );
 
-  const elements = getElementsReactFlow(dsEnrichItems, classes);
-
-  function onElementClick(event: any, element: any) {
-    if (!dsEnrichItems) return;
-    const id = element.data.enrichItemId && element.data.enrichItemId;
-    const item = dsEnrichItems.filter((item) => item.enrichItemId === id)[0];
-    setEnrichItemToView(item);
-  }
-
-  if (!datasource) {
-    return <span className="loading-animation" />;
-  }
-
-  if (!dsEnrichPipeline) {
-    return (
-      <>
-        <h2>
-          {datasource.datasourceId}: {datasource.name}
-        </h2>
-        {/* <ClayAlert
-          displayType="warning"
-          className={clsx(classes.alert, classes.alertWarning)}
-        >
-          {"There aren't items in Enrich Pipeline for this Data Source"}
-        </ClayAlert> */}
-      </>
-    );
-  }
+  const selectedEnrich = dsEnrichItems.find(
+    (ei) => ei.enrichItemId === selectedEnrichId,
+  );
 
   return (
-    <>
+    <div>
       <h2>
         {datasource.datasourceId}: {datasource.name}
       </h2>
-      <h5 className={classes.title}>Enrich Pipeline</h5>
-      <div className={classes.reactFlowContainer}>
-        <ReactFlow elements={elements} onElementClick={onElementClick} />
-      </div>
 
-      {enrichItemToView && Object.entries(enrichItemToView).length !== 0 && (
-        <>
-          <h5 className={classes.title}>{enrichItemToView.name}</h5>
+      <div className={classes.respWrap}>
+        {!isServer && (
+          <Suspense fallback={<span className="loading-animation" />}>
+            <EnrichPipelineReorderStack
+              dsEnrichItems={dsEnrichItems}
+              selectedEnrichId={selectedEnrichId}
+              setSelectedEnrichId={setSelectedEnrichId}
+              pluginInfos={pluginInfos}
+              mutateEnrichItems={mutateEnrichItems}
+            />
+          </Suspense>
+        )}
+
+        {selectedEnrich ? (
           <div>
-            <strong>Status:</strong>{" "}
-            {enrichItemToView.active ? (
-              <span className="label label-success">
-                <span className="label-item label-item-expand">ENABLED</span>
-              </span>
-            ) : (
-              <span className="label label-warning">
-                <span className="label-item label-item-expand">DISABLED</span>
-              </span>
-            )}
+            <h5>Item Configuration: {selectedEnrich.name}</h5>
+            <div>
+              <strong>Status:</strong>{" "}
+              {selectedEnrich.active ? (
+                <span className="label label-success">
+                  <span className="label-item label-item-expand">ENABLED</span>
+                </span>
+              ) : (
+                <span className="label label-warning">
+                  <span className="label-item label-item-expand">DISABLED</span>
+                </span>
+              )}
+            </div>
+            <div>
+              <strong>Position:</strong> {selectedEnrich._position}
+            </div>
+            <div>
+              <strong>Service Name:</strong> {selectedEnrich.serviceName}
+            </div>
+            <div>
+              <strong>JSON Configuration</strong>
+              <pre className={classes.json}>
+                {JSON.stringify(JSON.parse(selectedEnrich.jsonConfig), null, 4)}
+              </pre>
+            </div>
           </div>
-          <div>
-            <strong>Position:</strong> {enrichItemToView._position}
-          </div>
-          <div>
-            <strong>Service Name:</strong> {enrichItemToView.serviceName}
-          </div>
-          <div>
-            <strong>JSON Configuration</strong>
-            <pre className={classes.json}>
-              {JSON.stringify(JSON.parse(enrichItemToView.jsonConfig), null, 4)}
-            </pre>
-          </div>
-        </>
-      )}
-    </>
+        ) : (
+          <div>Select an enrich item to configure.</div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -244,7 +455,7 @@ function DSEnrich() {
   const tenantId = query.tenantId && firstOrString(query.tenantId);
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
 
-  const { loginValid, loginInfo } = useLoginCheck();
+  const { loginValid } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
 
   if (!tenantId || !datasourceId) return null;

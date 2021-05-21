@@ -58,6 +58,7 @@ export const defaultTheme = {
   borderRadiusSm: 2,
 
   baseBoxShadow: "1px 20px 30px 0px rgba(56,77,104,0.14)",
+  shortBoxShadow: "0px 3px 6px 0px rgba(56,77,104,0.4)",
   navigationShadow: "1px 4px 15px 0px rgba(56,77,104,0.14)",
 };
 

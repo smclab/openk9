@@ -347,3 +347,22 @@ export async function deleteEnrichPipeline(
   const response: EnrichPipeline[] = await request.json();
   return response;
 }
+
+export async function reorderEnrichItems(
+  enrichItemsIds: number[],
+  loginInfo: LoginInfo | null,
+): Promise<string> {
+  const request = await authFetch(
+    `/api/datasource/v1/enrich-item/reorder`,
+    loginInfo,
+    {
+      method: "POST",
+      headers: {
+        ContentType: "application/json",
+      },
+      body: JSON.stringify(enrichItemsIds),
+    },
+  );
+  const response: string = await request.text();
+  return response;
+}
