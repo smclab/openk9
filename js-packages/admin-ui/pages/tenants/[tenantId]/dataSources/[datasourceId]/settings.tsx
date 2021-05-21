@@ -34,6 +34,7 @@ import { EditDataSource } from "../../../../../components/EditDataSource";
 import { Layout } from "../../../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
 import { useToast } from "../../../../_app";
+import { JSONView } from "../../../../../components/JSONView";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -51,13 +52,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
       marginBottom: "0.2rem",
     },
     marginBottom: "1rem",
-  },
-  json: {
-    marginTop: "0.2rem",
-    backgroundColor: theme.digitalLakeMainL2,
-    color: "white",
-    padding: theme.spacingUnit * 2,
-    borderRadius: theme.borderRadius,
   },
   settingHeader: {
     display: "flex",
@@ -171,9 +165,7 @@ function Inner({
       </div>
 
       <h5>JSON Configuration</h5>
-      <pre className={classes.json}>
-        {JSON.stringify(JSON.parse(datasource.jsonConfig), null, 4)}
-      </pre>
+      <JSONView jsonString={datasource.jsonConfig} />
     </>
   );
 }

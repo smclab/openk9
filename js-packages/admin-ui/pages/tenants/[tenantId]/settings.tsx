@@ -26,6 +26,7 @@ import { putTenant, getTenant, Tenant } from "@openk9/http-api";
 import { Layout } from "../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
 import { useToast } from "../../_app";
+import { JSONView } from "../../../components/JSONView";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -52,13 +53,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
       marginBottom: "0.2rem",
     },
     marginBottom: "1rem",
-  },
-  json: {
-    marginTop: "0.2rem",
-    backgroundColor: theme.digitalLakeMainL2,
-    color: "white",
-    padding: theme.spacingUnit * 2,
-    borderRadius: theme.borderRadius,
   },
   editElement: {
     marginBottom: "16px",
@@ -197,7 +191,7 @@ function Inside({ tenantId }: { tenantId: number }) {
           </div>
 
           <h5>Tenant Configuration</h5>
-          <pre className={classes.json}>{data.jsonConfig}</pre>
+          <JSONView jsonString={data.jsonConfig} />
         </>
       )}
     </>
