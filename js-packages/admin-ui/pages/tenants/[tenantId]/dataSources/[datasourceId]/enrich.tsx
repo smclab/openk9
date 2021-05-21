@@ -15,41 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { forwardRef, HTMLAttributes, Suspense, useState } from "react";
-import clsx from "clsx";
-import useSWR from "swr";
+import React, { Suspense, useState } from "react";
+import useSWR, { mutate } from "swr";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import ClayIcon from "@clayui/icon";
-import { ParentSize } from "@vx/responsive";
+import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-  DraggableProvided,
-} from "react-beautiful-dnd";
-import {
-  firstOrString,
-  pluginLoader,
-  ThemeType,
-} from "@openk9/search-ui-components";
-import {
+  changeEnrichItem,
   DataSourceInfo,
   EnrichItem,
   EnrichPipeline,
-  EnrichPlugin,
   getDataSourceInfo,
   getEnrichItem,
   getEnrichPipeline,
   getPlugins,
   PluginInfo,
   postEnrichPipeline,
-  reorderEnrichItems,
 } from "@openk9/http-api";
 import { Layout } from "../../../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
+import { JSONView } from "../../../../../components/JSONView";
+import { EnrichItemEdit } from "../../../../../components/EnrichItemEdit";
+import { EnrichPipelineReorderStack } from "../../../../../components/EnrichItemReorderStack";
+import { useToast } from "../../../../_app";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -68,66 +58,20 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     gap: theme.spacingUnit * 3,
     marginTop: "2em",
   },
-  enrichStack: {
-    minWidth: 200,
-    maxWidth: 300,
-  },
-  stackColumns: {
-    display: "flex",
-  },
-  stackVertArrow: {
-    width: 24,
-    flexShrink: 0,
-    marginLeft: 8,
-  },
-  stackContainer: {
+  grow: {
     flexGrow: 1,
   },
-  enrichItem: {
-    margin: [theme.spacingUnit, 0],
-    padding: [theme.spacingUnit, theme.spacingUnit * 2],
-    border: "1px solid rgba(0,0,0,0.25)",
-    borderRadius: theme.borderRadius,
-    boxShadow: theme.shortBoxShadow,
-    backgroundColor: "white",
-  },
-  enrichItemInput: {
-    opacity: 0.5,
-    padding: [theme.spacingUnit / 1, theme.spacingUnit * 2],
-    paddingLeft: 36,
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.1ch",
-  },
-  enrichItemOutput: {
-    opacity: 0.5,
-    padding: [theme.spacingUnit / 1, theme.spacingUnit * 2],
-    paddingLeft: 36,
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.1ch",
-  },
-  enrichItemSelected: {
-    backgroundColor: theme.digitalLakePrimaryD2,
-    color: "white",
-  },
-  json: {
-    marginTop: "0.2rem",
-    backgroundColor: theme.digitalLakeMainL2,
-    color: "white",
-    padding: theme.spacingUnit * 2,
-    borderRadius: theme.borderRadius,
+  detailTitle: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 }));
 
 function NoEnrichPipelineMessage({
   datasource,
-  mutateEnrichPipeline,
 }: {
   datasource: DataSourceInfo;
-  mutateEnrichPipeline: (
-    data: (d: EnrichPipeline[] | undefined) => EnrichPipeline[],
-  ) => void;
 }) {
   const loginInfo = useLoginInfo();
   async function createEnrichPipeline() {
@@ -139,7 +83,7 @@ function NoEnrichPipelineMessage({
       name: `${datasource.datasourceId}-${datasource.name}-pipeline`,
     };
     postEnrichPipeline(newPipeline, loginInfo);
-    mutateEnrichPipeline((pipelines) =>
+    mutate(`/api/v2/enrichPipeline`, (pipelines: EnrichPipeline[] | null) =>
       pipelines
         ? [...pipelines, { ...newPipeline, enrichPipelineId: -1 }]
         : [{ ...newPipeline, enrichPipelineId: -1 }],
@@ -158,186 +102,96 @@ function NoEnrichPipelineMessage({
   );
 }
 
-function EnrichItemBlock({
-  item,
-  selected,
-  onSelect,
+function EnrichItemShow({
+  selectedEnrich,
   pluginInfos,
-  draggableProvided,
+  editing,
+  setEditing,
 }: {
-  item: EnrichItem;
-  selected: boolean;
-  onSelect(): void;
+  selectedEnrich: EnrichItem;
   pluginInfos: PluginInfo[];
-  draggableProvided: DraggableProvided;
+  editing: EnrichItem | null;
+  setEditing(
+    fn: EnrichItem | null | ((ei: EnrichItem | null) => EnrichItem | null),
+  ): void;
 }) {
   const classes = useStyles();
 
-  const pluginInfo = (pluginInfos || []).find((p) =>
-    item.serviceName.startsWith(p.bundleInfo.symbolicName),
-  );
-  const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
-
-  const enrichPlugin = plugin?.pluginServices.find(
-    (ps) => ps.type === "ENRICH" && ps.serviceName === item.serviceName,
-  ) as EnrichPlugin | null;
-
-  const displayName =
-    enrichPlugin?.displayName || item.serviceName.split(".").slice(-1)[0];
-  const Icon = enrichPlugin?.iconRenderer || (() => null);
-
-  return (
-    <div
-      className={clsx(
-        classes.enrichItem,
-        selected && classes.enrichItemSelected,
-      )}
-      onClick={onSelect}
-      style={draggableProvided.draggableProps.style}
-      ref={draggableProvided.innerRef}
-      {...draggableProvided.draggableProps}
-      {...draggableProvided.dragHandleProps}
-    >
-      <ClayIcon symbol="drag" /> <Icon size={32} /> {displayName}
-    </div>
-  );
-}
-
-function EnrichPipelineReorderStack({
-  dsEnrichItems,
-  selectedEnrichId,
-  setSelectedEnrichId,
-  pluginInfos,
-  mutateEnrichItems,
-}: {
-  dsEnrichItems: EnrichItem[];
-  selectedEnrichId: number | null;
-  setSelectedEnrichId(v: number | null): void;
-  pluginInfos: PluginInfo[];
-  mutateEnrichItems: (data?: EnrichItem[]) => void;
-}) {
-  const classes = useStyles();
-
+  const { pushToast } = useToast();
   const loginInfo = useLoginInfo();
 
-  async function dragEnd(result: DropResult) {
-    if (!dsEnrichItems || !result.destination) return dsEnrichItems;
+  async function handleSave() {
+    if (editing) {
+      const prev = selectedEnrich;
+      const newEnrichItem: Partial<EnrichItem> = {};
 
-    const sorted = [...dsEnrichItems].sort((a, b) => a._position - b._position);
-    const [removed] = sorted.splice(result.source.index, 1);
-    sorted.splice(result.destination.index, 0, removed);
-    const reordered: EnrichItem[] = sorted.map((s, i) => ({
-      ...s,
-      _position: i,
-    }));
+      Object.keys(prev).forEach((key) => {
+        if (prev[key as keyof EnrichItem] !== editing[key as keyof EnrichItem])
+          (newEnrichItem as any)[key] = editing[key as keyof EnrichItem];
+      });
 
-    await reorderEnrichItems(
-      reordered.map((e) => e.enrichItemId),
-      loginInfo,
-    );
+      if (Object.entries(newEnrichItem).length !== 0) {
+        const saved = await changeEnrichItem(
+          prev.enrichItemId,
+          newEnrichItem,
+          loginInfo,
+        );
+        pushToast(`The datasource has been updated`);
+        mutate(`/api/v2/enrichItem`, (eis: EnrichItem[]) => [
+          ...eis.filter((ei) => ei.enrichItemId !== saved.enrichItemId),
+          saved,
+        ]);
 
-    mutateEnrichItems(reordered);
+        setEditing(null);
+      }
+    }
   }
 
-  return (
-    <div className={classes.enrichStack}>
-      <h5>Enrich Pipeline</h5>
-
-      <div className={classes.stackColumns}>
-        <div className={classes.stackContainer}>
-          <DragDropContext onDragEnd={dragEnd}>
-            <Droppable droppableId="droppable">
-              {(droppableProvided) => (
-                <div ref={droppableProvided.innerRef}>
-                  <div
-                    className={clsx(
-                      classes.enrichItem,
-                      classes.enrichItemInput,
-                    )}
-                  >
-                    Input
-                  </div>
-
-                  {dsEnrichItems
-                    ?.sort((a, b) => a._position - b._position)
-                    .map((item) => (
-                      <Draggable
-                        key={item.enrichItemId}
-                        draggableId={item.enrichItemId.toString()}
-                        index={item._position}
-                      >
-                        {(draggableProvided) => (
-                          <EnrichItemBlock
-                            item={item}
-                            selected={item.enrichItemId == selectedEnrichId}
-                            onSelect={() =>
-                              setSelectedEnrichId(item.enrichItemId)
-                            }
-                            pluginInfos={pluginInfos}
-                            draggableProvided={draggableProvided}
-                          />
-                        )}
-                      </Draggable>
-                    ))}
-
-                  {droppableProvided.placeholder}
-
-                  <div
-                    className={clsx(
-                      classes.enrichItem,
-                      classes.enrichItemOutput,
-                    )}
-                  >
-                    Output
-                  </div>
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </div>
-
-        <div className={classes.stackVertArrow}>
-          <ParentSize>
-            {({ width, height }) => (
-              <svg width={width} height={height}>
-                <defs>
-                  <marker
-                    id="arrowhead"
-                    markerWidth={12}
-                    markerHeight={8}
-                    refX={12 / 2}
-                    refY={8}
-                  >
-                    <polygon points={`0,0 ${12},${0} ${12 / 2},${8}`} />
-                  </marker>
-                </defs>
-                <line
-                  x1={12 / 2}
-                  y1={8}
-                  x2={12 / 2}
-                  y2={height - 8}
-                  stroke="black"
-                  opacity={0.5}
-                  strokeDasharray="4"
-                  markerEnd="url(#arrowhead)"
-                />
-                <text
-                  x={-height / 2}
-                  y={width - 5}
-                  fill="black"
-                  transform="rotate(-90,0,0)"
-                  fontSize={12}
-                  textAnchor="middle"
-                  opacity={0.5}
-                  letterSpacing={0.8}
-                  fontWeight={600}
-                >
-                  DATA
-                </text>
-              </svg>
-            )}
-          </ParentSize>
-        </div>
+  return editing ? (
+    <EnrichItemEdit
+      selectedEnrich={selectedEnrich}
+      pluginInfos={pluginInfos}
+      editing={editing}
+      setEditing={setEditing}
+      onSave={handleSave}
+      onAbort={() => setEditing(null)}
+    />
+  ) : (
+    <div className={classes.grow}>
+      <div className={classes.detailTitle}>
+        <h5>Item Configuration: {selectedEnrich.name}</h5>
+        <button
+          className="btn btn-secondary"
+          type="button"
+          onClick={() => setEditing(selectedEnrich)}
+        >
+          <span className="inline-item inline-item-before">
+            <ClayIcon symbol="pencil" />
+          </span>
+          Edit
+        </button>
+      </div>
+      <div>
+        <strong>Status:</strong>{" "}
+        {selectedEnrich.active ? (
+          <span className="label label-success">
+            <span className="label-item label-item-expand">ENABLED</span>
+          </span>
+        ) : (
+          <span className="label label-warning">
+            <span className="label-item label-item-expand">DISABLED</span>
+          </span>
+        )}
+      </div>
+      <div>
+        <strong>Position:</strong> {selectedEnrich._position}
+      </div>
+      <div>
+        <strong>Service Name:</strong> {selectedEnrich.serviceName}
+      </div>
+      <div>
+        <strong>JSON Configuration</strong>
+        <JSONView jsonString={selectedEnrich.jsonConfig} />
       </div>
     </div>
   );
@@ -357,17 +211,17 @@ function Inner({ datasourceId }: { datasourceId: number }) {
     getPlugins(loginInfo),
   );
 
-  const {
-    data: enrichPipelines,
-    mutate: mutateEnrichPipeline,
-  } = useSWR(`/api/v2/enrichPipeline`, () => getEnrichPipeline(loginInfo));
+  const { data: enrichPipelines } = useSWR(`/api/v2/enrichPipeline`, () =>
+    getEnrichPipeline(loginInfo),
+  );
 
-  const {
-    data: enrichItem,
-    mutate: mutateEnrichItems,
-  } = useSWR(`/api/v2/enrichItem`, () => getEnrichItem(loginInfo));
+  const { data: enrichItem } = useSWR(`/api/v2/enrichItem`, () =>
+    getEnrichItem(loginInfo),
+  );
 
   const [selectedEnrichId, setSelectedEnrichId] = useState<number | null>(null);
+
+  const [editing, setEditing] = useState<EnrichItem | null>(null);
 
   if (!datasource || !pluginInfos || !enrichItem) {
     return <span className="loading-animation" />;
@@ -378,12 +232,7 @@ function Inner({ datasourceId }: { datasourceId: number }) {
     enrichPipelines.filter((e) => e.datasourceId === datasourceId)[0];
 
   if (!dsEnrichPipeline) {
-    return (
-      <NoEnrichPipelineMessage
-        datasource={datasource}
-        mutateEnrichPipeline={mutateEnrichPipeline}
-      />
-    );
+    return <NoEnrichPipelineMessage datasource={datasource} />;
   }
 
   const dsEnrichItems =
@@ -408,41 +257,21 @@ function Inner({ datasourceId }: { datasourceId: number }) {
             <EnrichPipelineReorderStack
               dsEnrichItems={dsEnrichItems}
               selectedEnrichId={selectedEnrichId}
-              setSelectedEnrichId={setSelectedEnrichId}
+              setSelectedEnrichId={editing ? () => {} : setSelectedEnrichId}
               pluginInfos={pluginInfos}
-              mutateEnrichItems={mutateEnrichItems}
             />
           </Suspense>
         )}
 
-        {selectedEnrich ? (
-          <div>
-            <h5>Item Configuration: {selectedEnrich.name}</h5>
-            <div>
-              <strong>Status:</strong>{" "}
-              {selectedEnrich.active ? (
-                <span className="label label-success">
-                  <span className="label-item label-item-expand">ENABLED</span>
-                </span>
-              ) : (
-                <span className="label label-warning">
-                  <span className="label-item label-item-expand">DISABLED</span>
-                </span>
-              )}
-            </div>
-            <div>
-              <strong>Position:</strong> {selectedEnrich._position}
-            </div>
-            <div>
-              <strong>Service Name:</strong> {selectedEnrich.serviceName}
-            </div>
-            <div>
-              <strong>JSON Configuration</strong>
-              <pre className={classes.json}>
-                {JSON.stringify(JSON.parse(selectedEnrich.jsonConfig), null, 4)}
-              </pre>
-            </div>
-          </div>
+        {selectedEnrich && !isServer ? (
+          <Suspense fallback={<span className="loading-animation" />}>
+            <EnrichItemShow
+              selectedEnrich={selectedEnrich}
+              pluginInfos={pluginInfos}
+              editing={editing}
+              setEditing={setEditing}
+            />
+          </Suspense>
         ) : (
           <div>Select an enrich item to configure.</div>
         )}

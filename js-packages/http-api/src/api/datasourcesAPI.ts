@@ -234,7 +234,7 @@ export async function getEnrichItem(
 }
 
 export async function postEnrichItem(
-  enrichItem: Partial<EnrichItem>,
+  enrichItem: Omit<EnrichItem, "enrichItemId">,
   loginInfo: LoginInfo | null,
 ): Promise<EnrichItem[]> {
   const request = await authFetch(`/api/datasource/v2/enrichItem/`, loginInfo, {
@@ -250,9 +250,9 @@ export async function postEnrichItem(
 
 export async function changeEnrichItem(
   enrichItemId: number,
-  enrichItem: Omit<EnrichItem, "enrichItemId">,
+  enrichItem: Partial<EnrichItem>,
   loginInfo: LoginInfo | null,
-): Promise<EnrichItem[]> {
+): Promise<EnrichItem> {
   const request = await authFetch(
     `/api/datasource/v2/enrichItem/${enrichItemId}`,
     loginInfo,
@@ -264,14 +264,14 @@ export async function changeEnrichItem(
       body: JSON.stringify(enrichItem),
     },
   );
-  const response: EnrichItem[] = await request.json();
+  const response: EnrichItem = await request.json();
   return response;
 }
 
 export async function deleteEnrichItem(
   enrichItemId: number,
   loginInfo: LoginInfo | null,
-): Promise<EnrichItem[]> {
+): Promise<string> {
   const request = await authFetch(
     `/api/datasource/v2/enrichItem/${enrichItemId}`,
     loginInfo,
@@ -279,7 +279,7 @@ export async function deleteEnrichItem(
       method: "DELETE",
     },
   );
-  const response: EnrichItem[] = await request.json();
+  const response: string = await request.text();
   return response;
 }
 
@@ -336,7 +336,7 @@ export async function changeEnrichPipeline(
 export async function deleteEnrichPipeline(
   enrichPipelineId: number,
   loginInfo: LoginInfo | null,
-): Promise<EnrichPipeline[]> {
+): Promise<string> {
   const request = await authFetch(
     `/api/datasource/v2/enrichPipeline/${enrichPipelineId}`,
     loginInfo,
@@ -344,7 +344,7 @@ export async function deleteEnrichPipeline(
       method: "DELETE",
     },
   );
-  const response: EnrichPipeline[] = await request.json();
+  const response: string = await request.text();
   return response;
 }
 
