@@ -27,8 +27,7 @@ import {
   Droppable,
   Draggable,
   DropResult,
-  DraggableProvidedDragHandleProps,
-  DraggableProvidedDraggableProps,
+  DraggableProvided,
 } from "react-beautiful-dnd";
 import {
   firstOrString,
@@ -79,7 +78,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   stackVertArrow: {
     width: 24,
     flexShrink: 0,
-    marginLeft: 4,
+    marginLeft: 8,
   },
   stackContainer: {
     flexGrow: 1,
@@ -95,6 +94,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   enrichItemInput: {
     opacity: 0.5,
     padding: [theme.spacingUnit / 1, theme.spacingUnit * 2],
+    paddingLeft: 36,
     fontWeight: 600,
     textTransform: "uppercase",
     letterSpacing: "0.1ch",
@@ -102,6 +102,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   enrichItemOutput: {
     opacity: 0.5,
     padding: [theme.spacingUnit / 1, theme.spacingUnit * 2],
+    paddingLeft: 36,
     fontWeight: 600,
     textTransform: "uppercase",
     letterSpacing: "0.1ch",
@@ -157,20 +158,19 @@ function NoEnrichPipelineMessage({
   );
 }
 
-const EnrichItemBlock = forwardRef<
-  HTMLDivElement,
-  {
-    item: EnrichItem;
-    selected: boolean;
-    onSelect(): void;
-    pluginInfos: PluginInfo[];
-  } & DraggableProvidedDraggableProps &
-    (DraggableProvidedDragHandleProps | {}) &
-    HTMLAttributes<HTMLDivElement>
->(function EnrichItemBlock(
-  { item, selected, onSelect, pluginInfos, ...rest },
-  ref,
-) {
+function EnrichItemBlock({
+  item,
+  selected,
+  onSelect,
+  pluginInfos,
+  draggableProvided,
+}: {
+  item: EnrichItem;
+  selected: boolean;
+  onSelect(): void;
+  pluginInfos: PluginInfo[];
+  draggableProvided: DraggableProvided;
+}) {
   const classes = useStyles();
 
   const pluginInfo = (pluginInfos || []).find((p) =>
@@ -193,13 +193,15 @@ const EnrichItemBlock = forwardRef<
         selected && classes.enrichItemSelected,
       )}
       onClick={onSelect}
-      {...rest}
-      ref={ref}
+      style={draggableProvided.draggableProps.style}
+      ref={draggableProvided.innerRef}
+      {...draggableProvided.draggableProps}
+      {...draggableProvided.dragHandleProps}
     >
       <ClayIcon symbol="drag" /> <Icon size={32} /> {displayName}
     </div>
   );
-});
+}
 
 function EnrichPipelineReorderStack({
   dsEnrichItems,
@@ -255,6 +257,7 @@ function EnrichPipelineReorderStack({
                   >
                     Input
                   </div>
+
                   {dsEnrichItems
                     ?.sort((a, b) => a._position - b._position)
                     .map((item) => (
@@ -271,15 +274,14 @@ function EnrichPipelineReorderStack({
                               setSelectedEnrichId(item.enrichItemId)
                             }
                             pluginInfos={pluginInfos}
-                            style={draggableProvided.draggableProps.style}
-                            ref={draggableProvided.innerRef}
-                            {...draggableProvided.draggableProps}
-                            {...draggableProvided.dragHandleProps}
+                            draggableProvided={draggableProvided}
                           />
                         )}
                       </Draggable>
                     ))}
+
                   {droppableProvided.placeholder}
+
                   <div
                     className={clsx(
                       classes.enrichItem,
