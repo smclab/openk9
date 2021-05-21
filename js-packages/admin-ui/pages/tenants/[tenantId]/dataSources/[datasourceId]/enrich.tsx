@@ -24,6 +24,7 @@ import { firstOrString, ThemeType } from "@openk9/search-ui-components";
 import {
   changeEnrichItem,
   DataSourceInfo,
+  deleteEnrichItem,
   EnrichItem,
   EnrichPipeline,
   getDataSourceInfo,
@@ -40,6 +41,7 @@ import { JSONView } from "../../../../../components/JSONView";
 import { EnrichItemEdit } from "../../../../../components/EnrichItemEdit";
 import { EnrichPipelineReorderStack } from "../../../../../components/EnrichItemReorderStack";
 import { useToast } from "../../../../_app";
+import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -63,8 +65,9 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
   detailTitle: {
     display: "flex",
-    justifyContent: "space-between",
     alignItems: "center",
+    "& h5": { flexGrow: 1 },
+    "& button": { marginLeft: theme.spacingUnit },
   },
 }));
 
@@ -104,11 +107,13 @@ function NoEnrichPipelineMessage({
 
 function EnrichItemShow({
   selectedEnrich,
+  setSelectedEnrichId,
   pluginInfos,
   editing,
   setEditing,
 }: {
   selectedEnrich: EnrichItem;
+  setSelectedEnrichId(id: number | null): void;
   pluginInfos: PluginInfo[];
   editing: EnrichItem | null;
   setEditing(
@@ -147,6 +152,14 @@ function EnrichItemShow({
     }
   }
 
+  const [deleteModalV, setDeleteModalV] = useState(false);
+  async function doDelete() {
+    const resp = await deleteEnrichItem(selectedEnrich.enrichItemId, loginInfo);
+    console.log(resp);
+    pushToast(`Enrich Item Deleted`);
+    setSelectedEnrichId(null);
+  }
+
   return editing ? (
     <EnrichItemEdit
       selectedEnrich={selectedEnrich}
@@ -160,6 +173,16 @@ function EnrichItemShow({
     <div className={classes.grow}>
       <div className={classes.detailTitle}>
         <h5>Item Configuration: {selectedEnrich.name}</h5>
+        <button
+          className="btn btn-secondary"
+          type="button"
+          onClick={() => setDeleteModalV(true)}
+        >
+          <span className="inline-item inline-item-before">
+            <ClayIcon symbol="trash" />
+          </span>
+          Delete
+        </button>
         <button
           className="btn btn-secondary"
           type="button"
@@ -193,6 +216,17 @@ function EnrichItemShow({
         <strong>JSON Configuration</strong>
         <JSONView jsonString={selectedEnrich.jsonConfig} />
       </div>
+
+      {deleteModalV && (
+        <ConfirmationModal
+          title="Delete"
+          message="Are you sure you want to delete this enrich item?"
+          abortText="Abort"
+          confirmText="Delete"
+          onCloseModal={() => setDeleteModalV(false)}
+          onConfirmModal={doDelete}
+        />
+      )}
     </div>
   );
 }
@@ -270,6 +304,7 @@ function Inner({ datasourceId }: { datasourceId: number }) {
               pluginInfos={pluginInfos}
               editing={editing}
               setEditing={setEditing}
+              setSelectedEnrichId={setSelectedEnrichId}
             />
           </Suspense>
         ) : (
