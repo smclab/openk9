@@ -212,9 +212,7 @@ function EnrichPipelineReorderStack({
   selectedEnrichId: number | null;
   setSelectedEnrichId(v: number | null): void;
   pluginInfos: PluginInfo[];
-  mutateEnrichItems: (
-    data?: (d: EnrichItem[] | undefined) => EnrichItem[],
-  ) => void;
+  mutateEnrichItems: (data?: EnrichItem[]) => void;
 }) {
   const classes = useStyles();
 
@@ -226,14 +224,17 @@ function EnrichPipelineReorderStack({
     const sorted = [...dsEnrichItems].sort((a, b) => a._position - b._position);
     const [removed] = sorted.splice(result.source.index, 1);
     sorted.splice(result.destination.index, 0, removed);
-    const reordered = sorted.map((s, i) => ({ ...s, _position: i }));
+    const reordered: EnrichItem[] = sorted.map((s, i) => ({
+      ...s,
+      _position: i,
+    }));
 
     await reorderEnrichItems(
       reordered.map((e) => e.enrichItemId),
       loginInfo,
     );
 
-    mutateEnrichItems();
+    mutateEnrichItems(reordered);
   }
 
   return (
