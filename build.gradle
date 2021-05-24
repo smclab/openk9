@@ -403,3 +403,9 @@ task distTasks {
 static String toSnakeCase(String text ) {
 	text.replaceAll(/([A-Z])/, /-$1/).toLowerCase().replaceAll(/^-/, '')
 }
+
+task createDockerFiles {
+	def createDockerFileNames = distConfigurations
+			.collect({tasks.named("createDockerFile${it.name.substring(4)}")})
+	dependsOn(createDockerFileNames)
+}

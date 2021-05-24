@@ -41,41 +41,12 @@ jobs:
           java-version: 11
 
       - name: Build with Gradle
-        run: ./gradlew clean buildDist
+        run: ./gradlew createDockerFiles
     
       - uses: actions/upload-artifact@v2
         with:
           name: Package
-          path: build/libs
-        
-      - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      - name: Build OpenK9 Karaf Image
-        run: docker build -t openk9-karaf -f osgi/Dockerfile .
-
-      - name: Push OpenK9 Karaf Image
-        run: |
-          IMAGE_NAME=openk9-karaf
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
-
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "main" ] && VERSION=latest
-
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
+          path: build
 
       -
         name: Set up Docker Buildx
@@ -87,11 +58,56 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push Openk9 Karaf Image
-        id: docker_build_openk9_karaf
+        name: Build and push Openk9 Datasource
+        id: docker_build_openk9_datasource
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: osgi/Dockerfile
+          file: build/datasource/Dockerfile
           push: true
-          tags: smclab/openk9-karaf:${{ steps.prep.outputs.version }}
+          tags: smclab/openk9-datasource:${{ steps.prep.outputs.version }}
+      -
+        name: Build and push Openk9 Entity Manager
+        id: docker_build_openk9_entity
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: osgi/entity-manager/Dockerfile
+          push: true
+          tags: smclab/openk9-entity-manager:${{ steps.prep.outputs.version }}
+      -
+        name: Build and push Openk9 Index Writer
+        id: docker_build_openk9_index
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: osgi/index-writer/Dockerfile
+          push: true
+          tags: smclab/openk9-index-writer:${{ steps.prep.outputs.version }}
+      -
+        name: Build and push Openk9 Karaf Ingestion
+        id: docker_build_openk9_ingestion
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: osgi/ingestion/Dockerfile
+          push: true
+          tags: smclab/openk9-ingestion:${{ steps.prep.outputs.version }}
+      -
+        name: Build and push Openk9 Karaf Plugin Driver Manager
+        id: docker_build_openk9_plugin
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: osgi/plugin-driver-manager/Dockerfile
+          push: true
+          tags: smclab/openk9-plugin-driver-manager:${{ steps.prep.outputs.version }}
+      -
+        name: Build and push Openk9 Karaf Searcher
+        id: docker_build_openk9_searcher
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: osgi/searcher/Dockerfile
+          push: true
+          tags: smclab/openk9-searcher:${{ steps.prep.outputs.version }}
