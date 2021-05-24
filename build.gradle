@@ -284,6 +284,14 @@ distConfigurations
 							.replace("{CI_REGISTRY_NAME}", System.getenv("CI_REGISTRY_NAME"))
 							.replace("{IMAGE_ID}", "openk9-$distName:latest")
 					)
+					if (System.getenv("CI_COMMIT_TAG") != null) {
+						def tagName = System.getenv("CI_COMMIT_REF_NAME")
+						images.add(
+							dockerTagTemplate
+								.replace("{CI_REGISTRY_NAME}", System.getenv("CI_REGISTRY_NAME"))
+								.replace("{IMAGE_ID}", "openk9-$distName:$tagName")
+						)
+					}
 				}
 			})
 
@@ -303,6 +311,14 @@ distConfigurations
 							.replace("{CI_REGISTRY_NAME}", System.getenv("CI_REGISTRY_NAME"))
 							.replace("{IMAGE_ID}", "openk9-$distName:latest")
 					)
+					if (System.getenv("CI_COMMIT_TAG") != null) {
+						def tagName = System.getenv("CI_COMMIT_REF_NAME")
+						images.add(
+							dockerTagTemplate
+								.replace("{CI_REGISTRY_NAME}", System.getenv("CI_REGISTRY_NAME"))
+								.replace("{IMAGE_ID}", "openk9-$distName:$tagName")
+						)
+					}
 				})
 			}
 
