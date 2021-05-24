@@ -1,0 +1,7 @@
+Bundle-Name: [OpenK9] Groovy Script Api
+Bundle-SymbolicName: io.openk9.util.script.groovy.api
+Require-Bundle: groovy
+
+Export-Package: io.openk9.util.script.groovy.api
+
+-include: ${project.rootDir}/osgi/common.bnd

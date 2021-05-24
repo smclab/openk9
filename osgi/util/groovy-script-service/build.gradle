@@ -1,0 +1,5 @@
+dependencies {
+	compile libraries.groovy
+	compile libraries.osgi
+	compile project(":osgi:util:groovy-script-api")
+}
