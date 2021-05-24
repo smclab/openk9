@@ -1,6 +1,19 @@
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
+Build Tagged OSGI Docker Images:
+  image: smclab/docker-java-11:latest
+  stage: build-docker
+  only:
+    - tags
+  script:
+    - ./gradlew pushImages
+  cache:
+    key: build-docker-cache
+    paths:
+      - $CI_PROJECT_DIR/.m2/**/*
+      - $CI_PROJECT_DIR/.gradle/**/*
+
 Build Latest OSGI Docker Images:
   image: smclab/docker-java-11:latest
   stage: build-docker
