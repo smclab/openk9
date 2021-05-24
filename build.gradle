@@ -182,6 +182,7 @@ task downloadKaraf(type: Download) {
 	onlyIfModified true
 	connectTimeout 30
 	readTimeout 0
+	retries 5
 }
 
 task createDockerFileKaraf(type: Dockerfile) {
