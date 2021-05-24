@@ -25,23 +25,6 @@ JS Format Lint Test and Build Check:
     - yarn build
   allow_failure: true
 
-Build and Publish to NPM:
-  image: node:13.13
-  stage: build
-  only:
-    - tags
-  before_script:
-    - echo -e "$NPM_TOKEN" > ~/.npmrc
-    - chmod 600  ~/.npmrc
-    - cd js-packages
-    - yarn install --prefer-offline --frozen-lockfile --cache-folder $YARN_CACHE_FOLDER
-  script:
-    - yarn build
-    - yarn format
-    - git fetch --tags
-    - yarn run publish --registry https://registry.smc.it/repository/npm-hosted --no-git-reset --no-commit-hooks --no-git-tag-version --no-push --yes from-package
-  allow_failure: false
-
 Build Tagged JS Docker Images:
   image: docker:19.03.12
   stage: build-docker
