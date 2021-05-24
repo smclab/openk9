@@ -17,15 +17,15 @@
 
 package io.openk9.datasource.internal.web;
 
-import io.openk9.http.exception.HttpException;
-import io.openk9.model.EnrichItem;
 import io.openk9.datasource.repository.EnrichItemRepository;
+import io.openk9.http.exception.HttpException;
 import io.openk9.http.util.BaseEndpointRegister;
+import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.HttpRequest;
 import io.openk9.http.web.HttpResponse;
 import io.openk9.json.api.JsonFactory;
-import io.openk9.sql.api.client.Criteria;
+import io.openk9.model.EnrichItem;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -60,49 +60,58 @@ public class EnrichItemEndpoints extends BaseEndpointRegister {
 				.from(httpRequest.aggregateBodyToString())
 				.map(json -> _jsonFactory.fromJsonList(json, Long.class));
 
-		body
-			.flatMapMany(ids ->
-				_enrichItemRepository
-					.findByPrimaryKeys(ids)
-					.collectList()
-					.map(
-						enrichItemList ->
-							ids
-								.stream()
-								.map(id -> enrichItemList
-									.stream()
-									.filter(enrichItem ->
-										enrichItem
-											.getEnrichItemId()
-											.equals(id))
-									.findFirst()
-									.orElseThrow(() -> new HttpException(500, "EnrichItem for id: " + id + " not found"))
-								)
-						.collect(Collectors.toList())
-					)
-					.flatMap(
-						enrichItemListOrdered ->
-							Flux.zip(
-								Flux.fromStream(Stream.iterate(1, x -> x + 1).limit(enrichItemListOrdered.size())),
-								Flux.fromIterable(enrichItemListOrdered)
-							)
-							.map(t2 -> EnrichItem
-								.builder()
-								.enrichItemId(t2.getT2().getEnrichItemId())
-								._position(t2.getT1())
-								.active(t2.getT2().getActive())
-								.enrichPipelineId(t2.getT2().getEnrichPipelineId())
-								.jsonConfig(t2.getT2().getJsonConfig())
-								.serviceName(t2.getT2().getServiceName())
-								.name(t2.getT2().getName())
-								.build()
-							)
-							.flatMap(_enrichItemRepository::update)
-							.then()
-					)
-			);
 
-		return null;
+		Flux<Void> response =
+			body
+				.flatMapMany(ids ->
+					_enrichItemRepository
+						.findByPrimaryKeys(ids)
+						.collectList()
+						.map(
+							enrichItemList ->
+								ids
+									.stream()
+									.map(id -> enrichItemList
+										.stream()
+										.filter(enrichItem ->
+											enrichItem
+												.getEnrichItemId()
+												.equals(id))
+										.findFirst()
+										.orElseThrow(() -> new HttpException(
+											500, "EnrichItem for id: " + id +
+												 " not found"))
+									)
+									.collect(Collectors.toList())
+						)
+						.flatMap(
+							enrichItemListOrdered ->
+								Flux.zip(
+									Flux.fromStream(
+										Stream.iterate(1, x -> x + 1).limit(
+											enrichItemListOrdered.size())),
+									Flux.fromIterable(enrichItemListOrdered)
+								)
+									.map(t2 -> EnrichItem
+										.builder()
+										.enrichItemId(t2.getT2().getEnrichItemId())
+										._position(t2.getT1())
+										.active(t2.getT2().getActive())
+										.enrichPipelineId(
+											t2.getT2().getEnrichPipelineId())
+										.jsonConfig(t2.getT2().getJsonConfig())
+										.serviceName(t2.getT2().getServiceName())
+										.name(t2.getT2().getName())
+										.build()
+									)
+									.flatMap(_enrichItemRepository::update)
+									.then()
+						)
+				);
+
+		return _httpResponseWriter.write(
+			httpResponse, response.then(Mono.just("{}")));
+
 	}
 
 	@Deactivate
@@ -141,4 +150,7 @@ public class EnrichItemEndpoints extends BaseEndpointRegister {
 
 	@Reference
 	private EnrichItemRepository _enrichItemRepository;
+
+	@Reference
+	private HttpResponseWriter _httpResponseWriter;
 }
