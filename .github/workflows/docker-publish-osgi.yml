@@ -62,8 +62,8 @@ jobs:
         id: docker_build_openk9_datasource
         uses: docker/build-push-action@v2
         with:
-          context: build/
-          file: ./datasource/docker/Dockerfile
+          context: ./build/datasource/
+          file: ./build/datasource/docker/Dockerfile
           push: true
           tags: smclab/openk9-datasource:${{ steps.prep.outputs.version }}
       -
@@ -71,8 +71,8 @@ jobs:
         id: docker_build_openk9_entity
         uses: docker/build-push-action@v2
         with:
-          context: build/
-          file: ./entity-manager/docker/Dockerfile
+          context: ./build/entity-manager/
+          file: ./build/entity-manager/docker/Dockerfile
           push: true
           tags: smclab/openk9-entity-manager:${{ steps.prep.outputs.version }}
       -
@@ -80,8 +80,8 @@ jobs:
         id: docker_build_openk9_index
         uses: docker/build-push-action@v2
         with:
-          context: build/
-          file: ./index-writer/docker/Dockerfile
+          context: ./build/index-writer/
+          file: ./build/index-writer/docker/Dockerfile
           push: true
           tags: smclab/openk9-index-writer:${{ steps.prep.outputs.version }}
       -
@@ -89,8 +89,8 @@ jobs:
         id: docker_build_openk9_ingestion
         uses: docker/build-push-action@v2
         with:
-          context: build/
-          file: ./ingestion/docker/Dockerfile
+          context: ./build/ingestion/
+          file: ./build/ingestion/docker/Dockerfile
           push: true
           tags: smclab/openk9-ingestion:${{ steps.prep.outputs.version }}
       -
@@ -98,8 +98,8 @@ jobs:
         id: docker_build_openk9_plugin
         uses: docker/build-push-action@v2
         with:
-          context: build/
-          file: ./plugin-driver-manager/docker/Dockerfile
+          context: ./build/plugin-driver-manager/
+          file: ./build/plugin-driver-manager/docker/Dockerfile
           push: true
           tags: smclab/openk9-plugin-driver-manager:${{ steps.prep.outputs.version }}
       -
@@ -107,7 +107,7 @@ jobs:
         id: docker_build_openk9_searcher
         uses: docker/build-push-action@v2
         with:
-          context: build/
-          file: ./searcher/docker/Dockerfile
+          context: ./build/searcher/
+          file: ./build/searcher/docker/Dockerfile
           push: true
           tags: smclab/openk9-searcher:${{ steps.prep.outputs.version }}
