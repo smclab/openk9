@@ -1,3 +1,3 @@
 {
-	"url" : "http://openk9-index-writer:8080"
+	"url" : "http://index-writer:8080"
 }
