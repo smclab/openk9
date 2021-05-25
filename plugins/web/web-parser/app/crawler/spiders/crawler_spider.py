@@ -165,7 +165,7 @@ class MySpider(CrawlSpider):
             "datasourceId": self.datasource_id,
             "contentId": hash(str(response.url)),
             "parsingDate": int(self.end_timestamp),
-            "rawContent": content,
+            "rawContent": title + " " + content,
             "datasourcePayload": json.dumps(datasource_payload)
         }
 
