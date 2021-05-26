@@ -2,8 +2,8 @@ package io.openk9.auth.query.parser;
 
 import io.openk9.auth.keycloak.api.AuthVerifier;
 import io.openk9.auth.keycloak.api.UserInfo;
-import io.openk9.model.Tenant;
 import io.openk9.http.web.HttpRequest;
+import io.openk9.model.Tenant;
 import io.openk9.search.api.query.QueryParser;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -44,26 +44,32 @@ public class AuthQueryParser implements QueryParser {
 
 	@interface Config {
 		boolean enabled() default true;
+		boolean checkRoleGuest() default false;
 	}
 
 	@Activate
 	void activate(Config config) {
 		_enabled = config.enabled();
+		_checkRoleGuest = config.checkRoleGuest();
 	}
 
 	@Modified
 	void modified(Config config) {
-		_enabled = config.enabled();
+		activate(config);
 	}
 
 	private void _addAclQuery(
 		Tenant tenant, UserInfo userInfo,
 		BoolQueryBuilder boolQuery) {
 
-		boolQuery.must(
-			QueryBuilders
-				.matchQuery("acl.allow.roles","Guest")
-		);
+		if (_checkRoleGuest) {
+
+			boolQuery.must(
+				QueryBuilders
+					.matchQuery("acl.allow.roles","Guest")
+			);
+
+		}
 
 		if (userInfo == AuthVerifier.GUEST) {
 			return;
@@ -87,6 +93,8 @@ public class AuthQueryParser implements QueryParser {
 
 
 	private boolean _enabled;
+
+	private boolean _checkRoleGuest;
 
 	@Reference
 	private AuthVerifier _authVerifier;
