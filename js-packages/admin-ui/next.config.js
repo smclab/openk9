@@ -21,7 +21,7 @@ const withTM = require("next-transpile-modules")([
 ]);
 module.exports = {
   ...withTM(),
-  basePath: "/admin",
+  basePath: process.env.BASE_PATH || "/admin",
   async rewrites() {
     const basePathProxy = process.env.BASE_PROXY_PATH;
     if (!basePathProxy) return [];
