@@ -51,7 +51,11 @@ public class EntityManagerResponseConsumerImpl
 				Mono::just,
 				ignore -> Mono
 					.fromRunnable(closeableSafe::close)
-					.then(_queueService.deleteQueue(ingestionQueueName))
+					.then(
+						_queueService
+							.deleteQueue(ingestionQueueName)
+							.retry()
+					)
 			);
 
 		});
