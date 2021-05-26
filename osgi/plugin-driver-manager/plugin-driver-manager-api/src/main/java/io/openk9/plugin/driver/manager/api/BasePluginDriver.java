@@ -50,6 +50,8 @@ public abstract class BasePluginDriver implements PluginDriver {
 
 		requestJson.put("timestamp", fromDate.getTime());
 
+		requestJson.put("datasourceId", datasource.getDatasourceId());
+
 		Map<String, Object> headers = Arrays
 			.stream(headers())
 			.map(s -> s.split(":"))
