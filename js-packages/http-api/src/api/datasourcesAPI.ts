@@ -236,7 +236,7 @@ export async function getEnrichItem(
 export async function postEnrichItem(
   enrichItem: Omit<EnrichItem, "enrichItemId">,
   loginInfo: LoginInfo | null,
-): Promise<EnrichItem[]> {
+): Promise<EnrichItem> {
   const request = await authFetch(`/api/datasource/v2/enrichItem/`, loginInfo, {
     method: "POST",
     headers: {
@@ -244,7 +244,7 @@ export async function postEnrichItem(
     },
     body: JSON.stringify(enrichItem),
   });
-  const response: EnrichItem[] = await request.json();
+  const response: EnrichItem = await request.json();
   return response;
 }
 
@@ -297,7 +297,7 @@ export async function getEnrichPipeline(
 export async function postEnrichPipeline(
   enrichPipeline: Omit<EnrichPipeline, "enrichPipelineId">,
   loginInfo: LoginInfo | null,
-): Promise<EnrichPipeline[]> {
+): Promise<EnrichPipeline> {
   const request = await authFetch(
     `/api/datasource/v2/enrichPipeline/`,
     loginInfo,
@@ -309,7 +309,7 @@ export async function postEnrichPipeline(
       body: JSON.stringify(enrichPipeline),
     },
   );
-  const response: EnrichPipeline[] = await request.json();
+  const response: EnrichPipeline = await request.json();
   return response;
 }
 
