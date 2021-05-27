@@ -16,6 +16,7 @@
  */
 
 import { createUseStyles } from "react-jss";
+import ClayAlert from "@clayui/alert";
 import { ThemeType } from "@openk9/search-ui-components";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
@@ -26,13 +27,31 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     padding: theme.spacingUnit * 2,
     borderRadius: theme.borderRadius,
   },
+  error: {
+    margin: 0,
+  },
 }));
+
+function tryFormatJSON(jsonString: string) {
+  try {
+    return { jsonString: JSON.stringify(JSON.parse(jsonString), null, 4) };
+  } catch (error) {
+    return { jsonString, error };
+  }
+}
 
 export function JSONView({ jsonString }: { jsonString: string }) {
   const classes = useStyles();
+  const formatted = tryFormatJSON(jsonString);
   return (
-    <pre className={classes.json}>
-      {JSON.stringify(JSON.parse(jsonString), null, 4)}
-    </pre>
+    <>
+      {formatted.error && (
+        <ClayAlert displayType="danger">
+          Warning! Error in JSON
+          <pre className={classes.error}>{formatted.error.message}</pre>
+        </ClayAlert>
+      )}
+      <pre className={classes.json}>{formatted.jsonString}</pre>
+    </>
   );
 }
