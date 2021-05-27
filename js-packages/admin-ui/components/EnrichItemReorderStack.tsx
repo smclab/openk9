@@ -141,7 +141,7 @@ function EnrichItemBlock({
 
   const displayName =
     enrichPlugin?.displayName || item.serviceName.split(".").slice(-1)[0];
-  const Icon = enrichPlugin?.iconRenderer || (() => null);
+  const Icon = enrichPlugin?.iconRenderer || null;
 
   return (
     <div
@@ -156,9 +156,13 @@ function EnrichItemBlock({
       {...draggableProvided.dragHandleProps}
     >
       <ClayIcon symbol="drag" className={classes.handle} />{" "}
-      <div className={classes.icon}>
-        <Icon size={24} />
-      </div>{" "}
+      {Icon && (
+        <>
+          <div className={classes.icon}>
+            <Icon size={24} />
+          </div>{" "}
+        </>
+      )}
       {displayName}
     </div>
   );
