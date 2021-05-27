@@ -19,9 +19,14 @@ const withTM = require("next-transpile-modules")([
   "@openk9/search-ui-components",
   "@openk9/http-api",
 ]);
+
+const isProd = process.env.NODE_ENV === "production";
+
 module.exports = {
   ...withTM(),
-  basePath: process.env.BASE_PATH || "/admin",
+  basePath:
+    typeof process.env.BASE_PATH == "string" ? process.env.BASE_PATH : "/admin",
+  assetPrefix: isProd ? process.env.BASE_PATH_ASSETS : "",
   async rewrites() {
     const basePathProxy = process.env.BASE_PROXY_PATH;
     if (!basePathProxy) return [];
