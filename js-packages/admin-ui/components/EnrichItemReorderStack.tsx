@@ -39,7 +39,7 @@ import { mutate } from "swr";
 
 export const useStyles = createUseStyles((theme: ThemeType) => ({
   enrichStack: {
-    minWidth: 200,
+    minWidth: 250,
     maxWidth: 300,
   },
   stackColumns: {
@@ -55,16 +55,27 @@ export const useStyles = createUseStyles((theme: ThemeType) => ({
   },
   enrichItem: {
     margin: [theme.spacingUnit, 0],
-    padding: [theme.spacingUnit, theme.spacingUnit * 2],
+    padding: [theme.spacingUnit, 4],
     border: "1px solid rgba(0,0,0,0.25)",
     borderRadius: theme.borderRadius,
     boxShadow: theme.shortBoxShadow,
     backgroundColor: "white",
     display: "flex",
     alignItems: "center",
-
-    "& svg": { fill: "currentColor", marginRight: 4 },
-    "& .lexicon-icon": { margin: 0, marginRight: 4 },
+    "& svg": { fill: "currentColor" },
+  },
+  handle: {
+    margin: 0,
+    marginRight: theme.spacingUnit / 2,
+  },
+  icon: {
+    margin: 0,
+    marginRight: theme.spacingUnit / 2,
+    width: 32,
+    height: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
   enrichItemInput: {
     opacity: 0.5,
@@ -73,6 +84,11 @@ export const useStyles = createUseStyles((theme: ThemeType) => ({
     fontWeight: 600,
     textTransform: "uppercase",
     letterSpacing: "0.1ch",
+    marginBottom: theme.spacingUnit * 2,
+  },
+  enrichItemOutputContainer: {
+    marginTop: theme.spacingUnit * 2,
+    position: "relative",
   },
   enrichItemOutput: {
     opacity: 0.5,
@@ -81,6 +97,17 @@ export const useStyles = createUseStyles((theme: ThemeType) => ({
     fontWeight: 600,
     textTransform: "uppercase",
     letterSpacing: "0.1ch",
+  },
+  addButton: {
+    fontSize: 12,
+    padding: theme.spacingUnit / 2,
+    position: "absolute",
+    top: -theme.spacingUnit,
+    right: theme.spacingUnit,
+
+    "& *": {
+      fontSize: 12,
+    },
   },
   enrichItemSelected: {
     backgroundColor: theme.digitalLakePrimaryD2,
@@ -128,7 +155,11 @@ function EnrichItemBlock({
       {...draggableProvided.draggableProps}
       {...draggableProvided.dragHandleProps}
     >
-      <ClayIcon symbol="drag" /> <Icon size={24} /> {displayName}
+      <ClayIcon symbol="drag" className={classes.handle} />{" "}
+      <div className={classes.icon}>
+        <Icon size={24} />
+      </div>{" "}
+      {displayName}
     </div>
   );
 }
@@ -213,27 +244,34 @@ export function EnrichPipelineReorderStack({
 
                   {droppableProvided.placeholder}
 
-                  <div
-                    className={clsx(
-                      classes.enrichItem,
-                      classes.enrichItemOutput,
-                    )}
-                  >
-                    Output
+                  <div className={classes.enrichItemOutputContainer}>
+                    <div
+                      className={clsx(
+                        classes.enrichItem,
+                        classes.enrichItemOutput,
+                      )}
+                    >
+                      Output
+                    </div>
+                    <button
+                      className={clsx(
+                        "btn btn-sm btn-secondary",
+                        classes.addButton,
+                      )}
+                      type="button"
+                      disabled={editing}
+                      onClick={onAdd}
+                    >
+                      <span className="inline-item inline-item-before">
+                        <ClayIcon symbol="plus" />
+                      </span>{" "}
+                      ADD
+                    </button>
                   </div>
                 </div>
               )}
             </Droppable>
           </DragDropContext>
-
-          <button
-            className="btn btn-sm btn-primary"
-            type="button"
-            disabled={editing}
-            onClick={onAdd}
-          >
-            <ClayIcon symbol="plus" />
-          </button>
         </div>
 
         <div className={classes.stackVertArrow} key={dsEnrichItems.length}>
