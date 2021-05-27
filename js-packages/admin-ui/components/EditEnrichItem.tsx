@@ -52,13 +52,14 @@ export const useStyles = createUseStyles((theme: ThemeType) => ({
   buttons: {
     display: "flex",
     justifyContent: "flex-end",
+    marginBottom: theme.spacingUnit * 2,
   },
   closeButton: {
     marginRight: theme.spacingUnit * 2,
   },
 }));
 
-export function EnrichItemEdit({
+export function EditEnrichItem({
   selectedEnrich,
   pluginInfos,
   editing,
@@ -186,6 +187,7 @@ export function EnrichItemEdit({
                       onClick={() =>
                         setEditing((ei) => ({
                           ...(ei as EnrichItem),
+                          jsonConfig: eiSettings[ein],
                           serviceName: ein,
                         }))
                       }
@@ -199,7 +201,7 @@ export function EnrichItemEdit({
       <div className={classes.editElement}>
         {SettingsRenderer && SettingsRenderer != null && (
           <SettingsRenderer
-            currentSettings={eiSettings[editing.serviceName]}
+            currentSettings={editing.jsonConfig}
             setCurrentSettings={(e) => {
               setEditing((ei) => ({ ...(ei as EnrichItem), jsonConfig: e }));
               setEiSettings((cfg) => ({
@@ -216,7 +218,16 @@ export function EnrichItemEdit({
           type="button"
           onClick={onAbort}
         >
-          Close without Save
+          {editing.serviceName ? (
+            "Close without Save"
+          ) : (
+            <>
+              <span className="inline-item inline-item-before">
+                <ClayIcon symbol="trash" />
+              </span>
+              Delete
+            </>
+          )}
         </button>
         <button className="btn btn-primary" type="button" onClick={onSave}>
           <span className="inline-item inline-item-before">

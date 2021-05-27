@@ -32,13 +32,14 @@ import {
   getEnrichPipeline,
   getPlugins,
   PluginInfo,
+  postEnrichItem,
   postEnrichPipeline,
 } from "@openk9/http-api";
 import { Layout } from "../../../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 import { JSONView } from "../../../../../components/JSONView";
-import { EnrichItemEdit } from "../../../../../components/EnrichItemEdit";
+import { EditEnrichItem } from "../../../../../components/EditEnrichItem";
 import { EnrichPipelineReorderStack } from "../../../../../components/EnrichItemReorderStack";
 import { useToast } from "../../../../_app";
 import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
@@ -154,20 +155,35 @@ function EnrichItemShow({
 
   const [deleteModalV, setDeleteModalV] = useState(false);
   async function doDelete() {
-    const resp = await deleteEnrichItem(selectedEnrich.enrichItemId, loginInfo);
-    console.log(resp);
+    await deleteEnrichItem(selectedEnrich.enrichItemId, loginInfo);
     pushToast(`Enrich Item Deleted`);
     setSelectedEnrichId(null);
+    mutate(`/api/v2/enrichItem`, (eis: EnrichItem[]) =>
+      eis.filter((ei) => ei.enrichItemId !== selectedEnrich.enrichItemId),
+    );
+  }
+
+  async function handleAbort() {
+    if (!editing || editing?.serviceName) {
+      setEditing(null);
+    } else {
+      await deleteEnrichItem(editing.enrichItemId, loginInfo);
+      setSelectedEnrichId(null);
+      setEditing(null);
+      mutate(`/api/v2/enrichItem`, (eis: EnrichItem[]) =>
+        eis.filter((ei) => ei.enrichItemId !== editing.enrichItemId),
+      );
+    }
   }
 
   return editing ? (
-    <EnrichItemEdit
+    <EditEnrichItem
       selectedEnrich={selectedEnrich}
       pluginInfos={pluginInfos}
       editing={editing}
       setEditing={setEditing}
       onSave={handleSave}
-      onAbort={() => setEditing(null)}
+      onAbort={handleAbort}
     />
   ) : (
     <div className={classes.grow}>
@@ -270,14 +286,37 @@ function Inner({ datasourceId }: { datasourceId: number }) {
   }
 
   const dsEnrichItems =
-    dsEnrichPipeline &&
-    enrichItem.filter(
-      (e) => e.enrichPipelineId === dsEnrichPipeline.enrichPipelineId,
-    );
+    (dsEnrichPipeline &&
+      enrichItem.filter(
+        (e) => e.enrichPipelineId === dsEnrichPipeline.enrichPipelineId,
+      )) ||
+    [];
 
   const selectedEnrich = dsEnrichItems.find(
     (ei) => ei.enrichItemId === selectedEnrichId,
   );
+
+  async function handleAdd() {
+    if (!dsEnrichPipeline) return;
+
+    const newPosition = dsEnrichItems[dsEnrichItems.length - 1]
+      ? dsEnrichItems[dsEnrichItems.length - 1]._position + 1
+      : 0;
+
+    const emptyEnrichItem = {
+      active: false,
+      enrichPipelineId: dsEnrichPipeline?.enrichPipelineId,
+      jsonConfig: "{}",
+      name: "New Enrich Pipeline",
+      serviceName: "",
+      _position: newPosition,
+    };
+
+    const result = await postEnrichItem(emptyEnrichItem, loginInfo);
+    setSelectedEnrichId(result.enrichItemId);
+    setEditing(result);
+    mutate(`/api/v2/enrichItem`);
+  }
 
   return (
     <div>
@@ -293,6 +332,8 @@ function Inner({ datasourceId }: { datasourceId: number }) {
               selectedEnrichId={selectedEnrichId}
               setSelectedEnrichId={editing ? () => {} : setSelectedEnrichId}
               pluginInfos={pluginInfos}
+              onAdd={handleAdd}
+              editing={Boolean(editing)}
             />
           </Suspense>
         )}

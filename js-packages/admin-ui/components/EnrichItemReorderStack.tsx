@@ -50,7 +50,7 @@ export const useStyles = createUseStyles((theme: ThemeType) => ({
     flexShrink: 0,
     marginLeft: 8,
   },
-  grow: {
+  reorderColumn: {
     flexGrow: 1,
   },
   enrichItem: {
@@ -137,33 +137,37 @@ export function EnrichPipelineReorderStack({
   selectedEnrichId,
   setSelectedEnrichId,
   pluginInfos,
+  onAdd,
+  editing,
 }: {
   dsEnrichItems: EnrichItem[];
   selectedEnrichId: number | null;
   setSelectedEnrichId(v: number | null): void;
   pluginInfos: PluginInfo[];
+  onAdd(): void;
+  editing: boolean;
 }) {
   const classes = useStyles();
 
   const loginInfo = useLoginInfo();
 
   async function dragEnd(result: DropResult) {
-    if (!dsEnrichItems || !result.destination) return dsEnrichItems;
+    if (!dsEnrichItems || !result.destination) return;
 
     const sorted = [...dsEnrichItems].sort((a, b) => a._position - b._position);
     const [removed] = sorted.splice(result.source.index, 1);
-    sorted.splice(result.destination.index, 0, removed);
+    if (removed) sorted.splice(result.destination.index, 0, removed);
     const reordered: EnrichItem[] = sorted.map((s, i) => ({
       ...s,
-      _position: i,
+      _position: i + 1,
     }));
 
+    mutate(`/api/v2/enrichItem`, reordered, false);
+
     await reorderEnrichItems(
-      reordered.map((e) => e.enrichItemId),
+      reordered.map((e) => e.enrichItemId).filter(Boolean),
       loginInfo,
     );
-
-    mutate(`/api/v2/enrichItem`, reordered);
   }
 
   return (
@@ -171,7 +175,7 @@ export function EnrichPipelineReorderStack({
       <h5>Enrich Pipeline</h5>
 
       <div className={classes.stackColumns}>
-        <div className={classes.grow}>
+        <div className={classes.reorderColumn}>
           <DragDropContext onDragEnd={dragEnd}>
             <Droppable droppableId="droppable">
               {(droppableProvided) => (
@@ -187,11 +191,11 @@ export function EnrichPipelineReorderStack({
 
                   {dsEnrichItems
                     ?.sort((a, b) => a._position - b._position)
-                    .map((item) => (
+                    .map((item, index) => (
                       <Draggable
                         key={item.enrichItemId}
                         draggableId={item.enrichItemId.toString()}
-                        index={item._position}
+                        index={index}
                       >
                         {(draggableProvided) => (
                           <EnrichItemBlock
@@ -221,9 +225,18 @@ export function EnrichPipelineReorderStack({
               )}
             </Droppable>
           </DragDropContext>
+
+          <button
+            className="btn btn-sm btn-primary"
+            type="button"
+            disabled={editing}
+            onClick={onAdd}
+          >
+            <ClayIcon symbol="plus" />
+          </button>
         </div>
 
-        <div className={classes.stackVertArrow}>
+        <div className={classes.stackVertArrow} key={dsEnrichItems.length}>
           <ParentSize>
             {({ width, height }) => (
               <svg width={width} height={height}>
