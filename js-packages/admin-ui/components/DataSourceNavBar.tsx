@@ -72,19 +72,16 @@ export function DataSourceNavBar({
       .filter((job) => ids.includes(job.datasourceId))
       .map((job) => job.jobName);
     const resp = await triggerScheduler(schedulerItemsToRestart, loginInfo);
-    console.log(resp);
     pushToast(`Reindex requested for 1 item`);
   }
 
   async function reindex(datasourceId: number) {
     const resp = await triggerReindex([datasourceId], loginInfo);
-    console.log(resp);
     pushToast(`Full reindex requested for 1 item`);
   }
 
   async function doDelete(datasourceId: number) {
     const resp = await deleteDataSource(datasourceId, loginInfo);
-    console.log(resp);
     pushToast(`DataSource Deleted`);
     push(`/tenants/${tenantId}/dataSources`);
   }

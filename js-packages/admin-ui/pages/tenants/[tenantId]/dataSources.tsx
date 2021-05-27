@@ -518,22 +518,19 @@ function DataSources() {
       .filter((job) => ids.includes(job.datasourceId))
       .map((job) => job.jobName);
     const resp = await triggerScheduler(schedulerItemsToRestart, loginInfo);
-    console.log(resp);
-    pushToast(`Reindex requested for ${ids.length} item`);
+    pushToast(`Reindex requested for ${resp.length} item`);
   }
 
   async function reindex(ids: number[]) {
     const resp = await triggerReindex(ids, loginInfo);
-    console.log(resp);
-    pushToast(`Full reindex requested for ${ids.length} item`);
+    pushToast(`Full reindex requested for ${resp.length} item`);
   }
 
   async function doDelete(ids: number[]) {
     const resp = await Promise.all(
       ids.map((id) => deleteDataSource(id, loginInfo)),
     );
-    console.log(resp);
-    pushToast(`${ids.length} DataSources Deleted`);
+    pushToast(`${resp.length} DataSources Deleted`);
     mutate(`/api/v2/datasource`);
   }
 
