@@ -18,7 +18,7 @@
 import { useCallback, useEffect } from "react";
 import create from "zustand";
 import { devtools } from "zustand/middleware";
-import { useHistory, useLocation, useParams } from "react-router-dom";
+import { useHistory, useParams } from "react-router-dom";
 
 import {
   isSearchQueryEmpty,
@@ -52,7 +52,7 @@ export type StateType = {
   initial: boolean;
   searchQuery: SearchQuery;
   setSearchQuery(query: SearchQuery): void;
-  results: SearchResult<{}> | null;
+  results: SearchResult<unknown> | null;
   range: [number, number] | null;
   loading: boolean;
   doLoadMore(): void;
@@ -252,8 +252,7 @@ export function useLoginInfo() {
 
 export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
   const history = useHistory();
-  const location = useLocation();
-  const query = new URLSearchParams(location.search);
+  const query = new URLSearchParams(window.location.search);
 
   const loginInfo = useStore((s) => s.loginInfo);
   const userInfo = useStore((s) => s.userInfo);
@@ -271,7 +270,7 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
 
   function goToLogin(redirect?: string) {
     history.push(
-      `/login?redirect=${redirect || encodeURIComponent(location.pathname)}`,
+      `/login?redirect=${redirect || encodeURIComponent(window.location.href)}`,
     );
   }
 
@@ -288,9 +287,13 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
       }
     } else if (!canEnter && !isLoginPage) {
       // protected page ad no login, redirect to login
-      goToLogin(redirect);
+      history.push(
+        `/login?redirect=${
+          redirect || encodeURIComponent(window.location.href)
+        }`,
+      );
     }
-  }, [canEnter, loginValid, isLoginPage]);
+  }, [canEnter, loginValid, isLoginPage, history, redirect]);
 
   //
   // Refresh loop logic
@@ -325,7 +328,7 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
     return () => {
       if (refreshTimeout) clearTimeout(refreshTimeout);
     };
-  }, []);
+  }, [invalidateLogin, setLoginInfo]);
 
   return { loginInfo, userInfo, canEnter, isGuest, goToLogin, loginValid };
 }

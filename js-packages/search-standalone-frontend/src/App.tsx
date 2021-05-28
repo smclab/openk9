@@ -32,7 +32,7 @@ function App() {
   const loadInitial = useStore((s) => s.loadInitial);
   useLayoutEffect(() => {
     loadInitial();
-  }, []);
+  }, [loadInitial]);
 
   return (
     <ThemeProvider theme={defaultTheme}>
