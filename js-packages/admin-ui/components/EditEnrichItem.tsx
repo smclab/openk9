@@ -152,7 +152,7 @@ export function EditEnrichItem({
         )}
       </div>
       <div className={classes.editElement}>
-        <strong>Driver Service Name:</strong>
+        <strong>Service Name:</strong>
         <ClayAutocomplete>
           <ClayAutocomplete.Input
             onChange={(e) =>

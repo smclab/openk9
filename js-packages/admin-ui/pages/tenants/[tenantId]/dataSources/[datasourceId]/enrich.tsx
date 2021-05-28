@@ -63,6 +63,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
   grow: {
     flexGrow: 1,
+    maxWidth: "694px",
   },
   detailTitle: {
     display: "flex",
