@@ -72,18 +72,33 @@ export function DataSourceNavBar({
       .filter((job) => ids.includes(job.datasourceId))
       .map((job) => job.jobName);
     const resp = await triggerScheduler(schedulerItemsToRestart, loginInfo);
-    pushToast(`Reindex requested for 1 item`);
+    if (!resp || !resp.errors || resp.errors.length == 0) {
+      pushToast(`Reindex requested for 1 item`);
+    } else {
+      pushToast(`Failed. Check console for more info.`);
+      console.warn(resp);
+    }
   }
 
   async function reindex(datasourceId: number) {
     const resp = await triggerReindex([datasourceId], loginInfo);
-    pushToast(`Full reindex requested for 1 item`);
+    if (resp.length === 1) {
+      pushToast(`Full reindex requested for 1 item`);
+    } else {
+      pushToast(`Failed. Check console for more info.`);
+      console.warn(resp);
+    }
   }
 
   async function doDelete(datasourceId: number) {
     const resp = await deleteDataSource(datasourceId, loginInfo);
-    pushToast(`DataSource Deleted`);
-    push(`/tenants/${tenantId}/dataSources`);
+    if (resp.length === 1) {
+      pushToast(`DataSource Deleted`);
+      push(`/tenants/${tenantId}/dataSources`);
+    } else {
+      pushToast(`Failed. Check console for more info.`);
+      console.warn(resp);
+    }
   }
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
