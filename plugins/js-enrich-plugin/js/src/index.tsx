@@ -19,6 +19,10 @@ import React from "react";
 import { Plugin } from "@openk9/http-api";
 import { SettingsIcon } from "@openk9/search-ui-components";
 
+import AceEditor from "react-ace";
+import "ace-builds/src-noconflict/mode-javascript";
+import "ace-builds/src-noconflict/theme-github";
+
 export const plugin: Plugin<unknown> = {
   pluginId: "js-enrich-script",
   displayName: "JS Enrich Script",
@@ -28,6 +32,7 @@ export const plugin: Plugin<unknown> = {
       displayName: "JS Script",
       serviceName: "io.openk9.plugins.js.enrichprocessor.JsEnrichProcessor",
       iconRenderer,
+      settingsRenderer,
       initialSettings: `{"code": ""}`,
     },
   ],
@@ -35,4 +40,25 @@ export const plugin: Plugin<unknown> = {
 
 function iconRenderer(props: any) {
   return <SettingsIcon {...props} />;
+}
+
+function settingsRenderer({
+  currentSettings,
+  setCurrentSettings,
+}: {
+  currentSettings: string;
+  setCurrentSettings(a: string): void;
+}) {
+  return (
+    <AceEditor
+      mode="javascript"
+      theme="github"
+      width="100%"
+      height="550px"
+      value={JSON.parse(currentSettings).code}
+      onChange={(code) => setCurrentSettings(JSON.stringify({ code }))}
+      name="JS_EDITOR"
+      editorProps={{ $blockScrolling: true }}
+    />
+  );
 }

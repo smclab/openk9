@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@clayui/icon": "^3.1.0",
+    "ace-builds": "^1.4.12",
     "clsx": "^1.1.0",
     "react": "^17.0.0",
+    "react-ace": "^9.4.0",
     "react-jss": "^10.4.0"
   },
   "devDependencies": {
