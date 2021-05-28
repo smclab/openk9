@@ -258,6 +258,11 @@ services:
             - "traefik.http.routers.logs.middlewares=logs-strip@docker"
             - "traefik.http.routers.traefik.middlewares=traefik-compress"
             - "traefik.http.middlewares.traefik-compress.compress=true"
+    js-scripts-executor:
+        image: smclab/openk9-js-scripts-executor:latest
+        container_name: js-scripts-executor
+        ports:
+            - 3000:3000
     ner-en:
         image: flair_flair-ner-relations:latest
         container_name: ner-en

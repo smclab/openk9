@@ -48,6 +48,10 @@ Build Tagged JS Docker Images:
     - docker build -t admin-logs-service:${CI_COMMIT_REF_NAME} -f js-packages/admin-logs-service/Dockerfile .
     - docker tag admin-logs-service:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/admin-logs-service:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/admin-logs-service:${CI_COMMIT_REF_NAME}
+    
+    - docker build -t js-scripts-executor:${CI_COMMIT_REF_NAME} -f js-packages/js-scripts-executor/Dockerfile .
+    - docker tag js-scripts-executor:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/js-scripts-executor:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/js-scripts-executor:${CI_COMMIT_REF_NAME}
   allow_failure: false
 
 Build Latest JS Docker Images:
@@ -76,4 +80,8 @@ Build Latest JS Docker Images:
     - docker build -t admin-logs-service:latest -f js-packages/admin-logs-service/Dockerfile .
     - docker tag admin-logs-service:latest $CI_REGISTRY_NAME/openk9/admin-logs-service:latest
     - docker push $CI_REGISTRY_NAME/openk9/admin-logs-service:latest
+    
+    - docker build -t js-scripts-executor:latest -f js-packages/js-scripts-executor/Dockerfile .
+    - docker tag js-scripts-executor:latest $CI_REGISTRY_NAME/openk9/js-scripts-executor:latest
+    - docker push $CI_REGISTRY_NAME/openk9/js-scripts-executor:latest
   allow_failure: false
