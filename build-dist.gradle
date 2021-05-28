@@ -356,6 +356,7 @@ dependencies {
 	distPluginDriverManager project(path: ':plugins:liferay', transitive: false)
 	distPluginDriverManager project(path: ':plugins:web', transitive: false)
 	distPluginDriverManager project(path: ':plugins:applications', transitive: false)
+	distPluginDriverManager project(path: ':plugins:js-enrich-plugin', transitive: false)
 
 	// felix dependency manager
 
