@@ -36,6 +36,7 @@ import io.openk9.model.EnrichItem;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -205,7 +206,9 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 			.publish(messageRequest)
 			.then(
 				_entityManagerResponseConsumer
-					.stream(1, messageRequest.getRequest().getIngestionId()));
+					.stream(1, messageRequest.getRequest().getIngestionId())
+					.timeout(Duration.ofSeconds(30))
+			);
 
 	}
 
