@@ -1,0 +1,9 @@
+dependencies {
+	compile project(":osgi:plugin:plugin-api")
+	compile project(":osgi:common:common-api")
+	compile project(":osgi:search:search-enrich-api")
+	compile project(":osgi:search:search-enrich-mapper-api")
+	compile project(":osgi:plugin-driver-manager:plugin-driver-manager-api")
+}
+
+apply from: "$rootDir/build-js.gradle"

@@ -15,22 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.core.api.constant;
+import React from "react";
+import { Plugin } from "@openk9/http-api";
+import { SettingsIcon } from "@openk9/search-ui-components";
 
-public interface Constants {
-	String DATASOURCE_ID = "datasourceId";
-	String CONTENT_ID = "contentId";
-	String TENANT_ID = "tenantId";
-	String DATASOURCE_PAYLOAD = "datasourcePayload";
-	String CONTENT = "content";
-	String CODE = "code";
-	String CONFIDENCE = "confidence";
-	String RAW_CONTENT = "rawContent";
-	String INGESTION_ID = "ingestionId";
-	String ENTITIES = "entities";
-	String RELATIONS = "relations";
-	String TYPE = "type";
-	String NAME = "name";
-	String ID = "id";
-	String CONTEXT = "context";
+export const plugin: Plugin<unknown> = {
+  pluginId: "js-enrich-script",
+  displayName: "JS Enrich Script",
+  pluginServices: [
+    {
+      type: "ENRICH",
+      displayName: "JS Script",
+      serviceName: "io.openk9.plugins.js.enrichprocessor.JsEnrichProcessor",
+      iconRenderer,
+      initialSettings: `{"code": ""}`,
+    },
+  ],
+};
+
+function iconRenderer(props: any) {
+  return <SettingsIcon {...props} />;
 }
