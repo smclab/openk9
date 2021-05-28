@@ -155,7 +155,7 @@ jobs:
           tags: smclab/openk9-admin-logs-service:${{ steps.prep.outputs.version }}
       -
         name: Build and push JS Scripts Executor image
-        id: docker_build_admin_logs
+        id: docker_build_js_scripts_executor
         uses: docker/build-push-action@v2
         with:
           file: js-packages/js-scripts-executor/Dockerfile
