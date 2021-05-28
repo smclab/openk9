@@ -17,10 +17,9 @@
 
 import { createUseStyles } from "react-jss";
 import ClayAlert from "@clayui/alert";
-import { ThemeType } from "@openk9/search-ui-components";
 import { useToast } from "../pages/_app";
 
-const useStyles = createUseStyles((theme: ThemeType) => ({
+const useStyles = createUseStyles(() => ({
   alert: {
     "& .alert-autofit-row": {
       alignItems: "center",

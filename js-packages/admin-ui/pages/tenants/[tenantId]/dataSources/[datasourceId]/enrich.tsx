@@ -20,7 +20,7 @@ import useSWR, { mutate } from "swr";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import ClayIcon from "@clayui/icon";
-import { firstOrString, ThemeType } from "@openk9/search-ui-components";
+import { firstOrString, noop, ThemeType } from "@openk9/search-ui-components";
 import {
   changeEnrichItem,
   DataSourceInfo,
@@ -98,7 +98,7 @@ function NoEnrichPipelineMessage({
       <h2>
         {datasource.datasourceId}: {datasource.name}
       </h2>
-      <p>This datasource currently doesn't have an enrich pipeline.</p>
+      <p>This datasource currently doesn&apos;t have an enrich pipeline.</p>
       <button className="btn btn-primary" onClick={createEnrichPipeline}>
         Create a new one
       </button>
@@ -132,8 +132,10 @@ function EnrichItemShow({
       const newEnrichItem: Partial<EnrichItem> = {};
 
       Object.keys(prev).forEach((key) => {
-        if (prev[key as keyof EnrichItem] !== editing[key as keyof EnrichItem])
-          (newEnrichItem as any)[key] = editing[key as keyof EnrichItem];
+        const k = key as keyof EnrichItem;
+        if (prev[k] !== editing[k]) {
+          (newEnrichItem[k] as EnrichItem[typeof k]) = editing[k];
+        }
       });
 
       if (Object.entries(newEnrichItem).length !== 0) {
@@ -330,7 +332,7 @@ function Inner({ datasourceId }: { datasourceId: number }) {
             <EnrichPipelineReorderStack
               dsEnrichItems={dsEnrichItems}
               selectedEnrichId={selectedEnrichId}
-              setSelectedEnrichId={editing ? () => {} : setSelectedEnrichId}
+              setSelectedEnrichId={editing ? noop : setSelectedEnrichId}
               pluginInfos={pluginInfos}
               onAdd={handleAdd}
               editing={Boolean(editing)}

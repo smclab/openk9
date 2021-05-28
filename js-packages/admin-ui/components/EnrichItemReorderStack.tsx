@@ -145,11 +145,14 @@ function EnrichItemBlock({
 
   return (
     <div
+      role="button"
       className={clsx(
         classes.enrichItem,
         selected && classes.enrichItemSelected,
       )}
       onClick={onSelect}
+      onKeyDown={onSelect}
+      tabIndex={item._position}
       style={draggableProvided.draggableProps.style}
       ref={draggableProvided.innerRef}
       {...draggableProvided.draggableProps}
@@ -167,6 +170,7 @@ function EnrichItemBlock({
     </div>
   );
 }
+
 export function EnrichPipelineReorderStack({
   dsEnrichItems,
   selectedEnrichId,

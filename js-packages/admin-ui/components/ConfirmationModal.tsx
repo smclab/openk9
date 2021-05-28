@@ -50,10 +50,10 @@ export function ConfirmationModal({
     },
   });
 
-  const onConfirm = React.useCallback(() => {
+  function onConfirm() {
     onConfirmModal();
     onClose();
-  }, []);
+  }
 
   return (
     <ClayModal observer={observer} size="lg">

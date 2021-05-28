@@ -42,7 +42,7 @@ export type StateType = {
 
 export const useStore = create<StateType>(
   persist(
-    devtools((set, get) => ({
+    devtools((set) => ({
       sidebarOpen: true,
       toggleSidebar() {
         set((state) => ({ ...state, sidebarOpen: !state.sidebarOpen }));
@@ -97,7 +97,7 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
         `/login?redirect=${redirect || encodeURIComponent(location.href)}`,
       );
     }
-  }, [loginValid, isLoginPage]);
+  }, [loginValid, isLoginPage, router, redirect]);
 
   //
   // Refresh loop logic
@@ -132,7 +132,7 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
     return () => {
       if (refreshTimeout) clearTimeout(refreshTimeout);
     };
-  }, []);
+  }, [invalidateLogin, setLoginInfo]);
 
   return { loginInfo, userInfo, loginValid };
 }

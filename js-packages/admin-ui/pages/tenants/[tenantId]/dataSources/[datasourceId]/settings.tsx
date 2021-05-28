@@ -61,11 +61,9 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 }));
 
 function Inner({
-  tenantId,
   datasourceId,
   onSaveDataSource,
 }: {
-  tenantId: number;
   datasourceId: number;
   onSaveDataSource(
     datasourceId: number,
@@ -195,12 +193,9 @@ function DSSettings() {
     const newDatasource: Partial<DataSourceInfo> = {};
 
     Object.keys(prevDataSource).forEach((key) => {
-      if (
-        prevDataSource[key as keyof DataSourceInfo] !==
-        editedDatasource[key as keyof DataSourceInfo]
-      ) {
-        (newDatasource as any)[key] =
-          editedDatasource[key as keyof DataSourceInfo];
+      const k = key as keyof DataSourceInfo;
+      if (prevDataSource[k] !== editedDatasource[k]) {
+        (newDatasource[k] as DataSourceInfo[typeof k]) = editedDatasource[k];
       }
     });
 
@@ -236,7 +231,6 @@ function DSSettings() {
       >
         <div className={classes.root}>
           <Inner
-            tenantId={parseInt(tenantId)}
             datasourceId={datasourceInt}
             onSaveDataSource={saveDataSource}
           />

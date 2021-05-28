@@ -16,12 +16,11 @@
  */
 
 import ClayForm, { ClayInput } from "@clayui/form";
-import { ThemeType } from "@openk9/search-ui-components";
 import clsx from "clsx";
 import React from "react";
 import { createUseStyles } from "react-jss";
 
-const useStyles = createUseStyles((theme: ThemeType) => ({
+const useStyles = createUseStyles(() => ({
   root: {
     display: "flex",
     flexWrap: "wrap",

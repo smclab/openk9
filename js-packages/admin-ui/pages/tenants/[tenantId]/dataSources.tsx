@@ -40,7 +40,6 @@ import {
   getPlugins,
   getSchedulerItems,
   Plugin,
-  PluginInfo,
   toggleDataSource,
   triggerReindex,
   triggerScheduler,
@@ -87,7 +86,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 function DSItemRender({
   ds,
   plugin,
-  pluginInfo,
   tenantId,
   selected,
   onSelect,
@@ -97,8 +95,7 @@ function DSItemRender({
   setIdToDelete,
 }: {
   ds: DataSourceInfo;
-  plugin?: Plugin<any>;
-  pluginInfo?: PluginInfo;
+  plugin?: Plugin<unknown>;
   tenantId: string;
   selected: boolean;
   onSelect(): void;
@@ -410,7 +407,6 @@ function Inside({
           <DSItemRender
             ds={ds}
             plugin={plugin}
-            pluginInfo={pluginInfo}
             key={ds.datasourceId}
             tenantId={tenantId}
             selected={selectedIds.includes(ds.datasourceId)}

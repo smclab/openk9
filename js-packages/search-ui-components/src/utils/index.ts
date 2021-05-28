@@ -32,6 +32,8 @@ export function arrOrEncapsulate(arr: string[] | string) {
   else return arr;
 }
 
+export const noop = () => {};
+
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 let opIdCounter = 0;
