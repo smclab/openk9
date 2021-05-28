@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import clsx from "clsx";
 import { format } from "date-fns";
@@ -29,7 +29,6 @@ import { pluginLoader, ThemeType } from "@openk9/search-ui-components";
 import {
   DataSourceInfo,
   DataSourcePlugin,
-  getDriverServiceNames,
   getPlugins,
   getServices,
   Plugin,
@@ -64,9 +63,7 @@ function Inner<T>({
   onChange,
   onAbort,
   onSave,
-  pluginInfos,
   plugins,
-  driverServiceNames,
 }: {
   editingDataSource: DataSourceInfo;
   onChange: React.Dispatch<React.SetStateAction<T>>;
@@ -74,17 +71,20 @@ function Inner<T>({
   onSave(): void;
   pluginInfos: PluginInfo[];
   plugins: Plugin<unknown>[];
-  driverServiceNames: string[];
 }) {
   const classes = useStyles();
 
-  const pluginServices = getServices(plugins);
+  const pluginServices = useMemo(
+    () =>
+      getServices(plugins).filter(
+        (p) => p.type === "DATASOURCE",
+      ) as DataSourcePlugin[],
+    [plugins],
+  );
 
   const dataSourcePlugin = pluginServices.find(
-    (ps) =>
-      ps.type === "DATASOURCE" &&
-      ps.driverServiceName === editingDataSource.driverServiceName,
-  ) as DataSourcePlugin | null;
+    (ps) => ps.driverServiceName === editingDataSource.driverServiceName,
+  );
 
   const SettingsRenderer =
     dataSourcePlugin?.settingsRenderer ||
@@ -113,20 +113,24 @@ function Inner<T>({
 
   const [dsSettings, setDsSettings] = useState<{ [dsn: string]: string }>({});
   useLayoutEffect(() => {
-    const result: { [dsn: string]: string } = {};
-    result[editingDataSource.driverServiceName] = editingDataSource.jsonConfig;
-
-    driverServiceNames?.forEach((dsn) => {
-      const ps = pluginServices.find(
-        (ps) => ps.type === "DATASOURCE" && ps.driverServiceName === dsn,
-      ) as DataSourcePlugin | null;
-
-      if (ps && !result[dsn]) {
-        result[dsn] = ps.initialSettings;
+    setDsSettings((prev) => {
+      const result: { [ein: string]: string } = { ...prev };
+      pluginServices.forEach((ps) => {
+        if (!result[ps.driverServiceName]) {
+          result[ps.driverServiceName] = ps.initialSettings;
+        }
+      });
+      if (editingDataSource.driverServiceName) {
+        result[editingDataSource.driverServiceName] =
+          editingDataSource.jsonConfig;
       }
+      return result;
     });
-    setDsSettings(result);
-  }, [driverServiceNames, pluginInfos]);
+  }, [
+    pluginServices,
+    editingDataSource.driverServiceName,
+    editingDataSource.jsonConfig,
+  ]);
 
   return (
     <>
@@ -182,26 +186,26 @@ function Inner<T>({
           />
           <ClayAutocomplete.DropDown active={activeAutocomplete}>
             <ClayDropDown.ItemList>
-              {driverServiceNames &&
-                driverServiceNames.map((dsn) => {
-                  const dataSourcePlugin = pluginServices.find(
-                    (ps) =>
-                      ps.type === "DATASOURCE" && ps.driverServiceName === dsn,
-                  ) as DataSourcePlugin | null;
-                  const displayName = dataSourcePlugin?.displayName;
-                  const Icon = dataSourcePlugin?.iconRenderer;
-                  return (
-                    <AutocompleteItemIcon
-                      key={dsn}
-                      icon={Icon && <Icon size={16} />}
-                      match={dsn + " " + displayName}
-                      value={displayName || dsn}
-                      onClick={() =>
-                        onChange((ds) => ({ ...ds, driverServiceName: dsn }))
-                      }
-                    />
-                  );
-                })}
+              {pluginServices.map((dataSourcePlugin) => {
+                const dsn = dataSourcePlugin.driverServiceName;
+                const displayName = dataSourcePlugin.displayName;
+                const Icon = dataSourcePlugin.iconRenderer;
+                return (
+                  <AutocompleteItemIcon
+                    key={dsn}
+                    icon={Icon && <Icon size={16} />}
+                    match={dsn + " " + displayName}
+                    value={displayName || dsn}
+                    onClick={() =>
+                      onChange((ds) => ({
+                        ...ds,
+                        jsonConfig: dsSettings[dsn],
+                        driverServiceName: dsn,
+                      }))
+                    }
+                  />
+                );
+              })}
             </ClayDropDown.ItemList>
           </ClayAutocomplete.DropDown>
         </ClayAutocomplete>
@@ -241,7 +245,7 @@ function Inner<T>({
       <div className={classes.editElement}>
         {SettingsRenderer && SettingsRenderer != null && (
           <SettingsRenderer
-            currentSettings={dsSettings[editingDataSource.driverServiceName]}
+            currentSettings={editingDataSource.jsonConfig}
             setCurrentSettings={(e) => {
               onChange((ds) => ({ ...ds, jsonConfig: e }));
               setDsSettings((cfg) => ({
@@ -281,11 +285,6 @@ export function EditDataSource<
 }) {
   const loginInfo = useLoginInfo();
 
-  const { data: driverServiceNames } = useSWR(
-    `/api/v1/driver-service-names`,
-    () => getDriverServiceNames(loginInfo),
-  );
-
   const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
     getPlugins(loginInfo),
   );
@@ -293,16 +292,9 @@ export function EditDataSource<
     pluginLoader.read(pi.pluginId),
   );
 
-  if (!pluginInfos || !driverServiceNames) {
+  if (!pluginInfos) {
     return <span className="loading-animation" />;
   }
 
-  return (
-    <Inner
-      pluginInfos={pluginInfos}
-      plugins={plugins}
-      driverServiceNames={driverServiceNames}
-      {...props}
-    />
-  );
+  return <Inner pluginInfos={pluginInfos} plugins={plugins} {...props} />;
 }

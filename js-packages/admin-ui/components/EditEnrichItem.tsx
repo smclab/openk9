@@ -87,24 +87,22 @@ export function EditEnrichItem({
       getServices(plugins).filter((p) => p.type === "ENRICH") as EnrichPlugin[],
     [plugins],
   );
-  const serviceNames = useMemo(
-    () => pluginServices.map((ps) => ps.serviceName),
-    [pluginServices],
-  );
 
   const [eiSettings, setEiSettings] = useState<{ [ein: string]: string }>({});
   useLayoutEffect(() => {
-    const result: { [ein: string]: string } = {};
-    result[editing.serviceName] = editing.jsonConfig;
-
-    serviceNames?.forEach((ein) => {
-      const ps = pluginServices.find((ps) => ps.serviceName === ein);
-      if (ps && !result[ein]) {
-        result[ein] = ps.initialSettings;
+    setEiSettings((prev) => {
+      const result: { [ein: string]: string } = { ...prev };
+      pluginServices.forEach((ps) => {
+        if (!result[ps.serviceName]) {
+          result[ps.serviceName] = ps.initialSettings;
+        }
+      });
+      if (editing.serviceName) {
+        result[editing.serviceName] = editing.jsonConfig;
       }
+      return result;
     });
-    setEiSettings(result);
-  }, [serviceNames, pluginInfos]);
+  }, [pluginServices, editing.serviceName, editing.jsonConfig]);
 
   const currentPlugin = pluginServices.find(
     (ps) => ps.serviceName === editing?.serviceName,
@@ -171,29 +169,26 @@ export function EditEnrichItem({
           />
           <ClayAutocomplete.DropDown active={activeAutocomplete}>
             <ClayDropDown.ItemList>
-              {serviceNames &&
-                serviceNames.map((ein) => {
-                  const enrichPlugin = pluginServices.find(
-                    (ps) => ps.serviceName === ein,
-                  );
-                  const displayName = enrichPlugin?.displayName;
-                  const Icon = enrichPlugin?.iconRenderer;
-                  return (
-                    <AutocompleteItemIcon
-                      key={ein}
-                      icon={Icon && <Icon size={16} />}
-                      match={ein + " " + displayName}
-                      value={displayName || ein}
-                      onClick={() =>
-                        setEditing((ei) => ({
-                          ...(ei as EnrichItem),
-                          jsonConfig: eiSettings[ein],
-                          serviceName: ein,
-                        }))
-                      }
-                    />
-                  );
-                })}
+              {pluginServices.map((enrichPlugin) => {
+                const esn = enrichPlugin.serviceName;
+                const displayName = enrichPlugin.displayName;
+                const Icon = enrichPlugin.iconRenderer;
+                return (
+                  <AutocompleteItemIcon
+                    key={esn}
+                    icon={Icon && <Icon size={16} />}
+                    match={esn + " " + displayName}
+                    value={displayName || esn}
+                    onClick={() =>
+                      setEditing((ei) => ({
+                        ...(ei as EnrichItem),
+                        jsonConfig: eiSettings[esn],
+                        serviceName: esn,
+                      }))
+                    }
+                  />
+                );
+              })}
             </ClayDropDown.ItemList>
           </ClayAutocomplete.DropDown>
         </ClayAutocomplete>
