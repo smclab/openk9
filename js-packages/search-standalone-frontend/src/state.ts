@@ -40,26 +40,23 @@ import {
   doLoginRefresh,
   getUserInfo,
 } from "@openk9/http-api";
+import { debounce } from "@openk9/search-ui-components";
 
 const resultsChunkNumber = 8;
-const timeoutDebounce = 500;
-const suggTimeoutDebounce = 300;
+const searchTimeoutDebounce = 800;
+const suggTimeoutDebounce = 400;
 
 const localStorageLoginPersistKey = "openk9-login-info";
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export type StateType = {
   initial: boolean;
   searchQuery: SearchQuery;
   setSearchQuery(query: SearchQuery): void;
-  lastSearch: number;
   results: SearchResult<{}> | null;
   range: [number, number] | null;
   loading: boolean;
   doLoadMore(): void;
   focus: "INPUT" | "RESULTS";
-  suggestionsRequestTime: number;
   suggestions: InputSuggestionToken[];
   setSuggestions(suggestions: InputSuggestionToken[]): void;
   fetchSuggestions(): Promise<void>;
@@ -85,13 +82,11 @@ const { loginInfo, userInfo } = JSON.parse(
 export const useStore = create<StateType>(
   devtools((set, get) => ({
     initial: true,
-    lastSearch: 0,
     results: null,
     searchQuery: [],
     loading: false,
     range: null,
     focus: "INPUT",
-    suggestionsRequestTime: 0,
     suggestions: [],
     focusToken: null,
     selectedResult: null,
@@ -124,36 +119,31 @@ export const useStore = create<StateType>(
         ...state,
         searchQuery,
         initial: false,
+        loading: true,
       }));
-      get().fetchSuggestions();
 
-      const startTime = new Date().getTime();
-      const lastTime = get().lastSearch;
-      set((state) => ({
-        ...state,
-        lastSearch: startTime,
-      }));
-      if (startTime - lastTime <= timeoutDebounce) {
-        await sleep(timeoutDebounce);
-      }
-      if (get().lastSearch <= startTime) {
-        set((state) => ({
-          ...state,
-          loading: true,
-          lastSearch: startTime,
-        }));
+      debounce("suggestionsFetch", get().fetchSuggestions, suggTimeoutDebounce);
+
+      async function performSearch(
+        myOpId: number,
+        opRef: { lastOpId: number },
+      ) {
         const request: SearchRequest = {
           searchQuery,
           range: [0, resultsChunkNumber],
         };
         const results = await doSearch(request, get().loginInfo);
-        set((state) => ({
-          ...state,
-          results: isSearchQueryEmpty(searchQuery) ? null : results,
-          loading: false,
-          range: [0, resultsChunkNumber],
-        }));
+
+        if (myOpId === opRef.lastOpId) {
+          set((state) => ({
+            ...state,
+            results: isSearchQueryEmpty(searchQuery) ? null : results,
+            loading: false,
+            range: [0, resultsChunkNumber],
+          }));
+        }
       }
+      debounce("searchFetch", performSearch, searchTimeoutDebounce);
     },
 
     async doLoadMore() {
@@ -188,18 +178,14 @@ export const useStore = create<StateType>(
       set((state) => ({ ...state, selectedResult }));
     },
 
-    async fetchSuggestions() {
-      const startTime = new Date().getTime();
+    // With optional parameters for debouncing
+    async fetchSuggestions(myOpId?: number, opRef?: { lastOpId: number }) {
       const token =
         get().focusToken !== null && get().searchQuery[get().focusToken || 0];
-      const lastSuggestionsRequestTime = get().suggestionsRequestTime;
-      set((state) => ({ ...state, suggestionsRequestTime: startTime }));
-      if (startTime - lastSuggestionsRequestTime <= suggTimeoutDebounce) {
-        await sleep(suggTimeoutDebounce);
-      }
-      if (token && get().suggestionsRequestTime <= startTime) {
+
+      if (token) {
         const suggestions = await getTokenSuggestions(token, get().loginInfo);
-        if (get().suggestionsRequestTime === startTime) {
+        if (myOpId === undefined || myOpId === opRef?.lastOpId) {
           set((state) => ({ ...state, suggestions }));
         }
       } else {
@@ -283,8 +269,10 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
 
   const redirect = query.get("redirect") || "/";
 
-  function goToLogin() {
-    history.push(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+  function goToLogin(redirect?: string) {
+    history.push(
+      `/login?redirect=${redirect || encodeURIComponent(location.pathname)}`,
+    );
   }
 
   //
@@ -300,7 +288,7 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
       }
     } else if (!canEnter && !isLoginPage) {
       // protected page ad no login, redirect to login
-      goToLogin();
+      goToLogin(redirect);
     }
   }, [canEnter, loginValid, isLoginPage]);
 
