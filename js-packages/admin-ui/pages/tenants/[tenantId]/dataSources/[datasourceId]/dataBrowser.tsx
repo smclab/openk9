@@ -19,9 +19,14 @@ import React from "react";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import useSWR from "swr";
+import { format } from "date-fns";
 
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { getDataSourceInfo } from "@openk9/http-api";
+import {
+  doSearch,
+  GenericResultItem,
+  getDataSourceInfo,
+} from "@openk9/http-api";
 
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 import { Layout } from "../../../../../components/Layout";
@@ -43,7 +48,35 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  resultRow: {
+    paddingBottom: "1em",
+    paddingTop: "1em",
+    "& + &": {
+      borderTop: "1px solid black",
+    },
+  },
 }));
+
+function ResultRenderer({ res }: { res: GenericResultItem }) {
+  const classes = useStyles();
+
+  const { id, type, parsingDate, rawContent, ...rest } = res.source;
+
+  return (
+    <div className={classes.resultRow}>
+      <div>
+        <strong>Id:</strong> {id}
+      </div>
+      <div>
+        <strong>Type:</strong> [{type.join(", ")}]
+      </div>
+      <div>
+        <strong>ParsingDate:</strong> {format(parsingDate, "dd/MM/yyyy, HH:mm")}
+      </div>
+      {JSON.stringify(rest, null, 2)}
+    </div>
+  );
+}
 
 function Inner({
   tenantId,
@@ -56,11 +89,19 @@ function Inner({
 
   const loginInfo = useLoginInfo();
 
-  const {
-    data: datasource,
-    mutate,
-  } = useSWR(`/api/v2/datasource/${datasourceId}`, () =>
-    getDataSourceInfo(datasourceId, loginInfo),
+  const { data: datasource } = useSWR(
+    `/api/v2/datasource/${datasourceId}`,
+    () => getDataSourceInfo(datasourceId, loginInfo),
+  );
+
+  const { data: searchResults } = useSWR(`/api/v1/search`, () =>
+    doSearch(
+      {
+        searchQuery: [{ tokenType: "DATASOURCE", values: [] }],
+        range: [0, 20],
+      },
+      loginInfo,
+    ),
   );
 
   if (!datasource) {
@@ -74,6 +115,12 @@ function Inner({
           {datasource.datasourceId}: {datasource.name}
         </h2>
       </div>
+
+      {!searchResults ? (
+        <span className="loading-animation" />
+      ) : (
+        searchResults.result.map((res) => <ResultRenderer res={res} />)
+      )}
     </>
   );
 }
@@ -86,7 +133,7 @@ function DSDataBrowser() {
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
   const dataSourceInt = parseInt(datasourceId || "NaN");
 
-  const { loginValid, loginInfo } = useLoginCheck();
+  const { loginValid } = useLoginCheck();
   if (!loginValid) return <span className="loading-animation" />;
 
   if (isNaN(dataSourceInt) || !tenantId || !datasourceId) {

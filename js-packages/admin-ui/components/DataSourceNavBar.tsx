@@ -124,7 +124,7 @@ export function DataSourceNavBar({
             </a>
           </Link>
         </ClayNavigationBar.Item>
-        <ClayNavigationBar.Item>
+        {/* <ClayNavigationBar.Item>
           <Link
             href={`/tenants/${tenantId}/dataSources/${datasourceId}/dataBrowser`}
             passHref
@@ -138,7 +138,7 @@ export function DataSourceNavBar({
               Data Browser
             </a>
           </Link>
-        </ClayNavigationBar.Item>
+        </ClayNavigationBar.Item> */}
         <ClayNavigationBar.Item>
           <Link
             href={`/tenants/${tenantId}/dataSources/${datasourceId}/enrich`}
