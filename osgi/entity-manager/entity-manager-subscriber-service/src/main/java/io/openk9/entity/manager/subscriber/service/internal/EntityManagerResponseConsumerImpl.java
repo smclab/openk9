@@ -5,10 +5,16 @@ import io.openk9.entity.manager.pub.sub.api.MessageResponse;
 import io.openk9.entity.manager.subscriber.api.EntityManagerResponseConsumer;
 import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.ReceiverReactor;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+
+import java.time.Duration;
 
 @Component(
 	immediate = true,
@@ -17,35 +23,40 @@ import reactor.core.publisher.Mono;
 public class EntityManagerResponseConsumerImpl
 	implements EntityManagerResponseConsumer {
 
+	@Activate
+	void activate() {
+
+		_sink =
+			Sinks
+				.many()
+				.replay()
+				.limit(Duration.ofSeconds(30));
+
+		_disposable =
+			_receiverReactor
+				.consumeAutoAck(_binding.getQueue())
+				.map(delivery -> _cborFactory.fromCBOR(
+					delivery.getBody(), MessageResponse.class))
+				.doOnNext(_sink::tryEmitNext)
+				.subscribe();
+
+	}
+
+	@Deactivate
+	void deactivate() {
+		_disposable.dispose();
+		_sink.emitComplete(Sinks.EmitFailureHandler.FAIL_FAST);
+	}
+
 	@Override
 	public Mono<MessageResponse> stream(int prefetch, String ingestionId) {
-		return _receiverReactor
-			.consumeManualAck(_binding.getQueue(), prefetch)
-			.flatMap(acknowledgableDelivery -> {
-
-				String ingestionRoutingKey = "ingestion-id." + ingestionId;
-
-				if (acknowledgableDelivery
-					.getEnvelope()
-					.getRoutingKey()
-					.equals(ingestionRoutingKey)) {
-
-					acknowledgableDelivery.ack();
-
-					MessageResponse messageResponse =
-						_cborFactory.fromCBOR(
-							acknowledgableDelivery.getBody(),
-							MessageResponse.class);
-
-					return Mono.just(messageResponse);
-
-				}
-
-				acknowledgableDelivery.nack(true);
-
-				return Mono.empty();
-
-			})
+		return _sink
+			.asFlux()
+			.filter(messageResponse ->
+				messageResponse
+					.getResponse()
+					.getIngestionId()
+					.equals(ingestionId))
 			.next();
 	}
 
@@ -54,8 +65,13 @@ public class EntityManagerResponseConsumerImpl
 		return stream(prefetch, ingestionId);
 	}
 
+	private Disposable _disposable;
+
+	private Sinks.Many<MessageResponse> _sink;
+
 	@Reference
 	private ReceiverReactor _receiverReactor;
+
 	@Reference
 	private CBORFactory _cborFactory;
 
