@@ -24,5 +24,8 @@ public interface ReceiverReactor extends Receiver {
 	Flux<Delivery> consumeAutoAck(String queue);
 	Flux<Delivery> consumeAutoAck(String queue, int prefetch);
 	Flux<Delivery> consumeNoAck(String queue);
+	Flux<Delivery> consumeNoAck(String queue, int prefetch);
+	Flux<AcknowledgableDelivery> consumeManualAck(String queue);
+	Flux<AcknowledgableDelivery> consumeManualAck(String queue, int prefetch);
 
 }

@@ -24,6 +24,7 @@ import io.openk9.ingestion.api.BundleSender;
 import io.openk9.ingestion.api.BundleSenderProvider;
 import io.openk9.ingestion.api.Delivery;
 import io.openk9.json.api.ObjectNode;
+import io.openk9.model.EnrichItem;
 import io.openk9.osgi.util.AutoCloseables;
 import io.openk9.search.enrich.api.EndEnrichProcessor;
 import io.openk9.search.enrich.api.EnrichProcessor;
@@ -134,28 +135,24 @@ class EnrichProcessorServiceTracker
 						BundleReceiver.class,
 						"(queue=" + enrichProcessor.name() + ")");
 
-			_component.add(bundleReceiverDependency);
-
 			ServiceDependency bundleSenderProviderDependency =
 				_dependencyManager.createServiceDependency()
 					.setRequired(true)
 					.setService(BundleSenderProvider.class);
-
-			_component.add(bundleSenderProviderDependency);
 
 			ServiceDependency cborFactoryDependency=
 				_dependencyManager.createServiceDependency()
 					.setRequired(true)
 					.setService(CBORFactory.class);
 
-			_component.add(cborFactoryDependency);
-
 			ServiceDependency endEnrichProcessorDependency =
 				_dependencyManager.createServiceDependency()
 					.setRequired(true)
 					.setService(EndEnrichProcessor.class);
 
-			_component.add(endEnrichProcessorDependency);
+			_component.add(
+				bundleReceiverDependency, bundleSenderProviderDependency,
+				cborFactoryDependency, endEnrichProcessorDependency);
 
 		}
 
@@ -182,9 +179,17 @@ class EnrichProcessorServiceTracker
 						.treeNode(context.getObjectNode())
 						.toObjectNode();
 
+					EnrichItem enrichItem = context
+						.getDatasourceContext()
+						.getEnrichItems()
+						.stream()
+						.filter(e -> e.getServiceName().equals(_enrichProcessor.name()))
+						.findFirst().orElseThrow(IllegalStateException::new);
+
 					return _enrichProcessor.process(
 						objectNode,
 						context.getDatasourceContext(),
+						enrichItem,
 						context.getPluginDriverDTO()
 					)
 						.flatMap(

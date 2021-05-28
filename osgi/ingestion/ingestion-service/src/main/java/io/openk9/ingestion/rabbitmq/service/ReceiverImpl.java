@@ -17,10 +17,12 @@
 
 package io.openk9.ingestion.rabbitmq.service;
 
-import io.openk9.ingestion.rabbitmq.wrapper.DeliveryWrapper;
+import io.openk9.ingestion.api.AcknowledgableDelivery;
 import io.openk9.ingestion.api.Delivery;
 import io.openk9.ingestion.api.Receiver;
 import io.openk9.ingestion.api.ReceiverReactor;
+import io.openk9.ingestion.rabbitmq.wrapper.AcknowledgableDeliveryWrapper;
+import io.openk9.ingestion.rabbitmq.wrapper.DeliveryWrapper;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Flux;
@@ -46,6 +48,22 @@ public class ReceiverImpl implements ReceiverReactor {
 	}
 
 	@Override
+	public Flux<Delivery> consumeNoAck(String queue) {
+		return _senderProvider
+			.get()
+			.consumeNoAck(queue)
+			.map(DeliveryWrapper::new);
+	}
+
+	@Override
+	public Flux<Delivery> consumeNoAck(String queue, int prefetch) {
+		return _senderProvider
+			.get()
+			.consumeNoAck(queue, new ConsumeOptions().qos(prefetch))
+			.map(DeliveryWrapper::new);
+	}
+
+	@Override
 	public Flux<Delivery> consumeAutoAck(String queue, int prefetch) {
 		return _senderProvider
 			.get()
@@ -54,11 +72,20 @@ public class ReceiverImpl implements ReceiverReactor {
 	}
 
 	@Override
-	public Flux<Delivery> consumeNoAck(String queue) {
+	public Flux<AcknowledgableDelivery> consumeManualAck(String queue) {
 		return _senderProvider
 			.get()
-			.consumeNoAck(queue)
-			.map(DeliveryWrapper::new);
+			.consumeManualAck(queue)
+			.map(AcknowledgableDeliveryWrapper::new);
+	}
+
+	@Override
+	public Flux<AcknowledgableDelivery> consumeManualAck(
+		String queue, int prefetch) {
+		return _senderProvider
+			.get()
+			.consumeManualAck(queue, new ConsumeOptions().qos(prefetch))
+			.map(AcknowledgableDeliveryWrapper::new);
 	}
 
 	@Reference(target = "(rabbit=receiver)")

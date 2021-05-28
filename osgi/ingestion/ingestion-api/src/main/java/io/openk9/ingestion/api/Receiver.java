@@ -22,6 +22,10 @@ import org.reactivestreams.Publisher;
 public interface Receiver {
 
 	Publisher<Delivery> consumeAutoAck(String queue);
+	Publisher<Delivery> consumeAutoAck(String queue, int prefetch);
 	Publisher<Delivery> consumeNoAck(String queue);
+	Publisher<Delivery> consumeNoAck(String queue, int prefetch);
+	Publisher<AcknowledgableDelivery> consumeManualAck(String queue);
+	Publisher<AcknowledgableDelivery> consumeManualAck(String queue, int prefetch);
 
 }

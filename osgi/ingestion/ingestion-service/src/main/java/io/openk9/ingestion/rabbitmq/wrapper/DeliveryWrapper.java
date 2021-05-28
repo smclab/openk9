@@ -24,26 +24,26 @@ import io.openk9.ingestion.api.Envelope;
 public class DeliveryWrapper
 	implements Delivery, Delegate<com.rabbitmq.client.Delivery> {
 
-	public DeliveryWrapper(com.rabbitmq.client.Delivery _delegate) {
-		this._delegate = _delegate;
+	public DeliveryWrapper(com.rabbitmq.client.Delivery delegate) {
+		this.delegate = delegate;
 	}
 
 	public Envelope getEnvelope() {
-		return new EnvelopeWrapper(this._delegate.getEnvelope());
+		return new EnvelopeWrapper(this.delegate.getEnvelope());
 	}
 
 	public BasicProperties getProperties() {
-		return new BasicPropertiesWrapper(this._delegate.getProperties());
+		return new BasicPropertiesWrapper(this.delegate.getProperties());
 	}
 
 	public byte[] getBody() {
-		return this._delegate.getBody();
+		return this.delegate.getBody();
 	}
 
 	public com.rabbitmq.client.Delivery getDelegate() {
-		return _delegate;
+		return delegate;
 	}
 
-	private final com.rabbitmq.client.Delivery _delegate;
+	protected final com.rabbitmq.client.Delivery delegate;
 
 }
