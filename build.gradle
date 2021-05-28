@@ -5,7 +5,10 @@
  * Learn more about Gradle by exploring our samples at https://docs.gradle.org/6.7/samples
  */
 
-import aQute.bnd.gradle.Bundle
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 
 buildscript {
 	repositories {
@@ -98,6 +101,9 @@ ext.libraries = [
 		karaf_util: [
 				"org.apache.karaf:org.apache.karaf.util:$karafVersion"
 		],
+		karaf_config: [
+				"org.apache.karaf.config:org.apache.karaf.config.core:$karafVersion"
+		],
 		elasticsearch: 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.9.3',
 		avro:  'org.apache.avro:avro:1.10.0',
 		felix_dependencymanager: 'org.apache.felix:org.apache.felix.dependencymanager:4.6.0',
@@ -160,11 +166,6 @@ subprojects {
 apply from: "build-dist.gradle"
 
 apply plugin: 'com.bmuschko.docker-remote-api'
-
-import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
-import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
 
 if (System.getenv("CI_REGISTRY_NAME") != null) {
 	docker {

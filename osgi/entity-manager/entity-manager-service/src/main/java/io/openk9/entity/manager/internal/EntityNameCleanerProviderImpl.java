@@ -21,8 +21,16 @@ public class EntityNameCleanerProviderImpl
 
 	@Override
 	public EntityNameCleaner getEntityNameCleaner(String entityType) {
-		return _entityNameCleanerMap.getOrDefault(
-			entityType, _defaultEntityNameCleaner);
+
+		EntityNameCleaner entityNameCleaner =
+			_entityNameCleanerMap.get(entityType);
+
+		if (entityNameCleaner == null) {
+			return EntityNameCleaner.DefaultEntityNameCleaner.of(entityType);
+		}
+
+		return entityNameCleaner;
+
 	}
 
 	@Override
