@@ -119,7 +119,9 @@ function Inner({
       {!searchResults ? (
         <span className="loading-animation" />
       ) : (
-        searchResults.result.map((res) => <ResultRenderer res={res} />)
+        searchResults.result.map((res) => (
+          <ResultRenderer key={res.source.id} res={res} />
+        ))
       )}
     </>
   );
