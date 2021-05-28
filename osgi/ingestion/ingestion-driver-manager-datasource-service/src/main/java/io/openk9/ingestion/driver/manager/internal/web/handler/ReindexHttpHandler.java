@@ -34,7 +34,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
@@ -58,25 +57,15 @@ public class ReindexHttpHandler implements HttpHandler {
 	public Publisher<Void> apply(
 		HttpRequest httpRequest, HttpResponse httpResponse) {
 
-		String hostName = HttpUtil.getHostName(httpRequest);
-
 		return _httpResponseWriter.write(
 			httpResponse,
-			_tenantRepository
-				.findByVirtualHost(hostName)
-				.switchIfEmpty(
-					Mono.error(
-						() -> new RuntimeException(
-							"tenant not found for virtualhost: " + hostName)))
-				.flatMapMany(t -> HttpUtil
+				HttpUtil
 					.mapBodyRequest(
 						httpRequest, body -> _jsonFactory.fromJson(
 							body, ReindexRequest.class))
 					.map(ReindexRequest::getDatasourceIds)
 					.flatMapMany(ids -> _datasourceRepository.findBy(
-						Criteria
-							.where("tenantId").is(t.getTenantId())
-							.and("datasourceId").in(ids))
+						Criteria.where("datasourceId").in(ids)
 					))
 				.flatMap(ds -> {
 						ds.setLastIngestionDate(Instant.EPOCH);
