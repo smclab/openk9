@@ -23,6 +23,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.util.tracker.ServiceTracker;
 
 @Component(
@@ -34,9 +35,11 @@ public class ProcessorRegistry {
 	@interface Config {
 		String exchangeName() default "openk9.erich.direct";
 		String exchangeType() default "direct";
+		int prefetch() default 250;
 	}
 
 	@Activate
+	@Modified
 	public void activate(BundleContext bundleContext, Config config) {
 
 		Binding.Exchange exchange = Binding.Exchange.of(
@@ -46,7 +49,8 @@ public class ProcessorRegistry {
 
 		_serviceTracker = new ServiceTracker<>(
 			bundleContext, EnrichProcessor.class,
-			new EnrichProcessorServiceTracker(exchange, bundleContext)
+			new EnrichProcessorServiceTracker(
+				config.prefetch(), exchange, bundleContext)
 		);
 
 		_serviceTracker.open();

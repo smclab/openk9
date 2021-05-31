@@ -273,6 +273,8 @@ class EnrichProcessorServiceTracker
 
 	}
 
+	private final int prefetch;
+
 	private final Binding.Exchange exchange;
 
 	private final BundleContext _bundleContext;

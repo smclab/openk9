@@ -68,39 +68,37 @@ public class JsEnrichProcessor implements EnrichProcessor {
 		return Mono.defer(() -> {
 
 			JsonNode datasourceConfiguration =
-							_jsonFactory.fromJsonToJsonNode(enrichItem.getJsonConfig());
+				_jsonFactory.fromJsonToJsonNode(enrichItem.getJsonConfig());
 
 			if (!datasourceConfiguration.isObject()) {
 				return Mono.error(
-								new RuntimeException(
-												"jsonConfig must be an instance of ObjectNode "
-																+ datasourceConfiguration.toString()));
+					new RuntimeException(
+						"jsonConfig must be an instance of ObjectNode "
+						+ datasourceConfiguration.toString()));
 			}
 
 			ObjectNode request =
-							prepareRequestRawContent(
-											objectNode, datasourceConfiguration.toObjectNode(),
-											context, pluginDriverName);
+				prepareRequestRawContent(
+					objectNode, datasourceConfiguration.toObjectNode(),
+					context, pluginDriverName);
 
-			return Mono.from(
-							_httpClient.request(
-											getMethod(), getPath(), request.toString(), getHeaders()))
-							.map(_jsonFactory::fromJsonToJsonNode)
-							.map(JsonNode::toObjectNode)
-							.map(objectNode::merge);
-
+			return Mono
+				.from(_httpClient.request(getMethod(), getPath(), request.toString(), getHeaders()))
+				.map(_jsonFactory::fromJsonToJsonNode)
+				.map(JsonNode::toObjectNode)
+				.map(objectNode::merge);
 		});
 
 	}
 
 	protected ObjectNode prepareRequestRawContent(
-					ObjectNode objectNode, ObjectNode datasourceConfiguration,
-					DatasourceContext context, PluginDriverDTO pluginDriverDTO) {
+		ObjectNode objectNode, ObjectNode datasourceConfiguration,
+		DatasourceContext context, PluginDriverDTO pluginDriverDTO) {
 
 		JsonNode rawContentNode = objectNode.get(Constants.RAW_CONTENT);
 
 		JsonNode codeNode =
-						datasourceConfiguration.get(Constants.CODE);
+			datasourceConfiguration.get(Constants.CODE);
 
 		ObjectNode request = _jsonFactory.createObjectNode();
 
@@ -127,8 +125,7 @@ public class JsEnrichProcessor implements EnrichProcessor {
 
 		request.put(Constants.TENANT_ID, context.getTenant().getTenantId());
 
-		request.put(
-						Constants.DATASOURCE_ID, context.getDatasource().getDatasourceId());
+		request.put(Constants.DATASOURCE_ID, context.getDatasource().getDatasourceId());
 
 		request.put(Constants.CONTENT_ID, objectNode.get(Constants.CONTENT_ID));
 
@@ -142,9 +139,9 @@ public class JsEnrichProcessor implements EnrichProcessor {
 
 	protected Map<String, Object> getHeaders() {
 		return Arrays
-						.stream(_config.headers())
-						.map(s -> s.split(":"))
-						.collect(Collectors.toMap(e -> e[0], e -> e[1]));
+			.stream(_config.headers())
+			.map(s -> s.split(":"))
+			.collect(Collectors.toMap(e -> e[0], e -> e[1]));
 	}
 
 	protected int getMethod() {
