@@ -22,7 +22,6 @@ import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.BundleReceiver;
 import io.openk9.ingestion.api.BundleSender;
 import io.openk9.ingestion.api.BundleSenderProvider;
-import io.openk9.ingestion.api.Delivery;
 import io.openk9.json.api.ObjectNode;
 import io.openk9.model.EnrichItem;
 import io.openk9.osgi.util.AutoCloseables;
@@ -37,11 +36,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
@@ -167,11 +164,12 @@ class EnrichProcessorServiceTracker
 		public void start() {
 
 			_disposable = m_bundleReceiver
-				.consumeAutoAck(prefetch)
-				.map(Delivery::getBody)
-				.map(bytes -> m_cborFactory.fromCBOR(
-					bytes, EnrichProcessorContext.class))
-				.flatMap(context -> {
+				.consumeManualAck(prefetch)
+				.flatMap(delivery -> {
+
+					EnrichProcessorContext context =
+						m_cborFactory.fromCBOR(
+							delivery.getBody(), EnrichProcessorContext.class);
 
 					List<String> dependencies = context.getDependencies();
 
@@ -234,31 +232,30 @@ class EnrichProcessorServiceTracker
 									Mono.just(m_cborFactory.toCBOR(newContext))
 								);
 
-							});
+							})
+						.doOnNext(unused -> delivery.ack())
+						.onErrorContinue((throwable, o) -> {
+
+							delivery.nack(true);
+
+							if (_log.isErrorEnabled()) {
+
+								if (o != null) {
+									_log.error("error on object: " + o, throwable);
+								}
+								else {
+									_log.error(throwable.getMessage(), throwable);
+								}
+							}
+
+						});
 				})
-				.transform(this::_manageExceptions)
 				.subscribe();
 
 		}
 
 		public void stop() {
 			_disposable.dispose();
-		}
-
-		private <V> Publisher<V> _manageExceptions(Publisher<V> objectNodeFlux) {
-			return Flux.from(objectNodeFlux).onErrorContinue((throwable, o) -> {
-
-				if (_log.isErrorEnabled()) {
-
-					if (o != null) {
-						_log.error("error on object: " + o, throwable);
-					}
-					else {
-						_log.error(throwable.getMessage(), throwable);
-					}
-				}
-
-			});
 		}
 
 		private volatile BundleSenderProvider m_bundleSenderProvider;

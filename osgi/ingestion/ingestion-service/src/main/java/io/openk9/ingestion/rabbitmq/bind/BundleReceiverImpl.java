@@ -17,6 +17,7 @@
 
 package io.openk9.ingestion.rabbitmq.bind;
 
+import io.openk9.ingestion.api.AcknowledgableDelivery;
 import io.openk9.ingestion.api.BundleReceiver;
 import io.openk9.ingestion.api.Delivery;
 import io.openk9.ingestion.api.ReceiverReactor;
@@ -43,6 +44,16 @@ public class BundleReceiverImpl implements BundleReceiver {
 	@Override
 	public Flux<Delivery> consumeNoAck() {
 		return _receiverReactor.consumeNoAck(_queue);
+	}
+
+	@Override
+	public Flux<AcknowledgableDelivery> consumeManualAck() {
+		return _receiverReactor.consumeManualAck(_queue);
+	}
+
+	@Override
+	public Flux<AcknowledgableDelivery> consumeManualAck(int prefetch) {
+		return _receiverReactor.consumeManualAck(_queue, prefetch);
 	}
 
 	private final String _queue;
