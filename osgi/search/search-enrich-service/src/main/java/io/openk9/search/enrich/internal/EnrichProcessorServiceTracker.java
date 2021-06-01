@@ -171,7 +171,7 @@ class EnrichProcessorServiceTracker
 				.map(Delivery::getBody)
 				.map(bytes -> m_cborFactory.fromCBOR(
 					bytes, EnrichProcessorContext.class))
-				.concatMap(context -> {
+				.flatMap(context -> {
 
 					List<String> dependencies = context.getDependencies();
 
