@@ -17,6 +17,7 @@ import io.openk9.index.writer.entity.client.api.IndexWriterEntityClient;
 import io.openk9.index.writer.entity.model.DocumentEntityRequest;
 import io.openk9.index.writer.entity.model.DocumentEntityResponse;
 import io.openk9.relationship.graph.api.client.GraphClient;
+import org.apache.commons.lang3.time.StopWatch;
 import org.neo4j.cypherdsl.core.AliasedExpression;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Functions;
@@ -82,6 +83,28 @@ public class GetOrAddEntitiesConsumer {
 			.subscribe();
 	}
 
+
+	private <T> Mono<T> _stopWatch(String message, Mono<T> request) {
+
+		if (_log.isDebugEnabled()) {
+			return Mono.usingWhen(
+				Mono.fromSupplier(() -> {
+					StopWatch stopWatch = new StopWatch(message);
+					stopWatch.start();
+					return stopWatch;
+				}),
+				ignore -> request,
+				stopWatch ->
+					Mono.fromRunnable(() -> {
+						_log.debug(stopWatch.toString());
+					})
+			);
+		}
+
+		return request;
+
+	}
+
 	@Modified
 	void modified(Config config) {
 		activate(config);
@@ -107,11 +130,14 @@ public class GetOrAddEntitiesConsumer {
 
 						return Mono.zip(
 							Mono.just(er),
-							_indexWriterEntityClient
-								.getEntities(tenantId, stringObjectMap)
-								.map(candidates ->
-									cleanCandidates(er, candidates)
-								),
+							_stopWatch(
+								"getEntities",
+								_indexWriterEntityClient
+									.getEntities(tenantId, stringObjectMap)
+									.map(candidates ->
+										cleanCandidates(er, candidates)
+									)
+							),
 							Map::entry);
 					}
 				)
@@ -143,10 +169,11 @@ public class GetOrAddEntitiesConsumer {
 				}
 
 				entityRequestDocumentEntityMono =
-					_disambiguate(
-						entry.getValue(),
-						entityRequestListWithoutCurrentEntityRequest,
-						tenantId, currentEntityRequest);
+					_stopWatch(
+						"disambiguate", _disambiguate(
+							entry.getValue(),
+							entityRequestListWithoutCurrentEntityRequest,
+							tenantId, currentEntityRequest));
 
 				result.add(entityRequestDocumentEntityMono);
 
@@ -156,120 +183,120 @@ public class GetOrAddEntitiesConsumer {
 
 		})
 			.collectMap(Tuple2::getT1, Tuple2::getT2)
-			.flatMap(map -> {
+			.flatMap(map ->
+				_stopWatch("write-relations-neo4j", Mono.defer(() -> {
+					List<Statement> statementList = new ArrayList<>();
 
-				List<Statement> statementList = new ArrayList<>();
+					for (Map.Entry<EntityRequest, DocumentEntityResponse> entrySet : map.entrySet()) {
 
-				for (Map.Entry<EntityRequest, DocumentEntityResponse> entrySet : map.entrySet()) {
+						List<RelationRequest> relations =
+							entrySet.getKey().getRelations();
 
-					List<RelationRequest> relations =
-						entrySet.getKey().getRelations();
+						if (relations == null || relations.isEmpty()) {
+							continue;
+						}
 
-					if (relations == null || relations.isEmpty()) {
-						continue;
+						DocumentEntityResponse currentEntity = entrySet.getValue();
+
+						List<Tuple2<String, DocumentEntityResponse>> entityRelations =
+							map
+								.entrySet()
+								.stream()
+								.flatMap(entry -> {
+
+									for (RelationRequest relation : relations) {
+										if (entry.getKey().getTmpId() == relation.getTo()) {
+											return Stream.of(
+												Tuples.of(
+													relation.getName(),
+													entry.getValue())
+											);
+										}
+									}
+
+									return Stream.empty();
+
+								})
+								.collect(Collectors.toList());
+
+						Node currentEntityNode =
+							Cypher
+								.node(currentEntity.getType())
+								.named("a");
+
+						List<Statement> currentStatementList =
+							entityRelations
+								.stream()
+								.map(t2 -> {
+
+									DocumentEntityResponse entityRelation = t2.getT2();
+
+									Node entityRelationNode =
+										Cypher
+											.node(entityRelation.getType())
+											.named("b");
+
+									return Cypher
+										.match(currentEntityNode, entityRelationNode)
+										.where(
+											Functions
+												.id(currentEntityNode)
+												.eq(literalOf(currentEntity.getId()))
+												.and(
+													Functions
+														.id(entityRelationNode)
+														.eq(literalOf(
+															entityRelation.getId()))
+												)
+										)
+										.merge(
+											currentEntityNode
+												.relationshipTo(
+													entityRelationNode, t2.getT1())
+										)
+										.build();
+								})
+								.collect(Collectors.toList());
+
+						statementList.addAll(currentStatementList);
+
 					}
 
-					DocumentEntityResponse currentEntity = entrySet.getValue();
-
-					List<Tuple2<String, DocumentEntityResponse>> entityRelations =
+					List<Response> response =
 						map
 							.entrySet()
 							.stream()
-							.flatMap(entry -> {
-
-								for (RelationRequest relation : relations) {
-									if (entry.getKey().getTmpId() == relation.getTo()) {
-										return Stream.of(
-											Tuples.of(
-												relation.getName(),
-												entry.getValue())
-										);
-									}
-								}
-
-								return Stream.empty();
-
-							})
-							.collect(Collectors.toList());
-
-					Node currentEntityNode =
-						Cypher
-							.node(currentEntity.getType())
-							.named("a");
-
-					List<Statement> currentStatementList =
-						entityRelations
-							.stream()
-							.map(t2 -> {
-
-								DocumentEntityResponse entityRelation = t2.getT2();
-
-								Node entityRelationNode =
-									Cypher
-										.node(entityRelation.getType())
-										.named("b");
-
-								return Cypher
-									.match(currentEntityNode, entityRelationNode)
-									.where(
-										Functions
-											.id(currentEntityNode)
-											.eq(literalOf(currentEntity.getId()))
-											.and(
-												Functions
-													.id(entityRelationNode)
-													.eq(literalOf(
-														entityRelation.getId()))
-											)
-									)
-									.merge(
-										currentEntityNode
-											.relationshipTo(
-												entityRelationNode, t2.getT1())
-									)
-									.build();
-							})
-							.collect(Collectors.toList());
-
-					statementList.addAll(currentStatementList);
-
-				}
-
-				List<Response> response =
-					map
-						.entrySet()
-						.stream()
-						.map(t2 -> Response
-							.builder()
-							.entity(
-								Entity
-									.builder()
-									.name(t2.getValue().getName())
-									.id(t2.getValue().getId())
-									.tenantId(t2.getValue().getTenantId())
-									.type(t2.getValue().getType())
-									.build()
+							.map(t2 -> Response
+								.builder()
+								.entity(
+									Entity
+										.builder()
+										.name(t2.getValue().getName())
+										.id(t2.getValue().getId())
+										.tenantId(t2.getValue().getTenantId())
+										.type(t2.getValue().getType())
+										.build()
+								)
+								.tmpId(t2.getKey().getTmpId())
+								.build()
 							)
-							.tmpId(t2.getKey().getTmpId())
-							.build()
-						)
-						.collect(Collectors.toList());
+							.collect(Collectors.toList());
 
-				if (statementList.size() > 1) {
-					return _graphClient
-						.write(Cypher.unionAll(statementList.toArray(new Statement[0])))
-						.then(Mono.just(ResponseList.of(request.getIngestionId(), response)));
-				}
-				else if (statementList.size() == 1) {
-					return _graphClient
-						.write(statementList.get(0))
-						.then(Mono.just(ResponseList.of(request.getIngestionId(), response)));
-				}
-				else {
-					return Mono.just(ResponseList.of(request.getIngestionId(), response));
-				}
-
-			});
+					if (statementList.size() > 1) {
+						return _graphClient
+							.write(Cypher.unionAll(statementList.toArray(new Statement[0])))
+							.then(Mono.just(ResponseList.of(request.getIngestionId(), response)));
+					}
+					else if (statementList.size() == 1) {
+						return _graphClient
+							.write(statementList.get(0))
+							.then(Mono.just(ResponseList.of(request.getIngestionId(), response)));
+					}
+					else {
+						return Mono.just(ResponseList.of(request.getIngestionId(), response));
+					}
+				}))
+			);
 	}
 
 	private List<DocumentEntityResponse> cleanCandidates(

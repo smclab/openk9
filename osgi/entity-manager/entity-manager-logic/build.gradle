@@ -5,9 +5,12 @@ dependencies {
 	compile project(":osgi:index-writer:index-writer-entity-client-api")
 	compile project(':osgi:common:serialization-api')
 
+
 	compile libraries.reactor
 	compile libraries.osgi
 	compile libraries.slf4j_api
+
+	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
 	compile group: 'org.neo4j', name: 'neo4j-cypher-dsl', version: '2021.1.1'
 }

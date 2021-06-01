@@ -2,3 +2,5 @@ Bundle-Name: [OpenK9] Entity Manager Logic
 Bundle-SymbolicName: io.openk9.entity.manager.logic
 
 -include: ${project.rootDir}/osgi/common.bnd
+
+Include-Resource: @commons-lang3-*.jar
