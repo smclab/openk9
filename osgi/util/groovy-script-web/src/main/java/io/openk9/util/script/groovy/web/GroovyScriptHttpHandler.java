@@ -6,15 +6,10 @@ import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.HttpRequest;
 import io.openk9.http.web.HttpResponse;
 import io.openk9.util.script.groovy.api.GroovyScriptExecutor;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 @Component(
@@ -42,9 +37,9 @@ public class GroovyScriptHttpHandler implements HttpHandler {
 		return _httpResponseWriter.write(
 			httpResponse, Mono
 				.from(request)
+				.publishOn(Schedulers.boundedElastic())
 				.map(_groovyScriptExecutor::execute)
 				.map(String::new)
-				.subscribeOn(Schedulers.boundedElastic())
 		);
 	}
 

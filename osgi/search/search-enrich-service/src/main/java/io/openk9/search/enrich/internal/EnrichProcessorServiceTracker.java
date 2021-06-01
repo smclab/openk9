@@ -69,7 +69,7 @@ class EnrichProcessorServiceTracker
 
 		EnrichProcessorExtension enrichProcessorExtension =
 			new EnrichProcessorExtension(
-				reference.getBundle(), service, 1);
+				reference.getBundle(), service, prefetch);
 
 		enrichProcessorExtension.start();
 

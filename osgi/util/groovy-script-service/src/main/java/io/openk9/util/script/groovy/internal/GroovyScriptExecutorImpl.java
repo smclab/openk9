@@ -12,6 +12,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
 import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Map;
 
 @Component(
@@ -36,16 +37,20 @@ public class GroovyScriptExecutorImpl implements GroovyScriptExecutor {
 
 		ByteArrayOutputStream response = new ByteArrayOutputStream();
 
-		compiledScript.setBinding(
-			new Binding(
-				Map.of(
-					"out", new GroovyPrintStream(response),
-					"context", _bundleContext
-				)
-			)
-		);
+		try (PrintStream printStream = new GroovyPrintStream(response)) {
 
-		compiledScript.run();
+			compiledScript.setBinding(
+				new Binding(
+					Map.of(
+						"out", printStream,
+						"context", _bundleContext
+					)
+				)
+			);
+
+			compiledScript.run();
+			
+		}
 
 		return response.toByteArray();
 

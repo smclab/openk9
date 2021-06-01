@@ -8,6 +8,7 @@ import io.openk9.ingestion.api.ReceiverReactor;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.Disposable;
@@ -23,14 +24,19 @@ import java.time.Duration;
 public class EntityManagerResponseConsumerImpl
 	implements EntityManagerResponseConsumer {
 
+	@interface Config {
+		long replayDurationMs() default 60000;
+	}
+
 	@Activate
-	void activate() {
+	@Modified
+	void activate(Config config) {
 
 		_sink =
 			Sinks
 				.many()
 				.replay()
-				.limit(Duration.ofSeconds(30));
+				.limit(Duration.ofMillis(config.replayDurationMs()));
 
 		_disposable =
 			_receiverReactor
