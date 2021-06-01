@@ -207,7 +207,7 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 			.then(
 				_entityManagerResponseConsumer
 					.stream(1, messageRequest.getRequest().getIngestionId())
-					.timeout(Duration.ofSeconds(30))
+					//.timeout(Duration.ofSeconds(30))
 			);
 
 	}
