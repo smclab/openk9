@@ -1,6 +1,6 @@
 {
   "name": "@openk9/web-datasource",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "author": "SMC",
   "description": "OpenK9 Web Data Source Frontend Module",
