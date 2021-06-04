@@ -66,7 +66,11 @@ interface Props {
   onAdd(id: string): void;
 }
 
-function TokenIcon({ suggestion }: { suggestion: InputSuggestionToken }) {
+export function TokenIcon({
+  suggestion,
+}: {
+  suggestion: InputSuggestionToken;
+}) {
   const classes = useStyles();
 
   if (suggestion.kind === "ENTITY") {
