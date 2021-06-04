@@ -195,6 +195,8 @@ export const useStore = create<StateType>(
 
     setLoginInfo(loginInfo: LoginInfo, userInfo: UserInfo) {
       set((state) => ({ ...state, loginInfo, userInfo }));
+      (window as any).loginInfo = loginInfo;
+      (window as any).userInfo = userInfo;
       localStorage.setItem(
         localStorageLoginPersistKey,
         JSON.stringify({
@@ -205,6 +207,8 @@ export const useStore = create<StateType>(
     },
     invalidateLogin() {
       set((state) => ({ ...state, loginInfo: null, userInfo: null }));
+      (window as any).loginInfo = null;
+      (window as any).userInfo = null;
       localStorage.setItem(
         localStorageLoginPersistKey,
         JSON.stringify({
