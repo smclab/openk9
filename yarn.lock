@@ -15338,6 +15338,11 @@ react-beautiful-dnd@^13.1.0:
     redux "^4.0.4"
     use-memo-one "^1.1.1"
 
+react-click-away-listener@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/react-click-away-listener/-/react-click-away-listener-2.0.3.tgz#3d032603cff8c1d66a9107f6908695df04db34a8"
+  integrity sha512-buvbebDZ10me+ConatrMcv33BNH6D+3HvEjztiNdz6LvDvyEYHxD0QLXw9aaO7bXjz2YPC7zbgIxLX+cEsFjkA==
+
 react-cookie-consent@^6.2.3:
   version "6.2.3"
   resolved "https://registry.yarnpkg.com/react-cookie-consent/-/react-cookie-consent-6.2.3.tgz#fdfbea5ea07ac484c46046418514865c33319015"

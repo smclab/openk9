@@ -59,8 +59,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 export function SearchResults() {
   const results = useStore((s) => s.results);
   const handleLoadMore = useStore((s) => s.doLoadMore);
-  const focus = useStore((s) => s.focus);
-  const suggestions = useStore((s) => s.suggestions);
   const selectedResult = useStore((s) => s.selectedResult);
   const setSelectedResult = useStore((s) => s.setSelectedResult);
   const pluginInfos = useStore((s) => s.pluginInfos);
@@ -76,17 +74,6 @@ export function SearchResults() {
     pluginInfos,
   );
 
-  // useLayoutEffect(() => {
-  //   function onKeyDown(e: KeyboardEvent) {
-  //     if (e.key === "Escape") {
-  //       setFocus("RESULTS");
-  //     }
-  //   }
-
-  //   document.addEventListener("keydown", onKeyDown);
-  //   return () => document.removeEventListener("keydown", onKeyDown);
-  // }, []);
-
   return (
     results && (
       <div className={classes.root}>
@@ -96,9 +83,7 @@ export function SearchResults() {
           <SearchResultsList
             renderers={resultRenderers}
             searchResults={results.result}
-            keyboardFocusEnabled={
-              focus === "RESULTS" || suggestions.length === 0
-            }
+            keyboardFocusEnabled={false}
             onSelectResult={setSelectedResult}
           />
 

@@ -15,13 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useState } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
+import ClickAwayListener from "react-click-away-listener";
 import { readQueryParamToken, setQueryParamToken } from "@openk9/http-api";
-
-import { useSearchQuery, useStore } from "../state";
 import {
   ThemeType,
   MultipleSelectionBar,
@@ -30,23 +29,24 @@ import {
   SearchQueryField,
 } from "@openk9/search-ui-components";
 
+import { useSearchQuery, useStore } from "../state";
+import { NewBar } from "../components/NewBar";
+
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
     backgroundColor: theme.digitalLakeBackground,
     display: "flex",
     flexDirection: "column",
-    // alignItems: "center",
     padding: [theme.spacingUnit * 2, theme.spacingUnit],
     paddingLeft: theme.spacingUnit * 8,
-    // transition: "padding 0.5s",
-  },
-  rootOpen: {
-    alignItems: "center",
-    padding: [theme.spacingUnit * 18, theme.spacingUnit],
   },
   centering: {
     maxWidth: theme.searchMaxWidth,
     width: "100%",
+
+    "& div .input-group-item": {
+      zIndex: 99,
+    },
   },
   inputField: {
     minHeight: 32,
@@ -60,14 +60,15 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 }));
 
 export function SearchQueryInput() {
+  const classes = useStyles();
+
   const [searchQuery, setSearchQuery] = useSearchQuery();
   const tenantConfig = useStore((s) => s.tenantConfig);
-  const focus = useStore((s) => s.focus);
-  const setFocus = useStore((s) => s.setFocus);
   const suggestions = useStore((s) => s.suggestions);
+  const suggestionsKind = useStore((s) => s.suggestionsKind);
+  const setSuggestionsKind = useStore((s) => s.setSuggestionsKind);
   const focusToken = useStore((s) => s.focusToken);
   const setFocusToken = useStore((s) => s.setFocusToken);
-  const open = useStore((s) => s.initial);
 
   const selectedDataType =
     firstOrNull(readQueryParamToken(searchQuery, "type")) || "any";
@@ -83,24 +84,31 @@ export function SearchQueryInput() {
     );
   }
 
-  // Prevent page back on backspace
+  const [inputFocus, setInputFocus] = useState(false);
+  const searchOpen = searchQuery.length == 0 || inputFocus;
+
   useLayoutEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
+      // Prevent page back on backspace
       const inputUnfocused =
         !document.activeElement ||
         !document.activeElement.classList.contains("firstFocusInput");
       if (e.key === "Backspace" && inputUnfocused) {
         e.preventDefault();
       }
+
+      // Hide search on ESC or ENTER
+      if (e.key == "Escape" || e.key == "Enter") {
+        setInputFocus(false);
+      }
     }
+
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const classes = useStyles();
-
   return (
-    <div className={clsx(classes.root, open && classes.rootOpen)}>
+    <div className={classes.root}>
       <div className={classes.centering}>
         {tenantConfig.querySourceBarShortcuts && (
           <MultipleSelectionBar>
@@ -122,37 +130,49 @@ export function SearchQueryInput() {
           </MultipleSelectionBar>
         )}
 
-        <div className="input-group">
-          <div className={"input-group-item"}>
-            <div className="form-control input-group-inset input-group-inset-before">
-              <SearchQueryField
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                className={clsx(
-                  "form-control",
-                  "firstFocusInput",
-                  classes.inputField,
-                )}
-                aria-label="Search"
-                placeholder="Search..."
-                suggestions={suggestions}
-                onCloseSuggestions={() => setFocus("RESULTS")}
-                suggestionsVisible={focus === "INPUT"}
-                focusToken={focusToken}
-                onFocusToken={setFocusToken}
-                onFocus={() => setFocus("INPUT")}
-                onBlur={() => setFocus("RESULTS")}
-                onFocusDown={() => setFocus("RESULTS")}
-              />
+        <ClickAwayListener onClickAway={() => setInputFocus(false)}>
+          <div className="input-group">
+            <div className="input-group-item">
+              <div className="form-control input-group-inset input-group-inset-before">
+                <SearchQueryField
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                  className={clsx(
+                    "form-control",
+                    "firstFocusInput",
+                    classes.inputField,
+                  )}
+                  aria-label="Search"
+                  placeholder="Search..."
+                  suggestions={[]}
+                  onCloseSuggestions={() => null}
+                  suggestionsVisible={false}
+                  focusToken={focusToken}
+                  onFocusToken={setFocusToken}
+                  onFocus={() => setInputFocus(true)}
+                  onBlur={() => null}
+                  onFocusDown={() => null}
+                />
+              </div>
+
+              <div className="input-group-inset-item input-group-inset-item-before">
+                <button className="btn btn-unstyled">
+                  <ClayIcon symbol="search" />
+                </button>
+              </div>
             </div>
 
-            <div className="input-group-inset-item input-group-inset-item-before">
-              <button className="btn btn-unstyled">
-                <ClayIcon symbol="search" />
-              </button>
-            </div>
+            <NewBar
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              suggestions={suggestions}
+              visible={searchOpen}
+              suggestionsKind={suggestionsKind}
+              setSuggestionsKind={setSuggestionsKind}
+              onClose={() => setInputFocus(false)}
+            />
           </div>
-        </div>
+        </ClickAwayListener>
       </div>
     </div>
   );

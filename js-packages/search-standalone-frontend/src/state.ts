@@ -56,13 +56,13 @@ export type StateType = {
   range: [number, number] | null;
   loading: boolean;
   doLoadMore(): void;
-  focus: "INPUT" | "RESULTS";
   suggestions: InputSuggestionToken[];
   setSuggestions(suggestions: InputSuggestionToken[]): void;
   fetchSuggestions(): Promise<void>;
+  suggestionsKind: string | null;
+  setSuggestionsKind(suggestionsKind: string | null): void;
   focusToken: number | null;
   setFocusToken(focusToken: number | null): void;
-  setFocus(focus: "INPUT" | "RESULTS"): void;
   selectedResult: string | null;
   setSelectedResult(selectedResult: string | null): void;
   pluginInfos: PluginInfo[];
@@ -86,8 +86,8 @@ export const useStore = create<StateType>(
     searchQuery: [],
     loading: false,
     range: null,
-    focus: "INPUT",
     suggestions: [],
+    suggestionsKind: null,
     focusToken: null,
     selectedResult: null,
     pluginInfos: [],
@@ -164,9 +164,6 @@ export const useStore = create<StateType>(
       }
     },
 
-    setFocus(focus: "INPUT" | "RESULTS") {
-      set((state) => ({ ...state, focus }));
-    },
     setSuggestions(suggestions: InputSuggestionToken[]) {
       set((state) => ({ ...state, suggestions }));
     },
@@ -183,14 +180,21 @@ export const useStore = create<StateType>(
       const token =
         get().focusToken !== null && get().searchQuery[get().focusToken || 0];
 
-      if (token) {
-        const suggestions = await getTokenSuggestions(token, get().loginInfo);
-        if (myOpId === undefined || myOpId === opRef?.lastOpId) {
-          set((state) => ({ ...state, suggestions }));
-        }
-      } else {
-        set((state) => ({ ...state, suggestions: [] }));
+      const suggestions = await getTokenSuggestions(
+        token || { tokenType: "TEXT", values: [] },
+        get().loginInfo,
+        false,
+        get().suggestionsKind || undefined,
+      );
+
+      if (myOpId === undefined || myOpId === opRef?.lastOpId) {
+        set((state) => ({ ...state, suggestions }));
       }
+    },
+
+    setSuggestionsKind(suggestionsKind: string | null) {
+      set((state) => ({ ...state, suggestionsKind }));
+      get().fetchSuggestions();
     },
 
     setLoginInfo(loginInfo: LoginInfo, userInfo: UserInfo) {

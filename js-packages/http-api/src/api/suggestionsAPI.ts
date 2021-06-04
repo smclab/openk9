@@ -263,6 +263,7 @@ export async function getTokenSuggestions(
   writingToken: SearchToken,
   loginInfo: LoginInfo | null,
   noParams?: boolean,
+  entityKind?: string,
 ): Promise<InputSuggestionToken[]> {
   const writingText = writingToken.values[0];
   const entityId =
@@ -287,7 +288,9 @@ export async function getTokenSuggestions(
 
   if (writingText && writingText.length > 0) {
     const foundEntities = await doSearchEntities(
-      { all: writingText },
+      entityKind
+        ? { all: writingText, type: entityKind }
+        : { all: writingText },
       loginInfo,
     );
     const entities = foundEntities.result.map((e) => ({
@@ -311,6 +314,24 @@ export async function getTokenSuggestions(
     ];
 
     return suggestions;
+  } else if (entityKind && entityKind.length > 0) {
+    const foundEntities = await doSearchEntities(
+      { type: entityKind },
+      loginInfo,
+    );
+    const entities = foundEntities.result.map((e) => ({
+      kind: "ENTITY",
+      id: e.entityId,
+      alternatives: [e.name],
+      displayDescription: e.name,
+      compatibleKeywordKeys: [],
+      type: e.type,
+    }));
+
+    return entities.map((entity) => ({
+      ...entity,
+      kind: "ENTITY" as const,
+    }));
   }
 
   return defaultsKK;
