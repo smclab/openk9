@@ -165,6 +165,14 @@ export function NewBar({
     onClose();
   }
 
+  function handleToggleKind(kind: string) {
+    if (suggestionsKind === kind) {
+      setSuggestionsKind(null);
+    } else {
+      setSuggestionsKind(kind);
+    }
+  }
+
   return visible ? (
     <div className={classes.root}>
       <div className={classes.menu}>
@@ -172,7 +180,7 @@ export function NewBar({
           <MenuItem
             key={item.id}
             active={suggestionsKind === item.id}
-            onSelect={() => setSuggestionsKind(s => s !== item.id ? item.id : null)}
+            onSelect={() => handleToggleKind(item.id)}
             i={i}
             {...item}
           />
