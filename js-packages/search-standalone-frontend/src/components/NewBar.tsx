@@ -172,7 +172,7 @@ export function NewBar({
           <MenuItem
             key={item.id}
             active={suggestionsKind === item.id}
-            onSelect={() => setSuggestionsKind(item.id)}
+            onSelect={() => setSuggestionsKind(s => s !== item.id ? item.id : null)}
             i={i}
             {...item}
           />
