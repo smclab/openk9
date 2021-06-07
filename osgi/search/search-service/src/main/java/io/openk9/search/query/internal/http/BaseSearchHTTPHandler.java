@@ -82,8 +82,7 @@ public abstract class BaseSearchHTTPHandler implements HttpHandler {
 					)
 				)
 			)
-			.map(SearchResponse::getHits)
-			.map(this::_searchHitToResponse)
+			.map(this::searchHitToResponse)
 			.map(_jsonFactory::toJson)
 			.transform(httpResponse::sendString);
 
@@ -93,7 +92,9 @@ public abstract class BaseSearchHTTPHandler implements HttpHandler {
 		_getTenantAndDatasourceList(
 			HttpRequest httpRequest, HttpResponse httpResponse);
 
-	private Response _searchHitToResponse(SearchHits hits) {
+	protected Response searchHitToResponse(SearchResponse searchResponse) {
+
+		SearchHits hits = searchResponse.getHits();
 
 		List<Map<String, Object>> result = new ArrayList<>();
 
@@ -247,31 +248,11 @@ public abstract class BaseSearchHTTPHandler implements HttpHandler {
 					SearchSourceBuilder searchSourceBuilder =
 						new SearchSourceBuilder();
 
-					int[] range = searchRequest.getRange();
-
-					searchSourceBuilder.from(range[0]);
-					searchSourceBuilder.size(range[1]);
-
 					searchSourceBuilder.query(boolQuery);
 
-					HighlightBuilder highlightBuilder = new HighlightBuilder();
-
-					documentTypeList
-						.stream()
-						.map(PluginDriverDTO::getDocumentTypes)
-						.flatMap(Collection::stream)
-						.map(DocumentTypeDTO::getSearchKeywords)
-						.flatMap(Collection::stream)
-						.filter(SearchKeywordDTO::isText)
-						.map(SearchKeywordDTO::getKeyword)
-						.distinct()
-						.forEach(highlightBuilder::field);
-
-					highlightBuilder.forceSource(true);
-
-					highlightBuilder.tagsSchema("default");
-
-					searchSourceBuilder.highlighter(highlightBuilder);
+					customizeSearchSourceBuilder(
+						tenant, datasources, searchRequest, documentTypeList,
+						searchSourceBuilder);
 
 					if (_log.isDebugEnabled()) {
 						_log.debug(searchSourceBuilder.toString());
@@ -282,6 +263,36 @@ public abstract class BaseSearchHTTPHandler implements HttpHandler {
 				}));
 
 		});
+
+	}
+
+	protected void customizeSearchSourceBuilder(
+		Tenant tenant, List<Datasource> datasources, SearchRequest searchRequest,
+		List<PluginDriverDTO> documentTypeList, SearchSourceBuilder searchSourceBuilder) {
+
+		int[] range = searchRequest.getRange();
+
+		searchSourceBuilder.from(range[0]);
+		searchSourceBuilder.size(range[1]);
+
+		HighlightBuilder highlightBuilder = new HighlightBuilder();
+
+		documentTypeList
+			.stream()
+			.map(PluginDriverDTO::getDocumentTypes)
+			.flatMap(Collection::stream)
+			.map(DocumentTypeDTO::getSearchKeywords)
+			.flatMap(Collection::stream)
+			.filter(SearchKeywordDTO::isText)
+			.map(SearchKeywordDTO::getKeyword)
+			.distinct()
+			.forEach(highlightBuilder::field);
+
+		highlightBuilder.forceSource(true);
+
+		highlightBuilder.tagsSchema("default");
+
+		searchSourceBuilder.highlighter(highlightBuilder);
 
 	}
 
