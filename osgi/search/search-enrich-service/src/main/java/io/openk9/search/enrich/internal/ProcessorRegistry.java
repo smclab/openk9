@@ -35,7 +35,7 @@ public class ProcessorRegistry {
 	@interface Config {
 		String exchangeName() default "openk9.erich.direct";
 		String exchangeType() default "direct";
-			int prefetch() default 250;
+		int prefetch() default 1;
 	}
 
 	@Activate
