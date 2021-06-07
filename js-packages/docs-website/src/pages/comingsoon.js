@@ -20,7 +20,7 @@ function ComingSoon() {
           </p>
           <p className={styles.pageDescription}>
             In the meantime, you can check out{" "}
-            <a href="https://github.com/smclab.openk9">GitHub repository</a>.
+            <a href="https://github.com/smclab/openk9">GitHub repository</a>.
           </p>
         </div>
       </header>
