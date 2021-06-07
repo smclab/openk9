@@ -10,7 +10,8 @@ Include-Resource: \
  @jackson-*.jar, \
  @micrometer-core-*.jar,\
  @LatencyUtils-*.jar,\
- @HdrHistogram-*.jar
+ @HdrHistogram-*.jar,\
+ @commons-lang3-*.jar
 
 Export-Package: \
  io.vavr, io.vavr.*,\

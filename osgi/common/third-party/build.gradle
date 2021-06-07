@@ -7,5 +7,6 @@ dependencies {
 	compile libraries.micrometer
 	compile libraries.hdrhistogram
 	compile libraries.latencyutils
+	compile libraries.apache_commons_lang3
 	compile libraries.osgi
 }

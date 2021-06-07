@@ -366,6 +366,8 @@ dependencies {
 
 	//ENTITY MANAGER CLIENT
 	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-api', transitive: false)
+	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-pub-sub-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-pub-sub-binding', transitive: false)
 	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-publisher-api', transitive: false)

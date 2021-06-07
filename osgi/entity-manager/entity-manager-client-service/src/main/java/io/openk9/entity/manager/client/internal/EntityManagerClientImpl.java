@@ -55,7 +55,7 @@ public class EntityManagerClientImpl implements EntityManagerClient {
 				_entityManagerHttpClient
 					.request(
 						HttpHandler.POST,
-						"/entity-manager/get-or-add-entities",
+						"/get-or-add-entities",
 						_jsonFactory.toJson(request),
 						Map.of()
 					)
