@@ -54,6 +54,7 @@ public class GetOrAddEntities {
 		int minHops() default 1;
 		int maxHops() default 2;
 		String[] uniqueEntities() default {"date", "organization"};
+		String[] notIndexEntities() default {"document"};
 		String labelFilter() default "-date";
 	}
 
@@ -65,6 +66,7 @@ public class GetOrAddEntities {
 		_scoreThreshold = config.scoreThreshold();
 		_uniqueEntities = config.uniqueEntities();
 		_labelFilter = config.labelFilter();
+		_notIndexEntities = config.notIndexEntities();
 
 	}
 
@@ -480,18 +482,27 @@ public class GetOrAddEntities {
 				Mono.defer(() ->
 					_entityGraphRepository.addEntity(
 						tenantId, currentEntityRequest.getName(),
-						currentEntityRequest.getType())
-					.flatMap(entity -> _indexWriterEntityClient
-						.insertEntity(
-							DocumentEntityRequest
-								.builder()
-								.tenantId(entity.getTenantId())
-								.name(entity.getName())
-								.type(entity.getType())
-								.id(entity.getId())
-								.build())
-						.thenReturn(entity)
+						currentEntityRequest.getType()
 					)
+						.flatMap(entity -> {
+
+							if (_containsValue(_notIndexEntities, entity.getType())) {
+								return Mono.just(entity);
+							}
+							else {
+								return _indexWriterEntityClient
+									.insertEntity(
+										DocumentEntityRequest
+											.builder()
+											.tenantId(entity.getTenantId())
+											.name(entity.getName())
+											.type(entity.getType())
+											.id(entity.getId())
+											.build())
+									.thenReturn(entity);
+							}
+
+						})
 				)
 			)
 			.map(entity -> Tuples.of(
@@ -528,6 +539,8 @@ public class GetOrAddEntities {
 	private String[] _uniqueEntities;
 
 	private String _labelFilter;
+
+	private String[] _notIndexEntities;
 
 	@Reference
 	private IndexWriterEntityClient _indexWriterEntityClient;
