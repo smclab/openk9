@@ -19,7 +19,11 @@ Export-Package: \
  reactor, reactor.*, com.fasterxml.jackson.*,\
  io.micrometer.*, \
  org.HdrHistogram, \
- org.LatencyUtils
+ org.LatencyUtils, \
+ org.apache.commons.lang3, \
+ org.apache.commons.lang3.concurrent.locks, \
+ org.apache.commons.lang3.text.translate, \
+ org.apache.commons.lang3.*
 
 Import-Package: *;resolution:=optional
 
