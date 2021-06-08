@@ -27,6 +27,7 @@ import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
+import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
@@ -118,10 +119,12 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 				.stream()
 				.map(PluginDriverDTO::getDocumentTypes)
 				.flatMap(Collection::stream)
-				.flatMap(documentTypeDTO ->
+				.map(DocumentTypeDTO::getName)
+				.distinct()
+				.flatMap(name ->
 					Arrays
 						.stream(_datasourceFieldAggregations)
-						.map(suffix -> documentTypeDTO.getName() + "." + suffix)
+						.map(suffix -> name + "." + suffix)
 				);
 
 		Stream<String> concat = Stream
