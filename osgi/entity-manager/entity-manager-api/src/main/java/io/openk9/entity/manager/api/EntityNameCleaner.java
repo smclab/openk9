@@ -9,6 +9,8 @@ import java.util.Map;
 
 public interface EntityNameCleaner {
 
+	String AND_OPERATOR = "_AND";
+
 	String getEntityType();
 
 	Map<String, Object> cleanEntityName(long tenantId, String entityName);

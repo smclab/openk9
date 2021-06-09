@@ -19,6 +19,8 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -39,6 +41,8 @@ import java.util.Map;
 
 @Component(immediate = true, service = IndexWriterEndpoins.class)
 public class IndexWriterEndpoins extends BaseEndpointRegister {
+
+	public static final String AND = "_AND";
 
 	@Activate
 	public void activate(BundleContext bundleContext) {
@@ -154,12 +158,35 @@ public class IndexWriterEndpoins extends BaseEndpointRegister {
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
 		for (Map.Entry<String, Object> entry : queryObject.entrySet()) {
-			boolQueryBuilder.must(
-				QueryBuilders.matchQuery(
-					entry.getKey(),
-					entry.getValue()
-				)
-			);
+
+			String fieldName = entry.getKey();
+
+			MatchQueryBuilder matchQueryBuilder;
+
+			if (fieldName.endsWith(AND)) {
+
+				String fieldAndOperator =
+					fieldName.substring(0, fieldName.length() - AND.length());
+
+				matchQueryBuilder =
+					QueryBuilders
+						.matchQuery(
+							fieldAndOperator,
+							entry.getValue())
+						.operator(Operator.AND);
+
+			}
+			else {
+				matchQueryBuilder =
+					QueryBuilders
+						.matchQuery(
+							fieldName,
+							entry.getValue());
+			}
+
+			boolQueryBuilder.must(matchQueryBuilder);
+
+
 		}
 
 		return boolQueryBuilder;

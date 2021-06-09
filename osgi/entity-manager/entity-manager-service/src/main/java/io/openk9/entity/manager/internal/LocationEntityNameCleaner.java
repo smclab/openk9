@@ -10,11 +10,11 @@ import java.util.Map;
 	immediate = true,
 	service = EntityNameCleaner.class
 )
-public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
+public class LocationEntityNameCleaner extends DefaultEntityNameCleaner {
 
 	@Override
 	public String getEntityType() {
-		return "person";
+		return "loc";
 	}
 
 	@Override
