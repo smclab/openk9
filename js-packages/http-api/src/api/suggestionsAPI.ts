@@ -154,6 +154,7 @@ export async function getTokenSuggestions(
   loginInfo: LoginInfo | null,
   entityKind?: string,
 ): Promise<InputSuggestionToken[]> {
+  const prevTokens = searchQuery.slice(0, -1);
   const writingToken = searchQuery[searchQuery.length - 1] || {
     tokenType: "TEXT",
     values: [],
@@ -162,11 +163,18 @@ export async function getTokenSuggestions(
     (writingToken.tokenType === "TEXT" && writingToken.values[0]) || undefined;
 
   const serverSuggestions = await getServerSuggestions(
-    { searchQuery, range: [0, 16] },
+    { searchQuery: prevTokens, range: [0, 16] },
     loginInfo,
   );
   const fromServer = serverSuggestions.result
     .filter((ss) => !entityKind || entityKind === ss.keywordKey)
+    .filter(
+      (ss) =>
+        !writingText ||
+        writingText.length === 0 ||
+        ss.value.includes(writingText) ||
+        writingText.includes(ss.value),
+    )
     .map((ss) => ({
       id: ss.value,
       kind: "TOKEN" as const,
@@ -198,8 +206,8 @@ export async function getTokenSuggestions(
   ).filter((ss) => !entityKind || entityKind === ss.kind);
 
   const suggestions: InputSuggestionToken[] = [
-    ...entities,
     ...fromServer,
+    ...entities,
     ...defaults,
   ];
 
