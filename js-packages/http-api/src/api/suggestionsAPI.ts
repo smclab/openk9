@@ -60,8 +60,14 @@ const defaultParams: ParamSuggestion[] = [
   },
   {
     kind: "PARAM",
+    id: "istat.documentType",
+    alternatives: ["document", "type", "tipo", "documento", "istat"],
+    displayDescription: "Doc Type",
+  },
+  {
+    kind: "PARAM",
     id: "istat.topic",
-    alternatives: ["topic", "argomento"],
+    alternatives: ["topic", "argomento", "istat"],
     displayDescription: "Topic",
   },
 ];
@@ -80,9 +86,16 @@ function findInDefault(
     : defaultParams.filter(
         (p) =>
           p.id !== query &&
-          (p.id.toString().startsWith(query.toString()) ||
-            p.alternatives.some((a) => a.startsWith(query.toString())) ||
-            p.displayDescription.includes(query.toString())),
+          (p.id
+            .toString()
+            .toLocaleLowerCase()
+            .startsWith(query.toString().toLocaleLowerCase()) ||
+            p.alternatives.some((a) =>
+              a.toLocaleLowerCase().startsWith(query.toString()),
+            ) ||
+            p.displayDescription
+              .toLocaleLowerCase()
+              .includes(query.toString().toLocaleLowerCase())),
       );
 
   return [...(noParams ? [] : exactParams), ...(noParams ? [] : params)];
@@ -172,8 +185,10 @@ export async function getTokenSuggestions(
       (ss) =>
         !writingText ||
         writingText.length === 0 ||
-        ss.value.includes(writingText) ||
-        writingText.includes(ss.value),
+        ss.value
+          .toLocaleLowerCase()
+          .includes(writingText.toLocaleLowerCase()) ||
+        writingText.toLocaleLowerCase().includes(ss.value.toLocaleLowerCase()),
     )
     .map((ss) => ({
       id: ss.value,
