@@ -198,8 +198,8 @@ export async function getTokenSuggestions(
   ).filter((ss) => !entityKind || entityKind === ss.kind);
 
   const suggestions: InputSuggestionToken[] = [
-    ...fromServer,
     ...entities,
+    ...fromServer,
     ...defaults,
   ];
 
