@@ -148,7 +148,7 @@ export function NewBar({
     if (sugg && sugg.kind === "ENTITY") {
       const tok: SearchToken = {
         tokenType: "ENTITY" as const,
-        keywordKey: last.keywordKey,
+        // keywordKey: last.keywordKey,
         entityType: sugg.type,
         values: [sugg.id],
       };
