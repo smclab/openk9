@@ -44,7 +44,7 @@ export function isSearchQueryEmpty(query: SearchQuery) {
 export function readQueryParamToken(
   query: SearchQuery,
   keywordKey: string,
-): string[] | null {
+): (string | number)[] | null {
   const item = query.find((i) => i.keywordKey === keywordKey);
   if (item) {
     return item.values;
@@ -62,7 +62,7 @@ export function setQueryParamToken({
 }: {
   query: SearchQuery;
   keywordKey: string;
-  values: string[] | string[] | null;
+  values: string[] | number[] | null;
   tokenType: SearchToken["tokenType"];
   entityType?: string;
 }): SearchQuery {
