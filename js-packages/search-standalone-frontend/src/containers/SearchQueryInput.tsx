@@ -89,8 +89,7 @@ export function SearchQueryInput() {
     );
   }
 
-  const [inputFocus, setInputFocus] = useState(false);
-  const searchOpen = searchQuery.length === 0 || inputFocus;
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useLayoutEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -104,7 +103,7 @@ export function SearchQueryInput() {
 
       // Hide search on ESC or ENTER
       if (e.key === "Escape" || e.key === "Enter") {
-        setInputFocus(false);
+        setSearchOpen(false);
       }
     }
 
@@ -140,7 +139,7 @@ export function SearchQueryInput() {
           </MultipleSelectionBar>
         )}
 
-        <ClickAwayListener onClickAway={() => setInputFocus(false)}>
+        <ClickAwayListener onClickAway={() => setSearchOpen(false)}>
           <div className="input-group">
             <div className="input-group-item">
               <div className="form-control input-group-inset input-group-inset-before">
@@ -158,7 +157,7 @@ export function SearchQueryInput() {
                   onCloseSuggestions={() => null}
                   suggestionsVisible={false}
                   focusToken={focusToken}
-                  onClick={() => setInputFocus(true)}
+                  onClick={() => setSearchOpen(true)}
                   onFocusToken={setFocusToken}
                   onFocus={() => null}
                   onBlur={() => null}
@@ -181,7 +180,7 @@ export function SearchQueryInput() {
               visible={searchOpen}
               suggestionsKind={suggestionsKind}
               setSuggestionsKind={setSuggestionsKind}
-              onClose={() => setInputFocus(false)}
+              onClose={() => setSearchOpen(false)}
             />
           </div>
         </ClickAwayListener>
