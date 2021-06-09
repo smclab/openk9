@@ -176,6 +176,7 @@ export function SearchQueryInput() {
             <NewBar
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}
+              focusToken={focusToken}
               suggestions={suggestions}
               visible={searchOpen}
               suggestionsKind={suggestionsKind}

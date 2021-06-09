@@ -121,6 +121,7 @@ const menuItems = [
 
 export function NewBar({
   suggestions,
+  focusToken,
   visible,
   searchQuery,
   onSearchQueryChange,
@@ -129,6 +130,7 @@ export function NewBar({
   setSuggestionsKind,
 }: {
   suggestions: InputSuggestionToken[];
+  focusToken: number | null;
   visible: boolean;
   searchQuery: SearchQuery;
   onSearchQueryChange(searchQuery: SearchQuery): void;
@@ -139,16 +141,13 @@ export function NewBar({
   const classes = useStyles();
 
   function handleAddSuggestion(sugg: InputSuggestionToken) {
-    const last = searchQuery[searchQuery.length - 1];
-    const soFar =
-      last && last.tokenType === "TEXT" && !last.keywordKey
-        ? searchQuery.slice(0, -1)
-        : searchQuery;
+    const soFar = searchQuery.filter((e, i) => i !== focusToken);
+    const editingTok = (focusToken !== null && searchQuery[focusToken]) || null;
 
     if (sugg && sugg.kind === "ENTITY") {
       const tok: SearchToken = {
         tokenType: "ENTITY" as const,
-        // keywordKey: last.keywordKey,
+        keywordKey: editingTok?.keywordKey,
         entityType: sugg.type,
         values: [sugg.id],
       };
