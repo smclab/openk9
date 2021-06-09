@@ -32,6 +32,10 @@ export function arrOrEncapsulate(arr: string[] | string) {
   else return arr;
 }
 
+export function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.substring(1);
+}
+
 export const noop = () => {};
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

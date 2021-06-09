@@ -17,6 +17,10 @@
 
 import { SearchQuery, SearchToken } from "./types";
 
+export function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.substring(1);
+}
+
 export function escapeString(str: string) {
   if (str.includes(" ")) {
     return `"${str}"`;
