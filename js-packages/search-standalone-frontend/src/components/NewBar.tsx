@@ -55,6 +55,8 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+    cursor: "pointer",
+    userSelect: "none",
 
     "& .lexicon-icon": { marginTop: 0 },
   },
@@ -69,6 +71,8 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   token: {
     padding: theme.spacingUnit,
     paddingLeft: theme.spacingUnit * 2,
+    cursor: "pointer",
+    userSelect: "none",
     "&:hover": {
       backgroundColor: theme.digitalLakePrimaryL3,
     },
