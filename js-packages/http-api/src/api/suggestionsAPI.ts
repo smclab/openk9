@@ -162,6 +162,14 @@ export async function getTokenInfo(
   ];
 }
 
+function strMatch(str: string, pat: string) {
+  if (pat.charAt(0) === "*") {
+    return str.endsWith(pat.substring(1));
+  } else {
+    return str === pat;
+  }
+}
+
 export async function getTokenSuggestions(
   searchQuery: SearchQuery,
   loginInfo: LoginInfo | null,
@@ -180,7 +188,7 @@ export async function getTokenSuggestions(
     loginInfo,
   );
   const fromServer = serverSuggestions.result
-    .filter((ss) => !entityKind || entityKind === ss.keywordKey)
+    .filter((ss) => !entityKind || strMatch(ss.keywordKey, entityKind))
     .filter(
       (ss) =>
         !writingText ||
@@ -218,7 +226,7 @@ export async function getTokenSuggestions(
   const defaults = findInDefault(
     writingText,
     Boolean(writingToken.keywordKey),
-  ).filter((ss) => !entityKind || entityKind === ss.kind);
+  ).filter((ss) => !entityKind || strMatch(ss.kind, entityKind));
 
   const suggestions: InputSuggestionToken[] = [
     ...fromServer,

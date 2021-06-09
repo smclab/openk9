@@ -114,8 +114,8 @@ const menuItems = [
   { id: "organization", label: "Organizations" },
   { id: "email", label: "Emails" },
   { id: "loc", label: "Locations" },
-  { id: "istat.topic", label: "Topics" },
-  { id: "document.documentType", label: "Document Type" },
+  { id: "*.topic", label: "Topics" },
+  { id: "*.documentType", label: "Document Type" },
   { id: "type", label: "Types" },
   { id: "PARAM", label: "Filters" },
 ];
