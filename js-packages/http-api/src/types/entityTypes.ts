@@ -22,8 +22,8 @@ export type EntityDescription = {
 };
 
 export interface EntityLookupRequest {
-  entityId?: string;
-  all?: string;
+  entityId?: string | number;
+  all?: string | number;
   type?: string;
 }
 

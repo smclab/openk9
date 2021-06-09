@@ -177,14 +177,12 @@ export const useStore = create<StateType>(
 
     // With optional parameters for debouncing
     async fetchSuggestions(myOpId?: number, opRef?: { lastOpId: number }) {
-      const token =
-        get().focusToken !== null && get().searchQuery[get().focusToken || 0];
+      const { searchQuery, suggestionsKind, loginInfo } = get();
 
       const suggestions = await getTokenSuggestions(
-        token || { tokenType: "TEXT", values: [] },
-        get().loginInfo,
-        false,
-        get().suggestionsKind || undefined,
+        searchQuery,
+        loginInfo,
+        suggestionsKind || undefined,
       );
 
       if (myOpId === undefined || myOpId === opRef?.lastOpId) {

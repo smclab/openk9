@@ -29,7 +29,6 @@ import { position } from "caret-pos";
 import { ThemeType } from "../theme";
 import {
   Token,
-  getTokenSuggestions,
   InputSuggestionToken,
   SearchQuery,
   SearchToken,
@@ -103,8 +102,10 @@ function ParamTokenDisplay({
   onTokenChange(token: SearchToken): void;
   onTokenDelete(): void;
   suggestionsInfo: [string, string][];
-  selectedSuggestion: string | null;
-  setSelectedSuggestion: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedSuggestion: string | number | null;
+  setSelectedSuggestion: React.Dispatch<
+    React.SetStateAction<string | number | null>
+  >;
 } & CommonProps &
   React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
@@ -168,8 +169,10 @@ function SingleInput({
   autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
   suggestionsInfo: [string, string][];
-  selectedSuggestion: string | null;
-  setSelectedSuggestion: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedSuggestion: string | number | null;
+  setSelectedSuggestion: React.Dispatch<
+    React.SetStateAction<string | number | null>
+  >;
 } & CommonProps &
   React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
@@ -205,7 +208,7 @@ function SingleInput({
   );
 
   const handleAutoComplete = useCallback(
-    (id?: string) => {
+    (id?: string | number) => {
       const toAdd = filteredSuggestions.find(
         (s) => s.id === (id || selectedSuggestion),
       );
@@ -254,34 +257,34 @@ function SingleInput({
   );
 
   const nextSuggestion = useCallback(() => {
-    setSelectedSuggestion((selectedSuggestion) => {
-      const index = filteredSuggestions.findIndex(
-        (s) => s.id === selectedSuggestion,
-      );
-      if (index !== -1) {
-        return filteredSuggestions[
-          Math.min(filteredSuggestions.length - 1, index + 1)
-        ].id;
-      } else {
-        return filteredSuggestions[1]
-          ? filteredSuggestions[1].id
-          : filteredSuggestions[0]
-          ? filteredSuggestions[0].id
-          : null;
-      }
-    });
+    // setSelectedSuggestion((selectedSuggestion) => {
+    //   const index = filteredSuggestions.findIndex(
+    //     (s) => s.id === selectedSuggestion,
+    //   );
+    //   if (index !== -1) {
+    //     return filteredSuggestions[
+    //       Math.min(filteredSuggestions.length - 1, index + 1)
+    //     ].id;
+    //   } else {
+    //     return filteredSuggestions[1]
+    //       ? filteredSuggestions[1].id
+    //       : filteredSuggestions[0]
+    //       ? filteredSuggestions[0].id
+    //       : null;
+    //   }
+    // });
   }, [filteredSuggestions, setSelectedSuggestion]);
   const prevSuggestion = useCallback(() => {
-    setSelectedSuggestion((selectedSuggestion) => {
-      const index = filteredSuggestions.findIndex(
-        (s) => s.id === selectedSuggestion,
-      );
-      if (index !== -1) {
-        return filteredSuggestions[Math.max(0, index - 1)].id;
-      } else {
-        return selectedSuggestion;
-      }
-    });
+    // setSelectedSuggestion((selectedSuggestion) => {
+    //   const index = filteredSuggestions.findIndex(
+    //     (s) => s.id === selectedSuggestion,
+    //   );
+    //   if (index !== -1) {
+    //     return filteredSuggestions[Math.max(0, index - 1)].id;
+    //   } else {
+    //     return selectedSuggestion;
+    //   }
+    // });
   }, [filteredSuggestions, setSelectedSuggestion]);
 
   const handleInputFieldKeyDown = useCallback(
@@ -376,8 +379,10 @@ function SingleToken({
   autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
   suggestionsInfo: [string, string][];
-  selectedSuggestion: string | null;
-  setSelectedSuggestion: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedSuggestion: string | number | null;
+  setSelectedSuggestion: React.Dispatch<
+    React.SetStateAction<string | number | null>
+  >;
 } & CommonProps &
   React.HTMLAttributes<HTMLInputElement>) {
   return token.keywordKey ? (
@@ -408,12 +413,14 @@ export function SearchQueryField({
   focusToken,
   onFocusToken,
   suggestionsVisible,
+  getTokenInfo,
   ...rest
 }: {
   searchQuery: SearchQuery;
   onSearchQueryChange(searchQuery: SearchQuery): void;
   focusToken: number | null;
   onFocusToken(token: number | null): void;
+  getTokenInfo(token: SearchToken): Promise<InputSuggestionToken[]>;
 } & CommonProps &
   React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
@@ -469,13 +476,8 @@ export function SearchQueryField({
     Promise.all(
       searchQuery.map(async (token) => {
         if (token.tokenType !== "TEXT" || token.keywordKey) {
-          const suggestions = await getTokenSuggestions(token, null);
-          const pairs = suggestions.map(
-            (s) => [s.id, s.displayDescription] as [string, string],
-          );
-          return pairs;
-        } else {
-          return [];
+          const ss = await getTokenInfo(token);
+          return ss.map((s) => [s.id, s.displayDescription] as const);
         }
       }),
     ).then((s) => {
@@ -483,9 +485,9 @@ export function SearchQueryField({
     });
   }, [searchQuery]);
 
-  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(
-    null,
-  );
+  const [selectedSuggestion, setSelectedSuggestion] = useState<
+    string | number | null
+  >(null);
   const calcSelectedSuggestion =
     (suggestions.find((s) => s.id === selectedSuggestion) &&
       selectedSuggestion) ||

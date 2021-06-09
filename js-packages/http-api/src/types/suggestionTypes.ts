@@ -18,7 +18,6 @@
 import { SearchToken } from "./searchQueryTypes";
 
 export interface BaseSuggestion {
-  id: string;
   alternatives: string[];
   displayDescription: string;
   compatibleKeywordKeys?: string[];
@@ -27,6 +26,7 @@ export interface BaseSuggestion {
 export interface EntitySuggestion extends BaseSuggestion {
   kind: "ENTITY";
   type: string;
+  id: string | number;
 }
 
 export interface ParamSuggestion extends BaseSuggestion {
@@ -37,6 +37,7 @@ export interface ParamSuggestion extends BaseSuggestion {
 
 export interface TokenSuggestion extends BaseSuggestion {
   kind: "TOKEN";
+  id: string;
   entityType?: string;
   outputKeywordKey?: string;
   outputTokenType?: SearchToken["tokenType"];

@@ -61,9 +61,9 @@ interface Props {
   suggestions: InputSuggestionToken[];
   x: number;
   y: number;
-  selected: string | null;
+  selected: string | number | null;
   visible?: boolean;
-  onAdd(id: string): void;
+  onAdd(id: string | number): void;
 }
 
 export function TokenIcon({
@@ -95,6 +95,8 @@ export function TokenIcon({
       case "from":
       case "to":
         return <EmailIcon className={classes.icon} size={16} />;
+      default:
+        return <ClayIcon className={classes.icon} symbol="filter" />;
     }
   } else if (suggestion.kind === "TOKEN") {
     switch (suggestion.id) {

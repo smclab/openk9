@@ -20,7 +20,12 @@ import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import ClickAwayListener from "react-click-away-listener";
-import { readQueryParamToken, setQueryParamToken } from "@openk9/http-api";
+import {
+  getTokenInfo,
+  readQueryParamToken,
+  SearchToken,
+  setQueryParamToken,
+} from "@openk9/http-api";
 import {
   ThemeType,
   MultipleSelectionBar,
@@ -29,7 +34,7 @@ import {
   SearchQueryField,
 } from "@openk9/search-ui-components";
 
-import { useSearchQuery, useStore } from "../state";
+import { useLoginInfo, useSearchQuery, useStore } from "../state";
 import { NewBar } from "../components/NewBar";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
@@ -85,7 +90,7 @@ export function SearchQueryInput() {
   }
 
   const [inputFocus, setInputFocus] = useState(false);
-  const searchOpen = searchQuery.length == 0 || inputFocus;
+  const searchOpen = searchQuery.length === 0 || inputFocus;
 
   useLayoutEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -98,7 +103,7 @@ export function SearchQueryInput() {
       }
 
       // Hide search on ESC or ENTER
-      if (e.key == "Escape" || e.key == "Enter") {
+      if (e.key === "Escape" || e.key === "Enter") {
         setInputFocus(false);
       }
     }
@@ -106,6 +111,11 @@ export function SearchQueryInput() {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  const loginInfo = useLoginInfo();
+  async function handleGetTokenInfo(token: SearchToken) {
+    return await getTokenInfo(token, loginInfo);
+  }
 
   return (
     <div className={classes.root}>
@@ -148,10 +158,12 @@ export function SearchQueryInput() {
                   onCloseSuggestions={() => null}
                   suggestionsVisible={false}
                   focusToken={focusToken}
+                  onClick={() => setInputFocus(true)}
                   onFocusToken={setFocusToken}
-                  onFocus={() => setInputFocus(true)}
+                  onFocus={() => null}
                   onBlur={() => null}
                   onFocusDown={() => null}
+                  getTokenInfo={handleGetTokenInfo}
                 />
               </div>
 

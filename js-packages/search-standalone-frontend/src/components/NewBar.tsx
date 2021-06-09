@@ -78,13 +78,13 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 function MenuItem({
   active,
   onSelect,
-  id,
+  onOver,
   label,
   i,
 }: {
   active: boolean;
   onSelect(): void;
-  id: string;
+  onOver(): void;
   label: string;
   i: number;
 }) {
@@ -95,6 +95,8 @@ function MenuItem({
       className={clsx(classes.menuItem, active && classes.menuItemActive)}
       onClick={onSelect}
       onKeyDown={onSelect}
+      // onFocus={onOver}
+      // onMouseOver={onOver}
       tabIndex={i}
     >
       {label} <ClayIcon symbol="angle-right-small" />
@@ -107,9 +109,10 @@ const menuItems = [
   { id: "organization", label: "Organizations" },
   { id: "email", label: "Emails" },
   { id: "loc", label: "Locations" },
-  { id: "source", label: "Sources" },
-  { id: "topic", label: "Topics" },
+  { id: "istat.topic", label: "Topics" },
+  { id: "document.documentType", label: "Document Type" },
   { id: "type", label: "Types" },
+  { id: "PARAM", label: "Filters" },
 ];
 
 export function NewBar({
@@ -141,7 +144,7 @@ export function NewBar({
     if (sugg && sugg.kind === "ENTITY") {
       const tok: SearchToken = {
         tokenType: "ENTITY" as const,
-        // keywordKey: token.keywordKey,
+        keywordKey: last.keywordKey,
         entityType: sugg.type,
         values: [sugg.id],
       };
@@ -149,7 +152,7 @@ export function NewBar({
     } else if (sugg && sugg.kind === "PARAM") {
       const tok: SearchToken = {
         tokenType: "TEXT" as const,
-        keywordKey: sugg.id,
+        keywordKey: sugg.id.toString(),
         values: [""],
       };
       onSearchQueryChange([...soFar, tok]);
@@ -176,12 +179,20 @@ export function NewBar({
   return visible ? (
     <div className={classes.root}>
       <div className={classes.menu}>
+        <MenuItem
+          active={suggestionsKind === null}
+          onSelect={() => setSuggestionsKind(null)}
+          onOver={() => setSuggestionsKind(null)}
+          label="All"
+          i={0}
+        />
         {menuItems.map((item, i) => (
           <MenuItem
             key={item.id}
             active={suggestionsKind === item.id}
             onSelect={() => handleToggleKind(item.id)}
-            i={i}
+            onOver={() => setSuggestionsKind(item.id)}
+            i={i + 1}
             {...item}
           />
         ))}

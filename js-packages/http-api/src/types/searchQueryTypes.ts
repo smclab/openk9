@@ -24,7 +24,6 @@ import { GenericResultItem } from "./searchResults";
 
 export type SearchToken = {
   keywordKey?: string;
-  values: string[];
 
   // Parser location info
   start?: number;
@@ -45,6 +44,7 @@ export type Token = EntityToken | DataSourceToken | DocTypeToken | TextToken;
 export interface EntityItem {
   tokenType: "ENTITY";
   entityType: string;
+  values: (string | number)[];
 }
 
 export interface DataSourceItem {
@@ -59,10 +59,12 @@ export interface DocTypeItem {
 
 export interface TextItem {
   tokenType: "TEXT";
+  values: string[];
 }
 
 export interface TextTokenItem {
   tokenType: "TEXT-TOKEN";
+  values: string[];
 }
 
 //
