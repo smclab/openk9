@@ -26,7 +26,7 @@ export interface BaseSuggestion {
 export interface EntitySuggestion extends BaseSuggestion {
   kind: "ENTITY";
   type: string;
-  id: string | number;
+  id: number;
 }
 
 export interface ParamSuggestion extends BaseSuggestion {

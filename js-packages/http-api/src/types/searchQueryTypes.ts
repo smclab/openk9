@@ -44,7 +44,7 @@ export type Token = EntityToken | DataSourceToken | DocTypeToken | TextToken;
 export interface EntityItem {
   tokenType: "ENTITY";
   entityType: string;
-  values: (string | number)[];
+  values: number[];
 }
 
 export interface DataSourceItem {

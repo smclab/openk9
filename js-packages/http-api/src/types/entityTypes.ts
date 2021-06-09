@@ -17,13 +17,13 @@
 
 export type EntityDescription = {
   type: string;
-  entityId: string;
+  entityId: number;
   name: string;
 };
 
 export interface EntityLookupRequest {
-  entityId?: string | number;
-  all?: string | number;
+  entityId?: number;
+  all?: string;
   type?: string;
 }
 
