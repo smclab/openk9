@@ -49,7 +49,7 @@ export const defaultTheme = {
 
   spacingUnit: 8,
 
-  searchMaxWidth: 700,
+  searchMaxWidth: 800,
   pageMaxWidth: 1000,
   adminSidebarWidth: 240,
 
