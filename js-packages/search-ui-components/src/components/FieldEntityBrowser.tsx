@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import React from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
@@ -24,7 +25,7 @@ import {
   SearchToken,
 } from "@openk9/http-api";
 import { ThemeType } from "@openk9/search-ui-components";
-import { TokenIcon } from "@openk9/search-ui-components/src/components/InputSuggestionTokensDisplay";
+import { TokenIcon } from "./InputSuggestionTokensDisplay";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -119,7 +120,7 @@ const menuItems = [
   { id: "PARAM", label: "Filters" },
 ];
 
-export function NewBar({
+export function FieldEntityBrowser({
   suggestions,
   focusToken,
   visible,

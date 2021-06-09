@@ -32,10 +32,10 @@ import {
   MultipleSelectionBarItem,
   firstOrNull,
   SearchQueryField,
+  FieldEntityBrowser,
 } from "@openk9/search-ui-components";
 
 import { useLoginInfo, useSearchQuery, useStore } from "../state";
-import { NewBar } from "../components/NewBar";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -173,7 +173,7 @@ export function SearchQueryInput() {
               </div>
             </div>
 
-            <NewBar
+            <FieldEntityBrowser
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}
               focusToken={focusToken}

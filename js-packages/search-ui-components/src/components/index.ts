@@ -17,6 +17,7 @@
 
 export * from "./Dockbar";
 export * from "./MultipleSelectionBar";
+export * from "./FieldEntityBrowser";
 export * from "./SearchResultsList";
 export * from "./SearchQueryField";
 export * from "./ResultCard";
