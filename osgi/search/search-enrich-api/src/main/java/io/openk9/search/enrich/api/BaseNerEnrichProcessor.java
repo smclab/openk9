@@ -66,6 +66,7 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 			return Mono.from(
 				_httpClient.request(
 					getMethod(), getPath(), request.toString(), getHeaders()))
+				.retry(5)
 				.map(_jsonFactory::fromJsonToJsonNode)
 				.map(JsonNode::toObjectNode)
 				.map(jsonNodes -> {
