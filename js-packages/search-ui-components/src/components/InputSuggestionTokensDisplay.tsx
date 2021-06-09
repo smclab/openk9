@@ -122,10 +122,14 @@ export function TokenIcon({
         return <ClayIcon className={classes.icon} symbol="calendar" />;
       case "user":
         return <ClayIcon className={classes.icon} symbol="user" />;
+      case "web":
+        return <ClayIcon className={classes.icon} symbol="globe" />;
+      case "file":
+        return <ClayIcon className={classes.icon} symbol="paperclip" />;
     }
   }
 
-  return null;
+  return <ClayIcon className={classes.icon} symbol="tag" />;
 }
 
 export function InputSuggestionTokenDisplay({
