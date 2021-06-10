@@ -45,6 +45,10 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
       marginLeft: theme.spacingUnit,
     },
   },
+  selectedToken: {
+    color: "white",
+    backgroundColor: theme.digitalLakePrimaryD1,
+  },
   paramToken: {
     color: "white",
     backgroundColor: theme.digitalLakePrimary,
@@ -58,14 +62,55 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 export function AtomTokenDisplay({
   token,
   suggestionsInfo,
+  focused,
+  tabIndex,
+  onNextTokenFocus,
+  onPrevTokenFocus,
+  onTokenDelete,
 }: {
   token: Token;
   suggestionsInfo: [number | string, string][];
+  focused: boolean;
+  tabIndex: number;
+  onNextTokenFocus(): void;
+  onPrevTokenFocus(): void;
+  onTokenDelete(): void;
 }) {
   const classes = useStyles();
+  const ref = useRef<HTMLDivElement | null>(null);
   const cacheElement = suggestionsInfo.find((t) => t[0] === token.values[0]);
+
+  useEffect(() => {
+    if (ref.current) {
+      if (focused) ref.current.focus();
+      else ref.current.blur();
+    }
+  }, [focused]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Backspace") {
+        onTokenDelete();
+      }
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        onPrevTokenFocus();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        onNextTokenFocus();
+      }
+    },
+    [token, onTokenDelete],
+  );
+
   return (
-    <div className={classes.token}>
+    <div
+      className={clsx(classes.token, focused && classes.selectedToken)}
+      ref={ref}
+      onKeyDown={handleKeyDown}
+      tabIndex={tabIndex}
+    >
       {cacheElement ? cacheElement[1] : token.values[0]}
     </div>
   );
@@ -81,7 +126,11 @@ export function ParamTokenDisplay({
   token: SearchToken;
   onTokenChange(token: SearchToken): void;
   onTokenDelete(): void;
+  onNextTokenFocus(): void;
+  onPrevTokenFocus(): void;
   suggestionsInfo: [number | string, string][];
+  focused: boolean;
+  tabIndex: number;
 } & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const cacheElement = suggestionsInfo.find((t) => t[0] === token.keywordKey);
@@ -108,6 +157,7 @@ export function ParamTokenDisplay({
         />
       ) : (
         <AtomTokenDisplay
+          onTokenDelete={onTokenDelete}
           token={token}
           {...rest}
           suggestionsInfo={suggestionsInfo}
@@ -122,25 +172,31 @@ function SingleInput({
   onTokenChange,
   onTokenDelete,
   onPrevTokenDelete,
+  onNextTokenFocus,
+  onPrevTokenFocus,
   small,
   className,
   inputContRef,
-  autoFocus,
   suggestionsInfo,
   noParams,
   outerKeywordKey,
+  focused,
+  tabIndex,
   ...rest
 }: {
   token: SearchToken;
   onTokenChange(token: SearchToken): void;
   onTokenDelete(): void;
   onPrevTokenDelete(): void;
+  onNextTokenFocus(): void;
+  onPrevTokenFocus(): void;
   noParams?: boolean;
   small?: boolean;
-  autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
   suggestionsInfo: [number | string, string][];
   outerKeywordKey?: string;
+  focused: boolean;
+  tabIndex: number;
 } & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -170,32 +226,44 @@ function SingleInput({
 
   const handleInputFieldKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const cursorPos =
+        inputRef.current &&
+        inputRef.current.selectionStart === inputRef.current.selectionEnd &&
+        inputRef.current.selectionStart;
+      const inputLimit = inputRef.current && inputRef.current.value.length;
+
       if (e.key === "Backspace") {
         if (token.values.length === 0 || token.values[0] === "") {
           e.preventDefault();
           onTokenDelete();
-        } else if (
-          inputRef.current &&
-          inputRef.current.selectionStart === inputRef.current.selectionEnd &&
-          inputRef.current.selectionStart === 0
-        ) {
+        } else if (cursorPos === 0) {
           e.preventDefault();
           onPrevTokenDelete();
         }
+      }
+
+      if (e.key === "ArrowLeft" && cursorPos === 0) {
+        e.preventDefault();
+        onPrevTokenFocus();
+      } else if (e.key === "ArrowRight" && cursorPos === inputLimit) {
+        e.preventDefault();
+        onNextTokenFocus();
       }
     },
     [token, onTokenDelete, onPrevTokenDelete],
   );
 
   useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus();
+    if (inputRef.current) {
+      if (focused) inputRef.current.focus();
+      else inputRef.current.blur();
     }
-  }, [autoFocus]);
+  }, [focused]);
 
   return (
     <>
       <input
+        tabIndex={tabIndex}
         aria-label="Search for"
         placeholder="Search..."
         type="text"
@@ -212,39 +280,29 @@ function SingleInput({
 
 function SingleToken({
   token,
-  onTokenChange,
-  onTokenDelete,
-  onPrevTokenDelete,
   ...rest
 }: {
   token: SearchToken;
   onTokenChange(token: SearchToken): void;
   onTokenDelete(): void;
   onPrevTokenDelete(): void;
+  onNextTokenFocus(): void;
+  onPrevTokenFocus(): void;
   small?: boolean;
   noParams?: boolean;
   autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
   suggestionsInfo: [number | string, string][];
   outerKeywordKey?: string;
+  focused: boolean;
+  tabIndex: number;
 } & React.HTMLAttributes<HTMLInputElement>) {
   return token.keywordKey ? (
-    <ParamTokenDisplay
-      {...rest}
-      token={token}
-      onTokenChange={onTokenChange}
-      onTokenDelete={onTokenDelete}
-    />
+    <ParamTokenDisplay {...rest} token={token} />
   ) : token.tokenType === "ENTITY" ? (
     <AtomTokenDisplay token={token} {...rest} />
   ) : (
-    <SingleInput
-      token={token}
-      onTokenChange={onTokenChange}
-      onTokenDelete={onTokenDelete}
-      onPrevTokenDelete={onPrevTokenDelete}
-      {...rest}
-    />
+    <SingleInput token={token} {...rest} />
   );
 }
 
@@ -309,10 +367,6 @@ export function SearchQueryField({
     }
   }
 
-  const isEmptyOrLastTokenIsNotText =
-    searchQuery.length === 0 ||
-    !(searchQuery[searchQuery.length - 1]?.tokenType === "TEXT");
-
   return (
     <div style={{ position: "relative" }}>
       <div ref={inputContRef} className={classes.inputCont}>
@@ -321,6 +375,7 @@ export function SearchQueryField({
             tok && (
               <SingleToken
                 key={i}
+                tabIndex={i}
                 token={tok}
                 onTokenChange={(ntok) => handleTokenChange(ntok, i)}
                 onTokenDelete={() => handleTokenDelete(i)}
@@ -328,8 +383,12 @@ export function SearchQueryField({
                 inputContRef={inputContRef}
                 suggestionsInfo={suggestionsInfo}
                 {...rest}
-                autoFocus={j === arr.length - 1 && isEmptyOrLastTokenIsNotText}
                 onFocus={() => onFocusToken(i)}
+                focused={focusToken === i}
+                onNextTokenFocus={() =>
+                  onFocusToken(Math.min((focusToken || 0) + 1, arr.length - 1))
+                }
+                onPrevTokenFocus={() => onFocusToken((focusToken || 1) - 1)}
               />
             ),
         )}
