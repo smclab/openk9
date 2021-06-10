@@ -39,6 +39,7 @@ import {
   UserInfo,
   doLoginRefresh,
   getUserInfo,
+  getTokenInfo,
 } from "@openk9/http-api";
 import { debounce } from "@openk9/search-ui-components";
 
@@ -57,8 +58,8 @@ export type StateType = {
   loading: boolean;
   doLoadMore(): void;
   suggestions: InputSuggestionToken[];
-  setSuggestions(suggestions: InputSuggestionToken[]): void;
   fetchSuggestions(): Promise<void>;
+  suggestionsInfo: [string, string][];
   suggestionsKind: string | null;
   setSuggestionsKind(suggestionsKind: string | null): void;
   focusToken: number | null;
@@ -88,6 +89,7 @@ export const useStore = create<StateType>(
     range: null,
     suggestions: [],
     suggestionsKind: null,
+    suggestionsInfo: [],
     focusToken: null,
     selectedResult: null,
     pluginInfos: [],
@@ -132,7 +134,32 @@ export const useStore = create<StateType>(
           searchQuery,
           range: [0, resultsChunkNumber],
         };
-        const results = await doSearch(request, get().loginInfo);
+        const [results, suggestions] = await Promise.all([
+          doSearch(request, get().loginInfo),
+
+          Promise.all(
+            searchQuery.map(async (token) => {
+              if (
+                (token.tokenType !== "TEXT" || token.keywordKey) &&
+                !(
+                  get().suggestionsInfo.find(
+                    ([k]) =>
+                      (token.values as (string | number)[]).indexOf(k) === -1,
+                  ) ||
+                  get().suggestionsInfo.find(([k]) => k !== token.keywordKey)
+                )
+              ) {
+                const ss = await getTokenInfo(token, get().loginInfo);
+                return ss.map((s) => [s.id, s.displayDescription] as const);
+              }
+            }),
+          ),
+        ]);
+
+        const filteredSuggestions = suggestions.flat().filter(Boolean) as [
+          string,
+          string,
+        ][];
 
         if (myOpId === opRef.lastOpId) {
           set((state) => ({
@@ -140,6 +167,7 @@ export const useStore = create<StateType>(
             results: isSearchQueryEmpty(searchQuery) ? null : results,
             loading: false,
             range: [0, resultsChunkNumber],
+            suggestionsInfo: [...state.suggestionsInfo, ...filteredSuggestions],
           }));
         }
       }
@@ -164,9 +192,6 @@ export const useStore = create<StateType>(
       }
     },
 
-    setSuggestions(suggestions: InputSuggestionToken[]) {
-      set((state) => ({ ...state, suggestions }));
-    },
     setFocusToken(focusToken: number | null) {
       set((state) => ({ ...state, focusToken }));
       get().fetchSuggestions();
@@ -185,8 +210,17 @@ export const useStore = create<StateType>(
         suggestionsKind || undefined,
       );
 
+      const infos = suggestions
+        .map((s) => [s.id, s.displayDescription] as const)
+        .flat()
+        .filter(Boolean);
+
       if (myOpId === undefined || myOpId === opRef?.lastOpId) {
-        set((state) => ({ ...state, suggestions }));
+        set((state) => ({
+          ...state,
+          suggestions,
+          suggestionInfo: [...state.suggestionsInfo, ...infos],
+        }));
       }
     },
 

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 
@@ -253,14 +253,14 @@ export function SearchQueryField({
   onFocus,
   focusToken,
   onFocusToken,
-  getTokenInfo,
+  suggestionsInfo,
   ...rest
 }: {
   searchQuery: SearchQuery;
   onSearchQueryChange(searchQuery: SearchQuery): void;
   focusToken: number | null;
   onFocusToken(token: number | null): void;
-  getTokenInfo(token: SearchToken): Promise<InputSuggestionToken[]>;
+  suggestionsInfo: [string, string][];
 } & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
 
@@ -307,22 +307,6 @@ export function SearchQueryField({
       onSearchQueryChange(searchQuery.filter((t, j) => i !== j));
     }
   }
-
-  const [suggestionsInfo, setSuggestionsInfo] = useState<[string, string][]>(
-    [],
-  );
-  useEffect(() => {
-    Promise.all(
-      searchQuery.map(async (token) => {
-        if (token.tokenType !== "TEXT" || token.keywordKey) {
-          const ss = await getTokenInfo(token);
-          return ss.map((s) => [s.id, s.displayDescription] as const);
-        }
-      }),
-    ).then((s) => {
-      setSuggestionsInfo(s.flat().filter(Boolean) as [string, string][]);
-    });
-  }, [searchQuery]);
 
   const isEmptyOrLastTokenIsNotText =
     searchQuery.length === 0 ||

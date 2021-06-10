@@ -20,12 +20,7 @@ import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import ClickAwayListener from "react-click-away-listener";
-import {
-  getTokenInfo,
-  readQueryParamToken,
-  SearchToken,
-  setQueryParamToken,
-} from "@openk9/http-api";
+import { readQueryParamToken, setQueryParamToken } from "@openk9/http-api";
 import {
   ThemeType,
   MultipleSelectionBar,
@@ -72,6 +67,7 @@ export function SearchQueryInput() {
   const suggestions = useStore((s) => s.suggestions);
   const suggestionsKind = useStore((s) => s.suggestionsKind);
   const setSuggestionsKind = useStore((s) => s.setSuggestionsKind);
+  const suggestionsInfo = useStore((s) => s.suggestionsInfo);
   const focusToken = useStore((s) => s.focusToken);
   const setFocusToken = useStore((s) => s.setFocusToken);
 
@@ -110,11 +106,6 @@ export function SearchQueryInput() {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
-
-  const loginInfo = useLoginInfo();
-  async function handleGetTokenInfo(token: SearchToken) {
-    return await getTokenInfo(token, loginInfo);
-  }
 
   return (
     <div className={classes.root}>
@@ -156,7 +147,7 @@ export function SearchQueryInput() {
                   focusToken={focusToken}
                   onClick={() => setSearchOpen(true)}
                   onFocusToken={setFocusToken}
-                  getTokenInfo={handleGetTokenInfo}
+                  suggestionsInfo={suggestionsInfo}
                 />
               </div>
 
