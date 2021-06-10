@@ -15,16 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
-import { position } from "caret-pos";
 
 import { ThemeType } from "../theme";
 import {
@@ -33,7 +26,6 @@ import {
   SearchQuery,
   SearchToken,
 } from "@openk9/http-api";
-import { InputSuggestionTokensDisplay } from "./InputSuggestionTokensDisplay";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   inputCont: {
@@ -68,15 +60,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-export type CommonProps = {
-  suggestionsVisible?: boolean;
-  suggestions: InputSuggestionToken[];
-  onCloseSuggestions(): void;
-  onFocusDown(): void;
-  onFocus?: () => void;
-  onBlur?: () => void;
-};
-
 export function AtomTokenDisplay({
   token,
   suggestionsInfo,
@@ -91,7 +74,7 @@ export function AtomTokenDisplay({
   ) : null;
 }
 
-function ParamTokenDisplay({
+export function ParamTokenDisplay({
   token,
   onTokenChange,
   onTokenDelete,
@@ -102,12 +85,7 @@ function ParamTokenDisplay({
   onTokenChange(token: SearchToken): void;
   onTokenDelete(): void;
   suggestionsInfo: [string, string][];
-  selectedSuggestion: string | number | null;
-  setSelectedSuggestion: React.Dispatch<
-    React.SetStateAction<string | number | null>
-  >;
-} & CommonProps &
-  React.HTMLAttributes<HTMLInputElement>) {
+} & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const cacheElement = suggestionsInfo.find((t) => t[0] === token.keywordKey);
 
@@ -151,12 +129,6 @@ function SingleInput({
   inputContRef,
   autoFocus,
   suggestionsInfo,
-  suggestionsVisible,
-  suggestions,
-  selectedSuggestion,
-  setSelectedSuggestion,
-  onCloseSuggestions,
-  onFocusDown,
   noParams,
   ...rest
 }: {
@@ -169,20 +141,9 @@ function SingleInput({
   autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
   suggestionsInfo: [string, string][];
-  selectedSuggestion: string | number | null;
-  setSelectedSuggestion: React.Dispatch<
-    React.SetStateAction<string | number | null>
-  >;
-} & CommonProps &
-  React.HTMLAttributes<HTMLInputElement>) {
+} & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const inputRef = useRef<HTMLInputElement | null>(null);
-
-  const filteredSuggestions = useMemo(
-    () =>
-      noParams ? suggestions.filter((s) => s.kind !== "PARAM") : suggestions,
-    [suggestions, noParams],
-  );
 
   const handleWritingQueryChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,117 +168,23 @@ function SingleInput({
     [token, onTokenDelete, onTokenChange],
   );
 
-  const handleAutoComplete = useCallback(
-    (id?: string | number) => {
-      const toAdd = filteredSuggestions.find(
-        (s) => s.id === (id || selectedSuggestion),
-      );
-      if (toAdd && toAdd.kind === "ENTITY") {
-        const tok: SearchToken = {
-          tokenType: "ENTITY" as const,
-          keywordKey: token.keywordKey,
-          entityType: toAdd.type,
-          values: [toAdd.id],
-        };
-        onTokenChange(tok);
-      } else if (toAdd && toAdd.kind === "PARAM") {
-        const tok: SearchToken = {
-          tokenType: "TEXT" as const,
-          keywordKey: toAdd.id,
-          values: [""],
-        };
-        onTokenChange(tok);
-      } else if (toAdd && toAdd.kind === "TOKEN") {
-        const tok: SearchToken = {
-          tokenType: toAdd.outputTokenType || ("TEXT" as any),
-          keywordKey: toAdd.outputKeywordKey as any,
-          values: [toAdd.id as any],
-        };
-        onTokenChange(tok);
-      }
-    },
-    [filteredSuggestions, selectedSuggestion, onTokenChange, token],
-  );
-
-  const handleBackspace = useCallback(
+  const handleInputFieldKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (token.values.length === 0 || token.values[0] === "") {
-        e.preventDefault();
-        onTokenDelete();
-      } else if (
-        inputRef.current &&
-        inputRef.current.selectionStart === inputRef.current.selectionEnd &&
-        inputRef.current.selectionStart === 0
-      ) {
-        e.preventDefault();
-        onPrevTokenDelete();
+      if (e.key === "Backspace") {
+        if (token.values.length === 0 || token.values[0] === "") {
+          e.preventDefault();
+          onTokenDelete();
+        } else if (
+          inputRef.current &&
+          inputRef.current.selectionStart === inputRef.current.selectionEnd &&
+          inputRef.current.selectionStart === 0
+        ) {
+          e.preventDefault();
+          onPrevTokenDelete();
+        }
       }
     },
     [token, onTokenDelete, onPrevTokenDelete],
-  );
-
-  const nextSuggestion = useCallback(() => {
-    // setSelectedSuggestion((selectedSuggestion) => {
-    //   const index = filteredSuggestions.findIndex(
-    //     (s) => s.id === selectedSuggestion,
-    //   );
-    //   if (index !== -1) {
-    //     return filteredSuggestions[
-    //       Math.min(filteredSuggestions.length - 1, index + 1)
-    //     ].id;
-    //   } else {
-    //     return filteredSuggestions[1]
-    //       ? filteredSuggestions[1].id
-    //       : filteredSuggestions[0]
-    //       ? filteredSuggestions[0].id
-    //       : null;
-    //   }
-    // });
-  }, [filteredSuggestions, setSelectedSuggestion]);
-  const prevSuggestion = useCallback(() => {
-    // setSelectedSuggestion((selectedSuggestion) => {
-    //   const index = filteredSuggestions.findIndex(
-    //     (s) => s.id === selectedSuggestion,
-    //   );
-    //   if (index !== -1) {
-    //     return filteredSuggestions[Math.max(0, index - 1)].id;
-    //   } else {
-    //     return selectedSuggestion;
-    //   }
-    // });
-  }, [filteredSuggestions, setSelectedSuggestion]);
-
-  const handleInputFieldKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && filteredSuggestions.length > 0) {
-        e.preventDefault();
-        handleAutoComplete();
-      } else if (e.key === "Backspace") {
-        handleBackspace(e);
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        if (filteredSuggestions.length > 0) {
-          nextSuggestion();
-        } else {
-          onFocusDown();
-        }
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        prevSuggestion();
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        onCloseSuggestions();
-      }
-    },
-    [
-      filteredSuggestions,
-      handleAutoComplete,
-      handleBackspace,
-      nextSuggestion,
-      onFocusDown,
-      prevSuggestion,
-      onCloseSuggestions,
-    ],
   );
 
   useEffect(() => {
@@ -339,26 +206,6 @@ function SingleInput({
         className={clsx(className, small && classes.inputFieldSmall)}
         {...rest}
       />
-
-      {filteredSuggestions.length > 0 && !token.keywordKey && (
-        <InputSuggestionTokensDisplay
-          visible={suggestionsVisible}
-          suggestions={filteredSuggestions}
-          x={
-            (inputRef.current &&
-              inputRef.current.offsetLeft -
-                (inputContRef?.current?.scrollLeft || 0) +
-                position(inputRef.current)?.left) ||
-            0
-          }
-          y={
-            ((inputRef.current && position(inputRef.current)?.top) || 0) +
-            (inputContRef?.current?.height || 32)
-          }
-          selected={selectedSuggestion}
-          onAdd={handleAutoComplete}
-        />
-      )}
     </>
   );
 }
@@ -379,12 +226,7 @@ function SingleToken({
   autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
   suggestionsInfo: [string, string][];
-  selectedSuggestion: string | number | null;
-  setSelectedSuggestion: React.Dispatch<
-    React.SetStateAction<string | number | null>
-  >;
-} & CommonProps &
-  React.HTMLAttributes<HTMLInputElement>) {
+} & React.HTMLAttributes<HTMLInputElement>) {
   return token.keywordKey ? (
     <ParamTokenDisplay
       {...rest}
@@ -408,11 +250,9 @@ function SingleToken({
 export function SearchQueryField({
   searchQuery,
   onSearchQueryChange,
-  suggestions,
   onFocus,
   focusToken,
   onFocusToken,
-  suggestionsVisible,
   getTokenInfo,
   ...rest
 }: {
@@ -421,8 +261,7 @@ export function SearchQueryField({
   focusToken: number | null;
   onFocusToken(token: number | null): void;
   getTokenInfo(token: SearchToken): Promise<InputSuggestionToken[]>;
-} & CommonProps &
-  React.HTMLAttributes<HTMLInputElement>) {
+} & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
 
   const inputContRef = useRef<HTMLInputElement | null>(null);
@@ -485,14 +324,6 @@ export function SearchQueryField({
     });
   }, [searchQuery]);
 
-  const [selectedSuggestion, setSelectedSuggestion] = useState<
-    string | number | null
-  >(null);
-  const calcSelectedSuggestion =
-    (suggestions.find((s) => s.id === selectedSuggestion) &&
-      selectedSuggestion) ||
-    (suggestions[0] && suggestions[0].id);
-
   const isEmptyOrLastTokenIsNotText =
     searchQuery.length === 0 ||
     !(searchQuery[searchQuery.length - 1]?.tokenType === "TEXT");
@@ -510,17 +341,10 @@ export function SearchQueryField({
                 onTokenDelete={() => handleTokenDelete(i)}
                 onPrevTokenDelete={() => handleTokenDelete(i - 1)}
                 inputContRef={inputContRef}
-                suggestions={suggestions}
                 suggestionsInfo={suggestionsInfo}
-                selectedSuggestion={calcSelectedSuggestion}
-                setSelectedSuggestion={setSelectedSuggestion}
-                suggestionsVisible={suggestionsVisible && focusToken === i}
                 {...rest}
                 autoFocus={j === arr.length - 1 && isEmptyOrLastTokenIsNotText}
-                onFocus={() => {
-                  onFocusToken(i);
-                  onFocus && onFocus();
-                }}
+                onFocus={() => onFocusToken(i)}
               />
             ),
         )}

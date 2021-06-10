@@ -17,12 +17,11 @@
 
 import React from "react";
 import clsx from "clsx";
-import ClayIcon from "@clayui/icon";
 import { createUseStyles } from "react-jss";
 
 import { ThemeType } from "../theme";
 import { InputSuggestionToken } from "@openk9/http-api";
-import { DXPLogo, EmailIcon, OSLogo } from "../icons";
+import { TokenIcon } from "./TokenIcon";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   popup: {
@@ -51,10 +50,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     backgroundColor: theme.digitalLakePrimary,
     color: "white",
   },
-  icon: {
-    marginRight: theme.spacingUnit,
-    fill: "currentColor",
-  },
 }));
 
 interface Props {
@@ -64,74 +59,6 @@ interface Props {
   selected: string | number | null;
   visible?: boolean;
   onAdd(id: string | number): void;
-}
-
-export function TokenIcon({
-  suggestion,
-}: {
-  suggestion: InputSuggestionToken;
-}) {
-  const classes = useStyles();
-
-  if (suggestion.kind === "ENTITY") {
-    switch (suggestion.type) {
-      case "person":
-        return <ClayIcon className={classes.icon} symbol="user" />;
-      case "organization":
-        return <ClayIcon className={classes.icon} symbol="organizations" />;
-      case "product":
-        return <ClayIcon className={classes.icon} symbol="devices" />;
-      case "gpe":
-        return <ClayIcon className={classes.icon} symbol="geolocation" />;
-      case "loc":
-        return <ClayIcon className={classes.icon} symbol="geolocation" />;
-      case "date":
-        return <ClayIcon className={classes.icon} symbol="calendar" />;
-      case "email":
-        return <EmailIcon className={classes.icon} size={16} />;
-    }
-  } else if (suggestion.kind === "PARAM") {
-    switch (suggestion.id) {
-      case "from":
-      case "to":
-        return <EmailIcon className={classes.icon} size={16} />;
-      default:
-        return <ClayIcon className={classes.icon} symbol="filter" />;
-    }
-  } else if (suggestion.kind === "TOKEN") {
-    switch (suggestion.id) {
-      case "spaces":
-        return <OSLogo className={classes.icon} size={16} />;
-      case "liferay":
-        return <DXPLogo className={classes.icon} size={16} />;
-      case "email":
-        return <EmailIcon className={classes.icon} size={16} />;
-      case "application":
-        return <ClayIcon className={classes.icon} symbol="desktop" />;
-      case "document":
-        return <ClayIcon className={classes.icon} symbol="document" />;
-      case "office-word":
-        return <ClayIcon className={classes.icon} symbol="document-text" />;
-      case "office-powerpoint":
-        return (
-          <ClayIcon className={classes.icon} symbol="document-presentation" />
-        );
-      case "office-excel":
-        return <ClayIcon className={classes.icon} symbol="document-table" />;
-      case "pdf":
-        return <ClayIcon className={classes.icon} symbol="document-pdf" />;
-      case "calendar":
-        return <ClayIcon className={classes.icon} symbol="calendar" />;
-      case "user":
-        return <ClayIcon className={classes.icon} symbol="user" />;
-      case "web":
-        return <ClayIcon className={classes.icon} symbol="globe" />;
-      case "file":
-        return <ClayIcon className={classes.icon} symbol="paperclip" />;
-    }
-  }
-
-  return <ClayIcon className={classes.icon} symbol="tag" />;
 }
 
 export function InputSuggestionTokenDisplay({

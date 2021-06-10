@@ -153,15 +153,9 @@ export function SearchQueryInput() {
                   )}
                   aria-label="Search"
                   placeholder="Search..."
-                  suggestions={[]}
-                  onCloseSuggestions={() => null}
-                  suggestionsVisible={false}
                   focusToken={focusToken}
                   onClick={() => setSearchOpen(true)}
                   onFocusToken={setFocusToken}
-                  onFocus={() => null}
-                  onBlur={() => null}
-                  onFocusDown={() => null}
                   getTokenInfo={handleGetTokenInfo}
                 />
               </div>

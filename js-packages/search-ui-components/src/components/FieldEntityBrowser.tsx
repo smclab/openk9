@@ -25,7 +25,7 @@ import {
   SearchToken,
 } from "@openk9/http-api";
 import { ThemeType } from "@openk9/search-ui-components";
-import { TokenIcon } from "./InputSuggestionTokensDisplay";
+import { TokenIcon } from "./TokenIcon";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {

@@ -16,6 +16,8 @@
  */
 
 export * from "./Dockbar";
+export * from "./TokenIcon";
+export * from "./InputSuggestionTokensDisplay";
 export * from "./MultipleSelectionBar";
 export * from "./FieldEntityBrowser";
 export * from "./SearchResultsList";
