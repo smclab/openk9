@@ -20,7 +20,11 @@ import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import ClickAwayListener from "react-click-away-listener";
-import { readQueryParamToken, setQueryParamToken } from "@openk9/http-api";
+import {
+  readQueryParamToken,
+  SearchQuery,
+  setQueryParamToken,
+} from "@openk9/http-api";
 import {
   ThemeType,
   MultipleSelectionBar,
@@ -30,7 +34,7 @@ import {
   FieldEntityBrowser,
 } from "@openk9/search-ui-components";
 
-import { useLoginInfo, useSearchQuery, useStore } from "../state";
+import { useSearchQuery, useStore } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -136,7 +140,10 @@ export function SearchQueryInput() {
               <div className="form-control input-group-inset input-group-inset-before">
                 <SearchQueryField
                   searchQuery={searchQuery}
-                  onSearchQueryChange={setSearchQuery}
+                  onSearchQueryChange={(query: SearchQuery) => {
+                    setSearchQuery(query);
+                    setSearchOpen(true);
+                  }}
                   className={clsx(
                     "form-control",
                     "firstFocusInput",
