@@ -121,6 +121,7 @@ export const useStore = create<StateType>(
       set((state) => ({
         ...state,
         searchQuery,
+        focusToken: searchQuery.length,
         initial: false,
         loading: true,
       }));
