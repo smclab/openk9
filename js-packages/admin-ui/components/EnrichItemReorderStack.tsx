@@ -151,7 +151,7 @@ function EnrichItemBlock({
         selected && classes.enrichItemSelected,
       )}
       onClick={onSelect}
-      onKeyDown={onSelect}
+      onKeyDown={(e) => e.key === "Enter" && onSelect()}
       tabIndex={item._position}
       style={draggableProvided.draggableProps.style}
       ref={draggableProvided.innerRef}

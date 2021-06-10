@@ -99,7 +99,7 @@ function MenuItem({
       role="button"
       className={clsx(classes.menuItem, active && classes.menuItemActive)}
       onClick={onSelect}
-      onKeyDown={onSelect}
+      onKeyDown={(e) => e.key === "Enter" && onSelect()}
       // onFocus={onOver}
       // onMouseOver={onOver}
       tabIndex={i}
@@ -210,7 +210,7 @@ export function FieldEntityBrowser({
             className={classes.token}
             key={s.id}
             onClick={() => handleAddSuggestion(s)}
-            onKeyDown={() => handleAddSuggestion(s)}
+            onKeyDown={(e) => e.key === "Enter" && handleAddSuggestion(s)}
           >
             <TokenIcon suggestion={s} />
             {s.displayDescription}
