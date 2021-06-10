@@ -121,7 +121,11 @@ export const useStore = create<StateType>(
       set((state) => ({
         ...state,
         searchQuery,
-        focusToken: searchQuery.length,
+        focusToken:
+          searchQuery[state.focusToken || -1] &&
+          searchQuery[state.focusToken || -1].tokenType !== "TEXT"
+            ? searchQuery.length
+            : state.focusToken,
         initial: false,
         loading: true,
       }));
