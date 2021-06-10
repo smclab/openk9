@@ -90,7 +90,7 @@ export function AtomTokenDisplay({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Backspace") {
+      if (e.key === "Backspace" || e.key === "Delete") {
         onTokenDelete();
       }
 
