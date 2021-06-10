@@ -67,6 +67,7 @@ export function AtomTokenDisplay({
   onNextTokenFocus,
   onPrevTokenFocus,
   onTokenDelete,
+  onFocus,
 }: {
   token: Token;
   suggestionsInfo: [number | string, string][];
@@ -75,7 +76,7 @@ export function AtomTokenDisplay({
   onNextTokenFocus(): void;
   onPrevTokenFocus(): void;
   onTokenDelete(): void;
-}) {
+} & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const ref = useRef<HTMLDivElement | null>(null);
   const cacheElement = suggestionsInfo.find((t) => t[0] === token.values[0]);
@@ -110,6 +111,8 @@ export function AtomTokenDisplay({
       ref={ref}
       onKeyDown={handleKeyDown}
       tabIndex={tabIndex}
+      onFocus={onFocus}
+      onClick={onFocus as any}
     >
       {cacheElement ? cacheElement[1] : token.values[0]}
     </div>
