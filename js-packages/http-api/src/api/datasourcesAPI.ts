@@ -80,7 +80,7 @@ export async function getSupportedDataSources(
   loginInfo: LoginInfo | null,
 ): Promise<SupportedDataSource[]> {
   const request = await authFetch(
-    `/api/datasource/v1/supported-datasources`,
+    `/api/searcher/v1/supported-datasources`,
     loginInfo,
   );
   const response: SupportedDataSource[] = await request.json();

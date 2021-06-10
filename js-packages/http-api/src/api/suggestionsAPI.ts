@@ -25,6 +25,7 @@ import {
 import { capitalize } from "../utilities";
 import { LoginInfo } from "./authAPI";
 import { authFetch } from "./common";
+import { getSupportedDataSources } from "./datasourcesAPI";
 import { doSearchEntities } from "./entitiesAPI";
 
 const defaultParams: ParamSuggestion[] = [
@@ -62,7 +63,7 @@ const defaultParams: ParamSuggestion[] = [
     kind: "PARAM",
     id: "istat.documentType",
     alternatives: ["document", "type", "tipo", "documento", "istat"],
-    displayDescription: "Doc Type",
+    displayDescription: "Istat Doc Type",
   },
   {
     kind: "PARAM",
@@ -228,10 +229,32 @@ export async function getTokenSuggestions(
     Boolean(writingToken.keywordKey),
   ).filter((ss) => !entityKind || strMatch(ss.kind, entityKind));
 
+  const datasourcesFields = await getSupportedDataSources(loginInfo);
+  const dsFieldsParams: InputSuggestionToken[] = datasourcesFields
+    .flatMap((ext) =>
+      ext.documentTypes.flatMap((dt) =>
+        dt.searchKeywords.map((sk) => ({
+          kind: "PARAM" as const,
+          id: sk.keyword,
+          alternatives: [],
+          displayDescription: sk.keyword,
+        })),
+      ),
+    )
+    .filter((ss) => !defaults.find((d) => d.id === ss.id))
+    .filter((ss) => !entityKind || strMatch(ss.kind, entityKind));
+  const dsFieldsParamsIDs = Array.from(
+    new Set(dsFieldsParams.map((ss) => ss.id)),
+  );
+  const dsFieldsParamsUnique = dsFieldsParamsIDs.map(
+    (id) => dsFieldsParams.find((ss) => ss.id === id) as InputSuggestionToken,
+  );
+
   const suggestions: InputSuggestionToken[] = [
     ...fromServer,
     ...entities,
     ...defaults,
+    ...dsFieldsParamsUnique,
   ];
 
   return suggestions;
