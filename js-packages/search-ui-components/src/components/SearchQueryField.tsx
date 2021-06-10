@@ -60,13 +60,15 @@ export function AtomTokenDisplay({
   suggestionsInfo,
 }: {
   token: Token;
-  suggestionsInfo: [string, string][];
+  suggestionsInfo: [number | string, string][];
 }) {
   const classes = useStyles();
   const cacheElement = suggestionsInfo.find((t) => t[0] === token.values[0]);
-  return cacheElement ? (
-    <div className={classes.token}>{cacheElement[1]}</div>
-  ) : null;
+  return (
+    <div className={classes.token}>
+      {cacheElement ? cacheElement[1] : token.values[0]}
+    </div>
+  );
 }
 
 export function ParamTokenDisplay({
@@ -79,7 +81,7 @@ export function ParamTokenDisplay({
   token: SearchToken;
   onTokenChange(token: SearchToken): void;
   onTokenDelete(): void;
-  suggestionsInfo: [string, string][];
+  suggestionsInfo: [number | string, string][];
 } & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const cacheElement = suggestionsInfo.find((t) => t[0] === token.keywordKey);
@@ -137,7 +139,7 @@ function SingleInput({
   small?: boolean;
   autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
-  suggestionsInfo: [string, string][];
+  suggestionsInfo: [number | string, string][];
   outerKeywordKey?: string;
 } & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
@@ -223,7 +225,7 @@ function SingleToken({
   noParams?: boolean;
   autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
-  suggestionsInfo: [string, string][];
+  suggestionsInfo: [number | string, string][];
   outerKeywordKey?: string;
 } & React.HTMLAttributes<HTMLInputElement>) {
   return token.keywordKey ? (
@@ -259,7 +261,7 @@ export function SearchQueryField({
   onSearchQueryChange(searchQuery: SearchQuery): void;
   focusToken: number | null;
   onFocusToken(token: number | null): void;
-  suggestionsInfo: [string, string][];
+  suggestionsInfo: [number | string, string][];
 } & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
 

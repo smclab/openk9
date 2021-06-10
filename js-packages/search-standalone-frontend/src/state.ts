@@ -46,6 +46,7 @@ import { debounce } from "@openk9/search-ui-components";
 const resultsChunkNumber = 8;
 const searchTimeoutDebounce = 800;
 const suggTimeoutDebounce = 400;
+const maxSuggestionsCache = 128;
 
 const localStorageLoginPersistKey = "openk9-login-info";
 
@@ -59,7 +60,7 @@ export type StateType = {
   doLoadMore(): void;
   suggestions: InputSuggestionToken[];
   fetchSuggestions(): Promise<void>;
-  suggestionsInfo: [string, string][];
+  suggestionsInfo: [number | string, string][];
   suggestionsKind: string | null;
   setSuggestionsKind(suggestionsKind: string | null): void;
   focusToken: number | null;
@@ -211,15 +212,19 @@ export const useStore = create<StateType>(
       );
 
       const infos = suggestions
-        .map((s) => [s.id, s.displayDescription] as const)
-        .flat()
+        .map((s) => [s.id, s.displayDescription] as [number | string, string])
         .filter(Boolean);
 
       if (myOpId === undefined || myOpId === opRef?.lastOpId) {
         set((state) => ({
           ...state,
           suggestions,
-          suggestionInfo: [...state.suggestionsInfo, ...infos],
+          suggestionsInfo: [
+            ...state.suggestionsInfo
+              .slice(0, Math.max(0, maxSuggestionsCache - infos.length))
+              .filter(([id]) => !infos.find((s) => s[0] === id)),
+            ...infos,
+          ],
         }));
       }
     },
