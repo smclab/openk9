@@ -20,12 +20,7 @@ import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 
 import { ThemeType } from "../theme";
-import {
-  Token,
-  InputSuggestionToken,
-  SearchQuery,
-  SearchToken,
-} from "@openk9/http-api";
+import { Token, SearchQuery, SearchToken } from "@openk9/http-api";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   inputCont: {
@@ -97,6 +92,7 @@ export function ParamTokenDisplay({
       {token.tokenType === "TEXT" ? (
         <SingleToken
           token={{ ...token, keywordKey: undefined }}
+          outerKeywordKey={token.keywordKey}
           onTokenChange={(ntok) =>
             onTokenChange({ ...ntok, keywordKey: token.keywordKey })
           }
@@ -130,6 +126,7 @@ function SingleInput({
   autoFocus,
   suggestionsInfo,
   noParams,
+  outerKeywordKey,
   ...rest
 }: {
   token: SearchToken;
@@ -141,6 +138,7 @@ function SingleInput({
   autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
   suggestionsInfo: [string, string][];
+  outerKeywordKey?: string;
 } & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -148,11 +146,11 @@ function SingleInput({
   const handleWritingQueryChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.value.length === 0) {
-        if (token.keywordKey) {
+        if (outerKeywordKey) {
           onTokenChange({
             ...token,
             tokenType: "TEXT" as const,
-            values: [],
+            values: [""],
           });
         } else {
           onTokenDelete();
@@ -165,7 +163,7 @@ function SingleInput({
         });
       }
     },
-    [token, onTokenDelete, onTokenChange],
+    [token, onTokenDelete, onTokenChange, outerKeywordKey],
   );
 
   const handleInputFieldKeyDown = useCallback(
@@ -226,6 +224,7 @@ function SingleToken({
   autoFocus?: boolean;
   inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
   suggestionsInfo: [string, string][];
+  outerKeywordKey?: string;
 } & React.HTMLAttributes<HTMLInputElement>) {
   return token.keywordKey ? (
     <ParamTokenDisplay
