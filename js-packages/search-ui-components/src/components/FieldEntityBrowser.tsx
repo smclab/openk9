@@ -59,10 +59,16 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     cursor: "pointer",
     userSelect: "none",
 
+    "&:hover,&:focus": {
+      backgroundColor: theme.digitalLakeMainL6,
+    },
     "& .lexicon-icon": { marginTop: 0 },
   },
   menuItemActive: {
     backgroundColor: theme.digitalLakeMainL5,
+    "&:hover,&:focus": {
+      backgroundColor: theme.digitalLakeMainL5,
+    },
   },
 
   tokens: {
@@ -74,7 +80,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     paddingLeft: theme.spacingUnit * 2,
     cursor: "pointer",
     userSelect: "none",
-    "&:hover": {
+    "&:hover,&:focus": {
       backgroundColor: theme.digitalLakePrimaryL3,
     },
   },
