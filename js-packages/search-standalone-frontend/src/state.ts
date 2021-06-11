@@ -40,13 +40,14 @@ import {
   doLoginRefresh,
   getUserInfo,
   getTokenInfo,
+  doSearchEntities,
 } from "@openk9/http-api";
 import { debounce } from "@openk9/search-ui-components";
 
 const resultsChunkNumber = 8;
 const searchTimeoutDebounce = 800;
 const suggTimeoutDebounce = 400;
-const maxSuggestionsCache = 128;
+const maxSuggestionsCache = 1024;
 
 const localStorageLoginPersistKey = "openk9-login-info";
 
@@ -172,7 +173,7 @@ export const useStore = create<StateType>(
             results: isSearchQueryEmpty(searchQuery) ? null : results,
             loading: false,
             range: [0, resultsChunkNumber],
-            suggestionsInfo: [...state.suggestionsInfo, ...suggestions],
+            suggestionsInfo: [...suggestions, ...state.suggestionsInfo],
           }));
         }
       }
@@ -201,8 +202,46 @@ export const useStore = create<StateType>(
       set((state) => ({ ...state, focusToken }));
       get().fetchSuggestions();
     },
-    setSelectedResult(selectedResult: string | null) {
-      set((state) => ({ ...state, selectedResult }));
+
+    async setSelectedResult(selectedResult: string | null) {
+      set((state) => ({
+        ...state,
+        selectedResult,
+      }));
+
+      const result = get().results?.result.find(
+        (r) => r.source.id === selectedResult,
+      );
+      const entities = result?.source.entities;
+      const entitiesIds =
+        entities &&
+        Object.entries(entities)
+          .flatMap(([k, v]) => v.map((e) => e.id))
+          .filter(Boolean);
+
+      const entityLabels = !entitiesIds
+        ? []
+        : await Promise.all(
+            entitiesIds.map(async (eId) => {
+              const currentCache = get().suggestionsInfo;
+              const isAlreadyInCache = currentCache.find(([k]) => eId === k);
+
+              if (!isAlreadyInCache) {
+                const resp = await doSearchEntities(
+                  { entityId: eId },
+                  get().loginInfo,
+                );
+                return resp.result.map((s) => [s.entityId, s.name]);
+              } else {
+                return [];
+              }
+            }),
+          ).then((sugg) => sugg.flat().filter(Boolean) as [string, string][]);
+
+      set((state) => ({
+        ...state,
+        suggestionsInfo: [...entityLabels, ...state.suggestionsInfo],
+      }));
     },
 
     // With optional parameters for debouncing
@@ -224,10 +263,10 @@ export const useStore = create<StateType>(
           ...state,
           suggestions,
           suggestionsInfo: [
+            ...infos,
             ...state.suggestionsInfo
               .slice(0, Math.max(0, maxSuggestionsCache - infos.length))
               .filter(([id]) => !infos.find((s) => s[0] === id)),
-            ...infos,
           ],
         }));
       }
