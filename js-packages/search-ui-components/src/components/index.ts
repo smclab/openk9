@@ -21,6 +21,7 @@ export * from "./InputSuggestionTokensDisplay";
 export * from "./MultipleSelectionBar";
 export * from "./FieldEntityBrowser";
 export * from "./SearchResultsList";
+export * from "./EntityListDisplay";
 export * from "./SearchQueryField";
 export * from "./ResultCard";
 export * from "./Highlight";
