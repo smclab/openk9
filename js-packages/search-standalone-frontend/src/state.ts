@@ -140,32 +140,31 @@ export const useStore = create<StateType>(
           searchQuery,
           range: [0, resultsChunkNumber],
         };
+
+        const resultsPromise = doSearch(request, get().loginInfo);
+        const suggestionsPromise = Promise.all(
+          searchQuery.map(async (token) => {
+            const hasLabelToDownload =
+              token.tokenType !== "TEXT" || token.keywordKey;
+
+            const currentCache = get().suggestionsInfo;
+            const isAlreadyInCache =
+              currentCache.find(
+                ([k]) =>
+                  (token.values as (string | number)[]).indexOf(k) === -1,
+              ) || currentCache.find(([k]) => k !== token.keywordKey);
+
+            if (hasLabelToDownload && !isAlreadyInCache) {
+              const ss = await getTokenInfo(token, get().loginInfo);
+              return ss.map((s) => [s.id, s.displayDescription] as const);
+            }
+          }),
+        ).then((sugg) => sugg.flat().filter(Boolean) as [string, string][]);
+
         const [results, suggestions] = await Promise.all([
-          doSearch(request, get().loginInfo),
-
-          Promise.all(
-            searchQuery.map(async (token) => {
-              if (
-                (token.tokenType !== "TEXT" || token.keywordKey) &&
-                !(
-                  get().suggestionsInfo.find(
-                    ([k]) =>
-                      (token.values as (string | number)[]).indexOf(k) === -1,
-                  ) ||
-                  get().suggestionsInfo.find(([k]) => k !== token.keywordKey)
-                )
-              ) {
-                const ss = await getTokenInfo(token, get().loginInfo);
-                return ss.map((s) => [s.id, s.displayDescription] as const);
-              }
-            }),
-          ),
+          resultsPromise,
+          suggestionsPromise,
         ]);
-
-        const filteredSuggestions = suggestions.flat().filter(Boolean) as [
-          string,
-          string,
-        ][];
 
         if (myOpId === opRef.lastOpId) {
           set((state) => ({
@@ -173,7 +172,7 @@ export const useStore = create<StateType>(
             results: isSearchQueryEmpty(searchQuery) ? null : results,
             loading: false,
             range: [0, resultsChunkNumber],
-            suggestionsInfo: [...state.suggestionsInfo, ...filteredSuggestions],
+            suggestionsInfo: [...state.suggestionsInfo, ...suggestions],
           }));
         }
       }
