@@ -20,7 +20,7 @@
 // ============================================
 //
 
-import { GenericResultItem } from "./searchResults";
+import { GenericResultItem } from "./searchResultsType";
 
 export type SearchToken = {
   keywordKey?: string;

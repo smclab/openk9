@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export * from "./searchResults";
+export * from "./searchResultsType";
 export * from "./entityTypes";
 export * from "./searchQueryTypes";
 export * from "./suggestionTypes";
