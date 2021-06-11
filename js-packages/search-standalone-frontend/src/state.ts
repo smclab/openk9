@@ -122,8 +122,8 @@ export const useStore = create<StateType>(
         ...state,
         searchQuery,
         focusToken:
-          searchQuery[state.focusToken || -1] &&
-          searchQuery[state.focusToken || -1].tokenType !== "TEXT"
+          searchQuery[state.focusToken || 0] &&
+          searchQuery[state.focusToken || 0].tokenType !== "TEXT"
             ? searchQuery.length
             : state.focusToken,
         initial: false,
