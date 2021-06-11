@@ -31,7 +31,7 @@ import {
   MultipleSelectionBarItem,
   firstOrNull,
   SearchQueryField,
-  FieldEntityBrowser,
+  FieldSuggestionBrowser,
 } from "@openk9/search-ui-components";
 
 import { useSearchQuery, useStore } from "../state";
@@ -165,7 +165,7 @@ export function SearchQueryInput() {
               </div>
             </div>
 
-            <FieldEntityBrowser
+            <FieldSuggestionBrowser
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}
               focusToken={focusToken}

@@ -126,7 +126,7 @@ const menuItems = [
   { id: "PARAM", label: "Filters" },
 ];
 
-export function FieldEntityBrowser({
+export function FieldSuggestionBrowser({
   suggestions,
   focusToken,
   visible,
