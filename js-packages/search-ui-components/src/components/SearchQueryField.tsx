@@ -20,7 +20,8 @@ import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 
 import { ThemeType } from "../theme";
-import { Token, SearchQuery, SearchToken } from "@openk9/http-api";
+import { SearchQuery, SearchToken } from "@openk9/http-api";
+import { mergeRefs } from "../utils";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   inputCont: {
@@ -59,6 +60,20 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
+interface CommonProps {
+  token: SearchToken;
+  suggestionsInfo: [number | string, string][];
+  onNextTokenFocus(): void;
+  onPrevTokenFocus(): void;
+  onTokenDelete(): void;
+  innerRef: React.Ref<HTMLInputElement | null>;
+  focused: boolean;
+  tabIndex: number;
+  onTokenChange(token: SearchToken): void;
+  onPrevTokenDelete(): void;
+  onInputKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+}
+
 export function AtomTokenDisplay({
   token,
   suggestionsInfo,
@@ -68,15 +83,8 @@ export function AtomTokenDisplay({
   onPrevTokenFocus,
   onTokenDelete,
   onFocus,
-}: {
-  token: Token;
-  suggestionsInfo: [number | string, string][];
-  focused: boolean;
-  tabIndex: number;
-  onNextTokenFocus(): void;
-  onPrevTokenFocus(): void;
-  onTokenDelete(): void;
-} & React.HTMLAttributes<HTMLInputElement>) {
+  onInputKeyDown,
+}: CommonProps & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const ref = useRef<HTMLDivElement | null>(null);
   const cacheElement = suggestionsInfo.find((t) => t[0] === token.values[0]);
@@ -100,6 +108,10 @@ export function AtomTokenDisplay({
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
         onNextTokenFocus();
+      }
+
+      if (onInputKeyDown) {
+        onInputKeyDown(e);
       }
     },
     [token, onTokenDelete],
@@ -125,16 +137,7 @@ export function ParamTokenDisplay({
   onTokenDelete,
   suggestionsInfo,
   ...rest
-}: {
-  token: SearchToken;
-  onTokenChange(token: SearchToken): void;
-  onTokenDelete(): void;
-  onNextTokenFocus(): void;
-  onPrevTokenFocus(): void;
-  suggestionsInfo: [number | string, string][];
-  focused: boolean;
-  tabIndex: number;
-} & React.HTMLAttributes<HTMLInputElement>) {
+}: CommonProps & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const cacheElement = suggestionsInfo.find((t) => t[0] === token.keywordKey);
 
@@ -151,8 +154,8 @@ export function ParamTokenDisplay({
             onTokenChange({ ...ntok, keywordKey: token.keywordKey })
           }
           onTokenDelete={onTokenDelete}
-          onPrevTokenDelete={onTokenDelete}
           {...rest}
+          onPrevTokenDelete={onTokenDelete}
           small
           autoFocus
           suggestionsInfo={suggestionsInfo}
@@ -160,6 +163,7 @@ export function ParamTokenDisplay({
         />
       ) : (
         <AtomTokenDisplay
+          onTokenChange={onTokenChange}
           onTokenDelete={onTokenDelete}
           token={token}
           {...rest}
@@ -179,28 +183,20 @@ function SingleInput({
   onPrevTokenFocus,
   small,
   className,
-  inputContRef,
   suggestionsInfo,
   noParams,
   outerKeywordKey,
   focused,
   tabIndex,
+  innerRef,
+  onInputKeyDown,
   ...rest
 }: {
-  token: SearchToken;
-  onTokenChange(token: SearchToken): void;
-  onTokenDelete(): void;
-  onPrevTokenDelete(): void;
-  onNextTokenFocus(): void;
-  onPrevTokenFocus(): void;
   noParams?: boolean;
   small?: boolean;
-  inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
-  suggestionsInfo: [number | string, string][];
   outerKeywordKey?: string;
-  focused: boolean;
-  tabIndex: number;
-} & React.HTMLAttributes<HTMLInputElement>) {
+} & CommonProps &
+  React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -252,6 +248,10 @@ function SingleInput({
         e.preventDefault();
         onNextTokenFocus();
       }
+
+      if (onInputKeyDown) {
+        onInputKeyDown(e);
+      }
     },
     [token, onTokenDelete, onPrevTokenDelete],
   );
@@ -273,7 +273,7 @@ function SingleInput({
         value={token.values[0] || ""}
         onChange={handleWritingQueryChange}
         onKeyDown={handleInputFieldKeyDown}
-        ref={inputRef}
+        ref={mergeRefs([inputRef, innerRef])}
         className={clsx(className, small && classes.inputFieldSmall)}
         {...rest}
       />
@@ -285,21 +285,12 @@ function SingleToken({
   token,
   ...rest
 }: {
-  token: SearchToken;
-  onTokenChange(token: SearchToken): void;
-  onTokenDelete(): void;
-  onPrevTokenDelete(): void;
-  onNextTokenFocus(): void;
-  onPrevTokenFocus(): void;
   small?: boolean;
   noParams?: boolean;
   autoFocus?: boolean;
-  inputContRef?: React.MutableRefObject<HTMLInputElement | null>;
-  suggestionsInfo: [number | string, string][];
   outerKeywordKey?: string;
-  focused: boolean;
-  tabIndex: number;
-} & React.HTMLAttributes<HTMLInputElement>) {
+} & CommonProps &
+  React.HTMLAttributes<HTMLInputElement>) {
   return token.keywordKey ? (
     <ParamTokenDisplay {...rest} token={token} />
   ) : token.tokenType === "ENTITY" ? (
@@ -309,21 +300,29 @@ function SingleToken({
   );
 }
 
-export function SearchQueryField({
-  searchQuery,
-  onSearchQueryChange,
-  onFocus,
-  focusToken,
-  onFocusToken,
-  suggestionsInfo,
-  ...rest
-}: {
-  searchQuery: SearchQuery;
-  onSearchQueryChange(searchQuery: SearchQuery): void;
-  focusToken: number | null;
-  onFocusToken(token: number | null): void;
-  suggestionsInfo: [number | string, string][];
-} & React.HTMLAttributes<HTMLInputElement>) {
+export const SearchQueryField = React.forwardRef<
+  HTMLInputElement | null,
+  {
+    searchQuery: SearchQuery;
+    onSearchQueryChange(searchQuery: SearchQuery): void;
+    focusToken: number | null;
+    onFocusToken(token: number | null): void;
+    suggestionsInfo: [number | string, string][];
+    onInputKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  } & React.HTMLAttributes<HTMLInputElement>
+>(function SearchQueryField(
+  {
+    searchQuery,
+    onSearchQueryChange,
+    onFocus,
+    focusToken,
+    onFocusToken,
+    suggestionsInfo,
+    onInputKeyDown,
+    ...rest
+  },
+  ref,
+) {
   const classes = useStyles();
 
   const inputContRef = useRef<HTMLInputElement | null>(null);
@@ -370,6 +369,18 @@ export function SearchQueryField({
     }
   }
 
+  const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+  function updateRef(el: HTMLInputElement, tokenI: number) {
+    inputsRef.current[tokenI] = el;
+    const currentRef = focusToken !== null && inputsRef.current[focusToken];
+
+    if (typeof ref === "function" && currentRef) {
+      ref(currentRef);
+    } else if (ref != null && currentRef) {
+      (ref as React.MutableRefObject<HTMLInputElement | null>).current = currentRef;
+    }
+  }
+
   return (
     <div style={{ position: "relative" }}>
       <div ref={inputContRef} className={classes.inputCont}>
@@ -378,12 +389,13 @@ export function SearchQueryField({
             tok && (
               <SingleToken
                 key={i}
+                innerRef={(el: HTMLInputElement) => updateRef(el, i)}
+                onInputKeyDown={onInputKeyDown}
                 tabIndex={i}
                 token={tok}
                 onTokenChange={(ntok) => handleTokenChange(ntok, i)}
                 onTokenDelete={() => handleTokenDelete(i)}
                 onPrevTokenDelete={() => handleTokenDelete(i - 1)}
-                inputContRef={inputContRef}
                 suggestionsInfo={suggestionsInfo}
                 {...rest}
                 onFocus={() => onFocusToken(i)}
@@ -398,4 +410,4 @@ export function SearchQueryField({
       </div>
     </div>
   );
-}
+});

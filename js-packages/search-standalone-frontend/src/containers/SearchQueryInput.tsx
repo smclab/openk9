@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
@@ -91,6 +91,8 @@ export function SearchQueryInput() {
 
   const [searchOpen, setSearchOpen] = useState(false);
 
+  const focusedInputRef = useRef<HTMLInputElement | null>(null);
+
   useLayoutEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       // Prevent page back on backspace
@@ -139,6 +141,7 @@ export function SearchQueryInput() {
             <div className="input-group-item">
               <div className="form-control input-group-inset input-group-inset-before">
                 <SearchQueryField
+                  ref={focusedInputRef}
                   searchQuery={searchQuery}
                   onSearchQueryChange={(query: SearchQuery) => {
                     setSearchQuery(query);
@@ -151,8 +154,8 @@ export function SearchQueryInput() {
                   )}
                   aria-label="Search"
                   placeholder="Search..."
-                  focusToken={focusToken}
                   onClick={() => setSearchOpen(true)}
+                  focusToken={focusToken}
                   onFocusToken={setFocusToken}
                   suggestionsInfo={suggestionsInfo}
                 />
@@ -172,7 +175,10 @@ export function SearchQueryInput() {
               suggestions={suggestions}
               visible={searchOpen}
               suggestionsKind={suggestionsKind}
-              setSuggestionsKind={setSuggestionsKind}
+              setSuggestionsKind={(kind) => {
+                setSuggestionsKind(kind);
+                focusedInputRef.current && focusedInputRef.current.focus();
+              }}
               onClose={() => setSearchOpen(false)}
             />
           </div>

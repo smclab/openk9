@@ -89,15 +89,11 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 function MenuItem({
   active,
   onSelect,
-  onOver,
   label,
-  i,
 }: {
   active: boolean;
   onSelect(): void;
-  onOver(): void;
   label: string;
-  i: number;
 }) {
   const classes = useStyles();
   return (
@@ -105,10 +101,6 @@ function MenuItem({
       role="button"
       className={clsx(classes.menuItem, active && classes.menuItemActive)}
       onClick={onSelect}
-      onKeyDown={(e) => e.key === "Enter" && onSelect()}
-      // onFocus={onOver}
-      // onMouseOver={onOver}
-      tabIndex={i}
     >
       {label} <ClayIcon symbol="angle-right-small" />
     </div>
@@ -192,17 +184,13 @@ export function FieldSuggestionBrowser({
         <MenuItem
           active={suggestionsKind === null}
           onSelect={() => setSuggestionsKind(null)}
-          onOver={() => setSuggestionsKind(null)}
           label="All"
-          i={0}
         />
         {menuItems.map((item, i) => (
           <MenuItem
             key={item.id}
             active={suggestionsKind === item.id}
             onSelect={() => handleToggleKind(item.id)}
-            onOver={() => setSuggestionsKind(item.id)}
-            i={i + 1}
             {...item}
           />
         ))}
