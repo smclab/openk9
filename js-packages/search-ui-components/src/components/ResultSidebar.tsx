@@ -18,7 +18,7 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
 
-import { GenericResultItem } from "@openk9/http-api";
+import { GenericResultItem, SidebarRendererProps } from "@openk9/http-api";
 import { ThemeType } from "../theme";
 import { arrOrEncapsulate, SidebarRenderersType } from "../utils";
 
@@ -49,15 +49,17 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 function SidebarContentDispatch<E>({
   result,
   renderers,
+  otherProps,
 }: {
   result: GenericResultItem<E>;
   renderers: SidebarRenderersType<E>;
+  otherProps: Omit<SidebarRendererProps<E>, "result">;
 }): JSX.Element | null {
   const Renderer = arrOrEncapsulate(result.source.type as any)
     .map((k) => renderers[k])
     .filter(Boolean)[0];
   if (Renderer) {
-    return <Renderer result={result} />;
+    return <Renderer result={result} {...otherProps} />;
   } else {
     console.warn("No sidebar renderer for", result.source.type);
     return null;
@@ -67,16 +69,22 @@ function SidebarContentDispatch<E>({
 export function ResultSidebar<E>({
   result,
   renderers,
+  otherProps,
 }: {
   result: GenericResultItem<E> | null;
   renderers: SidebarRenderersType<E>;
+  otherProps: Omit<SidebarRendererProps<E>, "result">;
 }) {
   const classes = useStyles();
 
   return (
     <div className={classes.root}>
       {result && (
-        <SidebarContentDispatch result={result} renderers={renderers} />
+        <SidebarContentDispatch
+          result={result}
+          renderers={renderers}
+          otherProps={otherProps}
+        />
       )}
     </div>
   );

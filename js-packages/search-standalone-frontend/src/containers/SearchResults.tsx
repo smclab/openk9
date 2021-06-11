@@ -18,7 +18,7 @@
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 
-import { useStore } from "../state";
+import { useLoginInfo, useStore } from "../state";
 import {
   ThemeType,
   SearchResultsList,
@@ -62,6 +62,8 @@ export function SearchResults() {
   const selectedResult = useStore((s) => s.selectedResult);
   const setSelectedResult = useStore((s) => s.setSelectedResult);
   const pluginInfos = useStore((s) => s.pluginInfos);
+  const suggestionsInfo = useStore((s) => s.suggestionsInfo);
+  const loginInfo = useLoginInfo();
 
   const classes = useStyles();
 
@@ -85,6 +87,7 @@ export function SearchResults() {
             searchResults={results.result}
             keyboardFocusEnabled={false}
             onSelectResult={setSelectedResult}
+            otherProps={{ suggestionsInfo, loginInfo }}
           />
 
           {results.total > results.result.length && (
@@ -101,7 +104,11 @@ export function SearchResults() {
 
         <div className={classes.spacer} />
 
-        <ResultSidebar renderers={sidebarRenderers} result={result || null} />
+        <ResultSidebar
+          renderers={sidebarRenderers}
+          result={result || null}
+          otherProps={{ suggestionsInfo, loginInfo }}
+        />
       </div>
     )
   );

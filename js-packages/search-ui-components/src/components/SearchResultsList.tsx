@@ -17,23 +17,29 @@
 
 import React, { useLayoutEffect } from "react";
 
-import { GenericResultItem, SearchResult } from "@openk9/http-api";
+import {
+  GenericResultItem,
+  ResultRendererProps,
+  SearchResult,
+} from "@openk9/http-api";
 import { arrOrEncapsulate, ResultRenderersType } from "../utils";
 
 function ResultDisplay<E>({
   data,
   renderers,
   onSelect,
+  otherProps,
 }: {
   data: GenericResultItem<E>;
   renderers: ResultRenderersType<E>;
   onSelect(): void;
+  otherProps: Omit<ResultRendererProps<E>, "data" | "onSelect">;
 }): JSX.Element | null {
   const Renderer = arrOrEncapsulate(data.source.type as any)
     .map((k) => renderers[k])
     .filter(Boolean)[0];
   if (Renderer) {
-    return <Renderer data={data} onSelect={onSelect} />;
+    return <Renderer data={data} onSelect={onSelect} {...otherProps} />;
   } else {
     console.warn("No renderer for", data.source.type);
     return null;
@@ -45,6 +51,7 @@ interface Props<E> {
   searchResults: SearchResult<E>["result"];
   keyboardFocusEnabled?: boolean;
   onSelectResult(id: string | null): void;
+  otherProps: Omit<ResultRendererProps<E>, "data" | "onSelect">;
 }
 
 export function SearchResultsList<E>({
@@ -52,6 +59,7 @@ export function SearchResultsList<E>({
   searchResults,
   keyboardFocusEnabled,
   onSelectResult,
+  otherProps,
   ...rest
 }: Props<E> & React.HTMLAttributes<HTMLDivElement>) {
   useLayoutEffect(() => {
@@ -95,6 +103,7 @@ export function SearchResultsList<E>({
           renderers={renderers}
           key={result.source.id + "-" + i}
           onSelect={() => onSelectResult(result.source.id)}
+          otherProps={otherProps}
         />
       ))}
     </div>

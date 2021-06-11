@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { LoginInfo } from "../api/authAPI";
 import { GenericResultItem } from "./searchResultsType";
 import { InputSuggestionToken } from "./suggestionTypes";
 
@@ -68,10 +69,14 @@ export type EnrichPlugin = {
 export type ResultRendererProps<E> = {
   data: GenericResultItem<E>;
   onSelect(): void;
+  suggestionsInfo?: [string | number, string][];
+  loginInfo: LoginInfo | null;
 };
 
 export type SidebarRendererProps<E> = {
   result: GenericResultItem<E>;
+  suggestionsInfo?: [string | number, string][];
+  loginInfo: LoginInfo | null;
 };
 
 export type ResultRendererPlugin<E> = {
