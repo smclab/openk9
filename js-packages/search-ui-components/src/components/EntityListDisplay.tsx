@@ -66,7 +66,7 @@ export function EntityListDisplay({
   const classes = useStyles();
 
   const entityList = Object.entries(entities || {})
-    .filter(([key]) => !ignoreTypes || ignoreTypes.indexOf(key) !== -1)
+    .filter(([key]) => !ignoreTypes || ignoreTypes.indexOf(key) === -1)
     .flatMap(([key, value]) =>
       value
         ? value.map((v) => ({
