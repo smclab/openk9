@@ -218,7 +218,10 @@ function Inner<T>({
       </div>
       <div className={classes.editElement}>
         <strong>Last Ingestion Date:</strong>{" "}
-        {format(editingDataSource.lastIngestionDate, "dd/MM/yyyy, HH:mm")}
+        {format(
+          editingDataSource.lastIngestionDate * 1000,
+          "dd/MM/yyyy, HH:mm",
+        )}
         <span className={clsx("label label-info", classes.labelReadOnly)}>
           <span className="label-item label-item-expand">READ ONLY</span>
         </span>

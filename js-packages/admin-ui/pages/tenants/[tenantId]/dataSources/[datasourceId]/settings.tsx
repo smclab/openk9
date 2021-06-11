@@ -155,7 +155,7 @@ function Inner({
         </div>
         <div>
           <strong>Last Ingestion Date:</strong>{" "}
-          {format(datasource.lastIngestionDate, "dd/MM/yyyy, HH:mm")}
+          {format(datasource.lastIngestionDate * 1000, "dd/MM/yyyy, HH:mm")}
         </div>
         <div>
           <strong>Scheduling:</strong> {datasource.scheduling}
