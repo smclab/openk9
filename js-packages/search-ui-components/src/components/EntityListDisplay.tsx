@@ -56,15 +56,17 @@ export function EntityDisplay({
 export function EntityListDisplay({
   entities,
   entityLabels,
+  ignoreTypes,
   ...rest
 }: {
   entities: GenericResultItem["source"]["entities"];
+  ignoreTypes?: string[];
   entityLabels?: [number, string][];
 } & React.HTMLAttributes<HTMLDivElement>) {
   const classes = useStyles();
 
   const entityList = Object.entries(entities || {})
-    .filter(([key]) => key !== "document")
+    .filter(([key]) => !ignoreTypes || ignoreTypes.indexOf(key) !== -1)
     .flatMap(([key, value]) =>
       value
         ? value.map((v) => ({
