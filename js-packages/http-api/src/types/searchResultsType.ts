@@ -31,7 +31,7 @@ export type GenericResultItem<E = {}> = {
         context: DeepKeys<
           Without<GenericResultItem<E>["source"], "entities">
         >[];
-        id: string;
+        id: number;
       }[];
     };
   } & E;
