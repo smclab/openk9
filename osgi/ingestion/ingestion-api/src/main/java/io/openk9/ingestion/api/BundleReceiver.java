@@ -23,6 +23,7 @@ public interface BundleReceiver {
 	Flux<Delivery> consumeAutoAck();
 	Flux<Delivery> consumeAutoAck(int prefetch);
 	Flux<Delivery> consumeNoAck();
+	Flux<Delivery> consumeNoAck(int prefetch);
 	Flux<AcknowledgableDelivery> consumeManualAck();
 	Flux<AcknowledgableDelivery> consumeManualAck(int prefetch);
 }

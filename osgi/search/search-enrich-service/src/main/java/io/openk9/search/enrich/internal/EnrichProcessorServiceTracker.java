@@ -164,8 +164,8 @@ class EnrichProcessorServiceTracker
 		public void start() {
 
 			_disposable = m_bundleReceiver
-				.consumeAutoAck(prefetch)
-				.concatMap(delivery -> {
+				.consumeNoAck(prefetch)
+				.flatMap(delivery -> {
 
 					EnrichProcessorContext context =
 						m_cborFactory.fromCBOR(

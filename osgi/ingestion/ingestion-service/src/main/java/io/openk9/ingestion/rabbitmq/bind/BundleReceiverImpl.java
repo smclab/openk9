@@ -47,6 +47,11 @@ public class BundleReceiverImpl implements BundleReceiver {
 	}
 
 	@Override
+	public Flux<Delivery> consumeNoAck(int prefetch) {
+		return _receiverReactor.consumeNoAck(_queue, prefetch);
+	}
+
+	@Override
 	public Flux<AcknowledgableDelivery> consumeManualAck() {
 		return _receiverReactor.consumeManualAck(_queue);
 	}

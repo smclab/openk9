@@ -22,7 +22,7 @@ public class LocationEntityNameCleaner extends DefaultEntityNameCleaner {
 		String entityName) {
 
 		return Map.of(
-			Constants.ENTITY_NAME_FIELD + AND_OPERATOR, entityName,
+			Constants.ENTITY_NAME_FIELD + EXACT, entityName,
 			Constants.ENTITY_TYPE_FIELD, getEntityType());
 	}
 }

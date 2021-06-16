@@ -14,6 +14,7 @@ import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Mono;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -51,13 +52,19 @@ public class IndexWriterEntityClientImpl implements IndexWriterEntityClient {
 
 	@Override
 	public Mono<Void> insertEntity(DocumentEntityRequest documentEntityRequest) {
+		return insertEntities(List.of(documentEntityRequest));
+	}
+
+	@Override
+	public Mono<Void> insertEntities(
+		Collection<DocumentEntityRequest> documentEntityRequestList) {
 		return Mono
 			.from(
 				_indexWriterHttpClient
 					.request(
 						HttpHandler.POST,
 						"/v1/",
-						_jsonFactory.toJson(documentEntityRequest),
+						_jsonFactory.toJson(documentEntityRequestList),
 						Map.of()
 					)
 			)
