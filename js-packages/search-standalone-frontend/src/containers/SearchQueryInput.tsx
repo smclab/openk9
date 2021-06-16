@@ -21,8 +21,10 @@ import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import ClickAwayListener from "react-click-away-listener";
 import {
+  InputSuggestionToken,
   readQueryParamToken,
   SearchQuery,
+  SearchToken,
   setQueryParamToken,
 } from "@openk9/http-api";
 import {
@@ -32,6 +34,7 @@ import {
   firstOrNull,
   SearchQueryField,
   FieldSuggestionBrowser,
+  circularMod,
 } from "@openk9/search-ui-components";
 
 import { useSearchQuery, useStore } from "../state";
@@ -89,9 +92,9 @@ export function SearchQueryInput() {
     );
   }
 
-  const [searchOpen, setSearchOpen] = useState(false);
-
   const focusedInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useLayoutEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -112,6 +115,60 @@ export function SearchQueryInput() {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  const [highlightToken, setHighlightToken] = useState<string | number | null>(
+    null,
+  );
+
+  function handleAddSuggestion(sugg: InputSuggestionToken) {
+    const soFar = searchQuery.filter((e, i) => i !== focusToken);
+    const editingTok = (focusToken !== null && searchQuery[focusToken]) || null;
+
+    if (sugg && sugg.kind === "ENTITY") {
+      const tok: SearchToken = {
+        tokenType: "ENTITY" as const,
+        keywordKey: editingTok?.keywordKey,
+        entityType: sugg.type,
+        values: [sugg.id],
+      };
+      setSearchQuery([...soFar, tok]);
+    } else if (sugg && sugg.kind === "PARAM") {
+      const tok: SearchToken = {
+        tokenType: "TEXT" as const,
+        keywordKey: sugg.id.toString(),
+        values: [""],
+      };
+      setSearchQuery([...soFar, tok]);
+    } else if (sugg && sugg.kind === "TOKEN") {
+      const tok: SearchToken = {
+        tokenType: sugg.outputTokenType || ("TEXT" as any),
+        keywordKey: sugg.outputKeywordKey as any,
+        values: [sugg.id as any],
+      };
+      setSearchQuery([...soFar, tok]);
+    }
+
+    setSearchOpen(false);
+  }
+
+  function handleInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+
+      const suggI = suggestions.findIndex((s) => s.id === highlightToken);
+      const nextSugg = suggestions[circularMod(suggI + 1, suggestions.length)];
+      if (nextSugg) setHighlightToken(nextSugg.id);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+
+      const suggI = suggestions.findIndex((s) => s.id === highlightToken);
+      const nextSugg = suggestions[circularMod(suggI - 1, suggestions.length)];
+      if (nextSugg) setHighlightToken(nextSugg.id);
+    } else if (e.key === "Enter") {
+      const sugg = suggestions.find((s) => s.id === highlightToken);
+      if (sugg) handleAddSuggestion(sugg);
+    }
+  }
 
   return (
     <div className={classes.root}>
@@ -158,6 +215,7 @@ export function SearchQueryInput() {
                   focusToken={focusToken}
                   onFocusToken={setFocusToken}
                   suggestionsInfo={suggestionsInfo}
+                  onInputKeyDown={handleInputKeyDown}
                 />
               </div>
 
@@ -169,9 +227,6 @@ export function SearchQueryInput() {
             </div>
 
             <FieldSuggestionBrowser
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-              focusToken={focusToken}
               suggestions={suggestions}
               visible={searchOpen}
               suggestionsKind={suggestionsKind}
@@ -179,7 +234,9 @@ export function SearchQueryInput() {
                 setSuggestionsKind(kind);
                 focusedInputRef.current && focusedInputRef.current.focus();
               }}
-              onClose={() => setSearchOpen(false)}
+              onAddSuggestion={handleAddSuggestion}
+              highlightToken={highlightToken}
+              onHighlightToken={setHighlightToken}
             />
           </div>
         </ClickAwayListener>

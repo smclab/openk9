@@ -36,6 +36,10 @@ export function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.substring(1);
 }
 
+export function circularMod(n: number, mod: number) {
+  return ((n % mod) + mod) % mod;
+}
+
 export const noop = () => {};
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

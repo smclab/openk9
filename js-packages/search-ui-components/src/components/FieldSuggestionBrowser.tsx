@@ -15,15 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
-import {
-  InputSuggestionToken,
-  SearchQuery,
-  SearchToken,
-} from "@openk9/http-api";
+import { InputSuggestionToken } from "@openk9/http-api";
 import { ThemeType } from "@openk9/search-ui-components";
 import { TokenIcon } from "./TokenIcon";
 
@@ -80,9 +76,9 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     paddingLeft: theme.spacingUnit * 2,
     cursor: "pointer",
     userSelect: "none",
-    "&:hover,&:focus": {
-      backgroundColor: theme.digitalLakePrimaryL3,
-    },
+  },
+  tokenHighlight: {
+    backgroundColor: theme.digitalLakePrimaryL3,
   },
 }));
 
@@ -120,55 +116,22 @@ const menuItems = [
 
 export function FieldSuggestionBrowser({
   suggestions,
-  focusToken,
+  onAddSuggestion,
   visible,
-  searchQuery,
-  onSearchQueryChange,
-  onClose,
   suggestionsKind,
   setSuggestionsKind,
+  highlightToken,
+  onHighlightToken,
 }: {
   suggestions: InputSuggestionToken[];
-  focusToken: number | null;
+  onAddSuggestion(sugg: InputSuggestionToken): void;
   visible: boolean;
-  searchQuery: SearchQuery;
-  onSearchQueryChange(searchQuery: SearchQuery): void;
-  onClose(): void;
   suggestionsKind: string | null;
   setSuggestionsKind(k: string | null): void;
+  highlightToken: string | number | null;
+  onHighlightToken(tok: string | number | null): void;
 }) {
   const classes = useStyles();
-
-  function handleAddSuggestion(sugg: InputSuggestionToken) {
-    const soFar = searchQuery.filter((e, i) => i !== focusToken);
-    const editingTok = (focusToken !== null && searchQuery[focusToken]) || null;
-
-    if (sugg && sugg.kind === "ENTITY") {
-      const tok: SearchToken = {
-        tokenType: "ENTITY" as const,
-        keywordKey: editingTok?.keywordKey,
-        entityType: sugg.type,
-        values: [sugg.id],
-      };
-      onSearchQueryChange([...soFar, tok]);
-    } else if (sugg && sugg.kind === "PARAM") {
-      const tok: SearchToken = {
-        tokenType: "TEXT" as const,
-        keywordKey: sugg.id.toString(),
-        values: [""],
-      };
-      onSearchQueryChange([...soFar, tok]);
-    } else if (sugg && sugg.kind === "TOKEN") {
-      const tok: SearchToken = {
-        tokenType: sugg.outputTokenType || ("TEXT" as any),
-        keywordKey: sugg.outputKeywordKey as any,
-        values: [sugg.id as any],
-      };
-      onSearchQueryChange([...soFar, tok]);
-    }
-
-    onClose();
-  }
 
   function handleToggleKind(kind: string) {
     if (suggestionsKind === kind) {
@@ -177,6 +140,24 @@ export function FieldSuggestionBrowser({
       setSuggestionsKind(kind);
     }
   }
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!scrollRef.current) return;
+
+    const hTok = scrollRef.current.querySelector(
+      `div.${classes.tokenHighlight}`,
+    ) as HTMLDivElement | null;
+
+    if (!hTok) return;
+
+    const bbRoot = scrollRef.current.getBoundingClientRect();
+    const bbTok = hTok.getBoundingClientRect();
+    const visibleTok =
+      bbTok.y >= bbRoot.top && bbTok.y < bbRoot.height + bbRoot.top;
+
+    if (!visibleTok) hTok.scrollIntoView(false);
+  }, [highlightToken]);
 
   return visible ? (
     <div className={classes.root}>
@@ -196,15 +177,19 @@ export function FieldSuggestionBrowser({
         ))}
       </div>
 
-      <div className={classes.tokens}>
+      <div className={classes.tokens} ref={scrollRef}>
         {suggestions.map((s, i) => (
           <div
             role="button"
             tabIndex={i}
-            className={classes.token}
+            className={clsx(
+              classes.token,
+              highlightToken === s.id && classes.tokenHighlight,
+            )}
             key={s.id}
-            onClick={() => handleAddSuggestion(s)}
-            onKeyDown={(e) => e.key === "Enter" && handleAddSuggestion(s)}
+            onClick={() => onAddSuggestion(s)}
+            onKeyDown={(e) => e.key === "Enter" && onAddSuggestion(s)}
+            onMouseMove={() => onHighlightToken(s.id)}
           >
             <TokenIcon suggestion={s} />
             {s.displayDescription}
