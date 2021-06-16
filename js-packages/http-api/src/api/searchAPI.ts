@@ -67,3 +67,14 @@ export async function doSearchDatasource<E>(
   const response: SearchResults<E> = await request.json();
   return response;
 }
+
+export async function getItemsInDatasource<E>(
+  datasourceId: number,
+  loginInfo: LoginInfo | null,
+): Promise<SearchResults<E>> {
+  return doSearchDatasource(
+    { range: [0, 0], searchQuery: [] },
+    datasourceId,
+    loginInfo,
+  );
+}

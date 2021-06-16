@@ -35,6 +35,7 @@ import { Layout } from "../../../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
 import { useToast } from "../../../../_app";
 import { JSONView } from "../../../../../components/JSONView";
+import { DSItemsCountShow } from "../../../../../components/DSItemsCountShow";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -143,6 +144,10 @@ function Inner({
               <span className="label-item label-item-expand">DISABLED</span>
             </span>
           )}
+        </div>
+        <div>
+          <strong>Items in Index:</strong>{" "}
+          <DSItemsCountShow datasourceId={datasourceId} /> items
         </div>
         <div>
           <strong>Description:</strong> {datasource.description}

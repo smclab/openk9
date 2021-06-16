@@ -48,6 +48,7 @@ import { Layout } from "../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
 import { ConfirmationModal } from "../../../components/ConfirmationModal";
 import { useToast } from "../../_app";
+import { DSItemsCountShow } from "../../../components/DSItemsCountShow";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -159,6 +160,11 @@ function DSItemRender({
               <span className="label-item label-item-expand">DISABLED</span>
             </span>
           )}
+          <span className="label label-inverse-light">
+            <span className="label-item label-item-expand">
+              <DSItemsCountShow datasourceId={ds.datasourceId} /> items
+            </span>
+          </span>
         </div>
       </div>
       <div className="autofit-col">
