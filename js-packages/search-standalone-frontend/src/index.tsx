@@ -20,6 +20,6 @@ import { loadPluginDepsIntoGlobal } from "@openk9/search-ui-components";
 
 import App from "./App";
 
-loadPluginDepsIntoGlobal();
+loadPluginDepsIntoGlobal(true);
 
 ReactDOM.render(<App />, document.getElementById("root"));
