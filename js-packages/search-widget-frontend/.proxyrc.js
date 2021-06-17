@@ -26,4 +26,12 @@ module.exports = function (app) {
       secure: false,
     }),
   );
+  app.use(
+    createProxyMiddleware("/icons.svg", {
+      target: "http://dev-projectq.smc.it/",
+      // target: "https://demo.openk9.io/",
+      changeOrigin: true,
+      secure: false,
+    }),
+  );
 };

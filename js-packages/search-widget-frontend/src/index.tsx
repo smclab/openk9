@@ -15,33 +15,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from "react";
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
+import { ThemeProvider } from "react-jss";
+import { ClayIconSpriteContext } from "@clayui/icon";
 
-import { Brand } from "@openk9/search-ui-components";
+import {
+  defaultTheme,
+  loadPluginDepsIntoGlobal,
+} from "@openk9/search-ui-components";
 
-function App() {
-  return (
-    <>
-      <Brand />
-      It Works!
-    </>
-  );
-}
+import { SearchApp } from "./SearchApp";
 
 export function initOpenK9(element: Element) {
-  ReactDOM.render(<App />, element);
+  ReactDOM.render(
+    <ThemeProvider theme={defaultTheme}>
+      <ClayIconSpriteContext.Provider value="/icons.svg">
+        <Suspense fallback={null}>
+          <SearchApp />
+        </Suspense>
+      </ClayIconSpriteContext.Provider>
+    </ThemeProvider>,
+    element,
+  );
 }
 
 const openK9API = {
   initOpenK9,
+  deps: loadPluginDepsIntoGlobal(true),
 };
 
 declare global {
   interface Window {
-    OpenK9: typeof openK9API;
+    OpenK9: typeof openK9API & {
+      deps: ReturnType<typeof loadPluginDepsIntoGlobal>;
+    };
   }
 }
-
 window.OpenK9 = openK9API;
 export default openK9API;
