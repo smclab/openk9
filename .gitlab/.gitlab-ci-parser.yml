@@ -23,6 +23,10 @@ Build Latest Parser Docker Images:
   image: docker:19.03.13
   stage: build-docker
   needs: []
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
@@ -30,7 +34,6 @@ Build Latest Parser Docker Images:
         - plugins/email/email-parser/**/*
         - plugins/liferay/liferay-parser/**/*
   before_script:
-    - export DOCKER_HOST="tcp://localhost:2375"
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
   script:
     - docker build -t web-parser:latest -f plugins/web/web-parser/Dockerfile .
