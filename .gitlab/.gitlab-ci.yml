@@ -32,6 +32,7 @@ sonarqube-check:
     - main
 
 trigger_deploy:
+  image: curlimages/curl
   stage: deploy
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
