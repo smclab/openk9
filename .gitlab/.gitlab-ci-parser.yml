@@ -30,6 +30,7 @@ Build Latest Parser Docker Images:
         - plugins/email/email-parser/**/*
         - plugins/liferay/liferay-parser/**/*
   before_script:
+    - export DOCKER_Host="tcp://localhost:2375"
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
   script:
     - docker build -t web-parser:latest -f plugins/web/web-parser/Dockerfile .
