@@ -20,7 +20,9 @@ Build Tagged Parser Docker Images:
     - docker push $CI_REGISTRY_NAME/openk9/liferay-parser:${CI_COMMIT_REF_NAME}
 
 Build Latest Parser Docker Images:
-  image: docker:19.03.12
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
   stage: build-docker
   needs: []
   rules:
