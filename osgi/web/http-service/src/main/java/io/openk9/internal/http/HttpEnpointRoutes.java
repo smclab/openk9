@@ -21,16 +21,21 @@ import io.openk9.http.socket.WebSocketHandler;
 import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.internal.http.util.ClassLoaderUtil;
-import io.openk9.internal.http.util.HttpServerOperationsUtil;
 import io.openk9.internal.http.util.Predicates;
 import io.openk9.internal.http.ws.WebSocketSessionFactory;
+import io.vavr.CheckedFunction4;
+import io.vavr.Function4;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.websocket.WebsocketInbound;
+import reactor.netty.http.websocket.WebsocketOutbound;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -84,7 +89,7 @@ public abstract class HttpEnpointRoutes<T extends Endpoint> {
 		public Publisher<Void> handle(
 			HttpServerRequest request, HttpServerResponse response) {
 
-			return HttpServerOperationsUtil.withWebsocketSupport(
+			return withWebsocketSupport(
 				request, getEndpoint().getPath(), getEndpoint().getProtocols(),
 				getEndpoint().getMaxFramePayloadLength(),
 				(in, out) ->
@@ -167,6 +172,55 @@ public abstract class HttpEnpointRoutes<T extends Endpoint> {
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+
+		try {
+
+			Class<?> httpServerOperations = ClassLoaderUtil
+				.getClassLoader()
+				.loadClass(
+					"reactor.netty.http.server.HttpServerOperations");
+
+			Method withWebsocketSupport =
+				httpServerOperations.getDeclaredMethod(
+					"withWebsocketSupport", String.class, String.class,
+					int.class, BiFunction.class);
+
+			withWebsocketSupport.setAccessible(true);
+
+			_methodInvoker = req -> CheckedFunction4.<
+				String, String, Integer,
+				BiFunction<
+					WebsocketInbound,
+					WebsocketOutbound,
+					Publisher<Void>>,
+				Mono<Void>>narrow(
+				(s, s2, integer, f2) ->
+					(Mono<Void>)withWebsocketSupport.invoke(
+						req, s, s2, integer, f2)).unchecked();
+
+
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
 	}
+
+	private static Mono<Void> withWebsocketSupport(
+		HttpServerRequest req, String url, String protocols,
+		int maxFramePayloadLength,
+		BiFunction<WebsocketInbound, WebsocketOutbound,
+			Publisher<Void>> websocketHandler) {
+
+		return _methodInvoker
+			.apply(req)
+			.apply(url, protocols, maxFramePayloadLength, websocketHandler);
+
+	}
+
+	static Function<HttpServerRequest, Function4<
+		String, String, Integer,
+		BiFunction<WebsocketInbound, WebsocketOutbound,
+			Publisher<Void>>, Mono<Void>>> _methodInvoker;
 
 }

@@ -43,6 +43,7 @@ import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.resources.LoopResources;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.function.Function;
@@ -96,7 +97,12 @@ public class ReactorNettyActivator {
 		DisposableServer disposableServer = httpServer
 			.bindNow();
 
-		_dispose = disposableServer::disposeNow;
+		disposableServer.onDispose(() -> _log.info("shutdown reactor netty"));
+
+		_dispose = () -> {
+			loopResources.dispose();
+			disposableServer.disposeNow(Duration.ofSeconds(1));
+		};
 
 		_serviceTracker =
 			ServiceTrackerProcessor
@@ -176,9 +182,9 @@ public class ReactorNettyActivator {
 
 	@Deactivate
 	public void destroy() {
+		_serviceTracker.close();
 		_dispose.run();
 		_dispose = _EMPTY_RUNNABLE;
-		_serviceTracker.close();
 		_serviceTracker = null;
 	}
 
