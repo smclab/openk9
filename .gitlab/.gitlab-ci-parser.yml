@@ -21,6 +21,8 @@ Build Tagged Parser Docker Images:
 
 Build Latest Parser Docker Images:
   image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
   stage: build-docker
   needs: []
   variables:
