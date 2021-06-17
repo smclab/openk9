@@ -4,7 +4,7 @@ variables:
 Build Tagged OSGI Docker Images:
   image: smclab/docker-java-11:latest
   services:
-    - smclab/docker-java-11:latest-dind
+    - docker:19.03.13-dind
   stage: build-docker
   variables:
     TEST_NAME: local/test
@@ -24,7 +24,7 @@ Build Tagged OSGI Docker Images:
 Build Latest OSGI Docker Images:
   image: smclab/docker-java-11:latest
   services:
-    - smclab/docker-java-11:latest-dind
+    - docker:19.03.13-dind
   stage: build-docker
   variables:
     TEST_NAME: local/test
