@@ -1,6 +1,6 @@
 {
   "name": "@openk9/email-datasource",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "author": "SMC",
   "description": "OpenK9 Email Data Source Frontend Module",
@@ -18,7 +18,7 @@
     "react-jss": "^10.4.0"
   },
   "devDependencies": {
-    "@openk9/plugin-scripts": "^0.1.0",
+    "@openk9/plugin-scripts": "^0.2.0",
     "browserslist-config-clay": "^3.0.0"
   }
 }

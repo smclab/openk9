@@ -1,6 +1,6 @@
 {
   "name": "@openk9/search-ui-components",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "SMC",
   "description": "OpenK9 search UI React components",
   "main": "src/index.ts",

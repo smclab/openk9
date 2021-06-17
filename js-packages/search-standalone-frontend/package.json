@@ -1,6 +1,6 @@
 {
   "name": "@openk9/search-standalone-frontend",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "scripts": {
     "start": "craco start",
