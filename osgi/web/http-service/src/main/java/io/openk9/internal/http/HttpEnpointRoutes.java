@@ -89,7 +89,8 @@ public abstract class HttpEnpointRoutes<T extends Endpoint> {
 				getEndpoint().getMaxFramePayloadLength(),
 				(in, out) ->
 					getEndpoint().apply(
-						WebSocketSessionFactory.createWebSocketSession(in, out)));
+						WebSocketSessionFactory.createWebSocketSession(
+							in, out, request, response)));
 
 		}
 

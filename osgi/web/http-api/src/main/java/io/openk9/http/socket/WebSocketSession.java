@@ -17,6 +17,8 @@
 
 package io.openk9.http.socket;
 
+import io.openk9.http.web.HttpRequest;
+import io.openk9.http.web.HttpResponse;
 import org.reactivestreams.Publisher;
 
 import java.nio.ByteBuffer;
@@ -38,5 +40,13 @@ public interface WebSocketSession {
 	String getSessionId();
 
 	Publisher<Void> close(CloseStatus status);
+
+	String getHeader(String name);
+
+	String getHeader(String name, String defaultValue);
+
+	HttpRequest getRequest();
+
+	HttpResponse getResponse();
 
 }

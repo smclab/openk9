@@ -17,9 +17,6 @@
 
 package io.openk9.internal.http.ws;
 
-import io.openk9.http.socket.CloseStatus;
-import io.openk9.http.socket.WebSocketMessage;
-import io.openk9.http.socket.WebSocketSession;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
@@ -28,9 +25,18 @@ import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.CharsetUtil;
+import io.openk9.http.socket.CloseStatus;
+import io.openk9.http.socket.WebSocketMessage;
+import io.openk9.http.socket.WebSocketSession;
+import io.openk9.http.web.HttpRequest;
+import io.openk9.http.web.HttpResponse;
+import io.openk9.internal.http.HttpRequestImpl;
+import io.openk9.internal.http.HttpResponseImpl;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.websocket.WebsocketInbound;
 import reactor.netty.http.websocket.WebsocketOutbound;
 
@@ -47,10 +53,14 @@ public class WebSocketSessionFactory {
 	private static class WebSocketSessionImpl implements WebSocketSession {
 
 		private WebSocketSessionImpl(
-			WebsocketInbound inbound, WebsocketOutbound outbound) {
+			WebsocketInbound inbound, WebsocketOutbound outbound,
+			HttpServerRequest request,
+			HttpServerResponse response) {
 			_inbound = inbound;
 			_outbound = outbound;
 			_id = UUID.randomUUID().toString();
+			_request = request;
+			_response = response;
 		}
 
 		@Override
@@ -105,6 +115,26 @@ public class WebSocketSessionFactory {
 		@Override
 		public Mono<Void> close(CloseStatus status) {
 			return _outbound.sendClose(status.getCode(), status.getReason());
+		}
+
+		@Override
+		public String getHeader(String name) {
+			return _inbound.headers().get(name);
+		}
+
+		@Override
+		public String getHeader(String name, String defaultValue) {
+			return _inbound.headers().get(name, defaultValue);
+		}
+
+		@Override
+		public HttpRequest getRequest() {
+			return new HttpRequestImpl(_request);
+		}
+
+		@Override
+		public HttpResponse getResponse() {
+			return new HttpResponseImpl(_response);
 		}
 
 		private WebSocketMessage _toMessage(WebSocketFrame webSocketFrame) {
@@ -177,6 +207,10 @@ public class WebSocketSessionFactory {
 
 		private final String _id;
 
+		private final HttpServerRequest _request;
+
+		private final HttpServerResponse _response;
+
 		private static final Map<Class, Function<ByteBuf, WebSocketMessage>>
 			messageTypes;
 
@@ -198,9 +232,11 @@ public class WebSocketSessionFactory {
 	}
 
 	public static WebSocketSession createWebSocketSession(
-		WebsocketInbound inbound, WebsocketOutbound outbound) {
+		WebsocketInbound inbound, WebsocketOutbound outbound,
+		HttpServerRequest request, HttpServerResponse response) {
 
-		return new WebSocketSessionImpl(inbound, outbound);
+		return new WebSocketSessionImpl(
+			inbound, outbound, request, response);
 	}
 
 }
