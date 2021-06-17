@@ -1,7 +1,13 @@
 Build Tagged Parser Docker Images:
-  image: docker:19.03.12
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
   stage: build-docker
   needs: []
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
   only: 
     - tags
   before_script:

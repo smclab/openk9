@@ -26,8 +26,14 @@ JS Format Lint Test and Build Check:
   allow_failure: true
 
 Build Tagged JS Docker Images:
-  image: docker:19.03.12
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
   stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
   only:
     - tags
   before_script:
@@ -55,8 +61,14 @@ Build Tagged JS Docker Images:
   allow_failure: false
 
 Build Latest JS Docker Images:
-  image: docker:19.03.12
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
   stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
   needs: [JS Format Lint Test and Build Check]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'

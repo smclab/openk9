@@ -3,6 +3,13 @@ variables:
 
 Build Tagged OSGI Docker Images:
   image: smclab/docker-java-11:latest
+  services:
+    - smclab/docker-java-11:latest-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
   stage: build-docker
   only:
     - tags
@@ -16,7 +23,13 @@ Build Tagged OSGI Docker Images:
 
 Build Latest OSGI Docker Images:
   image: smclab/docker-java-11:latest
+  services:
+    - smclab/docker-java-11:latest-dind
   stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
