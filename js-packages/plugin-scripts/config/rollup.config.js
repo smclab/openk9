@@ -45,12 +45,12 @@ const getBabelOptions = ({ useESModules }, targets) => ({
 });
 
 const externalGlobalsDefault = {
-  react: "React",
-  "react-dom": "ReactDOM",
-  "@openk9/http-api": "ok9API",
-  "@openk9/search-ui-components": "ok9Components",
-  "@clayui/icon": "clayIcon",
-  "react-jss": "reactJSS",
+  react: "OpenK9.deps.React",
+  "react-dom": "OpenK9.deps.ReactDOM",
+  "@openk9/http-api": "OpenK9.deps.ok9API",
+  "@openk9/search-ui-components": "OpenK9.deps.ok9Components",
+  "@clayui/icon": "OpenK9.deps.clayIcon",
+  "react-jss": "OpenK9.deps.reactJSS",
 };
 
 module.exports = (srcPath, buildPath, buildGraph) => [

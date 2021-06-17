@@ -38,13 +38,18 @@ export const pluginLoader = createAsset(async (id) => {
 
 export function loadPluginDepsIntoGlobal() {
   if (typeof window !== "undefined") {
-    (window as any).React = React;
-    (window as any).ReactDOM = ReactDOM;
-    (window as any).ok9API = ok9API;
-    (window as any).ok9Components = ok9Components;
-    (window as any).clayIcon = clayIcon;
-    (window as any).reactJSS = reactJSS;
+    if (typeof (window as any).OpenK9 === "undefined")
+      (window as any).OpenK9 = { deps: {} };
+
+    (window as any).OpenK9.deps.React = React;
+    (window as any).OpenK9.deps.ReactDOM = ReactDOM;
+    (window as any).OpenK9.deps.ok9API = ok9API;
+    (window as any).OpenK9.deps.ok9Components = ok9Components;
+    (window as any).OpenK9.deps.clayIcon = clayIcon;
+    (window as any).OpenK9.deps.reactJSS = reactJSS;
   }
+
+  return { React, ReactDOM, ok9API, ok9Components, clayIcon, reactJSS };
 }
 
 export type ResultRenderersType<E> = {
