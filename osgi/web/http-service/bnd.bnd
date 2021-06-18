@@ -1,33 +1,4 @@
 Bundle-Name: [OpenK9] Http Service
 Bundle-SymbolicName: io.openk9.http.service
 
-Include-Resource: @netty-*.jar, @reactor-netty-*.jar
-
-Import-Package: \
- com.google.protobuf;resolution:=optional,\
- com.google.protobuf.nano;resolution:=optional,\
- com.jcraft.jzlib;resolution:=optional,\
- com.ning.compress;resolution:=optional,\
- com.ning.compress.lzf;resolution:=optional,\
- com.ning.compress.lzf.util;resolution:=optional,\
- com.oracle.svm.core.annotate;resolution:=optional,\
- io.netty.channel.kqueue;resolution:=optional,\
- io.netty.handler.codec.haproxy;resolution:=optional,\
- io.netty.incubator.channel.uring;resolution:=optional,\
- io.netty.internal.tcnative;resolution:=optional,\
- lzma.sdk;resolution:=optional,\
- lzma.sdk.lzma;resolution:=optional,\
- net.jpountz.lz4;resolution:=optional,\
- net.jpountz.xxhash;resolution:=optional,\
- org.conscrypt;resolution:=optional,\
- org.eclipse.jetty.alpn;resolution:=optional,\
- org.eclipse.jetty.npn;resolution:=optional,\
- org.jboss.marshalling;resolution:=optional,\
- reactor.blockhound;resolution:=optional,\
- reactor.blockhound.integration;resolution:=optional,\
- sun.net.dns;resolution:=optional,\
- sun.security.ssl;resolution:=optional,\
- sun.security.x509;resolution:=optional,\
- *
-
 -include: ${project.rootDir}/osgi/common.bnd

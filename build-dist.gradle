@@ -25,6 +25,10 @@ configurations {
 		transitive = false
 		visible = false
 	}
+	distTest {
+		transitive = false
+		visible = false
+	}
 }
 
 repositories {
@@ -33,7 +37,7 @@ repositories {
 }
 
 dependencies {
-	
+
 	// <ENTITY MANAGER>
 
 	distEntityManager project(path: ':osgi:common:common-api', transitive: false)
@@ -43,7 +47,13 @@ dependencies {
 	distEntityManager project(path: ':osgi:common:osgi-api', transitive: false)
 	distEntityManager project(path: ':osgi:common:serialization-api', transitive: false)
 	distEntityManager project(path: ':osgi:common:serialization-service', transitive: false)
-	distEntityManager project(path: ':osgi:common:third-party', transitive: false)
+	distEntityManager project(path: ':osgi:third-party:reactor', transitive: false)
+	distEntityManager project(path: ':osgi:third-party:reactor-netty', transitive: false)
+	distEntityManager project(path: ':osgi:third-party:reactive-streams', transitive: false)
+	distEntityManager project(path: ':osgi:third-party:micrometer', transitive: false)
+	distEntityManager project(path: ':osgi:third-party:jackson', transitive: false)
+	distEntityManager project(path: ':osgi:third-party:vavr', transitive: false)
+	distEntityManager project(path: ':osgi:third-party:apache', transitive: false)
 
 	distEntityManager project(path: ':osgi:index-writer:index-writer-model', transitive: false)
 	distEntityManager project(path: ':osgi:index-writer:index-writer-entity-model', transitive: false)
@@ -111,7 +121,13 @@ dependencies {
 	distIndexWriter project(path: ':osgi:common:osgi-api', transitive: false)
 	distIndexWriter project(path: ':osgi:common:serialization-api', transitive: false)
 	distIndexWriter project(path: ':osgi:common:serialization-service', transitive: false)
-	distIndexWriter project(path: ':osgi:common:third-party', transitive: false)
+	distIndexWriter project(path: ':osgi:third-party:reactor', transitive: false)
+	distIndexWriter project(path: ':osgi:third-party:reactor-netty', transitive: false)
+	distIndexWriter project(path: ':osgi:third-party:reactive-streams', transitive: false)
+	distIndexWriter project(path: ':osgi:third-party:micrometer', transitive: false)
+	distIndexWriter project(path: ':osgi:third-party:jackson', transitive: false)
+	distIndexWriter project(path: ':osgi:third-party:vavr', transitive: false)
+	distIndexWriter project(path: ':osgi:third-party:apache', transitive: false)
 	distIndexWriter project(path: ':osgi:common:http-serialization', transitive: false)
 
 	distIndexWriter project(path: ':osgi:ingestion:ingestion-api', transitive: false)
@@ -158,7 +174,13 @@ dependencies {
 	distDatasource project(path: ':osgi:common:osgi-api', transitive: false)
 	distDatasource project(path: ':osgi:common:serialization-api', transitive: false)
 	distDatasource project(path: ':osgi:common:serialization-service', transitive: false)
-	distDatasource project(path: ':osgi:common:third-party', transitive: false)
+	distDatasource project(path: ':osgi:third-party:reactor', transitive: false)
+	distDatasource project(path: ':osgi:third-party:reactor-netty', transitive: false)
+	distDatasource project(path: ':osgi:third-party:reactive-streams', transitive: false)
+	distDatasource project(path: ':osgi:third-party:micrometer', transitive: false)
+	distDatasource project(path: ':osgi:third-party:jackson', transitive: false)
+	distDatasource project(path: ':osgi:third-party:vavr', transitive: false)
+	distDatasource project(path: ':osgi:third-party:apache', transitive: false)
 	distDatasource project(path: ':osgi:common:http-serialization', transitive: false)
 
 	distDatasource project(path: ':osgi:index-writer:index-writer-model', transitive: false)
@@ -222,7 +244,13 @@ dependencies {
 	distIngestion project(path: ':osgi:common:osgi-api', transitive: false)
 	distIngestion project(path: ':osgi:common:serialization-api', transitive: false)
 	distIngestion project(path: ':osgi:common:serialization-service', transitive: false)
-	distIngestion project(path: ':osgi:common:third-party', transitive: false)
+	distIngestion project(path: ':osgi:third-party:reactor', transitive: false)
+	distIngestion project(path: ':osgi:third-party:reactor-netty', transitive: false)
+	distIngestion project(path: ':osgi:third-party:reactive-streams', transitive: false)
+	distIngestion project(path: ':osgi:third-party:micrometer', transitive: false)
+	distIngestion project(path: ':osgi:third-party:jackson', transitive: false)
+	distIngestion project(path: ':osgi:third-party:vavr', transitive: false)
+	distIngestion project(path: ':osgi:third-party:apache', transitive: false)
 	distIngestion project(path: ':osgi:common:http-serialization', transitive: false)
 
 	distIngestion project(path: ':osgi:index-writer:index-writer-model', transitive: false)
@@ -263,7 +291,13 @@ dependencies {
 	distSearcher project(path: ':osgi:common:osgi-api', transitive: false)
 	distSearcher project(path: ':osgi:common:serialization-api', transitive: false)
 	distSearcher project(path: ':osgi:common:serialization-service', transitive: false)
-	distSearcher project(path: ':osgi:common:third-party', transitive: false)
+	distSearcher project(path: ':osgi:third-party:reactor', transitive: false)
+	distSearcher project(path: ':osgi:third-party:reactor-netty', transitive: false)
+	distSearcher project(path: ':osgi:third-party:reactive-streams', transitive: false)
+	distSearcher project(path: ':osgi:third-party:micrometer', transitive: false)
+	distSearcher project(path: ':osgi:third-party:jackson', transitive: false)
+	distSearcher project(path: ':osgi:third-party:vavr', transitive: false)
+	distSearcher project(path: ':osgi:third-party:apache', transitive: false)
 	distSearcher project(path: ':osgi:common:http-serialization', transitive: false)
 
 	distSearcher project(path: ':osgi:index-writer:index-writer-model', transitive: false)
@@ -322,7 +356,13 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:common:osgi-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:common:serialization-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:common:serialization-service', transitive: false)
-	distPluginDriverManager project(path: ':osgi:common:third-party', transitive: false)
+	distPluginDriverManager project(path: ':osgi:third-party:reactor', transitive: false)
+	distPluginDriverManager project(path: ':osgi:third-party:reactor-netty', transitive: false)
+	distPluginDriverManager project(path: ':osgi:third-party:reactive-streams', transitive: false)
+	distPluginDriverManager project(path: ':osgi:third-party:micrometer', transitive: false)
+	distPluginDriverManager project(path: ':osgi:third-party:jackson', transitive: false)
+	distPluginDriverManager project(path: ':osgi:third-party:vavr', transitive: false)
+	distPluginDriverManager project(path: ':osgi:third-party:apache', transitive: false)
 	distPluginDriverManager project(path: ':osgi:common:http-serialization', transitive: false)
 
 	distPluginDriverManager project(path: ':osgi:index-writer:index-writer-model', transitive: false)

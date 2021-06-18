@@ -1,0 +1,5 @@
+dependencies {
+	compile libraries.reactor
+	compile libraries.reactor_extra
+	compile libraries.reactor_tools
+}

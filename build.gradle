@@ -65,9 +65,9 @@ ext.libraries = [
 		checkerframework_checker_qual: 'org.checkerframework:checker-qual:3.8.0',
 		google_errorprone_error_prone_annotations: 'com.google.errorprone:error_prone_annotations:2.4.0',
 		reactor: [
-		        'io.projectreactor:reactor-core:3.4.6',
-				'io.projectreactor.addons:reactor-extra:3.4.3'
+		        'io.projectreactor:reactor-core:3.4.6'
 		],
+		reactor_extra: 'io.projectreactor.addons:reactor-extra:3.4.3',
 		reactor_tools: 'io.projectreactor:reactor-tools:3.4.6',
 		reactor_netty: [
 				'io.projectreactor.netty:reactor-netty:1.0.7'
@@ -111,6 +111,7 @@ ext.libraries = [
 		neo4j_java_driver: 'org.neo4j.driver:neo4j-java-driver:4.2.3',
 		neo4j_cypher_dsl: 'org.neo4j:neo4j-cypher-dsl:2021.1.1',
 		groovy: 'org.codehaus.groovy:groovy:3.0.8'
+
 
 ]
 

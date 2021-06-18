@@ -1,0 +1,14 @@
+Bundle-Name: [OpenK9 - Third Party] Jackson
+Bundle-SymbolicName: io.openk9.third.party.jackson
+
+Include-Resource: \
+ @jackson-*.jar
+
+Export-Package: \
+ com.fasterxml.jackson.*
+
+Import-Package: !com.fasterxml.jackson.*
+
+-fixupmessages: Classes found in the wrong directory: ...;is:=ignore
+
+-include: ${project.rootDir}/osgi/common.bnd

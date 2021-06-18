@@ -97,6 +97,8 @@ public class ReactorNettyActivator {
 		DisposableServer disposableServer = httpServer
 			.bindNow();
 
+		_log.info("reactor netty listening on " + config.port());
+
 		disposableServer.onDispose(() -> _log.info("shutdown reactor netty"));
 
 		_dispose = () -> {

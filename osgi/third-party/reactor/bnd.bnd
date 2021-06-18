@@ -1,0 +1,23 @@
+Bundle-Name: [OpenK9 - Third Party] Reactor
+Bundle-SymbolicName: io.openk9.third.party.reactor
+
+Include-Resource: @reactor-*.jar
+
+Export-Package: reactor, reactor.*
+
+Import-Package: \
+ io.micrometer.core.*;resolution:=optional,\
+ sun.misc;resolution:=optional,\
+ com.sun.*;resolution:=optional,\
+ javax.annotation.*;resolution:=optional,\
+ org.slf4j;resolution:=optional,\
+ javax.*;resolution:=optional,\
+ jdk.internal.misc;resolution:=optional,\
+ org.eclipse.swt.widgets;resolution:=optional,\
+ !kotlin.*,\
+ !reactor.*,\
+ *
+
+-fixupmessages: Classes found in the wrong directory: ...;is:=ignore
+
+-include: ${project.rootDir}/osgi/common.bnd
