@@ -25,10 +25,6 @@ configurations {
 		transitive = false
 		visible = false
 	}
-	distTest {
-		transitive = false
-		visible = false
-	}
 }
 
 repositories {
