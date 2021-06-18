@@ -68,33 +68,6 @@ public class UrlUtil {
 		return path;
 	}
 
-	public static void main(String[] args) {
-
-		String[] paths = {"/ciao", "/test", "/ciao"}; // -> /test/ciao/
-
-		StringBuilder sb = new StringBuilder();
-
-		for (String path : paths) {
-
-			sb.append(path);
-
-		}
-
-		String concatenation = sb.toString();
-
-		String[] split = concatenation.split("/");
-
-		System.out.println(Arrays.toString(split));
-
-		String collect = Arrays
-			.stream(split)
-			.filter(e -> !e.isEmpty())
-			.collect(Collectors.joining("/", "/", concatenation.endsWith("/") ? "/" : ""));
-
-
-		System.out.println(collect);
-	}
-
 	public static final String BLANK = "";
 
 	public static final char SLASH = '/';

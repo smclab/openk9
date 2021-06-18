@@ -29,6 +29,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.WebsocketServerSpec;
 import reactor.netty.http.websocket.WebsocketInbound;
 import reactor.netty.http.websocket.WebsocketOutbound;
 
@@ -151,12 +152,12 @@ public abstract class HttpEnpointRoutes<T extends Endpoint> {
 
 	}
 
-	static HttpEnpointRoutes ws(
+	public static HttpEnpointRoutes ws(
 		WebSocketHandler endpoint, Predicate<HttpServerRequest> condition) {
 		return new WebSocketRoutes(endpoint, condition);
 	}
 
-	static HttpEnpointRoutes noWs(
+	public static HttpEnpointRoutes noWs(
 		HttpHandler endpoint, Predicate<HttpServerRequest> condition) {
 		return new NoWebSocketRoutes(endpoint, condition);
 	}
@@ -182,8 +183,8 @@ public abstract class HttpEnpointRoutes<T extends Endpoint> {
 
 			Method withWebsocketSupport =
 				httpServerOperations.getDeclaredMethod(
-					"withWebsocketSupport", String.class, String.class,
-					int.class, BiFunction.class);
+					"withWebsocketSupport", String.class,
+					WebsocketServerSpec.class, BiFunction.class);
 
 			withWebsocketSupport.setAccessible(true);
 
@@ -196,8 +197,12 @@ public abstract class HttpEnpointRoutes<T extends Endpoint> {
 				Mono<Void>>narrow(
 				(s, s2, integer, f2) ->
 					(Mono<Void>)withWebsocketSupport.invoke(
-						req, s, s2, integer, f2)).unchecked();
-
+						s, WebsocketServerSpec
+							.builder()
+							.protocols(s2)
+							.maxFramePayloadLength(integer),
+						f2))
+				.unchecked();
 
 		}
 		catch (Exception e) {

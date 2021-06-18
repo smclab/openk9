@@ -20,12 +20,13 @@ package io.openk9.internal.http.util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.wiring.BundleWiring;
+import reactor.netty.http.server.HttpServer;
 
 public class ClassLoaderUtil {
 
 	public static ClassLoader getClassLoader() {
 
-		Bundle bundle = FrameworkUtil.getBundle(ClassLoaderUtil.class);
+		Bundle bundle = FrameworkUtil.getBundle(HttpServer.class);
 
 		BundleWiring adapt = bundle.adapt(BundleWiring.class);
 

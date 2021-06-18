@@ -23,7 +23,6 @@ import io.openk9.http.socket.WebSocketHandler;
 import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.internal.http.util.HttpPredicateUtil;
-import io.openk9.internal.http.util.ServiceTrackerProcessor;
 import io.openk9.internal.http.util.UrlUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -33,6 +32,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,79 +106,12 @@ public class ReactorNettyActivator {
 			disposableServer.disposeNow(Duration.ofSeconds(1));
 		};
 
-		_serviceTracker =
-			ServiceTrackerProcessor
-				.create(bundleContext, Endpoint.class)
-				.map(b -> s -> {
+		_serviceTracker = new ServiceTracker<>(
+			bundleContext, Endpoint.class,
+			new EndpointServiceTrackerCustomizer(
+				bundleContext, config.contextPath()));
 
-						String contextPath = config.contextPath();
-
-						Object property = s.getProperty("base.path");
-
-						String basePath = UrlUtil.BLANK;
-
-						if (property != null) {
-							basePath =(String)property;
-						}
-
-						Endpoint service = b.getService(s);
-
-						String path = service.getPath();
-
-						path = contextPath + basePath + path;
-
-						String[] split = path.split(UrlUtil.S_SLASH);
-
-						path = Arrays
-							.stream(split)
-							.filter(e -> !e.isEmpty())
-							.collect(
-								Collectors.joining(
-									UrlUtil.S_SLASH, UrlUtil.S_SLASH,
-									path.endsWith("/") ? "/" : ""));
-
-						if (_log.isDebugEnabled()) {
-							_log.debug(
-								String.format(
-									"path: %s, service: %s",
-									path, service)
-							);
-						}
-
-						if (service instanceof WebSocketHandler) {
-							return HttpEnpointRoutes.ws(
-								(WebSocketHandler)service,
-								HttpPredicateUtil.get(path));
-						}
-						else {
-
-							HttpHandler httpHandler =(HttpHandler)service;
-
-							HttpHandler httpFilter =
-								_httpFilterRegistry.getHttpFilter(
-									path, (HttpHandler)service);
-
-
-							if (httpHandler.prefix()) {
-								return HttpEnpointRoutes.noWs(
-									httpFilter,
-									HttpPredicateUtil.prefix(path)
-								);
-							}
-
-							return HttpEnpointRoutes.noWs(
-								httpFilter,
-								HttpPredicateUtil
-									.getPredicate(httpHandler.method())
-									.apply(path)
-							);
-
-						}
-
-					},
-					b -> (r, o) -> b.ungetService(r)
-				)
-				.open();
+		_serviceTracker.open();
 
 	}
 
@@ -255,6 +188,108 @@ public class ReactorNettyActivator {
 			.map(s -> s.handle(req, res))
 			.findFirst()
 			.orElseGet(res::sendNotFound);
+	}
+
+	private class EndpointServiceTrackerCustomizer implements
+		ServiceTrackerCustomizer<Endpoint, HttpEnpointRoutes> {
+
+		private EndpointServiceTrackerCustomizer(
+			BundleContext bundleContext, String contextPath) {
+			_bundleContext = bundleContext;
+			_contextPath = contextPath;
+		}
+
+		@Override
+		public HttpEnpointRoutes addingService(
+			ServiceReference<Endpoint> serviceReference) {
+
+			String contextPath = _contextPath;
+
+			Object property = serviceReference.getProperty("base.path");
+
+			String basePath = UrlUtil.BLANK;
+
+			if (property != null) {
+				basePath =(String)property;
+			}
+
+			Endpoint service = _bundleContext.getService(serviceReference);
+
+			String path = service.getPath();
+
+			path = contextPath + basePath + path;
+
+			String[] split = path.split(UrlUtil.S_SLASH);
+
+			path = Arrays
+				.stream(split)
+				.filter(e -> !e.isEmpty())
+				.collect(
+					Collectors.joining(
+						UrlUtil.S_SLASH, UrlUtil.S_SLASH,
+						path.endsWith("/") ? "/" : ""));
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					String.format(
+						"path: %s, service: %s",
+						path, service)
+				);
+			}
+
+			if (service instanceof WebSocketHandler) {
+				return HttpEnpointRoutes.ws(
+					(WebSocketHandler)service,
+					HttpPredicateUtil.get(path));
+			}
+			else {
+
+				HttpHandler httpHandler =(HttpHandler)service;
+
+				HttpHandler httpFilter =
+					_httpFilterRegistry.getHttpFilter(
+						path, (HttpHandler)service);
+
+
+				if (httpHandler.prefix()) {
+					return HttpEnpointRoutes.noWs(
+						httpFilter,
+						HttpPredicateUtil.prefix(path)
+					);
+				}
+
+				return HttpEnpointRoutes.noWs(
+					httpFilter,
+					HttpPredicateUtil
+						.getPredicate(httpHandler.method())
+						.apply(path)
+				);
+
+			}
+		}
+
+		@Override
+		public void modifiedService(
+			ServiceReference<Endpoint> serviceReference, HttpEnpointRoutes endpoint) {
+
+			removedService(serviceReference, endpoint);
+
+			addingService(serviceReference);
+
+		}
+
+		@Override
+		public void removedService(
+			ServiceReference<Endpoint> serviceReference,
+			HttpEnpointRoutes endpoint) {
+
+			_bundleContext.ungetService(serviceReference);
+
+		}
+
+		private BundleContext _bundleContext;
+		private String _contextPath;
+
 	}
 
 	@Reference
