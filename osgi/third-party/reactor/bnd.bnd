@@ -1,6 +1,8 @@
 Bundle-Name: [OpenK9 - Third Party] Reactor
 Bundle-SymbolicName: io.openk9.third.party.reactor
 
+Include-Resource: @reactor-*.jar
+
 Export-Package: reactor, reactor.*
 
 Import-Package: \
@@ -13,6 +15,7 @@ Import-Package: \
  jdk.internal.misc;resolution:=optional,\
  org.eclipse.swt.widgets;resolution:=optional,\
  !kotlin.*,\
+ !reactor.*,\
  *
 
 -fixupmessages: Classes found in the wrong directory: ...;is:=ignore

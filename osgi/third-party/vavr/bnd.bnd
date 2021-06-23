@@ -1,7 +1,13 @@
 Bundle-Name: [OpenK9 - Third Party] Vavr
 Bundle-SymbolicName: io.openk9.third.party.vavr
 
+Include-Resource: \
+ @vavr-*.jar,\
+ @vavr-match-*.jar
+
 Export-Package: io.vavr, io.vavr.*
+
+Import-Package: !io.vavr
 
 -fixupmessages: Classes found in the wrong directory: ...;is:=ignore
 

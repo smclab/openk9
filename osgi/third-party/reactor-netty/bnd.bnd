@@ -1,6 +1,11 @@
 Bundle-Name: [OpenK9 - Third Party] Reactor Netty
 Bundle-SymbolicName: io.openk9.third.party.reactor.netty
 
+Include-Resource: \
+ @netty-*.jar,\
+ @reactor-netty-*.jar
+
+
 Export-Package: io.netty.*, reactor.netty.*
 
 Import-Package: \
@@ -26,6 +31,8 @@ Import-Package: \
  net.jpountz.*;resolution:=optional,\
  org.jboss.*;resolution:=optional,\
  org.apache.*;resolution:=optional,\
+ !io.netty.*,\
+ !reactor.netty.*,\
  *
 
 -fixupmessages: Classes found in the wrong directory: ...;is:=ignore
