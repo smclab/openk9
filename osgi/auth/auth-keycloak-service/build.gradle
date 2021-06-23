@@ -3,7 +3,6 @@ dependencies {
 	compile project(':osgi:common:serialization-api')
 	compile project(':osgi:web:http-api')
 	compile project(":osgi:auth:auth-keycloak-api")
-	compile project(":osgi:cache:cache-api")
 	compile project(':osgi:ingestion:ingestion-api')
 
 	compile libraries.caffeine
