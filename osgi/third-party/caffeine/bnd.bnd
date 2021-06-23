@@ -1,5 +1,5 @@
-Bundle-Name: [OpenK9] Cache Api
-Bundle-SymbolicName: io.openk9.cache.api
+Bundle-Name: [OpenK9 - Third Party] Caffeine
+Bundle-SymbolicName: io.openk9.third.party.caffeine
 
 -include: ${project.rootDir}/osgi/common.bnd
 
@@ -11,3 +11,5 @@ Export-Package: \
  org.checkerframework.*,\
  com.google.errorprone,\
  com.google.errorprone.annotations
+
+Import-Package: *;resolution:=optional

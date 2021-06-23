@@ -33,7 +33,6 @@ repositories {
 }
 
 dependencies {
-
 	// <ENTITY MANAGER>
 
 	distEntityManager project(path: ':osgi:common:common-api', transitive: false)
@@ -185,7 +184,7 @@ dependencies {
 	distDatasource project(path: ':osgi:auth:auth-keycloak-service', transitive: false)
 	distDatasource project(path: ':osgi:auth:auth-keycloak-web', transitive: false)
 
-	distDatasource project(path: ':osgi:cache:cache-api', transitive: false)
+	distDatasource project(path: ':osgi:third-party:caffeine', transitive: false)
 
 	distDatasource project(path: ':osgi:ingestion:ingestion-api', transitive: false)
 	distDatasource project(path: ':osgi:ingestion:ingestion-service', transitive: false)
@@ -322,7 +321,7 @@ dependencies {
 	distSearcher project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-service', transitive: false)
 	distSearcher project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
 
-	distSearcher project(path: ':osgi:cache:cache-api', transitive: false)
+	distSearcher project(path: ':osgi:third-party:caffeine', transitive: false)
 
 	distSearcher project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
 
