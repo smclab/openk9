@@ -11,5 +11,3 @@ Export-Package: \
  org.checkerframework.*,\
  com.google.errorprone,\
  com.google.errorprone.annotations
-
-Import-Package: *;resolution:=optional

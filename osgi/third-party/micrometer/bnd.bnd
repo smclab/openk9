@@ -16,7 +16,7 @@ Import-Package: \
  !org.LatencyUtils,\
  !org.HdrHistogram.*,\
  !org.HdrHistogram,\
- !*;resolution:=optional
+ *;resolution:=optional
 
 
 -fixupmessages: Classes found in the wrong directory: ...;is:=ignore
