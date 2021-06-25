@@ -17,7 +17,6 @@
 
 export * from "./Dockbar";
 export * from "./TokenIcon";
-export * from "./InputSuggestionTokensDisplay";
 export * from "./MultipleSelectionBar";
 export * from "./FieldSuggestionBrowser";
 export * from "./SearchResultsList";
