@@ -35,6 +35,12 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
+/**
+ * Display a single entity badge.
+ * @param type - the type of the entity, that gets truncated to 3 upper case chars
+ * @param id - the id of the entity
+ * @param label - the label of the entity, if not present the id is shown instead
+ */
 export function EntityDisplay({
   type,
   id,
@@ -53,6 +59,13 @@ export function EntityDisplay({
   );
 }
 
+/**
+ * Display a list of entity badges, in a row wrapping flex container.
+ * @param entities - the entities you want to display
+ * @param ignoreTypes - if you want to hide some specific entity types, like documents
+ * @param entityLabels - entities does not contain a string label but only a numeric id, so you can provide a label for each id here
+ * @param rest - gets spread into the wrapper div
+ */
 export function EntityListDisplay({
   entities,
   entityLabels,

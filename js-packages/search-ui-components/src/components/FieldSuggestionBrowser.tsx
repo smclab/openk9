@@ -58,6 +58,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     "&:hover,&:focus": {
       backgroundColor: theme.digitalLakeMainL6,
     },
+    // Clay icons have an annoying margin
     "& .lexicon-icon": { marginTop: 0 },
   },
   menuItemActive: {
@@ -82,6 +83,9 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
+/**
+ * A menu item for the types selector
+ */
 function MenuItem({
   active,
   onSelect,
@@ -103,6 +107,7 @@ function MenuItem({
   );
 }
 
+// TODO: move this to tenant configuration/component prop
 const menuItems = [
   { id: "person", label: "People" },
   { id: "organization", label: "Organizations" },
@@ -114,6 +119,11 @@ const menuItems = [
   { id: "PARAM", label: "Filters" },
 ];
 
+/**
+ * A floating menu for adding tokens, such as predicates and entities. To be used with SearchQueryField.
+ * @param suggestionsKind - the currently selected token type, AKA the left menu selector state. Please fetch suggestions again at every change.
+ * @param highlightToken - the currently selected token, please implement in your focused input field the logic to change this with keyboard.
+ */
 export function FieldSuggestionBrowser({
   suggestions,
   onAddSuggestion,
@@ -141,6 +151,9 @@ export function FieldSuggestionBrowser({
     }
   }
 
+  // This is used to scroll the container correctly when the selected token with keyboard is out of scroll.
+  // Every time the selected token changes, it finds which one is highlighted using an ugly DOM operation and scrolls into it.
+  // We can't use focus to perform this, since we want the user to be able to write in the input while selecting tokens!
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!scrollRef.current) return;

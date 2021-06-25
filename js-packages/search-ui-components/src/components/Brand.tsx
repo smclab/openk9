@@ -41,6 +41,11 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
+
+/**
+ * Use this component for OpenK9 branding (logo and title).
+ * It's open, it has a dog on it, it's cute!
+ */
 export function Brand({
   badge,
   className,

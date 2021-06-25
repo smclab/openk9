@@ -31,11 +31,25 @@ import {
   SidebarRendererProps,
 } from "@openk9/http-api";
 
+/**
+ * This object is to be used when loading plugins in a React Suspense environment.
+ * Remember to add a <Suspense /> wrapper, or it will crash.
+ *
+ * @example
+ * const plugin = pluginLoader.read("plugin-id");
+ * console.log(plugin.displayName);
+ */
 export const pluginLoader = createAsset(async (id) => {
   const plugin = await loadPlugin(id);
   return plugin;
 });
 
+/**
+ * Since OpenK9 plugins rely on global objects, to avoid repeating dependencies, it's crucial to call this method BEFORE loading any plugin.
+ * This will load shared dependencies in window.OpenK9.deps.
+ *
+ * @param compatMode - set to true to load dependencies also in window object directly, to allow loading older plugins.
+ */
 export function loadPluginDepsIntoGlobal(compatMode = false) {
   if (typeof window !== "undefined") {
     if (typeof (window as any).OpenK9 === "undefined")
@@ -61,14 +75,23 @@ export function loadPluginDepsIntoGlobal(compatMode = false) {
   return { React, ReactDOM, ok9API, ok9Components, clayIcon, reactJSS };
 }
 
+/**
+ * A key-value map with renderer functions for each result type, for the result cards.
+ */
 export type ResultRenderersType<E> = {
   [key: string]: React.FC<ResultRendererProps<E>>;
 };
 
+/**
+ * A key-value map with renderer functions for each result type, for the preview sidebar.
+ */
 export type SidebarRenderersType<E> = {
   [key: string]: React.FC<SidebarRendererProps<E>>;
 };
 
+/**
+ * Given a list of available plugins, it loads them and returns a map with all the available result renderers.
+ */
 export function getPluginResultRenderers(pluginInfos: PluginInfo[]) {
   const plugins = pluginInfos
     .map((pI) => pluginLoader.read(pI.pluginId))

@@ -60,6 +60,10 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
+/**
+ * A components used to wrap result items, handling selection with mouse and keyboard.
+ * The onSelect prop will be provided by the frontend, so make sure to spread your rest props in your plugin.
+ */
 export function ResultCard({
   className,
   onSelect,

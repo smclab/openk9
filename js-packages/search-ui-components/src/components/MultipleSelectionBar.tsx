@@ -83,6 +83,15 @@ interface BarProps {
   className?: string;
 }
 
+/**
+ * Display a tab controller list, insert items as children.
+ * @example
+ * <MultipleSelectionBar>
+ *   <MultipleSelectionBarItem selected={false} onClick={() => {}}>
+ *     All
+ *   </MultipleSelectionBarItem>
+ * </MultipleSelectionBar>
+ */
 export function MultipleSelectionBar({
   className,
   children,

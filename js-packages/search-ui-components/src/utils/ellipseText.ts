@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Splits and ellipsis text if longer than max, keeping words intact.
+ */
 export function ellipseText(text: string = "", max: number) {
   const parts = text.split(" ").reduce((parts: string[], part, i) => {
     const length = parts.reduce((l, p) => p.length + l, 0);

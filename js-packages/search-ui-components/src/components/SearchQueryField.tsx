@@ -300,6 +300,16 @@ function SingleToken({
   );
 }
 
+/**
+ * An input field for search queries, supporting tokens.
+ * @param searchQuery - currently writing search query
+ * @param onSearchQueryChange - when the search query gets changed
+ * @param focusToken - the index of the current focused token
+ * @param onFocusToken - when the index of the current focused token changes, for example when pressing arrow keys
+ * @param suggestionsInfo - map with labels for entities, otherwise entity numeric id is showed
+ * @param onInputKeyDown - called onKeyDown on the input field, for custom actions
+ * @param ref - the ref for this component will be the currently focus item
+ */
 export const SearchQueryField = React.forwardRef<
   HTMLInputElement | null,
   {

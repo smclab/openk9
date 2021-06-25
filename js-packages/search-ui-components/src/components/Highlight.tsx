@@ -36,6 +36,14 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
+/**
+ * It performs highlighting on text with the format incoming from ElasticSearch. It also perform text ellipsis!
+ * @example
+ * <Highlight
+ *   text={data.source.user.lastName}
+ *   highlight={data.highlight["user.lastName"]}
+ * />
+ */
 export function Highlight({
   text,
   highlight,

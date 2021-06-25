@@ -75,6 +75,11 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
+/**
+ * Common dockbar component to mock the one from Open Square design language.
+ * @param onHamburgerAction - called when the user clicks on the three bars hambuger menu, set me to undefined if you don't want an hamburger menu (it may also be a good idea...)
+ * @param onLoginAction - called when the user clicks on the upper right login button, set me to undefined if you don't want a login button
+ */
 export function Dockbar({
   onHamburgerAction,
   onLoginAction,
@@ -103,6 +108,7 @@ export function Dockbar({
           </button>
         ) : (
           <>
+            {/* TODO: this is a placeholder to make it look like Open Square, but it serves no function */}
             <div className={classes.notifications} />
             <div className={classes.user} />
           </>

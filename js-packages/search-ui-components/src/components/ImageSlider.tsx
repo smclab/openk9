@@ -110,6 +110,10 @@ function Inner({
   );
 }
 
+/**
+ * An image viewer that allows a modal when you click on it.
+ * @param urls - the urls of the images to show
+ */
 export function ImageSlider({
   urls,
   ...rest

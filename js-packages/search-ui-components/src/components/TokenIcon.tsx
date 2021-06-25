@@ -29,6 +29,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
+// TODO: move these inside plugins as a pluginservice
 export function TokenIcon({
   suggestion,
 }: {
