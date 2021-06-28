@@ -95,9 +95,10 @@ public class GetOrAddEntities {
 	public Mono<EntityContext> handleMessage(
 		StartDisambiguation.InternalDisambiguation id) {
 
-		return Mono.defer(() -> {
+		MonoSink<EntityContext> emitter = id.getEmitter();
 
-			MonoSink<EntityContext> emitter = id.getEmitter();
+		return Mono
+			.defer(() -> {
 
 			RequestContext request = id.getRequest();
 
@@ -179,7 +180,8 @@ public class GetOrAddEntities {
 				.doOnNext(emitter::success)
 				.doOnError(emitter::error);
 
-		});
+		})
+			.contextWrite(emitter.currentContext());
 
 	}
 

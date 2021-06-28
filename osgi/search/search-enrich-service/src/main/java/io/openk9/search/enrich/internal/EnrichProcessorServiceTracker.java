@@ -164,7 +164,7 @@ class EnrichProcessorServiceTracker
 		public void start() {
 
 			_disposable = m_bundleReceiver
-				.consumeNoAck(prefetch)
+				.consumeAutoAck(prefetch)
 				.flatMap(delivery -> {
 
 					EnrichProcessorContext context =

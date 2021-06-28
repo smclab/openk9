@@ -22,14 +22,14 @@ public class Neo4jGraphConnection {
 		String username() default "openk9";
 		String password() default "openk9";
 		boolean logLeakedSessions() default false;
-		int maxConnectionPoolSize() default 100; //PoolSettings.DEFAULT_MAX_CONNECTION_POOL_SIZE;
+		int maxConnectionPoolSize() default 200; //PoolSettings.DEFAULT_MAX_CONNECTION_POOL_SIZE;
 		long idleTimeBeforeConnectionTest() default -1; //PoolSettings.DEFAULT_IDLE_TIME_BEFORE_CONNECTION_TEST;
 		long maxConnectionLifetimeMillis() default 3_600_000; // TimeUnit.HOURS.toMillis( 1 )
 		long connectionAcquisitionTimeoutMillis() default 60_000; // TimeUnit.SECONDS.toMillis( 60 )
 		int routingFailureLimit() default 1; // RoutingSettings.DEFAULT.maxRoutingFailures()
 		long routingRetryDelayMillis() default 5_000; // RoutingSettings.DEFAULT.retryTimeoutDelay();
 		long routingTablePurgeDelayMillis() default 30_000; // RoutingSettings.DEFAULT.routingTablePurgeDelayMs()
-		int connectionTimeoutMillis() default 30_000; // TimeUnit.SECONDS.toMillis( 30 )
+		int connectionTimeoutMillis() default 90_000; // TimeUnit.SECONDS.toMillis( 30 )
 		long maxTransactionRetryTime() default 30_000; // RetrySettings.DEFAULT
 		boolean isMetricsEnabled() default false;
 		long fetchSize() default 1000; // FetchSizeUtil.DEFAULT_FETCH_SIZE;

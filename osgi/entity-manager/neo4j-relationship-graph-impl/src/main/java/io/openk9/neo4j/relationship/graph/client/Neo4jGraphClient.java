@@ -81,6 +81,17 @@ public class Neo4jGraphClient implements GraphClient {
 			Optional<RxTransaction> optional =
 				contextView.getOrEmpty(SESSION);
 
+			if (optional.isPresent()) {
+				if (_log.isDebugEnabled()) {
+					_log.debug("reuse neo4j connection");
+				}
+			}
+			else {
+				if (_log.isDebugEnabled()) {
+					_log.debug("create new neo4j connection");
+				}
+			}
+
 			return optional
 				.map(rxTransaction -> rxTransaction
 					.run(statement.getCypher())
@@ -103,6 +114,17 @@ public class Neo4jGraphClient implements GraphClient {
 
 			Optional<RxTransaction> optional =
 				contextView.getOrEmpty(SESSION);
+
+			if (optional.isPresent()) {
+				if (_log.isDebugEnabled()) {
+					_log.debug("reuse neo4j connection");
+				}
+			}
+			else {
+				if (_log.isDebugEnabled()) {
+					_log.debug("create new neo4j connection");
+				}
+			}
 
 			return optional
 				.map(rxTransaction -> rxTransaction
