@@ -1,7 +1,6 @@
 dependencies {
 	compile libraries.reactor
 	compile libraries.neo4j_cypher_dsl
-
-	compile group: 'com.querydsl', name: 'querydsl-core', version: '4.4.0'
-
+	compile libraries.neo4j_query_dsl_core
+	compile libraries.neo4j_java_driver
 }

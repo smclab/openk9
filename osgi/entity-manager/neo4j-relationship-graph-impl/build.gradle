@@ -3,4 +3,5 @@ dependencies {
 
 	compile libraries.neo4j_java_driver
 	compile libraries.reactor
+	compile libraries.slf4j_api
 }

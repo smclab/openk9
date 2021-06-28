@@ -110,6 +110,8 @@ ext.libraries = [
 		felix_dependencymanager: 'org.apache.felix:org.apache.felix.dependencymanager:4.6.0',
 		neo4j_java_driver: 'org.neo4j.driver:neo4j-java-driver:4.2.3',
 		neo4j_cypher_dsl: 'org.neo4j:neo4j-cypher-dsl:2021.1.1',
+		neo4j_query_dsl_core: 'com.querydsl:querydsl-core:4.4.0',
+		guava: 'com.google.guava:guava:18.0',
 		groovy: 'org.codehaus.groovy:groovy:3.0.8'
 
 

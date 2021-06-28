@@ -21,6 +21,7 @@ import org.neo4j.cypherdsl.core.Statement;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
@@ -56,7 +57,7 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 			.from(httpRequest.aggregateBodyToString())
 			.map(body -> _jsonFactory.fromJson(body, Request.class));
 
-		Mono<ResponseList> response =
+		Flux<RequestContext> requestContextFlux =
 			requestMono
 				.flatMapIterable(
 					request -> request
@@ -80,22 +81,26 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 							.build()
 						)
 						.collect(Collectors.toList())
-				)
+				);
+
+		Mono<List<EntityContext>> disambiguateListMono =
+			requestContextFlux
 				.flatMap(
 					request -> Mono.<EntityContext>create(
-						fluxSink -> {
-							_startDisambiguation
-								.disambiguate(request, fluxSink);
-						}
+						fluxSink ->
+							_startDisambiguation.disambiguate(request, fluxSink)
 					)
 				)
-				.collectList()
-				.flatMap(entityContexts ->
-					GetOrAddEntities.stopWatch(
-						"write-relations", writeRelations(entityContexts)));
+				.collectList();
+
+		Mono<ResponseList> writeRelations = disambiguateListMono
+			.flatMap(entityContexts ->
+				GetOrAddEntities.stopWatch(
+					"write-relations", writeRelations(entityContexts)));
 
 		return Mono
-			.from(_httpResponseWriter.write(httpResponse, response));
+			.from(_httpResponseWriter.write(
+				httpResponse, _graphClient.makeTransactional(writeRelations)));
 	}
 
 	public Mono<ResponseList> writeRelations(List<EntityContext> entityContext) {
