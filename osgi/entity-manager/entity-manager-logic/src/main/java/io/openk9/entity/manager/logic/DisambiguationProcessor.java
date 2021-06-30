@@ -30,8 +30,9 @@ import java.util.concurrent.TimeoutException;
 public class DisambiguationProcessor {
 
 	@interface Config {
-		long amount() default 120_000;
+		long amount() default 30_000;
 		ChronoUnit unit() default ChronoUnit.MILLIS;
+		int concurrency() default 256;
 	}
 
 	private Mono<Void> _disambiguate(
@@ -63,8 +64,8 @@ public class DisambiguationProcessor {
 				.groupBy(
 					internalDisambiguation ->
 						internalDisambiguation.getRequest().getCurrent(),
-					Integer.MAX_VALUE)
-				.flatMap(this::_disambiguate, Integer.MAX_VALUE)
+					config.concurrency())
+				.flatMap(this::_disambiguate, config.concurrency())
 				.onErrorContinue(TimeoutException.class, (throwable, o) -> {
 
 					if (_log.isDebugEnabled()) {
