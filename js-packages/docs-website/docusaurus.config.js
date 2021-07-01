@@ -121,7 +121,7 @@ module.exports = {
             },
             {
               label: "Contact Us",
-              href: "https://www.smc.it/contact-us",
+              href: "https://www.smc.it/contatta-smc",
             },
           ],
         },

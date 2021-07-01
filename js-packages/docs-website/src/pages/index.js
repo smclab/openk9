@@ -471,7 +471,7 @@ function Home() {
             <div className={styles.centering}>
               <Link
                 className={clsx("button button--primary button--lg")}
-                to="https://www.smc.it/contact-us"
+                to="https://www.smc.it/contatta-smc"
               >
                 Contact Us
               </Link>

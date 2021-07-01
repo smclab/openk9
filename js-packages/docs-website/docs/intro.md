@@ -8,7 +8,7 @@ slug: /
 OpenK9 is a powerful modular Open Source Cognitive Enterprise Search System, enhanced through AI and Machine Learning. Using state-of-art Information Retrieval and Machine Learning algorithms, OpenK9 is able to enrich and index data from different data sources.
 
 :::caution
-OpenK9 is under heavy development and is not yet production ready. Expect changes at any time. This documentation is under construction. Please check the [GitHub repository](https://github.com/smclab/openk9) or [contact us](https://www.smc.it/contact-us) for further inquiries.
+OpenK9 is under heavy development and is not yet production ready. Expect changes at any time. This documentation is under construction. Please check the [GitHub repository](https://github.com/smclab/openk9) or [contact us](https://www.smc.it/contatta-smc) for further inquiries.
 :::
 
 ## Architecture Overview
