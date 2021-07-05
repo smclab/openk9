@@ -69,6 +69,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	@interface Config {
 		String[] rootFieldAggregations() default {"type"};
 		String[] datasourceFieldAggregations() default {"topic", "documentType"};
+		int aggregationSize() default 20;
 	}
 
 	@Activate
@@ -76,6 +77,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	void activate(Config config) {
 		_rootFieldAggregations = config.rootFieldAggregations();
 		_datasourceFieldAggregations = config.datasourceFieldAggregations();
+		_aggregationSize = config.aggregationSize();
 	}
 
 	@Override
@@ -138,6 +140,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 				AggregationBuilders
 					.terms(nameField)
 					.field(nameField)
+					.size(_aggregationSize)
 			)
 			.forEach(searchSourceBuilder::aggregation);
 
@@ -230,5 +233,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 	private String[] _rootFieldAggregations;
 	private String[] _datasourceFieldAggregations;
+	private int _aggregationSize;
 
 }
