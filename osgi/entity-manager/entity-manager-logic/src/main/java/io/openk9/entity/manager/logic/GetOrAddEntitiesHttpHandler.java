@@ -18,7 +18,10 @@ import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Functions;
 import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Statement;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -38,6 +41,25 @@ import static org.neo4j.cypherdsl.core.Cypher.literalOf;
 	service = Endpoint.class
 )
 public class GetOrAddEntitiesHttpHandler implements HttpHandler {
+
+	@interface Config {
+		boolean transactional() default false;
+	}
+
+	@Activate
+	void activate(Config config) {
+		_transactional = config.transactional();
+	}
+
+	@Modified
+	void modified(Config config) {
+		deactivate();
+		activate(config);
+	}
+
+	@Deactivate
+	void deactivate() {
+	}
 
 	@Override
 	public String getPath() {
@@ -84,14 +106,22 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 				);
 
 		Mono<List<EntityContext>> disambiguateListMono =
-			requestContextFlux
-				.flatMap(
-					request -> Mono.<EntityContext>create(
-						fluxSink ->
-							_startDisambiguation.disambiguate(request, fluxSink)
+			GetOrAddEntities.stopWatch(
+				"disambiguate-all-entities",
+				requestContextFlux
+					.flatMap(
+						request ->
+							GetOrAddEntities.stopWatch(
+								"disambiguate-" + request.getCurrent().getName(),
+								Mono.<EntityContext>create(
+									fluxSink ->
+										_startDisambiguation.disambiguate(
+											request, fluxSink)
+								)
+							)
 					)
-				)
-				.collectList();
+					.collectList()
+			);
 
 		Mono<ResponseList> writeRelations = disambiguateListMono
 			.flatMap(entityContexts ->
@@ -100,7 +130,10 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 		return Mono
 			.from(_httpResponseWriter.write(
-				httpResponse, _graphClient.makeTransactional(writeRelations)));
+				httpResponse,
+				_transactional
+					? _graphClient.makeTransactional(writeRelations)
+					: writeRelations));
 	}
 
 	public Mono<ResponseList> writeRelations(List<EntityContext> entityContext) {
@@ -222,6 +255,7 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 
 	}
 
+	private boolean _transactional;
 
 	@Reference
 	private GraphClient _graphClient;
