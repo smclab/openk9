@@ -24,8 +24,7 @@ def get_favicon(domain):
         if icon_link is None:
             icon_link = soup.find("link", rel="icon")
         if icon_link is None:
-            base_url = urlparse(domain)
-            return get_favicon(base_url.netloc)
+            return None
         if not icon_link["href"].startswith("http"):
             base_url = urlparse(domain)
             href = 'http://' + base_url.netloc + icon_link["href"]
