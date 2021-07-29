@@ -3,4 +3,6 @@ Bundle-SymbolicName: io.openk9.reactor.netty.util
 
 Export-Package: io.openk9.reactor.netty.util
 
+Import-Package: org.reactivestreams, *
+
 -include: ${project.rootDir}/osgi/common.bnd
