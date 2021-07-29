@@ -63,7 +63,7 @@ public class ReactorNettyActivator {
 		boolean compress() default false;
 		boolean forwarded() default true;
 		HttpProtocol httpProtocol() default HttpProtocol.HTTP11;
-		AdvancedByteBufFormat wiretapFormat() default AdvancedByteBufFormat.TEXTUAL;
+		AdvancedByteBufFormat wiretapFormat() default AdvancedByteBufFormat.HEX_DUMP;
 	}
 
 	@Activate
