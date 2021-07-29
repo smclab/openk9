@@ -78,10 +78,10 @@ public class IndexWriterEndpoins implements RouterHandler {
 			.delete("/v1/clean-orphan-entities/{tenantId}", this::_cleanOrphanEntities)
 			.post("/v1/get-entities/{tenantId}", this::_getEntities)
 			.post("/v1/", this::_insertEntity)
-			.post("/v1/delete-entities", this::_deleteEntities);
+			.post("/v1/delete-data-documents", this::_deleteDataDocuments);
 	}
 
-	private Publisher<Void> _deleteEntities(
+	private Publisher<Void> _deleteDataDocuments(
 		HttpServerRequest httpServerRequest,
 		HttpServerResponse httpServerResponse) {
 
@@ -111,38 +111,39 @@ public class IndexWriterEndpoins implements RouterHandler {
 							_datasourceClient.findDatasource(
 								deleteEntitiesRequest.getDatasourceId());
 
-						Mono<String> indexName =
-							datasourceMono
-								.flatMap(datasource -> _pluginDriverManagerClient
-									.getPluginDriver(
-										datasource.getDriverServiceName())
-									.map(pluginDriverDTO ->
-										datasource.getTenantId() +
-										"-" +
-										pluginDriverDTO.getName() +
-										"-data"
-									));
-
-						Mono<DeleteByQueryRequest> deleteByQueryRequestMono =
-							indexName
+						return datasourceMono
+							.flatMap(datasource -> _pluginDriverManagerClient
+								.getPluginDriver(
+									datasource.getDriverServiceName())
+								.map(pluginDriverDTO ->
+									datasource.getTenantId() +
+									"-" +
+									pluginDriverDTO.getName() +
+									"-data"
+								)
 								.map(DeleteByQueryRequest::new)
 								.map(
 									deleteByQueryRequest -> deleteByQueryRequest.setQuery(
-										boolQuery));
+										boolQuery))
 
-						return deleteByQueryRequestMono.flatMap(
-							deleteByQueryRequest ->
-								Mono.<BulkByScrollResponse>create(sink ->
-									restHighLevelClient
-										.deleteByQueryAsync(
-											deleteByQueryRequest,
-											RequestOptions.DEFAULT,
-											new ReactorActionListener<>(sink)
+								.flatMap(
+									deleteByQueryRequest ->
+										Mono.<BulkByScrollResponse>create(sink ->
+											restHighLevelClient
+												.deleteByQueryAsync(
+													deleteByQueryRequest,
+													RequestOptions.DEFAULT,
+													new ReactorActionListener<>(sink)
+												)
 										)
 								)
-						)
-							.map(Object::toString)
-							.doOnNext(_log::info);
+								.map(Object::toString)
+								.doOnNext(_log::info)
+								.flatMap(response ->
+									_invokeCleanOrpanEntities(datasource.getTenantId())
+										.thenReturn(response)
+								)
+							);
 
 					}
 
@@ -157,10 +158,21 @@ public class IndexWriterEndpoins implements RouterHandler {
 	private Publisher<Void> _cleanOrphanEntities(
 		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		Mono<Object> cleanOrphanEntities =
-			Mono.create(sink -> {
+		long tenantId = Long.parseLong(httpRequest.param("tenantId"));
 
-			long tenantId = Long.parseLong(httpRequest.param("tenantId"));
+		Mono<Object> cleanOrphanEntities =
+			_invokeCleanOrpanEntities(tenantId);
+
+		return _httpResponseWriter.write(
+			httpResponse,
+			cleanOrphanEntities.publishOn(Schedulers.single())
+		);
+
+	}
+
+	private Mono<Object> _invokeCleanOrpanEntities(long tenantId) {
+
+		return Mono.create(sink -> {
 
 			RestHighLevelClient client =
 				_restHighLevelClientProvider.get();
@@ -273,12 +285,6 @@ public class IndexWriterEndpoins implements RouterHandler {
 				sink.error(e);
 			}
 		});
-
-		return _httpResponseWriter.write(
-			httpResponse,
-			cleanOrphanEntities.publishOn(Schedulers.single())
-		);
-
 	}
 
 	private Publisher<Void> _insertEntity(
