@@ -54,20 +54,18 @@ public class ReactiveRepositoryHttpHandler implements RouterHandler {
 
 	@Override
 	public HttpServerRoutes handle(HttpServerRoutes router) {
+
 		return router
-			.get(Strings.BLANK, this::_findAll)
-			.get(
-				"/{" + _reactiveRepository.primaryKeyName() + "}",
+			.get(_basePath, this::_findAll)
+			.get(_basePath + "/{" + _reactiveRepository.primaryKeyName() + "}",
 				this::_findByPrimaryKey)
-			.delete(
-				"/{" + _reactiveRepository.primaryKeyName() + "}",
-				this::_delete)
-			.post(Strings.BLANK, this::_create)
-			.put(Strings.BLANK, this::_update)
+			.delete(_basePath + "/{" + _reactiveRepository.primaryKeyName() + "}", this::_delete)
+			.post(_basePath, this::_create)
+			.put(_basePath, this::_update)
 			.route(
-				HttpPredicateV2.patch("/{" + _reactiveRepository.primaryKeyName() + "}"),
+				HttpPredicateV2.patch(_basePath + "/{" + _reactiveRepository.primaryKeyName() + "}"),
 				this::_patch)
-			.post("/filter", this::_filter);
+			.post(_basePath + "/filter", this::_filter);
 	}
 
 	private Publisher<Void> _filter(

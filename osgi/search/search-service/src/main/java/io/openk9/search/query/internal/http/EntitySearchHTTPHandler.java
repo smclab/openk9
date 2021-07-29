@@ -54,6 +54,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.openk9.reactor.netty.util.HttpPredicateV2.get;
+import static io.openk9.reactor.netty.util.HttpPredicateV2.post;
+
 @Component(
 	immediate = true,
 	service = RouterHandler.class
@@ -64,8 +67,7 @@ public class EntitySearchHTTPHandler
 	@Override
 	public HttpServerRoutes handle(HttpServerRoutes router) {
 		return router
-			.get("/v1/entity", this)
-			.post("/v1/entity", this);
+			.route(get("/v1/entity").or(post("/v1/entity")), this);
 	}
 
 	@Override

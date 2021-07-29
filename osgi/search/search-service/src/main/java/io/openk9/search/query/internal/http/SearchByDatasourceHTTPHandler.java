@@ -41,6 +41,9 @@ import reactor.util.function.Tuples;
 import java.util.List;
 import java.util.Objects;
 
+import static io.openk9.reactor.netty.util.HttpPredicateV2.get;
+import static io.openk9.reactor.netty.util.HttpPredicateV2.post;
+
 @Component(
 	immediate = true,
 	service = RouterHandler.class
@@ -50,8 +53,10 @@ public class SearchByDatasourceHTTPHandler extends BaseSearchHTTPHandler {
 	@Override
 	public HttpServerRoutes handle(HttpServerRoutes router) {
 		return router
-			.get("/v1/search/{datasourceId}", this)
-			.post("/v1/search/{datasourceId}", this);
+			.route(
+				get("/v1/search/{datasourceId}").or(post("/v1/search/{datasourceId}")),
+				this
+			);
 	}
 
 	@Override

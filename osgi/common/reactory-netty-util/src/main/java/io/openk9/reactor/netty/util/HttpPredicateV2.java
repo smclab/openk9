@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 
 public class HttpPredicateV2
-		implements Predicate<HttpServerRequest>, Function<Object, Map<String, String>> {
+	implements Predicate<HttpServerRequest>, Function<Object, Map<String, String>> {
 
 	/**
 	 * An alias for {@link HttpPredicateV2#http}.
@@ -37,6 +37,57 @@ public class HttpPredicateV2
 	}
 
 	/**
+	 * An alias for {@link HttpPredicateV2#http}.
+	 * <p>
+	 * Creates a {@link Predicate} based on a URI template filtering .
+	 * <p>
+	 * This will listen for DELETE Method.
+	 *
+	 * @param uri The string to compile into a URI template and use for matching
+	 *
+	 * @return The new {@link Predicate}.
+	 *
+	 * @see Predicate
+	 */
+	public static Predicate<HttpServerRequest> delete(String uri) {
+		return http(uri, null, HttpMethod.DELETE);
+	}
+
+	/**
+	 * An alias for {@link HttpPredicateV2#http}.
+	 * <p>
+	 * Creates a {@link Predicate} based on a URI template filtering .
+	 * <p>
+	 * This will listen for GET Method.
+	 *
+	 * @param uri The string to compile into a URI template and use for matching
+	 *
+	 * @return The new {@link Predicate}.
+	 *
+	 * @see Predicate
+	 */
+	public static Predicate<HttpServerRequest> get(String uri) {
+		return http(uri, null, HttpMethod.GET);
+	}
+
+	/**
+	 * An alias for {@link HttpPredicateV2#http}.
+	 * <p>
+	 * Creates a {@link Predicate} based on a URI template filtering .
+	 * <p>
+	 * This will listen for HEAD Method.
+	 *
+	 * @param uri The string to compile into a URI template and use for matching
+	 *
+	 * @return The new {@link Predicate}.
+	 *
+	 * @see Predicate
+	 */
+	public static Predicate<HttpServerRequest> head(String uri) {
+		return http(uri, null, HttpMethod.HEAD);
+	}
+
+	/**
 	 * Creates a {@link Predicate} based on a URI template.
 	 * This will listen for all Methods.
 	 *
@@ -47,9 +98,43 @@ public class HttpPredicateV2
 	 * @see Predicate
 	 */
 	public static Predicate<HttpServerRequest> http(String uri,
-			@Nullable HttpVersion protocol,
-			HttpMethod method) {
+													@Nullable HttpVersion protocol,
+													HttpMethod method) {
 		return new HttpPredicateV2(uri, protocol, method);
+	}
+
+	/**
+	 * An alias for {@link HttpPredicateV2#http}.
+	 * <p>
+	 * Creates a {@link Predicate} based on a URI template filtering .
+	 * <p>
+	 * This will listen for OPTIONS Method.
+	 *
+	 * @param uri The string to compile into a URI template and use for matching
+	 *
+	 * @return The new {@link Predicate}.
+	 *
+	 * @see Predicate
+	 */
+	public static Predicate<HttpServerRequest> options(String uri) {
+		return http(uri, null, HttpMethod.OPTIONS);
+	}
+
+	/**
+	 * An alias for {@link HttpPredicateV2#http}.
+	 * <p>
+	 * Creates a {@link Predicate} based on a URI template filtering .
+	 * <p>
+	 * This will listen for POST Method.
+	 *
+	 * @param uri The string to compile into a URI template and use for matching
+	 *
+	 * @return The new {@link Predicate}.
+	 *
+	 * @see Predicate
+	 */
+	public static Predicate<HttpServerRequest> post(String uri) {
+		return http(uri, null, HttpMethod.POST);
 	}
 
 	/**
@@ -89,6 +174,23 @@ public class HttpPredicateV2
 		return new HttpPrefixPredicate(target, method);
 	}
 
+	/**
+	 * An alias for {@link HttpPredicateV2#http}.
+	 * <p>
+	 * Creates a {@link Predicate} based on a URI template filtering .
+	 * <p>
+	 * This will listen for PUT Method.
+	 *
+	 * @param uri The string to compile into a URI template and use for matching
+	 *
+	 * @return The new {@link Predicate}.
+	 *
+	 * @see Predicate
+	 */
+	public static Predicate<HttpServerRequest> put(String uri) {
+		return http(uri, null, HttpMethod.PUT);
+	}
+
 	final HttpVersion     protocol;
 	final HttpMethod      method;
 	final String          uri;
@@ -115,7 +217,7 @@ public class HttpPredicateV2
 	@Override
 	public final boolean test(HttpServerRequest key) {
 		return (protocol == null || protocol.equals(key.version())) && method.equals(key.method()) &&
-				template.matches(key.uri());
+			   template.matches(key.uri());
 	}
 
 	/**
@@ -131,17 +233,17 @@ public class HttpPredicateV2
 	static final class UriPathTemplate {
 
 		private static final Pattern FULL_SPLAT_PATTERN     =
-				Pattern.compile("[\\*][\\*]");
+			Pattern.compile("[\\*][\\*]");
 		private static final String  FULL_SPLAT_REPLACEMENT = ".*";
 
 		private static final Pattern NAME_SPLAT_PATTERN     =
-				Pattern.compile("\\{([^/]+?)\\}[\\*][\\*]");
+			Pattern.compile("\\{([^/]+?)\\}[\\*][\\*]");
 
 		private static final Pattern NAME_PATTERN           = Pattern.compile("\\{([^/]+?)\\}");
 		// JDK 6 doesn't support named capture groups
 
 		private static final Pattern URL_PATTERN            =
-				Pattern.compile("(?:(\\w+)://)?((?:\\[.+?])|(?<!\\[)(?:[^/?]+?))(?::(\\d{2,5}))?([/?].*)?");
+			Pattern.compile("(?:(\\w+)://)?((?:\\[.+?])|(?<!\\[)(?:[^/?]+?))(?::(\\d{2,5}))?([/?].*)?");
 
 		private final List<String> pathVariables = new ArrayList<>();
 

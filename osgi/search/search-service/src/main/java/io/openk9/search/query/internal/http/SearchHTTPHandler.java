@@ -52,9 +52,7 @@ public class SearchHTTPHandler extends BaseSearchHTTPHandler {
 	@Override
 	public HttpServerRoutes handle(
 		HttpServerRoutes router) {
-		return router
-			.get("/v1/search", this)
-			.post("/v1/search", this);
+		return router.post("/v1/search", this);
 	}
 
 	@Override

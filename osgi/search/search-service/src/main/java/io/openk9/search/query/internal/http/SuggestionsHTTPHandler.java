@@ -83,7 +83,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	public HttpServerRoutes handle(
 		HttpServerRoutes router) {
 		return router
-			.get("/v1/suggestions", this)
 			.post("/v1/suggestions", this);
 	}
 

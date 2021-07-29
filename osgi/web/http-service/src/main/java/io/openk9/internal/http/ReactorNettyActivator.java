@@ -129,6 +129,13 @@ public class ReactorNettyActivator {
 			Mono.<Void>defer(() -> {
 				Throwable unwrap = Exceptions.unwrap(throwable);
 
+				if (_log.isErrorEnabled()) {
+					_log.debug(throwable.getMessage());
+				}
+				else if (_log.isDebugEnabled()) {
+					_log.debug(throwable.getMessage(), throwable);
+				}
+
 				HttpServerResponse response =
 					(HttpServerResponse) connection;
 
