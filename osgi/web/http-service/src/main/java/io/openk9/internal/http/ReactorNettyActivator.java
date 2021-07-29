@@ -17,6 +17,7 @@
 
 package io.openk9.internal.http;
 
+import io.netty.handler.logging.LogLevel;
 import io.openk9.http.web.ExceptionHandler;
 import io.openk9.http.web.RouterHandler;
 import org.osgi.framework.ServiceReference;
@@ -39,6 +40,7 @@ import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 import reactor.netty.resources.LoopResources;
+import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
 import java.util.Collection;
 import java.util.Map;
@@ -61,6 +63,7 @@ public class ReactorNettyActivator {
 		boolean compress() default false;
 		boolean forwarded() default true;
 		HttpProtocol httpProtocol() default HttpProtocol.HTTP11;
+		AdvancedByteBufFormat wiretapFormat() default AdvancedByteBufFormat.TEXTUAL;
 	}
 
 	@Activate
@@ -88,6 +91,7 @@ public class ReactorNettyActivator {
 					.accessLog(config.accessLog())
 					.forwarded(config.forwarded())
 					.wiretap(config.wiretap())
+					.wiretap("openk9", LogLevel.DEBUG, config.wiretapFormat())
 					.runOn(loopResources)
 					.compress(config.compress())
 					.handle(routerHandler.handle(HttpServerRoutes.newRoutes()))
