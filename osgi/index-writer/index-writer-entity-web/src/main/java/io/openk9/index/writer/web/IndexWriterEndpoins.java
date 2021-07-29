@@ -1,13 +1,20 @@
 package io.openk9.index.writer.web;
 
 
+import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.web.RouterHandler;
 import io.openk9.index.writer.entity.model.DocumentEntityRequest;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.model.Datasource;
+import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.search.client.api.ReactorActionListener;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -31,6 +38,8 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -68,7 +77,81 @@ public class IndexWriterEndpoins implements RouterHandler {
 		return router
 			.delete("/v1/clean-orphan-entities/{tenantId}", this::_cleanOrphanEntities)
 			.post("/v1/get-entities/{tenantId}", this::_getEntities)
-			.post("/v1/", this::_insertEntity);
+			.post("/v1/", this::_insertEntity)
+			.post("/v1/delete-entities", this::_deleteEntities);
+	}
+
+	private Publisher<Void> _deleteEntities(
+		HttpServerRequest httpServerRequest,
+		HttpServerResponse httpServerResponse) {
+
+		RestHighLevelClient restHighLevelClient =
+			_restHighLevelClientProvider.get();
+
+		Mono<byte[]> body =
+			ReactorNettyUtils
+				.aggregateBodyAsByteArray(httpServerRequest);
+
+		Mono<String> responseMono =
+			body
+				.map(bytes -> _jsonFactory.fromJson(
+					bytes, DeleteEntitiesRequest.class))
+				.flatMap(deleteEntitiesRequest -> {
+
+					if (!deleteEntitiesRequest.getContentIds().isEmpty()) {
+
+						BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+
+						for (String contentId : deleteEntitiesRequest.getContentIds()) {
+							boolQuery.mustNot(
+								matchQuery("contentId", contentId));
+						}
+
+						Mono<Datasource> datasourceMono =
+							_datasourceClient.findDatasource(
+								deleteEntitiesRequest.getDatasourceId());
+
+						Mono<String> indexName =
+							datasourceMono
+								.flatMap(datasource -> _pluginDriverManagerClient
+									.getPluginDriver(
+										datasource.getDriverServiceName())
+									.map(pluginDriverDTO ->
+										datasource.getTenantId() +
+										"-" +
+										pluginDriverDTO.getName() +
+										"-data"
+									));
+
+						Mono<DeleteByQueryRequest> deleteByQueryRequestMono =
+							indexName
+								.map(DeleteByQueryRequest::new)
+								.map(
+									deleteByQueryRequest -> deleteByQueryRequest.setQuery(
+										boolQuery));
+
+						return deleteByQueryRequestMono.flatMap(
+							deleteByQueryRequest ->
+								Mono.<BulkByScrollResponse>create(sink ->
+									restHighLevelClient
+										.deleteByQueryAsync(
+											deleteByQueryRequest,
+											RequestOptions.DEFAULT,
+											new ReactorActionListener<>(sink)
+										)
+								)
+						)
+							.map(Object::toString)
+							.doOnNext(_log::info);
+
+					}
+
+					return Mono.empty();
+
+				});
+
+		return _httpResponseWriter.write(
+			httpServerResponse, responseMono);
 	}
 
 	private Publisher<Void> _cleanOrphanEntities(
@@ -362,7 +445,22 @@ public class IndexWriterEndpoins implements RouterHandler {
 	@Reference
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
+	@Reference
+	protected DatasourceClient _datasourceClient;
+
+	@Reference
+	protected PluginDriverManagerClient _pluginDriverManagerClient;
+
 	private static final Logger _log = LoggerFactory.getLogger(
 		IndexWriterEndpoins.class);
+
+	@Data
+	@Builder
+	@NoArgsConstructor
+	@AllArgsConstructor(staticName = "of")
+	public static class DeleteEntitiesRequest {
+		private long datasourceId;
+		private List<String> contentIds;
+	}
 
 }
