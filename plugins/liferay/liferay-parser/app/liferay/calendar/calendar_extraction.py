@@ -76,7 +76,7 @@ class AsyncCalendarExtraction(threading.Thread):
     def post_message(self, url, payload, timeout):
 
         try:
-            r = requests.post(url, data=payload, timeout=timeout)
+            r = requests.post(url, json=payload, timeout=timeout)
             if r.status_code == 200:
                 return
             else:
