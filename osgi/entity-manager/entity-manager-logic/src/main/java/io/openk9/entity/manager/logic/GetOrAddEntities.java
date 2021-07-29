@@ -1,4 +1,4 @@
-package io.openk9.entity.manager.logic;
+	package io.openk9.entity.manager.logic;
 
 
 import io.openk9.common.api.reactor.util.ReactorStopWatch;

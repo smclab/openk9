@@ -20,10 +20,8 @@ package io.openk9.search.query.internal.http;
 import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.util.HttpUtil;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
@@ -40,6 +38,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -47,18 +48,19 @@ import java.util.List;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class
+	service = RouterHandler.class
 )
-public class SupportedDatasourcesEndpoint implements HttpHandler {
+public class SupportedDatasourcesEndpoint
+	implements RouterHandler, HttpHandler {
 
 	@Override
-	public String getPath() {
-		return "/v1/supported-datasources";
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.get("/v1/supported-datasources", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		String hostName = HttpUtil.getHostName(httpRequest);
 

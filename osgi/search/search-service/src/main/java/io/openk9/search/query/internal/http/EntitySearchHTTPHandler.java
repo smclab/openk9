@@ -18,16 +18,15 @@
 package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
-import io.openk9.model.Tenant;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.util.HttpUtil;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
+import io.openk9.model.Tenant;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.search.client.api.Search;
 import io.openk9.search.client.api.SearchRequestFactory;
 import io.openk9.search.enrich.mapper.api.EntityMapper;
@@ -45,6 +44,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,26 +56,21 @@ import java.util.Map;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class,
-	property = {
-		"base.path=/v1/entity"
-	}
+	service = RouterHandler.class
 )
-public class EntitySearchHTTPHandler implements HttpHandler {
+public class EntitySearchHTTPHandler
+	implements RouterHandler, HttpHandler {
 
 	@Override
-	public String getPath() {
-		return "";
-	}
-
-	@Override
-	public int method() {
-		return HttpHandler.GET + HttpHandler.POST;
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router
+			.get("/v1/entity", this)
+			.post("/v1/entity", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		String hostName = HttpUtil.getHostName(httpRequest);
 
@@ -87,7 +84,8 @@ public class EntitySearchHTTPHandler implements HttpHandler {
 							"tenant not found for virtualhost: " + hostName)))
 				.map(Tenant::getTenantId)
 				.flatMap(tenantId -> Mono
-					.from(httpRequest.aggregateBodyToByteArray())
+					.from(
+						ReactorNettyUtils.aggregateBodyAsByteArray(httpRequest))
 					.map(_jsonFactory::fromJsonToJsonNode)
 					.map(JsonNode::toObjectNode)
 					.map(jsonObj -> _toSearchRequest(tenantId, jsonObj))

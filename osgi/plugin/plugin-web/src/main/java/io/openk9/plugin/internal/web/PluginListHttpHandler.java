@@ -18,34 +18,32 @@
 package io.openk9.plugin.internal.web;
 
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.plugin.api.PluginInfoProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class
+	service = RouterHandler.class
 )
-public class PluginListHttpHandler implements HttpHandler {
+public class PluginListHttpHandler
+	implements HttpHandler, RouterHandler {
 
 	@Override
-	public int method() {
-		return GET;
-	}
-
-	@Override
-	public String getPath() {
-		return "/v1/plugin";
+	public HttpServerRoutes handle(
+		HttpServerRoutes router) {
+		return router.get("/v1/plugin", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return _httpResponseWriter.write(
 			httpResponse, _pluginInfoProvider.getPluginInfoList());
@@ -56,5 +54,6 @@ public class PluginListHttpHandler implements HttpHandler {
 
 	@Reference(target = "(type=json)")
 	private HttpResponseWriter _httpResponseWriter;
+
 
 }

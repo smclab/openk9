@@ -17,11 +17,13 @@
 
 package io.openk9.plugin.internal;
 
+import io.netty.handler.codec.http.HttpMethod;
 import io.openk9.common.api.constant.Strings;
 import io.openk9.http.osgi.BaseStaticEndpoint;
-import io.openk9.http.web.Endpoint;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.osgi.util.AutoCloseables;
 import io.openk9.plugin.api.PluginInfo;
+import io.openk9.reactor.netty.util.HttpPrefixPredicate;
 import lombok.RequiredArgsConstructor;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -38,41 +40,21 @@ public class PluginInfoServiceTrackerCustomizer
 
 		PluginInfo pluginInfo = _bundleContext.getService(reference);
 
-		BaseStaticEndpoint baseStaticEndpoint = new BaseStaticEndpoint() {
+		String path = "/plugins/" + pluginInfo.getPluginId() + "/static";
 
-			{
-				_bundle = reference.getBundle();
-			}
+		RouterHandler routerHandler = router ->
+			router
+				.route(
+					HttpPrefixPredicate.of(
+						path, HttpMethod.GET),
+					BaseStaticEndpoint.of(
+						reference.getBundle(), path, Strings.BLANK, "")
+				);
 
-			@Override
-			public String getStaticFolder() {
-				return Strings.BLANK;
-			}
-
-			@Override
-			public String getPath() {
-				return _path;
-			}
-
-			@Override
-			public int method() {
-				return GET;
-			}
-
-			@Override
-			public boolean prefix() {
-				return true;
-			}
-
-			private final String _path =
-				"/plugins/" + pluginInfo.getPluginId() + "/static";
-
-		};
-
-		ServiceRegistration<Endpoint> serviceRegistration =
+		ServiceRegistration<RouterHandler> serviceRegistration =
 			_bundleContext.registerService(
-				Endpoint.class,
-				baseStaticEndpoint,
+				RouterHandler.class,
+				routerHandler,
 				null
 			);
 

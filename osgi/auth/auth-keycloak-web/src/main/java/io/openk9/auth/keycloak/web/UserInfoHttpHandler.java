@@ -2,33 +2,30 @@ package io.openk9.auth.keycloak.web;
 
 import io.openk9.auth.keycloak.api.AuthVerifier;
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class
+	service = RouterHandler.class
 )
-public class UserInfoHttpHandler implements HttpHandler {
+public class UserInfoHttpHandler
+	implements RouterHandler, HttpHandler {
 
 	@Override
-	public String getPath() {
-		return "/v1/auth/user-info";
-	}
-
-	@Override
-	public int method() {
-		return HttpHandler.POST;
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.post("/v1/auth/user-info", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return _httpResponseWriter.write(
 			httpResponse,

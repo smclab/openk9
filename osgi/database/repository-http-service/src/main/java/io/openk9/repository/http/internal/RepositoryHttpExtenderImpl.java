@@ -18,12 +18,11 @@
 package io.openk9.repository.http.internal;
 
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.Endpoint;
-import io.openk9.http.web.HttpHandler;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
-import io.openk9.sql.api.entity.ReactiveRepository;
 import io.openk9.repository.http.api.RepositoryHttpExtender;
 import io.openk9.repository.http.internal.util.ReactiveRepositoryHttpHandler;
+import io.openk9.sql.api.entity.ReactiveRepository;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -35,9 +34,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
@@ -62,26 +58,6 @@ public class RepositoryHttpExtenderImpl {
 
 		_serviceTracker.open();
 
-		_docServiceRegister =
-			_bundleContext.registerService(
-				Endpoint.class.getName(),
-				HttpHandler.get(
-					_config.endpointPath() + "/doc",
-					(req, res) -> _httpResponseWriter.write(
-						res, Arrays.stream(
-							_serviceTracker.getServices(
-								new ReactiveRepositoryHttpHandler[0])
-						).collect(
-							Collectors.toMap(
-								ReactiveRepositoryHttpHandler::getBasePath,
-								ReactiveRepositoryHttpHandler::getRestDocumentationList
-							)
-						)
-					)
-				),
-				null
-			);
-
 	}
 
 	@Modified
@@ -92,16 +68,15 @@ public class RepositoryHttpExtenderImpl {
 
 	@Deactivate
 	public void deactivate() {
-		_docServiceRegister.unregister();
 		_serviceTracker.close();
 		_bundleContext = null;
 	}
 
 	private class RepositoryHttpExtenderServiceTrackerCustomizer
-		implements ServiceTrackerCustomizer<RepositoryHttpExtender, ReactiveRepositoryHttpHandler> {
+		implements ServiceTrackerCustomizer<RepositoryHttpExtender, ServiceRegistration<RouterHandler>> {
 
 		@Override
-		public ReactiveRepositoryHttpHandler addingService(
+		public ServiceRegistration<RouterHandler> addingService(
 			ServiceReference<RepositoryHttpExtender> reference) {
 
 			BundleContext bundleContext =
@@ -129,19 +104,17 @@ public class RepositoryHttpExtenderImpl {
 					prefixPath + "/" + endpointName,
 					reactiveRepository,
 					_jsonFactory,
-					_httpResponseWriter,
-					bundleContext
+					_httpResponseWriter
 				);
 
-			reactiveRepositoryHttpHandler.start();
-
-			return reactiveRepositoryHttpHandler;
+			return _bundleContext.registerService(
+				RouterHandler.class, reactiveRepositoryHttpHandler, null);
 		}
 
 		@Override
 		public void modifiedService(
 			ServiceReference<RepositoryHttpExtender> reference,
-			ReactiveRepositoryHttpHandler autoCloseableSafe) {
+			ServiceRegistration<RouterHandler> autoCloseableSafe) {
 
 			removedService(reference, autoCloseableSafe);
 
@@ -152,14 +125,15 @@ public class RepositoryHttpExtenderImpl {
 		@Override
 		public void removedService(
 			ServiceReference<RepositoryHttpExtender> reference,
-			ReactiveRepositoryHttpHandler autoCloseableSafe) {
+			ServiceRegistration<RouterHandler> autoCloseableSafe) {
 
 			BundleContext bundleContext =
 				RepositoryHttpExtenderImpl.this._bundleContext;
 
 			bundleContext.ungetService(reference);
 
-			autoCloseableSafe.close();
+			autoCloseableSafe.unregister();
+
 
 		}
 
@@ -170,10 +144,8 @@ public class RepositoryHttpExtenderImpl {
 	private Config _config;
 
 	private ServiceTracker<
-		RepositoryHttpExtender, ReactiveRepositoryHttpHandler>
+		RepositoryHttpExtender, ServiceRegistration<RouterHandler>>
 			_serviceTracker;
-
-	private ServiceRegistration<?> _docServiceRegister;
 
 	@Reference
 	private JsonFactory _jsonFactory;

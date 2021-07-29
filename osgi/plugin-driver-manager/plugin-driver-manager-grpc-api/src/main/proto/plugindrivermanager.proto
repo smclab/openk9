@@ -1,0 +1,108 @@
+/*
+Mono<Void> invokeDataParser(
+		String serviceDriverName, Datasource datasource, Date fromDate,
+		Date toDate);
+
+	Mono<SchedulerEnabledDTO> schedulerEnabled(String serviceDriverName);
+
+	Mono<PluginDriverDTO> getPluginDriver(String serviceDriverName);
+
+	Mono<PluginDriverDTOList> getPluginDriverList(
+		Collection<String> serviceDriverNames);
+
+	Mono<PluginDriverDTOList> getPluginDriverList();
+ */
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.plugin.driver.manager.grpc.api";
+option java_outer_classname = "PluginDriverManagerProto";
+
+package datasource;
+
+// The greeting service definition.
+service PluginDriverManagerService {
+  rpc InvokeDataParser(InvokeDataParserReq) returns(InvokeDataParserRes);
+  rpc SchedulerEnabled(SchedulerEnabledReq) returns (SchedulerEnabledRes);
+  rpc GetPluginDriver(GetPluginDriverReq) returns (GetPluginDriverRes);
+  rpc GetPluginDriverListByServiceDriverNames(GetPluginDriverListByServiceDriverNamesReq) returns (GetPluginDriverListByServiceDriverNamesRes);
+  rpc GetPluginDriverList(GetPluginDriverListReq) returns (GetPluginDriverListRes);
+}
+
+message Datasource {
+  int64 datasourceId = 1;
+  bool active = 2;
+  string description = 3;
+  string jsonConfig = 4;
+  int64 lastIngestionDate = 5;
+  string name = 6;
+  int64 tenantId = 7;
+  string scheduling = 8;
+  string driverServiceName = 9;
+}
+
+message PluginDriver {
+  string name = 1;
+  bool schedulerEnabled = 2;
+  repeated DocumentType documentTypes = 3;
+  DocumentType defaultDocumentType = 4;
+}
+
+message DocumentType {
+  string name = 1;
+  string icon = 2;
+  repeated SearchKeyword searchKeywords = 3;
+}
+
+message SearchKeyword {
+  string keyword = 1;
+  bool text = 2;
+  FieldBoost fieldBoost = 3;
+}
+
+message FieldBoost {
+  string keyword = 1;
+  float boost = 2;
+}
+
+message InvokeDataParserReq {
+  string serviceDriverName = 1;
+  Datasource datasource = 2;
+  int64 fromDate = 3;
+  int64 toDate = 4;
+}
+
+message InvokeDataParserRes {
+}
+
+message SchedulerEnabledReq {
+  string serviceDriverName = 1;
+}
+
+message SchedulerEnabledRes {
+  bool schedulerEnabled = 1;
+}
+
+message GetPluginDriverReq {
+  string serviceDriverName = 1;
+}
+
+message GetPluginDriverRes {
+    PluginDriver pluginDriver = 1;
+}
+
+message GetPluginDriverListByServiceDriverNamesReq {
+  repeated string serviceDriverName = 1;
+}
+
+message GetPluginDriverListByServiceDriverNamesRes {
+  repeated PluginDriver pluginDriver = 1;
+}
+
+message GetPluginDriverListReq{
+}
+
+message GetPluginDriverListRes {
+  repeated PluginDriver pluginDriver = 1;
+}

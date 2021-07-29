@@ -17,120 +17,80 @@
 
 package io.openk9.ingestion.queue;
 
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.ingestion.identifier.generator.api.IdentifierGenerator;
 import io.openk9.ingestion.logic.api.IngestionLogic;
-import io.openk9.ingestion.queue.exception.AttributeException;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.IngestionPayload;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.Map;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class,
-	property = {
-		"base.path=/v1/ingestion"
-	}
+	service = RouterHandler.class
 )
-public class IngestionEndpoint implements HttpHandler {
+public class IngestionEndpoint
+	implements HttpHandler, RouterHandler {
 
 	@Override
-	public String getPath() {
-		return "/";
-	}
-
-	@Override
-	public int method() {
-		return POST;
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.post("/v1/ingestion/", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
+
 
 		Mono<String> monoResponse =
-			Mono.from(httpRequest.bodyAttributesFirst())
-				.<Map<String, String>>handle((map, synchronousSink) -> {
-
-					for (String attributeKey : _requiredAttributeKeys) {
-						if (!map.containsKey(attributeKey)) {
-							synchronousSink
-								.error(
-									new AttributeException(
-										"request required attribute "
-										+ attributeKey));
-							return;
-						}
-					}
-
-					synchronousSink.next(map);
-
-				})
-				.map(map -> {
-
-					String datasourceIdAttribute = map.get("datasourceId");
-					String contentId = map.get("contentId");
-					String parsingDateAttribute = map.get("parsingDate");
-					String rawContent = map.get("rawContent");
-					String datasourcePayload = map.get("datasourcePayload");
-
-					long datasourceId =
-						Long.parseLong(datasourceIdAttribute);
-
-					long parsingDate =
-						Long.parseLong(parsingDateAttribute);
-
-					Map<String, Object> datasourcePayloadMap = _jsonFactory
-						.fromJsonToJsonNode(datasourcePayload)
-						.toObjectNode()
-						.toMap();
-
-					return IngestionPayload.of(
+			ReactorNettyUtils
+				.aggregateBodyAsByteArray(httpRequest)
+				.map(body -> _jsonFactory.fromJson(body, IngestionDTO.class))
+				.map(dto ->
+					IngestionPayload.of(
 						_identifierGenerator.create(),
-						datasourceId,
-						contentId,
-						parsingDate,
-						rawContent,
-						datasourcePayloadMap,
+						dto.getDatasourceId(),
+						dto.getContentId(),
+						dto.getParsingDate(),
+						dto.getRawContent(),
+						dto.getDatasourcePayload(),
 						-1,
-						datasourcePayloadMap
+						dto.getDatasourcePayload()
 							.keySet()
 							.toArray(new String[0])
-					);
-				})
+					)
+				)
 				.doOnNext(_ingestionLogicSender::send)
-				.map(ignore -> "{}")
-				.onErrorResume(
-					e -> Mono.just(
-						httpResponse.status(500, _handleError(e))));
+				.map(ignore -> "{}");
 
 		return httpResponse.sendString(monoResponse);
 
 	}
 
-	private String _handleError(Throwable e) {
-		return
-			"{" +
-			"\"errorMessage\":\"" + e.getMessage() + "\"," +
-			"\"errorClassName\":\"" + e.getClass().getName() + "\"" +
-			"}";
+	@Data
+	@Builder
+	@NoArgsConstructor
+	@AllArgsConstructor(staticName = "of")
+	public static class IngestionDTO {
+		private long datasourceId;
+		private String contentId;
+		private long parsingDate;
+		private String rawContent;
+		private Map<String, Object> datasourcePayload;
 	}
-
-	private final String[] _requiredAttributeKeys = {
-		"datasourceId",
-		"contentId",
-		"parsingDate",
-		"rawContent",
-		"datasourcePayload"
-	};
 
 	@Reference
 	private JsonFactory _jsonFactory;

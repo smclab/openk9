@@ -20,49 +20,45 @@ package io.openk9.ingestion.driver.manager.internal.web.handler;
 import io.openk9.datasource.repository.DatasourceRepository;
 import io.openk9.datasource.repository.TenantRepository;
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.util.HttpUtil;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.ingestion.driver.manager.internal.web.request.ReindexRequest;
 import io.openk9.ingestion.driver.manager.internal.web.response.ReindexResponse;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.sql.api.client.Criteria;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.time.Instant;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class
+	service = RouterHandler.class
 )
-public class ReindexHttpHandler implements HttpHandler {
+public class ReindexHttpHandler
+	implements RouterHandler, HttpHandler {
 
 	@Override
-	public String getPath() {
-		return "/v1/index/reindex";
-	}
-
-	@Override
-	public int method() {
-		return POST;
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.post("/v1/index/reindex", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return _httpResponseWriter.write(
 			httpResponse,
-				HttpUtil
-					.mapBodyRequest(
-						httpRequest, body -> _jsonFactory.fromJson(
-							body, ReindexRequest.class))
+				ReactorNettyUtils.aggregateBodyAsByteArray(httpRequest)
+					.map(body -> _jsonFactory.fromJson(
+						body, ReindexRequest.class))
 					.map(ReindexRequest::getDatasourceIds)
 					.flatMapMany(ids -> _datasourceRepository.findBy(
 						Criteria.where("datasourceId").in(ids)

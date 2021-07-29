@@ -17,17 +17,17 @@
 
 package io.openk9.http.util;
 
-import io.openk9.http.web.HttpResponse;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerResponse;
 
 public interface HttpResponseWriter {
 
-	Publisher<Void> write(HttpResponse httpResponse, Object value);
+	Publisher<Void> write(HttpServerResponse httpResponse, Object value);
 
-	Publisher<Void> write(HttpResponse httpResponse, Mono<?> value);
+	Publisher<Void> write(HttpServerResponse httpResponse, Mono<?> value);
 
-	Publisher<Void> write(HttpResponse httpResponse, Flux<?> value);
+	Publisher<Void> write(HttpServerResponse httpResponse, Flux<?> value);
 
 }

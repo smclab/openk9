@@ -18,13 +18,13 @@
 package io.openk9.ext.http.response.serialization;
 
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.HttpResponse;
 import io.openk9.json.api.JsonFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerResponse;
 
 @Component(
 	immediate = true,
@@ -35,25 +35,22 @@ public class JsonHttpResponseWriter implements HttpResponseWriter {
 
 	@Override
 	public Publisher<Void> write(
-		HttpResponse httpResponse, Object value) {
-
+		HttpServerResponse httpResponse, Object value) {
 		return write(httpResponse, Mono.just(value));
 	}
 
 	@Override
 	public Publisher<Void> write(
-		HttpResponse httpResponse, Flux<?> value) {
+		HttpServerResponse httpResponse, Flux<?> value) {
 		return write(httpResponse, value.collectList());
 	}
 
 	@Override
 	public Publisher<Void> write(
-		HttpResponse httpResponse, Mono<?> value) {
-
+		HttpServerResponse httpResponse, Mono<?> value) {
 		return httpResponse
 			.header("Content-type", "application/json")
 			.sendString(value.map(_jsonFactory::toJson));
-
 	}
 
 	@Reference

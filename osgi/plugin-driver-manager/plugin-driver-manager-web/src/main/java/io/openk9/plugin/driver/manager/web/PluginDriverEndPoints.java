@@ -1,11 +1,8 @@
 package io.openk9.plugin.driver.manager.web;
 
 import io.openk9.http.exception.HttpException;
-import io.openk9.http.util.BaseEndpointRegister;
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.plugin.driver.manager.api.PluginDriver;
 import io.openk9.plugin.driver.manager.api.PluginDriverDTOService;
@@ -14,40 +11,36 @@ import io.openk9.plugin.driver.manager.model.InvokeDataParserDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.plugin.driver.manager.model.SchedulerEnabledDTO;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.Optional;
 
-@Component(immediate = true, service = PluginDriverEndPoints.class)
-public class PluginDriverEndPoints extends BaseEndpointRegister {
+@Component(immediate = true, service = RouterHandler.class)
+public class PluginDriverEndPoints implements RouterHandler {
 
-	@Activate
-	public void activate(BundleContext bundleContext) {
-
-		setBundleContext(bundleContext);
-
-		this.registerEndpoint(
-			HttpHandler.get("/{serviceDriverName}", this::_findPluginDriverByName),
-			HttpHandler.post("/", this::_findPluginDriverByNames),
-			HttpHandler.get("/", this::_findAll),
-			HttpHandler.get("/scheduler-enabled/{serviceDriverName}", this::_schedulerEnabled),
-			HttpHandler.post("/invoke-data-parser/", this::_invokeDataParser)
-		);
-
+	@Override
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router
+			.get("/v1/plugin-driver/{serviceDriverName}", this::_findPluginDriverByName)
+			.post("/v1/plugin-driver/", this::_findPluginDriverByNames)
+			.get("/v1/plugin-driver/", this::_findAll)
+			.get("/v1/plugin-driver/scheduler-enabled/{serviceDriverName}", this::_schedulerEnabled)
+			.post("/v1/plugin-driver/invoke-data-parser/", this::_invokeDataParser);
 	}
 
 	private Publisher<Void> _invokeDataParser(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return Mono.defer(() ->
 			Mono
-				.from(httpRequest.aggregateBodyToString())
+				.from(ReactorNettyUtils.aggregateBodyAsString(httpRequest))
 				.map(json -> _jsonFactory.fromJson(json, InvokeDataParserDTO.class))
 				.flatMap((invokeDataParserDTO)-> {
 
@@ -92,12 +85,12 @@ public class PluginDriverEndPoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _schedulerEnabled(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return Mono.defer(() -> {
 
 			String serviceDriverName =
-				httpRequest.pathParam("serviceDriverName");
+				httpRequest.param("serviceDriverName");
 
 			Optional<PluginDriver> pluginDriver =
 				_pluginDriverRegistry.getPluginDriver(serviceDriverName);
@@ -124,13 +117,13 @@ public class PluginDriverEndPoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _findPluginDriverByNames(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return Mono.defer(() -> {
 
 			Mono<PluginDriverDTOList> response =
 				Mono
-					.from(httpRequest.aggregateBodyToString())
+					.from(ReactorNettyUtils.aggregateBodyAsString(httpRequest))
 					.map(json -> _jsonFactory.fromJsonList(json, String.class))
 					.map(_pluginDriverDTOService::findPluginDriverDTOByNames);
 
@@ -140,12 +133,12 @@ public class PluginDriverEndPoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _findPluginDriverByName(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return Mono.defer(() -> {
 
 			String serviceDriverName =
-				httpRequest.pathParam("serviceDriverName");
+				httpRequest.param("serviceDriverName");
 
 			PluginDriverDTO response =
 				_pluginDriverDTOService
@@ -162,7 +155,7 @@ public class PluginDriverEndPoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _findAll(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return Mono.defer(() ->
 			Mono.from(
@@ -172,16 +165,6 @@ public class PluginDriverEndPoints extends BaseEndpointRegister {
 				)
 			)
 		);
-	}
-
-	@Deactivate
-	public void deactivate() {
-		this.close();
-	}
-
-	@Override
-	public String getBasePath() {
-		return "/v1/plugin-driver";
 	}
 
 	@Reference

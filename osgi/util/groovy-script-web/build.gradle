@@ -2,4 +2,5 @@ dependencies {
 	compile project(':osgi:web:http-api')
 	compile project(':osgi:common:http-serialization')
 	compile project(":osgi:util:groovy-script-api")
+	compile project(':osgi:common:reactory-netty-util')
 }

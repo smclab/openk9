@@ -2,7 +2,6 @@ package io.openk9.auth.query.parser;
 
 import io.openk9.auth.keycloak.api.AuthVerifier;
 import io.openk9.auth.keycloak.api.UserInfo;
-import io.openk9.http.web.HttpRequest;
 import io.openk9.model.Tenant;
 import io.openk9.search.api.query.QueryParser;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -12,6 +11,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ public class AuthQueryParser implements QueryParser {
 
 		return Mono.defer(() -> {
 
-			HttpRequest httpRequest = context.getHttpRequest();
+			HttpServerRequest httpRequest = context.getHttpRequest();
 			Tenant tenant = context.getTenant();
 
 			return _authVerifier

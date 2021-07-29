@@ -1,7 +1,0 @@
-dependencies {
-	compile project(':osgi:web:http-api')
-	compile project(':osgi:common:osgi-api')
-	compile project(':osgi:common:serialization-api')
-	compile project(':osgi:database:sql-api')
-	compile libraries.avro
-}

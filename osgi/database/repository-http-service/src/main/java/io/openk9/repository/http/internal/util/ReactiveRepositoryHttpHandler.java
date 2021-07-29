@@ -19,78 +19,62 @@ package io.openk9.repository.http.internal.util;
 
 import io.openk9.common.api.constant.Strings;
 import io.openk9.documentation.model.RestDocumentation;
-import io.openk9.http.util.BaseEndpointRegister;
-import io.openk9.http.util.HttpHandlerUtil;
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.Endpoint;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
-import io.openk9.repository.http.internal.http.HttpRequestUtil;
+import io.openk9.reactor.netty.util.HttpPredicateV2;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.sql.api.client.Criteria;
-import io.openk9.sql.api.client.Page;
 import io.openk9.sql.api.entity.ReactiveRepository;
-import org.osgi.framework.BundleContext;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
-public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
+public class ReactiveRepositoryHttpHandler implements RouterHandler {
 
 	public ReactiveRepositoryHttpHandler(
 		String _basePath,
 		ReactiveRepository<Object, Object> _reactiveRepository,
-		JsonFactory _jsonFactory, HttpResponseWriter _httpResponseWriter,
-		BundleContext _bundleContext) {
+		JsonFactory _jsonFactory, HttpResponseWriter _httpResponseWriter) {
 
 		this._basePath = _basePath;
 		this._reactiveRepository = _reactiveRepository;
 		this._jsonFactory = _jsonFactory;
 		this._httpResponseWriter = _httpResponseWriter;
-		setBundleContext(_bundleContext);
 	}
 
 	@Override
-	public String getBasePath() {
-		return _basePath;
-	}
-
-	public void start() {
-
-		registerEndpoint(
-			HttpHandler.get(Strings.BLANK, this::_findAll),
-			HttpHandler.get(
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router
+			.get(Strings.BLANK, this::_findAll)
+			.get(
 				"/{" + _reactiveRepository.primaryKeyName() + "}",
-				this::_findByPrimaryKey),
-			HttpHandler.delete(
+				this::_findByPrimaryKey)
+			.delete(
 				"/{" + _reactiveRepository.primaryKeyName() + "}",
-				this::_delete),
-			HttpHandler.post(Strings.BLANK, this::_create),
-			HttpHandler.put(Strings.BLANK, this::_update),
-			HttpHandler.patch(
-				"/{" + _reactiveRepository.primaryKeyName() + "}",
-				this::_patch),
-			HttpHandler.post("/filter", this::_filter)
-		);
-
+				this::_delete)
+			.post(Strings.BLANK, this::_create)
+			.put(Strings.BLANK, this::_update)
+			.route(
+				HttpPredicateV2.patch("/{" + _reactiveRepository.primaryKeyName() + "}"),
+				this::_patch)
+			.post("/filter", this::_filter);
 	}
 
 	private Publisher<Void> _filter(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		Publisher<String> body = httpRequest.aggregateBodyToString();
+		Publisher<String> body = ReactorNettyUtils.aggregateBodyAsString(
+			httpRequest);
 
 		return _httpResponseWriter.write(
 			httpResponse,
@@ -190,89 +174,16 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 
 	}
 
-	@Override
-	protected BaseEndpointRegister registerEndpoint(
-		Endpoint... endpoints) {
-
-		for (Endpoint endpoint : endpoints) {
-
-			if (endpoint instanceof HttpHandler) {
-
-				HttpHandler httpHandler = (HttpHandler)endpoint;
-
-				int method = httpHandler.method();
-
-				String path = httpHandler.getPath();
-
-				RestDocumentation.RestDocumentationBuilder restDoc =
-					RestDocumentation
-						.builder()
-						.allowMethods(
-							HttpHandlerUtil.bitsToMethodName(method));
-
-				if (getBasePath() != null && !getBasePath().isEmpty()) {
-					restDoc.path(getBasePath() + path);
-				}
-				else {
-					restDoc.path(path);
-				}
-
-				if (method == HttpHandler.GET && path.equals(Strings.BLANK)) {
-					restDoc.params(
-						List.of(
-							HttpRequestUtil._START,
-							HttpRequestUtil._END,
-							HttpRequestUtil._ORDER_COLUMN,
-							HttpRequestUtil._ORDER_TYPE
-						)
-					);
-				}
-
-				restDoc.prefix(httpHandler.prefix());
-
-				if ((method == HttpHandler.POST || method == HttpHandler.PUT)
-					&& path.equals(Strings.BLANK)) {
-
-					restDoc.body(
-						_jsonFactory.toJsonClassDefinition(
-							_reactiveRepository.entityClass()));
-
-				}
-
-				restDoc.response(
-					_jsonFactory.toJsonClassDefinition(
-						_reactiveRepository.entityClass()));
-
-				_restDocumentationList.add(restDoc.build());
-
-			}
-
-		}
-
-		return super.registerEndpoint(
-			Stream.concat(
-				Arrays.stream(endpoints),
-				Stream.<Endpoint>of(
-					HttpHandler.get(
-						"/doc",
-						(req, res) -> _httpResponseWriter.write(
-							res, _restDocumentationList))
-				)
-			)
-				.toArray(Endpoint[]::new)
-		);
-
-	}
-
 	private Publisher<Void> _patch(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		String primaryKey =
-			httpRequest.pathParam(_reactiveRepository.primaryKeyName());
+			httpRequest.param(_reactiveRepository.primaryKeyName());
 
 		Object PK = _reactiveRepository.parsePrimaryKey(primaryKey);
 
-		Publisher<String> body = httpRequest.aggregateBodyToString();
+		Publisher<String> body = ReactorNettyUtils.aggregateBodyAsString(
+			httpRequest);
 
 		return _httpResponseWriter.write(
 			httpResponse,
@@ -288,9 +199,10 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _update(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		Publisher<String> body = httpRequest.aggregateBodyToString();
+		Publisher<String> body = ReactorNettyUtils.aggregateBodyAsString(
+			httpRequest);;
 
 		return _httpResponseWriter.write(
 			httpResponse,
@@ -307,9 +219,10 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _create(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		Publisher<String> body = httpRequest.aggregateBodyToString();
+		Publisher<String> body = ReactorNettyUtils.aggregateBodyAsString(
+			httpRequest);
 
 		return _httpResponseWriter.write(
 			httpResponse,
@@ -326,10 +239,10 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _delete(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		String primaryKey =
-			httpRequest.pathParam(_reactiveRepository.primaryKeyName());
+			httpRequest.param(_reactiveRepository.primaryKeyName());
 
 		Object PK = _reactiveRepository.parsePrimaryKey(primaryKey);
 
@@ -338,10 +251,10 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _findByPrimaryKey(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		String primaryKey =
-			httpRequest.pathParam(_reactiveRepository.primaryKeyName());
+			httpRequest.param(_reactiveRepository.primaryKeyName());
 
 		Object PK = _reactiveRepository.parsePrimaryKey(primaryKey);
 
@@ -350,12 +263,10 @@ public class ReactiveRepositoryHttpHandler extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _findAll(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
-
-		Page page = HttpRequestUtil.getPage(httpRequest);
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return _httpResponseWriter.write(
-			httpResponse, _reactiveRepository.findAll(page));
+			httpResponse, _reactiveRepository.findAll());
 	}
 
 	public List<RestDocumentation> getRestDocumentationList() {

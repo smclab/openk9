@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Schema Registry Api
-Bundle-SymbolicName: io.openk9.web.schema.registry.api
-
-Export-Package: io.openk9.schemaregistry.*
-
--include: ${project.rootDir}/osgi/common.bnd

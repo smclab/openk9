@@ -19,8 +19,7 @@ package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
@@ -28,6 +27,7 @@ import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchToken;
@@ -49,6 +49,8 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
 import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
@@ -60,19 +62,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class BaseSearchHTTPHandler implements HttpHandler {
-
-	@Override
-	public abstract String getPath();
-
-	@Override
-	public abstract int method();
+public abstract class BaseSearchHTTPHandler
+	implements RouterHandler, HttpHandler {
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		return  Mono.from(httpRequest.aggregateBodyToString())
+		return  Mono.from(ReactorNettyUtils.aggregateBodyAsString(httpRequest))
 			.flatMap(body -> _getTenantAndDatasourceList(httpRequest, httpResponse)
 				.flatMap(tenantDatasources -> _toQuerySearchRequest(
 					tenantDatasources.getT1(),
@@ -90,7 +87,7 @@ public abstract class BaseSearchHTTPHandler implements HttpHandler {
 
 	protected abstract Mono<Tuple2<Tenant, List<Datasource>>>
 		_getTenantAndDatasourceList(
-			HttpRequest httpRequest, HttpResponse httpResponse);
+			HttpServerRequest httpRequest, HttpServerResponse httpResponse);
 
 	protected Response searchHitToResponse(SearchResponse searchResponse) {
 
@@ -145,7 +142,7 @@ public abstract class BaseSearchHTTPHandler implements HttpHandler {
 
 	private Mono<SearchResponse> _toQuerySearchRequest(
 		Tenant tenant, List<Datasource> datasources, SearchRequest searchRequest,
-		HttpRequest httpRequest) {
+		HttpServerRequest httpRequest) {
 
 		return Mono.defer(() -> {
 

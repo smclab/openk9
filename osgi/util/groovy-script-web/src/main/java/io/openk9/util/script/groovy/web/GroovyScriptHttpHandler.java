@@ -1,42 +1,41 @@
 package io.openk9.util.script.groovy.web;
 
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.util.script.groovy.api.GroovyScriptExecutor;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class
+	service = RouterHandler.class
 )
-public class GroovyScriptHttpHandler implements HttpHandler {
+public class GroovyScriptHttpHandler
+	implements HttpHandler, RouterHandler {
 
 	@Override
-	public String getPath() {
-		return "/v1/script/groovy";
-	}
-
-	@Override
-	public int method() {
-		return POST;
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.post("/v1/script/groovy", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		Publisher<String> request = httpRequest.aggregateBodyToString();
+		Mono<String> body =
+			ReactorNettyUtils.aggregateBodyAsString(httpRequest);
 
 		return _httpResponseWriter.write(
 			httpResponse, Mono
-				.from(request)
+				.from(body)
 				.publishOn(Schedulers.boundedElastic())
 				.map(_groovyScriptExecutor::execute)
 				.map(String::new)

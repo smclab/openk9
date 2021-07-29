@@ -19,45 +19,38 @@ package io.openk9.datasource.internal.web;
 
 import io.openk9.datasource.repository.EnrichItemRepository;
 import io.openk9.http.exception.HttpException;
-import io.openk9.http.util.BaseEndpointRegister;
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.EnrichItem;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Component(immediate = true, service = EnrichItemEndpoints.class)
-public class EnrichItemEndpoints extends BaseEndpointRegister {
+@Component(immediate = true, service = RouterHandler.class)
+public class EnrichItemEndpoints implements RouterHandler {
 
-	@Activate
-	public void activate(BundleContext bundleContext) {
-		setBundleContext(bundleContext);
-
-		this.registerEndpoint(
-			HttpHandler.post("/reorder", this::_reorder)
-		);
-
+	@Override
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.post("/v1/enrich-item/reorder", this::_reorder);
 	}
 
 	private Publisher<Void> _reorder(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		Mono<List<Long>> body =
 			Mono
-				.from(httpRequest.aggregateBodyToString())
+				.from(ReactorNettyUtils.aggregateBodyAsByteArray(httpRequest))
 				.map(json -> _jsonFactory.fromJsonList(json, Long.class));
 
 
@@ -112,37 +105,6 @@ public class EnrichItemEndpoints extends BaseEndpointRegister {
 		return _httpResponseWriter.write(
 			httpResponse, response.then(Mono.just("{}")));
 
-	}
-
-	@Deactivate
-	public void deactivate() {
-		this.close();
-	}
-
-	private Publisher<Void> _addDatasource(
-		HttpRequest request, HttpResponse response) {
-
-		Mono<String> jsonResponse =
-			_getDatasourceFromBodyAttribute(request)
-				.flatMap(_enrichItemRepository::addEnrichItem)
-				.map(_jsonFactory::toJson);
-
-		return response.sendString(jsonResponse);
-
-	}
-
-	private Mono<EnrichItem> _getDatasourceFromBodyAttribute(
-		HttpRequest request) {
-
-		return Mono
-			.from(request.aggregateBodyToString())
-			.map(s -> _jsonFactory.fromJson(s, EnrichItem.class));
-
-	}
-
-	@Override
-	public String getBasePath() {
-		return "/v1/enrich-item";
 	}
 
 	@Reference

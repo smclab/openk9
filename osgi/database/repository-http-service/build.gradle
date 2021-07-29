@@ -6,4 +6,5 @@ dependencies {
     compile project(':osgi:common:serialization-api')
     compile project(':osgi:common:osgi-api')
     compile project(':osgi:web:open-api')
+    compile project(':osgi:common:reactory-netty-util')
 }

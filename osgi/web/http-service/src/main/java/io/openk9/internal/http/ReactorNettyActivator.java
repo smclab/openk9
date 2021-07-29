@@ -17,38 +17,35 @@
 
 package io.openk9.internal.http;
 
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import io.openk9.http.socket.WebSocketHandler;
-import io.openk9.http.web.Endpoint;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.internal.http.util.HttpPredicateUtil;
-import io.openk9.internal.http.util.UrlUtil;
-import org.osgi.framework.BundleContext;
+import io.openk9.http.web.ExceptionHandler;
+import io.openk9.http.web.RouterHandler;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.reactivestreams.Publisher;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.Exceptions;
+import reactor.core.publisher.Mono;
+import reactor.netty.Connection;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.server.HttpServer;
-import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 import reactor.netty.resources.LoopResources;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component(immediate = true, service = ReactorNettyActivator.class)
 public class ReactorNettyActivator {
@@ -61,245 +58,169 @@ public class ReactorNettyActivator {
 		boolean daemon() default true;
 		boolean wiretap() default true;
 		boolean accessLog() default true;
-		String contextPath() default "/";
 		boolean compress() default false;
 		boolean forwarded() default true;
 		HttpProtocol httpProtocol() default HttpProtocol.HTTP11;
 	}
 
 	@Activate
-	public void init(BundleContext bundleContext, Config config) {
+	void activate(Config config) {
 
-		LoopResources loopResources = LoopResources
-			.create(
-				config.name(),
-				config.selectCount(),
-				config.workerCount() == -1
-					? LoopResources.DEFAULT_IO_WORKER_COUNT
-					: config.workerCount(),
-				config.daemon());
+		_executorService = Executors.newSingleThreadExecutor();
 
-		HttpServer httpServer =
-			HttpServer
-				.create()
-				.metrics(true, Function.identity())
-				.accessLog(config.accessLog())
-				.forwarded(config.forwarded())
-				.wiretap(config.wiretap())
-				.runOn(loopResources)
-				.compress(config.compress())
-				.handle(this::_handle)
-				.port(config.port())
-				.protocol(config.httpProtocol());
+		_executorService.execute(() -> {
 
-		httpServer.warmup().block();
+			LoopResources loopResources = LoopResources
+				.create(
+					config.name(),
+					config.selectCount(),
+					config.workerCount() == -1
+						? LoopResources.DEFAULT_IO_WORKER_COUNT
+						: config.workerCount(),
+					config.daemon());
 
-		DisposableServer disposableServer = httpServer
-			.bindNow();
+			RouterHandler routerHandler = _getRouterHandler();
 
-		_log.info("reactor netty listening on " + config.port());
+			HttpServer httpServer =
+				HttpServer
+					.create()
+					.metrics(true, Function.identity())
+					.accessLog(config.accessLog())
+					.forwarded(config.forwarded())
+					.wiretap(config.wiretap())
+					.runOn(loopResources)
+					.compress(config.compress())
+					.handle(routerHandler.handle(HttpServerRoutes.newRoutes()))
+					.mapHandle(this::_mapHandle)
+					.port(config.port())
+					.protocol(config.httpProtocol());
 
-		disposableServer.onDispose(() -> _log.info("shutdown reactor netty"));
+			httpServer.warmup().block();
 
-		_dispose = () -> {
-			loopResources.dispose();
-			disposableServer.disposeNow(Duration.ofSeconds(1));
-		};
+			DisposableServer disposableServer = httpServer
+				.bindNow();
 
-		_serviceTracker = new ServiceTracker<>(
-			bundleContext, Endpoint.class,
-			new EndpointServiceTrackerCustomizer(
-				bundleContext, config.contextPath()));
+			_log.info("reactor netty listening on " + config.port());
 
-		_serviceTracker.open();
+			try {
+
+				disposableServer
+					.onDispose()
+					.block();
+			}
+			catch (Exception exception) {
+
+				Throwable unwrap = Exceptions.unwrap(exception);
+
+				if (unwrap instanceof InterruptedException) {
+					loopResources.dispose();
+					disposableServer.dispose();
+					_log.info("shutdown reactor netty");
+					Thread.currentThread().interrupt();
+				}
+			}
+
+		});
+
+	}
+
+	private Mono<Void> _mapHandle(Mono<Void> voidMono, Connection connection) {
+		return voidMono.onErrorResume(throwable ->
+			Mono.<Void>defer(() -> {
+				Throwable unwrap = Exceptions.unwrap(throwable);
+
+				HttpServerResponse response =
+					(HttpServerResponse) connection;
+
+				ExceptionHandler exceptionHandler =
+					ExceptionHandler.INTERNAL_SERVER_ERROR;
+
+				for (
+					ExceptionHandler<? extends Throwable> e :
+						_exceptionHandlerRegistry.values()) {
+
+					if (e.getType() == unwrap.getClass()) {
+						exceptionHandler = e;
+						break;
+					}
+
+				}
+
+				return exceptionHandler.map(unwrap, response);
+			})
+		);
+	}
+
+	private RouterHandler _getRouterHandler() {
+
+		Collection<RouterHandler> values = _routerHandlerRegistry.values();
+
+		return values
+			.stream()
+			.reduce(RouterHandler.NOTHING, RouterHandler::andThen);
+
+	}
+
+	@Modified
+	void modified(Config config) {
+
+		deactivate();
+
+		activate(config);
 
 	}
 
 	@Deactivate
-	public void destroy() {
-		_serviceTracker.close();
-		_dispose.run();
-		_dispose = _EMPTY_RUNNABLE;
-		_serviceTracker = null;
+	void deactivate() {
+		_executorService.shutdownNow();
 	}
 
-	@Modified
-	public void modified(BundleContext bundleContext, Config config) {
-		destroy();
-		init(bundleContext, config);
+
+	@Reference(
+		cardinality = ReferenceCardinality.AT_LEAST_ONE,
+		bind = "addRouterHandler",
+		unbind = "removeRouterHandler",
+		policy = ReferencePolicy.STATIC,
+		policyOption = ReferencePolicyOption.GREEDY,
+		service = RouterHandler.class
+	)
+	public void addRouterHandler(
+		ServiceReference serviceReference, RouterHandler routerHandler) {
+		_routerHandlerRegistry.put(serviceReference, routerHandler);
 	}
 
-	private Publisher<Void> _handle(
-		HttpServerRequest req, HttpServerResponse res) {
-
-		ServiceReference<Endpoint>[] serviceReferences =
-			_serviceTracker.getServiceReferences();
-
-		java.util.List<HttpEnpointRoutes> services;
-
-		if (serviceReferences == null) {
-			services = Collections.emptyList();
-		}
-		else {
-			services = Arrays
-				.stream(serviceReferences)
-				.sorted()
-				.map(_serviceTracker::getService)
-				.collect(Collectors.toList());
-		}
-
-		boolean isWebSocketHttpRequest =
-			req
-				.requestHeaders()
-				.containsValue(
-					HttpHeaderNames.CONNECTION,
-					HttpHeaderValues.UPGRADE, true);
-
-		java.util.List<HttpEnpointRoutes> list =
-			services.stream()
-				.filter(s -> s.getCondition().test(req))
-				.collect(Collectors.toList());
-
-		if (list.size() >= 2) {
-			list = Collections.singletonList(list.get(0));
-		}
-
-		if (isWebSocketHttpRequest) {
-			return _handleFirstHER(
-				req, res, list
-					.stream()
-					.filter(HttpEnpointRoutes::isWebSocket));
-		}
-		else {
-			return _handleFirstHER(
-				req, res, list
-					.stream()
-					.filter(HttpEnpointRoutes::isNotWebSocket));
-
-		}
-
+	public void removeRouterHandler(
+		ServiceReference serviceReference, RouterHandler routerHandler) {
+		_routerHandlerRegistry.remove(serviceReference);
 	}
 
-	private Publisher<Void> _handleFirstHER(
-		HttpServerRequest req, HttpServerResponse res,
-		Stream<HttpEnpointRoutes> list) {
-
-		return list
-			.map(s -> s.handle(req, res))
-			.findFirst()
-			.orElseGet(res::sendNotFound);
+	@Reference(
+		cardinality = ReferenceCardinality.MULTIPLE,
+		bind = "addExceptionHandler",
+		unbind = "removeExceptionHandler",
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY,
+		service = ExceptionHandler.class
+	)
+	public void addExceptionHandler(
+		ServiceReference serviceReference, ExceptionHandler exceptionHandler) {
+		_exceptionHandlerRegistry.put(serviceReference, exceptionHandler);
 	}
 
-	private class EndpointServiceTrackerCustomizer implements
-		ServiceTrackerCustomizer<Endpoint, HttpEnpointRoutes> {
-
-		private EndpointServiceTrackerCustomizer(
-			BundleContext bundleContext, String contextPath) {
-			_bundleContext = bundleContext;
-			_contextPath = contextPath;
-		}
-
-		@Override
-		public HttpEnpointRoutes addingService(
-			ServiceReference<Endpoint> serviceReference) {
-
-			String contextPath = _contextPath;
-
-			Object property = serviceReference.getProperty("base.path");
-
-			String basePath = UrlUtil.BLANK;
-
-			if (property != null) {
-				basePath =(String)property;
-			}
-
-			Endpoint service = _bundleContext.getService(serviceReference);
-
-			String path = service.getPath();
-
-			path = contextPath + basePath + path;
-
-			String[] split = path.split(UrlUtil.S_SLASH);
-
-			path = Arrays
-				.stream(split)
-				.filter(e -> !e.isEmpty())
-				.collect(
-					Collectors.joining(
-						UrlUtil.S_SLASH, UrlUtil.S_SLASH,
-						path.endsWith("/") ? "/" : ""));
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					String.format(
-						"path: %s, service: %s",
-						path, service)
-				);
-			}
-
-			if (service instanceof WebSocketHandler) {
-				return HttpEnpointRoutes.ws(
-					(WebSocketHandler)service,
-					HttpPredicateUtil.get(path));
-			}
-			else {
-
-				HttpHandler httpHandler =(HttpHandler)service;
-
-				HttpHandler httpFilter =
-					_httpFilterRegistry.getHttpFilter(
-						path, (HttpHandler)service);
-
-
-				if (httpHandler.prefix()) {
-					return HttpEnpointRoutes.noWs(
-						httpFilter,
-						HttpPredicateUtil.prefix(path)
-					);
-				}
-
-				return HttpEnpointRoutes.noWs(
-					httpFilter,
-					HttpPredicateUtil
-						.getPredicate(httpHandler.method())
-						.apply(path)
-				);
-
-			}
-		}
-
-		@Override
-		public void modifiedService(
-			ServiceReference<Endpoint> serviceReference, HttpEnpointRoutes endpoint) {
-
-			removedService(serviceReference, endpoint);
-
-			addingService(serviceReference);
-
-		}
-
-		@Override
-		public void removedService(
-			ServiceReference<Endpoint> serviceReference,
-			HttpEnpointRoutes endpoint) {
-
-			_bundleContext.ungetService(serviceReference);
-
-		}
-
-		private BundleContext _bundleContext;
-		private String _contextPath;
-
+	public void removeExceptionHandler(
+		ServiceReference serviceReference, ExceptionHandler exceptionHandler) {
+		_exceptionHandlerRegistry.remove(serviceReference);
 	}
 
-	@Reference
-	private HttpFilterRegistry _httpFilterRegistry;
+	private Map<ServiceReference, RouterHandler> _routerHandlerRegistry =
+		new TreeMap<>();
 
-	private ServiceTracker<Endpoint, HttpEnpointRoutes> _serviceTracker;
+	private Map<
+		ServiceReference,
+		ExceptionHandler<? extends Throwable>> _exceptionHandlerRegistry =
+			new TreeMap<>();
 
-	private Runnable _dispose = _EMPTY_RUNNABLE;
-
-	private static final Runnable _EMPTY_RUNNABLE = () -> {};
+	private ExecutorService _executorService;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		ReactorNettyActivator.class.getName());

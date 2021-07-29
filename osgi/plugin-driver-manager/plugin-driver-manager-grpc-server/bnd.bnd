@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Plugin Driver Manager gRPC Server
+Bundle-SymbolicName: io.openk9.plugin.driver.manager.grpc.server
+
+-include: ${project.rootDir}/osgi/common.bnd

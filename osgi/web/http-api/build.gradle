@@ -3,4 +3,5 @@ dependencies {
     compile libraries.reactivestreams
     compile libraries.reactor
     compile libraries.osgi
+    compile libraries.reactor_netty
 }

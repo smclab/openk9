@@ -17,7 +17,6 @@
 
 package io.openk9.search.api.query;
 
-import io.openk9.http.web.HttpRequest;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
@@ -25,6 +24,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -53,7 +53,7 @@ public interface QueryParser
 		final List<Datasource> datasourceList;
 		final List<PluginDriverDTO> pluginDriverDocumentTypeList;
 		final Map<String, List<SearchToken>> tokenTypeGroup;
-		final HttpRequest httpRequest;
+		final HttpServerRequest httpRequest;
 	}
 
 }

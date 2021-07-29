@@ -18,12 +18,15 @@
 package io.openk9.http.osgi;
 
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import org.osgi.framework.Bundle;
 import org.reactivestreams.Publisher;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -33,35 +36,32 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class BaseStaticEndpoint implements HttpHandler {
+@Data
+@Builder
+@AllArgsConstructor(staticName = "of")
+public class BaseStaticEndpoint implements HttpHandler {
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		String path;
 
-		if (!pathParam().isEmpty()) {
+		if (!getPathParam().isEmpty()) {
 			path = _getPath(
-				getStaticFolder(), httpRequest.pathParam(pathParam()));
+				getStaticFolder(), httpRequest.param(getPathParam()));
 		}
 		else {
 			path = _getPath(
 				getStaticFolder(), httpRequest.path().substring(getPath().length()));
 		}
 
-		return sendStaticContent(path, _bundle, httpResponse);
+		return sendStaticContent(path, bundle, httpResponse);
 
 	}
-
-	protected String pathParam() {
-		return "";
-	}
-
-	public abstract String getStaticFolder();
 
 	public static Publisher<Void> sendStaticContent(
-		String path, Bundle bundle, HttpResponse httpResponse) {
+		String path, Bundle bundle, HttpServerResponse httpResponse) {
 
 		return Mono.defer(() -> {
 
@@ -119,6 +119,9 @@ public abstract class BaseStaticEndpoint implements HttpHandler {
 
 	}
 
-	protected Bundle _bundle;
+	private final Bundle bundle;
+	private final String path;
+	private final String staticFolder;
+	private final String pathParam;
 
 }

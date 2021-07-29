@@ -1,13 +1,11 @@
 package io.openk9.index.writer.web;
 
 
-import io.openk9.http.util.BaseEndpointRegister;
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.index.writer.entity.model.DocumentEntityRequest;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.search.client.api.ReactorActionListener;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.apache.lucene.search.join.ScoreMode;
@@ -36,16 +34,16 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,33 +56,28 @@ import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
-@Component(immediate = true, service = IndexWriterEndpoins.class)
-public class IndexWriterEndpoins extends BaseEndpointRegister {
+@Component(immediate = true, service = RouterHandler.class)
+public class IndexWriterEndpoins implements RouterHandler {
 
 	public static final String AND = "_AND";
 
 	public static final String EXACT = "_EXACT";
 
-	@Activate
-	public void activate(BundleContext bundleContext) {
-
-		setBundleContext(bundleContext);
-
-		this.registerEndpoint(
-			HttpHandler.delete("/clean-orphan-entities/{tenantId}", this::_cleanOrphanEntities),
-			HttpHandler.post("/get-entities/{tenantId}", this::_getEntities),
-			HttpHandler.post("/", this::_insertEntity)
-		);
-
+	@Override
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router
+			.delete("/v1/clean-orphan-entities/{tenantId}", this::_cleanOrphanEntities)
+			.post("/v1/get-entities/{tenantId}", this::_getEntities)
+			.post("/v1/", this::_insertEntity);
 	}
 
 	private Publisher<Void> _cleanOrphanEntities(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		Mono<Object> cleanOrphanEntities =
 			Mono.create(sink -> {
 
-			long tenantId = Long.parseLong(httpRequest.pathParam("tenantId"));
+			long tenantId = Long.parseLong(httpRequest.param("tenantId"));
 
 			RestHighLevelClient client =
 				_restHighLevelClientProvider.get();
@@ -206,14 +199,14 @@ public class IndexWriterEndpoins extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _insertEntity(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		RestHighLevelClient restHighLevelClient =
 			_restHighLevelClientProvider.get();
 
 		Mono<List<DocumentEntityRequest>> request =
 			Mono
-				.from(httpRequest.aggregateBodyToByteArray())
+				.from(ReactorNettyUtils.aggregateBodyAsByteArray(httpRequest))
 				.map(json -> _jsonFactory.fromJsonList(json, DocumentEntityRequest.class));
 
 		Mono<BulkResponse> elasticResponse =
@@ -251,13 +244,13 @@ public class IndexWriterEndpoins extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _getEntities(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		long tenantId = Long.parseLong(httpRequest.pathParam("tenantId"));
+		long tenantId = Long.parseLong(httpRequest.param("tenantId"));
 
 		Mono<List<Map<String, Object>>> response =
 			Mono
-				.from(httpRequest.aggregateBodyToString())
+				.from(ReactorNettyUtils.aggregateBodyAsString(httpRequest))
 				.map(json -> _jsonFactory.fromJsonMap(json, Object.class))
 				.map(this::_toQuery)
 				.flatMap(queryBuilder -> _executeQuery(tenantId, queryBuilder))
@@ -358,17 +351,6 @@ public class IndexWriterEndpoins extends BaseEndpointRegister {
 		}
 
 		return boolQueryBuilder;
-	}
-
-	@Deactivate
-	public void deactivate() {
-		this.close();
-	}
-
-
-	@Override
-	public String getBasePath() {
-		return "/v1";
 	}
 
 	@Reference

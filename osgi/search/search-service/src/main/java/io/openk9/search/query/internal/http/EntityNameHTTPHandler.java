@@ -18,13 +18,11 @@
 package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
-import io.openk9.model.Tenant;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.util.HttpUtil;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
+import io.openk9.model.Tenant;
 import io.openk9.search.client.api.Search;
 import io.openk9.search.client.api.SearchRequestFactory;
 import io.openk9.search.query.internal.response.Response;
@@ -39,6 +37,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,26 +47,19 @@ import java.util.Map;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class,
-	property = {
-		"base.path=/v1/entity/name"
-	}
+	service = RouterHandler.class
 )
-public class EntityNameHTTPHandler implements HttpHandler {
+public class EntityNameHTTPHandler
+	implements RouterHandler, HttpHandler {
 
 	@Override
-	public String getPath() {
-		return "";
-	}
-
-	@Override
-	public int method() {
-		return HttpHandler.GET;
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.get("/v1/entity/name", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		String hostName = HttpUtil.getHostName(httpRequest);
 

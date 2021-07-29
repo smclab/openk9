@@ -18,31 +18,34 @@
 package io.openk9.search.query.internal.http;
 
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class
+	service = RouterHandler.class
 )
-public class PluginDriverEndpoint implements HttpHandler {
+public class PluginDriverEndpoint
+	implements RouterHandler, HttpHandler {
 
 	@Override
-	public String getPath() {
-		return "/v1/driver-service-names";
+	public HttpServerRoutes handle(
+		HttpServerRoutes router) {
+		return router.get("/v1/driver-service-names", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return _httpResponseWriter.write(
 			httpResponse,

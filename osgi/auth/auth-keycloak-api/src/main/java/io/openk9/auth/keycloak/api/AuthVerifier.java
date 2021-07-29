@@ -1,15 +1,13 @@
 package io.openk9.auth.keycloak.api;
 
-import io.openk9.http.web.HttpRequest;
 import reactor.core.publisher.Mono;
-
-import java.util.function.Supplier;
+import reactor.netty.http.server.HttpServerRequest;
 
 public interface AuthVerifier {
 
-	Mono<UserInfo> getUserInfo(HttpRequest httpRequest);
+	Mono<UserInfo> getUserInfo(HttpServerRequest httpRequest);
 
-	Mono<UserInfo> getUserInfo(HttpRequest httpRequest, Mono<String> nameSupplier);
+	Mono<UserInfo> getUserInfo(HttpServerRequest httpRequest, Mono<String> nameSupplier);
 
 	UserInfo GUEST = new UserInfo();
 

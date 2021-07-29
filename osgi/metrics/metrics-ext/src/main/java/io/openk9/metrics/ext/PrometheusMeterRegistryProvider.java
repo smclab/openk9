@@ -19,16 +19,17 @@ package io.openk9.metrics.ext;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.metrics.api.MeterRegistryProvider;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.Map;
 
@@ -36,11 +37,11 @@ import java.util.Map;
 	immediate = true,
 	service = {
 		MeterRegistryProvider.class,
-		Endpoint.class
+		RouterHandler.class
 	}
 )
 public class PrometheusMeterRegistryProvider
-	implements MeterRegistryProvider, HttpHandler {
+	implements MeterRegistryProvider, HttpHandler, RouterHandler {
 
 	@Activate
 	public void activate(Map<String, Object> props) {
@@ -57,18 +58,13 @@ public class PrometheusMeterRegistryProvider
 	}
 
 	@Override
-	public String getPath() {
-		return "/v1/prometheus";
-	}
-
-	@Override
-	public boolean prefix() {
-		return true;
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.get("/v1/prometheus", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return httpResponse.sendString(
 			Mono.fromSupplier(_prometheusMeterRegistry::scrape));

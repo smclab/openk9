@@ -17,10 +17,11 @@
 
 package io.openk9.http.bundle.ext;
 
+import io.netty.handler.codec.http.HttpMethod;
 import io.openk9.http.osgi.BaseStaticEndpoint;
-import io.openk9.http.web.Endpoint;
-import io.openk9.http.web.HttpHandler;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.osgi.util.AutoCloseables;
+import io.openk9.reactor.netty.util.HttpPrefixPredicate;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -71,38 +72,20 @@ public class HttpBundleExtender implements BundleActivator {
 						staticFolderVar = staticFolder;
 					}
 
-					HttpHandler httpHandler = new BaseStaticEndpoint() {
-						{
-							_bundle = bundle;
-						}
-
-						@Override
-						public String getStaticFolder() {
-							return staticFolderVar;
-						}
-
-						@Override
-						public String getPath() {
-							return contextPath;
-						}
-
-						@Override
-						public boolean prefix() {
-							return true;
-						}
-
-						@Override
-						public int method() {
-							return HttpHandler.GET;
-						}
-
-					};
+					RouterHandler routerHandler = router ->
+						router
+							.route(
+								HttpPrefixPredicate.of(
+									contextPath, HttpMethod.GET),
+								BaseStaticEndpoint.of(
+									bundle, contextPath, staticFolderVar, "")
+							);
 
 					BundleContext bundleContext = bundle.getBundleContext();
 
-					ServiceRegistration<Endpoint> serviceRegistration =
+					ServiceRegistration<RouterHandler> serviceRegistration =
 						bundleContext.registerService(
-							Endpoint.class, httpHandler, null);
+							RouterHandler.class, routerHandler, null);
 
 					return AutoCloseables.mergeAutoCloseableToSafe(
 						serviceRegistration::unregister);

@@ -8,11 +8,10 @@ import io.openk9.entity.manager.model.payload.Request;
 import io.openk9.entity.manager.model.payload.Response;
 import io.openk9.entity.manager.model.payload.ResponseList;
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.relationship.graph.api.client.GraphClient;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Functions;
@@ -26,6 +25,9 @@ import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -38,9 +40,10 @@ import static org.neo4j.cypherdsl.core.Cypher.literalOf;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class
+	service = RouterHandler.class
 )
-public class GetOrAddEntitiesHttpHandler implements HttpHandler {
+public class GetOrAddEntitiesHttpHandler
+	implements HttpHandler, RouterHandler {
 
 	@interface Config {
 		boolean transactional() default false;
@@ -62,21 +65,16 @@ public class GetOrAddEntitiesHttpHandler implements HttpHandler {
 	}
 
 	@Override
-	public String getPath() {
-		return "/get-or-add-entities";
-	}
-
-	@Override
-	public int method() {
-		return POST;
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.post("/get-or-add-entities", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		Mono<Request> requestMono = Mono
-			.from(httpRequest.aggregateBodyToString())
+			.from(ReactorNettyUtils.aggregateBodyAsString(httpRequest))
 			.map(body -> _jsonFactory.fromJson(body, Request.class));
 
 		Flux<RequestContext> requestContextFlux =

@@ -17,47 +17,35 @@
 
 package io.openk9.datasource.internal.web;
 
-import io.openk9.model.Datasource;
 import io.openk9.datasource.repository.DatasourceRepository;
-import io.openk9.http.util.BaseEndpointRegister;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
-import org.osgi.framework.BundleContext;
+import io.openk9.model.Datasource;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Deactivate;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
-@Component(immediate = true, service = DatasourceEndpoints.class)
-public class DatasourceEndpoints extends BaseEndpointRegister {
+@Component(immediate = true, service = RouterHandler.class)
+public class DatasourceEndpoints implements RouterHandler {
 
-	@Activate
-	public void activate(BundleContext bundleContext) {
-
-		setBundleContext(bundleContext);
-
-		this.registerEndpoint(
-			HttpHandler.post("/", this::_addDatasource),
-			HttpHandler.delete("/{id}", this::_deleteDatasource),
-			HttpHandler.get("/{id}", this::_getDatasourceById),
-			HttpHandler.get("/", this::_findAll),
-			HttpHandler.put("/", this::_updateDatasource)
-		);
-
-	}
-
-	@Deactivate
-	public void deactivate() {
-		this.close();
+	@Override
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router
+			.post("/v1/datasource/", this::_addDatasource)
+			.delete("/v1/datasource/{id}", this::_deleteDatasource)
+			.get("/v1/datasource/{id}", this::_getDatasourceById)
+			.get("/v1/datasource/", this::_findAll)
+			.put("/v1/datasource/", this::_updateDatasource);
 	}
 
 	private Publisher<Void> _findAll(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		Flux<String> response =
 			_datasourceRepository
@@ -68,7 +56,7 @@ public class DatasourceEndpoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _updateDatasource(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		Mono<String> jsonResponse =
 			_getDatasourceFromBodyAttribute(httpRequest)
@@ -79,8 +67,8 @@ public class DatasourceEndpoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _getDatasourceById(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
-		String id = httpRequest.pathParam("id");
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
+		String id = httpRequest.param("id");
 
 		Mono<String> response = _datasourceRepository
 			.findByPrimaryKey(Long.valueOf(id))
@@ -90,9 +78,9 @@ public class DatasourceEndpoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _deleteDatasource(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		String id = httpRequest.pathParam("id");
+		String id = httpRequest.param("id");
 
 		return _datasourceRepository
 			.removeDatasource(Long.valueOf(id))
@@ -100,7 +88,7 @@ public class DatasourceEndpoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _addDatasource(
-		HttpRequest request, HttpResponse response) {
+		HttpServerRequest request, HttpServerResponse response) {
 
 		Mono<String> jsonResponse =
 			_getDatasourceFromBodyAttribute(request)
@@ -112,17 +100,12 @@ public class DatasourceEndpoints extends BaseEndpointRegister {
 	}
 
 	private Mono<Datasource> _getDatasourceFromBodyAttribute(
-		HttpRequest request) {
+		HttpServerRequest request) {
 
 		return Mono
-			.from(request.aggregateBodyToString())
+			.from(ReactorNettyUtils.aggregateBodyAsByteArray(request))
 			.map(s -> _jsonFactory.fromJson(s, Datasource.class));
 
-	}
-
-	@Override
-	public String getBasePath() {
-		return "/v1/datasource";
 	}
 
 	@Reference

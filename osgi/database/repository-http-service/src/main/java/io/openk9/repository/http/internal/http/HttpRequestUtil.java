@@ -17,43 +17,46 @@
 
 package io.openk9.repository.http.internal.http;
 
-import io.openk9.http.web.HttpRequest;
 import io.openk9.sql.api.client.Page;
 import io.openk9.sql.api.client.Sort;
 import io.vavr.Function4;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import reactor.netty.http.server.HttpServerRequest;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class HttpRequestUtil {
 
-	public static Page getPage(HttpRequest httpRequest) {
+	public static Page getPage(HttpServerRequest httpRequest) {
+
+		Map<String, String> params = httpRequest.params();
 
 		Tuple2<Integer, Integer> start =
-			httpRequest
-				.firstParam(_START)
+			Optional
+				.ofNullable(params.get(_START))
 				.map(Integer::valueOf)
 				.map(v -> Tuple.of(_START_VALUE, v))
 				.orElseGet(HttpRequestUtil::_defaultTuple);
 
 		Tuple2<Integer, Integer> end =
-			httpRequest
-				.firstParam(_END)
+			Optional
+				.ofNullable(params.get(_END))
 				.map(Integer::valueOf)
 				.map(v -> Tuple.of(_END_VALUE, v))
 				.orElseGet(HttpRequestUtil::_defaultTuple);
 
 		Tuple2<Integer, String> type =
-			httpRequest
-				.firstParam(_ORDER_TYPE)
+			Optional
+				.ofNullable(params.get(_ORDER_TYPE))
 				.map(v -> Tuple.of(_ORDER_TYPE_VALUE, v))
 				.orElseGet(HttpRequestUtil::_defaultTuple);
 
 		Tuple2<Integer, String> column =
-			httpRequest
-				.firstParam(_ORDER_COLUMN)
+			Optional
+				.ofNullable(params.get(_ORDER_COLUMN))
 				.map(v -> Tuple.of(_ORDER_COLUMN_VALUE, v))
 				.orElseGet(HttpRequestUtil::_defaultTuple);
 

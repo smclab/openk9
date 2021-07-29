@@ -18,14 +18,13 @@
 package io.openk9.sql.scheduler.web;
 
 import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.Endpoint;
 import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import org.apache.karaf.scheduler.Scheduler;
 import org.apache.karaf.scheduler.SchedulerError;
 import org.osgi.service.component.annotations.Component;
@@ -33,34 +32,35 @@ import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class
+	service = RouterHandler.class
 )
-public class SchedulerTriggerHttpHandler implements HttpHandler {
+public class SchedulerTriggerHttpHandler
+	implements RouterHandler, HttpHandler {
 
 	@Override
-	public String getPath() {
-		return "/v1/scheduler/trigger";
-	}
-
-	@Override
-	public int method() {
-		return HttpHandler.POST;
+	public HttpServerRoutes handle(
+		HttpServerRoutes router) {
+		return router.post("/v1/scheduler/trigger", this);
 	}
 
 	@Override
 	public Publisher<Void> apply(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return _httpResponseWriter.write(
 			httpResponse,
 			Mono
-				.from(httpRequest.aggregateBodyToString())
+				.from(
+					ReactorNettyUtils.aggregateBodyAsString(httpRequest))
 				.map(_jsonFactory::fromJsonToJsonNode)
 				.handle((jsonNode, sink) -> {
 

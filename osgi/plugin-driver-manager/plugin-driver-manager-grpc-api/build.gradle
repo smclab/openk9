@@ -1,0 +1,35 @@
+/*
+dependencies {
+	compile libraries.rsocket_rpc_core
+	compile libraries.protobuf
+}
+
+apply plugin: 'com.google.protobuf'
+
+protobuf {
+	protoc { artifact = "com.google.protobuf:protoc:3.7.1" }
+	plugins {
+		rsocketRpc { artifact = 'io.rsocket.rpc:rsocket-rpc-protobuf:0.3.0' }
+	}
+	generateProtoTasks {
+		all()*.plugins {
+			rsocketRpc {}
+		}
+	}
+}
+
+// Inform IDEs like IntelliJ IDEA, Eclipse or NetBeans about the generated code.
+sourceSets {
+	main {
+		java {
+			srcDirs 'build/generated/source/proto/main/grpc'
+			srcDirs 'build/generated/source/proto/main/java'
+			srcDirs 'build/generated/source/proto/main/reactor'
+			srcDirs 'build/generated/source/proto/main/rsocketRpc'
+		}
+	}
+}
+
+compileJava.dependsOn("generateProto")
+
+*/

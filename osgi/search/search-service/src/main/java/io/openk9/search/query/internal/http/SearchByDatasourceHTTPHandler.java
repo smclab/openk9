@@ -18,76 +18,49 @@
 package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
-import io.openk9.http.web.Endpoint;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
-import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
-import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
-import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
 import io.openk9.search.api.query.QueryParser;
-import io.openk9.search.api.query.SearchRequest;
-import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
-import io.openk9.search.client.api.util.SearchUtil;
-import io.openk9.search.query.internal.response.Response;
-import org.apache.lucene.search.TotalHits;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.text.Text;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Objects;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class
+	service = RouterHandler.class
 )
 public class SearchByDatasourceHTTPHandler extends BaseSearchHTTPHandler {
 
 	@Override
-	public String getPath() {
-		return "/v1/search/{datasourceId}";
-	}
-
-	@Override
-	public int method() {
-		return HttpHandler.GET + HttpHandler.POST;
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router
+			.get("/v1/search/{datasourceId}", this)
+			.post("/v1/search/{datasourceId}", this);
 	}
 
 	@Override
 	protected Mono<Tuple2<Tenant, List<Datasource>>> _getTenantAndDatasourceList(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		long datasourceId =
-			Long.parseLong(httpRequest.pathParam("datasourceId"));
+			Long.parseLong(
+				Objects.requireNonNull(httpRequest.param("datasourceId")));
 
 		return _datasourceClient
 			.findTenantAndDatasourceByDatasourceId(datasourceId)

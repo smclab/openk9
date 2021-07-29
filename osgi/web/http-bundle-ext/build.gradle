@@ -1,3 +1,4 @@
 dependencies {
 	compile project(':osgi:web:http-api')
+	compile project(':osgi:common:reactory-netty-util')
 }

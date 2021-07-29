@@ -17,26 +17,21 @@
 
 package io.openk9.http.util;
 
-import io.openk9.http.web.HttpRequest;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
 
 import java.net.InetSocketAddress;
-import java.util.function.Function;
 
 public class HttpUtil {
 
-	public static String getHostName(HttpRequest httpRequest) {
+	public static String getHostName(HttpServerRequest httpRequest) {
 		InetSocketAddress inetSocketAddress = httpRequest.hostAddress();
 		return inetSocketAddress.getHostName();
 	}
 
-	public static <T> Mono<T> mapBodyRequest(
-		HttpRequest httpRequest, Function<String, T> mapper) {
-
-		return Mono
-			.from(httpRequest.aggregateBodyToString())
-			.map(mapper);
-
+	public static Mono<byte[]> bodyToByteArray(HttpServerRequest httpRequest) {
+		return httpRequest.receive().aggregate().asByteArray();
 	}
+
 
 }

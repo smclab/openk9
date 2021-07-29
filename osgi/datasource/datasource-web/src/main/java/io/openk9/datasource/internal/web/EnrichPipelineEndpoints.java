@@ -17,46 +17,35 @@
 
 package io.openk9.datasource.internal.web;
 
-import io.openk9.model.EnrichPipeline;
 import io.openk9.datasource.repository.EnrichPipelineRepository;
-import io.openk9.http.util.BaseEndpointRegister;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
+import io.openk9.model.EnrichPipeline;
+import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 
-@Component(immediate = true, service = EnrichPipelineEndpoints.class)
-public class EnrichPipelineEndpoints extends BaseEndpointRegister {
+@Component(immediate = true, service = RouterHandler.class)
+public class EnrichPipelineEndpoints implements RouterHandler {
 
-	@Activate
-	public void activate(BundleContext bundleContext) {
-		setBundleContext(bundleContext);
-
-		this.registerEndpoint(
-			HttpHandler.post("/", this::_addDatasource),
-			HttpHandler.delete("/{id}", this::_deleteDatasource),
-			HttpHandler.get("/{id}", this::_getDatasourceById),
-			HttpHandler.get("/", this::_findAll),
-			HttpHandler.put("/", this::_updateDatasource)
-		);
-
-	}
-
-	@Deactivate
-	public void deactivate() {
-		this.close();
+	@Override
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router
+			.post("/v1/enrich-pipeline/", this::_addDatasource)
+			.delete("/v1/enrich-pipeline/{id}", this::_deleteDatasource)
+			.get("/v1/enrich-pipeline/{id}", this::_getDatasourceById)
+			.get("/v1/enrich-pipeline/", this::_findAll)
+			.put("/v1/enrich-pipeline/", this::_updateDatasource);
 	}
 
 	private Publisher<Void> _findAll(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		Flux<String> response =
 			_enrichPipelineRepository
@@ -67,7 +56,7 @@ public class EnrichPipelineEndpoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _updateDatasource(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		Mono<String> jsonResponse =
 			_getDatasourceFromBodyAttribute(httpRequest)
@@ -78,8 +67,8 @@ public class EnrichPipelineEndpoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _getDatasourceById(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
-		String id = httpRequest.pathParam("id");
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
+		String id = httpRequest.param("id");
 
 		Mono<String> response = _enrichPipelineRepository
 			.findByPrimaryKey(Long.valueOf(id))
@@ -89,9 +78,9 @@ public class EnrichPipelineEndpoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _deleteDatasource(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		String id = httpRequest.pathParam("id");
+		String id = httpRequest.param("id");
 
 		return _enrichPipelineRepository
 			.removeEnrichPipeline(Long.valueOf(id))
@@ -99,7 +88,7 @@ public class EnrichPipelineEndpoints extends BaseEndpointRegister {
 	}
 
 	private Publisher<Void> _addDatasource(
-		HttpRequest request, HttpResponse response) {
+		HttpServerRequest request, HttpServerResponse response) {
 
 		Mono<String> jsonResponse =
 			_getDatasourceFromBodyAttribute(request)
@@ -111,17 +100,12 @@ public class EnrichPipelineEndpoints extends BaseEndpointRegister {
 	}
 
 	private Mono<EnrichPipeline> _getDatasourceFromBodyAttribute(
-		HttpRequest request) {
+		HttpServerRequest request) {
 
 		return Mono
-			.from(request.aggregateBodyToString())
+			.from(ReactorNettyUtils.aggregateBodyAsByteArray(request))
 			.map(s -> _jsonFactory.fromJson(s, EnrichPipeline.class));
 
-	}
-
-	@Override
-	public String getBasePath() {
-		return "/v1/enrich-pipeline";
 	}
 
 	@Reference

@@ -19,10 +19,7 @@ package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpUtil;
-import io.openk9.http.web.Endpoint;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.HttpRequest;
-import io.openk9.http.web.HttpResponse;
+import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
@@ -48,6 +45,9 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ import java.util.stream.Stream;
 
 @Component(
 	immediate = true,
-	service = Endpoint.class,
+	service = RouterHandler.class,
 	property = {
 		"base.path=/v1/suggestions"
 	}
@@ -71,7 +71,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		String[] datasourceFieldAggregations() default {"topic", "documentType"};
 		int aggregationSize() default 20;
 	}
-
 	@Activate
 	@Modified
 	void activate(Config config) {
@@ -81,18 +80,16 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	}
 
 	@Override
-	public String getPath() {
-		return "";
-	}
-
-	@Override
-	public int method() {
-		return HttpHandler.GET + HttpHandler.POST;
+	public HttpServerRoutes handle(
+		HttpServerRoutes router) {
+		return router
+			.get("/v1/suggestions", this)
+			.post("/v1/suggestions", this);
 	}
 
 	@Override
 	protected Mono<Tuple2<Tenant, List<Datasource>>> _getTenantAndDatasourceList(
-		HttpRequest httpRequest, HttpResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 		String hostName = HttpUtil.getHostName(httpRequest);
 
 		return _datasourceClient

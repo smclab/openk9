@@ -10,7 +10,6 @@ import io.openk9.auth.keycloak.api.AuthVerifier;
 import io.openk9.auth.keycloak.api.KeycloakClient;
 import io.openk9.auth.keycloak.api.UserInfo;
 import io.openk9.http.util.HttpUtil;
-import io.openk9.http.web.HttpRequest;
 import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.Delivery;
 import io.openk9.ingestion.api.ReceiverReactor;
@@ -27,11 +26,11 @@ import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.netty.http.server.HttpServerRequest;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Supplier;
 
 @Component(
 	immediate = true,
@@ -152,16 +151,17 @@ public class AuthVerifierImpl implements AuthVerifier {
 	}
 
 	@Override
-	public Mono<UserInfo> getUserInfo(HttpRequest httpRequest) {
+	public Mono<UserInfo> getUserInfo(
+		HttpServerRequest httpRequest) {
 		return getUserInfo(
 			httpRequest, Mono.just(HttpUtil.getHostName(httpRequest)));
 	}
 
 	@Override
 	public Mono<UserInfo> getUserInfo(
-		HttpRequest httpRequest, Mono<String> nameSupplier) {
+		HttpServerRequest httpRequest, Mono<String> nameSupplier) {
 
-		String token = httpRequest.getHeader("Authorization");
+		String token = httpRequest.requestHeaders().get("Authorization");
 
 		if (token == null || token.isEmpty()) {
 			return Mono.just(GUEST);
