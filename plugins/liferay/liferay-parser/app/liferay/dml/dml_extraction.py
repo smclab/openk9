@@ -235,7 +235,7 @@ class AsyncDmlExtraction(threading.Thread):
                             "contentId": str(doc_id),
                             "parsingDate": int(end_timestamp),
                             "rawContent": raw_msg,
-                            "datasourcePayload": json.dumps(datasource_payload)
+                            "datasourcePayload": datasource_payload
                         }
                                                 
                         try:

@@ -255,7 +255,7 @@ class AsyncUserExtraction(threading.Thread):
                             "contentId": str(user['userId']),
                             "parsingDate": int(end_timestamp),
                             "rawContent": raw_content,
-                            "datasourcePayload": json.dumps(datasource_payload)
+                            "datasourcePayload": datasource_payload
                         }
 
                         self.status_logger.info(raw_content)

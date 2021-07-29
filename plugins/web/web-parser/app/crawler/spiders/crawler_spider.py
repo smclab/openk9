@@ -166,7 +166,7 @@ class MySpider(CrawlSpider):
             "contentId": hash(str(response.url)),
             "parsingDate": int(self.end_timestamp),
             "rawContent": title + " " + content,
-            "datasourcePayload": json.dumps(datasource_payload)
+            "datasourcePayload": datasource_payload
         }
 
         self.post_message(self.ingestion_url, payload, 10)
