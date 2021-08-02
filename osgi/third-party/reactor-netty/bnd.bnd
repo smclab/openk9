@@ -9,31 +9,9 @@ Include-Resource: \
 Export-Package: io.netty.*, reactor.netty.*
 
 Import-Package: \
- io.netty.channel.kqueue;resolution:=optional,\
- io.netty.incubator.channel.uring;resolution:=optional,\
- io.netty.handler.codec.haproxy;resolution:=optional,\
- com.google.protobuf.*;resolution:=optional,\
- com.ning.compress.*;resolution:=optional,\
- io.micrometer.*;resolution:=optional,\
- javax.*;resolution:=optional,\
- org.apache.logging.*;resolution:=optional,\
- org.bouncycastle.*;resolution:=optional,\
- org.eclipse.*;resolution:=optional,\
- org.slf4j.*;resolution:=optional,\
- reactor.blockhound.*;resolution:=optional,\
- com.jcraft.jzlib;resolution:=optional,\
- sun.*;resolution:=optional,\
- com.oracle.*;resolution:=optional,\
- org.conscrypt.*;resolution:=optional,\
- lzma.sdk.*;resolution:=optional,\
- com.oracle.*;resolution:=optional,\
- net.jpountz;resolution:=optional,\
- net.jpountz.*;resolution:=optional,\
- org.jboss.*;resolution:=optional,\
- org.apache.*;resolution:=optional,\
  !io.netty.*,\
  !reactor.netty.*,\
- *
+ *;resolution:=optional
 
 -fixupmessages: Classes found in the wrong directory: ...;is:=ignore
 
