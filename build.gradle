@@ -65,12 +65,12 @@ ext.libraries = [
 		checkerframework_checker_qual: 'org.checkerframework:checker-qual:3.8.0',
 		google_errorprone_error_prone_annotations: 'com.google.errorprone:error_prone_annotations:2.4.0',
 		reactor: [
-		        'io.projectreactor:reactor-core:3.4.6'
+		        'io.projectreactor:reactor-core:3.4.8'
 		],
 		reactor_extra: 'io.projectreactor.addons:reactor-extra:3.4.3',
-		reactor_tools: 'io.projectreactor:reactor-tools:3.4.6',
+		reactor_tools: 'io.projectreactor:reactor-tools:3.4.8',
 		reactor_netty: [
-				'io.projectreactor.netty:reactor-netty:1.0.7'
+				'io.projectreactor.netty:reactor-netty:1.0.9'
 		],
 		osgi: 'org.osgi:osgi.core:7.0.0',
 		osgi_cmpn: 'org.osgi:osgi.cmpn:7.0.0',
