@@ -5,13 +5,9 @@ Include-Resource: \
  @netty-*.jar,\
  @reactor-netty-*.jar
 
+Export-Package: io.netty.*;-noimport:=true, reactor.netty.*;-noimport:=true
 
-Export-Package: io.netty.*, reactor.netty.*
-
-Import-Package: \
- !io.netty.*,\
- !reactor.netty.*,\
- *;resolution:=optional
+Import-Package: *;resolution:=optional
 
 -fixupmessages: Classes found in the wrong directory: ...;is:=ignore
 

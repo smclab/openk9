@@ -134,10 +134,7 @@ public class ReactorNettyActivator {
 				Throwable unwrap = Exceptions.unwrap(throwable);
 
 				if (_log.isErrorEnabled()) {
-					_log.debug(throwable.getMessage());
-				}
-				else if (_log.isDebugEnabled()) {
-					_log.debug(throwable.getMessage(), throwable);
+					_log.error(throwable.getMessage(), throwable);
 				}
 
 				HttpServerResponse response =
