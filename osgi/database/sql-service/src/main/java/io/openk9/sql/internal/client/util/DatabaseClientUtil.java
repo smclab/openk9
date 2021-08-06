@@ -26,6 +26,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 public final class DatabaseClientUtil {
@@ -47,10 +48,22 @@ public final class DatabaseClientUtil {
 		ConnectionFactory connectionFactory,
 		Function<Connection, Publisher<T>> executeQuery) {
 
-		return Flux.usingWhen(
-			connectionFactory.create(),
-			executeQuery,
-			Connection::close, (c, err) -> c.close(), Connection::close);
+		return Flux.deferContextual(contextView -> {
+
+			Optional<Connection> connectionOrEmpty =
+				contextView.getOrEmpty(
+					io.openk9.sql.api.client.DatabaseClientUtil.TRANSACTION_KEY
+				);
+
+			return connectionOrEmpty
+				.map(executeQuery)
+				.orElseGet(() -> Flux.usingWhen(
+					connectionFactory.create(),
+					executeQuery,
+					Connection::close, (c, err) -> c.close(), Connection::close)
+				);
+		});
+
 	}
 
 }

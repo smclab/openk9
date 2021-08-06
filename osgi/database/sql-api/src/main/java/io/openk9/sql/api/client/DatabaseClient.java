@@ -19,6 +19,7 @@ package io.openk9.sql.api.client;
 
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
@@ -32,6 +33,8 @@ public interface DatabaseClient {
 	InsertFromSpec insert();
 	DeleteFromSpec delete();
 	UpdateFromSpec update();
+	<T> Flux<T> makeTransactional(Flux<T> publisher);
+	<T> Mono<T> makeTransactional(Mono<T> publisher);
 
 	interface SelectSpec<S extends SelectSpec<S>> {
 

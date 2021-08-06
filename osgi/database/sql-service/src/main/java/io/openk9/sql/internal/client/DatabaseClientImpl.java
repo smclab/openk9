@@ -18,6 +18,7 @@
 package io.openk9.sql.internal.client;
 
 import io.openk9.sql.api.client.DatabaseClient;
+import io.openk9.sql.api.client.DatabaseClientUtil;
 import io.openk9.sql.internal.client.delete.DefaultDeleteFromSpec;
 import io.openk9.sql.internal.client.insert.DefaultInsertFromSpec;
 import io.openk9.sql.internal.client.select.DefaultSelectFromSpec;
@@ -25,6 +26,8 @@ import io.openk9.sql.internal.client.update.DefaultUpdateFromSpec;
 import io.r2dbc.spi.ConnectionFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Component(immediate = true, service = DatabaseClient.class)
 public class DatabaseClientImpl implements DatabaseClient {
@@ -47,6 +50,18 @@ public class DatabaseClientImpl implements DatabaseClient {
 	@Override
 	public UpdateFromSpec update() {
 		return new DefaultUpdateFromSpec(_connectionFactory);
+	}
+
+	@Override
+	public <T> Flux<T> makeTransactional(Flux<T> publisher) {
+		return DatabaseClientUtil.makeTransactional(
+			_connectionFactory, publisher);
+	}
+
+	@Override
+	public <T> Mono<T> makeTransactional(Mono<T> publisher) {
+		return DatabaseClientUtil.makeTransactional(
+			_connectionFactory, publisher);
 	}
 
 	@Reference
