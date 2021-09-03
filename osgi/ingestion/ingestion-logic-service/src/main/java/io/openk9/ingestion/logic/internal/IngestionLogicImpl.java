@@ -34,7 +34,7 @@ public class IngestionLogicImpl implements IngestionLogic {
 
 	@Activate
 	public void activate() {
-		_many = Sinks.many().multicast().onBackpressureBuffer();
+		_many = Sinks.unsafe().many().multicast().onBackpressureBuffer();
 	}
 
 	@Deactivate
