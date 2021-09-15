@@ -1,0 +1,219 @@
+package io.openk9.search.query.internal.http;
+
+import io.openk9.datasource.client.api.DatasourceClient;
+import io.openk9.http.util.HttpUtil;
+import io.openk9.http.web.RouterHandler;
+import io.openk9.model.Datasource;
+import io.openk9.model.Tenant;
+import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
+import io.openk9.search.client.api.Search;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.HttpServerRoutes;
+
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+
+@Component(
+	immediate = true,
+	service = RouterHandler.class
+)
+public class ResourcesHttpHandler implements RouterHandler {
+
+	@Activate
+	void activate(BundleContext bundleContext) {
+		lastModifiedDate = Instant.ofEpochMilli(
+			bundleContext.getBundle().getLastModified());
+	}
+
+	@Override
+	public HttpServerRoutes handle(HttpServerRoutes router) {
+		return router.get(
+			"/resources/{datasourceId}/{documentId}/{resourceId}",
+			this::_getResources);
+	}
+
+	private Publisher<Void> _getResources(
+		HttpServerRequest request, HttpServerResponse response) {
+
+		String hostName = HttpUtil.getHostName(request);
+
+		long datasourceId = NumberUtils.toLong(request.param("datasourceId"));
+		String documentId = request.param("documentId");
+		String resourceId = request.param("resourceId");
+
+		_manageCache(request, response);
+
+		Mono<Tenant> tenantMono =
+			_datasourceClient
+				.findTenantByVirtualHost(hostName)
+				.next()
+				.switchIfEmpty(
+					Mono.error(
+						() -> new RuntimeException(
+							"tenant not found with virtualhost: " + hostName)));
+
+		Mono<Datasource> datasourceMono = _datasourceClient
+			.findDatasource(datasourceId)
+			.switchIfEmpty(
+				Mono.error(
+					() -> new RuntimeException(
+						"datasource not found with datasourceId: "
+						+ datasourceId)));
+
+		return tenantMono
+			.zipWith(datasourceMono)
+			.flatMap(
+				t2 -> _pluginDriverManagerClient
+					.getPluginDriver(t2.getT2().getDriverServiceName())
+					.flatMap(pd -> _sendResource(
+						t2.getT1(), t2.getT2(), pd, datasourceId, documentId,
+						resourceId, response))
+			);
+
+
+
+	}
+
+	private void _manageCache(
+		HttpServerRequest request, HttpServerResponse response) {
+
+		Map<String, List<String>> queryParams =
+			HttpUtil.getQueryParams(request);
+
+		List<String> modifiedDate = queryParams.get("t");
+
+		response.header("cache-control", "public");
+		response.header(
+			"expires",
+			DateTimeFormatter
+				.RFC_1123_DATE_TIME
+				.format(
+					Instant
+						.now()
+						.plus(10, ChronoUnit.YEARS)
+				)
+		);
+		response.header(
+			"last-modified",
+			DateTimeFormatter.RFC_1123_DATE_TIME.format(lastModifiedDate)
+		);
+
+	}
+
+	private Mono<Void> _sendResource(
+		Tenant tenant, Datasource datasource , PluginDriverDTO pluginDriverDTO,
+		long datasourceId, String documentId, String resourceId,
+		HttpServerResponse httpResponse) {
+
+		return _search.search(factory -> {
+
+			SearchRequest searchRequest = factory.createSearchRequest(
+				tenant.getTenantId(), pluginDriverDTO.getName());
+
+			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+			boolQueryBuilder.must(
+				QueryBuilders
+					.idsQuery()
+					.addIds(documentId)
+			);
+
+			boolQueryBuilder.must(
+				QueryBuilders.nestedQuery(
+					"resources.binaries",
+					QueryBuilders.matchQuery(
+						"resources.binaries.id", resourceId),
+					ScoreMode.Max
+				)
+			);
+
+			SearchSourceBuilder searchSourceBuilder =
+				new SearchSourceBuilder();
+
+			searchSourceBuilder.query(boolQueryBuilder);
+
+			searchSourceBuilder.fetchSource(
+				new String[] {
+					"resources.binaries.data",
+					"resources.binaries.contentType"
+				}, null);
+
+			return searchRequest.source(searchSourceBuilder);
+
+		})
+			.flatMap(response -> {
+
+				SearchHits searchHits = response.getHits();
+
+				SearchHit[] hits = searchHits.getHits();
+
+				if (hits.length == 0) {
+					return httpResponse.sendNotFound();
+				}
+				else if (hits.length > 1) {
+					_log.warn(
+						"found more than one resource (datasourceId: "
+						+ datasourceId + " resourceId: "
+						+ resourceId + " tenantId: "
+						+ tenant.getTenantId()  + " documentId: "
+						+ documentId + ")"
+					);
+				}
+
+				SearchHit hit = hits[0];
+
+				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+
+				String data =(String)sourceAsMap.get("resources.binaries.data");
+
+				String contentType =(String)
+					sourceAsMap.get("resources.binaries.contentType");
+
+				if (contentType != null && !contentType.isBlank()) {
+					httpResponse.header("Content-Type", contentType);
+				}
+
+				byte[] decode = Base64.getDecoder().decode(data);
+
+				return Mono.from(httpResponse.sendByteArray(Mono.just(decode)));
+
+			});
+	}
+
+	private Instant lastModifiedDate;
+
+	@Reference
+	private DatasourceClient _datasourceClient;
+
+	@Reference
+	private Search _search;
+
+	@Reference
+	private PluginDriverManagerClient _pluginDriverManagerClient;
+
+	private static final Logger _log = LoggerFactory.getLogger(
+		ResourcesHttpHandler.class);
+
+}

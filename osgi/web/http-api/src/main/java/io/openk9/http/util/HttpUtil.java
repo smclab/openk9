@@ -17,10 +17,13 @@
 
 package io.openk9.http.util;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
 import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Map;
 
 public class HttpUtil {
 
@@ -31,6 +34,16 @@ public class HttpUtil {
 
 	public static Mono<byte[]> bodyToByteArray(HttpServerRequest httpRequest) {
 		return httpRequest.receive().aggregate().asByteArray();
+	}
+
+	public static Map<String, List<String>> getQueryParams(
+		HttpServerRequest request) {
+
+		QueryStringDecoder queryStringDecoder =
+			new QueryStringDecoder(request.uri());
+
+		return queryStringDecoder.parameters();
+
 	}
 
 

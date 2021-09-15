@@ -22,7 +22,9 @@ import io.openk9.http.web.RouterHandler;
 import io.openk9.ingestion.identifier.generator.api.IdentifierGenerator;
 import io.openk9.ingestion.logic.api.IngestionLogic;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.model.BinaryPayload;
 import io.openk9.model.IngestionPayload;
+import io.openk9.model.ResourcesPayload;
 import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,7 +38,9 @@ import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
@@ -70,7 +74,8 @@ public class IngestionEndpoint
 						-1,
 						dto.getDatasourcePayload()
 							.keySet()
-							.toArray(new String[0])
+							.toArray(new String[0]),
+						_dtoToPayload(dto.getResources())
 					)
 				)
 				.doOnNext(_ingestionLogicSender::send)
@@ -78,6 +83,28 @@ public class IngestionEndpoint
 
 		return httpResponse.sendString(monoResponse);
 
+	}
+
+	private ResourcesPayload _dtoToPayload(ResourcesDTO resources) {
+
+		List<BinaryDTO> binaries = resources.getBinaries();
+
+		List<BinaryPayload> binaryPayloadList;
+
+		if (binaries == null) {
+			binaryPayloadList = List.of();
+		}
+		else {
+			binaryPayloadList =
+				binaries
+					.stream()
+					.map(binaryDTO -> BinaryPayload.of(
+						binaryDTO.id, binaryDTO.name, binaryDTO.contentType,
+						binaryDTO.data))
+					.collect(Collectors.toList());
+		}
+
+		return ResourcesPayload.of(binaryPayloadList);
 	}
 
 	@Data
@@ -90,6 +117,27 @@ public class IngestionEndpoint
 		private long parsingDate;
 		private String rawContent;
 		private Map<String, Object> datasourcePayload;
+		private ResourcesDTO resources;
+	}
+
+	@Data
+	@Builder
+	@NoArgsConstructor
+	@AllArgsConstructor(staticName = "of")
+	public static class ResourcesDTO {
+		private List<BinaryDTO> binaries;
+	}
+
+
+	@Data
+	@Builder
+	@NoArgsConstructor
+	@AllArgsConstructor(staticName = "of")
+	public static class BinaryDTO {
+		private String id;
+		private String name;
+		private String contentType;
+		private String data;
 	}
 
 	@Reference

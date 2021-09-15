@@ -245,6 +245,9 @@ public abstract class BaseSearchHTTPHandler
 					SearchSourceBuilder searchSourceBuilder =
 						new SearchSourceBuilder();
 
+					searchSourceBuilder.fetchSource(
+						includeFields(), excludeFields());
+
 					searchSourceBuilder.query(boolQuery);
 
 					customizeSearchSourceBuilder(
@@ -261,6 +264,14 @@ public abstract class BaseSearchHTTPHandler
 
 		});
 
+	}
+
+	protected String[] excludeFields() {
+		return new String[] {"resources.binaries.data"};
+	}
+
+	protected String[] includeFields() {
+		return _EMPTY_ARRAY;
 	}
 
 	protected void customizeSearchSourceBuilder(
@@ -335,6 +346,8 @@ public abstract class BaseSearchHTTPHandler
 	protected PluginDriverManagerClient _pluginDriverManagerClient;
 
 	protected JsonFactory _jsonFactory;
+
+	private static final String[] _EMPTY_ARRAY = {};
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		BaseSearchHTTPHandler.class);

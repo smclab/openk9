@@ -25,9 +25,9 @@ import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
 import io.openk9.model.DatasourceContext;
 import io.openk9.model.EnrichItem;
-import io.openk9.plugin.driver.manager.model.IngestionDatasourcePluginDriverPayload;
 import io.openk9.osgi.util.AutoCloseables;
 import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
+import io.openk9.plugin.driver.manager.model.IngestionDatasourcePluginDriverPayload;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.enrich.api.StartEnrichProcessor;
 import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
@@ -74,13 +74,11 @@ public class EnrichPipelineProcessor {
 			.map(idp ->
 				_mapToEnrichProcessorContext(
 					_adaptIngestionPayload(
-						Tuples.of(
-							idp.getDatasourceContext(),
-							_cborFactory
-								.treeNode(idp.getIngestionPayload())
-								.toObjectNode(),
-							idp.getPluginDriverDTO()
-						)
+						idp.getDatasourceContext(),
+						_cborFactory
+							.treeNode(idp.getIngestionPayload())
+							.toObjectNode(),
+						idp.getPluginDriverDTO()
 					)
 				)
 			)
@@ -111,14 +109,8 @@ public class EnrichPipelineProcessor {
 	private Tuple3<
 		DatasourceContext,
 		ObjectNode, PluginDriverDTO> _adaptIngestionPayload(
-		Tuple3<
-			DatasourceContext,
-			ObjectNode,
-			PluginDriverDTO> t3) {
-
-		ObjectNode ingestionPayload = t3.getT2();
-
-		PluginDriverDTO pluginDriverDTO = t3.getT3();
+			DatasourceContext datasourceContext, ObjectNode ingestionPayload,
+			PluginDriverDTO pluginDriverDTO) {
 
 		ObjectNode newIngestionPayload = ingestionPayload;
 
@@ -156,8 +148,8 @@ public class EnrichPipelineProcessor {
 			!ingestionPayload.get(io.openk9.core.api.constant.Constants.TYPE).toArrayNode().isEmpty()
 		) {
 			return Tuples.of(
-				t3.getT1(),
-				t3.getT2(),
+				datasourceContext,
+				ingestionPayload,
 				pluginDriverDTO
 			);
 		}
@@ -166,7 +158,7 @@ public class EnrichPipelineProcessor {
 			pluginDriverDTO.getDefaultDocumentType();
 
 		return Tuples.of(
-			t3.getT1(),
+			datasourceContext,
 			newIngestionPayload
 				.set(
 					io.openk9.core.api.constant.Constants.TYPE,

@@ -9,4 +9,6 @@ dependencies {
 	compile project(':osgi:datasource:datasource-client-api')
 	compile project(":osgi:plugin-driver-manager:plugin-driver-manager-client-api")
 
+	compile libraries.apache_commons_lang3
+
 }

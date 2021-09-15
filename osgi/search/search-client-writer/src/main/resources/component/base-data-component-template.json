@@ -126,6 +126,28 @@
 				"rawContent": {
 					"type": "text",
 					"index": false
+				},
+				"resources" : {
+					"properties": {
+						"binaries" : {
+							"type": "nested",
+							"properties": {
+								"id": {
+									"type": "keyword"
+								},
+								"name" : {
+									"type" : "text"
+								},
+								"contentType" : {
+									"type" : "keyword"
+								},
+								"data" : {
+									"type" : "binary",
+									"index": false
+								}
+							}
+						}
+					}
 				}
 			}
 		}

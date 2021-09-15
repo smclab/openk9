@@ -45,7 +45,8 @@ public class DatasourceIngestionLogic {
 									ingestionPayload.getRawContent(),
 									ingestionPayload.getDatasourcePayload(),
 									context.getTenant().getTenantId(),
-									ingestionPayload.getType()
+									ingestionPayload.getType(),
+									ingestionPayload.getResources()
 								), context)
 					)
 					.map(_cborFactory::toCBOR)
