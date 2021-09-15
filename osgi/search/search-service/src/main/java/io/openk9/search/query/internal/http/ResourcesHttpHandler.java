@@ -7,6 +7,7 @@ import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
+import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.client.api.Search;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.lucene.search.join.ScoreMode;
@@ -89,10 +90,8 @@ public class ResourcesHttpHandler implements RouterHandler {
 					.getPluginDriver(t2.getT2().getDriverServiceName())
 					.flatMap(pd -> _sendResource(
 						t2.getT1(), t2.getT2(), pd, datasourceId, documentId,
-						resourceId, response))
+						resourceId, request, response))
 			);
-
-
 
 	}
 
@@ -103,6 +102,13 @@ public class ResourcesHttpHandler implements RouterHandler {
 			HttpUtil.getQueryParams(request);
 
 		List<String> modifiedDate = queryParams.get("t");
+
+		Instant lastModifiedDate = this.lastModifiedDate;
+
+		if (modifiedDate != null && !modifiedDate.isEmpty()) {
+			long t = NumberUtils.toLong(modifiedDate.get(0));
+			lastModifiedDate = Instant.ofEpochMilli(t);
+		}
 
 		response.header("cache-control", "public");
 		response.header(
@@ -125,44 +131,50 @@ public class ResourcesHttpHandler implements RouterHandler {
 	private Mono<Void> _sendResource(
 		Tenant tenant, Datasource datasource , PluginDriverDTO pluginDriverDTO,
 		long datasourceId, String documentId, String resourceId,
-		HttpServerResponse httpResponse) {
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
-		return _search.search(factory -> {
+		return _queryParser.apply(
+			QueryParser.Context.of(tenant, null, null, null, httpRequest))
+			.flatMap(consumer ->
 
-			SearchRequest searchRequest = factory.createSearchRequest(
-				tenant.getTenantId(), pluginDriverDTO.getName());
+				_search.search(factory -> {
 
-			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+					SearchRequest searchRequest = factory.createSearchRequest(
+						tenant.getTenantId(), pluginDriverDTO.getName());
 
-			boolQueryBuilder.must(
-				QueryBuilders
-					.idsQuery()
-					.addIds(documentId)
-			);
+					BoolQueryBuilder boolQueryBuilder =
+						QueryBuilders.boolQuery();
 
-			boolQueryBuilder.must(
-				QueryBuilders.nestedQuery(
-					"resources.binaries",
-					QueryBuilders.matchQuery(
-						"resources.binaries.id", resourceId),
-					ScoreMode.Max
-				)
-			);
+					boolQueryBuilder.must(
+						QueryBuilders
+							.idsQuery()
+							.addIds(documentId)
+					);
 
-			SearchSourceBuilder searchSourceBuilder =
-				new SearchSourceBuilder();
+					boolQueryBuilder.must(
+						QueryBuilders.nestedQuery(
+							_RESOURCES_BINARIES,
+							QueryBuilders.matchQuery(
+								_RESOURCES_BINARIES_ID, resourceId),
+							ScoreMode.Max
+						)
+					);
 
-			searchSourceBuilder.query(boolQueryBuilder);
+					SearchSourceBuilder searchSourceBuilder =
+						new SearchSourceBuilder();
 
-			searchSourceBuilder.fetchSource(
-				new String[] {
-					"resources.binaries.data",
-					"resources.binaries.contentType"
-				}, null);
+					consumer.accept(boolQueryBuilder);
 
-			return searchRequest.source(searchSourceBuilder);
+					searchSourceBuilder.query(boolQueryBuilder);
 
-		})
+					searchSourceBuilder.fetchSource(
+						new String[] {
+							_RESOURCES_BINARIES_DATA,
+							_RESOURCES_BINARIES_CONTENT_TYPE
+						}, null);
+
+					return searchRequest.source(searchSourceBuilder);
+			}))
 			.flatMap(response -> {
 
 				SearchHits searchHits = response.getHits();
@@ -186,13 +198,13 @@ public class ResourcesHttpHandler implements RouterHandler {
 
 				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 
-				String data =(String)sourceAsMap.get("resources.binaries.data");
+				String data =(String)sourceAsMap.get(_RESOURCES_BINARIES_DATA);
 
 				String contentType =(String)
-					sourceAsMap.get("resources.binaries.contentType");
+					sourceAsMap.get(_RESOURCES_BINARIES_CONTENT_TYPE);
 
 				if (contentType != null && !contentType.isBlank()) {
-					httpResponse.header("Content-Type", contentType);
+					httpResponse.header(_CONTENT_TYPE, contentType);
 				}
 
 				byte[] decode = Base64.getDecoder().decode(data);
@@ -212,6 +224,22 @@ public class ResourcesHttpHandler implements RouterHandler {
 
 	@Reference
 	private PluginDriverManagerClient _pluginDriverManagerClient;
+
+	@Reference(target = "(component.name=io.openk9.auth.query.parser.AuthQueryParser)")
+	private QueryParser _queryParser;
+
+	private static final String _RESOURCES_BINARIES_CONTENT_TYPE =
+		"resources.binaries.contentType";
+
+	private static final String _RESOURCES_BINARIES_DATA =
+		"resources.binaries.data";
+
+	private static final String _RESOURCES_BINARIES = "resources.binaries";
+
+	private static final String _RESOURCES_BINARIES_ID =
+		"resources.binaries.id";
+
+	private static final String _CONTENT_TYPE = "Content-Type";
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		ResourcesHttpHandler.class);
