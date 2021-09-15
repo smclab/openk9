@@ -180,7 +180,7 @@ public class IndexWriterEndpoins implements RouterHandler {
 			try {
 
 				final Scroll scroll =
-					new Scroll(TimeValue.timeValueMinutes(1L));
+					new Scroll(TimeValue.timeValueSeconds(20));
 
 				String entityIndexName = tenantId + "-entity";
 
