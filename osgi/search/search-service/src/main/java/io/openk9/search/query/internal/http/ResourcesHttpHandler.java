@@ -30,7 +30,8 @@ import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -111,14 +112,16 @@ public class ResourcesHttpHandler implements RouterHandler {
 			lastModifiedDate = Instant.ofEpochMilli(t);
 		}
 
+		;
+
 		response.header("cache-control", "public");
 		response.header(
 			"expires",
 			DateTimeFormatter
 				.RFC_1123_DATE_TIME
 				.format(
-					LocalDateTime
-						.now()
+					ZonedDateTime
+						.ofInstant(Instant.now(), ZoneOffset.UTC)
 						.plus(10, ChronoUnit.YEARS)
 				)
 		);
