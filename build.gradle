@@ -333,10 +333,6 @@ distConfigurations
 				into "$rootDir/$distName/deploy"
 			})
 
-			tasks.register("printDependencies${distPrimaryName}", Copy, {
-				println confTmp.files
-			})
-
 			def cleanDist = tasks.register("clean${distPrimaryName}", Delete, {
 				delete("$rootDir/build/$distName")
 			})
