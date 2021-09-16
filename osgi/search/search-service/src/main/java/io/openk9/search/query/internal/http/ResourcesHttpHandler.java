@@ -3,12 +3,19 @@ package io.openk9.search.query.internal.http;
 import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.RouterHandler;
+import io.openk9.json.api.JsonFactory;
+import io.openk9.model.BinaryPayload;
 import io.openk9.model.Datasource;
+import io.openk9.model.ResourcesPayload;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.client.api.Search;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequest;
@@ -66,8 +73,6 @@ public class ResourcesHttpHandler implements RouterHandler {
 		String documentId = request.param("documentId");
 		String resourceId = request.param("resourceId");
 
-		_manageCache(request, response);
-
 		Mono<Tenant> tenantMono =
 			_datasourceClient
 				.findTenantByVirtualHost(hostName)
@@ -111,8 +116,6 @@ public class ResourcesHttpHandler implements RouterHandler {
 			long t = NumberUtils.toLong(modifiedDate.get(0));
 			lastModifiedDate = Instant.ofEpochMilli(t);
 		}
-
-		;
 
 		response.header("cache-control", "public");
 		response.header(
@@ -202,14 +205,21 @@ public class ResourcesHttpHandler implements RouterHandler {
 
 				SearchHit hit = hits[0];
 
-				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+				String source = hit.getSourceAsString();
 
-				_log.info(sourceAsMap.toString());
+				Resources resources =
+					_jsonFactory.fromJson(source, Resources.class);
 
-				String data =(String)sourceAsMap.get(_RESOURCES_BINARIES_DATA);
+				ResourcesPayload resourcesPayload = resources.getResources();
 
-				String contentType =(String)
-					sourceAsMap.get(_RESOURCES_BINARIES_CONTENT_TYPE);
+				BinaryPayload binaryPayload =
+					resourcesPayload.getBinaries().get(0);
+
+				String data = binaryPayload.getData();
+
+				String contentType = binaryPayload.getContentType();
+
+				_manageCache(httpRequest, httpResponse);
 
 				if (contentType != null && !contentType.isBlank()) {
 					httpResponse.header(_CONTENT_TYPE, contentType);
@@ -236,6 +246,9 @@ public class ResourcesHttpHandler implements RouterHandler {
 	@Reference(target = "(component.name=io.openk9.auth.query.parser.AuthQueryParser)")
 	private QueryParser _queryParser;
 
+	@Reference
+	private JsonFactory _jsonFactory;
+
 	private static final String _RESOURCES_BINARIES_CONTENT_TYPE =
 		"resources.binaries.contentType";
 
@@ -251,5 +264,13 @@ public class ResourcesHttpHandler implements RouterHandler {
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		ResourcesHttpHandler.class);
+
+	@Data
+	@Builder
+	@NoArgsConstructor
+	@AllArgsConstructor(staticName = "of")
+	public static class Resources {
+		private ResourcesPayload resources;
+	}
 
 }
