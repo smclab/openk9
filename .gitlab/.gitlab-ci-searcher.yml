@@ -57,3 +57,13 @@ Build Latest Searcher Docker Images:
         paths:
             - $CI_PROJECT_DIR/.m2/**/*
             - $CI_PROJECT_DIR/.gradle/**/*
+
+trigger_deploy:
+  image: curlimages/curl
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - "curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $TRIGGER_URL"
