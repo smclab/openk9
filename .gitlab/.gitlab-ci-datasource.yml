@@ -1,0 +1,74 @@
+variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+Build Latest Datasource Docker Images:
+    image: smclab/docker-java-11:latest
+    services:
+        - docker:19.03.13-dind
+    stage: build-docker
+    variables:
+        TEST_NAME: local/test
+        DOCKER_HOST: tcp://localhost:2375
+        DOCKER_TLS_CERTDIR: ""
+    rules:
+        - if: '$CI_COMMIT_BRANCH == "main"'
+          changes:
+              - datasource/configs/*
+              - osgi/common/reactory-netty-util
+              - osgi/web/http-api
+              - osgi/web/http-service
+              - osgi/web/http-bundle-ext
+              - osgi/web/open-api
+              - osgi/metrics/metrics-api
+              - osgi/metrics/metrics-service
+              - osgi/metrics/metrics-ext
+              - osgi/common/common-api
+              - osgi/common/core-api
+              - osgi/common/model
+              - osgi/common/osgi-api
+              - osgi/common/serialization-api
+              - osgi/common/serialization-service
+              - osgi/third-party/reactor
+              - osgi/third-party/reactor-netty
+              - osgi/third-party/reactive-streams
+              - osgi/third-party/micrometer
+              - osgi/third-party/jackson
+              - osgi/third-party/vavr
+              - osgi/third-party/apache
+              - osgi/common/http-serialization
+              - osgi/index-writer/index-writer-model
+              - osgi/auth/auth-keycloak-api
+              - osgi/auth/auth-keycloak-service
+              - osgi/auth/auth-keycloak-web
+              - osgi/third-party/caffeine
+              - osgi/ingestion/ingestion-api
+              - osgi/ingestion/ingestion-service
+              - osgi/ingestion/ingestion-driver-manager-datasource-service
+              - osgi/database/sql-api/
+              - osgi/database/sql-service/
+              - osgi/database/sql-jdbc-service/
+              - osgi/database/sql-scheduler/
+              - osgi/database/sql-scheduler-web/
+              - osgi/database/repository-http-api/
+              - osgi/database/repository-http-service/
+              - osgi/datasource/datasource-api
+              - osgi/datasource/datasource-service
+              - osgi/datasource/datasource-web
+              - osgi/datasource/datasource-queue
+              - osgi/datasource/datasource-event-publisher
+              - osgi/plugin-driver-manager/plugin-driver-manager-client-api
+              - osgi/plugin-driver-manager/plugin-driver-manager-client-service
+              - osgi/plugin-driver-manager/plugin-driver-manager-model
+              - osgi/init-data
+              - osgi/config/enviroment-variable-propagation
+              - osgi/fix/karaf-json-config-fix
+              - osgi/util/groovy-script-api
+              - osgi/util/groovy-script-service
+              - osgi/util/groovy-script-web
+    script:
+        - ./gradlew pushImageDatasource
+    cache:
+        key: build-docker-cache
+        paths:
+            - $CI_PROJECT_DIR/.m2/**/*
+            - $CI_PROJECT_DIR/.gradle/**/*

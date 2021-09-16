@@ -1,0 +1,85 @@
+variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+Build Latest Plugin Driver Manager Docker Images:
+    image: smclab/docker-java-11:latest
+    services:
+        - docker:19.03.13-dind
+    stage: build-docker
+    variables:
+        TEST_NAME: local/test
+        DOCKER_HOST: tcp://localhost:2375
+        DOCKER_TLS_CERTDIR: ""
+    rules:
+        - if: '$CI_COMMIT_BRANCH == "main"'
+          changes:
+              - plugin-driver-manager/configs/*
+              - osgi/common/reactory-netty-util
+              - osgi/web/http-api
+              - osgi/web/http-service
+              - osgi/web/http-bundle-ext
+              - osgi/web/open-api
+              - osgi/metrics/metrics-api
+              - osgi/metrics/metrics-service
+              - osgi/common/common-api
+              - osgi/common/core-api
+              - osgi/common/model
+              - osgi/common/osgi-api
+              - osgi/common/serialization-api
+              - osgi/common/serialization-service
+              - osgi/third-party/reactor
+              - osgi/third-party/reactor-netty
+              - osgi/third-party/reactive-streams
+              - osgi/third-party/micrometer
+              - osgi/third-party/jackson
+              - osgi/third-party/vavr
+              - osgi/third-party/apache
+              - osgi/common/http-serialization
+              - osgi/index-writer/index-writer-model
+              - osgi/index-writer/index-writer-mappings-publisher-api
+              - osgi/index-writer/index-writer-mappings-publisher-service
+              - osgi/index-writer/index-writer-mappings-pub-sub
+              - osgi/plugin-driver-manager/plugin-driver-manager-api
+              - osgi/plugin-driver-manager/plugin-driver-manager-service
+              - osgi/plugin-driver-manager/plugin-driver-manager-ingestion
+              - osgi/plugin-driver-manager/plugin-driver-manager-model
+              - osgi/plugin-driver-manager/plugin-driver-manager-search-service
+              - osgi/plugin-driver-manager/plugin-driver-manager-web
+              - osgi/search/search-enrich-service
+              - osgi/search/search-enrich-api
+              - osgi/plugin/plugin-api
+              - osgi/plugin/plugin-service
+              - osgi/plugin/plugin-web
+              - osgi/ingestion/ingestion-api
+              - osgi/ingestion/ingestion-logic-api
+              - osgi/ingestion/ingestion-logic-service
+              - osgi/ingestion/ingestion-service
+              - osgi/ingestion/ingestion-queue
+              - osgi/ingestion/ingestion-identifier-generator-api
+              - osgi/ingestion/ingestion-identifier-generator-service
+              - plugins/email
+              - plugins/liferay
+              - plugins/web
+              - plugins/applications
+              - plugins/js-enrich-plugin
+              - osgi/entity-manager/entity-manager-model
+              - osgi/entity-manager/entity-manager-client-api
+              - osgi/entity-manager/entity-manager-client-service
+              - osgi/entity-manager/entity-manager-pub-sub-api
+              - osgi/entity-manager/entity-manager-pub-sub-binding
+              - osgi/entity-manager/entity-manager-publisher-api
+              - osgi/entity-manager/entity-manager-publisher-service
+              - osgi/entity-manager/entity-manager-subscriber-api
+              - osgi/entity-manager/entity-manager-subscriber-service
+              - osgi/config/enviroment-variable-propagation
+              - osgi/fix/karaf-json-config-fix
+              - osgi/util/groovy-script-api
+              - osgi/util/groovy-script-service
+              - osgi/util/groovy-script-web
+    script:
+        - ./gradlew pushImagePluginDriverManager
+    cache:
+        key: build-docker-cache
+        paths:
+            - $CI_PROJECT_DIR/.m2/**/*
+            - $CI_PROJECT_DIR/.gradle/**/*

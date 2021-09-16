@@ -1,0 +1,57 @@
+variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+Build Latest Ingestion Docker Images:
+    image: smclab/docker-java-11:latest
+    services:
+        - docker:19.03.13-dind
+    stage: build-docker
+    variables:
+        TEST_NAME: local/test
+        DOCKER_HOST: tcp://localhost:2375
+        DOCKER_TLS_CERTDIR: ""
+    rules:
+        - if: '$CI_COMMIT_BRANCH == "main"'
+          changes:
+              - ingestion/configs/*
+              - osgi/common/reactory-netty-util
+              - osgi/web/http-api
+              - osgi/web/http-service
+              - osgi/web/http-bundle-ext
+              - osgi/web/open-api
+              - osgi/metrics/metrics-api
+              - osgi/metrics/metrics-service
+              - osgi/common/common-api
+              - osgi/common/core-api
+              - osgi/common/model
+              - osgi/common/osgi-api
+              - osgi/common/serialization-api
+              - osgi/common/serialization-service
+              - osgi/third-party/reactor
+              - osgi/third-party/reactor-netty
+              - osgi/third-party/reactive-streams
+              - osgi/third-party/micrometer
+              - osgi/third-party/jackson
+              - osgi/third-party/vavr
+              - osgi/third-party/apache
+              - osgi/common/http-serialization
+              - osgi/index-writer/index-writer-model
+              - osgi/ingestion/ingestion-api
+              - osgi/ingestion/ingestion-logic-api
+              - osgi/ingestion/ingestion-logic-service
+              - osgi/ingestion/ingestion-service
+              - osgi/ingestion/ingestion-queue
+              - osgi/ingestion/ingestion-identifier-generator-api
+              - osgi/ingestion/ingestion-identifier-generator-service
+              - osgi/config/enviroment-variable-propagation
+              - osgi/fix/karaf-json-config-fix
+              - osgi/util/groovy-script-api
+              - osgi/util/groovy-script-service
+              - osgi/util/groovy-script-web
+    script:
+        - ./gradlew pushImageIngestion
+    cache:
+        key: build-docker-cache
+        paths:
+            - $CI_PROJECT_DIR/.m2/**/*
+            - $CI_PROJECT_DIR/.gradle/**/*
