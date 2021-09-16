@@ -29,7 +29,7 @@ Build Latest Searcher Docker Images:
               - osgi/common/serialization-service
               - osgi/third-party/*
               - osgi/common/http-serialization
-              - osgi/index-writer/index-writer-model
+              - osgi/index-writer/index-writer-model/**/*
               - osgi/search/**/*
               - osgi/datasource/datasource-client-api
               - osgi/datasource/datasource-client-service
