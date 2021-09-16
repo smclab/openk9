@@ -28,13 +28,7 @@ Build Latest Datasource Docker Images:
               - osgi/common/osgi-api
               - osgi/common/serialization-api
               - osgi/common/serialization-service
-              - osgi/third-party/reactor
-              - osgi/third-party/reactor-netty
-              - osgi/third-party/reactive-streams
-              - osgi/third-party/micrometer
-              - osgi/third-party/jackson
-              - osgi/third-party/vavr
-              - osgi/third-party/apache
+              - osgi/third-party/*
               - osgi/common/http-serialization
               - osgi/index-writer/index-writer-model
               - osgi/auth/auth-keycloak-api
@@ -44,11 +38,7 @@ Build Latest Datasource Docker Images:
               - osgi/ingestion/ingestion-api
               - osgi/ingestion/ingestion-service
               - osgi/ingestion/ingestion-driver-manager-datasource-service
-              - osgi/database/sql-api/
-              - osgi/database/sql-service/
-              - osgi/database/sql-jdbc-service/
-              - osgi/database/sql-scheduler/
-              - osgi/database/sql-scheduler-web/
+              - osgi/database/*
               - osgi/database/repository-http-api/
               - osgi/database/repository-http-service/
               - osgi/datasource/datasource-api

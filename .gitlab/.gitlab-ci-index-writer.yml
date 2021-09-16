@@ -14,12 +14,7 @@ Build Latest Index Writer Docker Images:
         - if: '$CI_COMMIT_BRANCH == "main"'
           changes:
               - index-writer/configs/*
-              - osgi/index-writer/index-writer-service
-              - osgi/index-writer/index-writer-mappings-consumer
-              - osgi/index-writer/index-writer-model
-              - osgi/index-writer/index-writer-entity-model
-              - osgi/index-writer/index-writer-entity-web
-              - osgi/index-writer/index-writer-mappings-pub-sub
+              - osgi/index-writer/*
               - osgi/search/search-client-api
               - osgi/search/search-client-service
               - osgi/search/search-client-metrics

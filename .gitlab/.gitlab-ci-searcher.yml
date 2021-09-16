@@ -27,22 +27,10 @@ Build Latest Searcher Docker Images:
               - osgi/common/osgi-api
               - osgi/common/serialization-api
               - osgi/common/serialization-service
-              - osgi/third-party/reactor
-              - osgi/third-party/reactor-netty
-              - osgi/third-party/reactive-streams
-              - osgi/third-party/micrometer
-              - osgi/third-party/jackson
-              - osgi/third-party/vavr
-              - osgi/third-party/apache
+              - osgi/third-party/*
               - osgi/common/http-serialization
               - osgi/index-writer/index-writer-model
-              - osgi/search/search-api
-              - osgi/search/search-service
-              - osgi/search/search-client-api
-              - osgi/search/search-client-service
-              - osgi/search/search-client-metrics
-              - osgi/search/search-enrich-mapper-service
-              - osgi/search/search-enrich-mapper-api
+              - osgi/search/*
               - osgi/datasource/datasource-client-api
               - osgi/datasource/datasource-client-service
               - osgi/auth/auth-keycloak-api

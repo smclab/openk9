@@ -40,18 +40,7 @@ Build Latest Entity Manager Docker Images:
               - osgi/metrics/metrics-api
               - osgi/metrics/metrics-service
               - osgi/metrics/metrics-ext
-              - osgi/entity-manager/entity-manager-api
-              - osgi/entity-manager/entity-manager-service
-              - osgi/entity-manager/entity-manager-model
-              - osgi/entity-manager/entity-manager-logic
-              - osgi/entity-manager/entity-manager-pub-sub-api
-              - osgi/entity-manager/entity-manager-pub-sub-binding
-              - osgi/entity-manager/entity-manager-publisher-api
-              - osgi/entity-manager/entity-manager-publisher-service
-              - osgi/entity-manager/entity-manager-subscriber-api
-              - osgi/entity-manager/entity-manager-subscriber-service
-              - osgi/entity-manager/neo4j-relationship-graph-impl
-              - osgi/entity-manager/relationship-graph-api
+              - osgi/entity-manager/*
               - osgi/ingestion/ingestion-api
               - osgi/ingestion/ingestion-service
               - osgi/config/enviroment-variable-propagation
