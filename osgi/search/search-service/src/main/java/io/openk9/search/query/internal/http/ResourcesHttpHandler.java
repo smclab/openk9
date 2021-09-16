@@ -30,6 +30,7 @@ import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -116,7 +117,7 @@ public class ResourcesHttpHandler implements RouterHandler {
 			DateTimeFormatter
 				.RFC_1123_DATE_TIME
 				.format(
-					Instant
+					LocalDateTime
 						.now()
 						.plus(10, ChronoUnit.YEARS)
 				)
