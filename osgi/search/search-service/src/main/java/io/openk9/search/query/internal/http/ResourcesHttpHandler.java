@@ -117,7 +117,7 @@ public class ResourcesHttpHandler implements RouterHandler {
 			lastModifiedDate = Instant.ofEpochMilli(t);
 		}
 
-		response.header("cache-control", "public");
+		response.header("cache-control", "max-age=31536000, public");
 		response.header(
 			"expires",
 			DateTimeFormatter
