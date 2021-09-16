@@ -144,8 +144,9 @@ public class ResourcesHttpHandler implements RouterHandler {
 
 				_search.search(factory -> {
 
-					SearchRequest searchRequest = factory.createSearchRequest(
-						tenant.getTenantId(), pluginDriverDTO.getName());
+					SearchRequest searchRequest =
+						factory.createSearchRequestData(
+							tenant.getTenantId(), pluginDriverDTO.getName());
 
 					BoolQueryBuilder boolQueryBuilder =
 						QueryBuilders.boolQuery();
@@ -202,6 +203,8 @@ public class ResourcesHttpHandler implements RouterHandler {
 				SearchHit hit = hits[0];
 
 				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+
+				_log.info(sourceAsMap.toString());
 
 				String data =(String)sourceAsMap.get(_RESOURCES_BINARIES_DATA);
 
