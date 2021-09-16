@@ -59,6 +59,7 @@ Build Latest Plugin Driver Manager Docker Images:
               - osgi/util/groovy-script-web
     script:
         - ./gradlew pushImagePluginDriverManager
+        - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-plugin-driver-manager" -F ref=master $TRIGGER_URL
     cache:
         key: build-docker-cache
         paths:

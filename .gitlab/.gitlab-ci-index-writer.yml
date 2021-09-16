@@ -57,6 +57,7 @@ Build Latest Index Writer Docker Images:
               - osgi/util/groovy-script-web
     script:
         - ./gradlew pushImageIndexWriter
+        - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-index-writer" -F ref=master $TRIGGER_URL
     cache:
         key: build-docker-cache
         paths:
