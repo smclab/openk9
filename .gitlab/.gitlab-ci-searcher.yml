@@ -66,4 +66,4 @@ trigger_deploy:
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
-    - "curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $TRIGGER_URL"
+    - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $TRIGGER_URL
