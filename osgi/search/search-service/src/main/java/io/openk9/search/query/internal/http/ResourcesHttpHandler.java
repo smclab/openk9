@@ -127,7 +127,8 @@ public class ResourcesHttpHandler implements RouterHandler {
 		);
 		response.header(
 			"last-modified",
-			DateTimeFormatter.RFC_1123_DATE_TIME.format(lastModifiedDate)
+			DateTimeFormatter.RFC_1123_DATE_TIME.format(
+				ZonedDateTime.ofInstant(lastModifiedDate, ZoneOffset.UTC))
 		);
 
 	}
