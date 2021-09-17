@@ -117,9 +117,9 @@ public class ResourcesHttpHandler implements RouterHandler {
 			lastModifiedDate = Instant.ofEpochMilli(t);
 		}
 
-		response.header("cache-control", "max-age=31536000, public");
+		response.header("Cache-Control", "max-age=31536000, public");
 		response.header(
-			"expires",
+			"Expires",
 			DateTimeFormatter
 				.RFC_1123_DATE_TIME
 				.format(
@@ -129,7 +129,7 @@ public class ResourcesHttpHandler implements RouterHandler {
 				)
 		);
 		response.header(
-			"last-modified",
+			"Last-Modified",
 			DateTimeFormatter.RFC_1123_DATE_TIME.format(
 				ZonedDateTime.ofInstant(lastModifiedDate, ZoneOffset.UTC))
 		);
