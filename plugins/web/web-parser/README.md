@@ -29,21 +29,25 @@ This endpoint takes different arguments in JSON raw body:
 - **timestamp**: timestamp to check data to be extracted
 - **depth**: depth to search contents
 - **follow**: boolean to set if follow links from crawled pages; default is *True*
+- **bodyTag**: html tag for main content to extract from page
+- **titleTag*+: html tag for title to assign to extracted page
 
 Follows an example of Curl call:
 
 ```
-curl --location --request POST 'http://localhost:5008/execute-web-crawler' \
+curl --location --request POST 'http://localhost:5008/execute-random' \
 --header 'Content-Type: application/json' \
---header 'Cookie: COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=en_US' \
 --data-raw '{
     "startUrls": ["https://smc.it"],
     "allowedDomains": ["smc.it"],
     "allowedPaths": [],
     "excludedPaths": [".php"],
     "datasourceId": 1,
-    "timestamp": 0,-
+    "timestamp": 0,
+    "bodyTag": "div#main-content",
+    "titleTag": "title::text",
     "depth": 1,
+    "pageCount": -1
     "follow": true
 }'
 ```
@@ -58,22 +62,19 @@ This endpoint takes different arguments in JSON raw body:
 - **allowedDomains**: username of specific liferay account
 - **datasourceId**: id of datasource
 - **timestamp**: timestamp to check data to be extracted
-- **depth**: companyId for which to extract the data
-- **follow**: boolean to set if follow links from crawled pages; default is *False*
 
 Follows an example of Curl call:
 
 ```
-curl --location --request POST 'http://localhost:5008/execute-sitemap-crawler' \
+curl --location --request POST 'http://localhost:5008/execute-sitemap' \
 --header 'Content-Type: application/json' \
---header 'Cookie: COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=en_US' \
 --data-raw '{
-    "sitemapUrls": ["https://www.smc.it/robots.txt"],
-    "allowedDomains": [],
+    "sitemapUrls": ["https://www.smc.it/sitemap.xml"],
+    "allowedDomains": ["smc.it"],
+    "bodyTag": "div#main-content",
+    "titleTag": "title::text",
     "datasourceId": 1,
-    "timestamp": 0,
-    "depth": 3,
-    "follow": true
+    "timestamp": 0
 }'
 ```
 

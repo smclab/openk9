@@ -15,40 +15,42 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from flask import Flask, request, jsonify, render_template, make_response
-from logging.config import dictConfig
+from fastapi import FastAPI
+from pydantic import BaseModel
 import logging
-import json
-import requests
 import os
+import requests
+import json
 
-app = Flask(__name__)
+app = FastAPI()
 
-try:
-    app.config.from_json('./static/log/log_config.json')
-except FileNotFoundError:
-    app.logger.error("Log configuration file is missing")
+ingestion_url = os.environ.get("INGESTION_URL")
+delete_url = os.environ.get("DELETE_URL")
 
-dictConfig(app.config["LOG_SETTINGS"])
-
-app.config["INGESTION_URL"] = os.environ.get("INGESTION_URL")
+logger = logging.getLogger("uvicorn.access")
 
 
-@app.errorhandler(400)
-def bad_request_error():
-    app.logger.error("Bad request error:" + str())
-    return make_response(jsonify({'error': 'Bad request', 'key': str()}), 400)
+class SitemapRequest(BaseModel):
+    sitemapUrls: list
+    bodyTag: str
+    titleTag: str
+    datasourceId: int
+    timestamp: int
+    allowedDomains: list
 
 
-@app.errorhandler(Exception)
-def exception_handler(exception):
-    app.logger.error("Exception: " + str(exception))
-    logging.exception(str(exception))
-    return make_response(
-        jsonify({
-            'type': str(exception.__class__.__name__),
-            'message': str(exception)}),
-        500)
+class RandomRequest(BaseModel):
+    startUrls: list
+    allowedDomains: list
+    allowedPaths: list
+    excludedPaths: list
+    bodyTag: str
+    titleTag: str
+    pageCount: int
+    depth: int
+    datasourceId: int
+    timestamp: int
+    follow: bool
 
 
 def post_message(url, payload, timeout):
@@ -59,111 +61,104 @@ def post_message(url, payload, timeout):
         else:
             r.raise_for_status()
     except requests.RequestException as e:
-        app.logger.error(str(e) + " during request at url: " + str(url))
+        logger.error(str(e) + " during request at url: " + str(url))
         raise e
 
 
-@app.route('/')
-def get_docs():
-    return render_template('swaggerui.html')
+@app.post("/execute-random")
+def execute_random(request: RandomRequest):
 
+    request = request.dict()
 
-@app.route("/execute", methods=["POST"])
-def execute():
-    if request.method == "POST":
+    start_urls = request['startUrls']
+    allowed_domains = request["allowedDomains"]
+    allowed_paths = request["allowedPaths"]
+    excluded_paths = request["excludedPaths"]
+    body_tag = request["bodyTag"]
+    title_tag = request["titleTag"]
+    datasource_id = request['datasourceId']
+    timestamp = request["timestamp"]
+    page_count = request["pageCount"]
+    depth = request["depth"]
+    follow = request["follow"]
 
-        try:
-            start_urls = request.json["startUrls"]
-        except KeyError:
-            app.logger.error("No url from start crawling")
-            return "No url from start crawling"
+    payload = {
+        "project": "crawler",
+        "spider": "RandomSpider",
+        "start_urls": json.dumps(start_urls),
+        "allowed_domains": json.dumps(allowed_domains),
+        "allowed_paths": json.dumps(allowed_paths),
+        "excluded_paths": json.dumps(excluded_paths),
+        "body_tag": body_tag,
+        "title_tag": title_tag,
+        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "DEPTH_LIMIT=%s" % depth],
+        "datasource_id": datasource_id,
+        "ingestion_url": ingestion_url,
+        "delete_url": delete_url,
+        "timestamp": timestamp,
+        "follow": follow
+    }
 
-        try:
-            allowed_domains = request.json["allowedDomains"]
-        except KeyError:
-            allowed_domains = []
-
-        try:
-            allowed_paths = request.json["allowedPaths"]
-        except KeyError:
-            allowed_paths = []
-
-        try:
-            excluded_paths = request.json["excludedPaths"]
-        except KeyError:
-            excluded_paths = []
-
-        try:
-            depth = request.json["depth"]
-        except KeyError:
-            depth = 0
-
-        try:
-            page_count = request.json["page_count"]
-        except KeyError:
-            page_count = 0
-
-        try:
-            timestamp = int(request.json["timestamp"])
-        except KeyError:
-            timestamp = 0
-
-        datasource_id = request.json["datasourceId"]
-
-        payload = {
-            "project": "crawler",
-            "spider": "WebCrawler",
-            "start_urls": json.dumps(start_urls),
-            "allowed_domains": json.dumps(allowed_domains),
-            "allowed_paths": json.dumps(allowed_paths),
-            "excluded_paths": json.dumps(excluded_paths),
-            "setting": ["CLOSESPIDER_PAGECOUNT=%s"% page_count, "DEPTH_LIMIT=%s"%depth],
-            "datasource_id": datasource_id,
-            "ingestion_url": app.config["INGESTION_URL"]
+    if timestamp == 0:
+        response = post_message("http://localhost:6800/schedule.json", payload, 10)
+    else:
+        response = {
+            "status": "error",
+            "message": "timestamp greater than zero"
         }
 
-        if timestamp == 0:
-            response = post_message("http://localhost:6800/schedule.json", payload, 10)
-        else:
-            response = {
-                "status": "error",
-                "message": "timestamp greater than zero"
-            }
-
-        if response["status"] == 'ok':
-            app.logger.info("Crawling process started with job " + str(response["jobid"]))
-            return "Crawling process started with job " + str(response["jobid"])
-        else:
-            app.logger.error(response)
-            return response
+    if response["status"] == 'ok':
+        return "Crawling process started with job " + str(response["jobid"])
+    else:
+        return response
 
 
-@app.route("/cancel-job", methods=["POST"])
-def cancel_job():
-    if request.method == "POST":
+@app.post("/execute-sitemap")
+def execute(request: SitemapRequest):
 
-        try:
-            job = request.json["job"]
-        except KeyError:
-            app.logger.error("No job with this id founded")
-            return "No job with this id founded"
+    request = request.dict()
 
-        payload = {
-            "project": "crawler",
-            "job": str(job)
-        }
+    sitemap_urls = request['sitemapUrls']
+    body_tag = request["bodyTag"]
+    title_tag = request["titleTag"]
+    datasource_id = request['datasourceId']
+    timestamp = request["timestamp"]
+    allowed_domains = request["allowedDomains"]
 
-        response = post_message("http://localhost:6800/cancel.json", payload, 10)
+    payload = {
+        "project": "crawler",
+        "spider": "CustomSitemapSpider",
+        "sitemap_urls": json.dumps(sitemap_urls),
+        "allowed_domains": json.dumps(allowed_domains),
+        "body_tag": body_tag,
+        "title_tag": title_tag,
+        "datasource_id": datasource_id,
+        "ingestion_url": ingestion_url,
+        "delete_url": delete_url,
+        "timestamp": timestamp
+    }
 
-        if response["status"] == 'ok':
-            app.logger.info("Cancelled job with id " + str(job))
-            return "Cancelled job with id " + str(job)
-        else:
-            app.logger.error(response)
-            return response
+    response = post_message("http://localhost:6800/schedule.json", payload, 10)
+
+    if response["status"] == 'ok':
+        return "Crawling process started with job " + str(response["jobid"])
+    else:
+        return response
 
 
-if __name__ == "__main__":
-    app.logger = logging.getLogger("status-logger")
-    app.run(host="0.0.0.0", port=80)
+@app.post("/cancel-job/{job_id}")
+def cancel_job(job_id: str):
+
+    payload = {
+        "project": "crawler",
+        "job": str(job_id)
+    }
+
+    response = post_message("http://localhost:6800/cancel.json", payload, 10)
+
+    if response["status"] == 'ok':
+        return "Cancelled job with id " + str(job_id)
+    else:
+        return response
+
 

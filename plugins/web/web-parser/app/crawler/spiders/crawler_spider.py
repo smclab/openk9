@@ -1,43 +1,70 @@
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
+"""
+Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import ast
 import json
-from bs4 import BeautifulSoup
 from datetime import datetime
-import re
-import tika
-from tika import parser
-import base64
-import requests
-from PIL import Image
-from io import BytesIO
-from pdf2image import convert_from_path, convert_from_bytes
+import logging
+import hashlib
+import concurrent.futures
 
-from .util import get_favicon, map_type, get_path
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
+from scrapy import signals
+
+from crawler.items import GenericWebItem, Payload
+from .util.generic.utility import get_favicon, get_title, get_content, post_message
+from .util.tika.utility import parse_document_by_url
+
+logger = logging.getLogger(__name__)
 
 
-class MySpider(CrawlSpider):
+class CustomCrawlerSpider(CrawlSpider):
 
-    name = 'WebCrawler'
+    name = 'RandomSpider'
 
     cont = 0
 
-    def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, datasource_id,
-                 ingestion_url, *args, **kwargs):
+    crawled_ids = []
+    allowed_types = []
+    type_mapping = []
+
+    def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, title_tag, follow,
+                 datasource_id, ingestion_url, delete_url, *args, **kwargs):
         super(CrawlSpider, self).__init__(*args, **kwargs)
+
         self.allowed_domains = ast.literal_eval(allowed_domains)
         self.start_urls = ast.literal_eval(start_urls)
         self.allowed_paths = ast.literal_eval(allowed_paths)
         self.excluded_paths = ast.literal_eval(excluded_paths)
-        self.ingestion_url = ingestion_url
         self.datasource_id = datasource_id
+        self.body_tag = body_tag
+        self.title_tag = title_tag
+        self.follow = follow
 
-        MySpider.rules = (
+        self.ingestion_url = ingestion_url
+        self.delete_url = delete_url
+
+        CustomCrawlerSpider.rules = (
             # Extract links matching 'item.php' and parse them with the spider's method parse_item
             Rule(LinkExtractor(allow=self.allowed_paths, deny=self.excluded_paths, ),
-                 callback='parse', follow=True,),
+                 callback='parse', follow=self.follow,),
         )
-        super(MySpider, self)._compile_rules()
+        super(CustomCrawlerSpider, self)._compile_rules()
         self.end_timestamp = datetime.utcnow().timestamp() * 1000
 
         try:
@@ -51,122 +78,65 @@ class MySpider(CrawlSpider):
         self.allowed_types = self.type_mapping.keys()
         self.logger.info(self.allowed_types)
 
-        tika.initVM()
+        self.executor = concurrent.futures.ThreadPoolExecutor(8)
 
-    def post_message(self, url, payload, timeout):
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(CustomCrawlerSpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed, signals.spider_closed)
+        return spider
 
-        try:
-            r = requests.post(url, json=payload, timeout=timeout)
-            if r.status_code == 200:
-                return
-            else:
-                r.raise_for_status()
-        except requests.RequestException as e:
-            self.logger.error(str(e) + " during request at url: " + str(url))
-            raise e
+    def spider_closed(self, spider):
+        if spider.executor is not None:
+            spider.executor.shutdown(wait=True)
 
-    def get_as_base64(self, url):
+        logger.info("Ingestion completed")
 
-        r = requests.get(url, stream=True)
-        images = convert_from_bytes(r.content)
-        try:
-            im = images[0]
-            size = 128, 128
-            im.thumbnail(size, Image.ANTIALIAS)
-            buffered = BytesIO()
-            im.save(buffered, "PNG")
-        except IOError:
-            self.logger.error("cannot create thumbnail")
-            return
-        uri = ("data:image/png;" + "base64,"
-               + base64.b64encode(buffered.getvalue()).decode("utf-8"))
-        return uri
+        payload = {
+            "datasourceId": self.datasource_id,
+            "contentIds": self.crawled_ids
+        }
+
+        logger.info(payload)
+
+        post_message(self.delete_url, payload)
 
     def parse(self, response, **kwargs):
 
         if hasattr(response, "text"):
-            title = response.css('title::text').get()
-            if title is not None:
-                title = title.strip()
-            else:
-                title = "Unknown title"
-            body = response.body
-            soup = BeautifulSoup(body, 'lxml')
-            content = ''
-            for p in soup.find_all("p"):
-                content = content + p.get_text()
-            content = content.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
-            content = re.sub(' +', ' ', content)
-            self.cont = self.cont + 1
+
+            title = get_title(response, self.title_tag)
+
+            content = get_content(response, self.body_tag)
+
+            web_item = GenericWebItem()
+            web_item['url'] = response.url
+            web_item['content'] = content
+            web_item['title'] = title
+            web_item['favicon'] = get_favicon(response.url)
 
             datasource_payload = {
-                "web": {
-                    "url": response.url,
-                    "title": title,
-                    "content": content,
-                    "favicon": get_favicon(response.url),
-                }
+                "web": dict(web_item)
             }
+
+            payload = Payload()
+
+            url = response.url
+            content_id = int(hashlib.sha1(url.encode("utf-8")).hexdigest(), 16) % (10 ** 16)
+
+            payload["parsingDate"] = int(self.end_timestamp)
+            payload['datasourceId'] = self.datasource_id
+            payload['contentId'] = content_id
+            payload['rawContent'] = content
+            payload['datasourcePayload'] = datasource_payload
+            payload["resources"] = {
+                "binaries": []
+            }
+
+            yield payload
 
             self.logger.info("Crawled web page from url: " + str(response.url))
 
         else:
-            parsed = parser.from_file(response.url)
 
-            metadata = parsed['metadata']
-            content_type = metadata['Content-Type']
-
-            if content_type in self.allowed_types:
-
-                # saving content of pdf
-                # you can also bring text only, by parsed_pdf['text']
-                # parsed_pdf['content'] returns string
-                content = parsed['content']
-                content = content.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
-                content = re.sub(' +', ' ', content)
-
-                try:
-                    title = metadata['title']
-                except KeyError:
-                    title = metadata["resourceName"].replace("'b", "")
-                self.cont = self.cont + 1
-                self.logger.info("Crawled document from url: " + str(response.url))
-
-                datasource_payload = {
-                    "file": {
-                        "lastModifiedDate": metadata['Last-Modified'],
-                        "path": get_path(response.url)
-                    },
-                    "document": {
-                        "URL": response.url,
-                        "contentType": content_type,
-                        "title": title,
-                        "content": content,
-                        "previewUrl": self.get_as_base64(response.url),
-                        "previewURLs": []
-                    }
-                }
-
-                type_values = {}
-
-                mapping = map_type(content_type, self.type_mapping)
-                self.logger.info(content_type)
-                self.logger.info(mapping)
-                if mapping is not None:
-                    datasource_payload[mapping] = type_values
-
-            else:
-                self.logger.info("Document with url: " + str(response.url) + " excluded")
-                return
-
-        self.logger.info("Crawled " + str(self.cont) + " elements")
-
-        payload = {
-            "datasourceId": self.datasource_id,
-            "contentId": hash(str(response.url)),
-            "parsingDate": int(self.end_timestamp),
-            "rawContent": title + " " + content,
-            "datasourcePayload": datasource_payload
-        }
-
-        self.post_message(self.ingestion_url, payload, 10)
+            self.executor.submit(parse_document_by_url, response.url, self)
