@@ -40,7 +40,8 @@ public class WebPluginDriver extends BasePluginDriver {
 		String[] headers() default "Content-Type:application/json";
 		boolean schedulerEnabled() default true;
 		String[] jsonKeys() default {
-			"startUrls", "allowedDomains", "allowedPaths", "excludedPaths", "datasourceId", "depth", "max_length", "page_count"
+			"startUrls", "sitemapUrls", "allowedDomains", "allowedPaths", "excludedPaths", "bodyTag", "titleTag",
+				"depth", "pageCount", "datasourceId", "follow"
 		};
 	}
 
