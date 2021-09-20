@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from fastapi import FastAPI
+from typing import Optional
 from pydantic import BaseModel
 import logging
 import os
@@ -46,11 +47,11 @@ class GenericRequest(BaseModel):
     excludedPaths: list
     bodyTag: str
     titleTag: str
-    pageCount: int
-    depth: int
+    pageCount: Optional[int] = 0
+    depth: Optional[int] = 0
     datasourceId: int
     timestamp: int
-    follow: bool
+    follow: Optional[bool] = True
 
 
 def post_message(url, payload, timeout):
@@ -81,16 +82,8 @@ def execute_generic(request: GenericRequest):
     datasource_id = request['datasourceId']
     timestamp = request["timestamp"]
 
-    try:
-        page_count = request["pageCount"]
-    except KeyError:
-        page_count = 0
-
-    try:
-        depth = request["depth"]
-    except KeyError:
-        depth = 0
-
+    page_count = request["pageCount"]
+    depth = request["depth"]
     follow = request["follow"]
 
     payload = {
