@@ -36,3 +36,13 @@ sonarqube-check:
   only:
     - merge_requests
     - main
+
+trigger_deploy:
+  image: curlimages/curl
+  stage: deploy
+  only:
+    - tags
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-demo" -F ref=master $TRIGGER_URL
