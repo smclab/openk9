@@ -27,15 +27,15 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy import signals
 
 from crawler.items import GenericWebItem, Payload
-from .util.generic.utility import get_favicon, get_title, get_content, post_message
+from .util.generic.utility import get_favicon, get_title, get_content, post_message, str_to_bool
 from .util.tika.utility import parse_document_by_url
 
 logger = logging.getLogger(__name__)
 
 
-class CustomCrawlerSpider(CrawlSpider):
+class CustomGenericSpider(CrawlSpider):
 
-    name = 'RandomSpider'
+    name = 'CustomGenericSpider'
 
     cont = 0
 
@@ -45,7 +45,7 @@ class CustomCrawlerSpider(CrawlSpider):
 
     def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, title_tag, follow,
                  datasource_id, ingestion_url, delete_url, *args, **kwargs):
-        super(CrawlSpider, self).__init__(*args, **kwargs)
+        super(CustomGenericSpider, self).__init__(*args, **kwargs)
 
         self.allowed_domains = ast.literal_eval(allowed_domains)
         self.start_urls = ast.literal_eval(start_urls)
@@ -54,17 +54,17 @@ class CustomCrawlerSpider(CrawlSpider):
         self.datasource_id = datasource_id
         self.body_tag = body_tag
         self.title_tag = title_tag
-        self.follow = follow
+        self.follow = str_to_bool(follow)
 
         self.ingestion_url = ingestion_url
         self.delete_url = delete_url
 
-        CustomCrawlerSpider.rules = (
+        CustomGenericSpider.rules = (
             # Extract links matching 'item.php' and parse them with the spider's method parse_item
             Rule(LinkExtractor(allow=self.allowed_paths, deny=self.excluded_paths, ),
                  callback='parse', follow=self.follow,),
         )
-        super(CustomCrawlerSpider, self)._compile_rules()
+        super(CustomGenericSpider, self)._compile_rules()
         self.end_timestamp = datetime.utcnow().timestamp() * 1000
 
         try:
@@ -82,7 +82,7 @@ class CustomCrawlerSpider(CrawlSpider):
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
-        spider = super(CustomCrawlerSpider, cls).from_crawler(crawler, *args, **kwargs)
+        spider = super(CustomGenericSpider, cls).from_crawler(crawler, *args, **kwargs)
         crawler.signals.connect(spider.spider_closed, signals.spider_closed)
         return spider
 

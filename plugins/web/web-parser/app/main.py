@@ -39,7 +39,7 @@ class SitemapRequest(BaseModel):
     allowedDomains: list
 
 
-class RandomRequest(BaseModel):
+class GenericRequest(BaseModel):
     startUrls: list
     allowedDomains: list
     allowedPaths: list
@@ -65,8 +65,8 @@ def post_message(url, payload, timeout):
         raise e
 
 
-@app.post("/execute-random")
-def execute_random(request: RandomRequest):
+@app.post("/execute-generic")
+def execute_generic(request: GenericRequest):
 
     request = request.dict()
 
@@ -74,17 +74,28 @@ def execute_random(request: RandomRequest):
     allowed_domains = request["allowedDomains"]
     allowed_paths = request["allowedPaths"]
     excluded_paths = request["excludedPaths"]
+
     body_tag = request["bodyTag"]
     title_tag = request["titleTag"]
+
     datasource_id = request['datasourceId']
     timestamp = request["timestamp"]
-    page_count = request["pageCount"]
-    depth = request["depth"]
+
+    try:
+        page_count = request["pageCount"]
+    except KeyError:
+        page_count = 0
+
+    try:
+        depth = request["depth"]
+    except KeyError:
+        depth = 0
+
     follow = request["follow"]
 
     payload = {
         "project": "crawler",
-        "spider": "RandomSpider",
+        "spider": "CustomGenericSpider",
         "start_urls": json.dumps(start_urls),
         "allowed_domains": json.dumps(allowed_domains),
         "allowed_paths": json.dumps(allowed_paths),

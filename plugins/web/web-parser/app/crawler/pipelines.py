@@ -45,7 +45,7 @@ class CustomPipeline:
         else:
             self.exporter.export_item(item)
 
-            post_message(ingestion_url, dict(item))
+            # post_message(ingestion_url, dict(item))
 
             spider.crawled_ids.append(str(item['contentId']))
             spider.cont = spider.cont + 1

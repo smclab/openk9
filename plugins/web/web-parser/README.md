@@ -15,7 +15,7 @@ The container takes via environment variable INGESTION_URL, which must match the
 
 This Rest service exposes three different endpoints:
 
-### Execute Simple Web Crawler enpoint
+### Execute Generic Web Crawler enpoint
 
 Call this endpoint to execute a crawler that extract web pages starting from list of Urls
 
@@ -35,7 +35,7 @@ This endpoint takes different arguments in JSON raw body:
 Follows an example of Curl call:
 
 ```
-curl --location --request POST 'http://localhost:5008/execute-random' \
+curl --location --request POST 'http://localhost:5008/execute-generic' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "startUrls": ["https://smc.it"],
@@ -46,15 +46,15 @@ curl --location --request POST 'http://localhost:5008/execute-random' \
     "timestamp": 0,
     "bodyTag": "div#main-content",
     "titleTag": "title::text",
-    "depth": 1,
-    "pageCount": -1
+    "depth": 0,
+    "pageCount": 0
     "follow": true
 }'
 ```
 
 ### Execute Sitemap Web Crawler enpoint
 
-Call this endpoint to execute a crawler that extract web pages starting from robots file or from sitemap
+Call this endpoint to execute a crawler that extract web pages starting from sitemap or from robots.txt file
 
 This endpoint takes different arguments in JSON raw body:
 
@@ -62,6 +62,8 @@ This endpoint takes different arguments in JSON raw body:
 - **allowedDomains**: username of specific liferay account
 - **datasourceId**: id of datasource
 - **timestamp**: timestamp to check data to be extracted
+- **bodyTag**: html tag for main content to extract from page
+- **titleTag*+: html tag for title to assign to extracted page
 
 Follows an example of Curl call:
 
@@ -82,17 +84,12 @@ curl --location --request POST 'http://localhost:5008/execute-sitemap' \
 
 Call this endpoint to cancel running job before it ends 
 
-This endpoint takes different arguments in JSON raw body:
+This endpoint takes the job_id as url parameter:
 
-- **job**: id of running job
+- **job_id**: id of running job
 
 Follows an example of Curl call:
 
 ```
-curl --location --request POST 'http://localhost:5008/cancel-job' \
---header 'Content-Type: application/json' \
---header 'Cookie: COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=en_US' \
---data-raw '{
-    "job": "01befe1e781d11eb8d7a0242ac180002"
-}'
+curl --location --request POST 'http://localhost:5008/cancel-job/{job_id}'
 ```

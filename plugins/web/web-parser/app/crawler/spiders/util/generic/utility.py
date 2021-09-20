@@ -90,3 +90,12 @@ def post_message(url, payload, timeout=30):
 def get_as_base64(response):
     data = base64.b64encode(response.content).decode('utf-8')
     return data
+
+
+def str_to_bool(s):
+    if s.capitalize() == 'True':
+        return True
+    elif s.capitalize() == 'False':
+        return False
+    else:
+        raise ValueError("full parameter must be True or False")
