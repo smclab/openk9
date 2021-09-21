@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.plugins.web.driver;
+package io.openk9.plugins.web.generic.driver;
 
 import io.openk9.json.api.JsonFactory;
 import io.openk9.http.client.HttpClient;
@@ -31,16 +31,16 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	service = PluginDriver.class
 )
-public class WebPluginDriver extends BasePluginDriver {
+public class GenericWebPluginDriver extends BasePluginDriver {
 
 	@interface Config {
 		String url() default "http://web-parser:5008/";
-		String path() default "/execute";
+		String path() default "/execute-random";
 		int method() default HttpHandler.POST;
 		String[] headers() default "Content-Type:application/json";
 		boolean schedulerEnabled() default true;
 		String[] jsonKeys() default {
-			"startUrls", "sitemapUrls", "allowedDomains", "allowedPaths", "excludedPaths", "bodyTag", "titleTag",
+			"startUrls", "allowedDomains", "allowedPaths", "excludedPaths", "bodyTag", "titleTag",
 				"depth", "pageCount", "datasourceId", "follow"
 		};
 	}

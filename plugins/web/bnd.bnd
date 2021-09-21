@@ -1,7 +1,0 @@
-Bundle-Name: [OpenK9 - Plugin] Web
-Bundle-SymbolicName: io.openk9.plugins.web
-
--include: ${project.rootDir}/osgi/common.bnd
-
-OpenK9-Plugin: true
-OpenK9-Plugin-Web-Id: web-datasource

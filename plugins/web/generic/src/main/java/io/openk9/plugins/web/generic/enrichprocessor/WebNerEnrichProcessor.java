@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.plugins.web.enrichprocessor;
+package io.openk9.plugins.web.generic.enrichprocessor;
 
 import io.openk9.entity.manager.client.api.EntityManagerClient;
 import io.openk9.http.client.HttpClientFactory;

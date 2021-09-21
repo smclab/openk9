@@ -26,13 +26,13 @@ import { DocumentSidebar } from "./DocumentSidebar";
 import { PageSidebar } from "./PageSidebar";
 
 export const plugin: Plugin<WebResultType> = {
-  pluginId: "web-datasource",
-  displayName: "Web DataSource",
+  pluginId: "generic-web-datasource",
+  displayName: "Generic Web DataSource",
   pluginServices: [
     {
       type: "DATASOURCE",
       displayName: "Web DataSource",
-      driverServiceName: "io.openk9.plugins.web.driver.WebPluginDriver",
+      driverServiceName: "io.openk9.plugins.web.driver.GenericWebPluginDriver",
       iconRenderer,
       initialSettings: `
         {
@@ -52,7 +52,7 @@ export const plugin: Plugin<WebResultType> = {
       type: "ENRICH",
       displayName: "Web NER",
       serviceName:
-        "io.openk9.plugins.web.enrichprocessor.WebNerEnrichProcessor",
+        "WebNerEnrichProcessor",
       iconRenderer,
       initialSettings: `{"entities": ["person", "organization"], "confidence": 0.90}`,
     },

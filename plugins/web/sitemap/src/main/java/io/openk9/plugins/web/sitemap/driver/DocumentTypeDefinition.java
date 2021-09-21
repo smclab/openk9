@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.plugins.web.driver;
+package io.openk9.plugins.web.sitemap.driver;
 
 import io.openk9.common.api.constant.Strings;
 import io.openk9.osgi.util.AutoCloseables;
@@ -73,7 +73,7 @@ public class DocumentTypeDefinition implements
 	}
 
 	@Reference(
-		target = "(component.name=io.openk9.plugins.web.driver.WebPluginDriver)"
+		target = "(component.name=io.openk9.plugins.web.sitemap.driver.SitemapWebPluginDriver)"
 	)
 	private PluginDriver _pluginDriver;
 

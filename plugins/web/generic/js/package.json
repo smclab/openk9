@@ -1,9 +1,9 @@
 {
-  "name": "@openk9/web-datasource",
+  "name": "@openk9/generic-web-datasource",
   "version": "0.2.1",
   "private": true,
   "author": "SMC",
-  "description": "OpenK9 Web Data Source Frontend Module",
+  "description": "OpenK9  Generic Web Data Source Frontend Module",
   "main": "build/index.js",
   "license": "AGPL-3.0-or-later",
   "homepage": "https://openk9.io/",
