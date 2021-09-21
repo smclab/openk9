@@ -118,7 +118,10 @@ class AsyncEmailExtraction(threading.Thread):
                         "contentId": msg_id,
                         "parsingDate": int(end_timestamp),
                         "rawContent": raw_msg,
-                        "datasourcePayload": datasource_payload
+                        "datasourcePayload": datasource_payload,
+                        "resources": {
+                            "binaries": []
+                        }
                     }
                     
                     try:
