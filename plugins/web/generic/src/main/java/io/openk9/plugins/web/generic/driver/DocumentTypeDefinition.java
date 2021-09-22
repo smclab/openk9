@@ -52,7 +52,7 @@ public class DocumentTypeDefinition implements
 					DocumentType
 						.builder()
 						.icon(Strings.BLANK)
-						.name(pluginDriverName)
+						.name("web")
 						.searchKeywords(
 							List.of(
 								SearchKeyword.text("title", pluginDriverName),
