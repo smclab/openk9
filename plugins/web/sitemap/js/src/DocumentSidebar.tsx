@@ -58,6 +58,7 @@ export function DocumentSidebar({ result }: { result: DocumentResultItem }) {
           {result.source.document.url}
         </a>
       </div>
+      <div>
         <strong>Content:</strong> {result.source.document.content}
       </div>
     </>
