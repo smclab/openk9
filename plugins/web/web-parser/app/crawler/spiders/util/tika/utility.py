@@ -121,7 +121,7 @@ def parse_document_by_url(url, spider):
                     "binaries": binaries
                 }
 
-                # post_message(spider.ingestion_url, dict(payload))
+                post_message(spider.ingestion_url, dict(payload))
 
                 spider.crawled_ids.append(str(content_id))
                 logger.info("Crawled document from url: " + str(url))
