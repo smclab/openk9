@@ -50,6 +50,7 @@ Build Latest Ingestion Docker Images:
               - osgi/util/groovy-script-web/**/*
     script:
         - ./gradlew pushImageIngestion
+    after_script:
         - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-plugin-ingestion" -F ref=master $TRIGGER_URL
     cache:
         key: build-docker-cache

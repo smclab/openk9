@@ -50,6 +50,7 @@ Build Latest Entity Manager Docker Images:
               - osgi/util/groovy-script-web/**/*
     script:
         - ./gradlew pushImageEntityManager
+    after_script:
         - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-entity-manager" -F ref=master $TRIGGER_URL
     cache:
         key: build-docker-cache
