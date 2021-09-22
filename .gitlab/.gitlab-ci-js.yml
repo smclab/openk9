@@ -76,6 +76,7 @@ Build Latest JS Docker Images:
         - js-packages/**/*
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
   script:
     - docker build -t search-standalone-frontend:latest -f js-packages/search-standalone-frontend/Dockerfile .
     - docker tag search-standalone-frontend:latest $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest

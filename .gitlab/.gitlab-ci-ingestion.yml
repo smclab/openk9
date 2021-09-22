@@ -51,7 +51,7 @@ Build Latest Ingestion Docker Images:
     script:
         - ./gradlew pushImageIngestion
     after_script:
-        - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-plugin-ingestion" -F ref=master $DEV_TRIGGER_URL
+        - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-ingestion" -F ref=master $DEV_TRIGGER_URL
     cache:
         key: build-docker-cache
         paths:
