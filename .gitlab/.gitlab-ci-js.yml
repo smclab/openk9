@@ -96,4 +96,6 @@ Build Latest JS Docker Images:
     - docker build -t js-scripts-executor:latest -f js-packages/js-scripts-executor/Dockerfile .
     - docker tag js-scripts-executor:latest $CI_REGISTRY_NAME/openk9/js-scripts-executor:latest
     - docker push $CI_REGISTRY_NAME/openk9/js-scripts-executor:latest
+  after_script:
+    - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-js" -F ref=master $DEV_TRIGGER_URL
   allow_failure: false

@@ -53,7 +53,7 @@ Build Latest Searcher Docker Images:
     script:
         - ./gradlew pushImageSearcher
     after_script:
-        - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $TRIGGER_URL
+        - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
     cache:
         key: build-docker-cache
         paths:

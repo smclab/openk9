@@ -45,4 +45,4 @@ trigger_deploy:
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
-    - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-demo" -F ref=master $TRIGGER_URL
+    - curl -X POST -F token=$STAGING_TOKEN -F "variables[TRIGGER_JOB]=deploy-demo" -F ref=master $STAGING_TRIGGER_URL
