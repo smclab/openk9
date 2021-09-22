@@ -1,11 +1,11 @@
 {
 	"datasourceId" : 1,
-	"name" : "web-datasource",
+	"name" : "generic-web-datasource",
 	"tenantId" : 1,
 	"active" : true,
-	"description" : "web",
-	"jsonConfig" : " {\n \t\"startUrls\": [\"https://it.wikipedia.org/wiki/Apple_Inc.\"],\n \t\"allowedDomains\": [\"it.wikipedia.org\"],\n \t\"allowedPaths\": [],\n \t\"excludedPaths\": [\"^https://it.wikipedia.org/wiki/Category\", \"^https://it.wikipedia.org/wiki/Wikipedia\",\n \t\t\"^https://it.wikipedia.org/wiki/File\",\n \t\t\"^https://it.wikipedia.org/wiki/Template\"\n \t],\n \t\"datasourceId\": 1,\n \t\"timestamp\": 0,\n \t\"depth\": 2,\n \t\"max_length\": 4000,\n \t\"page_count\": 200\n }",
+	"description" : "generic web datasource",
+	"jsonConfig" : " {\"datasourceId\":1,\"timestamp\":0,\"startUrls\":[\"https://it.wikipedia.org/wiki/Apple_Inc.\"],\"allowedDomains\":[\"it.wikipedia.org\"],\"allowedPaths\":[],\"excludedPaths\":[\"^https://it.wikipedia.org/wiki/Category\",\"^https://it.wikipedia.org/wiki/Wikipedia\",\"^https://it.wikipedia.org/wiki/File\",\"^https://it.wikipedia.org/wiki/Template\"],\"bodyTag\":\"div.mw-parser-output\",\"titleTag\":\"title::text\",\"follow\":true,\"depth\":2,\"pageCount\":5000}",
 	"lastIngestionDate" : 0,
 	"scheduling" : "0 11 11 11 11 ?",
-	"driverServiceName" : "io.openk9.plugins.web.driver.WebPluginDriver"
+	"driverServiceName" : "io.openk9.plugins.web.generic.driver.GenericWebPluginDriver"
 }

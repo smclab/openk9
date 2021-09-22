@@ -2,5 +2,5 @@
 	"tenantId" : 1,
 	"name": "openk9.io",
 	"virtualHost": "openk9.io",
-	"jsonConfig": "{}"
+	"jsonConfig": "{\n  \"querySourceBarShortcuts\": [\n    { \"id\": \"web\", \"text\": \"web\" },\n    { \"id\": \"document\", \"text\": \"document\" }\n  ]\n}"
 }

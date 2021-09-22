@@ -72,17 +72,13 @@ export function DocumentResultCard({
 
   return (
     <ResultCard
-      href={data.source.document.URL}
+      href={data.source.document.url}
       target="_blank"
       className={classes.root}
       {...rest}
     >
       <div className={classes.iconArea}>
-        {data.source.document.previewUrl ? (
-          <img width={64} src={data.source.document.previewUrl} />
-        ) : (
           <ClayIcon symbol="document-text" />
-        )}
       </div>
       <div style={{ minWidth: 0 }}>
         <h4 className={classes.title}>
@@ -90,16 +86,8 @@ export function DocumentResultCard({
             text={data.source.document.title}
             highlight={data.highlight["document.title"]}
           />{" "}
-          {data.source.document.documentType && (
-            <div className={classes.badge}>
-              {data.source.document.documentType}
-            </div>
-          )}
         </h4>
         <div className={classes.path}>
-          <strong>
-            {data.source.spaces?.spaceName || "Documents and Media"}
-          </strong>
           {data.source.file.path}
         </div>
         <div className={classes.textArea}>

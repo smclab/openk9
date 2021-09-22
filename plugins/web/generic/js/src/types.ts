@@ -24,22 +24,15 @@ export type WebResultType =
 
 export type DocumentResultItem = GenericResultItem<{
   document: {
-    documentType?: string | null;
-    previewUrl: string;
-    previewURLs: string[];
     title: string;
     contentType: string;
     content: string;
-    URL: string;
+    url: string;
+    relativeUrl: string;
   };
   file: {
     path: string;
     lastModifiedDate: number;
-  };
-  spaces?: {
-    spaceName: string;
-    spaceId: string;
-    URL: string;
   };
 }>;
 

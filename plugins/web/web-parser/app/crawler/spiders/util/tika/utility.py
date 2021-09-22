@@ -24,6 +24,7 @@ import os
 
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+from datetime import datetime
 
 from crawler.items import Payload, DocumentItem, FileItem, BinaryItem
 from ..generic.utility import post_message, get_as_base64
@@ -80,8 +81,13 @@ def parse_document_by_url(url, spider):
                 else:
                     content = ""
 
+                last_modified_date = soup.find("meta", {"name": "Last-Modified"})
+                if content_type is None:
+                    last_modified_date = datetime.fromtimestamp(0).isoformat()
+
                 file_item = FileItem()
                 file_item['path'] = get_path(url)
+                file_item['lastModifiedDate'] = last_modified_date
 
                 document_item = DocumentItem()
                 document_item['url'] = url

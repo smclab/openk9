@@ -45,12 +45,6 @@ export function DocumentSidebar({ result }: { result: DocumentResultItem }) {
       <div className={classes.break}>
         <strong>Document Type:</strong> {result.source.document.documentType}
       </div>
-      {result.source.spaces && (
-        <div className={classes.break}>
-          <strong>Space:</strong> {result.source.spaces.spaceName} (
-          {result.source.spaces.spaceId})
-        </div>
-      )}
       <div className={classes.break}>
         <strong>Path:</strong> {result.source.file.path}
       </div>
@@ -60,16 +54,10 @@ export function DocumentSidebar({ result }: { result: DocumentResultItem }) {
       </div>
       <div className={classes.break}>
         <strong>URL:</strong>{" "}
-        <a href={result.source.document.URL} target="_blank">
-          {result.source.document.URL}
+        <a href={result.source.document.url} target="_blank">
+          {result.source.document.url}
         </a>
       </div>
-      <ImageSlider
-        key={result.source.id}
-        urls={result.source.document.previewURLs}
-        className={classes.previews}
-      />
-      <div>
         <strong>Content:</strong> {result.source.document.content}
       </div>
     </>
