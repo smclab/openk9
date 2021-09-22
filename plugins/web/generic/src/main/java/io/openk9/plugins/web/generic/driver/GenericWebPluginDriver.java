@@ -53,7 +53,7 @@ public class GenericWebPluginDriver extends BasePluginDriver {
 
 	@Override
 	public String getName() {
-		return "web";
+		return "generic";
 	}
 
 	@Override

@@ -52,7 +52,7 @@ public class SitemapWebPluginDriver extends BasePluginDriver {
 
 	@Override
 	public String getName() {
-		return "web";
+		return "sitemap";
 	}
 
 	@Override
