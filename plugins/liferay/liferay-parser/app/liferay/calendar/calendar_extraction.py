@@ -185,7 +185,10 @@ class AsyncCalendarExtraction(threading.Thread):
                                 "parsingDate": int(end_timestamp),
                                 "rawContent": str(calendar_booking['titleCurrentValue'])
                                                   + " " + str(calendar_booking['description']),
-                                "datasourcePayload": datasource_payload
+                                "datasourcePayload": datasource_payload,
+                                "resources": {
+                                    "binaries": []
+                                }
                             }
                             
                             self.status_logger.info(str(calendar_booking['titleCurrentValue'])
