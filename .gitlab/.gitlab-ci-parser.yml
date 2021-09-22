@@ -54,4 +54,4 @@ Build Latest Parser Docker Images:
     - docker tag liferay-parser:latest $CI_REGISTRY_NAME/openk9/liferay-parser:latest
     - docker push $CI_REGISTRY_NAME/openk9/liferay-parser:latest
   after_script:
-    - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-parsers" -F ref=master $TRIGGER_URL
+    - curl -X POST -F token=$TOKEN -F "variables[TRIGGER_JOB]=deploy-parser" -F ref=master $TRIGGER_URL
