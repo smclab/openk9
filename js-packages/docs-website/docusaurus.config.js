@@ -45,14 +45,6 @@ module.exports = {
       { property: "og:image", content: "https://openk9.io/logo.png" },
       { property: "og:url", content: "https://openk9.io/" },
     ],
-    announcementBar: {
-      id: "beta",
-      content:
-        "We are still in <strong>alpha phase</strong>, everything you see may change at every time. Feel free to <a href='https://github.com/smclab/openk9'>try our product</a> right now!",
-      backgroundColor: "#f9f9f9",
-      textColor: "#505050",
-      isCloseable: true,
-    },
     navbar: {
       title: "OpenK9",
       logo: {
