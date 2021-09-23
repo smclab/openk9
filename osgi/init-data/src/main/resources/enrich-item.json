@@ -4,6 +4,6 @@
 	"name" : "web-ner",
 	"_position" : 1,
 	"active" : true,
-	"serviceName" : "io.openk9.plugins.web.sitemap.enrichprocessor.WebNerEnrichProcessor",
+	"serviceName" : "io.openk9.plugins.web.generic.enrichprocessor.WebNerEnrichProcessor",
 	"jsonConfig" : "{\"entities\": [\"person\", \"organization\", \"loc\", \"document\"], \"confidence\": 0.90}"
 }
