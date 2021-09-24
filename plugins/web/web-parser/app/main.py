@@ -52,7 +52,7 @@ class GenericRequest(BaseModel):
     datasourceId: int
     timestamp: int
     follow: Optional[bool] = True
-    maxLength: Optional[bool] = None
+    maxLength: Optional[int] = None
 
 
 def post_message(url, payload, timeout):

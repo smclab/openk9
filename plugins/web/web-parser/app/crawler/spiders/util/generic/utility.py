@@ -25,7 +25,7 @@ import re
 logger = logging.getLogger(__name__)
 
 
-def get_title(response, title_tag, max_length):
+def get_title(response, title_tag):
     title = response.css(title_tag).get()
     if title is not None:
         title = title.strip()
@@ -34,7 +34,7 @@ def get_title(response, title_tag, max_length):
     return title
 
 
-def get_content(response, body_tag=None):
+def get_content(response, max_length, body_tag=None):
 
     if body_tag is None:
         body = response.body

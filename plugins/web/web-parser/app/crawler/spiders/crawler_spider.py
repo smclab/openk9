@@ -108,7 +108,7 @@ class CustomGenericSpider(CrawlSpider):
 
             title = get_title(response, self.title_tag)
 
-            content = get_content(response, self.body_tag, self.max_length)
+            content = get_content(response, self.max_length, self.body_tag)
 
             web_item = GenericWebItem()
             web_item['url'] = response.url
