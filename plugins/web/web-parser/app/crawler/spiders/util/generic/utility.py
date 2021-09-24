@@ -36,6 +36,8 @@ def get_title(response, title_tag):
 
 def get_content(response, max_length, body_tag=None):
 
+    content = ''
+
     if body_tag is None:
         body = response.body
     else:
@@ -44,15 +46,13 @@ def get_content(response, max_length, body_tag=None):
     try:
         soup = BeautifulSoup(body, 'lxml').get_text()
     except TypeError:
-        return None
+        return content
 
     if body is not None:
         content = soup.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
         content = re.sub(' +', ' ', content)
         if max_length is not None:
             content = content[:max_length]
-    else:
-        content = None
 
     return content
 
