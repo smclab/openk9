@@ -41,7 +41,7 @@ public class GenericWebPluginDriver extends BasePluginDriver {
 		boolean schedulerEnabled() default true;
 		String[] jsonKeys() default {
 			"startUrls", "allowedDomains", "allowedPaths", "excludedPaths", "bodyTag", "titleTag",
-				"depth", "pageCount", "datasourceId", "follow"
+				"depth", "pageCount", "datasourceId", "follow", "maxLength"
 		};
 	}
 
