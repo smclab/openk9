@@ -44,7 +44,7 @@ class CustomGenericSpider(CrawlSpider):
     type_mapping = []
 
     def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, title_tag, follow,
-                 datasource_id, ingestion_url, delete_url, *args, **kwargs):
+                max_length, datasource_id, ingestion_url, delete_url, *args, **kwargs):
         super(CustomGenericSpider, self).__init__(*args, **kwargs)
 
         self.allowed_domains = ast.literal_eval(allowed_domains)
@@ -55,6 +55,7 @@ class CustomGenericSpider(CrawlSpider):
         self.body_tag = body_tag
         self.title_tag = title_tag
         self.follow = str_to_bool(follow)
+        self.max_length = int(max_length)
 
         self.ingestion_url = ingestion_url
         self.delete_url = delete_url
@@ -107,7 +108,7 @@ class CustomGenericSpider(CrawlSpider):
 
             title = get_title(response, self.title_tag)
 
-            content = get_content(response, self.body_tag)
+            content = get_content(response, self.body_tag, self.max_length)
 
             web_item = GenericWebItem()
             web_item['url'] = response.url

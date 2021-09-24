@@ -52,6 +52,7 @@ class GenericRequest(BaseModel):
     datasourceId: int
     timestamp: int
     follow: Optional[bool] = True
+    maxLength: Optional[bool] = None
 
 
 def post_message(url, payload, timeout):
@@ -86,6 +87,8 @@ def execute_generic(request: GenericRequest):
     depth = request["depth"]
     follow = request["follow"]
 
+    max_length = request["maxLength"]
+
     payload = {
         "project": "crawler",
         "spider": "CustomGenericSpider",
@@ -100,7 +103,8 @@ def execute_generic(request: GenericRequest):
         "ingestion_url": ingestion_url,
         "delete_url": delete_url,
         "timestamp": timestamp,
-        "follow": follow
+        "follow": follow,
+        "max_length": max_length
     }
 
     if timestamp == 0:

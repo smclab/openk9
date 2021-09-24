@@ -25,7 +25,7 @@ import re
 logger = logging.getLogger(__name__)
 
 
-def get_title(response, title_tag):
+def get_title(response, title_tag, max_length):
     title = response.css(title_tag).get()
     if title is not None:
         title = title.strip()
@@ -49,6 +49,8 @@ def get_content(response, body_tag=None):
     if body is not None:
         content = soup.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
         content = re.sub(' +', ' ', content)
+        if max_length is not None:
+            content = content[:max_length]
     else:
         content = None
 
