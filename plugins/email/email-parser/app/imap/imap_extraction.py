@@ -111,6 +111,8 @@ class AsyncEmailExtraction(threading.Thread):
                     "email": struct_msg
                 }
 
+                binaries = []
+
                 if struct_msg['date'] > self.timestamp:
 
                     payload = {
@@ -120,7 +122,7 @@ class AsyncEmailExtraction(threading.Thread):
                         "rawContent": raw_msg,
                         "datasourcePayload": datasource_payload,
                         "resources": {
-                            "binaries": []
+                            "binaries": json.loads(binaries)
                         }
                     }
                     
