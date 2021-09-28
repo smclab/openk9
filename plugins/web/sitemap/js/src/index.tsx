@@ -31,7 +31,7 @@ export const plugin: Plugin<WebResultType> = {
   pluginServices: [
     {
       type: "DATASOURCE",
-      displayName: "Web DataSource",
+      displayName: "Sitemap Web DataSource",
       driverServiceName: "io.openk9.plugins.web.driver.sitemap.SitemapWebPluginDriver",
       iconRenderer,
       initialSettings: `
