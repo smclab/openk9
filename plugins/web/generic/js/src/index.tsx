@@ -32,7 +32,7 @@ export const plugin: Plugin<WebResultType> = {
     {
       type: "DATASOURCE",
       displayName: "Web DataSource",
-      driverServiceName: "io.openk9.plugins.web.driver.GenericWebPluginDriver",
+      driverServiceName: "io.openk9.plugins.web.generic.driver.GenericWebPluginDriver",
       iconRenderer,
       initialSettings: `
         {
