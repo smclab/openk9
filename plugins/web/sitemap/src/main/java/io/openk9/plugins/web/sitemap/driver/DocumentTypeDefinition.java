@@ -55,8 +55,8 @@ public class DocumentTypeDefinition implements
 						.name("web")
 						.searchKeywords(
 							List.of(
-								SearchKeyword.text("title", pluginDriverName),
-								SearchKeyword.text("content", pluginDriverName)
+								SearchKeyword.text("title", "web"),
+								SearchKeyword.text("content", "web")
 							)
 						)
 						.sourceFields(
