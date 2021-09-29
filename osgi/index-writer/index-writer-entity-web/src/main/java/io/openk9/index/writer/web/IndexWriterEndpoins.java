@@ -182,7 +182,8 @@ public class IndexWriterEndpoins implements RouterHandler {
 						.stream()
 						.map(id -> new DeleteRequest(entityIndexName, id))
 						.collect(Collectors.toList())
-				);
+				)
+					.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
 				BulkResponse bulkResponse =
 					client.bulk(bulkRequest, RequestOptions.DEFAULT);
