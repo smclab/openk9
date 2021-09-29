@@ -42,11 +42,11 @@ import reactor.netty.http.server.HttpServerRoutes;
 import reactor.netty.resources.LoopResources;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
+import java.lang.management.ManagementFactory;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 @Component(immediate = true, service = ReactorNettyActivator.class)
@@ -69,9 +69,7 @@ public class ReactorNettyActivator {
 	@Activate
 	void activate(Config config) {
 
-		_executorService = Executors.newSingleThreadExecutor();
-
-		_executorService.execute(() -> {
+		_thread = new Thread(() -> {
 
 			LoopResources loopResources = LoopResources
 				.create(
@@ -101,30 +99,26 @@ public class ReactorNettyActivator {
 
 			httpServer.warmup().block();
 
-			DisposableServer disposableServer = httpServer
-				.bindNow();
-
-			_log.info("reactor netty listening on " + config.port());
-
 			try {
-
-				disposableServer
-					.onDispose()
-					.block();
+				httpServer
+					.bindUntilJavaShutdown(
+						Duration.ofSeconds(60), this::callback);
 			}
 			catch (Exception exception) {
 
 				Throwable unwrap = Exceptions.unwrap(exception);
 
 				if (unwrap instanceof InterruptedException) {
-					loopResources.dispose();
-					disposableServer.dispose();
+					loopResources.disposeLater().block();
 					_log.info("shutdown reactor netty");
-					Thread.currentThread().interrupt();
 				}
 			}
 
 		});
+
+		_thread.setDaemon(true);
+
+		_thread.start();
 
 	}
 
@@ -169,6 +163,17 @@ public class ReactorNettyActivator {
 
 	}
 
+	private void callback(DisposableServer server) {
+		_log.info("HTTP server started on port: " + server.port());
+		try {
+			double uptime = ManagementFactory.getRuntimeMXBean().getUptime();
+			_log.info("JVM running for " + uptime + "ms");
+		}
+		catch (Throwable e) {
+			// ignore
+		}
+	}
+
 	@Modified
 	void modified(Config config) {
 
@@ -180,7 +185,8 @@ public class ReactorNettyActivator {
 
 	@Deactivate
 	void deactivate() {
-		_executorService.shutdownNow();
+		_thread.interrupt();
+		_thread = null;
 	}
 
 
@@ -228,7 +234,7 @@ public class ReactorNettyActivator {
 		ExceptionHandler<? extends Throwable>> _exceptionHandlerRegistry =
 			new TreeMap<>();
 
-	private ExecutorService _executorService;
+	private Thread _thread;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		ReactorNettyActivator.class.getName());
