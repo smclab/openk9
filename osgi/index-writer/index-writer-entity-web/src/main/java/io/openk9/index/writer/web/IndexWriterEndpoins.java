@@ -11,6 +11,8 @@ import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.search.client.api.ReactorActionListener;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -43,13 +45,14 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
@@ -71,6 +74,128 @@ public class IndexWriterEndpoins implements RouterHandler {
 	public static final String AND = "_AND";
 
 	public static final String EXACT = "_EXACT";
+
+	@Activate
+	void activate(BundleContext bundleContext) {
+		_eventBus.consumer(
+			"clean-orphan-entities", this::_cleanOrphanEntitiesConsumer);
+	}
+
+	private void _cleanOrphanEntitiesConsumer(Message<Long> message) {
+
+		Long tenantId = message.body();
+
+		RestHighLevelClient client =
+			_restHighLevelClientProvider.get();
+
+		try {
+
+			final Scroll scroll =
+				new Scroll(TimeValue.timeValueSeconds(20));
+
+			String entityIndexName = tenantId + "-entity";
+
+			SearchRequest searchRequest =
+				new SearchRequest(entityIndexName);
+			searchRequest.scroll(scroll);
+			SearchSourceBuilder searchSourceBuilder =
+				new SearchSourceBuilder();
+			searchRequest.source(searchSourceBuilder);
+
+			SearchResponse searchResponse =
+				client.search(searchRequest, RequestOptions.DEFAULT);
+
+			String scrollId = searchResponse.getScrollId();
+
+			SearchHit[] searchHits = searchResponse.getHits().getHits();
+
+			Collection<String> entitiesToDelete = new HashSet<>();
+			Collection<String> entityNames = new ArrayList<>();
+
+			while (searchHits != null && searchHits.length > 0) {
+
+				for (SearchHit searchHit : searchHits) {
+
+					Map<String, Object> source = searchHit.getSourceAsMap();
+
+					Object id = source.get("id");
+					Object type = source.get("type");
+					String name = String.valueOf(source.get("name"));
+
+					String nestEntityPath = "entities." + type;
+
+					String nestIdPath = nestEntityPath + ".id";
+
+					CountRequest countRequest =
+						new CountRequest(tenantId + "-*-data");
+
+					countRequest.query(
+						QueryBuilders
+							.nestedQuery(
+								nestEntityPath,
+								matchQuery(nestIdPath, id),
+								ScoreMode.Max)
+							.ignoreUnmapped(true)
+					);
+
+					CountResponse countResponse =
+						client.count(countRequest, RequestOptions.DEFAULT);
+
+					if (countResponse.getCount() == 0) {
+
+						entitiesToDelete.add(searchHit.getId());
+						entityNames.add(name);
+
+					}
+
+				}
+
+				SearchScrollRequest scrollRequest =
+					new SearchScrollRequest(scrollId);
+
+				scrollRequest.scroll(scroll);
+
+				searchResponse =
+					client.scroll(scrollRequest, RequestOptions.DEFAULT);
+
+				scrollId = searchResponse.getScrollId();
+
+				searchHits = searchResponse.getHits().getHits();
+
+			}
+
+			ClearScrollRequest clearScrollRequest =
+				new ClearScrollRequest();
+			clearScrollRequest.addScrollId(scrollId);
+			ClearScrollResponse clearScrollResponse =
+				client.clearScroll(
+					clearScrollRequest, RequestOptions.DEFAULT);
+
+			boolean succeeded = clearScrollResponse.isSucceeded();
+
+			if (!entitiesToDelete.isEmpty()) {
+
+				BulkRequest bulkRequest = new BulkRequest();
+
+				bulkRequest.add(
+					entitiesToDelete
+						.stream()
+						.map(id -> new DeleteRequest(entityIndexName, id))
+						.collect(Collectors.toList())
+				);
+
+				BulkResponse bulkResponse =
+					client.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+			}
+
+			message.reply("Entities deleted " + entityNames);
+
+		}
+		catch (Exception e) {
+			message.reply(e.getMessage());
+		}
+	}
 
 	@Override
 	public HttpServerRoutes handle(HttpServerRoutes router) {
@@ -140,7 +265,8 @@ public class IndexWriterEndpoins implements RouterHandler {
 								.map(Object::toString)
 								.doOnNext(_log::info)
 								.flatMap(response ->
-									_invokeCleanOrpanEntities(datasource.getTenantId())
+									Mono.fromRunnable(
+										() -> _sendCleanOrphanEntitiesRequest(datasource.getTenantId()))
 										.thenReturn(response)
 								)
 							);
@@ -160,129 +286,23 @@ public class IndexWriterEndpoins implements RouterHandler {
 
 		long tenantId = Long.parseLong(httpRequest.param("tenantId"));
 
-		Mono<Object> cleanOrphanEntities =
-			_invokeCleanOrpanEntities(tenantId);
+		_sendCleanOrphanEntitiesRequest(tenantId);
 
 		return _httpResponseWriter.write(
 			httpResponse,
-			cleanOrphanEntities.publishOn(Schedulers.single())
+			Mono.just("{}")
 		);
 
 	}
 
-	private Mono<Object> _invokeCleanOrpanEntities(long tenantId) {
-
-		return Mono.create(sink -> {
-
-			RestHighLevelClient client =
-				_restHighLevelClientProvider.get();
-
-			try {
-
-				final Scroll scroll =
-					new Scroll(TimeValue.timeValueSeconds(20));
-
-				String entityIndexName = tenantId + "-entity";
-
-				SearchRequest searchRequest =
-					new SearchRequest(entityIndexName);
-				searchRequest.scroll(scroll);
-				SearchSourceBuilder searchSourceBuilder =
-					new SearchSourceBuilder();
-				searchRequest.source(searchSourceBuilder);
-
-				SearchResponse searchResponse =
-					client.search(searchRequest, RequestOptions.DEFAULT);
-
-				String scrollId = searchResponse.getScrollId();
-
-				SearchHit[] searchHits = searchResponse.getHits().getHits();
-
-				Collection<String> entitiesToDelete = new HashSet<>();
-				Collection<String> entityNames = new ArrayList<>();
-
-				while (searchHits != null && searchHits.length > 0) {
-
-					for (SearchHit searchHit : searchHits) {
-
-						Map<String, Object> source = searchHit.getSourceAsMap();
-
-						Object id = source.get("id");
-						Object type = source.get("type");
-						String name = String.valueOf(source.get("name"));
-
-						String nestEntityPath = "entities." + type;
-
-						String nestIdPath = nestEntityPath + ".id";
-
-						CountRequest countRequest =
-							new CountRequest(tenantId + "-*-data");
-
-						countRequest.query(
-							QueryBuilders
-								.nestedQuery(
-									nestEntityPath,
-									matchQuery(nestIdPath, id),
-									ScoreMode.Max)
-								.ignoreUnmapped(true)
-							);
-
-						CountResponse countResponse =
-							client.count(countRequest, RequestOptions.DEFAULT);
-
-						if (countResponse.getCount() == 0) {
-
-							entitiesToDelete.add(searchHit.getId());
-							entityNames.add(name);
-
-						}
-
-					}
-
-					SearchScrollRequest scrollRequest =
-						new SearchScrollRequest(scrollId);
-
-					scrollRequest.scroll(scroll);
-
-					searchResponse =
-						client.scroll(scrollRequest, RequestOptions.DEFAULT);
-
-					scrollId = searchResponse.getScrollId();
-
-					searchHits = searchResponse.getHits().getHits();
-
+	private void _sendCleanOrphanEntitiesRequest(long tenantId) {
+		_eventBus.request("clean-orphan-entities", tenantId, result -> {
+			if (result.succeeded()) {
+				Message<Object> resultMessage = result.result();
+				Object body = resultMessage.body();
+				if (body != null) {
+					_log.info(body.toString());
 				}
-
-				ClearScrollRequest clearScrollRequest =
-					new ClearScrollRequest();
-				clearScrollRequest.addScrollId(scrollId);
-				ClearScrollResponse clearScrollResponse =
-					client.clearScroll(
-						clearScrollRequest, RequestOptions.DEFAULT);
-
-				boolean succeeded = clearScrollResponse.isSucceeded();
-
-				if (!entitiesToDelete.isEmpty()) {
-
-					BulkRequest bulkRequest = new BulkRequest();
-
-					bulkRequest.add(
-						entitiesToDelete
-							.stream()
-							.map(id -> new DeleteRequest(entityIndexName, id))
-							.collect(Collectors.toList())
-					);
-
-					BulkResponse bulkResponse =
-						client.bulk(bulkRequest, RequestOptions.DEFAULT);
-
-				}
-
-				sink.success(entityNames);
-
-			}
-			catch (Exception e) {
-				sink.error(e);
 			}
 		});
 	}
@@ -456,6 +476,9 @@ public class IndexWriterEndpoins implements RouterHandler {
 
 	@Reference
 	protected PluginDriverManagerClient _pluginDriverManagerClient;
+
+	@Reference
+	protected EventBus _eventBus;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		IndexWriterEndpoins.class);

@@ -106,15 +106,14 @@ ext.libraries = [
 		],
 		apache_commons_lang3: 'org.apache.commons:commons-lang3:3.12.0',
 		elasticsearch: 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.9.3',
-		avro:  'org.apache.avro:avro:1.10.0',
+		avro: 'org.apache.avro:avro:1.10.0',
 		felix_dependencymanager: 'org.apache.felix:org.apache.felix.dependencymanager:4.6.0',
 		neo4j_java_driver: 'org.neo4j.driver:neo4j-java-driver:4.2.3',
 		neo4j_cypher_dsl: 'org.neo4j:neo4j-cypher-dsl:2021.1.1',
 		neo4j_query_dsl_core: 'com.querydsl:querydsl-core:4.4.0',
 		guava: 'com.google.guava:guava:18.0',
-		groovy: 'org.codehaus.groovy:groovy:3.0.8'
-
-
+		groovy: 'org.codehaus.groovy:groovy:3.0.8',
+		vertx_core: 'io.vertx:vertx-core:4.1.4'
 ]
 
 def projectVersion = findProperty("project.version")

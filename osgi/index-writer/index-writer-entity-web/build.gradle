@@ -6,6 +6,8 @@ dependencies {
 	compile project(':osgi:datasource:datasource-client-api')
 	compile project(":osgi:plugin-driver-manager:plugin-driver-manager-client-api")
 	compile project(':osgi:common:reactory-netty-util')
+	compile project(':osgi:common:core-api')
 	compile libraries.osgi
+	compile libraries.vertx_core
 	compile libraries.slf4j_api
 }

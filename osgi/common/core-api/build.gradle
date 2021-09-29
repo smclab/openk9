@@ -1,3 +1,4 @@
 dependencies {
 	compile libraries.slf4j_api
+	compile libraries.reactor
 }

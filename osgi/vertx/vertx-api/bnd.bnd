@@ -1,0 +1,6 @@
+Bundle-Name: [OpenK9] Vertx Api
+Bundle-SymbolicName: io.openk9.vertx.api
+
+Export-Package: io.openk9.vertx.api
+
+-include: ${project.rootDir}/osgi/common.bnd
