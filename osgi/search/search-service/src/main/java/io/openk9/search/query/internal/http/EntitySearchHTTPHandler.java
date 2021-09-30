@@ -22,6 +22,7 @@ import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.RouterHandler;
+import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
@@ -135,6 +136,24 @@ public class EntitySearchHTTPHandler
 			_searchRequestFactory.createSearchRequestEntity(tenantId);
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		JsonNode sizeJsonNode = jsonNodes.get("size");
+
+		if (sizeJsonNode != null && sizeJsonNode.isArray()) {
+			ArrayNode sizeArrayNode = sizeJsonNode.toArrayNode();
+
+			int size = sizeArrayNode.size();
+
+			if (size == 2) {
+
+				JsonNode fromJsonNode = sizeArrayNode.get(0);
+				JsonNode sizeJN = sizeArrayNode.get(1);
+
+				searchSourceBuilder.from(fromJsonNode.asInt());
+				searchSourceBuilder.size(sizeJN.asInt());
+			}
+
+		}
 
 		searchSourceBuilder.query(boolQuery);
 
