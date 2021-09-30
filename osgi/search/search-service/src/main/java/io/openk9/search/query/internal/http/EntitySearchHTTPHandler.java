@@ -130,14 +130,14 @@ public class EntitySearchHTTPHandler
 	private SearchRequest _toSearchRequest(
 		Long tenantId, ObjectNode jsonNodes) {
 
+		JsonNode sizeJsonNode = jsonNodes.remove("size");
+
 		BoolQueryBuilder boolQuery = _getBoolQueryBuilder(jsonNodes);
 
 		SearchRequest searchRequest =
 			_searchRequestFactory.createSearchRequestEntity(tenantId);
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-		JsonNode sizeJsonNode = jsonNodes.get("size");
 
 		if (sizeJsonNode != null && sizeJsonNode.isArray()) {
 			ArrayNode sizeArrayNode = sizeJsonNode.toArrayNode();
