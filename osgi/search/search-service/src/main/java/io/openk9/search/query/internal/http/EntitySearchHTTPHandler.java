@@ -44,6 +44,8 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -142,15 +144,24 @@ public class EntitySearchHTTPHandler
 		if (sizeJsonNode != null && sizeJsonNode.isArray()) {
 			ArrayNode sizeArrayNode = sizeJsonNode.toArrayNode();
 
-			int size = sizeArrayNode.size();
+			int length = sizeArrayNode.size();
 
-			if (size == 2) {
+			if (length == 2) {
 
 				JsonNode fromJsonNode = sizeArrayNode.get(0);
 				JsonNode sizeJN = sizeArrayNode.get(1);
 
+				int size = sizeJN.asInt();
+
+				if (size > 10000) {
+					if (_log.isWarnEnabled()) {
+						_log.warn("size[1] max size is 10000");
+					}
+					size = 10000;
+				}
+
 				searchSourceBuilder.from(fromJsonNode.asInt());
-				searchSourceBuilder.size(sizeJN.asInt());
+				searchSourceBuilder.size(size);
 			}
 
 		}
@@ -229,5 +240,8 @@ public class EntitySearchHTTPHandler
 
 	@Reference
 	private Search _search;
+
+	private static final Logger _log = LoggerFactory.getLogger(
+		EntitySearchHTTPHandler.class);
 
 }
