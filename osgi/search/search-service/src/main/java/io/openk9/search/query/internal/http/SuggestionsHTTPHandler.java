@@ -172,7 +172,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 			}
 		}
 
-		return new Response(list, list.size(), true);
+		return new Response(list, list.size());
 
 	}
 

@@ -133,11 +133,7 @@ public abstract class BaseSearchHTTPHandler
 
 		TotalHits totalHits = hits.getTotalHits();
 
-		return new Response(
-			result,
-			totalHits.value,
-			totalHits.relation == TotalHits.Relation.EQUAL_TO
-		);
+		return new Response(result, totalHits.value);
 	}
 
 	private Mono<SearchResponse> _toQuerySearchRequest(

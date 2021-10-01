@@ -27,5 +27,4 @@ import lombok.NoArgsConstructor;
 public class Response {
 	private Object result;
 	long total;
-	boolean last;
 }

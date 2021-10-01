@@ -98,11 +98,7 @@ public class EntityNameHTTPHandler
 
 		TotalHits totalHits = searchHits.getTotalHits();
 
-		return new Response(
-			result,
-			totalHits.value,
-			totalHits.relation == TotalHits.Relation.EQUAL_TO
-		);
+		return new Response(result, totalHits.value);
 	}
 
 	private SearchRequest _toSearchRequest(Long tenantId) {
