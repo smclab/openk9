@@ -92,7 +92,15 @@ public class ObjectNodeWrapper extends JsonNodeWrapper implements ObjectNode {
 
 	@Override
 	public JsonNode remove(String fieldName) {
-		return new JsonNodeWrapper(this.delegate.remove(fieldName));
+
+		com.fasterxml.jackson.databind.JsonNode jsonNode =
+			this.delegate.remove(fieldName);
+
+		if (jsonNode == null) {
+			return null;
+		}
+
+		return new JsonNodeWrapper(jsonNode);
 	}
 
 	@Override
