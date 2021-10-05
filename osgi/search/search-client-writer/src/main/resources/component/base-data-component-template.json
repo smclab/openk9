@@ -31,7 +31,7 @@
 					"index": true
 				},
 				"datasourceId": {
-					"type": "text",
+					"type": "keyword",
 					"index": true
 				},
 				"datasourceName": {
