@@ -259,8 +259,17 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 
 					int ind = key.indexOf(".");
 
-					String type = key.substring(0, ind);
-					String field = key.substring(ind + 1);
+					String type;
+					String field;
+
+					if (ind == -1) {
+						type = "ROOT";
+						field = key;
+					}
+					else {
+						type = key.substring(0, ind);
+						field = key.substring(ind + 1);
+					}
 
 					types.add(
 						Map.of(type, Map.of(field, entry.getValue()))
