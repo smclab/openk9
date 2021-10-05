@@ -30,18 +30,22 @@ import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchTokenizer;
+import io.openk9.search.client.api.RestHighLevelClientProvider;
 import io.openk9.search.client.api.Search;
 import io.openk9.search.client.api.SearchRequestFactory;
 import io.openk9.search.query.internal.response.Response;
 import io.openk9.search.query.internal.response.SuggestionsDTO;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -52,6 +56,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -59,6 +64,7 @@ import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -121,6 +127,60 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 			tenant, datasources, searchRequest, documentTypeList,
 			searchSourceBuilder);
 
+		/* <BLE> */
+
+		org.elasticsearch.action.search.SearchRequest searchRequestEntity =
+			_searchRequestFactory.createSearchRequestEntity(
+				tenant.getTenantId());
+
+		SearchSourceBuilder searchSourceBuilderEntity =
+			new SearchSourceBuilder();
+
+		searchSourceBuilderEntity
+			.aggregation(
+				AggregationBuilders
+					.terms("type.keyword")
+					.field("type.keyword")
+					.size(_aggregationSize)
+		);
+
+		searchSourceBuilderEntity.size(0);
+
+		searchRequestEntity.source(searchSourceBuilderEntity);
+
+		Stream<TermsAggregationBuilder> termsAggregationBuilderEntities;
+
+		try {
+			SearchResponse search =
+				_restHighLevelClientProvider
+					.get()
+					.search(searchRequestEntity, RequestOptions.DEFAULT);
+
+			Stream.Builder<TermsAggregationBuilder> builder = Stream.builder();
+
+			for (Aggregation aggregation : search.getAggregations()) {
+				Terms terms = (Terms)aggregation;
+
+				for (Terms.Bucket bucket : terms.getBuckets()) {
+					builder.add(
+						AggregationBuilders
+							.terms("entities." + bucket.getKeyAsString() + ".id")
+							.field("entities." + bucket.getKeyAsString() + ".id")
+							.size(_aggregationSize)
+					);
+				}
+
+			}
+
+			termsAggregationBuilderEntities = builder.build();
+
+		}
+		catch (IOException e) {
+			throw Exceptions.bubble(e);
+		}
+
+		/* </BLE> */
+
 		List<String> documentTypeNameList =
 			documentTypeList
 				.stream()
@@ -161,16 +221,7 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 						.field("datasourceId")
 						.size(_aggregationSize)
 				),
-				documentTypeNameList
-					.stream()
-					.map(documentTypeName ->
-						"entities." + documentTypeName + ".id")
-					.map(field ->
-						AggregationBuilders
-							.terms(field)
-							.field(field)
-							.size(_aggregationSize)
-					)
+				termsAggregationBuilderEntities
 			)
 			.flatMap(Function.identity())
 			.forEach(searchSourceBuilder::aggregation);
@@ -488,6 +539,9 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 
 	@Reference
 	private Search _search;
+
+	@Reference
+	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
 	private String[] _rootFieldAggregations;
 	private String[] _datasourceFieldAggregations;
