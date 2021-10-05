@@ -284,7 +284,7 @@ public class GetOrAddEntities {
 						.flatMap(entity -> {
 
 							if (_containsValue(_notIndexEntities, entity.getType())) {
-								return Mono.just(entity);
+								return Mono.empty();
 							}
 							else {
 								return _indexWriterEntityClient
