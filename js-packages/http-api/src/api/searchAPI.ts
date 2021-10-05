@@ -31,7 +31,7 @@ export async function doSearch<E>(
 ): Promise<SearchResults<E>> {
   const fixedSearch = {
     ...searchRequest,
-    range: [searchRequest.range[0], searchRequest.range[1] * 2],
+    range: [searchRequest.range[0], searchRequest.range[1]],
     searchQuery: searchRequest.searchQuery.map((i) =>
       i.tokenType === "TEXT-TOKEN" ? { ...i, tokenType: "TEXT" } : i,
     ),

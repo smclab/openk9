@@ -1,0 +1,4 @@
+{
+  "*.{ts,tsx,js,jsx}": ["prettier --list-different --write"],
+  "*.{md,html,css}": ["prettier --list-different --write"]
+}

@@ -19,6 +19,7 @@ import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
 import { ThemeProvider } from "react-jss";
 import { ClayIconSpriteContext } from "@clayui/icon";
+import "@clayui/css/lib/css/atlas.css";
 
 import {
   defaultTheme,

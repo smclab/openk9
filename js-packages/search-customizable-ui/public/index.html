@@ -1,0 +1,71 @@
+<script src="../src/index.tsx"></script>
+
+<style>
+  .root {
+    margin: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  }
+</style>
+
+<style>
+  .openk9-container {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: min-content 0px min-content 1fr;
+    grid-template-areas:
+      "search search"
+      "suggestions suggestions"
+      "tabs tabs"
+      "results details";
+    width: 1200px;
+    height: 800px;
+    margin: 50px;
+  }
+  .openk9-container > #search {
+    grid-area: search;
+  }
+  .openk9-container > #suggestions-container {
+    grid-area: suggestions;
+    position: relative;
+  }
+  .openk9-container > #suggestions-container > #suggestions {
+    position: absolute;
+    width: 100%;
+    background-color: white;
+    z-index: 10000;
+  }
+  .openk9-container > #tabs {
+    grid-area: tabs;
+  }
+  .openk9-container > #results {
+    grid-area: results;
+    overflow-x: hidden;
+    overflow-y: scroll;
+  }
+  .openk9-container > #details {
+    grid-area: details;
+    overflow-x: hidden;
+    overflow-y: scroll;
+  }
+</style>
+
+<div class="openk9-container">
+  <div id="search"></div>
+  <div id="suggestions-container">
+    <div id="suggestions"></div>
+  </div>
+  <div id="tabs"></div>
+  <div id="results"></div>
+  <div id="details"></div>
+</div>
+
+<script>
+  OpenK9.initOpenK9({
+    search: document.getElementById("search"),
+    suggestions: document.getElementById("suggestions"),
+    tabs: document.getElementById("tabs"),
+    results: document.getElementById("results"),
+    details: document.getElementById("details"),
+  });
+</script>
