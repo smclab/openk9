@@ -376,12 +376,12 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 								for (DocumentTypeDTO documentType
 									: pluginDriverDTO.getDocumentTypes()) {
 
-									documentTypes.add(
-										Map.of(
-											"name", documentType.getName(),
-											"icon", documentType.getIcon()
-										)
-									);
+									Map<String, Object> map = new HashMap<>();
+
+									map.put("name", documentType.getName());
+									map.put("icon", documentType.getIcon());
+
+									documentTypes.add(map);
 
 								}
 
