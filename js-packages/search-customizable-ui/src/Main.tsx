@@ -239,7 +239,9 @@ export function Main({
           if (templates.token) {
             return (
               <React.Fragment key={index}>
-                {templates.token({ token, entity: null })}
+                <EmbedElement
+                  element={templates.token({ token, entity: null })}
+                />
               </React.Fragment>
             );
           }
@@ -374,7 +376,7 @@ export function Main({
             if (customizedTokenKind) {
               return (
                 <React.Fragment key={tokenK.id ?? ""}>
-                  {customizedTokenKind}
+                  <EmbedElement element={customizedTokenKind} />
                 </React.Fragment>
               );
             }
@@ -428,7 +430,7 @@ export function Main({
             if (customizedItem) {
               return (
                 <React.Fragment key={suggestion.id}>
-                  {customizedItem}
+                  <EmbedElement element={customizedItem} />
                 </React.Fragment>
               );
             }
@@ -465,11 +467,13 @@ export function Main({
       </div>
     ),
     tabs: templates.tabs ? (
-      templates.tabs({
-        tabs: tabTokens.map(({ label }) => label),
-        activeIndex: state.tabIndex,
-        setActiveIndex: setActiveTabIndex,
-      })
+      <EmbedElement
+        element={templates.tabs({
+          tabs: tabTokens.map(({ label }) => label),
+          activeIndex: state.tabIndex,
+          setActiveIndex: setActiveTabIndex,
+        })}
+      />
     ) : (
       <div style={{ display: "flex" }}>
         {tabTokens.map((tabToken, index) => {
@@ -509,7 +513,7 @@ export function Main({
                   });
                   return cusomizedResult ? (
                     <React.Fragment key={result.source.id}>
-                      {cusomizedResult}
+                      <EmbedElement element={cusomizedResult} />
                     </React.Fragment>
                   ) : (
                     <div
@@ -541,7 +545,8 @@ export function Main({
         const customizedDetail = templates.detail?.({
           result: state.detail,
         });
-        if (customizedDetail) return customizedDetail;
+        if (customizedDetail)
+          return <EmbedElement element={customizedDetail} />;
         return (
           <div style={{ padding: "8px 16px" }}>
             <Detail
@@ -568,6 +573,21 @@ function ScrollIntoView<E extends HTMLElement>({
     }
   }, [enabled]);
   return children(ref) as JSX.Element;
+}
+
+function EmbedElement(props: { element: Element }) {
+  return (
+    <div
+      ref={(element) => {
+        if (element) {
+          for (const child of element.children) {
+            element?.removeChild(child);
+          }
+          element.appendChild(props.element);
+        }
+      }}
+    ></div>
+  );
 }
 
 // TODO get it from back-end

@@ -28,7 +28,7 @@ import { ThemeProvider } from "react-jss";
 import "@clayui/css/lib/css/atlas.css";
 import { ClayIconSpriteContext } from "@clayui/icon";
 // @ts-ignore
-import spritemap from "url:@clayui/css/lib/images/icons/icons.svg";
+import spritemap from "@clayui/css/lib/images/icons/icons.svg"; // use url:@clayui for `yarn dev` command
 import {
   EntityDescription,
   GenericResultItem,
@@ -51,28 +51,28 @@ export type OpenK9UITemplates = {
     tabs: Array<string>;
     activeIndex: number;
     setActiveIndex(index: number): void;
-  }): React.ReactNode;
+  }): Element;
   result?(params: {
     result: GenericResultItem<unknown>;
     setDetail(result: GenericResultItem<unknown>): void;
-  }): React.ReactNode | null;
+  }): Element | null;
   detail?(params: {
     result: GenericResultItem<unknown>;
-  }): React.ReactNode | null;
+  }): Element | null;
   suggestionKind?(params: {
     label: string;
     active: boolean;
     select(): void;
-  }): React.ReactNode;
+  }): Element;
   suggestionItem?(params: {
     label: string;
     kind: string;
     select(): void;
-  }): React.ReactNode;
+  }): Element;
   token?(params: {
     token: SearchToken;
     entity: EntityDescription | null;
-  }): React.ReactNode;
+  }): Element;
   inputPlaceholder?: string;
 };
 
@@ -125,3 +125,5 @@ declare global {
 }
 window.OpenK9 = openK9API;
 export default openK9API;
+
+export * from "@openk9/http-api"
