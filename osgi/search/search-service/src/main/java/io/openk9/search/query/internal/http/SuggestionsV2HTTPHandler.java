@@ -207,6 +207,7 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 
 						return Tuples.of(
 							aggregationName, buckets.stream()
+								.filter(bucket -> bucket.getDocCount() > 0)
 								.map(Terms.Bucket::getKeyAsString)
 								.collect(Collectors.toList())
 						);
