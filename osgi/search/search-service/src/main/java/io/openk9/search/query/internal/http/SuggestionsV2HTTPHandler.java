@@ -240,13 +240,13 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 			Mono<List<Map<String, Object>>> entitiesMono =
 				_getEntitiesMono(tenant, searchRequest, aggregationsResult);
 
-			Mono<List<Map<String, Object>>> typesMono =
+			Mono<Map<String, Map<String, Object>>> typesMono =
 				_getTypesMono(aggregationsResult);
 
 			return Mono.zip(arr -> SuggestionsDTO.of(
 				(List<Map<String, Object>>)arr[0],
 				(List<Map<String, Object>>)arr[1],
-				(List<Map<String, Object>>)arr[2]
+				(Map<String, Map<String, Object>>)arr[2]
 			), entitiesMono, datasourcesMono, typesMono)
 				.map(suggestionsDTO -> new Response(suggestionsDTO, 0));
 
@@ -254,40 +254,51 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 
 	}
 
-	private Mono<List<Map<String, Object>>> _getTypesMono(
+	private Mono<Map<String, Map<String, Object>>> _getTypesMono(
 		Map<String, List<String>> aggregationsResult) {
 		return Mono.fromSupplier(() -> {
-			List<Map<String, Object>> types = new ArrayList<>();
 
-			for (Map.Entry<String, List<String>> entry :
-				aggregationsResult.entrySet()) {
+			Map<String, Map<String, Object>> types =
+				aggregationsResult
+					.entrySet()
+					.stream()
+					.filter(entry ->
+						!entry.getKey().equals("datasourceId") &&
+						!entry.getKey().equals("entities"))
+					.map(entry -> {
 
-				String key = entry.getKey();
+						String key = entry.getKey();
 
-				if (!key.equals("datasourceId") &&
-					!key.equals("entities")) {
+						int ind = key.indexOf(".");
 
-					int ind = key.indexOf(".");
+						String type;
+						String field;
 
-					String type;
-					String field;
+						if (ind == -1) {
+							type = "ROOT";
+							field = key;
+						}
+						else {
+							type = key.substring(0, ind);
+							field = key.substring(ind + 1);
+						}
 
-					if (ind == -1) {
-						type = "ROOT";
-						field = key;
-					}
-					else {
-						type = key.substring(0, ind);
-						field = key.substring(ind + 1);
-					}
+						return Map.entry(
+							type, Map.entry(field, entry.getValue()));
 
-					types.add(
-						Map.of(type, Map.of(field, entry.getValue()))
+					})
+					.collect(
+						Collectors.groupingBy(
+							Map.Entry::getKey,
+							Collectors.mapping(
+								Map.Entry::getValue,
+								Collectors.toMap(
+									Map.Entry::getKey,
+									Map.Entry::getValue
+								)
+							)
+						)
 					);
-
-				}
-
-			}
 
 			return types;
 		});
@@ -317,6 +328,10 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 					boolQueryBuilder.should(
 						QueryBuilders.matchQuery("id", entity)
 					);
+				}
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(boolQueryBuilder.toString());
 				}
 
 				org.elasticsearch.action.search.SearchRequest
