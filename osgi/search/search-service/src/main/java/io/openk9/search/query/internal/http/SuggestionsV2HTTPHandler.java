@@ -50,6 +50,8 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -194,11 +196,19 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 					.asList()
 					.stream()
 					.map(aggregation -> (Terms)aggregation)
+					.filter(terms -> !terms.getBuckets().isEmpty())
 					.map(terms -> {
 
 						String aggregationName = terms.getName();
 
+						if (_log.isDebugEnabled()) {
+							_log.debug("aggregationName: " + aggregationName);
+						}
+
 						if (aggregationName.startsWith("entities.")) {
+							if (_log.isDebugEnabled()) {
+								_log.debug("startWith: " + aggregationName);
+							}
 							aggregationName = "entities";
 						}
 
@@ -207,7 +217,6 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 
 						return Tuples.of(
 							aggregationName, buckets.stream()
-								.filter(bucket -> bucket.getDocCount() > 0)
 								.map(Terms.Bucket::getKeyAsString)
 								.collect(Collectors.toList())
 						);
@@ -290,6 +299,15 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 		return Mono.defer(() -> {
 			List<String> entities = aggregationsResult.get("entities");
 
+			if (_log.isDebugEnabled()) {
+				if (entities != null) {
+					_log.debug(entities.toString());
+				}
+				else {
+					_log.debug("entities is null");
+				}
+			}
+
 			if (entities != null && !entities.isEmpty()) {
 
 				BoolQueryBuilder boolQueryBuilder =
@@ -297,8 +315,8 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 
 				for (String entity : entities) {
 					boolQueryBuilder.should(
-						QueryBuilders.matchQuery(
-							"id", NumberUtils.toLong(entity)));
+						QueryBuilders.matchQuery("id", entity)
+					);
 				}
 
 				org.elasticsearch.action.search.SearchRequest
@@ -459,5 +477,8 @@ public class SuggestionsV2HTTPHandler extends BaseSearchHTTPHandler {
 	private String[] _rootFieldAggregations;
 	private String[] _datasourceFieldAggregations;
 	private int _aggregationSize;
+
+	private static final Logger _log = LoggerFactory.getLogger(
+		SuggestionsV2HTTPHandler.class);
 
 }
