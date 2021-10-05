@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor(staticName = "of")
 @Builder
 public class PluginDriverDTO {
+	private String driverServiceName;
 	private String name;
 	private boolean schedulerEnabled;
 	private List<DocumentTypeDTO> documentTypes;

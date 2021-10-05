@@ -26,6 +26,7 @@ import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
 import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.search.api.query.QueryParser;
@@ -52,6 +53,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,15 +73,32 @@ public abstract class BaseSearchHTTPHandler
 
 		return  Mono.from(ReactorNettyUtils.aggregateBodyAsString(httpRequest))
 			.flatMap(body -> _getTenantAndDatasourceList(httpRequest, httpResponse)
-				.flatMap(tenantDatasources -> _toQuerySearchRequest(
-					tenantDatasources.getT1(),
-					tenantDatasources.getT2(),
-					_searchTokenizer.parse(body),
-					httpRequest
+				.flatMap(tenantDatasources -> _getPluginDriverDTOList(tenantDatasources.getT2())
+					.flatMap(pluginDriverDTOList ->
+						_toQuerySearchRequest(
+							tenantDatasources.getT1(),
+							tenantDatasources.getT2(),
+							pluginDriverDTOList,
+							_searchTokenizer.parse(body),
+							httpRequest
+						)
+						.map(searchResponse ->
+							Tuples.of(
+								tenantDatasources.getT1(),
+								tenantDatasources.getT2(),
+								pluginDriverDTOList,
+								_searchTokenizer.parse(body),
+								httpRequest,
+								searchResponse
+							)
+						)
 					)
 				)
 			)
-			.map(this::searchHitToResponse)
+			.flatMap(t -> searchHitToResponseMono(
+				t.getT1(), t.getT2(), t.getT3(), t.getT5(), t.getT4(),
+				t.getT6())
+			)
 			.map(_jsonFactory::toJson)
 			.transform(httpResponse::sendString);
 
@@ -88,6 +107,14 @@ public abstract class BaseSearchHTTPHandler
 	protected abstract Mono<Tuple2<Tenant, List<Datasource>>>
 		_getTenantAndDatasourceList(
 			HttpServerRequest httpRequest, HttpServerResponse httpResponse);
+
+	protected Mono<Response> searchHitToResponseMono(
+		Tenant tenant, List<Datasource> datasourceList,
+		PluginDriverDTOList pluginDriverDTOList,
+		HttpServerRequest httpServerRequest, SearchRequest searchRequest,
+		SearchResponse searchResponse) {
+		return Mono.fromSupplier(() -> searchHitToResponse(searchResponse));
+	}
 
 	protected Response searchHitToResponse(SearchResponse searchResponse) {
 
@@ -137,30 +164,14 @@ public abstract class BaseSearchHTTPHandler
 	}
 
 	private Mono<SearchResponse> _toQuerySearchRequest(
-		Tenant tenant, List<Datasource> datasources, SearchRequest searchRequest,
+		Tenant tenant, List<Datasource> datasources,
+		PluginDriverDTOList pdDTOList, SearchRequest searchRequest,
 		HttpServerRequest httpRequest) {
 
 		return Mono.defer(() -> {
 
-			List<String> serviceDriverNames =
-				new ArrayList<>(datasources.size());
-
-			for (Datasource datasource : datasources) {
-
-				String driverServiceName = datasource.getDriverServiceName();
-
-				if (!serviceDriverNames.contains(driverServiceName)) {
-					serviceDriverNames.add(driverServiceName);
-				}
-
-			}
-
-			return _pluginDriverManagerClient.getPluginDriverList(serviceDriverNames);
-
-		}).flatMap(pluginDriverList -> {
-
 			List<PluginDriverDTO> pluginDriverDTOList =
-					pluginDriverList.getPluginDriverDTOList();
+				pdDTOList.getPluginDriverDTOList();
 
 			Map<String, List<SearchToken>> tokenTypeGroup =
 				searchRequest
@@ -260,6 +271,27 @@ public abstract class BaseSearchHTTPHandler
 
 		});
 
+	}
+
+	private Mono<PluginDriverDTOList> _getPluginDriverDTOList(List<Datasource> datasources) {
+		return Mono.defer(() -> {
+
+			List<String> serviceDriverNames =
+				new ArrayList<>(datasources.size());
+
+			for (Datasource datasource : datasources) {
+
+				String driverServiceName = datasource.getDriverServiceName();
+
+				if (!serviceDriverNames.contains(driverServiceName)) {
+					serviceDriverNames.add(driverServiceName);
+				}
+
+			}
+
+			return _pluginDriverManagerClient.getPluginDriverList(serviceDriverNames);
+
+		});
 	}
 
 	protected String[] excludeFields() {
