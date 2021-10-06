@@ -38,88 +38,20 @@
 					"type": "text",
 					"index": true
 				},
-				"type": {
+				"documentTypes": {
 					"type": "keyword",
 					"index": true
 				},
 				"entities": {
 					"properties": {
-						"person": {
-							"type": "nested",
-							"properties": {
-								"context": {
-									"type": "keyword"
-								},
-								"id": {
-									"type": "keyword"
-								}
-							}
+						"entityType": {
+							"type": "keyword"
 						},
-						"organization": {
-							"type": "nested",
-							"properties": {
-								"context": {
-									"type": "keyword"
-								},
-								"id": {
-									"type": "keyword"
-								}
-							}
+						"context": {
+							"type": "keyword"
 						},
-						"email": {
-							"type": "nested",
-							"properties": {
-								"context": {
-									"type": "keyword"
-								},
-								"id": {
-									"type": "keyword"
-								}
-							}
-						},
-						"product": {
-							"type": "nested",
-							"properties": {
-								"context": {
-									"type": "keyword"
-								},
-								"id": {
-									"type": "keyword"
-								}
-							}
-						},
-						"gpe": {
-							"type": "nested",
-							"properties": {
-								"context": {
-									"type": "keyword"
-								},
-								"id": {
-									"type": "keyword"
-								}
-							}
-						},
-						"loc": {
-							"type": "nested",
-							"properties": {
-								"context": {
-									"type": "keyword"
-								},
-								"id": {
-									"type": "keyword"
-								}
-							}
-						},
-						"date": {
-							"type": "nested",
-							"properties": {
-								"context": {
-									"type": "keyword"
-								},
-								"id": {
-									"type": "keyword"
-								}
-							}
+						"id": {
+							"type": "keyword"
 						}
 					}
 				},
