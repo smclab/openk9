@@ -2,7 +2,6 @@ package io.openk9.search.query.internal.parser;
 
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchToken;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -32,32 +31,27 @@ public class EntityQueryParser implements QueryParser {
 				for (SearchToken searchToken : searchTokens) {
 					String[] ids = searchToken.getValues();
 
+					BoolQueryBuilder boolQueryBuilder = QueryBuilders
+						.boolQuery()
+						.must(_multiMatchValues(ids));
+
 					String entityType = searchToken.getEntityType();
 
-					String nestEntityPath = "entities." + entityType;
-
-					String nestIdPath = nestEntityPath + ".id";
-
-					BoolQueryBuilder innerNestBoolQuery = QueryBuilders
-						.boolQuery()
-						.must(_multiMatchValues(nestIdPath, ids));
+					if (entityType != null && !entityType.isEmpty()) {
+						boolQueryBuilder
+							.must(QueryBuilders.matchQuery(
+								ENTITIES_ENTITY_TYPE, entityType));
+					}
 
 					String keywordKey = searchToken.getKeywordKey();
 
 					if (keywordKey != null && !keywordKey.isEmpty()) {
-						innerNestBoolQuery
+						boolQueryBuilder
 							.must(QueryBuilders.matchQuery(
-								nestEntityPath + ".context", keywordKey));
+								ENTITIES_CONTEXT, keywordKey));
 					}
 
-					bool.filter(
-						QueryBuilders
-							.nestedQuery(
-								nestEntityPath,
-								innerNestBoolQuery,
-								ScoreMode.Max)
-							.ignoreUnmapped(true)
-					);
+					bool.filter(boolQueryBuilder);
 
 				}
 			};
@@ -65,12 +59,12 @@ public class EntityQueryParser implements QueryParser {
 		});
 	}
 
-	private QueryBuilder _multiMatchValues(String field, String[] ids) {
+	private QueryBuilder _multiMatchValues(String[] ids) {
 
 		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
 
 		for (String id : ids) {
-			boolQuery.should(QueryBuilders.termQuery(field, id));
+			boolQuery.should(QueryBuilders.matchQuery(ENTITIES_ID, id));
 		}
 
 		return boolQuery;
@@ -78,5 +72,8 @@ public class EntityQueryParser implements QueryParser {
 	}
 
 	public static final String TYPE = "ENTITY";
+	public static final String ENTITIES_ID = "entities.id";
+	public static final String ENTITIES_ENTITY_TYPE = "entities.entityType";
+	public static final String ENTITIES_CONTEXT = "entities.context";
 
 }
