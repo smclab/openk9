@@ -4,6 +4,10 @@
   "author": "SMC",
   "description": "OpenK9 search UI customizable widget",
   "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "search",
     "ui",
@@ -22,7 +26,7 @@
   },
   "homepage": "https://openk9.io/",
   "scripts": {
-    "build": "parcel build src/index.tsx",
+    "build": "webpack && rollup -c",
     "dev": "parcel public/index.html",
     "lint": "eslint --ext js,ts,tsx src",
     "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
@@ -62,7 +66,13 @@
     "lint-staged": "^10.0.8",
     "parcel": "^2.0.0-beta.2",
     "prettier": "^2.2.1",
-    "typescript": "^4.1.2"
+    "typescript": "^4.1.2",
+    "rollup": "^2.58.0",
+    "rollup-plugin-dts": "^4.0.0",
+    "webpack": "^5.57.0",
+    "webpack-cli": "^4.8.0",
+    "css-loader": "^6.3.0",
+    "ts-loader": "^9.2.6"
   },
   "publishConfig": {
     "access": "public"
