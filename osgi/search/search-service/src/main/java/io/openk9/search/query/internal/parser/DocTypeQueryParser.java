@@ -53,7 +53,7 @@ public class DocTypeQueryParser implements QueryParser {
 				shouldBool
 					.should(
 						QueryBuilders
-							.matchQuery("type", type)
+							.matchQuery("documentTypes", type)
 							.operator(Operator.AND)
 					);
 			}

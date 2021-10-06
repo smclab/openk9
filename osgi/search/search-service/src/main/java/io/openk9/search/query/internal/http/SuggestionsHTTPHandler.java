@@ -67,8 +67,8 @@ import java.util.stream.Stream;
 public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 	@interface Config {
-		String[] rootFieldAggregations() default {"type"};
-		String[] datasourceFieldAggregations() default {"topic", "documentType"};
+		String[] rootFieldAggregations() default {"documentTypes"};
+		String[] datasourceFieldAggregations() default {"topic", "category"};
 		int aggregationSize() default 20;
 	}
 	@Activate

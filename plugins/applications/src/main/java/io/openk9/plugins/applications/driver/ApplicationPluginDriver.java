@@ -77,7 +77,7 @@ public class ApplicationPluginDriver implements PluginDriver {
 								.toMap()
 						)
 						.parsingDate(toDate.getTime())
-						.type(new String[] {getName()})
+						.documentTypes(new String[] {getName()})
 						.build()
 				);
 

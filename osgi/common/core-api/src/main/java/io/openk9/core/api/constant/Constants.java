@@ -29,7 +29,7 @@ public interface Constants {
 	String INGESTION_ID = "ingestionId";
 	String ENTITIES = "entities";
 	String RELATIONS = "relations";
-	String TYPE = "type";
+	String TYPE = "documentTypes";
 	String NAME = "name";
 	String ID = "id";
 	String CONTEXT = "context";

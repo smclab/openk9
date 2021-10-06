@@ -45,7 +45,7 @@ public class DatasourceIngestionLogic {
 									ingestionPayload.getRawContent(),
 									ingestionPayload.getDatasourcePayload(),
 									context.getTenant().getTenantId(),
-									ingestionPayload.getType(),
+									ingestionPayload.getDocumentTypes(),
 									ingestionPayload.getResources()
 								), context)
 					)
