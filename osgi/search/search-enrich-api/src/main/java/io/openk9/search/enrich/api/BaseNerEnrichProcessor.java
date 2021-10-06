@@ -137,7 +137,7 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 	}
 
 
-	private Mono<ObjectNode> _getEntityOrCreate(ObjectNode jsonNode) {
+	private Mono<JsonNode> _getEntityOrCreate(ObjectNode jsonNode) {
 
 		return _entityManagerClient.getOrAddEntities(
 			_jsonFactory.fromJsonNode(jsonNode, Request.class))
@@ -149,7 +149,7 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 
 				ArrayNode entitiesArrayNode = entitiesJsonNode.toArrayNode();
 
-				ObjectNode objectNode = _jsonFactory.createObjectNode();
+				ArrayNode arrayNode = _jsonFactory.createArrayNode();
 
 				for (JsonNode node : entitiesArrayNode) {
 
@@ -162,33 +162,23 @@ public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
 
 					if (responseOptional.isPresent()) {
 
-						JsonNode context = node.get("context");
+						Entity entity = responseOptional.get().getEntity();
 
-						Response response = responseOptional.get();
+						ObjectNode result = _jsonFactory.createObjectNode();
 
-						Entity entity = response.getEntity();
-
-						JsonNode arrayNode = objectNode.get(entity.getType());
-
-						if (arrayNode == null) {
-							arrayNode = _jsonFactory.createArrayNode();
-							objectNode.set(entity.getType(), arrayNode);
-						}
-
-						ObjectNode result = _jsonFactory
-							.createObjectNode();
+						result.put("entityType", entity.getType());
 
 						result.put("id", entity.getId());
 
-						result.put("context", context);
+						result.put("context", node.get("context"));
 
-						arrayNode.toArrayNode().add(result);
+						arrayNode.add(result);
 
 					}
 
 				}
 
-				return objectNode;
+				return arrayNode;
 
 			});
 
