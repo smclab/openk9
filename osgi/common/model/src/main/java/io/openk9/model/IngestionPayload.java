@@ -36,6 +36,6 @@ public class IngestionPayload {
 	private String rawContent;
 	private Map<String, Object> datasourcePayload;
 	private long tenantId;
-	private String[] type;
+	private String[] documentTypes;
 	private ResourcesPayload resources;
 }
