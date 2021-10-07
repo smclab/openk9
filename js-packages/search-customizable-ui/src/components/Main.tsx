@@ -363,7 +363,7 @@ export function Main({
       <div
         ref={suggestionsRef}
         style={{
-          height: "100%",
+          height: "200px",
           display: "flex",
         }}
       >

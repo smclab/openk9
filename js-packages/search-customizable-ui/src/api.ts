@@ -9,7 +9,7 @@ export type OpenK9UIConfiguration = {
   templates?: OpenK9UITemplates;
 };
 
-export type OpenK9UIWidgets = {
+type OpenK9UIWidgets = {
   search?: Element | null;
   suggestions?: Element | null;
   tabs?: Element | null;

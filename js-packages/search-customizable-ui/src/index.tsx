@@ -33,7 +33,7 @@ import { OpenK9UIConfiguration } from "./api";
 
 const queryClient = new QueryClient();
 
-export function initOpenK9({
+function initOpenK9({
   widgets = {},
   templates = {},
 }: OpenK9UIConfiguration) {
