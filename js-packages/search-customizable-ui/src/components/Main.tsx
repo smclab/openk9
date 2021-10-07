@@ -10,18 +10,17 @@ import {
 } from "@openk9/http-api";
 import { useQuery, useInfiniteQuery } from "react-query";
 import { Result } from "./Result";
-import useDebounce from "./useDebounce";
+import useDebounce from "../hooks/useDebounce";
 import { TokenComponent } from "./Token";
-import { getPluginResultRenderers } from "../../search-ui-components/src";
-import { useClickAway } from "./useClickAway";
+import { getPluginResultRenderers } from "@openk9/search-ui-components";
+import { useClickAway } from "../hooks/useClickAway";
 import { useInView } from "react-intersection-observer";
 import { Detail } from "./Detail";
-import { OpenK9UITemplates } from ".";
+import { OpenK9UITemplates } from "../api";
+import { EmbedElement } from "./EmbedElement";
+import { ScrollIntoView } from "./ScrollIntoView";
 
-export function Main({
-  children,
-  templates,
-}: {
+type MainProps = {
   children: (widgets: {
     search: React.ReactNode;
     suggestions: React.ReactNode;
@@ -30,28 +29,37 @@ export function Main({
     details: React.ReactNode;
   }) => React.ReactNode;
   templates: OpenK9UITemplates;
-}) {
-  const [state, setState] = React.useState<{
-    tokens: SearchToken[];
-    tabIndex: number;
-    focusedToken: number | null;
-    text: string;
-    searchQuery: SearchQuery | null;
-    showSuggestions: boolean;
-    suggestionIndex: number | null;
-    entityKind: string | undefined;
-    detail: GenericResultItem<any> | null;
-  }>({
-    tokens: [],
-    tabIndex: 0,
-    text: "",
-    searchQuery: null,
-    showSuggestions: false,
-    focusedToken: null,
-    suggestionIndex: null,
-    entityKind: undefined,
-    detail: null,
-  });
+}
+
+type State = {
+  tokens: SearchToken[];
+  tabIndex: number;
+  focusedToken: number | null;
+  text: string;
+  searchQuery: SearchQuery | null;
+  showSuggestions: boolean;
+  suggestionIndex: number | null;
+  entityKind: string | undefined;
+  detail: GenericResultItem<any> | null;
+}
+
+const initialState: State = {
+  tokens: [],
+  tabIndex: 0,
+  text: "",
+  searchQuery: null,
+  showSuggestions: false,
+  focusedToken: null,
+  suggestionIndex: null,
+  entityKind: undefined,
+  detail: null,
+}
+
+export function Main({
+  children,
+  templates,
+}: MainProps) {
+  const [state, setState] = React.useState<State>(initialState);
   const { tokens, text, showSuggestions, searchQuery } = state;
   const tabTokens = defaultTabTokens;
   const selectedTabTokens = tabTokens[state.tabIndex].tokens;
@@ -557,37 +565,6 @@ export function Main({
         );
       })(),
   }) as JSX.Element;
-}
-
-function ScrollIntoView<E extends HTMLElement>({
-  enabled,
-  children,
-}: {
-  enabled: boolean;
-  children: (ref: React.MutableRefObject<E | null>) => React.ReactNode;
-}) {
-  const ref = React.useRef<E | null>(null);
-  React.useLayoutEffect(() => {
-    if (enabled) {
-      ref.current?.scrollIntoView({ block: "nearest" });
-    }
-  }, [enabled]);
-  return children(ref) as JSX.Element;
-}
-
-function EmbedElement(props: { element: Element }) {
-  return (
-    <div
-      ref={(element) => {
-        if (element) {
-          for (const child of element.children) {
-            element?.removeChild(child);
-          }
-          element.appendChild(props.element);
-        }
-      }}
-    ></div>
-  );
 }
 
 // TODO get it from back-end

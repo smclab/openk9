@@ -1,5 +1,5 @@
 import React from "react";
-import { doSearchEntities, EntityToken, SearchToken } from "../../http-api/src";
+import { doSearchEntities, EntityToken, SearchToken } from "@openk9/http-api";
 import { useQuery } from "react-query";
 
 const tokenStyle: React.CSSProperties = {

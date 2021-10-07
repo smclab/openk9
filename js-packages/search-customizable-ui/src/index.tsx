@@ -23,83 +23,38 @@ import {
   loadPluginDepsIntoGlobal,
   defaultTheme,
 } from "../../search-ui-components/src";
-import { Main } from "./Main";
+import { Main } from "./components/Main";
 import { ThemeProvider } from "react-jss";
 import "@clayui/css/lib/css/atlas.css";
 import { ClayIconSpriteContext } from "@clayui/icon";
 // @ts-ignore
-import spritemap from "@clayui/css/lib/images/icons/icons.svg"; // use url:@clayui for `yarn dev` command
-import {
-  EntityDescription,
-  GenericResultItem,
-  SearchToken,
-} from "../../http-api/src";
+import spritemap from "@clayui/css/lib/images/icons/icons.svg";
+import { OpenK9UIConfiguration } from "./api";
 
 const queryClient = new QueryClient();
 
-type OpenK9UIConfiguration = {
-  search?: Element | null;
-  suggestions?: Element | null;
-  tabs?: Element | null;
-  results?: Element | null;
-  details?: Element | null;
-  templates?: OpenK9UITemplates;
-};
-
-export type OpenK9UITemplates = {
-  tabs?(params: {
-    tabs: Array<string>;
-    activeIndex: number;
-    setActiveIndex(index: number): void;
-  }): Element;
-  result?(params: {
-    result: GenericResultItem<unknown>;
-    setDetail(result: GenericResultItem<unknown>): void;
-  }): Element | null;
-  detail?(params: {
-    result: GenericResultItem<unknown>;
-  }): Element | null;
-  suggestionKind?(params: {
-    label: string;
-    active: boolean;
-    select(): void;
-  }): Element;
-  suggestionItem?(params: {
-    label: string;
-    kind: string;
-    select(): void;
-  }): Element;
-  token?(params: {
-    token: SearchToken;
-    entity: EntityDescription | null;
-  }): Element;
-  inputPlaceholder?: string;
-};
-
 export function initOpenK9({
-  search,
-  suggestions,
-  tabs,
-  results,
-  details,
-  templates,
+  widgets = {},
+  templates = {},
 }: OpenK9UIConfiguration) {
   const root = document.createElement("div");
-  document.body.appendChild(root);
   ReactDOM.render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={defaultTheme}>
         <ClayIconSpriteContext.Provider value={spritemap}>
           <Suspense fallback={null}>
-            <Main templates={templates ?? {}}>
-              {(widgets) => (
+            <Main templates={templates}>
+              {({ search, suggestions, tabs, results, details }) => (
                 <>
-                  {search && ReactDOM.createPortal(widgets.search, search)}
-                  {suggestions &&
-                    ReactDOM.createPortal(widgets.suggestions, suggestions)}
-                  {tabs && ReactDOM.createPortal(widgets.tabs, tabs)}
-                  {results && ReactDOM.createPortal(widgets.results, results)}
-                  {details && ReactDOM.createPortal(widgets.details, details)}
+                  {widgets.search &&
+                    ReactDOM.createPortal(search, widgets.search)}
+                  {widgets.suggestions &&
+                    ReactDOM.createPortal(suggestions, widgets.suggestions)}
+                  {widgets.tabs && ReactDOM.createPortal(tabs, widgets.tabs)}
+                  {widgets.results &&
+                    ReactDOM.createPortal(results, widgets.results)}
+                  {widgets.details &&
+                    ReactDOM.createPortal(details, widgets.details)}
                 </>
               )}
             </Main>
@@ -116,6 +71,8 @@ const openK9API = {
   deps: loadPluginDepsIntoGlobal(true),
 };
 
+export default openK9API;
+
 declare global {
   interface Window {
     OpenK9: typeof openK9API & {
@@ -124,6 +81,5 @@ declare global {
   }
 }
 window.OpenK9 = openK9API;
-export default openK9API;
 
-export * from "@openk9/http-api"
+export * from "@openk9/http-api";

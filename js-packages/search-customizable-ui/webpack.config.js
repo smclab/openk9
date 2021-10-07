@@ -1,6 +1,7 @@
 const path = require("path");
 
 module.exports = {
+  mode: "production",
   entry: "./src/index.tsx",
   devtool: "source-map",
   module: {
@@ -12,7 +13,7 @@ module.exports = {
       },
       {
         test: /\.css$/i,
-        use: "css-loader",
+        use: ["style-loader", "css-loader"],
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
@@ -27,9 +28,5 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
     filename: "index.js",
     libraryTarget: "umd",
-  },
-  externals: {
-    react: "react",
-    "react-dom": "react-dom",
   },
 };
