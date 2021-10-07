@@ -31,6 +31,8 @@ public class ElasticSearchConfigurationImpl implements ElasticSearchConfiguratio
 	@interface Config {
 		String dataIndex() default "data";
 		String entityIndex() default "entity";
+		String username() default "elastic";
+		String password() default "elastic";
 		String[] hosts() default {"localhost:9200"};
 		int bufferMaxSize() default 100;
 		long bufferMaxTime() default 1_000;
@@ -52,6 +54,16 @@ public class ElasticSearchConfigurationImpl implements ElasticSearchConfiguratio
 
 	public String getEntityIndex() {
 		return _config.entityIndex();
+	}
+
+	@Override
+	public String getUsername() {
+		return _config.username();
+	}
+
+	@Override
+	public String getPassword() {
+		return _config.password();
 	}
 
 	public String[] hosts() {

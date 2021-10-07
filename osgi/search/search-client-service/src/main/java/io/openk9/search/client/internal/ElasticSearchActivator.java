@@ -21,6 +21,10 @@ import io.openk9.osgi.util.AutoCloseables;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
 import io.openk9.search.client.api.configuration.ElasticSearchConfiguration;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -45,12 +49,26 @@ public class ElasticSearchActivator {
 	public void activate(BundleContext bundleContext)
 		throws IOException {
 
+		CredentialsProvider credentialsProvider =
+			new BasicCredentialsProvider();
+
+		credentialsProvider.setCredentials(
+			AuthScope.ANY, new UsernamePasswordCredentials(
+				_elasticSearchConfiguration.getUsername(),
+				_elasticSearchConfiguration.getPassword()));
+
 		RestClientBuilder builder = RestClient.builder(
 			Arrays
 				.stream(_elasticSearchConfiguration.hosts())
 				.map(e -> e.split(":"))
 				.map(e -> new HttpHost(e[0], Integer.parseInt(e[1])))
 				.toArray(HttpHost[]::new)
+		);
+
+		builder.setHttpClientConfigCallback(
+			httpClientBuilder ->
+				httpClientBuilder.setDefaultCredentialsProvider(
+					credentialsProvider)
 		);
 
 		RestHighLevelClient restHighLevelClient =

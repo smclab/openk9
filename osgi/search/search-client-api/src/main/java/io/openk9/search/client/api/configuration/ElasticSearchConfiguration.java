@@ -6,6 +6,10 @@ public interface ElasticSearchConfiguration {
 
 	String getEntityIndex();
 
+	String getUsername();
+
+	String getPassword();
+
 	String[] hosts();
 
 	int bufferMaxSize();
