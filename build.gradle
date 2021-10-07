@@ -41,6 +41,7 @@ ext.libraries = [
 				'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.11.3',
 		 		'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.3',
 				'com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.11.3',
+				'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3',
 				'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.3',
 				'com.fasterxml.jackson.core:jackson-annotations:2.11.3',
 				'com.fasterxml.jackson.core:jackson-core:2.11.3',
@@ -105,7 +106,7 @@ ext.libraries = [
 				"org.apache.karaf.config:org.apache.karaf.config.core:$karafVersion"
 		],
 		apache_commons_lang3: 'org.apache.commons:commons-lang3:3.12.0',
-		elasticsearch: 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.9.3',
+		elasticsearch: 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.15.0',
 		avro: 'org.apache.avro:avro:1.10.0',
 		felix_dependencymanager: 'org.apache.felix:org.apache.felix.dependencymanager:4.6.0',
 		neo4j_java_driver: 'org.neo4j.driver:neo4j-java-driver:4.2.3',
