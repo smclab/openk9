@@ -7,7 +7,8 @@ Export-Package: \
  org.apache.commons.lang3, \
  org.apache.commons.lang3.concurrent.locks, \
  org.apache.commons.lang3.text.translate, \
- org.apache.commons.lang3.*
+ org.apache.commons.lang3.*,\
+ org.apache.commons.codec.*
 
 Import-Package: !org.apache.commons.lang3
 
