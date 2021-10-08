@@ -31,7 +31,9 @@ import java.util.Map;
 	immediate = true,
 	property = {
 		"elastic.host=http://elasticsearch:9200",
-		"elastic.autoCreateIndex=false"
+		"elastic.autoCreateIndex=false",
+		"elastic.userName=elastic",
+		"elastic.password=elastic"
 	},
 	service = MeterRegistryProvider.class
 )
