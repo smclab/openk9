@@ -43,6 +43,7 @@ Build Latest Parser Docker Images:
         - plugins/liferay/liferay-parser/**/*
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
   script:
     - docker build -t web-parser:latest -f plugins/web/web-parser/Dockerfile .
     - docker tag web-parser:latest $CI_REGISTRY_NAME/openk9/web-parser:latest
