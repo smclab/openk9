@@ -60,7 +60,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 function ResultRenderer({ res }: { res: GenericResultItem }) {
   const classes = useStyles();
 
-  const { id, type, parsingDate, rawContent, ...rest } = res.source;
+  const { id, documentTypes, parsingDate, rawContent, ...rest } = res.source;
 
   return (
     <div className={classes.resultRow}>
@@ -68,7 +68,7 @@ function ResultRenderer({ res }: { res: GenericResultItem }) {
         <strong>Id:</strong> {id}
       </div>
       <div>
-        <strong>Type:</strong> [{type.join(", ")}]
+        <strong>Type:</strong> [{documentTypes.join(", ")}]
       </div>
       <div>
         <strong>ParsingDate:</strong> {format(parsingDate, "dd/MM/yyyy, HH:mm")}
