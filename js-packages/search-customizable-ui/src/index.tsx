@@ -36,6 +36,7 @@ const queryClient = new QueryClient();
 function initOpenK9({
   widgets = {},
   templates = {},
+  interactions = {}
 }: OpenK9UIConfiguration) {
   const root = document.createElement("div");
   ReactDOM.render(
@@ -43,7 +44,7 @@ function initOpenK9({
       <ThemeProvider theme={defaultTheme}>
         <ClayIconSpriteContext.Provider value={spritemap}>
           <Suspense fallback={null}>
-            <Main templates={templates}>
+            <Main templates={templates} interactions={interactions}>
               {({ search, suggestions, tabs, results, details }) => (
                 <>
                   {widgets.search &&

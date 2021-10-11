@@ -7,6 +7,7 @@ import {
 export type OpenK9UIConfiguration = {
   widgets?: OpenK9UIWidgets;
   templates?: OpenK9UITemplates;
+  interactions?: OpenK9UIInteractions
 };
 
 type OpenK9UIWidgets = {
@@ -44,3 +45,7 @@ export type OpenK9UITemplates = {
   }): Element;
   inputPlaceholder?: string;
 };
+
+export type OpenK9UIInteractions = {
+  searchAsYouType?: boolean
+}

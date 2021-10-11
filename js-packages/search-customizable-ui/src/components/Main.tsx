@@ -15,7 +15,7 @@ import { getPluginResultRenderers } from "@openk9/search-ui-components";
 import { useClickAway } from "../hooks/useClickAway";
 import { useInView } from "react-intersection-observer";
 import { Detail } from "./Detail";
-import { OpenK9UITemplates } from "../api";
+import { OpenK9UIInteractions, OpenK9UITemplates } from "../api";
 import { EmbedElement } from "./EmbedElement";
 import { ScrollIntoView } from "./ScrollIntoView";
 import { useTabTokens } from "../data-hooks/useTabTokens";
@@ -30,6 +30,7 @@ type MainProps = {
     details: React.ReactNode;
   }) => React.ReactNode;
   templates: OpenK9UITemplates;
+  interactions: OpenK9UIInteractions;
 };
 
 type State = {
@@ -56,7 +57,7 @@ const initialState: State = {
   detail: null,
 };
 
-export function Main({ children, templates }: MainProps) {
+export function Main({ children, templates, interactions }: MainProps) {
   const [state, setState] = React.useState<State>(initialState);
   const { tokens, text, showSuggestions, searchQuery } = state;
   const tabTokens = useTabTokens(null);
@@ -89,7 +90,7 @@ export function Main({ children, templates }: MainProps) {
     return getPlugins(null);
   });
   const renderers = pluginInfos ? getPluginResultRenderers(pluginInfos) : null;
-  function updateSearch() {
+  const updateSearch = React.useCallback(() => {
     setState((state) => {
       // ATTENTION reread from state otherwise it will lag 1 interactions behind
       const { text, tokens } = state;
@@ -110,7 +111,7 @@ export function Main({ children, templates }: MainProps) {
         return { ...state, searchQuery: null };
       }
     });
-  }
+  }, [tabTokens]);
   function addToken(token: SearchToken) {
     setState((state) => {
       return { ...state, tokens: [...state.tokens, token] };
@@ -206,6 +207,18 @@ export function Main({ children, templates }: MainProps) {
       entityKind: id,
     }));
   }
+  // update search debounced
+  React.useEffect(() => {
+    if (interactions.searchAsYouType) {
+      const timeoutId = setTimeout(() => {
+        updateSearch();
+      }, 300);
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [updateSearch, interactions.searchAsYouType, state.text]);
+
   return children({
     search: (
       <div
@@ -552,5 +565,3 @@ const tokenKinds = [
   { id: "type", label: "Types" },
   { id: "PARAM", label: "Filters" },
 ];
-
-
