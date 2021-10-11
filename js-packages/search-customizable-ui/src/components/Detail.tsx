@@ -10,9 +10,9 @@ export function Detail<E>({
   sidebarRenderers: SidebarRenderersType<E>;
 }) {
   const Renderer = (
-    typeof result.source.type === "string"
-      ? [result.source.type]
-      : result.source.type
+    typeof result.source.documentTypes === "string"
+      ? [result.source.documentTypes]
+      : result.source.documentTypes
   )
     .map((k) => sidebarRenderers[k as any])
     .find(Boolean);

@@ -30,5 +30,4 @@ export interface EntityLookupRequest {
 export type EntityLookupResponse = {
   result: EntityDescription[];
   total: number;
-  last: boolean;
 };

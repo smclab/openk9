@@ -212,12 +212,8 @@ export const useStore = create<StateType>(
       const result = get().results?.result.find(
         (r) => r.source.id === selectedResult,
       );
-      const entities = result?.source.entities;
-      const entitiesIds =
-        entities &&
-        Object.entries(entities)
-          .flatMap(([k, v]) => v.map((e) => e.id))
-          .filter(Boolean);
+      
+      const entitiesIds = result?.source.entities?.map((e) => e.id).filter(Boolean);
 
       const entityLabels = !entitiesIds
         ? []
@@ -279,8 +275,8 @@ export const useStore = create<StateType>(
 
     setLoginInfo(loginInfo: LoginInfo, userInfo: UserInfo) {
       set((state) => ({ ...state, loginInfo, userInfo }));
-      (window as any).loginInfo = loginInfo;
-      (window as any).userInfo = userInfo;
+      window.loginInfo = loginInfo;
+      window.userInfo = userInfo;
       localStorage.setItem(
         localStorageLoginPersistKey,
         JSON.stringify({
@@ -291,8 +287,8 @@ export const useStore = create<StateType>(
     },
     invalidateLogin() {
       set((state) => ({ ...state, loginInfo: null, userInfo: null }));
-      (window as any).loginInfo = null;
-      (window as any).userInfo = null;
+      window.loginInfo = null;
+      window.userInfo = null;
       localStorage.setItem(
         localStorageLoginPersistKey,
         JSON.stringify({
@@ -419,4 +415,11 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
   }, [invalidateLogin, setLoginInfo]);
 
   return { loginInfo, userInfo, canEnter, isGuest, goToLogin, loginValid };
+}
+
+declare global {
+  interface Window {
+    loginInfo: LoginInfo | null;
+    userInfo: UserInfo | null;
+  }
 }

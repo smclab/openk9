@@ -112,7 +112,6 @@ export interface ServerSuggestion {
 export interface ServerSuggestionsResponse {
   result: ServerSuggestion[];
   total: number;
-  last: boolean;
 }
 
 export async function getServerSuggestions(

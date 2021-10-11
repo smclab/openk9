@@ -35,13 +35,13 @@ function ResultDisplay<E>({
   onSelect(): void;
   otherProps: Omit<ResultRendererProps<E>, "data" | "onSelect">;
 }): JSX.Element | null {
-  const Renderer = arrOrEncapsulate(data.source.type as any)
+  const Renderer = arrOrEncapsulate(data.source.documentTypes as any)
     .map((k) => renderers[k])
     .filter(Boolean)[0];
   if (Renderer) {
     return <Renderer data={data} onSelect={onSelect} {...otherProps} />;
   } else {
-    console.warn("No renderer for", data.source.type);
+    console.warn("No renderer for", data.source.documentTypes);
     return null;
   }
 }

@@ -214,12 +214,10 @@ export const useStore = create<StateType>(
       const result = get().results?.result.find(
         (r) => r.source.id === selectedResult,
       );
-      const entities = result?.source.entities;
-      const entitiesIds =
-        entities &&
-        Object.entries(entities)
-          .flatMap(([k, v]) => v.map((e) => e.id))
-          .filter(Boolean);
+
+      const entitiesIds = result?.source.entities
+        ?.map((e) => e.id)
+        .filter(Boolean);
 
       const entityLabels = !entitiesIds
         ? []
@@ -314,7 +312,7 @@ export function useSearchQuery() {
     (searchQuery: SearchQuery) => {
       storedSetSearchQuery(searchQuery);
     },
-    [history, storedSetSearchQuery],
+    [storedSetSearchQuery],
   );
 
   return [storedSearchQuery || [], setSearchQuery] as const;

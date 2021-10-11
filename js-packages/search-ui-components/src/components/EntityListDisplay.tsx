@@ -78,23 +78,20 @@ export function EntityListDisplay({
 } & React.HTMLAttributes<HTMLDivElement>) {
   const classes = useStyles();
 
-  const entityList = Object.entries(entities || {})
-    .filter(([key]) => !ignoreTypes || ignoreTypes.indexOf(key) === -1)
-    .flatMap(([key, value]) =>
-      value
-        ? value.map((v) => ({
-            type: key,
-            label: entityLabels && entityLabels.find(([id]) => id === v.id),
-            ...v,
-          }))
-        : [],
-    );
+  const entityList = entities
+    ?.filter(
+      (entity) => !ignoreTypes || !ignoreTypes.includes(entity.entityType),
+    )
+    .map((entity) => ({
+      ...entity,
+      label: entityLabels && entityLabels.find(([id]) => id === entity.id),
+    }));
 
   return (
     <div className={classes.entities} {...rest}>
-      {entityList.map((e) => (
+      {entityList?.map((e) => (
         <EntityDisplay
-          type={e.type}
+          type={e.entityType}
           id={e.id}
           key={e.id}
           label={e.label && e.label[1]}

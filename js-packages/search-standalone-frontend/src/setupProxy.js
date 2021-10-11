@@ -21,9 +21,9 @@ module.exports = function (app) {
   app.use(
     "/api/*",
     createProxyMiddleware({
-      // target: "http://dev-projectq.smc.it/",
       target: "https://dev.openk9.io/",
       changeOrigin: true,
+      secure: false
     }),
   );
 };

@@ -19,21 +19,20 @@ import { DeepKeys, Without } from ".";
 
 export type GenericResultItem<E = {}> = {
   source: {
-    type: (keyof E)[];
+    documentTypes: (keyof E)[];
     contentId: string;
     id: string;
     parsingDate: number; // timestamp
     rawContent: string;
     tenantId: number;
     datasourceId: number;
-    entities?: {
-      [entity: string]: {
-        context: DeepKeys<
-          Without<GenericResultItem<E>["source"], "entities">
-        >[];
-        id: number;
-      }[];
-    };
+    entities?: Array<{
+      entityType: string,
+      context: DeepKeys<
+        Without<GenericResultItem<E>["source"], "entities">
+      >[];
+      id: number;
+    }>;
   } & E;
   highlight: {
     [field in DeepKeys<

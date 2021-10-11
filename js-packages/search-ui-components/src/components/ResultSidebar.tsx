@@ -55,13 +55,13 @@ function SidebarContentDispatch<E>({
   renderers: SidebarRenderersType<E>;
   otherProps: Omit<SidebarRendererProps<E>, "result">;
 }): JSX.Element | null {
-  const Renderer = arrOrEncapsulate(result.source.type as any)
+  const Renderer = arrOrEncapsulate(result.source.documentTypes as any)
     .map((k) => renderers[k])
     .filter(Boolean)[0];
   if (Renderer) {
     return <Renderer result={result} {...otherProps} />;
   } else {
-    console.warn("No sidebar renderer for", result.source.type);
+    console.warn("No sidebar renderer for", result.source.documentTypes);
     return null;
   }
 }
