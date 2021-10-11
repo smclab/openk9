@@ -108,6 +108,7 @@ function MenuItem({
 }
 
 // TODO: move this to tenant configuration/component prop
+// HARDCODED
 const menuItems = [
   { id: "person", label: "People" },
   { id: "organization", label: "Organizations" },

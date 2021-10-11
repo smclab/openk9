@@ -56,7 +56,6 @@
     "express": "^4.17.1",
     "http-proxy-middleware": "^2.0.0",
     "lint-staged": "^10.0.8",
-    "parcel": "^2.0.0-beta.2",
     "prettier": "^2.2.1",
     "react": "^17.0.0",
     "react-click-away-listener": "^2.0.3",

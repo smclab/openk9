@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  doSearch,
   GenericResultItem,
   getPlugins,
   getTokenSuggestions,
@@ -8,7 +7,7 @@ import {
   SearchQuery,
   SearchToken,
 } from "@openk9/http-api";
-import { useQuery, useInfiniteQuery } from "react-query";
+import { useQuery } from "react-query";
 import { Result } from "./Result";
 import useDebounce from "../hooks/useDebounce";
 import { TokenComponent } from "./Token";
@@ -19,6 +18,8 @@ import { Detail } from "./Detail";
 import { OpenK9UITemplates } from "../api";
 import { EmbedElement } from "./EmbedElement";
 import { ScrollIntoView } from "./ScrollIntoView";
+import { useTabTokens } from "../data-hooks/useTabTokens";
+import { useInfiniteResults } from "../data-hooks/useInfiniteResults";
 
 type MainProps = {
   children: (widgets: {
@@ -29,7 +30,7 @@ type MainProps = {
     details: React.ReactNode;
   }) => React.ReactNode;
   templates: OpenK9UITemplates;
-}
+};
 
 type State = {
   tokens: SearchToken[];
@@ -41,7 +42,7 @@ type State = {
   suggestionIndex: number | null;
   entityKind: string | undefined;
   detail: GenericResultItem<any> | null;
-}
+};
 
 const initialState: State = {
   tokens: [],
@@ -53,45 +54,16 @@ const initialState: State = {
   suggestionIndex: null,
   entityKind: undefined,
   detail: null,
-}
+};
 
-export function Main({
-  children,
-  templates,
-}: MainProps) {
+export function Main({ children, templates }: MainProps) {
   const [state, setState] = React.useState<State>(initialState);
   const { tokens, text, showSuggestions, searchQuery } = state;
-  const tabTokens = defaultTabTokens;
+  const tabTokens = useTabTokens(null);
   const selectedTabTokens = tabTokens[state.tabIndex].tokens;
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const suggestionsRef = React.useRef<HTMLInputElement | null>(null);
-  const pageSize = 4;
-  const results = useInfiniteQuery(
-    ["search", searchQuery] as const,
-    async ({ queryKey, pageParam = 0 }) => {
-      if (!queryKey[1]) throw new Error();
-      const result = await doSearch(
-        {
-          searchQuery: queryKey[1],
-          range: [pageParam * pageSize, pageParam * pageSize + pageSize],
-        },
-        null,
-      );
-      return {
-        ...result,
-        page: pageParam,
-        last: pageParam * pageSize + pageSize > result.total,
-      };
-    },
-    {
-      enabled: searchQuery !== null,
-      keepPreviousData: true,
-      getNextPageParam(lastPage, pages) {
-        if (lastPage.last) return undefined;
-        return lastPage.page + 1;
-      },
-    },
-  );
+  const results = useInfiniteResults(searchQuery);
   const debouncedSearchQuery: SearchQuery = useDebounce(
     React.useMemo(
       () =>
@@ -568,6 +540,7 @@ export function Main({
 }
 
 // TODO get it from back-end
+// HARDCODED
 const tokenKinds = [
   { id: undefined, label: "All" },
   { id: "person", label: "People" },
@@ -580,19 +553,4 @@ const tokenKinds = [
   { id: "PARAM", label: "Filters" },
 ];
 
-const defaultTabTokens: Array<{ label: string; tokens: Array<SearchToken> }> = [
-  {
-    label: "All",
-    tokens: [],
-  },
-  {
-    label: "Web",
-    tokens: [{ tokenType: "DOCTYPE", keywordKey: "type", values: ["web"] }],
-  },
-  {
-    label: "Document",
-    tokens: [
-      { tokenType: "DOCTYPE", keywordKey: "type", values: ["document"] },
-    ],
-  },
-];
+

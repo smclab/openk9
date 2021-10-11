@@ -34,13 +34,13 @@ import {
   getPlugins,
   TenantJSONConfig,
   emptyTenantJSONConfig,
-  getTenants,
   LoginInfo,
   UserInfo,
   doLoginRefresh,
   getUserInfo,
   getTokenInfo,
   doSearchEntities,
+  getTentantWithConfiguration,
 } from "@openk9/http-api";
 import { debounce } from "@openk9/search-ui-components";
 
@@ -101,16 +101,7 @@ export const useStore = create<StateType>(
 
     async loadInitial() {
       const pluginInfos = await getPlugins(null);
-
-      // TODO getCurrentTenantConfig
-      const tenants = await getTenants(null);
-      const tenant = tenants.find(
-        (tenant) => window.location.host === tenant.virtualHost,
-      );
-      const tenantConfig =
-        (tenant?.jsonConfig && JSON.parse(tenant?.jsonConfig)) ||
-        emptyTenantJSONConfig;
-
+      const { config: tenantConfig } = await getTentantWithConfiguration(null);
       set((state) => ({
         ...state,
         pluginInfos,
@@ -212,8 +203,10 @@ export const useStore = create<StateType>(
       const result = get().results?.result.find(
         (r) => r.source.id === selectedResult,
       );
-      
-      const entitiesIds = result?.source.entities?.map((e) => e.id).filter(Boolean);
+
+      const entitiesIds = result?.source.entities
+        ?.map((e) => e.id)
+        .filter(Boolean);
 
       const entityLabels = !entitiesIds
         ? []

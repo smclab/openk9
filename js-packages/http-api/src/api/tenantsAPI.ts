@@ -15,9 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Tenant } from "../types";
+import { emptyTenantJSONConfig, Tenant, TenantJSONConfig } from "../types";
 import { LoginInfo } from "./authAPI";
 import { authFetch } from "./common";
+
+export async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
+  const tenants = await getTenants(loginInfo);
+  const tenant = tenants.find(
+    (tenant) => window.location.host === tenant.virtualHost,
+  );
+  const config =
+    (tenant?.jsonConfig &&
+      (JSON.parse(tenant?.jsonConfig) as TenantJSONConfig)) ||
+    emptyTenantJSONConfig;
+  return { tenant, config };
+}
 
 export async function getTenants(
   loginInfo: LoginInfo | null,
