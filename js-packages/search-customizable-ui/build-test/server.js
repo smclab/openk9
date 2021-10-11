@@ -1,8 +1,14 @@
 const express = require("express");
-const proxyMiddleware = require("../.proxyrc.js");
+const { createProxyMiddleware } = require("http-proxy-middleware");
 
 var app = express();
-proxyMiddleware(app);
-app.use(express.static("build-test"));
+app.use(
+  createProxyMiddleware("/api", {
+    target: "https://dev.openk9.io/",
+    changeOrigin: true,
+    secure: false,
+  }),
+);
+app.use(express.static("public"));
 app.use(express.static("dist"));
 app.listen(3001, () => console.log("listening on port 3001"));
