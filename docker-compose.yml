@@ -20,6 +20,10 @@ services:
             - cluster.initial_master_nodes=elasticsearch
             - bootstrap.memory_lock=true
             - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+            - ELASTIC_USERNAME=elastic
+            - ELASTIC_PASSWORD=elastic
+        ports:
+            - "9200:9200"
         ulimits:
             memlock:
                 soft: -1
@@ -34,6 +38,8 @@ services:
         environment:
             ELASTICSEARCH_URL: http://elasticsearch:9200
             ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+            ELASTICSEARCHì_USERNAME: elastic
+            ELASTICSEARCH_PASSWORD: elastic
     datasource:
         image: smclab/openk9-datasource:latest
         container_name: openk9-datasource

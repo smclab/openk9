@@ -38,6 +38,7 @@ class SitemapRequest(BaseModel):
     datasourceId: int
     timestamp: int
     allowedDomains: list
+    maxLength: Optional[int] = None
 
 
 class GenericRequest(BaseModel):
@@ -132,6 +133,7 @@ def execute(request: SitemapRequest):
     datasource_id = request['datasourceId']
     timestamp = request["timestamp"]
     allowed_domains = request["allowedDomains"]
+    max_length = request["maxLength"]
 
     payload = {
         "project": "crawler",
@@ -143,7 +145,8 @@ def execute(request: SitemapRequest):
         "datasource_id": datasource_id,
         "ingestion_url": ingestion_url,
         "delete_url": delete_url,
-        "timestamp": timestamp
+        "timestamp": timestamp,
+        "max_length": max_length
     }
 
     response = post_message("http://localhost:6800/schedule.json", payload, 10)

@@ -82,8 +82,8 @@ def parse_document_by_url(url, spider):
                     content = ""
 
                 last_modified_date = soup.find("meta", {"name": "Last-Modified"})
-                if content_type is None:
-                    last_modified_date = datetime.fromtimestamp(0).isoformat()
+                if last_modified_date is not None:
+                    last_modified_date = last_modified_date["content"]
 
                 file_item = FileItem()
                 file_item['path'] = get_path(url)

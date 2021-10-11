@@ -50,7 +50,7 @@ class CustomSitemapSpider(SitemapSpider):
     cont = 0
 
     def __init__(self, sitemap_urls, allowed_domains, body_tag, title_tag, datasource_id, ingestion_url, delete_url,
-                 timestamp, *a, **kw):
+                 timestamp, max_length, *a, **kw):
         super(SitemapSpider, self).__init__(*a, **kw)
 
         self._cbs = []
@@ -71,6 +71,8 @@ class CustomSitemapSpider(SitemapSpider):
         self.delete_url = delete_url
         self.timestamp = timestamp
         self.allowed_domains = ast.literal_eval(allowed_domains)
+
+        self.max_length = int(max_length)
 
         try:
             with open("./crawler/spiders/mapping_config.json") as config_file:
@@ -170,7 +172,7 @@ class CustomSitemapSpider(SitemapSpider):
 
             title = get_title(response, self.title_tag)
 
-            content = get_content(response, self.body_tag)
+            content = get_content(response, self.max_length, self.body_tag)
 
             web_item = GenericWebItem()
             web_item['url'] = response.url
