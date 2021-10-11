@@ -50,7 +50,9 @@ export const pluginLoader = createAsset(async (id) => {
  *
  * @param compatMode - set to true to load dependencies also in window object directly, to allow loading older plugins.
  */
-export function loadPluginDepsIntoGlobal(compatMode = false): any /* TODO fix exporting external lib typings */ {
+export function loadPluginDepsIntoGlobal(
+  compatMode = false,
+): any /* TODO fix exporting external lib typings */ {
   if (typeof window !== "undefined") {
     if (typeof (window as any).OpenK9 === "undefined")
       (window as any).OpenK9 = { deps: {} };
@@ -92,7 +94,13 @@ export type SidebarRenderersType<E> = {
 /**
  * Given a list of available plugins, it loads them and returns a map with all the available result renderers.
  */
-export function getPluginResultRenderers(pluginInfos: PluginInfo[]) {
+export type PluginResultRenderes = {
+  resultRenderers: ResultRenderersType<unknown>;
+  sidebarRenderers: SidebarRenderersType<unknown>;
+};
+export function getPluginResultRenderers(
+  pluginInfos: PluginInfo[],
+): PluginResultRenderes {
   const plugins = pluginInfos
     .map((pI) => pluginLoader.read(pI.pluginId))
     .filter(Boolean);

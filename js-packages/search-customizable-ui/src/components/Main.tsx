@@ -8,7 +8,6 @@ import {
   SearchToken,
 } from "@openk9/http-api";
 import { useQuery } from "react-query";
-import { Result } from "./Result";
 import useDebounce from "../hooks/useDebounce";
 import { TokenComponent } from "./Token";
 import { getPluginResultRenderers } from "@openk9/search-ui-components";
@@ -20,6 +19,7 @@ import { EmbedElement } from "./EmbedElement";
 import { ScrollIntoView } from "./ScrollIntoView";
 import { useTabTokens } from "../data-hooks/useTabTokens";
 import { useInfiniteResults } from "../data-hooks/useInfiniteResults";
+import { ResultPageMemo } from "./ResultPage";
 
 type MainProps = {
   children: (widgets: {
@@ -81,15 +81,20 @@ export function Main({ children, templates, interactions }: MainProps) {
   );
   const suggestions = useQuery(
     ["suggestion", debouncedSearchQuery, state.entityKind] as const,
-    ({ queryKey }) => {
-      return getTokenSuggestions(queryKey[1], null, queryKey[2]);
+    async ({ queryKey }) => {
+      return (await getTokenSuggestions(queryKey[1], null, queryKey[2])).slice(
+        0,
+        8,
+      );
     },
     { enabled: showSuggestions, keepPreviousData: true },
   );
   const { data: pluginInfos } = useQuery(["plugins"], () => {
     return getPlugins(null);
   });
-  const renderers = pluginInfos ? getPluginResultRenderers(pluginInfos) : null;
+  const renderers = React.useMemo(() => {
+    return pluginInfos ? getPluginResultRenderers(pluginInfos) : null;
+  }, [pluginInfos]);
   const updateSearch = React.useCallback(() => {
     setState((state) => {
       // ATTENTION reread from state otherwise it will lag 1 interactions behind
@@ -198,9 +203,12 @@ export function Main({ children, templates, interactions }: MainProps) {
     setState((state) => ({ ...state, tabIndex: index }));
     updateSearch();
   }
-  function setResultForDetail(result: GenericResultItem<unknown>) {
-    setState((state) => ({ ...state, detail: result }));
-  }
+  const setResultForDetail = React.useCallback(
+    (result: GenericResultItem<unknown>) => {
+      setState((state) => ({ ...state, detail: result }));
+    },
+    [],
+  );
   function setSuggestionKind(id: string) {
     setState((state) => ({
       ...state,
@@ -498,30 +506,13 @@ export function Main({ children, templates, interactions }: MainProps) {
         {renderers &&
           results.data?.pages.map(({ result }, index) => {
             return (
-              <React.Fragment key={index}>
-                {result.map((result) => {
-                  const cusomizedResult = templates.result?.({
-                    result,
-                    setDetail: setResultForDetail,
-                  });
-                  return cusomizedResult ? (
-                    <React.Fragment key={result.source.id}>
-                      <EmbedElement element={cusomizedResult} />
-                    </React.Fragment>
-                  ) : (
-                    <div
-                      key={result.source.id}
-                      style={{ marginLeft: "16px", marginRight: "16px" }}
-                    >
-                      <Result
-                        result={result}
-                        resultRenderers={renderers.resultRenderers}
-                        onSelect={() => setResultForDetail(result)}
-                      />
-                    </div>
-                  );
-                })}
-              </React.Fragment>
+              <ResultPageMemo
+                key={index}
+                results={result}
+                templates={templates}
+                renderers={renderers}
+                onDetail={setResultForDetail}
+              />
             );
           })}
         {results.hasNextPage && !results.isFetchingNextPage && (
