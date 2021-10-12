@@ -42,7 +42,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregation;
-import org.elasticsearch.search.aggregations.bucket.composite.TermsValuesSourceBuilder;
+import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Activate;
@@ -62,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -137,18 +138,18 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 		searchSourceBuilder.aggregation(
 			AggregationBuilders
-				.composite(
-					"entities",
-					List.of(
-						new TermsValuesSourceBuilder("entities.id")
-							.field("entities.id"),
-						new TermsValuesSourceBuilder("entities.context")
-							.field("entities.context"),
-						new TermsValuesSourceBuilder("entities.entityType")
-							.field("entities.entityType")
-					)
+				.nested("entitiesNested", "entities")
+				.subAggregation(
+					AggregationBuilders
+						.terms("entities.id")
+						.field("entities.id")
+						.subAggregation(
+							AggregationBuilders
+								.terms("entities.context")
+								.field("entities.context")
+						)
+						.size(_aggregationSize)
 				)
-				.size(_aggregationSize)
 		);
 
 		searchSourceBuilder.aggregation(
@@ -202,20 +203,21 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 			ssb.query(boolQueryBuilder);
 			ssb.size(1000);
-			ssb.fetchSource(new String[]{"name", "id"}, null);
+			ssb.fetchSource(new String[]{"name", "id", "type"}, null);
 
 			return searchRequestEntity.source(ssb);
 		})
 			.map(entityResponse -> {
 
-				Map<String, String> entityMap = new HashMap<>();
+				Map<String, String[]> entityMap = new HashMap<>();
 
 				for (SearchHit hit : entityResponse.getHits()) {
 					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 					String name =(String)sourceAsMap.get("name");
+					String type =(String)sourceAsMap.get("type");
 					String entityId =
 						Integer.toString((Integer)sourceAsMap.get("id"));
-					entityMap.put(entityId, name);
+					entityMap.put(entityId, new String[]{name, type});
 				}
 
 				Aggregations aggregations = searchResponse.getAggregations();
@@ -229,31 +231,60 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 					String key = aggr.getKey();
 
-					if (key.equals("entities")) {
-						CompositeAggregation compositeAggregation =
-							(CompositeAggregation)aggregation;
+					if (key.equals("entitiesNested")) {
+						Nested nestedAggregator = (Nested)aggregation;
+						for (Aggregation nestedEntitiesAggr :
+							nestedAggregator.getAggregations()) {
 
-						for (CompositeAggregation.Bucket bucket :
-							compositeAggregation.getBuckets()) {
-							Map<String, Object> keys = bucket.getKey();
+							Terms terms = (Terms)nestedEntitiesAggr;
 
-							String entitiesId =(String)keys.get("entities.id");
-							String entitiesContext =(
-								String)keys.get("entities.context");
-							String entitiesEntityType =
-								(String)keys.get("entities.entityType");
+							for (Terms.Bucket bucket : terms.getBuckets()) {
 
-							list.add(
-								Map.of(
-									"tokenType", "ENTITY",
-									"keywordKey", entitiesContext,
-									"entityName", entityMap.getOrDefault(
-										entitiesId, Strings.BLANK),
-									"value", entitiesId,
-									"entityType", entitiesEntityType,
-									"count", bucket.getDocCount()
-								)
-							);
+								String entityId = bucket.getKeyAsString();
+
+								Aggregations subAggr = bucket.getAggregations();
+
+								Iterator<Aggregation> iterator =
+									subAggr.iterator();
+
+								String[] strings = entityMap.getOrDefault(
+									entityId, _EMPTY_ARRAY);
+
+								if (!iterator.hasNext()) {
+									list.add(
+										Map.of(
+											"tokenType", "ENTITY",
+											"keywordKey", "",
+											"entityName", strings[0],
+											"value", entityId,
+											"entityType", strings[1],
+											"count", bucket.getDocCount()
+										)
+									);
+								}
+								else {
+									while (iterator.hasNext()) {
+
+										Terms entityContextTerms =
+											(Terms)iterator.next();
+
+										for (Terms.Bucket b : entityContextTerms.getBuckets()) {
+											list.add(
+												Map.of(
+													"tokenType", "ENTITY",
+													"keywordKey", b.getKeyAsString(),
+													"entityName", strings[0],
+													"value", entityId,
+													"entityType", strings[1],
+													"count", bucket.getDocCount()
+												)
+											);
+										}
+
+									}
+								}
+
+							}
 
 						}
 
@@ -378,5 +409,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 	private String[] _datasourceFieldAggregations;
 	private int _aggregationSize;
+
+	private static final String[] _EMPTY_ARRAY = new String[]{"", ""};
 
 }

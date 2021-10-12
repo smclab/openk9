@@ -119,10 +119,9 @@ public class IndexWriterEndpoins implements RouterHandler {
 					Map<String, Object> source = searchHit.getSourceAsMap();
 
 					Object id = source.get("id");
-					Object type = source.get("type");
 					String name = String.valueOf(source.get("name"));
 
-					String nestEntityPath = "entities." + type;
+					String nestEntityPath = "entities";
 
 					String nestIdPath = nestEntityPath + ".id";
 
@@ -132,7 +131,7 @@ public class IndexWriterEndpoins implements RouterHandler {
 					countRequest.query(
 						QueryBuilders
 							.nestedQuery(
-								nestEntityPath,
+								"entities",
 								matchQuery(nestIdPath, id),
 								ScoreMode.Max)
 							.ignoreUnmapped(true)
