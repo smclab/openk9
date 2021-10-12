@@ -259,7 +259,7 @@ public abstract class BaseSearchHTTPHandler
 
 					customizeSearchSourceBuilder(
 						tenant, datasources, searchRequest, documentTypeList,
-						searchSourceBuilder);
+						searchSourceBuilder, elasticSearchQuery);
 
 					if (_log.isDebugEnabled()) {
 						_log.debug(searchSourceBuilder.toString());
@@ -304,7 +304,9 @@ public abstract class BaseSearchHTTPHandler
 
 	protected void customizeSearchSourceBuilder(
 		Tenant tenant, List<Datasource> datasources, SearchRequest searchRequest,
-		List<PluginDriverDTO> documentTypeList, SearchSourceBuilder searchSourceBuilder) {
+		List<PluginDriverDTO> documentTypeList,
+		SearchSourceBuilder searchSourceBuilder,
+		org.elasticsearch.action.search.SearchRequest elasticSearchQuery) {
 
 		int[] range = searchRequest.getRange();
 

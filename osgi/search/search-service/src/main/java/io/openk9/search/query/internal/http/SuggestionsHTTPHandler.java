@@ -17,6 +17,7 @@
 
 package io.openk9.search.query.internal.http;
 
+import io.openk9.common.api.constant.Strings;
 import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.RouterHandler;
@@ -26,11 +27,13 @@ import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
 import io.openk9.search.query.internal.response.Response;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -57,6 +60,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
@@ -105,11 +109,14 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	@Override
 	protected void customizeSearchSourceBuilder(
 		Tenant tenant, List<Datasource> datasources, SearchRequest searchRequest,
-		List<PluginDriverDTO> documentTypeList, SearchSourceBuilder searchSourceBuilder) {
+		List<PluginDriverDTO> documentTypeList,
+		SearchSourceBuilder searchSourceBuilder,
+		org.elasticsearch.action.search.SearchRequest elasticSearchQuery) {
 
-		super.customizeSearchSourceBuilder(
-			tenant, datasources, searchRequest, documentTypeList,
-			searchSourceBuilder);
+		elasticSearchQuery.indices(
+			tenant.getTenantId() + "-*-data",
+			tenant.getTenantId() + "-entity"
+		);
 
 		documentTypeList
 			.stream()
@@ -160,30 +167,55 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 				.size(_aggregationSize)
 		);
 
+		searchSourceBuilder.aggregation(
+			AggregationBuilders
+				.composite(
+					"entity",
+					List.of(
+						new TermsValuesSourceBuilder("name")
+							.field("name"),
+						new TermsValuesSourceBuilder("entityId")
+							.field("entityId")
+					)
+				)
+				.size(_aggregationSize)
+		);
+
 		searchSourceBuilder.from(0);
 		searchSourceBuilder.size(0);
 
 	}
 
 	@Override
-	protected Response searchHitToResponse(SearchResponse searchResponse) {
+	protected Mono<Response> searchHitToResponseMono(
+		Tenant tenant, List<Datasource> datasourceList,
+		PluginDriverDTOList pluginDriverDTOList,
+		HttpServerRequest httpServerRequest, SearchRequest searchRequest,
+		SearchResponse searchResponse) {
+		return Mono.fromSupplier(() -> {
 
-		Aggregations aggregations = searchResponse.getAggregations();
+			Aggregations aggregations = searchResponse.getAggregations();
 
-		List<Map<String, Object>> list = new ArrayList<>();
+			List<Map<String, Object>> list = new ArrayList<>();
 
-		for (Map.Entry<String, Aggregation> aggr :
-			aggregations.getAsMap().entrySet()) {
+			CompositeAggregation entity = aggregations.get("entity");
+			CompositeAggregation entities = aggregations.get("entities");
 
-			Aggregation aggregation = aggr.getValue();
+			if (entities != null) {
 
-			String key = aggr.getKey();
+				Map<String, String> entityMap =
+					(entity)
+						.getBuckets()
+						.stream()
+						.collect(
+							Collectors.toMap(
+								bucket -> (String) bucket.getKey().get("entityId"),
+								bucket -> (String) bucket.getKey().get("name"))
+						);
 
-			if (key.equals("entities")) {
-				CompositeAggregation compositeAggregation =
-					(CompositeAggregation)aggregation;
+				for (CompositeAggregation.Bucket bucket :
+					entities.getBuckets()) {
 
-				for (CompositeAggregation.Bucket bucket : compositeAggregation.getBuckets()) {
 					Map<String, Object> keys = bucket.getKey();
 
 					String entitiesId =(String)keys.get("entities.id");
@@ -196,6 +228,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						Map.of(
 							"tokenType", "ENTITY",
 							"keywordKey", entitiesContext,
+							"entityName", entityMap.get(entitiesId),
 							"value", entitiesId,
 							"entityType", entitiesEntityType,
 							"count", bucket.getDocCount()
@@ -205,57 +238,106 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 				}
 
 			}
-			else if (key.equals("datasourceId")) {
 
-				Terms terms =(Terms)aggr.getValue();
+			for (Map.Entry<String, Aggregation> aggr :
+				aggregations.getAsMap().entrySet()) {
 
-				for (Terms.Bucket bucket : terms.getBuckets()) {
-					list.add(
-						Map.of(
-							"tokenType", "DATASOURCE",
-							"value", bucket.getKey(),
-							"count", bucket.getDocCount()
-						)
-					);
+				Aggregation aggregation = aggr.getValue();
+
+				String key = aggr.getKey();
+
+				if (key.equals("entities")) {
+					CompositeAggregation compositeAggregation =
+						(CompositeAggregation)aggregation;
+
+					for (CompositeAggregation.Bucket bucket :
+						compositeAggregation.getBuckets()) {
+						Map<String, Object> keys = bucket.getKey();
+
+						String entitiesId =(String)keys.get("entities.id");
+						String entitiesContext =(
+							String)keys.get("entities.context");
+						String entitiesEntityType =
+							(String)keys.get("entities.entityType");
+
+						list.add(
+							Map.of(
+								"tokenType", "ENTITY",
+								"keywordKey", entitiesContext,
+								"value", entitiesId,
+								"entityType", entitiesEntityType,
+								"count", bucket.getDocCount()
+							)
+						);
+
+					}
+
+				}
+				else if (key.equals("datasourceId")) {
+
+					Terms terms =(Terms)aggr.getValue();
+
+					for (Terms.Bucket bucket : terms.getBuckets()) {
+
+						long datasourceId = NumberUtils.toLong(
+							bucket.getKeyAsString());
+
+						String datasourceName = Strings.BLANK;
+
+						for (Datasource datasource : datasourceList) {
+							if (datasource.getDatasourceId() == datasourceId) {
+								datasourceName = datasource.getName();
+							}
+						}
+
+						list.add(
+							Map.of(
+								"tokenType", "DATASOURCE",
+								"value", datasourceName,
+								"datasourceId", datasourceId,
+								"count", bucket.getDocCount()
+							)
+						);
+					}
+
+				}
+				else if (key.equals("documentTypes")) {
+
+					Terms terms =(Terms)aggr.getValue();
+
+					for (Terms.Bucket bucket : terms.getBuckets()) {
+						list.add(
+							Map.of(
+								"tokenType", "DOCTYPE",
+								"value", bucket.getKey(),
+								"count", bucket.getDocCount()
+							)
+						);
+					}
+
+				}
+				else {
+
+					Terms terms =(Terms)aggr.getValue();
+
+					for (Terms.Bucket bucket : terms.getBuckets()) {
+						list.add(
+							Map.of(
+								"tokenType", "TEXT",
+								"keywordKey", terms.getName(),
+								"value", bucket.getKey(),
+								"count", bucket.getDocCount()
+							)
+						);
+					}
+
 				}
 
 			}
-			else if (key.equals("documentTypes")) {
 
-				Terms terms =(Terms)aggr.getValue();
+			return new Response(list, list.size());
 
-				for (Terms.Bucket bucket : terms.getBuckets()) {
-					list.add(
-						Map.of(
-							"tokenType", "DOCTYPE",
-							"value", bucket.getKey(),
-							"count", bucket.getDocCount()
-						)
-					);
-				}
-
-			}
-			else {
-
-				Terms terms =(Terms)aggr.getValue();
-
-				for (Terms.Bucket bucket : terms.getBuckets()) {
-					list.add(
-						Map.of(
-							"tokenType", "TEXT",
-							"keywordKey", terms.getName(),
-							"value", bucket.getKey(),
-							"count", bucket.getDocCount()
-						)
-					);
-				}
-
-			}
-
-		}
-
-		return new Response(list, list.size());
-
+		});
 	}
 
 	@Reference(
