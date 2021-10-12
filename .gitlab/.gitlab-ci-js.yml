@@ -60,7 +60,7 @@ Build Tagged JS Docker Images:
     - docker push $CI_REGISTRY_NAME/openk9/js-scripts-executor:${CI_COMMIT_REF_NAME}
   allow_failure: false
 
-Build Latest JS Docker Images:
+Build Latest Frontend Docker Image:
   image: docker:19.03.13
   services:
     - docker:19.03.13-dind
@@ -73,7 +73,12 @@ Build Latest JS Docker Images:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - js-packages/**/*
+        - js-packages/http-api/**/*
+        - js-packages/search-ui-components/**/*
+        - js-packages/search-widget-frontend/**/*
+        - js-packages/plugin-scripts/**/*
+        - js-packages/search-customizable-ui/**/*
+        - js-packager/search-standalone-frontend/**/*
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
@@ -81,19 +86,106 @@ Build Latest JS Docker Images:
     - docker build -t search-standalone-frontend:latest -f js-packages/search-standalone-frontend/Dockerfile .
     - docker tag search-standalone-frontend:latest $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
     - docker push $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
-    
+  after_script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-frontend" -F ref=master $DEV_TRIGGER_URL
+  allow_failure: false
+
+Build Latest Site Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  needs: [JS Format Lint Test and Build Check]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/docs-website/**/*
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
     - docker build -t docs-website:latest -f js-packages/docs-website/Dockerfile .
     - docker tag docs-website:latest $CI_REGISTRY_NAME/openk9/docs-website:latest
     - docker push $CI_REGISTRY_NAME/openk9/docs-website:latest
-    
+  allow_failure: false
+
+Build Latest Admin Ui Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  needs: [JS Format Lint Test and Build Check]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/http-api/**/*
+        - js-packages/search-ui-components/**/*
+        - js-packages/search-widget-frontend/**/*
+        - js-packages/plugin-scripts/**/*
+        - js-packages/admin-ui/**/*
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
     - docker build -t search-admin:latest -f js-packages/admin-ui/Dockerfile .
     - docker tag search-admin:latest $CI_REGISTRY_NAME/openk9/search-admin:latest
     - docker push $CI_REGISTRY_NAME/openk9/search-admin:latest
-    
+  after_script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-admin-ui" -F ref=master $DEV_TRIGGER_URL
+  allow_failure: false
+
+
+Build Latest Admin Logs Service Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  needs: [JS Format Lint Test and Build Check]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/admin-logs-service/**/*
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
     - docker build -t admin-logs-service:latest -f js-packages/admin-logs-service/Dockerfile .
     - docker tag admin-logs-service:latest $CI_REGISTRY_NAME/openk9/admin-logs-service:latest
     - docker push $CI_REGISTRY_NAME/openk9/admin-logs-service:latest
-    
+  after_script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-admin-logs-service" -F ref=master $DEV_TRIGGER_URL
+  allow_failure: false
+
+Build Latest Js Executor Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  needs: [JS Format Lint Test and Build Check]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/js-scripts-executor/**/*
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
     - docker build -t js-scripts-executor:latest -f js-packages/js-scripts-executor/Dockerfile .
     - docker tag js-scripts-executor:latest $CI_REGISTRY_NAME/openk9/js-scripts-executor:latest
     - docker push $CI_REGISTRY_NAME/openk9/js-scripts-executor:latest
