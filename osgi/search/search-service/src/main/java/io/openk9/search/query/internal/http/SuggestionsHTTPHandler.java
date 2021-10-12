@@ -246,7 +246,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 								Map.of(
 									"tokenType", "ENTITY",
 									"keywordKey", entitiesContext,
-									"entityName", entityMap.getOrDefault(entitiesId, null),
+									"entityName", entityMap.getOrDefault(
+										entitiesId, Strings.BLANK),
 									"value", entitiesId,
 									"entityType", entitiesEntityType,
 									"count", bucket.getDocCount()
