@@ -193,7 +193,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 				boolQueryBuilder.should(
 					QueryBuilders.matchQuery(
-						"entityId", bucket.getKey().get("entities.id"))
+						"id", bucket.getKey().get("entities.id"))
 				);
 
 			}
@@ -202,7 +202,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 			ssb.query(boolQueryBuilder);
 			ssb.size(1000);
-			ssb.fetchSource(new String[]{"name", "entityId"}, null);
+			ssb.fetchSource(new String[]{"name", "id"}, null);
 
 			return searchRequestEntity.source(ssb);
 		})
@@ -213,7 +213,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 				for (SearchHit hit : entityResponse.getHits()) {
 					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 					String name =(String)sourceAsMap.get("name");
-					String entityId =(String)sourceAsMap.get("entityId");
+					String entityId =(String)sourceAsMap.get("id");
 					entityMap.put(entityId, name);
 				}
 
