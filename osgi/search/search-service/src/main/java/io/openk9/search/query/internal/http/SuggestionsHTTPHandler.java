@@ -186,7 +186,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 			Aggregations aggregations = searchResponse.getAggregations();
 
-			CompositeAggregation entitiesAggr = aggregations.get("entities");
+			CompositeAggregation entitiesAggr = aggregations.get("entitiesNested");
 
 			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
