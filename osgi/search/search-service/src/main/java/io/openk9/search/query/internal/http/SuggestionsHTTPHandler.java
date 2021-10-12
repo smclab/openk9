@@ -61,6 +61,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component(
 	immediate = true,
@@ -113,9 +114,14 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		SearchSourceBuilder searchSourceBuilder,
 		org.elasticsearch.action.search.SearchRequest elasticSearchQuery) {
 
+		String[] indices = elasticSearchQuery.indices();
+
 		elasticSearchQuery.indices(
-			tenant.getTenantId() + "-*-data",
-			tenant.getTenantId() + "-entity"
+			Stream.concat(
+				Arrays.stream(indices),
+				Stream.of(tenant.getTenantId() + "-entity")
+			)
+				.toArray(String[]::new)
 		);
 
 		documentTypeList
