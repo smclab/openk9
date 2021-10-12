@@ -52,11 +52,7 @@ public class SearchByDatasourceHTTPHandler extends BaseSearchHTTPHandler {
 
 	@Override
 	public HttpServerRoutes handle(HttpServerRoutes router) {
-		return router
-			.route(
-				get("/v1/search/{datasourceId}").or(post("/v1/search/{datasourceId}")),
-				this
-			);
+		return router.post("/v1/search/{datasourceId}", this);
 	}
 
 	@Override
