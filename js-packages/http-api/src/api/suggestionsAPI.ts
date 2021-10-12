@@ -21,12 +21,34 @@ import {
   SearchQuery,
   SearchRequest,
   SearchToken,
+  SuggestionResult
 } from "../types";
 import { capitalize } from "../utilities";
 import { LoginInfo } from "./authAPI";
 import { authFetch } from "./common";
 import { getSupportedDataSources } from "./datasourcesAPI";
 import { doSearchEntities } from "./entitiesAPI";
+
+export async function getSuggestions({
+  searchQuery,
+  range,
+  loginInfo,
+}: {
+  searchQuery: SearchQuery;
+  range: [number, number];
+  loginInfo: LoginInfo | null;
+}) {
+  const request = await authFetch(`/api/searcher/v1/suggestions`, loginInfo, {
+    method: "POST",
+    body: JSON.stringify({ searchQuery, range }),
+  });
+  const response = await request.json();
+  return response as { result: SuggestionResult[]; total: number };
+}
+
+// DEPRECATED (code below is deprecated)
+// ----------------------------------------------------------------------
+// TODO: remove after refactor
 
 const defaultParams: ParamSuggestion[] = [
   {
@@ -102,19 +124,19 @@ function findInDefault(
   return [...(noParams ? [] : exactParams), ...(noParams ? [] : params)];
 }
 
-export interface ServerSuggestion {
+interface ServerSuggestion {
   keywordKey: string;
   tokenType: string;
   value: string;
   count: number;
 }
 
-export interface ServerSuggestionsResponse {
+interface ServerSuggestionsResponse {
   result: ServerSuggestion[];
   total: number;
 }
 
-export async function getServerSuggestions(
+async function getServerSuggestions(
   searchRequest: SearchRequest,
   loginInfo: LoginInfo | null,
 ): Promise<ServerSuggestionsResponse> {
@@ -127,7 +149,7 @@ export async function getServerSuggestions(
   return response;
 }
 
-export async function getTokenInfo(
+async function getTokenInfo(
   token: SearchToken,
   loginInfo: LoginInfo | null,
 ): Promise<InputSuggestionToken[]> {
@@ -170,7 +192,7 @@ function strMatch(str: string, pat: string) {
   }
 }
 
-export async function getTokenSuggestions(
+async function getTokenSuggestions(
   searchQuery: SearchQuery,
   loginInfo: LoginInfo | null,
   entityKind?: string,

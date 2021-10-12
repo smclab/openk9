@@ -17,13 +17,44 @@
 
 import { SearchToken } from "./searchQueryTypes";
 
-export interface BaseSuggestion {
+export type SuggestionResult =
+  | {
+      tokenType: "DATASOURCE";
+      datasourceId: number;
+      value: string;
+      count: number;
+    }
+  | {
+      tokenType: "TEXT";
+      keywordKey: string;
+      value: string;
+      count: number;
+    }
+  | {
+      tokenType: "ENTITY";
+      entityType: string;
+      entityName: string;
+      keywordKey: string;
+      value: string;
+      count: number;
+    }
+  | {
+      tokenType: "DOCTYPE";
+      count: string;
+      value: string;
+    }
+
+
+// DEPRECATED (code below is deprecated)
+// -----------------------------------------------------
+// TODO: remove after refactor
+interface BaseSuggestion {
   alternatives: string[];
   displayDescription: string;
   compatibleKeywordKeys?: string[];
 }
 
-export interface EntitySuggestion extends BaseSuggestion {
+interface EntitySuggestion extends BaseSuggestion {
   kind: "ENTITY";
   type: string;
   id: number;
@@ -35,7 +66,7 @@ export interface ParamSuggestion extends BaseSuggestion {
   compatibleKeywordKeys?: [];
 }
 
-export interface TokenSuggestion extends BaseSuggestion {
+interface TokenSuggestion extends BaseSuggestion {
   kind: "TOKEN";
   id: string;
   entityType?: string;

@@ -15,15 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { GenericResultItem, SearchRequest } from "../types";
+import { SearchResults, SearchRequest } from "../types";
 import { LoginInfo } from "./authAPI";
 import { authFetch } from "./common";
-
-export type SearchResults<E> = {
-  result: GenericResultItem<E>[];
-  total: number;
-  last: boolean;
-};
 
 export async function doSearch<E>(
   searchRequest: SearchRequest,
