@@ -35,6 +35,8 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregation;
+import org.elasticsearch.search.aggregations.bucket.composite.TermsValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Activate;
@@ -55,7 +57,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 @Component(
 	immediate = true,
@@ -67,14 +68,12 @@ import java.util.stream.Stream;
 public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 	@interface Config {
-		String[] rootFieldAggregations() default {"documentTypes"};
 		String[] datasourceFieldAggregations() default {"topic", "category"};
 		int aggregationSize() default 20;
 	}
 	@Activate
 	@Modified
 	void activate(Config config) {
-		_rootFieldAggregations = config.rootFieldAggregations();
 		_datasourceFieldAggregations = config.datasourceFieldAggregations();
 		_aggregationSize = config.aggregationSize();
 	}
@@ -112,26 +111,17 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 			tenant, datasources, searchRequest, documentTypeList,
 			searchSourceBuilder);
 
-		Stream<String> datasourceFieldStream =
-			documentTypeList
-				.stream()
-				.map(PluginDriverDTO::getDocumentTypes)
-				.flatMap(Collection::stream)
-				.map(DocumentTypeDTO::getName)
-				.distinct()
-				.flatMap(name ->
-					Arrays
-						.stream(_datasourceFieldAggregations)
-						.map(suffix -> name + "." + suffix)
-				);
-
-		Stream<String> concat = Stream
-			.concat(
-				Arrays.stream(_rootFieldAggregations),
-				datasourceFieldStream
-			);
-
-		concat
+		documentTypeList
+			.stream()
+			.map(PluginDriverDTO::getDocumentTypes)
+			.flatMap(Collection::stream)
+			.map(DocumentTypeDTO::getName)
+			.distinct()
+			.flatMap(name ->
+				Arrays
+					.stream(_datasourceFieldAggregations)
+					.map(suffix -> name + "." + suffix)
+			)
 			.map(nameField ->
 				AggregationBuilders
 					.terms(nameField)
@@ -139,6 +129,36 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 					.size(_aggregationSize)
 			)
 			.forEach(searchSourceBuilder::aggregation);
+
+		searchSourceBuilder.aggregation(
+			AggregationBuilders
+				.composite(
+					"entities",
+					List.of(
+						new TermsValuesSourceBuilder("entities.id")
+							.field("entities.id"),
+						new TermsValuesSourceBuilder("entities.context")
+							.field("entities.context"),
+						new TermsValuesSourceBuilder("entities.entityType")
+							.field("entities.entityType")
+					)
+				)
+				.size(_aggregationSize)
+		);
+
+		searchSourceBuilder.aggregation(
+			AggregationBuilders
+				.terms("datasourceId")
+				.field("datasourceId")
+				.size(_aggregationSize)
+		);
+
+		searchSourceBuilder.aggregation(
+			AggregationBuilders
+				.terms("documentTypes")
+				.field("documentTypes")
+				.size(_aggregationSize)
+		);
 
 		searchSourceBuilder.from(0);
 		searchSourceBuilder.size(0);
@@ -157,19 +177,81 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 			Aggregation aggregation = aggr.getValue();
 
-			if (aggregation instanceof Terms) {
-				Terms terms = (Terms)aggregation;
+			String key = aggr.getKey();
+
+			if (key.equals("entities")) {
+				CompositeAggregation compositeAggregation =
+					(CompositeAggregation)aggregation;
+
+				for (CompositeAggregation.Bucket bucket : compositeAggregation.getBuckets()) {
+					Map<String, Object> keys = bucket.getKey();
+
+					String entitiesId =(String)keys.get("entities.id");
+					String entitiesContext =(
+						String)keys.get("entities.context");
+					String entitiesEntityType =
+						(String)keys.get("entities.entityType");
+
+					list.add(
+						Map.of(
+							"tokenType", "ENTITY",
+							"keywordKey", entitiesContext,
+							"value", entitiesId,
+							"entityType", entitiesEntityType,
+							"count", bucket.getDocCount()
+						)
+					);
+
+				}
+
+			}
+			else if (key.equals("datasourceId")) {
+
+				Terms terms =(Terms)aggr.getValue();
+
 				for (Terms.Bucket bucket : terms.getBuckets()) {
 					list.add(
 						Map.of(
-							"tokenType", "TEXT",
-							"keywordKey", aggr.getKey(),
+							"tokenType", "DATASOURCE",
 							"value", bucket.getKey(),
 							"count", bucket.getDocCount()
 						)
 					);
 				}
+
 			}
+			else if (key.equals("documentTypes")) {
+
+				Terms terms =(Terms)aggr.getValue();
+
+				for (Terms.Bucket bucket : terms.getBuckets()) {
+					list.add(
+						Map.of(
+							"tokenType", "DOCTYPE",
+							"value", bucket.getKey(),
+							"count", bucket.getDocCount()
+						)
+					);
+				}
+
+			}
+			else {
+
+				Terms terms =(Terms)aggr.getValue();
+
+				for (Terms.Bucket bucket : terms.getBuckets()) {
+					list.add(
+						Map.of(
+							"tokenType", "TEXT",
+							"keywordKey", terms.getName(),
+							"value", bucket.getKey(),
+							"count", bucket.getDocCount()
+						)
+					);
+				}
+
+			}
+
 		}
 
 		return new Response(list, list.size());
@@ -227,7 +309,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		super.setJsonFactory(jsonFactory);
 	}
 
-	private String[] _rootFieldAggregations;
 	private String[] _datasourceFieldAggregations;
 	private int _aggregationSize;
 
