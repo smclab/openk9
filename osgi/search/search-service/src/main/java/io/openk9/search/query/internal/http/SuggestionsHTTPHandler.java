@@ -235,57 +235,70 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 					String key = aggr.getKey();
 
-					if (key.equals("entitiesNested")) {
-						Nested nestedAggregator = (Nested)aggregation;
-						for (Aggregation nestedEntitiesAggr :
-							nestedAggregator.getAggregations()) {
+					switch (key) {
+						case "entitiesNested":
+							Nested nestedAggregator = (Nested) aggregation;
+							for (Aggregation nestedEntitiesAggr :
+								nestedAggregator.getAggregations()) {
 
-							Terms terms = (Terms)nestedEntitiesAggr;
+								Terms terms = (Terms) nestedEntitiesAggr;
 
-							for (Terms.Bucket bucket : terms.getBuckets()) {
+								for (Terms.Bucket bucket : terms.getBuckets()) {
 
-								String entityId = bucket.getKeyAsString();
+									String entityId = bucket.getKeyAsString();
 
-								Aggregations subAggr = bucket.getAggregations();
+									Aggregations subAggr =
+										bucket.getAggregations();
 
-								Iterator<Aggregation> iterator =
-									subAggr.iterator();
+									Iterator<Aggregation> iterator =
+										subAggr.iterator();
 
-								String[] strings = entityMap.getOrDefault(
-									entityId, _EMPTY_ARRAY);
+									String[] strings = entityMap.getOrDefault(
+										entityId, _EMPTY_ARRAY);
 
-								while (iterator.hasNext()) {
+									while (iterator.hasNext()) {
 
-									Terms entityContextTerms = (Terms)iterator.next();
+										Terms entityContextTerms =
+											(Terms) iterator.next();
 
-									for (Terms.Bucket b : entityContextTerms.getBuckets()) {
+										for (Terms.Bucket b : entityContextTerms.getBuckets()) {
 
-										String keyAsString = b.getKeyAsString();
+											String keyAsString =
+												b.getKeyAsString();
 
-										if (keyAsString.isEmpty()) {
-											list.add(
-												Map.of(
-													"tokenType", "ENTITY",
-													"entityName", strings[0],
-													"value", entityId,
-													"entityType", strings[1],
-													"count", bucket.getDocCount()
-												)
-											);
+											if (keyAsString.isEmpty()) {
+												list.add(
+													Map.of(
+														"tokenType", "ENTITY",
+														"entityName",
+														strings[0],
+														"value", entityId,
+														"entityType",
+														strings[1],
+														"count",
+														bucket.getDocCount()
+													)
+												);
+											}
+											else {
+												list.add(
+													Map.of(
+														"tokenType", "ENTITY",
+														"keywordKey",
+														keyAsString,
+														"entityName",
+														strings[0],
+														"value", entityId,
+														"entityType",
+														strings[1],
+														"count",
+														bucket.getDocCount()
+													)
+												);
+											}
+
+
 										}
-										else {
-											list.add(
-												Map.of(
-													"tokenType", "ENTITY",
-													"keywordKey", keyAsString,
-													"entityName", strings[0],
-													"value", entityId,
-													"entityType", strings[1],
-													"count", bucket.getDocCount()
-												)
-											);
-										}
-
 
 									}
 
@@ -293,67 +306,70 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 							}
 
-						}
+							break;
+						case "datasourceId": {
 
-					}
-					else if (key.equals("datasourceId")) {
+							Terms terms = (Terms) aggr.getValue();
 
-						Terms terms =(Terms)aggr.getValue();
+							for (Terms.Bucket bucket : terms.getBuckets()) {
 
-						for (Terms.Bucket bucket : terms.getBuckets()) {
+								long datasourceId = NumberUtils.toLong(
+									bucket.getKeyAsString());
 
-							long datasourceId = NumberUtils.toLong(
-								bucket.getKeyAsString());
+								String datasourceName = Strings.BLANK;
 
-							String datasourceName = Strings.BLANK;
-
-							for (Datasource datasource : datasourceList) {
-								if (datasource.getDatasourceId() == datasourceId) {
-									datasourceName = datasource.getName();
+								for (Datasource datasource : datasourceList) {
+									if (datasource.getDatasourceId() ==
+										datasourceId) {
+										datasourceName = datasource.getName();
+									}
 								}
+
+								list.add(
+									Map.of(
+										"tokenType", "DATASOURCE",
+										"value", datasourceName,
+										"datasourceId", datasourceId,
+										"count", bucket.getDocCount()
+									)
+								);
 							}
 
-							list.add(
-								Map.of(
-									"tokenType", "DATASOURCE",
-									"value", datasourceName,
-									"datasourceId", datasourceId,
-									"count", bucket.getDocCount()
-								)
-							);
+							break;
 						}
+						case "documentTypes": {
 
-					}
-					else if (key.equals("documentTypes")) {
+							Terms terms = (Terms) aggr.getValue();
 
-						Terms terms =(Terms)aggr.getValue();
+							for (Terms.Bucket bucket : terms.getBuckets()) {
+								list.add(
+									Map.of(
+										"tokenType", "DOCTYPE",
+										"value", bucket.getKey(),
+										"count", bucket.getDocCount()
+									)
+								);
+							}
 
-						for (Terms.Bucket bucket : terms.getBuckets()) {
-							list.add(
-								Map.of(
-									"tokenType", "DOCTYPE",
-									"value", bucket.getKey(),
-									"count", bucket.getDocCount()
-								)
-							);
+							break;
 						}
+						default: {
 
-					}
-					else {
+							Terms terms = (Terms) aggr.getValue();
 
-						Terms terms =(Terms)aggr.getValue();
+							for (Terms.Bucket bucket : terms.getBuckets()) {
+								list.add(
+									Map.of(
+										"tokenType", "TEXT",
+										"keywordKey", terms.getName(),
+										"value", bucket.getKey(),
+										"count", bucket.getDocCount()
+									)
+								);
+							}
 
-						for (Terms.Bucket bucket : terms.getBuckets()) {
-							list.add(
-								Map.of(
-									"tokenType", "TEXT",
-									"keywordKey", terms.getName(),
-									"value", bucket.getKey(),
-									"count", bucket.getDocCount()
-								)
-							);
+							break;
 						}
-
 					}
 
 				}
