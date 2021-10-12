@@ -30,7 +30,10 @@ export async function getPlugins(
   return response;
 }
 
-export async function loadPlugin<E>(id: string): Promise<Plugin<E>> {
+export async function loadPlugin<E>(
+  id: string,
+  lastModified: number,
+): Promise<Plugin<E>> {
   const defaultPlugin: Plugin<any> = {
     pluginId: id,
     displayName: id,
@@ -38,7 +41,7 @@ export async function loadPlugin<E>(id: string): Promise<Plugin<E>> {
   };
 
   try {
-    const jsURL = `/api/plugin-driver-manager/plugins/${id}/static/build/index.js`;
+    const jsURL = `/api/plugin-driver-manager/plugins/${id}/static/build/index.js?t=${lastModified}`;
     // @ts-ignore
     const code = await import(/* webpackIgnore: true */ jsURL);
     const plugin = code.plugin as Plugin<E>;

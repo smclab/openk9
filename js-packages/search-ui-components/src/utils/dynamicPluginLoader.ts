@@ -39,10 +39,12 @@ import {
  * const plugin = pluginLoader.read("plugin-id");
  * console.log(plugin.displayName);
  */
-export const pluginLoader = createAsset(async (id) => {
-  const plugin = await loadPlugin(id);
-  return plugin;
-});
+export const pluginLoader = createAsset(
+  async (id: string, lastModified: number) => {
+    const plugin = await loadPlugin(id, lastModified);
+    return plugin;
+  },
+);
 
 /**
  * Since OpenK9 plugins rely on global objects, to avoid repeating dependencies, it's crucial to call this method BEFORE loading any plugin.
@@ -102,7 +104,7 @@ export function getPluginResultRenderers(
   pluginInfos: PluginInfo[],
 ): PluginResultRenderes {
   const plugins = pluginInfos
-    .map((pI) => pluginLoader.read(pI.pluginId))
+    .map((pI) => pluginLoader.read(pI.pluginId, pI.bundleInfo.lastModified))
     .filter(Boolean);
 
   const resultRendererPluginServices = plugins
