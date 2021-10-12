@@ -41,8 +41,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregation;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.bucket.nested.ParsedNested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Activate;
@@ -186,15 +186,18 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 			Aggregations aggregations = searchResponse.getAggregations();
 
-			CompositeAggregation entitiesAggr = aggregations.get("entitiesNested");
+			ParsedNested entitiesAggr = aggregations.get("entitiesNested");
+
+			Terms aggregation =
+				entitiesAggr.getAggregations().get("entities.id");
 
 			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-			for (CompositeAggregation.Bucket bucket : entitiesAggr.getBuckets()) {
+			for (Terms.Bucket bucket : aggregation.getBuckets()) {
 
 				boolQueryBuilder.should(
 					QueryBuilders.matchQuery(
-						"id", bucket.getKey().get("entities.id"))
+						"id", bucket.getKey())
 				);
 
 			}
