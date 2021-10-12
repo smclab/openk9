@@ -35,6 +35,9 @@ import io.openk9.search.client.api.Search;
 import io.openk9.search.query.internal.response.Response;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -58,10 +61,9 @@ import reactor.util.function.Tuple2;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component(
 	immediate = true,
@@ -114,16 +116,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		SearchSourceBuilder searchSourceBuilder,
 		org.elasticsearch.action.search.SearchRequest elasticSearchQuery) {
 
-		String[] indices = elasticSearchQuery.indices();
-
-		elasticSearchQuery.indices(
-			Stream.concat(
-				Arrays.stream(indices),
-				Stream.of(tenant.getTenantId() + "-entity")
-			)
-				.toArray(String[]::new)
-		);
-
 		documentTypeList
 			.stream()
 			.map(PluginDriverDTO::getDocumentTypes)
@@ -173,20 +165,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 				.size(_aggregationSize)
 		);
 
-		searchSourceBuilder.aggregation(
-			AggregationBuilders
-				.composite(
-					"entity",
-					List.of(
-						new TermsValuesSourceBuilder("name")
-							.field("name"),
-						new TermsValuesSourceBuilder("entityId")
-							.field("entityId")
-					)
-				)
-				.size(_aggregationSize)
-		);
-
 		searchSourceBuilder.from(0);
 		searchSourceBuilder.size(0);
 
@@ -198,152 +176,151 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		PluginDriverDTOList pluginDriverDTOList,
 		HttpServerRequest httpServerRequest, SearchRequest searchRequest,
 		SearchResponse searchResponse) {
-		return Mono.fromSupplier(() -> {
+
+		return _search.search(factory -> {
+
+			org.elasticsearch.action.search.SearchRequest
+				searchRequestEntity =
+				factory.createSearchRequestEntity(tenant.getTenantId());
 
 			Aggregations aggregations = searchResponse.getAggregations();
 
-			List<Map<String, Object>> list = new ArrayList<>();
+			CompositeAggregation entitiesAggr = aggregations.get("entities");
 
-			CompositeAggregation entity = aggregations.get("entity");
-			CompositeAggregation entities = aggregations.get("entities");
+			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-			if (entities != null) {
+			for (CompositeAggregation.Bucket bucket : entitiesAggr.getBuckets()) {
 
-				Map<String, String> entityMap =
-					(entity)
-						.getBuckets()
-						.stream()
-						.collect(
-							Collectors.toMap(
-								bucket -> (String) bucket.getKey().get("entityId"),
-								bucket -> (String) bucket.getKey().get("name"))
-						);
-
-				for (CompositeAggregation.Bucket bucket :
-					entities.getBuckets()) {
-
-					Map<String, Object> keys = bucket.getKey();
-
-					String entitiesId =(String)keys.get("entities.id");
-					String entitiesContext =(
-						String)keys.get("entities.context");
-					String entitiesEntityType =
-						(String)keys.get("entities.entityType");
-
-					list.add(
-						Map.of(
-							"tokenType", "ENTITY",
-							"keywordKey", entitiesContext,
-							"entityName", entityMap.get(entitiesId),
-							"value", entitiesId,
-							"entityType", entitiesEntityType,
-							"count", bucket.getDocCount()
-						)
-					);
-
-				}
+				boolQueryBuilder.should(
+					QueryBuilders.matchQuery(
+						"entityId", bucket.getKey().get("entities.id"))
+				);
 
 			}
 
-			for (Map.Entry<String, Aggregation> aggr :
-				aggregations.getAsMap().entrySet()) {
+			SearchSourceBuilder ssb = new SearchSourceBuilder();
 
-				Aggregation aggregation = aggr.getValue();
+			ssb.query(boolQueryBuilder);
+			ssb.size(1000);
+			ssb.fetchSource(new String[]{"name", "entityId"}, null);
 
-				String key = aggr.getKey();
+			return searchRequestEntity.source(ssb);
+		})
+			.map(entityResponse -> {
 
-				if (key.equals("entities")) {
-					CompositeAggregation compositeAggregation =
-						(CompositeAggregation)aggregation;
+				Map<String, String> entityMap = new HashMap<>();
 
-					for (CompositeAggregation.Bucket bucket :
-						compositeAggregation.getBuckets()) {
-						Map<String, Object> keys = bucket.getKey();
-
-						String entitiesId =(String)keys.get("entities.id");
-						String entitiesContext =(
-							String)keys.get("entities.context");
-						String entitiesEntityType =
-							(String)keys.get("entities.entityType");
-
-						list.add(
-							Map.of(
-								"tokenType", "ENTITY",
-								"keywordKey", entitiesContext,
-								"value", entitiesId,
-								"entityType", entitiesEntityType,
-								"count", bucket.getDocCount()
-							)
-						);
-
-					}
-
+				for (SearchHit hit : entityResponse.getHits()) {
+					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+					String name =(String)sourceAsMap.get("name");
+					String entityId =(String)sourceAsMap.get("entityId");
+					entityMap.put(entityId, name);
 				}
-				else if (key.equals("datasourceId")) {
 
-					Terms terms =(Terms)aggr.getValue();
+				Aggregations aggregations = searchResponse.getAggregations();
 
-					for (Terms.Bucket bucket : terms.getBuckets()) {
+				List<Map<String, Object>> list = new ArrayList<>();
 
-						long datasourceId = NumberUtils.toLong(
-							bucket.getKeyAsString());
+				for (Map.Entry<String, Aggregation> aggr :
+					aggregations.getAsMap().entrySet()) {
 
-						String datasourceName = Strings.BLANK;
+					Aggregation aggregation = aggr.getValue();
 
-						for (Datasource datasource : datasourceList) {
-							if (datasource.getDatasourceId() == datasourceId) {
-								datasourceName = datasource.getName();
-							}
+					String key = aggr.getKey();
+
+					if (key.equals("entities")) {
+						CompositeAggregation compositeAggregation =
+							(CompositeAggregation)aggregation;
+
+						for (CompositeAggregation.Bucket bucket :
+							compositeAggregation.getBuckets()) {
+							Map<String, Object> keys = bucket.getKey();
+
+							String entitiesId =(String)keys.get("entities.id");
+							String entitiesContext =(
+								String)keys.get("entities.context");
+							String entitiesEntityType =
+								(String)keys.get("entities.entityType");
+
+							list.add(
+								Map.of(
+									"tokenType", "ENTITY",
+									"keywordKey", entitiesContext,
+									"entityName", entityMap.getOrDefault(entitiesId, null),
+									"value", entitiesId,
+									"entityType", entitiesEntityType,
+									"count", bucket.getDocCount()
+								)
+							);
+
 						}
 
-						list.add(
-							Map.of(
-								"tokenType", "DATASOURCE",
-								"value", datasourceName,
-								"datasourceId", datasourceId,
-								"count", bucket.getDocCount()
-							)
-						);
+					}
+					else if (key.equals("datasourceId")) {
+
+						Terms terms =(Terms)aggr.getValue();
+
+						for (Terms.Bucket bucket : terms.getBuckets()) {
+
+							long datasourceId = NumberUtils.toLong(
+								bucket.getKeyAsString());
+
+							String datasourceName = Strings.BLANK;
+
+							for (Datasource datasource : datasourceList) {
+								if (datasource.getDatasourceId() == datasourceId) {
+									datasourceName = datasource.getName();
+								}
+							}
+
+							list.add(
+								Map.of(
+									"tokenType", "DATASOURCE",
+									"value", datasourceName,
+									"datasourceId", datasourceId,
+									"count", bucket.getDocCount()
+								)
+							);
+						}
+
+					}
+					else if (key.equals("documentTypes")) {
+
+						Terms terms =(Terms)aggr.getValue();
+
+						for (Terms.Bucket bucket : terms.getBuckets()) {
+							list.add(
+								Map.of(
+									"tokenType", "DOCTYPE",
+									"value", bucket.getKey(),
+									"count", bucket.getDocCount()
+								)
+							);
+						}
+
+					}
+					else {
+
+						Terms terms =(Terms)aggr.getValue();
+
+						for (Terms.Bucket bucket : terms.getBuckets()) {
+							list.add(
+								Map.of(
+									"tokenType", "TEXT",
+									"keywordKey", terms.getName(),
+									"value", bucket.getKey(),
+									"count", bucket.getDocCount()
+								)
+							);
+						}
+
 					}
 
 				}
-				else if (key.equals("documentTypes")) {
 
-					Terms terms =(Terms)aggr.getValue();
+				return new Response(list, list.size());
 
-					for (Terms.Bucket bucket : terms.getBuckets()) {
-						list.add(
-							Map.of(
-								"tokenType", "DOCTYPE",
-								"value", bucket.getKey(),
-								"count", bucket.getDocCount()
-							)
-						);
-					}
-
-				}
-				else {
-
-					Terms terms =(Terms)aggr.getValue();
-
-					for (Terms.Bucket bucket : terms.getBuckets()) {
-						list.add(
-							Map.of(
-								"tokenType", "TEXT",
-								"keywordKey", terms.getName(),
-								"value", bucket.getKey(),
-								"count", bucket.getDocCount()
-							)
-						);
-					}
-
-				}
-
-			}
-
-			return new Response(list, list.size());
-
-		});
+			});
 	}
 
 	@Reference(
