@@ -147,6 +147,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 							AggregationBuilders
 								.terms("entities.context")
 								.field("entities.context")
+								.missing(Strings.BLANK)
 						)
 						.size(_aggregationSize)
 				)
@@ -253,29 +254,30 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 								String[] strings = entityMap.getOrDefault(
 									entityId, _EMPTY_ARRAY);
 
-								if (!iterator.hasNext()) {
-									list.add(
-										Map.of(
-											"tokenType", "ENTITY",
-											"keywordKey", "",
-											"entityName", strings[0],
-											"value", entityId,
-											"entityType", strings[1],
-											"count", bucket.getDocCount()
-										)
-									);
-								}
-								else {
-									while (iterator.hasNext()) {
+								while (iterator.hasNext()) {
 
-										Terms entityContextTerms =
-											(Terms)iterator.next();
+									Terms entityContextTerms = (Terms)iterator.next();
 
-										for (Terms.Bucket b : entityContextTerms.getBuckets()) {
+									for (Terms.Bucket b : entityContextTerms.getBuckets()) {
+
+										String keyAsString = b.getKeyAsString();
+
+										if (keyAsString.isEmpty()) {
 											list.add(
 												Map.of(
 													"tokenType", "ENTITY",
-													"keywordKey", b.getKeyAsString(),
+													"entityName", strings[0],
+													"value", entityId,
+													"entityType", strings[1],
+													"count", bucket.getDocCount()
+												)
+											);
+										}
+										else {
+											list.add(
+												Map.of(
+													"tokenType", "ENTITY",
+													"keywordKey", keyAsString,
 													"entityName", strings[0],
 													"value", entityId,
 													"entityType", strings[1],
@@ -284,7 +286,9 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 											);
 										}
 
+
 									}
+
 								}
 
 							}
