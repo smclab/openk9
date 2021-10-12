@@ -1,5 +1,5 @@
 import React from "react";
-import { doSearchEntities, EntityToken, SearchToken } from "@openk9/http-api";
+import { doSearchEntities, SearchToken } from "@openk9/http-api";
 import { useQuery } from "react-query";
 
 const tokenStyle: React.CSSProperties = {
@@ -87,15 +87,12 @@ export function TokenComponent({
         </div>
       );
     }
-    case "TEXT-TOKEN": {
-      return <div style={tokenStyle}>{token.values[0]}</div>;
-    }
     default:
       return null;
   }
 }
 
-function EntityTokenComponent({ token }: { token: EntityToken }) {
+function EntityTokenComponent({ token }: { token: Extract<SearchToken, {tokenType: "ENTITY"}> }) {
   const { data: entity } = useQuery(
     ["entity", token.entityType, token.values[0]] as const,
     async ({ queryKey }) => {

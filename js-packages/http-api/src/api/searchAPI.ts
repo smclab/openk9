@@ -32,9 +32,7 @@ export async function doSearch<E>(
   const fixedSearch = {
     ...searchRequest,
     range: [searchRequest.range[0], searchRequest.range[1]],
-    searchQuery: searchRequest.searchQuery.map((i) =>
-      i.tokenType === "TEXT-TOKEN" ? { ...i, tokenType: "TEXT" } : i,
-    ),
+    searchQuery: searchRequest.searchQuery,
   };
   const request = await authFetch(`/api/searcher/v1/search`, loginInfo, {
     method: "POST",
@@ -52,9 +50,7 @@ export async function doSearchDatasource<E>(
   const fixedSearch = {
     ...searchRequest,
     range: [searchRequest.range[0], searchRequest.range[1] * 2],
-    searchQuery: searchRequest.searchQuery.map((i) =>
-      i.tokenType === "TEXT-TOKEN" ? { ...i, tokenType: "TEXT" } : i,
-    ),
+    searchQuery: searchRequest.searchQuery,
   };
   const request = await authFetch(
     `/api/searcher/v1/search/${datasourceId}`,

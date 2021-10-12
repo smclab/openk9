@@ -29,17 +29,7 @@ export type SearchToken = {
   start?: number;
   mid?: number;
   end?: number;
-} & (EntityItem | DataSourceItem | DocTypeItem | TextItem | TextTokenItem);
-
-export type EntityToken = SearchToken & EntityItem;
-
-export type DataSourceToken = SearchToken & DataSourceItem;
-
-export type DocTypeToken = SearchToken & DocTypeItem;
-
-export type TextToken = SearchToken & TextTokenItem;
-
-export type Token = EntityToken | DataSourceToken | DocTypeToken | TextToken;
+} & (EntityItem | DataSourceItem | DocTypeItem | TextItem);
 
 export interface EntityItem {
   tokenType: "ENTITY";
@@ -59,11 +49,6 @@ export interface DocTypeItem {
 
 export interface TextItem {
   tokenType: "TEXT";
-  values: string[];
-}
-
-export interface TextTokenItem {
-  tokenType: "TEXT-TOKEN";
   values: string[];
 }
 

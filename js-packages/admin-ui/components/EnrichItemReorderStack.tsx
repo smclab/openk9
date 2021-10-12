@@ -133,7 +133,7 @@ function EnrichItemBlock({
   const pluginInfo = (pluginInfos || []).find((p) =>
     item.serviceName.startsWith(p.bundleInfo.symbolicName),
   );
-  const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
+  const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId, pluginInfo.bundleInfo.lastModified);
 
   const enrichPlugin = plugin?.pluginServices.find(
     (ps) => ps.type === "ENRICH" && ps.serviceName === item.serviceName,

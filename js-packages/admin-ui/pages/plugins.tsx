@@ -187,7 +187,7 @@ function Controls({
 function TRow({ pluginInfo }: { pluginInfo: PluginInfo }) {
   const classes = useStyles();
 
-  const plugin = pluginLoader.read(pluginInfo.pluginId);
+  const plugin = pluginLoader.read(pluginInfo.pluginId, pluginInfo.bundleInfo.lastModified);
 
   return (
     <tr>

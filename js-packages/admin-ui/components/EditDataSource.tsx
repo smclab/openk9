@@ -292,7 +292,7 @@ export function EditDataSource<
     getPlugins(loginInfo),
   );
   const plugins = (pluginInfos || []).map((pi) =>
-    pluginLoader.read(pi.pluginId),
+    pluginLoader.read(pi.pluginId, pi.bundleInfo.lastModified),
   );
 
   if (!pluginInfos) {

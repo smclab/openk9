@@ -407,7 +407,7 @@ function Inside({
         const pluginInfo = (pluginInfos || []).find((p) =>
           ds.driverServiceName.startsWith(p.bundleInfo.symbolicName),
         );
-        const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId);
+        const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId, pluginInfo.bundleInfo.lastModified);
 
         return (
           <DSItemRender

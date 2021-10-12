@@ -203,10 +203,7 @@ export async function getTokenSuggestions(
       kind: "TOKEN" as const,
       alternatives: [],
       displayDescription: capitalize(ss.value),
-      outputTokenType:
-        ss.keywordKey === "type"
-          ? ("DOCTYPE" as const)
-          : ("TEXT-TOKEN" as const),
+      outputTokenType: "DOCTYPE" as const,
       outputKeywordKey: ss.keywordKey,
     }));
 

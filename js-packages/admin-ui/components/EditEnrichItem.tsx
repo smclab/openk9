@@ -79,7 +79,7 @@ export function EditEnrichItem({
   const classes = useStyles();
 
   const plugins = useMemo(
-    () => (pluginInfos || []).map((pi) => pluginLoader.read(pi.pluginId)),
+    () => (pluginInfos || []).map((pi) => pluginLoader.read(pi.pluginId, pi.bundleInfo.lastModified)),
     [pluginInfos],
   );
   const pluginServices = useMemo(
