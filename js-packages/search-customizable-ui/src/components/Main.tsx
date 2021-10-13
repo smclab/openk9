@@ -2,10 +2,9 @@ import React from "react";
 import {
   GenericResultItem,
   getPlugins,
-  getTokenSuggestions,
-  InputSuggestionToken,
   SearchQuery,
   SearchToken,
+  SuggestionResult,
 } from "@openk9/http-api";
 import { useQuery } from "react-query";
 import useDebounce from "../hooks/useDebounce";
@@ -16,10 +15,11 @@ import { useInView } from "react-intersection-observer";
 import { Detail } from "./Detail";
 import { OpenK9UIInteractions, OpenK9UITemplates } from "../api";
 import { EmbedElement } from "./EmbedElement";
-import { ScrollIntoView } from "./ScrollIntoView";
 import { useTabTokens } from "../data-hooks/useTabTokens";
 import { useInfiniteResults } from "../data-hooks/useInfiniteResults";
 import { ResultPageMemo } from "./ResultPage";
+import { useInfiniteSuggestions } from "../data-hooks/useInfiniteSuggestions";
+import { SuggestionPageMemo } from "./SuggestionPage";
 
 type MainProps = {
   children: (widgets: {
@@ -40,7 +40,7 @@ type State = {
   text: string;
   searchQuery: SearchQuery | null;
   showSuggestions: boolean;
-  suggestionIndex: number | null;
+  selectedSuggestion: SuggestionResult | null;
   entityKind: string | undefined;
   detail: GenericResultItem<any> | null;
 };
@@ -52,7 +52,7 @@ const initialState: State = {
   searchQuery: null,
   showSuggestions: false,
   focusedToken: null,
-  suggestionIndex: null,
+  selectedSuggestion: null,
   entityKind: undefined,
   detail: null,
 };
@@ -79,16 +79,19 @@ export function Main({ children, templates, interactions }: MainProps) {
     ),
     500,
   );
-  const suggestions = useQuery(
-    ["suggestion", debouncedSearchQuery, state.entityKind] as const,
-    async ({ queryKey }) => {
-      return (await getTokenSuggestions(queryKey[1], null, queryKey[2])).slice(
-        0,
-        8,
-      );
-    },
-    { enabled: showSuggestions, keepPreviousData: true },
+  const suggestions = useInfiniteSuggestions(
+    showSuggestions ? debouncedSearchQuery : null,
   );
+  const flattenedSuggestions = React.useMemo(
+    () => suggestions.data?.pages.flatMap((page) => page.result) ?? [],
+    [suggestions.data?.pages],
+  );
+  const selectedSuggestionIndex = React.useMemo(() => {
+    if (!state.selectedSuggestion) return null;
+    const indexOf = flattenedSuggestions.indexOf(state.selectedSuggestion);
+    if (indexOf === -1) return null;
+    return indexOf;
+  }, [flattenedSuggestions, state.selectedSuggestion]);
   const { data: pluginInfos } = useQuery(["plugins"], () => {
     return getPlugins(null);
   });
@@ -125,80 +128,90 @@ export function Main({ children, templates, interactions }: MainProps) {
   function focusInput() {
     inputRef.current?.focus();
   }
-  function addSuggestion(suggestion: InputSuggestionToken) {
-    switch (suggestion.kind) {
-      case "ENTITY": {
-        addToken({
-          tokenType: "ENTITY",
-          entityType: suggestion.type,
-          values: [suggestion.id],
-        });
-        break;
+  const addSuggestion = React.useCallback(
+    (suggestion: SuggestionResult) => {
+      switch (suggestion.tokenType) {
+        case "ENTITY": {
+          addToken({
+            tokenType: "ENTITY",
+            entityType: suggestion.entityType,
+            keywordKey: suggestion.keywordKey,
+            values: [Number(suggestion.value)],
+          });
+          break;
+        }
+        case "TEXT": {
+          addToken({
+            tokenType: "TEXT",
+            keywordKey: suggestion.keywordKey,
+            values: [suggestion.value],
+          });
+          break;
+        }
+        case "DOCTYPE": {
+          addToken({
+            tokenType: "DOCTYPE",
+            values: [suggestion.value],
+          });
+          break;
+        }
+        case "DATASOURCE": {
+          addToken({
+            tokenType: "DATASOURCE",
+            values: [suggestion.value],
+          });
+          break;
+        }
       }
-      case "PARAM": {
-        addToken({
-          tokenType: "TEXT",
-          keywordKey: suggestion.id,
-          values: [""],
-        });
-        break;
-      }
-      case "TOKEN": {
-        addToken({
-          tokenType: (suggestion.outputTokenType as any) ?? "TEXT",
-          keywordKey: suggestion.outputKeywordKey,
-          values: [suggestion.id],
-        });
-        break;
-      }
-    }
+      setState((state) => ({
+        ...state,
+        text: "",
+        suggestionIndex: null,
+        showSuggestions: false,
+        focusedToken: state.tokens.length - 1,
+      }));
+      updateSearch();
+      focusInput();
+    },
+    [updateSearch],
+  );
+  const selectSuggestion = React.useCallback((suggestion: SuggestionResult) => {
     setState((state) => ({
       ...state,
-      text: "",
-      suggestionIndex: null,
-      showSuggestions: false,
-      focusedToken: state.tokens.length - 1,
+      selectedSuggestion: suggestion,
     }));
-    updateSearch();
-    focusInput();
-  }
+  }, []);
   useClickAway(
     React.useMemo(() => [inputRef, suggestionsRef], []),
     React.useCallback(() => {
       setState((state) => ({ ...state, showSuggestions: false }));
     }, []),
   );
-  const { ref, inView } = useInView({ delay: 200, initialInView: false });
-  const { fetchNextPage } = results;
-  React.useEffect(() => {
-    if (inView) fetchNextPage();
-  }, [fetchNextPage, inView]);
+  const loadMoreResultsRef = useLoadMore(results.fetchNextPage);
+  const loadMoreSuggestionsRef = useLoadMore(suggestions.fetchNextPage);
   function suggestionUp() {
     setState((state) => {
-      if (state.suggestionIndex !== null && state.suggestionIndex > 0) {
-        return { ...state, suggestionIndex: state.suggestionIndex - 1 };
+      if (selectedSuggestionIndex !== null && selectedSuggestionIndex > 0) {
+        return {
+          ...state,
+          selectedSuggestion: flattenedSuggestions[selectedSuggestionIndex - 1],
+        };
       }
-      if (state.suggestionIndex === 0) {
+      if (selectedSuggestionIndex === 0) {
         return { ...state, suggestionIndex: null };
       } else return state;
     });
   }
   function suggestionDown() {
     setState((state) => {
-      if (state.suggestionIndex !== null) {
-        return { ...state, suggestionIndex: state.suggestionIndex + 1 };
-      } else return { ...state, suggestionIndex: 0 };
+      if (selectedSuggestionIndex !== null) {
+        return {
+          ...state,
+          selectedSuggestion: flattenedSuggestions[selectedSuggestionIndex + 1],
+        };
+      } else return { ...state, selectedSuggestion: flattenedSuggestions[0] };
     });
   }
-  React.useEffect(() => {
-    if (
-      suggestions.data &&
-      state.suggestionIndex !== null &&
-      state.suggestionIndex >= suggestions.data?.length
-    ) {
-      setState((state) => ({ ...state, suggestionIndex: 0 }));
-    }
-  }, [state.suggestionIndex, suggestions.data]);
   function setActiveTabIndex(index: number) {
     setState((state) => ({ ...state, tabIndex: index }));
     updateSearch();
@@ -296,9 +309,9 @@ export function Main({ children, templates, interactions }: MainProps) {
           onKeyDown={(event) => {
             switch (event.key) {
               case "Enter": {
-                if (state.suggestionIndex !== null) {
-                  const suggestion = suggestions.data?.[state.suggestionIndex];
-                  if (suggestion) addSuggestion(suggestion);
+                if (selectedSuggestionIndex !== null) {
+                  if (state.selectedSuggestion)
+                    addSuggestion(state.selectedSuggestion);
                 } else {
                   setState((state) => ({
                     ...state,
@@ -405,65 +418,28 @@ export function Main({ children, templates, interactions }: MainProps) {
             overflowY: "scroll",
           }}
         >
-          {suggestions.data?.map((suggestion, index) => {
-            const customizedItem = templates.suggestionItem?.({
-              label: suggestion.displayDescription,
-              kind: suggestion.id as string,
-              select: () => {
-                addSuggestion(suggestion);
-              },
-            });
-            const type = (() => {
-              switch (suggestion.kind) {
-                case "ENTITY":
-                  return suggestion.type;
-                case "PARAM":
-                  return suggestion.id;
-                case "TOKEN":
-                  return (
-                    suggestion.entityType ??
-                    suggestion.outputKeywordKey ??
-                    suggestion.id
-                  );
-              }
-            })();
-            const isHighlighted = state.suggestionIndex === index;
-            if (customizedItem) {
-              return (
-                <React.Fragment key={suggestion.id}>
-                  <EmbedElement element={customizedItem} />
-                </React.Fragment>
-              );
-            }
+          {suggestions.data?.pages.map((suggestionPage, index) => {
+            const selected =
+              state.selectedSuggestion &&
+              suggestionPage.result.includes(state.selectedSuggestion)
+                ? state.selectedSuggestion
+                : null;
             return (
-              <ScrollIntoView<HTMLDivElement>
-                key={suggestion.id}
-                enabled={isHighlighted}
-              >
-                {(ref) => (
-                  <div
-                    ref={ref}
-                    style={{
-                      padding: "8px 16px",
-                      backgroundColor: isHighlighted ? "lightgray" : "",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={() => {
-                      setState((state) => ({
-                        ...state,
-                        suggestionIndex: index,
-                      }));
-                    }}
-                    onClick={() => {
-                      addSuggestion(suggestion);
-                    }}
-                  >
-                    <strong>{type}</strong> {suggestion.displayDescription}
-                  </div>
-                )}
-              </ScrollIntoView>
+              <SuggestionPageMemo
+                key={index}
+                suggestions={suggestionPage.result}
+                templates={templates}
+                onAdd={addSuggestion}
+                onSelect={selectSuggestion}
+                selected={selected}
+              />
             );
           })}
+          {results.hasNextPage && !results.isFetchingNextPage && (
+            <div style={{ margin: "8px 16px" }} ref={loadMoreSuggestionsRef}>
+              Loading more...
+            </div>
+          )}
         </div>
       </div>
     ),
@@ -516,7 +492,7 @@ export function Main({ children, templates, interactions }: MainProps) {
             );
           })}
         {results.hasNextPage && !results.isFetchingNextPage && (
-          <div style={{ margin: "8px 16px" }} ref={ref}>
+          <div style={{ margin: "8px 16px" }} ref={loadMoreResultsRef}>
             Loading more...
           </div>
         )}
@@ -556,3 +532,11 @@ const tokenKinds = [
   { id: "type", label: "Types" },
   { id: "PARAM", label: "Filters" },
 ];
+
+function useLoadMore(callback: () => void) {
+  const { ref, inView } = useInView({ delay: 200, initialInView: false });
+  React.useEffect(() => {
+    if (inView) callback();
+  }, [callback, inView]);
+  return ref;
+}

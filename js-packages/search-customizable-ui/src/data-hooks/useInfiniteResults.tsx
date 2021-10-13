@@ -2,7 +2,7 @@ import { doSearch, SearchQuery } from "@openk9/http-api";
 import { useInfiniteQuery } from "react-query";
 
 export function useInfiniteResults(searchQuery: SearchQuery | null) {
-  const pageSize = 4;
+  const pageSize = 8;
   return useInfiniteQuery(
     ["search", searchQuery] as const,
     async ({ queryKey, pageParam = 0 }) => {

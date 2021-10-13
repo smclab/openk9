@@ -47,7 +47,7 @@ export function TokenComponent({
     case "TEXT": {
       return (
         <div style={tokenStyle} onClick={() => onFocus()}>
-          <strong>{token.keywordKey}: </strong>{" "}
+          {token.keywordKey ? <strong>{token.keywordKey}: </strong> : null}
           {isFocused ? (
             <input
               ref={inputRef}
@@ -81,6 +81,11 @@ export function TokenComponent({
             />
           ) : (
             <span tabIndex={0} onFocus={() => onFocus()}>
+              {token.keywordKey ? (
+                <>
+                  <strong>{token.keywordKey}: </strong>
+                </>
+              ) : null}
               {token.values[0]}
             </span>
           )}
@@ -92,7 +97,11 @@ export function TokenComponent({
   }
 }
 
-function EntityTokenComponent({ token }: { token: Extract<SearchToken, {tokenType: "ENTITY"}> }) {
+function EntityTokenComponent({
+  token,
+}: {
+  token: Extract<SearchToken, { tokenType: "ENTITY" }>;
+}) {
   const { data: entity } = useQuery(
     ["entity", token.entityType, token.values[0]] as const,
     async ({ queryKey }) => {
@@ -104,7 +113,12 @@ function EntityTokenComponent({ token }: { token: Extract<SearchToken, {tokenTyp
   );
   return (
     <span style={tokenStyle}>
-      <strong>{token.entityType}: </strong> {entity?.name ?? token.values[0]}
+      {token.keywordKey ? (
+        <>
+          <strong>{token.keywordKey} :</strong>{" "}
+        </>
+      ) : null}
+      <strong>{token.entityType} </strong> {entity?.name ?? token.values[0]}
     </span>
   );
 }
