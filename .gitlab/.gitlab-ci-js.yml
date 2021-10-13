@@ -75,7 +75,6 @@ Build Latest Frontend Docker Image:
       changes:
         - js-packages/http-api/**/*
         - js-packages/search-ui-components/**/*
-        - js-packages/search-widget-frontend/**/*
         - js-packages/plugin-scripts/**/*
         - js-packages/search-customizable-ui/**/*
         - js-packager/search-standalone-frontend/**/*
@@ -128,7 +127,6 @@ Build Latest Admin Ui Docker Image:
       changes:
         - js-packages/http-api/**/*
         - js-packages/search-ui-components/**/*
-        - js-packages/search-widget-frontend/**/*
         - js-packages/plugin-scripts/**/*
         - js-packages/admin-ui/**/*
   before_script:

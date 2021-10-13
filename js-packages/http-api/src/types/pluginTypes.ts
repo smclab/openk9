@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { SuggestionResult } from ".";
 import { LoginInfo } from "../api/authAPI";
 import { GenericResultItem } from "./searchResultsType";
-import { InputSuggestionToken } from "./suggestionTypes";
 
 export type PluginInfo = {
   pluginId: string;
@@ -89,5 +89,5 @@ export type ResultRendererPlugin<E> = {
 
 export type SuggestionsPlugin = {
   type: "SUGGESTIONS";
-  renderSuggestionIcons?: React.FC<{ suggestion: InputSuggestionToken }>;
+  renderSuggestionIcons?: React.FC<{ suggestion: SuggestionResult }>;
 };

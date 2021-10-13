@@ -15,8 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { SearchToken } from "./searchQueryTypes";
-
 export type SuggestionResult =
   | {
       tokenType: "DATASOURCE";
@@ -43,38 +41,3 @@ export type SuggestionResult =
       count: string;
       value: string;
     }
-
-
-// DEPRECATED (code below is deprecated)
-// -----------------------------------------------------
-// TODO: remove after refactor
-interface BaseSuggestion {
-  alternatives: string[];
-  displayDescription: string;
-  compatibleKeywordKeys?: string[];
-}
-
-interface EntitySuggestion extends BaseSuggestion {
-  kind: "ENTITY";
-  type: string;
-  id: number;
-}
-
-export interface ParamSuggestion extends BaseSuggestion {
-  kind: "PARAM";
-  id: string;
-  compatibleKeywordKeys?: [];
-}
-
-interface TokenSuggestion extends BaseSuggestion {
-  kind: "TOKEN";
-  id: string;
-  entityType?: string;
-  outputKeywordKey?: string;
-  outputTokenType?: SearchToken["tokenType"];
-}
-
-export type InputSuggestionToken =
-  | EntitySuggestion
-  | ParamSuggestion
-  | TokenSuggestion;
