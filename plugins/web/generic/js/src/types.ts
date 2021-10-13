@@ -29,6 +29,7 @@ export type DocumentResultItem = GenericResultItem<{
     content: string;
     url: string;
     relativeUrl: string;
+    documentType?: string
   };
   file: {
     path: string;

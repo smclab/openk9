@@ -64,11 +64,11 @@ export function DocumentSidebar({ result }: { result: DocumentResultItem }) {
           {result.source.document.URL}
         </a>
       </div>
-      <ImageSlider
+      {result.source.document.previewURLs && <ImageSlider
         key={result.source.id}
         urls={result.source.document.previewURLs}
         className={classes.previews}
-      />
+      />}
       <div>
         <strong>Content:</strong> {result.source.document.content}
       </div>

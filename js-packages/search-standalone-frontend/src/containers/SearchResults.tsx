@@ -62,7 +62,6 @@ export function SearchResults() {
   const selectedResult = useStore((s) => s.selectedResult);
   const setSelectedResult = useStore((s) => s.setSelectedResult);
   const pluginInfos = useStore((s) => s.pluginInfos);
-  const suggestionsInfo = useStore((s) => s.suggestionsInfo);
   const loginInfo = useLoginInfo();
 
   const classes = useStyles();
@@ -87,7 +86,7 @@ export function SearchResults() {
             searchResults={results.result}
             keyboardFocusEnabled={false}
             onSelectResult={setSelectedResult}
-            otherProps={{ suggestionsInfo, loginInfo }}
+            otherProps={{ loginInfo }}
           />
 
           {results.total > results.result.length && (
@@ -107,7 +106,7 @@ export function SearchResults() {
         <ResultSidebar
           renderers={sidebarRenderers}
           result={result || null}
-          otherProps={{ suggestionsInfo, loginInfo }}
+          otherProps={{ loginInfo }}
         />
       </div>
     )

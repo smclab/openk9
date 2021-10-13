@@ -15,12 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 import { GenericResultItem } from "@openk9/http-api";
 
-export type WebResultType = 
-  | DocumentResultItem
-  | PageResultItem;
+export type WebResultType = DocumentResultItem | PageResultItem;
 
 export type DocumentResultItem = GenericResultItem<{
   document: {
@@ -29,6 +26,7 @@ export type DocumentResultItem = GenericResultItem<{
     content: string;
     url: string;
     relativeUrl: string;
+    documentType?: string;
   };
   file: {
     path: string;

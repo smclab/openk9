@@ -151,6 +151,7 @@ export function Main({ children, templates, interactions }: MainProps) {
         case "DOCTYPE": {
           addToken({
             tokenType: "DOCTYPE",
+            keywordKey: "type",
             values: [suggestion.value],
           });
           break;
