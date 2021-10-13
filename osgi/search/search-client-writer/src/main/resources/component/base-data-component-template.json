@@ -43,7 +43,6 @@
 					"index": true
 				},
 				"entities": {
-					"type": "nested",
 					"properties": {
 						"entityType": {
 							"type": "keyword"

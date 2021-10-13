@@ -2,7 +2,6 @@ package io.openk9.search.query.internal.parser;
 
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchToken;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -40,30 +39,16 @@ public class EntityQueryParser implements QueryParser {
 
 					if (entityType != null && !entityType.isEmpty()) {
 						boolQueryBuilder
-							.must(
-								QueryBuilders.nestedQuery(
-									ENTITIES,
-									QueryBuilders
-										.matchQuery(
-											ENTITIES_ENTITY_TYPE, entityType
-										),
-									ScoreMode.Max
-								)
-							);
+							.must(QueryBuilders.matchQuery(
+								ENTITIES_ENTITY_TYPE, entityType));
 					}
 
 					String keywordKey = searchToken.getKeywordKey();
 
 					if (keywordKey != null && !keywordKey.isEmpty()) {
 						boolQueryBuilder
-							.must(
-								QueryBuilders.nestedQuery(
-									ENTITIES,
-									QueryBuilders.matchQuery(
-										ENTITIES_CONTEXT, keywordKey),
-									ScoreMode.Max
-								)
-							);
+							.must(QueryBuilders.matchQuery(
+								ENTITIES_CONTEXT, keywordKey));
 					}
 
 					bool.filter(boolQueryBuilder);
@@ -79,13 +64,7 @@ public class EntityQueryParser implements QueryParser {
 		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
 
 		for (String id : ids) {
-			boolQuery.should(
-				QueryBuilders.nestedQuery(
-					ENTITIES,
-					QueryBuilders.matchQuery(ENTITIES_ID, id),
-					ScoreMode.Max
-				)
-			);
+			boolQuery.should(QueryBuilders.matchQuery(ENTITIES_ID, id));
 		}
 
 		return boolQuery;
@@ -93,7 +72,6 @@ public class EntityQueryParser implements QueryParser {
 	}
 
 	public static final String TYPE = "ENTITY";
-	public static final String ENTITIES = "entities";
 	public static final String ENTITIES_ID = "entities.id";
 	public static final String ENTITIES_ENTITY_TYPE = "entities.entityType";
 	public static final String ENTITIES_CONTEXT = "entities.context";
