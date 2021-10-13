@@ -21,7 +21,7 @@ import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import ClickAwayListener from "react-click-away-listener";
 import {
-  InputSuggestionToken,
+  SuggestionResult,
   readQueryParamToken,
   SearchQuery,
   SearchToken,
@@ -74,7 +74,6 @@ export function SearchQueryInput() {
   const suggestions = useStore((s) => s.suggestions);
   const suggestionsKind = useStore((s) => s.suggestionsKind);
   const setSuggestionsKind = useStore((s) => s.setSuggestionsKind);
-  const suggestionsInfo = useStore((s) => s.suggestionsInfo);
   const focusToken = useStore((s) => s.focusToken);
   const setFocusToken = useStore((s) => s.setFocusToken);
 
@@ -116,57 +115,58 @@ export function SearchQueryInput() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const [highlightToken, setHighlightToken] = useState<string | number | null>(
+  const [highlightToken, setHighlightToken] = useState<SuggestionResult | null>(
     null,
   );
 
-  function handleAddSuggestion(sugg: InputSuggestionToken) {
+  function handleAddSuggestion(suggestion: SuggestionResult) {
     const soFar = searchQuery.filter((e, i) => i !== focusToken);
     const editingTok = (focusToken !== null && searchQuery[focusToken]) || null;
-
-    if (sugg && sugg.kind === "ENTITY") {
-      const tok: SearchToken = {
-        tokenType: "ENTITY" as const,
-        keywordKey: editingTok?.keywordKey,
-        entityType: sugg.type,
-        values: [sugg.id],
-      };
-      setSearchQuery([...soFar, tok]);
-    } else if (sugg && sugg.kind === "PARAM") {
-      const tok: SearchToken = {
-        tokenType: "TEXT" as const,
-        keywordKey: sugg.id.toString(),
-        values: [""],
-      };
-      setSearchQuery([...soFar, tok]);
-    } else if (sugg && sugg.kind === "TOKEN") {
-      const tok: SearchToken = {
-        tokenType: sugg.outputTokenType || ("TEXT" as any),
-        keywordKey: sugg.outputKeywordKey as any,
-        values: [sugg.id as any],
-      };
-      setSearchQuery([...soFar, tok]);
+    const addToken = (searchToken: SearchToken) => {
+      setSearchQuery([...soFar, searchToken]);
+    };
+    switch (suggestion.tokenType) {
+      case "DATASOURCE": {
+        addToken({ tokenType: "DATASOURCE", values: [suggestion.value] });
+        break;
+      }
+      case "DOCTYPE": {
+        addToken({ tokenType: "DOCTYPE", keywordKey: "type", values: [suggestion.value] });
+        break;
+      }
+      case "ENTITY": {
+        addToken({
+          tokenType: "ENTITY",
+          keywordKey: editingTok?.keywordKey,
+          entityType: suggestion.entityType,
+          values: [Number(suggestion.value)],
+        });
+        break;
+      }
+      case "TEXT": {
+        addToken({
+          tokenType: "TEXT",
+          keywordKey: suggestion.keywordKey,
+          values: [suggestion.value],
+        });
+        break;
+      }
     }
-
     setSearchOpen(false);
   }
 
   function handleInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    const suggI = highlightToken ? suggestions.indexOf(highlightToken) : -1;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-
-      const suggI = suggestions.findIndex((s) => s.id === highlightToken);
       const nextSugg = suggestions[circularMod(suggI + 1, suggestions.length)];
-      if (nextSugg) setHighlightToken(nextSugg.id);
+      if (nextSugg) setHighlightToken(nextSugg);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-
-      const suggI = suggestions.findIndex((s) => s.id === highlightToken);
       const nextSugg = suggestions[circularMod(suggI - 1, suggestions.length)];
-      if (nextSugg) setHighlightToken(nextSugg.id);
+      if (nextSugg) setHighlightToken(nextSugg);
     } else if (e.key === "Enter") {
-      const sugg = suggestions.find((s) => s.id === highlightToken);
-      if (sugg) handleAddSuggestion(sugg);
+      if (highlightToken) handleAddSuggestion(highlightToken);
     }
   }
 
@@ -214,7 +214,6 @@ export function SearchQueryInput() {
                   onClick={() => setSearchOpen(true)}
                   focusToken={focusToken}
                   onFocusToken={setFocusToken}
-                  suggestionsInfo={suggestionsInfo}
                   onInputKeyDown={handleInputKeyDown}
                 />
               </div>

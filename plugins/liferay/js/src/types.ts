@@ -26,7 +26,7 @@ export type DocumentResultItem = GenericResultItem<{
   document: {
     documentType?: string | null;
     previewUrl: string;
-    previewURLs: string[];
+    previewURLs?: string[];
     title: string;
     contentType: string;
     content: string;

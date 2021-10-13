@@ -87,6 +87,7 @@ function Inner({
         src={urls[currentPreviewI]}
         className={classes.imgPreview}
         onClick={onOpenModal}
+        alt="preview"
       />
       <div className={classes.buttons}>
         <button

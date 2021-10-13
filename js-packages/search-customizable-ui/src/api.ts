@@ -2,12 +2,13 @@ import {
   EntityDescription,
   GenericResultItem,
   SearchToken,
+  SuggestionResult,
 } from "../../http-api/src";
 
 export type OpenK9UIConfiguration = {
   widgets?: OpenK9UIWidgets;
   templates?: OpenK9UITemplates;
-  interactions?: OpenK9UIInteractions
+  interactions?: OpenK9UIInteractions;
 };
 
 type OpenK9UIWidgets = {
@@ -35,8 +36,7 @@ export type OpenK9UITemplates = {
     select(): void;
   }): Element;
   suggestionItem?(params: {
-    label: string;
-    kind: string;
+    suggestion: SuggestionResult;
     select(): void;
   }): Element;
   token?(params: {
@@ -47,5 +47,5 @@ export type OpenK9UITemplates = {
 };
 
 export type OpenK9UIInteractions = {
-  searchAsYouType?: boolean
-}
+  searchAsYouType?: boolean;
+};

@@ -23,13 +23,12 @@ import { useHistory, useParams } from "react-router-dom";
 import {
   isSearchQueryEmpty,
   SearchQuery,
-  SearchResult,
+  SearchResults,
   doSearch,
   SearchRequest,
   despaceString,
   undespaceString,
-  InputSuggestionToken,
-  getTokenSuggestions,
+  getSuggestions,
   PluginInfo,
   getPlugins,
   TenantJSONConfig,
@@ -38,16 +37,14 @@ import {
   UserInfo,
   doLoginRefresh,
   getUserInfo,
-  getTokenInfo,
-  doSearchEntities,
   getTentantWithConfiguration,
+  SuggestionResult,
 } from "@openk9/http-api";
 import { debounce } from "@openk9/search-ui-components";
 
 const resultsChunkNumber = 8;
 const searchTimeoutDebounce = 800;
 const suggTimeoutDebounce = 400;
-const maxSuggestionsCache = 1024;
 
 const localStorageLoginPersistKey = "openk9-login-info";
 
@@ -55,13 +52,12 @@ export type StateType = {
   initial: boolean;
   searchQuery: SearchQuery;
   setSearchQuery(query: SearchQuery): void;
-  results: SearchResult<unknown> | null;
+  results: SearchResults<unknown> | null;
   range: [number, number] | null;
   loading: boolean;
   doLoadMore(): void;
-  suggestions: InputSuggestionToken[];
+  suggestions: SuggestionResult[];
   fetchSuggestions(): Promise<void>;
-  suggestionsInfo: [number | string, string][];
   suggestionsKind: string | null;
   setSuggestionsKind(suggestionsKind: string | null): void;
   focusToken: number | null;
@@ -134,29 +130,8 @@ export const useStore = create<StateType>(
         };
 
         const resultsPromise = doSearch(request, get().loginInfo);
-        const suggestionsPromise = Promise.all(
-          searchQuery.map(async (token) => {
-            const hasLabelToDownload =
-              token.tokenType !== "TEXT" || token.keywordKey;
 
-            const currentCache = get().suggestionsInfo;
-            const isAlreadyInCache =
-              currentCache.find(
-                ([k]) =>
-                  (token.values as (string | number)[]).indexOf(k) === -1,
-              ) || currentCache.find(([k]) => k !== token.keywordKey);
-
-            if (hasLabelToDownload && !isAlreadyInCache) {
-              const ss = await getTokenInfo(token, get().loginInfo);
-              return ss.map((s) => [s.id, s.displayDescription] as const);
-            }
-          }),
-        ).then((sugg) => sugg.flat().filter(Boolean) as [string, string][]);
-
-        const [results, suggestions] = await Promise.all([
-          resultsPromise,
-          suggestionsPromise,
-        ]);
+        const [results] = await Promise.all([resultsPromise]);
 
         if (myOpId === opRef.lastOpId) {
           set((state) => ({
@@ -164,7 +139,6 @@ export const useStore = create<StateType>(
             results: isSearchQueryEmpty(searchQuery) ? null : results,
             loading: false,
             range: [0, resultsChunkNumber],
-            suggestionsInfo: [...suggestions, ...state.suggestionsInfo],
           }));
         }
       }
@@ -199,64 +173,21 @@ export const useStore = create<StateType>(
         ...state,
         selectedResult,
       }));
-
-      const result = get().results?.result.find(
-        (r) => r.source.id === selectedResult,
-      );
-
-      const entitiesIds = result?.source.entities
-        ?.map((e) => e.id)
-        .filter(Boolean);
-
-      const entityLabels = !entitiesIds
-        ? []
-        : await Promise.all(
-            entitiesIds.map(async (eId) => {
-              const currentCache = get().suggestionsInfo;
-              const isAlreadyInCache = currentCache.find(([k]) => eId === k);
-
-              if (!isAlreadyInCache) {
-                const resp = await doSearchEntities(
-                  { entityId: eId },
-                  get().loginInfo,
-                );
-                return resp.result.map((s) => [s.entityId, s.name]);
-              } else {
-                return [];
-              }
-            }),
-          ).then((sugg) => sugg.flat().filter(Boolean) as [string, string][]);
-
-      set((state) => ({
-        ...state,
-        suggestionsInfo: [...entityLabels, ...state.suggestionsInfo],
-      }));
     },
 
     // With optional parameters for debouncing
     async fetchSuggestions(myOpId?: number, opRef?: { lastOpId: number }) {
       const { searchQuery, suggestionsKind, loginInfo } = get();
 
-      const suggestions = await getTokenSuggestions(
-        searchQuery,
-        loginInfo,
-        suggestionsKind || undefined,
+      const { result: suggestions } = await getSuggestions(
+        { searchQuery, range: [0, 1000], loginInfo },
+        // suggestionsKind || undefined,
       );
-
-      const infos = suggestions
-        .map((s) => [s.id, s.displayDescription] as [number | string, string])
-        .filter(Boolean);
 
       if (myOpId === undefined || myOpId === opRef?.lastOpId) {
         set((state) => ({
           ...state,
           suggestions,
-          suggestionsInfo: [
-            ...infos,
-            ...state.suggestionsInfo
-              .slice(0, Math.max(0, maxSuggestionsCache - infos.length))
-              .filter(([id]) => !infos.find((s) => s[0] === id)),
-          ],
         }));
       }
     },

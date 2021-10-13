@@ -19,7 +19,7 @@ import React, { useEffect, useRef } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
-import { InputSuggestionToken } from "@openk9/http-api";
+import { SuggestionResult } from "@openk9/http-api";
 import { ThemeType } from "@openk9/search-ui-components";
 import { TokenIcon } from "./TokenIcon";
 
@@ -134,13 +134,13 @@ export function FieldSuggestionBrowser({
   highlightToken,
   onHighlightToken,
 }: {
-  suggestions: InputSuggestionToken[];
-  onAddSuggestion(sugg: InputSuggestionToken): void;
+  suggestions: SuggestionResult[];
+  onAddSuggestion(sugg: SuggestionResult): void;
   visible: boolean;
   suggestionsKind: string | null;
   setSuggestionsKind(k: string | null): void;
-  highlightToken: string | number | null;
-  onHighlightToken(tok: string | number | null): void;
+  highlightToken: SuggestionResult | null;
+  onHighlightToken(suggestion: SuggestionResult): void;
 }) {
   const classes = useStyles();
 
@@ -192,21 +192,35 @@ export function FieldSuggestionBrowser({
       </div>
 
       <div className={classes.tokens} ref={scrollRef}>
-        {suggestions.map((s, i) => (
+        {suggestions.map((suggestion, index) => (
           <div
             role="button"
-            tabIndex={i}
+            tabIndex={index}
             className={clsx(
               classes.token,
-              highlightToken === s.id && classes.tokenHighlight,
+              highlightToken === suggestion && classes.tokenHighlight,
             )}
-            key={s.id}
-            onClick={() => onAddSuggestion(s)}
-            onKeyDown={(e) => e.key === "Enter" && onAddSuggestion(s)}
-            onMouseMove={() => onHighlightToken(s.id)}
+            key={index}
+            onClick={() => onAddSuggestion(suggestion)}
+            onKeyDown={(e) => e.key === "Enter" && onAddSuggestion(suggestion)}
+            onMouseMove={() => onHighlightToken(suggestion)}
           >
-            <TokenIcon suggestion={s} />
-            {s.displayDescription}
+            {"keywordKey" in suggestion && suggestion.keywordKey && (
+              <strong>{suggestion.keywordKey}: </strong>
+            )}
+            <TokenIcon suggestion={suggestion} />
+            {(() => {
+              switch (suggestion.tokenType) {
+                case "DATASOURCE":
+                  return suggestion.value;
+                case "DOCTYPE":
+                  return suggestion.value;
+                case "ENTITY":
+                  return suggestion.entityName;
+                case "TEXT":
+                  return suggestion.value;
+              }
+            })()}
           </div>
         ))}
       </div>

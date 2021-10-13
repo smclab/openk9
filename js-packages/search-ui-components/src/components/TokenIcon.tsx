@@ -18,7 +18,7 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
-import { InputSuggestionToken } from "@openk9/http-api";
+import {  SuggestionResult } from "@openk9/http-api";
 import { DXPLogo, EmailIcon, OSLogo } from "../icons";
 import { ThemeType } from "../theme";
 
@@ -30,15 +30,16 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 }));
 
 // TODO: move these inside plugins as a pluginservice
+// HARDCODED
 export function TokenIcon({
   suggestion,
 }: {
-  suggestion: InputSuggestionToken;
+  suggestion: SuggestionResult;
 }) {
   const classes = useStyles();
 
-  if (suggestion.kind === "ENTITY") {
-    switch (suggestion.type) {
+  if (suggestion.tokenType === "ENTITY") {
+    switch (suggestion.entityType) {
       case "person":
         return <ClayIcon className={classes.icon} symbol="user" />;
       case "organization":
@@ -54,16 +55,16 @@ export function TokenIcon({
       case "email":
         return <EmailIcon className={classes.icon} size={16} />;
     }
-  } else if (suggestion.kind === "PARAM") {
-    switch (suggestion.id) {
-      case "from":
-      case "to":
+  } else if (suggestion.tokenType === "TEXT") {
+    switch (suggestion.keywordKey) {
+      case "email.from":
+      case "email.to":
         return <EmailIcon className={classes.icon} size={16} />;
       default:
         return <ClayIcon className={classes.icon} symbol="filter" />;
     }
-  } else if (suggestion.kind === "TOKEN") {
-    switch (suggestion.id) {
+  } else if (suggestion.tokenType === "DOCTYPE") {
+    switch (suggestion.value) {
       case "spaces":
         return <OSLogo className={classes.icon} size={16} />;
       case "liferay":

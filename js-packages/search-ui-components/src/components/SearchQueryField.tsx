@@ -62,7 +62,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 
 interface CommonProps {
   token: SearchToken;
-  suggestionsInfo: [number | string, string][];
   onNextTokenFocus(): void;
   onPrevTokenFocus(): void;
   onTokenDelete(): void;
@@ -76,7 +75,6 @@ interface CommonProps {
 
 export function AtomTokenDisplay({
   token,
-  suggestionsInfo,
   focused,
   tabIndex,
   onNextTokenFocus,
@@ -87,7 +85,6 @@ export function AtomTokenDisplay({
 }: CommonProps & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
   const ref = useRef<HTMLDivElement | null>(null);
-  const cacheElement = suggestionsInfo.find((t) => t[0] === token.values[0]);
 
   useEffect(() => {
     if (ref.current) {
@@ -126,7 +123,7 @@ export function AtomTokenDisplay({
       onFocus={onFocus}
       onClick={onFocus as any}
     >
-      {cacheElement ? cacheElement[1] : token.values[0]}
+      {token.values[0]}
     </div>
   );
 }
@@ -135,17 +132,13 @@ export function ParamTokenDisplay({
   token,
   onTokenChange,
   onTokenDelete,
-  suggestionsInfo,
   ...rest
 }: CommonProps & React.HTMLAttributes<HTMLInputElement>) {
   const classes = useStyles();
-  const cacheElement = suggestionsInfo.find((t) => t[0] === token.keywordKey);
 
   return (
     <div className={clsx(classes.token, classes.paramToken)}>
-      <div className={classes.paramTokenParam}>
-        {cacheElement ? cacheElement[1] : token.keywordKey}:
-      </div>
+      <div className={classes.paramTokenParam}>{token.keywordKey}:</div>
       {token.tokenType === "TEXT" ? (
         <SingleToken
           token={{ ...token, keywordKey: undefined }}
@@ -158,7 +151,6 @@ export function ParamTokenDisplay({
           onPrevTokenDelete={onTokenDelete}
           small
           autoFocus
-          suggestionsInfo={suggestionsInfo}
           noParams
         />
       ) : (
@@ -167,7 +159,6 @@ export function ParamTokenDisplay({
           onTokenDelete={onTokenDelete}
           token={token}
           {...rest}
-          suggestionsInfo={suggestionsInfo}
         />
       )}
     </div>
@@ -183,7 +174,6 @@ function SingleInput({
   onPrevTokenFocus,
   small,
   className,
-  suggestionsInfo,
   noParams,
   outerKeywordKey,
   focused,
@@ -317,7 +307,6 @@ export const SearchQueryField = React.forwardRef<
     onSearchQueryChange(searchQuery: SearchQuery): void;
     focusToken: number | null;
     onFocusToken(token: number | null): void;
-    suggestionsInfo: [number | string, string][];
     onInputKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   } & React.HTMLAttributes<HTMLInputElement>
 >(function SearchQueryField(
@@ -327,7 +316,6 @@ export const SearchQueryField = React.forwardRef<
     onFocus,
     focusToken,
     onFocusToken,
-    suggestionsInfo,
     onInputKeyDown,
     ...rest
   },
@@ -387,7 +375,8 @@ export const SearchQueryField = React.forwardRef<
     if (typeof ref === "function" && currentRef) {
       ref(currentRef);
     } else if (ref != null && currentRef) {
-      (ref as React.MutableRefObject<HTMLInputElement | null>).current = currentRef;
+      (ref as React.MutableRefObject<HTMLInputElement | null>).current =
+        currentRef;
     }
   }
 
@@ -406,7 +395,6 @@ export const SearchQueryField = React.forwardRef<
                 onTokenChange={(ntok) => handleTokenChange(ntok, i)}
                 onTokenDelete={() => handleTokenDelete(i)}
                 onPrevTokenDelete={() => handleTokenDelete(i - 1)}
-                suggestionsInfo={suggestionsInfo}
                 {...rest}
                 onFocus={() => onFocusToken(i)}
                 focused={focusToken === i}

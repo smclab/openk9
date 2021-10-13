@@ -20,7 +20,7 @@ import React, { useLayoutEffect } from "react";
 import {
   GenericResultItem,
   ResultRendererProps,
-  SearchResult,
+  SearchResults,
 } from "@openk9/http-api";
 import { arrOrEncapsulate, ResultRenderersType } from "../utils";
 
@@ -48,7 +48,7 @@ function ResultDisplay<E>({
 
 interface Props<E> {
   renderers: ResultRenderersType<E>;
-  searchResults: SearchResult<E>["result"];
+  searchResults: SearchResults<E>["result"];
   keyboardFocusEnabled?: boolean;
   onSelectResult(id: string | null): void;
   otherProps: Omit<ResultRendererProps<E>, "data" | "onSelect">;
