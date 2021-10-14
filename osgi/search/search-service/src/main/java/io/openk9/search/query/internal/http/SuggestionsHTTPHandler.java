@@ -51,6 +51,8 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -210,6 +212,10 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 					QueryBuilders.matchQuery("id", entityId)
 				));
 
+			if (_log.isDebugEnabled()) {
+				_log.debug("entities query: " + boolQueryBuilder);
+			}
+
 			SearchSourceBuilder ssb = new SearchSourceBuilder();
 
 			ssb.query(boolQueryBuilder);
@@ -259,17 +265,23 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 						String[] typeName = entityMap.get(entitiesId);
 
+						String type = null;
+						String name = null;
+
+						if (typeName != null) {
+							type = typeName[0];
+							name = typeName[1];
+						}
+
 						if (entitiesContext != null) {
 							suggestions.add(
 								Suggestions.entity(
-									entitiesId, typeName[0], typeName[1],
-									entitiesContext)
+									entitiesId, type, name, entitiesContext)
 							);
 						}
 						else {
 							suggestions.add(
-								Suggestions.entity(
-									entitiesId, typeName[0], typeName[1])
+								Suggestions.entity(entitiesId, type, name)
 							);
 						}
 					}
@@ -365,5 +377,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	private int _aggregationSize;
 
 	private static final String[] _EMPTY_ARRAY = new String[]{"", ""};
+
+	private static final Logger _log = LoggerFactory.getLogger(
+		SuggestionsHTTPHandler.class);
 
 }
