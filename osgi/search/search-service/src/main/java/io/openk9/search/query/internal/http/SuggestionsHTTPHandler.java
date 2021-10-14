@@ -43,8 +43,6 @@ import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregati
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.TermsValuesSourceBuilder;
-import org.elasticsearch.search.aggregations.bucket.nested.ParsedNested;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -67,6 +65,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -194,21 +193,22 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 			Aggregations aggregations = searchResponse.getAggregations();
 
-			ParsedNested entitiesAggr = aggregations.get("entitiesNested");
+			CompositeAggregation compositeAggregation =
+				aggregations.get("composite");
 
-			Terms aggregation =
-				entitiesAggr.getAggregations().get("entities.id");
+			List<? extends CompositeAggregation.Bucket> buckets =
+				compositeAggregation.getBuckets();
 
 			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-			for (Terms.Bucket bucket : aggregation.getBuckets()) {
-
-				boolQueryBuilder.should(
-					QueryBuilders.matchQuery(
-						"id", bucket.getKey())
-				);
-
-			}
+			buckets
+				.stream()
+				.map(bucket -> (String)bucket.getKey().get("entities.id"))
+				.filter(Objects::nonNull)
+				.distinct()
+				.forEach(entityId -> boolQueryBuilder.should(
+					QueryBuilders.matchQuery("id", entityId)
+				));
 
 			SearchSourceBuilder ssb = new SearchSourceBuilder();
 
