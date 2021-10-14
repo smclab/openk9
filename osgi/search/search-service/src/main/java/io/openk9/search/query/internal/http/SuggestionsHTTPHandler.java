@@ -17,7 +17,6 @@
 
 package io.openk9.search.query.internal.http;
 
-import io.openk9.common.api.constant.Strings;
 import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.RouterHandler;
@@ -32,16 +31,18 @@ import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
-import io.openk9.search.query.internal.response.Response;
-import org.apache.commons.lang3.math.NumberUtils;
+import io.openk9.search.query.internal.response.SuggestionsResponse;
+import io.openk9.search.query.internal.response.suggestions.Suggestions;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregation;
+import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
+import org.elasticsearch.search.aggregations.bucket.composite.TermsValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.bucket.nested.ParsedNested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -58,13 +59,18 @@ import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component(
 	immediate = true,
@@ -117,55 +123,56 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		SearchSourceBuilder searchSourceBuilder,
 		org.elasticsearch.action.search.SearchRequest elasticSearchQuery) {
 
-		documentTypeList
-			.stream()
-			.map(PluginDriverDTO::getDocumentTypes)
-			.flatMap(Collection::stream)
-			.map(DocumentTypeDTO::getName)
-			.distinct()
-			.flatMap(name ->
-				Arrays
-					.stream(_datasourceFieldAggregations)
-					.map(suffix -> name + "." + suffix)
-			)
-			.map(nameField ->
-				AggregationBuilders
-					.terms(nameField)
+		Function<String, CompositeValuesSourceBuilder<?>> fieldToTerms =
+			nameField ->
+				new TermsValuesSourceBuilder(nameField)
 					.field(nameField)
-					.size(_aggregationSize)
-			)
-			.forEach(searchSourceBuilder::aggregation);
+					.missingBucket(true);
 
-		searchSourceBuilder.aggregation(
-			AggregationBuilders
-				.nested("entitiesNested", "entities")
-				.subAggregation(
-					AggregationBuilders
-						.terms("entities.id")
-						.field("entities.id")
-						.subAggregation(
-							AggregationBuilders
-								.terms("entities.context")
-								.field("entities.context")
-								.missing(Strings.BLANK)
-						)
-						.size(_aggregationSize)
-				)
-		);
+		Stream<String> datasourceFields =
+			documentTypeList
+				.stream()
+				.map(PluginDriverDTO::getDocumentTypes)
+				.flatMap(Collection::stream)
+				.map(DocumentTypeDTO::getName)
+				.distinct()
+				.flatMap(name ->
+					Arrays
+						.stream(_datasourceFieldAggregations)
+						.map(suffix -> name + "." + suffix)
+				);
 
-		searchSourceBuilder.aggregation(
-			AggregationBuilders
-				.terms("datasourceId")
-				.field("datasourceId")
-				.size(_aggregationSize)
-		);
+		Stream<String> rest =
+			Stream.of(
+				"entities.id", "entities.context", "datasourceId",
+				"documentTypes"
+			);
 
-		searchSourceBuilder.aggregation(
-			AggregationBuilders
-				.terms("documentTypes")
-				.field("documentTypes")
-				.size(_aggregationSize)
-		);
+		CompositeAggregationBuilder compositeAggregation =
+			Stream
+				.concat(datasourceFields, rest)
+				.map(fieldToTerms)
+				.collect(
+					Collectors.collectingAndThen(
+						Collectors.toList(),
+						list -> AggregationBuilders
+							.composite("composite", list)
+					)
+				);
+
+		String afterKey = searchRequest.getAfterKey();
+
+		if (afterKey != null) {
+			byte[] afterKeyDecoded = Base64.getDecoder().decode(afterKey);
+
+			Map<String, Object> map =
+				_jsonFactory.fromJsonMap(
+					new String(afterKeyDecoded), Object.class);
+
+			compositeAggregation.aggregateAfter(map);
+		}
+
+		searchSourceBuilder.aggregation(compositeAggregation);
 
 		searchSourceBuilder.from(0);
 		searchSourceBuilder.size(0);
@@ -173,7 +180,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	}
 
 	@Override
-	protected Mono<Response> searchHitToResponseMono(
+	protected Mono<Object> searchHitToResponseMono(
 		Tenant tenant, List<Datasource> datasourceList,
 		PluginDriverDTOList pluginDriverDTOList,
 		HttpServerRequest httpServerRequest, SearchRequest searchRequest,
@@ -221,160 +228,84 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 					String type =(String)sourceAsMap.get("type");
 					String entityId =
 						Integer.toString((Integer)sourceAsMap.get("id"));
-					entityMap.put(entityId, new String[]{name, type});
+					entityMap.put(entityId, new String[]{type, name});
 				}
 
 				Aggregations aggregations = searchResponse.getAggregations();
 
-				List<Map<String, Object>> list = new ArrayList<>();
+				CompositeAggregation compositeAggregation =
+					aggregations.get("composite");
 
-				for (Map.Entry<String, Aggregation> aggr :
-					aggregations.getAsMap().entrySet()) {
+				List<? extends CompositeAggregation.Bucket> buckets =
+					compositeAggregation.getBuckets();
 
-					Aggregation aggregation = aggr.getValue();
+				Set<Suggestions> suggestions =
+					new LinkedHashSet<>(buckets.size());
 
-					String key = aggr.getKey();
+				for (CompositeAggregation.Bucket bucket : buckets) {
+					Map<String, Object> keys = new HashMap<>(bucket.getKey());
 
-					switch (key) {
-						case "entitiesNested":
-							Nested nestedAggregator = (Nested) aggregation;
-							for (Aggregation nestedEntitiesAggr :
-								nestedAggregator.getAggregations()) {
+					String datasourceId =(String)keys.remove("datasourceId");
 
-								Terms terms = (Terms) nestedEntitiesAggr;
+					if (datasourceId != null) {
+						suggestions.add(Suggestions.datasource(datasourceId));
+					}
 
-								for (Terms.Bucket bucket : terms.getBuckets()) {
+					String entitiesId =(String)keys.remove("entities.id");
+					String entitiesContext =
+						(String)keys.remove("entities.context");
 
-									String entityId = bucket.getKeyAsString();
+					if (entitiesId != null) {
 
-									Aggregations subAggr =
-										bucket.getAggregations();
+						String[] typeName = entityMap.get(entitiesId);
 
-									Iterator<Aggregation> iterator =
-										subAggr.iterator();
-
-									String[] strings = entityMap.getOrDefault(
-										entityId, _EMPTY_ARRAY);
-
-									while (iterator.hasNext()) {
-
-										Terms entityContextTerms =
-											(Terms) iterator.next();
-
-										for (Terms.Bucket b : entityContextTerms.getBuckets()) {
-
-											String keyAsString =
-												b.getKeyAsString();
-
-											if (keyAsString.isEmpty()) {
-												list.add(
-													Map.of(
-														"tokenType", "ENTITY",
-														"entityName",
-														strings[0],
-														"value", entityId,
-														"entityType",
-														strings[1],
-														"count",
-														bucket.getDocCount()
-													)
-												);
-											}
-											else {
-												list.add(
-													Map.of(
-														"tokenType", "ENTITY",
-														"keywordKey",
-														keyAsString,
-														"entityName",
-														strings[0],
-														"value", entityId,
-														"entityType",
-														strings[1],
-														"count",
-														bucket.getDocCount()
-													)
-												);
-											}
-
-
-										}
-
-									}
-
-								}
-
-							}
-
-							break;
-						case "datasourceId": {
-
-							Terms terms = (Terms) aggr.getValue();
-
-							for (Terms.Bucket bucket : terms.getBuckets()) {
-
-								long datasourceId = NumberUtils.toLong(
-									bucket.getKeyAsString());
-
-								String datasourceName = Strings.BLANK;
-
-								for (Datasource datasource : datasourceList) {
-									if (datasource.getDatasourceId() ==
-										datasourceId) {
-										datasourceName = datasource.getName();
-									}
-								}
-
-								list.add(
-									Map.of(
-										"tokenType", "DATASOURCE",
-										"value", datasourceName,
-										"datasourceId", datasourceId,
-										"count", bucket.getDocCount()
-									)
-								);
-							}
-
-							break;
+						if (entitiesContext != null) {
+							suggestions.add(
+								Suggestions.entity(
+									entitiesId, typeName[0], typeName[1],
+									entitiesContext)
+							);
 						}
-						case "documentTypes": {
-
-							Terms terms = (Terms) aggr.getValue();
-
-							for (Terms.Bucket bucket : terms.getBuckets()) {
-								list.add(
-									Map.of(
-										"tokenType", "DOCTYPE",
-										"value", bucket.getKey(),
-										"count", bucket.getDocCount()
-									)
-								);
-							}
-
-							break;
+						else {
+							suggestions.add(
+								Suggestions.entity(
+									entitiesId, typeName[0], typeName[1])
+							);
 						}
-						default: {
+					}
 
-							Terms terms = (Terms) aggr.getValue();
+					String documentTypes =(String)keys.remove("documentTypes");
 
-							for (Terms.Bucket bucket : terms.getBuckets()) {
-								list.add(
-									Map.of(
-										"tokenType", "TEXT",
-										"keywordKey", terms.getName(),
-										"value", bucket.getKey(),
-										"count", bucket.getDocCount()
-									)
-								);
-							}
+					if (documentTypes != null) {
+						suggestions.add(
+							Suggestions.docType(documentTypes)
+						);
+					}
 
-							break;
+					for (Map.Entry<String, Object> restEntry : keys.entrySet()) {
+						String keywordKey = restEntry.getKey();
+						String value =(String)restEntry.getValue();
+
+						if (value != null) {
+							suggestions.add(
+								Suggestions.text(value, keywordKey)
+							);
 						}
+
 					}
 
 				}
 
-				return new Response(list, list.size());
+				Map<String, Object> map = compositeAggregation.afterKey();
+				String afterKey = null;
+
+				if (map != null) {
+					afterKey = _jsonFactory.toJson(map);
+					afterKey = Base64.getEncoder().encodeToString(
+						afterKey.getBytes(StandardCharsets.UTF_8));
+				}
+
+				return SuggestionsResponse.of(suggestions, afterKey);
 
 			});
 	}

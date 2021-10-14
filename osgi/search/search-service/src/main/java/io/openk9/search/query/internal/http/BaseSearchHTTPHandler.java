@@ -108,7 +108,7 @@ public abstract class BaseSearchHTTPHandler
 		_getTenantAndDatasourceList(
 			HttpServerRequest httpRequest, HttpServerResponse httpResponse);
 
-	protected Mono<Response> searchHitToResponseMono(
+	protected Mono<Object> searchHitToResponseMono(
 		Tenant tenant, List<Datasource> datasourceList,
 		PluginDriverDTOList pluginDriverDTOList,
 		HttpServerRequest httpServerRequest, SearchRequest searchRequest,
@@ -116,7 +116,7 @@ public abstract class BaseSearchHTTPHandler
 		return Mono.fromSupplier(() -> searchHitToResponse(searchResponse));
 	}
 
-	protected Response searchHitToResponse(SearchResponse searchResponse) {
+	protected Object searchHitToResponse(SearchResponse searchResponse) {
 
 		SearchHits hits = searchResponse.getHits();
 
