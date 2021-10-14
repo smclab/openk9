@@ -173,6 +173,13 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 			compositeAggregation.aggregateAfter(map);
 		}
 
+		int[] range = searchRequest.getRange();
+
+		if (range != null && range.length == 2) {
+			int size = range[1];
+			compositeAggregation.size(size);
+		}
+
 		searchSourceBuilder.aggregation(compositeAggregation);
 
 		searchSourceBuilder.from(0);
