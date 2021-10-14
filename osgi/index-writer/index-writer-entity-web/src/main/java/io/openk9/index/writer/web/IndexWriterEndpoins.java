@@ -17,7 +17,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -129,12 +128,7 @@ public class IndexWriterEndpoins implements RouterHandler {
 						new CountRequest(tenantId + "-*-data");
 
 					countRequest.query(
-						QueryBuilders
-							.nestedQuery(
-								"entities",
-								matchQuery(nestIdPath, id),
-								ScoreMode.Max)
-							.ignoreUnmapped(true)
+						matchQuery(nestIdPath, id)
 					);
 
 					CountResponse countResponse =
