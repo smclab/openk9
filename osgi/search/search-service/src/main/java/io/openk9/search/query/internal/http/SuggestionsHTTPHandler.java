@@ -301,24 +301,21 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 						String[] typeName = entityMap.get(entitiesId);
 
-						String type = null;
-						String name = null;
-
 						if (typeName != null) {
-							type = typeName[0];
-							name = typeName[1];
-						}
+							String type = typeName[0];
+							String name = typeName[1];
 
-						if (entitiesContext != null) {
-							suggestions.add(
-								Suggestions.entity(
-									entitiesId, type, name, entitiesContext)
-							);
-						}
-						else {
-							suggestions.add(
-								Suggestions.entity(entitiesId, type, name)
-							);
+							if (entitiesContext != null) {
+								suggestions.add(
+									Suggestions.entity(
+										entitiesId, type, name, entitiesContext)
+								);
+							}
+							else {
+								suggestions.add(
+									Suggestions.entity(entitiesId, type, name)
+								);
+							}
 						}
 					}
 
