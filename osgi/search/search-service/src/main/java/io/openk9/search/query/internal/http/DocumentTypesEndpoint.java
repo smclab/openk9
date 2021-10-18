@@ -33,7 +33,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -67,7 +66,7 @@ public class DocumentTypesEndpoint
 
 		String hostName = HttpUtil.getHostName(httpRequest);
 
-		Flux<Object> response =
+		Mono<Object> response =
 			_datasourceClient
 				.findTenantByVirtualHost(hostName)
 				.next()
@@ -87,6 +86,7 @@ public class DocumentTypesEndpoint
 					})
 					.map(pluginDriverDTO -> Tuples.of(datasource, pluginDriverDTO))
 				)
+				.collectList()
 				.map(this::_mapToResponse);
 
 		return _httpResponseWriter.write(httpResponse, response);
@@ -94,34 +94,37 @@ public class DocumentTypesEndpoint
 	}
 
 	private Object _mapToResponse(
-		Tuple2<Datasource, PluginDriverDTO> t2) {
-
-		PluginDriverDTO pluginDriver = t2.getT2();
+		List<Tuple2<Datasource, PluginDriverDTO>> list) {
 
 		Map<String, Collection<String>> response = new HashMap<>();
 
-		for (DocumentTypeDTO documentType : pluginDriver.getDocumentTypes()) {
+		for (Tuple2<Datasource, PluginDriverDTO> t2 : list) {
+			PluginDriverDTO pluginDriver = t2.getT2();
 
-			String name = documentType.getName();
+			for (DocumentTypeDTO documentType : pluginDriver.getDocumentTypes()) {
 
-			List<SearchKeywordDTO> searchKeywords =
-				documentType.getSearchKeywords();
+				String name = documentType.getName();
 
-			List<String> keywords =
-				searchKeywords
-					.stream()
-					.map(SearchKeywordDTO::getKeyword)
-					.collect(Collectors.toList());
+				List<SearchKeywordDTO> searchKeywords =
+					documentType.getSearchKeywords();
 
-			Collection<String> prevKeywords = response.get(name);
+				List<String> keywords =
+					searchKeywords
+						.stream()
+						.map(SearchKeywordDTO::getKeyword)
+						.collect(Collectors.toList());
 
-			Set<String> combine = new HashSet<>(keywords);
+				Collection<String> prevKeywords = response.get(name);
 
-			if (prevKeywords != null) {
-				combine.addAll(prevKeywords);
+				Set<String> combine = new HashSet<>(keywords);
+
+				if (prevKeywords != null) {
+					combine.addAll(prevKeywords);
+				}
+
+				response.put(name, combine);
+
 			}
-
-			response.put(name, combine);
 
 		}
 
