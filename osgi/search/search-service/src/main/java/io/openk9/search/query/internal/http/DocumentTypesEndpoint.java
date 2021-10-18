@@ -25,11 +25,9 @@ import io.openk9.http.web.RouterHandler;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
+import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
@@ -43,19 +41,24 @@ import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
 	service = RouterHandler.class
 )
-public class SupportedDatasourcesEndpoint
+public class DocumentTypesEndpoint
 	implements RouterHandler, HttpHandler {
 
 	@Override
 	public HttpServerRoutes handle(HttpServerRoutes router) {
-		return router.get("/v1/supported-datasources", this);
+		return router.get("/v1/document-types", this);
 	}
 
 	@Override
@@ -64,7 +67,7 @@ public class SupportedDatasourcesEndpoint
 
 		String hostName = HttpUtil.getHostName(httpRequest);
 
-		Flux<SupportedDatasourcesResponse> response =
+		Flux<Object> response =
 			_datasourceClient
 				.findTenantByVirtualHost(hostName)
 				.next()
@@ -90,48 +93,41 @@ public class SupportedDatasourcesEndpoint
 
 	}
 
-	private SupportedDatasourcesResponse _mapToResponse(
+	private Object _mapToResponse(
 		Tuple2<Datasource, PluginDriverDTO> t2) {
-
-		Datasource t1 = t2.getT1();
 
 		PluginDriverDTO pluginDriver = t2.getT2();
 
-		return SupportedDatasourcesResponse.of(
-			t1.getName(), t1.getActive(),
-			pluginDriver
-				.getDocumentTypes()
-				.stream()
-				.map(documentTypeDTO -> SupportedDatasourcesDocumentType.of(
-					documentTypeDTO.getName(), documentTypeDTO.getIcon())
-				)
-				.collect(Collectors.toList()),
-			SupportedDatasourcesDocumentType.of(
-				pluginDriver.getDefaultDocumentType().getName(),
-				pluginDriver.getDefaultDocumentType().getIcon()
-			)
-		);
-	}
+		Map<String, Collection<String>> response = new HashMap<>();
 
-	@Data
-	@Builder
-	@AllArgsConstructor(staticName = "of")
-	@NoArgsConstructor(staticName = "of")
-	public static class SupportedDatasourcesResponse {
-		private String name;
-		private Boolean active;
-		private List<SupportedDatasourcesDocumentType> documentTypes;
-		private SupportedDatasourcesDocumentType defaultDocumentType;
-	}
+		for (DocumentTypeDTO documentType : pluginDriver.getDocumentTypes()) {
 
-	@Data
-	@Builder
-	@AllArgsConstructor(staticName = "of")
-	@NoArgsConstructor(staticName = "of")
-	public static class SupportedDatasourcesDocumentType {
-		private String name;
-		private String icon;
-	}
+			String name = documentType.getName();
+
+			List<SearchKeywordDTO> searchKeywords =
+				documentType.getSearchKeywords();
+
+			List<String> keywords =
+				searchKeywords
+					.stream()
+					.map(SearchKeywordDTO::getKeyword)
+					.collect(Collectors.toList());
+
+			Collection<String> prevKeywords = response.get(name);
+
+			Set<String> combine = new HashSet<>(keywords);
+
+			if (prevKeywords != null) {
+				combine.addAll(prevKeywords);
+			}
+
+			response.put(name, combine);
+
+		}
+
+		return response;
+
+ 	}
 
 	@Reference
 	private HttpResponseWriter _httpResponseWriter;
@@ -143,6 +139,6 @@ public class SupportedDatasourcesEndpoint
 	private PluginDriverManagerClient _pluginDriverManagerClient;
 
 	private static final Logger _log = LoggerFactory.getLogger(
-		SupportedDatasourcesEndpoint.class);
+		DocumentTypesEndpoint.class);
 
 }
