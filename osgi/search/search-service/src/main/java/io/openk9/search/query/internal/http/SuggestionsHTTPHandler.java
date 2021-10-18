@@ -261,7 +261,36 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 					String datasourceId =(String)keys.remove("datasourceId");
 
 					if (datasourceId != null) {
-						suggestions.add(Suggestions.datasource(datasourceId));
+						long datasourceIdL = Long.parseLong(datasourceId);
+						for1: for (Datasource datasource : datasourceList) {
+
+							if (datasource
+								.getDatasourceId()
+								.equals(datasourceIdL)) {
+
+								for (PluginDriverDTO pluginDriverDTO :
+									pluginDriverDTOList
+										.getPluginDriverDTOList()) {
+
+									if (
+										pluginDriverDTO
+											.getDriverServiceName()
+											.equals(
+												datasource
+													.getDriverServiceName())
+									) {
+										suggestions.add(
+											Suggestions.datasource(
+												pluginDriverDTO.getName()));
+
+										break for1;
+
+									}
+
+								}
+
+							}
+						}
 					}
 
 					String entitiesId =(String)keys.remove("entities.id");
