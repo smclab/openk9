@@ -40,7 +40,7 @@ import {
   getTentantWithConfiguration,
   SuggestionResult,
 } from "@openk9/http-api";
-import { debounce } from "@openk9/search-ui-components";
+import { debounce, filterSuggestionByActiveSuggestionCategory, filterSuggestionBySearchQuery } from "@openk9/search-ui-components";
 
 const resultsChunkNumber = 8;
 const searchTimeoutDebounce = 800;
@@ -189,13 +189,10 @@ export const useStore = create<StateType>(
         set((state) => ({
           ...state,
           suggestions:
-            activeSuggestionCategoryId !== 0
-              ? suggestions.filter(
-                  (suggestion) =>
-                    suggestion.suggestionCategory ===
-                    activeSuggestionCategoryId,
-                )
-              : suggestions,
+            suggestions.filter(
+              filterSuggestionByActiveSuggestionCategory(activeSuggestionCategoryId),
+            )
+            .filter(filterSuggestionBySearchQuery(searchQuery)),
         }));
       }
     },

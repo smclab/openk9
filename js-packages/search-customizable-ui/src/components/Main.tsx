@@ -9,7 +9,7 @@ import {
 import { useQuery } from "react-query";
 import useDebounce from "../hooks/useDebounce";
 import { TokenComponent } from "./Token";
-import { getPluginResultRenderers } from "@openk9/search-ui-components";
+import { getPluginResultRenderers, mapSuggestionToSearchToken } from "@openk9/search-ui-components";
 import { useClickAway } from "../hooks/useClickAway";
 import { useInView } from "react-intersection-observer";
 import { Detail } from "./Detail";
@@ -82,6 +82,7 @@ export function Main({ children, templates, interactions }: MainProps) {
   );
   const suggestions = useInfiniteSuggestions(
     showSuggestions ? debouncedSearchQuery : null,
+    state.activeSuggestionCategory
   );
   const flattenedSuggestions = React.useMemo(
     () => suggestions.data?.pages.flatMap((page) => page.result) ?? [],
@@ -131,37 +132,22 @@ export function Main({ children, templates, interactions }: MainProps) {
   }
   const addSuggestion = React.useCallback(
     (suggestion: SuggestionResult) => {
+      const searchToken = mapSuggestionToSearchToken(suggestion)
       switch (suggestion.tokenType) {
         case "ENTITY": {
-          addToken({
-            tokenType: "ENTITY",
-            entityType: suggestion.entityType,
-            keywordKey: suggestion.keywordKey,
-            values: [Number(suggestion.value)],
-          });
+          addToken(searchToken);
           break;
         }
         case "TEXT": {
-          addToken({
-            tokenType: "TEXT",
-            keywordKey: suggestion.keywordKey,
-            values: [suggestion.value],
-          });
+          addToken(searchToken);
           break;
         }
         case "DOCTYPE": {
-          addToken({
-            tokenType: "DOCTYPE",
-            keywordKey: "type",
-            values: [suggestion.value],
-          });
+          addToken(searchToken);
           break;
         }
         case "DATASOURCE": {
-          addToken({
-            tokenType: "DATASOURCE",
-            values: [suggestion.value],
-          });
+          addToken(searchToken);
           break;
         }
       }
@@ -428,18 +414,10 @@ export function Main({ children, templates, interactions }: MainProps) {
               suggestionPage.result.includes(state.selectedSuggestion)
                 ? state.selectedSuggestion
                 : null;
-            const filteredSuggestions =
-              state.activeSuggestionCategory !== 0
-                ? suggestionPage.result.filter(
-                    (suggestion) =>
-                      suggestion.suggestionCategory ===
-                      state.activeSuggestionCategory,
-                  )
-                : suggestionPage.result;
             return (
               <SuggestionPageMemo
                 key={index}
-                suggestions={filteredSuggestions}
+                suggestions={suggestionPage.result}
                 templates={templates}
                 onAdd={addSuggestion}
                 onSelect={selectSuggestion}

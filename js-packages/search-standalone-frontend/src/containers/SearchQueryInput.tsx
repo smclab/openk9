@@ -35,6 +35,7 @@ import {
   SearchQueryField,
   FieldSuggestionBrowser,
   circularMod,
+  mapSuggestionToSearchToken,
 } from "@openk9/search-ui-components";
 
 import { useSearchQuery, useStore } from "../state";
@@ -121,34 +122,25 @@ export function SearchQueryInput() {
 
   function handleAddSuggestion(suggestion: SuggestionResult) {
     const soFar = searchQuery.filter((e, i) => i !== focusToken);
-    const editingTok = (focusToken !== null && searchQuery[focusToken]) || null;
     const addToken = (searchToken: SearchToken) => {
       setSearchQuery([...soFar, searchToken]);
     };
+    const searchToken = mapSuggestionToSearchToken(suggestion)
     switch (suggestion.tokenType) {
       case "DATASOURCE": {
-        addToken({ tokenType: "DATASOURCE", values: [suggestion.value] });
+        addToken(searchToken);
         break;
       }
       case "DOCTYPE": {
-        addToken({ tokenType: "DOCTYPE", keywordKey: "type", values: [suggestion.value] });
+        addToken(searchToken);
         break;
       }
       case "ENTITY": {
-        addToken({
-          tokenType: "ENTITY",
-          keywordKey: editingTok?.keywordKey,
-          entityType: suggestion.entityType,
-          values: [Number(suggestion.value)],
-        });
+        addToken(searchToken);
         break;
       }
       case "TEXT": {
-        addToken({
-          tokenType: "TEXT",
-          keywordKey: suggestion.keywordKey,
-          values: [suggestion.value],
-        });
+        addToken(searchToken);
         break;
       }
     }
