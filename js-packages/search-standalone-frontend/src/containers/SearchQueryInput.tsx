@@ -72,8 +72,8 @@ export function SearchQueryInput() {
   const [searchQuery, setSearchQuery] = useSearchQuery();
   const tenantConfig = useStore((s) => s.tenantConfig);
   const suggestions = useStore((s) => s.suggestions);
-  const suggestionsKind = useStore((s) => s.suggestionsKind);
-  const setSuggestionsKind = useStore((s) => s.setSuggestionsKind);
+  const activeSuggestionCategoryId = useStore((s) => s.activeSuggestionCategoryId);
+  const setActiveSugegstionCategoryId = useStore((s) => s.setActiveSugestionCategoryId);
   const focusToken = useStore((s) => s.focusToken);
   const setFocusToken = useStore((s) => s.setFocusToken);
 
@@ -228,9 +228,9 @@ export function SearchQueryInput() {
             <FieldSuggestionBrowser
               suggestions={suggestions}
               visible={searchOpen}
-              suggestionsKind={suggestionsKind}
-              setSuggestionsKind={(kind) => {
-                setSuggestionsKind(kind);
+              activeSuggestionCategoryId={activeSuggestionCategoryId}
+              onActiveSuggestionCategoryChange={(suggestionCategoryId) => {
+                setActiveSugegstionCategoryId(suggestionCategoryId);
                 focusedInputRef.current && focusedInputRef.current.focus();
               }}
               onAddSuggestion={handleAddSuggestion}

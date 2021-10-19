@@ -58,8 +58,8 @@ export type StateType = {
   doLoadMore(): void;
   suggestions: SuggestionResult[];
   fetchSuggestions(): Promise<void>;
-  suggestionsKind: string | null;
-  setSuggestionsKind(suggestionsKind: string | null): void;
+  activeSuggestionCategoryId: number;
+  setActiveSugestionCategoryId(suggestionCategoryId: number): void;
   focusToken: number | null;
   setFocusToken(focusToken: number | null): void;
   selectedResult: string | null;
@@ -86,7 +86,7 @@ export const useStore = create<StateType>(
     loading: false,
     range: null,
     suggestions: [],
-    suggestionsKind: null,
+    activeSuggestionCategoryId: 0,
     suggestionsInfo: [],
     focusToken: null,
     selectedResult: null,
@@ -177,23 +177,34 @@ export const useStore = create<StateType>(
 
     // With optional parameters for debouncing
     async fetchSuggestions(myOpId?: number, opRef?: { lastOpId: number }) {
-      const { searchQuery, suggestionsKind, loginInfo } = get();
+      const { searchQuery, activeSuggestionCategoryId, loginInfo } = get();
 
-      const { result: suggestions } = await getSuggestions(
-        { searchQuery, range: [0, 1000], loginInfo },
-        // suggestionsKind || undefined,
-      );
+      const { result: suggestions } = await getSuggestions({
+        searchQuery,
+        range: [0, 100],
+        loginInfo,
+      });
 
       if (myOpId === undefined || myOpId === opRef?.lastOpId) {
         set((state) => ({
           ...state,
-          suggestions,
+          suggestions:
+            activeSuggestionCategoryId !== 0
+              ? suggestions.filter(
+                  (suggestion) =>
+                    suggestion.suggestionCategory ===
+                    activeSuggestionCategoryId,
+                )
+              : suggestions,
         }));
       }
     },
 
-    setSuggestionsKind(suggestionsKind: string | null) {
-      set((state) => ({ ...state, suggestionsKind }));
+    setActiveSugestionCategoryId(suggestionCategoryId: number) {
+      set((state) => ({
+        ...state,
+        activeSuggestionCategoryId: suggestionCategoryId,
+      }));
       get().fetchSuggestions();
     },
 

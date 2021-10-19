@@ -30,7 +30,7 @@ export type OpenK9UITemplates = {
     setDetail(result: GenericResultItem<unknown>): void;
   }): Element | null;
   detail?(params: { result: GenericResultItem<unknown> }): Element | null;
-  suggestionKind?(params: {
+  suggestionCategory?(params: {
     label: string;
     active: boolean;
     select(): void;

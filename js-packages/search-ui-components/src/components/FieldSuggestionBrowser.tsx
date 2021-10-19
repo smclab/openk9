@@ -22,6 +22,7 @@ import ClayIcon from "@clayui/icon";
 import { SuggestionResult } from "@openk9/http-api";
 import { ThemeType } from "@openk9/search-ui-components";
 import { TokenIcon } from "./TokenIcon";
+import { useSuggestionCategories } from "../data-hooks/useSuggestionCategories";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -107,19 +108,6 @@ function MenuItem({
   );
 }
 
-// TODO: move this to tenant configuration/component prop
-// HARDCODED
-const menuItems = [
-  { id: "person", label: "People" },
-  { id: "organization", label: "Organizations" },
-  { id: "email", label: "Emails" },
-  { id: "loc", label: "Locations" },
-  { id: "*.topic", label: "Topics" },
-  { id: "*.documentType", label: "Document Type" },
-  { id: "type", label: "Types" },
-  { id: "PARAM", label: "Filters" },
-];
-
 /**
  * A floating menu for adding tokens, such as predicates and entities. To be used with SearchQueryField.
  * @param suggestionsKind - the currently selected token type, AKA the left menu selector state. Please fetch suggestions again at every change.
@@ -129,26 +117,26 @@ export function FieldSuggestionBrowser({
   suggestions,
   onAddSuggestion,
   visible,
-  suggestionsKind,
-  setSuggestionsKind,
+  activeSuggestionCategoryId,
+  onActiveSuggestionCategoryChange,
   highlightToken,
   onHighlightToken,
 }: {
   suggestions: SuggestionResult[];
   onAddSuggestion(sugg: SuggestionResult): void;
   visible: boolean;
-  suggestionsKind: string | null;
-  setSuggestionsKind(k: string | null): void;
+  activeSuggestionCategoryId: number;
+  onActiveSuggestionCategoryChange(k: number): void;
   highlightToken: SuggestionResult | null;
   onHighlightToken(suggestion: SuggestionResult): void;
 }) {
   const classes = useStyles();
 
-  function handleToggleKind(kind: string) {
-    if (suggestionsKind === kind) {
-      setSuggestionsKind(null);
+  function handleToggleActiveSuggestionCategory(id: number) {
+    if (activeSuggestionCategoryId === id) {
+      onActiveSuggestionCategoryChange(0);
     } else {
-      setSuggestionsKind(kind);
+      onActiveSuggestionCategoryChange(id);
     }
   }
 
@@ -173,22 +161,26 @@ export function FieldSuggestionBrowser({
     if (!visibleTok) hTok.scrollIntoView(false);
   }, [highlightToken]);
 
+  const suggestionCategories = useSuggestionCategories();
   return visible ? (
     <div className={classes.root}>
       <div className={classes.menu}>
-        <MenuItem
-          active={suggestionsKind === null}
-          onSelect={() => setSuggestionsKind(null)}
-          label="All"
-        />
-        {menuItems.map((item, i) => (
-          <MenuItem
-            key={item.id}
-            active={suggestionsKind === item.id}
-            onSelect={() => handleToggleKind(item.id)}
-            {...item}
-          />
-        ))}
+        {suggestionCategories.data?.categories.map((suggestionCategory) => {
+          return (
+            <MenuItem
+              key={suggestionCategory.categoryId}
+              active={
+                activeSuggestionCategoryId === suggestionCategory.categoryId
+              }
+              onSelect={() =>
+                handleToggleActiveSuggestionCategory(
+                  suggestionCategory.categoryId,
+                )
+              }
+              label={suggestionCategory.name}
+            />
+          );
+        })}
       </div>
 
       <div className={classes.tokens} ref={scrollRef}>
@@ -216,7 +208,7 @@ export function FieldSuggestionBrowser({
                 case "DOCTYPE":
                   return suggestion.value;
                 case "ENTITY":
-                  return suggestion.entityName;
+                  return suggestion.entityValue;
                 case "TEXT":
                   return suggestion.value;
               }

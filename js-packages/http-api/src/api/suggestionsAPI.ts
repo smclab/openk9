@@ -22,16 +22,39 @@ import { authFetch } from "./common";
 export async function getSuggestions({
   searchQuery,
   range,
+  afterKey,
   loginInfo,
 }: {
   searchQuery: SearchQuery;
-  range: [number, number];
+  range?: [number, number]; // for pagination
+  afterKey?: string, // for pagination
   loginInfo: LoginInfo | null;
-}): Promise<{ result: SuggestionResult[]; total: number }> {
+}): Promise<{ result: SuggestionResult[]; afterKey: string }> {
   const request = await authFetch(`/api/searcher/v1/suggestions`, loginInfo, {
     method: "POST",
-    body: JSON.stringify({ searchQuery, range }),
+    body: JSON.stringify({ searchQuery, range, afterKey }),
   });
   const response = await request.json();
   return response;
+}
+
+type SuggestionsCategoriesResult = {
+  categories: Array<{
+    categoryId: number;
+    name: string;
+    parentCategoryId: number; // 0 means root category
+  }>;
+};
+
+export async function getSuggestionCategories(): Promise<SuggestionsCategoriesResult> {
+  // TODO implement
+  return {
+    categories: [
+      { categoryId: 0, name: "ALL", parentCategoryId: 0 },
+      { categoryId: 1, name: "DATASOURCE", parentCategoryId: 0 },
+      { categoryId: 2, name: "DOCTYPE", parentCategoryId: 0 },
+      { categoryId: 3, name: "ENTITY", parentCategoryId: 0 },
+      { categoryId: 4, name: "TEXT", parentCategoryId: 0 },
+    ],
+  };
 }

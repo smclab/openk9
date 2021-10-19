@@ -57,33 +57,39 @@ function SuggestionPage({
                     case "DATASOURCE": {
                       return (
                         <>
-                          <strong>datasource: </strong> {suggestion.value} (
-                          {suggestion.count})
+                          <strong>datasource: </strong> {suggestion.value}
                         </>
                       );
                     }
                     case "DOCTYPE": {
                       return (
                         <>
-                          <strong>doctype: </strong> {suggestion.value} (
-                          {suggestion.count})
+                          <strong>doctype: </strong> {suggestion.value}
                         </>
                       );
                     }
                     case "ENTITY": {
                       return (
                         <>
-                          {suggestion.keywordKey ? <><strong>{suggestion.keywordKey}: </strong></>: null}
+                          {suggestion.keywordKey ? (
+                            <>
+                              <strong>{suggestion.keywordKey}: </strong>
+                            </>
+                          ) : null}
                           <strong>{suggestion.entityType}</strong>{" "}
-                          {suggestion.entityName} ({suggestion.count})
+                          {suggestion.entityValue}
                         </>
                       );
                     }
                     case "TEXT": {
                       return (
                         <>
-                          {suggestion.keywordKey ? <><strong>{suggestion.keywordKey}: </strong></>: null}
-                          {suggestion.value} ({suggestion.count})
+                          {suggestion.keywordKey ? (
+                            <>
+                              <strong>{suggestion.keywordKey}: </strong>
+                            </>
+                          ) : null}
+                          {suggestion.value}
                         </>
                       );
                     }

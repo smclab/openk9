@@ -27,6 +27,9 @@ import { defaultTheme } from "@openk9/search-ui-components";
 import { useStore } from "./state";
 import { LoginPage } from "./pages/LoginPage";
 import { SearchPage } from "./pages/SearchPage";
+import { QueryClient, QueryClientProvider } from "react-query";
+
+const queryClient = new QueryClient();
 
 function App() {
   const loadInitial = useStore((s) => s.loadInitial);
@@ -37,18 +40,20 @@ function App() {
   return (
     <ThemeProvider theme={defaultTheme}>
       <ClayIconSpriteContext.Provider value="/icons.svg">
-        <Router>
-          <Switch>
-            <Route path={["/login"]}>
-              <Suspense fallback={<span className="loading-animation" />}>
-                <LoginPage />
-              </Suspense>
-            </Route>
-            <Route path={["/q/:query", "/"]}>
-              <SearchPage />
-            </Route>
-          </Switch>
-        </Router>
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <Switch>
+              <Route path={["/login"]}>
+                <Suspense fallback={<span className="loading-animation" />}>
+                  <LoginPage />
+                </Suspense>
+              </Route>
+              <Route path={["/q/:query", "/"]}>
+                <SearchPage />
+              </Route>
+            </Switch>
+          </Router>
+        </QueryClientProvider>
       </ClayIconSpriteContext.Provider>
     </ThemeProvider>
   );

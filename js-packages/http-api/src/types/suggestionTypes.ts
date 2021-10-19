@@ -15,29 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type SuggestionResult =
+export type SuggestionResult = (
   | {
       tokenType: "DATASOURCE";
-      datasourceId: number;
       value: string;
-      count: number;
     }
   | {
       tokenType: "TEXT";
-      keywordKey: string;
+      keywordKey?: string;
       value: string;
-      count: number;
     }
   | {
       tokenType: "ENTITY";
       entityType: string;
-      entityName: string;
-      keywordKey: string;
+      entityValue: string;
+      keywordKey?: string;
       value: string;
-      count: number;
     }
   | {
       tokenType: "DOCTYPE";
-      count: string;
       value: string;
     }
+) & {
+  suggestionCategory: number;
+};

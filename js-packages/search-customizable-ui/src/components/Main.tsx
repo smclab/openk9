@@ -18,8 +18,9 @@ import { EmbedElement } from "./EmbedElement";
 import { useTabTokens } from "../data-hooks/useTabTokens";
 import { useInfiniteResults } from "../data-hooks/useInfiniteResults";
 import { ResultPageMemo } from "./ResultPage";
-import { useInfiniteSuggestions } from "../data-hooks/useInfiniteSuggestions";
 import { SuggestionPageMemo } from "./SuggestionPage";
+import { useSuggestionCategories } from "../data-hooks/useSuggestionCategories";
+import { useInfiniteSuggestions } from "../data-hooks/useInfiniteSuggestions";
 
 type MainProps = {
   children: (widgets: {
@@ -41,7 +42,7 @@ type State = {
   searchQuery: SearchQuery | null;
   showSuggestions: boolean;
   selectedSuggestion: SuggestionResult | null;
-  entityKind: string | undefined;
+  activeSuggestionCategory: number;
   detail: GenericResultItem<any> | null;
 };
 
@@ -53,7 +54,7 @@ const initialState: State = {
   showSuggestions: false,
   focusedToken: null,
   selectedSuggestion: null,
-  entityKind: undefined,
+  activeSuggestionCategory: 0,
   detail: null,
 };
 
@@ -223,10 +224,10 @@ export function Main({ children, templates, interactions }: MainProps) {
     },
     [],
   );
-  function setSuggestionKind(id: string) {
+  function setActiveSuggestionCategoryId(id: number) {
     setState((state) => ({
       ...state,
-      entityKind: id,
+      activeSuggestionCategory: id,
     }));
   }
   // update search debounced
@@ -240,7 +241,7 @@ export function Main({ children, templates, interactions }: MainProps) {
       };
     }
   }, [updateSearch, interactions.searchAsYouType, state.text]);
-
+  const suggestionCategories = useSuggestionCategories();
   return children({
     search: (
       <div
@@ -381,25 +382,27 @@ export function Main({ children, templates, interactions }: MainProps) {
             overflowY: "scroll",
           }}
         >
-          {tokenKinds.map((tokenK) => {
-            const isActive = tokenK.id === state.entityKind;
-            const customizedTokenKind = templates.suggestionKind?.({
-              label: tokenK.label,
+          {suggestionCategories.data?.categories.map((suggestionCategory) => {
+            const isActive =
+              suggestionCategory.categoryId === state.activeSuggestionCategory;
+            const customizedTokenKind = templates.suggestionCategory?.({
+              label: suggestionCategory.name,
               active: isActive,
-              select: () => setSuggestionKind(tokenK.id ?? ""),
+              select: () =>
+                setActiveSuggestionCategoryId(suggestionCategory.categoryId),
             });
             if (customizedTokenKind) {
               return (
-                <React.Fragment key={tokenK.id ?? ""}>
+                <React.Fragment key={suggestionCategory.categoryId}>
                   <EmbedElement element={customizedTokenKind} />
                 </React.Fragment>
               );
             }
             return (
               <div
-                key={tokenK.id ?? ""}
+                key={suggestionCategory.categoryId}
                 onClick={() => {
-                  setSuggestionKind(tokenK.id ?? "");
+                  setActiveSuggestionCategoryId(suggestionCategory.categoryId);
                 }}
                 style={{
                   padding: "8px 16px",
@@ -407,7 +410,7 @@ export function Main({ children, templates, interactions }: MainProps) {
                   cursor: "pointer",
                 }}
               >
-                {tokenK.label}
+                {suggestionCategory.name}
               </div>
             );
           })}
@@ -425,10 +428,18 @@ export function Main({ children, templates, interactions }: MainProps) {
               suggestionPage.result.includes(state.selectedSuggestion)
                 ? state.selectedSuggestion
                 : null;
+            const filteredSuggestions =
+              state.activeSuggestionCategory !== 0
+                ? suggestionPage.result.filter(
+                    (suggestion) =>
+                      suggestion.suggestionCategory ===
+                      state.activeSuggestionCategory,
+                  )
+                : suggestionPage.result;
             return (
               <SuggestionPageMemo
                 key={index}
-                suggestions={suggestionPage.result}
+                suggestions={filteredSuggestions}
                 templates={templates}
                 onAdd={addSuggestion}
                 onSelect={selectSuggestion}
@@ -436,7 +447,7 @@ export function Main({ children, templates, interactions }: MainProps) {
               />
             );
           })}
-          {results.hasNextPage && !results.isFetchingNextPage && (
+          {suggestions.hasNextPage && !suggestions.isFetchingNextPage && (
             <div style={{ margin: "8px 16px" }} ref={loadMoreSuggestionsRef}>
               Loading more...
             </div>
@@ -519,20 +530,6 @@ export function Main({ children, templates, interactions }: MainProps) {
       })(),
   }) as JSX.Element;
 }
-
-// TODO get it from back-end
-// HARDCODED
-const tokenKinds = [
-  { id: undefined, label: "All" },
-  { id: "person", label: "People" },
-  { id: "organization", label: "Organizations" },
-  { id: "email", label: "Emails" },
-  { id: "loc", label: "Locations" },
-  { id: "*.topic", label: "Topics" },
-  { id: "*.documentType", label: "Document Type" },
-  { id: "type", label: "Types" },
-  { id: "PARAM", label: "Filters" },
-];
 
 function useLoadMore(callback: () => void) {
   const { ref, inView } = useInView({ delay: 200, initialInView: false });
