@@ -48,7 +48,9 @@ export function JSONView({ jsonString }: { jsonString: string }) {
       {formatted.error && (
         <ClayAlert displayType="danger">
           Warning! Error in JSON
-          <pre className={classes.error}>{formatted.error.message}</pre>
+          <pre className={classes.error}>
+            {(formatted.error as any).message}
+          </pre>
         </ClayAlert>
       )}
       <pre className={classes.json}>{formatted.jsonString}</pre>
