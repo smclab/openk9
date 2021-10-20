@@ -258,11 +258,11 @@ public class IndexWriterEndpoins implements RouterHandler {
 								)
 								.map(Object::toString)
 								.doOnNext(_log::info)
-								/*.flatMap(response ->
+								.flatMap(response ->
 									Mono.fromRunnable(
 										() -> _sendCleanOrphanEntitiesRequest(datasource.getTenantId()))
 										.thenReturn(response)
-								)*/
+								)
 							);
 
 					}

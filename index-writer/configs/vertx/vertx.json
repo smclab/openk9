@@ -1,0 +1,4 @@
+{
+	"maxEventLoopExecuteTime" : 20,
+	"maxEventLoopExecuteTimeUnit" : "SECONDS"
+}
