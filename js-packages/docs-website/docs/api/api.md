@@ -1,6 +1,6 @@
 ---
 id: api
-title: Rest APIs
+title: Rest APIs overview
 slug: /api
 
 ---
@@ -14,7 +14,6 @@ Some content might not be included yet.
 :::
 
 
-- [APIs Overview](api/api-introduction)
 - [Searcher APIs](api/searcher-api)
 - [Datasource APIs](api/datasource-api)
 - [Ingestion API](api/ingestion-api)

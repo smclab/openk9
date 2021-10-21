@@ -24,8 +24,15 @@ POST /v1/suggestions
 
 ### Description
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Allows you to execute a search query to get back a list of suggestions about different informations: like:
+- datasources
+- documentTypes
+- entities
+- search keywords
+- categories
+- topics
+
+You can provide search queries using the following request body.
 
 ### Request Body
 

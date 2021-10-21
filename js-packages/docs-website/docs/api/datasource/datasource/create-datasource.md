@@ -23,7 +23,22 @@ POST /v2/datasource
 
 ### Description
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Allows you to create a new datasource.
 
 ### Request Body
+
+`active`: (boolean) Specific if datasource is enabled or not
+
+`description`: (string) Description about the datasource
+
+`jsonConfig`: (dict) Configuration of the datasource. Normally includes the information to be sent to the external connector.
+
+`name`: (date) Name of datasource
+
+`tenantId`: (int) Id of related tenant
+
+`scheduling`: (cron expression) Quartz cron expression to adjust the scheduler
+
+`driverServiceName`: (string) Symbolic name of related plugin
+
+

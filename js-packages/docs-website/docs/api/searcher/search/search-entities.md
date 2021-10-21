@@ -10,16 +10,20 @@ Search Entities on Index
 ```bash
 POST /v1/entity
 {
-  "all": "name"
-	"size": [0,1000]
+  "all": "name",
+  "size": [0,1000]
 }
 ```
 
 ### Description
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Allows you to execute a search query on entities index and get back a list of entities that match the query.
+You can provide search queries using the following request body.
 
 ### Request Body
+
+`all`: query for search
+
+`range`: range to get results
 
 
