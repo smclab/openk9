@@ -37,7 +37,8 @@
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-jss": "^10.4.0",
-    "use-asset": "^1.0.2"
+    "use-asset": "^1.0.2",
+    "react-query": "^3.19.1"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.175",
