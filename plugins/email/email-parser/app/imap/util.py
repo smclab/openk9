@@ -18,9 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import email
 import email.header
 import email.utils
+import base64
 
 from bs4 import BeautifulSoup
 from datetime import datetime
+
+
+def get_as_base64(response):
+
+    data = base64.b64encode(response).decode('utf-8')
+    return data
 
 
 def parse_email(fetched_msg):
@@ -40,19 +47,20 @@ def parse_email(fetched_msg):
     msg_date = email.utils.parsedate_tz(msg['Date'])
     local_date = email.utils.mktime_tz(msg_date)
 
+    binaries = []
     raw_body = ""
     try:
         if msg.is_multipart():
             for part in msg.walk():
                 content_type = part.get_content_type()
-                disp = str(part.get('Content-Disposition'))
-                # look for plain text parts, but skip attachments
-                if content_type == 'text/html' and 'attachment' not in disp:
+                if content_type == 'text/html':
                     charset = part.get_content_charset()
                     # decode the base64 unicode bytestring into plain text
                     raw_body = part.get_payload(decode=True).decode(encoding=charset, errors="ignore")
                     # if we've found the plain/text part, stop looping thru the parts
-                    break
+                elif content_type in ["image/png", "image/jpg", "image/jpeg", "application/pdf", "application/msword"]:
+                    data = get_as_base64(part.get_payload(decode=True))
+                    binaries.append(data)
         else:
             # not multipart - i.e. plain text, no attachments
             charset = msg.get_content_charset()
@@ -80,4 +88,4 @@ def parse_email(fetched_msg):
         raw_msg = raw_msg + " CC: " + msg_cc
     raw_msg = raw_msg + " " + body
 
-    return raw_msg, struct_msg, msg_id
+    return raw_msg, struct_msg, msg_id, binaries

@@ -105,13 +105,11 @@ class AsyncEmailExtraction(threading.Thread):
                     self.status_logger.error('ERROR getting message', num)
                     continue
                     
-                raw_msg, struct_msg, msg_id = parse_email(fetched_msg)
+                raw_msg, struct_msg, msg_id, binaries = parse_email(fetched_msg)
 
                 datasource_payload = {
                     "email": struct_msg
                 }
-
-                binaries = []
 
                 if struct_msg['date'] > self.timestamp:
 
@@ -127,7 +125,7 @@ class AsyncEmailExtraction(threading.Thread):
                     }
                     
                     try:
-                        self.post_message(self.ingestion_url, payload, 10)
+                        self.status_logger.info(payload)
                     except requests.RequestException:
                         self.status_logger.error("Problems during extraction of email with id " + str(num))
                         self.status = "ERROR"
