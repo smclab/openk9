@@ -15,12 +15,6 @@ repositories {
     mavenLocal()
 }
 
-buildNative {
-    additionalBuildArgs = [
-            '-J-Xmx4G'
-    ]
-}
-
 dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
     implementation 'io.quarkus:quarkus-resteasy-reactive-jackson'
