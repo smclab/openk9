@@ -1,0 +1,863 @@
+---
+openapi: 3.0.3
+info:
+  title: datasource API
+  version: 0.0.1
+paths:
+  /v1/datasource:
+    get:
+      tags:
+      - Datasource Resource
+      parameters:
+      - name: page
+        in: query
+        schema:
+          format: int32
+          default: 0
+          type: integer
+      - name: size
+        in: query
+        schema:
+          format: int32
+          default: 20
+          type: integer
+      - name: sort
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    post:
+      tags:
+      - Datasource Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasourceDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/datasource/{id}:
+    get:
+      tags:
+      - Datasource Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Datasource'
+    post:
+      tags:
+      - Datasource Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasourceDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    delete:
+      tags:
+      - Datasource Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          description: No Content
+    patch:
+      tags:
+      - Datasource Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasourceDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/enrichItem:
+    get:
+      tags:
+      - Enrich Item Resource
+      parameters:
+      - name: page
+        in: query
+        schema:
+          format: int32
+          default: 0
+          type: integer
+      - name: size
+        in: query
+        schema:
+          format: int32
+          default: 20
+          type: integer
+      - name: sort
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    post:
+      tags:
+      - Enrich Item Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrichItemDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/enrichItem/{id}:
+    get:
+      tags:
+      - Enrich Item Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichItem'
+    post:
+      tags:
+      - Enrich Item Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrichItemDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    delete:
+      tags:
+      - Enrich Item Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          description: No Content
+    patch:
+      tags:
+      - Enrich Item Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrichItemDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/enrichPipeline:
+    get:
+      tags:
+      - Enrich Pipeline Resource
+      parameters:
+      - name: page
+        in: query
+        schema:
+          format: int32
+          default: 0
+          type: integer
+      - name: size
+        in: query
+        schema:
+          format: int32
+          default: 20
+          type: integer
+      - name: sort
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    post:
+      tags:
+      - Enrich Pipeline Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrichPipelineDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/enrichPipeline/{id}:
+    get:
+      tags:
+      - Enrich Pipeline Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichPipeline'
+    post:
+      tags:
+      - Enrich Pipeline Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrichPipelineDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    delete:
+      tags:
+      - Enrich Pipeline Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          description: No Content
+    patch:
+      tags:
+      - Enrich Pipeline Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrichPipelineDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/suggestion-category:
+    get:
+      tags:
+      - Suggestion Category Resource
+      parameters:
+      - name: page
+        in: query
+        schema:
+          format: int32
+          default: 0
+          type: integer
+      - name: size
+        in: query
+        schema:
+          format: int32
+          default: 20
+          type: integer
+      - name: sort
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    post:
+      tags:
+      - Suggestion Category Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuggestionCategoryDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/suggestion-category-field:
+    get:
+      tags:
+      - Suggestion Category Field Resource
+      parameters:
+      - name: page
+        in: query
+        schema:
+          format: int32
+          default: 0
+          type: integer
+      - name: size
+        in: query
+        schema:
+          format: int32
+          default: 20
+          type: integer
+      - name: sort
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    post:
+      tags:
+      - Suggestion Category Field Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuggestionCategoryFieldDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/suggestion-category-field/{id}:
+    get:
+      tags:
+      - Suggestion Category Field Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionCategoryField'
+    post:
+      tags:
+      - Suggestion Category Field Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuggestionCategoryFieldDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    delete:
+      tags:
+      - Suggestion Category Field Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          description: No Content
+    patch:
+      tags:
+      - Suggestion Category Field Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuggestionCategoryFieldDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/suggestion-category/{id}:
+    get:
+      tags:
+      - Suggestion Category Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionCategory'
+    post:
+      tags:
+      - Suggestion Category Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuggestionCategoryDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    delete:
+      tags:
+      - Suggestion Category Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          description: No Content
+    patch:
+      tags:
+      - Suggestion Category Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuggestionCategoryDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/tenant:
+    get:
+      tags:
+      - Tenant Resource
+      parameters:
+      - name: page
+        in: query
+        schema:
+          format: int32
+          default: 0
+          type: integer
+      - name: size
+        in: query
+        schema:
+          format: int32
+          default: 20
+          type: integer
+      - name: sort
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    post:
+      tags:
+      - Tenant Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /v1/tenant/{id}:
+    get:
+      tags:
+      - Tenant Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+    post:
+      tags:
+      - Tenant Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+    delete:
+      tags:
+      - Tenant Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          description: No Content
+    patch:
+      tags:
+      - Tenant Resource
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+components:
+  schemas:
+    Datasource:
+      type: object
+      properties:
+        datasourceId:
+          format: int64
+          type: integer
+        active:
+          type: boolean
+        description:
+          type: string
+        jsonConfig:
+          type: string
+        lastIngestionDate:
+          format: date-time
+          type: string
+        name:
+          type: string
+        tenantId:
+          format: int64
+          type: integer
+        scheduling:
+          type: string
+        driverServiceName:
+          type: string
+    DatasourceDto:
+      type: object
+      properties:
+        active:
+          type: boolean
+        description:
+          type: string
+        jsonConfig:
+          type: string
+        lastIngestionDate:
+          format: date-time
+          type: string
+        name:
+          type: string
+        tenantId:
+          format: int64
+          type: integer
+        scheduling:
+          type: string
+        driverServiceName:
+          type: string
+    EnrichItem:
+      type: object
+      properties:
+        enrichItemId:
+          format: int64
+          type: integer
+        _position:
+          format: int32
+          type: integer
+        active:
+          type: boolean
+        jsonConfig:
+          type: string
+        enrichPipelineId:
+          format: int64
+          type: integer
+        name:
+          type: string
+        serviceName:
+          type: string
+    EnrichItemDto:
+      type: object
+      properties:
+        _position:
+          format: int32
+          type: integer
+        active:
+          type: boolean
+        jsonConfig:
+          type: string
+        enrichPipelineId:
+          format: int64
+          type: integer
+        name:
+          type: string
+        serviceName:
+          type: string
+    EnrichPipeline:
+      type: object
+      properties:
+        enrichPipelineId:
+          format: int64
+          type: integer
+        active:
+          type: boolean
+        datasourceId:
+          format: int64
+          type: integer
+        name:
+          type: string
+    EnrichPipelineDto:
+      type: object
+      properties:
+        active:
+          type: boolean
+        datasourceId:
+          format: int64
+          type: integer
+        name:
+          type: string
+    SuggestionCategory:
+      type: object
+      properties:
+        suggestionCategoryId:
+          format: int64
+          type: integer
+        tenantId:
+          format: int64
+          type: integer
+        parentCategoryId:
+          format: int64
+          type: integer
+        name:
+          type: string
+    SuggestionCategoryDto:
+      type: object
+      properties:
+        tenantId:
+          format: int64
+          type: integer
+        categoryId:
+          format: int64
+          type: integer
+        parentCategoryId:
+          format: int64
+          type: integer
+        name:
+          type: string
+    SuggestionCategoryField:
+      type: object
+      properties:
+        suggestionCategoryFieldId:
+          format: int64
+          type: integer
+        tenantId:
+          format: int64
+          type: integer
+        categoryId:
+          format: int64
+          type: integer
+        fieldName:
+          type: string
+        name:
+          type: string
+    SuggestionCategoryFieldDto:
+      type: object
+      properties:
+        tenantId:
+          format: int64
+          type: integer
+        categoryId:
+          format: int64
+          type: integer
+        fieldName:
+          type: string
+        name:
+          type: string
+    Tenant:
+      type: object
+      properties:
+        tenantId:
+          format: int64
+          type: integer
+        name:
+          type: string
+        virtualHost:
+          type: string
+        jsonConfig:
+          type: string
+    TenantDto:
+      type: object
+      properties:
+        name:
+          type: string
+        virtualHost:
+          type: string
+        jsonConfig:
+          type: string
