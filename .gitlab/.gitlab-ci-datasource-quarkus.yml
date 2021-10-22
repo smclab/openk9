@@ -14,6 +14,7 @@ Build Latest Datasource Quarkus Docker Images:
         - if: '$CI_COMMIT_BRANCH == "datasource-quarkus"'
           changes:
               - quarkus/datasource/**
+              - quarkus/datasource/**/*
               - .gitlab/.gitlab-ci-datasource-quarkus.yml
     script:
         - ./gradlew build -p ./quarkus/datasource -Dquarkus.package.type=native -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true
