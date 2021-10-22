@@ -25,6 +25,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @Path("/v2/datasource")
 public class DatasourceResource {
@@ -34,6 +35,16 @@ public class DatasourceResource {
 	@Produces("application/json")
 	public Uni<Datasource> findById(@PathParam("id") long id){
 		return Datasource.findById(id);
+	}
+
+	@POST
+	@Path("/filter")
+	@Produces("application/json")
+	public Uni<List<Datasource>> filter(Map<String, Object> maps){
+
+		String query = ResourceUtil.getFilterQuery(maps);
+
+		return Datasource.list(query, maps);
 	}
 
 	@GET

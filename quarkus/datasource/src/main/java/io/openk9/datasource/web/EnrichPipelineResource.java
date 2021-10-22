@@ -25,6 +25,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @Path("/v2/enrichPipeline")
 public class EnrichPipelineResource {
@@ -34,6 +35,16 @@ public class EnrichPipelineResource {
 	@Produces("application/json")
 	public Uni<EnrichPipeline> findById(@PathParam("id") long id){
 		return EnrichPipeline.findById(id);
+	}
+
+	@POST
+	@Path("/filter")
+	@Produces("application/json")
+	public Uni<List<EnrichPipeline>> filter(Map<String, Object> maps){
+
+		String query = ResourceUtil.getFilterQuery(maps);
+
+		return EnrichPipeline.list(query, maps);
 	}
 
 	@GET

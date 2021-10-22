@@ -2,7 +2,6 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.dto.TenantDto;
 import io.openk9.datasource.mapper.TenantIgnoreNullMapper;
-import io.openk9.datasource.mapper.TenantMapper;
 import io.openk9.datasource.mapper.TenantNullAwareMapper;
 import io.openk9.datasource.model.Tenant;
 import io.quarkus.hibernate.reactive.panache.Panache;
@@ -26,6 +25,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @Path("/v2/tenant")
 public class TenantResource {
@@ -35,6 +35,16 @@ public class TenantResource {
 	@Produces("application/json")
 	public Uni<Tenant> findById(@PathParam("id") long id){
 		return Tenant.findById(id);
+	}
+
+	@POST
+	@Path("/filter")
+	@Produces("application/json")
+	public Uni<List<Tenant>> filter(Map<String, Object> maps){
+
+		String query = ResourceUtil.getFilterQuery(maps);
+
+		return Tenant.list(query, maps);
 	}
 
 	@GET

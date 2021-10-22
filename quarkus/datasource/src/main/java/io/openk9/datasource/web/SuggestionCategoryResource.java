@@ -4,6 +4,7 @@ import io.openk9.datasource.dto.SuggestionCategoryDto;
 import io.openk9.datasource.mapper.SuggestionCategoryIgnoreNullMapper;
 import io.openk9.datasource.mapper.SuggestionCategoryNullAwareMapper;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.Tenant;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
@@ -25,6 +26,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @Path("/v2/suggestion-category")
 public class SuggestionCategoryResource {
@@ -34,6 +36,16 @@ public class SuggestionCategoryResource {
 	@Produces("application/json")
 	public Uni<SuggestionCategory> findById(@PathParam("id") long id){
 		return SuggestionCategory.findById(id);
+	}
+
+	@POST
+	@Path("/filter")
+	@Produces("application/json")
+	public Uni<List<SuggestionCategory>> filter(Map<String, Object> maps){
+
+		String query = ResourceUtil.getFilterQuery(maps);
+
+		return SuggestionCategory.list(query, maps);
 	}
 
 	@GET

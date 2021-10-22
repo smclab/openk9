@@ -25,6 +25,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @Path("/v2/enrichItem")
 public class EnrichItemResource {
@@ -34,6 +35,16 @@ public class EnrichItemResource {
 	@Produces("application/json")
 	public Uni<EnrichItem> findById(@PathParam("id") long id){
 		return EnrichItem.findById(id);
+	}
+
+	@POST
+	@Path("/filter")
+	@Produces("application/json")
+	public Uni<List<EnrichItem>> filter(Map<String, Object> maps){
+
+		String query = ResourceUtil.getFilterQuery(maps);
+
+		return EnrichItem.list(query, maps);
 	}
 
 	@GET
