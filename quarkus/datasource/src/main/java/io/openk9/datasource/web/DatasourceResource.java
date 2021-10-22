@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
 
-@Path("/v1/datasource")
+@Path("/v2/datasource")
 public class DatasourceResource {
 
 	@GET
@@ -65,7 +65,7 @@ public class DatasourceResource {
 			.onItem()
 			.transform(inserted -> Response.created(
 					URI.create(
-						"/v1/datasource/" + inserted.getDatasourceId()
+						"/v2/datasource/" + inserted.getDatasourceId()
 					)
 				).build()
 			);

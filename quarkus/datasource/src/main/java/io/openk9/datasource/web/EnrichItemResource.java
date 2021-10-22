@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
 
-@Path("/v1/enrichItem")
+@Path("/v2/enrichItem")
 public class EnrichItemResource {
 
 	@GET
@@ -65,7 +65,7 @@ public class EnrichItemResource {
 			.onItem()
 			.transform(inserted -> Response.created(
 					URI.create(
-						"/v1/enrichItem/" + inserted.getEnrichItemId()
+						"/v2/enrichItem/" + inserted.getEnrichItemId()
 					)
 				).build()
 			);

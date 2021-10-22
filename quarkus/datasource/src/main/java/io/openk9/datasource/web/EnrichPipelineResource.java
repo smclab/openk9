@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
 
-@Path("/v1/enrichPipeline")
+@Path("/v2/enrichPipeline")
 public class EnrichPipelineResource {
 
 	@GET
@@ -65,7 +65,7 @@ public class EnrichPipelineResource {
 			.onItem()
 			.transform(inserted -> Response.created(
 					URI.create(
-						"/v1/enrichPipeline/" + inserted.getEnrichPipelineId()
+						"/v2/enrichPipeline/" + inserted.getEnrichPipelineId()
 					)
 				).build()
 			);

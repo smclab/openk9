@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
 
-@Path("/v1/tenant")
+@Path("/v2/tenant")
 public class TenantResource {
 
 	@GET
@@ -66,7 +66,7 @@ public class TenantResource {
 			.onItem()
 			.transform(inserted -> Response.created(
 					URI.create(
-						"/v1/tenant/" + inserted.getTenantId()
+						"/v2/tenant/" + inserted.getTenantId()
 					)
 				).build()
 			);

@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
 
-@Path("/v1/suggestion-category")
+@Path("/v2/suggestion-category")
 public class SuggestionCategoryResource {
 
 	@GET
@@ -65,7 +65,7 @@ public class SuggestionCategoryResource {
 			.onItem()
 			.transform(inserted -> Response.created(
 					URI.create(
-						"/v1/suggestionCategory/" + inserted.getSuggestionCategoryId()
+						"/v2/suggestionCategory/" + inserted.getSuggestionCategoryId()
 					)
 				).build()
 			);
