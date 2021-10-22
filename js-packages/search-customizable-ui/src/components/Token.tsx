@@ -1,6 +1,7 @@
 import React from "react";
 import { doSearchEntities, SearchToken } from "@openk9/http-api";
 import { useQuery } from "react-query";
+import { OpenK9UIInteractions } from "../api";
 
 const tokenStyle: React.CSSProperties = {
   marginRight: "8px",
@@ -14,6 +15,7 @@ export function TokenComponent({
   onSubmit,
   isFocused,
   onFocus,
+  interactions,
 }: {
   token: SearchToken;
   onChange(token: SearchToken): void;
@@ -21,6 +23,7 @@ export function TokenComponent({
   onSubmit(): void;
   isFocused: boolean;
   onFocus(): void;
+  interactions: OpenK9UIInteractions;
 }) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   React.useLayoutEffect(() => {
@@ -54,6 +57,9 @@ export function TokenComponent({
               value={token.values[0]}
               onChange={(event) => {
                 onChange({ ...token, values: [event.currentTarget.value] });
+                if (interactions.searchAsYouType) {
+                  onSubmit();
+                }
               }}
               style={{
                 appearance: "none",
@@ -81,11 +87,6 @@ export function TokenComponent({
             />
           ) : (
             <span tabIndex={0} onFocus={() => onFocus()}>
-              {token.keywordKey ? (
-                <>
-                  <strong>{token.keywordKey}: </strong>
-                </>
-              ) : null}
               {token.values[0]}
             </span>
           )}

@@ -1,5 +1,13 @@
-import { SearchQuery, SearchToken, SuggestionResult } from "@openk9/http-api";
+import {
+  DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+  getDocumentTypes,
+  SearchQuery,
+  SearchToken,
+  SuggestionResult,
+} from "@openk9/http-api";
 import { isEqual } from "lodash";
+import React from "react";
+import { useQuery } from "react-query";
 
 export const filterSuggestionByActiveSuggestionCategory =
   (activeSuggestionCategoryId: number) => (suggestion: SuggestionResult) =>
@@ -8,8 +16,8 @@ export const filterSuggestionByActiveSuggestionCategory =
 
 export const filterSuggestionBySearchQuery =
   (searchQuery: SearchQuery) => (suggestion: SuggestionResult) => {
-    const searchToken = mapSuggestionToSearchToken(suggestion)
-    return !searchQuery.some(st => isEqual(st, searchToken));
+    const searchToken = mapSuggestionToSearchToken(suggestion);
+    return !searchQuery.some((st) => isEqual(st, searchToken));
   };
 
 export const mapSuggestionToSearchToken = (
@@ -41,6 +49,36 @@ export const mapSuggestionToSearchToken = (
         values: [suggestion.value],
       };
     }
-  }  
+  }
 };
 
+export function useDocumentTypeSuggestions(text: string) {
+  const { data: documentTypes } = useQuery(["document-types"], () => {
+    return getDocumentTypes(null);
+  });
+  const documentTypeSuggestions = React.useMemo(
+    () =>
+      Object.entries(documentTypes ?? {}).flatMap(
+        ([documentType, keywordKeys]) => {
+          return keywordKeys.map((keywordKey): SuggestionResult => {
+            return {
+              tokenType: "TEXT",
+              suggestionCategory: DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+              keywordKey,
+              value: "",
+            };
+          });
+        },
+      ),
+    [documentTypes],
+  );
+  const filteredDocumentTypeSuggestions = text
+    ? documentTypeSuggestions.filter((suggestion) => {
+        return (
+          suggestion.tokenType === "TEXT" &&
+          suggestion.keywordKey?.toLowerCase().includes(text.toLowerCase())
+        );
+      })
+    : documentTypeSuggestions;
+  return filteredDocumentTypeSuggestions;
+}

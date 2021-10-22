@@ -165,28 +165,22 @@ export function FieldSuggestionBrowser({
   return visible ? (
     <div className={classes.root}>
       <div className={classes.menu}>
-        {suggestionCategories.data?.categories.map(
-          (suggestionCategory: {
-            categoryId: number;
-            name: string;
-            parentCategoryId: number;
-          }) => {
-            return (
-              <MenuItem
-                key={suggestionCategory.categoryId}
-                active={
-                  activeSuggestionCategoryId === suggestionCategory.categoryId
-                }
-                onSelect={() =>
-                  handleToggleActiveSuggestionCategory(
-                    suggestionCategory.categoryId,
-                  )
-                }
-                label={suggestionCategory.name}
-              />
-            );
-          },
-        )}
+        {suggestionCategories.data?.categories.map((suggestionCategory) => {
+          return (
+            <MenuItem
+              key={suggestionCategory.categoryId}
+              active={
+                activeSuggestionCategoryId === suggestionCategory.categoryId
+              }
+              onSelect={() =>
+                handleToggleActiveSuggestionCategory(
+                  suggestionCategory.categoryId,
+                )
+              }
+              label={suggestionCategory.name}
+            />
+          );
+        })}
       </div>
 
       <div className={classes.tokens} ref={scrollRef}>

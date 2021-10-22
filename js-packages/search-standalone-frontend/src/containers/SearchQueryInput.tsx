@@ -36,6 +36,7 @@ import {
   FieldSuggestionBrowser,
   circularMod,
   mapSuggestionToSearchToken,
+  useDocumentTypeSuggestions,
 } from "@openk9/search-ui-components";
 
 import { useSearchQuery, useStore } from "../state";
@@ -73,10 +74,17 @@ export function SearchQueryInput() {
   const [searchQuery, setSearchQuery] = useSearchQuery();
   const tenantConfig = useStore((s) => s.tenantConfig);
   const suggestions = useStore((s) => s.suggestions);
-  const activeSuggestionCategoryId = useStore((s) => s.activeSuggestionCategoryId);
-  const setActiveSugegstionCategoryId = useStore((s) => s.setActiveSugestionCategoryId);
+  const activeSuggestionCategoryId = useStore(
+    (s) => s.activeSuggestionCategoryId,
+  );
+  const setActiveSugegstionCategoryId = useStore(
+    (s) => s.setActiveSugestionCategoryId,
+  );
   const focusToken = useStore((s) => s.focusToken);
   const setFocusToken = useStore((s) => s.setFocusToken);
+  const documentTypeSuggestions = useDocumentTypeSuggestions(
+    (searchQuery?.[searchQuery.length - 1]?.values[0] as string) ?? "",
+  );
 
   const selectedDataType =
     firstOrNull(readQueryParamToken(searchQuery, "type")) || "any";
@@ -125,7 +133,7 @@ export function SearchQueryInput() {
     const addToken = (searchToken: SearchToken) => {
       setSearchQuery([...soFar, searchToken]);
     };
-    const searchToken = mapSuggestionToSearchToken(suggestion)
+    const searchToken = mapSuggestionToSearchToken(suggestion);
     switch (suggestion.tokenType) {
       case "DATASOURCE": {
         addToken(searchToken);
@@ -218,7 +226,7 @@ export function SearchQueryInput() {
             </div>
 
             <FieldSuggestionBrowser
-              suggestions={suggestions}
+              suggestions={suggestions.concat(documentTypeSuggestions)}
               visible={searchOpen}
               activeSuggestionCategoryId={activeSuggestionCategoryId}
               onActiveSuggestionCategoryChange={(suggestionCategoryId) => {

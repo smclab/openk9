@@ -27,7 +27,7 @@ export async function getSuggestions({
 }: {
   searchQuery: SearchQuery;
   range?: [number, number]; // for pagination
-  afterKey?: string, // for pagination
+  afterKey?: string; // for pagination
   loginInfo: LoginInfo | null;
 }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
   const request = await authFetch(`/api/searcher/v1/suggestions`, loginInfo, {
@@ -46,15 +46,43 @@ type SuggestionsCategoriesResult = {
   }>;
 };
 
+export const ROOT_SUGGESTION_CATEGORY_ID = 0;
+export const DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID = 99999;
+
 export async function getSuggestionCategories(): Promise<SuggestionsCategoriesResult> {
   // TODO implement
   return {
     categories: [
-      { categoryId: 0, name: "ALL", parentCategoryId: 0 },
-      { categoryId: 1, name: "DATASOURCE", parentCategoryId: 0 },
-      { categoryId: 2, name: "DOCTYPE", parentCategoryId: 0 },
-      { categoryId: 3, name: "ENTITY", parentCategoryId: 0 },
-      { categoryId: 4, name: "TEXT", parentCategoryId: 0 },
+      {
+        categoryId: ROOT_SUGGESTION_CATEGORY_ID,
+        name: "ALL",
+        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      },
+      {
+        categoryId: 1,
+        name: "DATASOURCE",
+        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      },
+      {
+        categoryId: 2,
+        name: "DOCTYPE",
+        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      },
+      {
+        categoryId: 3,
+        name: "ENTITY",
+        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      },
+      {
+        categoryId: 4,
+        name: "TEXT",
+        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      },
+      {
+        categoryId: DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+        name: "KEYWORDS",
+        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      },
     ],
   };
 }

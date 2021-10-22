@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
   GenericResultItem,
   getPlugins,
   SearchQuery,
@@ -9,7 +10,11 @@ import {
 import { useQuery } from "react-query";
 import useDebounce from "../hooks/useDebounce";
 import { TokenComponent } from "./Token";
-import { getPluginResultRenderers, mapSuggestionToSearchToken } from "@openk9/search-ui-components";
+import {
+  getPluginResultRenderers,
+  mapSuggestionToSearchToken,
+  useDocumentTypeSuggestions,
+} from "@openk9/search-ui-components";
 import { useClickAway } from "../hooks/useClickAway";
 import { useInView } from "react-intersection-observer";
 import { Detail } from "./Detail";
@@ -82,7 +87,7 @@ export function Main({ children, templates, interactions }: MainProps) {
   );
   const suggestions = useInfiniteSuggestions(
     showSuggestions ? debouncedSearchQuery : null,
-    state.activeSuggestionCategory
+    state.activeSuggestionCategory,
   );
   const flattenedSuggestions = React.useMemo(
     () => suggestions.data?.pages.flatMap((page) => page.result) ?? [],
@@ -97,6 +102,7 @@ export function Main({ children, templates, interactions }: MainProps) {
   const { data: pluginInfos } = useQuery(["plugins"], () => {
     return getPlugins(null);
   });
+  const documentTypeSuggestions = useDocumentTypeSuggestions(state.text);
   const renderers = React.useMemo(() => {
     return pluginInfos ? getPluginResultRenderers(pluginInfos) : null;
   }, [pluginInfos]);
@@ -132,7 +138,7 @@ export function Main({ children, templates, interactions }: MainProps) {
   }
   const addSuggestion = React.useCallback(
     (suggestion: SuggestionResult) => {
-      const searchToken = mapSuggestionToSearchToken(suggestion)
+      const searchToken = mapSuggestionToSearchToken(suggestion);
       switch (suggestion.tokenType) {
         case "ENTITY": {
           addToken(searchToken);
@@ -273,6 +279,7 @@ export function Main({ children, templates, interactions }: MainProps) {
                   showSuggestions: false,
                 }))
               }
+              interactions={interactions}
             />
           );
         })}
@@ -408,6 +415,16 @@ export function Main({ children, templates, interactions }: MainProps) {
             overflowY: "scroll",
           }}
         >
+          {state.activeSuggestionCategory ===
+            DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID && (
+            <SuggestionPageMemo
+              suggestions={documentTypeSuggestions}
+              templates={templates}
+              onAdd={addSuggestion}
+              onSelect={selectSuggestion}
+              selected={state.selectedSuggestion}
+            />
+          )}
           {suggestions.data?.pages.map((suggestionPage, index) => {
             const selected =
               state.selectedSuggestion &&
