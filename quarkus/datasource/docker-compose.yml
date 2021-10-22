@@ -27,9 +27,6 @@ services:
             QUARKUS_DATASOURCE_USERNAME: openk9
             QUARKUS_DATASOURCE_PASSWORD: openk9
             QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: none
-            QUARKUS_SMALLRYE_OPENAPI_PATH: /swagger
-            QUARKUS_SWAGGER_UI_ALWAYS_INCLUDE: 'true'
-            MP_MESSAGING_INCOMING_INGESTION_ADDRESS: ingestion
         ports:
             - "8080:8080"
         networks:
