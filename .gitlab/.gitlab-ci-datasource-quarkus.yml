@@ -1,0 +1,25 @@
+variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+Build Latest Datasource Quarkus Docker Images:
+    image: smclab/docker-java-11:latest
+    services:
+        - docker:19.03.13-dind
+    stage: build-docker
+    variables:
+        TEST_NAME: local/test
+        DOCKER_HOST: tcp://localhost:2375
+        DOCKER_TLS_CERTDIR: ""
+    rules:
+        - if: '$CI_COMMIT_BRANCH == "datasource-quarkus"'
+          changes:
+              - quarkus/datasource/*
+    script:
+        - ./gradlew build -p ./quarkus/datasource -Dquarkus.package.type=native -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true
+    after_script:
+        - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-datasource-quarkus" -F ref=master $DEV_TRIGGER_URL
+    cache:
+        key: build-docker-cache
+        paths:
+            - $CI_PROJECT_DIR/.m2/**/*
+            - $CI_PROJECT_DIR/.gradle/**/*
