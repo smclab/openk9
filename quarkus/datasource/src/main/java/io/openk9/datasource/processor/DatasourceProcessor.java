@@ -20,7 +20,9 @@ public class DatasourceProcessor {
 
 	@Incoming("ingestion")
 	@Outgoing("datasource")
-	public IngestionDatasourcePayload process(JsonObject jsonObject) {
+	public IngestionDatasourcePayload process(byte[] json) {
+
+		JsonObject jsonObject = new JsonObject(new String(json));
 
 		IngestionPayload ingestionPayload =
 			jsonObject.mapTo(IngestionPayload.class);
