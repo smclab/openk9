@@ -4,27 +4,26 @@ import io.openk9.datasource.dto.SuggestionCategoryDto;
 import io.openk9.datasource.mapper.SuggestionCategoryIgnoreNullMapper;
 import io.openk9.datasource.mapper.SuggestionCategoryNullAwareMapper;
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.Tenant;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
+import io.vertx.core.json.JsonObject;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -34,23 +33,25 @@ public class SuggestionCategoryResource {
 	@GET
 	@Path("/{id}")
 	@Produces("application/json")
-	public Uni<SuggestionCategory> findById(@PathParam("id") long id){
+	public SuggestionCategory findById(@PathParam("id") long id){
 		return SuggestionCategory.findById(id);
 	}
 
 	@POST
 	@Path("/filter")
 	@Produces("application/json")
-	public Uni<List<SuggestionCategory>> filter(Map<String, Object> maps){
+	public List<SuggestionCategory> filter(SuggestionCategoryDto dto){
 
-		String query = ResourceUtil.getFilterQuery(maps);
+		Map<String, Object> map = JsonObject.mapFrom(dto).getMap();
 
-		return SuggestionCategory.list(query, maps);
+		Tuple2<String, Map<String, Object>> query = ResourceUtil.getFilterQuery(map);
+
+		return SuggestionCategory.list(query.getItem1(), query.getItem2());
 	}
 
 	@GET
 	@Produces("application/json")
-	public Uni<Response> findAll(
+	public List<SuggestionCategory> findAll(
 		@QueryParam("sort") List<String> sortQuery,
 		@QueryParam("page") @DefaultValue("0") int pageIndex,
 		@QueryParam("size") @DefaultValue("20") int pageSize
@@ -58,75 +59,81 @@ public class SuggestionCategoryResource {
 		Page page = Page.of(pageIndex, pageSize);
 		Sort sort = Sort.by(sortQuery.toArray(String[]::new));
 
-		return SuggestionCategory
-			.findAll(sort)
-			.page(page)
-			.list()
-			.onItem()
-			.transform(list -> Response.ok(list).build());
+		return SuggestionCategory.findAll(sort).page(page).list();
 	}
 
 	@POST
 	@Consumes("application/json")
-	public Uni<Response> create(@Valid SuggestionCategoryDto dto) {
+	@Transactional
+	public SuggestionCategory create(@Valid SuggestionCategoryDto dto) {
 
 		SuggestionCategory suggestionCategory = _suggestionCategoryMapper.toSuggestionCategory(dto);
 
-		return Panache
-			.<SuggestionCategory>withTransaction(suggestionCategory::persist)
-			.onItem()
-			.transform(inserted -> Response.created(
-					URI.create(
-						"/v2/suggestionCategory/" + inserted.getSuggestionCategoryId()
-					)
-				).build()
-			);
+		suggestionCategory.persistAndFlush();
+
+		return suggestionCategory;
+
 	}
 
 	@POST
 	@Path("/{id}")
 	@Consumes("application/json")
-	public Uni<Response> update(
+	@Transactional
+	public SuggestionCategory update(
 		@PathParam("id") long id, @Valid SuggestionCategoryDto dto) {
 
-		return SuggestionCategory
-			.<SuggestionCategory>findById(id)
-			.onItem()
-			.ifNull()
-			.failWith(NotFoundException::new)
-			.onItem()
-			.transformToUni(suggestionCategory -> {
-				SuggestionCategory update = _suggestionCategoryMapper.update(suggestionCategory, dto);
-				return Panache.<SuggestionCategory>withTransaction(update::persist);
-			})
-			.map(o -> Response.ok(o).build());
+		SuggestionCategory entity = SuggestionCategory.findById(id);
+
+		if (entity == null) {
+			throw new WebApplicationException(
+				"SuggestionCategory with id of " + id + " does not exist.", 404);
+		}
+
+		entity = _suggestionCategoryMapper.update(entity, dto);
+
+		entity.persistAndFlush();
+
+		return entity;
 
 	}
 
 	@PATCH
 	@Path("/{id}")
 	@Consumes("application/json")
-	public Uni<Response> patch(
+	@Transactional
+	public SuggestionCategory patch(
 		@PathParam("id") long id, @Valid SuggestionCategoryDto dto) {
 
-		return SuggestionCategory
-			.<SuggestionCategory>findById(id)
-			.onItem()
-			.ifNull()
-			.failWith(NotFoundException::new)
-			.onItem()
-			.transformToUni(suggestionCategory -> {
-				SuggestionCategory update = _suggestionCategoryIgnoreNullMapper.update(suggestionCategory, dto);
-				return Panache.<SuggestionCategory>withTransaction(update::persist);
-			})
-			.map(o -> Response.ok(o).build());
+		SuggestionCategory entity = SuggestionCategory.findById(id);
+
+		if (entity == null) {
+			throw new WebApplicationException(
+				"SuggestionCategory with id of " + id + " does not exist.", 404);
+		}
+
+		entity = _suggestionCategoryIgnoreNullMapper.update(entity, dto);
+
+		entity.persistAndFlush();
+
+		return entity;
 
 	}
 
 	@DELETE
 	@Path("/{id}")
-	public Uni<Void> deleteById(@PathParam("id") long id){
-		return SuggestionCategory.deleteById(id).replaceWithVoid();
+	@Transactional
+	public Response deleteById(@PathParam("id") long id){
+
+		SuggestionCategory entity = SuggestionCategory.findById(id);
+
+		if (entity == null) {
+			throw new WebApplicationException(
+				"SuggestionCategory with id of " + id + " does not exist.", 404);
+		}
+
+		entity.delete();
+
+		return Response.status(204).build();
 	}
 
 	@Inject

@@ -17,8 +17,7 @@
 
 package io.openk9.datasource.model;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import io.smallrye.mutiny.Uni;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -51,7 +50,7 @@ public class EnrichPipeline extends PanacheEntityBase {
     private Long datasourceId;
     private String name;
 
-    public static Uni<EnrichPipeline> findByDatasourceId(Long datasourceId) {
+    public static EnrichPipeline findByDatasourceId(Long datasourceId) {
         return EnrichPipeline
             .find("datasourceId", datasourceId)
             .firstResult();

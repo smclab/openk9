@@ -8,79 +8,43 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.subscription.Cancellable;
-import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Outgoing;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.Path;
 import java.util.List;
 
 @ApplicationScoped
-@Path("/test")
 public class DatasourceProcessor {
 
-	@Channel("datasource")
-	Emitter<IngestionDatasourcePayload> datasourceEmitter;
+	@Incoming("ingestion")
+	@Outgoing("datasource")
+	public IngestionDatasourcePayload process(JsonObject jsonObject) {
 
-	@Channel("ingestion")
-	Multi<JsonObject> _ingestionQueue;
+		IngestionPayload ingestionPayload =
+			jsonObject.mapTo(IngestionPayload.class);
 
-	@PostConstruct
-	public void process() {
-		_disposable = _ingestionQueue
-			.flatMap(jsonObject -> {
+		long datasourceId = ingestionPayload.getDatasourceId();
 
-				IngestionPayload ingestionPayload =
-					jsonObject.mapTo(IngestionPayload.class);
+		Datasource datasource =
+			Datasource.findById(datasourceId);
 
-				long datasourceId = ingestionPayload.getDatasourceId();
+		EnrichPipeline enrichPipeline =
+			EnrichPipeline.findByDatasourceId(datasourceId);
 
-				Uni<Datasource> datasourceUni =
-					Datasource.findById(datasourceId);
+		List<EnrichItem> enrichItemList = EnrichItem.findByEnrichPipelineId(
+			enrichPipeline.getEnrichPipelineId());
 
-				Uni<Tuple2<EnrichPipeline, List<EnrichItem>>> t2 =
-					EnrichPipeline
-						.findByDatasourceId(datasourceId)
-						.flatMap(enrichPipeline ->
-							EnrichItem.findByEnrichPipelineId(
-									enrichPipeline.getEnrichPipelineId())
-								.map(enrichItems -> Tuple2.of(
-									enrichPipeline, enrichItems))
-						);
+		Tenant tenant = Tenant.findById(ingestionPayload.getTenantId());
 
-				Uni<Tenant> tenantUni =
-					Tenant.findById(ingestionPayload.getTenantId());
+		DatasourceContext datasourceContext = DatasourceContext.of(
+			datasource, tenant, enrichPipeline, enrichItemList
+		);
 
-				return Uni
-					.combine()
-					.all()
-					.unis(datasourceUni, tenantUni, t2)
-					.combinedWith((item1, item2, item3) -> DatasourceContext.of(
-							item1, item2, item3.getItem1(), item3.getItem2()
-						)
-					)
-					.map(datasourceContext -> IngestionDatasourcePayload.of(
-						ingestionPayload, datasourceContext))
-					.toMulti();
-			})
-			.subscribe()
-			.with(datasourceEmitter::send);
+		return IngestionDatasourcePayload.of(
+			ingestionPayload, datasourceContext);
 
 	}
-
-	@PreDestroy
-	public void destroy() {
-		_disposable.cancel();
-	}
-
-	private Cancellable _disposable;
-
 
 }

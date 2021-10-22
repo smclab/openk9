@@ -17,18 +17,18 @@
 
 package io.openk9.datasource.model;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import io.smallrye.mutiny.Uni;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -60,7 +60,7 @@ public class EnrichItem extends PanacheEntityBase {
     @Column(nullable = false)
     private String serviceName;
 
-    public static Uni<List<EnrichItem>> findByEnrichPipelineId(
+    public static List<EnrichItem> findByEnrichPipelineId(
         Long enrichPipelineId) {
 
         return EnrichItem.list("enrichPipelineId", enrichPipelineId);

@@ -1,21 +1,32 @@
 package io.openk9.datasource.web;
 
+import io.smallrye.mutiny.tuples.Tuple2;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ResourceUtil {
 
-	public static String getFilterQuery(Map<String, Object> maps) {
+	public static Tuple2<String, Map<String, Object>> getFilterQuery(
+		Map<String, Object> maps) {
 
 		StringBuilder sb = new StringBuilder();
 
-		Iterator<String> iterator = maps.keySet().iterator();
+		Map<String, Object> collect =
+			maps
+				.entrySet()
+				.stream()
+				.filter(e -> e.getValue() != null)
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 		Function<String, String> condition =
 			key -> key.endsWith("_not")
 				? " != "
 				: " = ";
+
+		Iterator<String> iterator = collect.keySet().iterator();
 
 		if (iterator.hasNext()) {
 			String key = iterator.next();
@@ -32,7 +43,7 @@ public class ResourceUtil {
 				.append(key);
 		}
 
-		return sb.toString();
+		return Tuple2.of(sb.toString(), collect);
 
 	}
 

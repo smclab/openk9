@@ -17,19 +17,20 @@
 
 package io.openk9.datasource.model;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import io.openk9.datasource.listener.DatasourceListener;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -43,18 +44,19 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor(staticName = "of")
+@EntityListeners(DatasourceListener.class)
 public class Datasource extends PanacheEntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long datasourceId;
     @Column(nullable = false)
     private Boolean active = false;
-    @Lob
+    @Column(length = 1024)
     private String description;
     @Lob
     private String jsonConfig;
     private Instant lastIngestionDate;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
     @Column(nullable = false)
     private Long tenantId;

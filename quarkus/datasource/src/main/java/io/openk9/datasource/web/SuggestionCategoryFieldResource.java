@@ -3,28 +3,27 @@ package io.openk9.datasource.web;
 import io.openk9.datasource.dto.SuggestionCategoryFieldDto;
 import io.openk9.datasource.mapper.SuggestionCategoryFieldIgnoreNullMapper;
 import io.openk9.datasource.mapper.SuggestionCategoryFieldNullAwareMapper;
-import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategoryField;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
+import io.vertx.core.json.JsonObject;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -34,23 +33,25 @@ public class SuggestionCategoryFieldResource {
 	@GET
 	@Path("/{id}")
 	@Produces("application/json")
-	public Uni<SuggestionCategoryField> findById(@PathParam("id") long id){
+	public SuggestionCategoryField findById(@PathParam("id") long id){
 		return SuggestionCategoryField.findById(id);
 	}
 
 	@POST
 	@Path("/filter")
 	@Produces("application/json")
-	public Uni<List<SuggestionCategoryField>> filter(Map<String, Object> maps){
+	public List<SuggestionCategoryField> filter(SuggestionCategoryFieldDto dto){
 
-		String query = ResourceUtil.getFilterQuery(maps);
+		Map<String, Object> map = JsonObject.mapFrom(dto).getMap();
 
-		return SuggestionCategoryField.list(query, maps);
+		Tuple2<String, Map<String, Object>> query = ResourceUtil.getFilterQuery(map);
+
+		return SuggestionCategoryField.list(query.getItem1(), query.getItem2());
 	}
 
 	@GET
 	@Produces("application/json")
-	public Uni<Response> findAll(
+	public List<SuggestionCategoryField> findAll(
 		@QueryParam("sort") List<String> sortQuery,
 		@QueryParam("page") @DefaultValue("0") int pageIndex,
 		@QueryParam("size") @DefaultValue("20") int pageSize
@@ -58,75 +59,81 @@ public class SuggestionCategoryFieldResource {
 		Page page = Page.of(pageIndex, pageSize);
 		Sort sort = Sort.by(sortQuery.toArray(String[]::new));
 
-		return SuggestionCategoryField
-			.findAll(sort)
-			.page(page)
-			.list()
-			.onItem()
-			.transform(list -> Response.ok(list).build());
+		return SuggestionCategoryField.findAll(sort).page(page).list();
 	}
 
 	@POST
 	@Consumes("application/json")
-	public Uni<Response> create(@Valid SuggestionCategoryFieldDto dto) {
+	@Transactional
+	public SuggestionCategoryField create(@Valid SuggestionCategoryFieldDto dto) {
 
 		SuggestionCategoryField suggestionCategoryField = _suggestionCategoryFieldMapper.toSuggestionCategoryField(dto);
 
-		return Panache
-			.<SuggestionCategoryField>withTransaction(suggestionCategoryField::persist)
-			.onItem()
-			.transform(inserted -> Response.created(
-					URI.create(
-						"/v2/suggestionCategoryField/" + inserted.getSuggestionCategoryFieldId()
-					)
-				).build()
-			);
+		suggestionCategoryField.persistAndFlush();
+
+		return suggestionCategoryField;
+
 	}
 
 	@POST
 	@Path("/{id}")
 	@Consumes("application/json")
-	public Uni<Response> update(
+	@Transactional
+	public SuggestionCategoryField update(
 		@PathParam("id") long id, @Valid SuggestionCategoryFieldDto dto) {
 
-		return SuggestionCategoryField
-			.<SuggestionCategoryField>findById(id)
-			.onItem()
-			.ifNull()
-			.failWith(NotFoundException::new)
-			.onItem()
-			.transformToUni(suggestionCategoryField -> {
-				SuggestionCategoryField update = _suggestionCategoryFieldMapper.update(suggestionCategoryField, dto);
-				return Panache.<SuggestionCategoryField>withTransaction(update::persist);
-			})
-			.map(o -> Response.ok(o).build());
+		SuggestionCategoryField entity = SuggestionCategoryField.findById(id);
+
+		if (entity == null) {
+			throw new WebApplicationException(
+				"SuggestionCategoryField with id of " + id + " does not exist.", 404);
+		}
+
+		entity = _suggestionCategoryFieldMapper.update(entity, dto);
+
+		entity.persistAndFlush();
+
+		return entity;
 
 	}
 
 	@PATCH
 	@Path("/{id}")
 	@Consumes("application/json")
-	public Uni<Response> patch(
+	@Transactional
+	public SuggestionCategoryField patch(
 		@PathParam("id") long id, @Valid SuggestionCategoryFieldDto dto) {
 
-		return SuggestionCategoryField
-			.<SuggestionCategoryField>findById(id)
-			.onItem()
-			.ifNull()
-			.failWith(NotFoundException::new)
-			.onItem()
-			.transformToUni(suggestionCategoryField -> {
-				SuggestionCategoryField update = _suggestionCategoryFieldIgnoreNullMapper.update(suggestionCategoryField, dto);
-				return Panache.<SuggestionCategoryField>withTransaction(update::persist);
-			})
-			.map(o -> Response.ok(o).build());
+		SuggestionCategoryField entity = SuggestionCategoryField.findById(id);
+
+		if (entity == null) {
+			throw new WebApplicationException(
+				"SuggestionCategoryField with id of " + id + " does not exist.", 404);
+		}
+
+		entity = _suggestionCategoryFieldIgnoreNullMapper.update(entity, dto);
+
+		entity.persistAndFlush();
+
+		return entity;
 
 	}
 
 	@DELETE
 	@Path("/{id}")
-	public Uni<Void> deleteById(@PathParam("id") long id){
-		return SuggestionCategoryField.deleteById(id).replaceWithVoid();
+	@Transactional
+	public Response deleteById(@PathParam("id") long id){
+
+		SuggestionCategoryField entity = SuggestionCategoryField.findById(id);
+
+		if (entity == null) {
+			throw new WebApplicationException(
+				"SuggestionCategoryField with id of " + id + " does not exist.", 404);
+		}
+
+		entity.delete();
+
+		return Response.status(204).build();
 	}
 
 	@Inject

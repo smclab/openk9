@@ -4,37 +4,59 @@ info:
   title: datasource API
   version: 0.0.1
 paths:
-  /v1/datasource:
-    get:
+  /v1/index/reindex:
+    post:
       tags:
-      - Datasource Resource
-      parameters:
-      - name: page
-        in: query
-        schema:
-          format: int32
-          default: 0
-          type: integer
-      - name: size
-        in: query
-        schema:
-          format: int32
-          default: 20
-          type: integer
-      - name: sort
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
+        - Reindex Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReindexRequestDto'
       responses:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReindexResponseDto'
+  /v2/datasource:
+    get:
+      tags:
+        - Datasource Resource
+      parameters:
+        - name: page
+          in: query
+          schema:
+            format: int32
+            default: 0
+            type: integer
+        - name: size
+          in: query
+          schema:
+            format: int32
+            default: 20
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Datasource'
     post:
       tags:
-      - Datasource Resource
+        - Datasource Resource
       requestBody:
         content:
           application/json:
@@ -44,18 +66,39 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/datasource/{id}:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Datasource'
+  /v2/datasource/filter:
+    post:
+      tags:
+        - Datasource Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Datasource'
+  /v2/datasource/{id}:
     get:
       tags:
-      - Datasource Resource
+        - Datasource Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
         "200":
           description: OK
@@ -65,14 +108,14 @@ paths:
                 $ref: '#/components/schemas/Datasource'
     post:
       tags:
-      - Datasource Resource
+        - Datasource Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -82,30 +125,32 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Datasource'
     delete:
       tags:
-      - Datasource Resource
+        - Datasource Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
-        "204":
-          description: No Content
+        "200":
+          description: OK
     patch:
       tags:
-      - Datasource Resource
+        - Datasource Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -115,38 +160,44 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/enrichItem:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Datasource'
+  /v2/enrichItem:
     get:
       tags:
-      - Enrich Item Resource
+        - Enrich Item Resource
       parameters:
-      - name: page
-        in: query
-        schema:
-          format: int32
-          default: 0
-          type: integer
-      - name: size
-        in: query
-        schema:
-          format: int32
-          default: 20
-          type: integer
-      - name: sort
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
+        - name: page
+          in: query
+          schema:
+            format: int32
+            default: 0
+            type: integer
+        - name: size
+          in: query
+          schema:
+            format: int32
+            default: 20
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
       responses:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrichItem'
     post:
       tags:
-      - Enrich Item Resource
+        - Enrich Item Resource
       requestBody:
         content:
           application/json:
@@ -156,18 +207,39 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/enrichItem/{id}:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichItem'
+  /v2/enrichItem/filter:
+    post:
+      tags:
+        - Enrich Item Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrichItem'
+  /v2/enrichItem/{id}:
     get:
       tags:
-      - Enrich Item Resource
+        - Enrich Item Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
         "200":
           description: OK
@@ -177,14 +249,14 @@ paths:
                 $ref: '#/components/schemas/EnrichItem'
     post:
       tags:
-      - Enrich Item Resource
+        - Enrich Item Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -194,30 +266,32 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichItem'
     delete:
       tags:
-      - Enrich Item Resource
+        - Enrich Item Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
-        "204":
-          description: No Content
+        "200":
+          description: OK
     patch:
       tags:
-      - Enrich Item Resource
+        - Enrich Item Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -227,38 +301,44 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/enrichPipeline:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichItem'
+  /v2/enrichPipeline:
     get:
       tags:
-      - Enrich Pipeline Resource
+        - Enrich Pipeline Resource
       parameters:
-      - name: page
-        in: query
-        schema:
-          format: int32
-          default: 0
-          type: integer
-      - name: size
-        in: query
-        schema:
-          format: int32
-          default: 20
-          type: integer
-      - name: sort
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
+        - name: page
+          in: query
+          schema:
+            format: int32
+            default: 0
+            type: integer
+        - name: size
+          in: query
+          schema:
+            format: int32
+            default: 20
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
       responses:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrichPipeline'
     post:
       tags:
-      - Enrich Pipeline Resource
+        - Enrich Pipeline Resource
       requestBody:
         content:
           application/json:
@@ -268,18 +348,39 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/enrichPipeline/{id}:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichPipeline'
+  /v2/enrichPipeline/filter:
+    post:
+      tags:
+        - Enrich Pipeline Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrichPipeline'
+  /v2/enrichPipeline/{id}:
     get:
       tags:
-      - Enrich Pipeline Resource
+        - Enrich Pipeline Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
         "200":
           description: OK
@@ -289,14 +390,14 @@ paths:
                 $ref: '#/components/schemas/EnrichPipeline'
     post:
       tags:
-      - Enrich Pipeline Resource
+        - Enrich Pipeline Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -306,30 +407,32 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichPipeline'
     delete:
       tags:
-      - Enrich Pipeline Resource
+        - Enrich Pipeline Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
-        "204":
-          description: No Content
+        "200":
+          description: OK
     patch:
       tags:
-      - Enrich Pipeline Resource
+        - Enrich Pipeline Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -339,38 +442,44 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/suggestion-category:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichPipeline'
+  /v2/suggestion-category:
     get:
       tags:
-      - Suggestion Category Resource
+        - Suggestion Category Resource
       parameters:
-      - name: page
-        in: query
-        schema:
-          format: int32
-          default: 0
-          type: integer
-      - name: size
-        in: query
-        schema:
-          format: int32
-          default: 20
-          type: integer
-      - name: sort
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
+        - name: page
+          in: query
+          schema:
+            format: int32
+            default: 0
+            type: integer
+        - name: size
+          in: query
+          schema:
+            format: int32
+            default: 20
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
       responses:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuggestionCategory'
     post:
       tags:
-      - Suggestion Category Resource
+        - Suggestion Category Resource
       requestBody:
         content:
           application/json:
@@ -380,38 +489,44 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/suggestion-category-field:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionCategory'
+  /v2/suggestion-category-field:
     get:
       tags:
-      - Suggestion Category Field Resource
+        - Suggestion Category Field Resource
       parameters:
-      - name: page
-        in: query
-        schema:
-          format: int32
-          default: 0
-          type: integer
-      - name: size
-        in: query
-        schema:
-          format: int32
-          default: 20
-          type: integer
-      - name: sort
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
+        - name: page
+          in: query
+          schema:
+            format: int32
+            default: 0
+            type: integer
+        - name: size
+          in: query
+          schema:
+            format: int32
+            default: 20
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
       responses:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuggestionCategoryField'
     post:
       tags:
-      - Suggestion Category Field Resource
+        - Suggestion Category Field Resource
       requestBody:
         content:
           application/json:
@@ -421,18 +536,39 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/suggestion-category-field/{id}:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionCategoryField'
+  /v2/suggestion-category-field/filter:
+    post:
+      tags:
+        - Suggestion Category Field Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuggestionCategoryField'
+  /v2/suggestion-category-field/{id}:
     get:
       tags:
-      - Suggestion Category Field Resource
+        - Suggestion Category Field Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
         "200":
           description: OK
@@ -442,14 +578,14 @@ paths:
                 $ref: '#/components/schemas/SuggestionCategoryField'
     post:
       tags:
-      - Suggestion Category Field Resource
+        - Suggestion Category Field Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -459,30 +595,32 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionCategoryField'
     delete:
       tags:
-      - Suggestion Category Field Resource
+        - Suggestion Category Field Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
-        "204":
-          description: No Content
+        "200":
+          description: OK
     patch:
       tags:
-      - Suggestion Category Field Resource
+        - Suggestion Category Field Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -492,18 +630,39 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/suggestion-category/{id}:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionCategoryField'
+  /v2/suggestion-category/filter:
+    post:
+      tags:
+        - Suggestion Category Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuggestionCategory'
+  /v2/suggestion-category/{id}:
     get:
       tags:
-      - Suggestion Category Resource
+        - Suggestion Category Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
         "200":
           description: OK
@@ -513,14 +672,14 @@ paths:
                 $ref: '#/components/schemas/SuggestionCategory'
     post:
       tags:
-      - Suggestion Category Resource
+        - Suggestion Category Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -530,30 +689,32 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionCategory'
     delete:
       tags:
-      - Suggestion Category Resource
+        - Suggestion Category Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
-        "204":
-          description: No Content
+        "200":
+          description: OK
     patch:
       tags:
-      - Suggestion Category Resource
+        - Suggestion Category Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -563,38 +724,44 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/tenant:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionCategory'
+  /v2/tenant:
     get:
       tags:
-      - Tenant Resource
+        - Tenant Resource
       parameters:
-      - name: page
-        in: query
-        schema:
-          format: int32
-          default: 0
-          type: integer
-      - name: size
-        in: query
-        schema:
-          format: int32
-          default: 20
-          type: integer
-      - name: sort
-        in: query
-        schema:
-          type: array
-          items:
-            type: string
+        - name: page
+          in: query
+          schema:
+            format: int32
+            default: 0
+            type: integer
+        - name: size
+          in: query
+          schema:
+            format: int32
+            default: 20
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
       responses:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tenant'
     post:
       tags:
-      - Tenant Resource
+        - Tenant Resource
       requestBody:
         content:
           application/json:
@@ -604,18 +771,39 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
-  /v1/tenant/{id}:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+  /v2/tenant/filter:
+    post:
+      tags:
+        - Tenant Resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tenant'
+  /v2/tenant/{id}:
     get:
       tags:
-      - Tenant Resource
+        - Tenant Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
         "200":
           description: OK
@@ -625,14 +813,14 @@ paths:
                 $ref: '#/components/schemas/Tenant'
     post:
       tags:
-      - Tenant Resource
+        - Tenant Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -642,30 +830,32 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
     delete:
       tags:
-      - Tenant Resource
+        - Tenant Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       responses:
-        "204":
-          description: No Content
+        "200":
+          description: OK
     patch:
       tags:
-      - Tenant Resource
+        - Tenant Resource
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          format: int64
-          type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            format: int64
+            type: integer
       requestBody:
         content:
           application/json:
@@ -675,7 +865,9 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
 components:
   schemas:
     Datasource:
@@ -783,6 +975,22 @@ components:
           type: integer
         name:
           type: string
+    ReindexRequestDto:
+      type: object
+      properties:
+        datasourceIds:
+          type: array
+          items:
+            format: int64
+            type: integer
+    ReindexResponseDto:
+      type: object
+      properties:
+        datasourceId:
+          format: int64
+          type: integer
+        status:
+          type: boolean
     SuggestionCategory:
       type: object
       properties:
