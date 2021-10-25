@@ -190,7 +190,7 @@ public class DatasourceClientImpl implements DatasourceClient {
 					suggestionCategory.getTenantId(),
 					suggestionCategory.getParentCategoryId(),
 					suggestionCategory.getName(), fields)
-			);
+		);
 	}
 
 	@Override
