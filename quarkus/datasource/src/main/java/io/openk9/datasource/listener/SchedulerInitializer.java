@@ -59,6 +59,8 @@ public class SchedulerInitializer {
 				(CronTriggerImpl)_scheduler.getTrigger(
 					triggerKey);
 
+			trigger.setStartTime(new Date());
+
 			try {
 				trigger.setCronExpression(datasource.getScheduling());
 			}
