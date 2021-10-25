@@ -29,8 +29,6 @@ public class ReindexResource {
 		List<ReindexResponseDto> response = new ArrayList<>();
 
 		for (Datasource datasource : datasourceList) {
-			datasource.setLastIngestionDate(Instant.EPOCH);
-			datasource.persistAndFlush();
 
 			try {
 
@@ -42,6 +40,9 @@ public class ReindexResource {
 						true
 					)
 				);
+
+				datasource.setLastIngestionDate(Instant.EPOCH);
+				datasource.persistAndFlush();
 
 			}
 			catch (SchedulerException e) {
