@@ -15,6 +15,8 @@ import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 @Component(
 	immediate = true,
 	service = DatasourceClient.class
@@ -48,29 +50,32 @@ public class DatasourceClientImpl implements DatasourceClient {
 	@Override
 	public Mono<Datasource> findDatasource(long datasourceId) {
 		return Mono.from(
-			_httpClient
-				.request(
-					HttpHandler.GET,
-					"/v2/datasource/" + datasourceId
-				)
-		)
+				_httpClient
+					.request(
+						HttpHandler.GET,
+						"/v2/datasource/" + datasourceId
+					)
+			)
 			.map(response -> _jsonFactory.fromJson(response, Datasource.class));
 	}
 
 	@Override
 	public Flux<Datasource> findDatasourceByTenantIdAndIsActive(long tenantId) {
 		return Mono.from(
-			_httpClient
-				.request(
-					HttpHandler.POST,
-					"/v2/datasource/filter",
-					_jsonFactory
-						.createObjectNode()
-						.put("tenantId", tenantId)
-						.put("active", true)
-						.toString()
-				)
-		)
+				_httpClient
+					.request(
+						HttpHandler.POST,
+						"/v2/datasource/filter",
+						_jsonFactory
+							.createObjectNode()
+							.put("tenantId", tenantId)
+							.put("active", true)
+							.toString(),
+						Map.of(
+							"Content-Type", "application/json"
+						)
+					)
+			)
 			.flatMapIterable(
 				response -> _jsonFactory.fromJsonList(
 					response, Datasource.class));
@@ -79,16 +84,19 @@ public class DatasourceClientImpl implements DatasourceClient {
 	@Override
 	public Flux<Datasource> findDatasourceByTenantId(long tenantId) {
 		return Mono.from(
-			_httpClient
-				.request(
-					HttpHandler.POST,
-					"/v2/datasource/filter",
-					_jsonFactory
-						.createObjectNode()
-						.put("tenantId", tenantId)
-						.toString()
-				)
-		)
+				_httpClient
+					.request(
+						HttpHandler.POST,
+						"/v2/datasource/filter",
+						_jsonFactory
+							.createObjectNode()
+							.put("tenantId", tenantId)
+							.toString(),
+						Map.of(
+							"Content-Type", "application/json"
+						)
+					)
+			)
 			.flatMapIterable(
 				response -> _jsonFactory.fromJsonList(
 					response, Datasource.class));
@@ -97,28 +105,31 @@ public class DatasourceClientImpl implements DatasourceClient {
 	@Override
 	public Flux<Tenant> findTenantByVirtualHost(String virtualHost) {
 		return Mono.from(
-			_httpClient
-				.request(
-					HttpHandler.POST,
-					"/v2/tenant/filter",
-					_jsonFactory
-						.createObjectNode()
-						.put("virtualHost", virtualHost)
-						.toString()
-				)
-		)
+				_httpClient
+					.request(
+						HttpHandler.POST,
+						"/v2/tenant/filter",
+						_jsonFactory
+							.createObjectNode()
+							.put("virtualHost", virtualHost)
+							.toString(),
+						Map.of(
+							"Content-Type", "application/json"
+						)
+					)
+			)
 			.flatMapIterable(response -> _jsonFactory.fromJsonList(response, Tenant.class));
 	}
 
 	@Override
 	public Mono<Tenant> findTenant(long tenantId) {
 		return Mono.from(
-			_httpClient
-				.request(
-					HttpHandler.GET,
-					"/v2/tenant/" + tenantId
-				)
-		)
+				_httpClient
+					.request(
+						HttpHandler.GET,
+						"/v2/tenant/" + tenantId
+					)
+			)
 			.map(response -> _jsonFactory.fromJson(response, Tenant.class));
 	}
 
