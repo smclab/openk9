@@ -6,6 +6,7 @@ import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -20,8 +21,6 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.quartz.impl.triggers.CronTriggerImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -127,12 +126,10 @@ public class SchedulerInitializer {
 
 		}
 		else {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"[SCHEDULER] datasourceId: " + datasourceId +
-					" service: " + driverServiceName + " not found"
-				);
-			}
+			_log.warn(
+				"[SCHEDULER] datasourceId: " + datasourceId +
+				" service: " + driverServiceName + " not found"
+			);
 		}
 	}
 
@@ -160,7 +157,7 @@ public class SchedulerInitializer {
 	@RestClient
 	PluginDriverClient _pluginDriverClient;
 
-	private static final Logger _log = LoggerFactory.getLogger(
+	private static final Logger _log = Logger.getLogger(
 		SchedulerInitializer.class);
 
 }

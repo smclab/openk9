@@ -2,8 +2,7 @@ package io.openk9.datasource.listener;
 
 import io.openk9.datasource.model.Datasource;
 import org.quartz.SchedulerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import javax.persistence.PostPersist;
@@ -42,7 +41,7 @@ public class DatasourceListener {
 
 	}
 
-	private static final Logger _log = LoggerFactory.getLogger(
+	private static final Logger _log = Logger.getLogger(
 		DatasourceListener.class);
 
 }
