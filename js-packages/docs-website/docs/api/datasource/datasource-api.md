@@ -6,7 +6,7 @@ slug: /api/datasource-api
 ---
 
 These are APIs exposed by Openk9 Datasource component. It includes Tenant, Datasource,
-Enrichitem and Enrichpipeline APIs.
+Enrichitem, Enrichpipeline and Reindex APIs.
 
 
 ## Tenant APIs
@@ -49,3 +49,8 @@ Enrichitem and Enrichpipeline APIs.
 - [List](api-introduction)
 - [Reorder](api-introduction)
 - [Patch](api-introduction)
+
+## Reindex APIs
+
+- [Reindex](reindex)
+- [Trigger](trigger)
