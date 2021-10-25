@@ -52,16 +52,25 @@ public class SchedulerInitializer {
 
 		if (_scheduler.checkExists(jobKey)) {
 
-			Trigger trigger = TriggerBuilder.newTrigger()
-				.withIdentity(name)
-				.startNow()
-				.withSchedule(
-					CronScheduleBuilder.cronSchedule(
-						datasource.getScheduling()))
-				.build();
+			String scheduling = _scheduler
+				.getJobDetail(jobKey)
+				.getJobDataMap()
+				.getString("scheduling");
 
-			_scheduler.rescheduleJob(TriggerKey.triggerKey(name), trigger);
-			_scheduler.triggerJob(jobKey);
+			if (!scheduling.equals(datasource.getScheduling())) {
+
+				Trigger trigger = TriggerBuilder.newTrigger()
+					.withIdentity(name)
+					.startNow()
+					.withSchedule(
+						CronScheduleBuilder.cronSchedule(
+							datasource.getScheduling()))
+					.build();
+
+				_scheduler.rescheduleJob(TriggerKey.triggerKey(name), trigger);
+				_scheduler.triggerJob(jobKey);
+
+			}
 
 		}
 		else {
@@ -71,6 +80,7 @@ public class SchedulerInitializer {
 				.usingJobData(
 					"driverServiceName", datasource.getDriverServiceName())
 				.usingJobData("datasourceId", datasource.getDatasourceId())
+				.usingJobData("scheduling", datasource.getScheduling())
 				.build();
 
 			Trigger trigger = TriggerBuilder.newTrigger()
