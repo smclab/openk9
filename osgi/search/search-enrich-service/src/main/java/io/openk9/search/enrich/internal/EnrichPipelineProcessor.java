@@ -69,7 +69,7 @@ public class EnrichPipelineProcessor {
 	private Disposable _erichProcessorSubscriber() {
 		return _bundleReceiver
 			.consumeAutoAck(Queues.XS_BUFFER_SIZE)
-			.map(delivery -> _cborFactory.fromCBOR(
+			.map(delivery -> _jsonFactory.fromJson(
 				delivery.getBody(), IngestionDatasourcePluginDriverPayload.class))
 			.map(idp ->
 				_mapToEnrichProcessorContext(

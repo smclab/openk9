@@ -1,11 +1,11 @@
 package io.openk9.plugin.driver.manager.ingestion;
 
-import io.openk9.cbor.api.CBORFactory;
 import io.openk9.ingestion.api.BundleReceiver;
 import io.openk9.ingestion.api.BundleSender;
+import io.openk9.json.api.JsonFactory;
 import io.openk9.model.IngestionDatasourcePayload;
-import io.openk9.plugin.driver.manager.model.IngestionDatasourcePluginDriverPayload;
 import io.openk9.plugin.driver.manager.api.PluginDriverDTOService;
+import io.openk9.plugin.driver.manager.model.IngestionDatasourcePluginDriverPayload;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -26,7 +26,7 @@ public class IngestionDatasourcePubSub {
 		_disposable =
 			_bundleReceiver
 				.consumeAutoAck()
-				.map(delivery -> _cborFactory.fromCBOR(delivery.getBody(), IngestionDatasourcePayload.class))
+				.map(delivery -> _jsonFactory.fromJson(delivery.getBody(), IngestionDatasourcePayload.class))
 				.map(ingestionDatasourcePayload ->
 					_pluginDriverDTOService
 						.findPluginDriverDTOByName(
@@ -43,7 +43,7 @@ public class IngestionDatasourcePubSub {
 					)
 				)
 				.flatMap(Mono::justOrEmpty)
-				.transform(flux -> _bundleSender.send(flux.map(_cborFactory::toCBOR)))
+				.transform(flux -> _bundleSender.send(flux.map(_jsonFactory::toJson).map(String::getBytes)))
 				.subscribe();
 
 	}
@@ -56,7 +56,7 @@ public class IngestionDatasourcePubSub {
 	private Disposable _disposable;
 
 	@Reference
-	private CBORFactory _cborFactory;
+	private JsonFactory _jsonFactory;
 
 	@Reference(target = "(queue=ingestion-datasource)")
 	private BundleReceiver _bundleReceiver;

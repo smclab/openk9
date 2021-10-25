@@ -17,9 +17,9 @@
 
 package io.openk9.ingestion.queue.logic;
 
-import io.openk9.cbor.api.CBORFactory;
 import io.openk9.ingestion.api.BundleSender;
 import io.openk9.ingestion.logic.api.IngestionLogic;
+import io.openk9.json.api.JsonFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -33,7 +33,8 @@ public class SendToQueue {
 	public void activate() {
 		_disposable = _ingestionLogicReceiver
 			.flux()
-			.map(_cborFactory::toCBOR)
+			.map(_jsonFactory::toJson)
+			.map(String::getBytes)
 			.transform(_bundleSender::send)
 			.subscribe();
 	}
@@ -51,7 +52,7 @@ public class SendToQueue {
 	private BundleSender _bundleSender;
 
 	@Reference
-	private CBORFactory _cborFactory;
+	private JsonFactory _jsonFactory;
 
 	@Reference
 	private IngestionLogic _ingestionLogicReceiver;
