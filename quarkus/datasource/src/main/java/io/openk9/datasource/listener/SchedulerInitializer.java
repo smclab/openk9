@@ -43,6 +43,10 @@ public class SchedulerInitializer {
 		}
 	}
 
+	public void triggerJob(String name) throws SchedulerException {
+		_scheduler.triggerJob(JobKey.jobKey(name));
+	}
+
 	public void createOrUpdateScheduler(
 		Datasource datasource) throws SchedulerException {
 
@@ -52,35 +56,22 @@ public class SchedulerInitializer {
 
 		if (_scheduler.checkExists(jobKey)) {
 
-			String scheduling = _scheduler
-				.getJobDetail(jobKey)
-				.getJobDataMap()
-				.getString("scheduling");
+			Trigger trigger = TriggerBuilder.newTrigger()
+				.withIdentity(name)
+				.startNow()
+				.withSchedule(
+					CronScheduleBuilder.cronSchedule(
+						datasource.getScheduling()))
+				.build();
 
-			if (!scheduling.equals(datasource.getScheduling())) {
-
-				Trigger trigger = TriggerBuilder.newTrigger()
-					.withIdentity(name)
-					.startNow()
-					.withSchedule(
-						CronScheduleBuilder.cronSchedule(
-							datasource.getScheduling()))
-					.build();
-
-				_scheduler.rescheduleJob(TriggerKey.triggerKey(name), trigger);
-				_scheduler.triggerJob(jobKey);
-
-			}
+			_scheduler.rescheduleJob(TriggerKey.triggerKey(name), trigger);
 
 		}
 		else {
 
 			JobDetail job = JobBuilder.newJob(DatasourceJob.class)
 				.withIdentity(name)
-				.usingJobData(
-					"driverServiceName", datasource.getDriverServiceName())
 				.usingJobData("datasourceId", datasource.getDatasourceId())
-				.usingJobData("scheduling", datasource.getScheduling())
 				.build();
 
 			Trigger trigger = TriggerBuilder.newTrigger()
@@ -102,9 +93,14 @@ public class SchedulerInitializer {
 		_scheduler.deleteJob(JobKey.jobKey(datasource.getName()));
 	}
 
-	public void performTask(Long datasourceId, String driverServiceName) {
+	public void performTask(Long datasourceId) {
 
 		boolean schedulerEnabled = false;
+
+		Datasource datasource =
+			Datasource.findById(datasourceId);
+
+		String driverServiceName = datasource.getDriverServiceName();
 
 		try {
 			SchedulerEnabledDTO schedulerEnabledDTO = _pluginDriverClient
@@ -118,16 +114,13 @@ public class SchedulerInitializer {
 
 		if (schedulerEnabled) {
 
-			Datasource datasource =
-				Datasource.findById(datasourceId);
-
 			try {
 
 				_pluginDriverClient
 					.invokeDataParser(
 						InvokeDataParserDTO
 							.of(
-								datasource.getDriverServiceName(), datasource,
+								driverServiceName, datasource,
 								Date.from(datasource.getLastIngestionDate()),
 								new Date()));
 			}
@@ -158,8 +151,7 @@ public class SchedulerInitializer {
 			JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
 			taskBean.performTask(
-				jobDataMap.getLong("datasourceId"),
-				jobDataMap.getString("driverServiceName"));
+				jobDataMap.getLong("datasourceId"));
 		}
 
 	}

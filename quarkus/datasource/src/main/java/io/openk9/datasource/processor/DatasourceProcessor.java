@@ -37,7 +37,9 @@ public class DatasourceProcessor {
 		Datasource datasource =
 			Datasource.findById(datasourceId);
 
-		datasource.setLastIngestionDate(Instant.now());
+		datasource.setLastIngestionDate(
+			Instant.ofEpochMilli(
+				ingestionPayload.getParsingDate()));
 
 		datasource.persist();
 
