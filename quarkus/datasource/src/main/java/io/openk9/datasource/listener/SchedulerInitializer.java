@@ -21,13 +21,11 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
-import org.quartz.impl.triggers.CronTriggerImpl;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
@@ -52,23 +50,17 @@ public class SchedulerInitializer {
 
 		JobKey jobKey = JobKey.jobKey(name);
 
-		TriggerKey triggerKey = TriggerKey.triggerKey(name);
-
 		if (_scheduler.checkExists(jobKey)) {
-			CronTriggerImpl trigger =
-				(CronTriggerImpl)_scheduler.getTrigger(
-					triggerKey);
 
-			trigger.setStartTime(new Date());
+			Trigger trigger = TriggerBuilder.newTrigger()
+				.withIdentity(name)
+				.startNow()
+				.withSchedule(
+					CronScheduleBuilder.cronSchedule(
+						datasource.getScheduling()))
+				.build();
 
-			try {
-				trigger.setCronExpression(datasource.getScheduling());
-			}
-			catch (ParseException e) {
-				throw new SchedulerException(e);
-			}
-
-			_scheduler.rescheduleJob(triggerKey, trigger);
+			_scheduler.rescheduleJob(TriggerKey.triggerKey(name), trigger);
 
 			return;
 
