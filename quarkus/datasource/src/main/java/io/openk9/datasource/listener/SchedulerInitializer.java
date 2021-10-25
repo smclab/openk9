@@ -8,6 +8,7 @@ import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.quartz.CronScheduleBuilder;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -25,6 +26,7 @@ import org.quartz.impl.triggers.CronTriggerImpl;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -133,11 +135,13 @@ public class SchedulerInitializer {
 		}
 	}
 
+	@DisallowConcurrentExecution
 	public static class DatasourceJob implements Job {
 
 		@Inject
 		SchedulerInitializer taskBean;
 
+		@Transactional
 		public void execute(JobExecutionContext context) throws
 			JobExecutionException {
 
