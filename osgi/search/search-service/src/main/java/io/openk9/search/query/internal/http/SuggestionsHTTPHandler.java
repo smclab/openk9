@@ -197,41 +197,41 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 		return _search.search(factory -> {
 
-			org.elasticsearch.action.search.SearchRequest
-				searchRequestEntity =
-				factory.createSearchRequestEntity(tenant.getTenantId());
+				org.elasticsearch.action.search.SearchRequest
+					searchRequestEntity =
+					factory.createSearchRequestEntity(tenant.getTenantId());
 
-			Aggregations aggregations = searchResponse.getAggregations();
+				Aggregations aggregations = searchResponse.getAggregations();
 
-			CompositeAggregation compositeAggregation =
-				aggregations.get("composite");
+				CompositeAggregation compositeAggregation =
+					aggregations.get("composite");
 
-			List<? extends CompositeAggregation.Bucket> buckets =
-				compositeAggregation.getBuckets();
+				List<? extends CompositeAggregation.Bucket> buckets =
+					compositeAggregation.getBuckets();
 
-			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+				BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-			buckets
-				.stream()
-				.map(bucket -> (String)bucket.getKey().get("entities.id"))
-				.filter(Objects::nonNull)
-				.distinct()
-				.forEach(entityId -> boolQueryBuilder.should(
-					QueryBuilders.matchQuery("id", entityId)
-				));
+				buckets
+					.stream()
+					.map(bucket -> (String)bucket.getKey().get("entities.id"))
+					.filter(Objects::nonNull)
+					.distinct()
+					.forEach(entityId -> boolQueryBuilder.should(
+						QueryBuilders.matchQuery("id", entityId)
+					));
 
-			if (_log.isDebugEnabled()) {
-				_log.debug("entities query: " + boolQueryBuilder);
-			}
+				if (_log.isDebugEnabled()) {
+					_log.debug("entities query: " + boolQueryBuilder);
+				}
 
-			SearchSourceBuilder ssb = new SearchSourceBuilder();
+				SearchSourceBuilder ssb = new SearchSourceBuilder();
 
-			ssb.query(boolQueryBuilder);
-			ssb.size(1000);
-			ssb.fetchSource(new String[]{"name", "id", "type"}, null);
+				ssb.query(boolQueryBuilder);
+				ssb.size(1000);
+				ssb.fetchSource(new String[]{"name", "id", "type"}, null);
 
-			return searchRequestEntity.source(ssb);
-		})
+				return searchRequestEntity.source(ssb);
+			})
 			.flatMap(entityResponse ->
 				_datasourceClient
 					.findSuggestionCategoryFields()
@@ -390,7 +390,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 						return SuggestionsResponse.of(suggestions, afterKey);
 
-			}));
+					}));
 	}
 
 	@Reference(
