@@ -22,6 +22,7 @@ import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
+import io.openk9.model.SuggestionCategoryField;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
@@ -231,128 +232,165 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 			return searchRequestEntity.source(ssb);
 		})
-			.map(entityResponse -> {
+			.flatMap(entityResponse ->
+				_datasourceClient
+					.findSuggestionCategoryFields()
+					.map(fields -> {
 
-				Map<String, String[]> entityMap = new HashMap<>();
+						Map<String, String[]> entityMap = new HashMap<>();
 
-				for (SearchHit hit : entityResponse.getHits()) {
-					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
-					String name =(String)sourceAsMap.get("name");
-					String type =(String)sourceAsMap.get("type");
-					String entityId =
-						Integer.toString((Integer)sourceAsMap.get("id"));
-					entityMap.put(entityId, new String[]{type, name});
-				}
+						for (SearchHit hit : entityResponse.getHits()) {
+							Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+							String name =(String)sourceAsMap.get("name");
+							String type =(String)sourceAsMap.get("type");
+							String entityId =
+								Integer.toString((Integer)sourceAsMap.get("id"));
+							entityMap.put(entityId, new String[]{type, name});
+						}
 
-				Aggregations aggregations = searchResponse.getAggregations();
+						Aggregations aggregations = searchResponse.getAggregations();
 
-				CompositeAggregation compositeAggregation =
-					aggregations.get("composite");
+						CompositeAggregation compositeAggregation =
+							aggregations.get("composite");
 
-				List<? extends CompositeAggregation.Bucket> buckets =
-					compositeAggregation.getBuckets();
+						Map<String, Long> fieldNameCategoryIdMap =
+							fields
+								.stream()
+								.collect(
+									Collectors.toMap(
+										SuggestionCategoryField::getFieldName,
+										SuggestionCategoryField::getCategoryId,
+										(a1, a2) -> a2));
 
-				Set<Suggestions> suggestions =
-					new LinkedHashSet<>(buckets.size());
+						Long datasourceIdCategoryId =
+							fieldNameCategoryIdMap.getOrDefault(
+								"datasourceId", 1L);
+						Long entityIdCategoryId =
+							fieldNameCategoryIdMap.getOrDefault(
+								"entities.id", 2L);
+						Long entitiesContextCategoryId =
+							fieldNameCategoryIdMap.getOrDefault(
+								"entities.context", entityIdCategoryId);
+						Long documentTypesCategoryId =
+							fieldNameCategoryIdMap.getOrDefault(
+								"documentTypes", 4L);
 
-				for (CompositeAggregation.Bucket bucket : buckets) {
-					Map<String, Object> keys = new HashMap<>(bucket.getKey());
+						List<? extends CompositeAggregation.Bucket> buckets =
+							compositeAggregation.getBuckets();
 
-					String datasourceId =(String)keys.remove("datasourceId");
+						Set<Suggestions> suggestions =
+							new LinkedHashSet<>(buckets.size());
 
-					if (datasourceId != null) {
-						long datasourceIdL = Long.parseLong(datasourceId);
-						for1: for (Datasource datasource : datasourceList) {
+						for (CompositeAggregation.Bucket bucket : buckets) {
+							Map<String, Object> keys = new HashMap<>(bucket.getKey());
 
-							if (datasource
-								.getDatasourceId()
-								.equals(datasourceIdL)) {
+							String datasourceId =(String)keys.remove("datasourceId");
 
-								for (PluginDriverDTO pluginDriverDTO :
-									pluginDriverDTOList
-										.getPluginDriverDTOList()) {
+							if (datasourceId != null) {
+								long datasourceIdL = Long.parseLong(datasourceId);
+								for1: for (Datasource datasource : datasourceList) {
 
-									if (
-										pluginDriverDTO
-											.getDriverServiceName()
-											.equals(
-												datasource
-													.getDriverServiceName())
-									) {
-										suggestions.add(
-											Suggestions.datasource(
-												pluginDriverDTO.getName()));
+									if (datasource
+										.getDatasourceId()
+										.equals(datasourceIdL)) {
 
-										break for1;
+										for (PluginDriverDTO pluginDriverDTO :
+											pluginDriverDTOList
+												.getPluginDriverDTOList()) {
+
+											if (
+												pluginDriverDTO
+													.getDriverServiceName()
+													.equals(
+														datasource
+															.getDriverServiceName())
+											) {
+												suggestions.add(
+													Suggestions.datasource(
+														pluginDriverDTO.getName(),
+														datasourceIdCategoryId));
+
+												break for1;
+
+											}
+
+										}
 
 									}
+								}
+							}
 
+							String entitiesId =(String)keys.remove("entities.id");
+							String entitiesContext =
+								(String)keys.remove("entities.context");
+
+							if (entitiesId != null) {
+
+								String[] typeName = entityMap.get(entitiesId);
+
+								if (typeName != null) {
+									String type = typeName[0];
+									String name = typeName[1];
+
+									if (entitiesContext != null) {
+										suggestions.add(
+											Suggestions.entity(
+												entitiesId,
+												entitiesContextCategoryId,
+												type, name, entitiesContext)
+										);
+									}
+									else {
+										suggestions.add(
+											Suggestions.entity(
+												entitiesId, entityIdCategoryId,
+												type, name)
+										);
+									}
+								}
+							}
+
+							String documentTypes =(String)keys.remove("documentTypes");
+
+							if (documentTypes != null) {
+								suggestions.add(
+									Suggestions.docType(
+										documentTypes,
+										documentTypesCategoryId)
+								);
+							}
+
+							for (Map.Entry<String, Object> restEntry : keys.entrySet()) {
+								String keywordKey = restEntry.getKey();
+								String value =(String)restEntry.getValue();
+
+								Long textCategoryId =
+									fieldNameCategoryIdMap.getOrDefault(
+										keywordKey, 5L);
+
+								if (value != null) {
+									suggestions.add(
+										Suggestions.text(
+											value, textCategoryId, keywordKey)
+									);
 								}
 
 							}
-						}
-					}
 
-					String entitiesId =(String)keys.remove("entities.id");
-					String entitiesContext =
-						(String)keys.remove("entities.context");
-
-					if (entitiesId != null) {
-
-						String[] typeName = entityMap.get(entitiesId);
-
-						if (typeName != null) {
-							String type = typeName[0];
-							String name = typeName[1];
-
-							if (entitiesContext != null) {
-								suggestions.add(
-									Suggestions.entity(
-										entitiesId, type, name, entitiesContext)
-								);
-							}
-							else {
-								suggestions.add(
-									Suggestions.entity(entitiesId, type, name)
-								);
-							}
-						}
-					}
-
-					String documentTypes =(String)keys.remove("documentTypes");
-
-					if (documentTypes != null) {
-						suggestions.add(
-							Suggestions.docType(documentTypes)
-						);
-					}
-
-					for (Map.Entry<String, Object> restEntry : keys.entrySet()) {
-						String keywordKey = restEntry.getKey();
-						String value =(String)restEntry.getValue();
-
-						if (value != null) {
-							suggestions.add(
-								Suggestions.text(value, keywordKey)
-							);
 						}
 
-					}
+						Map<String, Object> map = compositeAggregation.afterKey();
+						String afterKey = null;
 
-				}
+						if (map != null) {
+							afterKey = _jsonFactory.toJson(map);
+							afterKey = Base64.getEncoder().encodeToString(
+								afterKey.getBytes(StandardCharsets.UTF_8));
+						}
 
-				Map<String, Object> map = compositeAggregation.afterKey();
-				String afterKey = null;
+						return SuggestionsResponse.of(suggestions, afterKey);
 
-				if (map != null) {
-					afterKey = _jsonFactory.toJson(map);
-					afterKey = Base64.getEncoder().encodeToString(
-						afterKey.getBytes(StandardCharsets.UTF_8));
-				}
-
-				return SuggestionsResponse.of(suggestions, afterKey);
-
-			});
+			}));
 	}
 
 	@Reference(

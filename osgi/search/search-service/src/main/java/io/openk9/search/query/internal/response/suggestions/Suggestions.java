@@ -4,9 +4,10 @@ import java.util.Objects;
 
 public abstract class Suggestions {
 
-	Suggestions(TokenType tokenType, String value) {
+	Suggestions(TokenType tokenType, String value, long suggestionCategoryId) {
 		this.tokenType = tokenType;
 		this.value = value;
+		this.suggestionCategoryId = suggestionCategoryId;
 	}
 
 	public TokenType getTokenType() {
@@ -36,31 +37,34 @@ public abstract class Suggestions {
 
 	private final TokenType tokenType;
 	private final String value;
+	private final long suggestionCategoryId;
 
 	public static Suggestions entity(
-		String value, String entityType, String entityValue) {
+		String value, long suggestionCategoryId, String entityType, String entityValue) {
 
-		return new EntitySuggestions(value, entityType, entityValue);
+		return new EntitySuggestions(
+			value, suggestionCategoryId, entityType, entityValue);
 	}
 
 	public static Suggestions entity(
-		String value, String entityType, String entityValue,
-		String keywordKey) {
+		String value, long suggestionCategoryId, String entityType,
+		String entityValue, String keywordKey) {
 
 		return new EntityContextSuggestions(
-			value, entityType, entityValue, keywordKey);
+			value, suggestionCategoryId, entityType, entityValue, keywordKey);
 	}
 
-	public static Suggestions text(String value, String keywordKey) {
-		return new TextSuggestions(value, keywordKey);
+	public static Suggestions text(
+		String value, long suggestionCategoryId, String keywordKey) {
+		return new TextSuggestions(value, suggestionCategoryId, keywordKey);
 	}
 
-	public static Suggestions docType(String value) {
-		return new DocTypeSuggestions(value);
+	public static Suggestions docType(String value, long suggestionCategoryId) {
+		return new DocTypeSuggestions(value, suggestionCategoryId);
 	}
 
-	public static Suggestions datasource(String value) {
-		return new DatasourceSuggestions(value);
+	public static Suggestions datasource(String value, long suggestionCategoryId) {
+		return new DatasourceSuggestions(value, suggestionCategoryId);
 	}
 
 }

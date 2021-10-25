@@ -2,8 +2,9 @@ package io.openk9.search.query.internal.response.suggestions;
 
 class TextSuggestions extends Suggestions {
 
-	TextSuggestions(String value, String keywordKey) {
-		super(TokenType.TEXT, value);
+	TextSuggestions(
+		String value, long suggestionCategoryId, String keywordKey) {
+		super(TokenType.TEXT, value, suggestionCategoryId);
 		this.keywordKey = keywordKey;
 	}
 

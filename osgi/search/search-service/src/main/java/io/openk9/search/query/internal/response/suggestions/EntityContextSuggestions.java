@@ -5,9 +5,9 @@ import java.util.Objects;
 class EntityContextSuggestions extends EntitySuggestions {
 
 	EntityContextSuggestions(
-		String value, String entityType, String entityValue,
-		String keywordKey) {
-		super(value, entityType, entityValue);
+		String value, long suggestionCategoryId, String entityType,
+		String entityValue, String keywordKey) {
+		super(value, suggestionCategoryId, entityType, entityValue);
 		this.keywordKey = keywordKey;
 	}
 

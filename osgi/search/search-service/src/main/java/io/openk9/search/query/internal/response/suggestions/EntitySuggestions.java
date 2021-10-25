@@ -3,8 +3,9 @@ package io.openk9.search.query.internal.response.suggestions;
 class EntitySuggestions extends Suggestions {
 
 	EntitySuggestions(
-		String value, String entityType, String entityValue) {
-		super(TokenType.ENTITY, value);
+		String value, long suggestionCategoryId, String entityType,
+		String entityValue) {
+		super(TokenType.ENTITY, value, suggestionCategoryId);
 		this.entityType = entityType;
 		this.entityValue = entityValue;
 	}

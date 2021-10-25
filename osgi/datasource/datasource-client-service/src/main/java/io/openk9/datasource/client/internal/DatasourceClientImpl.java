@@ -194,6 +194,19 @@ public class DatasourceClientImpl implements DatasourceClient {
 	}
 
 	@Override
+	public Mono<List<SuggestionCategoryField>> findSuggestionCategoryFields() {
+		return Mono.from(
+				_httpClient
+					.request(
+						HttpHandler.GET,
+						"/v2/suggestion-category-field"
+					)
+			)
+			.map(response -> _jsonFactory.fromJsonList(
+				response, SuggestionCategoryField.class));
+	}
+
+	@Override
 	public Mono<List<SuggestionCategoryField>> findSuggestionCategoryFieldsByCategoryId(
 		long categoryId) {
 		return Mono.from(
