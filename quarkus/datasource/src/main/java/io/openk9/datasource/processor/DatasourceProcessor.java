@@ -15,6 +15,7 @@ import org.eclipse.microprofile.reactive.messaging.Outgoing;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;
+import java.time.Instant;
 import java.util.List;
 
 @ApplicationScoped
@@ -36,13 +37,25 @@ public class DatasourceProcessor {
 		Datasource datasource =
 			Datasource.findById(datasourceId);
 
+		datasource.setLastIngestionDate(Instant.now());
+
+		datasource.persist();
+
+		Tenant tenant = Tenant.findById(ingestionPayload.getTenantId());
+
 		EnrichPipeline enrichPipeline =
 			EnrichPipeline.findByDatasourceId(datasourceId);
 
-		List<EnrichItem> enrichItemList = EnrichItem.findByEnrichPipelineId(
-			enrichPipeline.getEnrichPipelineId());
+		List<EnrichItem> enrichItemList;
 
-		Tenant tenant = Tenant.findById(ingestionPayload.getTenantId());
+		if (enrichPipeline != null) {
+			enrichItemList = EnrichItem.findByEnrichPipelineId(
+				enrichPipeline.getEnrichPipelineId());
+		}
+		else {
+			enrichPipeline = EnrichPipeline.builder().build();
+			enrichItemList = List.of();
+		}
 
 		DatasourceContext datasourceContext = DatasourceContext.of(
 			datasource, tenant, enrichPipeline, enrichItemList
