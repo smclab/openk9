@@ -6,6 +6,9 @@ import io.openk9.http.client.HttpClientFactory;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
+import io.openk9.model.SuggestionCategory;
+import io.openk9.model.SuggestionCategoryField;
+import io.openk9.model.SuggestionCategoryPayload;
 import io.openk9.model.Tenant;
 import io.openk9.model.TenantDatasource;
 import org.osgi.service.component.annotations.Activate;
@@ -15,7 +18,9 @@ import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 @Component(
 	immediate = true,
@@ -131,6 +136,82 @@ public class DatasourceClientImpl implements DatasourceClient {
 					)
 			)
 			.map(response -> _jsonFactory.fromJson(response, Tenant.class));
+	}
+
+	@Override
+	public Mono<List<SuggestionCategory>> findSuggestionCategories() {
+		return Mono.from(
+				_httpClient
+					.request(
+						HttpHandler.GET,
+						"/v2/suggestion-category"
+					)
+			)
+			.map(response -> _jsonFactory.fromJsonList(
+				response, SuggestionCategory.class));
+	}
+
+	@Override
+	public Mono<SuggestionCategory> findSuggestionCategory(long categoryId) {
+		return Mono.from(
+				_httpClient
+					.request(
+						HttpHandler.GET,
+						"/v2/suggestion-category/" + categoryId
+					)
+			)
+			.map(response -> _jsonFactory.fromJson(response, SuggestionCategory.class));
+	}
+
+	@Override
+	public Mono<List<SuggestionCategoryPayload>> findSuggestionCategoriesWithFields() {
+		return findSuggestionCategories()
+			.flatMapIterable(Function.identity())
+			.flatMap(suggestionCategory ->
+				findSuggestionCategoryFieldsByCategoryId(
+					suggestionCategory.getSuggestionCategoryId())
+					.map(fields -> SuggestionCategoryPayload.of(
+						suggestionCategory.getSuggestionCategoryId(),
+						suggestionCategory.getTenantId(),
+						suggestionCategory.getParentCategoryId(),
+						suggestionCategory.getName(), fields)))
+			.collectList();
+	}
+
+	@Override
+	public Mono<SuggestionCategoryPayload> findSuggestionCategoryWithFieldsById(
+		long categoryId) {
+		return Mono.zip(
+			findSuggestionCategory(categoryId),
+			findSuggestionCategoryFieldsByCategoryId(categoryId),
+			(suggestionCategory, fields) ->
+				SuggestionCategoryPayload.of(
+					suggestionCategory.getSuggestionCategoryId(),
+					suggestionCategory.getTenantId(),
+					suggestionCategory.getParentCategoryId(),
+					suggestionCategory.getName(), fields)
+			);
+	}
+
+	@Override
+	public Mono<List<SuggestionCategoryField>> findSuggestionCategoryFieldsByCategoryId(
+		long categoryId) {
+		return Mono.from(
+				_httpClient
+					.request(
+						HttpHandler.POST,
+						"/v2/suggestion-category-field/filter",
+						_jsonFactory
+							.createObjectNode()
+							.put("categoryId", categoryId)
+							.toString(),
+						Map.of(
+							"Content-Type", "application/json"
+						)
+					)
+			)
+			.map(response -> _jsonFactory.fromJsonList(
+				response, SuggestionCategoryField.class));
 	}
 
 	private HttpClient _httpClient;
