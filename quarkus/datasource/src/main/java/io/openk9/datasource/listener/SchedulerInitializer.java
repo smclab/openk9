@@ -118,7 +118,7 @@ public class SchedulerInitializer {
 					.invokeDataParser(
 						InvokeDataParserDTO
 							.of(
-								driverServiceName, datasource,
+								datasource.getDriverServiceName(), datasource,
 								Date.from(datasource.getLastIngestionDate()),
 								new Date()));
 			}
