@@ -32,7 +32,7 @@ public class TenantResource {
 
 	@GET
 	@Path("/{id}")
-	@Produces("application/json")
+	@Produces()
 	@Transactional
 	public Tenant findById(@PathParam("id") long id){
 		return Tenant.findById(id);
@@ -40,7 +40,7 @@ public class TenantResource {
 
 	@POST
 	@Path("/filter")
-	@Produces("application/json")
+	@Produces()
 	@Transactional
 	public List<Tenant> filter(TenantDto dto){
 
@@ -52,7 +52,7 @@ public class TenantResource {
 	}
 
 	@GET
-	@Produces("application/json")
+	@Produces()
 	@Transactional
 	public List<Tenant> findAll(
 		@QueryParam("sort") List<String> sortQuery,

@@ -32,14 +32,14 @@ public class EnrichPipelineResource {
 
 	@GET
 	@Path("/{id}")
-	@Produces("application/json")
+	@Produces()
 	public EnrichPipeline findById(@PathParam("id") long id){
 		return EnrichPipeline.findById(id);
 	}
 
 	@POST
 	@Path("/filter")
-	@Produces("application/json")
+	@Produces()
 	public List<EnrichPipeline> filter(EnrichPipeline dto){
 
 		Map<String, Object> map = JsonObject.mapFrom(dto).getMap();
@@ -50,7 +50,7 @@ public class EnrichPipelineResource {
 	}
 
 	@GET
-	@Produces("application/json")
+	@Produces()
 	public List<EnrichPipeline> findAll(
 		@QueryParam("sort") List<String> sortQuery,
 		@QueryParam("page") @DefaultValue("0") int pageIndex,

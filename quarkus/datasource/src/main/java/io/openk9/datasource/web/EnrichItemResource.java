@@ -1,10 +1,9 @@
-package io.openk9.enrichItem.web;
+package io.openk9.datasource.web;
 
 import io.openk9.datasource.dto.EnrichItemDto;
 import io.openk9.datasource.mapper.EnrichItemIgnoreNullMapper;
 import io.openk9.datasource.mapper.EnrichItemNullAwareMapper;
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.web.ResourceUtil;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -33,7 +32,7 @@ public class EnrichItemResource {
 
 	@GET
 	@Path("/{id}")
-	@Produces("application/json")
+	@Produces()
 	@Transactional
 	public EnrichItem findById(@PathParam("id") long id){
 		return EnrichItem.findById(id);
@@ -41,7 +40,7 @@ public class EnrichItemResource {
 
 	@POST
 	@Path("/filter")
-	@Produces("application/json")
+	@Produces()
 	@Transactional
 	public List<EnrichItem> filter(EnrichItemDto dto){
 
@@ -53,7 +52,7 @@ public class EnrichItemResource {
 	}
 
 	@GET
-	@Produces("application/json")
+	@Produces()
 	@Transactional
 	public List<EnrichItem> findAll(
 		@QueryParam("sort") List<String> sortQuery,

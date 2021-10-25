@@ -32,14 +32,14 @@ public class SuggestionCategoryResource {
 
 	@GET
 	@Path("/{id}")
-	@Produces("application/json")
+	@Produces()
 	public SuggestionCategory findById(@PathParam("id") long id){
 		return SuggestionCategory.findById(id);
 	}
 
 	@POST
 	@Path("/filter")
-	@Produces("application/json")
+	@Produces()
 	public List<SuggestionCategory> filter(SuggestionCategoryDto dto){
 
 		Map<String, Object> map = JsonObject.mapFrom(dto).getMap();
@@ -50,7 +50,7 @@ public class SuggestionCategoryResource {
 	}
 
 	@GET
-	@Produces("application/json")
+	@Produces()
 	public List<SuggestionCategory> findAll(
 		@QueryParam("sort") List<String> sortQuery,
 		@QueryParam("page") @DefaultValue("0") int pageIndex,

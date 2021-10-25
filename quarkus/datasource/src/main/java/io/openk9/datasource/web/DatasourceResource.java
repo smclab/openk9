@@ -32,7 +32,7 @@ public class DatasourceResource {
 
 	@GET
 	@Path("/{id}")
-	@Produces("application/json")
+	@Produces()
 	@Transactional
 	public Datasource findById(@PathParam("id") long id){
 		return Datasource.findById(id);
@@ -40,7 +40,7 @@ public class DatasourceResource {
 
 	@POST
 	@Path("/filter")
-	@Produces("application/json")
+	@Produces()
 	@Transactional
 	public List<Datasource> filter(DatasourceDto dto){
 
@@ -52,7 +52,7 @@ public class DatasourceResource {
 	}
 
 	@GET
-	@Produces("application/json")
+	@Produces()
 	@Transactional
 	public List<Datasource> findAll(
 		@QueryParam("sort") List<String> sortQuery,
