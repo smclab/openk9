@@ -5,6 +5,7 @@ import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.RouterHandler;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
@@ -12,6 +13,10 @@ import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 
+@Component(
+	immediate = true,
+	service = RouterHandler.class
+)
 public class SuggestionCategoriesHttpHandler
 	implements RouterHandler, HttpHandler {
 
