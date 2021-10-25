@@ -17,9 +17,9 @@
 
 package io.openk9.search.enrich.internal;
 
-import io.openk9.cbor.api.CBORFactory;
 import io.openk9.ingestion.api.BundleSender;
 import io.openk9.ingestion.api.BundleSenderProvider;
+import io.openk9.json.api.JsonFactory;
 import io.openk9.search.enrich.api.EndEnrichProcessor;
 import io.openk9.search.enrich.api.StartEnrichProcessor;
 import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
@@ -64,7 +64,7 @@ public class StartEnrichProcessorImpl implements StartEnrichProcessor {
 
 			return bundleSender.send(
 				Mono.just(
-					_cborFactory.toCBOR(
+					_jsonFactory.toJson(
 						EnrichProcessorContext
 							.builder()
 							.dependencies(dependencies)
@@ -75,6 +75,7 @@ public class StartEnrichProcessorImpl implements StartEnrichProcessor {
 								enrichProcessorContext.getDatasourceContext())
 							.build()
 					)
+						.getBytes()
 				)
 			);
 		});
@@ -82,7 +83,7 @@ public class StartEnrichProcessorImpl implements StartEnrichProcessor {
 	}
 
 	@Reference
-	private CBORFactory _cborFactory;
+	private JsonFactory _jsonFactory;
 
 	@Reference
 	private BundleSenderProvider _bundleSenderProvider;
