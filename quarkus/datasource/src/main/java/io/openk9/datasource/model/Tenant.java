@@ -25,11 +25,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Type;
 
-import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -51,8 +50,8 @@ public class Tenant extends PanacheEntityBase {
     private String name;
     @Column(nullable = false)
     private String virtualHost;
-    @Column(columnDefinition = "text")
     @Lob
+    @Type(type="org.hibernate.type.TextType")
     private String jsonConfig;
 
     @Override

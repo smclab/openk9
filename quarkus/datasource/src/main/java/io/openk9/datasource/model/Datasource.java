@@ -57,7 +57,7 @@ public class Datasource extends PanacheEntityBase {
     @Column(length = 1024)
     private String description;
     @Lob
-    @Column(columnDefinition = "text")
+    @Type(type="org.hibernate.type.TextType")
     private String jsonConfig;
     private Instant lastIngestionDate;
     @Column(nullable = false, unique = true)

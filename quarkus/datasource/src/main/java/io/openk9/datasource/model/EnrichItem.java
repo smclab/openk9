@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -51,8 +52,8 @@ public class EnrichItem extends PanacheEntityBase {
     private Integer _position;
     @Column(nullable = false)
     private Boolean active = false;
-    @Column(columnDefinition = "text")
     @Lob
+    @Type(type="org.hibernate.type.TextType")
     private String jsonConfig;
     @Column(nullable = false)
     private Long enrichPipelineId;
