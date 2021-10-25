@@ -25,6 +25,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.type.TextType;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -54,6 +57,7 @@ public class Datasource extends PanacheEntityBase {
     @Column(length = 1024)
     private String description;
     @Lob
+    @Column(columnDefinition = "text")
     private String jsonConfig;
     private Instant lastIngestionDate;
     @Column(nullable = false, unique = true)

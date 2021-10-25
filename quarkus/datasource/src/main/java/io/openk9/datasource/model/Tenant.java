@@ -51,6 +51,7 @@ public class Tenant extends PanacheEntityBase {
     private String name;
     @Column(nullable = false)
     private String virtualHost;
+    @Column(columnDefinition = "text")
     @Lob
     private String jsonConfig;
 

@@ -51,6 +51,7 @@ public class EnrichItem extends PanacheEntityBase {
     private Integer _position;
     @Column(nullable = false)
     private Boolean active = false;
+    @Column(columnDefinition = "text")
     @Lob
     private String jsonConfig;
     @Column(nullable = false)
