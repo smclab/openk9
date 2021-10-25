@@ -62,25 +62,29 @@ public class SchedulerInitializer {
 
 			_scheduler.rescheduleJob(TriggerKey.triggerKey(name), trigger);
 
-			return;
+		}
+		else {
+
+			JobDetail job = JobBuilder.newJob(DatasourceJob.class)
+				.withIdentity(name)
+				.usingJobData(
+					"driverServiceName", datasource.getDriverServiceName())
+				.usingJobData("datasourceId", datasource.getDatasourceId())
+				.build();
+
+			Trigger trigger = TriggerBuilder.newTrigger()
+				.withIdentity(name)
+				.startNow()
+				.withSchedule(
+					CronScheduleBuilder.cronSchedule(
+						datasource.getScheduling()))
+				.build();
+
+			_scheduler.scheduleJob(job, trigger);
 
 		}
 
-		JobDetail job = JobBuilder.newJob(DatasourceJob.class)
-			.withIdentity(name)
-			.usingJobData("driverServiceName", datasource.getDriverServiceName())
-			.usingJobData("datasourceId", datasource.getDatasourceId())
-			.build();
-
-		Trigger trigger = TriggerBuilder.newTrigger()
-			.withIdentity(name)
-			.startNow()
-			.withSchedule(
-				CronScheduleBuilder.cronSchedule(
-					datasource.getScheduling()))
-			.build();
-
-		_scheduler.scheduleJob(job, trigger);
+		_scheduler.triggerJob(jobKey);
 
 	}
 
