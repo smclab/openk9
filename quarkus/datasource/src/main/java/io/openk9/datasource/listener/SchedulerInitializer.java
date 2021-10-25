@@ -136,6 +136,7 @@ public class SchedulerInitializer {
 	}
 
 	@DisallowConcurrentExecution
+	@ApplicationScoped
 	public static class DatasourceJob implements Job {
 
 		@Inject
