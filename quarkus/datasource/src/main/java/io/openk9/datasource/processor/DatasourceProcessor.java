@@ -20,7 +20,7 @@ import java.util.List;
 public class DatasourceProcessor {
 
 	@Incoming("ingestion")
-	@Outgoing("datasource")
+	@Outgoing("ingestion-datasource")
 	@Blocking
 	public IngestionDatasourcePayload process(byte[] json) {
 
