@@ -68,6 +68,8 @@ public class SchedulerInitializer {
 
 			_scheduler.rescheduleJob(triggerKey, trigger);
 
+			return;
+
 		}
 
 		JobDetail job = JobBuilder.newJob(DatasourceJob.class)
