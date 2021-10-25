@@ -30,6 +30,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-container-image-jib'
     implementation 'io.quarkus:quarkus-hibernate-validator'
     implementation 'io.quarkus:quarkus-smallrye-reactive-messaging-amqp'
+    implementation 'org.jboss.logging:commons-logging-jboss-logging'
 
     implementation 'com.cronutils:cron-utils:9.1.5'
 
