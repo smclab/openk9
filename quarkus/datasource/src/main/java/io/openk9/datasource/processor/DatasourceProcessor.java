@@ -8,6 +8,7 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
@@ -20,6 +21,7 @@ public class DatasourceProcessor {
 
 	@Incoming("ingestion")
 	@Outgoing("datasource")
+	@Blocking
 	public IngestionDatasourcePayload process(byte[] json) {
 
 		JsonObject jsonObject = new JsonObject(new String(json));
