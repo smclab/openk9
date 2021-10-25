@@ -61,6 +61,7 @@ public class SchedulerInitializer {
 				.build();
 
 			_scheduler.rescheduleJob(TriggerKey.triggerKey(name), trigger);
+			_scheduler.triggerJob(jobKey);
 
 		}
 		else {
@@ -83,8 +84,6 @@ public class SchedulerInitializer {
 			_scheduler.scheduleJob(job, trigger);
 
 		}
-
-		_scheduler.triggerJob(jobKey);
 
 	}
 
