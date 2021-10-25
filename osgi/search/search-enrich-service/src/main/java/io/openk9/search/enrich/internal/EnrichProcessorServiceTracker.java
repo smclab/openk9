@@ -17,11 +17,11 @@
 
 package io.openk9.search.enrich.internal;
 
-import io.openk9.cbor.api.CBORFactory;
 import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.BundleReceiver;
 import io.openk9.ingestion.api.BundleSender;
 import io.openk9.ingestion.api.BundleSenderProvider;
+import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.ObjectNode;
 import io.openk9.model.EnrichItem;
 import io.openk9.osgi.util.AutoCloseables;
@@ -140,7 +140,7 @@ class EnrichProcessorServiceTracker
 			ServiceDependency cborFactoryDependency=
 				_dependencyManager.createServiceDependency()
 					.setRequired(true)
-					.setService(CBORFactory.class);
+					.setService(JsonFactory.class);
 
 			ServiceDependency endEnrichProcessorDependency =
 				_dependencyManager.createServiceDependency()
@@ -168,12 +168,12 @@ class EnrichProcessorServiceTracker
 				.flatMap(delivery -> {
 
 					EnrichProcessorContext context =
-						m_cborFactory.fromCBOR(
+						m_jsonFactory.fromJson(
 							delivery.getBody(), EnrichProcessorContext.class);
 
 					List<String> dependencies = context.getDependencies();
 
-					ObjectNode objectNode = m_cborFactory
+					ObjectNode objectNode = m_jsonFactory
 						.treeNode(context.getObjectNode())
 						.toObjectNode();
 
@@ -229,7 +229,9 @@ class EnrichProcessorServiceTracker
 									);
 
 								return bundleSender.send(
-									Mono.just(m_cborFactory.toCBOR(newContext))
+									Mono.just(
+										m_jsonFactory.toJson(newContext).getBytes()
+									)
 								);
 
 							})
@@ -257,7 +259,7 @@ class EnrichProcessorServiceTracker
 
 		private volatile BundleSenderProvider m_bundleSenderProvider;
 		private volatile BundleReceiver m_bundleReceiver;
-		private volatile CBORFactory m_cborFactory;
+		private volatile JsonFactory m_jsonFactory;
 		private volatile EndEnrichProcessor m_endEnrichProcessor;
 
 		private Disposable _disposable;

@@ -51,4 +51,7 @@ public interface JsonFactory {
 	ObjectNode createObjectNode();
 
 	ArrayNode createArrayNode();
+
+	JsonNode treeNode(Object object);
+
 }

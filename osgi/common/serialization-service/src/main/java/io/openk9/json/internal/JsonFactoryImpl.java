@@ -198,6 +198,12 @@ public class JsonFactoryImpl implements JsonFactory {
 			_objectMapperProvider.getObjectMapper().createArrayNode());
 	}
 
+	@Override
+	public JsonNode treeNode(Object object) {
+		return new JsonNodeWrapper(
+			_objectMapperProvider.getObjectMapper().valueToTree(object));
+	}
+
 	@Reference
 	private ObjectMapperProvider _objectMapperProvider;
 
