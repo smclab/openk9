@@ -6,6 +6,8 @@ Build Latest Datasource Docker Images:
     services:
         - docker:19.03.13-dind
     stage: build-docker
+    before_script:
+        - export GRADLE_USER_HOME=`pwd`/.gradle
     variables:
         TEST_NAME: local/test
         DOCKER_HOST: tcp://localhost:2375
@@ -23,4 +25,5 @@ Build Latest Datasource Docker Images:
         key: build-docker-cache
         paths:
             - $CI_PROJECT_DIR/.m2/**/*
-            - $CI_PROJECT_DIR/.gradle/**/*
+            - .gradle/caches
+            - .gradle/wrapper
