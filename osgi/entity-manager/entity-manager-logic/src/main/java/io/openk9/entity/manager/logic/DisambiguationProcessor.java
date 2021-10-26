@@ -32,7 +32,7 @@ public class DisambiguationProcessor {
 	@interface Config {
 		long amount() default 30_000;
 		ChronoUnit unit() default ChronoUnit.MILLIS;
-		int concurrency() default 256;
+		int concurrency() default Integer.MAX_VALUE;
 	}
 
 	private Mono<Void> _disambiguate(
@@ -65,7 +65,7 @@ public class DisambiguationProcessor {
 					internalDisambiguation ->
 						internalDisambiguation.getRequest().getCurrent(),
 					config.concurrency())
-				.flatMap(this::_disambiguate, config.concurrency())
+				.flatMap(this::_disambiguate, config.concurrency(), config.concurrency())
 				.onErrorContinue(TimeoutException.class, (throwable, o) -> {
 
 					if (_log.isDebugEnabled()) {

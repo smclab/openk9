@@ -64,6 +64,13 @@ public class GetOrAddEntitiesConsumer  {
 		_disposable = _entityManagerRequestConsumer
 			.stream(config.prefetch())
 			.flatMap(this::apply, config.concurrency())
+			.onErrorContinue(TimeoutException.class, (throwable, o) -> {
+
+				if (_log.isErrorEnabled()) {
+					_log.error(throwable.getMessage());
+				}
+
+			})
 			.flatMap(objectNode -> {
 
 				String replyTo = objectNode.get("replyTo").asText();
@@ -100,132 +107,140 @@ public class GetOrAddEntitiesConsumer  {
 
 	public Mono<ObjectNode> apply(ObjectNode objectNode) {
 
-		String replyTo = objectNode.get("replyTo").asText();
+		return Mono.defer(() -> {
 
-		ObjectNode datasourceContextJson =
-			objectNode.get("datasourceContext").toObjectNode();
+			ObjectNode datasourceContextJson =
+				objectNode.get("datasourceContext").toObjectNode();
 
-		long datasourceId = datasourceContextJson
-			.get("datasource")
-			.get("datasourceId")
-			.asLong();
+			long datasourceId = datasourceContextJson
+				.get("datasource")
+				.get("datasourceId")
+				.asLong();
 
-		long tenantId = datasourceContextJson
-			.get("tenant")
-			.get("tenantId")
-			.asLong();
+			long tenantId = datasourceContextJson
+				.get("tenant")
+				.get("tenantId")
+				.asLong();
 
-		JsonNode entities = objectNode.remove("entities");
+			JsonNode entities = objectNode.remove("entities");
 
-		ObjectNode responseJson = _jsonFactory.createObjectNode();
+			ObjectNode responseJson = _jsonFactory.createObjectNode();
 
-		responseJson.put("entities", entities);
-		responseJson.put("tenantId", tenantId);
-		responseJson.put("datasourceId", datasourceId);
+			responseJson.put("entities", entities);
+			responseJson.put("tenantId", tenantId);
+			responseJson.put("datasourceId", datasourceId);
 
-		Request request =
-			_jsonFactory.fromJson(responseJson.toString(), Request.class);
+			Request request =
+				_jsonFactory.fromJson(responseJson.toString(), Request.class);
 
-		List<RequestContext> requestContextList =
-			request
-				.getEntities()
-				.stream()
-				.map(entityRequest -> RequestContext
-					.builder()
-					.current(entityRequest)
-					.tenantId(request.getTenantId())
-					.datasourceId(request.getDatasourceId())
-					.rest(
-						request
-							.getEntities()
-							.stream()
-							.filter(er -> er != entityRequest)
-							.collect(Collectors.toList())
+			List<RequestContext> requestContextList =
+				request
+					.getEntities()
+					.stream()
+					.map(entityRequest -> RequestContext
+						.builder()
+						.current(entityRequest)
+						.tenantId(request.getTenantId())
+						.datasourceId(request.getDatasourceId())
+						.rest(
+							request
+								.getEntities()
+								.stream()
+								.filter(er -> er != entityRequest)
+								.collect(Collectors.toList())
+						)
+						.build()
 					)
-					.build()
-				)
-				.collect(Collectors.toList());
+					.collect(Collectors.toList());
 
-		Mono<List<EntityContext>> disambiguateListMono =
-			GetOrAddEntities.stopWatch(
-				"disambiguate-all-entities",
-				Flux.fromIterable(requestContextList)
-					.flatMap(
-						requestContext ->
-							GetOrAddEntities.stopWatch(
-								"disambiguate-" + requestContext.getCurrent().getName(),
-								Mono.<EntityContext>create(
-									fluxSink ->
-										_startDisambiguation.disambiguate(
-											requestContext, fluxSink)
-								)
-							)
-					)
-					.collectList()
-			);
-
-		Mono<ResponseList> writeRelations = disambiguateListMono
-			.flatMap(entityContexts ->
+			Mono<List<EntityContext>> disambiguateListMono =
 				GetOrAddEntities.stopWatch(
-					"write-relations", writeRelations(entityContexts)));
+					"disambiguate-all-entities",
+					Flux.fromIterable(requestContextList)
+						.flatMap(
+							requestContext ->
+								GetOrAddEntities.stopWatch(
+									"disambiguate-" + requestContext.getCurrent().getName(),
+									Mono.<EntityContext>create(
+										fluxSink ->
+											_startDisambiguation.disambiguate(
+												requestContext, fluxSink)
+									)
+								)
+						)
+						.collectList()
+				);
 
-		Mono<ResponseList> responseListWrapper =
-			_transactional
-				? _graphClient.makeTransactional(writeRelations)
-				: writeRelations;
+			Mono<ResponseList> writeRelations = disambiguateListMono
+				.flatMap(entityContexts ->
+					GetOrAddEntities.stopWatch(
+						"write-relations", writeRelations(entityContexts)));
 
-		Mono<ArrayNode> entitiesField = responseListWrapper
-			.map(responseListDTO -> {
+			Mono<ResponseList> responseListWrapper =
+				_transactional
+					? _graphClient.makeTransactional(writeRelations)
+					: writeRelations;
 
-				List<Response> responseList = responseListDTO.getResponse();
+			Mono<ArrayNode> entitiesField = responseListWrapper
+				.map(responseListDTO -> {
 
-				ArrayNode entitiesArrayNode = entities.toArrayNode();
+					List<Response> responseList = responseListDTO.getResponse();
 
-				ArrayNode arrayNode = _jsonFactory.createArrayNode();
+					ArrayNode entitiesArrayNode = entities.toArrayNode();
 
-				for (JsonNode node : entitiesArrayNode) {
+					ArrayNode arrayNode = _jsonFactory.createArrayNode();
 
-					Optional<Response> responseOptional =
-						responseList
-							.stream()
-							.filter(response ->
-								node.get("tmpId").asLong() ==
-								response.getTmpId())
-							.findFirst();
+					for (JsonNode node : entitiesArrayNode) {
 
-					if (responseOptional.isPresent()) {
+						Optional<Response> responseOptional =
+							responseList
+								.stream()
+								.filter(response ->
+									node.get("tmpId").asLong() ==
+									response.getTmpId())
+								.findFirst();
 
-						Entity entity = responseOptional.get().getEntity();
+						if (responseOptional.isPresent()) {
 
-						ObjectNode result = _jsonFactory.createObjectNode();
+							Entity entity = responseOptional.get().getEntity();
 
-						result.put("entityType", entity.getType());
+							ObjectNode result = _jsonFactory.createObjectNode();
 
-						result.put("id", entity.getId());
+							result.put("entityType", entity.getType());
 
-						result.put("context", node.get("context"));
+							result.put("id", entity.getId());
 
-						arrayNode.add(result);
+							result.put("context", node.get("context"));
+
+							arrayNode.add(result);
+
+						}
 
 					}
 
-				}
+					return arrayNode;
 
-				return arrayNode;
+				});
 
-			});
+			return entitiesField.map(
+				entitiesArray -> {
 
-		return entitiesField.map(
-			entitiesArray -> {
+					ObjectNode payload = objectNode.get("payload").toObjectNode();
 
-				ObjectNode payload = objectNode.get("payload").toObjectNode();
+					payload.set("entities", entitiesArray);
 
-				payload.set("entities", entitiesArray);
+					return objectNode;
 
-				return objectNode;
-
-			});
-
+				});
+		})
+			.timeout(
+				Duration.ofSeconds(120),
+				Mono.error(
+					new TimeoutException(
+						"timeout on entities: " + objectNode.get("entities") +
+						" (Did not observe any item or terminal signal within 120000ms)")
+				)
+			);
 	}
 
 	public Mono<ResponseList> writeRelations(List<EntityContext> entityContext) {
