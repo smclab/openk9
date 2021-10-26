@@ -29,6 +29,7 @@ import io.openk9.model.DatasourceContext;
 import io.openk9.model.EnrichItem;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.enrich.api.EnrichProcessor;
+import io.openk9.search.enrich.api.SyncEnrichProcessor;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -40,7 +41,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component(immediate = true, service = EnrichProcessor.class)
-public class JsEnrichProcessor implements EnrichProcessor {
+public class JsEnrichProcessor implements SyncEnrichProcessor {
 
 	@interface Config {
 		String url() default "http://js-scripts-executor:3000/";

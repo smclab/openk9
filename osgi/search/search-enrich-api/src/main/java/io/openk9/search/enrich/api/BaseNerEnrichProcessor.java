@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public abstract class BaseNerEnrichProcessor implements EnrichProcessor {
+public abstract class BaseNerEnrichProcessor implements SyncEnrichProcessor {
 
 	@Override
 	public abstract String name();

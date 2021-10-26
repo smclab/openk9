@@ -25,8 +25,10 @@ import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.ObjectNode;
 import io.openk9.model.EnrichItem;
 import io.openk9.osgi.util.AutoCloseables;
+import io.openk9.search.enrich.api.AsyncEnrichProcessor;
 import io.openk9.search.enrich.api.EndEnrichProcessor;
 import io.openk9.search.enrich.api.EnrichProcessor;
+import io.openk9.search.enrich.api.SyncEnrichProcessor;
 import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
 import lombok.RequiredArgsConstructor;
 import org.apache.felix.dm.DependencyManager;
@@ -41,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.IdentityHashMap;
@@ -56,6 +59,9 @@ class EnrichProcessorServiceTracker
 	public EnrichProcessor addingService(
 		ServiceReference<EnrichProcessor> reference) {
 
+		List<AutoCloseable> autoCloseableSafes =
+			new ArrayList<>();
+
 		EnrichProcessor service = _bundleContext.getService(reference);
 
 		Binding binding = Binding.of(exchange, service.name(), service.name());
@@ -64,16 +70,37 @@ class EnrichProcessorServiceTracker
 			_bundleContext.registerService(
 				Binding.class, binding, new Hashtable<>());
 
+		autoCloseableSafes.add(serviceRegistration::unregister);
+
+		if (service instanceof AsyncEnrichProcessor) {
+
+			AsyncEnrichProcessor asyncEnrichProcessor =
+				((AsyncEnrichProcessor)service);
+
+			Binding bindingDestinationName = Binding.of(
+				exchange,
+				asyncEnrichProcessor.destinationName(),
+				asyncEnrichProcessor.destinationName());
+
+			ServiceRegistration<Binding> destinationNameServiceRegistration =
+				_bundleContext.registerService(
+					Binding.class, bindingDestinationName, new Hashtable<>());
+
+			autoCloseableSafes.add(
+				destinationNameServiceRegistration::unregister);
+		}
+
 		EnrichProcessorExtension enrichProcessorExtension =
 			new EnrichProcessorExtension(
 				reference.getBundle(), service, prefetch);
 
 		enrichProcessorExtension.start();
 
+		autoCloseableSafes.add(enrichProcessorExtension::destroy);
+
 		_map.put(
 			service, AutoCloseables.mergeAutoCloseableToSafe(
-				serviceRegistration::unregister,
-				enrichProcessorExtension::destroy
+				autoCloseableSafes
 			)
 		);
 
@@ -184,70 +211,112 @@ class EnrichProcessorServiceTracker
 						.filter(e -> e.getServiceName().equals(_enrichProcessor.name()))
 						.findFirst().orElseThrow(IllegalStateException::new);
 
-					return _enrichProcessor.process(
-						objectNode,
-						context.getDatasourceContext(),
-						enrichItem,
-						context.getPluginDriverDTO()
-					)
-						.flatMap(
-							jsonNode -> {
+					if (_enrichProcessor instanceof AsyncEnrichProcessor) {
 
-								if (dependencies.isEmpty()) {
-									return m_endEnrichProcessor
-										.exec(
-											EnrichProcessorContext.of(
-												jsonNode.toMap(),
-												context.getDatasourceContext(),
-												context.getPluginDriverDTO(),
-												Collections.emptyList()
-											)
+						BundleSender bundleSender =
+							m_bundleSenderProvider.getBundleSender(
+								((AsyncEnrichProcessor)_enrichProcessor)
+									.destinationName());
+
+						ObjectNode ob = m_jsonFactory.createObjectNode();
+
+						ob.put("payload", objectNode);
+						ob.put(
+							"enrichItemConfig",
+							m_jsonFactory.fromJsonToJsonNode(
+								enrichItem.getJsonConfig()
+							)
+						);
+
+						if (dependencies.isEmpty()) {
+							ob.put("replyTo", "index-writer");
+						}
+						else {
+
+							LinkedList<String> linkedList =
+								new LinkedList<>(dependencies);
+
+							String routingKey = linkedList.pop();
+
+							ob.put("replyTo", routingKey);
+						}
+
+						return bundleSender.send(
+							Mono.just(ob.toString().getBytes())
+						);
+
+					}
+					else if (_enrichProcessor instanceof SyncEnrichProcessor) {
+						return ((SyncEnrichProcessor)_enrichProcessor).process(
+								objectNode,
+								context.getDatasourceContext(),
+								enrichItem,
+								context.getPluginDriverDTO()
+							)
+							.flatMap(
+								jsonNode -> {
+
+									if (dependencies.isEmpty()) {
+										return m_endEnrichProcessor
+											.exec(
+												EnrichProcessorContext.of(
+													jsonNode.toMap(),
+													context.getDatasourceContext(),
+													context.getPluginDriverDTO(),
+													Collections.emptyList()
+												)
+											);
+									}
+
+									LinkedList<String> linkedList =
+										new LinkedList<>(dependencies);
+
+									String routingKey = linkedList.pop();
+
+									BundleSender bundleSender =
+										m_bundleSenderProvider
+											.getBundleSender(routingKey);
+
+									if (bundleSender == null) {
+										throw new IllegalStateException(
+											"bundleSender for routingKey: " +
+											routingKey + " not exist");
+									}
+
+									EnrichProcessorContext newContext =
+										EnrichProcessorContext.of(
+											jsonNode.toMap(),
+											context.getDatasourceContext(),
+											context.getPluginDriverDTO(),
+											linkedList
 										);
-								}
 
-								LinkedList<String> linkedList =
-									new LinkedList<>(dependencies);
-
-								String routingKey = linkedList.pop();
-
-								BundleSender bundleSender =
-									m_bundleSenderProvider
-										.getBundleSender(routingKey);
-
-								if (bundleSender == null) {
-									throw new IllegalStateException(
-										"bundleSender for routingKey: " +
-										routingKey + " not exist");
-								}
-
-								EnrichProcessorContext newContext =
-									EnrichProcessorContext.of(
-										jsonNode.toMap(),
-										context.getDatasourceContext(),
-										context.getPluginDriverDTO(),
-										linkedList
+									return bundleSender.send(
+										Mono.just(
+											m_jsonFactory.toJson(newContext).getBytes()
+										)
 									);
 
-								return bundleSender.send(
-									Mono.just(
-										m_jsonFactory.toJson(newContext).getBytes()
-									)
-								);
+								})
+							.onErrorContinue((throwable, o) -> {
 
-							})
-						.onErrorContinue((throwable, o) -> {
+								if (_log.isErrorEnabled()) {
 
-							if (_log.isErrorEnabled()) {
-
-								if (o != null) {
-									_log.error("error on object: " + o, throwable);
+									if (o != null) {
+										_log.error("error on object: " + o, throwable);
+									}
+									else {
+										_log.error(throwable.getMessage(), throwable);
+									}
 								}
-								else {
-									_log.error(throwable.getMessage(), throwable);
-								}
-							}
 
-						});
+							});
+					}
+					else {
+						return Mono.error(() -> new IllegalStateException(
+							"EnrichProcessor instanceof must be AsyncEnrichProcessor or SyncEnrichProcessor"));
+					}
+
 				})
 				.subscribe();
 
