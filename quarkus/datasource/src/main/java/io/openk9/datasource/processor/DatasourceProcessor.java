@@ -21,17 +21,12 @@ import reactor.core.scheduler.Schedulers;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
 @ApplicationScoped
 public class DatasourceProcessor {
-
-	@PersistenceContext
-	private EntityManager em;
 
 	@PostConstruct
 	public void start() {
@@ -59,7 +54,7 @@ public class DatasourceProcessor {
 			.groupBy(Datasource::getDatasourceId)
 			.flatMap(group -> group.sample(Duration.ofSeconds(30)))
 			.subscribeOn(Schedulers.fromExecutor(executor))
-			.subscribe(threadContext.contextualConsumer(em::persist));
+			.subscribe(threadContext.contextualConsumer(Datasource::persistAndFlush));
 
 	}
 
@@ -118,7 +113,5 @@ public class DatasourceProcessor {
 
 	private Sinks.Many<Datasource> _many;
 	private Disposable _disposable;
-
-
 
 }
