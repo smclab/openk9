@@ -33,6 +33,9 @@ dependencies {
     implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'org.jboss.logging:commons-logging-jboss-logging'
 
+    implementation 'io.projectreactor:reactor-core:3.4.11'
+
+
     implementation 'com.cronutils:cron-utils:9.1.5'
 
     testImplementation 'io.quarkus:quarkus-junit5'

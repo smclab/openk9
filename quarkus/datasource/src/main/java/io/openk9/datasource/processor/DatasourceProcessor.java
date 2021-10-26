@@ -12,19 +12,45 @@ import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import reactor.core.Disposable;
+import reactor.core.publisher.Sinks;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
-import javax.transaction.Transactional;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
 @ApplicationScoped
 public class DatasourceProcessor {
 
+	@PostConstruct
+	public void start() {
+		_many = Sinks
+			.unsafe()
+			.many()
+			.multicast()
+			.onBackpressureBuffer();
+
+		_disposable = _many
+			.asFlux()
+			.groupBy(Datasource::getDatasourceId)
+			.flatMap(group -> group.sample(Duration.ofSeconds(30)))
+			.subscribe(Datasource::persistAndFlush);
+
+	}
+
+	@PreDestroy
+	public void stop() {
+		_disposable.dispose();
+		_many.emitComplete(Sinks.EmitFailureHandler.FAIL_FAST);
+	}
+
+
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
 	@Blocking("ingestion-datasource-pool")
-	@Transactional
 	public IngestionDatasourcePayload process(byte[] json) {
 
 		JsonObject jsonObject = new JsonObject(new String(json));
@@ -41,7 +67,7 @@ public class DatasourceProcessor {
 			Instant.ofEpochMilli(
 				ingestionPayload.getParsingDate()));
 
-		datasource.persistAndFlush();
+		_many.tryEmitNext(datasource);
 
 		Tenant tenant = Tenant.findById(datasource.getTenantId());
 
@@ -67,5 +93,8 @@ public class DatasourceProcessor {
 			ingestionPayload, datasourceContext);
 
 	}
+
+	private Sinks.Many<Datasource> _many;
+	private Disposable _disposable;
 
 }
