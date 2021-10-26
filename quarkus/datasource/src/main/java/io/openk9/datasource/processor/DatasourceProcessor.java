@@ -66,7 +66,7 @@ public class DatasourceProcessor {
 
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
-	@Blocking("ingestion-datasource-pool")
+	@Blocking
 	public IngestionDatasourcePayload process(byte[] json) {
 
 		JsonObject jsonObject = new JsonObject(new String(json));
