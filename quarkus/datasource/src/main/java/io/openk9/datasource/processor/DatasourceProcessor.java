@@ -32,7 +32,6 @@ public class DatasourceProcessor {
 	public void start() {
 
 		ManagedExecutor executor = ManagedExecutor.builder()
-			.maxAsync(5)
 			.propagated(
 				ThreadContext.CDI,
 				ThreadContext.TRANSACTION)
@@ -53,8 +52,8 @@ public class DatasourceProcessor {
 			.asFlux()
 			.groupBy(Datasource::getDatasourceId)
 			.flatMap(group -> group.sample(Duration.ofSeconds(30)))
-			.subscribeOn(Schedulers.fromExecutor(executor))
-			.subscribe(threadContext.contextualConsumer(Datasource::persistAndFlush));
+			.subscribeOn(Schedulers.fromExecutorService(executor))
+			.subscribe(threadContext.contextualConsumer(d -> d.persist()));
 
 	}
 
