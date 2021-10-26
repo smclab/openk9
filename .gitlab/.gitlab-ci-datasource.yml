@@ -27,3 +27,11 @@ Build Latest Datasource Docker Images:
             - $CI_PROJECT_DIR/.m2/**/*
             - .gradle/caches
             - .gradle/wrapper
+        policy: push
+cache:
+    key: build-docker-cache
+    paths:
+        - $CI_PROJECT_DIR/.m2/**/*
+        - .gradle/wrapper
+        - .gradle/caches
+    policy: pull
