@@ -11,7 +11,6 @@ import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import reactor.core.Disposable;
@@ -21,6 +20,7 @@ import reactor.core.scheduler.Schedulers;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.time.Duration;
@@ -36,12 +36,6 @@ public class DatasourceProcessor {
 	@PostConstruct
 	public void start() {
 
-		ManagedExecutor executor = ManagedExecutor.builder()
-			.propagated(
-				ThreadContext.CDI,
-				ThreadContext.TRANSACTION)
-			.build();
-
 		_many = Sinks
 			.unsafe()
 			.many()
@@ -52,7 +46,7 @@ public class DatasourceProcessor {
 			.asFlux()
 			.groupBy(Datasource::getDatasourceId)
 			.flatMap(group -> group.sample(Duration.ofSeconds(30)))
-			.subscribeOn(Schedulers.fromExecutor(executor))
+			.subscribeOn(Schedulers.fromExecutor(managedExecutor))
 			.subscribe(em::persist);
 
 	}
@@ -110,7 +104,12 @@ public class DatasourceProcessor {
 
 	}
 
+	@Inject
+	ManagedExecutor managedExecutor;
+
 	private Sinks.Many<Datasource> _many;
 	private Disposable _disposable;
+
+
 
 }
