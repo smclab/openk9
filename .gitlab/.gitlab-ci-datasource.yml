@@ -23,6 +23,7 @@ Build Latest Datasource Docker Images:
         - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-datasource" -F ref=master $DEV_TRIGGER_URL
     cache:
         key: build-docker-cache
+        untracked: true
         paths:
             - $CI_PROJECT_DIR/.m2/**/*
             - .gradle/caches
@@ -30,6 +31,7 @@ Build Latest Datasource Docker Images:
         policy: push
 cache:
     key: build-docker-cache
+    untracked: true
     paths:
         - $CI_PROJECT_DIR/.m2/**/*
         - .gradle/wrapper
