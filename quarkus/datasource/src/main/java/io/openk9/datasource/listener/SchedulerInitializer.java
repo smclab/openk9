@@ -44,6 +44,7 @@ public class SchedulerInitializer {
 	}
 
 	public void triggerJob(String name) throws SchedulerException {
+		logger.info("trigger: " + name);
 		_scheduler.triggerJob(JobKey.jobKey(name));
 	}
 
@@ -109,7 +110,7 @@ public class SchedulerInitializer {
 			schedulerEnabled = schedulerEnabledDTO.isSchedulerEnabled();
 		}
 		catch (Exception e) {
-			_log.error(e.getMessage(), e);
+			logger.error(e.getMessage(), e);
 		}
 
 		if (schedulerEnabled) {
@@ -125,12 +126,12 @@ public class SchedulerInitializer {
 								new Date()));
 			}
 			catch (Exception e) {
-				_log.error(e.getMessage(), e);
+				logger.error(e.getMessage(), e);
 			}
 
 		}
 		else {
-			_log.warn(
+			logger.warn(
 				"[SCHEDULER] datasourceId: " + datasourceId +
 				" service: " + driverServiceName + " not found"
 			);
@@ -163,7 +164,7 @@ public class SchedulerInitializer {
 	@RestClient
 	PluginDriverClient _pluginDriverClient;
 
-	private static final Logger _log = Logger.getLogger(
-		SchedulerInitializer.class);
+	@Inject
+	Logger logger;
 
 }
