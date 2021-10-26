@@ -32,7 +32,8 @@ public class ReindexResource {
 
 			try {
 
-				_schedulerInitializer.triggerJob(datasource.getName());
+				_schedulerInitializer.triggerJob(
+					datasource.getDatasourceId(), datasource.getName());
 
 				response.add(
 					ReindexResponseDto.of(
