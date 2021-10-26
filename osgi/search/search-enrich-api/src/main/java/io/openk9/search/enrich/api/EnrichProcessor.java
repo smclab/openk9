@@ -17,63 +17,6 @@
 
 package io.openk9.search.enrich.api;
 
-import io.openk9.model.EnrichItem;
-import io.openk9.model.DatasourceContext;
-import io.openk9.json.api.JsonNode;
-import io.openk9.json.api.ObjectNode;
-import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
-import reactor.core.publisher.Mono;
-
 public interface EnrichProcessor {
-
-	Mono<ObjectNode> process(
-		ObjectNode objectNode, DatasourceContext datasourceContext,
-		EnrichItem enrichItem, PluginDriverDTO pluginDriverDTO);
-
-	default Mono<ObjectNode> process(
-		ObjectNode objectNode, DatasourceContext datasourceContext,
-		PluginDriverDTO pluginDriverDTO) {
-
-		EnrichItem enrichItem = datasourceContext
-			.getEnrichItems()
-			.stream()
-			.filter(e -> e.getServiceName().equals(name()))
-			.findFirst().orElseThrow(IllegalStateException::new);
-
-		return process(
-			objectNode, datasourceContext, enrichItem, pluginDriverDTO);
-
-	}
-
 	String name();
-
-	EnrichProcessor NOTHING = new EnrichProcessor() {
-		@Override
-		public Mono<ObjectNode> process(
-			ObjectNode objectNode, DatasourceContext datasourceContext,
-			EnrichItem enrichItem, PluginDriverDTO pluginDriverDTO) {
-
-			String pluginDriverName = pluginDriverDTO.getName();
-
-			if (objectNode.hasNonNull(pluginDriverName)) {
-
-				JsonNode driverData =
-					objectNode.remove(pluginDriverName);
-
-				driverData
-					.toObjectNode()
-					.stream()
-					.forEach(e -> objectNode.put(e.getKey(), e.getValue()));
-
-			}
-
-			return Mono.just(objectNode);
-		}
-
-		@Override
-		public String name() {
-			return "NOTHING";
-		}
-	};
-
 }
