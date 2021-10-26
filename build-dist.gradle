@@ -9,10 +9,6 @@ configurations {
 		transitive = false
 		visible = false
 	}
-	distDatasource {
-		transitive = false
-		visible = false
-	}
 	distIngestion {
 		transitive = false
 		visible = false
@@ -160,78 +156,6 @@ dependencies {
 	distIndexWriter project(path: ':osgi:util:groovy-script-web', transitive: false)
 
 	// </INDEX WRITER>
-
-	// <DATASOURCE>
-
-	distDatasource project(path:':osgi:common:reactory-netty-util', transitive: false)
-	distDatasource project(path: ':osgi:web:http-api', transitive: false)
-	distDatasource project(path: ':osgi:web:http-service', transitive: false)
-	distDatasource project(path: ':osgi:web:http-bundle-ext', transitive: false)
-	distDatasource project(path: ':osgi:web:open-api', transitive: false)
-
-	distDatasource project(path: ':osgi:metrics:metrics-api', transitive: false)
-	distDatasource project(path: ':osgi:metrics:metrics-service', transitive: false)
-	distDatasource project(path: ':osgi:metrics:metrics-ext', transitive: false)
-
-	distDatasource project(path: ':osgi:common:common-api', transitive: false)
-	distDatasource project(path: ':osgi:common:core-api', transitive: false)
-	distDatasource project(path: ':osgi:common:model', transitive: false)
-	distDatasource project(path: ':osgi:common:osgi-api', transitive: false)
-	distDatasource project(path: ':osgi:common:serialization-api', transitive: false)
-	distDatasource project(path: ':osgi:common:serialization-service', transitive: false)
-	distDatasource project(path: ':osgi:third-party:reactor', transitive: false)
-	distDatasource project(path: ':osgi:third-party:reactor-netty', transitive: false)
-	distDatasource project(path: ':osgi:third-party:reactive-streams', transitive: false)
-	distDatasource project(path: ':osgi:third-party:micrometer', transitive: false)
-	distDatasource project(path: ':osgi:third-party:jackson', transitive: false)
-	distDatasource project(path: ':osgi:third-party:vavr', transitive: false)
-	distDatasource project(path: ':osgi:third-party:apache', transitive: false)
-	distDatasource project(path: ':osgi:common:http-serialization', transitive: false)
-
-	distDatasource project(path: ':osgi:index-writer:index-writer-model', transitive: false)
-
-	distDatasource project(path: ':osgi:auth:auth-keycloak-api', transitive: false)
-	distDatasource project(path: ':osgi:auth:auth-keycloak-service', transitive: false)
-	distDatasource project(path: ':osgi:auth:auth-keycloak-web', transitive: false)
-
-	distDatasource project(path: ':osgi:third-party:caffeine', transitive: false)
-
-	distDatasource project(path: ':osgi:ingestion:ingestion-api', transitive: false)
-	distDatasource project(path: ':osgi:ingestion:ingestion-service', transitive: false)
-	distDatasource project(path: ':osgi:ingestion:ingestion-driver-manager-datasource-service', transitive: false)
-
-	distDatasource project(path: ':osgi:database:sql-api:', transitive: false)
-	distDatasource project(path: ':osgi:database:sql-service:', transitive: false)
-	distDatasource project(path: ':osgi:database:sql-jdbc-service:', transitive: false)
-	distDatasource project(path: ':osgi:database:sql-scheduler:', transitive: false)
-	distDatasource project(path: ':osgi:database:sql-scheduler-web:', transitive: false)
-
-	distDatasource project(path: ':osgi:database:repository-http-api:', transitive: false)
-	distDatasource project(path: ':osgi:database:repository-http-service:', transitive: false)
-
-	distDatasource project(path: ':osgi:datasource:datasource-api', transitive: false)
-	distDatasource project(path: ':osgi:datasource:datasource-service', transitive: false)
-	distDatasource project(path: ':osgi:datasource:datasource-web', transitive: false)
-	distDatasource project(path: ':osgi:datasource:datasource-queue', transitive: false)
-	distDatasource project(path: ':osgi:datasource:datasource-event-publisher', transitive: false)
-
-	distDatasource project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-api', transitive: false)
-	distDatasource project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-service', transitive: false)
-	distDatasource project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
-
-	distDatasource project(path: ':osgi:init-data', transitive: false)
-
-	distDatasource project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
-
-	distDatasource project(path: ':osgi:fix:karaf-json-config-fix', transitive: false)
-
-	//GROOVY SCRIPT
-	distDatasource group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.8' , transitive: false
-	distDatasource project(path: ':osgi:util:groovy-script-api', transitive: false)
-	distDatasource project(path: ':osgi:util:groovy-script-service', transitive: false)
-	distDatasource project(path: ':osgi:util:groovy-script-web', transitive: false)
-
-	// </DATASOURCE>
 
 	// <INGESTION>
 
