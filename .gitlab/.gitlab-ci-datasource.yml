@@ -14,7 +14,7 @@ Build Latest Datasource Quarkus Docker Images:
         - if: '$CI_COMMIT_BRANCH == "main"'
           changes:
               - quarkus/datasource/**/*
-              - .gitlab/.gitlab-ci-datasource-quarkus.yml
+              - .gitlab/.gitlab-ci-datasource.yml
     script:
         - ./gradlew build -p ./quarkus/datasource -Dquarkus.live-reload.password=123 -Dquarkus.package.type=jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
     after_script:
