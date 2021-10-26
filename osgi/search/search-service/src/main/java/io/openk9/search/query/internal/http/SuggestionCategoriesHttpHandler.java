@@ -42,7 +42,7 @@ public class SuggestionCategoriesHttpHandler
 				NumberUtils.toLong(categoryId));
 		}
 		else {
-			response = _datasourceClient.findSuggestionCategories();
+			response = _datasourceClient.findSuggestionCategoriesWithFields();
 		}
 
 		return _httpResponseWriter.write(httpServerResponse,response);
