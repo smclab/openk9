@@ -14,6 +14,7 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
 
@@ -22,7 +23,8 @@ public class DatasourceProcessor {
 
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
-	@Blocking
+	@Blocking("ingestion-datasource-pool")
+	@Transactional
 	public IngestionDatasourcePayload process(byte[] json) {
 
 		JsonObject jsonObject = new JsonObject(new String(json));
