@@ -18,6 +18,10 @@ public abstract class Suggestions {
 		return value;
 	}
 
+	public long getSuggestionCategoryId() {
+		return suggestionCategoryId;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
