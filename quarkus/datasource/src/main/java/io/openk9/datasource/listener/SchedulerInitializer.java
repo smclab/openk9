@@ -44,7 +44,7 @@ public class SchedulerInitializer {
 	}
 
 	public void triggerJob(long datasourceId, String name) throws SchedulerException {
-		logger.info("trigger: " + name);
+		logger.info("datasourceId: " + datasourceId + "trigger: " + name);
 		performTask(datasourceId);
 	}
 
