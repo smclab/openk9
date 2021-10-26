@@ -14,6 +14,7 @@ Build Tagged OSGI Docker Images:
     - tags
   script:
     - ./gradlew pushImages
+    - ./gradlew build -p ./quarkus/datasource -Dquarkus.package.type=native -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true
   cache:
     key: build-docker-cache
     paths:
