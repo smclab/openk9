@@ -76,7 +76,10 @@ public class BindingServiceTrackerCustomizer
 		Binding.Exchange.Type exchangeType = exchangeDTO.getType();
 
 		Mono<AMQP.Exchange.DeclareOk> mono1 = _sender.declareExchange(
-			ExchangeSpecification.exchange(exchange).type(exchangeType.name())
+			ExchangeSpecification
+				.exchange(exchange)
+				.type(exchangeType.name())
+				.durable(true)
 		);
 
 		List<AutoCloseable> autoCloseables = new ArrayList<>();

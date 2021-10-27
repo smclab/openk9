@@ -323,12 +323,14 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-identifier-generator-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-identifier-generator-service', transitive: false)
 
+	/*
 	distPluginDriverManager project(path: ':plugins:email', transitive: false)
 	distPluginDriverManager project(path: ':plugins:liferay', transitive: false)
 	distPluginDriverManager project(path: ':plugins:web:generic', transitive: false)
 	distPluginDriverManager project(path: ':plugins:web:sitemap', transitive: false)
 	distPluginDriverManager project(path: ':plugins:applications', transitive: false)
 	distPluginDriverManager project(path: ':plugins:js-enrich-plugin', transitive: false)
+	 */
 
 	// felix dependency manager
 
