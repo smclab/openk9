@@ -1,0 +1,47 @@
+variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+build plugins:
+    image: smclab/docker-java-11:latest
+    services:
+        - docker:19.03.13-dind
+    stage: build-docker
+    variables:
+        TEST_NAME: local/test
+        DOCKER_HOST: tcp://localhost:2375
+        DOCKER_TLS_CERTDIR: ""
+    rules:
+        - if: '$CI_COMMIT_BRANCH == "async-enrich-process"'
+          changes:
+              - plugins/**
+    before_script:
+        - export GRADLE_USER_HOME=`pwd`/.gradle
+    script:
+        - ./gradlew buildPlugin
+    artifacts:
+        paths:
+            - build/plugin/libs/*.jar
+            - .gitlab/.gitlab-ci-plugins.yml
+        expire_in: 1 week
+    cache:
+        key: build-docker-cache
+        paths:
+            - $CI_PROJECT_DIR/.m2/**/*
+            - $CI_PROJECT_DIR/.gradle/**/*
+
+deploy-plugins:
+    stage: deploy
+    image: roffe/kubectl
+    rules:
+        -   if: '$CI_COMMIT_BRANCH == "async-enrich-process"'
+            changes:
+                - plugins/**
+                - .gitlab/.gitlab-ci-plugins.yml
+    needs: [build plugins]
+    script:
+        - find build/plugin/libs/ -type f -exec kubectl cp {} $(kubectl get pods -n k9-develop  | grep plugin-driver-manager | awk '{print $1}' | tail -1):/opt/apache-karaf/deploy -n k9-develop \;
+    environment:
+        name: develop
+        kubernetes:
+            namespace: k9-develop
+    resource_group: develop
