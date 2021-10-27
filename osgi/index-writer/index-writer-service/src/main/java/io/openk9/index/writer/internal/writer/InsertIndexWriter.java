@@ -1,8 +1,8 @@
 package io.openk9.index.writer.internal.writer;
 
-import io.openk9.cbor.api.CBORFactory;
 import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.ReceiverReactor;
+import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.ObjectNode;
 import io.openk9.search.client.api.IndexBus;
 import io.openk9.search.client.api.Search;
@@ -41,8 +41,8 @@ public class InsertIndexWriter {
 					delivery -> {
 
 						ObjectNode enrichProcessorContext =
-							_cborFactory
-								.fromCBORToJsonNode(delivery.getBody())
+							_jsonFactory
+								.fromJsonToJsonNode(delivery.getBody())
 								.toObjectNode();
 
 						String routingKey =
@@ -141,7 +141,7 @@ public class InsertIndexWriter {
 	private IndexBus _indexBus;
 
 	@Reference
-	private CBORFactory _cborFactory;
+	private JsonFactory _jsonFactory;
 
 	@Reference
 	private Search _search;
