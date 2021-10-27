@@ -21,6 +21,10 @@ configurations {
 		transitive = false
 		visible = false
 	}
+	distPlugin {
+		transitive = false
+		visible = false
+	}
 }
 
 repositories {
@@ -359,5 +363,13 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:util:groovy-script-web', transitive: false)
 
 	// </PluginDriverManager>
+
+
+	distPlugin project(path: ':plugins:email', transitive: false)
+	distPlugin project(path: ':plugins:liferay', transitive: false)
+	distPlugin project(path: ':plugins:web:generic', transitive: false)
+	distPlugin project(path: ':plugins:web:sitemap', transitive: false)
+	distPlugin project(path: ':plugins:applications', transitive: false)
+	distPlugin project(path: ':plugins:js-enrich-plugin', transitive: false)
 
 }
