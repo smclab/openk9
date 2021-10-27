@@ -11,7 +11,7 @@ build plugins:
         DOCKER_HOST: tcp://localhost:2375
         DOCKER_TLS_CERTDIR: ""
     rules:
-        - if: '$CI_COMMIT_BRANCH == "async-enrich-process"'
+        - if: '$CI_COMMIT_BRANCH == "async-enrich-processor"'
           changes:
               - plugins/*
               - plugins/**
@@ -34,7 +34,7 @@ deploy-plugins:
     stage: deploy
     image: roffe/kubectl
     rules:
-        -   if: '$CI_COMMIT_BRANCH == "async-enrich-process"'
+        -   if: '$CI_COMMIT_BRANCH == "async-enrich-processor"'
             changes:
                 - plugins/*
                 - plugins/**
