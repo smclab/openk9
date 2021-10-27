@@ -17,7 +17,7 @@ include:
   - local: '/.gitlab/.gitlab-ci-plugin-driver-manager.yml'
   - local: '/.gitlab/.gitlab-ci-entity-manager-async-enrich-processor.yml'
   - local: '/.gitlab/.gitlab-ci-plugin-driver-manager-async-enrich-processor.yml'
-  - local: '/.gitlab-ci-index-writer-async-enrich-processor.yml'
+  - local: '/.gitlab/.gitlab-ci-index-writer-async-enrich-processor.yml'
 
 sonarqube-check:
   stage: quality
