@@ -18,7 +18,7 @@ public class IndexWriterBinding implements Binding {
 
 	@Override
 	public String getRoutingKey() {
-		return "#";
+		return "index-writer";
 	}
 
 	@Override
