@@ -26,6 +26,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -53,7 +54,7 @@ public class GetOrAddEntitiesConsumer  {
 	void activate(Config config) {
 		_transactional = config.transactional();
 
-		_entityManagerRequestConsumer
+		_disposable = _entityManagerRequestConsumer
 			.stream()
 			.concatMap(this::apply)
 			.concatMap(objectNode -> {
@@ -73,7 +74,8 @@ public class GetOrAddEntitiesConsumer  {
 					Mono.just(objectNode.toString().getBytes())
 				);
 
-			});
+			})
+			.subscribe();
 
 	}
 
@@ -85,6 +87,7 @@ public class GetOrAddEntitiesConsumer  {
 
 	@Deactivate
 	void deactivate() {
+		_disposable.dispose();
 	}
 
 
@@ -330,6 +333,8 @@ public class GetOrAddEntitiesConsumer  {
 	}
 
 	private boolean _transactional;
+
+	private Disposable _disposable;
 
 	@Reference
 	private GraphClient _graphClient;
