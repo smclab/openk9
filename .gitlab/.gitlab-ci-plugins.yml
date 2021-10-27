@@ -13,6 +13,7 @@ build plugins:
     rules:
         - if: '$CI_COMMIT_BRANCH == "async-enrich-process"'
           changes:
+              - plugins/*
               - plugins/**
               - .gitlab/.gitlab-ci-plugins.yml
     before_script:
@@ -35,6 +36,7 @@ deploy-plugins:
     rules:
         -   if: '$CI_COMMIT_BRANCH == "async-enrich-process"'
             changes:
+                - plugins/*
                 - plugins/**
                 - .gitlab/.gitlab-ci-plugins.yml
     needs: [build plugins]
