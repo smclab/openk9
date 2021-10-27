@@ -7,11 +7,15 @@ import io.openk9.entity.manager.model.payload.RelationRequest;
 import io.openk9.entity.manager.model.payload.Request;
 import io.openk9.entity.manager.model.payload.Response;
 import io.openk9.entity.manager.model.payload.ResponseList;
-import io.openk9.http.util.HttpResponseWriter;
-import io.openk9.http.web.HttpHandler;
-import io.openk9.http.web.RouterHandler;
+import io.openk9.entity.manager.subscriber.api.EntityManagerRequestConsumer;
+import io.openk9.ingestion.api.Binding;
+import io.openk9.ingestion.api.BindingRegistry;
+import io.openk9.ingestion.api.BundleSender;
+import io.openk9.ingestion.api.BundleSenderProvider;
+import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
-import io.openk9.reactor.netty.util.ReactorNettyUtils;
+import io.openk9.json.api.JsonNode;
+import io.openk9.json.api.ObjectNode;
 import io.openk9.relationship.graph.api.client.GraphClient;
 import org.neo4j.cypherdsl.core.Cypher;
 import org.neo4j.cypherdsl.core.Functions;
@@ -22,17 +26,14 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
-import reactor.netty.http.server.HttpServerResponse;
-import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,10 +41,9 @@ import static org.neo4j.cypherdsl.core.Cypher.literalOf;
 
 @Component(
 	immediate = true,
-	service = RouterHandler.class
+	service = GetOrAddEntitiesConsumer.class
 )
-public class GetOrAddEntitiesHttpHandler
-	implements HttpHandler, RouterHandler {
+public class GetOrAddEntitiesConsumer  {
 
 	@interface Config {
 		boolean transactional() default false;
@@ -52,6 +52,29 @@ public class GetOrAddEntitiesHttpHandler
 	@Activate
 	void activate(Config config) {
 		_transactional = config.transactional();
+
+		_entityManagerRequestConsumer
+			.stream()
+			.concatMap(this::apply)
+			.concatMap(objectNode -> {
+
+				String replyTo = objectNode.get("replyTo").asText();
+
+				_bindingRegistry.register(
+					Binding.Exchange.of(
+						"amq.topic", Binding.Exchange.Type.topic),
+						replyTo
+					);
+
+				BundleSender bundleSender =
+					_bundleSenderProvider.getBundleSender(replyTo);
+
+				return bundleSender.send(
+					Mono.just(objectNode.toString().getBytes())
+				);
+
+			});
+
 	}
 
 	@Modified
@@ -64,54 +87,67 @@ public class GetOrAddEntitiesHttpHandler
 	void deactivate() {
 	}
 
-	@Override
-	public HttpServerRoutes handle(HttpServerRoutes router) {
-		return router.post("/get-or-add-entities", this);
-	}
 
-	@Override
-	public Publisher<Void> apply(
-		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
+	public Mono<ObjectNode> apply(ObjectNode objectNode) {
 
-		Mono<Request> requestMono = Mono
-			.from(ReactorNettyUtils.aggregateBodyAsString(httpRequest))
-			.map(body -> _jsonFactory.fromJson(body, Request.class));
+		String replyTo = objectNode.get("replyTo").asText();
 
-		Flux<RequestContext> requestContextFlux =
-			requestMono
-				.flatMapIterable(
-					request -> request
-						.getEntities()
-						.stream()
-						.map(entityRequest -> RequestContext
-							.builder()
-							.current(entityRequest)
-							.tenantId(request.getTenantId())
-							.datasourceId(request.getDatasourceId())
-							.rest(
-								request
-									.getEntities()
-									.stream()
-									.filter(er -> er != entityRequest)
-									.collect(Collectors.toList())
-							)
-							.build()
-						)
-						.collect(Collectors.toList())
-				);
+		ObjectNode datasourceContextJson =
+			objectNode.get("datasourceContext").toObjectNode();
+
+		long datasourceId = datasourceContextJson
+			.get("datasource")
+			.get("datasourceId")
+			.asLong();
+
+		long tenantId = datasourceContextJson
+			.get("tenant")
+			.get("tenantId")
+			.asLong();
+
+		JsonNode entities = objectNode.get("entities");
+
+		ObjectNode responseJson = _jsonFactory.createObjectNode();
+
+		responseJson.put("entities", entities);
+		responseJson.put("tenantId", tenantId);
+		responseJson.put("datasourceId", datasourceId);
+
+		Request request =
+			_jsonFactory.fromJson(responseJson.toString(), Request.class);
+
+		List<RequestContext> requestContextList =
+			request
+				.getEntities()
+				.stream()
+				.map(entityRequest -> RequestContext
+					.builder()
+					.current(entityRequest)
+					.tenantId(request.getTenantId())
+					.datasourceId(request.getDatasourceId())
+					.rest(
+						request
+							.getEntities()
+							.stream()
+							.filter(er -> er != entityRequest)
+							.collect(Collectors.toList())
+					)
+					.build()
+				)
+				.collect(Collectors.toList());
 
 		Mono<List<EntityContext>> disambiguateListMono =
 			GetOrAddEntities.stopWatch(
 				"disambiguate-all-entities",
-				requestContextFlux
+				Flux.fromIterable(requestContextList)
 					.flatMap(
-						request ->
+						requestContext ->
 							GetOrAddEntities.stopWatch(
-								"disambiguate-" + request.getCurrent().getName(),
+								"disambiguate-" + requestContext.getCurrent().getName(),
 								Mono.<EntityContext>create(
 									fluxSink ->
 										_startDisambiguation.disambiguate(
-											request, fluxSink)
+											requestContext, fluxSink)
 								)
 							)
 					)
@@ -123,12 +159,55 @@ public class GetOrAddEntitiesHttpHandler
 				GetOrAddEntities.stopWatch(
 					"write-relations", writeRelations(entityContexts)));
 
-		return Mono
-			.from(_httpResponseWriter.write(
-				httpResponse,
-				_transactional
-					? _graphClient.makeTransactional(writeRelations)
-					: writeRelations));
+		Mono<ResponseList> responseListWrapper =
+			_transactional
+				? _graphClient.makeTransactional(writeRelations)
+				: writeRelations;
+
+		Mono<ArrayNode> entitiesField = responseListWrapper
+			.map(responseListDTO -> {
+
+				List<Response> responseList = responseListDTO.getResponse();
+
+				ArrayNode entitiesArrayNode = entities.toArrayNode();
+
+				ArrayNode arrayNode = _jsonFactory.createArrayNode();
+
+				for (JsonNode node : entitiesArrayNode) {
+
+					Optional<Response> responseOptional =
+						responseList
+							.stream()
+							.filter(response ->
+								node.get("tmpId").asLong() ==
+								response.getTmpId())
+							.findFirst();
+
+					if (responseOptional.isPresent()) {
+
+						Entity entity = responseOptional.get().getEntity();
+
+						ObjectNode result = _jsonFactory.createObjectNode();
+
+						result.put("entityType", entity.getType());
+
+						result.put("id", entity.getId());
+
+						result.put("context", node.get("context"));
+
+						arrayNode.add(result);
+
+					}
+
+				}
+
+				return arrayNode;
+
+			});
+
+		return entitiesField.map(
+			entitiesArray -> objectNode.set("entities", entitiesArray));
+
 	}
 
 	public Mono<ResponseList> writeRelations(List<EntityContext> entityContext) {
@@ -259,9 +338,15 @@ public class GetOrAddEntitiesHttpHandler
 	private JsonFactory _jsonFactory;
 
 	@Reference
-	private HttpResponseWriter _httpResponseWriter;
+	private StartDisambiguation _startDisambiguation;
 
 	@Reference
-	private StartDisambiguation _startDisambiguation;
+	private EntityManagerRequestConsumer _entityManagerRequestConsumer;
+
+	@Reference
+	private BindingRegistry _bindingRegistry;
+
+	@Reference
+	private BundleSenderProvider _bundleSenderProvider;
 
 }

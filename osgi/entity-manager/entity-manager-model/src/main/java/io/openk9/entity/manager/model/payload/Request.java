@@ -12,10 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Request {
-	private String ingestionId;
 	private long tenantId;
 	private long datasourceId;
-	private String contentId;
 	private List<EntityRequest> entities;
-	private String content;
 }

@@ -17,13 +17,13 @@
 
 package io.openk9.search.enrich.api;
 
-import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
+import io.openk9.json.api.ObjectNode;
 import reactor.core.publisher.Mono;
 
 public interface Processor {
 
 	String name();
 
-	Mono<Void> exec(EnrichProcessorContext enrichProcessorContext);
+	Mono<Void> exec(ObjectNode objectNode);
 
 }

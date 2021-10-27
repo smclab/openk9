@@ -18,6 +18,7 @@
 package io.openk9.json.api;
 
 public interface ArrayNode extends JsonNode {
+
 	ArrayNode add(JsonNode value);
 
 	ArrayNode add(String value);
@@ -25,4 +26,7 @@ public interface ArrayNode extends JsonNode {
 	ArrayNode addPOJO(Object value);
 
 	ArrayNode addAll(ArrayNode value);
+
+	JsonNode remove(int index);
+
 }

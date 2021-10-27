@@ -21,15 +21,18 @@ import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.BundleReceiver;
 import io.openk9.ingestion.api.BundleSender;
 import io.openk9.ingestion.api.BundleSenderProvider;
+import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
+import io.openk9.model.DatasourceContext;
 import io.openk9.model.EnrichItem;
 import io.openk9.osgi.util.AutoCloseables;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.enrich.api.AsyncEnrichProcessor;
 import io.openk9.search.enrich.api.EndEnrichProcessor;
 import io.openk9.search.enrich.api.EnrichProcessor;
 import io.openk9.search.enrich.api.SyncEnrichProcessor;
-import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
 import lombok.RequiredArgsConstructor;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
@@ -44,10 +47,8 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Hashtable;
 import java.util.IdentityHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -194,18 +195,30 @@ class EnrichProcessorServiceTracker
 				.consumeAutoAck(prefetch)
 				.flatMap(delivery -> {
 
-					EnrichProcessorContext context =
+					ObjectNode context =
+						m_jsonFactory.fromJsonToJsonNode(
+							delivery.getBody()).toObjectNode();
+
+					ArrayNode dependencies = context.get("dependencies").toArrayNode();
+
+					ObjectNode objectNode = context.get("payload").toObjectNode();
+
+					JsonNode datasourceContextJson =
+						context.get("datasourceContext");
+
+					DatasourceContext datasourceContext =
 						m_jsonFactory.fromJson(
-							delivery.getBody(), EnrichProcessorContext.class);
+							datasourceContextJson.toString(),
+							DatasourceContext.class);
 
-					List<String> dependencies = context.getDependencies();
+					JsonNode pluginDriverJson = context.get("pluginDriver");
 
-					ObjectNode objectNode = m_jsonFactory
-						.treeNode(context.getObjectNode())
-						.toObjectNode();
+					PluginDriverDTO pluginDriver = m_jsonFactory.fromJson(
+						pluginDriverJson.toString(),
+						PluginDriverDTO.class
+					);
 
-					EnrichItem enrichItem = context
-						.getDatasourceContext()
+					EnrichItem enrichItem = datasourceContext
 						.getEnrichItems()
 						.stream()
 						.filter(e -> e.getServiceName().equals(_enrichProcessor.name()))
@@ -227,18 +240,20 @@ class EnrichProcessorServiceTracker
 								enrichItem.getJsonConfig()
 							)
 						);
+						ob.put("datasourceContext", datasourceContextJson);
+						ob.put("pluginDriver", pluginDriverJson);
 
 						if (dependencies.isEmpty()) {
+							ob.put("dependencies", m_jsonFactory.createArrayNode());
 							ob.put("replyTo", "index-writer");
 						}
 						else {
 
-							LinkedList<String> linkedList =
-								new LinkedList<>(dependencies);
-
-							String routingKey = linkedList.pop();
+							String routingKey =
+								dependencies.remove(0).asText();
 
 							ob.put("replyTo", routingKey);
+							ob.put("dependencies", dependencies);
 						}
 
 						return bundleSender.send(
@@ -249,29 +264,37 @@ class EnrichProcessorServiceTracker
 					else if (_enrichProcessor instanceof SyncEnrichProcessor) {
 						return ((SyncEnrichProcessor)_enrichProcessor).process(
 								objectNode,
-								context.getDatasourceContext(),
+								datasourceContext,
 								enrichItem,
-								context.getPluginDriverDTO()
+								pluginDriver
 							)
 							.flatMap(
 								jsonNode -> {
 
+									ObjectNode ob2 =
+										m_jsonFactory.createObjectNode();
+
+									ob2.put("payload", jsonNode);
+									ob2.put("datasourceContext", m_jsonFactory.fromObjectToJsonNode(datasourceContext));
+									ob2.put("pluginDriver", m_jsonFactory.fromObjectToJsonNode(pluginDriver));
+
 									if (dependencies.isEmpty()) {
-										return m_endEnrichProcessor
-											.exec(
-												EnrichProcessorContext.of(
-													jsonNode.toMap(),
-													context.getDatasourceContext(),
-													context.getPluginDriverDTO(),
-													Collections.emptyList()
-												)
-											);
+
+										ob2.put(
+											"dependencies",
+											m_jsonFactory.createArrayNode());
+
+										return m_endEnrichProcessor.exec(ob2);
 									}
 
-									LinkedList<String> linkedList =
-										new LinkedList<>(dependencies);
+									String routingKey =
+										dependencies.remove(0).asText();
 
-									String routingKey = linkedList.pop();
+									ob2.put("replyTo", routingKey);
+
+									ob2.put(
+										"dependencies",
+										dependencies);
 
 									BundleSender bundleSender =
 										m_bundleSenderProvider
@@ -283,18 +306,8 @@ class EnrichProcessorServiceTracker
 											routingKey + " not exist");
 									}
 
-									EnrichProcessorContext newContext =
-										EnrichProcessorContext.of(
-											jsonNode.toMap(),
-											context.getDatasourceContext(),
-											context.getPluginDriverDTO(),
-											linkedList
-										);
-
 									return bundleSender.send(
-										Mono.just(
-											m_jsonFactory.toJson(newContext).getBytes()
-										)
+										Mono.just(ob2.toString().getBytes())
 									);
 
 								})

@@ -1,20 +1,20 @@
 package io.openk9.entity.manager.subscriber.api;
 
-import io.openk9.entity.manager.pub.sub.api.MessageRequest;
+import io.openk9.json.api.ObjectNode;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
 public interface EntityManagerRequestConsumer {
 
-	Flux<MessageRequest> stream();
+	Flux<ObjectNode> stream();
 
-	Flux<MessageRequest> stream(int prefetch);
+	Flux<ObjectNode> stream(int prefetch);
 
-	default Publisher<MessageRequest> genericRequest() {
+	default Publisher<ObjectNode> genericRequest() {
 		return stream();
 	}
 
-	default Publisher<MessageRequest> genericRequest(int prefetch) {
+	default Publisher<ObjectNode> genericRequest(int prefetch) {
 		return stream(prefetch);
 	}
 

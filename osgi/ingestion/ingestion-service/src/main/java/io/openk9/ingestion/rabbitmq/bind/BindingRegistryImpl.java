@@ -8,7 +8,9 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Component(
 	immediate = true,
@@ -45,20 +47,42 @@ public class BindingRegistryImpl implements BindingRegistry {
 		return _register(exchange, null, null);
 	}
 
+	@Override
+	public boolean exists(
+		Binding.Exchange exchange, String routingKey, String queue) {
+		return _bindings.contains(Binding.of(exchange, routingKey, queue));
+	}
+
+	@Override
+	public boolean exists(Binding.Exchange exchange, String routingKey) {
+		return _bindings.contains(Binding.of(exchange, routingKey, null));
+	}
+
 	private AutoCloseables.AutoCloseableSafe _register(
 		Binding.Exchange exchange, String routingKey, String queue) {
 
-		ServiceRegistration<Binding> serviceRegistration =
-			_bundleContext.registerService(
-				Binding.class,
-				Binding.of(exchange, routingKey, queue),
-				null
-			);
+		Binding binding = Binding.of(exchange, routingKey, queue);
 
-		return AutoCloseables.mergeAutoCloseableToSafe(
-			serviceRegistration::unregister);
+		if (_bindings.contains(binding)) {
+			return () -> {};
+		}
+		else {
+
+			ServiceRegistration<Binding> serviceRegistration =
+				_bundleContext.registerService(
+					Binding.class,
+					binding,
+					null
+				);
+
+			return AutoCloseables.mergeAutoCloseableToSafe(
+				serviceRegistration::unregister);
+
+		}
 
 	}
 
 	private BundleContext _bundleContext;
+	private final Set<Binding> _bindings = new HashSet<>();
+
 }

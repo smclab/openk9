@@ -30,7 +30,6 @@ import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.IngestionDatasourcePluginDriverPayload;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.enrich.api.StartEnrichProcessor;
-import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -87,7 +86,7 @@ public class EnrichPipelineProcessor {
 			.subscribe();
 	}
 
-	private EnrichProcessorContext _mapToEnrichProcessorContext(
+	private ObjectNode _mapToEnrichProcessorContext(
 		Tuple3<DatasourceContext, ObjectNode, PluginDriverDTO> t3) {
 
 		List<String> dependencies = t3
@@ -97,13 +96,14 @@ public class EnrichPipelineProcessor {
 			.map(EnrichItem::getServiceName)
 			.collect(Collectors.toList());
 
-		return EnrichProcessorContext
-			.builder()
-			.dependencies(dependencies)
-			.datasourceContext(t3.getT1())
-			.objectNode(t3.getT2().toMap())
-			.pluginDriverDTO(t3.getT3())
-			.build();
+		ObjectNode objectNode = _jsonFactory.createObjectNode();
+
+		objectNode.put("pluginDriver", _jsonFactory.fromObjectToJsonNode(t3.getT3()));
+		objectNode.put("dependencies", _jsonFactory.fromObjectToJsonNode(dependencies));
+		objectNode.put("datasourceContext", _jsonFactory.fromObjectToJsonNode(t3.getT1()));
+		objectNode.put("payload", t3.getT2());
+
+		return objectNode;
 	}
 
 	private Tuple3<

@@ -19,16 +19,13 @@ package io.openk9.search.enrich.internal;
 
 import io.openk9.ingestion.api.BundleSender;
 import io.openk9.ingestion.api.BundleSenderProvider;
-import io.openk9.json.api.JsonFactory;
+import io.openk9.json.api.ArrayNode;
+import io.openk9.json.api.ObjectNode;
 import io.openk9.search.enrich.api.EndEnrichProcessor;
 import io.openk9.search.enrich.api.StartEnrichProcessor;
-import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Mono;
-
-import java.util.LinkedList;
-import java.util.List;
 
 @Component(
 	immediate = true,
@@ -42,48 +39,28 @@ public class StartEnrichProcessorImpl implements StartEnrichProcessor {
 	}
 
 	@Override
-	public Mono<Void> exec(
-		EnrichProcessorContext enrichProcessorContext) {
+	public Mono<Void> exec(ObjectNode objectNode) {
 
 		return Mono.defer(() -> {
 
-			List<String> originalDependencies =
-				enrichProcessorContext.getDependencies();
+			ArrayNode originalDependencies =
+				objectNode.get("dependencies").toArrayNode();
 
 			if (originalDependencies.isEmpty()) {
-				return _endEnrichProcessor.exec(enrichProcessorContext);
+				return _endEnrichProcessor.exec(objectNode);
 			}
 
-			LinkedList<String> dependencies =
-				new LinkedList<>(originalDependencies);
-
-			String routingKey = dependencies.pop();
+			String routingKey =
+				originalDependencies.remove(0).asText();
 
 			BundleSender bundleSender =
 				_bundleSenderProvider.getBundleSender(routingKey);
 
 			return bundleSender.send(
-				Mono.just(
-					_jsonFactory.toJson(
-						EnrichProcessorContext
-							.builder()
-							.dependencies(dependencies)
-							.objectNode(enrichProcessorContext.getObjectNode())
-							.pluginDriverDTO(
-								enrichProcessorContext.getPluginDriverDTO())
-							.datasourceContext(
-								enrichProcessorContext.getDatasourceContext())
-							.build()
-					)
-						.getBytes()
-				)
-			);
+				Mono.just(objectNode.toString().getBytes()));
 		});
 
 	}
-
-	@Reference
-	private JsonFactory _jsonFactory;
 
 	@Reference
 	private BundleSenderProvider _bundleSenderProvider;

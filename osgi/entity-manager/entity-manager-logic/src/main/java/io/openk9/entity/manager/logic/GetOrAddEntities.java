@@ -1,57 +1,47 @@
 	package io.openk9.entity.manager.logic;
 
 
-import io.openk9.common.api.reactor.util.ReactorStopWatch;
-import io.openk9.entity.manager.api.EntityGraphRepository;
-import io.openk9.entity.manager.api.EntityNameCleaner;
-import io.openk9.entity.manager.api.EntityNameCleanerProvider;
-import io.openk9.entity.manager.model.BaseEntity;
-import io.openk9.entity.manager.model.DocumentEntity;
-import io.openk9.entity.manager.model.Entity;
-import io.openk9.entity.manager.model.payload.EntityRequest;
-import io.openk9.entity.manager.model.payload.RelationRequest;
-import io.openk9.entity.manager.model.payload.Request;
-import io.openk9.entity.manager.model.payload.Response;
-import io.openk9.entity.manager.model.payload.ResponseList;
-import io.openk9.entity.manager.pub.sub.api.MessageRequest;
-import io.openk9.index.writer.entity.client.api.IndexWriterEntityClient;
-import io.openk9.index.writer.entity.model.DocumentEntityRequest;
-import io.openk9.index.writer.entity.model.DocumentEntityResponse;
-import io.openk9.relationship.graph.api.client.GraphClient;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.neo4j.cypherdsl.core.AliasedExpression;
-import org.neo4j.cypherdsl.core.Cypher;
-import org.neo4j.cypherdsl.core.Functions;
-import org.neo4j.cypherdsl.core.Node;
-import org.neo4j.cypherdsl.core.Statement;
-import org.neo4j.cypherdsl.core.SymbolicName;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
-import org.osgi.service.component.annotations.Reference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoSink;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
+	import io.openk9.common.api.reactor.util.ReactorStopWatch;
+	import io.openk9.entity.manager.api.EntityGraphRepository;
+	import io.openk9.entity.manager.api.EntityNameCleaner;
+	import io.openk9.entity.manager.api.EntityNameCleanerProvider;
+	import io.openk9.entity.manager.model.BaseEntity;
+	import io.openk9.entity.manager.model.DocumentEntity;
+	import io.openk9.entity.manager.model.Entity;
+	import io.openk9.entity.manager.model.payload.EntityRequest;
+	import io.openk9.index.writer.entity.client.api.IndexWriterEntityClient;
+	import io.openk9.index.writer.entity.model.DocumentEntityRequest;
+	import io.openk9.index.writer.entity.model.DocumentEntityResponse;
+	import io.openk9.relationship.graph.api.client.GraphClient;
+	import lombok.AllArgsConstructor;
+	import lombok.Builder;
+	import lombok.Data;
+	import lombok.NoArgsConstructor;
+	import org.neo4j.cypherdsl.core.AliasedExpression;
+	import org.neo4j.cypherdsl.core.Cypher;
+	import org.neo4j.cypherdsl.core.Functions;
+	import org.neo4j.cypherdsl.core.Node;
+	import org.neo4j.cypherdsl.core.Statement;
+	import org.neo4j.cypherdsl.core.SymbolicName;
+	import org.osgi.service.component.annotations.Activate;
+	import org.osgi.service.component.annotations.Component;
+	import org.osgi.service.component.annotations.Modified;
+	import org.osgi.service.component.annotations.Reference;
+	import org.slf4j.Logger;
+	import org.slf4j.LoggerFactory;
+	import reactor.core.publisher.Flux;
+	import reactor.core.publisher.Mono;
+	import reactor.core.publisher.MonoSink;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+	import java.util.Arrays;
+	import java.util.Collections;
+	import java.util.List;
+	import java.util.Map;
+	import java.util.Optional;
+	import java.util.function.Function;
+	import java.util.stream.Collectors;
 
-import static org.neo4j.cypherdsl.core.Cypher.literalOf;
+	import static org.neo4j.cypherdsl.core.Cypher.literalOf;
 
 @Component(
 	immediate = true,
@@ -303,330 +293,6 @@ public class GetOrAddEntities {
 				)
 			);
 
-	}
-
-	public Mono<ResponseList> handleMessage(MessageRequest messageRequest) {
-
-		Request request = messageRequest.getRequest();
-
-		long tenantId = request.getTenantId();
-
-		List<EntityRequest> entityRequests = request.getEntities();
-
-		Mono<Map<EntityRequest, List<DocumentEntityResponse>>> entityMap =
-			Flux
-				.fromIterable(entityRequests)
-				.concatMap(er -> {
-
-						Map<String, Object> stringObjectMap =
-							_entityNameCleanerProvider
-								.getEntityNameCleaner(er.getType())
-								.cleanEntityName(tenantId, er.getName());
-
-						return Mono.zip(
-							Mono.just(er),
-							stopWatch(
-								"getEntities",
-								_indexWriterEntityClient
-									.getEntities(tenantId, stringObjectMap)
-									.map(candidates ->
-										cleanCandidates(er, candidates)
-									)
-							),
-							Map::entry);
-					}
-				)
-				.collectMap(Map.Entry::getKey, Map.Entry::getValue);
-
-		return entityMap
-			.flatMapMany(map -> {
-
-				boolean searchEntities =
-					map
-						.entrySet()
-						.stream()
-						.anyMatch(
-							entry ->
-								!_containsValue(
-									_uniqueEntities, entry.getKey().getType())
-								&& !entry.getValue().isEmpty());
-
-				Mono<List<Entity>> entitiesMono;
-
-				if (searchEntities) {
-
-					List<DocumentEntityResponse> candidates =
-						map
-							.values()
-							.stream()
-							.flatMap(Collection::stream)
-							.distinct()
-							.collect(Collectors.toList());
-
-					entitiesMono = _getEntities(candidates).collectList().cache();
-				}
-				else {
-					entitiesMono = Mono.empty();
-				}
-
-				List<Mono<BaseEntity>> result = new ArrayList<>();
-
-			for (Map.Entry<EntityRequest, List<DocumentEntityResponse>> entry : map.entrySet()) {
-
-				EntityRequest currentEntityRequest = entry.getKey();
-
-				Mono<BaseEntity> entityRequestDocumentEntityMono;
-
-				List<DocumentEntityResponse> internalCandidates = entry.getValue();
-
-				if (_log.isInfoEnabled()) {
-					_log.info("doing disambiguation");
-				}
-
-				if (internalCandidates.size() == 1 && _containsValue(_uniqueEntities, currentEntityRequest.getType())) {
-
-					entityRequestDocumentEntityMono =
-						_entityGraphRepository
-							.getEntity(internalCandidates.get(0).getId())
-							.map(List::of)
-							.map(entities -> _insertToDataset(
-								internalCandidates,
-								entities,
-								tenantId, currentEntityRequest
-								)
-							);
-
-				}
-				else {
-					entityRequestDocumentEntityMono =
-						entitiesMono
-							.defaultIfEmpty(List.of())
-							.map(entities -> _insertToDataset(
-								internalCandidates,
-								entities,
-								tenantId, currentEntityRequest)
-							);
-				}
-
-				result.add(entityRequestDocumentEntityMono);
-
-			}
-
-			return Flux.concat(result);
-
-		})
-			.collectList()
-			.flatMap(baseEntityList ->
-				stopWatch("write-in-index-writer-and-neo4j", Mono.defer(() -> {
-
-					Map<Boolean, List<BaseEntity>> partitionMap =
-						baseEntityList
-							.stream()
-							.collect(
-								Collectors.partitioningBy(BaseEntity::isExistEntity));
-
-					List<BaseEntity> notExistEntities =
-						partitionMap.getOrDefault(false, List.of());
-
-					List<Entity> entitiesToAdd
-						= notExistEntities
-							.stream()
-							.map(baseEntity ->
-								Entity
-									.builder()
-									.name(
-										baseEntity.getEntityRequest().getName())
-									.tenantId(baseEntity.getTenantId())
-									.type(
-										baseEntity.getEntityRequest().getType())
-									.build()
-							)
-							.collect(Collectors.toList());
-
-					Flux<BaseEntity> addedEntities =
-						stopWatch(
-							"insert-in-neo4j",
-							_entityGraphRepository
-								.addEntities(entitiesToAdd)
-						)
-						.concatMap(entity ->
-							Mono.justOrEmpty(
-								notExistEntities
-								.stream()
-								.filter(baseEntity ->
-									baseEntity.getTenantId() == entity.getTenantId() &&
-									baseEntity.getEntityRequest().getName().equals(entity.getName()) &&
-									baseEntity.getEntityRequest().getType().equals(entity.getType()))
-								.findFirst()
-								.map(baseEntity -> BaseEntity.exist(baseEntity.getEntityRequest(), baseEntity.getTenantId(), entity, null))
-							)
-						);
-
-					return addedEntities
-						.cast(BaseEntity.ExistEntity.class)
-						.collectList()
-						.flatMap(entitiesToBeIndexed -> {
-								List<DocumentEntityRequest> filtered =
-									entitiesToBeIndexed
-										.stream()
-										.filter(entity -> !_containsValue(
-											_notIndexEntities,
-											entity.getEntity().getType()))
-										.map(baseEntity -> DocumentEntityRequest
-											.builder()
-											.type(baseEntity.getEntity().getType())
-											.tenantId(baseEntity.getTenantId())
-											.name(baseEntity.getEntity().getName())
-											.id(baseEntity.getEntity().getId())
-											.build()
-										)
-										.collect(Collectors.toList());
-
-								if (!filtered.isEmpty()) {
-
-									if (_log.isInfoEnabled()) {
-										_log.info(
-											"_indexWriterEntityClient.insertEntities: " +
-											filtered
-												.stream()
-												.map(DocumentEntityRequest::getName)
-												.collect(Collectors.joining(", ")));
-									}
-
-									return stopWatch("index-writer-insertEntities", _indexWriterEntityClient.insertEntities(filtered))
-										.thenReturn(entitiesToBeIndexed);
-								}
-
-								return Mono.just(entitiesToBeIndexed);
-							}
-
-						)
-						.flatMapIterable(Function.identity())
-						.concatWith(
-							Flux
-								.fromIterable(partitionMap.getOrDefault(true, List.of()))
-								.cast(BaseEntity.ExistEntity.class))
-						.collectList()
-						.flatMap(existEntities -> stopWatch("write-relations-neo4j", Mono.defer(() -> {
-
-							List<Statement> statementList = new ArrayList<>();
-
-							for (BaseEntity.ExistEntity entity : existEntities) {
-
-								List<RelationRequest> relations =
-									entity.getEntityRequest().getRelations();
-
-								if (relations == null || relations.isEmpty()) {
-									continue;
-								}
-
-								List<Tuple2<String, BaseEntity.ExistEntity>> entityRelations =
-									existEntities
-										.stream()
-										.flatMap(entry -> {
-
-											for (RelationRequest relation : relations) {
-												if (entry.getEntityRequest().getTmpId() == relation.getTo()) {
-													return Stream.of(
-														Tuples.of(
-															relation.getName(),
-															entry)
-													);
-												}
-											}
-
-											return Stream.empty();
-
-										})
-										.collect(Collectors.toList());
-
-								Node currentEntityNode =
-									Cypher
-										.node(entity.getEntity().getType())
-										.named("a");
-
-								List<Statement> currentStatementList =
-									entityRelations
-										.stream()
-										.map(t2 -> {
-
-											BaseEntity.ExistEntity existEntity =
-												t2.getT2();
-
-											Entity entityRelation =
-												existEntity.getEntity();
-
-
-											Node entityRelationNode =
-												Cypher
-													.node(entityRelation.getType())
-													.named("b");
-
-											return Cypher
-												.match(currentEntityNode, entityRelationNode)
-												.where(
-													Functions
-														.id(currentEntityNode)
-														.eq(literalOf(entity.getEntity().getId()))
-														.and(
-															Functions
-																.id(entityRelationNode)
-																.eq(literalOf(
-																	entityRelation.getId()))
-														)
-												)
-												.merge(
-													currentEntityNode
-														.relationshipTo(
-															entityRelationNode, t2.getT1())
-												)
-												.build();
-										})
-										.collect(Collectors.toList());
-
-								statementList.addAll(currentStatementList);
-							}
-
-							List<Response> response = existEntities
-								.stream()
-								.map(existEntity -> Response
-									.builder()
-									.entity(
-										Entity
-											.builder()
-											.name(
-												existEntity.getEntity().getName())
-											.id(existEntity.getEntity().getId())
-											.tenantId(
-												existEntity.getEntity().getTenantId())
-											.type(
-												existEntity.getEntity().getType())
-											.build()
-									)
-									.tmpId(
-										existEntity.getEntityRequest().getTmpId())
-									.build()
-								)
-								.collect(Collectors.toList());
-
-							if (statementList.size() > 1) {
-								return _graphClient
-									.write(Cypher.unionAll(statementList.toArray(new Statement[0])))
-									.then(Mono.just(ResponseList.of(request.getIngestionId(), response)));
-							}
-							else if (statementList.size() == 1) {
-								return _graphClient
-									.write(statementList.get(0))
-									.then(Mono.just(ResponseList.of(request.getIngestionId(), response)));
-							}
-							else {
-								return Mono.just(ResponseList.of(request.getIngestionId(), response));
-							}
-
-						})));
-
-				}))
-			);
 	}
 
 	public static <T> Mono<T> stopWatch(String message, Mono<T> request) {

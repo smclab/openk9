@@ -19,9 +19,8 @@ package io.openk9.ingestion.api;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-
-import java.util.Optional;
 
 public interface Binding {
 
@@ -60,6 +59,7 @@ public interface Binding {
 	@Data
 	@RequiredArgsConstructor(staticName = "of")
 	@Builder
+	@EqualsAndHashCode
 	class Exchange {
 		private final String name;
 		private final Type type;
@@ -73,6 +73,7 @@ public interface Binding {
 	@Data
 	@RequiredArgsConstructor(staticName = "of")
 	@Builder
+	@EqualsAndHashCode
 	class Default implements Binding {
 		private final Exchange exchange;
 		private final String routingKey;

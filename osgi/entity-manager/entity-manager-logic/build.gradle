@@ -7,6 +7,7 @@ dependencies {
 	compile project(':osgi:common:common-api')
 	compile project(':osgi:common:reactory-netty-util')
 	compile project(':osgi:web:http-api')
+	compile project(':osgi:ingestion:ingestion-api')
 
 	compile libraries.reactor
 	compile libraries.osgi

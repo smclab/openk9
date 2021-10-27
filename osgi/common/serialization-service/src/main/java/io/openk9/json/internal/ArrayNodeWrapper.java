@@ -50,6 +50,11 @@ public class ArrayNodeWrapper extends JsonNodeWrapper implements ArrayNode {
 			delegate.addAll(((ArrayNodeWrapper)value).delegate));
 	}
 
+	@Override
+	public JsonNode remove(int index) {
+		return new JsonNodeWrapper(delegate.remove(index));
+	}
+
 	private final com.fasterxml.jackson.databind.node.ArrayNode delegate;
 
 	@Override

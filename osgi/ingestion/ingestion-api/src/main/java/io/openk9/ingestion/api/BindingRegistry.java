@@ -29,4 +29,8 @@ public interface BindingRegistry {
 
 	AutoCloseables.AutoCloseableSafe register(Binding.Exchange exchange);
 
+	boolean exists(Binding.Exchange exchange, String routingKey, String queue);
+
+	boolean exists(Binding.Exchange exchange, String routingKey);
+
 }

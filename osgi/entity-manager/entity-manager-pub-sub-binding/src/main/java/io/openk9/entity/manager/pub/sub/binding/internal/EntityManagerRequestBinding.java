@@ -12,9 +12,9 @@ import org.osgi.service.component.annotations.Modified;
 public class EntityManagerRequestBinding implements Binding {
 
 	@interface Config {
-		String exchange() default "entity-manager-request.topic";
+		String exchange() default "amq.topic";
 		Binding.Exchange.Type type() default Binding.Exchange.Type.topic;
-		String routingKey() default "#";
+		String routingKey() default "entity-manager-request";
 		String queue() default "entity-manager-request";
 	}
 

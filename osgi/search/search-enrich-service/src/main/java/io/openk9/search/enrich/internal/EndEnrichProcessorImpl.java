@@ -17,12 +17,11 @@
 
 package io.openk9.search.enrich.internal;
 
-import io.openk9.cbor.api.CBORFactory;
 import io.openk9.common.api.constant.Strings;
 import io.openk9.ingestion.api.OutboundMessageFactory;
 import io.openk9.ingestion.api.SenderReactor;
+import io.openk9.json.api.ObjectNode;
 import io.openk9.search.enrich.api.EndEnrichProcessor;
-import io.openk9.search.enrich.api.dto.EnrichProcessorContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -58,19 +57,20 @@ public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 
 	@Override
 	public Mono<Void> exec(
-		EnrichProcessorContext enrichProcessorContext) {
+		ObjectNode objectNode) {
 
 		return _senderReactor.sendMono(
 			Mono.fromSupplier(() -> {
 
-				Long tenantId =
-					enrichProcessorContext
-						.getDatasourceContext()
-						.getTenant()
-						.getTenantId();
+				long tenantId =
+					objectNode
+						.get("datasourceContext")
+						.get("tenant")
+						.get("tenantId")
+						.asLong();
 
-				String pluginDriverName =
-					enrichProcessorContext.getPluginDriverDTO().getName();
+				String pluginDriverName = objectNode
+					.get("pluginDriver").get("name").asText();
 
 				return _outboundMessageFactory.createOutboundMessage(
 						builder -> builder
@@ -78,10 +78,10 @@ public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 							.routingKey(
 								String.join(
 									Strings.DASH,
-									tenantId.toString(),
+									Long.toString(tenantId),
 									pluginDriverName,
 									_routingKeySuffix))
-							.body(_cborFactory.toCBOR(enrichProcessorContext))
+							.body(objectNode.toString().getBytes())
 					);
 				}
 			)
@@ -94,9 +94,6 @@ public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 
 	@Reference
 	private SenderReactor _senderReactor;
-
-	@Reference
-	private CBORFactory _cborFactory;
 
 	@Reference
 	private OutboundMessageFactory _outboundMessageFactory;

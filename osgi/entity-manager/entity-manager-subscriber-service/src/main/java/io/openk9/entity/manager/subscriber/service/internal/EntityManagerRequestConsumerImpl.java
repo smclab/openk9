@@ -1,10 +1,10 @@
 package io.openk9.entity.manager.subscriber.service.internal;
 
-import io.openk9.cbor.api.CBORFactory;
-import io.openk9.entity.manager.pub.sub.api.MessageRequest;
 import io.openk9.entity.manager.subscriber.api.EntityManagerRequestConsumer;
 import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.ReceiverReactor;
+import io.openk9.json.api.JsonFactory;
+import io.openk9.json.api.ObjectNode;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -34,24 +34,24 @@ public class EntityManagerRequestConsumerImpl
 	}
 
 	@Override
-	public Flux<MessageRequest> stream() {
+	public Flux<ObjectNode> stream() {
 		return stream(_defaultPrefetch);
 	}
 
 	@Override
-	public Flux<MessageRequest> stream(int prefetch) {
+	public Flux<ObjectNode> stream(int prefetch) {
 		return _receiverReactor
 			.consumeAutoAck(_binding.getQueue(), prefetch)
-			.map(delivery -> _cborFactory.fromCBOR(delivery.getBody(), MessageRequest.class));
+			.map(delivery -> _jsonFactory.fromJsonToJsonNode(delivery.getBody()).toObjectNode());
 	}
 
 	@Override
-	public Publisher<MessageRequest> genericRequest() {
+	public Publisher<ObjectNode> genericRequest() {
 		return stream();
 	}
 
 	@Override
-	public Publisher<MessageRequest> genericRequest(int prefetch) {
+	public Publisher<ObjectNode> genericRequest(int prefetch) {
 		return stream(prefetch);
 	}
 
@@ -61,7 +61,7 @@ public class EntityManagerRequestConsumerImpl
 	private ReceiverReactor _receiverReactor;
 
 	@Reference
-	private CBORFactory _cborFactory;
+	private JsonFactory _jsonFactory;
 
 	@Reference(target = "(component.name=io.openk9.entity.manager.pub.sub.binding.internal.EntityManagerRequestBinding)")
 	private Binding _binding;
