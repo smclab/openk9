@@ -79,7 +79,7 @@ public class BindingServiceTrackerCustomizer
 			ExchangeSpecification
 				.exchange(exchange)
 				.type(exchangeType.name())
-				.durable(true)
+				.durable(exchange.startsWith("amq"))
 		);
 
 		List<AutoCloseable> autoCloseables = new ArrayList<>();
