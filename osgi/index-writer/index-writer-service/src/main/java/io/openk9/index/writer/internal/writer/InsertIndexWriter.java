@@ -95,7 +95,7 @@ public class InsertIndexWriter {
 
 			ObjectNode objectNode =
 				enrichProcessorContext
-					.get("objectNode")
+					.get("payload")
 					.toObjectNode();
 
 			String contentId = objectNode.get("contentId").asText();
