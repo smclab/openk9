@@ -108,7 +108,7 @@ public class GetOrAddEntitiesConsumer  {
 			.get("tenantId")
 			.asLong();
 
-		JsonNode entities = objectNode.get("entities");
+		JsonNode entities = objectNode.remove("entities");
 
 		ObjectNode responseJson = _jsonFactory.createObjectNode();
 
