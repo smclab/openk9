@@ -209,7 +209,15 @@ public class GetOrAddEntitiesConsumer  {
 			});
 
 		return entitiesField.map(
-			entitiesArray -> objectNode.set("entities", entitiesArray));
+			entitiesArray -> {
+
+				ObjectNode payload = objectNode.get("payload").toObjectNode();
+
+				payload.set("entities", entitiesArray);
+
+				return objectNode;
+
+			});
 
 	}
 
