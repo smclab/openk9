@@ -50,16 +50,31 @@ public class InsertIndexWriter {
 								.getEnvelope()
 								.getRoutingKey();
 
+						long tenantId =
+							enrichProcessorContext
+								.get("datasourceContext")
+								.get("tenant")
+								.get("tenantId")
+								.asLong();
+
+						String pluginDriverName = enrichProcessorContext
+							.get("pluginDriver").get("name").asText();
+
+						String indexName = String.join(
+							"-", Long.toString(tenantId), pluginDriverName, "data");
+
 						if (routingKey.endsWith("entity")) {
 							return Mono.fromSupplier(() ->
-								new IndexRequest(routingKey).source(
+								new IndexRequest(
+									indexName
+								).source(
 									enrichProcessorContext.toString(),
 									XContentType.JSON)
 							);
 						}
 
 						return _createDocWriterRequest(
-							routingKey, enrichProcessorContext);
+							indexName, enrichProcessorContext);
 
 					})
 				.onErrorContinue(this::_manageExceptions)

@@ -17,7 +17,6 @@
 
 package io.openk9.search.enrich.internal;
 
-import io.openk9.common.api.constant.Strings;
 import io.openk9.ingestion.api.OutboundMessageFactory;
 import io.openk9.ingestion.api.SenderReactor;
 import io.openk9.json.api.ObjectNode;
@@ -60,30 +59,13 @@ public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 		ObjectNode objectNode) {
 
 		return _senderReactor.sendMono(
-			Mono.fromSupplier(() -> {
-
-				long tenantId =
-					objectNode
-						.get("datasourceContext")
-						.get("tenant")
-						.get("tenantId")
-						.asLong();
-
-				String pluginDriverName = objectNode
-					.get("pluginDriver").get("name").asText();
-
-				return _outboundMessageFactory.createOutboundMessage(
-						builder -> builder
-							.exchange(_exchange)
-							.routingKey(
-								String.join(
-									Strings.DASH,
-									Long.toString(tenantId),
-									pluginDriverName,
-									_routingKeySuffix))
-							.body(objectNode.toString().getBytes())
-					);
-				}
+			Mono.fromSupplier(() ->
+				_outboundMessageFactory.createOutboundMessage(
+					builder -> builder
+						.exchange(_exchange)
+						.routingKey("index-writer")
+						.body(objectNode.toString().getBytes())
+				)
 			)
 		);
 
