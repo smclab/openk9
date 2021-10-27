@@ -33,8 +33,8 @@ import org.osgi.util.tracker.ServiceTracker;
 public class ProcessorRegistry {
 
 	@interface Config {
-		String exchangeName() default "openk9.erich.direct";
-		String exchangeType() default "direct";
+		String exchangeName() default "amq.topic";
+		String exchangeType() default "topic";
 		int prefetch() default 1;
 	}
 

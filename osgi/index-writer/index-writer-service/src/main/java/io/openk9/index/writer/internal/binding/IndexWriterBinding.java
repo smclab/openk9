@@ -12,13 +12,13 @@ public class IndexWriterBinding implements Binding {
 	@Override
 	public Exchange getExchange() {
 		return Exchange.of(
-			"index-writer.topic",
+			"amq.topic",
 			Exchange.Type.topic);
 	}
 
 	@Override
 	public String getRoutingKey() {
-		return "#";
+		return "index-writer";
 	}
 
 	@Override
