@@ -63,7 +63,6 @@ public class GetOrAddEntitiesConsumer  {
 		_disposable = _entityManagerRequestConsumer
 			.stream(config.prefetch())
 			.flatMap(this::apply)
-			.timeout(Duration.ofSeconds(config.timeout()))
 			.flatMap(objectNode -> {
 
 				String replyTo = objectNode.get("replyTo").asText();
@@ -81,11 +80,6 @@ public class GetOrAddEntitiesConsumer  {
 					Mono.just(objectNode.toString().getBytes())
 				);
 
-			})
-			.onErrorContinue((e, b) -> {
-				if (_log.isErrorEnabled()) {
-					_log.error(e.getMessage() + " " + b);
-				}
 			})
 			.subscribe();
 
