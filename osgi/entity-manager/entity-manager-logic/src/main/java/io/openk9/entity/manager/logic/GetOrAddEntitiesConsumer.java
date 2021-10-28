@@ -32,6 +32,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +49,7 @@ public class GetOrAddEntitiesConsumer  {
 
 	@interface Config {
 		boolean transactional() default false;
+		long timeout() default 30;
 	}
 
 	@Activate
@@ -57,6 +59,7 @@ public class GetOrAddEntitiesConsumer  {
 		_disposable = _entityManagerRequestConsumer
 			.stream()
 			.concatMap(this::apply)
+			.timeout(Duration.ofSeconds(config.timeout()))
 			.concatMap(objectNode -> {
 
 				String replyTo = objectNode.get("replyTo").asText();
