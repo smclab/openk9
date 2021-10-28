@@ -50,6 +50,7 @@ public class GetOrAddEntitiesConsumer  {
 	@interface Config {
 		boolean transactional() default false;
 		long timeout() default 30;
+		int prefetch() default 1;
 	}
 
 	@Activate
@@ -57,7 +58,7 @@ public class GetOrAddEntitiesConsumer  {
 		_transactional = config.transactional();
 
 		_disposable = _entityManagerRequestConsumer
-			.stream()
+			.stream(config.prefetch())
 			.concatMap(this::apply)
 			.timeout(Duration.ofSeconds(config.timeout()))
 			.concatMap(objectNode -> {
