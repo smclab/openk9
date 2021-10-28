@@ -67,8 +67,11 @@ export function Highlight({
 
   return (
     <>
-      {highlight.slice(0, maxRows).map((h) => (
-        <div key={h} className={clsx(classes.line, inline && classes.inline)}>
+      {highlight.slice(0, maxRows).map((h, index) => (
+        <div
+          key={index}
+          className={clsx(classes.line, inline && classes.inline)}
+        >
           {h
             .split("<em>")
             .flatMap((s) => s.split("</em>"))

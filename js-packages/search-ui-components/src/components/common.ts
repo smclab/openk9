@@ -1,6 +1,9 @@
 import {
+  ALL_SUGGESTION_CATEGORY_ID,
   DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
   getDocumentTypes,
+  getSuggestionCategories,
+  LoginInfo,
   SearchQuery,
   SearchToken,
   SuggestionResult,
@@ -11,8 +14,8 @@ import { useQuery } from "react-query";
 
 export const filterSuggestionByActiveSuggestionCategory =
   (activeSuggestionCategoryId: number) => (suggestion: SuggestionResult) =>
-    activeSuggestionCategoryId === 0 ||
-    suggestion.suggestionCategory === activeSuggestionCategoryId;
+    activeSuggestionCategoryId === ALL_SUGGESTION_CATEGORY_ID ||
+    suggestion.suggestionCategoryId === activeSuggestionCategoryId;
 
 export const filterSuggestionBySearchQuery =
   (searchQuery: SearchQuery) => (suggestion: SuggestionResult) => {
@@ -63,7 +66,7 @@ export function useDocumentTypeSuggestions(text: string) {
           return keywordKeys.map((keywordKey): SuggestionResult => {
             return {
               tokenType: "TEXT",
-              suggestionCategory: DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+              suggestionCategoryId: DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
               keywordKey,
               value: "",
             };
@@ -81,4 +84,11 @@ export function useDocumentTypeSuggestions(text: string) {
       })
     : documentTypeSuggestions;
   return filteredDocumentTypeSuggestions;
+}
+
+export function useSuggestionCategories(loginInfo: LoginInfo | null) {
+  return useQuery(["suggestion-categories"], async ({ queryKey }) => {
+    const result = await getSuggestionCategories(loginInfo);
+    return result;
+  });
 }

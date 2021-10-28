@@ -26,6 +26,7 @@ import {
   SearchQuery,
   SearchToken,
   setQueryParamToken,
+  DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
 } from "@openk9/http-api";
 import {
   ThemeType,
@@ -226,7 +227,12 @@ export function SearchQueryInput() {
             </div>
 
             <FieldSuggestionBrowser
-              suggestions={suggestions.concat(documentTypeSuggestions)}
+              suggestions={suggestions.concat(
+                activeSuggestionCategoryId ===
+                  DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID
+                  ? documentTypeSuggestions
+                  : [],
+              )}
               visible={searchOpen}
               activeSuggestionCategoryId={activeSuggestionCategoryId}
               onActiveSuggestionCategoryChange={(suggestionCategoryId) => {

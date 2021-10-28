@@ -39,6 +39,7 @@ import {
   getUserInfo,
   getTentantWithConfiguration,
   SuggestionResult,
+  ALL_SUGGESTION_CATEGORY_ID,
 } from "@openk9/http-api";
 import {
   debounce,
@@ -90,7 +91,7 @@ export const useStore = create<StateType>(
     loading: false,
     range: null,
     suggestions: [],
-    activeSuggestionCategoryId: 0,
+    activeSuggestionCategoryId: ALL_SUGGESTION_CATEGORY_ID,
     suggestionsInfo: [],
     focusToken: null,
     selectedResult: null,

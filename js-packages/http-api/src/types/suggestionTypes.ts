@@ -37,5 +37,5 @@ export type SuggestionResult = (
       value: string;
     }
 ) & {
-  suggestionCategory: number;
+  suggestionCategoryId: number;
 };

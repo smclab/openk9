@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  ALL_SUGGESTION_CATEGORY_ID,
   DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
   GenericResultItem,
   getPlugins,
@@ -14,6 +15,7 @@ import {
   getPluginResultRenderers,
   mapSuggestionToSearchToken,
   useDocumentTypeSuggestions,
+  useSuggestionCategories,
 } from "@openk9/search-ui-components";
 import { useClickAway } from "../hooks/useClickAway";
 import { useInView } from "react-intersection-observer";
@@ -24,7 +26,6 @@ import { useTabTokens } from "../data-hooks/useTabTokens";
 import { useInfiniteResults } from "../data-hooks/useInfiniteResults";
 import { ResultPageMemo } from "./ResultPage";
 import { SuggestionPageMemo } from "./SuggestionPage";
-import { useSuggestionCategories } from "../data-hooks/useSuggestionCategories";
 import { useInfiniteSuggestions } from "../data-hooks/useInfiniteSuggestions";
 
 type MainProps = {
@@ -59,7 +60,7 @@ const initialState: State = {
   showSuggestions: false,
   focusedToken: null,
   selectedSuggestion: null,
-  activeSuggestionCategory: 0,
+  activeSuggestionCategory: ALL_SUGGESTION_CATEGORY_ID,
   detail: null,
 };
 
@@ -233,7 +234,7 @@ export function Main({ children, templates, interactions }: MainProps) {
       };
     }
   }, [updateSearch, interactions.searchAsYouType, state.text]);
-  const suggestionCategories = useSuggestionCategories();
+  const suggestionCategories = useSuggestionCategories(null);
   return children({
     search: (
       <div
@@ -375,27 +376,32 @@ export function Main({ children, templates, interactions }: MainProps) {
             overflowY: "scroll",
           }}
         >
-          {suggestionCategories.data?.categories.map((suggestionCategory) => {
+          {suggestionCategories.data?.map((suggestionCategory) => {
             const isActive =
-              suggestionCategory.categoryId === state.activeSuggestionCategory;
+              suggestionCategory.suggestionCategoryId ===
+              state.activeSuggestionCategory;
             const customizedTokenKind = templates.suggestionCategory?.({
               label: suggestionCategory.name,
               active: isActive,
               select: () =>
-                setActiveSuggestionCategoryId(suggestionCategory.categoryId),
+                setActiveSuggestionCategoryId(
+                  suggestionCategory.suggestionCategoryId,
+                ),
             });
             if (customizedTokenKind) {
               return (
-                <React.Fragment key={suggestionCategory.categoryId}>
+                <React.Fragment key={suggestionCategory.suggestionCategoryId}>
                   <EmbedElement element={customizedTokenKind} />
                 </React.Fragment>
               );
             }
             return (
               <div
-                key={suggestionCategory.categoryId}
+                key={suggestionCategory.suggestionCategoryId}
                 onClick={() => {
-                  setActiveSuggestionCategoryId(suggestionCategory.categoryId);
+                  setActiveSuggestionCategoryId(
+                    suggestionCategory.suggestionCategoryId,
+                  );
                 }}
                 style={{
                   padding: "8px 16px",

@@ -33,56 +33,47 @@ export async function getSuggestions({
   const request = await authFetch(`/api/searcher/v1/suggestions`, loginInfo, {
     method: "POST",
     body: JSON.stringify({ searchQuery, range, afterKey }),
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
   });
   const response = await request.json();
   return response;
 }
 
-type SuggestionsCategoriesResult = {
-  categories: Array<{
-    categoryId: number;
-    name: string;
-    parentCategoryId: number; // 0 means root category
-  }>;
-};
+type SuggestionsCategoriesResult = Array<{
+  name: string;
+  parentCategoryId: number;
+  suggestionCategoryId: number;
+  tenantId: number;
+}>;
 
-export const ROOT_SUGGESTION_CATEGORY_ID = 0;
+export const ROOT_SUGGESTION_CATEGORY_ID = -1;
+export const ALL_SUGGESTION_CATEGORY_ID = 100000;
 export const DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID = 99999;
 
-export async function getSuggestionCategories(): Promise<SuggestionsCategoriesResult> {
-  // TODO implement
-  return {
-    categories: [
-      {
-        categoryId: ROOT_SUGGESTION_CATEGORY_ID,
-        name: "ALL",
-        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
-      },
-      {
-        categoryId: 1,
-        name: "DATASOURCE",
-        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
-      },
-      {
-        categoryId: 2,
-        name: "DOCTYPE",
-        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
-      },
-      {
-        categoryId: 3,
-        name: "ENTITY",
-        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
-      },
-      {
-        categoryId: 4,
-        name: "TEXT",
-        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
-      },
-      {
-        categoryId: DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
-        name: "KEYWORDS",
-        parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
-      },
-    ],
-  };
+export async function getSuggestionCategories(
+  loginInfo: LoginInfo | null,
+): Promise<SuggestionsCategoriesResult> {
+  const response = await authFetch(
+    `/api/searcher/suggestion-categories`,
+    loginInfo,
+  );
+  const data = (await response.json()) as SuggestionsCategoriesResult;
+  return [
+    {
+      name: "All",
+      parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      suggestionCategoryId: ALL_SUGGESTION_CATEGORY_ID,
+      tenantId: NaN,
+    },
+    {
+      name: "Keywords",
+      parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      suggestionCategoryId: DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+      tenantId: NaN,
+    },
+    ...data,
+  ];
 }

@@ -89,7 +89,6 @@ export async function getSupportedDataSources(
 export async function getDocumentTypes(
   loginInfo: LoginInfo | null,
 ): Promise<Record<string, Array<string>>> {
-  fetch("/api/searcher/v1/document-types");
   const request = await authFetch(`/api/searcher/v1/document-types`, loginInfo);
   const response = await request.json();
   return response;

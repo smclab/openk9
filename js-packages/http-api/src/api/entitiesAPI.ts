@@ -26,6 +26,10 @@ export async function doSearchEntities(
   const request = await authFetch(`/api/searcher/v1/entity`, loginInfo, {
     method: "POST",
     body: JSON.stringify(query),
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
   });
   return await request.json();
 }

@@ -31,6 +31,10 @@ export async function doSearch<E>(
   const request = await authFetch(`/api/searcher/v1/search`, loginInfo, {
     method: "POST",
     body: JSON.stringify(fixedSearch),
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
   });
   const response: SearchResults<E> = await request.json();
   return response;
@@ -52,6 +56,10 @@ export async function doSearchDatasource<E>(
     {
       method: "POST",
       body: JSON.stringify(fixedSearch),
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     },
   );
   const response: SearchResults<E> = await request.json();

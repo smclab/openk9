@@ -19,10 +19,12 @@ import React, { useEffect, useRef } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
-import { SuggestionResult } from "@openk9/http-api";
-import { ThemeType } from "@openk9/search-ui-components";
+import { ALL_SUGGESTION_CATEGORY_ID, SuggestionResult } from "@openk9/http-api";
+import {
+  ThemeType,
+  useSuggestionCategories,
+} from "@openk9/search-ui-components";
 import { TokenIcon } from "./TokenIcon";
-import { useSuggestionCategories } from "../data-hooks/useSuggestionCategories";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -134,7 +136,7 @@ export function FieldSuggestionBrowser({
 
   function handleToggleActiveSuggestionCategory(id: number) {
     if (activeSuggestionCategoryId === id) {
-      onActiveSuggestionCategoryChange(0);
+      onActiveSuggestionCategoryChange(ALL_SUGGESTION_CATEGORY_ID);
     } else {
       onActiveSuggestionCategoryChange(id);
     }
@@ -161,20 +163,21 @@ export function FieldSuggestionBrowser({
     if (!visibleTok) hTok.scrollIntoView(false);
   }, [highlightToken]);
 
-  const suggestionCategories = useSuggestionCategories();
+  const suggestionCategories = useSuggestionCategories(null);
   return visible ? (
     <div className={classes.root}>
       <div className={classes.menu}>
-        {suggestionCategories.data?.categories.map((suggestionCategory) => {
+        {suggestionCategories.data?.map((suggestionCategory) => {
           return (
             <MenuItem
-              key={suggestionCategory.categoryId}
+              key={suggestionCategory.suggestionCategoryId}
               active={
-                activeSuggestionCategoryId === suggestionCategory.categoryId
+                activeSuggestionCategoryId ===
+                suggestionCategory.suggestionCategoryId
               }
               onSelect={() =>
                 handleToggleActiveSuggestionCategory(
-                  suggestionCategory.categoryId,
+                  suggestionCategory.suggestionCategoryId,
                 )
               }
               label={suggestionCategory.name}
