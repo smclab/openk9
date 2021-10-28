@@ -4,7 +4,6 @@ import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.RouterHandler;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
@@ -38,11 +37,11 @@ public class SuggestionCategoriesHttpHandler
 		Mono<?> response;
 
 		if (categoryId != null) {
-			response = _datasourceClient.findSuggestionCategoryWithFieldsById(
-				NumberUtils.toLong(categoryId));
+			response = _datasourceClient.findSuggestionCategory(
+				Long.parseLong(categoryId));
 		}
 		else {
-			response = _datasourceClient.findSuggestionCategoriesWithFields();
+			response = _datasourceClient.findSuggestionCategories();
 		}
 
 		return _httpResponseWriter.write(httpServerResponse,response);
