@@ -54,6 +54,7 @@ public class GetOrAddEntitiesConsumer  {
 		boolean transactional() default false;
 		long timeout() default 30;
 		int prefetch() default 1;
+		int concurrency() default 8;
 	}
 
 	@Activate
@@ -62,7 +63,7 @@ public class GetOrAddEntitiesConsumer  {
 
 		_disposable = _entityManagerRequestConsumer
 			.stream(config.prefetch())
-			.flatMap(this::apply)
+			.flatMap(this::apply, config.concurrency())
 			.flatMap(objectNode -> {
 
 				String replyTo = objectNode.get("replyTo").asText();
