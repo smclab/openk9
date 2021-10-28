@@ -59,9 +59,9 @@ public class GetOrAddEntitiesConsumer  {
 
 		_disposable = _entityManagerRequestConsumer
 			.stream(config.prefetch())
-			.concatMap(this::apply)
+			.flatMap(this::apply)
 			.timeout(Duration.ofSeconds(config.timeout()))
-			.concatMap(objectNode -> {
+			.flatMap(objectNode -> {
 
 				String replyTo = objectNode.get("replyTo").asText();
 
