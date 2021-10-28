@@ -12,6 +12,7 @@ import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.BindingRegistry;
 import io.openk9.ingestion.api.BundleSender;
 import io.openk9.ingestion.api.BundleSenderProvider;
+import io.openk9.ingestion.api.ReceiverReactor;
 import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
@@ -61,16 +62,25 @@ public class GetOrAddEntitiesConsumer  {
 	void activate(Config config) {
 		_transactional = config.transactional();
 
-		_disposable = _entityManagerRequestConsumer
-			.stream(config.prefetch())
-			.flatMap(this::apply, config.concurrency())
-			.onErrorContinue(TimeoutException.class, (throwable, o) -> {
+		_disposable = _receiverReactor
+			.consumeManualAck(_binding.getQueue(), config.prefetch())
+			.flatMap(acknowledgableDelivery ->
+				apply(_jsonFactory.fromJsonToJsonNode(acknowledgableDelivery.getBody()).toObjectNode())
+					.doOnNext(ignore -> acknowledgableDelivery.ack())
+					.onErrorContinue((throwable, o) -> {
 
-				if (_log.isErrorEnabled()) {
-					_log.error(throwable.getMessage());
-				}
+						if (_log.isDebugEnabled()) {
+							_log.debug(throwable.getMessage());
+						}
 
-			})
+						if (_log.isErrorEnabled()) {
+							_log.error("error on message: " + acknowledgableDelivery.getEnvelope().getDeliveryTag() + " requeue message.");
+						}
+
+						acknowledgableDelivery.nack(true);
+
+					})
+			, config.concurrency())
 			.flatMap(objectNode -> {
 
 				String replyTo = objectNode.get("replyTo").asText();
@@ -376,13 +386,16 @@ public class GetOrAddEntitiesConsumer  {
 	private StartDisambiguation _startDisambiguation;
 
 	@Reference
-	private EntityManagerRequestConsumer _entityManagerRequestConsumer;
-
-	@Reference
 	private BindingRegistry _bindingRegistry;
 
 	@Reference
 	private BundleSenderProvider _bundleSenderProvider;
+
+	@Reference
+	private ReceiverReactor _receiverReactor;
+
+	@Reference(target = "(component.name=io.openk9.entity.manager.pub.sub.binding.internal.EntityManagerRequestBinding)")
+	private Binding _binding;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		GetOrAddEntitiesConsumer.class);
