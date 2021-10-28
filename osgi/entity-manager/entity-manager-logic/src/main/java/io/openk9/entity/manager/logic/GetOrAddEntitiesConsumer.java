@@ -82,7 +82,7 @@ public class GetOrAddEntitiesConsumer  {
 				);
 
 			})
-			.onErrorContinue(TimeoutException.class, (e, b) -> {
+			.onErrorContinue((e, b) -> {
 				if (_log.isErrorEnabled()) {
 					_log.error(e.getMessage() + " " + b);
 				}
