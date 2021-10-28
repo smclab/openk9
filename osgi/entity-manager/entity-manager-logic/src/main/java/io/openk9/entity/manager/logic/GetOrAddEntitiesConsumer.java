@@ -26,6 +26,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -36,6 +38,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -78,6 +81,11 @@ public class GetOrAddEntitiesConsumer  {
 					Mono.just(objectNode.toString().getBytes())
 				);
 
+			})
+			.onErrorContinue(TimeoutException.class, (e, b) -> {
+				if (_log.isErrorEnabled()) {
+					_log.error(e.getMessage() + " " + b);
+				}
 			})
 			.subscribe();
 
@@ -365,5 +373,8 @@ public class GetOrAddEntitiesConsumer  {
 
 	@Reference
 	private BundleSenderProvider _bundleSenderProvider;
+
+	private static final Logger _log = LoggerFactory.getLogger(
+		GetOrAddEntitiesConsumer.class);
 
 }

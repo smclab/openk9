@@ -1,7 +1,6 @@
 package io.openk9.entity.manager.subscriber.service.internal;
 
 import io.openk9.entity.manager.subscriber.api.EntityManagerRequestConsumer;
-import io.openk9.ingestion.api.AcknowledgableDelivery;
 import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.ReceiverReactor;
 import io.openk9.json.api.JsonFactory;
@@ -14,7 +13,6 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Component(
 	immediate = true,
@@ -44,31 +42,9 @@ public class EntityManagerRequestConsumerImpl
 
 	@Override
 	public Flux<ObjectNode> stream(int prefetch) {
-
-		Flux<AcknowledgableDelivery> acknowledgableDeliveryFlux =
-			_receiverReactor
-				.consumeManualAck(_binding.getQueue(), prefetch);
-
-		return Flux.usingWhen(
-			acknowledgableDeliveryFlux,
-			delivery -> Mono.just(_jsonFactory.fromJsonToJsonNode(delivery.getBody()).toObjectNode()),
-			d -> Mono.fromRunnable(d::ack),
-			(d, e) -> {
-				if (_log.isErrorEnabled()) {
-					if (d != null) {
-						_log.error(
-							"error on message: " +
-							new String(d.getBody()).substring(80).concat("..."), e);
-					}
-					else {
-						_log.error(e.getMessage(), e);
-					}
-				}
-
-				return Mono.fromRunnable(() -> d.nack(true));
-			},
-			d -> Mono.fromRunnable(() -> d.nack(true))
-		);
+		return _receiverReactor
+			.consumeAutoAck(_binding.getQueue(), prefetch)
+			.map(delivery -> _jsonFactory.fromJsonToJsonNode(delivery.getBody()).toObjectNode());
 	}
 
 	@Override
