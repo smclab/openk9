@@ -44,7 +44,7 @@ public class DisambiguationProcessor {
 				_duration,
 				Mono.error(
 					new TimeoutException(
-						"timeout on key: " + group.key() +
+						"close queue name: " + group.key().getName() + " type: " + group.key().getType() +
 						" (Did not observe any item or terminal signal within " + _duration.toMillis() + "ms)")
 				)
 			)
@@ -65,14 +65,8 @@ public class DisambiguationProcessor {
 					internalDisambiguation ->
 						internalDisambiguation.getRequest().getCurrent(),
 					config.concurrency())
-				.flatMap(this::_disambiguate, config.concurrency(), config.concurrency())
-				.onErrorContinue(TimeoutException.class, (throwable, o) -> {
-
-					if (_log.isDebugEnabled()) {
-						_log.debug(throwable.getMessage());
-					}
-
-				})
+				.flatMap(this::_disambiguate, config.concurrency())
+				.onErrorContinue(TimeoutException.class, (throwable, o) -> _log.info(throwable.getMessage()))
 				.subscribe();
 
 	}

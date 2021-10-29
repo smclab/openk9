@@ -7,12 +7,10 @@ import io.openk9.entity.manager.model.payload.RelationRequest;
 import io.openk9.entity.manager.model.payload.Request;
 import io.openk9.entity.manager.model.payload.Response;
 import io.openk9.entity.manager.model.payload.ResponseList;
-import io.openk9.entity.manager.subscriber.api.EntityManagerRequestConsumer;
 import io.openk9.ingestion.api.Binding;
-import io.openk9.ingestion.api.BindingRegistry;
-import io.openk9.ingestion.api.BundleSender;
-import io.openk9.ingestion.api.BundleSenderProvider;
+import io.openk9.ingestion.api.OutboundMessageFactory;
 import io.openk9.ingestion.api.ReceiverReactor;
+import io.openk9.ingestion.api.SenderReactor;
 import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
@@ -32,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -53,52 +52,52 @@ public class GetOrAddEntitiesConsumer  {
 
 	@interface Config {
 		boolean transactional() default false;
-		long timeout() default 30;
-		int prefetch() default 1;
+		long timeout() default 120;
+		int prefetch() default 8;
 		int concurrency() default 8;
 	}
 
 	@Activate
 	void activate(Config config) {
 		_transactional = config.transactional();
+		_timeout = config.timeout();
 
 		_disposable = _receiverReactor
 			.consumeManualAck(_binding.getQueue(), config.prefetch())
 			.flatMap(acknowledgableDelivery ->
-				apply(_jsonFactory.fromJsonToJsonNode(acknowledgableDelivery.getBody()).toObjectNode())
-					.doOnNext(ignore -> acknowledgableDelivery.ack())
-					.onErrorContinue((throwable, o) -> {
-
-						if (_log.isDebugEnabled()) {
-							_log.debug(throwable.getMessage());
-						}
-
-						if (_log.isErrorEnabled()) {
-							_log.error("error on message: " + acknowledgableDelivery.getEnvelope().getDeliveryTag() + " requeue message.");
-						}
-
-						acknowledgableDelivery.nack(true);
-
-					})
-			, config.concurrency())
+					apply(_jsonFactory.fromJsonToJsonNode(acknowledgableDelivery.getBody()).toObjectNode())
+						.doOnNext(json -> {
+							_log.info("entities disambiguated: " + json.get("payload").get("entities").toArrayNode().size());
+							acknowledgableDelivery.ack();
+						})
+						.doOnError(t -> acknowledgableDelivery.nack(true))
+						.doOnCancel(() -> {
+							_log.info("cancel. requeue message.");
+							acknowledgableDelivery.nack(true);
+						})
+				, config.concurrency())
+			.onErrorContinue((e, o) -> {
+				if (_log.isErrorEnabled()) {
+					_log.error(e.getMessage() + " requeue message.");
+				}
+			})
 			.flatMap(objectNode -> {
 
 				String replyTo = objectNode.get("replyTo").asText();
 
-				_bindingRegistry.register(
-					Binding.Exchange.of(
-						"amq.topic", Binding.Exchange.Type.topic),
-						replyTo
-					);
-
-				BundleSender bundleSender =
-					_bundleSenderProvider.getBundleSender(replyTo);
-
-				return bundleSender.send(
-					Mono.just(objectNode.toString().getBytes())
+				return _senderReactor.send(
+					Mono.just(
+						_outboundMessageFactory.createOutboundMessage(
+							builder -> builder
+								.body(objectNode.toString().getBytes())
+								.exchange("amq.topic")
+								.routingKey(replyTo)
+						)
+					)
 				);
 
 			})
+			.subscribeOn(Schedulers.newParallel("entity-manager-pool"))
 			.subscribe();
 
 	}
@@ -134,123 +133,131 @@ public class GetOrAddEntitiesConsumer  {
 
 			JsonNode entities = objectNode.remove("entities");
 
-			ObjectNode responseJson = _jsonFactory.createObjectNode();
+			Mono<ArrayNode> entitiesField;
 
-			responseJson.put("entities", entities);
-			responseJson.put("tenantId", tenantId);
-			responseJson.put("datasourceId", datasourceId);
+			if (entities.size() == 0) {
+				entitiesField = Mono.just(_jsonFactory.createArrayNode());
+			}
+			else {
+				ObjectNode responseJson = _jsonFactory.createObjectNode();
 
-			Request request =
-				_jsonFactory.fromJson(responseJson.toString(), Request.class);
+				responseJson.put("entities", entities);
+				responseJson.put("tenantId", tenantId);
+				responseJson.put("datasourceId", datasourceId);
 
-			List<RequestContext> requestContextList =
-				request
-					.getEntities()
-					.stream()
-					.map(entityRequest -> RequestContext
-						.builder()
-						.current(entityRequest)
-						.tenantId(request.getTenantId())
-						.datasourceId(request.getDatasourceId())
-						.rest(
-							request
-								.getEntities()
-								.stream()
-								.filter(er -> er != entityRequest)
-								.collect(Collectors.toList())
+				Request request =
+					_jsonFactory.fromJson(responseJson.toString(), Request.class);
+
+				List<RequestContext> requestContextList =
+					request
+						.getEntities()
+						.stream()
+						.map(entityRequest -> RequestContext
+							.builder()
+							.current(entityRequest)
+							.tenantId(request.getTenantId())
+							.datasourceId(request.getDatasourceId())
+							.rest(
+								request
+									.getEntities()
+									.stream()
+									.filter(er -> er != entityRequest)
+									.collect(Collectors.toList())
+							)
+							.build()
 						)
-						.build()
-					)
-					.collect(Collectors.toList());
+						.collect(Collectors.toList());
 
-			Mono<List<EntityContext>> disambiguateListMono =
-				GetOrAddEntities.stopWatch(
-					"disambiguate-all-entities",
-					Flux.fromIterable(requestContextList)
-						.flatMap(
-							requestContext ->
-								GetOrAddEntities.stopWatch(
-									"disambiguate-" + requestContext.getCurrent().getName(),
-									Mono.<EntityContext>create(
-										fluxSink ->
-											_startDisambiguation.disambiguate(
-												requestContext, fluxSink)
-									)
-								)
-						)
-						.collectList()
-				);
-
-			Mono<ResponseList> writeRelations = disambiguateListMono
-				.flatMap(entityContexts ->
+				Mono<List<EntityContext>> disambiguateListMono =
 					GetOrAddEntities.stopWatch(
-						"write-relations", writeRelations(entityContexts)));
+						"disambiguate-all-entities",
+						Flux.fromIterable(requestContextList)
+							.flatMap(
+								requestContext ->
+									GetOrAddEntities.stopWatch(
+										"disambiguate-" + requestContext.getCurrent().getName(),
+										Mono.<EntityContext>create(
+											fluxSink ->
+												_startDisambiguation.disambiguate(
+													requestContext, fluxSink)
+										)
+									)
+							)
+							.collectList()
+					);
 
-			Mono<ResponseList> responseListWrapper =
-				_transactional
-					? _graphClient.makeTransactional(writeRelations)
-					: writeRelations;
+				Mono<ResponseList> writeRelations = disambiguateListMono
+					.flatMap(entityContexts ->
+						GetOrAddEntities.stopWatch(
+							"write-relations", writeRelations(entityContexts)));
 
-			Mono<ArrayNode> entitiesField = responseListWrapper
-				.map(responseListDTO -> {
+				Mono<ResponseList> responseListWrapper =
+					_transactional
+						? _graphClient.makeTransactional(writeRelations)
+						: writeRelations;
 
-					List<Response> responseList = responseListDTO.getResponse();
+				entitiesField = responseListWrapper
+					.map(responseListDTO -> {
 
-					ArrayNode entitiesArrayNode = entities.toArrayNode();
+						List<Response> responseList = responseListDTO.getResponse();
 
-					ArrayNode arrayNode = _jsonFactory.createArrayNode();
+						ArrayNode entitiesArrayNode = entities.toArrayNode();
 
-					for (JsonNode node : entitiesArrayNode) {
+						ArrayNode arrayNode = _jsonFactory.createArrayNode();
 
-						Optional<Response> responseOptional =
-							responseList
-								.stream()
-								.filter(response ->
-									node.get("tmpId").asLong() ==
-									response.getTmpId())
-								.findFirst();
+						for (JsonNode node : entitiesArrayNode) {
 
-						if (responseOptional.isPresent()) {
+							Optional<Response> responseOptional =
+								responseList
+									.stream()
+									.filter(response ->
+										node.get("tmpId").asLong() ==
+										response.getTmpId())
+									.findFirst();
 
-							Entity entity = responseOptional.get().getEntity();
+							if (responseOptional.isPresent()) {
 
-							ObjectNode result = _jsonFactory.createObjectNode();
+								Entity entity = responseOptional.get().getEntity();
 
-							result.put("entityType", entity.getType());
+								ObjectNode result = _jsonFactory.createObjectNode();
 
-							result.put("id", entity.getId());
+								result.put("entityType", entity.getType());
 
-							result.put("context", node.get("context"));
+								result.put("id", entity.getId());
 
-							arrayNode.add(result);
+								result.put("context", node.get("context"));
+
+								arrayNode.add(result);
+
+							}
 
 						}
 
-					}
+						return arrayNode;
 
-					return arrayNode;
-
-				});
+					});
+			}
 
 			return entitiesField.map(
-				entitiesArray -> {
+					entitiesArray -> {
 
-					ObjectNode payload = objectNode.get("payload").toObjectNode();
+						ObjectNode payload = objectNode.get("payload").toObjectNode();
 
-					payload.set("entities", entitiesArray);
+						payload.set("entities", entitiesArray);
 
-					return objectNode;
+						return objectNode;
 
-				});
-		})
-			.timeout(
-				Duration.ofSeconds(120),
-				Mono.error(
-					new TimeoutException(
-						"timeout on entities: " + objectNode.get("entities") +
-						" (Did not observe any item or terminal signal within 120000ms)")
-				)
-			);
+					})
+				.timeout(
+					Duration.ofSeconds(_timeout),
+					Mono.error(
+						new TimeoutException(
+							"timeout on entities count: " + entities.size() +
+							" (Did not observe any item or terminal signal within " + Duration.ofSeconds(_timeout).toMillis() + "ms)")
+					)
+				);
+		});
+
 	}
 
 	public Mono<ResponseList> writeRelations(List<EntityContext> entityContext) {
@@ -374,6 +381,8 @@ public class GetOrAddEntitiesConsumer  {
 
 	private boolean _transactional;
 
+	private long _timeout;
+
 	private Disposable _disposable;
 
 	@Reference
@@ -386,13 +395,13 @@ public class GetOrAddEntitiesConsumer  {
 	private StartDisambiguation _startDisambiguation;
 
 	@Reference
-	private BindingRegistry _bindingRegistry;
-
-	@Reference
-	private BundleSenderProvider _bundleSenderProvider;
-
-	@Reference
 	private ReceiverReactor _receiverReactor;
+
+	@Reference
+	private SenderReactor _senderReactor;
+
+	@Reference
+	private OutboundMessageFactory _outboundMessageFactory;
 
 	@Reference(target = "(component.name=io.openk9.entity.manager.pub.sub.binding.internal.EntityManagerRequestBinding)")
 	private Binding _binding;

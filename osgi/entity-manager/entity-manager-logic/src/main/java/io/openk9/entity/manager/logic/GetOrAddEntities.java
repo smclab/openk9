@@ -183,12 +183,14 @@ public class GetOrAddEntities {
 
 		String currentEntityRequestType = currentEntityRequest.getType();
 
-		_log.info(Arrays.toString(_uniqueEntities));
+		if (_log.isDebugEnabled()) {
+			_log.debug(Arrays.toString(_uniqueEntities));
+		}
 
 		if (!candidates.isEmpty() && !_containsValue(_uniqueEntities, currentEntityRequestType)) {
 
-			if (_log.isInfoEnabled()) {
-				_log.info("disambiguating with search entity with type " + currentEntityRequestType);
+			if (_log.isDebugEnabled()) {
+				_log.debug("disambiguating with search entity with type " + currentEntityRequestType);
 			}
 
 			Statement[] statements = new Statement[entityRequestList.size()];
@@ -250,8 +252,8 @@ public class GetOrAddEntities {
 
 		if (candidates.size() == 1 && _containsValue(_uniqueEntities, currentEntityRequestType)) {
 
-			if (_log.isInfoEnabled()) {
-				_log.info("disambiguating entity with type " + currentEntityRequestType);
+			if (_log.isDebugEnabled()) {
+				_log.debug("disambiguating entity with type " + currentEntityRequestType);
 			}
 
 			DocumentEntityResponse candidate = candidates.get(0);
