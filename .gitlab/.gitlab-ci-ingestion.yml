@@ -1,7 +1,7 @@
 variables:
     GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
-Build Latest ingestion Docker Images:
+Build Latest Ingestion Docker Images:
     image: smclab/docker-java-11:latest
     services:
         - docker:19.03.13-dind
