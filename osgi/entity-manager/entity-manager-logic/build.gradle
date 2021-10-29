@@ -8,6 +8,7 @@ dependencies {
 	compile project(':osgi:common:reactory-netty-util')
 	compile project(':osgi:web:http-api')
 	compile project(':osgi:ingestion:ingestion-api')
+	compile project(":osgi:search:search-client-api")
 
 	compile libraries.reactor
 	compile libraries.osgi

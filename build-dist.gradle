@@ -92,6 +92,11 @@ dependencies {
 	distEntityManager project(path: ':osgi:util:groovy-script-service', transitive: false)
 	distEntityManager project(path: ':osgi:util:groovy-script-web', transitive: false)
 
+	distEntityManager project(path: ':osgi:search:search-client-api', transitive: false)
+	distEntityManager project(path: ':osgi:search:search-client-service', transitive: false)
+	distEntityManager project(path: ':osgi:search:search-client-metrics', transitive: false)
+	distEntityManager project(path: ':osgi:search:search-client-writer', transitive: false)
+
 	// </ENTITY MANAGER>
 
 	// <INDEX WRITER>

@@ -5,18 +5,30 @@
 	import io.openk9.entity.manager.api.EntityGraphRepository;
 	import io.openk9.entity.manager.api.EntityNameCleaner;
 	import io.openk9.entity.manager.api.EntityNameCleanerProvider;
-	import io.openk9.entity.manager.model.BaseEntity;
-	import io.openk9.entity.manager.model.DocumentEntity;
 	import io.openk9.entity.manager.model.Entity;
 	import io.openk9.entity.manager.model.payload.EntityRequest;
 	import io.openk9.index.writer.entity.client.api.IndexWriterEntityClient;
 	import io.openk9.index.writer.entity.model.DocumentEntityRequest;
 	import io.openk9.index.writer.entity.model.DocumentEntityResponse;
+	import io.openk9.json.api.JsonFactory;
 	import io.openk9.relationship.graph.api.client.GraphClient;
+	import io.openk9.search.client.api.ReactorActionListener;
+	import io.openk9.search.client.api.RestHighLevelClientProvider;
 	import lombok.AllArgsConstructor;
 	import lombok.Builder;
 	import lombok.Data;
 	import lombok.NoArgsConstructor;
+	import org.elasticsearch.action.index.IndexRequest;
+	import org.elasticsearch.action.index.IndexResponse;
+	import org.elasticsearch.action.search.SearchRequest;
+	import org.elasticsearch.action.search.SearchResponse;
+	import org.elasticsearch.action.support.WriteRequest;
+	import org.elasticsearch.client.Cancellable;
+	import org.elasticsearch.client.RequestOptions;
+	import org.elasticsearch.client.RestHighLevelClient;
+	import org.elasticsearch.common.xcontent.XContentType;
+	import org.elasticsearch.index.query.QueryBuilder;
+	import org.elasticsearch.search.builder.SearchSourceBuilder;
 	import org.neo4j.cypherdsl.core.AliasedExpression;
 	import org.neo4j.cypherdsl.core.Cypher;
 	import org.neo4j.cypherdsl.core.Functions;
@@ -36,8 +48,6 @@
 	import java.util.Arrays;
 	import java.util.Collections;
 	import java.util.List;
-	import java.util.Map;
-	import java.util.Optional;
 	import java.util.function.Function;
 	import java.util.stream.Collectors;
 
@@ -101,7 +111,7 @@ public class GetOrAddEntities {
 			EntityNameCleaner entityNameCleaner =
 				_entityNameCleanerProvider.getEntityNameCleaner(current.getType());
 
-			Map<String, Object> currentQuery =
+			QueryBuilder currentQuery =
 				entityNameCleaner
 					.cleanEntityName(
 						tenantId, current.getName());
@@ -109,8 +119,7 @@ public class GetOrAddEntities {
 			Mono<List<DocumentEntityResponse>> currentCandidates =
 				stopWatch(
 					"current-get-candidates",
-					_indexWriterEntityClient
-						.getEntities(tenantId, currentQuery)
+					_getEntities(tenantId, currentQuery)
 						.map(list -> cleanCandidates(current, list))
 				);
 
@@ -119,13 +128,12 @@ public class GetOrAddEntities {
 					.stream()
 					.map(entityRequest -> {
 
-						Map<String, Object> query =
+						QueryBuilder query =
 							_entityNameCleanerProvider
 								.getEntityNameCleaner(entityRequest.getType())
 								.cleanEntityName(tenantId, entityRequest.getName());
 
-						return _indexWriterEntityClient
-							.getEntities(tenantId, query)
+						return _getEntities(tenantId, query)
 							.map(list -> cleanCandidates(entityRequest, list));
 
 					})
@@ -279,8 +287,7 @@ public class GetOrAddEntities {
 								return Mono.just(entity);
 							}
 							else {
-								return _indexWriterEntityClient
-									.insertEntity(
+								return _insertEntity(
 										DocumentEntityRequest
 											.builder()
 											.tenantId(entity.getTenantId())
@@ -319,101 +326,33 @@ public class GetOrAddEntities {
 
 	}
 
-	private Flux<Entity> _getEntities(List<DocumentEntityResponse> candidates) {
+	private Mono<Void> _insertEntity(
+		DocumentEntityRequest entityRequest) {
 
-		Statement[] statements = new Statement[candidates.size()];
+		RestHighLevelClient restHighLevelClient =
+			_restHighLevelClientProvider.get();
 
-		for (int i = 0; i < candidates.size(); i++) {
+		return Mono.<IndexResponse>create(sink -> {
 
-			DocumentEntityResponse entityRequest = candidates.get(i);
+			IndexRequest indexRequest =
+				new IndexRequest(entityRequest.getTenantId() + "-entity");
 
-			Node nodeEntity =
-				Cypher.node(entityRequest.getType()).named(ENTITY);
+			indexRequest.source(
+				_jsonFactory.toJson(entityRequest), XContentType.JSON);
 
-			AliasedExpression entityAliased = nodeEntity.as(ENTITY);
+			indexRequest.setRefreshPolicy(
+				WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
-			SymbolicName path = Cypher.name(PATH);
+			Cancellable cancellable =
+				restHighLevelClient
+					.indexAsync(
+						indexRequest, RequestOptions.DEFAULT,
+						new ReactorActionListener<>(sink));
 
-			Statement statement = Cypher
-				.match(nodeEntity)
-				.where(Functions.id(nodeEntity).eq(
-					literalOf(entityRequest.getId())))
-				.call(APOC_PATH_EXPAND).withArgs(
-					entityAliased.getDelegate(), literalOf(null),
-					literalOf(_labelFilter), literalOf(_minHops),
-					literalOf(_maxHops))
-				.yield(path)
-				.returning(
-					Functions.last(Functions.nodes(path)).as(NODE),
-					Functions.size(Functions.nodes(path)).subtract(
-						literalOf(1)).as(HOPS))
-				.build();
+			sink.onCancel(cancellable::cancel);
 
-			statements[i] = statement;
-
-		}
-
-		if (statements.length == 1) {
-			Statement entityRequestListStatement =
-				Cypher
-					.call(statements[0])
-					.returning(NODE, HOPS)
-					.orderBy(Cypher.name(HOPS))
-					.build();
-
-			return _entityGraphRepository.getEntities(
-				entityRequestListStatement);
-
-		}
-		else if (statements.length > 1) {
-			Statement entityRequestListStatement =
-				Cypher
-					.call(Cypher.unionAll(statements))
-					.returning(NODE, HOPS)
-					.orderBy(Cypher.name(HOPS))
-					.build();
-
-			return _entityGraphRepository.getEntities(
-				entityRequestListStatement);
-		}
-
-		return Flux.empty();
-
-	}
-
-	private BaseEntity _insertToDataset(
-		List<DocumentEntityResponse> candidates, List<Entity> entityList,
-		long tenantId, EntityRequest currentEntityRequest) {
-
-		Optional<Entity> first =
-			entityList
-				.stream()
-				.filter(entity -> candidates
-					.stream()
-					.anyMatch(entity1 -> entity1.getId() == entity.getId()))
-				.findFirst();
-
-		if (first.isEmpty()) {
-			return BaseEntity.notExist(currentEntityRequest, tenantId);
-		}
-		else {
-
-			Entity entity = first.get();
-
-			return BaseEntity.exist(
-				currentEntityRequest,
-				tenantId,
-				entity,
-				DocumentEntity
-					.builder()
-					.tenantId(entity.getTenantId())
-					.type(entity.getType())
-					.name(entity.getName())
-					.id(entity.getId())
-					.score(1L)
-					.build());
-
-		}
+		})
+			.then();
 
 	}
 
@@ -511,6 +450,58 @@ public class GetOrAddEntities {
 		return 1 - ((double)dp[xLength][yLength] / Math.max(xLength, yLength));
 	}
 
+	private Mono<List<DocumentEntityResponse>> _getEntities(long tenantId, QueryBuilder builder) {
+		return _executeQuery(tenantId, builder)
+			.flatMapIterable(SearchResponse::getHits)
+			.map(hit -> {
+
+				String sourceAsString = hit.getSourceAsString();
+
+				DocumentEntityResponse documentEntityResponse =
+					_jsonFactory.fromJson(sourceAsString,
+						DocumentEntityResponse.class);
+
+				documentEntityResponse.setScore(hit.getScore());
+
+				return documentEntityResponse;
+
+			})
+			.onErrorResume(throwable -> {
+				if (_log.isErrorEnabled()) {
+					_log.error(throwable.getMessage(), throwable);
+				}
+				return Mono.empty();
+			})
+			.collectList()
+			.defaultIfEmpty(List.of());
+
+	}
+
+	private Mono<SearchResponse> _executeQuery(
+		long tenantId, QueryBuilder queryBuilder) {
+
+		return Mono.create(sink -> {
+
+			RestHighLevelClient restHighLevelClient =
+				_restHighLevelClientProvider.get();
+
+			SearchRequest searchRequest = new SearchRequest(tenantId + "-entity");
+
+			SearchSourceBuilder searchSourceBuilder =
+				new SearchSourceBuilder();
+
+			searchSourceBuilder.query(queryBuilder);
+
+			searchRequest.source(searchSourceBuilder);
+
+			restHighLevelClient
+				.searchAsync(
+					searchRequest, RequestOptions.DEFAULT,
+					new ReactorActionListener<>(sink));
+
+		});
+	}
+
 	public static int _min(int... numbers) {
 		return Arrays.stream(numbers)
 			.min().orElse(Integer.MAX_VALUE);
@@ -552,6 +543,9 @@ public class GetOrAddEntities {
 	private String[] _notIndexEntities;
 
 	@Reference
+	private RestHighLevelClientProvider _restHighLevelClientProvider;
+
+	@Reference
 	private IndexWriterEntityClient _indexWriterEntityClient;
 
 	@Reference
@@ -562,6 +556,9 @@ public class GetOrAddEntities {
 
 	@Reference
 	private GraphClient _graphClient;
+
+	@Reference
+	private JsonFactory _jsonFactory;
 
 	private static final String ENTITY = "entity";
 	private static final String PATH = "path";

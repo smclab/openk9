@@ -4,8 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Map;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 public interface EntityNameCleaner {
 
@@ -15,7 +16,7 @@ public interface EntityNameCleaner {
 
 	String getEntityType();
 
-	Map<String, Object> cleanEntityName(long tenantId, String entityName);
+	QueryBuilder cleanEntityName(long tenantId, String entityName);
 
 	default String cleanEntityName(String entityName) {
 		return entityName.trim();
@@ -30,15 +31,24 @@ public interface EntityNameCleaner {
 		private String entityType;
 
 		@Override
-		public Map<String, Object> cleanEntityName(long tenantId, String entityName) {
+		public QueryBuilder cleanEntityName(long tenantId, String entityName) {
 			return createQueryBuilder(cleanEntityName(entityName));
 		}
 
-		protected Map<String, Object> createQueryBuilder(String entityName) {
-			return Map.of(
-				Constants.ENTITY_NAME_FIELD, entityName,
-				Constants.ENTITY_TYPE_FIELD, getEntityType()
+		protected QueryBuilder createQueryBuilder(String entityName) {
+
+			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+			boolQueryBuilder.must(
+				QueryBuilders.matchQuery(Constants.ENTITY_NAME_FIELD, entityName)
 			);
+
+			boolQueryBuilder.must(
+				QueryBuilders.matchQuery(Constants.ENTITY_TYPE_FIELD, getEntityType())
+			);
+
+			return boolQueryBuilder;
+
 		}
 
 	}
