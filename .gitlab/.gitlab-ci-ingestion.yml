@@ -16,6 +16,7 @@ Build Latest ingestion Docker Images:
         - if: '$CI_COMMIT_BRANCH == "main"'
           changes:
               - quarkus/ingestion/**/*
+              - quarkus/ingestion/*
               - .gitlab/.gitlab-ci-ingestion.yml
     script:
         - ./gradlew build -p ./quarkus/ingestion -Dquarkus.package.type=mutable-jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
