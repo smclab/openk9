@@ -67,9 +67,7 @@ public class DatasourceProcessor {
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
 	@Blocking
-	public IngestionDatasourcePayload process(byte[] json) {
-
-		JsonObject jsonObject = new JsonObject(new String(json));
+	public IngestionDatasourcePayload process(JsonObject jsonObject) {
 
 		IngestionPayload ingestionPayload =
 			jsonObject.mapTo(IngestionPayload.class);
