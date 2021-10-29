@@ -13,7 +13,7 @@ Build Latest Datasource Docker Images:
         DOCKER_HOST: tcp://localhost:2375
         DOCKER_TLS_CERTDIR: ""
     rules:
-        - if: '$CI_COMMIT_BRANCH == "async-enrich-processor"'
+        - if: '$CI_COMMIT_BRANCH == "main"'
           changes:
               - quarkus/datasource/**/*
               - .gitlab/.gitlab-ci-datasource.yml
