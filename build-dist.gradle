@@ -9,10 +9,6 @@ configurations {
 		transitive = false
 		visible = false
 	}
-	distIngestion {
-		transitive = false
-		visible = false
-	}
 	distSearcher {
 		transitive = false
 		visible = false
@@ -164,54 +160,6 @@ dependencies {
 	distIndexWriter project(path: ':osgi:util:groovy-script-web', transitive: false)
 
 	// </INDEX WRITER>
-
-	// <INGESTION>
-
-	distIngestion project(path:':osgi:common:reactory-netty-util', transitive: false)
-	distIngestion project(path: ':osgi:web:http-api', transitive: false)
-	distIngestion project(path: ':osgi:web:http-service', transitive: false)
-	distIngestion project(path: ':osgi:web:http-bundle-ext', transitive: false)
-	distIngestion project(path: ':osgi:web:open-api', transitive: false)
-
-	distIngestion project(path: ':osgi:metrics:metrics-api', transitive: false)
-	distIngestion project(path: ':osgi:metrics:metrics-service', transitive: false)
-
-	distIngestion project(path: ':osgi:common:common-api', transitive: false)
-	distIngestion project(path: ':osgi:common:core-api', transitive: false)
-	distIngestion project(path: ':osgi:common:model', transitive: false)
-	distIngestion project(path: ':osgi:common:osgi-api', transitive: false)
-	distIngestion project(path: ':osgi:common:serialization-api', transitive: false)
-	distIngestion project(path: ':osgi:common:serialization-service', transitive: false)
-	distIngestion project(path: ':osgi:third-party:reactor', transitive: false)
-	distIngestion project(path: ':osgi:third-party:reactor-netty', transitive: false)
-	distIngestion project(path: ':osgi:third-party:reactive-streams', transitive: false)
-	distIngestion project(path: ':osgi:third-party:micrometer', transitive: false)
-	distIngestion project(path: ':osgi:third-party:jackson', transitive: false)
-	distIngestion project(path: ':osgi:third-party:vavr', transitive: false)
-	distIngestion project(path: ':osgi:third-party:apache', transitive: false)
-	distIngestion project(path: ':osgi:common:http-serialization', transitive: false)
-
-	distIngestion project(path: ':osgi:index-writer:index-writer-model', transitive: false)
-
-	distIngestion project(path: ':osgi:ingestion:ingestion-api', transitive: false)
-	distIngestion project(path: ':osgi:ingestion:ingestion-logic-api', transitive: false)
-	distIngestion project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
-	distIngestion project(path: ':osgi:ingestion:ingestion-service', transitive: false)
-	distIngestion project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
-	distIngestion project(path: ':osgi:ingestion:ingestion-identifier-generator-api', transitive: false)
-	distIngestion project(path: ':osgi:ingestion:ingestion-identifier-generator-service', transitive: false)
-
-	distIngestion project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
-
-	distIngestion project(path: ':osgi:fix:karaf-json-config-fix', transitive: false)
-
-	//GROOVY SCRIPT
-	distIngestion group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.8' , transitive: false
-	distIngestion project(path: ':osgi:util:groovy-script-api', transitive: false)
-	distIngestion project(path: ':osgi:util:groovy-script-service', transitive: false)
-	distIngestion project(path: ':osgi:util:groovy-script-web', transitive: false)
-
-	// </INGESTION>
 
 	// <SEARCHER>
 
