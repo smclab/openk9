@@ -146,7 +146,9 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 		Stream<String> rest =
 			Stream.of(
-				"entities.id", "entities.context", "datasourceId",
+				"entities.id",
+				// "entities.context",
+				"datasourceId",
 				"documentTypes"
 			);
 
