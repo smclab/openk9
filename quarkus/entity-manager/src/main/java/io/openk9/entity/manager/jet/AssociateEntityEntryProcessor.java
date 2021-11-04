@@ -11,7 +11,6 @@ import io.openk9.entity.manager.util.MapUtil;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -41,7 +40,7 @@ public class AssociateEntityEntryProcessor
 
 			entry.setValue(null);
 		}
-		catch (IOException ioe) {
+		catch (Exception ioe) {
 			CDI.current().select(Logger.class).get().error(ioe.getMessage(), ioe);
 		}
 

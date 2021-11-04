@@ -37,7 +37,7 @@ public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 			);
 
 		}
-		catch (IOException e) {
+		catch (Exception e) {
 			_log.error(e.getMessage(), e);
 		}
 

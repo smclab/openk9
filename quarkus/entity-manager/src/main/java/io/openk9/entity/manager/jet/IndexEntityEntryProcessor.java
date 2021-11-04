@@ -8,7 +8,6 @@ import io.openk9.entity.manager.service.EntityService;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -31,7 +30,7 @@ public class IndexEntityEntryProcessor
 					v.getType())
 			);
 		}
-		catch (IOException ioe) {
+		catch (Exception ioe) {
 			CDI.current().select(Logger.class).get().error(ioe.getMessage(), ioe);
 		}
 
