@@ -31,6 +31,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
   brandLogo: {
     marginRight: "0.4em",
+    color: theme.digitalLakePrimary,
   },
   badge: {
     backgroundColor: "white",
@@ -40,7 +41,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     padding: [0, theme.spacingUnit * 2],
   },
 }));
-
 
 /**
  * Use this component for OpenK9 branding (logo and title).

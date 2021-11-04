@@ -25,6 +25,7 @@ import {
   ResultSidebar,
   getPluginResultRenderers,
 } from "@openk9/search-ui-components";
+import ClayButton from "@clayui/button";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: { display: "flex" },
@@ -71,9 +72,8 @@ export function SearchResults() {
     selectedResult &&
     results.result.find((r) => r.source.id === selectedResult);
 
-  const { resultRenderers, sidebarRenderers } = getPluginResultRenderers(
-    pluginInfos,
-  );
+  const { resultRenderers, sidebarRenderers } =
+    getPluginResultRenderers(pluginInfos);
 
   return (
     results && (
@@ -91,12 +91,13 @@ export function SearchResults() {
 
           {results.total > results.result.length && (
             <div className={classes.actions}>
-              <button
-                className={clsx("btn btn-secondary", classes.loadMore)}
+              <ClayButton
+                className={classes.loadMore}
+                displayType="secondary"
                 onClick={handleLoadMore}
               >
                 Load more results
-              </button>
+              </ClayButton>
             </div>
           )}
         </div>
