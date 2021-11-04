@@ -21,6 +21,10 @@ public class IndexEntityEntryProcessor
 
 		EntityService entityService = CDI.current().select(EntityService.class).get();
 
+		if (v.getId() != null) {
+			return null;
+		}
+
 		try {
 			entityService.index(
 				EntityIndex.of(
