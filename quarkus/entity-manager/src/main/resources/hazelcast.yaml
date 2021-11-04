@@ -86,6 +86,8 @@ hazelcast:
             # check.
             kubernetes:
                 enabled: true
+                namespace: k9-develop
+                service-name: entity-manager
             eureka:
                 enabled: false
                 # Specifies if the Eureka Discovery SPI plugin will register itself
