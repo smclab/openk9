@@ -6,19 +6,18 @@ import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import io.openk9.entity.manager.loader.EntityMapStore;
-import io.openk9.entity.manager.service.EntityService;
-import io.quarkus.arc.Unremovable;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
 
-@ApplicationScoped
 public class HazelcastConfig {
 
-	@Produces
-	@Unremovable
-	HazelcastInstance createInstance() {
+	private HazelcastConfig() {}
+
+	@PostConstruct
+	public void afterCreate() {
 
 		Config config = Config.load();
 
@@ -27,16 +26,28 @@ public class HazelcastConfig {
 		MapStoreConfig mapStoreConfig = new MapStoreConfig();
 
 		mapStoreConfig.setEnabled(true);
-		mapStoreConfig.setImplementation(new EntityMapStore(_entityService));
+		mapStoreConfig.setImplementation(new EntityMapStore());
 
 		mapConfig.setMapStoreConfig(mapStoreConfig);
 
 		config.addMapConfig(mapConfig);
 
-		return Hazelcast.newHazelcastInstance(config);
+		instance = Hazelcast.newHazelcastInstance(config);
 	}
 
-	@Inject
-	EntityService _entityService;
+	@PreDestroy
+	public void beforeDestroy() {
+		if(instance != null) {
+			instance.shutdown();
+		}
+	}
+
+	@Produces
+	@ApplicationScoped
+	public HazelcastInstance getInstance() {
+		return instance;
+	}
+
+	private HazelcastInstance instance;
 
 }

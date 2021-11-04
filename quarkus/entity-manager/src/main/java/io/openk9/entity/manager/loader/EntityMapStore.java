@@ -8,6 +8,7 @@ import io.openk9.entity.manager.model.EntityIndex;
 import io.openk9.entity.manager.service.EntityService;
 import org.jboss.logging.Logger;
 
+import javax.enterprise.inject.spi.CDI;
 import java.io.IOException;
 
 public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
@@ -17,7 +18,10 @@ public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 
 		try {
 
-			EntityIndex entityIndex = _entityService.searchByNameAndType(
+			EntityService entityService =
+				CDI.current().select(EntityService.class).get();
+
+			EntityIndex entityIndex = entityService.searchByNameAndType(
 				key.getTenantId(), key.getName(), key.getType());
 
 			if (entityIndex == null) {
@@ -41,13 +45,6 @@ public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 
 	}
 
-	public EntityMapStore(
-		EntityService entityService) {
-		_entityService = entityService;
-	}
-
-
-	private final EntityService _entityService;
 	private static final Logger _log =
 		Logger.getLogger(EntityMapStore.class);
 
