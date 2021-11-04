@@ -34,19 +34,15 @@ public class DisambiguationComponent {
 
 		Predicate predicateIdNull = Predicates.equal("id", null);
 
-		Stream<Predicate> predicateStream1 =
-			entityKeys
-				.stream()
-				.map(entityKey -> Predicates.and(
-					Predicates.equal("__key.name", entityKey.getName()),
-					Predicates.equal("__key.type", entityKey.getType())));
-
-		Predicate[] predicates =
-			Stream.concat(Stream.of(predicateIdNull), predicateStream1).toArray(
-				Predicate[]::new);
+		Predicate[] predicateKeys = entityKeys
+			.stream()
+			.map(entityKey -> Predicates.and(
+				Predicates.equal("__key.name", entityKey.getName()),
+				Predicates.equal("__key.type", entityKey.getType())))
+			.toArray(Predicate[]::new);
 
 		entityIMap.executeOnEntries(
-			new IndexEntityEntryProcessor(), Predicates.and(predicates));
+			new IndexEntityEntryProcessor(), Predicates.and(predicateIdNull, Predicates.or(predicateKeys)));
 
 	}
 
