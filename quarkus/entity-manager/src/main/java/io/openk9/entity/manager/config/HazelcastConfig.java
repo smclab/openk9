@@ -6,15 +6,17 @@ import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import io.openk9.entity.manager.loader.EntityMapStore;
+import io.quarkus.runtime.Startup;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import javax.inject.Named;
 
+@Startup
+@ApplicationScoped
 public class HazelcastConfig {
-
-	private HazelcastConfig() {}
 
 	@PostConstruct
 	public void afterCreate() {
