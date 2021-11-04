@@ -34,7 +34,7 @@ hazelcast:
         port:
             # Determines whether if the member automatically tries higher port
             # numbers when the preferred one is occupied by another process.
-            auto-increment: true
+            auto-increment: false
             # The number of port that Hazelcast will try to bind. The default trial
             # count is 100. With this default, if you set the value of port as 5701,
             # as members join the cluster, Hazelcast tries to find ports between 5701
@@ -787,7 +787,7 @@ hazelcast:
 
     jet:
         # Specifies whether if the jet is enabled or not in this member
-        enabled: false
+        enabled: true
         # Specifies whether uploading resources when submitting the job is enabled or not
         resource-upload-enabled: false
         # period between flow control packets in milliseconds

@@ -7,6 +7,7 @@ import io.openk9.entity.manager.model.EntityIndex;
 import io.openk9.entity.manager.service.EntityService;
 import org.jboss.logging.Logger;
 
+import javax.enterprise.inject.spi.CDI;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
@@ -14,19 +15,15 @@ import java.util.Map;
 public class IndexEntityEntryProcessor
 	implements EntryProcessor<EntityKey, Entity, Entity>, Serializable {
 
-	public IndexEntityEntryProcessor(
-		EntityService entityService, Logger logger) {
-		_entityService = entityService;
-		_logger = logger;
-	}
-
 	@Override
 	public Entity process(Map.Entry<EntityKey, Entity> entry) {
 
 		Entity v = entry.getValue();
 
+		EntityService entityService = CDI.current().select(EntityService.class).get();
+
 		try {
-			_entityService.index(
+			entityService.index(
 				EntityIndex.of(
 					v.getCacheId(),
 					v.getTenantId(),
@@ -35,7 +32,7 @@ public class IndexEntityEntryProcessor
 			);
 		}
 		catch (IOException ioe) {
-			_logger.error(ioe.getMessage(), ioe);
+			CDI.current().select(Logger.class).get().error(ioe.getMessage(), ioe);
 		}
 
 		v.setId(v.getCacheId());
@@ -45,8 +42,5 @@ public class IndexEntityEntryProcessor
 		return null;
 
 	}
-
-	private final EntityService _entityService;
-	private final Logger _logger;
 
 }

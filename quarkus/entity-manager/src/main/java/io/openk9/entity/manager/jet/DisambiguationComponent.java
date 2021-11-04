@@ -38,7 +38,7 @@ public class DisambiguationComponent {
 			.orElseGet(Predicates::alwaysFalse);
 
 		entityIMap.executeOnEntries(
-			new IndexEntityEntryProcessor(_entityService, _logger),
+			new IndexEntityEntryProcessor(),
 			predicateNameType);
 
 	}
@@ -63,7 +63,7 @@ public class DisambiguationComponent {
 				.orElseGet(Predicates::alwaysFalse);
 
 		ingestionMap.executeOnEntries(
-			new AssociateEntityEntryProcessor(_dataService, _logger),
+			new AssociateEntityEntryProcessor(),
 			predicateNameType);
 
 	}
