@@ -35,7 +35,7 @@ public class DataService {
 		for (SearchHit hit : searchResponse.getHits()) {
 			String indexName = hit.getIndex();
 			String id = hit.getId();
-			JsonObject dataDocument = JsonObject.mapFrom(hit.getSourceAsString());
+			JsonObject dataDocument = new JsonObject(hit.getSourceAsString());
 
 			JsonArray entities = dataDocument.getJsonArray("entities");
 
