@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Collection;
 import java.util.List;
 
 @Data
@@ -12,5 +13,5 @@ import java.util.List;
 public class DataEntityIndex {
 	private final long id;
 	private final String entityType;
-	private final List<String> context;
+	private final Collection<String> context;
 }

@@ -1,6 +1,7 @@
 package io.openk9.entity.manager.service;
 
 import io.openk9.entity.manager.cache.model.Entity;
+import io.openk9.entity.manager.model.DataEntityIndex;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.search.SearchRequest;
@@ -23,7 +24,7 @@ import java.util.Collection;
 @ApplicationScoped
 public class DataService {
 
-	public void associateEntity(
+	public boolean associateEntity(
 		long tenantId, String ingestionId, Entity entity, Collection<String> context)
 		throws IOException {
 
@@ -43,7 +44,9 @@ public class DataService {
 				entities = new JsonArray();
 			}
 
-			entities.add(JsonObject.mapFrom(entity).put("context", context));
+			entities.add(JsonObject.mapFrom(
+				DataEntityIndex.of(entity.getCacheId(), entity.getType(), context)
+			));
 
 			dataDocument.put("entities", entities);
 
@@ -53,9 +56,11 @@ public class DataService {
 
 			_restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
 
-			break;
+			return true;
 
 		}
+
+		return false;
 
 	}
 

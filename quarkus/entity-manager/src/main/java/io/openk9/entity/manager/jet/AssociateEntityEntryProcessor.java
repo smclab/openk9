@@ -34,14 +34,17 @@ public class AssociateEntityEntryProcessor
 
 			try {
 
-				dataService.associateEntity(
-					v.getTenantId(),
-					k.getIngestionId(),
-					v,
-					entityContextMultiMap.get(k)
-				);
+				boolean associated =
+					dataService.associateEntity(
+						v.getTenantId(),
+						k.getIngestionId(),
+						v,
+						entityContextMultiMap.get(k)
+					);
 
-				entry.setValue(null);
+				if (associated) {
+					entry.setValue(null);
+				}
 			}
 			catch (Exception ioe) {
 				_log.error(ioe.getMessage(), ioe);
