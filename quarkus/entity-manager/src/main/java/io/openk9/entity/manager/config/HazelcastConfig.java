@@ -23,7 +23,7 @@ public class HazelcastConfig {
 
 		Config config = Config.load();
 
-		MapConfig mapConfig = new MapConfig("entityMap");
+		/*MapConfig mapConfig = new MapConfig("entityMap");
 
 		MapStoreConfig mapStoreConfig = new MapStoreConfig();
 
@@ -32,7 +32,7 @@ public class HazelcastConfig {
 
 		mapConfig.setMapStoreConfig(mapStoreConfig);
 
-		config.addMapConfig(mapConfig);
+		config.addMapConfig(mapConfig);*/
 
 		instance = Hazelcast.newHazelcastInstance(config);
 	}
