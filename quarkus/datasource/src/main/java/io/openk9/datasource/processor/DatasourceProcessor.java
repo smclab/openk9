@@ -85,6 +85,8 @@ public class DatasourceProcessor {
 
 		Tenant tenant = Tenant.findById(datasource.getTenantId());
 
+		ingestionPayload.setTenantId(tenant.getTenantId());
+
 		EnrichPipeline enrichPipeline =
 			EnrichPipeline.findByDatasourceId(datasourceId);
 
