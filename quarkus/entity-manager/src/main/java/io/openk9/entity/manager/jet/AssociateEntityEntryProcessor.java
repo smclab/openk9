@@ -49,7 +49,7 @@ public class AssociateEntityEntryProcessor
 
 	}
 
-	private HazelcastInstance _hazelcastInstance;
+	private transient HazelcastInstance _hazelcastInstance;
 
 	@Override
 	public void setHazelcastInstance(
