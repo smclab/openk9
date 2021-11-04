@@ -31,7 +31,7 @@ public class IndexEntityEntryProcessor
 			);
 		}
 		catch (Exception ioe) {
-			CDI.current().select(Logger.class).get().error(ioe.getMessage(), ioe);
+			_log.error(ioe.getMessage(), ioe);
 		}
 
 		v.setId(v.getCacheId());
@@ -41,5 +41,7 @@ public class IndexEntityEntryProcessor
 		return null;
 
 	}
+
+	private static final Logger _log = Logger.getLogger(IndexEntityEntryProcessor.class);
 
 }

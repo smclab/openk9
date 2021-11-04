@@ -41,7 +41,7 @@ public class AssociateEntityEntryProcessor
 			entry.setValue(null);
 		}
 		catch (Exception ioe) {
-			CDI.current().select(Logger.class).get().error(ioe.getMessage(), ioe);
+			_log.error(ioe.getMessage(), ioe);
 		}
 
 		return null;
@@ -55,4 +55,7 @@ public class AssociateEntityEntryProcessor
 		HazelcastInstance hazelcastInstance) {
 		_hazelcastInstance = hazelcastInstance;
 	}
+
+	private static final Logger _log = Logger.getLogger(AssociateEntityEntryProcessor.class);
+
 }
