@@ -13,10 +13,9 @@ Build Latest Entity Manager Docker Images:
         DOCKER_HOST: tcp://localhost:2375
         DOCKER_TLS_CERTDIR: ""
     rules:
-        - if: '$CI_COMMIT_BRANCH == "main"'
+        - if: '$CI_COMMIT_BRANCH == "async-enrich-processor"'
           changes:
               - quarkus/entity-manager/**/*
-              - quarkus/entity-manager/*
               - .gitlab/.gitlab-ci-hazelcast-entity-manager.yml
     script:
         - ./gradlew build -p ./quarkus/entity-manager -Dquarkus.package.type=mutable-jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.name -Dquarkus.container-image.tag=latest
