@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
-public class EntityManagerRequest {
-	private long tenantId;
-	private String ingestionId;
+public class Payload {
+	private EntityManagerRequest payload;
+	private List<EntityRequest> entities;
 }

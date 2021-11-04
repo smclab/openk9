@@ -13,6 +13,7 @@ import io.openk9.entity.manager.cache.model.EntityRelationKey;
 import io.openk9.entity.manager.cache.model.IngestionKey;
 import io.openk9.entity.manager.dto.EntityManagerRequest;
 import io.openk9.entity.manager.dto.EntityRequest;
+import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.MapUtil;
 import io.smallrye.reactive.messaging.annotations.Blocking;
@@ -66,13 +67,15 @@ public class EntityManagerConsumer {
 	@Incoming("entity-manager-request")
 	@Outgoing("index-writer")
 	@Blocking
-	public EntityManagerRequest consume(byte[] bytes) {
+	public byte[] consume(byte[] bytes) {
 
-		EntityManagerRequest request =
-			new JsonObject(new String(bytes)).mapTo(EntityManagerRequest.class);
+		Payload request =
+			new JsonObject(new String(bytes)).mapTo(Payload.class);
 
-		long tenantId = request.getTenantId();
-		String ingestionId = request.getIngestionId();
+		EntityManagerRequest payload = request.getPayload();
+
+		long tenantId = payload.getTenantId();
+		String ingestionId = payload.getIngestionId();
 		List<EntityRequest> entities = request.getEntities();
 
 		Map<EntityKey, Entity> localEntityMap =
@@ -176,7 +179,7 @@ public class EntityManagerConsumer {
 
 		_entityRelationMap.setAll(localEntityRelationMap);
 
-		return request;
+		return bytes;
 
 	}
 
