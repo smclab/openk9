@@ -16,6 +16,11 @@ public class MapUtil {
 		return hazelcastInstance.getMap("entityMap");
 	}
 
+	public static MultiMap<EntityKey, Entity> getRestEntityMultiMap(
+		HazelcastInstance hazelcastInstance) {
+		return hazelcastInstance.getMultiMap("restEntityMultiMap");
+	}
+
 	public static IMap<EntityRelationKey, EntityRelation> getEntityRelationMap(
 		HazelcastInstance hazelcastInstance) {
 		return hazelcastInstance.getMap("entityRelationMap");

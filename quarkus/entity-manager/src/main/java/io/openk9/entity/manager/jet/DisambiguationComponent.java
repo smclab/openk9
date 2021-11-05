@@ -2,8 +2,6 @@ package io.openk9.entity.manager.jet;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import com.hazelcast.multimap.MultiMap;
-import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
@@ -15,11 +13,8 @@ import io.quarkus.scheduler.Scheduled;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 public class DisambiguationComponent {
@@ -30,19 +25,11 @@ public class DisambiguationComponent {
 		IMap<EntityKey, Entity> entityIMap =
 			MapUtil.getEntityMap(_hazelcastInstance);
 
-		Set<EntityKey> entityKeys = entityIMap.localKeySet();
+		Set<EntityKey> entityKeys = entityIMap.localKeySet(
+			Predicates.equal("id", null));
 
-		Predicate predicateIdNull = Predicates.equal("id", null);
-
-		Predicate[] predicateKeys = entityKeys
-			.stream()
-			.map(entityKey -> Predicates.and(
-				Predicates.equal("__key.name", entityKey.getName()),
-				Predicates.equal("__key.type", entityKey.getType())))
-			.toArray(Predicate[]::new);
-
-		entityIMap.executeOnEntries(
-			new IndexEntityEntryProcessor(), Predicates.and(predicateIdNull, Predicates.or(predicateKeys)));
+		entityIMap.executeOnKeys(
+			entityKeys, new IndexEntityEntryProcessor());
 
 	}
 
@@ -52,44 +39,13 @@ public class DisambiguationComponent {
 		IMap<IngestionKey, Entity> ingestionMap =
 			MapUtil.getIngestionMap(_hazelcastInstance);
 
-		Set<IngestionKey> entityKeys = ingestionMap.localKeySet();
+		Set<IngestionKey> entityKeys = ingestionMap.localKeySet(
+			Predicates.notEqual("this", null));
 
-		Map<IngestionKey, Entity> entityMap = ingestionMap.getAll(entityKeys);
+		ingestionMap.executeOnKeys(
+			entityKeys, new AssociateEntityEntryProcessor());
 
-		for (Map.Entry<IngestionKey, Entity> entry : entityMap.entrySet()) {
-
-			IngestionKey k = entry.getKey();
-			Entity v = entry.getValue();
-
-			if (v != null) {
-
-				MultiMap<IngestionKey, String> entityContextMultiMap =
-					MapUtil.getEntityContextMultiMap(_hazelcastInstance);
-
-				DataService dataService =
-					CDI.current().select(DataService.class).get();
-
-				try {
-
-					boolean associated =
-						dataService.associateEntity(
-							v.getTenantId(),
-							k.getIngestionId(),
-							v,
-							entityContextMultiMap.get(k)
-						);
-
-					if (associated) {
-						ingestionMap.delete(k);
-					}
-				}
-				catch (Exception ioe) {
-					_logger.error(ioe.getMessage(), ioe);
-				}
-
-			}
-
-		}
+		ingestionMap.removeAll(Predicates.equal("this", null));
 
 	}
 

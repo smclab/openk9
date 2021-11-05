@@ -24,35 +24,31 @@ public class AssociateEntityEntryProcessor
 		IngestionKey k = entry.getKey();
 		Entity v = entry.getValue();
 
-		if (v != null) {
+		MultiMap<IngestionKey, String> entityContextMultiMap =
+			MapUtil.getEntityContextMultiMap(_hazelcastInstance);
 
-			MultiMap<IngestionKey, String> entityContextMultiMap =
-				MapUtil.getEntityContextMultiMap(_hazelcastInstance);
+		DataService dataService =
+			CDI.current().select(DataService.class).get();
 
-			DataService dataService =
-				CDI.current().select(DataService.class).get();
+		try {
 
-			try {
+			boolean associated =
+				dataService.associateEntity(
+					v.getTenantId(),
+					k.getIngestionId(),
+					v,
+					entityContextMultiMap.get(k)
+				);
 
-				boolean associated =
-					dataService.associateEntity(
-						v.getTenantId(),
-						k.getIngestionId(),
-						v,
-						entityContextMultiMap.get(k)
-					);
-
-				if (associated) {
-					entry.setValue(null);
-				}
+			if (associated) {
+				entry.setValue(null);
 			}
-			catch (Exception ioe) {
-				_log.error(ioe.getMessage(), ioe);
-			}
-
+		}
+		catch (Exception ioe) {
+			_log.error(ioe.getMessage(), ioe);
 		}
 
-		return v;
+		return null;
 
 	}
 

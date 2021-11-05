@@ -42,9 +42,10 @@ public class EntityManagerConsumer {
 		_entityRelationFlakeId = hazelcastInstance.getFlakeIdGenerator(
 			"entityRelationFlakeId");
 		_entityMap = MapUtil.getEntityMap(hazelcastInstance);
+		_restEntityMultiMap = MapUtil.getRestEntityMultiMap(hazelcastInstance);
 		_entityRelationMap = MapUtil.getEntityRelationMap(hazelcastInstance);
 		_entityContextMultiMap = MapUtil.getEntityContextMultiMap(hazelcastInstance);
-		_ingestionMultiMap = MapUtil.getIngestionMap(hazelcastInstance);
+		_ingestionMap = MapUtil.getIngestionMap(hazelcastInstance);
 	}
 
 	@GET
@@ -90,20 +91,26 @@ public class EntityManagerConsumer {
 
 			EntityKey key = EntityKey.of(tenantId, name, type);
 
-			_entityMap.lock(key);
+			boolean lock = _entityMap.tryLock(key);
 
-			try {
+			if (lock) {
 
-				if (_entityMap.containsKey(key)) {
-					entity = _entityMap.get(key);
+				try {
+
+					if (_entityMap.containsKey(key)) {
+						entity = _entityMap.get(key);
+					}
+					else {
+						_entityMap.set(key, entity);
+					}
+
 				}
-				else {
-					_entityMap.set(key, entity);
+				finally {
+					_entityMap.unlock(key);
 				}
-
 			}
-			finally {
-				_entityMap.unlock(key);
+			else {
+				_restEntityMultiMap.put(key, entity);
 			}
 
 			localEntityMap.put(key, entity);
@@ -117,7 +124,7 @@ public class EntityManagerConsumer {
 				_entityContextMultiMap.put(ingestionKey, c);
 			}
 
-			_ingestionMultiMap.put(ingestionKey, entity);
+			_ingestionMap.set(ingestionKey, entity);
 
 			for (EntityRequest entityRequest2 : entities) {
 
@@ -187,8 +194,9 @@ public class EntityManagerConsumer {
 	private final FlakeIdGenerator _entityFlakeId;
 	private final FlakeIdGenerator _entityRelationFlakeId;
 	private final IMap<EntityKey, Entity> _entityMap;
+	private final MultiMap<EntityKey, Entity> _restEntityMultiMap;
 	private final MultiMap<IngestionKey, String> _entityContextMultiMap;
-	private final IMap<IngestionKey, Entity> _ingestionMultiMap;
+	private final IMap<IngestionKey, Entity> _ingestionMap;
 	private final IMap<EntityRelationKey, EntityRelation> _entityRelationMap;
 
 }

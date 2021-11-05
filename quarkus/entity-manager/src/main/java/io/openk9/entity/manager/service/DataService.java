@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -53,6 +54,9 @@ public class DataService {
 			UpdateRequest updateRequest = new UpdateRequest(indexName, id);
 
 			updateRequest.doc(dataDocument.toString(), XContentType.JSON);
+
+			updateRequest.setRefreshPolicy(
+				WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
 			_restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
 
