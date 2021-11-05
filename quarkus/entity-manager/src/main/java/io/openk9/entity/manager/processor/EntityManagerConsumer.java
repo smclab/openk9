@@ -110,17 +110,19 @@ public class EntityManagerConsumer {
 
 			String name = entityRequest.getName();
 			String type = entityRequest.getType();
-			long cacheId = _entityFlakeId.newId();
-			Entity entity = new Entity(null, cacheId, tenantId, name, type);
 
 			EntityKey key = EntityKey.of(tenantId, name, type);
 
 			Entity entityInCache = entityCache.get(key);
 
+			Entity entity;
+
 			if (entityInCache != null) {
 				entity = entityInCache;
 			}
 			else {
+				long cacheId = _entityFlakeId.newId();
+				entity = new Entity(null, cacheId, tenantId, name, type);
 				localNewEntityMap.put(key, entity);
 			}
 
