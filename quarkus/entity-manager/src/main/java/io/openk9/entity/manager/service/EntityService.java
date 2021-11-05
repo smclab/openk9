@@ -7,7 +7,6 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -52,8 +51,6 @@ public class EntityService {
 
 		request.source(
 			JsonObject.mapFrom(entity).toString(), XContentType.JSON);
-
-		request.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
 		_indexerBus.emit(request);
 
