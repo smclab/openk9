@@ -43,7 +43,7 @@ public class EntityManagerConsumer {
 	public byte[] consume(byte[] bytes) {
 
 		_entityManagerBus.emit(
-			JsonObject.mapFrom(new String(bytes)).mapTo(Payload.class));
+			new JsonObject(new String(bytes)).mapTo(Payload.class));
 
 		return bytes;
 
