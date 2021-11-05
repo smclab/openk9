@@ -106,7 +106,7 @@ public class EntityManagerConsumer {
 
 				}
 				finally {
-					_entityMap.unlock(key);
+					_entityMap.forceUnlock(key);
 				}
 			}
 			else {
