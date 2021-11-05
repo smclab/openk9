@@ -33,7 +33,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
@@ -91,20 +90,10 @@ public class EntityManagerConsumer {
 		Map<EntityKey, Entity> localEntityMap =
 			new HashMap<>(entities.size());
 
-		Map<EntityKey, Entity> localNewEntityMap =
-			new HashMap<>();
-
 		Map<IngestionKey, Collection<? extends String>> entityContextMap =
 			new HashMap<>();
 
 		Map<IngestionKey, Entity> ingestionMap = new HashMap<>();
-
-		Set<EntityKey> collect = entities
-			.stream()
-			.map(er -> EntityKey.of(tenantId, er.getName(), er.getType()))
-			.collect(Collectors.toSet());
-
-		Map<EntityKey, Entity> entityCache = _entityMap.getAll(collect);
 
 		for (EntityRequest entityRequest : entities) {
 
@@ -113,45 +102,61 @@ public class EntityManagerConsumer {
 
 			EntityKey key = EntityKey.of(tenantId, name, type);
 
-			Entity entityInCache = entityCache.get(key);
-
 			Entity entity;
 
-			if (entityInCache != null) {
-				entity = entityInCache;
+			boolean lock = _entityMap.tryLock(key);
+
+			if (lock) {
+
+				try {
+					entity = _entityMap.get(key);
+
+					if (entity == null) {
+						long cacheId = _entityFlakeId.newId();
+						entity = new Entity(null, cacheId, tenantId, name, type);
+						_entityMap.set(key, entity);
+					}
+
+					localEntityMap.put(key, entity);
+
+				}
+				finally {
+					_entityMap.forceUnlock(key);
+				}
+
+				IngestionKey ingestionKey = IngestionKey.of(
+					entity.getCacheId(),
+					ingestionId,
+					tenantId);
+
+				for (String c : entityRequest.getContext()) {
+
+					Collection<String> entityContextList =
+						(Collection<String>)entityContextMap.computeIfAbsent(
+							ingestionKey, k -> new ArrayList<>());
+
+					entityContextList.add(c);
+
+				}
+
+				ingestionMap.put(ingestionKey, entity);
+
+				for (EntityRequest entityRequest2 : entities) {
+
+					for (RelationRequest relation : entityRequest2.getRelations()) {
+						if (relation.getTo().equals(entityRequest.getTmpId())) {
+							relation.setTo(entity.getCacheId());
+						}
+					}
+
+				}
+
 			}
 			else {
-				long cacheId = _entityFlakeId.newId();
-				entity = new Entity(null, cacheId, tenantId, name, type);
-				localNewEntityMap.put(key, entity);
-			}
-
-			localEntityMap.put(key, entity);
-
-			IngestionKey ingestionKey = IngestionKey.of(
-				entity.getCacheId(),
-				ingestionId,
-				tenantId);
-
-			for (String c : entityRequest.getContext()) {
-
-				Collection<String> entityContextList =
-					(Collection<String>)entityContextMap.computeIfAbsent(
-						ingestionKey, k -> new ArrayList<>());
-
-				entityContextList.add(c);
-
-			}
-
-			ingestionMap.put(ingestionKey, entity);
-
-			for (EntityRequest entityRequest2 : entities) {
-
-				for (RelationRequest relation : entityRequest2.getRelations()) {
-					if (relation.getTo().equals(entityRequest.getTmpId())) {
-						relation.setTo(entity.getCacheId());
-					}
-				}
+				/*
+				_restEntityMultiMap.put(
+					 key, new Entity(null, null, tenantId, name, type));
+				*/
 
 			}
 
@@ -209,15 +214,13 @@ public class EntityManagerConsumer {
 
 		CompletionStage<Void> future1 =
 			_entityContextMultiMap.putAllAsync(entityContextMap);
-		CompletionStage<Void> future2 =
-			_entityMap.setAllAsync(localNewEntityMap);
 		CompletionStage<Void> future3 =
 			_ingestionMap.setAllAsync(ingestionMap);
 		CompletionStage<Void> future4 =
 			_entityRelationMap.setAllAsync(localEntityRelationMap);
 
 		CompletableFuture<?>[] completableFutures = Stream
-			.of(future1, future2, future3, future4)
+			.of(future1, future3, future4)
 			.map(CompletionStage::toCompletableFuture)
 			.toArray(CompletableFuture<?>[]::new);
 
