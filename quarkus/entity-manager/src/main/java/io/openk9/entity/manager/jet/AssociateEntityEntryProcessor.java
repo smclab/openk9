@@ -24,6 +24,10 @@ public class AssociateEntityEntryProcessor
 		IngestionKey k = entry.getKey();
 		Entity v = entry.getValue();
 
+		if (v == null) {
+			return null;
+		}
+
 		MultiMap<IngestionKey, String> entityContextMultiMap =
 			MapUtil.getEntityContextMultiMap(_hazelcastInstance);
 
