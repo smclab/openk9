@@ -21,9 +21,9 @@ import { authFetch } from "./common";
 
 export async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
   const tenants = await getTenants(loginInfo);
-  const tenant = tenants.find(
-    (tenant) => window.location.host === tenant.virtualHost,
-  );
+  const tenant =
+    tenants.find((tenant) => window.location.host === tenant.virtualHost) ??
+    (window.location.hostname === "localhost" ? tenants[0] : undefined);
   const config =
     (tenant?.jsonConfig &&
       (JSON.parse(tenant?.jsonConfig) as TenantJSONConfig)) ||
