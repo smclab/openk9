@@ -41,6 +41,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   path: {
     fontSize: 12,
     marginBottom: "0.3rem",
+    wordBreak: "break-all"
   },
   textArea: {
     fontSize: 14,
