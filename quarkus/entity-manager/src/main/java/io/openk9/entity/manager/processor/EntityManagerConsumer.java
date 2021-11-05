@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
@@ -98,6 +99,13 @@ public class EntityManagerConsumer {
 
 		Map<IngestionKey, Entity> ingestionMap = new HashMap<>();
 
+		Set<EntityKey> collect = entities
+			.stream()
+			.map(er -> EntityKey.of(tenantId, er.getName(), er.getType()))
+			.collect(Collectors.toSet());
+
+		Map<EntityKey, Entity> entityCache = _entityMap.getAll(collect);
+
 		for (EntityRequest entityRequest : entities) {
 
 			String name = entityRequest.getName();
@@ -107,29 +115,7 @@ public class EntityManagerConsumer {
 
 			EntityKey key = EntityKey.of(tenantId, name, type);
 
-			/*boolean lock = _entityMap.tryLock(key);
-
-			if (lock) {
-
-				try {
-
-					if (_entityMap.containsKey(key)) {
-						entity = _entityMap.get(key);
-					}
-					else {
-						_entityMap.set(key, entity);
-					}
-
-				}
-				finally {
-					_entityMap.forceUnlock(key);
-				}
-			}
-			else {
-				_restEntityMultiMap.put(key, entity);
-			}*/
-
-			Entity entityInCache = _entityMap.get(key);
+			Entity entityInCache = entityCache.get(key);
 
 			if (entityInCache != null) {
 				entity = entityInCache;
