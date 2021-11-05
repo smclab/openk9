@@ -285,6 +285,8 @@ function SingleToken({
     <ParamTokenDisplay {...rest} token={token} />
   ) : token.tokenType === "ENTITY" ? (
     <AtomTokenDisplay token={token} {...rest} />
+  ) : token.tokenType === "DATASOURCE" ? (
+    <AtomTokenDisplay token={token} {...rest} />
   ) : (
     <SingleInput token={token} {...rest} />
   );
