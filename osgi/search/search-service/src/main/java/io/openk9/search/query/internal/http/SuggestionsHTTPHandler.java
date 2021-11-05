@@ -322,15 +322,13 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 								}
 							}
 
-							Long entitiesId =(Long)keys.remove("entities.id");
+							String entitiesId =(String)keys.remove("entities.id");
 							String entitiesContext =
 								(String)keys.remove("entities.context");
 
 							if (entitiesId != null) {
 
-								String entitiesIdString = Long.toString(entitiesId);
-
-								String[] typeName = entityMap.get(entitiesIdString);
+								String[] typeName = entityMap.get(entitiesId);
 
 								if (typeName != null) {
 									String type = typeName[0];
@@ -339,7 +337,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 									if (entitiesContext != null) {
 										suggestions.add(
 											Suggestions.entity(
-												entitiesIdString,
+												entitiesId,
 												entitiesContextCategoryId,
 												type, name, entitiesContext)
 										);
@@ -347,7 +345,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 									else {
 										suggestions.add(
 											Suggestions.entity(
-												entitiesIdString, entityIdCategoryId,
+												entitiesId, entityIdCategoryId,
 												type, name)
 										);
 									}
