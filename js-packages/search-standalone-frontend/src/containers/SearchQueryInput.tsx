@@ -84,7 +84,12 @@ export function SearchQueryInput() {
   const focusToken = useStore((s) => s.focusToken);
   const setFocusToken = useStore((s) => s.setFocusToken);
   const documentTypeSuggestions = useDocumentTypeSuggestions(
-    (searchQuery?.[searchQuery.length - 1]?.values[0] as string) ?? "",
+    (() => {
+      const lastToken = searchQuery?.[searchQuery.length - 1];
+      if (!lastToken) return "";
+      if (lastToken.tokenType !== "TEXT") return "";
+      return lastToken.values[0] ?? "";
+    })(),
   );
 
   const selectedDataType =
