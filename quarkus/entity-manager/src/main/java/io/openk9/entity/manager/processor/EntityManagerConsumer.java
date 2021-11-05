@@ -18,18 +18,25 @@ import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.MapUtil;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import org.eclipse.microprofile.reactive.messaging.Message;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 @Path("/")
@@ -66,9 +73,10 @@ public class EntityManagerConsumer {
 	}
 
 	@Incoming("entity-manager-request")
-	@Outgoing("index-writer")
 	@Blocking
-	public byte[] consume(byte[] bytes) {
+	public CompletionStage<Void> consume(byte[] bytes) {
+
+		_emitter.send(Message.of(bytes));
 
 		Payload request =
 			new JsonObject(new String(bytes)).mapTo(Payload.class);
@@ -83,6 +91,9 @@ public class EntityManagerConsumer {
 			new HashMap<>(entities.size());
 
 		Map<EntityKey, Entity> localNewEntityMap =
+			new HashMap<>();
+
+		Map<IngestionKey, Collection<? extends String>> entityContextMap =
 			new HashMap<>();
 
 		Map<IngestionKey, Entity> ingestionMap = new HashMap<>();
@@ -135,7 +146,13 @@ public class EntityManagerConsumer {
 				tenantId);
 
 			for (String c : entityRequest.getContext()) {
-				_entityContextMultiMap.put(ingestionKey, c);
+
+				Collection<String> entityContextList =
+					(Collection<String>)entityContextMap.computeIfAbsent(
+						ingestionKey, k -> new ArrayList<>());
+
+				entityContextList.add(c);
+
 			}
 
 			ingestionMap.put(ingestionKey, entity);
@@ -202,13 +219,27 @@ public class EntityManagerConsumer {
 			}
 		}
 
-		_entityMap.setAll(localNewEntityMap);
-		_ingestionMap.setAll(ingestionMap);
-		_entityRelationMap.setAll(localEntityRelationMap);
+		CompletionStage<Void> future1 =
+			_entityContextMultiMap.putAllAsync(entityContextMap);
+		CompletionStage<Void> future2 =
+			_entityMap.setAllAsync(localNewEntityMap);
+		CompletionStage<Void> future3 =
+			_ingestionMap.setAllAsync(ingestionMap);
+		CompletionStage<Void> future4 =
+			_entityRelationMap.setAllAsync(localEntityRelationMap);
 
-		return bytes;
+		CompletableFuture<?>[] completableFutures = Stream
+			.of(future1, future2, future3, future4)
+			.map(CompletionStage::toCompletableFuture)
+			.toArray(CompletableFuture<?>[]::new);
+
+		return CompletableFuture.allOf(completableFutures);
 
 	}
+
+	@Inject
+	@Channel("index-writer")
+	Emitter<byte[]> _emitter;
 
 	private final HazelcastInstance _hazelcastInstance;
 	private final FlakeIdGenerator _entityFlakeId;
