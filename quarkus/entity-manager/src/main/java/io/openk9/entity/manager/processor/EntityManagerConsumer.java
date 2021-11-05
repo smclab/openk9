@@ -166,7 +166,11 @@ public class EntityManagerConsumer {
 					.filter(e -> e.getName().equals(entity.getName()) &&
 								 e.getType().equals(entity.getType()))
 					.findFirst()
-					.orElseThrow();
+					.orElse(null);
+
+			if (current == null) {
+				continue;
+			}
 
 			for (RelationRequest relation : relations) {
 
