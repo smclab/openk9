@@ -82,6 +82,11 @@ public class EntityManagerConsumer {
 		Map<EntityKey, Entity> localEntityMap =
 			new HashMap<>(entities.size());
 
+		Map<EntityKey, Entity> localNewEntityMap =
+			new HashMap<>();
+
+		Map<IngestionKey, Entity> ingestionMap = new HashMap<>();
+
 		for (EntityRequest entityRequest : entities) {
 
 			String name = entityRequest.getName();
@@ -119,7 +124,7 @@ public class EntityManagerConsumer {
 				entity = entityInCache;
 			}
 			else {
-				_entityMap.set(key, entity);
+				localNewEntityMap.put(key, entity);
 			}
 
 			localEntityMap.put(key, entity);
@@ -133,7 +138,7 @@ public class EntityManagerConsumer {
 				_entityContextMultiMap.put(ingestionKey, c);
 			}
 
-			_ingestionMap.set(ingestionKey, entity);
+			ingestionMap.put(ingestionKey, entity);
 
 			for (EntityRequest entityRequest2 : entities) {
 
@@ -197,6 +202,8 @@ public class EntityManagerConsumer {
 			}
 		}
 
+		_entityMap.setAll(localNewEntityMap);
+		_ingestionMap.setAll(ingestionMap);
 		_entityRelationMap.setAll(localEntityRelationMap);
 
 		return bytes;
