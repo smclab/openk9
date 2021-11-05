@@ -31,6 +31,9 @@ dependencies {
     implementation 'com.hazelcast:hazelcast:5.0'
     implementation 'org.projectlombok:lombok:1.18.18'
     annotationProcessor 'org.projectlombok:lombok:1.18.18'
+
+    implementation group: 'io.projectreactor', name: 'reactor-core', version: '3.4.11'
+
 }
 
 java {

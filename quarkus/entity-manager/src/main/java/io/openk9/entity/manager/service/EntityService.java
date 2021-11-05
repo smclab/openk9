@@ -55,7 +55,7 @@ public class EntityService {
 
 		request.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
-		_restHighLevelClient.index(request, RequestOptions.DEFAULT);
+		_indexerBus.emit(request);
 
 	}
 
@@ -103,5 +103,8 @@ public class EntityService {
 
 	@Inject
 	RestHighLevelClient _restHighLevelClient;
+
+	@Inject
+	IndexerBus _indexerBus;
 
 }

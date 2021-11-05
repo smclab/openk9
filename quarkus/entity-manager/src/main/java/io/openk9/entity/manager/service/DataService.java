@@ -58,7 +58,7 @@ public class DataService {
 			updateRequest.setRefreshPolicy(
 				WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
-			_restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
+			_indexerBus.emit(updateRequest);
 
 			return true;
 
@@ -85,5 +85,8 @@ public class DataService {
 
 	@Inject
 	RestHighLevelClient _restHighLevelClient;
+
+	@Inject
+	IndexerBus _indexerBus;
 
 }

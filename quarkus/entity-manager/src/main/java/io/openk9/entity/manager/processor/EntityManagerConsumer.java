@@ -91,7 +91,7 @@ public class EntityManagerConsumer {
 
 			EntityKey key = EntityKey.of(tenantId, name, type);
 
-			boolean lock = _entityMap.tryLock(key);
+			/*boolean lock = _entityMap.tryLock(key);
 
 			if (lock) {
 
@@ -111,6 +111,15 @@ public class EntityManagerConsumer {
 			}
 			else {
 				_restEntityMultiMap.put(key, entity);
+			}*/
+
+			Entity entityInCache = _entityMap.get(key);
+
+			if (entityInCache != null) {
+				entity = entityInCache;
+			}
+			else {
+				_entityMap.set(key, entity);
 			}
 
 			localEntityMap.put(key, entity);
