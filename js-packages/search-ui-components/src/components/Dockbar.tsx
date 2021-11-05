@@ -20,6 +20,7 @@ import { createUseStyles } from "react-jss";
 import { HamburgerIcon } from "../icons/HamburgerIcon";
 import { ThemeType } from "../theme";
 import { Brand } from "./Brand";
+import ClayButton from "@clayui/button";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -30,6 +31,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     position: "sticky",
     top: 0,
     zIndex: 999,
+    boxShadow: "0 1px 2px 0 rgba(0,0,0,0.1)",
   },
   hamburger: {
     padding: [theme.spacingUnit * 1, theme.spacingUnit * 2],
@@ -103,9 +105,9 @@ export function Dockbar({
 
       <div className={classes.endButtons}>
         {onLoginAction ? (
-          <button className="btn btn-secondary" onClick={onLoginAction}>
+          <ClayButton onClick={onLoginAction} displayType="secondary">
             Login
-          </button>
+          </ClayButton>
         ) : (
           <>
             {/* TODO: this is a placeholder to make it look like Open Square, but it serves no function */}
