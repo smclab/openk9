@@ -215,7 +215,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 				buckets
 					.stream()
-					.map(bucket -> (String)bucket.getKey().get("entities.id"))
+					.map(bucket -> (Long)bucket.getKey().get("entities.id"))
 					.filter(Objects::nonNull)
 					.distinct()
 					.forEach(entityId -> boolQueryBuilder.should(
@@ -246,7 +246,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 							String name =(String)sourceAsMap.get("name");
 							String type =(String)sourceAsMap.get("type");
 							String entityId =
-								Integer.toString((Integer)sourceAsMap.get("id"));
+								Long.toString((Long)sourceAsMap.get("id"));
 							entityMap.put(entityId, new String[]{type, name});
 						}
 
@@ -322,13 +322,15 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 								}
 							}
 
-							String entitiesId =(String)keys.remove("entities.id");
+							Long entitiesId =(Long)keys.remove("entities.id");
 							String entitiesContext =
 								(String)keys.remove("entities.context");
 
 							if (entitiesId != null) {
 
-								String[] typeName = entityMap.get(entitiesId);
+								String entitiesIdString = Long.toString(entitiesId);
+
+								String[] typeName = entityMap.get(entitiesIdString);
 
 								if (typeName != null) {
 									String type = typeName[0];
@@ -337,7 +339,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 									if (entitiesContext != null) {
 										suggestions.add(
 											Suggestions.entity(
-												entitiesId,
+												entitiesIdString,
 												entitiesContextCategoryId,
 												type, name, entitiesContext)
 										);
@@ -345,7 +347,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 									else {
 										suggestions.add(
 											Suggestions.entity(
-												entitiesId, entityIdCategoryId,
+												entitiesIdString, entityIdCategoryId,
 												type, name)
 										);
 									}
