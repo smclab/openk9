@@ -50,7 +50,7 @@ public class EntityManagerBus {
 	}
 
 	public void emit(Payload request) {
-		_many.emitNext(request, Sinks.EmitFailureHandler.FAIL_FAST);
+		_many.tryEmitNext(request);
 	}
 
 	@PostConstruct
