@@ -159,6 +159,7 @@ export function SearchQueryInput() {
       }
     }
     setSearchOpen(false);
+    setHighlightToken(null);
   }
 
   function handleInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

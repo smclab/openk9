@@ -108,7 +108,7 @@ export function Main({ children, templates, interactions }: MainProps) {
     return pluginInfos ? getPluginResultRenderers(pluginInfos) : null;
   }, [pluginInfos]);
   const updateSearch = React.useCallback(() => {
-    setState((state) => {
+    setState((state): State => {
       // ATTENTION reread from state otherwise it will lag 1 interactions behind
       const { text, tokens } = state;
       const selectedTabTokens = tabTokens[state.tabIndex].tokens;
@@ -130,7 +130,7 @@ export function Main({ children, templates, interactions }: MainProps) {
     });
   }, [tabTokens]);
   function addToken(token: SearchToken) {
-    setState((state) => {
+    setState((state): State => {
       return { ...state, tokens: [...state.tokens, token] };
     });
   }
@@ -158,34 +158,38 @@ export function Main({ children, templates, interactions }: MainProps) {
           break;
         }
       }
-      setState((state) => ({
-        ...state,
-        text: "",
-        suggestionIndex: null,
-        showSuggestions: false,
-        focusedToken: state.tokens.length - 1,
-      }));
+      setState(
+        (state): State => ({
+          ...state,
+          text: "",
+          selectedSuggestion: null,
+          showSuggestions: false,
+          focusedToken: state.tokens.length - 1,
+        }),
+      );
       updateSearch();
       focusInput();
     },
     [updateSearch],
   );
   const selectSuggestion = React.useCallback((suggestion: SuggestionResult) => {
-    setState((state) => ({
-      ...state,
-      selectedSuggestion: suggestion,
-    }));
+    setState(
+      (state): State => ({
+        ...state,
+        selectedSuggestion: suggestion,
+      }),
+    );
   }, []);
   useClickAway(
     React.useMemo(() => [inputRef, suggestionsRef], []),
     React.useCallback(() => {
-      setState((state) => ({ ...state, showSuggestions: false }));
+      setState((state): State => ({ ...state, showSuggestions: false }));
     }, []),
   );
   const loadMoreResultsRef = useLoadMore(results.fetchNextPage);
   const loadMoreSuggestionsRef = useLoadMore(suggestions.fetchNextPage);
   function suggestionUp() {
-    setState((state) => {
+    setState((state): State => {
       if (selectedSuggestionIndex !== null && selectedSuggestionIndex > 0) {
         return {
           ...state,
@@ -193,12 +197,12 @@ export function Main({ children, templates, interactions }: MainProps) {
         };
       }
       if (selectedSuggestionIndex === 0) {
-        return { ...state, suggestionIndex: null };
+        return { ...state, selectedSuggestion: null };
       } else return state;
     });
   }
   function suggestionDown() {
-    setState((state) => {
+    setState((state): State => {
       if (selectedSuggestionIndex !== null) {
         return {
           ...state,
@@ -208,20 +212,22 @@ export function Main({ children, templates, interactions }: MainProps) {
     });
   }
   function setActiveTabIndex(index: number) {
-    setState((state) => ({ ...state, tabIndex: index }));
+    setState((state): State => ({ ...state, tabIndex: index }));
     updateSearch();
   }
   const setResultForDetail = React.useCallback(
     (result: GenericResultItem<unknown>) => {
-      setState((state) => ({ ...state, detail: result }));
+      setState((state): State => ({ ...state, detail: result }));
     },
     [],
   );
   function setActiveSuggestionCategoryId(id: number) {
-    setState((state) => ({
-      ...state,
-      activeSuggestionCategory: id,
-    }));
+    setState(
+      (state): State => ({
+        ...state,
+        activeSuggestionCategory: id,
+      }),
+    );
   }
   // update search debounced
   React.useEffect(() => {
@@ -259,26 +265,30 @@ export function Main({ children, templates, interactions }: MainProps) {
               key={index}
               token={token}
               onChange={(token) => {
-                setState((state) => {
+                setState((state): State => {
                   const tokens = [...state.tokens];
                   tokens[index] = token;
                   return { ...state, tokens };
                 });
               }}
               onRemove={() => {
-                setState((state) => ({
-                  ...state,
-                  tokens: state.tokens.filter((t, i) => i !== index),
-                }));
+                setState(
+                  (state): State => ({
+                    ...state,
+                    tokens: state.tokens.filter((t, i) => i !== index),
+                  }),
+                );
               }}
               onSubmit={updateSearch}
               isFocused={state.focusedToken === index}
               onFocus={() =>
-                setState((state) => ({
-                  ...state,
-                  focusedToken: index,
-                  showSuggestions: false,
-                }))
+                setState(
+                  (state): State => ({
+                    ...state,
+                    focusedToken: index,
+                    showSuggestions: false,
+                  }),
+                )
               }
               interactions={interactions}
             />
@@ -289,18 +299,22 @@ export function Main({ children, templates, interactions }: MainProps) {
           value={text}
           onChange={(event) => {
             const text = event.currentTarget.value;
-            setState((state) => ({
-              ...state,
-              text,
-              suggestionIndex: null,
-            }));
+            setState(
+              (state): State => ({
+                ...state,
+                text,
+                selectedSuggestion: null,
+              }),
+            );
           }}
           onFocus={() => {
-            setState((state) => ({
-              ...state,
-              focusedToken: null,
-              showSuggestions: true,
-            }));
+            setState(
+              (state): State => ({
+                ...state,
+                focusedToken: null,
+                showSuggestions: true,
+              }),
+            );
           }}
           onKeyDown={(event) => {
             switch (event.key) {
@@ -309,29 +323,35 @@ export function Main({ children, templates, interactions }: MainProps) {
                   if (state.selectedSuggestion)
                     addSuggestion(state.selectedSuggestion);
                 } else {
-                  setState((state) => ({
-                    ...state,
-                    showSuggestions: false,
-                  }));
+                  setState(
+                    (state): State => ({
+                      ...state,
+                      showSuggestions: false,
+                    }),
+                  );
                   updateSearch();
                 }
                 break;
               }
               case "Escape": {
-                setState((state) => ({
-                  ...state,
-                  suggestionIndex: null,
-                  showSuggestions: false,
-                }));
+                setState(
+                  (state): State => ({
+                    ...state,
+                    selectedSuggestion: null,
+                    showSuggestions: false,
+                  }),
+                );
                 break;
               }
               case "Backspace": {
                 if (event.currentTarget.value === "") {
                   event.preventDefault();
-                  setState((state) => ({
-                    ...state,
-                    tokens: state.tokens.slice(0, -1),
-                  }));
+                  setState(
+                    (state): State => ({
+                      ...state,
+                      tokens: state.tokens.slice(0, -1),
+                    }),
+                  );
                 }
                 break;
               }
@@ -346,7 +366,9 @@ export function Main({ children, templates, interactions }: MainProps) {
                 break;
               }
               default:
-                setState((state) => ({ ...state, showSuggestions: true }));
+                setState(
+                  (state): State => ({ ...state, showSuggestions: true }),
+                );
             }
           }}
           style={{
