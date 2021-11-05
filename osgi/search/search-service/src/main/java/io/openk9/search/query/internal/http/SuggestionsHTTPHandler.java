@@ -215,7 +215,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 				buckets
 					.stream()
-					.map(bucket -> (Long)bucket.getKey().get("entities.id"))
+					.map(bucket -> (String)bucket.getKey().get("entities.id"))
 					.filter(Objects::nonNull)
 					.distinct()
 					.forEach(entityId -> boolQueryBuilder.should(
