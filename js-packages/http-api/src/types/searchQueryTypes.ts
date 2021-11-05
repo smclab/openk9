@@ -34,7 +34,7 @@ export type SearchToken = {
 export interface EntityItem {
   tokenType: "ENTITY";
   entityType: string;
-  values: number[];
+  values: string[];
 }
 
 export interface DataSourceItem {

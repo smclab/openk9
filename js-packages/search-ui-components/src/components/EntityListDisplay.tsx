@@ -19,6 +19,7 @@ import React from "react";
 import { createUseStyles } from "react-jss";
 import { GenericResultItem } from "@openk9/http-api";
 import { ThemeType } from "../theme";
+import { useEntity } from ".";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   entities: {
@@ -39,22 +40,14 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
  * Display a single entity badge.
  * @param type - the type of the entity, that gets truncated to 3 upper case chars
  * @param id - the id of the entity
- * @param label - the label of the entity, if not present the id is shown instead
  */
-export function EntityDisplay({
-  type,
-  id,
-  label,
-}: {
-  type: string;
-  id: number;
-  label?: string;
-}) {
+export function EntityDisplay({ type, id }: { type: string; id: string }) {
   const classes = useStyles();
+  const { data: entity } = useEntity({ type, id });
   return (
     <div className={classes.token}>
       <strong>{type.toUpperCase().substring(0, 3)} </strong>
-      {label ? label : id}
+      {entity?.name ?? id}
     </div>
   );
 }
@@ -68,34 +61,22 @@ export function EntityDisplay({
  */
 export function EntityListDisplay({
   entities,
-  entityLabels,
   ignoreTypes,
   ...rest
 }: {
   entities: GenericResultItem["source"]["entities"];
   ignoreTypes?: string[];
-  entityLabels?: [number, string][];
 } & React.HTMLAttributes<HTMLDivElement>) {
   const classes = useStyles();
 
-  const entityList = entities
-    ?.filter(
-      (entity) => !ignoreTypes || !ignoreTypes.includes(entity.entityType),
-    )
-    .map((entity) => ({
-      ...entity,
-      label: entityLabels && entityLabels.find(([id]) => id === entity.id),
-    }));
+  const entityList = entities?.filter(
+    (entity) => !ignoreTypes || !ignoreTypes.includes(entity.entityType),
+  );
 
   return (
     <div className={classes.entities} {...rest}>
       {entityList?.map((e) => (
-        <EntityDisplay
-          type={e.entityType}
-          id={e.id}
-          key={e.id}
-          label={e.label && e.label[1]}
-        />
+        <EntityDisplay id={e.id} type={e.entityType} key={e.id} />
       ))}
     </div>
   );

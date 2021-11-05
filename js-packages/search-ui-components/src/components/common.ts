@@ -1,6 +1,7 @@
 import {
   ALL_SUGGESTION_CATEGORY_ID,
   DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+  doSearchEntities,
   getDocumentTypes,
   getSuggestionCategories,
   LoginInfo,
@@ -42,7 +43,7 @@ export const mapSuggestionToSearchToken = (
         tokenType: "ENTITY",
         keywordKey: suggestion.keywordKey,
         entityType: suggestion.entityType,
-        values: [Number(suggestion.value)],
+        values: [suggestion.value],
       };
     }
     case "TEXT": {
@@ -91,4 +92,18 @@ export function useSuggestionCategories(loginInfo: LoginInfo | null) {
     const result = await getSuggestionCategories(loginInfo);
     return result;
   });
+}
+
+export function useEntity(entity: { type: string; id: string } | null) {
+  const { type = "", id = "" } = entity || {};
+  return useQuery(
+    ["entity", type, id] as const,
+    async ({ queryKey }) => {
+      const [, type, id] = queryKey;
+      const found = await doSearchEntities({ type, entityId: id }, null);
+      if (found.result.length === 1) return found.result[0];
+      else throw new Error();
+    },
+    { enabled: entity !== null },
+  );
 }

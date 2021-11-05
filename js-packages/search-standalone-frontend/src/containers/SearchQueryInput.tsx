@@ -84,7 +84,12 @@ export function SearchQueryInput() {
   const focusToken = useStore((s) => s.focusToken);
   const setFocusToken = useStore((s) => s.setFocusToken);
   const documentTypeSuggestions = useDocumentTypeSuggestions(
-    (searchQuery?.[searchQuery.length - 1]?.values[0] as string) ?? "",
+    (() => {
+      const lastToken = searchQuery?.[searchQuery.length - 1];
+      if (!lastToken) return "";
+      if (lastToken.tokenType !== "TEXT") return "";
+      return lastToken.values[0] ?? "";
+    })(),
   );
 
   const selectedDataType =
@@ -129,11 +134,11 @@ export function SearchQueryInput() {
     null,
   );
 
+  const soFar = searchQuery.filter((e, i) => i !== focusToken);
+  const addToken = (...searchTokens: SearchToken[]) => {
+    setSearchQuery([...soFar, ...searchTokens]);
+  };
   function handleAddSuggestion(suggestion: SuggestionResult) {
-    const soFar = searchQuery.filter((e, i) => i !== focusToken);
-    const addToken = (searchToken: SearchToken) => {
-      setSearchQuery([...soFar, searchToken]);
-    };
     const searchToken = mapSuggestionToSearchToken(suggestion);
     switch (suggestion.tokenType) {
       case "DATASOURCE": {
@@ -154,6 +159,7 @@ export function SearchQueryInput() {
       }
     }
     setSearchOpen(false);
+    setHighlightToken(null);
   }
 
   function handleInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -168,6 +174,17 @@ export function SearchQueryInput() {
       if (nextSugg) setHighlightToken(nextSugg);
     } else if (e.key === "Enter") {
       if (highlightToken) handleAddSuggestion(highlightToken);
+    } else if (e.key === " ") {
+      const lastToken = searchQuery[searchQuery.length - 1];
+      if (lastToken && lastToken.tokenType === "TEXT") {
+        addToken(
+          { tokenType: "TEXT", values: [lastToken.values[0]] },
+          { tokenType: "TEXT", values: [""] },
+        );
+        setFocusToken(soFar.length + 2);
+        setSearchOpen(false);
+        setHighlightToken(null);
+      }
     }
   }
 
