@@ -134,11 +134,11 @@ export function SearchQueryInput() {
     null,
   );
 
+  const soFar = searchQuery.filter((e, i) => i !== focusToken);
+  const addToken = (...searchTokens: SearchToken[]) => {
+    setSearchQuery([...soFar, ...searchTokens]);
+  };
   function handleAddSuggestion(suggestion: SuggestionResult) {
-    const soFar = searchQuery.filter((e, i) => i !== focusToken);
-    const addToken = (searchToken: SearchToken) => {
-      setSearchQuery([...soFar, searchToken]);
-    };
     const searchToken = mapSuggestionToSearchToken(suggestion);
     switch (suggestion.tokenType) {
       case "DATASOURCE": {
@@ -174,6 +174,17 @@ export function SearchQueryInput() {
       if (nextSugg) setHighlightToken(nextSugg);
     } else if (e.key === "Enter") {
       if (highlightToken) handleAddSuggestion(highlightToken);
+    } else if (e.key === " ") {
+      const lastToken = searchQuery[searchQuery.length - 1];
+      if (lastToken && lastToken.tokenType === "TEXT") {
+        addToken(
+          { tokenType: "TEXT", values: [lastToken.values[0]] },
+          { tokenType: "TEXT", values: [""] },
+        );
+        setFocusToken(soFar.length + 2);
+        setSearchOpen(false);
+        setHighlightToken(null);
+      }
     }
   }
 

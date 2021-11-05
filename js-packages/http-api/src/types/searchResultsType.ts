@@ -27,11 +27,9 @@ export type GenericResultItem<E = {}> = {
     tenantId: number;
     datasourceId: number;
     entities?: Array<{
-      entityType: string,
-      context: DeepKeys<
-        Without<GenericResultItem<E>["source"], "entities">
-      >[];
-      id: number;
+      entityType: string;
+      context: DeepKeys<Without<GenericResultItem<E>["source"], "entities">>[];
+      id: string;
     }>;
   } & E;
   highlight: {

@@ -72,19 +72,16 @@ export function Main({ children, templates, interactions }: MainProps) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const suggestionsRef = React.useRef<HTMLInputElement | null>(null);
   const results = useInfiniteResults(searchQuery);
-  const debouncedSearchQuery: SearchQuery = useDebounce(
-    React.useMemo(
-      () =>
-        text
-          ? [
-              ...tokens,
-              ...selectedTabTokens,
-              { tokenType: "TEXT", values: [text] },
-            ]
-          : [...tokens, ...selectedTabTokens],
-      [text, tokens, selectedTabTokens],
-    ),
-    500,
+  const debouncedSearchQuery: SearchQuery = React.useMemo(
+    () =>
+      text
+        ? [
+            ...tokens,
+            ...selectedTabTokens,
+            { tokenType: "TEXT", values: [text] },
+          ]
+        : [...tokens, ...selectedTabTokens],
+    [text, tokens, selectedTabTokens],
   );
   const suggestions = useInfiniteSuggestions(
     showSuggestions ? debouncedSearchQuery : null,
@@ -331,6 +328,19 @@ export function Main({ children, templates, interactions }: MainProps) {
                   );
                   updateSearch();
                 }
+                break;
+              }
+              case " ": {
+                addToken({ tokenType: "TEXT", values: [text] });
+                setState(
+                  (state): State => ({
+                    ...state,
+                    text: "",
+                    selectedSuggestion: null,
+                    showSuggestions: false,
+                  }),
+                );
+                updateSearch();
                 break;
               }
               case "Escape": {
