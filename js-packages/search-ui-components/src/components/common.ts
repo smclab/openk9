@@ -43,7 +43,7 @@ export const mapSuggestionToSearchToken = (
         tokenType: "ENTITY",
         keywordKey: suggestion.keywordKey,
         entityType: suggestion.entityType,
-        values: [Number(suggestion.value)],
+        values: [suggestion.value],
       };
     }
     case "TEXT": {
@@ -94,8 +94,8 @@ export function useSuggestionCategories(loginInfo: LoginInfo | null) {
   });
 }
 
-export function useEntity(entity: { type: string; id: number } | null) {
-  const { type = "", id = NaN } = entity || {};
+export function useEntity(entity: { type: string; id: string } | null) {
+  const { type = "", id = "" } = entity || {};
   return useQuery(
     ["entity", type, id] as const,
     async ({ queryKey }) => {

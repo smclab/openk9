@@ -117,7 +117,7 @@ export function AtomTokenDisplay({
 
   const { data: entity } = useEntity(
     token.tokenType === "ENTITY"
-      ? { type: token.tokenType, id: token.values[0] }
+      ? { type: token.entityType, id: token.values[0] }
       : null,
   );
 
