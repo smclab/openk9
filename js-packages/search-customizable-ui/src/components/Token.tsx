@@ -1,7 +1,7 @@
 import React from "react";
-import { doSearchEntities, SearchToken } from "@openk9/http-api";
-import { useQuery } from "react-query";
+import { SearchToken } from "@openk9/http-api";
 import { OpenK9UIInteractions } from "../api";
+import { useEntity } from "@openk9/search-ui-components";
 
 const tokenStyle: React.CSSProperties = {
   marginRight: "8px",
@@ -103,15 +103,10 @@ function EntityTokenComponent({
 }: {
   token: Extract<SearchToken, { tokenType: "ENTITY" }>;
 }) {
-  const { data: entity } = useQuery(
-    ["entity", token.entityType, token.values[0]] as const,
-    async ({ queryKey }) => {
-      const [, type, entityId] = queryKey;
-      const found = await doSearchEntities({ type, entityId }, null);
-      if (found.result.length === 1) return found.result[0];
-      else throw new Error();
-    },
-  );
+  const { data: entity } = useEntity({
+    type: token.entityType,
+    id: token.values[0],
+  });
   return (
     <span style={tokenStyle}>
       {token.keywordKey ? (

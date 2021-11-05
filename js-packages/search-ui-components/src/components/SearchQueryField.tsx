@@ -22,6 +22,7 @@ import { createUseStyles } from "react-jss";
 import { ThemeType } from "../theme";
 import { SearchQuery, SearchToken } from "@openk9/http-api";
 import { mergeRefs } from "../utils";
+import { useEntity } from ".";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   inputCont: {
@@ -114,6 +115,14 @@ export function AtomTokenDisplay({
     [token, onTokenDelete],
   );
 
+  const { data: entity } = useEntity(
+    token.tokenType === "ENTITY"
+      ? { type: token.tokenType, id: token.values[0] }
+      : null,
+  );
+
+  const label = entity ? entity.name : token.values[0];
+
   return (
     <div
       className={clsx(classes.token, focused && classes.selectedToken)}
@@ -123,7 +132,7 @@ export function AtomTokenDisplay({
       onFocus={onFocus}
       onClick={onFocus as any}
     >
-      {token.values[0]}
+      {label}
     </div>
   );
 }
