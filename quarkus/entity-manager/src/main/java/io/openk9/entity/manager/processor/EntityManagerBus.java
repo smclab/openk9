@@ -64,155 +64,158 @@ public class EntityManagerBus {
 
 		_disposable = _many
 			.asFlux()
-			.flatMap(request -> Mono.defer(() -> {
+			.flatMap(request ->
+				Mono.defer(() -> {
 
-			EntityManagerRequest payload = request.getPayload();
+					EntityManagerRequest payload = request.getPayload();
 
-			long tenantId = payload.getTenantId();
-			String ingestionId = payload.getIngestionId();
-			List<EntityRequest> entities = request.getEntities();
+					_log.info("process ingestionId: " + payload.getIngestionId());
 
-			Map<EntityKey, Entity> localEntityMap =
-				new HashMap<>(entities.size());
+					long tenantId = payload.getTenantId();
+					String ingestionId = payload.getIngestionId();
+					List<EntityRequest> entities = request.getEntities();
 
-			Map<IngestionKey, Collection<? extends String>> entityContextMap =
-				new HashMap<>();
+					Map<EntityKey, Entity> localEntityMap =
+						new HashMap<>(entities.size());
 
-			Map<IngestionKey, Entity> ingestionMap = new HashMap<>();
+					Map<IngestionKey, Collection<? extends String>> entityContextMap =
+						new HashMap<>();
 
-			for (EntityRequest entityRequest : entities) {
+					Map<IngestionKey, Entity> ingestionMap = new HashMap<>();
 
-				String name = entityRequest.getName();
-				String type = entityRequest.getType();
+					for (EntityRequest entityRequest : entities) {
 
-				EntityKey key = EntityKey.of(tenantId, name, type);
+						String name = entityRequest.getName();
+						String type = entityRequest.getType();
 
-				Entity entity;
+						EntityKey key = EntityKey.of(tenantId, name, type);
 
-				boolean lock = _entityMap.tryLock(key);
+						Entity entity;
 
-				if (lock) {
+						boolean lock = _entityMap.tryLock(key);
 
-					try {
-						entity = _entityMap.get(key);
+						if (lock) {
 
-						if (entity == null) {
-							long cacheId = _entityFlakeId.newId();
-							entity = new Entity(null, cacheId, tenantId, name, type);
-							_entityMap.set(key, entity);
+							try {
+								entity = _entityMap.get(key);
+
+								if (entity == null) {
+									long cacheId = _entityFlakeId.newId();
+									entity = new Entity(null, cacheId, tenantId, name, type);
+									_entityMap.set(key, entity);
+								}
+
+								localEntityMap.put(key, entity);
+
+							}
+							finally {
+								_entityMap.forceUnlock(key);
+							}
+
+							IngestionKey ingestionKey = IngestionKey.of(
+								entity.getCacheId(),
+								ingestionId,
+								tenantId);
+
+							for (String c : entityRequest.getContext()) {
+
+								Collection<String> entityContextList =
+									(Collection<String>)entityContextMap.computeIfAbsent(
+										ingestionKey, k -> new ArrayList<>());
+
+								entityContextList.add(c);
+
+							}
+
+							ingestionMap.put(ingestionKey, entity);
+
+							for (EntityRequest entityRequest2 : entities) {
+
+								for (RelationRequest relation : entityRequest2.getRelations()) {
+									if (relation.getTo().equals(entityRequest.getTmpId())) {
+										relation.setTo(entity.getCacheId());
+									}
+								}
+
+							}
+
+						}
+						else {
+					/*
+					_restEntityMultiMap.put(
+						 key, new Entity(null, null, tenantId, name, type));
+					*/
+
 						}
 
-						localEntityMap.put(key, entity);
-
-					}
-					finally {
-						_entityMap.forceUnlock(key);
 					}
 
-					IngestionKey ingestionKey = IngestionKey.of(
-						entity.getCacheId(),
-						ingestionId,
-						tenantId);
+					Map<EntityRelationKey, EntityRelation> localEntityRelationMap =
+						new HashMap<>();
 
-					for (String c : entityRequest.getContext()) {
+					for (EntityRequest entity : entities) {
 
-						Collection<String> entityContextList =
-							(Collection<String>)entityContextMap.computeIfAbsent(
-								ingestionKey, k -> new ArrayList<>());
+						List<RelationRequest> relations = entity.getRelations();
 
-						entityContextList.add(c);
+						if (relations == null || relations.isEmpty()) {
+							continue;
+						}
 
-					}
+						Collection<Entity> values = localEntityMap.values();
 
-					ingestionMap.put(ingestionKey, entity);
+						Entity current =
+							values
+								.stream()
+								.filter(e -> e.getName().equals(entity.getName()) &&
+											 e.getType().equals(entity.getType()))
+								.findFirst()
+								.orElse(null);
 
-					for (EntityRequest entityRequest2 : entities) {
+						if (current == null) {
+							continue;
+						}
 
-						for (RelationRequest relation : entityRequest2.getRelations()) {
-							if (relation.getTo().equals(entityRequest.getTmpId())) {
-								relation.setTo(entity.getCacheId());
+						for (RelationRequest relation : relations) {
+
+							Long to = relation.getTo();
+							String name = relation.getName();
+
+							for (Entity value : values) {
+								if (value.getCacheId().equals(to)) {
+									long entityRelationId = _entityRelationFlakeId.newId();
+
+									EntityRelation entityRelation = new EntityRelation(
+										entityRelationId, current.getCacheId(), ingestionId,
+										name, value.getCacheId());
+
+									localEntityRelationMap.put(
+										EntityRelationKey.of(
+											entityRelationId,
+											current.getCacheId()
+										),
+										entityRelation
+									);
+								}
 							}
 						}
-
 					}
 
-				}
-				else {
-			/*
-			_restEntityMultiMap.put(
-				 key, new Entity(null, null, tenantId, name, type));
-			*/
+					CompletionStage<Void> future1 =
+						_entityContextMultiMap.putAllAsync(entityContextMap);
+					CompletionStage<Void> future3 =
+						_ingestionMap.setAllAsync(ingestionMap);
+					CompletionStage<Void> future4 =
+						_entityRelationMap.setAllAsync(localEntityRelationMap);
 
-				}
+					CompletableFuture<?>[] completableFutures = Stream
+						.of(future1, future3, future4)
+						.map(CompletionStage::toCompletableFuture)
+						.toArray(CompletableFuture<?>[]::new);
 
-			}
-
-			Map<EntityRelationKey, EntityRelation> localEntityRelationMap =
-				new HashMap<>();
-
-			for (EntityRequest entity : entities) {
-
-				List<RelationRequest> relations = entity.getRelations();
-
-				if (relations == null || relations.isEmpty()) {
-					continue;
-				}
-
-				Collection<Entity> values = localEntityMap.values();
-
-				Entity current =
-					values
-						.stream()
-						.filter(e -> e.getName().equals(entity.getName()) &&
-									 e.getType().equals(entity.getType()))
-						.findFirst()
-						.orElse(null);
-
-				if (current == null) {
-					continue;
-				}
-
-				for (RelationRequest relation : relations) {
-
-					Long to = relation.getTo();
-					String name = relation.getName();
-
-					for (Entity value : values) {
-						if (value.getCacheId().equals(to)) {
-							long entityRelationId = _entityRelationFlakeId.newId();
-
-							EntityRelation entityRelation = new EntityRelation(
-								entityRelationId, current.getCacheId(), ingestionId,
-								name, value.getCacheId());
-
-							localEntityRelationMap.put(
-								EntityRelationKey.of(
-									entityRelationId,
-									current.getCacheId()
-								),
-								entityRelation
-							);
-						}
-					}
-				}
-			}
-
-			CompletionStage<Void> future1 =
-				_entityContextMultiMap.putAllAsync(entityContextMap);
-			CompletionStage<Void> future3 =
-				_ingestionMap.setAllAsync(ingestionMap);
-			CompletionStage<Void> future4 =
-				_entityRelationMap.setAllAsync(localEntityRelationMap);
-
-			CompletableFuture<?>[] completableFutures = Stream
-				.of(future1, future3, future4)
-				.map(CompletionStage::toCompletableFuture)
-				.toArray(CompletableFuture<?>[]::new);
-
-			return Mono.fromCompletionStage(
-				CompletableFuture.allOf(completableFutures));
-			}))
-			.subscribeOn(Schedulers.boundedElastic())
+					return Mono.fromCompletionStage(
+						CompletableFuture.allOf(completableFutures));
+				}).subscribeOn(Schedulers.boundedElastic())
+			)
 			.subscribe();
 
 	}
