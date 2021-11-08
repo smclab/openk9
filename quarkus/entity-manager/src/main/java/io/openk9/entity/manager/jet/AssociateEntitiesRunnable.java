@@ -19,6 +19,8 @@ public class AssociateEntitiesRunnable
 	@Override
 	public void run() {
 
+		_log.info("start AssociateEntitiesRunnable");
+
 		IMap<IngestionKey, IngestionEntity> ingestionMap =
 			MapUtil.getIngestionMap(_hazelcastInstance);
 

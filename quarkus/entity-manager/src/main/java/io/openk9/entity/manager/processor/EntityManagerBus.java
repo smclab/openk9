@@ -4,7 +4,6 @@ import com.hazelcast.collection.IQueue;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.map.IMap;
-import com.hazelcast.multimap.MultiMap;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.EntityRelation;
@@ -35,7 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 @ApplicationScoped
-public class EntityManagerBus implements Runnable {
+public class EntityManagerBus {
 
 	public EntityManagerBus(HazelcastInstance hazelcastInstance) {
 		_entityFlakeId = hazelcastInstance.getFlakeIdGenerator(
@@ -43,7 +42,6 @@ public class EntityManagerBus implements Runnable {
 		_entityRelationFlakeId = hazelcastInstance.getFlakeIdGenerator(
 			"entityRelationFlakeId");
 		_entityMap = MapUtil.getEntityMap(hazelcastInstance);
-		_restEntityMultiMap = MapUtil.getRestEntityMultiMap(hazelcastInstance);
 		_entityRelationMap = MapUtil.getEntityRelationMap(hazelcastInstance);
 		_ingestionMap = MapUtil.getIngestionMap(hazelcastInstance);
 		_entityManagerQueue = hazelcastInstance.getQueue(
@@ -53,7 +51,7 @@ public class EntityManagerBus implements Runnable {
 	@PostConstruct
 	public void afterCreate() {
 		_executorService = Executors.newSingleThreadExecutor();
-		_executorService.execute(this);
+		_executorService.execute(this::run);
 	}
 
 	@PreDestroy
@@ -62,9 +60,10 @@ public class EntityManagerBus implements Runnable {
 	}
 
 	@SneakyThrows
-	@Override
 	public void run() {
 		while (true) {
+
+			_log.info("START take");
 
 			Payload request = _entityManagerQueue.take();
 
@@ -215,7 +214,6 @@ public class EntityManagerBus implements Runnable {
 	private final FlakeIdGenerator _entityFlakeId;
 	private final FlakeIdGenerator _entityRelationFlakeId;
 	private final IMap<EntityKey, Entity> _entityMap;
-	private final MultiMap<EntityKey, Entity> _restEntityMultiMap;
 	private final IMap<IngestionKey, IngestionEntity> _ingestionMap;
 	private final IMap<EntityRelationKey, EntityRelation> _entityRelationMap;
 	private final IQueue<Payload> _entityManagerQueue;

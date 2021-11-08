@@ -22,6 +22,8 @@ public class CreateEntitiesRunnable
 	@Override
 	public void run() {
 
+		_log.info("start CreateEntitiesRunnable");
+
 		IMap<EntityKey, Entity> entityIMap =
 			MapUtil.getEntityMap(_hazelcastInstance);
 

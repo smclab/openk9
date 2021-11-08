@@ -15,6 +15,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -47,10 +48,11 @@ public class EntityManagerConsumer {
 	@Incoming("entity-manager-request")
 	@Outgoing("index-writer")
 	@Blocking
-	public byte[] consume(byte[] bytes) {
+	public byte[] consume(byte[] bytes) throws InterruptedException {
 
 		_entityManagerQueue.offer(
-			new JsonObject(new String(bytes)).mapTo(Payload.class));
+			new JsonObject(new String(bytes)).mapTo(Payload.class),
+			45, TimeUnit.SECONDS);
 
 		return bytes;
 
