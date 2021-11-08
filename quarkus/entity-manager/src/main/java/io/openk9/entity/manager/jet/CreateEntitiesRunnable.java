@@ -12,12 +12,13 @@ import io.openk9.entity.manager.util.MapUtil;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class CreateEntitiesRunnable
-	implements Runnable, HazelcastInstanceAware {
+	implements Runnable, HazelcastInstanceAware, Serializable {
 
 	@Override
 	public void run() {
