@@ -4,6 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.scheduledexecutor.IScheduledExecutorService;
 import io.openk9.entity.manager.service.DataService;
 import io.openk9.entity.manager.service.EntityService;
+import io.quarkus.runtime.Startup;
 import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -13,6 +14,7 @@ import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
+@Startup
 public class DisambiguationComponent {
 
 	@PostConstruct

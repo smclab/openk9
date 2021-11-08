@@ -15,6 +15,7 @@ import io.openk9.entity.manager.dto.EntityRequest;
 import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.MapUtil;
+import io.quarkus.runtime.Startup;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.jboss.logging.Logger;
 
@@ -33,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 @ApplicationScoped
+@Startup
 public class EntityManagerBus {
 
 	@PostConstruct
