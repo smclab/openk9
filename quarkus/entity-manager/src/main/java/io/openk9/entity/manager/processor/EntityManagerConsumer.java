@@ -11,7 +11,6 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -22,7 +21,8 @@ import java.util.stream.Collectors;
 @Path("/")
 public class EntityManagerConsumer {
 
-	public EntityManagerConsumer() {
+	public EntityManagerConsumer(HazelcastInstance hazelcastInstance) {
+		_hazelcastInstance = hazelcastInstance;
 		_entityManagerQueue = _hazelcastInstance.getQueue(
 			"entityManagerQueue");
 	}
@@ -56,7 +56,6 @@ public class EntityManagerConsumer {
 
 	}
 
-	@Inject
 	HazelcastInstance _hazelcastInstance;
 
 	private final IQueue<Payload> _entityManagerQueue;
