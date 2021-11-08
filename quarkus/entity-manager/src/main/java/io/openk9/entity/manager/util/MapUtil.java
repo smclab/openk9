@@ -7,6 +7,7 @@ import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.EntityRelation;
 import io.openk9.entity.manager.cache.model.EntityRelationKey;
+import io.openk9.entity.manager.cache.model.IngestionEntity;
 import io.openk9.entity.manager.cache.model.IngestionKey;
 
 public class MapUtil {
@@ -31,7 +32,7 @@ public class MapUtil {
 		return hazelcastInstance.getMultiMap("entityContextMultiMap");
 	}
 
-	public static IMap<IngestionKey, Entity> getIngestionMap(
+	public static IMap<IngestionKey, IngestionEntity> getIngestionMap(
 		HazelcastInstance hazelcastInstance) {
 		return hazelcastInstance.getMap("ingestionMap");
 	}

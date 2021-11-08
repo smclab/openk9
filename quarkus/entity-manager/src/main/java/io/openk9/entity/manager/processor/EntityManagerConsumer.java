@@ -1,9 +1,11 @@
 package io.openk9.entity.manager.processor;
 
+import com.hazelcast.collection.IQueue;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.impl.MapService;
 import io.openk9.entity.manager.dto.Payload;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
@@ -20,6 +22,10 @@ import java.util.stream.Collectors;
 @Path("/")
 public class EntityManagerConsumer {
 
+	public EntityManagerConsumer() {
+		_entityManagerQueue = _hazelcastInstance.getQueue(
+			"entityManagerQueue");
+	}
 
 	@GET
 	@Path("/map/{mapName}")
@@ -40,9 +46,10 @@ public class EntityManagerConsumer {
 
 	@Incoming("entity-manager-request")
 	@Outgoing("index-writer")
+	@Blocking
 	public byte[] consume(byte[] bytes) {
 
-		_entityManagerBus.emit(
+		_entityManagerQueue.offer(
 			new JsonObject(new String(bytes)).mapTo(Payload.class));
 
 		return bytes;
@@ -50,9 +57,8 @@ public class EntityManagerConsumer {
 	}
 
 	@Inject
-	EntityManagerBus _entityManagerBus;
-
-	@Inject
 	HazelcastInstance _hazelcastInstance;
+
+	private final IQueue<Payload> _entityManagerQueue;
 
 }

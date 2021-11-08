@@ -5,13 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
-public class EntityManagerRequest {
+public class EntityManagerRequest implements Serializable {
 	private long tenantId;
 	private String ingestionId;
 }

@@ -1,6 +1,6 @@
 package io.openk9.entity.manager.service;
 
-import io.openk9.entity.manager.cache.model.Entity;
+import io.openk9.entity.manager.cache.model.IngestionEntity;
 import io.openk9.entity.manager.model.DataEntityIndex;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -19,13 +19,12 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.Collection;
 
 @ApplicationScoped
 public class DataService {
 
 	public boolean associateEntity(
-		long tenantId, String ingestionId, Entity entity, Collection<String> context)
+		long tenantId, String ingestionId, IngestionEntity entity)
 		throws IOException {
 
 		MatchQueryBuilder query =
@@ -45,7 +44,8 @@ public class DataService {
 			}
 
 			entities.add(JsonObject.mapFrom(
-				DataEntityIndex.of(entity.getCacheId(), entity.getType(), context)
+				DataEntityIndex.of(
+					entity.getCacheId(), entity.getType(), entity.getContext())
 			));
 
 			dataDocument.put("entities", entities);

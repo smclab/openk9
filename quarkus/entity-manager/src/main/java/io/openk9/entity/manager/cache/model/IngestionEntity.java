@@ -11,21 +11,37 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.IOException;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class EntityWithRelation implements IdentifiedDataSerializable {
+public class IngestionEntity implements IdentifiedDataSerializable, Comparable<IngestionEntity> {
 	private Long id;
 	@EqualsAndHashCode.Include
 	private Long cacheId;
 	private Long tenantId;
-	private Long tmpId;
-	private String ingestionId;
 	private String name;
 	private String type;
+	private List<String> context;
+
+	@Override
+	public int compareTo(IngestionEntity other) {
+		IngestionEntity p1 = this;
+		int res = String.CASE_INSENSITIVE_ORDER.compare(
+			p1.getName(), other.getName());
+		if (res != 0) {
+			return res;
+		}
+		res = String.CASE_INSENSITIVE_ORDER.compare(
+			p1.getType(), other.getType());
+		if (res != 0) {
+			return res;
+		}
+		return Long.compare(p1.getTenantId(), other.getTenantId());
+	}
 
 	@Override
 	public int getFactoryId() {
@@ -34,7 +50,7 @@ public class EntityWithRelation implements IdentifiedDataSerializable {
 
 	@Override
 	public int getClassId() {
-		return EntityManagerDataSerializableFactory.ENTITY_WITH_RELATION_TYPE;
+		return EntityManagerDataSerializableFactory.ENTITY_TYPE;
 	}
 
 	@Override
@@ -42,10 +58,9 @@ public class EntityWithRelation implements IdentifiedDataSerializable {
 		out.writeObject(id);
 		out.writeObject(cacheId);
 		out.writeObject(tenantId);
-		out.writeObject(tmpId);
-		out.writeString(ingestionId);
 		out.writeString(name);
 		out.writeString(type);
+		out.writeObject(context);
 	}
 
 	@Override
@@ -53,9 +68,21 @@ public class EntityWithRelation implements IdentifiedDataSerializable {
 		id = in.readObject();
 		cacheId = in.readObject();
 		tenantId = in.readObject();
-		tmpId = in.readObject();
-		ingestionId = in.readString();
 		name = in.readString();
 		type = in.readString();
+		context = in.readObject();
 	}
+
+	public static IngestionEntity fromEntity(
+		Entity entity, List<String> context) {
+		return new IngestionEntity(
+			entity.getId(),
+			entity.getCacheId(),
+			entity.getTenantId(),
+			entity.getName(),
+			entity.getType(),
+			context
+		);
+	}
+
 }

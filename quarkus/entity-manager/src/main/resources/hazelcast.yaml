@@ -577,6 +577,9 @@ hazelcast:
     # differentiate two same classes that have changes on it like adding/removing
     # field or changing a type of a field.
     serialization:
+        data-serializable-factories:
+            - factory-id: 1
+              class-name: io.openk9.entity.manager.cache.EntityManagerDataSerializableFactory
         portable-version: 0
 
     cardinality-estimator:

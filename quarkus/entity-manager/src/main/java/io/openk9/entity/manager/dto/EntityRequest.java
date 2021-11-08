@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class EntityRequest {
+public class EntityRequest implements Serializable {
 	@EqualsAndHashCode.Include
 	private String name;
 	@EqualsAndHashCode.Include

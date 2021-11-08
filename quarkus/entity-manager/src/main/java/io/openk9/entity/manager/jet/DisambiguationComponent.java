@@ -1,52 +1,55 @@
 package io.openk9.entity.manager.jet;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.IMap;
-import com.hazelcast.query.Predicates;
-import io.openk9.entity.manager.cache.model.Entity;
-import io.openk9.entity.manager.cache.model.EntityKey;
-import io.openk9.entity.manager.cache.model.IngestionKey;
+import com.hazelcast.scheduledexecutor.IScheduledExecutorService;
 import io.openk9.entity.manager.service.DataService;
 import io.openk9.entity.manager.service.EntityService;
-import io.openk9.entity.manager.util.MapUtil;
-import io.quarkus.scheduler.Scheduled;
 import org.jboss.logging.Logger;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
 public class DisambiguationComponent {
 
-	@Scheduled(every="20s")
-	public void createEntities() {
+	@PostConstruct
+	public void init() {
 
-		IMap<EntityKey, Entity> entityIMap =
-			MapUtil.getEntityMap(_hazelcastInstance);
+		IScheduledExecutorService createEntities =
+			_hazelcastInstance.getScheduledExecutorService(
+				"createEntities");
 
-		Set<EntityKey> entityKeys = entityIMap.localKeySet(
-			Predicates.equal("id", null));
+		createEntities.scheduleOnAllMembersAtFixedRate(
+			new CreateEntitiesRunnable(), 0, 60, TimeUnit.SECONDS
+		);
 
-		entityIMap.executeOnKeys(
-			entityKeys, new IndexEntityEntryProcessor());
+		IScheduledExecutorService associateEntities =
+			_hazelcastInstance.getScheduledExecutorService(
+				"associateEntities");
+
+		associateEntities.scheduleOnAllMembersAtFixedRate(
+			new AssociateEntitiesRunnable(), 60, 60, TimeUnit.SECONDS
+		);
 
 	}
 
-	@Scheduled(every="30s")
-	public void associateEntities() {
+	@PreDestroy
+	public void destroy() {
 
-		IMap<IngestionKey, Entity> ingestionMap =
-			MapUtil.getIngestionMap(_hazelcastInstance);
+		IScheduledExecutorService createEntities =
+			_hazelcastInstance.getScheduledExecutorService(
+				"createEntities");
 
-		Set<IngestionKey> entityKeys = ingestionMap.localKeySet(
-			Predicates.notEqual("this", null));
+		createEntities.shutdown();
 
-		ingestionMap.executeOnKeys(
-			entityKeys, new AssociateEntityEntryProcessor());
+		IScheduledExecutorService associateEntities =
+			_hazelcastInstance.getScheduledExecutorService(
+				"associateEntities");
 
-		ingestionMap.removeAll(Predicates.equal("this", null));
-
+		associateEntities.shutdown();
 	}
 
 	@Inject
