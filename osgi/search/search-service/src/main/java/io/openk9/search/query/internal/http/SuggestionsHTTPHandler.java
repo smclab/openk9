@@ -85,13 +85,11 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 	@interface Config {
 		String[] datasourceFieldAggregations() default {"topic", "category"};
-		int aggregationSize() default 20;
 	}
 	@Activate
 	@Modified
 	void activate(Config config) {
 		_datasourceFieldAggregations = config.datasourceFieldAggregations();
-		_aggregationSize = config.aggregationSize();
 	}
 
 	@Override
@@ -292,11 +290,17 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 								String key = entry.getKey();
 								String value = (String)entry.getValue();
 
+								if (value == null) {
+									continue;
+								}
+
 								switch (key) {
 									case "datasourceId":
+
 										long datasourceIdL = Long.parseLong(value);
 
-										_datasource(datasourceList,
+										_datasource(
+											datasourceList,
 											pluginDriverDTOList,
 											datasourceIdCategoryId,
 											suggestions, datasourceIdL);
@@ -343,12 +347,11 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 											fieldNameCategoryIdMap.getOrDefault(
 												key, 5L);
 
-										if (value != null) {
-											suggestions.add(
-												Suggestions.text(
-													value, textCategoryId, key)
-											);
-										}
+										suggestions.add(
+											Suggestions.text(
+												value, textCategoryId, key)
+										);
+
 								}
 							}
 						}
@@ -456,9 +459,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	}
 
 	private String[] _datasourceFieldAggregations;
-	private int _aggregationSize;
-
-	private static final String[] _EMPTY_ARRAY = new String[]{"", ""};
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		SuggestionsHTTPHandler.class);
