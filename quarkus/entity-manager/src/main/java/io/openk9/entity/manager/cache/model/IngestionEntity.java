@@ -50,7 +50,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 
 	@Override
 	public int getClassId() {
-		return EntityManagerDataSerializableFactory.ENTITY_TYPE;
+		return EntityManagerDataSerializableFactory.INGESTION_ENTITY_TYPE;
 	}
 
 	@Override
