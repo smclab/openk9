@@ -65,11 +65,11 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -278,8 +278,29 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						List<? extends CompositeAggregation.Bucket> buckets =
 							compositeAggregation.getBuckets();
 
-						Set<Suggestions> suggestions =
-							new LinkedHashSet<>(buckets.size());
+						LinkedList<Suggestions> suggestions =
+							new LinkedList<>();
+
+						String suggestKeyword =
+							searchRequest.getSuggestKeyword();
+
+						BiConsumer<String, Suggestions> addSuggestions;
+
+						if (suggestKeyword != null) {
+							addSuggestions = (key, sugg) -> {
+								if (key.contains(suggestKeyword)) {
+									suggestions.addFirst(sugg);
+								}
+								else {
+									suggestions.addLast(sugg);
+								}
+							};
+						}
+						else {
+							addSuggestions = (key, sugg) ->
+								suggestions.add(sugg);
+						}
+
 
 						for (CompositeAggregation.Bucket bucket : buckets) {
 
@@ -303,7 +324,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 											datasourceList,
 											pluginDriverDTOList,
 											datasourceIdCategoryId,
-											suggestions, datasourceIdL);
+											addSuggestions, datasourceIdL);
 
 										break;
 									case "entities.context":
@@ -319,7 +340,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 												(String)keys.get("entities.context");
 
 											if (entitiesContext != null) {
-												suggestions.add(
+												addSuggestions.accept(
+													name,
 													Suggestions.entity(
 														value,
 														entitiesContextCategoryId,
@@ -327,7 +349,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 												);
 											}
 											else {
-												suggestions.add(
+												addSuggestions.accept(
+													name,
 													Suggestions.entity(
 														value, entityIdCategoryId,
 														type, name)
@@ -336,7 +359,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 										}
 										break;
 									case "documentTypes":
-										suggestions.add(
+										addSuggestions.accept(
+											value,
 											Suggestions.docType(
 												value,
 												documentTypesCategoryId)
@@ -347,8 +371,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 											fieldNameCategoryIdMap.getOrDefault(
 												key, 5L);
 
-										suggestions.add(
-											Suggestions.text(
+										addSuggestions.accept(
+											value, Suggestions.text(
 												value, textCategoryId, key)
 										);
 
@@ -373,7 +397,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	private void _datasource(
 		List<Datasource> datasourceList,
 		PluginDriverDTOList pluginDriverDTOList, Long datasourceIdCategoryId,
-		Set<Suggestions> suggestions, long datasourceIdL) {
+		BiConsumer<String, Suggestions> addSuggestions, long datasourceIdL) {
 
 		for1:for (Datasource datasource : datasourceList) {
 
@@ -392,7 +416,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 								datasource
 									.getDriverServiceName())
 					) {
-						suggestions.add(
+						addSuggestions.accept(
+							pluginDriverDTO.getName(),
 							Suggestions.datasource(
 								pluginDriverDTO.getName(),
 								datasourceIdCategoryId));

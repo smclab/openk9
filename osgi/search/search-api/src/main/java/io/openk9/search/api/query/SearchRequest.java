@@ -26,4 +26,5 @@ public class SearchRequest {
 	private List<SearchToken> searchQuery;
 	private int[] range;
 	private String afterKey;
+	private String suggestKeyword;
 }
