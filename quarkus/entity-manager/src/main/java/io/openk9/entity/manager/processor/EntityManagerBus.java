@@ -15,7 +15,6 @@ import io.openk9.entity.manager.dto.EntityRequest;
 import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.MapUtil;
-import lombok.SneakyThrows;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.jboss.logging.Logger;
 
@@ -36,20 +35,17 @@ import java.util.stream.Stream;
 @ApplicationScoped
 public class EntityManagerBus {
 
-	public EntityManagerBus(HazelcastInstance hazelcastInstance) {
-		_entityFlakeId = hazelcastInstance.getFlakeIdGenerator(
-			"entityFlakeId");
-		_entityRelationFlakeId = hazelcastInstance.getFlakeIdGenerator(
-			"entityRelationFlakeId");
-		_entityMap = MapUtil.getEntityMap(hazelcastInstance);
-		_entityRelationMap = MapUtil.getEntityRelationMap(hazelcastInstance);
-		_ingestionMap = MapUtil.getIngestionMap(hazelcastInstance);
-		_entityManagerQueue = hazelcastInstance.getQueue(
-			"entityManagerQueue");
-	}
-
 	@PostConstruct
 	public void afterCreate() {
+		_entityFlakeId = _hazelcastInstance.getFlakeIdGenerator(
+			"entityFlakeId");
+		_entityRelationFlakeId = _hazelcastInstance.getFlakeIdGenerator(
+			"entityRelationFlakeId");
+		_entityMap = MapUtil.getEntityMap(_hazelcastInstance);
+		_entityRelationMap = MapUtil.getEntityRelationMap(_hazelcastInstance);
+		_ingestionMap = MapUtil.getIngestionMap(_hazelcastInstance);
+		_entityManagerQueue = _hazelcastInstance.getQueue(
+			"entityManagerQueue");
 		_executorService = Executors.newSingleThreadExecutor();
 		_executorService.execute(this::run);
 	}
@@ -59,13 +55,18 @@ public class EntityManagerBus {
 		_executorService.shutdown();
 	}
 
-	@SneakyThrows
 	public void run() {
 		while (true) {
 
 			_log.info("START take");
 
-			Payload request = _entityManagerQueue.take();
+			Payload request = null;
+			try {
+				request = _entityManagerQueue.take();
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
 
 			EntityManagerRequest payload = request.getPayload();
 
@@ -211,13 +212,17 @@ public class EntityManagerBus {
 	@Inject
 	Logger _log;
 
-	private final FlakeIdGenerator _entityFlakeId;
-	private final FlakeIdGenerator _entityRelationFlakeId;
-	private final IMap<EntityKey, Entity> _entityMap;
-	private final IMap<IngestionKey, IngestionEntity> _ingestionMap;
-	private final IMap<EntityRelationKey, EntityRelation> _entityRelationMap;
-	private final IQueue<Payload> _entityManagerQueue;
+	@Inject
+	HazelcastInstance _hazelcastInstance;
 
 	private ExecutorService _executorService;
+	private FlakeIdGenerator _entityFlakeId;
+	private FlakeIdGenerator _entityRelationFlakeId;
+	private IMap<EntityKey, Entity> _entityMap;
+	private IMap<IngestionKey, IngestionEntity> _ingestionMap;
+	private IMap<EntityRelationKey, EntityRelation> _entityRelationMap;
+	private IQueue<Payload> _entityManagerQueue;
+
+
 
 }

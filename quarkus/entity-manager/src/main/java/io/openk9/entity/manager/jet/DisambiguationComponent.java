@@ -22,7 +22,7 @@ public class DisambiguationComponent {
 			_hazelcastInstance.getScheduledExecutorService(
 				"createEntities");
 
-		createEntities.scheduleOnAllMembersAtFixedRate(
+		createEntities.scheduleAtFixedRate(
 			new CreateEntitiesRunnable(), 0, 60, TimeUnit.SECONDS
 		);
 
@@ -30,7 +30,7 @@ public class DisambiguationComponent {
 			_hazelcastInstance.getScheduledExecutorService(
 				"associateEntities");
 
-		associateEntities.scheduleOnAllMembersAtFixedRate(
+		associateEntities.scheduleAtFixedRate(
 			new AssociateEntitiesRunnable(), 60, 60, TimeUnit.SECONDS
 		);
 
