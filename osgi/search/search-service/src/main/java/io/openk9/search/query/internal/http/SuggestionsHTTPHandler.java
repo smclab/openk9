@@ -288,17 +288,23 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 						if (suggestKeyword != null) {
 							addSuggestions = (key, sugg) -> {
-								if (key.contains(suggestKeyword)) {
-									suggestions.addFirst(sugg);
-								}
-								else {
-									suggestions.addLast(sugg);
+
+								if (!suggestions.contains(sugg)) {
+									if (key.contains(suggestKeyword)) {
+										suggestions.addFirst(sugg);
+									}
+									else {
+										suggestions.addLast(sugg);
+									}
 								}
 							};
 						}
 						else {
-							addSuggestions = (key, sugg) ->
-								suggestions.add(sugg);
+							addSuggestions = (key, sugg) -> {
+								if (!suggestions.contains(sugg)) {
+									suggestions.add(sugg);
+								}
+							};
 						}
 
 
