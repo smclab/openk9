@@ -284,101 +284,73 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 							new LinkedHashSet<>(buckets.size());
 
 						for (CompositeAggregation.Bucket bucket : buckets) {
+
 							Map<String, Object> keys = new HashMap<>(bucket.getKey());
 
-							String datasourceId =(String)keys.remove("datasourceId");
+							for (Map.Entry<String, Object> entry : keys.entrySet()) {
 
-							if (datasourceId != null) {
-								long datasourceIdL = Long.parseLong(datasourceId);
-								for1: for (Datasource datasource : datasourceList) {
+								String key = entry.getKey();
+								String value = (String)entry.getValue();
 
-									if (datasource
-										.getDatasourceId()
-										.equals(datasourceIdL)) {
+								switch (key) {
+									case "datasourceId":
+										long datasourceIdL = Long.parseLong(value);
 
-										for (PluginDriverDTO pluginDriverDTO :
-											pluginDriverDTOList
-												.getPluginDriverDTOList()) {
+										_datasource(datasourceList,
+											pluginDriverDTOList,
+											datasourceIdCategoryId,
+											suggestions, datasourceIdL);
 
-											if (
-												pluginDriverDTO
-													.getDriverServiceName()
-													.equals(
-														datasource
-															.getDriverServiceName())
-											) {
+										break;
+									case "entities.context":
+										break;
+									case "entities.id":
+										String[] typeName = entityMap.get(value);
+
+										if (typeName != null) {
+											String type = typeName[0];
+											String name = typeName[1];
+
+											String entitiesContext =
+												(String)keys.get("entities.context");
+
+											if (entitiesContext != null) {
 												suggestions.add(
-													Suggestions.datasource(
-														pluginDriverDTO.getName(),
-														datasourceIdCategoryId));
-
-												break for1;
-
+													Suggestions.entity(
+														value,
+														entitiesContextCategoryId,
+														type, name, entitiesContext)
+												);
 											}
-
+											else {
+												suggestions.add(
+													Suggestions.entity(
+														value, entityIdCategoryId,
+														type, name)
+												);
+											}
 										}
-
-									}
-								}
-							}
-
-							String entitiesId =(String)keys.remove("entities.id");
-							String entitiesContext =
-								(String)keys.remove("entities.context");
-
-							if (entitiesId != null) {
-
-								String[] typeName = entityMap.get(entitiesId);
-
-								if (typeName != null) {
-									String type = typeName[0];
-									String name = typeName[1];
-
-									if (entitiesContext != null) {
+										break;
+									case "documentTypes":
 										suggestions.add(
-											Suggestions.entity(
-												entitiesId,
-												entitiesContextCategoryId,
-												type, name, entitiesContext)
+											Suggestions.docType(
+												value,
+												documentTypesCategoryId)
 										);
-									}
-									else {
-										suggestions.add(
-											Suggestions.entity(
-												entitiesId, entityIdCategoryId,
-												type, name)
-										);
-									}
+										break;
+									default:
+										Long textCategoryId =
+											fieldNameCategoryIdMap.getOrDefault(
+												key, 5L);
+
+										if (value != null) {
+											suggestions.add(
+												Suggestions.text(
+													value, textCategoryId, key)
+											);
+										}
 								}
 							}
-
-							String documentTypes =(String)keys.remove("documentTypes");
-
-							if (documentTypes != null) {
-								suggestions.add(
-									Suggestions.docType(
-										documentTypes,
-										documentTypesCategoryId)
-								);
-							}
-
-							for (Map.Entry<String, Object> restEntry : keys.entrySet()) {
-								String keywordKey = restEntry.getKey();
-								String value =(String)restEntry.getValue();
-
-								Long textCategoryId =
-									fieldNameCategoryIdMap.getOrDefault(
-										keywordKey, 5L);
-
-								if (value != null) {
-									suggestions.add(
-										Suggestions.text(
-											value, textCategoryId, keywordKey)
-									);
-								}
-
-							}
-
 						}
 
 						Map<String, Object> map = compositeAggregation.afterKey();
@@ -393,6 +365,43 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						return SuggestionsResponse.of(suggestions, afterKey);
 
 					}));
+	}
+
+	private void _datasource(
+		List<Datasource> datasourceList,
+		PluginDriverDTOList pluginDriverDTOList, Long datasourceIdCategoryId,
+		Set<Suggestions> suggestions, long datasourceIdL) {
+
+		for1:for (Datasource datasource : datasourceList) {
+
+			if (datasource
+				.getDatasourceId()
+				.equals(datasourceIdL)) {
+
+				for (PluginDriverDTO pluginDriverDTO :
+					pluginDriverDTOList
+						.getPluginDriverDTOList()) {
+
+					if (
+						pluginDriverDTO
+							.getDriverServiceName()
+							.equals(
+								datasource
+									.getDriverServiceName())
+					) {
+						suggestions.add(
+							Suggestions.datasource(
+								pluginDriverDTO.getName(),
+								datasourceIdCategoryId));
+
+						break for1;
+
+					}
+
+				}
+
+			}
+		}
 	}
 
 	@Reference(
