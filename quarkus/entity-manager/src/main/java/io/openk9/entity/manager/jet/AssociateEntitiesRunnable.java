@@ -15,10 +15,10 @@ import java.util.Map;
 import java.util.Set;
 
 public class AssociateEntitiesRunnable
-	implements Runnable, HazelcastInstanceAware, Serializable {
+	implements StopWatchRunnable, HazelcastInstanceAware, Serializable {
 
 	@Override
-	public void run() {
+	public void run_() {
 
 		_log.info("start AssociateEntitiesRunnable");
 
@@ -29,6 +29,10 @@ public class AssociateEntitiesRunnable
 
 		Map<IngestionKey, IngestionEntity> localIngestionMap =
 			ingestionMap.getAll(entityKeys);
+
+		_log.info("ingestionKeys: " + entityKeys.size());
+
+		int count = 0;
 
 		for (Map.Entry<IngestionKey, IngestionEntity> entry : localIngestionMap.entrySet()) {
 
@@ -49,6 +53,7 @@ public class AssociateEntitiesRunnable
 
 				if (associated) {
 					ingestionMap.delete(k);
+					count++;
 				}
 			}
 			catch (Exception ioe) {
@@ -56,6 +61,8 @@ public class AssociateEntitiesRunnable
 			}
 
 		}
+
+		_log.info("ingestion processed: " + count);
 
 	}
 

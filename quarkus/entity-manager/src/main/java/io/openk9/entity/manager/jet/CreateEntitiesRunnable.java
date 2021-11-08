@@ -18,10 +18,10 @@ import java.util.Map;
 import java.util.Set;
 
 public class CreateEntitiesRunnable
-	implements Runnable, HazelcastInstanceAware, Serializable {
+	implements StopWatchRunnable, HazelcastInstanceAware, Serializable {
 
 	@Override
-	public void run() {
+	public void run_() {
 
 		_log.info("start CreateEntitiesRunnable");
 
@@ -32,6 +32,8 @@ public class CreateEntitiesRunnable
 			Predicates.equal("id", null));
 
 		Map<EntityKey, Entity> localEntityMap = entityIMap.getAll(entityKeys);
+
+		_log.info("entityKeys: " + entityKeys.size());
 
 		Map<EntityKey, Entity> entityToUpdate = new HashMap<>();
 
@@ -62,6 +64,7 @@ public class CreateEntitiesRunnable
 		}
 
 		if (!entityToUpdate.isEmpty()) {
+			_log.info("entities updated: " + entityToUpdate.size());
 			entityIMap.setAll(entityToUpdate);
 		}
 
