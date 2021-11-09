@@ -1,8 +1,9 @@
 package io.openk9.entity.manager.jet;
 
+import com.hazelcast.cluster.Member;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.scheduledexecutor.IScheduledExecutorService;
+import com.hazelcast.scheduledexecutor.IScheduledFuture;
 import io.openk9.entity.manager.service.DataService;
 import io.openk9.entity.manager.service.EntityService;
 import io.quarkus.runtime.Startup;
@@ -12,6 +13,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
@@ -21,48 +24,38 @@ public class DisambiguationComponent {
 	@PostConstruct
 	public void init() {
 
-		IAtomicLong schedulerAtomicLock =
-			_hazelcastInstance
-				.getCPSubsystem()
-				.getAtomicLong("schedulerAtomicLock");
-
-		long i = schedulerAtomicLock.getAndIncrement();
-
-		if (i == 0) {
-			IScheduledExecutorService createEntities =
-				_hazelcastInstance.getScheduledExecutorService(
-					"createEntities");
-
-			createEntities.scheduleOnAllMembersAtFixedRate(
-				new CreateEntitiesRunnable(), 0, 60, TimeUnit.SECONDS
-			);
-
-			IScheduledExecutorService associateEntities =
-				_hazelcastInstance.getScheduledExecutorService(
-					"associateEntities");
-
-			associateEntities.scheduleOnAllMembersAtFixedRate(
-				new AssociateEntitiesRunnable(), 60, 60, TimeUnit.SECONDS
-			);
-		}
-
-
-	}
-
-	@PreDestroy
-	public void destroy() {
+		Member localMember = _hazelcastInstance.getCluster().getLocalMember();
 
 		IScheduledExecutorService createEntities =
 			_hazelcastInstance.getScheduledExecutorService(
 				"createEntities");
 
-		createEntities.shutdown();
+		_disposableList.add(
+			createEntities.scheduleOnMemberAtFixedRate(
+				new CreateEntitiesRunnable(), localMember, 0, 60,
+				TimeUnit.SECONDS
+			)
+		);
 
 		IScheduledExecutorService associateEntities =
 			_hazelcastInstance.getScheduledExecutorService(
 				"associateEntities");
 
-		associateEntities.shutdown();
+		_disposableList.add(
+			associateEntities.scheduleOnMemberAtFixedRate(
+				new AssociateEntitiesRunnable(), localMember, 60, 60,
+				TimeUnit.SECONDS
+			)
+		);
+
+
+	}
+
+
+	@PreDestroy
+	public void destroy() {
+		_disposableList.forEach(IScheduledFuture::dispose);
+		_disposableList.clear();
 	}
 
 	@Inject
@@ -76,5 +69,7 @@ public class DisambiguationComponent {
 
 	@Inject
 	Logger _logger;
+
+	private final List<IScheduledFuture<?>> _disposableList = new ArrayList<>();
 
 }
