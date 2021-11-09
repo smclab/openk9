@@ -1,6 +1,7 @@
 package io.openk9.entity.manager.service.graph;
 
 import io.openk9.entity.manager.model.graph.EntityGraph;
+import io.quarkus.arc.Unremovable;
 import org.jboss.logging.Logger;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Values;
@@ -12,6 +13,7 @@ import javax.inject.Inject;
 import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
+@Unremovable
 public class EntityGraphService {
 
 	public CompletionStage<EntityGraph> insertEntity(
