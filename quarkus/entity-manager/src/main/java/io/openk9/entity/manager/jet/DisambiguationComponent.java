@@ -1,6 +1,7 @@
 package io.openk9.entity.manager.jet;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.cp.IAtomicLong;
 import com.hazelcast.scheduledexecutor.IScheduledExecutorService;
 import io.openk9.entity.manager.service.DataService;
 import io.openk9.entity.manager.service.EntityService;
@@ -20,21 +21,31 @@ public class DisambiguationComponent {
 	@PostConstruct
 	public void init() {
 
-		IScheduledExecutorService createEntities =
-			_hazelcastInstance.getScheduledExecutorService(
-				"createEntities");
+		IAtomicLong schedulerAtomicLock =
+			_hazelcastInstance
+				.getCPSubsystem()
+				.getAtomicLong("schedulerAtomicLock");
 
-		createEntities.scheduleAtFixedRate(
-			new CreateEntitiesRunnable(), 0, 60, TimeUnit.SECONDS
-		);
+		long i = schedulerAtomicLock.getAndIncrement();
 
-		IScheduledExecutorService associateEntities =
-			_hazelcastInstance.getScheduledExecutorService(
-				"associateEntities");
+		if (i == 0) {
+			IScheduledExecutorService createEntities =
+				_hazelcastInstance.getScheduledExecutorService(
+					"createEntities");
 
-		associateEntities.scheduleAtFixedRate(
-			new AssociateEntitiesRunnable(), 60, 60, TimeUnit.SECONDS
-		);
+			createEntities.scheduleOnAllMembersAtFixedRate(
+				new CreateEntitiesRunnable(), 0, 60, TimeUnit.SECONDS
+			);
+
+			IScheduledExecutorService associateEntities =
+				_hazelcastInstance.getScheduledExecutorService(
+					"associateEntities");
+
+			associateEntities.scheduleOnAllMembersAtFixedRate(
+				new AssociateEntitiesRunnable(), 60, 60, TimeUnit.SECONDS
+			);
+		}
+
 
 	}
 
