@@ -15,13 +15,13 @@ public class EntityGraph {
 	private String name;
 	private String type;
 
-	public static EntityGraph from(Node node) {
+	public static EntityGraph from(String type, Node node) {
 		return new EntityGraph(
 			node.get("id").asLong(),
 			node.id(),
 			node.get("tenantId").asLong(),
 			node.get("name").asString(),
-			node.get("type").asString()
+			type
 		);
 	}
 

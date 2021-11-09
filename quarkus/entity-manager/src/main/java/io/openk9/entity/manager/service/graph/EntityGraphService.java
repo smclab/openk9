@@ -4,9 +4,13 @@ import io.openk9.entity.manager.model.graph.EntityGraph;
 import io.quarkus.arc.Unremovable;
 import org.jboss.logging.Logger;
 import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
 import org.neo4j.driver.Values;
 import org.neo4j.driver.async.AsyncSession;
 import org.neo4j.driver.async.ResultCursor;
+import org.neo4j.driver.types.Node;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -33,10 +37,10 @@ public class EntityGraphService {
 				)
 				.thenCompose(ResultCursor::singleAsync)
 			)
-			.thenApply(record -> EntityGraph.from(record.get("f").asNode()))
+			.thenApply(record -> EntityGraph.from(type, record.get("f").asNode()))
 			.thenCompose(
-				persistedFruit ->
-					session.closeAsync().thenApply(signal -> persistedFruit));
+				eg ->
+					session.closeAsync().thenApply(signal -> eg));
 
 	}
 
@@ -66,6 +70,29 @@ public class EntityGraphService {
 						.thenApply(signal -> nothing)
 			);
 
+	}
+
+	public EntityGraph searchByNameAndType(
+		long tenantId, String name, String type) {
+
+		Session session = driver.session();
+
+		Result result = session.run(
+			"MATCH (a:" + type + ") " +
+			"WHERE a.name = '" + name + "' AND a.tenantId = " + tenantId + " " +
+			"RETURN a"
+		);
+
+		if (result.hasNext()) {
+			Record next = result.next();
+			Node node = next.get("a").asNode();
+			String entityName = node.get("name").asString();
+			long id = node.get("id").asLong();
+			return EntityGraph.of(id, node.id(), tenantId, entityName, type);
+		}
+		else {
+			return null;
+		}
 
 	}
 

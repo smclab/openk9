@@ -4,8 +4,8 @@ package io.openk9.entity.manager.loader;
 import com.hazelcast.map.MapStoreAdapter;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
-import io.openk9.entity.manager.model.index.EntityIndex;
-import io.openk9.entity.manager.service.index.EntityService;
+import io.openk9.entity.manager.model.graph.EntityGraph;
+import io.openk9.entity.manager.service.graph.EntityGraphService;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
@@ -17,10 +17,10 @@ public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 
 		try {
 
-			EntityService entityService =
-				CDI.current().select(EntityService.class).get();
+			EntityGraphService entityGraphService =
+				CDI.current().select(EntityGraphService.class).get();
 
-			EntityIndex entityIndex = entityService.searchByNameAndType(
+			EntityGraph entityIndex = entityGraphService.searchByNameAndType(
 				key.getTenantId(), key.getName(), key.getType());
 
 			if (entityIndex == null) {
@@ -33,7 +33,7 @@ public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 				entityIndex.getTenantId(),
 				entityIndex.getName(),
 				entityIndex.getType(),
-				null
+				entityIndex.getGraphId()
 			);
 
 		}
