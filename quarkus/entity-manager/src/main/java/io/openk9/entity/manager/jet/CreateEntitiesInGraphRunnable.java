@@ -13,9 +13,6 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,8 +41,6 @@ public class CreateEntitiesInGraphRunnable
 		EntityGraphService entityGraphService = CDI.current().select(
 			EntityGraphService.class).get();
 
-		List<EntityGraph> entityGraphs = new ArrayList<>();
-
 		for (Map.Entry<EntityKey, Entity> entry : localEntityMap.entrySet()) {
 
 			Entity v = entry.getValue();
@@ -63,35 +58,15 @@ public class CreateEntitiesInGraphRunnable
 						)
 					);
 
-				entityGraphs.add(entityGraph);
+				v.setGraphId(entityGraph.getGraphId());
+
+				entityIMap.set(entry.getKey(), v);
 
 			}
 			catch (Exception e) {
 				_log.error(e.getMessage());
 			}
 
-		}
-
-		try {
-
-			Map<EntityKey, Entity> entityMapToUpdate = new HashMap<>();
-
-			for (Map.Entry<EntityKey, Entity> entry : localEntityMap.entrySet()) {
-				Entity value = entry.getValue();
-				for (EntityGraph result : entityGraphs) {
-					if (value.getId().equals(result.getId())) {
-						value.setGraphId(result.getGraphId());
-						entityMapToUpdate.put(entry.getKey(), value);
-						break;
-					}
-				}
-			}
-
-			entityIMap.setAll(entityMapToUpdate);
-
-		}
-		catch (Exception e) {
-			_log.error(e.getMessage(), e);
 		}
 
 	}

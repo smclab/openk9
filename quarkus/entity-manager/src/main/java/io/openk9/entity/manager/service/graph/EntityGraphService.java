@@ -12,6 +12,7 @@ import org.neo4j.driver.types.Node;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 
 @ApplicationScoped
 @Unremovable
@@ -60,13 +61,13 @@ public class EntityGraphService {
 					)
 				);
 
-				Record single = result.single();
+				List<Record> list = result.list();
 
 				if (_logger.isDebugEnabled()) {
-					_logger.debug(single);
+					_logger.debug(list);
 				}
 
-				return single;
+				return list;
 
 			});
 		}

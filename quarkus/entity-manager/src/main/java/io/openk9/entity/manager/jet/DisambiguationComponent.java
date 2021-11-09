@@ -32,7 +32,7 @@ public class DisambiguationComponent {
 
 		_disposableList.add(
 			createEntities.scheduleOnMemberAtFixedRate(
-				new CreateEntitiesRunnable(), localMember, 0, 60,
+				new CreateEntitiesRunnable(), localMember, 0, 30,
 				TimeUnit.SECONDS
 			)
 		);
@@ -43,7 +43,7 @@ public class DisambiguationComponent {
 
 		_disposableList.add(
 			associateEntities.scheduleOnMemberAtFixedRate(
-				new AssociateEntitiesRunnable(), localMember, 60, 60,
+				new AssociateEntitiesRunnable(), localMember, 30, 30,
 				TimeUnit.SECONDS
 			)
 		);
@@ -54,7 +54,7 @@ public class DisambiguationComponent {
 
 		_disposableList.add(
 			createEntitiesInGraph.scheduleOnMemberAtFixedRate(
-				new CreateEntitiesInGraphRunnable(), localMember, 0, 60,
+				new CreateEntitiesInGraphRunnable(), localMember, 0, 30,
 				TimeUnit.SECONDS
 			)
 		);
@@ -65,7 +65,7 @@ public class DisambiguationComponent {
 
 		_disposableList.add(
 			createRelation.scheduleOnMemberAtFixedRate(
-				new CreateRelationRunnable(), localMember, 0, 60,
+				new CreateRelationRunnable(), localMember, 0, 30,
 				TimeUnit.SECONDS
 			)
 		);
