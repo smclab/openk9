@@ -83,13 +83,12 @@ public class EntityGraphService {
 		Session session = driver.session();
 
 		Result result = session.run(
-			"MATCH (a:$type) " +
+			"MATCH (a:" + type + ") " +
 			"WHERE a.name = $name AND a.tenantId = $tenantId " +
 			"RETURN a",
 			Values.parameters(
 				"tenantId", tenantId,
-				"name", name,
-				"type", type
+				"name", name
 			)
 		);
 
