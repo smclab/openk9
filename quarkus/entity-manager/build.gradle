@@ -27,6 +27,8 @@ dependencies {
     implementation 'io.quarkus:quarkus-scheduler'
     implementation 'io.quarkus:quarkus-resteasy-reactive'
     implementation 'io.quarkus:quarkus-elasticsearch-rest-high-level-client'
+    implementation 'io.quarkus:quarkus-neo4j'
+    
     implementation 'org.jboss.logging:commons-logging-jboss-logging'
     implementation 'com.hazelcast:hazelcast:5.0'
     implementation 'org.projectlombok:lombok:1.18.18'

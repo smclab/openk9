@@ -4,12 +4,11 @@ package io.openk9.entity.manager.loader;
 import com.hazelcast.map.MapStoreAdapter;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
-import io.openk9.entity.manager.model.EntityIndex;
-import io.openk9.entity.manager.service.EntityService;
+import io.openk9.entity.manager.model.index.EntityIndex;
+import io.openk9.entity.manager.service.index.EntityService;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
-import java.io.IOException;
 
 public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 
@@ -33,7 +32,8 @@ public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 				entityIndex.getId(),
 				entityIndex.getTenantId(),
 				entityIndex.getName(),
-				entityIndex.getType()
+				entityIndex.getType(),
+				null
 			);
 
 		}

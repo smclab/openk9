@@ -1,6 +1,6 @@
-package io.openk9.entity.manager.service;
+package io.openk9.entity.manager.service.index;
 
-import io.openk9.entity.manager.model.EntityIndex;
+import io.openk9.entity.manager.model.index.EntityIndex;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;

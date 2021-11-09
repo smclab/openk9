@@ -95,7 +95,8 @@ public class EntityManagerBus {
 
 					if (entity == null) {
 						long cacheId = _entityFlakeId.newId();
-						entity = new Entity(null, cacheId, tenantId, name, type);
+						entity = new Entity(
+							null, cacheId, tenantId, name, type, null);
 						_entityMap.set(key, entity);
 					}
 

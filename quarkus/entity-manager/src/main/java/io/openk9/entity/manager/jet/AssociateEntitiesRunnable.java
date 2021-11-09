@@ -6,7 +6,7 @@ import com.hazelcast.core.Pipelining;
 import com.hazelcast.map.IMap;
 import io.openk9.entity.manager.cache.model.IngestionEntity;
 import io.openk9.entity.manager.cache.model.IngestionKey;
-import io.openk9.entity.manager.service.DataService;
+import io.openk9.entity.manager.service.index.DataService;
 import io.openk9.entity.manager.util.MapUtil;
 import org.jboss.logging.Logger;
 

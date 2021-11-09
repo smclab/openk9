@@ -4,8 +4,8 @@ import com.hazelcast.cluster.Member;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.scheduledexecutor.IScheduledExecutorService;
 import com.hazelcast.scheduledexecutor.IScheduledFuture;
-import io.openk9.entity.manager.service.DataService;
-import io.openk9.entity.manager.service.EntityService;
+import io.openk9.entity.manager.service.index.DataService;
+import io.openk9.entity.manager.service.index.EntityService;
 import io.quarkus.runtime.Startup;
 import org.jboss.logging.Logger;
 
@@ -44,6 +44,28 @@ public class DisambiguationComponent {
 		_disposableList.add(
 			associateEntities.scheduleOnMemberAtFixedRate(
 				new AssociateEntitiesRunnable(), localMember, 60, 60,
+				TimeUnit.SECONDS
+			)
+		);
+
+		IScheduledExecutorService createEntitiesInGraph =
+			_hazelcastInstance.getScheduledExecutorService(
+				"createEntitiesInGraph");
+
+		_disposableList.add(
+			createEntitiesInGraph.scheduleOnMemberAtFixedRate(
+				new CreateEntitiesInGraphRunnable(), localMember, 0, 60,
+				TimeUnit.SECONDS
+			)
+		);
+
+		IScheduledExecutorService createRelation =
+			_hazelcastInstance.getScheduledExecutorService(
+				"createRelation");
+
+		_disposableList.add(
+			createRelation.scheduleOnMemberAtFixedRate(
+				new CreateRelationRunnable(), localMember, 0, 60,
 				TimeUnit.SECONDS
 			)
 		);

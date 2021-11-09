@@ -1,4 +1,4 @@
-package io.openk9.entity.manager.service;
+package io.openk9.entity.manager.service.index;
 
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;

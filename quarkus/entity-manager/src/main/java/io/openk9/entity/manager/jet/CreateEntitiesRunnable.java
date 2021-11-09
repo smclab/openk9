@@ -6,8 +6,8 @@ import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicates;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
-import io.openk9.entity.manager.model.EntityIndex;
-import io.openk9.entity.manager.service.EntityService;
+import io.openk9.entity.manager.model.index.EntityIndex;
+import io.openk9.entity.manager.service.index.EntityService;
 import io.openk9.entity.manager.util.MapUtil;
 import org.jboss.logging.Logger;
 
@@ -79,6 +79,6 @@ public class CreateEntitiesRunnable
 	private transient HazelcastInstance _hazelcastInstance;
 
 	private static final Logger _log = Logger.getLogger(
-		AssociateEntitiesRunnable.class);
+		CreateEntitiesRunnable.class);
 
 }

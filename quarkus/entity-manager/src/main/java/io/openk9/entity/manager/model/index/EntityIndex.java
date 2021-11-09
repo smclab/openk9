@@ -1,4 +1,4 @@
-package io.openk9.entity.manager.model;
+package io.openk9.entity.manager.model.index;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
