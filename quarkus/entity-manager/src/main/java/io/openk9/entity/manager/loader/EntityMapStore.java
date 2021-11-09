@@ -5,7 +5,9 @@ import com.hazelcast.map.MapStoreAdapter;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.model.graph.EntityGraph;
+import io.openk9.entity.manager.model.index.EntityIndex;
 import io.openk9.entity.manager.service.graph.EntityGraphService;
+import io.openk9.entity.manager.service.index.EntityService;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
@@ -20,21 +22,40 @@ public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 			EntityGraphService entityGraphService =
 				CDI.current().select(EntityGraphService.class).get();
 
-			EntityGraph entityIndex = entityGraphService.searchByNameAndType(
+			EntityGraph entityGraph = entityGraphService.searchByNameAndType(
 				key.getTenantId(), key.getName(), key.getType());
 
-			if (entityIndex == null) {
-				return null;
+			if (entityGraph != null) {
+
+				return new Entity(
+					entityGraph.getId(),
+					entityGraph.getId(),
+					entityGraph.getTenantId(),
+					entityGraph.getName(),
+					entityGraph.getType(),
+					entityGraph.getGraphId()
+				);
+
 			}
 
-			return new Entity(
-				entityIndex.getId(),
-				entityIndex.getId(),
-				entityIndex.getTenantId(),
-				entityIndex.getName(),
-				entityIndex.getType(),
-				entityIndex.getGraphId()
-			);
+			EntityService entityService =
+				CDI.current().select(EntityService.class).get();
+
+			EntityIndex entityIndex = entityService.searchByNameAndType(
+				key.getTenantId(), key.getName(), key.getType());
+
+			if (entityIndex != null) {
+				return new Entity(
+					entityIndex.getId(),
+					entityIndex.getId(),
+					entityIndex.getTenantId(),
+					entityIndex.getName(),
+					entityIndex.getType(),
+					null
+				);
+			}
+
+			return null;
 
 		}
 		catch (Exception e) {

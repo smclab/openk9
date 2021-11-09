@@ -53,9 +53,14 @@ public class EntityGraphService {
 			.writeTransactionAsync(tx -> tx
 				.runAsync(
 					"MATCH (a), (b)\n" +
-					"WHERE a.id = " + graphId1 + " AND b.id = " + graphId2 + "\n" +
-					"MERGE (a)-[r:" + relationName + "]->(b)\n" +
-					"RETURN type(r)"
+					"WHERE a.id = $id1 AND b.id = $id2\n" +
+					"MERGE (a)-[r:$relationName]->(b)\n" +
+					"RETURN type(r)",
+					Values.parameters(
+						"id1", graphId1,
+						"id2", graphId2,
+						"relationName", relationName
+					)
 				)
 				.thenCompose(ResultCursor::singleAsync)
 			)
@@ -77,6 +82,8 @@ public class EntityGraphService {
 
 		Session session = driver.session();
 
+		name = _escape(name);
+
 		Result result = session.run(
 			"MATCH (a:" + type + ") " +
 			"WHERE a.name = '" + name + "' AND a.tenantId = " + tenantId + " " +
@@ -96,6 +103,26 @@ public class EntityGraphService {
 
 	}
 
+	private static String _escape(String name) {
+
+		if (name.contains("\"")) {
+			name = name.replaceAll("\"", "\"");
+		}
+
+		if (name.contains("\\")) {
+			name = name.replaceAll("\\\\", "\\");
+		}
+
+		return name;
+
+	}
+
+	public static void main(String[] args) {
+		String s = "banca d'italia \\ ciao \"";
+
+		System.out.println(_escape(s));
+
+	}
 
 
 	@Inject
