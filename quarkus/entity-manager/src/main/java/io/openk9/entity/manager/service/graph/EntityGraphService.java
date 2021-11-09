@@ -8,99 +8,97 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Values;
-import org.neo4j.driver.async.AsyncSession;
-import org.neo4j.driver.async.ResultCursor;
 import org.neo4j.driver.types.Node;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 @Unremovable
 public class EntityGraphService {
 
-	public CompletionStage<EntityGraph> insertEntity(
+	public EntityGraph insertEntity(
 		String type, EntityGraph entityGraph) {
 
-		AsyncSession session = driver.asyncSession();
+		try (Session session = driver.session()) {
 
-		return session
-			.writeTransactionAsync(tx -> tx
-				.runAsync(
-					"CREATE (f:" + type + " {name: $name, id: $id, tenantId: $tenantId}) RETURN f",
+			return session.writeTransaction(tx -> {
+				Result result = tx.run(
+					"CREATE (f:" + type +
+					" {name: $name, id: $id, tenantId: $tenantId}) RETURN f",
 					Values.parameters(
 						"name", entityGraph.getName(),
 						"id", entityGraph.getId(),
 						"tenantId", entityGraph.getTenantId()
 					)
-				)
-				.thenCompose(ResultCursor::singleAsync)
-			)
-			.thenApply(record -> EntityGraph.from(type, record.get("f").asNode()))
-			.thenCompose(
-				eg ->
-					session.closeAsync().thenApply(signal -> eg));
+				);
+
+				Node node = result.single().get("f").asNode();
+
+				return EntityGraph.from(type, node);
+
+			});
+		}
 
 	}
 
-	public CompletionStage<Void> createRelationship(
+	public void createRelationship(
 		long graphId1, long graphId2, String relationName) {
 
-		AsyncSession session = driver.asyncSession();
+		try (Session session = driver.session()) {
 
-		return session
-			.writeTransactionAsync(tx -> tx
-				.runAsync(
+			session.writeTransaction(tx -> {
+				Result result = tx.run(
 					"MATCH (a), (b)\n" +
 					"WHERE a.id = $id1 AND b.id = $id2\n" +
-					"MERGE (a)-[r:$relationName]->(b)\n" +
+					"MERGE (a)-[r:" + relationName + "]->(b)\n" +
 					"RETURN type(r)",
 					Values.parameters(
 						"id1", graphId1,
 						"id2", graphId2,
 						"relationName", relationName
 					)
-				)
-				.thenCompose(ResultCursor::singleAsync)
-			)
-			.thenAccept(record -> {
+				);
+
+				Record single = result.single();
+
 				if (_logger.isDebugEnabled()) {
-					_logger.debug(record);
+					_logger.debug(single);
 				}
-			})
-			.thenCompose(
-				nothing ->
-					session.closeAsync()
-						.thenApply(signal -> nothing)
-			);
+
+				return single;
+
+			});
+		}
 
 	}
 
 	public EntityGraph searchByNameAndType(
 		long tenantId, String name, String type) {
 
-		Session session = driver.session();
+		try (Session session = driver.session()) {
 
-		Result result = session.run(
-			"MATCH (a:" + type + ") " +
-			"WHERE a.name = $name AND a.tenantId = $tenantId " +
-			"RETURN a",
-			Values.parameters(
-				"tenantId", tenantId,
-				"name", name
-			)
-		);
+			Result result = session.run(
+				"MATCH (a:" + type + ") " +
+				"WHERE a.name = $name AND a.tenantId = $tenantId " +
+				"RETURN a",
+				Values.parameters(
+					"tenantId", tenantId,
+					"name", name
+				)
+			);
 
-		if (result.hasNext()) {
-			Record next = result.next();
-			Node node = next.get("a").asNode();
-			String entityName = node.get("name").asString();
-			long id = node.get("id").asLong();
-			return EntityGraph.of(id, node.id(), tenantId, entityName, type);
-		}
-		else {
-			return null;
+			if (result.hasNext()) {
+				Record next = result.next();
+				Node node = next.get("a").asNode();
+				String entityName = node.get("name").asString();
+				long id = node.get("id").asLong();
+				return EntityGraph.of(
+					id, node.id(), tenantId, entityName, type);
+			}
+			else {
+				return null;
+			}
 		}
 
 	}

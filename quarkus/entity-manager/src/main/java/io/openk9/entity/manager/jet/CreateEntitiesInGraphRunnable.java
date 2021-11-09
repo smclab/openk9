@@ -2,7 +2,6 @@ package io.openk9.entity.manager.jet;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.core.Pipelining;
 import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicates;
 import io.openk9.entity.manager.cache.model.Entity;
@@ -14,11 +13,11 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletionStage;
 
 public class CreateEntitiesInGraphRunnable
 	implements StopWatchRunnable, HazelcastInstanceAware, Serializable {
@@ -42,45 +41,44 @@ public class CreateEntitiesInGraphRunnable
 
 		_log.info("entityKeys: " + entityKeys.size());
 
-		Pipelining<EntityGraph> entityGraphPipelining =
-			new Pipelining<>(10);
-
 		EntityGraphService entityGraphService = CDI.current().select(
 			EntityGraphService.class).get();
+
+		List<EntityGraph> entityGraphs = new ArrayList<>();
 
 		for (Map.Entry<EntityKey, Entity> entry : localEntityMap.entrySet()) {
 
 			Entity v = entry.getValue();
 
-			CompletionStage<EntityGraph> completionStage =
-				entityGraphService.insertEntity(
-					v.getType(),
-					EntityGraph.of(
-						v.getId(),
-						null,
-						v.getTenantId(),
-						v.getName(),
-						v.getType()
-					)
-				);
-
 			try {
-				entityGraphPipelining.add(completionStage);
+				EntityGraph entityGraph =
+					entityGraphService.insertEntity(
+						v.getType(),
+						EntityGraph.of(
+							v.getId(),
+							null,
+							v.getTenantId(),
+							v.getName(),
+							v.getType()
+						)
+					);
+
+				entityGraphs.add(entityGraph);
+
 			}
-			catch (InterruptedException e) {
-				_log.error(e.getMessage(), e);
+			catch (Exception e) {
+				_log.error(e.getMessage());
 			}
 
 		}
 
 		try {
-			List<EntityGraph> results = entityGraphPipelining.results();
 
 			Map<EntityKey, Entity> entityMapToUpdate = new HashMap<>();
 
 			for (Map.Entry<EntityKey, Entity> entry : localEntityMap.entrySet()) {
 				Entity value = entry.getValue();
-				for (EntityGraph result : results) {
+				for (EntityGraph result : entityGraphs) {
 					if (value.getId().equals(result.getId())) {
 						value.setGraphId(result.getGraphId());
 						entityMapToUpdate.put(entry.getKey(), value);

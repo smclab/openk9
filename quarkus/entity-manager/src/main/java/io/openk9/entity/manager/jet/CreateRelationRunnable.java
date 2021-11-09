@@ -52,8 +52,6 @@ public class CreateRelationRunnable
 		EntityGraphService entityGraphService = CDI.current().select(
 			EntityGraphService.class).get();
 
-		Pipelining<Void> pipelining = new Pipelining<>(10);
-
 		List<EntityRelationKey> entityRelationKeysToDelete = new ArrayList<>();
 
 		for (Map.Entry<EntityRelationKey, EntityRelation> entry : entries) {
@@ -62,32 +60,29 @@ public class CreateRelationRunnable
 			EntityRelation value = entry.getValue();
 
 			try {
-				pipelining.add(
-					entityGraphService.createRelationship(
-						value.getEntityCacheId(), value.getTo(), value.getName()
-					)
+				entityGraphService.createRelationship(
+					value.getEntityCacheId(), value.getTo(), value.getName()
 				);
 
 				entityRelationKeysToDelete.add(key);
 
 			}
-			catch (InterruptedException e) {
+			catch (Exception e) {
 				_log.error(e.getMessage(), e);
 			}
 		}
 
 		try {
-			pipelining.results();
 
-			Pipelining pipelining1 = new Pipelining<>(10);
+			Pipelining pipelining = new Pipelining<>(10);
 
 			for (EntityRelationKey entityRelationKey : entityRelationKeysToDelete) {
-				pipelining1.add(
+				pipelining.add(
 					entityRelationMap.removeAsync(entityRelationKey)
 				);
 			}
 
-			pipelining1.results();
+			pipelining.results();
 
 		}
 		catch (Exception e) {
