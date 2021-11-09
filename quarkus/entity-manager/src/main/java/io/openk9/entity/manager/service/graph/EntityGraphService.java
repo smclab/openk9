@@ -82,12 +82,15 @@ public class EntityGraphService {
 
 		Session session = driver.session();
 
-		name = _escape(name);
-
 		Result result = session.run(
-			"MATCH (a:" + type + ") " +
-			"WHERE a.name = '" + name + "' AND a.tenantId = " + tenantId + " " +
-			"RETURN a"
+			"MATCH (a:$type) " +
+			"WHERE a.name = $name AND a.tenantId = $tenantId " +
+			"RETURN a",
+			Values.parameters(
+				"tenantId", tenantId,
+				"name", name,
+				"type", type
+			)
 		);
 
 		if (result.hasNext()) {
@@ -102,28 +105,6 @@ public class EntityGraphService {
 		}
 
 	}
-
-	private static String _escape(String name) {
-
-		if (name.contains("\"")) {
-			name = name.replaceAll("\"", "\"");
-		}
-
-		if (name.contains("\\")) {
-			name = name.replaceAll("\\\\", "\\");
-		}
-
-		return name;
-
-	}
-
-	public static void main(String[] args) {
-		String s = "banca d'italia \\ ciao \"";
-
-		System.out.println(_escape(s));
-
-	}
-
 
 	@Inject
 	Driver driver;

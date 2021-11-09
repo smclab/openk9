@@ -37,6 +37,12 @@ public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 				);
 
 			}
+		}
+		catch (Exception e) {
+			_log.error(e.getMessage());
+		}
+
+		try {
 
 			EntityService entityService =
 				CDI.current().select(EntityService.class).get();
@@ -54,13 +60,11 @@ public class EntityMapStore extends MapStoreAdapter<EntityKey, Entity> {
 					null
 				);
 			}
-
-			return null;
-
 		}
 		catch (Exception e) {
 			_log.error(e.getMessage());
 		}
+
 
 		return null;
 
