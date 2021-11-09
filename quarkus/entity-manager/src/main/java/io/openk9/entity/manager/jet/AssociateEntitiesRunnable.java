@@ -93,21 +93,26 @@ public class AssociateEntitiesRunnable
 
 		}
 
-		try {
+		int size = entitiesToDelete.size();
 
-			Pipelining pipelining = new Pipelining(entitiesToDelete.size());
+		if (size > 0) {
 
-			for (IngestionKey ingestionKey : entitiesToDelete) {
-				pipelining.add(ingestionMap.removeAsync(ingestionKey));
+			try {
+
+				Pipelining pipelining = new Pipelining(10);
+
+				for (IngestionKey ingestionKey : entitiesToDelete) {
+					pipelining.add(ingestionMap.removeAsync(ingestionKey));
+				}
+
+				pipelining.results();
+
+				_log.info("ingestion processed: " + size);
+
 			}
-
-			pipelining.results();
-
-			_log.info("ingestion processed: " + entitiesToDelete.size());
-
-		}
-		catch (Exception e) {
-			_log.error(e.getMessage(), e);
+			catch (Exception e) {
+				_log.error(e.getMessage(), e);
+			}
 		}
 
 	}

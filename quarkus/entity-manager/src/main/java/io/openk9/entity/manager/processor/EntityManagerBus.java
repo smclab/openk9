@@ -14,6 +14,7 @@ import io.openk9.entity.manager.dto.EntityManagerRequest;
 import io.openk9.entity.manager.dto.EntityRequest;
 import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
+import io.openk9.entity.manager.util.LoggerAggregator;
 import io.openk9.entity.manager.util.MapUtil;
 import io.quarkus.runtime.Startup;
 import lombok.SneakyThrows;
@@ -62,13 +63,12 @@ public class EntityManagerBus {
 	public void run() {
 		while (true) {
 
-			_log.info("START take");
-
 			Payload request = _entityManagerQueue.take();
 
 			EntityManagerRequest payload = request.getPayload();
 
-			_log.info("process ingestionId: " + payload.getIngestionId());
+			_loggerAggregator.emitLog(
+				"process ingestionId", payload.getIngestionId());
 
 			long tenantId = payload.getTenantId();
 			String ingestionId = payload.getIngestionId();
@@ -201,6 +201,9 @@ public class EntityManagerBus {
 
 	@Inject
 	HazelcastInstance _hazelcastInstance;
+
+	@Inject
+	LoggerAggregator _loggerAggregator;
 
 	private ExecutorService _executorService;
 	private FlakeIdGenerator _entityFlakeId;
