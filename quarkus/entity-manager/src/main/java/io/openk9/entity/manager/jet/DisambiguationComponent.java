@@ -48,17 +48,6 @@ public class DisambiguationComponent {
 			)
 		);
 
-		IScheduledExecutorService createEntitiesInGraph =
-			_hazelcastInstance.getScheduledExecutorService(
-				"createEntitiesInGraph");
-
-		_disposableList.add(
-			createEntitiesInGraph.scheduleOnMemberAtFixedRate(
-				new CreateEntitiesInGraphRunnable(), localMember, 0, 30,
-				TimeUnit.SECONDS
-			)
-		);
-
 		IScheduledExecutorService createRelation =
 			_hazelcastInstance.getScheduledExecutorService(
 				"createRelation");

@@ -6,7 +6,9 @@ import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicates;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
+import io.openk9.entity.manager.model.graph.EntityGraph;
 import io.openk9.entity.manager.model.index.EntityIndex;
+import io.openk9.entity.manager.service.graph.EntityGraphService;
 import io.openk9.entity.manager.service.index.EntityService;
 import io.openk9.entity.manager.util.MapUtil;
 import org.jboss.logging.Logger;
@@ -29,7 +31,11 @@ public class CreateEntitiesRunnable
 			MapUtil.getEntityMap(_hazelcastInstance);
 
 		Set<EntityKey> entityKeys = entityIMap.localKeySet(
-			Predicates.equal("id", null));
+			Predicates.and(
+				Predicates.equal("id", null),
+				Predicates.equal("graphId", null)
+			)
+		);
 
 		Map<EntityKey, Entity> localEntityMap = entityIMap.getAll(entityKeys);
 
@@ -37,11 +43,14 @@ public class CreateEntitiesRunnable
 
 		Map<EntityKey, Entity> entityToUpdate = new HashMap<>();
 
+		EntityGraphService entityGraphService = CDI.current().select(
+			EntityGraphService.class).get();
+
+		EntityService entityService = CDI.current().select(EntityService.class).get();
+
 		for (Map.Entry<EntityKey, Entity> entry : localEntityMap.entrySet()) {
 
 			Entity v = entry.getValue();
-
-			EntityService entityService = CDI.current().select(EntityService.class).get();
 
 			try {
 				entityService.index(
@@ -53,6 +62,20 @@ public class CreateEntitiesRunnable
 				);
 
 				v.setId(v.getCacheId());
+
+				EntityGraph entityGraph =
+					entityGraphService.insertEntity(
+						v.getType(),
+						EntityGraph.of(
+							v.getId(),
+							null,
+							v.getTenantId(),
+							v.getName(),
+							v.getType()
+						)
+					);
+
+				v.setGraphId(entityGraph.getGraphId());
 
 				entityToUpdate.put(entry.getKey(), v);
 
