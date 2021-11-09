@@ -16,6 +16,7 @@ import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.MapUtil;
 import io.quarkus.runtime.Startup;
+import lombok.SneakyThrows;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.jboss.logging.Logger;
 
@@ -57,18 +58,13 @@ public class EntityManagerBus {
 		_executorService.shutdown();
 	}
 
+	@SneakyThrows
 	public void run() {
 		while (true) {
 
 			_log.info("START take");
 
-			Payload request = null;
-			try {
-				request = _entityManagerQueue.take();
-			}
-			catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
+			Payload request = _entityManagerQueue.take();
 
 			EntityManagerRequest payload = request.getPayload();
 
@@ -92,53 +88,42 @@ public class EntityManagerBus {
 
 				Entity entity;
 
-				boolean lock = _entityMap.tryLock(key);
+				_entityMap.lock(key);
 
-				if (lock) {
+				try {
+					entity = _entityMap.get(key);
 
-					try {
-						entity = _entityMap.get(key);
-
-						if (entity == null) {
-							long cacheId = _entityFlakeId.newId();
-							entity = new Entity(null, cacheId, tenantId, name, type);
-							_entityMap.set(key, entity);
-						}
-
-						localEntityMap.put(key, entity);
-
-					}
-					finally {
-						_entityMap.forceUnlock(key);
+					if (entity == null) {
+						long cacheId = _entityFlakeId.newId();
+						entity = new Entity(null, cacheId, tenantId, name, type);
+						_entityMap.set(key, entity);
 					}
 
-					IngestionKey ingestionKey = IngestionKey.of(
-						entity.getCacheId(),
-						ingestionId,
-						tenantId);
-
-					ingestionMap.put(
-						ingestionKey,
-						IngestionEntity.fromEntity(
-							entity, entityRequest.getContext())
-					);
-
-					for (EntityRequest entityRequest2 : entities) {
-
-						for (RelationRequest relation : entityRequest2.getRelations()) {
-							if (relation.getTo().equals(entityRequest.getTmpId())) {
-								relation.setTo(entity.getCacheId());
-							}
-						}
-
-					}
+					localEntityMap.put(key, entity);
 
 				}
-				else {
-					/*
-					_restEntityMultiMap.put(
-						 key, new Entity(null, null, tenantId, name, type));
-					*/
+				finally {
+					_entityMap.unlock(key);
+				}
+
+				IngestionKey ingestionKey = IngestionKey.of(
+					entity.getCacheId(),
+					ingestionId,
+					tenantId);
+
+				ingestionMap.put(
+					ingestionKey,
+					IngestionEntity.fromEntity(
+						entity, entityRequest.getContext())
+				);
+
+				for (EntityRequest entityRequest2 : entities) {
+
+					for (RelationRequest relation : entityRequest2.getRelations()) {
+						if (relation.getTo().equals(entityRequest.getTmpId())) {
+							relation.setTo(entity.getCacheId());
+						}
+					}
 
 				}
 
