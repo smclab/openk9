@@ -19,6 +19,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.List;
 
 @ApplicationScoped
 public class DataService {
@@ -47,6 +48,50 @@ public class DataService {
 				DataEntityIndex.of(
 					entity.getCacheId(), entity.getType(), entity.getContext())
 			));
+
+			dataDocument.put("entities", entities);
+
+			UpdateRequest updateRequest = new UpdateRequest(indexName, id);
+
+			updateRequest.doc(dataDocument.toString(), XContentType.JSON);
+
+			_indexerBus.emit(updateRequest);
+
+			return true;
+
+		}
+
+		return false;
+
+	}
+
+	public boolean associateEntities(
+			long tenantId, String ingestionId,
+			List<IngestionEntity> ingestionEntities)
+		throws IOException {
+
+		MatchQueryBuilder query =
+			QueryBuilders.matchQuery("ingestionId", ingestionId);
+
+		SearchResponse searchResponse = search(tenantId, query);
+
+		for (SearchHit hit : searchResponse.getHits()) {
+			String indexName = hit.getIndex();
+			String id = hit.getId();
+			JsonObject dataDocument = new JsonObject(hit.getSourceAsString());
+
+			JsonArray entities = dataDocument.getJsonArray("entities");
+
+			if (entities == null) {
+				entities = new JsonArray();
+			}
+
+			ingestionEntities
+				.stream()
+				.map(entity -> DataEntityIndex.of(
+					entity.getCacheId(), entity.getType(), entity.getContext()))
+				.map(JsonObject::mapFrom)
+				.forEach(entities::add);
 
 			dataDocument.put("entities", entities);
 
