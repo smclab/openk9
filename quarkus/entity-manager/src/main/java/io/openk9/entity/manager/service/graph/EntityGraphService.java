@@ -49,7 +49,7 @@ public class EntityGraphService {
 			.writeTransactionAsync(tx -> tx
 				.runAsync(
 					"MATCH (a), (b)\n" +
-					"WHERE id(a) = " + graphId1 + " AND id(b) = " + graphId2 + "\n" +
+					"WHERE a.id = " + graphId1 + " AND b.id = " + graphId2 + "\n" +
 					"MERGE (a)-[r:" + relationName + "]->(b)\n" +
 					"RETURN type(r)"
 				)
