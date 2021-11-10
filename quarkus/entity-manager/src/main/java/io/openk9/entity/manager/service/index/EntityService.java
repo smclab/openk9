@@ -16,6 +16,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -65,7 +66,7 @@ public class EntityService {
 	}
 
 	public EntityIndex searchByNameAndType(
-		long tenantId, String name, String type) throws IOException {
+		long tenantId, String name, String type) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -81,11 +82,11 @@ public class EntityService {
 		return search.get(0);
 	}
 
-	public List<EntityIndex> search(long tenantId, String term, String match) throws IOException {
+	public List<EntityIndex> search(long tenantId, String term, String match) {
 		return search(tenantId, QueryBuilders.matchQuery(term, match), 0, 20);
 	}
 
-	public List<EntityIndex> search(long tenantId, QueryBuilder queryBuilder, int from, int size) throws IOException {
+	public List<EntityIndex> search(long tenantId, QueryBuilder queryBuilder, int from, int size) {
 
 		SearchRequest searchRequest = new SearchRequest(tenantId + "-entity");
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -94,17 +95,26 @@ public class EntityService {
 		searchSourceBuilder.size(size);
 		searchRequest.source(searchSourceBuilder);
 
-		SearchResponse searchResponse = _restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-		SearchHits hits = searchResponse.getHits();
-		List<EntityIndex> results = new ArrayList<>(hits.getHits().length);
-		for (SearchHit hit : hits.getHits()) {
-			String sourceAsString = hit.getSourceAsString();
-			JsonObject json = new JsonObject(sourceAsString);
-			EntityIndex entityIndex = json.mapTo(EntityIndex.class);
-			entityIndex.setScore(hit.getScore());
-			results.add(entityIndex);
+		try {
+
+			SearchResponse searchResponse =
+				_restHighLevelClient.search(searchRequest,
+					RequestOptions.DEFAULT);
+			SearchHits hits = searchResponse.getHits();
+			List<EntityIndex> results = new ArrayList<>(hits.getHits().length);
+			for (SearchHit hit : hits.getHits()) {
+				String sourceAsString = hit.getSourceAsString();
+				JsonObject json = new JsonObject(sourceAsString);
+				EntityIndex entityIndex = json.mapTo(EntityIndex.class);
+				entityIndex.setScore(hit.getScore());
+				results.add(entityIndex);
+			}
+			return results;
 		}
-		return results;
+		catch (Exception e) {
+			_logger.error(e.getMessage());
+		}
+		return List.of();
 
 	}
 
@@ -113,5 +123,8 @@ public class EntityService {
 
 	@Inject
 	IndexerBus _indexerBus;
+
+	@Inject
+	Logger _logger;
 
 }

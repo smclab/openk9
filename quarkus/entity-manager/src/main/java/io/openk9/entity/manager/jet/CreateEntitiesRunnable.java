@@ -99,19 +99,12 @@ public class CreateEntitiesRunnable
 						ingestionIdEntity.getTenantId(),
 						ingestionIdEntity.getName());
 
-				try {
+				List<EntityIndex> candidates =
+					entityService.search(
+						ingestionIdEntity.getTenantId(), queryBuilder, 0, 10);
 
-					List<EntityIndex> candidates =
-						entityService.search(
-							ingestionIdEntity.getTenantId(), queryBuilder, 0, 10);
-
-					entityCandidates.add(
-						EntityCandidates.of(ingestionIdEntity, candidates));
-
-				}
-				catch (Exception e) {
-					_log.error(e.getMessage());
-				}
+				entityCandidates.add(
+					EntityCandidates.of(ingestionIdEntity, candidates));
 
 			}
 
