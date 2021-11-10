@@ -85,7 +85,7 @@ hazelcast:
             # Specifies whether the member use the Kubernetes APIs to get a list of candidate IPs to
             # check.
             kubernetes:
-                enabled: false
+                enabled: true
                 namespace: k9-develop
                 service-name: entity-manager
             eureka:
