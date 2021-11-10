@@ -28,7 +28,6 @@ import org.neo4j.cypherdsl.core.Statement;
 import org.neo4j.cypherdsl.core.SymbolicName;
 
 import javax.enterprise.inject.spi.CDI;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -110,7 +109,7 @@ public class CreateEntitiesRunnable
 						EntityCandidates.of(ingestionIdEntity, candidates));
 
 				}
-				catch (IOException e) {
+				catch (Exception e) {
 					_log.error(e.getMessage());
 				}
 
