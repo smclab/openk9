@@ -137,7 +137,7 @@ public class CreateEntitiesRunnable
 
 				if (optionalEntityGraph.isEmpty()) {
 					try {
-						entityService.index(
+						entityService.awaitIndex(
 							EntityIndex.of(
 								currentEntityRequest.getCacheId(),
 								currentEntityRequest.getTenantId(),

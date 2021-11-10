@@ -5,8 +5,10 @@ import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -62,6 +64,33 @@ public class EntityService {
 		request.source(json, XContentType.JSON);
 
 		_indexerBus.emit(request);
+
+	}
+
+	public void awaitIndex(EntityIndex entity) throws IOException {
+
+		IndexRequest request =
+			new IndexRequest(entity.getTenantId() + "-entity");
+
+		request.id(Long.toString(entity.getId()));
+
+		Map<String, Object> json = new HashMap<>();
+
+		json.put("name", entity.getName());
+		json.put("tenantId", entity.getTenantId());
+		json.put("id", entity.getId());
+		json.put("type", entity.getType());
+
+		request.source(json, XContentType.JSON);
+
+		request.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
+
+		IndexResponse index =
+			_restHighLevelClient.index(request, RequestOptions.DEFAULT);
+
+		if (_logger.isDebugEnabled()) {
+			_logger.debug(index);
+		}
 
 	}
 
