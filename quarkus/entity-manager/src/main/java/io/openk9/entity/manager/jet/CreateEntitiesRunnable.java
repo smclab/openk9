@@ -349,7 +349,7 @@ public class CreateEntitiesRunnable
 				.stream()
 				.filter(Objects::nonNull)
 				.filter(entityGraph ->
-					entityGraph.getId() == currentEntityRequest.getId())
+					entityGraph.getId() == currentEntityRequest.getCacheId())
 				.findFirst();
 
 	}
