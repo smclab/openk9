@@ -19,7 +19,7 @@ Build Latest Entity Manager Docker Images:
               - quarkus/entity-manager/**/*
               - .gitlab/.gitlab-ci-hazelcast-entity-manager.yml
     script:
-        - ./gradlew build -p ./quarkus/entity-manager -Dquarkus.package.type=mutable-jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest e -Dquarkus.log.category.\"io.openk9.entity.manager.jet.CreateEntitiesRunnable\".level=DEBUG
+        - ./gradlew build -p ./quarkus/entity-manager -Dquarkus.package.type=mutable-jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest -Dquarkus.log.category.\"io.openk9.entity.manager.jet.CreateEntitiesRunnable\".level=DEBUG
     after_script:
         - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-entity-manager" -F ref=master $DEV_TRIGGER_URL
     cache:
