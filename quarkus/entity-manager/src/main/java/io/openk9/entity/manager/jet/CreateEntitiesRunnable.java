@@ -111,7 +111,7 @@ public class CreateEntitiesRunnable
 
 				}
 				catch (IOException e) {
-					_log.error(e.getMessage(), e);
+					_log.error(e.getMessage());
 				}
 
 			}
