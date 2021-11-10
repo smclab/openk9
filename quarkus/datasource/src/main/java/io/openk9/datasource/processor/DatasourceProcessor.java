@@ -8,6 +8,7 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.context.ManagedExecutor;
@@ -32,14 +33,11 @@ public class DatasourceProcessor {
 	public void start() {
 
 		ManagedExecutor executor = ManagedExecutor.builder()
-			.propagated(
-				ThreadContext.CDI,
-				ThreadContext.TRANSACTION)
+			.propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
 			.build();
 
 		ThreadContext threadContext = ThreadContext.builder()
-			.propagated(ThreadContext.CDI,
-				ThreadContext.TRANSACTION)
+			.propagated(ThreadContext.CDI, ThreadContext.TRANSACTION)
 			.build();
 
 		_many = Sinks
@@ -53,7 +51,7 @@ public class DatasourceProcessor {
 			.groupBy(Datasource::getDatasourceId)
 			.flatMap(group -> group.sample(Duration.ofSeconds(30)))
 			.subscribeOn(Schedulers.fromExecutorService(executor))
-			.subscribe(threadContext.contextualConsumer(d -> d.persist()));
+			.subscribe(threadContext.contextualConsumer(PanacheEntityBase::persistAndFlush));
 
 	}
 
