@@ -3,7 +3,8 @@ package io.openk9.entity.manager.processor;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
-import com.hazelcast.map.IMap;
+import com.hazelcast.transaction.TransactionContext;
+import com.hazelcast.transaction.TransactionalMap;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.EntityRelation;
@@ -15,7 +16,6 @@ import io.openk9.entity.manager.dto.EntityRequest;
 import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.LoggerAggregator;
-import io.openk9.entity.manager.util.MapUtil;
 import io.quarkus.runtime.Startup;
 import lombok.SneakyThrows;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -29,11 +29,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 @Startup
@@ -45,9 +42,6 @@ public class EntityManagerBus {
 			"entityFlakeId");
 		_entityRelationFlakeId = _hazelcastInstance.getFlakeIdGenerator(
 			"entityRelationFlakeId");
-		_entityMap = MapUtil.getEntityMap(_hazelcastInstance);
-		_entityRelationMap = MapUtil.getEntityRelationMap(_hazelcastInstance);
-		_ingestionMap = MapUtil.getIngestionMap(_hazelcastInstance);
 		_entityManagerQueue = _hazelcastInstance.getQueue(
 			"entityManagerQueue");
 		_executorService = Executors.newSingleThreadExecutor();
@@ -65,132 +59,127 @@ public class EntityManagerBus {
 
 			Payload request = _entityManagerQueue.take();
 
-			EntityManagerRequest payload = request.getPayload();
+			TransactionContext transactionContext =
+				_hazelcastInstance.newTransactionContext();
 
-			_loggerAggregator.emitLog(
-				"process ingestionId", payload.getIngestionId());
+			transactionContext.beginTransaction();
 
-			long tenantId = payload.getTenantId();
-			String ingestionId = payload.getIngestionId();
-			List<EntityRequest> entities = request.getEntities();
+			try {
+				TransactionalMap<EntityKey, Entity> entityTransactionalMap =
+					transactionContext.getMap("entityMap");
 
-			Map<EntityKey, Entity> localEntityMap =
-				new HashMap<>(entities.size());
+				TransactionalMap<IngestionKey, IngestionEntity> ingestionMapTransactional =
+					transactionContext.getMap("ingestionMap");
 
-			Map<IngestionKey, IngestionEntity> ingestionMap = new HashMap<>();
+				TransactionalMap<EntityRelationKey, EntityRelation> transactionalEntityRelationMap =
+					transactionContext.getMap("entityRelationMap");
 
-			for (EntityRequest entityRequest : entities) {
+				EntityManagerRequest payload = request.getPayload();
 
-				String name = entityRequest.getName();
-				String type = entityRequest.getType();
+				_loggerAggregator.emitLog(
+					"process ingestionId", payload.getIngestionId());
 
-				EntityKey key = EntityKey.of(tenantId, name, type);
+				long tenantId = payload.getTenantId();
+				String ingestionId = payload.getIngestionId();
+				List<EntityRequest> entities = request.getEntities();
 
-				Entity entity;
+				Map<EntityKey, Entity> localEntityMap =
+					new HashMap<>(entities.size());
 
-				_entityMap.lock(key);
+				for (EntityRequest entityRequest : entities) {
 
-				try {
-					entity = _entityMap.get(key);
+					String name = entityRequest.getName();
+					String type = entityRequest.getType();
 
-					if (entity == null) {
-						long cacheId = _entityFlakeId.newId();
-						entity = new Entity(
-							null, cacheId, tenantId, name, type, null);
-						_entityMap.set(key, entity);
-					}
+					long cacheId = _entityFlakeId.newId();
+
+					EntityKey key = EntityKey.of(tenantId, name, type, cacheId, ingestionId);
+
+					Entity entity = new Entity(
+						null, cacheId, tenantId, name, type, null, ingestionId);
+
+					entityTransactionalMap.set(key, entity);
 
 					localEntityMap.put(key, entity);
 
-				}
-				finally {
-					_entityMap.unlock(key);
-				}
+					IngestionKey ingestionKey = IngestionKey.of(
+						entity.getCacheId(),
+						ingestionId,
+						tenantId);
 
-				IngestionKey ingestionKey = IngestionKey.of(
-					entity.getCacheId(),
-					ingestionId,
-					tenantId);
+					ingestionMapTransactional.put(
+						ingestionKey,
+						IngestionEntity.fromEntity(
+							entity, entityRequest.getContext())
+					);
 
-				ingestionMap.put(
-					ingestionKey,
-					IngestionEntity.fromEntity(
-						entity, entityRequest.getContext())
-				);
+					for (EntityRequest entityRequest2 : entities) {
 
-				for (EntityRequest entityRequest2 : entities) {
-
-					for (RelationRequest relation : entityRequest2.getRelations()) {
-						if (relation.getTo().equals(entityRequest.getTmpId())) {
-							relation.setTo(entity.getCacheId());
+						for (RelationRequest relation : entityRequest2.getRelations()) {
+							if (relation.getTo().equals(entityRequest.getTmpId())) {
+								relation.setTo(entity.getCacheId());
+							}
 						}
+
 					}
 
 				}
 
-			}
+				for (EntityRequest entity : entities) {
 
-			Map<EntityRelationKey, EntityRelation> localEntityRelationMap =
-				new HashMap<>();
+					List<RelationRequest> relations = entity.getRelations();
 
-			for (EntityRequest entity : entities) {
+					if (relations == null || relations.isEmpty()) {
+						continue;
+					}
 
-				List<RelationRequest> relations = entity.getRelations();
+					Collection<Entity> values = localEntityMap.values();
 
-				if (relations == null || relations.isEmpty()) {
-					continue;
-				}
+					Entity current =
+						values
+							.stream()
+							.filter(e -> e.getName().equals(entity.getName()) &&
+										 e.getType().equals(entity.getType()))
+							.findFirst()
+							.orElse(null);
 
-				Collection<Entity> values = localEntityMap.values();
+					if (current == null) {
+						continue;
+					}
 
-				Entity current =
-					values
-						.stream()
-						.filter(e -> e.getName().equals(entity.getName()) &&
-									 e.getType().equals(entity.getType()))
-						.findFirst()
-						.orElse(null);
+					for (RelationRequest relation : relations) {
 
-				if (current == null) {
-					continue;
-				}
+						Long to = relation.getTo();
+						String name = relation.getName();
 
-				for (RelationRequest relation : relations) {
+						for (Entity value : values) {
+							if (value.getCacheId().equals(to)) {
+								long entityRelationId = _entityRelationFlakeId.newId();
 
-					Long to = relation.getTo();
-					String name = relation.getName();
+								EntityRelation entityRelation = new EntityRelation(
+									entityRelationId, current.getCacheId(), ingestionId,
+									name, value.getCacheId());
 
-					for (Entity value : values) {
-						if (value.getCacheId().equals(to)) {
-							long entityRelationId = _entityRelationFlakeId.newId();
-
-							EntityRelation entityRelation = new EntityRelation(
-								entityRelationId, current.getCacheId(), ingestionId,
-								name, value.getCacheId());
-
-							localEntityRelationMap.put(
-								EntityRelationKey.of(
-									entityRelationId,
-									current.getCacheId()
-								),
-								entityRelation
-							);
+								transactionalEntityRelationMap.put(
+									EntityRelationKey.of(
+										entityRelationId,
+										current.getCacheId()
+									),
+									entityRelation
+								);
+							}
 						}
 					}
 				}
+
+			}
+			catch (Exception e) {
+				transactionContext.rollbackTransaction();
+			}
+			finally {
+				transactionContext.commitTransaction();
 			}
 
-			CompletionStage<Void> future3 =
-				_ingestionMap.setAllAsync(ingestionMap);
-			CompletionStage<Void> future4 =
-				_entityRelationMap.setAllAsync(localEntityRelationMap);
-
-			CompletableFuture<?>[] completableFutures = Stream
-				.of(future3, future4)
-				.map(CompletionStage::toCompletableFuture)
-				.toArray(CompletableFuture<?>[]::new);
-
-			CompletableFuture.allOf(completableFutures).join();
 		}
 	}
 
@@ -209,11 +198,6 @@ public class EntityManagerBus {
 	private ExecutorService _executorService;
 	private FlakeIdGenerator _entityFlakeId;
 	private FlakeIdGenerator _entityRelationFlakeId;
-	private IMap<EntityKey, Entity> _entityMap;
-	private IMap<IngestionKey, IngestionEntity> _ingestionMap;
-	private IMap<EntityRelationKey, EntityRelation> _entityRelationMap;
 	private IQueue<Payload> _entityManagerQueue;
-
-
 
 }

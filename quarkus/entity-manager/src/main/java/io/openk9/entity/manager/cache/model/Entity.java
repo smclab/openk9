@@ -25,6 +25,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 	private String name;
 	private String type;
 	private Long graphId;
+	private String ingestionId;
 
 	@Override
 	public int compareTo(Entity other) {
@@ -60,6 +61,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 		out.writeString(name);
 		out.writeString(type);
 		out.writeObject(graphId);
+		out.writeString(ingestionId);
 	}
 
 	@Override
@@ -70,5 +72,6 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 		name = in.readString();
 		type = in.readString();
 		graphId = in.readObject();
+		ingestionId = in.readString();
 	}
 }

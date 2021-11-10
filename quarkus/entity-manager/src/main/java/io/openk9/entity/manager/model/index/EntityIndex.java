@@ -12,4 +12,5 @@ public class EntityIndex {
 	private final long tenantId;
 	private final String name;
 	private final String type;
+	private float score;
 }

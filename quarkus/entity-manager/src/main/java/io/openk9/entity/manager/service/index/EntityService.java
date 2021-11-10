@@ -21,7 +21,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class EntityService {
@@ -49,8 +51,14 @@ public class EntityService {
 
 		request.id(Long.toString(entity.getId()));
 
-		request.source(
-			JsonObject.mapFrom(entity).toString(), XContentType.JSON);
+		Map<String, Object> json = new HashMap<>();
+
+		json.put("name", entity.getName());
+		json.put("tenantId", entity.getTenantId());
+		json.put("id", entity.getId());
+		json.put("type", entity.getType());
+
+		request.source(json, XContentType.JSON);
 
 		_indexerBus.emit(request);
 
@@ -92,7 +100,9 @@ public class EntityService {
 		for (SearchHit hit : hits.getHits()) {
 			String sourceAsString = hit.getSourceAsString();
 			JsonObject json = new JsonObject(sourceAsString);
-			results.add(json.mapTo(EntityIndex.class));
+			EntityIndex entityIndex = json.mapTo(EntityIndex.class);
+			entityIndex.setScore(hit.getScore());
+			results.add(entityIndex);
 		}
 		return results;
 

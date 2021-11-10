@@ -4,6 +4,7 @@ package io.openk9.entity.manager.cache.model;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import com.hazelcast.partition.PartitionAware;
 import io.openk9.entity.manager.cache.EntityManagerDataSerializableFactory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,16 +13,19 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 @EqualsAndHashCode
-public class EntityKey implements IdentifiedDataSerializable {
+public class EntityKey implements IdentifiedDataSerializable, PartitionAware<Integer> {
 	private long tenantId;
 	private String name;
 	private String type;
+	private long cacheId;
+	private String ingestionId;
 
 	@Override
 	public int getFactoryId() {
@@ -38,6 +42,8 @@ public class EntityKey implements IdentifiedDataSerializable {
 		out.writeLong(tenantId);
 		out.writeString(name);
 		out.writeString(type);
+		out.writeLong(cacheId);
+		out.writeString(ingestionId);
 	}
 
 	@Override
@@ -45,5 +51,13 @@ public class EntityKey implements IdentifiedDataSerializable {
 		tenantId = in.readLong();
 		name = in.readString();
 		type = in.readString();
+		cacheId = in.readLong();
+		ingestionId = in.readString();
 	}
+
+	@Override
+	public Integer getPartitionKey() {
+		return Objects.hash(ingestionId);
+	}
+
 }

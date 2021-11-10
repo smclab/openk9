@@ -34,6 +34,8 @@ dependencies {
     implementation 'org.projectlombok:lombok:1.18.18'
     annotationProcessor 'org.projectlombok:lombok:1.18.18'
 
+    implementation group: 'org.neo4j', name: 'neo4j-cypher-dsl', version: '2021.4.0'
+
     implementation group: 'io.projectreactor', name: 'reactor-core', version: '3.4.11'
 
 }
