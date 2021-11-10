@@ -31,7 +31,9 @@ import javax.enterprise.inject.spi.CDI;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -129,8 +131,14 @@ public class CreateEntitiesRunnable
 				Optional<EntityGraph> optionalEntityGraph =
 					_disambiguate(
 						entityGraphService,
-						current.getCandidates(),
-						restCandidates,
+						cleanCandidates(
+							currentEntityRequest, current.getCandidates(),
+							entityNameCleanerProvider,
+							config.getScoreThreshold()),
+						cleanCandidates(
+							currentEntityRequest, restCandidates,
+							entityNameCleanerProvider,
+							config.getScoreThreshold()),
 						currentEntityRequest,
 						config.getUniqueEntities(), config.getMinHops(),
 						config.getMaxHops());
@@ -186,6 +194,75 @@ public class CreateEntitiesRunnable
 					), currentEntityRequest);
 			}
 		}
+
+	}
+
+	private List<EntityIndex> cleanCandidates(
+		Entity entityRequest,
+		List<EntityIndex> candidates,
+		EntityNameCleanerProvider entityNameCleanerProvider,
+		float scoreThreshold) {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"entity " + entityRequest.getName() + " candidates: " + candidates);
+		}
+
+		if (!candidates.isEmpty()) {
+
+			EntityIndex documentEntityResponse = candidates.get(0);
+
+			double bestScore;
+
+			if (candidates.size() > 1) {
+
+				if (_log.isDebugEnabled()) {
+					_log.debug("softmax");
+				}
+
+				double[] scores = candidates
+					.stream()
+					.mapToDouble(EntityIndex::getScore)
+					.toArray();
+
+				bestScore = _softmax(documentEntityResponse.getScore(), scores);
+
+			}
+			else {
+
+				if (_log.isDebugEnabled()) {
+					_log.debug("levenshtein");
+				}
+
+				bestScore = _levenshteinDistance(
+					entityNameCleanerProvider
+						.get(documentEntityResponse.getType())
+						.cleanEntityName(documentEntityResponse.getName()),
+					entityNameCleanerProvider
+						.get(entityRequest.getType())
+						.cleanEntityName(entityRequest.getName())
+				);
+
+			}
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"current score: " + bestScore + " score threshold: " + scoreThreshold + " for entity " + entityRequest.getName());
+			}
+
+			if (bestScore > scoreThreshold) {
+				_log.debug(
+					"filtered with treshold");
+				return Collections.singletonList(documentEntityResponse);
+			}
+
+		}
+
+		if (candidates.isEmpty() && _log.isDebugEnabled()) {
+			_log.debug("candidates empty");
+		}
+
+		return candidates;
 
 	}
 
@@ -281,6 +358,52 @@ public class CreateEntitiesRunnable
 					entityGraph.getId() == currentEntityRequest.getId())
 				.findFirst();
 
+	}
+
+	private static double _levenshteinDistance(String x, String y) {
+
+		int xLength = x.length();
+		int yLength = y.length();
+
+		int[][] dp = new int[xLength + 1][yLength + 1];
+
+		for (int i = 0; i <= xLength; i++) {
+			for (int j = 0; j <= yLength; j++) {
+				if (i == 0) {
+					dp[i][j] = j;
+				}
+				else if (j == 0) {
+					dp[i][j] = i;
+				}
+				else {
+					dp[i][j] = _min(dp[i - 1][j - 1]
+									+ _costOfSubstitution(x.charAt(i - 1), y.charAt(j - 1)),
+						dp[i - 1][j] + 1,
+						dp[i][j - 1] + 1);
+				}
+			}
+		}
+
+		return 1 - ((double)dp[xLength][yLength] / Math.max(xLength, yLength));
+	}
+
+	public static int _min(int... numbers) {
+		return Arrays.stream(numbers)
+			.min().orElse(Integer.MAX_VALUE);
+	}
+
+	public static int _costOfSubstitution(char a, char b) {
+		return a == b ? 0 : 1;
+	}
+
+	private static double _softmax(double input, double[] neuronValues) {
+
+		double total = Arrays
+			.stream(neuronValues)
+			.map(Math::exp)
+			.sum();
+
+		return Math.exp(input) / total;
 	}
 
 	private boolean _containsValue(String[] array, String value) {

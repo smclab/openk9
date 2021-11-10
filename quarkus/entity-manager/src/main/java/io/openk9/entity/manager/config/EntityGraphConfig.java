@@ -16,8 +16,15 @@ public class EntityGraphConfig {
 
 	@Inject
 	@ConfigProperty(
+		name = "openk9.entity.score-threshold",
+		defaultValue = "0.8"
+	)
+	private float scoreThreshold;
+
+	@Inject
+	@ConfigProperty(
 		name = "openk9.entity.unique-entities",
-		defaultValue = "date,organization"
+		defaultValue = "date,organization,loc,email,person,document"
 	)
 	private String[] uniqueEntities;
 
