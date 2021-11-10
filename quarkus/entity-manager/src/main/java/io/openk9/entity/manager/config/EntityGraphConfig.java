@@ -19,26 +19,26 @@ public class EntityGraphConfig {
 		name = "openk9.entity.score-threshold",
 		defaultValue = "0.8"
 	)
-	private float scoreThreshold;
+	float scoreThreshold;
 
 	@Inject
 	@ConfigProperty(
 		name = "openk9.entity.unique-entities",
 		defaultValue = "date,organization,loc,email,person,document"
 	)
-	private String[] uniqueEntities;
+	String[] uniqueEntities;
 
 	@Inject
 	@ConfigProperty(
 		name = "openk9.entity.min-hops",
 		defaultValue = "1"
 	)
-	private int minHops;
+	int minHops;
 	@Inject
 	@ConfigProperty(
 		name = "openk9.entity.max-hops",
 		defaultValue = "2"
 	)
-	private int maxHops = 2;
+	int maxHops = 2;
 
 }

@@ -17,7 +17,7 @@ public class OrganizationEntityNameCleaner extends DefaultEntityNameCleaner {
 		name = "openk9.entity.cleaner.stop-words",
 		defaultValue = "spa,s.p.a.,srl,s.r.l.,s.r.l,s.p.a"
 	)
-	private String[] _stopWords;
+	String[] _stopWords;
 
 	@Override
 	public String getEntityType() {
