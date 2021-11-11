@@ -169,11 +169,17 @@ public class CreateEntitiesRunnable
 							.stream()
 							.filter(entity -> entity != ingestionIdEntityMember)
 							.map(entityMember ->
-								getEntityCandidates(
-									entityNameCleanerProvider,
-									entityService,
-									entityMember, ingestionIdEntity
-								).getCandidates())
+									cleanCandidates(
+										entityMember.getEntity(),
+										getEntityCandidates(
+											entityNameCleanerProvider,
+											entityService,
+											entityMember, ingestionIdEntity
+										).getCandidates(),
+										entityNameCleanerProvider,
+										config.getScoreThreshold()
+									)
+								)
 							.flatMap(Collection::stream)
 							.collect(Collectors.toList());
 
@@ -184,10 +190,7 @@ public class CreateEntitiesRunnable
 								currentEntityRequest, current.getCandidates(),
 								entityNameCleanerProvider,
 								config.getScoreThreshold()),
-							cleanCandidates(
-								currentEntityRequest, restCandidates,
-								entityNameCleanerProvider,
-								config.getScoreThreshold()),
+							restCandidates,
 							currentEntityRequest,
 							config.getUniqueEntities(), config.getMinHops(),
 							config.getMaxHops());
