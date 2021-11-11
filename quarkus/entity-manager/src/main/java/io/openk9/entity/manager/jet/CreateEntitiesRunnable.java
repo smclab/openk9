@@ -346,7 +346,16 @@ public class CreateEntitiesRunnable
 
 				EntityIndex candidate = candidates.get(0);
 
-				result = List.of(entityGraphService.getEntity(candidate.getId()));
+				EntityGraph entityGraph =
+					EntityGraph.of(
+						currentEntityRequest.getId(),
+						currentEntityRequest.getGraphId(),
+						currentEntityRequest.getTenantId(),
+						candidate.getName(),
+						candidate.getType()
+					);
+
+				result = List.of(entityGraph);
 			}
 			else if (candidates.size() > 1) {
 
