@@ -21,6 +21,7 @@ import io.openk9.entity.manager.util.MapUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.jboss.logging.Logger;
 import org.neo4j.cypherdsl.core.AliasedExpression;
@@ -158,6 +159,10 @@ public class CreateEntitiesRunnable
 							entityService,
 							ingestionIdEntityMember, ingestionIdEntity);
 
+					if (_log.isDebugEnabled()) {
+						_log.debug("current: " + current);
+					}
+
 					EntityMember currentEntityMemberRequest =
 						current.getEntity();
 
@@ -266,6 +271,10 @@ public class CreateEntitiesRunnable
 				ingestionIdEntity.getTenantId(),
 				ingestionIdEntity.getName());
 
+		if (_log.isDebugEnabled()) {
+			_log.debug("type:" + ingestionIdEntity.getType()  + " class: " + entityNameCleaner.getClass().getName());
+		}
+
 		List<EntityIndex> candidates =
 			entityService.search(
 				ingestionIdEntity.getTenantId(), queryBuilder, 0, 10);
@@ -279,11 +288,6 @@ public class CreateEntitiesRunnable
 		EntityNameCleanerProvider entityNameCleanerProvider,
 		float scoreThreshold) {
 
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"entity " + entityRequest.getName() + " candidates: " + candidates);
-		}
-
 		if (!candidates.isEmpty()) {
 
 			EntityIndex documentEntityResponse = candidates.get(0);
@@ -291,10 +295,6 @@ public class CreateEntitiesRunnable
 			double bestScore;
 
 			if (candidates.size() > 1) {
-
-				if (_log.isDebugEnabled()) {
-					_log.debug("softmax");
-				}
 
 				double[] scores = candidates
 					.stream()
@@ -305,10 +305,6 @@ public class CreateEntitiesRunnable
 
 			}
 			else {
-
-				if (_log.isDebugEnabled()) {
-					_log.debug("levenshtein");
-				}
 
 				bestScore = _levenshteinDistance(
 					entityNameCleanerProvider
@@ -321,21 +317,10 @@ public class CreateEntitiesRunnable
 
 			}
 
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"current score: " + bestScore + " score threshold: " + scoreThreshold + " for entity " + entityRequest.getName());
-			}
-
 			if (bestScore > scoreThreshold) {
-				_log.debug(
-					"filtered with treshold");
 				return Collections.singletonList(documentEntityResponse);
 			}
 
-		}
-
-		if (candidates.isEmpty() && _log.isDebugEnabled()) {
-			_log.debug("candidates empty");
 		}
 
 		return candidates;
@@ -352,79 +337,33 @@ public class CreateEntitiesRunnable
 
 		List<EntityGraph> result = List.of();
 
-		if (!candidates.isEmpty() && !_containsValue(uniqueEntities, currentEntityRequestType)) {
+		if (_containsValue(uniqueEntities, currentEntityRequestType)) {
+			if (candidates.size() == 1) {
 
-			if (_log.isDebugEnabled()) {
-				_log.debug("disambiguating with search entity with type " + currentEntityRequestType);
+				if (_log.isDebugEnabled()) {
+					_log.debug("disambiguating entity with type " + currentEntityRequestType);
+				}
+
+				EntityIndex candidate = candidates.get(0);
+
+				result = List.of(entityGraphService.getEntity(candidate.getId()));
 			}
+			else if (candidates.size() > 1) {
 
-			Statement[] statements = new Statement[entityRequestList.size()];
-
-			for (int i = 0; i < entityRequestList.size(); i++) {
-
-				EntityIndex entityRequest = entityRequestList.get(i);
-
-				Node nodeEntity =
-					Cypher.node(entityRequest.getType()).named("entity");
-
-				AliasedExpression entityAliased = nodeEntity.as("entity");
-
-				SymbolicName path = Cypher.name("path");
-
-				Property idProperty = entityAliased.property("id");
-
-				Statement statement = Cypher
-					.match(nodeEntity)
-					.where(idProperty.eq(literalOf(entityRequest.getId())))
-					.call("apoc.path.expand").withArgs(
-						entityAliased, literalOf(null),
-						literalOf("-date"), literalOf(minHops), literalOf(maxHops))
-					.yield(path)
-					.returning(
-						Functions.last(Functions.nodes(path)).as("node"),
-						Functions.size(Functions.nodes(path)).subtract(
-							literalOf(1)).as("hops"))
-					.build();
-
-				statements[i] = statement;
+				result = _getEntityGraphs(
+					entityGraphService, entityRequestList,
+					minHops, maxHops, currentEntityRequestType, result);
 
 			}
-
-			if (statements.length == 1) {
-				Statement entityRequestListStatement =
-					Cypher
-						.call(statements[0])
-						.returning("node", "hops")
-						.orderBy(Cypher.name("hops"))
-						.build();
-
-				result = entityGraphService.search(
-					entityRequestListStatement);
-
-			}
-			else if (statements.length > 1) {
-				Statement entityRequestListStatement =
-					Cypher
-						.call(Cypher.unionAll(statements))
-						.returning("node", "hops")
-						.orderBy(Cypher.name("hops"))
-						.build();
-
-				result = entityGraphService.search(
-					entityRequestListStatement);
-			}
-
 		}
+		else {
+			if (!candidates.isEmpty()) {
 
-		if (candidates.size() == 1 && _containsValue(uniqueEntities, currentEntityRequestType)) {
+				result = _getEntityGraphs(
+					entityGraphService, entityRequestList,
+					minHops, maxHops, currentEntityRequestType, result);
 
-			if (_log.isDebugEnabled()) {
-				_log.debug("disambiguating entity with type " + currentEntityRequestType);
 			}
-
-			EntityIndex candidate = candidates.get(0);
-
-			result = List.of(entityGraphService.getEntity(candidate.getId()));
 		}
 
 		return
@@ -435,6 +374,74 @@ public class CreateEntitiesRunnable
 					entityGraph.getId() == currentEntityRequest.getCacheId())
 				.findFirst();
 
+	}
+
+	private List<EntityGraph> _getEntityGraphs(
+		EntityGraphService entityGraphService,
+		List<EntityIndex> entityRequestList, int minHops, int maxHops,
+		String currentEntityRequestType, List<EntityGraph> result) {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("disambiguating with search entity with type " +
+					   currentEntityRequestType);
+		}
+
+		Statement[] statements = new Statement[entityRequestList.size()];
+
+		for (int i = 0; i < entityRequestList.size(); i++) {
+
+			EntityIndex entityRequest = entityRequestList.get(i);
+
+			Node nodeEntity =
+				Cypher.node(entityRequest.getType()).named("entity");
+
+			AliasedExpression entityAliased = nodeEntity.as("entity");
+
+			SymbolicName path = Cypher.name("path");
+
+			Property idProperty = entityAliased.property("id");
+
+			Statement statement = Cypher
+				.match(nodeEntity)
+				.where(idProperty.eq(literalOf(entityRequest.getId())))
+				.call("apoc.path.expand").withArgs(
+					entityAliased, literalOf(null),
+					literalOf("-date"), literalOf(minHops), literalOf(maxHops))
+				.yield(path)
+				.returning(
+					Functions.last(Functions.nodes(path)).as("node"),
+					Functions.size(Functions.nodes(path)).subtract(
+						literalOf(1)).as("hops"))
+				.build();
+
+			statements[i] = statement;
+
+		}
+
+		if (statements.length == 1) {
+			Statement entityRequestListStatement =
+				Cypher
+					.call(statements[0])
+					.returning("node", "hops")
+					.orderBy(Cypher.name("hops"))
+					.build();
+
+			result = entityGraphService.search(
+				entityRequestListStatement);
+
+		}
+		else if (statements.length > 1) {
+			Statement entityRequestListStatement =
+				Cypher
+					.call(Cypher.unionAll(statements))
+					.returning("node", "hops")
+					.orderBy(Cypher.name("hops"))
+					.build();
+
+			result = entityGraphService.search(
+				entityRequestListStatement);
+		}
+		return result;
 	}
 
 	private static double _levenshteinDistance(String x, String y) {
@@ -501,6 +508,7 @@ public class CreateEntitiesRunnable
 	@Data
 	@Builder
 	@AllArgsConstructor(staticName = "of")
+	@ToString
 	public static class EntityMember {
 		private final Entity entity;
 		private final boolean local;
@@ -509,6 +517,7 @@ public class CreateEntitiesRunnable
 	@Data
 	@Builder
 	@AllArgsConstructor(staticName = "of")
+	@ToString
 	public static class EntityIngestionContext {
 		private final EntityMember current;
 		private final List<EntityMember> rest;
@@ -517,6 +526,7 @@ public class CreateEntitiesRunnable
 	@Data
 	@Builder
 	@AllArgsConstructor(staticName = "of")
+	@ToString
 	public static class EntityCandidates {
 		private final EntityMember entity;
 		private final List<EntityIndex> candidates;

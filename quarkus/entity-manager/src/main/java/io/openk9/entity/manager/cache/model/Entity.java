@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.io.IOException;
 
@@ -17,14 +18,19 @@ import java.io.IOException;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 	private Long id;
 	@EqualsAndHashCode.Include
 	private Long cacheId;
+	@ToString.Include
 	private Long tenantId;
+	@ToString.Include
 	private String name;
+	@ToString.Include
 	private String type;
 	private Long graphId;
+	@ToString.Include
 	private String ingestionId;
 
 	@Override

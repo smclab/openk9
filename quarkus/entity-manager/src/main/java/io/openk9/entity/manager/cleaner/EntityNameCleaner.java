@@ -15,7 +15,7 @@ public interface EntityNameCleaner {
 	QueryBuilder cleanEntityName(long tenantId, String entityName);
 
 	default String cleanEntityName(String entityName) {
-		return entityName.trim();
+		return entityName.strip();
 	}
 
 	@Data
@@ -36,11 +36,11 @@ public interface EntityNameCleaner {
 			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
 			boolQueryBuilder.must(
-				QueryBuilders.matchQuery("name", entityName)
+				QueryBuilders.matchQuery("name.keyword", entityName)
 			);
 
 			boolQueryBuilder.must(
-				QueryBuilders.matchQuery("type", getEntityType())
+				QueryBuilders.matchQuery("type.keyword", getEntityType())
 			);
 
 			return boolQueryBuilder;

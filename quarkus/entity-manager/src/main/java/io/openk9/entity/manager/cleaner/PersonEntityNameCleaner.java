@@ -26,7 +26,7 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 		);
 
 		boolQueryBuilder.must(
-			QueryBuilders.matchQuery("type", getEntityType())
+			QueryBuilders.matchQuery("type.keyword", getEntityType())
 		);
 
 		return boolQueryBuilder;
