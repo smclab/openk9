@@ -5,13 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.Collection;
-import java.util.List;
 
 @Data
 @Builder
 @AllArgsConstructor(staticName = "of")
 public class DataEntityIndex {
-	private final long id;
+	private final String id;
 	private final String entityType;
 	private final Collection<String> context;
 }
