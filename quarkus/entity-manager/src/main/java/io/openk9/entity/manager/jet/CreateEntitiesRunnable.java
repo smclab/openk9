@@ -33,7 +33,6 @@ import org.neo4j.cypherdsl.core.SymbolicName;
 
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -146,46 +145,35 @@ public class CreateEntitiesRunnable
 
 		for (List<EntityMember> ingestionIdEntities : values) {
 
-			List<EntityCandidates> entityCandidates =
-				new ArrayList<>(ingestionIdEntities.size());
-
 			for (EntityMember ingestionIdEntityMember : ingestionIdEntities) {
 
-				Entity ingestionIdEntity = ingestionIdEntityMember.getEntity();
+				if (ingestionIdEntityMember.isLocal()) {
 
-				EntityNameCleaner entityNameCleaner =
-					entityNameCleanerProvider.get(
-						ingestionIdEntity.getType());
+					Entity ingestionIdEntity =
+						ingestionIdEntityMember.getEntity();
 
-				QueryBuilder queryBuilder =
-					entityNameCleaner.cleanEntityName(
-						ingestionIdEntity.getTenantId(),
-						ingestionIdEntity.getName());
+					EntityCandidates current =
+						getEntityCandidates(
+							entityNameCleanerProvider,
+							entityService,
+							ingestionIdEntityMember, ingestionIdEntity);
 
-				List<EntityIndex> candidates =
-					entityService.search(
-						ingestionIdEntity.getTenantId(), queryBuilder, 0, 10);
-
-				entityCandidates.add(
-					EntityCandidates.of(ingestionIdEntityMember, candidates));
-
-			}
-
-			for (EntityCandidates current : entityCandidates) {
-
-				EntityMember currentEntityMemberRequest =
-					current.getEntity();
-
-				if (currentEntityMemberRequest.isLocal()) {
+					EntityMember currentEntityMemberRequest =
+						current.getEntity();
 
 					Entity currentEntityRequest =
 						currentEntityMemberRequest.getEntity();
 
 					List<EntityIndex> restCandidates =
-						entityCandidates
+						ingestionIdEntities
 							.stream()
-							.filter(entity -> entity != current)
-							.map(EntityCandidates::getCandidates)
+							.filter(entity -> entity != ingestionIdEntityMember)
+							.map(entityMember ->
+								getEntityCandidates(
+									entityNameCleanerProvider,
+									entityService,
+									entityMember, ingestionIdEntity
+								).getCandidates())
 							.flatMap(Collection::stream)
 							.collect(Collectors.toList());
 
@@ -256,10 +244,30 @@ public class CreateEntitiesRunnable
 							currentEntityRequest.getCacheId(),
 							currentEntityRequest.getIngestionId()
 						), currentEntityRequest);
-
 				}
 			}
 		}
+	}
+
+	private EntityCandidates getEntityCandidates(
+		EntityNameCleanerProvider entityNameCleanerProvider,
+		EntityService entityService, EntityMember ingestionIdEntityMember,
+		Entity ingestionIdEntity) {
+
+		EntityNameCleaner entityNameCleaner =
+			entityNameCleanerProvider.get(
+				ingestionIdEntity.getType());
+
+		QueryBuilder queryBuilder =
+			entityNameCleaner.cleanEntityName(
+				ingestionIdEntity.getTenantId(),
+				ingestionIdEntity.getName());
+
+		List<EntityIndex> candidates =
+			entityService.search(
+				ingestionIdEntity.getTenantId(), queryBuilder, 0, 10);
+
+		return EntityCandidates.of(ingestionIdEntityMember, candidates);
 	}
 
 	private List<EntityIndex> cleanCandidates(
