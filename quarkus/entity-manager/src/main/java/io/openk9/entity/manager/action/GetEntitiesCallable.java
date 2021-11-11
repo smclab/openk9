@@ -4,6 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicates;
+import com.hazelcast.scheduledexecutor.impl.HashMapAdapter;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 
@@ -24,9 +25,15 @@ public class GetEntitiesCallable
 		IMap<EntityKey, Entity> entityMap =
 			_hazelcastInstance.getMap("entityMap");
 
-		return entityMap.getAll(
-			entityMap.localKeySet(
-				Predicates.in("ingestionId", _ingestionIds)));
+		Map<EntityKey, Entity> result = new HashMapAdapter<>();
+
+		result.putAll(
+			entityMap.getAll(
+				entityMap.localKeySet(
+					Predicates.in("ingestionId", _ingestionIds)))
+		);
+
+		return result;
 	}
 
 	@Override
