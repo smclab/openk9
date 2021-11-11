@@ -2,17 +2,19 @@ package io.openk9.entity.manager.jet;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.core.Pipelining;
 import com.hazelcast.map.IMap;
+import com.hazelcast.multimap.MultiMap;
+import com.hazelcast.query.Predicates;
+import io.openk9.entity.manager.cache.model.Entity;
+import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.IngestionEntity;
-import io.openk9.entity.manager.cache.model.IngestionKey;
 import io.openk9.entity.manager.service.index.DataService;
 import io.openk9.entity.manager.util.MapUtil;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,18 +28,27 @@ public class AssociateEntitiesRunnable
 
 		_log.info("start AssociateEntitiesRunnable");
 
-		IMap<IngestionKey, IngestionEntity> ingestionMap =
-			MapUtil.getIngestionMap(_hazelcastInstance);
+		IMap<EntityKey, Entity> entityIMap =
+			MapUtil.getEntityMap(_hazelcastInstance);
 
-		Set<IngestionKey> entityKeys = ingestionMap.localKeySet();
+		MultiMap<String, String> entityContextMap =
+			_hazelcastInstance.getMultiMap("entityContextMap");
 
-		Map<IngestionKey, IngestionEntity> localIngestionMap =
-			ingestionMap.getAll(entityKeys);
+		Set<EntityKey> entityKeys = entityIMap.localKeySet(
+			Predicates.and(
+				Predicates.notEqual("id", null),
+				Predicates.notEqual("graphId", null),
+				Predicates.equal("associated", false)
+			)
+		);
 
-		_log.info("ingestionKeys: " + entityKeys.size());
+		Map<EntityKey, Entity> localEntityMap =
+			entityIMap.getAll(entityKeys);
 
-		Map<String, List<IngestionEntity>> groupingByIngestionId =
-			localIngestionMap
+		_log.info("ingestionKeys: " + localEntityMap.size());
+
+		Map<String, List<Entity>> groupingByIngestionId =
+			localEntityMap
 				.entrySet()
 				.stream()
 				.collect(
@@ -47,12 +58,12 @@ public class AssociateEntitiesRunnable
 							Map.Entry::getValue, Collectors.toList())));
 
 
-		List<IngestionKey> entitiesToDelete = new ArrayList<>();
+		Map<EntityKey, Entity> entitiesToUpdate = new HashMap<>();
 
-		for (Map.Entry<String, List<IngestionEntity>> entry : groupingByIngestionId.entrySet()) {
+		for (Map.Entry<String, List<Entity>> entry : groupingByIngestionId.entrySet()) {
 
 			String ingestionId = entry.getKey();
-			List<IngestionEntity> v = entry.getValue();
+			List<Entity> v = entry.getValue();
 
 			if (v.isEmpty()) {
 				continue;
@@ -64,7 +75,7 @@ public class AssociateEntitiesRunnable
 			Long tenantId =
 				v
 					.stream()
-					.map(IngestionEntity::getTenantId)
+					.map(Entity::getTenantId)
 					.findFirst()
 					.get();
 
@@ -75,16 +86,22 @@ public class AssociateEntitiesRunnable
 						tenantId,
 						ingestionId,
 						v
+							.stream()
+							.map(entity -> IngestionEntity
+								.fromEntity(entity, entityContextMap.get(entity.getCacheId())))
+							.collect(Collectors.toList())
 					);
 
 				if (associated) {
-					entitiesToDelete.addAll(
-						v
-							.stream()
-							.map(ie -> IngestionKey.of(
-								ie.getCacheId(), ingestionId, ie.getTenantId()))
-							.collect(Collectors.toList())
-					);
+					for (Entity entity : v) {
+						entity.setAssociated(true);
+						entitiesToUpdate.put(
+							EntityKey.of(
+								entity.getTenantId(), entity.getName(),
+								entity.getType(), entity.getCacheId(),
+								entity.getIngestionId()
+							), entity);
+					}
 				}
 			}
 			catch (Exception ioe) {
@@ -93,27 +110,7 @@ public class AssociateEntitiesRunnable
 
 		}
 
-		int size = entitiesToDelete.size();
-
-		if (size > 0) {
-
-			try {
-
-				Pipelining pipelining = new Pipelining(10);
-
-				for (IngestionKey ingestionKey : entitiesToDelete) {
-					pipelining.add(ingestionMap.removeAsync(ingestionKey));
-				}
-
-				pipelining.results();
-
-				_log.info("ingestion processed: " + size);
-
-			}
-			catch (Exception e) {
-				_log.error(e.getMessage(), e);
-			}
-		}
+		entityIMap.setAll(entitiesToUpdate);
 
 	}
 
