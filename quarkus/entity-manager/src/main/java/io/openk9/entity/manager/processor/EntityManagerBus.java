@@ -5,12 +5,11 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionalMap;
+import com.hazelcast.transaction.TransactionalMultiMap;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.EntityRelation;
 import io.openk9.entity.manager.cache.model.EntityRelationKey;
-import io.openk9.entity.manager.cache.model.IngestionEntity;
-import io.openk9.entity.manager.cache.model.IngestionKey;
 import io.openk9.entity.manager.dto.EntityManagerRequest;
 import io.openk9.entity.manager.dto.EntityRequest;
 import io.openk9.entity.manager.dto.Payload;
@@ -68,11 +67,11 @@ public class EntityManagerBus {
 				TransactionalMap<EntityKey, Entity> entityTransactionalMap =
 					transactionContext.getMap("entityMap");
 
-				TransactionalMap<IngestionKey, IngestionEntity> ingestionMapTransactional =
-					transactionContext.getMap("ingestionMap");
-
 				TransactionalMap<EntityRelationKey, EntityRelation> transactionalEntityRelationMap =
 					transactionContext.getMap("entityRelationMap");
+
+				TransactionalMultiMap<String, String> entityContextMap =
+					transactionContext.getMultiMap("entityContextMap");
 
 				EntityManagerRequest payload = request.getPayload();
 
@@ -96,22 +95,16 @@ public class EntityManagerBus {
 					EntityKey key = EntityKey.of(tenantId, name, type, cacheId, ingestionId);
 
 					Entity entity = new Entity(
-						null, cacheId, tenantId, name, type, null, ingestionId);
+						null, cacheId, tenantId, name, type, null,
+						ingestionId, false);
+
+					for (String context : entityRequest.getContext()) {
+						entityContextMap.put(cacheId, context);
+					}
 
 					entityTransactionalMap.set(key, entity);
 
 					localEntityMap.put(key, entity);
-
-					IngestionKey ingestionKey = IngestionKey.of(
-						entity.getCacheId(),
-						ingestionId,
-						tenantId);
-
-					ingestionMapTransactional.put(
-						ingestionKey,
-						IngestionEntity.fromEntity(
-							entity, entityRequest.getContext())
-					);
 
 					for (EntityRequest entityRequest2 : entities) {
 
@@ -160,7 +153,7 @@ public class EntityManagerBus {
 									entityRelationId, current.getCacheId(), ingestionId,
 									name, value.getCacheId());
 
-								transactionalEntityRelationMap.put(
+								transactionalEntityRelationMap.set(
 									EntityRelationKey.of(
 										entityRelationId,
 										current.getCacheId()
@@ -174,6 +167,7 @@ public class EntityManagerBus {
 
 			}
 			catch (Exception e) {
+				_log.error(e.getMessage(), e);
 				transactionContext.rollbackTransaction();
 			}
 			finally {

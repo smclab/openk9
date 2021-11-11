@@ -46,7 +46,7 @@ public class DataService {
 
 			entities.add(JsonObject.mapFrom(
 				DataEntityIndex.of(
-					entity.getCacheId(), entity.getType(), entity.getContext())
+					entity.getId(), entity.getType(), entity.getContext())
 			));
 
 			dataDocument.put("entities", entities);
@@ -89,7 +89,7 @@ public class DataService {
 			ingestionEntities
 				.stream()
 				.map(entity -> DataEntityIndex.of(
-					entity.getCacheId(), entity.getType(), entity.getContext()))
+					entity.getId(), entity.getType(), entity.getContext()))
 				.map(JsonObject::mapFrom)
 				.forEach(entities::add);
 

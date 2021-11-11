@@ -4,6 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.Pipelining;
 import com.hazelcast.map.IMap;
+import com.hazelcast.projection.Projections;
 import com.hazelcast.query.Predicates;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
@@ -16,9 +17,11 @@ import org.jboss.logging.Logger;
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CreateRelationRunnable
 	implements StopWatchRunnable, HazelcastInstanceAware, Serializable {
@@ -36,14 +39,24 @@ public class CreateRelationRunnable
 			)
 		);
 
-		Map<EntityKey, Entity> localEntityMap = entityIMap.getAll(entityKeys);
+		String[] cacheIds =
+			entityKeys
+				.stream()
+				.map(EntityKey::getCacheId)
+				.toArray(String[]::new);
+
+		Collection<Object[]> projection = entityIMap.project(
+			Projections.multiAttribute("cacheId", "id"),
+			Predicates.in("__key.cacheId", cacheIds));
 
 		IMap<EntityRelationKey, EntityRelation> entityRelationMap =
 			MapUtil.getEntityRelationMap(_hazelcastInstance);
 
-		String[] cacheIds =
-			localEntityMap.values().stream().map(Entity::getCacheId).toArray(
-				String[]::new);
+		Map<String, String> collect =
+			projection
+				.stream()
+				.collect(Collectors.toMap(
+					o -> (String)o[0], o -> (String)o[1]));
 
 		Set<Map.Entry<EntityRelationKey, EntityRelation>> entries =
 			entityRelationMap.entrySet(
@@ -59,17 +72,24 @@ public class CreateRelationRunnable
 			EntityRelationKey key = entry.getKey();
 			EntityRelation value = entry.getValue();
 
-			try {
-				entityGraphService.createRelationship(
-					value.getEntityCacheId(), value.getTo(), value.getName()
-				);
+			String from = collect.get(value.getEntityCacheId());
+			String to = collect.get(value.getTo());
 
-				entityRelationKeysToDelete.add(key);
+			if (from != null && to != null) {
+				try {
+					entityGraphService.createRelationship(
+						from, to, value.getName()
+					);
 
+					entityRelationKeysToDelete.add(key);
+
+				}
+				catch (Exception e) {
+					_log.error(e.getMessage(), e);
+				}
 			}
-			catch (Exception e) {
-				_log.error(e.getMessage(), e);
-			}
+
+
 		}
 
 		try {

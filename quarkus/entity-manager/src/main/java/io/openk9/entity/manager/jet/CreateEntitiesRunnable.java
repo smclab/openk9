@@ -146,6 +146,8 @@ public class CreateEntitiesRunnable
 
 		for (List<EntityMember> ingestionIdEntities : values) {
 
+			Map<EntityKey, Entity> entityMap = new HashMap<>();
+
 			for (EntityMember ingestionIdEntityMember : ingestionIdEntities) {
 
 				if (ingestionIdEntityMember.isLocal()) {
@@ -244,7 +246,7 @@ public class CreateEntitiesRunnable
 
 					}
 
-					entityIMap.set(
+					entityMap.put(
 						EntityKey.of(
 							currentEntityRequest.getTenantId(),
 							currentEntityRequest.getName(),
@@ -252,7 +254,11 @@ public class CreateEntitiesRunnable
 							currentEntityRequest.getCacheId(),
 							currentEntityRequest.getIngestionId()
 						), currentEntityRequest);
+
 				}
+
+				entityIMap.setAll(entityMap);
+
 			}
 		}
 	}
@@ -370,6 +376,12 @@ public class CreateEntitiesRunnable
 			result
 				.stream()
 				.filter(Objects::nonNull)
+				.filter(entityGraph ->
+						candidates
+							.stream()
+							.anyMatch(
+								entityIndex ->
+									entityGraph.getId().equals(entityIndex.getId())))
 				.findFirst();
 
 	}
@@ -403,7 +415,7 @@ public class CreateEntitiesRunnable
 				.match(nodeEntity)
 				.where(idProperty.eq(literalOf(entityRequest.getId())))
 				.call("apoc.path.expand").withArgs(
-					entityAliased, literalOf(null),
+					entityAliased.getDelegate(), literalOf(null),
 					literalOf("-date"), literalOf(minHops), literalOf(maxHops))
 				.yield(path)
 				.returning(

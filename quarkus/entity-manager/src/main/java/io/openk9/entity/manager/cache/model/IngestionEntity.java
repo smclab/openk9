@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
 
 @Data
 @Builder
@@ -25,7 +25,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 	private Long tenantId;
 	private String name;
 	private String type;
-	private List<String> context;
+	private Collection<String> context;
 
 	@Override
 	public int compareTo(IngestionEntity other) {
@@ -74,7 +74,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 	}
 
 	public static IngestionEntity fromEntity(
-		Entity entity, List<String> context) {
+		Entity entity, Collection<String> context) {
 		return new IngestionEntity(
 			entity.getId(),
 			entity.getCacheId(),
