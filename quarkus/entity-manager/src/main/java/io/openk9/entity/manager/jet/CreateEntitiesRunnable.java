@@ -1,9 +1,12 @@
 package io.openk9.entity.manager.jet;
 
+import com.hazelcast.cluster.Member;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
+import com.hazelcast.core.IExecutorService;
 import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicates;
+import io.openk9.entity.manager.action.GetEntitiesCallable;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cleaner.EntityNameCleaner;
@@ -13,6 +16,7 @@ import io.openk9.entity.manager.model.graph.EntityGraph;
 import io.openk9.entity.manager.model.index.EntityIndex;
 import io.openk9.entity.manager.service.graph.EntityGraphService;
 import io.openk9.entity.manager.service.index.EntityService;
+import io.openk9.entity.manager.util.FutureUtil;
 import io.openk9.entity.manager.util.MapUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,12 +37,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.neo4j.cypherdsl.core.Cypher.literalOf;
 
@@ -74,22 +82,76 @@ public class CreateEntitiesRunnable
 
 		Map<EntityKey, Entity> localEntityMap = entityIMap.getAll(entityKeys);
 
-		Collection<Entity> entityMapValues = localEntityMap.values();
+		Collection<Entity> localEntityValues = localEntityMap.values();
 
-		Map<String, List<Entity>> entitiesGroupingByIngestionId =
-			entityMapValues
+		Set<EntityKey> localEntityKeys = localEntityMap.keySet();
+
+		List<Member> collect =
+			_hazelcastInstance
+				.getCluster()
+				.getMembers()
 				.stream()
-				.collect(Collectors.groupingBy(Entity::getIngestionId));
+				.filter(member -> !member.localMember())
+				.collect(Collectors.toList());
 
-		Collection<List<Entity>> values =
+		String[] ingestionIds =
+			localEntityKeys
+				.stream()
+				.map(EntityKey::getIngestionId)
+				.distinct()
+				.toArray(String[]::new);
+
+		IExecutorService entityExecutor =
+			_hazelcastInstance.getExecutorService("entityExecutor");
+
+		Map<Member, Future<Map<EntityKey, Entity>>> memberFutureMap =
+			entityExecutor.submitToMembers(
+				new GetEntitiesCallable(ingestionIds), collect);
+
+		Map<EntityKey, Entity> otherEntityKeyEntityMap =
+			memberFutureMap
+				.values()
+				.stream()
+				.map(FutureUtil::makeCompletableFuture)
+				.map(CompletableFuture::join)
+				.reduce((a, b) -> {
+
+					Map<EntityKey, Entity> map = new HashMap<>();
+
+					map.putAll(a);
+					map.putAll(b);
+
+					return map;
+
+				})
+				.orElseGet(Map::of);
+
+		Stream<EntityMember> otherEntityMemberStream =
+			otherEntityKeyEntityMap
+				.values()
+				.stream()
+				.map(entity -> EntityMember.of(entity, false));
+
+		Stream<EntityMember> localEntityMemberStream = localEntityValues
+			.stream()
+			.map(entity -> EntityMember.of(entity, true));
+
+		Map<String, List<EntityMember>> entitiesGroupingByIngestionId =
+			Stream.concat(localEntityMemberStream, otherEntityMemberStream)
+				.collect(Collectors.groupingBy(
+					entityMember -> entityMember.getEntity().getIngestionId()));
+
+		Collection<List<EntityMember>> values =
 			entitiesGroupingByIngestionId.values();
 
-		for (List<Entity> ingestionIdEntities : values) {
+		for (List<EntityMember> ingestionIdEntities : values) {
 
 			List<EntityCandidates> entityCandidates =
 				new ArrayList<>(ingestionIdEntities.size());
 
-			for (Entity ingestionIdEntity : ingestionIdEntities) {
+			for (EntityMember ingestionIdEntityMember : ingestionIdEntities) {
+
+				Entity ingestionIdEntity = ingestionIdEntityMember.getEntity();
 
 				EntityNameCleaner entityNameCleaner =
 					entityNameCleanerProvider.get(
@@ -105,89 +167,99 @@ public class CreateEntitiesRunnable
 						ingestionIdEntity.getTenantId(), queryBuilder, 0, 10);
 
 				entityCandidates.add(
-					EntityCandidates.of(ingestionIdEntity, candidates));
+					EntityCandidates.of(ingestionIdEntityMember, candidates));
 
 			}
 
 			for (EntityCandidates current : entityCandidates) {
 
-				Entity currentEntityRequest = current.getEntity();
+				EntityMember currentEntityMemberRequest =
+					current.getEntity();
 
-				List<EntityIndex> restCandidates =
-					entityCandidates
-						.stream()
-						.filter(entity -> entity != current)
-						.map(EntityCandidates::getCandidates)
-						.flatMap(Collection::stream)
-						.collect(Collectors.toList());
+				if (currentEntityMemberRequest.isLocal()) {
 
-				Optional<EntityGraph> optionalEntityGraph =
-					_disambiguate(
-						entityGraphService,
-						cleanCandidates(
-							currentEntityRequest, current.getCandidates(),
-							entityNameCleanerProvider,
-							config.getScoreThreshold()),
-						cleanCandidates(
-							currentEntityRequest, restCandidates,
-							entityNameCleanerProvider,
-							config.getScoreThreshold()),
-						currentEntityRequest,
-						config.getUniqueEntities(), config.getMinHops(),
-						config.getMaxHops());
+					Entity currentEntityRequest =
+						currentEntityMemberRequest.getEntity();
 
-				if (optionalEntityGraph.isEmpty()) {
-					try {
-						entityService.awaitIndex(
-							EntityIndex.of(
-								currentEntityRequest.getCacheId(),
-								currentEntityRequest.getTenantId(),
-								currentEntityRequest.getName(),
-								currentEntityRequest.getType(),
-								0)
-						);
+					List<EntityIndex> restCandidates =
+						entityCandidates
+							.stream()
+							.filter(entity -> entity != current)
+							.map(EntityCandidates::getCandidates)
+							.flatMap(Collection::stream)
+							.collect(Collectors.toList());
 
-						currentEntityRequest.setId(currentEntityRequest.getCacheId());
+					Optional<EntityGraph> optionalEntityGraph =
+						_disambiguate(
+							entityGraphService,
+							cleanCandidates(
+								currentEntityRequest, current.getCandidates(),
+								entityNameCleanerProvider,
+								config.getScoreThreshold()),
+							cleanCandidates(
+								currentEntityRequest, restCandidates,
+								entityNameCleanerProvider,
+								config.getScoreThreshold()),
+							currentEntityRequest,
+							config.getUniqueEntities(), config.getMinHops(),
+							config.getMaxHops());
 
-						EntityGraph entityGraph =
-							entityGraphService.insertEntity(
-								currentEntityRequest.getType(),
-								EntityGraph.of(
-									currentEntityRequest.getId(),
-									null,
+					if (optionalEntityGraph.isEmpty()) {
+						try {
+							entityService.awaitIndex(
+								EntityIndex.of(
+									currentEntityRequest.getCacheId(),
 									currentEntityRequest.getTenantId(),
 									currentEntityRequest.getName(),
-									currentEntityRequest.getType()
-								)
+									currentEntityRequest.getType(),
+									0)
 							);
 
-						currentEntityRequest.setGraphId(entityGraph.getGraphId());
+							currentEntityRequest.setId(
+								currentEntityRequest.getCacheId());
+
+							EntityGraph entityGraph =
+								entityGraphService.insertEntity(
+									currentEntityRequest.getType(),
+									EntityGraph.of(
+										currentEntityRequest.getId(),
+										null,
+										currentEntityRequest.getTenantId(),
+										currentEntityRequest.getName(),
+										currentEntityRequest.getType()
+									)
+								);
+
+							currentEntityRequest.setGraphId(
+								entityGraph.getGraphId());
+
+						}
+						catch (Exception ioe) {
+							_log.error(ioe.getMessage());
+						}
+					}
+					else {
+
+						EntityGraph entityGraph = optionalEntityGraph.get();
+
+						currentEntityRequest.setId(entityGraph.getId());
+						currentEntityRequest.setGraphId(
+							entityGraph.getGraphId());
 
 					}
-					catch (Exception ioe) {
-						_log.error(ioe.getMessage());
-					}
+
+					entityIMap.set(
+						EntityKey.of(
+							currentEntityRequest.getTenantId(),
+							currentEntityRequest.getName(),
+							currentEntityRequest.getType(),
+							currentEntityRequest.getCacheId(),
+							currentEntityRequest.getIngestionId()
+						), currentEntityRequest);
+
 				}
-				else {
-
-					EntityGraph entityGraph = optionalEntityGraph.get();
-
-					currentEntityRequest.setId(entityGraph.getId());
-					currentEntityRequest.setGraphId(entityGraph.getGraphId());
-
-				}
-
-				entityIMap.set(
-					EntityKey.of(
-						currentEntityRequest.getTenantId(),
-						currentEntityRequest.getName(),
-						currentEntityRequest.getType(),
-						currentEntityRequest.getCacheId(),
-						currentEntityRequest.getIngestionId()
-					), currentEntityRequest);
 			}
 		}
-
 	}
 
 	private List<EntityIndex> cleanCandidates(
@@ -418,16 +490,24 @@ public class CreateEntitiesRunnable
 	@Data
 	@Builder
 	@AllArgsConstructor(staticName = "of")
+	public static class EntityMember {
+		private final Entity entity;
+		private final boolean local;
+	}
+
+	@Data
+	@Builder
+	@AllArgsConstructor(staticName = "of")
 	public static class EntityIngestionContext {
-		private final Entity current;
-		private final List<Entity> rest;
+		private final EntityMember current;
+		private final List<EntityMember> rest;
 	}
 
 	@Data
 	@Builder
 	@AllArgsConstructor(staticName = "of")
 	public static class EntityCandidates {
-		private final Entity entity;
+		private final EntityMember entity;
 		private final List<EntityIndex> candidates;
 	}
 

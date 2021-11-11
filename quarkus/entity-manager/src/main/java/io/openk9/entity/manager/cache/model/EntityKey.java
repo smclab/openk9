@@ -57,7 +57,7 @@ public class EntityKey implements IdentifiedDataSerializable, PartitionAware<Int
 
 	@Override
 	public Integer getPartitionKey() {
-		return Objects.hash(ingestionId);
+		return Objects.hash(tenantId, name, type);
 	}
 
 }
