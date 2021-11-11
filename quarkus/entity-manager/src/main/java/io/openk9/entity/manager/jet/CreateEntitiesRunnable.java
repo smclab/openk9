@@ -271,10 +271,6 @@ public class CreateEntitiesRunnable
 				ingestionIdEntity.getTenantId(),
 				ingestionIdEntity.getName());
 
-		if (_log.isDebugEnabled()) {
-			_log.debug("type:" + ingestionIdEntity.getType()  + " class: " + entityNameCleaner.getClass().getName());
-		}
-
 		List<EntityIndex> candidates =
 			entityService.search(
 				ingestionIdEntity.getTenantId(), queryBuilder, 0, 10);
@@ -371,7 +367,7 @@ public class CreateEntitiesRunnable
 				.stream()
 				.filter(Objects::nonNull)
 				.filter(entityGraph ->
-					entityGraph.getId() == currentEntityRequest.getCacheId())
+					entityGraph.getId().equals(currentEntityRequest.getCacheId()))
 				.findFirst();
 
 	}

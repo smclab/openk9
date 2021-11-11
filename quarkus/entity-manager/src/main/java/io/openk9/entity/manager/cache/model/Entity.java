@@ -20,9 +20,9 @@ import java.io.IOException;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
 public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
-	private Long id;
+	private String id;
 	@EqualsAndHashCode.Include
-	private Long cacheId;
+	private String cacheId;
 	@ToString.Include
 	private Long tenantId;
 	@ToString.Include
@@ -61,8 +61,8 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 
 	@Override
 	public void writeData(ObjectDataOutput out) throws IOException {
-		out.writeObject(id);
-		out.writeObject(cacheId);
+		out.writeString(id);
+		out.writeString(cacheId);
 		out.writeObject(tenantId);
 		out.writeString(name);
 		out.writeString(type);
@@ -72,8 +72,8 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 
 	@Override
 	public void readData(ObjectDataInput in) throws IOException {
-		id = in.readObject();
-		cacheId = in.readObject();
+		id = in.readString();
+		cacheId = in.readString();
 		tenantId = in.readObject();
 		name = in.readString();
 		type = in.readString();

@@ -563,10 +563,10 @@ hazelcast:
             # The bit-length of the sequence component of this flake id generator.
             # This configuration is limiting factor for the maximum rate at which IDs
             # can be generated. Default is 6 bits.
-            bits-sequence: 6
+            bits-sequence: 3
             # The bit-length of node id component of this flake id generator. Default
             # value is 16 bits.
-            bits-node-id: 16
+            bits-node-id: 8
             # Sets how far to the future is the generator allowed to go to generate
             # IDs without blocking, default is 15 seconds.
             allowed-future-millis: 15000

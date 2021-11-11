@@ -91,7 +91,7 @@ public class EntityManagerBus {
 					String name = entityRequest.getName();
 					String type = entityRequest.getType();
 
-					long cacheId = _entityFlakeId.newId();
+					String cacheId = Long.toString(_entityFlakeId.newId());
 
 					EntityKey key = EntityKey.of(tenantId, name, type, cacheId, ingestionId);
 
@@ -149,7 +149,7 @@ public class EntityManagerBus {
 
 					for (RelationRequest relation : relations) {
 
-						Long to = relation.getTo();
+						String to = relation.getTo();
 						String name = relation.getName();
 
 						for (Entity value : values) {

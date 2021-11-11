@@ -24,7 +24,7 @@ public class EntityKey implements IdentifiedDataSerializable, PartitionAware<Int
 	private long tenantId;
 	private String name;
 	private String type;
-	private long cacheId;
+	private String cacheId;
 	private String ingestionId;
 
 	@Override
@@ -42,7 +42,7 @@ public class EntityKey implements IdentifiedDataSerializable, PartitionAware<Int
 		out.writeLong(tenantId);
 		out.writeString(name);
 		out.writeString(type);
-		out.writeLong(cacheId);
+		out.writeString(cacheId);
 		out.writeString(ingestionId);
 	}
 
@@ -51,7 +51,7 @@ public class EntityKey implements IdentifiedDataSerializable, PartitionAware<Int
 		tenantId = in.readLong();
 		name = in.readString();
 		type = in.readString();
-		cacheId = in.readLong();
+		cacheId = in.readString();
 		ingestionId = in.readString();
 	}
 

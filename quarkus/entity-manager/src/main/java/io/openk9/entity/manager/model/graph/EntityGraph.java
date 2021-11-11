@@ -9,7 +9,7 @@ import org.neo4j.driver.types.Node;
 @Builder
 @AllArgsConstructor(staticName = "of")
 public class EntityGraph {
-	private long id;
+	private String id;
 	private Long graphId;
 	private long tenantId;
 	private String name;
@@ -17,7 +17,7 @@ public class EntityGraph {
 
 	public static EntityGraph from(String type, Node node) {
 		return new EntityGraph(
-			node.get("id").asLong(),
+			node.get("id").asString(),
 			node.id(),
 			node.get("tenantId").asLong(),
 			node.get("name").asString(),

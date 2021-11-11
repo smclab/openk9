@@ -13,5 +13,5 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class RelationRequest implements Serializable {
 	private String name;
-	private Long to;
+	private String to;
 }

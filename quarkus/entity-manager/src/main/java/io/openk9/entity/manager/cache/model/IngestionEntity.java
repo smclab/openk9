@@ -19,9 +19,9 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class IngestionEntity implements IdentifiedDataSerializable, Comparable<IngestionEntity> {
-	private Long id;
+	private String id;
 	@EqualsAndHashCode.Include
-	private Long cacheId;
+	private String cacheId;
 	private Long tenantId;
 	private String name;
 	private String type;
@@ -55,8 +55,8 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 
 	@Override
 	public void writeData(ObjectDataOutput out) throws IOException {
-		out.writeObject(id);
-		out.writeObject(cacheId);
+		out.writeString(id);
+		out.writeString(cacheId);
 		out.writeObject(tenantId);
 		out.writeString(name);
 		out.writeString(type);
@@ -65,8 +65,8 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 
 	@Override
 	public void readData(ObjectDataInput in) throws IOException {
-		id = in.readObject();
-		cacheId = in.readObject();
+		id = in.readString();
+		cacheId = in.readString();
 		tenantId = in.readObject();
 		name = in.readString();
 		type = in.readString();

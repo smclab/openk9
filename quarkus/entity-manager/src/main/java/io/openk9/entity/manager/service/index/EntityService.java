@@ -52,13 +52,15 @@ public class EntityService {
 		IndexRequest request =
 			new IndexRequest(entity.getTenantId() + "-entity");
 
-		request.id(Long.toString(entity.getId()));
+		String entityId = entity.getId();
+
+		request.id(entityId);
 
 		Map<String, Object> json = new HashMap<>();
 
 		json.put("name", entity.getName());
 		json.put("tenantId", entity.getTenantId());
-		json.put("id", entity.getId());
+		json.put("id", entityId);
 		json.put("type", entity.getType());
 
 		request.source(json, XContentType.JSON);
@@ -72,13 +74,15 @@ public class EntityService {
 		IndexRequest request =
 			new IndexRequest(entity.getTenantId() + "-entity");
 
-		request.id(Long.toString(entity.getId()));
+		String entityId = entity.getId();
+
+		request.id(entityId);
 
 		Map<String, Object> json = new HashMap<>();
 
 		json.put("name", entity.getName());
 		json.put("tenantId", entity.getTenantId());
-		json.put("id", entity.getId());
+		json.put("id", entityId);
 		json.put("type", entity.getType());
 
 		request.source(json, XContentType.JSON);

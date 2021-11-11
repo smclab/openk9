@@ -41,9 +41,9 @@ public class CreateRelationRunnable
 		IMap<EntityRelationKey, EntityRelation> entityRelationMap =
 			MapUtil.getEntityRelationMap(_hazelcastInstance);
 
-		Long[] cacheIds =
+		String[] cacheIds =
 			localEntityMap.values().stream().map(Entity::getCacheId).toArray(
-				Long[]::new);
+				String[]::new);
 
 		Set<Map.Entry<EntityRelationKey, EntityRelation>> entries =
 			entityRelationMap.entrySet(

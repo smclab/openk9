@@ -20,10 +20,10 @@ import java.io.IOException;
 public class EntityRelation implements IdentifiedDataSerializable {
 	@EqualsAndHashCode.Include
 	private Long cacheId;
-	private Long entityCacheId;
+	private String entityCacheId;
 	private String ingestionId;
 	private String name;
-	private Long to;
+	private String to;
 
 	@Override
 	public int getFactoryId() {
@@ -38,18 +38,18 @@ public class EntityRelation implements IdentifiedDataSerializable {
 	@Override
 	public void writeData(ObjectDataOutput out) throws IOException {
 		out.writeObject(cacheId);
-		out.writeObject(entityCacheId);
+		out.writeString(entityCacheId);
 		out.writeString(ingestionId);
 		out.writeString(name);
-		out.writeObject(to);
+		out.writeString(to);
 	}
 
 	@Override
 	public void readData(ObjectDataInput in) throws IOException {
 		cacheId = in.readObject();
-		entityCacheId = in.readObject();
+		entityCacheId = in.readString();
 		ingestionId = in.readString();
 		name = in.readString();
-		to = in.readObject();
+		to = in.readString();
 	}
 }

@@ -20,6 +20,6 @@ public class EntityRequest implements Serializable {
 	@EqualsAndHashCode.Include
 	private String type;
 	private List<RelationRequest> relations;
-	private long tmpId;
+	private String tmpId;
 	private List<String> context;
 }

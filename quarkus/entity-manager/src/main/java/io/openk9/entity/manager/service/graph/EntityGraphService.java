@@ -20,7 +20,7 @@ import java.util.List;
 @Unremovable
 public class EntityGraphService {
 
-	public EntityGraph getEntity(long id) {
+	public EntityGraph getEntity(String id) {
 
 		try (Session session = driver.session()) {
 
@@ -104,7 +104,7 @@ public class EntityGraphService {
 	}
 
 	public void createRelationship(
-		long graphId1, long graphId2, String relationName) {
+		String graphId1, String graphId2, String relationName) {
 
 		try (Session session = driver.session()) {
 
@@ -153,7 +153,7 @@ public class EntityGraphService {
 				Record next = result.next();
 				Node node = next.get("a").asNode();
 				String entityName = node.get("name").asString();
-				long id = node.get("id").asLong();
+				String id = node.get("id").asString();
 				return EntityGraph.of(
 					id, node.id(), tenantId, entityName, type);
 			}

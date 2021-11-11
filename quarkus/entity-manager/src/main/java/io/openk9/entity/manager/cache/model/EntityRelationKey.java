@@ -13,20 +13,21 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 @EqualsAndHashCode
-public class EntityRelationKey implements IdentifiedDataSerializable, PartitionAware<Long> {
+public class EntityRelationKey implements IdentifiedDataSerializable, PartitionAware<Integer> {
 
 	private long entityRelationId;
-	private long entityId;
+	private String entityId;
 
 	@Override
-	public Long getPartitionKey() {
-		return entityId;
+	public Integer getPartitionKey() {
+		return Objects.hash(entityId);
 	}
 
 	@Override
@@ -42,12 +43,12 @@ public class EntityRelationKey implements IdentifiedDataSerializable, PartitionA
 	@Override
 	public void writeData(ObjectDataOutput out) throws IOException {
 		out.writeLong(entityRelationId);
-		out.writeLong(entityId);
+		out.writeString(entityId);
 	}
 
 	@Override
 	public void readData(ObjectDataInput in) throws IOException {
 		entityRelationId = in.readLong();
-		entityId = in.readLong();
+		entityId = in.readString();
 	}
 }
