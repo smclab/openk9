@@ -34,6 +34,7 @@ import org.neo4j.cypherdsl.core.SymbolicName;
 
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -148,45 +149,42 @@ public class CreateEntitiesRunnable
 
 			Map<EntityKey, Entity> entityMap = new HashMap<>();
 
-			for (EntityMember ingestionIdEntityMember : ingestionIdEntities) {
+			List<EntityCandidates> entityCandidateList = new ArrayList<>();
+
+			for (EntityMember ingestionIdEntity : ingestionIdEntities) {
+				entityCandidateList.add(
+					getEntityCandidates(
+						entityNameCleanerProvider,
+						entityService,
+						ingestionIdEntity, ingestionIdEntity.getEntity())
+				);
+			}
+
+			for (EntityCandidates ingestionIdEntityCandidate : entityCandidateList) {
+
+				EntityMember ingestionIdEntityMember = ingestionIdEntityCandidate.getEntity();
 
 				if (ingestionIdEntityMember.isLocal()) {
 
-					Entity ingestionIdEntity =
-						ingestionIdEntityMember.getEntity();
-
-					EntityCandidates current =
-						getEntityCandidates(
-							entityNameCleanerProvider,
-							entityService,
-							ingestionIdEntityMember, ingestionIdEntity);
-
 					if (_log.isDebugEnabled()) {
-						_log.debug("current: " + current);
+						_log.debug("current: " + ingestionIdEntityMember);
 					}
 
-					EntityMember currentEntityMemberRequest =
-						current.getEntity();
-
 					Entity currentEntityRequest =
-						currentEntityMemberRequest.getEntity();
+						ingestionIdEntityMember.getEntity();
 
 					List<EntityIndex> restCandidates =
-						ingestionIdEntities
+						entityCandidateList
 							.stream()
-							.filter(entity -> entity != ingestionIdEntityMember)
-							.map(entityMember ->
-									cleanCandidates(
-										entityMember.getEntity(),
-										getEntityCandidates(
-											entityNameCleanerProvider,
-											entityService,
-											entityMember, ingestionIdEntity
-										).getCandidates(),
-										entityNameCleanerProvider,
-										config.getScoreThreshold()
-									)
+							.filter(entity -> entity != ingestionIdEntityCandidate)
+							.map(entityCandidates ->
+								cleanCandidates(
+									entityCandidates.getEntity().getEntity(),
+									entityCandidates.getCandidates(),
+									entityNameCleanerProvider,
+									config.getScoreThreshold()
 								)
+							)
 							.flatMap(Collection::stream)
 							.collect(Collectors.toList());
 
@@ -194,7 +192,7 @@ public class CreateEntitiesRunnable
 						_disambiguate(
 							entityGraphService,
 							cleanCandidates(
-								currentEntityRequest, current.getCandidates(),
+								currentEntityRequest, ingestionIdEntityCandidate.getCandidates(),
 								entityNameCleanerProvider,
 								config.getScoreThreshold()),
 							restCandidates,
