@@ -20,6 +20,7 @@ import java.io.IOException;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
 public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
+	@EqualsAndHashCode.Include
 	private String id;
 	@EqualsAndHashCode.Include
 	private String cacheId;
@@ -29,6 +30,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 	private String name;
 	@ToString.Include
 	private String type;
+	@ToString.Include
 	private Long graphId;
 	@ToString.Include
 	private String ingestionId;

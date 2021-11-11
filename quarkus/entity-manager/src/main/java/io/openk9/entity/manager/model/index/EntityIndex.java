@@ -10,6 +10,7 @@ import lombok.ToString;
 @AllArgsConstructor(staticName = "of")
 @ToString(onlyExplicitlyIncluded = true)
 public class EntityIndex {
+	@ToString.Include
 	private final String id;
 	@ToString.Include
 	private final long tenantId;
