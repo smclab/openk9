@@ -25,6 +25,11 @@ export async function getPlugins(
   const request = await authFetch(
     `/api/plugin-driver-manager/v1/plugin`,
     loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
   );
   const response: PluginInfo[] = await request.json();
   return response;

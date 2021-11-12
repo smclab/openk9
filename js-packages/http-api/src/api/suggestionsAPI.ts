@@ -59,6 +59,11 @@ export async function getSuggestionCategories(
   const response = await authFetch(
     `/api/searcher/suggestion-categories`,
     loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
   );
   const data = (await response.json()) as SuggestionsCategoriesResult;
   return [

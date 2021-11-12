@@ -27,8 +27,8 @@ export async function doSearchEntities(
     method: "POST",
     body: JSON.stringify(query),
     headers: {
-      Accept: "application/json",
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
   });
   return await request.json();

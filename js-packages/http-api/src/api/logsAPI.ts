@@ -28,7 +28,11 @@ export type ContainerStatus = {
 export async function getContainerStatus(
   loginInfo: LoginInfo | null,
 ): Promise<ContainerStatus[]> {
-  const request = await authFetch(`/api/logs/status`, loginInfo);
+  const request = await authFetch(`/api/logs/status`, loginInfo, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
   const response: ContainerStatus[] = await request.json();
   return response;
 }
@@ -38,7 +42,11 @@ export async function getContainerLogs(
   tail = 300,
   loginInfo: LoginInfo | null,
 ): Promise<string> {
-  const request = await authFetch(`/api/logs/status/${id}/${tail}`, loginInfo);
+  const request = await authFetch(`/api/logs/status/${id}/${tail}`, loginInfo, {
+    headers: {
+      Accept: "text/plain",
+    },
+  });
   const response: string = await request.text();
   return response;
 }

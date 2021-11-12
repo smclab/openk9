@@ -67,6 +67,10 @@ export async function doLogin(
     const request = await fetch(`/api/searcher/v1/auth/login`, {
       method: "POST",
       body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
     });
     return [request, await request.json()] as const;
   }
@@ -93,6 +97,10 @@ export async function doLogout(
     const request = await authFetch(`/api/searcher/v1/auth/logout`, loginInfo, {
       method: "POST",
       body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/plain",
+      },
     });
     const response = await request.text();
     return { ok: request.ok, response };
@@ -111,6 +119,10 @@ export async function doLoginRefresh(
     const request = await fetch(`/api/searcher/v1/auth/refresh`, {
       method: "POST",
       body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
     });
     return [request, await request.json()] as const;
   }
@@ -136,6 +148,10 @@ export async function getUserInfo(
       {
         method: "POST",
         body: "",
+        headers: {
+          "Content-Type": "text/plain",
+          Accept: "application/json",
+        },
       },
     );
     const response: UserInfo = await request.json();

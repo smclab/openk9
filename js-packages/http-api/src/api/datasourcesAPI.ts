@@ -81,6 +81,11 @@ export async function getSupportedDataSources(
   const request = await authFetch(
     `/api/searcher/v1/supported-datasources`,
     loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
   );
   const response: SupportedDataSource[] = await request.json();
   return response;
@@ -89,7 +94,15 @@ export async function getSupportedDataSources(
 export async function getDocumentTypes(
   loginInfo: LoginInfo | null,
 ): Promise<Record<string, Array<string>>> {
-  const request = await authFetch(`/api/searcher/v1/document-types`, loginInfo);
+  const request = await authFetch(
+    `/api/searcher/v1/document-types`,
+    loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
   const response = await request.json();
   return response;
 }
@@ -97,7 +110,11 @@ export async function getDocumentTypes(
 export async function getDataSources(
   loginInfo: LoginInfo | null,
 ): Promise<DataSourceInfo[]> {
-  const request = await authFetch(`/api/datasource/v2/datasource`, loginInfo);
+  const request = await authFetch(`/api/datasource/v2/datasource`, loginInfo, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
   const response: DataSourceInfo[] = await request.json();
   return response;
 }
@@ -109,6 +126,11 @@ export async function getDataSourceInfo(
   const request = await authFetch(
     `/api/datasource/v2/datasource/${datasourceId}`,
     loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
   );
   const response: DataSourceInfo = await request.json();
   return response;
@@ -125,7 +147,8 @@ export async function changeDataSourceInfo(
     {
       method: "PATCH",
       headers: {
-        ContentType: "application/json",
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify(datasource),
     },
@@ -165,6 +188,9 @@ export async function deleteDataSource(
     loginInfo,
     {
       method: "DELETE",
+      headers: {
+        Accept: "text/plain",
+      },
     },
   );
   const response: string = await request.text();
@@ -196,8 +222,11 @@ export async function triggerScheduler(
     loginInfo,
     {
       method: "POST",
-      headers: { ContentType: "application/json" },
       body: JSON.stringify(schedulerJobs),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
     },
   );
   const response: SchedulerRequestReturn = await request.json();
@@ -213,7 +242,10 @@ export async function triggerReindex(
     loginInfo,
     {
       method: "POST",
-      headers: { ContentType: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/plain",
+      },
       body: JSON.stringify({ datasourceIds: ids }),
     },
   );
@@ -227,6 +259,11 @@ export async function getDriverServiceNames(
   const request = await authFetch(
     `/api/searcher/v1/driver-service-names`,
     loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
   );
   const response: string[] = await request.json();
   return response;
@@ -235,7 +272,11 @@ export async function getDriverServiceNames(
 export async function getEnrichItem(
   loginInfo: LoginInfo | null,
 ): Promise<EnrichItem[]> {
-  const request = await authFetch(`/api/datasource/v2/enrichItem`, loginInfo);
+  const request = await authFetch(`/api/datasource/v2/enrichItem`, loginInfo, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
   const response: EnrichItem[] = await request.json();
   return response;
 }
@@ -247,7 +288,8 @@ export async function postEnrichItem(
   const request = await authFetch(`/api/datasource/v2/enrichItem/`, loginInfo, {
     method: "POST",
     headers: {
-      ContentType: "application/json",
+      "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify(enrichItem),
   });
@@ -266,7 +308,8 @@ export async function changeEnrichItem(
     {
       method: "PATCH",
       headers: {
-        ContentType: "application/json",
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify(enrichItem),
     },
@@ -284,6 +327,9 @@ export async function deleteEnrichItem(
     loginInfo,
     {
       method: "DELETE",
+      headers: {
+        Accept: "text/plain",
+      },
     },
   );
   const response: string = await request.text();
@@ -296,6 +342,11 @@ export async function getEnrichPipeline(
   const request = await authFetch(
     `/api/datasource/v2/enrichPipeline`,
     loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
   );
   const response: EnrichPipeline[] = await request.json();
   return response;
@@ -311,7 +362,8 @@ export async function postEnrichPipeline(
     {
       method: "POST",
       headers: {
-        ContentType: "application/json",
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify(enrichPipeline),
     },
@@ -331,7 +383,8 @@ export async function changeEnrichPipeline(
     {
       method: "PATCH",
       headers: {
-        ContentType: "application/json",
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify(enrichPipeline),
     },
@@ -349,6 +402,9 @@ export async function deleteEnrichPipeline(
     loginInfo,
     {
       method: "DELETE",
+      headers: {
+        Accept: "text/plain",
+      },
     },
   );
   const response: string = await request.text();
@@ -365,7 +421,8 @@ export async function reorderEnrichItems(
     {
       method: "POST",
       headers: {
-        ContentType: "application/json",
+        "Content-Type": "application/json",
+        Accept: "text/plain",
       },
       body: JSON.stringify(enrichItemsIds),
     },

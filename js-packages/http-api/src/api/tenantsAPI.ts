@@ -34,7 +34,11 @@ export async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
 export async function getTenants(
   loginInfo: LoginInfo | null,
 ): Promise<Tenant[]> {
-  const request = await authFetch(`/api/datasource/v2/tenant`, loginInfo);
+  const request = await authFetch(`/api/datasource/v2/tenant`, loginInfo, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
   const response: Tenant[] = await request.json();
   return response;
 }
@@ -46,6 +50,11 @@ export async function getTenant(
   const request = await authFetch(
     `/api/datasource/v2/tenant/${tenantId}`,
     loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
   );
   const response: Tenant = await request.json();
   return response;
