@@ -24,10 +24,11 @@ public class EntityRelationKey implements IdentifiedDataSerializable, PartitionA
 
 	private long entityRelationId;
 	private String entityId;
+	private String ingestionId;
 
 	@Override
 	public Integer getPartitionKey() {
-		return Objects.hash(entityId);
+		return Objects.hash(ingestionId);
 	}
 
 	@Override
@@ -44,11 +45,13 @@ public class EntityRelationKey implements IdentifiedDataSerializable, PartitionA
 	public void writeData(ObjectDataOutput out) throws IOException {
 		out.writeLong(entityRelationId);
 		out.writeString(entityId);
+		out.writeString(ingestionId);
 	}
 
 	@Override
 	public void readData(ObjectDataInput in) throws IOException {
 		entityRelationId = in.readLong();
 		entityId = in.readString();
+		ingestionId = in.readString();
 	}
 }

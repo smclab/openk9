@@ -156,7 +156,8 @@ public class EntityManagerBus {
 								transactionalEntityRelationMap.set(
 									EntityRelationKey.of(
 										entityRelationId,
-										current.getCacheId()
+										current.getCacheId(),
+										ingestionId
 									),
 									entityRelation
 								);

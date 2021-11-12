@@ -58,16 +58,18 @@ public class CreateRelationRunnable
 				.collect(Collectors.toMap(
 					o -> (String)o[0], o -> (String)o[1]));
 
-		Set<Map.Entry<EntityRelationKey, EntityRelation>> entries =
-			entityRelationMap.entrySet(
-				Predicates.in("__key.entityId", cacheIds));
+		Map<EntityRelationKey, EntityRelation> entries =
+			entityRelationMap.getAll(
+				entityRelationMap.localKeySet(
+					Predicates.in("__key.entityId", cacheIds))
+			);
 
 		EntityGraphService entityGraphService = CDI.current().select(
 			EntityGraphService.class).get();
 
 		List<EntityRelationKey> entityRelationKeysToDelete = new ArrayList<>();
 
-		for (Map.Entry<EntityRelationKey, EntityRelation> entry : entries) {
+		for (Map.Entry<EntityRelationKey, EntityRelation> entry : entries.entrySet()) {
 
 			EntityRelationKey key = entry.getKey();
 			EntityRelation value = entry.getValue();
