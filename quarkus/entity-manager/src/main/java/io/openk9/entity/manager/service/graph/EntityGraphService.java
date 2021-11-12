@@ -116,8 +116,7 @@ public class EntityGraphService {
 					"RETURN type(r)",
 					Values.parameters(
 						"id1", graphId1,
-						"id2", graphId2,
-						"relationName", relationName
+						"id2", graphId2
 					)
 				);
 

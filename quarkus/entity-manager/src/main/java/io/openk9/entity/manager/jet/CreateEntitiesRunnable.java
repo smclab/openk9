@@ -264,7 +264,7 @@ public class CreateEntitiesRunnable
 						entityGraphService.insertEntity(
 							copy.getType(),
 							EntityGraph.of(
-								copy.getId(),
+								copy.getCacheId(),
 								null,
 								copy.getTenantId(),
 								copy.getName(),

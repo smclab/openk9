@@ -97,10 +97,6 @@ public class CreateRelationRunnable
 				}
 			}
 
-			_log.info(
-				"EntityCacheId: " + value.getEntityCacheId() + " to: " + value.getTo() + " from: " + from + " to: " + to
-			);
-
 		}
 
 		try {
