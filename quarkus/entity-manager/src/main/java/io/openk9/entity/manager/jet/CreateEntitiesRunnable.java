@@ -46,6 +46,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -160,107 +161,152 @@ public class CreateEntitiesRunnable
 				);
 			}
 
-			for (EntityCandidates ingestionIdEntityCandidate : entityCandidateList) {
-
-				EntityMember ingestionIdEntityMember = ingestionIdEntityCandidate.getEntity();
-
-				if (ingestionIdEntityMember.isLocal()) {
-
-					if (_log.isDebugEnabled()) {
-						_log.debug("current: " + ingestionIdEntityMember);
-					}
-
-					Entity currentEntityRequest =
-						ingestionIdEntityMember.getEntity();
-
-					List<EntityIndex> restCandidates =
-						entityCandidateList
-							.stream()
-							.filter(entity -> entity != ingestionIdEntityCandidate)
-							.map(entityCandidates ->
-								cleanCandidates(
-									entityCandidates.getEntity().getEntity(),
-									entityCandidates.getCandidates(),
-									entityNameCleanerProvider,
-									config.getScoreThreshold()
-								)
+			List<CompletableFuture<Entity>> completableFutureList =
+				entityCandidateList
+					.stream()
+					.filter(
+						entityCandidates -> entityCandidates.getEntity().isLocal())
+					.map(entityCandidates ->
+						CompletableFuture.supplyAsync(
+							_getAndCreateEntityDisambiguate(
+								config, entityNameCleanerProvider, entityService,
+								entityGraphService,
+								entityCandidateList, entityCandidates,
+								entityCandidates.getEntity()
 							)
-							.flatMap(Collection::stream)
-							.collect(Collectors.toList());
+						))
+					.collect(Collectors.toList());
 
-					Optional<EntityGraph> optionalEntityGraph =
-						_disambiguate(
-							entityGraphService,
-							cleanCandidates(
-								currentEntityRequest, ingestionIdEntityCandidate.getCandidates(),
-								entityNameCleanerProvider,
-								config.getScoreThreshold()),
-							restCandidates,
-							currentEntityRequest,
-							config.getUniqueEntities(), config.getMinHops(),
-							config.getMaxHops());
+			CompletableFuture.allOf(
+				completableFutureList.toArray(
+					new CompletableFuture[0])).join();
 
-					if (optionalEntityGraph.isEmpty()) {
-						try {
+			for (CompletableFuture<Entity> future : completableFutureList) {
+				Entity currentEntityRequest = future.join();
+				entityMap.put(
+					EntityKey.of(
+						currentEntityRequest.getTenantId(),
+						currentEntityRequest.getName(),
+						currentEntityRequest.getType(),
+						currentEntityRequest.getCacheId(),
+						currentEntityRequest.getIngestionId()
+					), currentEntityRequest);
+			}
 
-							EntityGraph entityGraph =
-								entityGraphService.insertEntity(
-									currentEntityRequest.getType(),
-									EntityGraph.of(
-										currentEntityRequest.getId(),
-										null,
-										currentEntityRequest.getTenantId(),
-										currentEntityRequest.getName(),
-										currentEntityRequest.getType()
-									)
-								);
+			entityIMap.setAll(entityMap);
 
-							currentEntityRequest.setGraphId(
-								entityGraph.getGraphId());
+		}
 
-							entityService.awaitIndex(
-								EntityIndex.of(
-									currentEntityRequest.getCacheId(),
-									entityGraph.getGraphId(),
-									currentEntityRequest.getTenantId(),
-									currentEntityRequest.getName(),
-									currentEntityRequest.getType(),
-									0)
-							);
+	}
 
-							currentEntityRequest.setId(
-								currentEntityRequest.getCacheId());
+	private Supplier<Entity> _getAndCreateEntityDisambiguate(
+		EntityGraphConfig config,
+		EntityNameCleanerProvider entityNameCleanerProvider,
+		EntityService entityService, EntityGraphService entityGraphService,
+		List<EntityCandidates> entityCandidateList,
+		EntityCandidates ingestionIdEntityCandidate,
+		EntityMember ingestionIdEntityMember) {
 
-						}
-						catch (Exception ioe) {
-							_log.error(ioe.getMessage());
-						}
-					}
-					else {
+		return () -> {
 
-						EntityGraph entityGraph = optionalEntityGraph.get();
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"current: " + ingestionIdEntityMember);
+			}
 
-						currentEntityRequest.setId(entityGraph.getId());
-						currentEntityRequest.setGraphId(
-							entityGraph.getGraphId());
+			Entity currentEntityRequest =
+				ingestionIdEntityMember.getEntity();
 
-					}
+			Entity copy = new Entity(
+				currentEntityRequest.getId(),
+				currentEntityRequest.getCacheId(),
+				currentEntityRequest.getTenantId(),
+				currentEntityRequest.getName(),
+				currentEntityRequest.getType(),
+				currentEntityRequest.getGraphId(),
+				currentEntityRequest.getIngestionId(),
+				currentEntityRequest.isAssociated());
 
-					entityMap.put(
-						EntityKey.of(
-							currentEntityRequest.getTenantId(),
-							currentEntityRequest.getName(),
-							currentEntityRequest.getType(),
-							currentEntityRequest.getCacheId(),
-							currentEntityRequest.getIngestionId()
-						), currentEntityRequest);
+			List<EntityIndex> restCandidates =
+				entityCandidateList
+					.stream()
+					.filter(entity -> entity !=
+									  ingestionIdEntityCandidate)
+					.map(entityCandidates ->
+						cleanCandidates(
+							entityCandidates.getEntity().getEntity(),
+							entityCandidates.getCandidates(),
+							entityNameCleanerProvider,
+							config.getScoreThreshold()
+						)
+					)
+					.flatMap(Collection::stream)
+					.collect(Collectors.toList());
+
+			Optional<EntityGraph> optionalEntityGraph =
+				_disambiguate(
+					entityGraphService,
+					cleanCandidates(
+						copy,
+						ingestionIdEntityCandidate.getCandidates(),
+						entityNameCleanerProvider,
+						config.getScoreThreshold()),
+					restCandidates,
+					copy,
+					config.getUniqueEntities(),
+					config.getMinHops(),
+					config.getMaxHops());
+
+			if (optionalEntityGraph.isEmpty()) {
+				try {
+
+					EntityGraph entityGraph =
+						entityGraphService.insertEntity(
+							copy.getType(),
+							EntityGraph.of(
+								copy.getId(),
+								null,
+								copy.getTenantId(),
+								copy.getName(),
+								copy.getType()
+							)
+						);
+
+					copy.setGraphId(
+						entityGraph.getGraphId());
+
+					entityService.awaitIndex(
+						EntityIndex.of(
+							copy.getCacheId(),
+							entityGraph.getGraphId(),
+							copy.getTenantId(),
+							copy.getName(),
+							copy.getType(),
+							0)
+					);
+
+					copy.setId(
+						copy.getCacheId());
 
 				}
+				catch (Exception ioe) {
+					_log.error(ioe.getMessage());
+				}
+			}
+			else {
 
-				entityIMap.setAll(entityMap);
+				EntityGraph entityGraph =
+					optionalEntityGraph.get();
+
+				copy.setId(entityGraph.getId());
+				copy.setGraphId(
+					entityGraph.getGraphId());
 
 			}
-		}
+
+			return copy;
+
+		};
 	}
 
 	private EntityCandidates getEntityCandidates(
