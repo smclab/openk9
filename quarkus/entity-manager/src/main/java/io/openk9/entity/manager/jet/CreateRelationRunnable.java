@@ -39,6 +39,8 @@ public class CreateRelationRunnable
 			)
 		);
 
+		_log.info("entityKeys: " + entityKeys.size());
+
 		String[] cacheIds =
 			entityKeys
 				.stream()
@@ -48,6 +50,8 @@ public class CreateRelationRunnable
 		Collection<Object[]> projection = entityIMap.project(
 			Projections.multiAttribute("cacheId", "id"),
 			Predicates.in("__key.cacheId", cacheIds));
+
+		_log.info("projection: " + projection.size());
 
 		IMap<EntityRelationKey, EntityRelation> entityRelationMap =
 			MapUtil.getEntityRelationMap(_hazelcastInstance);
@@ -63,6 +67,8 @@ public class CreateRelationRunnable
 				entityRelationMap.localKeySet(
 					Predicates.in("__key.entityId", cacheIds))
 			);
+
+		_log.info("entityRelations: " + entries.size());
 
 		EntityGraphService entityGraphService = CDI.current().select(
 			EntityGraphService.class).get();
@@ -91,6 +97,9 @@ public class CreateRelationRunnable
 				}
 			}
 
+			_log.info(
+				"EntityCacheId: " + value.getEntityCacheId() + " to: " + value.getTo() + " from: " + from + " to: " + to
+			);
 
 		}
 
