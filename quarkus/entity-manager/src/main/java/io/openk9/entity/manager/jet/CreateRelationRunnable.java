@@ -64,7 +64,7 @@ public class CreateRelationRunnable
 
 		Map<EntityRelationKey, EntityRelation> entries =
 			entityRelationMap.getAll(
-				entityRelationMap.localKeySet(
+				entityRelationMap.keySet(
 					Predicates.in("__key.entityId", cacheIds))
 			);
 
