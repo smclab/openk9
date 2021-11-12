@@ -243,8 +243,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 							Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 							String name =(String)sourceAsMap.get("name");
 							String type =(String)sourceAsMap.get("type");
-							String entityId =
-								Long.toString((Long)sourceAsMap.get("id"));
+							String entityId =(String)sourceAsMap.get("id");
 							entityMap.put(entityId, new String[]{type, name});
 						}
 
