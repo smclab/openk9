@@ -13,6 +13,8 @@ public class EntityIndex {
 	@ToString.Include
 	private final String id;
 	@ToString.Include
+	private final Long graphId;
+	@ToString.Include
 	private final long tenantId;
 	@ToString.Include
 	private final String name;

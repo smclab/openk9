@@ -62,6 +62,7 @@ public class EntityService {
 		json.put("tenantId", entity.getTenantId());
 		json.put("id", entityId);
 		json.put("type", entity.getType());
+		json.put("graphId", entity.getGraphId());
 
 		request.source(json, XContentType.JSON);
 
@@ -84,6 +85,7 @@ public class EntityService {
 		json.put("tenantId", entity.getTenantId());
 		json.put("id", entityId);
 		json.put("type", entity.getType());
+		json.put("graphId", entity.getGraphId());
 
 		request.source(json, XContentType.JSON);
 

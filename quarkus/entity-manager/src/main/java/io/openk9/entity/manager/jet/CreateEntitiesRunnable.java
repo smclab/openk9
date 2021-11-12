@@ -202,17 +202,6 @@ public class CreateEntitiesRunnable
 
 					if (optionalEntityGraph.isEmpty()) {
 						try {
-							entityService.awaitIndex(
-								EntityIndex.of(
-									currentEntityRequest.getCacheId(),
-									currentEntityRequest.getTenantId(),
-									currentEntityRequest.getName(),
-									currentEntityRequest.getType(),
-									0)
-							);
-
-							currentEntityRequest.setId(
-								currentEntityRequest.getCacheId());
 
 							EntityGraph entityGraph =
 								entityGraphService.insertEntity(
@@ -228,6 +217,19 @@ public class CreateEntitiesRunnable
 
 							currentEntityRequest.setGraphId(
 								entityGraph.getGraphId());
+
+							entityService.awaitIndex(
+								EntityIndex.of(
+									currentEntityRequest.getCacheId(),
+									entityGraph.getGraphId(),
+									currentEntityRequest.getTenantId(),
+									currentEntityRequest.getName(),
+									currentEntityRequest.getType(),
+									0)
+							);
+
+							currentEntityRequest.setId(
+								currentEntityRequest.getCacheId());
 
 						}
 						catch (Exception ioe) {
@@ -348,9 +350,9 @@ public class CreateEntitiesRunnable
 
 				EntityGraph entityGraph =
 					EntityGraph.of(
-						currentEntityRequest.getId(),
-						currentEntityRequest.getGraphId(),
-						currentEntityRequest.getTenantId(),
+						candidate.getId(),
+						candidate.getGraphId(),
+						candidate.getTenantId(),
 						candidate.getName(),
 						candidate.getType()
 					);
