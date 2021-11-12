@@ -76,17 +76,13 @@ function Inner({
 
   const loginInfo = useLoginInfo();
 
-  const {
-    data: datasource,
-    mutate,
-  } = useSWR(`/api/v2/datasource/${datasourceId}`, () =>
-    getDataSourceInfo(datasourceId, loginInfo),
+  const { data: datasource, mutate } = useSWR(
+    `/api/v2/datasource/${datasourceId}`,
+    () => getDataSourceInfo(datasourceId, loginInfo),
   );
 
-  const [
-    editingDataSource,
-    setEditingDataSource,
-  ] = useState<DataSourceInfo | null>(null);
+  const [editingDataSource, setEditingDataSource] =
+    useState<DataSourceInfo | null>(null);
 
   if (!datasource) {
     return <span className="loading-animation" />;
@@ -101,7 +97,6 @@ function Inner({
       setEditingDataSource(null);
     }
   }
-
   if (editingDataSource && !isServer) {
     return (
       <Suspense fallback={<span className="loading-animation" />}>
@@ -160,7 +155,16 @@ function Inner({
         </div>
         <div>
           <strong>Last Ingestion Date:</strong>{" "}
-          {format(datasource.lastIngestionDate * 1000, "dd/MM/yyyy, HH:mm")}
+          {(() => {
+            try {
+              return format(
+                datasource.lastIngestionDate * 1000,
+                "dd/MM/yyyy, HH:mm",
+              );
+            } catch (error) {
+              return;
+            }
+          })()}
         </div>
         <div>
           <strong>Scheduling:</strong> {datasource.scheduling}
