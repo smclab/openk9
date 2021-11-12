@@ -50,6 +50,7 @@
     "eslint-import-resolver-node": "^0.3.4",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-prettier": "^3.1.4",
+    "http-proxy-middleware": "^2.0.1",
     "lint-staged": "^10.0.8",
     "next-transpile-modules": "^6.0.0",
     "prettier": "^2.2.1",
