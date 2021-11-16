@@ -59,6 +59,8 @@ public class NerAnnotator implements Annotator {
 
 		List<CategorySemantics> list = new ArrayList<>();
 
+		_log.info(builder.toString());
+
 		try {
 			SearchResponse search =
 				restHighLevelClient.search(
