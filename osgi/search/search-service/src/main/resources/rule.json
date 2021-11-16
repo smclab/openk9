@@ -1,0 +1,102 @@
+[
+	{
+		"lhs": "$Optionals",
+		"rhs": "$Optional ?$Optionals",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "e",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "le",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "su",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "i",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "con",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "di",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "il",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "del",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "in",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optionals",
+		"rhs": "sulle",
+		"sem": ""
+	},
+	{
+		"lhs": "$ROOT",
+		"rhs": "?$Optionals $Query ?$Optionals",
+		"sem": "IDENTITY"
+	},
+	{
+		"lhs": "$Query",
+		"rhs": "?$Optionals $Query ?$Optionals",
+		"sem": "IDENTITY"
+	},
+	{
+		"lhs": "$ROOT",
+		"rhs": "$IntentCollection",
+		"sem": "IDENTITY"
+	},
+	{
+		"lhs": "$IntentCollection",
+		"rhs": "$Intent ?$Optionals ?$IntentCollection",
+		"sem": "MERGE"
+	},
+	{
+		"lhs": "$Entity",
+		"rhs": "$PER",
+		"sem": "0"
+	},
+	{
+		"lhs": "$Entity",
+		"rhs": "$ORG",
+		"sem": "0"
+	},
+	{
+		"lhs": "$Entity",
+		"rhs": "$DATE",
+		"sem": "0"
+	},
+	{
+		"lhs": "$Entity",
+		"rhs": "$LOC",
+		"sem": "0"
+	},
+	{
+		"lhs": "$Intent",
+		"rhs": "$Entity",
+		"sem": "0"
+	}
+]
