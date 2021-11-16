@@ -111,7 +111,7 @@
 	},
 	{
 		"lhs": "$Intent",
-		"rhs": "$Token",
+		"rhs": "$TOKEN",
 		"sem": "0"
 	}
 ]

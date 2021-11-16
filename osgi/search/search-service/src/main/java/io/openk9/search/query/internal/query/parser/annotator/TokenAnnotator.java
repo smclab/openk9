@@ -4,8 +4,6 @@ import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -41,8 +39,5 @@ public class TokenAnnotator extends BaseAnnotator {
 		AnnotatorConfig annotatorConfig) {
 		super.setAnnotatorConfig(annotatorConfig);
 	}
-
-	private static final Logger _log = LoggerFactory.getLogger(
-		TokenAnnotator.class);
 
 }

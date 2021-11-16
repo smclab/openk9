@@ -85,8 +85,6 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 						SemanticTypes semanticTypes =
 							pars.getSemantics().apply();
 
-						_log.info(semanticTypes.toString());
-
 						for (SemanticType semanticType : semanticTypes) {
 
 							for (Map<String, Object> map : semanticType) {
