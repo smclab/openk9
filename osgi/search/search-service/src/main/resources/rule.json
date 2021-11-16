@@ -61,11 +61,6 @@
 	},
 	{
 		"lhs": "$Query",
-		"rhs": "?$Optionals $Query ?$Optionals",
-		"sem": "IDENTITY"
-	},
-	{
-		"lhs": "$ROOT",
 		"rhs": "$IntentCollection",
 		"sem": "IDENTITY"
 	},
@@ -101,7 +96,7 @@
 	},
 	{
 		"lhs": "$Content",
-		"rhs": "$DocType",
+		"rhs": "$DOCTYPE",
 		"sem": "0"
 	},
 	{
@@ -110,7 +105,7 @@
 		"sem": "0"
 	},
 	{
-		"lhs": "$Content",
+		"lhs": "$Optionals",
 		"rhs": "contenuti",
 		"sem": ""
 	}
