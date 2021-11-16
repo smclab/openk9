@@ -37,9 +37,7 @@ public class DocTypeAnnotator extends BaseAnnotator {
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
 		for (String token : tokens) {
-			builder.must(
-				QueryBuilders.matchQuery("documentTypes", token)
-			);
+			builder.must(query("documentTypes", token));
 		}
 
 		SearchRequest searchRequest;
@@ -68,7 +66,9 @@ public class DocTypeAnnotator extends BaseAnnotator {
 
 		List<CategorySemantics> list = new ArrayList<>();
 
-		_log.info(builder.toString());
+		if (_log.isDebugEnabled()) {
+			_log.debug(builder.toString());
+		}
 
 		try {
 			SearchResponse search =
@@ -91,7 +91,9 @@ public class DocTypeAnnotator extends BaseAnnotator {
 				}
 			}
 
-			_log.info(list.toString());
+			if (_log.isDebugEnabled()) {
+				_log.debug(list.toString());
+			}
 
 		}
 		catch (IOException e) {

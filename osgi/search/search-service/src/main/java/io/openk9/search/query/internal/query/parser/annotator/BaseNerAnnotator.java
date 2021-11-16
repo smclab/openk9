@@ -37,9 +37,7 @@ public class BaseNerAnnotator extends BaseAnnotator {
 				"type.keyword", category));
 
 		for (String token : tokens) {
-			builder.must(
-				QueryBuilders.matchQuery("name", token)
-			);
+			builder.must(query("name", token));
 		}
 
 		SearchRequest searchRequest;
@@ -61,7 +59,9 @@ public class BaseNerAnnotator extends BaseAnnotator {
 
 		List<CategorySemantics> list = new ArrayList<>();
 
-		_log.info(builder.toString());
+		if (_log.isDebugEnabled()) {
+			_log.debug(builder.toString());
+		}
 
 		try {
 			SearchResponse search =
@@ -84,7 +84,9 @@ public class BaseNerAnnotator extends BaseAnnotator {
 				);
 			}
 
-			_log.info(list.toString());
+			if (_log.isDebugEnabled()) {
+				_log.debug(list.toString());
+			}
 
 		}
 		catch (IOException e) {

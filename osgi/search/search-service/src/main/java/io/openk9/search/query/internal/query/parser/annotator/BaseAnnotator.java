@@ -2,6 +2,8 @@ package io.openk9.search.query.internal.query.parser.annotator;
 
 import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,6 +13,9 @@ public abstract class BaseAnnotator implements Annotator {
 	public abstract List<CategorySemantics> annotate_(
 		long tenantId, String... tokens);
 
+	protected QueryBuilder query(String field, String token) {
+		return QueryBuilders.matchQuery(field, token);
+	}
 
 	@Override
 	public final List<CategorySemantics> annotate(
@@ -27,7 +32,6 @@ public abstract class BaseAnnotator implements Annotator {
 		else {
 			return annotate_(tenantId, strings);
 		}
-
 
 	}
 

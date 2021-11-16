@@ -5,52 +5,52 @@
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "e",
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "le",
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "su",
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "i",
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "con",
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "di",
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "il",
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "del",
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "in",
 		"sem": ""
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "sulle",
 		"sem": ""
 	},
@@ -105,7 +105,7 @@
 		"sem": "0"
 	},
 	{
-		"lhs": "$Optionals",
+		"lhs": "$Optional",
 		"rhs": "contenuti",
 		"sem": ""
 	}
