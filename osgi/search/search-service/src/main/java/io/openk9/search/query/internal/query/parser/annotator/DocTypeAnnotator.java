@@ -60,7 +60,7 @@ public class DocTypeAnnotator extends BaseAnnotator {
 		searchSourceBuilder.aggregation(
 			AggregationBuilders
 				.terms("documentTypes")
-				.field("documentTypes.keywords"));
+				.field("documentTypes"));
 
 		searchRequest.source(searchSourceBuilder);
 
