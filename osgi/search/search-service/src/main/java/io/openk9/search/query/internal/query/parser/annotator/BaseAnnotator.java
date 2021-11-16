@@ -45,6 +45,8 @@ public abstract class BaseAnnotator implements Annotator {
 					context.put(key, response);
 				}
 
+				return response;
+
 			}
 
 			return categorySemantics;
