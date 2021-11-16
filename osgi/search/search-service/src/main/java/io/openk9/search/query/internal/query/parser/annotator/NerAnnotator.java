@@ -70,7 +70,7 @@ public class NerAnnotator implements Annotator {
 				Map<String, Object> senamtics = hit.getSourceAsMap();
 				list.add(
 					CategorySemantics.of(
-						(String)senamtics.get("type"),
+						"$" + senamtics.get("type"),
 						Map.of(
 							"tokenType", "ENTITY",
 							"entityType", senamtics.get("type"),

@@ -76,22 +76,22 @@
 	},
 	{
 		"lhs": "$Entity",
-		"rhs": "$PER",
+		"rhs": "$person",
 		"sem": "0"
 	},
 	{
 		"lhs": "$Entity",
-		"rhs": "$ORG",
+		"rhs": "$organization",
 		"sem": "0"
 	},
 	{
 		"lhs": "$Entity",
-		"rhs": "$DATE",
+		"rhs": "$date",
 		"sem": "0"
 	},
 	{
 		"lhs": "$Entity",
-		"rhs": "$LOC",
+		"rhs": "$loc",
 		"sem": "0"
 	},
 	{
