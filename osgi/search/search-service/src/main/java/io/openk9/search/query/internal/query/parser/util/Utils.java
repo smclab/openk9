@@ -1,5 +1,7 @@
 package io.openk9.search.query.internal.query.parser.util;
 
+import io.openk9.search.api.query.parser.Tuple;
+
 public class Utils {
 
 	public static <T> Tuple<T> toTuple(T[] rhs) {

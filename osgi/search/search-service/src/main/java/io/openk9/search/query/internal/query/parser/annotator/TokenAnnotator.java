@@ -2,6 +2,7 @@ package io.openk9.search.query.internal.query.parser.annotator;
 
 import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -9,7 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 @Component(
-	immediate = true, service = Annotator.class
+	immediate = true,
+	property = {
+		Constants.SERVICE_RANKING + ":Integer=-1000"
+	},
+	service = Annotator.class
 )
 public class TokenAnnotator extends BaseAnnotator {
 

@@ -2,8 +2,8 @@ package io.openk9.search.query.internal.query.parser;
 
 import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
+import io.openk9.search.api.query.parser.Tuple;
 import io.openk9.search.query.internal.query.parser.util.Itertools;
-import io.openk9.search.query.internal.query.parser.util.Tuple;
 import io.openk9.search.query.internal.query.parser.util.Utils;
 
 import java.util.ArrayList;
@@ -159,8 +159,10 @@ public class Grammar {
 
 		Tuple chartKey = Tuple.of(i, j);
 
+		Map<Tuple, List<CategorySemantics>> context = new HashMap<>();
+
 		for (Annotator annotator : annotators) {
-			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, tokens)) {
+			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, context, tokens)) {
 
 				String category = categorySemantics.getCategory();
 

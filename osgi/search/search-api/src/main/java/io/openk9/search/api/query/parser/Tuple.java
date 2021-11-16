@@ -1,4 +1,4 @@
-package io.openk9.search.query.internal.query.parser.util;
+package io.openk9.search.api.query.parser;
 
 import java.util.Arrays;
 
