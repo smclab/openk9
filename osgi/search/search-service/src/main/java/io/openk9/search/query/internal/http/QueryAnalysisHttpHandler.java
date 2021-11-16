@@ -20,6 +20,8 @@ import lombok.NoArgsConstructor;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.server.HttpServerRequest;
@@ -75,6 +77,8 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 					List<Parse> parses = grammar.parseInput(
 						t2.getT1(), queryAnalysisRequest.getSearchText());
+
+					_log.info(parses.toString());
 
 					List<QueryAnalysisTokens> tokens = new ArrayList<>();
 
@@ -163,5 +167,8 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		private String searchText;
 		private List<QueryAnalysisTokens> analysis;
 	}
+
+	private static final Logger _log = LoggerFactory.getLogger(
+		QueryAnalysisHttpHandler.class);
 
 }
