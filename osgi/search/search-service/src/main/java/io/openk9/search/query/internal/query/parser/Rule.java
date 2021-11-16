@@ -1,7 +1,7 @@
 package io.openk9.search.query.internal.query.parser;
 
 import io.openk9.search.query.internal.query.parser.util.Utils;
-import io.vavr.Tuple;
+import io.openk9.search.query.internal.query.parser.util.Tuple ;
 import lombok.Getter;
 import lombok.Setter;
 

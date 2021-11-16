@@ -21,4 +21,11 @@ public class OrganizationNerAnnotator extends BaseNerAnnotator {
 		super.setRestHighLevelClientProvider(restHighLevelClientProvider);
 	}
 
+	@Override
+	@Reference
+	protected void setAnnotatorConfig(
+		AnnotatorConfig annotatorConfig) {
+		super.setAnnotatorConfig(annotatorConfig);
+	}
+
 }

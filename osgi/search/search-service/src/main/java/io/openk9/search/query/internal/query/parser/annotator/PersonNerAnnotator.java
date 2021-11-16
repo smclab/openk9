@@ -21,4 +21,11 @@ public class PersonNerAnnotator extends BaseNerAnnotator {
 		super.setRestHighLevelClientProvider(restHighLevelClientProvider);
 	}
 
+	@Override
+	@Reference
+	protected void setAnnotatorConfig(
+		AnnotatorConfig annotatorConfig) {
+		super.setAnnotatorConfig(annotatorConfig);
+	}
+
 }

@@ -26,10 +26,10 @@ import java.util.Map;
 @Component(
 	immediate = true, service = Annotator.class
 )
-public class DocTypeAnnotator implements Annotator {
+public class DocTypeAnnotator extends BaseAnnotator {
 
 	@Override
-	public List<CategorySemantics> annotate(long tenantId, String...tokens) {
+	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
 		RestHighLevelClient restHighLevelClient =
 			_restHighLevelClientProvider.get();
@@ -98,6 +98,13 @@ public class DocTypeAnnotator implements Annotator {
 
 
 		return list;
+	}
+
+	@Override
+	@Reference
+	protected void setAnnotatorConfig(
+		AnnotatorConfig annotatorConfig) {
+		super.setAnnotatorConfig(annotatorConfig);
 	}
 
 	@Reference

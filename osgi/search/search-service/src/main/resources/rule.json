@@ -98,5 +98,20 @@
 		"lhs": "$Intent",
 		"rhs": "$Entity",
 		"sem": "0"
+	},
+	{
+		"lhs": "$Content",
+		"rhs": "$DocType",
+		"sem": "0"
+	},
+	{
+		"lhs": "$Intent",
+		"rhs": "$Content",
+		"sem": "0"
+	},
+	{
+		"lhs": "$Content",
+		"rhs": "contenuti",
+		"sem": ""
 	}
 ]

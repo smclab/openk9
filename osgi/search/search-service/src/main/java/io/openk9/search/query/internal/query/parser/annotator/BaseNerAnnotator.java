@@ -1,6 +1,5 @@
 package io.openk9.search.query.internal.query.parser.annotator;
 
-import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.elasticsearch.action.search.SearchRequest;
@@ -19,14 +18,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BaseNerAnnotator implements Annotator {
+public class BaseNerAnnotator extends BaseAnnotator {
 
 	public BaseNerAnnotator(String category) {
 		this.category = category;
 	}
 
 	@Override
-	public List<CategorySemantics> annotate(long tenantId, String...tokens) {
+	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();

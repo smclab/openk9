@@ -4,7 +4,7 @@ import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
 import io.openk9.search.query.internal.query.parser.util.Itertools;
 import io.openk9.search.query.internal.query.parser.util.Utils;
-import io.vavr.Tuple;
+import io.openk9.search.query.internal.query.parser.util.Tuple ;
 
 import java.util.ArrayList;
 import java.util.Arrays;
