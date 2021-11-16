@@ -18,8 +18,7 @@ public abstract class BaseAnnotator implements Annotator {
 
 		String[] strings = Arrays
 			.stream(tokens)
-			.filter(token -> Arrays.asList(
-				_annotatorConfig.stopWords()).contains(token))
+			.filter(token -> !Arrays.asList(_annotatorConfig.stopWords()).contains(token))
 			.toArray(String[]::new);
 
 		if (strings.length == 0) {
