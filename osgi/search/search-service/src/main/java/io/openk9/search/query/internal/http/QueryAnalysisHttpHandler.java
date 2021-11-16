@@ -78,8 +78,6 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 					List<Parse> parses = grammar.parseInput(
 						t2.getT1(), queryAnalysisRequest.getSearchText());
 
-					_log.info(parses.toString());
-
 					List<QueryAnalysisTokens> tokens = new ArrayList<>();
 
 					for (Parse pars : parses) {
@@ -87,15 +85,20 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 						SemanticTypes semanticTypes =
 							pars.getSemantics().apply();
 
+						_log.info(semanticTypes.toString());
+
 						for (SemanticType semanticType : semanticTypes) {
 
 							for (Map<String, Object> map : semanticType) {
 
-								tokens.add(
-									QueryAnalysisTokens.of(
-										"", -1, -1, List.of(map)
-									)
-								);
+								QueryAnalysisTokens queryAnalysisTokens = QueryAnalysisTokens.of(
+									"", -1, -1, List.of(map));
+
+								if (!tokens.contains(queryAnalysisTokens)) {
+									tokens.add(
+										queryAnalysisTokens
+									);
+								}
 
 							}
 
