@@ -28,6 +28,7 @@ public class Grammar {
 		for (GrammarMixin base : bases) {
 			rules.addAll(base.getRules());
 			annotators.addAll(base.getAnnotators());
+			annotators.sort(null);
 		}
 
 		this.startSymbol = startSymbol;
@@ -48,9 +49,11 @@ public class Grammar {
 
 		Map<Tuple, List<Parse>> chart = new HashMap<>();
 
+		Map<Tuple, List<CategorySemantics>> context = new HashMap<>();
+
 		for (int j = 1; j < tokens.length + 1; j++) {
 			for (int i = j - 1; i != -1 ; i--) {
-				applyAnnotators(chart, tokens, i, j, tenantId);
+				applyAnnotators(context, chart, tokens, i, j, tenantId);
 				applyLexicalRules(chart, tokens, i, j);
 				applyBinaryRules(chart, i, j);
 				applyUnaryRules(chart, i, j);
@@ -153,13 +156,11 @@ public class Grammar {
 	}
 
 	private void applyAnnotators(
-		Map<Tuple, List<Parse>> chart, String[] tokens, int i, int j, long tenantId) {
+		Map<Tuple, List<CategorySemantics>> context, Map<Tuple, List<Parse>> chart, String[] tokens, int i, int j, long tenantId) {
 
 		tokens = Arrays.stream(tokens, i, j).toArray(String[]::new);
 
 		Tuple chartKey = Tuple.of(i, j);
-
-		Map<Tuple, List<CategorySemantics>> context = new HashMap<>();
 
 		for (Annotator annotator : annotators) {
 			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, context, tokens)) {

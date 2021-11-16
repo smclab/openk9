@@ -12,7 +12,7 @@ import java.util.Map;
 @Component(
 	immediate = true,
 	property = {
-		Constants.SERVICE_RANKING + ":Integer=-1000"
+		Constants.SERVICE_RANKING + ":Integer=1000"
 	},
 	service = Annotator.class
 )
@@ -36,6 +36,11 @@ public class TokenAnnotator extends BaseAnnotator {
 
 		return List.of();
 
+	}
+
+	@Override
+	public int weight() {
+		return 10;
 	}
 
 	@Override

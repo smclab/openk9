@@ -54,6 +54,16 @@ public abstract class BaseAnnotator implements Annotator {
 
 	}
 
+	@Override
+	public int compareTo(Annotator o) {
+		return Integer.compare(this.weight(), o.weight());
+	}
+
+	@Override
+	public int weight() {
+		return 1;
+	}
+
 	protected void setAnnotatorConfig(AnnotatorConfig annotatorConfig) {
 		_annotatorConfig = annotatorConfig;
 	}
