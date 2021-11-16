@@ -1,9 +1,12 @@
 package io.openk9.search.query.internal.http;
 
+import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpResponseWriter;
+import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.model.Tenant;
 import io.openk9.reactor.netty.util.ReactorNettyUtils;
 import io.openk9.search.query.internal.query.parser.Grammar;
 import io.openk9.search.query.internal.query.parser.GrammarProvider;
@@ -50,49 +53,60 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 				.map(bytes -> _jsonFactory.fromJson(bytes,
 					QueryAnalysisRequest.class));
 
+		String hostName = HttpUtil.getHostName(httpServerRequest);
+
+		Mono<Long> tenantIdMono =
+			_datasourceClient
+				.findTenantByVirtualHost(hostName)
+				.next()
+				.switchIfEmpty(
+					Mono.error(
+						() -> new RuntimeException(
+							"tenant not found for virtualhost: " + hostName)))
+				.map(Tenant::getTenantId);
+
 		Mono<QueryAnalysisResponse> response =
-			requestMono
-				.flatMap(
-					queryAnalysisRequest ->
-						Mono.fromSupplier(() -> {
+			Mono.zip(tenantIdMono, requestMono)
+				.flatMap(t2 -> Mono.fromSupplier(() -> {
 
-							Grammar grammar = _grammarProvider.getGrammar();
+					QueryAnalysisRequest queryAnalysisRequest = t2.getT2();
 
-							List<Parse> parses = grammar.parseInput(
-								queryAnalysisRequest.getSearchText());
+					Grammar grammar = _grammarProvider.getGrammar();
 
-							List<QueryAnalysisTokens> tokens = new ArrayList<>();
+					List<Parse> parses = grammar.parseInput(
+						t2.getT1(), queryAnalysisRequest.getSearchText());
 
-							for (Parse pars : parses) {
+					List<QueryAnalysisTokens> tokens = new ArrayList<>();
 
-								SemanticTypes semanticTypes =
-									pars.getSemantics().apply();
+					for (Parse pars : parses) {
 
-								for (SemanticType semanticType : semanticTypes) {
+						SemanticTypes semanticTypes =
+							pars.getSemantics().apply();
 
-									for (Map<String, Object> map : semanticType) {
+						for (SemanticType semanticType : semanticTypes) {
 
-										tokens.add(
-											QueryAnalysisTokens.of(
-												"", -1, -1, List.of(map)
-											)
-										);
+							for (Map<String, Object> map : semanticType) {
 
-									}
-
-
-								}
+								tokens.add(
+									QueryAnalysisTokens.of(
+										"", -1, -1, List.of(map)
+									)
+								);
 
 							}
 
-							return QueryAnalysisResponse.of(
-								queryAnalysisRequest.getSearchText(),
-								tokens
-							);
+						}
 
-						})
-						.subscribeOn(Schedulers.boundedElastic())
-				);
+					}
+
+					return QueryAnalysisResponse.of(
+						queryAnalysisRequest.getSearchText(),
+						tokens
+					);
+
+				})
+				.subscribeOn(Schedulers.boundedElastic())
+			);
 
 		return _httpResponseWriter.write(httpServerResponse, response);
 
@@ -106,6 +120,9 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 	@Reference
 	private JsonFactory _jsonFactory;
+
+	@Reference
+	private DatasourceClient _datasourceClient;
 
 	@Data
 	@Builder

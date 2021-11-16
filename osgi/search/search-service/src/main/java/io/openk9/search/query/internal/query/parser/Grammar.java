@@ -39,6 +39,10 @@ public class Grammar {
 	}
 
 	public List<Parse> parseInput(String input) {
+		return parseInput(-1, input);
+	}
+
+	public List<Parse> parseInput(long tenantId, String input) {
 
 		String[] tokens = input.split(" ");
 
@@ -46,7 +50,7 @@ public class Grammar {
 
 		for (int j = 1; j < tokens.length + 1; j++) {
 			for (int i = j - 1; i != -1 ; i--) {
-				applyAnnotators(chart, tokens, i, j);
+				applyAnnotators(chart, tokens, i, j, tenantId);
 				applyLexicalRules(chart, tokens, i, j);
 				applyBinaryRules(chart, i, j);
 				applyUnaryRules(chart, i, j);
@@ -149,14 +153,14 @@ public class Grammar {
 	}
 
 	private void applyAnnotators(
-		Map<Tuple, List<Parse>> chart, String[] tokens, int i, int j) {
+		Map<Tuple, List<Parse>> chart, String[] tokens, int i, int j, long tenantId) {
 
 		tokens = Arrays.stream(tokens, i, j).toArray(String[]::new);
 
 		Tuple chartKey = Tuple.of(i, j);
 
 		for (Annotator annotator : annotators) {
-			for (CategorySemantics categorySemantics : annotator.annotate(tokens)) {
+			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, tokens)) {
 
 				String category = categorySemantics.getCategory();
 

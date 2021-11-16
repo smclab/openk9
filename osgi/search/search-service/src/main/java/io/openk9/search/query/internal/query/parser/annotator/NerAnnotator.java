@@ -80,6 +80,8 @@ public class NerAnnotator implements Annotator {
 				);
 			}
 
+			_log.info(list.toString());
+
 		}
 		catch (IOException e) {
 			_log.error(e.getMessage(), e);
