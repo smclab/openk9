@@ -34,8 +34,10 @@ public abstract class BaseAnnotator implements Annotator {
 
 	protected void setAnnotatorConfig(AnnotatorConfig annotatorConfig) {
 		_annotatorConfig = annotatorConfig;
+		stopWords = List.of(annotatorConfig.stopWords());
 	}
 
 	protected AnnotatorConfig _annotatorConfig;
+	protected List<String> stopWords;
 
 }

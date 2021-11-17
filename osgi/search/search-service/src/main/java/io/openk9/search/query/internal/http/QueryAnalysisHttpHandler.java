@@ -95,8 +95,16 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 						for (Parse pars : parses) {
 							for (SemanticType maps : pars.getSemantics().apply()) {
 								for (Map<String, Object> map : maps) {
-									aggregation.computeIfAbsent(
-										maps.getPos(), (k) -> new HashSet<>()).add(map);
+									Object tokenType = map.get("tokenType");
+									if (tokenType.equals("TEXT")) {
+										aggregation.computeIfAbsent(
+											maps.getPos(), (k) -> new HashSet<>());
+									}
+									else {
+										aggregation
+											.computeIfAbsent(maps.getPos(), (k) -> new HashSet<>())
+											.add(map);
+									}
 								}
 							}
 						}
@@ -117,12 +125,15 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 							int indexOf = searchText.indexOf(text, startPos);
 
+							Collection<Map<String, Object>> value =
+								entry.getValue();
+
 							result.add(
 								QueryAnalysisTokens.of(
 									text,
 									indexOf,
 									indexOf + text.length(),
-									entry.getValue())
+									value)
 							);
 						}
 
