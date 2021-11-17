@@ -81,13 +81,14 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 					Grammar grammar = _grammarProvider.getGrammar();
 
+					String searchText = queryAnalysisRequest.getSearchText();
+
 					Mono<List<Parse>> parsesMono = grammar.parseInput(
-						t2.getT1(), queryAnalysisRequest.getSearchText());
+						t2.getT1(), searchText);
 
 					return parsesMono.map(parses -> {
 
-						String[] tokens =
-							Utils.split(queryAnalysisRequest.getSearchText());
+						String[] tokens = Utils.split(searchText);
 
 						Map<Tuple<Integer>, Collection<Map<String, Object>>> aggregation = new HashMap<>();
 
@@ -114,17 +115,19 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 								.stream(tokens, startPos, endPos)
 								.collect(Collectors.joining(" "));
 
+							int indexOf = searchText.indexOf(text, startPos);
+
 							result.add(
 								QueryAnalysisTokens.of(
 									text,
-									startPos,
-									endPos,
+									indexOf,
+									indexOf + text.length(),
 									entry.getValue())
 							);
 						}
 
 						return QueryAnalysisResponse.of(
-							queryAnalysisRequest.getSearchText(),
+							searchText,
 							result
 						);
 
