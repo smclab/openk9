@@ -36,7 +36,14 @@ public class BaseNerAnnotator extends BaseAnnotator {
 			QueryBuilders.matchQuery(
 				"type.keyword", category));
 
-		builder.must(QueryBuilders.termsQuery("name", tokens));
+		if (tokens.length == 1) {
+			builder.must(query("name", tokens[0]));
+		}
+		else {
+			builder.must(QueryBuilders.matchPhraseQuery(
+				"name", String.join(" ", tokens)));
+		}
+
 
 		SearchRequest searchRequest;
 
