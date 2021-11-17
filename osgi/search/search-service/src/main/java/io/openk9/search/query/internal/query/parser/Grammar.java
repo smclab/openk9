@@ -5,6 +5,8 @@ import io.openk9.search.api.query.parser.CategorySemantics;
 import io.openk9.search.api.query.parser.Tuple;
 import io.openk9.search.query.internal.query.parser.util.Itertools;
 import io.openk9.search.query.internal.query.parser.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -70,6 +72,8 @@ public class Grammar {
 
 		Mono<Map<Tuple, List<Parse>>> aggregation =
 			Mono.zip(monoList, objs -> {
+
+				_log.info(Arrays.toString(objs));
 
 				Map<Tuple, List<Parse>> map = new HashMap<>(objs.length);
 
@@ -337,5 +341,7 @@ public class Grammar {
 	private final Set<String> categories = new HashSet<>();
 	private final List<Rule> rules = new ArrayList<>();
 	private final List<Annotator> annotators = new ArrayList<>();
+	private static final Logger _log = LoggerFactory.getLogger(
+		Grammar.class);
 
 }
