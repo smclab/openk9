@@ -1,6 +1,8 @@
 package io.openk9.search.api.query.parser;
 
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public final class Tuple<T> {
 
@@ -36,6 +38,14 @@ public final class Tuple<T> {
 	@Override
 	public int hashCode() {
 		return Arrays.hashCode(_args);
+	}
+
+	@Override
+	public String toString() {
+		return Arrays
+			.stream(_args)
+			.map(Objects::toString)
+			.collect(Collectors.joining(",", "(", ")"));
 	}
 
 	private final T[] _args;

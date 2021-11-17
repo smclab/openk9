@@ -52,7 +52,7 @@ public class Grammar {
 
 		String[] tokens = Utils.split(input);
 
-		List<Mono<Map<Tuple, List<Parse>>>> monoList =
+		List<Mono<Map<Tuple, List<Parse>>>> frtMonoList =
 			IntStream.range(1, tokens.length + 1).mapToObj(
 				j -> Mono.fromSupplier(() -> {
 
@@ -61,7 +61,6 @@ public class Grammar {
 					for (int i = j - 1; i != -1; i--) {
 						applyAnnotators(innerChart, tokens, i, j, tenantId);
 						applyLexicalRules(innerChart, tokens, i, j);
-						applyBinaryRules(innerChart, i, j);
 						applyUnaryRules(innerChart, i, j);
 					}
 
@@ -71,7 +70,7 @@ public class Grammar {
 			).collect(Collectors.toList());
 
 		Mono<Map<Tuple, List<Parse>>> aggregation =
-			Mono.zip(monoList, objs -> {
+			Mono.zip(frtMonoList, objs -> {
 
 				_log.info(Arrays.toString(objs));
 
@@ -85,7 +84,14 @@ public class Grammar {
 
 			});
 
-		return aggregation
+		return aggregation.map(chart -> {
+				for (int j = 1; j < tokens.length + 1; j++) {
+					for (int i = j - 1; i != -1; i--) {
+						applyBinaryRules(chart, i, j);
+					}
+				}
+				return chart;
+			})
 			.map(chart -> chart.getOrDefault(Tuple.of(0, tokens.length), List.of()))
 			.map(parses -> {
 				if (startSymbol != null && !startSymbol.isBlank()) {
