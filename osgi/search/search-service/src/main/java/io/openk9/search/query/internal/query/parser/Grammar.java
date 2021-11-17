@@ -72,8 +72,6 @@ public class Grammar {
 		Mono<Map<Tuple, List <Parse>>> aggregation =
 			Mono.zip(frtMonoList, objs -> {
 
-				_log.info(Arrays.toString(objs));
-
 				Map<Tuple, List<Parse>> map = new HashMap<>(objs.length);
 
 				for (Object obj : objs) {

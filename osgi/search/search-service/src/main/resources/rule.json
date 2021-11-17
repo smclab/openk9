@@ -67,7 +67,7 @@
 	{
 		"lhs": "$IntentCollection",
 		"rhs": "$Intent ?$Optionals ?$IntentCollection",
-		"sem": "MERGE"
+		"sem": "IDENTITY"
 	},
 	{
 		"lhs": "$Entity",

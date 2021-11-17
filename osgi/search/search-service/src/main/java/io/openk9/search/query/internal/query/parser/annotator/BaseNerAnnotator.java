@@ -44,7 +44,6 @@ public class BaseNerAnnotator extends BaseAnnotator {
 				"name", String.join(" ", tokens)));
 		}
 
-
 		SearchRequest searchRequest;
 
 		if (tenantId == -1) {
