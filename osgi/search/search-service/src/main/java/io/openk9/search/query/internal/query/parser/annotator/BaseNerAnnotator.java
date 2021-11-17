@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,12 @@ public class BaseNerAnnotator extends BaseAnnotator {
 
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
+
+		List<String> stopWords = List.of(_annotatorConfig.stopWords());
+
+		if (Arrays.stream(tokens).allMatch(stopWords::contains)) {
+			return List.of();
+		}
 
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();
