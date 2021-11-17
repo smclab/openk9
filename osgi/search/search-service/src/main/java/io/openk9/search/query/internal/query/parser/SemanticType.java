@@ -41,10 +41,10 @@ public class SemanticType implements Iterable<Map<String, Object>> {
 	public String toString() {
 
 		if (value.size() == 1) {
-			return next().toString();
+			return next().toString() + "pos: " + pos;
 		}
 		else {
-			return value.toString();
+			return value + "pos: " + pos;
 		}
 	}
 

@@ -12,9 +12,8 @@ import io.openk9.search.api.query.parser.Tuple;
 import io.openk9.search.query.internal.query.parser.Grammar;
 import io.openk9.search.query.internal.query.parser.GrammarProvider;
 import io.openk9.search.query.internal.query.parser.Parse;
-import io.openk9.search.query.internal.query.parser.Semantic;
 import io.openk9.search.query.internal.query.parser.SemanticType;
-import io.openk9.search.query.internal.query.parser.SemanticTypes;
+import io.openk9.search.query.internal.query.parser.util.Utils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,8 +30,13 @@ import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
@@ -82,37 +86,46 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 					return parsesMono.map(parses -> {
 
-						List<QueryAnalysisTokens> tokens = new ArrayList<>();
+						String[] tokens =
+							Utils.split(queryAnalysisRequest.getSearchText());
+
+						Map<Tuple<Integer>, Collection<Map<String, Object>>> aggregation = new HashMap<>();
 
 						for (Parse pars : parses) {
-
-							Semantic semantics = pars.getSemantics();
-
-							SemanticTypes semanticTypes = semantics.apply();
-
-							for (SemanticType semanticType : semanticTypes) {
-
-								Tuple<Integer> pos = semanticType.getPos();
-
-								QueryAnalysisTokens queryAnalysisTokens =
-									QueryAnalysisTokens.of(
-										"",
-										pos.getOrDefault(0, -1),
-										pos.getOrDefault(1, -1),
-										semanticType.getValue()
-									);
-
-								if (!tokens.contains(queryAnalysisTokens)) {
-									tokens.add(queryAnalysisTokens);
+							for (SemanticType maps : pars.getSemantics().apply()) {
+								for (Map<String, Object> map : maps) {
+									aggregation.computeIfAbsent(
+										maps.getPos(), (k) -> new HashSet<>()).add(map);
 								}
-
 							}
+						}
 
+						List<QueryAnalysisTokens> result = new ArrayList<>();
+
+						for (Map.Entry<Tuple<Integer>, Collection<Map<String, Object>>> entry : aggregation.entrySet()) {
+
+							Integer startPos =
+								entry.getKey().getOrDefault(0, -1);
+
+							Integer endPos =
+								entry.getKey().getOrDefault(1, -1);
+
+							String text = Arrays
+								.stream(tokens, startPos, endPos)
+								.collect(Collectors.joining(" "));
+
+							result.add(
+								QueryAnalysisTokens.of(
+									text,
+									startPos,
+									endPos,
+									entry.getValue())
+							);
 						}
 
 						return QueryAnalysisResponse.of(
 							queryAnalysisRequest.getSearchText(),
-							tokens
+							result
 						);
 
 					});
@@ -165,7 +178,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		private String text;
 		private Integer start;
 		private Integer end;
-		private List<Map<String, Object>> tokens;
+		private Collection<Map<String, Object>> tokens;
 	}
 
 	@Data

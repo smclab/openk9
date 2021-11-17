@@ -45,7 +45,7 @@ public class TokenAnnotator extends BaseAnnotator {
 
 	@Override
 	@Reference
-	protected void setAnnotatorConfig(
+	public void setAnnotatorConfig(
 		AnnotatorConfig annotatorConfig) {
 		super.setAnnotatorConfig(annotatorConfig);
 	}

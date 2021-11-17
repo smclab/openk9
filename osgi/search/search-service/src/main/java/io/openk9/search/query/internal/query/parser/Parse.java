@@ -41,7 +41,7 @@ public abstract class Parse {
 	}
 
 	public static Parse of(Rule rule, Tuple<Integer> pos, String child) {
-		return new ParseImpl(rule, pos, new ParseCat(child));
+		return new ParseImpl(rule, pos, new ParseCat(child, pos));
 	}
 
 	public static Parse of(Rule rule, Tuple<Integer> pos, String...strings) {
@@ -50,7 +50,7 @@ public abstract class Parse {
 			pos,
 			Arrays
 				.stream(strings)
-				.map(ParseCat::new)
+				.map(child -> new ParseCat(child, pos))
 				.toArray(ParseCat[]::new)
 		);
 	}
@@ -66,12 +66,18 @@ public abstract class Parse {
 	private static class ParseCat extends Parse {
 
 		public ParseCat(String children) {
-			value = children;
+			_value = children;
+			_pos = Tuple.of();
+		}
+
+		public ParseCat(String children, Tuple<Integer> pos) {
+			_value = children;
+			_pos = pos;
 		}
 
 		@Override
 		public Semantic getSemantics() {
-			return Semantic.of(Map.of("token", value));
+			return Semantic.of(_pos, Map.of("token", _value));
 		}
 
 		@Override
@@ -84,11 +90,12 @@ public abstract class Parse {
 			return Tuple.of();
 		}
 
-		private final String value;
+		private final String _value;
+		private final Tuple<Integer> _pos;
 
 		@Override
 		public String toString() {
-			return value;
+			return _value;
 		}
 	}
 
@@ -133,7 +140,7 @@ public abstract class Parse {
 			String childrenString = children.stream().map(Parse::toString).collect(
 				Collectors.joining(" "));
 
-			return String.format("(%s %s)", rule.getLhs(), childrenString);
+			return String.format("(%s %s pos: %s)", rule.getLhs(), childrenString, pos);
 
 		}
 

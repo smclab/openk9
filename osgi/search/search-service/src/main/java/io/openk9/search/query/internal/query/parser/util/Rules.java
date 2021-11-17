@@ -6,6 +6,7 @@ import io.openk9.search.query.internal.query.parser.SemanticTypes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,7 +30,7 @@ public class Rules {
 			//Rule.of("$ROOT", "$Query", Semantic.identity()),
 			Rule.of("$Query", "$IntentCollection", Semantic.identity()),
 			Rule.of("$IntentCollection", "$Intent ?$Optionals ?$IntentCollection",
-				Semantic.of(SemanticTypes::merge)));
+				Semantic.identity()));
 
 
 		List<Rule> rulesEntity = List.of(
@@ -37,7 +38,11 @@ public class Rules {
 			Rule.of("$Entity", "$ORG", Semantic.of(sems ->  SemanticTypes.of(sems.get(0)))),
 			Rule.of("$Entity", "$DATE", Semantic.of(sems ->  SemanticTypes.of(sems.get(0)))),
 			Rule.of("$Entity", "$LOC", Semantic.of(sems ->  SemanticTypes.of(sems.get(0)))),
-			Rule.of("$Intent", "$Entity", Semantic.of(sems ->  SemanticTypes.of(sems.get(0))))
+			Rule.of("$Intent", "$Entity", Semantic.of(sems ->  SemanticTypes.of(sems.get(0)))),
+			Rule.of("$Intent", "$TOKEN", Semantic.of(sems ->  SemanticTypes.of(sems.get(0)))),
+			Rule.of("$Intent", "$STOPWORD", Semantic.of(sems ->  SemanticTypes.of(sems.get(0)))),
+			Rule.of("$PER", "daniele caldarini", Semantic.of(Map.of("token", "daniele caldarini"))),
+			Rule.of("$PER", "cristian bianco", Semantic.of(Map.of("token", "cristian bianco")))
 		);
 
 		List<Rule> aggregation = new ArrayList<>();

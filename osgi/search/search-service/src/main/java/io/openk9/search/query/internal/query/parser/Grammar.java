@@ -48,7 +48,8 @@ public class Grammar {
 		return parseInput(-1, input);
 	}
 
-	public Mono<List<Parse>> parseInput(long tenantId, String input) {
+	public Mono<List<Parse>> parseInput(
+		long tenantId, String input) {
 
 		String[] tokens = Utils.split(input);
 
@@ -134,13 +135,7 @@ public class Grammar {
 				Tuple.of(parse.getRule().getLhs()), List.of())) {
 				chart
 					.computeIfAbsent(chartKey, k -> new ArrayList<>())
-					.add(Parse.of(
-						Rule.of(
-							rule.getLhs(),
-							rule.getLhs(),
-							Semantic.of(
-								chartKey, sems -> rule.getSem().apply(sems))),
-						chartKey, parse));
+					.add(Parse.of(rule, chartKey, parse));
 			}
 		}
 
@@ -168,13 +163,7 @@ public class Grammar {
 
 					chart
 						.computeIfAbsent(chartKey, key -> new ArrayList<>())
-						.add(Parse.of(
-							Rule.of(
-								rule.getLhs(),
-								rule.getLhs(),
-								Semantic.of(
-									chartKey, sems -> rule.getSem().apply(sems))),
-							chartKey, parse1, parse2));
+						.add(Parse.of(rule, chartKey, parse1, parse2));
 
 				}
 
@@ -200,9 +189,19 @@ public class Grammar {
 					Parse.of(
 						Rule.of(
 							rule.getLhs(),
-							rule.getLhs(),
+							rule.getRhs(),
 							Semantic.of(
-								chartKey, sems -> rule.getSem().apply(sems))),
+								chartKey, sems ->
+									rule
+										.getSem()
+										.apply(sems)
+										.stream()
+										.map(maps -> SemanticType.of(chartKey, maps.getValue()))
+										.collect(
+											Collectors.collectingAndThen(
+												Collectors.toList(), SemanticTypes::of))
+								)
+						),
 						chartKey,
 						tokens)
 				);
