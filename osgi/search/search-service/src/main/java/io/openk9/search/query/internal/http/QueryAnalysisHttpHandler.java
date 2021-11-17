@@ -90,9 +90,9 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 							SemanticTypes semanticTypes = semantics.apply();
 
-							Tuple<Integer> pos = semantics.getPos();
-
 							for (SemanticType semanticType : semanticTypes) {
+
+								Tuple<Integer> pos = semanticType.getPos();
 
 								QueryAnalysisTokens queryAnalysisTokens =
 									QueryAnalysisTokens.of(

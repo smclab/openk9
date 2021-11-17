@@ -63,7 +63,7 @@ public interface Semantic extends Function<SemanticTypes, SemanticTypes> {
 		}
 
 		public MapSemantic(Map<String, Object>[] semantic, Tuple<Integer> pos) {
-			_semantic = SemanticType.of(semantic);
+			_semantic = SemanticType.of(pos, semantic);
 			_pos = pos;
 		}
 
