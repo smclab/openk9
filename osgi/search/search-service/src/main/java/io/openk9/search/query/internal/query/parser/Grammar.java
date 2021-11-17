@@ -61,7 +61,6 @@ public class Grammar {
 					for (int i = j - 1; i != -1; i--) {
 						applyAnnotators(innerChart, tokens, i, j, tenantId);
 						applyLexicalRules(innerChart, tokens, i, j);
-						applyUnaryRules(innerChart, i, j);
 					}
 
 					return innerChart;
@@ -87,6 +86,7 @@ public class Grammar {
 		return aggregation.map(chart -> {
 				for (int j = 1; j < tokens.length + 1; j++) {
 					for (int i = j - 1; i != -1; i--) {
+						applyUnaryRules(chart, i, j);
 						applyBinaryRules(chart, i, j);
 					}
 				}
