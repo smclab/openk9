@@ -109,32 +109,36 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 							}
 						}
 
-						List<QueryAnalysisTokens> result = new ArrayList<>();
+						List<QueryAnalysisTokens> result =
+							new ArrayList<>(aggregation.size());
 
 						for (Map.Entry<Tuple<Integer>, Collection<Map<String, Object>>> entry : aggregation.entrySet()) {
-
-							Integer startPos =
-								entry.getKey().getOrDefault(0, -1);
-
-							Integer endPos =
-								entry.getKey().getOrDefault(1, -1);
-
-							String text = Arrays
-								.stream(tokens, startPos, endPos)
-								.collect(Collectors.joining(" "));
-
-							int indexOf = searchText.indexOf(text, startPos);
 
 							Collection<Map<String, Object>> value =
 								entry.getValue();
 
-							result.add(
-								QueryAnalysisTokens.of(
-									text,
-									indexOf,
-									indexOf + text.length(),
-									value)
-							);
+							if (!value.isEmpty()) {
+
+								Integer startPos =
+									entry.getKey().getOrDefault(0, -1);
+
+								Integer endPos =
+									entry.getKey().getOrDefault(1, -1);
+
+								String text = Arrays
+									.stream(tokens, startPos, endPos)
+									.collect(Collectors.joining(" "));
+
+								int indexOf = searchText.indexOf(text, startPos);
+
+								result.add(
+									QueryAnalysisTokens.of(
+										text,
+										indexOf,
+										indexOf + text.length(),
+										value)
+								);
+							}
 						}
 
 						return QueryAnalysisResponse.of(
