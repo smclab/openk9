@@ -1,7 +1,7 @@
 package io.openk9.search.query.internal.query.parser;
 
-import io.openk9.search.query.internal.query.parser.util.Utils;
 import io.openk9.search.api.query.parser.Tuple;
+import io.openk9.search.query.internal.query.parser.util.Utils;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -42,11 +42,11 @@ public class Rule {
 	}
 
 	public Rule(String lhs, String rhs) {
-		this(lhs, rhs.split(" "));
+		this(lhs, Utils.split(rhs));
 	}
 
 	public Rule(String lhs, String rhs, Semantic sem) {
-		this(lhs, rhs.split(" "), sem);
+		this(lhs, Utils.split(rhs), sem);
 	}
 
 	public Semantic applySemantics(SemanticTypes sems) {

@@ -48,7 +48,7 @@ public class Grammar {
 
 	public Mono<List<Parse>> parseInput(long tenantId, String input) {
 
-		String[] tokens = input.split("\\s+");
+		String[] tokens = Utils.split(input);
 
 		List<Mono<Map<Tuple, List<Parse>>>> monoList =
 			IntStream.range(1, tokens.length + 1).mapToObj(
