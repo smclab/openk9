@@ -23,7 +23,6 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
@@ -69,48 +68,51 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 		Mono<QueryAnalysisResponse> response =
 			Mono.zip(tenantIdMono, requestMono)
-				.flatMap(t2 -> Mono.fromSupplier(() -> {
+				.flatMap(t2 -> Mono.defer(() -> {
 
 					QueryAnalysisRequest queryAnalysisRequest = t2.getT2();
 
 					Grammar grammar = _grammarProvider.getGrammar();
 
-					List<Parse> parses = grammar.parseInput(
+					Mono<List<Parse>> parsesMono = grammar.parseInput(
 						t2.getT1(), queryAnalysisRequest.getSearchText());
 
-					List<QueryAnalysisTokens> tokens = new ArrayList<>();
+					return parsesMono.map(parses -> {
 
-					for (Parse pars : parses) {
+						List<QueryAnalysisTokens> tokens = new ArrayList<>();
 
-						SemanticTypes semanticTypes =
-							pars.getSemantics().apply();
+						for (Parse pars : parses) {
 
-						for (SemanticType semanticType : semanticTypes) {
+							SemanticTypes semanticTypes =
+								pars.getSemantics().apply();
 
-							for (Map<String, Object> map : semanticType) {
+							for (SemanticType semanticType : semanticTypes) {
 
-								QueryAnalysisTokens queryAnalysisTokens = QueryAnalysisTokens.of(
-									"", -1, -1, List.of(map));
+								for (Map<String, Object> map : semanticType) {
 
-								if (!tokens.contains(queryAnalysisTokens)) {
-									tokens.add(
-										queryAnalysisTokens
-									);
+									QueryAnalysisTokens queryAnalysisTokens = QueryAnalysisTokens.of(
+										"", -1, -1, List.of(map));
+
+									if (!tokens.contains(queryAnalysisTokens)) {
+										tokens.add(
+											queryAnalysisTokens
+										);
+									}
+
 								}
 
 							}
 
 						}
 
-					}
+						return QueryAnalysisResponse.of(
+							queryAnalysisRequest.getSearchText(),
+							tokens
+						);
 
-					return QueryAnalysisResponse.of(
-						queryAnalysisRequest.getSearchText(),
-						tokens
-					);
+					});
 
 				})
-				.subscribeOn(Schedulers.boundedElastic())
 			);
 
 		return _httpResponseWriter.write(httpServerResponse, response);

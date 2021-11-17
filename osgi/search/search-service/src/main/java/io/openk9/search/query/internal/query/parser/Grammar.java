@@ -5,6 +5,8 @@ import io.openk9.search.api.query.parser.CategorySemantics;
 import io.openk9.search.api.query.parser.Tuple;
 import io.openk9.search.query.internal.query.parser.util.Itertools;
 import io.openk9.search.query.internal.query.parser.util.Utils;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +26,8 @@ public class Grammar {
 		this(bases, "$ROOT");
 	}
 
-	public Grammar(List<GrammarMixin> bases, String startSymbol) {
+	public Grammar(
+		List<GrammarMixin> bases, String startSymbol) {
 		for (GrammarMixin base : bases) {
 			rules.addAll(base.getRules());
 			annotators.addAll(base.getAnnotators());
@@ -39,39 +42,59 @@ public class Grammar {
 
 	}
 
-	public List<Parse> parseInput(String input) {
+	public Mono<List<Parse>> parseInput(String input) {
 		return parseInput(-1, input);
 	}
 
-	public List<Parse> parseInput(long tenantId, String input) {
+	public Mono<List<Parse>> parseInput(long tenantId, String input) {
 
-		String[] tokens = input.split(" ");
+		String[] tokens = input.split("\\s+");
 
-		Map<Tuple, List<Parse>> chart = new HashMap<>();
+		List<Mono<Map<Tuple, List<Parse>>>> monoList =
+			IntStream.range(1, tokens.length + 1).mapToObj(
+				j -> Mono.fromSupplier(() -> {
 
-		Map<Tuple, List<CategorySemantics>> context = new HashMap<>();
+					Map<Tuple, List<Parse>> innerChart = new HashMap<>();
 
-		for (int j = 1; j < tokens.length + 1; j++) {
-			for (int i = j - 1; i != -1 ; i--) {
-				applyAnnotators(context, chart, tokens, i, j, tenantId);
-				applyLexicalRules(chart, tokens, i, j);
-				applyBinaryRules(chart, i, j);
-				applyUnaryRules(chart, i, j);
-			}
-		}
+					for (int i = j - 1; i != -1; i--) {
+						applyAnnotators(innerChart, tokens, i, j, tenantId);
+						applyLexicalRules(innerChart, tokens, i, j);
+						applyBinaryRules(innerChart, i, j);
+						applyUnaryRules(innerChart, i, j);
+					}
 
-		List<Parse> parses = chart.getOrDefault(
-			Tuple.of(0, tokens.length), List.of());
+					return innerChart;
 
-		if (startSymbol != null && !startSymbol.isBlank()) {
-			parses = parses
-				.stream()
-				.filter(parse ->
-					parse.getRule().getLhs().equals(startSymbol))
-				.collect(Collectors.toList());
-		}
+				}).subscribeOn(Schedulers.boundedElastic())
+			).collect(Collectors.toList());
 
-		return parses;
+		Mono<Map<Tuple, List<Parse>>> aggregation =
+			Mono.zip(monoList, objs -> {
+
+				Map<Tuple, List<Parse>> map = new HashMap<>(objs.length);
+
+				for (Object obj : objs) {
+					map.putAll((Map<Tuple, List<Parse>>) obj);
+				}
+
+				return map;
+
+			});
+
+		return aggregation
+			.map(chart -> chart.getOrDefault(Tuple.of(0, tokens.length), List.of()))
+			.map(parses -> {
+				if (startSymbol != null && !startSymbol.isBlank()) {
+					return parses
+						.stream()
+						.filter(parse ->
+							parse.getRule().getLhs().equals(startSymbol))
+						.collect(Collectors.toList());
+				}
+
+				return parses;
+
+			});
 
 	}
 
@@ -156,14 +179,14 @@ public class Grammar {
 	}
 
 	private void applyAnnotators(
-		Map<Tuple, List<CategorySemantics>> context, Map<Tuple, List<Parse>> chart, String[] tokens, int i, int j, long tenantId) {
+		Map<Tuple, List<Parse>> chart, String[] tokens, int i, int j, long tenantId) {
 
 		tokens = Arrays.stream(tokens, i, j).toArray(String[]::new);
 
 		Tuple chartKey = Tuple.of(i, j);
 
 		for (Annotator annotator : annotators) {
-			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, context, tokens)) {
+			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, tokens)) {
 
 				String category = categorySemantics.getCategory();
 

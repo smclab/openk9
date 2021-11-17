@@ -10,7 +10,7 @@ public class AnnotatorConfig {
 
 	@interface Config {
 		String[] stopWords() default {
-			"di", "a", "da", "in", "con", "su", "per", "tra", "fra", "e"
+			"di", "a", "da", "in", "con", "su", "per", "tra", "fra", "e", "i"
 		};
 	}
 
