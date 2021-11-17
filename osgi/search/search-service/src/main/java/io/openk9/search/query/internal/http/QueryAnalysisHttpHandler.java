@@ -18,6 +18,7 @@ import io.openk9.search.query.internal.query.parser.SemanticTypes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -93,20 +94,16 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 							for (SemanticType semanticType : semanticTypes) {
 
-								for (Map<String, Object> map : semanticType) {
+								QueryAnalysisTokens queryAnalysisTokens =
+									QueryAnalysisTokens.of(
+										"",
+										pos.getOrDefault(0, -1),
+										pos.getOrDefault(1, -1),
+										semanticType.getValue()
+									);
 
-									QueryAnalysisTokens queryAnalysisTokens =
-										QueryAnalysisTokens.of(
-											"",
-											pos.getOrDefault(0, -1),
-											pos.getOrDefault(1, -1),
-											List.of(map)
-										);
-
-									if (!tokens.contains(queryAnalysisTokens)) {
-										tokens.add(queryAnalysisTokens);
-									}
-
+								if (!tokens.contains(queryAnalysisTokens)) {
+									tokens.add(queryAnalysisTokens);
 								}
 
 							}
@@ -154,8 +151,8 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 	@AllArgsConstructor(staticName = "of")
 	public static class QueryAnalysisToken {
 		private String text;
-		private int start;
-		private int end;
+		private Integer start;
+		private Integer end;
 		private Map<String, Object> token;
 	}
 
@@ -163,10 +160,11 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor(staticName = "of")
+	@EqualsAndHashCode
 	public static class QueryAnalysisTokens {
 		private String text;
-		private int start;
-		private int end;
+		private Integer start;
+		private Integer end;
 		private List<Map<String, Object>> tokens;
 	}
 

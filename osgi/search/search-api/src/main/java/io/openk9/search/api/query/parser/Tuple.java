@@ -22,7 +22,15 @@ public final class Tuple<T> {
 		if (isEmpty() || (index < 0 || index >= _args.length)) {
 			return defaultValue;
 		}
-		return _args[index];
+
+		T result = _args[index];
+
+		if (result == null) {
+			return defaultValue;
+		}
+
+		return result;
+
 	}
 
 	public boolean isEmpty() {
