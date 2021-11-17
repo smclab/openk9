@@ -69,7 +69,7 @@ public interface Semantic extends Function<SemanticTypes, SemanticTypes> {
 
 		@Override
 		public SemanticTypes apply() {
-			return SemanticTypes.of(SemanticType.of(_semantic));
+			return SemanticTypes.of(_semantic);
 		}
 
 		@Override
