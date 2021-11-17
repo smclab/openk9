@@ -25,7 +25,7 @@
   },
   "homepage": "https://openk9.io/",
   "scripts": {
-    "dev": "webpack serve ",
+    "dev": "webpack serve",
     "build": "PRODUCTION=true webpack && rollup -c",
     "test-build": "yarn build && node build-test/server.js",
     "lint": "eslint --ext js,ts,tsx src",
@@ -36,9 +36,9 @@
     "main": false
   },
   "dependencies": {
-    "react-virtuoso": "^2.2.7"
   },
   "devDependencies": {
+    "react-virtuoso": "^2.2.7",
     "@babel/core": "^7.15.8",
     "@babel/plugin-transform-runtime": "^7.16.0",
     "@babel/preset-env": "^7.16.0",
