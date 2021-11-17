@@ -134,7 +134,13 @@ public class Grammar {
 				Tuple.of(parse.getRule().getLhs()), List.of())) {
 				chart
 					.computeIfAbsent(chartKey, k -> new ArrayList<>())
-					.add(Parse.of(rule, chartKey, parse));
+					.add(Parse.of(
+						Rule.of(
+							rule.getLhs(),
+							rule.getLhs(),
+							Semantic.of(
+								chartKey, sems -> rule.getSem().apply(sems))),
+						chartKey, parse));
 			}
 		}
 
@@ -162,7 +168,13 @@ public class Grammar {
 
 					chart
 						.computeIfAbsent(chartKey, key -> new ArrayList<>())
-						.add(Parse.of(rule, chartKey, parse1, parse2));
+						.add(Parse.of(
+							Rule.of(
+								rule.getLhs(),
+								rule.getLhs(),
+								Semantic.of(
+									chartKey, sems -> rule.getSem().apply(sems))),
+							chartKey, parse1, parse2));
 
 				}
 
@@ -181,9 +193,19 @@ public class Grammar {
 		Tuple<Integer> chartKey = Tuple.of(i, j);
 
 		for (Rule rule : lexicalRules.getOrDefault(tokenKey, List.of())) {
+
 			chart
 				.computeIfAbsent(chartKey, (k) -> new ArrayList<>())
-				.add(Parse.of(rule, chartKey, tokens));
+				.add(
+					Parse.of(
+						Rule.of(
+							rule.getLhs(),
+							rule.getLhs(),
+							Semantic.of(
+								chartKey, sems -> rule.getSem().apply(sems))),
+						chartKey,
+						tokens)
+				);
 		}
 
 	}
@@ -204,7 +226,7 @@ public class Grammar {
 					categorySemantics.getSemantics();
 
 				Rule rule = new Rule(
-					category, tokens, Semantic.of(semantics));
+					category, tokens, Semantic.of(chartKey, semantics));
 
 				chart.computeIfAbsent(
 					chartKey, (k) -> new ArrayList<>())

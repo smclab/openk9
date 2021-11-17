@@ -154,7 +154,7 @@ public abstract class Parse {
 							Collectors.collectingAndThen(
 								Collectors.toList(), SemanticTypes::of));
 
-				return rule.applySemantics(childSemantics, pos);
+				return rule.applySemantics(childSemantics);
 			}
 		}
 
