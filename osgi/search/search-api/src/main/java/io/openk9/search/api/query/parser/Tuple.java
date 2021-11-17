@@ -14,6 +14,21 @@ public final class Tuple<T> {
 		return _args;
 	}
 
+	public T get(int index) {
+		return _args[index];
+	}
+
+	public T getOrDefault(int index, T defaultValue) {
+		if (isEmpty() || (index < 0 || index >= _args.length)) {
+			return defaultValue;
+		}
+		return _args[index];
+	}
+
+	public boolean isEmpty() {
+		return _args.length == 0;
+	}
+
 	public static <T> Tuple<T> of() {
 		return (Tuple<T>)EMPTY_TUPLE;
 	}

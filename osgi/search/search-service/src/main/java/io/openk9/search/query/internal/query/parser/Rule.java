@@ -49,6 +49,18 @@ public class Rule {
 		this(lhs, Utils.split(rhs), sem);
 	}
 
+	public Semantic applySemantics(SemanticTypes sems, Tuple<Integer> pos) {
+		return Semantic.of(
+			pos, t ->
+				this.sem.apply(
+					Stream
+						.concat(t.stream(), sems.stream())
+						.collect(
+							Collectors.collectingAndThen(
+								Collectors.toList(), SemanticTypes::of)))
+		);
+	}
+
 	public Semantic applySemantics(SemanticTypes sems) {
 		return Semantic.of(
 			t ->

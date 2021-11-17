@@ -68,7 +68,7 @@ public class Grammar {
 				}).subscribeOn(Schedulers.boundedElastic())
 			).collect(Collectors.toList());
 
-		Mono<Map<Tuple, List<Parse>>> aggregation =
+		Mono<Map<Tuple, List <Parse>>> aggregation =
 			Mono.zip(frtMonoList, objs -> {
 
 				_log.info(Arrays.toString(objs));
@@ -124,7 +124,7 @@ public class Grammar {
 	private void applyUnaryRules(
 		Map<Tuple, List<Parse>> chart, int i, int j) {
 
-		Tuple chartKey = Tuple.of(i, j);
+		Tuple<Integer> chartKey = Tuple.of(i, j);
 
 		List<Parse> parseList = chart.getOrDefault(chartKey, List.of());
 
@@ -134,7 +134,7 @@ public class Grammar {
 				Tuple.of(parse.getRule().getLhs()), List.of())) {
 				chart
 					.computeIfAbsent(chartKey, k -> new ArrayList<>())
-					.add(Parse.of(rule, parse));
+					.add(Parse.of(rule, chartKey, parse));
 			}
 		}
 
@@ -143,7 +143,7 @@ public class Grammar {
 	private void applyBinaryRules(
 		Map<Tuple, List<Parse>> chart, int i, int j) {
 
-		Tuple chartKey = Tuple.of(i, j);
+		Tuple<Integer> chartKey = Tuple.of(i, j);
 
 		for (int k = i + 1; k < j; k++) {
 
@@ -162,7 +162,7 @@ public class Grammar {
 
 					chart
 						.computeIfAbsent(chartKey, key -> new ArrayList<>())
-						.add(Parse.of(rule, parse1, parse2));
+						.add(Parse.of(rule, chartKey, parse1, parse2));
 
 				}
 
@@ -178,12 +178,12 @@ public class Grammar {
 
 		Tuple tokenKey = Utils.toTuple(tokens);
 
-		Tuple chartKey = Tuple.of(i, j);
+		Tuple<Integer> chartKey = Tuple.of(i, j);
 
 		for (Rule rule : lexicalRules.getOrDefault(tokenKey, List.of())) {
 			chart
 				.computeIfAbsent(chartKey, (k) -> new ArrayList<>())
-				.add(Parse.of(rule, tokens));
+				.add(Parse.of(rule, chartKey, tokens));
 		}
 
 	}
@@ -193,7 +193,7 @@ public class Grammar {
 
 		tokens = Arrays.stream(tokens, i, j).toArray(String[]::new);
 
-		Tuple chartKey = Tuple.of(i, j);
+		Tuple<Integer> chartKey = Tuple.of(i, j);
 
 		for (Annotator annotator : annotators) {
 			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, tokens)) {
@@ -208,7 +208,7 @@ public class Grammar {
 
 				chart.computeIfAbsent(
 					chartKey, (k) -> new ArrayList<>())
-					.add(Parse.of(rule, tokens));
+					.add(Parse.of(rule, chartKey, tokens));
 			}
 		}
 

@@ -1,5 +1,7 @@
 package io.openk9.search.query.internal.query.parser;
 
+import io.openk9.search.api.query.parser.Tuple;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -7,10 +9,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class SemanticType implements Iterable<Map<String, Object>> {
+public class SemanticType implements Iterable<Map<String, Object>> {
 
 	protected SemanticType(List<Map<String, Object>> value) {
+		this(value, Tuple.of());
+	}
+
+	protected SemanticType(List<Map<String, Object>> value, Tuple<Integer> tuple) {
 		this.value = value;
+		this.pos = tuple;
+	}
+
+	public Tuple<Integer> getPos() {
+		return pos;
 	}
 
 	public List<Map<String, Object>> getValue() {
@@ -38,6 +49,7 @@ public abstract class SemanticType implements Iterable<Map<String, Object>> {
 	}
 
 	private final List<Map<String, Object>> value;
+	private final Tuple<Integer> pos;
 
 	public static SemanticType of(SemanticType...semanticTypes) {
 
@@ -52,15 +64,32 @@ public abstract class SemanticType implements Iterable<Map<String, Object>> {
 	}
 
 	public static SemanticType of(Map<String, Object> value) {
-		return new SingleSemanticType(value);
+		return new SemanticType(List.of(value));
 	}
 
 	public static SemanticType of(List<Map<String, Object>> value) {
-		return new ListSemanticType(value);
+		return new SemanticType(value);
 	}
 
+	@SafeVarargs
 	public static SemanticType of(Map<String, Object>...values) {
-		return new ListSemanticType(List.of(values));
+		return new SemanticType(List.of(values));
+	}
+
+	public static SemanticType of(
+		Tuple<Integer> pos, Map<String, Object> value) {
+		return new SemanticType(List.of(value), pos);
+	}
+
+	public static SemanticType of(
+		Tuple<Integer> pos, List<Map<String, Object>> value) {
+		return new SemanticType(value, pos);
+	}
+
+	@SafeVarargs
+	public static SemanticType of(
+		Tuple<Integer> pos, Map<String, Object>...values) {
+		return new SemanticType(List.of(values), pos);
 	}
 
 	public static SemanticType of() {
@@ -70,17 +99,5 @@ public abstract class SemanticType implements Iterable<Map<String, Object>> {
 	public static final SemanticType EMPTY_SEMANTIC_TYPE =
 		new SemanticType(List.of()){};
 
-
-	public static class ListSemanticType extends SemanticType {
-		public ListSemanticType(List<Map<String, Object>> value) {
-			super(value);
-		}
-	}
-
-	public static class SingleSemanticType extends SemanticType {
-		public SingleSemanticType(Map<String, Object> value) {
-			super(List.of(value));
-		}
-	}
 
 }

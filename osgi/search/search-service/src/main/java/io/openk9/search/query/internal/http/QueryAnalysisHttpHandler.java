@@ -8,9 +8,11 @@ import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Tenant;
 import io.openk9.reactor.netty.util.ReactorNettyUtils;
+import io.openk9.search.api.query.parser.Tuple;
 import io.openk9.search.query.internal.query.parser.Grammar;
 import io.openk9.search.query.internal.query.parser.GrammarProvider;
 import io.openk9.search.query.internal.query.parser.Parse;
+import io.openk9.search.query.internal.query.parser.Semantic;
 import io.openk9.search.query.internal.query.parser.SemanticType;
 import io.openk9.search.query.internal.query.parser.SemanticTypes;
 import lombok.AllArgsConstructor;
@@ -83,20 +85,26 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 						for (Parse pars : parses) {
 
-							SemanticTypes semanticTypes =
-								pars.getSemantics().apply();
+							Semantic semantics = pars.getSemantics();
+
+							SemanticTypes semanticTypes = semantics.apply();
+
+							Tuple<Integer> pos = semantics.getPos();
 
 							for (SemanticType semanticType : semanticTypes) {
 
 								for (Map<String, Object> map : semanticType) {
 
-									QueryAnalysisTokens queryAnalysisTokens = QueryAnalysisTokens.of(
-										"", -1, -1, List.of(map));
+									QueryAnalysisTokens queryAnalysisTokens =
+										QueryAnalysisTokens.of(
+											"",
+											pos.getOrDefault(0, -1),
+											pos.getOrDefault(1, -1),
+											List.of(map)
+										);
 
 									if (!tokens.contains(queryAnalysisTokens)) {
-										tokens.add(
-											queryAnalysisTokens
-										);
+										tokens.add(queryAnalysisTokens);
 									}
 
 								}

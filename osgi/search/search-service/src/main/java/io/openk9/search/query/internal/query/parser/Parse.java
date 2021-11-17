@@ -1,5 +1,6 @@
 package io.openk9.search.query.internal.query.parser;
 
+import io.openk9.search.api.query.parser.Tuple;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -13,9 +14,9 @@ public abstract class Parse {
 
 	public abstract Semantic getSemantics();
 
-	public abstract List<Parse> getChildren();
-
 	public abstract Rule getRule();
+
+	public abstract Tuple<Integer> getPos();
 
 	public static Parse of(Rule rule, String child) {
 		return new ParseImpl(rule, new ParseCat(child));
@@ -39,6 +40,29 @@ public abstract class Parse {
 		return new ParseImpl(rule, children);
 	}
 
+	public static Parse of(Rule rule, Tuple<Integer> pos, String child) {
+		return new ParseImpl(rule, pos, new ParseCat(child));
+	}
+
+	public static Parse of(Rule rule, Tuple<Integer> pos, String...strings) {
+		return new ParseImpl(
+			rule,
+			pos,
+			Arrays
+				.stream(strings)
+				.map(ParseCat::new)
+				.toArray(ParseCat[]::new)
+		);
+	}
+
+	public static Parse of(Rule rule, Tuple<Integer> pos, Parse child) {
+		return new ParseImpl(rule, pos, child);
+	}
+
+	public static Parse of(Rule rule, Tuple<Integer> pos, Parse...children) {
+		return new ParseImpl(rule, pos, children);
+	}
+
 	private static class ParseCat extends Parse {
 
 		public ParseCat(String children) {
@@ -51,13 +75,13 @@ public abstract class Parse {
 		}
 
 		@Override
-		public List<Parse> getChildren() {
-			return List.of();
+		public Rule getRule() {
+			return null;
 		}
 
 		@Override
-		public Rule getRule() {
-			return null;
+		public Tuple<Integer> getPos() {
+			return Tuple.of();
 		}
 
 		private final String value;
@@ -71,11 +95,16 @@ public abstract class Parse {
 	private static class ParseImpl extends Parse {
 
 		private ParseImpl(Rule rule, Parse...children) {
+			this(rule, Tuple.of(), children);
+		}
+
+		private ParseImpl(Rule rule, Tuple<Integer> pos, Parse...children) {
 			this.rule = rule;
 			this.children = List.of(children);
 			semantics = this._computeSemantics();
 			score = Float.NaN;
 			denotation = null;
+			this.pos = pos;
 			_validateParse();
 		}
 
@@ -84,14 +113,18 @@ public abstract class Parse {
 			return semantics;
 		}
 
-		@Override
-		public List<Parse> getChildren() {
+		private List<Parse> getChildren() {
 			return children;
 		}
 
 		@Override
 		public Rule getRule() {
 			return rule;
+		}
+
+		@Override
+		public Tuple<Integer> getPos() {
+			return pos;
 		}
 
 		@Override
@@ -121,7 +154,7 @@ public abstract class Parse {
 							Collectors.collectingAndThen(
 								Collectors.toList(), SemanticTypes::of));
 
-				return rule.applySemantics(childSemantics);
+				return rule.applySemantics(childSemantics, pos);
 			}
 		}
 
@@ -134,6 +167,7 @@ public abstract class Parse {
 		private Semantic semantics;
 		private float score;
 		private final Object denotation;
+		private Tuple<Integer> pos;
 
 	}
 
