@@ -43,7 +43,7 @@ public final class Tuple<T> {
 
 	@SafeVarargs
 	public static <T> Tuple<T> of(T...args) {
-		return new Tuple(args);
+		return new Tuple<>(args);
 	}
 
 	@Override

@@ -100,11 +100,11 @@ public abstract class Parse {
 
 		private ParseImpl(Rule rule, Tuple<Integer> pos, Parse...children) {
 			this.rule = rule;
+			this.pos = pos;
 			this.children = List.of(children);
 			semantics = this._computeSemantics();
 			score = Float.NaN;
 			denotation = null;
-			this.pos = pos;
 			_validateParse();
 		}
 

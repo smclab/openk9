@@ -134,12 +134,14 @@ public interface Semantic extends Function<SemanticTypes, SemanticTypes> {
 	@SafeVarargs
 	static Semantic of(
 		Tuple<Integer> pos, Map<String, Object>...sem) {
+		Objects.requireNonNull(pos, "pos is null");
 		return sem == null ? _NULL_SEMANTIC : new MapSemantic(sem, pos);
 	}
 
 	static Semantic of(
 		Tuple<Integer> pos, Function<SemanticTypes, SemanticTypes> function) {
 		Objects.requireNonNull(function, "function is null");
+		Objects.requireNonNull(pos, "pos is null");
 		return new FunctionSemantic(function, pos);
 	}
 
