@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
@@ -32,20 +33,18 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
+		if (Arrays.stream(tokens).allMatch(stopWords::contains)) {
+			return List.of();
+		}
+
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
-		BoolQueryBuilder innerBool = QueryBuilders.boolQuery();
-
 		for (String token : tokens) {
-			for (String keyword : keywords) {
-				innerBool.should(query(keyword, token));
-			}
+			builder.must(QueryBuilders.multiMatchQuery(keywords, token));
 		}
-
-		builder.must(innerBool);
 
 		SearchRequest searchRequest;
 
