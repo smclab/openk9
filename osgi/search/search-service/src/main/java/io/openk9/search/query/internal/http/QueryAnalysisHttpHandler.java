@@ -139,6 +139,12 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 						Map<Tuple<Integer>, TreeSet<Map<String, Object>>> aggregation = new HashMap<>();
 
+						for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
+							aggregation.computeIfAbsent(
+									e.getKey(), (k) -> new TreeSet<>(new ScoreComparator()))
+								.add(e.getValue());
+						}
+
 						for (Parse pars : parses) {
 							for (SemanticType maps : pars.getSemantics().apply()) {
 								for (Map<String, Object> map : maps) {
@@ -150,12 +156,6 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 									}
 								}
 							}
-						}
-
-						for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
-							aggregation.computeIfAbsent(
-									e.getKey(), (k) -> new TreeSet<>(new ScoreComparator()))
-								.add(e.getValue());
 						}
 
 						List<QueryAnalysisTokens> result =
