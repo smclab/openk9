@@ -24,19 +24,21 @@ export function TokenSelect({ span, onSelect, selected }: TokenSelectProps) {
       ? "has-selected"
       : "can-select"
     : "not-interactive";
-  const entryStyle = css`
+  const entryStyle = (isSelected: boolean) => css`
     padding: 8px 16px;
     :hover {
       background-color: ${myTheme.backgroundColor2};
     }
     cursor: pointer;
+    border-left: ${isSelected ? `8px solid ${myTheme.redTextColor}` : "none"};
+    padding-left: ${isSelected ? "8px" : "16px"};
   `;
   return (
     <div
       css={css`
         position: relative;
         user-select: none;
-        z-index: ${isInteractive ? 0 : -1};
+        pointer-events: ${isInteractive ? "inherit" : "none"};
       `}
       onClick={() => {
         if (isInteractive) {
@@ -72,12 +74,15 @@ export function TokenSelect({ span, onSelect, selected }: TokenSelectProps) {
               onSelect(null);
             }}
             css={css`
-              ${entryStyle};
+              ${entryStyle(selected === null)};
             `}
           >
             Deseleziona
           </div>
           {span.tokens.map((option, index) => {
+            const isSelected =
+              option.tokenType === selected?.tokenType &&
+              option.value === selected.value;
             return (
               <div
                 key={index}
@@ -85,7 +90,7 @@ export function TokenSelect({ span, onSelect, selected }: TokenSelectProps) {
                   onSelect(option);
                 }}
                 css={css`
-                  ${entryStyle};
+                  ${entryStyle(isSelected)};
                   display: flex;
                 `}
               >
