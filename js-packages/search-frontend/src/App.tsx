@@ -9,19 +9,12 @@ import {
   ResultDTO,
   useQueryAnalysis,
   AnalysisResponseEntryDTO,
+  AnalysisTokenDTO,
 } from "./utils/remote-data";
 import { DetailMemo } from "./renderers/Detail";
 import { myTheme } from "./utils/myTheme";
-import {
-  FiniteResults,
-  InfiniteResults,
-  VirtualResults,
-} from "./components/ResultList";
-
-const resultDisplayMode:
-  | { type: "finite" }
-  | { type: "infinite" }
-  | { type: "virtual" } = { type: "virtual" };
+import { Results } from "./components/ResultList";
+import { useClickAway } from "./utils/useClickAway";
 
 export function App() {
   const [text, setText] = React.useState("");
@@ -31,30 +24,11 @@ export function App() {
     searchText: textDebounced,
     tokens: [],
   });
-  const spans = React.useMemo(() => {
-    const spans: Array<AnalysisResponseEntryDTO> = [
-      { text: "", start: 0, end: 0, tokens: [] },
-    ];
-    for (let i = 0; i < text.length; ) {
-      const found = queryAnalysis.data?.analysis.find(
-        ({ start, end }) => i >= start && i < end,
-      );
-      if (found) {
-        spans.push(found);
-        i += found.text.length;
-        spans.push({ text: "", start: i, end: i, tokens: [] });
-      } else {
-        const last = spans[spans.length - 1];
-        last.text += text[i];
-        last.end += 1;
-        i += 1;
-      }
-    }
-    return spans;
-  }, [queryAnalysis.data?.analysis, text]);
+  const spans = React.useMemo(
+    () => calculateSpans(text, queryAnalysis.data?.analysis),
+    [queryAnalysis.data?.analysis, text],
+  );
   const showOverlay = text === textDebounced && queryAnalysis.data;
-  const [currentChoice, setCurrentChoice] =
-    React.useState<AnalysisResponseEntryDTO | null>(null);
   return (
     <PageLayout
       search={
@@ -71,7 +45,6 @@ export function App() {
           <div
             css={css`
               position: relative;
-              flex-grow: 1;
             `}
           >
             <input
@@ -81,7 +54,7 @@ export function App() {
                 setDetail(null);
               }}
               css={css`
-                width: 100%;
+                flex-grow: 1;
                 border: none;
                 outline: none;
                 padding: 16px;
@@ -92,72 +65,161 @@ export function App() {
               `}
               spellCheck="false"
             ></input>
-            <div
-              css={css`
-                top: 0px;
-                left: 0px;
-                position: absolute;
-                padding: 37px 16px 0px 16px;
-                display: flex;
-              `}
-            >
-              {showOverlay &&
-                spans.map((span, index) => {
-                  const isInteractive = span.tokens.length > 0;
-                  return (
-                    <div
-                      key={index}
-                      onClick={() => setCurrentChoice(span)}
-                      css={css`
-                        color: transparent;
-                        cursor: ${isInteractive ? "pointer" : "default"};
-                        white-space: pre;
-                        user-select: none;
-                        height: 16px;
-                        overflow: hidden;
-                        background-color: ${isInteractive
-                          ? myTheme.redTextColor
-                          : "transparent"};
-                      `}
-                    >
-                      {span.text}
-                    </div>
-                  );
-                })}
-            </div>
-            {currentChoice && (
+            {showOverlay && (
               <div
                 css={css`
+                  top: 0px;
+                  left: 0px;
                   position: absolute;
-                  background-color: ${myTheme.backgroundColor2};
                   padding: 16px;
+                  display: flex;
                 `}
               >
-                {currentChoice.tokens.map((token, index) => {
-                  return (
-                    <div key={index} css={css``}>
-                      {token.entityName}
-                    </div>
-                  );
+                {spans.map((span, index) => {
+                  return <Select key={index} span={span} />;
                 })}
               </div>
             )}
           </div>
         </div>
       }
-      result={(() => {
-        switch (resultDisplayMode.type) {
-          case "finite":
-            return <FiniteResults text={textDebounced} onDetail={setDetail} />;
-          case "infinite":
-            return (
-              <InfiniteResults text={textDebounced} onDetail={setDetail} />
-            );
-          case "virtual":
-            return <VirtualResults text={textDebounced} onDetail={setDetail} />;
-        }
-      })()}
+      result={
+        <Results
+          displayMode={{ type: "virtual" }}
+          text={textDebounced}
+          onDetail={setDetail}
+        />
+      }
       detail={detail && <DetailMemo result={detail} />}
     />
+  );
+}
+
+function calculateSpans(
+  text: string,
+  analysis: AnalysisResponseEntryDTO[] | undefined,
+): AnalysisResponseEntryDTO[] {
+  const spans: Array<AnalysisResponseEntryDTO> = [
+    { text: "", start: 0, end: 0, tokens: [] },
+  ];
+  for (let i = 0; i < text.length; ) {
+    const found = analysis?.find(({ start, end }) => i >= start && i < end);
+    if (found) {
+      spans.push(found);
+      i += found.text.length;
+      spans.push({ text: "", start: i, end: i, tokens: [] });
+    } else {
+      const last = spans[spans.length - 1];
+      last.text += text[i];
+      last.end += 1;
+      i += 1;
+    }
+  }
+  return spans;
+}
+
+type SelectProps = {
+  span: AnalysisResponseEntryDTO;
+};
+function Select({ span }: SelectProps) {
+  const [selected, setSelected] = React.useState<AnalysisTokenDTO | null>(null);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
+  useClickAway([clickAwayRef], () => setIsOpen(false));
+  const isInteractive = span.tokens.length > 0;
+  type Status =
+    | "can-select"
+    | "has-selected"
+    | "auto-selected"
+    | "not-interactive";
+  const status: Status = isInteractive
+    ? selected !== null
+      ? "has-selected"
+      : "can-select"
+    : "not-interactive";
+  const statusStyles: Record<Status, any> = {
+    "can-select": css`
+      color: deeppink;
+    `,
+    "auto-selected": css`
+      color: lightseagreen;
+    `,
+    "has-selected": css`
+      color: dodgerblue;
+    `,
+    "not-interactive": css`
+      color: black;
+    `,
+  };
+  const entryStyle = css`
+    padding: 8px 16px;
+    :hover {
+      background-color: ${myTheme.backgroundColor2};
+    }
+    cursor: pointer;
+    user-select: none;
+  `;
+  return (
+    <div
+      css={css`
+        position: relative;
+      `}
+      onClick={() => {
+        if (isInteractive) {
+          setIsOpen(true);
+        }
+      }}
+      ref={clickAwayRef}
+    >
+      <div
+        css={css`
+          cursor: ${isInteractive ? "pointer" : "default"};
+          white-space: pre;
+          ${statusStyles[status]};
+        `}
+      >
+        {span.text}
+      </div>
+      {isOpen && (
+        <div
+          css={css`
+            position: absolute;
+            top: 100%;
+            left: 0px;
+            width: 400px;
+            background-color: ${myTheme.backgroundColor1};
+            border: 1px solid ${myTheme.searchBarBorderColor};
+            border-radius: 4px;
+            z-index: 1;
+          `}
+        >
+          <div
+            onClick={() => {
+              setSelected(null);
+            }}
+            css={css`
+              ${entryStyle};
+            `}
+          >
+            Deseleziona
+          </div>
+          {span.tokens.map((option, index) => {
+            return (
+              <div
+                key={index}
+                onClick={() => {
+                  setSelected(option);
+                }}
+                css={css`
+                  ${entryStyle};
+                `}
+              >
+                {option.entityName}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

@@ -161,6 +161,6 @@ type TokenDTO = {
   entityName: string;
   value: string;
 };
-type AnalysisTokenDTO = TokenDTO & {
+export type AnalysisTokenDTO = TokenDTO & {
   score: number; // 0 - 1
 };

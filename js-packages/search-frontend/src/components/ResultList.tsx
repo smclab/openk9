@@ -4,6 +4,22 @@ import { Virtuoso } from "react-virtuoso";
 import { ResultDTO, useInfiniteResults } from "../utils/remote-data";
 import { ResultMemo, Result } from "../renderers/Result";
 
+type ResultsProps = {
+  text: string;
+  onDetail(result: ResultDTO): void;
+  displayMode: { type: "finite" } | { type: "infinite" } | { type: "virtual" };
+};
+export function Results({ displayMode, onDetail, text }: ResultsProps) {
+  switch (displayMode.type) {
+    case "finite":
+      return <FiniteResults text={text} onDetail={onDetail} />;
+    case "infinite":
+      return <InfiniteResults text={text} onDetail={onDetail} />;
+    case "virtual":
+      return <VirtualResults text={text} onDetail={onDetail} />;
+  }
+}
+
 type ResultCountProps = {
   children: number | undefined;
 };
