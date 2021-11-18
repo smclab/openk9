@@ -2,6 +2,7 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { WebDetail } from "./WebDetail";
 import { ResultDTO } from "../utils/remote-data";
+import { DocumentDetail } from "./DocumentDetail";
 
 type DetailProps = {
   result: ResultDTO;
@@ -14,6 +15,10 @@ function Detail({ result }: DetailProps) {
       `}
     >
       {(() => {
+        if (result.source.documentTypes.includes("document")) {
+          return <DocumentDetail result={result} />;
+        }
+
         if (result.source.documentTypes.includes("web")) {
           return <WebDetail result={result} />;
         }

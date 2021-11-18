@@ -107,7 +107,7 @@ async function fetchQueryAnalysisMock(
   return {
     searchText: request.searchText,
     analysis: words
-      .filter((word) => word.length > 3)
+      .filter((word) => word.length > 2)
       .map((word) => {
         const start = request.searchText.indexOf(word);
         const end = start + word.length;
@@ -115,22 +115,27 @@ async function fetchQueryAnalysisMock(
           start,
           end,
           text: word,
-          tokens: [
-            {
-              tokenType: "ENTITY",
-              entityName: word.toUpperCase(),
-              entityType: "person",
-              value: Math.random().toString(),
-              score: 0.8,
-            },
-            {
-              tokenType: "ENTITY",
-              entityName: word.toUpperCase() + "Alternative",
-              entityType: "loc",
-              value: Math.random().toString(),
-              score: 0.3,
-            },
-          ],
+          tokens: ((): Array<AnalysisTokenDTO> => {
+            if (word === "pdf") {
+              return [{ tokenType: "DOCTYPE", value: "pdf", score: 0.3 }];
+            }
+            return [
+              {
+                tokenType: "ENTITY",
+                entityName: word.toUpperCase(),
+                entityType: "person",
+                value: Math.random().toString(),
+                score: 0.8,
+              },
+              {
+                tokenType: "ENTITY",
+                entityName: word.toUpperCase() + "Alternative",
+                entityType: "loc",
+                value: Math.random().toString(),
+                score: 0.3,
+              },
+            ];
+          })(),
         };
       }),
   };
@@ -155,12 +160,27 @@ export type AnalysisResponseEntryDTO = {
   end: number;
   tokens: Array<AnalysisTokenDTO>;
 };
-type TokenDTO = {
-  tokenType: "ENTITY";
-  entityType: string;
-  entityName: string;
-  value: string;
-};
+type TokenDTO =
+  | {
+      tokenType: "DOCTYPE";
+      value: string;
+    }
+  | {
+      tokenType: "DATASOURCE";
+      value: string;
+    }
+  | {
+      tokenType: "ENTITY";
+      entityType: string;
+      entityName: string;
+      keywordKey?: string;
+      value: string;
+    }
+  | {
+      tokenType: "TEXT";
+      keywordKey?: string;
+      value: string;
+    };
 export type AnalysisTokenDTO = TokenDTO & {
   score: number; // 0 - 1
 };

@@ -15,6 +15,7 @@ import { DetailMemo } from "./renderers/Detail";
 import { myTheme } from "./utils/myTheme";
 import { Results } from "./components/ResultList";
 import { useClickAway } from "./utils/useClickAway";
+import { TokenIcon } from "./components/TokenIcon";
 
 export function App() {
   const [text, setText] = React.useState("");
@@ -44,7 +45,9 @@ export function App() {
           <FontAwesomeIcon icon={faSearch} style={{ paddingLeft: "16px" }} />
           <div
             css={css`
+              flex-grow: 1;
               position: relative;
+              display: flex;
             `}
           >
             <input
@@ -127,30 +130,11 @@ function Select({ span }: SelectProps) {
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setIsOpen(false));
   const isInteractive = span.tokens.length > 0;
-  type Status =
-    | "can-select"
-    | "has-selected"
-    | "auto-selected"
-    | "not-interactive";
   const status: Status = isInteractive
     ? selected !== null
       ? "has-selected"
       : "can-select"
     : "not-interactive";
-  const statusStyles: Record<Status, any> = {
-    "can-select": css`
-      color: deeppink;
-    `,
-    "auto-selected": css`
-      color: lightseagreen;
-    `,
-    "has-selected": css`
-      color: dodgerblue;
-    `,
-    "not-interactive": css`
-      color: black;
-    `,
-  };
   const entryStyle = css`
     padding: 8px 16px;
     :hover {
@@ -212,9 +196,12 @@ function Select({ span }: SelectProps) {
                 }}
                 css={css`
                   ${entryStyle};
+                  display: flex;
                 `}
               >
-                {option.entityName}
+                {"keywordKey" in option && <span>{option.keywordKey}: </span>}
+                <TokenIcon token={option} />
+                {getTokenLabel(option)}
               </div>
             );
           })}
@@ -222,4 +209,38 @@ function Select({ span }: SelectProps) {
       )}
     </div>
   );
+}
+
+type Status =
+  | "can-select"
+  | "has-selected"
+  | "auto-selected"
+  | "not-interactive";
+
+const statusStyles: Record<Status, any> = {
+  "can-select": css`
+    color: deeppink;
+  `,
+  "auto-selected": css`
+    color: lightseagreen;
+  `,
+  "has-selected": css`
+    color: dodgerblue;
+  `,
+  "not-interactive": css`
+    color: black;
+  `,
+};
+
+function getTokenLabel(token: AnalysisTokenDTO) {
+  switch (token.tokenType) {
+    case "DATASOURCE":
+      return token.value;
+    case "DOCTYPE":
+      return token.value;
+    case "ENTITY":
+      return token.entityName;
+    case "TEXT":
+      return token.value;
+  }
 }

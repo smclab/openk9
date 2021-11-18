@@ -3,9 +3,11 @@ import { css } from "styled-components/macro";
 import { ResultDTO } from "../utils/remote-data";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
 import { HighlightedText } from "../components/HighlightedText";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFileAlt } from "@fortawesome/free-solid-svg-icons";
 
 type DocumentResultProps = { result: ResultDTO };
-function DocumentResult({ result }: DocumentResultProps) {
+export function DocumentResult({ result }: DocumentResultProps) {
   return (
     <div
       css={css`
@@ -29,14 +31,7 @@ function DocumentResult({ result }: DocumentResultProps) {
           justify-content: center;
         `}
       >
-        <img
-          src={result.source.web?.favicon}
-          alt=""
-          css={css`
-            max-height: 30px;
-            max-width: 30px;
-          `}
-        />
+        <FontAwesomeIcon icon={faFileAlt} />
       </div>
       <div
         css={css`
@@ -50,11 +45,11 @@ function DocumentResult({ result }: DocumentResultProps) {
         {result.highlight["document.title"] ? (
           <HighlightedText text={result.highlight["document.title"][0]} />
         ) : (
-          result.source.web?.title
+          result.source.document?.title
         )}
       </div>
       <a
-        href={result.source.web?.url}
+        href={result.source.document?.url}
         css={css`
           grid-column: 2;
           grid-row: 2;
@@ -65,7 +60,7 @@ function DocumentResult({ result }: DocumentResultProps) {
         {result.highlight["document.url"] ? (
           <HighlightedText text={result.highlight["document.url"][0]} />
         ) : (
-          result.source.web?.url
+          result.source.document?.url
         )}
       </a>
       <div
@@ -75,8 +70,8 @@ function DocumentResult({ result }: DocumentResultProps) {
           ${truncatedLineStyle};
         `}
       >
-        {result.highlight["web.content"] ? (
-          result.highlight["web.content"].map((text, index) => (
+        {result.highlight["document.content"] ? (
+          result.highlight["document.content"].map((text, index) => (
             <div key={index} css={truncatedLineStyle}>
               <HighlightedText text={text} />
             </div>
@@ -88,7 +83,7 @@ function DocumentResult({ result }: DocumentResultProps) {
               overflow-y: hidden;
             `}
           >
-            {result.source.web?.content}
+            {result.source.document?.content}
           </div>
         )}
       </div>

@@ -3,6 +3,7 @@ import { css } from "styled-components/macro";
 import { WebResult } from "./WebResult";
 import { ResultDTO } from "../utils/remote-data";
 import { myTheme } from "../utils/myTheme";
+import { DocumentResult } from "./DocumentResult";
 
 type ResultProps = {
   result: ResultDTO;
@@ -23,6 +24,9 @@ export function Result({ result, onDetail }: ResultProps) {
         onMouseEnter={() => onDetail(result)}
       >
         {(() => {
+          if (result.source.documentTypes.includes("document")) {
+            return <DocumentResult result={result} />;
+          }
           if (result.source.documentTypes.includes("web")) {
             return <WebResult result={result} />;
           }
