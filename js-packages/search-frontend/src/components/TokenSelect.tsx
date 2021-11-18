@@ -13,12 +13,14 @@ type TokenSelectProps = {
   onSelect(token: TokenDTO | null): void;
   selected: TokenDTO | null;
   isOpen: boolean;
+  optionIndex: number | null;
 };
 export function TokenSelect({
   span,
   onSelect,
   selected,
   isOpen,
+  optionIndex,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const status: Status = isInteractive
@@ -26,11 +28,13 @@ export function TokenSelect({
       ? "has-selected"
       : "can-select"
     : "not-interactive";
-  const entryStyle = (isSelected: boolean) => css`
+  const entryStyle = (isSelected: boolean, isHighlighted: boolean) => css`
     padding: 8px 16px;
     :hover {
-      background-color: ${myTheme.backgroundColor2};
     }
+    background-color: ${isHighlighted
+      ? myTheme.backgroundColor2
+      : myTheme.backgroundColor1};
     cursor: pointer;
     border-left: ${isSelected ? `8px solid ${myTheme.redTextColor}` : "none"};
     padding-left: ${isSelected ? "8px" : "16px"};
@@ -67,7 +71,7 @@ export function TokenSelect({
               onSelect(null);
             }}
             css={css`
-              ${entryStyle(selected === null)};
+              ${entryStyle(selected === null, optionIndex === 0)};
             `}
           >
             Deseleziona
@@ -76,6 +80,7 @@ export function TokenSelect({
             const isSelected =
               option.tokenType === selected?.tokenType &&
               option.value === selected.value;
+            const isHighlighted = optionIndex === index + 1;
             return (
               <div
                 key={index}
@@ -83,7 +88,7 @@ export function TokenSelect({
                   onSelect(option);
                 }}
                 css={css`
-                  ${entryStyle(isSelected)};
+                  ${entryStyle(isSelected, isHighlighted)};
                   display: flex;
                 `}
               >

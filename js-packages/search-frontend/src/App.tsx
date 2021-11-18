@@ -16,7 +16,6 @@ import { DetailMemo } from "./renderers/Detail";
 import { myTheme } from "./utils/myTheme";
 import { Results } from "./components/ResultList";
 import { TokenSelect } from "./components/TokenSelect";
-import { usePrevious } from "./utils/usePrevious";
 import { useClickAway } from "./utils/useClickAway";
 
 export function App() {
@@ -28,7 +27,7 @@ export function App() {
   const textDebounced = useDebounce(text, 300);
   const queryAnalysis = useQueryAnalysis({
     searchText: textDebounced,
-    tokens: [],
+    tokens: selection,
   });
   const spans = React.useMemo(
     () => calculateSpans(text, queryAnalysis.data?.analysis),
@@ -44,7 +43,6 @@ export function App() {
   } | null>(null);
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
-
   return (
     <PageLayout
       search={
@@ -86,6 +84,7 @@ export function App() {
                         openedDropdown.textPosition >= span.start &&
                         openedDropdown.textPosition <= span.end
                       }
+                      optionIndex={openedDropdown?.optionPosition ?? null}
                       selected={
                         selection.find(
                           (selection) =>
@@ -135,8 +134,55 @@ export function App() {
                 ) {
                   setOpenedDropdown({
                     textPosition: event.currentTarget.selectionStart as number,
-                    optionPosition: 0,
+                    optionPosition: openedDropdown?.optionPosition ?? 0,
                   });
+                }
+              }}
+              onKeyDown={(event) => {
+                const span =
+                  openedDropdown &&
+                  spans.find(
+                    (span) =>
+                      span.start <= openedDropdown.textPosition &&
+                      span.end > openedDropdown.textPosition,
+                  );
+                const option =
+                  openedDropdown &&
+                  span?.tokens[openedDropdown.optionPosition - 1];
+                if (event.key === "ArrowDown") {
+                  event.preventDefault();
+                  if (openedDropdown && span) {
+                    setOpenedDropdown({
+                      textPosition: openedDropdown.textPosition,
+                      optionPosition:
+                        openedDropdown.optionPosition < span.tokens.length
+                          ? openedDropdown.optionPosition + 1
+                          : 0,
+                    });
+                  }
+                } else if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  if (openedDropdown && openedDropdown.optionPosition > 0) {
+                    setOpenedDropdown({
+                      textPosition: openedDropdown.textPosition,
+                      optionPosition: openedDropdown.optionPosition - 1,
+                    });
+                  }
+                } else if (event.key === "Enter") {
+                  event.preventDefault();
+                  if (span) {
+                    dispatch({
+                      type: "set-selection",
+                      selection: {
+                        text: span.text,
+                        start: span.start,
+                        end: span.end,
+                        token: option ?? null,
+                      },
+                    });
+                  }
+                } else if (event.key === "Escape") {
+                  setOpenedDropdown(null);
                 }
               }}
             ></input>

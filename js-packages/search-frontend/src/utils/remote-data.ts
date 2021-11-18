@@ -125,28 +125,32 @@ async function fetchQueryAnalysisMock(
                 tokenType: "ENTITY",
                 entityName: word.toUpperCase(),
                 entityType: "person",
-                value: Math.random().toString(),
+                value: word.toLowerCase() + "___",
                 score: 0.8,
               },
               {
                 tokenType: "ENTITY",
                 entityName: word.toUpperCase() + "Alternative",
                 entityType: "loc",
-                value: Math.random().toString(),
+                value: word.toLowerCase() + "____",
                 score: 0.3,
               },
             ];
           })(),
         };
       })
-      .concat([
-        {
-          text: request.searchText,
-          start: 0,
-          end: request.searchText.length,
-          tokens: [{ tokenType: "DATASOURCE", value: "tutto", score: 0 }],
-        },
-      ]),
+      .concat(
+        request.searchText.length > 0
+          ? [
+              {
+                text: request.searchText,
+                start: 0,
+                end: request.searchText.length,
+                tokens: [{ tokenType: "DATASOURCE", value: "tutto", score: 0 }],
+              },
+            ]
+          : [],
+      ),
   };
 }
 
