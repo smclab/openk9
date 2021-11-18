@@ -27,7 +27,7 @@ public class TokenAnnotator extends BaseAnnotator {
 				CategorySemantics.of(
 					"$TOKEN",
 					Map.of(
-						"tokenType", "TEXT",
+						"tokenType", "TOKEN",
 						"value", token
 					)
 				)

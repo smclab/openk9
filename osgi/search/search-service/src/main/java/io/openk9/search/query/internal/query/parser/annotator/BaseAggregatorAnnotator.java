@@ -103,7 +103,6 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 			_log.error(e.getMessage(), e);
 		}
 
-
 		return list;
 	}
 

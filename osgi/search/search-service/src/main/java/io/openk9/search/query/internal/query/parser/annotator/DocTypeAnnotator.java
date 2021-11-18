@@ -11,14 +11,10 @@ import java.util.Map;
 @Component(
 	immediate = true, service = Annotator.class
 )
-public class AggragatorAnnotator extends BaseAggregatorAnnotator {
+public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 
-	public AggragatorAnnotator() {
-		super(
-			"istat.category", "istat.topic",
-			"pubblicazioni.category", "pubblicazioni.topic",
-			"notize.category", "notizie.topic"
-		);
+	public DocTypeAnnotator() {
+		super("documentTypes");
 	}
 
 	@Override
@@ -26,10 +22,9 @@ public class AggragatorAnnotator extends BaseAggregatorAnnotator {
 		String aggregatorName, String aggregatorKey) {
 
 		return CategorySemantics.of(
-			"$AGGREGATE",
+			"$DOCTYPE",
 			Map.of(
-				"tokenType", "TEXT",
-				"keywordKey", aggregatorName,
+				"tokenType", "DOCTYPE",
 				"value", aggregatorKey
 			)
 		);

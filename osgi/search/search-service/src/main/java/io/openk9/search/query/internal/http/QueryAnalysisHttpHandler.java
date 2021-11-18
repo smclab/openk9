@@ -149,7 +149,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 							for (SemanticType maps : pars.getSemantics().apply()) {
 								for (Map<String, Object> map : maps) {
 									Object tokenType = map.get("tokenType");
-									if (!tokenType.equals("TEXT")) {
+									if (!tokenType.equals("TOKEN")) {
 										aggregation.computeIfAbsent(
 											maps.getPos(), (k) -> new TreeSet<>(new ScoreComparator()))
 											.add(map);
