@@ -89,10 +89,12 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 			for (Aggregation aggregation : search.getAggregations()) {
 				Terms terms =(Terms)aggregation;
-				for (Terms.Bucket bucket : terms.getBuckets()) {
-					String keyAsString = bucket.getKeyAsString();
-					list.add(_createCategorySemantics(
-						terms.getName(), keyAsString));
+				for (String token : tokens) {
+					Terms.Bucket bucketByKey = terms.getBucketByKey(token);
+					if (bucketByKey != null) {
+						list.add(_createCategorySemantics(
+							terms.getName(), bucketByKey.getKeyAsString()));
+					}
 				}
 			}
 

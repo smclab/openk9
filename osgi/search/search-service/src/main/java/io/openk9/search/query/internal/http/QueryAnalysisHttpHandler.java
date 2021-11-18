@@ -131,7 +131,6 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 					Grammar grammar = _grammarProvider.getGrammar();
 
-
 					Mono<List<Parse>> parsesMono = grammar.parseInput(
 						t2.getT1(), searchText);
 
