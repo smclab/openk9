@@ -1,6 +1,5 @@
 package io.openk9.search.query.internal.query.parser.annotator;
 
-import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.elasticsearch.action.search.SearchRequest;
@@ -13,32 +12,40 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-@Component(
-	immediate = true, service = Annotator.class
-)
-public class DocTypeAnnotator extends BaseAnnotator {
+public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
+
+	public BaseAggregatorAnnotator(String...keywords) {
+		this(List.of(keywords));
+	}
+
+	public BaseAggregatorAnnotator(List<String> keywords) {
+		this.keywords = keywords;
+	}
 
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
 		RestHighLevelClient restHighLevelClient =
-			_restHighLevelClientProvider.get();
+			restHighLevelClientProvider.get();
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
+		BoolQueryBuilder innerBool = QueryBuilders.boolQuery();
+
 		for (String token : tokens) {
-			builder.must(query("documentTypes", token));
+			for (String keyword : keywords) {
+				innerBool.should(query(keyword, token));
+			}
 		}
+
+		builder.must(innerBool);
 
 		SearchRequest searchRequest;
 
@@ -55,12 +62,14 @@ public class DocTypeAnnotator extends BaseAnnotator {
 
 		searchSourceBuilder.query(builder);
 
-		searchSourceBuilder.aggregation(
-			AggregationBuilders
-				.terms("documentTypes")
-				.field("documentTypes")
-				.size(tokens.length)
-		);
+		for (String keyword : keywords) {
+			searchSourceBuilder.aggregation(
+				AggregationBuilders
+					.terms(keyword)
+					.field(keyword)
+					.size(1)
+			);
+		}
 
 		searchRequest.source(searchSourceBuilder);
 
@@ -79,16 +88,8 @@ public class DocTypeAnnotator extends BaseAnnotator {
 				Terms terms =(Terms)aggregation;
 				for (Terms.Bucket bucket : terms.getBuckets()) {
 					String keyAsString = bucket.getKeyAsString();
-					list.add(
-						CategorySemantics.of(
-							"$DOCTYPE",
-							Map.of(
-								"tokenType", "DOCTYPE",
-								"value", keyAsString,
-								"score", 1.0
-							)
-						)
-					);
+					list.add(_createCategorySemantics(
+						terms.getName(), keyAsString));
 				}
 			}
 
@@ -105,15 +106,17 @@ public class DocTypeAnnotator extends BaseAnnotator {
 		return list;
 	}
 
-	@Override
-	@Reference
-	protected void setAnnotatorConfig(
-		AnnotatorConfig annotatorConfig) {
-		super.setAnnotatorConfig(annotatorConfig);
+	protected abstract CategorySemantics _createCategorySemantics(
+		String aggregatorName, String aggregatorKey);
+
+	protected void setRestHighLevelClientProvider(
+		RestHighLevelClientProvider restHighLevelClientProvider) {
+		this.restHighLevelClientProvider = restHighLevelClientProvider;
 	}
 
-	@Reference
-	private RestHighLevelClientProvider _restHighLevelClientProvider;
+	protected RestHighLevelClientProvider restHighLevelClientProvider;
+
+	protected final List<String> keywords;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		DocTypeAnnotator.class);

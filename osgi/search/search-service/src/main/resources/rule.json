@@ -100,6 +100,11 @@
 		"sem": "0"
 	},
 	{
+		"lhs": "$Content",
+		"rhs": "$AGGREGATE",
+		"sem": "0"
+	},
+	{
 		"lhs": "$Intent",
 		"rhs": "$Content",
 		"sem": "0"
