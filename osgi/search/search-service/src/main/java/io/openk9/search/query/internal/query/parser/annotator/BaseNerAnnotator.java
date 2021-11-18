@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +22,12 @@ import java.util.Map;
 
 public class BaseNerAnnotator extends BaseAnnotator {
 
-	public BaseNerAnnotator(String category) {
+	protected BaseNerAnnotator(String category) {
+		this.category = category;
+	}
+
+	protected BaseNerAnnotator(String category, boolean enabledCache, Duration duration) {
+		super(enabledCache, duration);
 		this.category = category;
 	}
 

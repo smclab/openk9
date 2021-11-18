@@ -6,6 +6,7 @@ import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+import java.time.Duration;
 import java.util.Map;
 
 @Component(
@@ -14,7 +15,7 @@ import java.util.Map;
 public class NotizieTopicAggregatorAnnotator extends BaseAggregatorAnnotator {
 
 	public NotizieTopicAggregatorAnnotator() {
-		super("notizie.topic");
+		super(true, Duration.ofSeconds(30), "notizie.topic");
 	}
 
 	@Override
@@ -26,7 +27,8 @@ public class NotizieTopicAggregatorAnnotator extends BaseAggregatorAnnotator {
 			Map.of(
 				"tokenType", "TEXT",
 				"keywordKey", aggregatorName,
-				"value", aggregatorKey
+				"value", aggregatorKey,
+				"score", 1.0f
 			)
 		);
 

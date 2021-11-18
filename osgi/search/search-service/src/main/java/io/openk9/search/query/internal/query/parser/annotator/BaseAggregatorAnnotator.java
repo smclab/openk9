@@ -16,18 +16,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
-	public BaseAggregatorAnnotator(String...keywords) {
+	protected BaseAggregatorAnnotator(String...keywords) {
 		this(List.of(keywords));
 	}
 
-	public BaseAggregatorAnnotator(List<String> keywords) {
+	protected BaseAggregatorAnnotator(List<String> keywords) {
 		this.keywords = keywords;
+	}
+
+	protected BaseAggregatorAnnotator(
+		boolean enableCache, Duration duration, String...keywords) {
+		super(enableCache, duration);
+		this.keywords = List.of(keywords);
 	}
 
 	@Override
