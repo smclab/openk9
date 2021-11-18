@@ -11,14 +11,10 @@ import java.util.Map;
 @Component(
 	immediate = true, service = Annotator.class
 )
-public class AggregatorAnnotator extends BaseAggregatorAnnotator {
+public class NotizieCategoryAggregatorAnnotator extends BaseAggregatorAnnotator {
 
-	public AggregatorAnnotator() {
-		super(
-			"istat.category", "istat.topic",
-			"pubblicazioni.category", "pubblicazioni.topic",
-			"notize.category", "notizie.topic"
-		);
+	public NotizieCategoryAggregatorAnnotator() {
+		super("pubblicazioni.category");
 	}
 
 	@Override

@@ -40,15 +40,24 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();
 
+		String token;
+
+		if (tokens.length == 1) {
+			token = tokens[0];
+		}
+		else {
+			token = String.join(" ", tokens);
+		}
+
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
-		for (String token : tokens) {
-			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-			for (String keyword : keywords) {
-				boolQueryBuilder.should(query(keyword, token));
-			}
-			builder.must(boolQueryBuilder);
+		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+		for (String keyword : keywords) {
+			boolQueryBuilder.should(QueryBuilders.fuzzyQuery(keyword, token));
 		}
+
+		builder.must(boolQueryBuilder);
 
 		SearchRequest searchRequest;
 
@@ -89,12 +98,9 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 			for (Aggregation aggregation : search.getAggregations()) {
 				Terms terms =(Terms)aggregation;
-				for (String token : tokens) {
-					Terms.Bucket bucketByKey = terms.getBucketByKey(token);
-					if (bucketByKey != null) {
-						list.add(_createCategorySemantics(
-							terms.getName(), bucketByKey.getKeyAsString()));
-					}
+				for (Terms.Bucket bucket : terms.getBuckets()) {
+					list.add(_createCategorySemantics(
+						terms.getName(), bucket.getKeyAsString()));
 				}
 			}
 
