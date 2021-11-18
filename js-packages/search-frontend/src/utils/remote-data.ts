@@ -80,6 +80,7 @@ export type ResultDTO = {
     "document.content"?: string[];
   };
 };
+
 export function useQueryAnalysis(request: AnalysisRequestDTO) {
   return useQuery(
     ["query-anaylis", request] as const,
@@ -140,27 +141,32 @@ async function fetchQueryAnalysisMock(
       }),
   };
 }
+
 type AnalysisRequestDTO = {
   searchText: string;
   tokens: Array<AnalysisRequestEntryDTO>;
 };
-type AnalysisRequestEntryDTO = {
+
+export type AnalysisRequestEntryDTO = {
   text: string;
   start: number;
   end: number;
   token: TokenDTO;
 };
+
 type AnalysisResponseDTO = {
   searchText: string;
   analysis: Array<AnalysisResponseEntryDTO>;
 };
+
 export type AnalysisResponseEntryDTO = {
   text: string;
   start: number;
   end: number;
   tokens: Array<AnalysisTokenDTO>;
 };
-type TokenDTO =
+
+export type TokenDTO =
   | {
       tokenType: "DOCTYPE";
       value: string;
@@ -181,6 +187,7 @@ type TokenDTO =
       keywordKey?: string;
       value: string;
     };
+
 export type AnalysisTokenDTO = TokenDTO & {
   score: number; // 0 - 1
 };

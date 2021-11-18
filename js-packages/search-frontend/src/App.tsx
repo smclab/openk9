@@ -9,16 +9,19 @@ import {
   ResultDTO,
   useQueryAnalysis,
   AnalysisResponseEntryDTO,
-  AnalysisTokenDTO,
+  AnalysisRequestEntryDTO,
+  TokenDTO,
 } from "./utils/remote-data";
 import { DetailMemo } from "./renderers/Detail";
 import { myTheme } from "./utils/myTheme";
 import { Results } from "./components/ResultList";
-import { useClickAway } from "./utils/useClickAway";
-import { TokenIcon } from "./components/TokenIcon";
+import { TokenSelect } from "./components/TokenSelect";
 
 export function App() {
-  const [text, setText] = React.useState("");
+  const [{ text, selection }, dispatch] = React.useReducer(reducer, {
+    text: "",
+    selection: [],
+  });
   const [detail, setDetail] = React.useState<ResultDTO | null>(null);
   const textDebounced = useDebounce(text, 300);
   const queryAnalysis = useQueryAnalysis({
@@ -53,7 +56,7 @@ export function App() {
             <input
               value={text}
               onChange={(event) => {
-                setText(event.currentTarget.value);
+                dispatch({ type: "set-text", text: event.currentTarget.value });
                 setDetail(null);
               }}
               css={css`
@@ -79,7 +82,30 @@ export function App() {
                 `}
               >
                 {spans.map((span, index) => {
-                  return <Select key={index} span={span} />;
+                  return (
+                    <TokenSelect
+                      key={index}
+                      span={span}
+                      selected={
+                        selection.find(
+                          (selection) =>
+                            selection.start === span.start &&
+                            selection.end === span.end,
+                        )?.token ?? null
+                      }
+                      onSelect={(token) => {
+                        dispatch({
+                          type: "set-selection",
+                          selection: {
+                            text: span.text,
+                            start: span.start,
+                            end: span.end,
+                            token,
+                          },
+                        });
+                      }}
+                    />
+                  );
                 })}
               </div>
             )}
@@ -121,126 +147,110 @@ function calculateSpans(
   return spans;
 }
 
-type SelectProps = {
-  span: AnalysisResponseEntryDTO;
-};
-function Select({ span }: SelectProps) {
-  const [selected, setSelected] = React.useState<AnalysisTokenDTO | null>(null);
-  const [isOpen, setIsOpen] = React.useState(false);
-  const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
-  useClickAway([clickAwayRef], () => setIsOpen(false));
-  const isInteractive = span.tokens.length > 0;
-  const status: Status = isInteractive
-    ? selected !== null
-      ? "has-selected"
-      : "can-select"
-    : "not-interactive";
-  const entryStyle = css`
-    padding: 8px 16px;
-    :hover {
-      background-color: ${myTheme.backgroundColor2};
+type State = { text: string; selection: Array<AnalysisRequestEntryDTO> };
+type Action =
+  | { type: "set-text"; text: string }
+  | {
+      type: "set-selection";
+      selection: {
+        text: string;
+        start: number;
+        end: number;
+        token: TokenDTO | null;
+      };
+    };
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "set-text": {
+      return {
+        text: action.text,
+        selection: shiftSelection(state.text, action.text, state.selection),
+      };
     }
-    cursor: pointer;
-    user-select: none;
-  `;
-  return (
-    <div
-      css={css`
-        position: relative;
-      `}
-      onClick={() => {
-        if (isInteractive) {
-          setIsOpen(true);
-        }
-      }}
-      ref={clickAwayRef}
-    >
-      <div
-        css={css`
-          cursor: ${isInteractive ? "pointer" : "default"};
-          white-space: pre;
-          ${statusStyles[status]};
-        `}
-      >
-        {span.text}
-      </div>
-      {isOpen && (
-        <div
-          css={css`
-            position: absolute;
-            top: 100%;
-            left: 0px;
-            width: 400px;
-            background-color: ${myTheme.backgroundColor1};
-            border: 1px solid ${myTheme.searchBarBorderColor};
-            border-radius: 4px;
-            z-index: 1;
-          `}
-        >
-          <div
-            onClick={() => {
-              setSelected(null);
-            }}
-            css={css`
-              ${entryStyle};
-            `}
-          >
-            Deseleziona
-          </div>
-          {span.tokens.map((option, index) => {
-            return (
-              <div
-                key={index}
-                onClick={() => {
-                  setSelected(option);
-                }}
-                css={css`
-                  ${entryStyle};
-                  display: flex;
-                `}
-              >
-                {"keywordKey" in option && <span>{option.keywordKey}: </span>}
-                <TokenIcon token={option} />
-                {getTokenLabel(option)}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+    case "set-selection": {
+      return {
+        text: state.text,
+        selection: state.selection
+          .filter(
+            (selection) =>
+              !(
+                selection.start === action.selection.start &&
+                selection.end === action.selection.end
+              ),
+          )
+          .concat(
+            action.selection.token
+              ? [action.selection as AnalysisRequestEntryDTO]
+              : [],
+          ),
+      };
+    }
+  }
 }
 
-type Status =
-  | "can-select"
-  | "has-selected"
-  | "auto-selected"
-  | "not-interactive";
-
-const statusStyles: Record<Status, any> = {
-  "can-select": css`
-    color: deeppink;
-  `,
-  "auto-selected": css`
-    color: lightseagreen;
-  `,
-  "has-selected": css`
-    color: dodgerblue;
-  `,
-  "not-interactive": css`
-    color: black;
-  `,
-};
-
-function getTokenLabel(token: AnalysisTokenDTO) {
-  switch (token.tokenType) {
-    case "DATASOURCE":
-      return token.value;
-    case "DOCTYPE":
-      return token.value;
-    case "ENTITY":
-      return token.entityName;
-    case "TEXT":
-      return token.value;
+function shiftSelection(
+  prevText: string,
+  nextText: string,
+  prevSelection: Array<AnalysisRequestEntryDTO>,
+): Array<AnalysisRequestEntryDTO> {
+  if (prevText === nextText) {
+    return prevSelection;
   }
+  const commonPrefixLength = findCommonPrefixLength(prevText, nextText);
+  const commonSuffixLength = findCommonSuffixLength(
+    prevText,
+    nextText,
+    commonPrefixLength,
+  );
+  const changeStart = commonPrefixLength;
+  const changePrevEnd = prevText.length - commonSuffixLength;
+  const changeNextEnd = nextText.length - commonSuffixLength;
+  const changeDelta = changeNextEnd - changePrevEnd;
+  const prefixAttributes = prevSelection.filter(
+    (attribute) =>
+      attribute.start <= changeStart && attribute.end <= changeStart,
+  );
+  const deletedAttributes = prevSelection.filter(
+    (attribute) =>
+      !(attribute.start <= changeStart && attribute.end <= changeStart) &&
+      !(attribute.start >= changePrevEnd),
+  );
+  const suffixAttributes = prevSelection
+    .filter((attribute) => attribute.start >= changePrevEnd)
+    .map((attribute) => ({
+      ...attribute,
+      start: attribute.start + changeDelta,
+      end: attribute.end + changeDelta,
+    }));
+  return prefixAttributes.concat(suffixAttributes);
+}
+
+function findCommonPrefixLength(a: string, b: string) {
+  const length = Math.min(a.length, b.length);
+  let prefixLength = 0;
+  for (
+    ;
+    prefixLength < length &&
+    a.charCodeAt(prefixLength) === b.charCodeAt(prefixLength);
+    ++prefixLength
+  ) {}
+
+  return prefixLength;
+}
+
+function findCommonSuffixLength(a: string, b: string, startFromIndex: number) {
+  const length = Math.min(a.length, b.length) - startFromIndex;
+  if (length <= 0) {
+    return 0;
+  }
+  let suffixLength = 0;
+  for (
+    ;
+    suffixLength < length &&
+    a.charCodeAt(a.length - suffixLength - 1) ===
+      b.charCodeAt(b.length - suffixLength - 1);
+    ++suffixLength
+  ) {}
+
+  return suffixLength;
 }
