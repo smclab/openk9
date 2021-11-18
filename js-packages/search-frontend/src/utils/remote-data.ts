@@ -138,7 +138,15 @@ async function fetchQueryAnalysisMock(
             ];
           })(),
         };
-      }),
+      })
+      .concat([
+        {
+          text: request.searchText,
+          start: 0,
+          end: request.searchText.length,
+          tokens: [{ tokenType: "DATASOURCE", value: "tutto", score: 0 }],
+        },
+      ]),
   };
 }
 

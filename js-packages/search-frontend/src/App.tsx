@@ -16,6 +16,8 @@ import { DetailMemo } from "./renderers/Detail";
 import { myTheme } from "./utils/myTheme";
 import { Results } from "./components/ResultList";
 import { TokenSelect } from "./components/TokenSelect";
+import { usePrevious } from "./utils/usePrevious";
+import { useClickAway } from "./utils/useClickAway";
 
 export function App() {
   const [{ text, selection }, dispatch] = React.useReducer(reducer, {
@@ -32,11 +34,22 @@ export function App() {
     () => calculateSpans(text, queryAnalysis.data?.analysis),
     [queryAnalysis.data?.analysis, text],
   );
-  const showOverlay = text === textDebounced && queryAnalysis.data;
+  const showSyntax =
+    textDebounced === text &&
+    queryAnalysis.data !== undefined &&
+    !queryAnalysis.isPreviousData;
+  const [openedDropdown, setOpenedDropdown] = React.useState<{
+    textPosition: number;
+    optionPosition: number;
+  } | null>(null);
+  const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
+  useClickAway([clickAwayRef], () => setOpenedDropdown(null));
+
   return (
     <PageLayout
       search={
         <div
+          ref={clickAwayRef}
           css={css`
             display: flex;
             border: 1px solid ${myTheme.searchBarBorderColor};
@@ -53,39 +66,26 @@ export function App() {
               display: flex;
             `}
           >
-            <input
-              value={text}
-              onChange={(event) => {
-                dispatch({ type: "set-text", text: event.currentTarget.value });
-                setDetail(null);
-              }}
+            <div
               css={css`
-                flex-grow: 1;
-                border: none;
-                outline: none;
+                top: 0px;
+                left: 0px;
                 padding: 16px;
-                color: inherit;
-                font-size: inherit;
-                font-family: inherit;
-                background-color: inherit;
+                display: flex;
+                position: absolute;
               `}
-              spellCheck="false"
-            ></input>
-            {showOverlay && (
-              <div
-                css={css`
-                  top: 0px;
-                  left: 0px;
-                  position: absolute;
-                  padding: 16px;
-                  display: flex;
-                `}
-              >
-                {spans.map((span, index) => {
+            >
+              {showSyntax &&
+                spans.map((span, index) => {
                   return (
                     <TokenSelect
                       key={index}
                       span={span}
+                      isOpen={
+                        openedDropdown !== null &&
+                        openedDropdown.textPosition >= span.start &&
+                        openedDropdown.textPosition <= span.end
+                      }
                       selected={
                         selection.find(
                           (selection) =>
@@ -107,8 +107,39 @@ export function App() {
                     />
                   );
                 })}
-              </div>
-            )}
+            </div>
+            <input
+              value={text}
+              onChange={(event) => {
+                dispatch({ type: "set-text", text: event.currentTarget.value });
+                setDetail(null);
+              }}
+              css={css`
+                position: relative;
+                flex-grow: 1;
+                border: none;
+                outline: none;
+                padding: 16px;
+                color: ${showSyntax ? "transparent" : "inherit"};
+                caret-color: black;
+                font-size: inherit;
+                font-family: inherit;
+                background-color: inherit;
+              `}
+              spellCheck="false"
+              onSelect={(event) => {
+                if (
+                  event.currentTarget.selectionDirection === "forward" &&
+                  event.currentTarget.selectionStart ===
+                    event.currentTarget.selectionEnd
+                ) {
+                  setOpenedDropdown({
+                    textPosition: event.currentTarget.selectionStart as number,
+                    optionPosition: 0,
+                  });
+                }
+              }}
+            ></input>
           </div>
         </div>
       }
@@ -132,7 +163,7 @@ function calculateSpans(
     { text: "", start: 0, end: 0, tokens: [] },
   ];
   for (let i = 0; i < text.length; ) {
-    const found = analysis?.find(({ start, end }) => i >= start && i < end);
+    const found = analysis?.find(({ start }) => i === start);
     if (found) {
       spans.push(found);
       i += found.text.length;

@@ -3,6 +3,7 @@ import {
   faFilePdf,
   faGlobe,
   faMapPin,
+  faSitemap,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -38,6 +39,8 @@ export function TokenIcon({ token }: TokenIconProps) {
                 return <FontAwesomeIcon icon={faUser} />;
               case "loc":
                 return <FontAwesomeIcon icon={faMapPin} />;
+              case "organization":
+                return <FontAwesomeIcon icon={faSitemap} />;
               default:
                 return null;
             }

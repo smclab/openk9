@@ -6,18 +6,20 @@ import {
   TokenDTO,
 } from "../utils/remote-data";
 import { myTheme } from "../utils/myTheme";
-import { useClickAway } from "../utils/useClickAway";
 import { TokenIcon } from "./TokenIcon";
 
 type TokenSelectProps = {
   span: AnalysisResponseEntryDTO;
   onSelect(token: TokenDTO | null): void;
   selected: TokenDTO | null;
+  isOpen: boolean;
 };
-export function TokenSelect({ span, onSelect, selected }: TokenSelectProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
-  useClickAway([clickAwayRef], () => setIsOpen(false));
+export function TokenSelect({
+  span,
+  onSelect,
+  selected,
+  isOpen,
+}: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const status: Status = isInteractive
     ? selected !== null
@@ -37,26 +39,17 @@ export function TokenSelect({ span, onSelect, selected }: TokenSelectProps) {
     <div
       css={css`
         position: relative;
-        user-select: none;
-        pointer-events: ${isInteractive ? "inherit" : "none"};
       `}
-      onClick={() => {
-        if (isInteractive) {
-          setIsOpen(true);
-        }
-      }}
-      ref={clickAwayRef}
     >
       <div
         css={css`
-          cursor: ${isInteractive ? "pointer" : "default"};
           white-space: pre;
           ${statusStyles[status]};
         `}
       >
         {span.text}
       </div>
-      {isOpen && (
+      {isOpen && isInteractive && (
         <div
           css={css`
             position: absolute;
