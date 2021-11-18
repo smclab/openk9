@@ -267,30 +267,22 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 			Set<String> lKeys = o1.keySet();
 			Set<String> rKeys = o2.keySet();
 
-			boolean equals = true;
-
 			if (lKeys.size() == rKeys.size()) {
 				for (String lKey : lKeys) {
 					if (!lKey.equals("score")) {
 						Object lValue = o1.get(lKey);
 						Object rValue = o2.get(lKey);
 						if (!Objects.deepEquals(lValue, rValue)) {
-							equals = false;
-							break;
+							return -1;
 						}
 					}
 				}
 			}
 
-			if (equals) {
-				return 0;
-			}
-			else {
-				double scoreO1 = toDouble(o1.getOrDefault("score", -1.0));
-				double scoreO2 = toDouble(o2.getOrDefault("score", -1.0));
+			double scoreO1 = toDouble(o1.getOrDefault("score", -1.0));
+			double scoreO2 = toDouble(o2.getOrDefault("score", -1.0));
 
-				return -Double.compare(scoreO1, scoreO2);
-			}
+			return -Double.compare(scoreO1, scoreO2);
 
 		}
 

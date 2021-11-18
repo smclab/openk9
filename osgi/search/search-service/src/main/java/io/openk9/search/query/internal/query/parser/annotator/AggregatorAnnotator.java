@@ -11,9 +11,9 @@ import java.util.Map;
 @Component(
 	immediate = true, service = Annotator.class
 )
-public class AggragatorAnnotator extends BaseAggregatorAnnotator {
+public class AggregatorAnnotator extends BaseAggregatorAnnotator {
 
-	public AggragatorAnnotator() {
+	public AggregatorAnnotator() {
 		super(
 			"istat.category", "istat.topic",
 			"pubblicazioni.category", "pubblicazioni.topic",
