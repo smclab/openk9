@@ -265,7 +265,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 			float scoreO1 =(float)o1.getOrDefault("score", -1.0f);
 			float scoreO2 = (float)o2.getOrDefault("score", -1.0f);
 
-			return -Integer.reverse(Float.compare(scoreO1, scoreO2));
+			return -Float.compare(scoreO1, scoreO2);
 		}
 	}
 
