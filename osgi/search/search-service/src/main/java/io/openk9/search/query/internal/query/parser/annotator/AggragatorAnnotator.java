@@ -54,6 +54,7 @@ public class AggragatorAnnotator extends BaseAggregatorAnnotator {
 	}
 
 	@Override
+	@Reference
 	public void setRestHighLevelClientProvider(
 		RestHighLevelClientProvider restHighLevelClientProvider) {
 		super.setRestHighLevelClientProvider(restHighLevelClientProvider);
