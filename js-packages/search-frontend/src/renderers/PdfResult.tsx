@@ -1,11 +1,13 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { HighlightedText } from "../components/HighlightedText";
-import { truncatedLineStyle } from "../utils/truncatedLineStyle";
 import { ResultDTO } from "../utils/remote-data";
+import { truncatedLineStyle } from "../utils/truncatedLineStyle";
+import { HighlightedText } from "../components/HighlightedText";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
 
-type WebResultProps = { result: ResultDTO };
-export function WebResult({ result }: WebResultProps) {
+type PdfResultProps = { result: ResultDTO };
+export function PdfResult({ result }: PdfResultProps) {
   return (
     <div
       css={css`
@@ -29,14 +31,7 @@ export function WebResult({ result }: WebResultProps) {
           justify-content: center;
         `}
       >
-        <img
-          src={result.source.web?.favicon}
-          alt=""
-          css={css`
-            max-height: 30px;
-            max-width: 30px;
-          `}
-        />
+        <FontAwesomeIcon icon={faFilePdf} />
       </div>
       <div
         css={css`
@@ -47,14 +42,14 @@ export function WebResult({ result }: WebResultProps) {
           ${truncatedLineStyle}
         `}
       >
-        {result.highlight["web.title"] ? (
-          <HighlightedText text={result.highlight["web.title"][0]} />
+        {result.highlight["document.title"] ? (
+          <HighlightedText text={result.highlight["document.title"][0]} />
         ) : (
-          result.source.web?.title
+          result.source.document?.title
         )}
       </div>
       <a
-        href={result.source.web?.url}
+        href={result.source.document?.url}
         css={css`
           grid-column: 2;
           grid-row: 2;
@@ -62,21 +57,21 @@ export function WebResult({ result }: WebResultProps) {
           ${truncatedLineStyle}
         `}
       >
-        {result.highlight["web.url"] ? (
-          <HighlightedText text={result.highlight["web.url"][0]} />
+        {result.highlight["document.url"] ? (
+          <HighlightedText text={result.highlight["document.url"][0]} />
         ) : (
-          result.source.web?.url
+          result.source.document?.url
         )}
       </a>
       <div
         css={css`
           grid-column: 2;
           grid-row: 3;
-          ${truncatedLineStyle};
+          ${result.highlight["document.content"] ? truncatedLineStyle : null};
         `}
       >
-        {result.highlight["web.content"] ? (
-          result.highlight["web.content"].map((text, index) => (
+        {result.highlight["document.content"] ? (
+          result.highlight["document.content"].map((text, index) => (
             <div key={index} css={truncatedLineStyle}>
               <HighlightedText text={text} />
             </div>
@@ -88,7 +83,7 @@ export function WebResult({ result }: WebResultProps) {
               overflow-y: hidden;
             `}
           >
-            {result.source.web?.content}
+            {result.source.document?.content}
           </div>
         )}
       </div>

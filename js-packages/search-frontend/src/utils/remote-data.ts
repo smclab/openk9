@@ -47,7 +47,17 @@ type ResultResponseDTO = {
 
 export type ResultDTO = {
   source: {
-    documentTypes: Array<"istat" | "web" | "file" | "document">;
+    datasourceId: number;
+    id: string;
+    documentTypes: Array<
+      | "istat"
+      | "web"
+      | "file"
+      | "document"
+      | "notizie"
+      | "pubblicazioni"
+      | "pdf"
+    >;
     istat?: {
       topic: Array<string>;
       category: string;
@@ -58,16 +68,36 @@ export type ResultDTO = {
       url: string;
       content: string;
     };
-    file: {
+    file?: {
       path: string;
       lastModifiedDate: string;
     };
-    document: {
+    document?: {
       title: string;
       relativeUrl: Array<string>;
       contentType: string;
       url: string;
       content: string;
+    };
+    notizie?: {
+      category: string;
+      imgUrl: string;
+      pubDate: string;
+      topic: string;
+    };
+    pubblicazioni?: {
+      category: string;
+      imgUrl: string;
+      pubDate: string;
+      topic: string;
+      authors: string;
+    };
+    resources: {
+      binaries: {
+        id: string;
+        name: string;
+        contentType: string;
+      }[];
     };
   };
   highlight: {
@@ -84,7 +114,7 @@ export type ResultDTO = {
 export function useQueryAnalysis(request: AnalysisRequestDTO) {
   return useQuery(
     ["query-anaylis", request] as const,
-    ({ queryKey: [, request] }) => fetchQueryAnalysisMock(request),
+    ({ queryKey: [, request] }) => fetchQueryAnalysis(request),
   );
 }
 

@@ -209,7 +209,9 @@ function calculateSpans(
     { text: "", start: 0, end: 0, tokens: [] },
   ];
   for (let i = 0; i < text.length; ) {
-    const found = analysis?.find(({ start }) => i === start);
+    const found = analysis?.find(
+      ({ start, text }) => i === start && text !== "",
+    );
     if (found) {
       spans.push(found);
       i += found.text.length;

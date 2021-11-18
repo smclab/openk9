@@ -67,7 +67,7 @@ export function DocumentResult({ result }: DocumentResultProps) {
         css={css`
           grid-column: 2;
           grid-row: 3;
-          ${truncatedLineStyle};
+          ${result.highlight["document.content"] ? truncatedLineStyle : null};
         `}
       >
         {result.highlight["document.content"] ? (
@@ -79,7 +79,7 @@ export function DocumentResult({ result }: DocumentResultProps) {
         ) : (
           <div
             css={css`
-              max-height: 100px;
+              max-height: calc(21px * 5);
               overflow-y: hidden;
             `}
           >

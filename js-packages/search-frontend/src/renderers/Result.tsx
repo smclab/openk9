@@ -4,6 +4,9 @@ import { WebResult } from "./WebResult";
 import { ResultDTO } from "../utils/remote-data";
 import { myTheme } from "../utils/myTheme";
 import { DocumentResult } from "./DocumentResult";
+import { NotizieResult } from "./NotizieResult";
+import { PubblicazioniResult } from "./PubblicazioniResult";
+import { PdfResult } from "./PdfResult";
 
 type ResultProps = {
   result: ResultDTO;
@@ -24,6 +27,15 @@ export function Result({ result, onDetail }: ResultProps) {
         onMouseEnter={() => onDetail(result)}
       >
         {(() => {
+          if (result.source.documentTypes.includes("notizie")) {
+            return <NotizieResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("pubblicazioni")) {
+            return <PubblicazioniResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("pdf")) {
+            return <PdfResult result={result} />;
+          }
           if (result.source.documentTypes.includes("document")) {
             return <DocumentResult result={result} />;
           }

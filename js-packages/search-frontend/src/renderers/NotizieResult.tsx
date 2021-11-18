@@ -3,15 +3,16 @@ import { css } from "styled-components/macro";
 import { HighlightedText } from "../components/HighlightedText";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
 import { ResultDTO } from "../utils/remote-data";
+import { Badge } from "../components/Badge";
 
-type WebResultProps = { result: ResultDTO };
-export function WebResult({ result }: WebResultProps) {
+type NotizieResultProps = { result: ResultDTO };
+export function NotizieResult({ result }: NotizieResultProps) {
   return (
     <div
       css={css`
         display: grid;
         grid-template-columns: 30px auto;
-        grid-template-rows: auto auto auto;
+        grid-template-rows: auto auto auto auto;
         padding: 8px 16px;
         grid-column-gap: 16px;
         grid-row-gap: 8px;
@@ -72,7 +73,17 @@ export function WebResult({ result }: WebResultProps) {
         css={css`
           grid-column: 2;
           grid-row: 3;
-          ${truncatedLineStyle};
+          display: flex;
+        `}
+      >
+        <Badge>{result.source.notizie?.pubDate}</Badge>
+        <Badge>{result.source.notizie?.topic}</Badge>
+      </div>
+      <div
+        css={css`
+          grid-column: 2;
+          grid-row: 4;
+          ${result.highlight["web.content"] ? truncatedLineStyle : null};
         `}
       >
         {result.highlight["web.content"] ? (
