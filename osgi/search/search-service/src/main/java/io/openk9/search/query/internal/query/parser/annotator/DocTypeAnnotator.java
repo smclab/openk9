@@ -6,7 +6,6 @@ import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import java.time.Duration;
 import java.util.Map;
 
 @Component(
@@ -15,7 +14,7 @@ import java.util.Map;
 public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 
 	public DocTypeAnnotator() {
-		super(true, Duration.ofSeconds(30), "documentTypes");
+		super("documentTypes");
 	}
 
 	@Override
@@ -26,8 +25,7 @@ public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 			"$DOCTYPE",
 			Map.of(
 				"tokenType", "DOCTYPE",
-				"value", aggregatorKey,
-				"score", 1.0f
+				"value", aggregatorKey
 			)
 		);
 

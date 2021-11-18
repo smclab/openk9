@@ -5,15 +5,13 @@ import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import java.time.Duration;
-
 @Component(
 	immediate = true, service = Annotator.class
 )
 public class PersonNerAnnotator extends BaseNerAnnotator {
 
 	public PersonNerAnnotator() {
-		super("person", true, Duration.ofSeconds(30));
+		super("person");
 	}
 
 	@Override

@@ -269,7 +269,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 			double scoreO1 = toDouble(o1.getOrDefault("score", -1.0));
 			double scoreO2 = toDouble(o2.getOrDefault("score", -1.0));
 
-			int scoreCompared = Double.compare(scoreO1, scoreO2);
+			int scoreCompared = -Double.compare(scoreO1, scoreO2);
 
 			if (lKeys.size() == rKeys.size()) {
 				for (String lKey : lKeys) {

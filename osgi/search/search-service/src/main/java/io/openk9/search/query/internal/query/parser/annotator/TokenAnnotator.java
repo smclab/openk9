@@ -6,7 +6,6 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -19,10 +18,6 @@ import java.util.Map;
 )
 public class TokenAnnotator extends BaseAnnotator {
 
-	public TokenAnnotator() {
-		super(true, Duration.ofSeconds(30));
-	}
-
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
@@ -33,7 +28,8 @@ public class TokenAnnotator extends BaseAnnotator {
 					"$TOKEN",
 					Map.of(
 						"tokenType", "TOKEN",
-						"value", token
+						"value", token,
+						"score", 1.0f
 					)
 				)
 			);

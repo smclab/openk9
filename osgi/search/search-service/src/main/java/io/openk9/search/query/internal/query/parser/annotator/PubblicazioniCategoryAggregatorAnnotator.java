@@ -6,7 +6,6 @@ import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import java.time.Duration;
 import java.util.Map;
 
 @Component(
@@ -15,7 +14,7 @@ import java.util.Map;
 public class PubblicazioniCategoryAggregatorAnnotator extends BaseAggregatorAnnotator {
 
 	public PubblicazioniCategoryAggregatorAnnotator() {
-		super(true, Duration.ofSeconds(30), "pubblicazioni.category");
+		super("pubblicazioni.category");
 	}
 
 	@Override

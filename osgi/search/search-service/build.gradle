@@ -11,6 +11,4 @@ dependencies {
 
 	compile libraries.apache_commons_lang3
 
-	compile libraries.caffeine
-
 }
