@@ -264,10 +264,10 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		public int compare(
 			Map<String, Object> o1, Map<String, Object> o2) {
 
-			Float scoreO1 =(Float)o1.getOrDefault("score", -1.0);
-			Float scoreO2 = (Float)o2.getOrDefault("score", -1.0);
+			double scoreO1 =(double) o1.getOrDefault("score", -1.0);
+			double scoreO2 = (double)o2.getOrDefault("score", -1.0);
 
-			return -Integer.reverse(Float.compare(scoreO1, scoreO2));
+			return -Integer.reverse(Double.compare(scoreO1, scoreO2));
 		}
 	}
 
