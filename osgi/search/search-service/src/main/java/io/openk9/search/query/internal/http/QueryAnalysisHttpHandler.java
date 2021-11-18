@@ -22,8 +22,6 @@ import lombok.NoArgsConstructor;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -116,10 +114,10 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 									(int)prefixCount,
 									(int)(prefixCount + splitAnalyzed.length));
 
-							Map<String, Object> copy =
-								new HashMap<>(token.getToken());
+							Map<String, Object> copy = new HashMap<>(
+								token.getToken());
 
-							copy.put("token", 100.0);
+							copy.put("score", 100.0f);
 
 							chart.put(pos, copy);
 
@@ -264,14 +262,11 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		public int compare(
 			Map<String, Object> o1, Map<String, Object> o2) {
 
-			double scoreO1 =(double) o1.getOrDefault("score", -1.0);
-			double scoreO2 = (double)o2.getOrDefault("score", -1.0);
+			float scoreO1 =(float)o1.getOrDefault("score", -1.0f);
+			float scoreO2 = (float)o2.getOrDefault("score", -1.0f);
 
-			return -Integer.reverse(Double.compare(scoreO1, scoreO2));
+			return -Integer.reverse(Float.compare(scoreO1, scoreO2));
 		}
 	}
-
-	private static final Logger _log = LoggerFactory.getLogger(
-		QueryAnalysisHttpHandler.class);
 
 }
