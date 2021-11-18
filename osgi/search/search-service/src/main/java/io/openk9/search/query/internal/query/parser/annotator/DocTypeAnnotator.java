@@ -84,7 +84,8 @@ public class DocTypeAnnotator extends BaseAnnotator {
 							"$DOCTYPE",
 							Map.of(
 								"tokenType", "DOCTYPE",
-								"value", keyAsString
+								"value", keyAsString,
+								"score", 1.0
 							)
 						)
 					);

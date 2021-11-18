@@ -83,7 +83,8 @@ public class BaseNerAnnotator extends BaseAnnotator {
 							"entityType", senamtics.get("type"),
 							"entityName", senamtics.get("name"),
 							"tenantId", senamtics.get("tenantId"),
-							"value", senamtics.get("id")
+							"value", senamtics.get("id"),
+							"score", hit.getScore()
 						)
 					)
 				);

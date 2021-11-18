@@ -32,10 +32,11 @@ import reactor.netty.http.server.HttpServerRoutes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Component(
@@ -79,40 +80,88 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 					QueryAnalysisRequest queryAnalysisRequest = t2.getT2();
 
+					String searchText = queryAnalysisRequest.getSearchText();
+
+					String[] tokens = Utils.split(searchText);
+
+					List<QueryAnalysisHttpHandler.QueryAnalysisToken> requestTokens =
+						queryAnalysisRequest.getTokens();
+
+					Map<Tuple<Integer>, Map<String, Object>> chart;
+
+					if (!requestTokens.isEmpty()) {
+
+						chart = new HashMap<>();
+
+						for (QueryAnalysisToken token : requestTokens) {
+
+							String analyzed =
+								searchText
+									.substring(
+										token.getStart(), token.getEnd());
+
+							String prefix =
+								searchText.substring(0, token.getStart());
+
+							long prefixCount =
+								prefix
+									.codePoints()
+									.filter(Character::isWhitespace)
+									.count();
+
+							String[] splitAnalyzed = Utils.split(analyzed);
+
+							Tuple<Integer> pos =
+								Tuple.of(
+									(int)prefixCount,
+									(int)(prefixCount + splitAnalyzed.length));
+
+							Map<String, Object> copy =
+								new HashMap<>(token.getToken());
+
+							copy.put("token", 100.0);
+
+							chart.put(pos, copy);
+
+						}
+					}
+					else {
+						chart = Map.of();
+					}
+
 					Grammar grammar = _grammarProvider.getGrammar();
 
-					String searchText = queryAnalysisRequest.getSearchText();
 
 					Mono<List<Parse>> parsesMono = grammar.parseInput(
 						t2.getT1(), searchText);
 
 					return parsesMono.map(parses -> {
 
-						String[] tokens = Utils.split(searchText);
-
-						Map<Tuple<Integer>, Collection<Map<String, Object>>> aggregation = new HashMap<>();
+						Map<Tuple<Integer>, TreeSet<Map<String, Object>>> aggregation = new HashMap<>();
 
 						for (Parse pars : parses) {
 							for (SemanticType maps : pars.getSemantics().apply()) {
 								for (Map<String, Object> map : maps) {
 									Object tokenType = map.get("tokenType");
-									if (tokenType.equals("TEXT")) {
+									if (!tokenType.equals("TEXT")) {
 										aggregation.computeIfAbsent(
-											maps.getPos(), (k) -> new HashSet<>());
-									}
-									else {
-										aggregation
-											.computeIfAbsent(maps.getPos(), (k) -> new HashSet<>())
+											maps.getPos(), (k) -> new TreeSet<>(new ScoreComparator()))
 											.add(map);
 									}
 								}
 							}
 						}
 
+						for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
+							aggregation.computeIfAbsent(
+									e.getKey(), (k) -> new TreeSet<>(new ScoreComparator()))
+								.add(e.getValue());
+						}
+
 						List<QueryAnalysisTokens> result =
 							new ArrayList<>(aggregation.size());
 
-						for (Map.Entry<Tuple<Integer>, Collection<Map<String, Object>>> entry : aggregation.entrySet()) {
+						for (Map.Entry<Tuple<Integer>, TreeSet<Map<String, Object>>> entry : aggregation.entrySet()) {
 
 							Collection<Map<String, Object>> value =
 								entry.getValue();
@@ -206,6 +255,20 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 	public static class QueryAnalysisResponse {
 		private String searchText;
 		private List<QueryAnalysisTokens> analysis;
+	}
+
+	public static class ScoreComparator
+		implements Comparator<Map<String, Object>> {
+
+		@Override
+		public int compare(
+			Map<String, Object> o1, Map<String, Object> o2) {
+
+			Float scoreO1 =(Float)o1.getOrDefault("score", -1.0);
+			Float scoreO2 = (Float)o2.getOrDefault("score", -1.0);
+
+			return -Integer.reverse(Float.compare(scoreO1, scoreO2));
+		}
 	}
 
 	private static final Logger _log = LoggerFactory.getLogger(
