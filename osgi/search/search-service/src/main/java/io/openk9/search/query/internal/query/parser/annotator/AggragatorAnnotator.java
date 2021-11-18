@@ -17,13 +17,23 @@ public class AggragatorAnnotator extends BaseAggregatorAnnotator {
 		super(
 			"istat.category", "istat.topic",
 			"pubblicazioni.category", "pubblicazioni.topic",
-			"notize.category", "notizie.topic"
+			"notize.category", "notizie.topic", "documentTypes"
 		);
 	}
 
 	@Override
 	protected CategorySemantics _createCategorySemantics(
 		String aggregatorName, String aggregatorKey) {
+
+		if ("documentTypes".equals(aggregatorName)) {
+			return CategorySemantics.of(
+				"$DOCTYPE",
+				Map.of(
+					"tokenType", "DOCTYPE",
+					"value", aggregatorKey
+				)
+			);
+		}
 		return CategorySemantics.of(
 			"$AGGREGATE",
 			Map.of(
@@ -32,6 +42,8 @@ public class AggragatorAnnotator extends BaseAggregatorAnnotator {
 				"value", aggregatorKey
 			)
 		);
+
+
 	}
 
 	@Override

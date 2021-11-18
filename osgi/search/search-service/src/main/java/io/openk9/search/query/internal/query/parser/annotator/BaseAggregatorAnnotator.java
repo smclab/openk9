@@ -119,6 +119,6 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 	protected final List<String> keywords;
 
 	private static final Logger _log = LoggerFactory.getLogger(
-		DocTypeAnnotator.class);
+		BaseAggregatorAnnotator.class);
 
 }
