@@ -43,7 +43,9 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
 		for (String token : tokens) {
-			builder.must(QueryBuilders.multiMatchQuery(keywords, token));
+			for (String keyword : keywords) {
+				builder.must(query(keyword, token));
+			}
 		}
 
 		SearchRequest searchRequest;
