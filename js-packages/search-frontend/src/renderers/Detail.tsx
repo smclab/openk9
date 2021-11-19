@@ -1,0 +1,41 @@
+import React from "react";
+import { css } from "styled-components/macro";
+import { WebDetail } from "./WebDetail";
+import { ResultDTO } from "../utils/remote-data";
+import { DocumentDetail } from "./DocumentDetail";
+import { NotizieDetail } from "./NotizieDetail";
+import { PubblicazioniDetail } from "./PubblicazioniDetail";
+import { PdfDetail } from "./PdfDetail";
+
+type DetailProps = {
+  result: ResultDTO;
+};
+function Detail({ result }: DetailProps) {
+  return (
+    <div
+      css={css`
+        padding: 8px 16px;
+      `}
+    >
+      {(() => {
+        if (result.source.documentTypes.includes("notizie")) {
+          return <NotizieDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("pubblicazioni")) {
+          return <PubblicazioniDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("pdf")) {
+          return <PdfDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("document")) {
+          return <DocumentDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("web")) {
+          return <WebDetail result={result} />;
+        }
+        return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
+      })()}
+    </div>
+  );
+}
+export const DetailMemo = React.memo(Detail);
