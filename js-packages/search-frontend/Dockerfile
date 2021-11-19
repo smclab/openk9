@@ -4,13 +4,13 @@ FROM node:14-alpine as react-build
 RUN mkdir -p /app/js-packages/search-frontend
 WORKDIR /app
 
+COPY ./package*.json /app
 COPY ./js-packages/search-frontend/package*.json /app/js-packages/search-frontend
 COPY ./yarn.lock /app
 RUN yarn install --frozen-lockfile
 
 COPY ./ /app
 WORKDIR /app/js-packages/search-frontend
-RUN yarn install
 RUN yarn build
 
 # Stage 2 - the production environment
