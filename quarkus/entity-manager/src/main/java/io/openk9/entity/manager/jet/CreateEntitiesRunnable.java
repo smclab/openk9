@@ -367,10 +367,6 @@ public class CreateEntitiesRunnable
 						.cleanEntityName(entityRequest.getName())
 				);
 
-				if (bestScore < scoreThreshold) {
-					return Collections.emptyList();
-				}
-
 			}
 
 			if (bestScore > scoreThreshold) {

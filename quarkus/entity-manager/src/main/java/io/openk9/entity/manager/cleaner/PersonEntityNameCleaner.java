@@ -22,7 +22,7 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 
 		boolQueryBuilder.must(
 			QueryBuilders.matchQuery("name", entityName)
-				.operator(Operator.OR)
+				.operator(Operator.AND)
 		);
 
 		boolQueryBuilder.must(
