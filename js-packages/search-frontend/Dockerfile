@@ -10,6 +10,7 @@ RUN yarn install --frozen-lockfile
 
 COPY ./ /app
 WORKDIR /app/js-packages/search-frontend
+RUN yarn install
 RUN yarn build
 
 # Stage 2 - the production environment
