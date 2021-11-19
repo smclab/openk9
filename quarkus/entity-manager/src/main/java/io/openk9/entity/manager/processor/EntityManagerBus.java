@@ -170,8 +170,9 @@ public class EntityManagerBus {
 
 				Entity documentEntity =
 					new Entity(
-						null, cacheId, tenantId, cacheId, "document", null,
-						ingestionId, false, false);
+						null, cacheId, tenantId,
+						payload.getDatasourceId() + "_" + payload.getContentId(),
+						"document", null, ingestionId, false, false);
 
 				entityTransactionalMap.set(
 					EntityKey.of(

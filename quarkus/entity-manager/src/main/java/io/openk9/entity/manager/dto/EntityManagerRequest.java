@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.List;
 
 @Data
 @Builder
@@ -15,4 +14,6 @@ import java.util.List;
 public class EntityManagerRequest implements Serializable {
 	private long tenantId;
 	private String ingestionId;
+	private String contentId;
+	private long datasourceId;
 }
