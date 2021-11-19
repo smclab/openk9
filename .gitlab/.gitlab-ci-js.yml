@@ -89,6 +89,35 @@ Build Latest Frontend Docker Image:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-frontend" -F ref=master $DEV_TRIGGER_URL
   allow_failure: false
 
+Build Query Understanding Frontend Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  needs: [JS Format Lint Test and Build Check]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/http-api/**/*
+        - js-packages/search-ui-components/**/*
+        - js-packages/plugin-scripts/**/*
+        - js-packages/search-customizable-ui/**/*
+        - js-packager/search-frontend/**/*
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - docker build -t search-frontend:latest -f js-packages/search-frontend/Dockerfile .
+    - docker tag search-frontend:latest $CI_REGISTRY_NAME/openk9/search-frontend:latest
+    - docker push $CI_REGISTRY_NAME/openk9/search-frontend:latest
+  after_script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-query-frontend" -F ref=master $DEV_TRIGGER_URL
+  allow_failure: false
+
 Build Latest Site Docker Image:
   image: docker:19.03.13
   services:
