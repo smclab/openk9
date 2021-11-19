@@ -35,6 +35,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 	@ToString.Include
 	private String ingestionId;
 	private boolean associated;
+	private boolean indexable;
 
 	@Override
 	public int compareTo(Entity other) {
@@ -72,6 +73,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 		out.writeObject(graphId);
 		out.writeString(ingestionId);
 		out.writeBoolean(associated);
+		out.writeBoolean(indexable);
 	}
 
 	@Override
@@ -84,5 +86,6 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 		graphId = in.readObject();
 		ingestionId = in.readString();
 		associated = in.readBoolean();
+		indexable = in.readBoolean();
 	}
 }

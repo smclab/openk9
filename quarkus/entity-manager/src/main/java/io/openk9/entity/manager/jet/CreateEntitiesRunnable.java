@@ -225,7 +225,8 @@ public class CreateEntitiesRunnable
 				currentEntityRequest.getType(),
 				currentEntityRequest.getGraphId(),
 				currentEntityRequest.getIngestionId(),
-				currentEntityRequest.isAssociated());
+				currentEntityRequest.isAssociated(),
+				currentEntityRequest.isIndexable());
 
 			List<EntityIndex> restCandidates =
 				entityCandidateList
@@ -275,18 +276,23 @@ public class CreateEntitiesRunnable
 					copy.setGraphId(
 						entityGraph.getGraphId());
 
-					entityService.awaitIndex(
-						EntityIndex.of(
-							copy.getCacheId(),
-							entityGraph.getGraphId(),
-							copy.getTenantId(),
-							copy.getName(),
-							copy.getType(),
-							0)
-					);
+					if (copy.isIndexable()) {
 
-					copy.setId(
-						copy.getCacheId());
+						entityService.awaitIndex(
+							EntityIndex.of(
+								copy.getCacheId(),
+								entityGraph.getGraphId(),
+								copy.getTenantId(),
+								copy.getName(),
+								copy.getType(),
+								0)
+						);
+
+					}
+
+						copy.setId(
+							copy.getCacheId());
+
 
 				}
 				catch (Exception ioe) {

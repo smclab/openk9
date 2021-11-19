@@ -39,6 +39,6 @@ public class EntityGraphConfig {
 		name = "openk9.entity.max-hops",
 		defaultValue = "2"
 	)
-	int maxHops = 2;
+	int maxHops;
 
 }

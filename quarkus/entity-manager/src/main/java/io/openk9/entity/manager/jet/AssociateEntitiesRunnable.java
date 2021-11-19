@@ -36,6 +36,7 @@ public class AssociateEntitiesRunnable
 
 		Set<EntityKey> entityKeys = entityIMap.localKeySet(
 			Predicates.and(
+				Predicates.equal("indexable", true),
 				Predicates.notEqual("id", null),
 				Predicates.notEqual("graphId", null),
 				Predicates.equal("associated", false)
