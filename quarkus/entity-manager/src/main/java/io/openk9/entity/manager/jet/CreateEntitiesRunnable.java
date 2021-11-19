@@ -464,7 +464,9 @@ public class CreateEntitiesRunnable
 
 			SymbolicName path = Cypher.name("path");
 
-			Property idProperty = entityAliased.property("id");
+			Property idProperty = entityAliased
+				.getDelegate()
+				.property("id");
 
 			Statement statement = Cypher
 				.match(nodeEntity)
