@@ -49,7 +49,7 @@ public class CreateRelationRunnable
 
 		Collection<Object[]> projection = entityIMap.project(
 			Projections.multiAttribute("cacheId", "id"),
-			Predicates.in("__key.cacheId", cacheIds));
+			Predicates.in("cacheId", cacheIds));
 
 		_log.info("projection: " + projection.size());
 

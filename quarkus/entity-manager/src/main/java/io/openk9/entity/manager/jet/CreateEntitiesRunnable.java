@@ -290,9 +290,7 @@ public class CreateEntitiesRunnable
 
 					}
 
-						copy.setId(
-							copy.getCacheId());
-
+					copy.setId(copy.getCacheId());
 
 				}
 				catch (Exception ioe) {
