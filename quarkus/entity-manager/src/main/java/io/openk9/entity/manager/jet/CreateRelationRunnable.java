@@ -4,7 +4,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.Pipelining;
 import com.hazelcast.map.IMap;
-import com.hazelcast.projection.Projections;
 import com.hazelcast.query.Predicates;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
@@ -17,7 +16,6 @@ import org.jboss.logging.Logger;
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,26 +39,25 @@ public class CreateRelationRunnable
 
 		_log.info("entityKeys: " + entityKeys.size());
 
-		String[] cacheIds =
-			entityKeys
-				.stream()
-				.map(EntityKey::getCacheId)
-				.toArray(String[]::new);
+		Map<EntityKey, Entity> entityIMapAll = entityIMap.getAll(entityKeys);
 
-		Collection<Object[]> projection = entityIMap.project(
-			Projections.multiAttribute("cacheId", "id"),
-			Predicates.in("cacheId", cacheIds));
-
-		_log.info("projection: " + projection.size());
+		_log.info("entityIMapAll: " + entityIMapAll.size());
 
 		IMap<EntityRelationKey, EntityRelation> entityRelationMap =
 			MapUtil.getEntityRelationMap(_hazelcastInstance);
 
 		Map<String, String> collect =
-			projection
+			entityIMapAll
+				.values()
 				.stream()
 				.collect(Collectors.toMap(
-					o -> (String)o[0], o -> (String)o[1]));
+					Entity::getCacheId, Entity::getId));
+
+		String[] cacheIds = entityKeys
+			.stream()
+			.map(EntityKey::getCacheId)
+			.distinct()
+			.toArray(String[]::new);
 
 		Map<EntityRelationKey, EntityRelation> entries =
 			entityRelationMap.getAll(
