@@ -118,5 +118,10 @@
 		"lhs": "$Intent",
 		"rhs": "$TOKEN",
 		"sem": "0"
+	},
+	{
+		"lhs": "$Entity",
+		"rhs": "$bank",
+		"sem": "0"
 	}
 ]
