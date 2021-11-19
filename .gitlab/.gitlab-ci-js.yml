@@ -106,7 +106,7 @@ Build Query Understanding Frontend Docker Image:
         - js-packages/search-ui-components/**/*
         - js-packages/plugin-scripts/**/*
         - js-packages/search-customizable-ui/**/*
-        - js-packager/search-frontend/**/*
+        - js-packages/search-frontend/**/*
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
