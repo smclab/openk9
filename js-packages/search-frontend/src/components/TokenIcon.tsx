@@ -4,6 +4,7 @@ import {
   faGlobe,
   faMapPin,
   faSitemap,
+  faTag,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -19,6 +20,7 @@ export function TokenIcon({ token }: TokenIconProps) {
         display: flex;
         margin-right: 8px;
         justify-content: center;
+        align-items: center;
       `}
     >
       {(() => {
@@ -30,7 +32,7 @@ export function TokenIcon({ token }: TokenIconProps) {
               case "web":
                 return <FontAwesomeIcon icon={faGlobe} />;
               default:
-                return null;
+                return <FontAwesomeIcon icon={faTag} />;
             }
           }
           case "ENTITY": {
@@ -42,11 +44,11 @@ export function TokenIcon({ token }: TokenIconProps) {
               case "organization":
                 return <FontAwesomeIcon icon={faSitemap} />;
               default:
-                return null;
+                return <FontAwesomeIcon icon={faTag} />;
             }
           }
           default:
-            return null;
+            return <FontAwesomeIcon icon={faTag} />;
         }
       })()}
     </div>

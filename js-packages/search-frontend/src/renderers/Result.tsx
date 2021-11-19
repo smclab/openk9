@@ -12,7 +12,7 @@ type ResultProps = {
   result: ResultDTO;
   onDetail(result: ResultDTO | null): void;
 };
-export function Result({ result, onDetail }: ResultProps) {
+function Result({ result, onDetail }: ResultProps) {
   return (
     <div
       css={css`

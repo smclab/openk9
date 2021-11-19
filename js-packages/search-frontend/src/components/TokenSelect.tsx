@@ -92,7 +92,15 @@ export function TokenSelect({
                   display: flex;
                 `}
               >
-                {"keywordKey" in option && <span>{option.keywordKey}: </span>}
+                {"keywordKey" in option && (
+                  <strong
+                    css={css`
+                      margin-right: 8px;
+                    `}
+                  >
+                    {option.keywordKey}:
+                  </strong>
+                )}
                 <TokenIcon token={option} />
                 {getTokenLabel(option)}
               </div>

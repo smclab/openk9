@@ -11,6 +11,7 @@ import {
   AnalysisResponseEntryDTO,
   AnalysisRequestEntryDTO,
   TokenDTO,
+  SearchTokenDTO,
 } from "./utils/remote-data";
 import { DetailMemo } from "./renderers/Detail";
 import { myTheme } from "./utils/myTheme";
@@ -18,23 +19,25 @@ import { Results } from "./components/ResultList";
 import { TokenSelect } from "./components/TokenSelect";
 import { useClickAway } from "./utils/useClickAway";
 
+const DEBOUNCE = 300;
+
 export function App() {
-  const [{ text, selection }, dispatch] = React.useReducer(reducer, {
+  const [state, dispatch] = React.useReducer(reducer, {
     text: "",
     selection: [],
   });
   const [detail, setDetail] = React.useState<ResultDTO | null>(null);
-  const textDebounced = useDebounce(text, 300);
+  const debounced = useDebounce(state, DEBOUNCE);
   const queryAnalysis = useQueryAnalysis({
-    searchText: textDebounced,
-    tokens: selection,
+    searchText: debounced.text,
+    tokens: debounced.selection,
   });
   const spans = React.useMemo(
-    () => calculateSpans(text, queryAnalysis.data?.analysis),
-    [queryAnalysis.data?.analysis, text],
+    () => calculateSpans(state.text, queryAnalysis.data?.analysis),
+    [queryAnalysis.data?.analysis, state.text],
   );
   const showSyntax =
-    textDebounced === text &&
+    state.text === debounced.text &&
     queryAnalysis.data !== undefined &&
     !queryAnalysis.isPreviousData;
   const [openedDropdown, setOpenedDropdown] = React.useState<{
@@ -43,6 +46,13 @@ export function App() {
   } | null>(null);
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
+  const searchQuery = useDebounce(
+    React.useMemo(
+      () => deriveSearchQuery(spans, state.selection),
+      [spans, state.selection],
+    ),
+    DEBOUNCE,
+  );
   return (
     <PageLayout
       search={
@@ -86,7 +96,7 @@ export function App() {
                       }
                       optionIndex={openedDropdown?.optionPosition ?? null}
                       selected={
-                        selection.find(
+                        state.selection.find(
                           (selection) =>
                             selection.start === span.start &&
                             selection.end === span.end,
@@ -108,7 +118,7 @@ export function App() {
                 })}
             </div>
             <input
-              value={text}
+              value={state.text}
               onChange={(event) => {
                 dispatch({ type: "set-text", text: event.currentTarget.value });
                 setDetail(null);
@@ -143,8 +153,8 @@ export function App() {
                   openedDropdown &&
                   spans.find(
                     (span) =>
-                      span.start <= openedDropdown.textPosition &&
-                      span.end > openedDropdown.textPosition,
+                      openedDropdown.textPosition > span.start &&
+                      openedDropdown.textPosition <= span.end,
                   );
                 const option =
                   openedDropdown &&
@@ -192,13 +202,46 @@ export function App() {
       result={
         <Results
           displayMode={{ type: "virtual" }}
-          text={textDebounced}
+          searchQuery={searchQuery}
           onDetail={setDetail}
         />
       }
       detail={detail && <DetailMemo result={detail} />}
     />
   );
+}
+
+function deriveSearchQuery(
+  spans: AnalysisResponseEntryDTO[],
+  selection: AnalysisRequestEntryDTO[],
+) {
+  return spans
+    .map((span) => ({ ...span, text: span.text.trim() }))
+    .filter((span) => span.text)
+    .map((span): SearchTokenDTO => {
+      const token =
+        selection.find(
+          (selection) =>
+            selection.start === span.start && selection.end === span.end,
+        )?.token ?? null;
+      if (token) {
+        switch (token.tokenType) {
+          case "DATASOURCE":
+            return { tokenType: "DATASOURCE", values: [token.value] };
+          case "DOCTYPE":
+            return { tokenType: "DOCTYPE", values: [token.value] };
+          case "ENTITY":
+            return {
+              tokenType: "ENTITY",
+              entityType: token.entityType,
+              values: [token.value],
+            };
+          case "TEXT":
+            return { tokenType: "TEXT", values: [token.value] };
+        }
+      }
+      return { tokenType: "TEXT", values: [span.text] };
+    });
 }
 
 function calculateSpans(
@@ -223,7 +266,7 @@ function calculateSpans(
       i += 1;
     }
   }
-  return spans;
+  return spans.filter((span) => span.text);
 }
 
 type State = { text: string; selection: Array<AnalysisRequestEntryDTO> };
@@ -289,11 +332,11 @@ function shiftSelection(
     (attribute) =>
       attribute.start <= changeStart && attribute.end <= changeStart,
   );
-  const deletedAttributes = prevSelection.filter(
-    (attribute) =>
-      !(attribute.start <= changeStart && attribute.end <= changeStart) &&
-      !(attribute.start >= changePrevEnd),
-  );
+  // const deletedAttributes = prevSelection.filter(
+  //   (attribute) =>
+  //     !(attribute.start <= changeStart && attribute.end <= changeStart) &&
+  //     !(attribute.start >= changePrevEnd),
+  // );
   const suffixAttributes = prevSelection
     .filter((attribute) => attribute.start >= changePrevEnd)
     .map((attribute) => ({

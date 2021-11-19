@@ -1,11 +1,11 @@
 import { useInfiniteQuery, useQuery } from "react-query";
 
-export function useInfiniteResults(text: string) {
+export function useInfiniteResults(searchQuery: Array<SearchTokenDTO>) {
   const pageSize = 10;
   return useInfiniteQuery(
-    ["results", text],
-    async ({ queryKey: [, text], pageParam = 0 }) => {
-      return fetchResults(text, [
+    ["results", searchQuery] as const,
+    async ({ queryKey: [, searchQuery], pageParam = 0 }) => {
+      return fetchResults(searchQuery, [
         pageParam * pageSize,
         pageParam * pageSize + pageSize,
       ]);
@@ -25,12 +25,15 @@ export function useInfiniteResults(text: string) {
   );
 }
 
-async function fetchResults(text: string, range: [number, number]) {
+async function fetchResults(
+  searchQuery: Array<SearchTokenDTO>,
+  range: [number, number],
+) {
   const response = await fetch("/api/searcher/v1/search", {
     method: "POST",
     body: JSON.stringify({
       range,
-      searchQuery: [{ tokenType: "TEXT", values: [text] }],
+      searchQuery,
     }),
     headers: {
       Accept: "application/json",
@@ -233,3 +236,24 @@ export type TokenDTO =
 export type AnalysisTokenDTO = TokenDTO & {
   score: number; // 0 - 1
 };
+
+export type SearchTokenDTO =
+  | {
+      tokenType: "DATASOURCE";
+      values: string[];
+    }
+  | {
+      tokenType: "DOCTYPE";
+      values: string[];
+    }
+  | {
+      tokenType: "TEXT";
+      keywordKey?: string;
+      values: string[];
+    }
+  | {
+      tokenType: "ENTITY";
+      keywordKey?: string;
+      entityType: string;
+      values: string[];
+    };
