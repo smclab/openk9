@@ -2,7 +2,7 @@ import React from "react";
 import { css } from "styled-components/macro";
 import "./index.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faLightbulb, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { PageLayout } from "./components/PageLayout";
 import { useDebounce } from "./utils/useDebounce";
 import {
@@ -53,6 +53,26 @@ export function App() {
     ),
     DEBOUNCE,
   );
+  const [autoSelect, setAutoSelect] = React.useState(true);
+  React.useEffect(() => {
+    if (autoSelect) {
+      const autoSelections = getAutoSelections(spans);
+      for (const autoSelection of autoSelections) {
+        if (
+          !state.selection.some(
+            (selection) =>
+              selection.start === autoSelection.start &&
+              selection.end === autoSelection.end,
+          )
+        ) {
+          dispatch({
+            type: "set-selection",
+            selection: { ...autoSelection, isAuto: true },
+          });
+        }
+      }
+    }
+  }, [autoSelect, spans, state.selection]);
   return (
     <PageLayout
       search={
@@ -85,34 +105,38 @@ export function App() {
             >
               {showSyntax &&
                 spans.map((span, index) => {
+                  const isOpen =
+                    openedDropdown !== null &&
+                    openedDropdown.textPosition > span.start &&
+                    openedDropdown.textPosition <= span.end;
+                  const optionIndex = openedDropdown?.optionPosition ?? null;
+                  const selection = state.selection.find(
+                    (selection) =>
+                      selection.start === span.start &&
+                      selection.end === span.end,
+                  );
+                  const selected = selection?.token ?? null;
+                  const onSelect = (token: TokenDTO | null): void => {
+                    dispatch({
+                      type: "set-selection",
+                      selection: {
+                        text: span.text,
+                        start: span.start,
+                        end: span.end,
+                        token,
+                      },
+                    });
+                  };
+                  const isAutoSelected = selection?.isAuto ?? false;
                   return (
                     <TokenSelect
                       key={index}
                       span={span}
-                      isOpen={
-                        openedDropdown !== null &&
-                        openedDropdown.textPosition >= span.start &&
-                        openedDropdown.textPosition <= span.end
-                      }
-                      optionIndex={openedDropdown?.optionPosition ?? null}
-                      selected={
-                        state.selection.find(
-                          (selection) =>
-                            selection.start === span.start &&
-                            selection.end === span.end,
-                        )?.token ?? null
-                      }
-                      onSelect={(token) => {
-                        dispatch({
-                          type: "set-selection",
-                          selection: {
-                            text: span.text,
-                            start: span.start,
-                            end: span.end,
-                            token,
-                          },
-                        });
-                      }}
+                      isOpen={isOpen}
+                      optionIndex={optionIndex}
+                      selected={selected}
+                      onSelect={onSelect}
+                      isAutoSlected={isAutoSelected}
                     />
                   );
                 })}
@@ -197,6 +221,17 @@ export function App() {
               }}
             ></input>
           </div>
+          <FontAwesomeIcon
+            icon={faLightbulb}
+            style={{
+              paddingRight: "16px",
+              color: autoSelect ? myTheme.redTextColor : "black",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              setAutoSelect(!autoSelect);
+            }}
+          />
         </div>
       }
       result={
@@ -269,7 +304,10 @@ function calculateSpans(
   return spans.filter((span) => span.text);
 }
 
-type State = { text: string; selection: Array<AnalysisRequestEntryDTO> };
+type State = {
+  text: string;
+  selection: Array<AnalysisRequestEntryDTO & { isAuto?: boolean }>;
+};
 type Action =
   | { type: "set-text"; text: string }
   | {
@@ -279,6 +317,7 @@ type Action =
         start: number;
         end: number;
         token: TokenDTO | null;
+        isAuto?: boolean;
       };
     };
 function reducer(state: State, action: Action): State {
@@ -375,4 +414,22 @@ function findCommonSuffixLength(a: string, b: string, startFromIndex: number) {
   ) {}
 
   return suffixLength;
+}
+
+function getAutoSelections(entries: Array<AnalysisResponseEntryDTO>) {
+  const autoSelections: Array<AnalysisRequestEntryDTO> = [];
+  for (const entry of entries) {
+    const [first, second] = [...entry.tokens].sort((a, b) => a.score - b.score);
+    if (first) {
+      if (!second || first.score >= second.score * 2) {
+        autoSelections.push({
+          text: entry.text,
+          start: entry.start,
+          end: entry.end,
+          token: first,
+        });
+      }
+    }
+  }
+  return autoSelections;
 }

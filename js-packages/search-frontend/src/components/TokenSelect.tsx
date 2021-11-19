@@ -14,6 +14,7 @@ type TokenSelectProps = {
   selected: TokenDTO | null;
   isOpen: boolean;
   optionIndex: number | null;
+  isAutoSlected: boolean;
 };
 export function TokenSelect({
   span,
@@ -21,11 +22,14 @@ export function TokenSelect({
   selected,
   isOpen,
   optionIndex,
+  isAutoSlected,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const status: Status = isInteractive
     ? selected !== null
-      ? "has-selected"
+      ? isAutoSlected
+        ? "auto-selected"
+        : "has-selected"
       : "can-select"
     : "not-interactive";
   const entryStyle = (isSelected: boolean, isHighlighted: boolean) => css`
