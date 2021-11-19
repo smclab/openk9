@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
 
 public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
@@ -112,9 +113,14 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 				for (Terms.Bucket bucket : terms.getBuckets()) {
 					String keyAsString = bucket.getKeyAsString();
 
+					if (token.equalsIgnoreCase(keyAsString)) {
+						return List.of(_createCategorySemantics(
+							terms.getName(), keyAsString));
+					}
+
 					scoreKeys.add(
 						Tuple.of(
-							_levenshteinDistance(token, keyAsString),
+							(Supplier<Double>)() -> _levenshteinDistance(token, keyAsString),
 							keyAsString,
 							terms.getName()));
 
@@ -133,7 +139,8 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 		scoreKeys.sort(
 			Collections.reverseOrder(
-				Comparator.comparingDouble(t -> (Double)t.get(0))));
+				Comparator.comparingDouble(
+					t -> ((Supplier<Double>)t.get(0)).get())));
 
 		String key = (String)scoreKeys.get(0).get(1);
 		String name = (String)scoreKeys.get(0).get(2);
