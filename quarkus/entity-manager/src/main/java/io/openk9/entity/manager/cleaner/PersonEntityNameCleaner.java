@@ -18,6 +18,14 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 
 	protected QueryBuilder createQueryBuilder(String entityName) {
 
+		String[] nameParts = entityName.split("\\s+");
+
+		for (String namePart : nameParts) {
+			if (namePart.contains(".")) {
+				entityName = entityName.replaceAll(namePart, "");
+			}
+		}
+
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
 		boolQueryBuilder.must(
