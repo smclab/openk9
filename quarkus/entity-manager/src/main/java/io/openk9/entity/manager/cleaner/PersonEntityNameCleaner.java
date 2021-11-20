@@ -16,25 +16,6 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 		return "person";
 	}
 
-	@Override
-	public QueryBuilder cleanEntityName(long tenantId, String entityName) {
-		return super.cleanEntityName(tenantId, entityName);
-	}
-
-	@Override
-	public String cleanEntityName(String entityName) {
-
-		String[] nameParts = entityName.split("\\s+");
-
-		for (String namePart : nameParts) {
-			if (namePart.contains(".")) {
-				entityName = entityName.replaceAll(namePart, "");
-			}
-		}
-
-		return super.cleanEntityName(entityName);
-	}
-
 	protected QueryBuilder createQueryBuilder(String entityName) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
