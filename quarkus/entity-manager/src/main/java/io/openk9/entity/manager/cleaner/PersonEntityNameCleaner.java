@@ -26,13 +26,15 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 
 		String[] nameParts = entityName.split("\\s+");
 
+		StringBuilder cleanedEntityName = new StringBuilder();
+
 		for (String namePart : nameParts) {
-			if (namePart.contains(".")) {
-				entityName = entityName.replaceAll(namePart, "");
+			if (!namePart.contains(".")) {
+				cleanedEntityName.append(namePart);
 			}
 		}
 
-		return super.cleanEntityName(entityName);
+		return super.cleanEntityName(cleanedEntityName.toString());
 	}
 
 	protected QueryBuilder createQueryBuilder(String entityName) {
