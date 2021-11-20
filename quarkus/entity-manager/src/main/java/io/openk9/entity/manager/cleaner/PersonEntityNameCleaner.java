@@ -16,7 +16,13 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 		return "person";
 	}
 
-	protected QueryBuilder createQueryBuilder(String entityName) {
+	@Override
+	public QueryBuilder cleanEntityName(long tenantId, String entityName) {
+		return super.cleanEntityName(tenantId, entityName);
+	}
+
+	@Override
+	public String cleanEntityName(String entityName) {
 
 		String[] nameParts = entityName.split("\\s+");
 
@@ -25,6 +31,11 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 				entityName = entityName.replaceAll(namePart, "");
 			}
 		}
+
+		return super.cleanEntityName(entityName);
+	}
+
+	protected QueryBuilder createQueryBuilder(String entityName) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
