@@ -10,5 +10,6 @@ dependencies {
 	compile project(":osgi:plugin-driver-manager:plugin-driver-manager-client-api")
 
 	compile libraries.apache_commons_lang3
+	compile libraries.metatype
 
 }
