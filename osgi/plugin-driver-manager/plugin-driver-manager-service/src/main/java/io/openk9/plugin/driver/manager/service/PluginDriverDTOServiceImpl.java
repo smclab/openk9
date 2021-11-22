@@ -5,6 +5,7 @@ import io.openk9.plugin.driver.manager.api.DocumentTypeProvider;
 import io.openk9.plugin.driver.manager.api.PluginDriver;
 import io.openk9.plugin.driver.manager.api.PluginDriverDTOService;
 import io.openk9.plugin.driver.manager.api.PluginDriverRegistry;
+import io.openk9.plugin.driver.manager.api.SearchKeyword;
 import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.FieldBoostDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
@@ -109,7 +110,7 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 			.map(searchKeyword ->
 				SearchKeywordDTO.of(
 					searchKeyword.getKeyword(),
-					searchKeyword.isText(),
+					_toSearchKeywordDTOType(searchKeyword.getType()),
 					FieldBoostDTO.of(
 						searchKeyword.getFieldBoost().getKey(),
 						searchKeyword.getFieldBoost().getValue()
@@ -117,6 +118,18 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 				)
 			)
 			.collect(Collectors.toList());
+	}
+
+	private SearchKeywordDTO.Type _toSearchKeywordDTOType(
+		SearchKeyword.Type type) {
+
+		switch (type) {
+			case DATE: return SearchKeywordDTO.Type.DATE;
+			case TEXT: return SearchKeywordDTO.Type.TEXT;
+			case NUMBER: return SearchKeywordDTO.Type.NUMBER;
+		}
+
+		return SearchKeywordDTO.Type.TEXT;
 	}
 
 	@Reference

@@ -80,7 +80,6 @@ public class TextQueryParser implements QueryParser {
 					Collectors.toMap(
 						FieldBoostDTO::getKeyword, FieldBoostDTO::getBoost));
 
-
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
 		for (String value : values) {

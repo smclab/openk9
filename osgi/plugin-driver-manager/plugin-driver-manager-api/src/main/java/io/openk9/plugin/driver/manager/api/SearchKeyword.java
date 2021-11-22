@@ -25,8 +25,8 @@ import java.util.Map;
 @EqualsAndHashCode
 public abstract class SearchKeyword {
 
-	protected SearchKeyword(String keyword, String prefix, boolean text) {
-		this.text = text;
+	protected SearchKeyword(String keyword, String prefix, Type type) {
+		this.type = type;
 		if (prefix == null || prefix.isEmpty()) {
 			this.keyword = keyword;
 		}
@@ -35,16 +35,16 @@ public abstract class SearchKeyword {
 		}
 	}
 
-	protected SearchKeyword(String keyword, boolean text) {
-		this(keyword, Strings.BLANK, text);
+	protected SearchKeyword(String keyword, Type type) {
+		this(keyword, Strings.BLANK, type);
 	}
 
 	public String getKeyword() {
 		return keyword;
 	}
 
-	public boolean isText() {
-		return text;
+	public Type getType() {
+		return type;
 	}
 
 	public Map.Entry<String, Float> getFieldBoost() {
@@ -52,51 +52,65 @@ public abstract class SearchKeyword {
 	}
 
 	public static SearchKeyword boostText(String keyword, float boost) {
-		return new BoostSearchKeyword(keyword, boost, true);
+		return new BoostSearchKeyword(keyword, boost, Type.TEXT);
 	}
 
 	public static SearchKeyword boostNumber(String keyword, float boost) {
-		return new BoostSearchKeyword(keyword, boost, false);
+		return new BoostSearchKeyword(keyword, boost, Type.NUMBER);
 	}
 
 	public static SearchKeyword boostNumber(
 		String keyword, String prefix, float boost) {
 
-		return new BoostSearchKeyword(keyword, prefix, boost, false);
+		return new BoostSearchKeyword(keyword, prefix, boost, Type.NUMBER);
 	}
 
 	public static SearchKeyword boostText(
 		String keyword, String prefix, float boost) {
 
-		return new BoostSearchKeyword(keyword, prefix, boost, true);
+		return new BoostSearchKeyword(keyword, prefix, boost, Type.TEXT);
+	}
+
+	public static SearchKeyword boostDate(
+		String keyword, String prefix, float boost) {
+
+		return new BoostSearchKeyword(keyword, prefix, boost, Type.DATE);
 	}
 
 	public static SearchKeyword number(String keyword) {
-		return new BaseSearchKeyword(keyword, false);
+		return new BaseSearchKeyword(keyword, Type.NUMBER);
 	}
 
 	public static SearchKeyword text(String keyword) {
-		return new BaseSearchKeyword(keyword, true);
+		return new BaseSearchKeyword(keyword, Type.TEXT);
 	}
 
 	public static SearchKeyword text(String keyword, String prefix) {
-		return new BaseSearchKeyword(keyword, prefix, true);
+		return new BaseSearchKeyword(keyword, prefix, Type.TEXT);
 	}
 
 	public static SearchKeyword number(String keyword, String prefix) {
-		return new BaseSearchKeyword(keyword, prefix, false);
+		return new BaseSearchKeyword(keyword, prefix, Type.NUMBER);
+	}
+
+	public static SearchKeyword date(String keyword) {
+		return new BaseSearchKeyword(keyword, Type.DATE);
+	}
+
+	public static SearchKeyword date(String keyword, String prefix) {
+		return new BaseSearchKeyword(keyword, prefix, Type.DATE);
 	}
 
 	static class BoostSearchKeyword extends SearchKeyword {
 
 		public BoostSearchKeyword(
-			String keyword, String prefix, float boost, boolean text) {
-			super(keyword, prefix, text);
+			String keyword, String prefix, float boost, Type type) {
+			super(keyword, prefix, type);
 			this.boost = boost;
 		}
 
-		public BoostSearchKeyword(String keyword, float boost, boolean text) {
-			super(keyword, text);
+		public BoostSearchKeyword(String keyword, float boost, Type type) {
+			super(keyword, type);
 			this.boost = boost;
 		}
 
@@ -115,17 +129,21 @@ public abstract class SearchKeyword {
 
 	static class BaseSearchKeyword extends SearchKeyword {
 
-		public BaseSearchKeyword(String keyword, String prefix, boolean text) {
-			super(keyword, prefix, text);
+		public BaseSearchKeyword(String keyword, String prefix, Type type) {
+			super(keyword, prefix, type);
 		}
 
-		public BaseSearchKeyword(String keyword, boolean text) {
-			super(keyword, text);
+		public BaseSearchKeyword(String keyword, Type type) {
+			super(keyword, type);
 		}
 
 	}
 
 	private final String keyword;
-	private final boolean text;
+	private final Type type;
+
+	public enum Type {
+		DATE,TEXT,NUMBER
+	}
 
 }

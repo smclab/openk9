@@ -13,6 +13,22 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SearchKeywordDTO {
 	private String keyword;
-	private boolean text;
+	private Type type;
 	private FieldBoostDTO fieldBoost;
+
+	public boolean isText() {
+		return type == Type.TEXT;
+	}
+
+	public boolean isDate() {
+		return type == Type.DATE;
+	}
+
+	public boolean isNumber() {
+		return type == Type.NUMBER;
+	}
+
+	public enum Type {
+		DATE,TEXT,NUMBER
+	}
 }
