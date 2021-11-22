@@ -72,7 +72,7 @@ export function App() {
       for (const selection of autoSelections) {
         dispatch({
           type: "set-selection",
-          replaceText,
+          replaceText: false,
           selection,
         });
       }
