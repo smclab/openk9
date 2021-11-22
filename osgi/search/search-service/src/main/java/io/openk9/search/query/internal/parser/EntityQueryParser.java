@@ -8,8 +8,10 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.osgi.service.component.annotations.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -46,36 +48,40 @@ public class EntityQueryParser implements QueryParser {
 
 				for (Map.Entry<String, List<SearchToken>> groupSearchTokens : searchTokenGroupingByType.entrySet()) {
 
-					BoolQueryBuilder innerBoolQueryBuilder =
-						QueryBuilders.boolQuery();
-
 					String type = groupSearchTokens.getKey();
 
 					if (!type.isBlank()) {
-						innerBoolQueryBuilder
+						outerBoolQueryBuilder
 							.must(QueryBuilders.matchQuery(
 								ENTITIES_ENTITY_TYPE, type));
 					}
 
-					for (SearchToken searchToken : groupSearchTokens.getValue()) {
+					List<SearchToken> value = groupSearchTokens.getValue();
 
-						String[] ids = searchToken.getValues();
+					String[] ids =
+						value
+							.stream()
+							.map(SearchToken::getValues)
+							.flatMap(Arrays::stream)
+							.distinct()
+							.toArray(String[]::new);
 
-						BoolQueryBuilder boolQueryBuilder =
-							innerBoolQueryBuilder
-								.should(_multiMatchValues(ids));
-
-						String keywordKey = searchToken.getKeywordKey();
-
-						if (keywordKey != null && !keywordKey.isEmpty()) {
-							boolQueryBuilder
-								.should(QueryBuilders.matchQuery(
-									ENTITIES_CONTEXT, keywordKey));
-						}
-
+					if (ids.length != 0) {
+						outerBoolQueryBuilder.must(
+							_multiMatchValues(ENTITIES_ID, ids));
 					}
 
-					outerBoolQueryBuilder.must(innerBoolQueryBuilder);
+					String[] keywordKeys =
+						value
+							.stream()
+							.map(SearchToken::getKeywordKey)
+							.filter(Objects::nonNull)
+							.toArray(String[]::new);
+
+					if (keywordKeys.length != 0) {
+						outerBoolQueryBuilder.must(
+							_multiMatchValues(ENTITIES_CONTEXT, keywordKeys));
+					}
 
 				}
 
@@ -86,12 +92,12 @@ public class EntityQueryParser implements QueryParser {
 		});
 	}
 
-	private QueryBuilder _multiMatchValues(String[] ids) {
+	private QueryBuilder _multiMatchValues(String field, String[] ids) {
 
 		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
 
 		for (String id : ids) {
-			boolQuery.should(QueryBuilders.matchQuery(ENTITIES_ID, id));
+			boolQuery.should(QueryBuilders.matchQuery(field, id));
 		}
 
 		return boolQuery;
