@@ -20,12 +20,27 @@ public class PersonEntityNameCleaner extends DefaultEntityNameCleaner {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-		boolQueryBuilder.must(
-			QueryBuilders.matchQuery("name", entityName)
-				.operator(Operator.AND)
-		);
+		String[] tokens = entityName.split("\\s+");
 
-		boolQueryBuilder.must(
+		for (String token : tokens) {
+
+			if (token.contains(".")) {
+				String replace = token.replace(".", "");
+				boolQueryBuilder.must(
+					QueryBuilders.prefixQuery("name", replace)
+				);
+			}
+			else {
+
+				boolQueryBuilder.must(
+					QueryBuilders.matchQuery("name", token)
+				);
+
+			}
+
+		}
+
+		boolQueryBuilder.filter(
 			QueryBuilders.matchQuery("type.keyword", getEntityType())
 		);
 

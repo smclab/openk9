@@ -166,36 +166,41 @@ public class EntityManagerBus {
 					}
 				}
 
-				String cacheId = Long.toString(_entityFlakeId.newId());
+				if (!localEntityMap.isEmpty()) {
 
-				Entity documentEntity =
-					new Entity(
-						null, cacheId, tenantId,
-						payload.getDatasourceId() + "_" + payload.getContentId(),
-						"document", null, ingestionId, true, false);
+					String cacheId = Long.toString(_entityFlakeId.newId());
 
-				entityTransactionalMap.set(
-					EntityKey.of(
-						tenantId, cacheId, "document", cacheId, ingestionId),
-					documentEntity
-				);
+					Entity documentEntity =
+						new Entity(
+							null, cacheId, tenantId,
+							payload.getDatasourceId() + "_" +
+							payload.getContentId(),
+							"document", null, ingestionId, true, false);
 
-				for (Entity value : localEntityMap.values()) {
-
-					long entityRelationId = _entityRelationFlakeId.newId();
-
-					EntityRelation entityRelation = new EntityRelation(
-						entityRelationId, value.getCacheId(), ingestionId,
-						"related_to", cacheId);
-
-					transactionalEntityRelationMap.set(
-						EntityRelationKey.of(
-							entityRelationId,
-							cacheId,
-							ingestionId
-						),
-						entityRelation
+					entityTransactionalMap.set(
+						EntityKey.of(
+							tenantId, cacheId, "document", cacheId,
+							ingestionId),
+						documentEntity
 					);
+
+					for (Entity value : localEntityMap.values()) {
+
+						long entityRelationId = _entityRelationFlakeId.newId();
+
+						EntityRelation entityRelation = new EntityRelation(
+							entityRelationId, value.getCacheId(), ingestionId,
+							"related_to", cacheId);
+
+						transactionalEntityRelationMap.set(
+							EntityRelationKey.of(
+								entityRelationId,
+								cacheId,
+								ingestionId
+							),
+							entityRelation
+						);
+					}
 				}
 
 			}
