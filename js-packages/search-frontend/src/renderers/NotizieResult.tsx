@@ -56,6 +56,8 @@ export function NotizieResult({ result }: NotizieResultProps) {
       </div>
       <a
         href={result.source.web?.url}
+        target="_blank"
+        rel="noreferrer"
         css={css`
           grid-column: 2;
           grid-row: 2;

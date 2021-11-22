@@ -50,6 +50,8 @@ export function DocumentResult({ result }: DocumentResultProps) {
       </div>
       <a
         href={result.source.document?.url}
+        target="_blank"
+        rel="noreferrer"
         css={css`
           grid-column: 2;
           grid-row: 2;
