@@ -14,7 +14,8 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import reactor.core.publisher.Mono;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 @Component(
@@ -42,36 +43,48 @@ public class DateOrderQueryParser implements QueryParser {
 
 		return Mono.fromSupplier(() -> (bool) -> {
 
-			FunctionScoreQueryBuilder.FilterFunctionBuilder[] filterFunctionBuilders =
-				context
-					.getPluginDriverDocumentTypeList()
-					.stream()
-					.map(PluginDriverDTO::getDocumentTypes)
-					.flatMap(Collection::stream)
-					.map(DocumentTypeDTO::getName)
-					.map(s -> {
+			BoolQueryBuilder innerBoolQueryBuilder =
+				QueryBuilders.boolQuery();
 
-						String fieldName = s + "." + _fieldName;
+			List<PluginDriverDTO> pluginDriverDocumentTypeList =
+				context.getPluginDriverDocumentTypeList();
 
-						return new FunctionScoreQueryBuilder.FilterFunctionBuilder(
-							QueryBuilders.existsQuery(fieldName),
+			List<FunctionScoreQueryBuilder.FilterFunctionBuilder> list =
+				new ArrayList<>(pluginDriverDocumentTypeList.size());
+
+			for (PluginDriverDTO pluginDriverDTO :
+				pluginDriverDocumentTypeList) {
+
+				for (DocumentTypeDTO documentType : pluginDriverDTO.getDocumentTypes()) {
+
+					String documentFieldName = documentType.getName() + "." + _fieldName;
+
+					innerBoolQueryBuilder.should(
+						QueryBuilders.existsQuery(documentFieldName));
+
+					list.add(
+						new FunctionScoreQueryBuilder.FilterFunctionBuilder(
 							ScoreFunctionBuilders.linearDecayFunction(
-								fieldName, null, _scale)
-						);
-					})
-					.toArray(
-						FunctionScoreQueryBuilder.FilterFunctionBuilder[]::new);
+								documentFieldName, null, _scale)));
 
+				}
 
-			bool.should(
+			}
+
+			if (!list.isEmpty()) {
+
+				bool.should(
 					QueryBuilders
 						.functionScoreQuery(
 							QueryBuilders.matchAllQuery(),
-							filterFunctionBuilders
+							list.toArray(
+								FunctionScoreQueryBuilder.FilterFunctionBuilder[]::new)
 						)
 				);
+
 			}
-		);
+
+		});
 	}
 
 	private String _fieldName;
