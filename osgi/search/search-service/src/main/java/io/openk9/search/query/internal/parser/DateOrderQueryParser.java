@@ -28,14 +28,12 @@ public class DateOrderQueryParser implements QueryParser {
 
 	@ObjectClassDefinition
 	@interface Config {
-		String fieldName() default "pubDate.sortable";
 		String scale() default "3650d";
 	}
 
 	@Activate
 	@Modified
 	void activate(Config config) {
-		_fieldName = config.fieldName();
 		_scale = config.scale();
 	}
 
@@ -47,32 +45,34 @@ public class DateOrderQueryParser implements QueryParser {
 			List<PluginDriverDTO> pluginDriverDocumentTypeList =
 				context.getPluginDriverDocumentTypeList();
 
-			FunctionScoreQueryBuilder.FilterFunctionBuilder[] filterFunctionBuilders =
-				pluginDriverDocumentTypeList
-					.stream()
-					.map(PluginDriverDTO::getDocumentTypes)
-					.flatMap(Collection::stream)
-					.map(DocumentTypeDTO::getSearchKeywords)
-					.flatMap(Collection::stream)
-					.filter(searchKeywordDTO -> searchKeywordDTO.getType() == SearchKeywordDTO.Type.DATE)
-					.distinct()
-					.map(searchKeywordDTO ->
+			pluginDriverDocumentTypeList
+				.stream()
+				.map(PluginDriverDTO::getDocumentTypes)
+				.flatMap(Collection::stream)
+				.map(DocumentTypeDTO::getSearchKeywords)
+				.flatMap(Collection::stream)
+				.filter(SearchKeywordDTO::isDate)
+				.distinct()
+				.map(SearchKeywordDTO::getKeyword)
+				.forEach(keyword -> {
+
+					FunctionScoreQueryBuilder.FilterFunctionBuilder
+						filterFunctionBuilder =
 						new FunctionScoreQueryBuilder.FilterFunctionBuilder(
 							ScoreFunctionBuilders.linearDecayFunction(
-								searchKeywordDTO.getKeyword(), null, _scale))
-					)
-					.toArray(FunctionScoreQueryBuilder.FilterFunctionBuilder[]::new);
+								keyword, null, _scale));
 
+					bool.should(
+						QueryBuilders.functionScoreQuery(
+							QueryBuilders.existsQuery(keyword),
+							new FunctionScoreQueryBuilder.FilterFunctionBuilder[] {filterFunctionBuilder}
+						)
+					);
 
-			if (filterFunctionBuilders.length != 0) {
-				bool.should(
-					QueryBuilders.functionScoreQuery(filterFunctionBuilders));
-			}
+				});
 
 		});
 	}
-
-	private String _fieldName;
 
 	private String _scale;
 
