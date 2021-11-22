@@ -1,5 +1,5 @@
 import React from "react";
-import { TokenDTO } from "../utils/remote-data";
+import { AnalysisResponseEntryDTO, TokenDTO } from "../utils/remote-data";
 import { loadQueryString, saveQueryString } from "../utils/queryString";
 
 export function useSelections() {
@@ -50,8 +50,10 @@ function reducer(state: State, action: Action): State {
     }
     case "set-selection": {
       const { text, selection } = (() => {
-        if (action.replaceText && action.selection.token) {
-          const tokenText = getTokenText(action.selection.token);
+        if (action.replaceText) {
+          const tokenText = action.selection.token
+            ? getTokenText(action.selection.token)
+            : state.text.slice(action.selection.start, action.selection.end);
           const text =
             state.text.slice(0, action.selection.start) +
             tokenText +
@@ -76,14 +78,8 @@ function reducer(state: State, action: Action): State {
         selection: shiftSelection(
           state.text,
           text,
-          state.selection.filter(
-            (selection) =>
-              !(
-                selection.start === action.selection.start &&
-                selection.end === action.selection.end
-              ),
-          ),
-        ).concat(action.selection.token ? [selection] : []),
+          state.selection.filter((s) => !isOverlapping(s, selection)),
+        ).concat([selection]),
       };
     }
   }
@@ -167,4 +163,58 @@ function getTokenText(token: TokenDTO) {
     case "TEXT":
       return token.value;
   }
+}
+
+export function getAutoSelections(
+  selection: Array<{
+    text: string;
+    start: number;
+    end: number;
+    token: TokenDTO | null;
+  }>,
+  entries: Array<AnalysisResponseEntryDTO>,
+) {
+  return entries
+    .filter(({ text }) => text.length > 0)
+    .map(getAutoSelection)
+    .filter(isNotNull)
+    .filter((entry, index, autoSelections) => {
+      return !selection
+        .concat(autoSelections.slice(0, index))
+        .some((selection) => isOverlapping(entry, selection));
+    });
+}
+
+function getAutoSelection(entry: AnalysisResponseEntryDTO) {
+  const [first, second] = [...entry.tokens].sort((a, b) => a.score - b.score);
+  if (first) {
+    if (!second || first.score >= second.score * 2) {
+      return {
+        text: entry.text,
+        start: entry.start,
+        end: entry.end,
+        token: first,
+        isAuto: true,
+      };
+    }
+  }
+  return null;
+}
+
+function isNotNull<Value>(value: Value | null): value is Value {
+  return value !== null;
+}
+
+function isOverlapping<
+  A extends { start: number; end: number },
+  B extends { start: number; end: number },
+>(a: A, b: B) {
+  return isInRange(a, b.start) || isInRange(a, b.end);
+}
+
+function isInRange<R extends { start: number; end: number }>(
+  { start, end }: R,
+  position: number,
+) {
+  return position >= start && position <= end;
 }

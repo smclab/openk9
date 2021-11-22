@@ -22,7 +22,7 @@ import { myTheme } from "./utils/myTheme";
 import { Results } from "./components/ResultList";
 import { TokenSelect } from "./components/TokenSelect";
 import { useClickAway } from "./utils/useClickAway";
-import { useSelections } from "./logic/useSelections";
+import { getAutoSelections, useSelections } from "./logic/useSelections";
 
 const DEBOUNCE = 300;
 
@@ -64,25 +64,20 @@ export function App() {
   );
   const searchQuery = useDebounce(searchQueryMemo, DEBOUNCE);
   React.useEffect(() => {
-    if (autoSelect) {
-      const autoSelections = getAutoSelections(spans);
-      for (const autoSelection of autoSelections) {
-        if (
-          !state.selection.some(
-            (selection) =>
-              selection.start === autoSelection.start &&
-              selection.end === autoSelection.end,
-          )
-        ) {
-          dispatch({
-            type: "set-selection",
-            replaceText,
-            selection: { ...autoSelection, isAuto: true },
-          });
-        }
+    if (autoSelect && queryAnalysis.data) {
+      const autoSelections = getAutoSelections(
+        state.selection,
+        queryAnalysis.data.analysis,
+      );
+      for (const selection of autoSelections) {
+        dispatch({
+          type: "set-selection",
+          replaceText,
+          selection,
+        });
       }
     }
-  }, [autoSelect, dispatch, replaceText, spans, state.selection]);
+  }, [autoSelect, dispatch, queryAnalysis.data, replaceText, state.selection]);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -358,22 +353,4 @@ function calculateSpans(
     }
   }
   return spans.filter((span) => span.text);
-}
-
-function getAutoSelections(entries: Array<AnalysisResponseEntryDTO>) {
-  const autoSelections: Array<AnalysisRequestEntryDTO> = [];
-  for (const entry of entries) {
-    const [first, second] = [...entry.tokens].sort((a, b) => a.score - b.score);
-    if (first) {
-      if (!second || first.score >= second.score * 2) {
-        autoSelections.push({
-          text: entry.text,
-          start: entry.start,
-          end: entry.end,
-          token: first,
-        });
-      }
-    }
-  }
-  return autoSelections;
 }

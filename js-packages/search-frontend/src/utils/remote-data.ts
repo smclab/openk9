@@ -150,7 +150,7 @@ async function fetchQueryAnalysisMock(
           end,
           text: word,
           tokens: ((): Array<AnalysisTokenDTO> => {
-            if (word === "pdf") {
+            if (word === "pdf" || word === "pof") {
               return [{ tokenType: "DOCTYPE", value: "pdf", score: 0.3 }];
             }
             return [
@@ -171,19 +171,19 @@ async function fetchQueryAnalysisMock(
             ];
           })(),
         };
-      })
-      .concat(
-        request.searchText.length > 0
-          ? [
-              {
-                text: request.searchText,
-                start: 0,
-                end: request.searchText.length,
-                tokens: [{ tokenType: "DATASOURCE", value: "tutto", score: 0 }],
-              },
-            ]
-          : [],
-      ),
+      }),
+    // .concat(
+    //   request.searchText.length > 0
+    //     ? [
+    //         {
+    //           text: request.searchText,
+    //           start: 0,
+    //           end: request.searchText.length,
+    //           tokens: [{ tokenType: "DATASOURCE", value: "tutto", score: 0 }],
+    //         },
+    //       ]
+    //     : [],
+    // )
   };
 }
 
