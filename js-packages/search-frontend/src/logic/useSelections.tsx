@@ -1,5 +1,5 @@
 import React from "react";
-import { AnalysisRequestEntryDTO, TokenDTO } from "../utils/remote-data";
+import { TokenDTO } from "../utils/remote-data";
 import { loadQueryString, saveQueryString } from "../utils/queryString";
 
 export function useSelections() {
@@ -16,24 +16,30 @@ export function useSelections() {
 
 type State = {
   text: string;
-  selection: Array<AnalysisRequestEntryDTO & { isAuto?: boolean }>;
+  selection: Array<Selection>;
 };
+
 const initial: State = {
   text: "",
   selection: [],
 };
+
 type Action =
   | { type: "set-text"; text: string }
   | {
       type: "set-selection";
-      selection: {
-        text: string;
-        start: number;
-        end: number;
-        token: TokenDTO | null;
-        isAuto?: boolean;
-      };
+      replaceText: boolean;
+      selection: Selection;
     };
+
+type Selection = {
+  text: string;
+  start: number;
+  end: number;
+  token: TokenDTO | null;
+  isAuto: boolean;
+};
+
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "set-text": {
@@ -43,30 +49,51 @@ function reducer(state: State, action: Action): State {
       };
     }
     case "set-selection": {
+      const { text, selection } = (() => {
+        if (action.replaceText && action.selection.token) {
+          const tokenText = getTokenText(action.selection.token);
+          const text =
+            state.text.slice(0, action.selection.start) +
+            tokenText +
+            state.text.slice(action.selection.end);
+          const selection: Selection = {
+            text: tokenText,
+            start: action.selection.start,
+            end: action.selection.start + tokenText.length,
+            token: action.selection.token,
+            isAuto: action.selection.isAuto,
+          };
+          return {
+            text,
+            selection,
+          };
+        } else {
+          return { text: state.text, selection: action.selection };
+        }
+      })();
       return {
-        text: state.text,
-        selection: state.selection
-          .filter(
+        text,
+        selection: shiftSelection(
+          state.text,
+          text,
+          state.selection.filter(
             (selection) =>
               !(
                 selection.start === action.selection.start &&
                 selection.end === action.selection.end
               ),
-          )
-          .concat(
-            action.selection.token
-              ? [action.selection as AnalysisRequestEntryDTO]
-              : [],
           ),
+        ).concat(action.selection.token ? [selection] : []),
       };
     }
   }
 }
+
 function shiftSelection(
   prevText: string,
   nextText: string,
-  prevSelection: Array<AnalysisRequestEntryDTO>,
-): Array<AnalysisRequestEntryDTO> {
+  prevSelection: Array<Selection>,
+): Array<Selection> {
   if (prevText === nextText) {
     return prevSelection;
   }
@@ -98,6 +125,7 @@ function shiftSelection(
     }));
   return prefixAttributes.concat(suffixAttributes);
 }
+
 function findCommonPrefixLength(a: string, b: string) {
   const length = Math.min(a.length, b.length);
   let prefixLength = 0;
@@ -110,6 +138,7 @@ function findCommonPrefixLength(a: string, b: string) {
 
   return prefixLength;
 }
+
 function findCommonSuffixLength(a: string, b: string, startFromIndex: number) {
   const length = Math.min(a.length, b.length) - startFromIndex;
   if (length <= 0) {
@@ -125,4 +154,17 @@ function findCommonSuffixLength(a: string, b: string, startFromIndex: number) {
   ) {}
 
   return suffixLength;
+}
+
+function getTokenText(token: TokenDTO) {
+  switch (token.tokenType) {
+    case "DATASOURCE":
+      return token.value;
+    case "DOCTYPE":
+      return token.value;
+    case "ENTITY":
+      return token.entityName;
+    case "TEXT":
+      return token.value;
+  }
 }

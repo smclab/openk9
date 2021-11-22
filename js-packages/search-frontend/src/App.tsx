@@ -2,7 +2,11 @@ import React from "react";
 import { css } from "styled-components/macro";
 import "./index.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLightbulb, faSearch } from "@fortawesome/free-solid-svg-icons";
+import {
+  faLightbulb,
+  faSearch,
+  faSyncAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { PageLayout } from "./components/PageLayout";
 import { useDebounce } from "./utils/useDebounce";
 import {
@@ -23,12 +27,20 @@ import { useSelections } from "./logic/useSelections";
 const DEBOUNCE = 300;
 
 export function App() {
+  const [autoSelect, setAutoSelect] = React.useState(true);
+  const [replaceText, setReplaceText] = React.useState(true);
   const [state, dispatch] = useSelections();
+  const [openedDropdown, setOpenedDropdown] = React.useState<{
+    textPosition: number;
+    optionPosition: number;
+  } | null>(null);
   const [detail, setDetail] = React.useState<ResultDTO | null>(null);
   const debounced = useDebounce(state, DEBOUNCE);
   const queryAnalysis = useQueryAnalysis({
     searchText: debounced.text,
-    tokens: debounced.selection,
+    tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
+      token ? [{ text, start, end, token }] : [],
+    ),
   });
   const spans = React.useMemo(
     () => calculateSpans(state.text, queryAnalysis.data?.analysis),
@@ -38,20 +50,19 @@ export function App() {
     state.text === debounced.text &&
     queryAnalysis.data !== undefined &&
     !queryAnalysis.isPreviousData;
-  const [openedDropdown, setOpenedDropdown] = React.useState<{
-    textPosition: number;
-    optionPosition: number;
-  } | null>(null);
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
-  const searchQuery = useDebounce(
-    React.useMemo(
-      () => deriveSearchQuery(spans, state.selection),
-      [spans, state.selection],
-    ),
-    DEBOUNCE,
+  const searchQueryMemo = React.useMemo(
+    () =>
+      deriveSearchQuery(
+        spans,
+        state.selection.flatMap(({ text, start, end, token }) =>
+          token ? [{ text, start, end, token }] : [],
+        ),
+      ),
+    [spans, state.selection],
   );
-  const [autoSelect, setAutoSelect] = React.useState(true);
+  const searchQuery = useDebounce(searchQueryMemo, DEBOUNCE);
   React.useEffect(() => {
     if (autoSelect) {
       const autoSelections = getAutoSelections(spans);
@@ -65,12 +76,24 @@ export function App() {
         ) {
           dispatch({
             type: "set-selection",
+            replaceText,
             selection: { ...autoSelection, isAuto: true },
           });
         }
       }
     }
-  }, [autoSelect, spans, state.selection]);
+  }, [autoSelect, dispatch, replaceText, spans, state.selection]);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const [adjustedSelection, setAdjustedSelection] = React.useState<{
+    selectionStart: number;
+    selectionEnd: number;
+  }>({ selectionStart: 0, selectionEnd: 0 });
+  React.useLayoutEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.selectionStart = adjustedSelection.selectionStart;
+      inputRef.current.selectionEnd = adjustedSelection.selectionEnd;
+    }
+  }, [adjustedSelection]);
   return (
     <PageLayout
       search={
@@ -117,13 +140,24 @@ export function App() {
                   const onSelect = (token: TokenDTO | null): void => {
                     dispatch({
                       type: "set-selection",
+                      replaceText,
                       selection: {
                         text: span.text,
                         start: span.start,
                         end: span.end,
                         token,
+                        isAuto: false,
                       },
                     });
+                    if (
+                      inputRef.current?.selectionStart &&
+                      inputRef.current?.selectionEnd
+                    ) {
+                      setAdjustedSelection({
+                        selectionStart: inputRef.current.selectionStart,
+                        selectionEnd: inputRef.current.selectionEnd,
+                      });
+                    }
                   };
                   const isAutoSelected = selection?.isAuto ?? false;
                   return (
@@ -140,6 +174,7 @@ export function App() {
                 })}
             </div>
             <input
+              ref={inputRef}
               value={state.text}
               onChange={(event) => {
                 dispatch({ type: "set-text", text: event.currentTarget.value });
@@ -206,13 +241,24 @@ export function App() {
                   if (span) {
                     dispatch({
                       type: "set-selection",
+                      replaceText,
                       selection: {
                         text: span.text,
                         start: span.start,
                         end: span.end,
                         token: option ?? null,
+                        isAuto: false,
                       },
                     });
+                    if (
+                      event.currentTarget.selectionStart &&
+                      event.currentTarget.selectionEnd
+                    ) {
+                      setAdjustedSelection({
+                        selectionStart: event.currentTarget.selectionStart,
+                        selectionEnd: event.currentTarget.selectionEnd,
+                      });
+                    }
                   }
                 } else if (event.key === "Escape") {
                   setOpenedDropdown(null);
@@ -220,6 +266,17 @@ export function App() {
               }}
             ></input>
           </div>
+          <FontAwesomeIcon
+            icon={faSyncAlt}
+            style={{
+              paddingRight: "16px",
+              color: replaceText ? myTheme.redTextColor : "black",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              setReplaceText(!replaceText);
+            }}
+          />
           <FontAwesomeIcon
             icon={faLightbulb}
             style={{
