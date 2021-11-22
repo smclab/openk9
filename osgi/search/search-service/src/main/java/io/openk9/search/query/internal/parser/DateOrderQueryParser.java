@@ -76,7 +76,7 @@ public class DateOrderQueryParser implements QueryParser {
 				bool.should(
 					QueryBuilders
 						.functionScoreQuery(
-							QueryBuilders.matchAllQuery(),
+							innerBoolQueryBuilder,
 							list.toArray(
 								FunctionScoreQueryBuilder.FilterFunctionBuilder[]::new)
 						)
