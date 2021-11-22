@@ -78,8 +78,12 @@ export function PubblicazioniResult({ result }: PubblicazioniResultProps) {
           display: flex;
         `}
       >
-        <Badge>{result.source.pubblicazioni?.pubDate}</Badge>
-        <Badge>{result.source.pubblicazioni?.topic}</Badge>
+        {result.source.pubblicazioni?.pubDate && (
+          <Badge>{result.source.pubblicazioni?.pubDate}</Badge>
+        )}
+        {result.source.pubblicazioni?.topic && (
+          <Badge>{result.source.pubblicazioni?.topic}</Badge>
+        )}
       </div>
       <div
         css={css`

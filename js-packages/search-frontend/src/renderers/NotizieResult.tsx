@@ -78,8 +78,12 @@ export function NotizieResult({ result }: NotizieResultProps) {
           display: flex;
         `}
       >
-        <Badge>{result.source.notizie?.pubDate}</Badge>
-        <Badge>{result.source.notizie?.topic}</Badge>
+        {result.source.notizie?.pubDate && (
+          <Badge>{result.source.notizie?.pubDate}</Badge>
+        )}
+        {result.source.notizie?.topic && (
+          <Badge>{result.source.notizie?.topic}</Badge>
+        )}
       </div>
       <div
         css={css`
