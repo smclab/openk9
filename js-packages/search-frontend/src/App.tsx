@@ -162,7 +162,8 @@ export function App() {
               spellCheck="false"
               onSelect={(event) => {
                 if (
-                  event.currentTarget.selectionDirection === "forward" &&
+                  (event.currentTarget.selectionDirection === "forward" ||
+                    event.currentTarget.selectionDirection === "none") &&
                   event.currentTarget.selectionStart ===
                     event.currentTarget.selectionEnd
                 ) {
