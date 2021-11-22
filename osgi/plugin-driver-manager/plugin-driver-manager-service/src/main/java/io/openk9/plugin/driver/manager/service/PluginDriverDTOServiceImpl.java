@@ -73,8 +73,11 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 		DocumentType defaultDocumentType =
 			_documentTypeProvider.getDefaultDocumentType(name);
 
-		if (documentTypeList.isEmpty()) {
+		if (documentTypeList.isEmpty() && defaultDocumentType != null) {
 			documentTypeList = List.of(defaultDocumentType);
+		}
+		else if(!documentTypeList.isEmpty() && defaultDocumentType == null) {
+			defaultDocumentType = documentTypeList.get(0);
 		}
 
 		List<DocumentTypeDTO> documentTypeDTOS =
@@ -89,17 +92,21 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 				)
 				.collect(Collectors.toList());
 
-		return PluginDriverDTO.of(
-			pluginDriver.getClass().getName(),
-			pluginDriver.getName(),
-			pluginDriver.schedulerEnabled(),
-			documentTypeDTOS,
-			DocumentTypeDTO.of(
-				defaultDocumentType.getName(),
-				defaultDocumentType.getIcon(),
-				_wrapSearchKeywords(defaultDocumentType)
-			)
-		);
+
+			return PluginDriverDTO.of(
+				pluginDriver.getClass().getName(),
+				pluginDriver.getName(),
+				pluginDriver.schedulerEnabled(),
+				documentTypeDTOS,
+				defaultDocumentType == null
+					? null
+					: DocumentTypeDTO.of(
+						defaultDocumentType.getName(),
+						defaultDocumentType.getIcon(),
+						_wrapSearchKeywords(defaultDocumentType)
+					)
+			);
+
 	}
 
 	private List<SearchKeywordDTO> _wrapSearchKeywords(
