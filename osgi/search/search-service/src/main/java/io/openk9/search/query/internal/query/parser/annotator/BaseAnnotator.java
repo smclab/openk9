@@ -13,7 +13,7 @@ public abstract class BaseAnnotator implements Annotator {
 		long tenantId, String...tokens);
 
 	protected QueryBuilder query(String field, String token) {
-		return QueryBuilders.matchQuery(field, token);
+		return QueryBuilders.fuzzyQuery(field, token);
 	}
 
 	@Override

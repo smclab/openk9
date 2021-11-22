@@ -56,7 +56,7 @@ public class BaseNerAnnotator extends BaseAnnotator {
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-		searchSourceBuilder.size(100);
+		searchSourceBuilder.size(10);
 
 		searchSourceBuilder.query(builder);
 

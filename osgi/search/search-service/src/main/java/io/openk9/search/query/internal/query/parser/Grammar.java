@@ -44,14 +44,20 @@ public class Grammar {
 
 	}
 
-	public Mono<List<Parse>> parseInput(String input) {
+	public Mono<List<Parse>> parseInput(String[] input) {
 		return parseInput(-1, input);
 	}
 
-	public Mono<List<Parse>> parseInput(
-		long tenantId, String input) {
+	public Mono<List<Parse>> parseInput(String input) {
+		return parseInput(-1, Utils.split(input.toLowerCase()));
+	}
 
-		String[] tokens = Utils.split(input);
+	public Mono<List<Parse>> parseInput(long tenantId, String input) {
+		return parseInput(tenantId, Utils.split(input.toLowerCase()));
+	}
+
+	public Mono<List<Parse>> parseInput(
+		long tenantId, String[] tokens) {
 
 		List<Mono<Map<Tuple, List<Parse>>>> frtMonoList =
 			IntStream.range(1, tokens.length + 1).mapToObj(

@@ -8,7 +8,6 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -33,12 +32,6 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 	public BaseAggregatorAnnotator(List<String> keywords) {
 		this.keywords = keywords;
-	}
-
-	@Override
-	protected QueryBuilder query(
-		String field, String token) {
-		return QueryBuilders.fuzzyQuery(field, token);
 	}
 
 	@Override
