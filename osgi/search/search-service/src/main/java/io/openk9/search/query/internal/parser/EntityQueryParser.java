@@ -9,7 +9,9 @@ import org.osgi.service.component.annotations.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
@@ -28,32 +30,57 @@ public class EntityQueryParser implements QueryParser {
 
 			return bool -> {
 
-				for (SearchToken searchToken : searchTokens) {
-					String[] ids = searchToken.getValues();
+				Map<String, List<SearchToken>> searchTokenGroupingByType =
+					searchTokens
+						.stream()
+						.collect(Collectors.groupingBy(
+								searchToken ->
+									searchToken.getEntityType() == null
+										? ""
+										: searchToken.getEntityType()
+							)
+						);
 
-					BoolQueryBuilder boolQueryBuilder = QueryBuilders
-						.boolQuery()
-						.must(_multiMatchValues(ids));
+				BoolQueryBuilder outerBoolQueryBuilder =
+					QueryBuilders.boolQuery();
 
-					String entityType = searchToken.getEntityType();
+				for (Map.Entry<String, List<SearchToken>> groupSearchTokens : searchTokenGroupingByType.entrySet()) {
 
-					if (entityType != null && !entityType.isEmpty()) {
-						boolQueryBuilder
+					BoolQueryBuilder innerBoolQueryBuilder =
+						QueryBuilders.boolQuery();
+
+					String type = groupSearchTokens.getKey();
+
+					if (!type.isBlank()) {
+						innerBoolQueryBuilder
 							.must(QueryBuilders.matchQuery(
-								ENTITIES_ENTITY_TYPE, entityType));
+								ENTITIES_ENTITY_TYPE, type));
 					}
 
-					String keywordKey = searchToken.getKeywordKey();
+					for (SearchToken searchToken : groupSearchTokens.getValue()) {
 
-					if (keywordKey != null && !keywordKey.isEmpty()) {
-						boolQueryBuilder
-							.must(QueryBuilders.matchQuery(
-								ENTITIES_CONTEXT, keywordKey));
+						String[] ids = searchToken.getValues();
+
+						BoolQueryBuilder boolQueryBuilder =
+							innerBoolQueryBuilder
+								.should(_multiMatchValues(ids));
+
+						String keywordKey = searchToken.getKeywordKey();
+
+						if (keywordKey != null && !keywordKey.isEmpty()) {
+							boolQueryBuilder
+								.should(QueryBuilders.matchQuery(
+									ENTITIES_CONTEXT, keywordKey));
+						}
+
 					}
 
-					bool.filter(boolQueryBuilder);
+					outerBoolQueryBuilder.must(innerBoolQueryBuilder);
 
 				}
+
+				bool.filter(outerBoolQueryBuilder);
+
 			};
 
 		});
