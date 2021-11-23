@@ -13,6 +13,7 @@ import io.openk9.search.query.internal.query.parser.Grammar;
 import io.openk9.search.query.internal.query.parser.GrammarProvider;
 import io.openk9.search.query.internal.query.parser.Parse;
 import io.openk9.search.query.internal.query.parser.SemanticType;
+import io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig;
 import io.openk9.search.query.internal.query.parser.util.Utils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -199,7 +200,10 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 				})
 			);
 
-		return _httpResponseWriter.write(httpServerResponse, response);
+		return _httpResponseWriter.write(
+			httpServerResponse,
+			response.timeout(_annotatorConfig.timeout())
+		);
 
 	}
 
@@ -214,6 +218,9 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 	@Reference
 	private DatasourceClient _datasourceClient;
+
+	@Reference
+	private AnnotatorConfig _annotatorConfig;
 
 	@Data
 	@Builder

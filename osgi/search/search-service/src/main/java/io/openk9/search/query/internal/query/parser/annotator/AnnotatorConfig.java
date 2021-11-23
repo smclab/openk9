@@ -8,6 +8,8 @@ import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
+import java.time.Duration;
+
 @Component(immediate = true, service = AnnotatorConfig.class)
 @Designate(ocd = AnnotatorConfig.Config.class)
 public class AnnotatorConfig {
@@ -56,6 +58,8 @@ public class AnnotatorConfig {
 
 		int restSize() default 10;
 
+		long timeoutMs() default 10_000;
+
 	}
 
 	@Activate
@@ -91,6 +95,11 @@ public class AnnotatorConfig {
 	public int nerSize() {
 		return _config.nerSize();
 	}
+
+	public Duration timeout() {
+		return Duration.ofMillis(_config.timeoutMs());
+	}
+
 
 	private Fuzziness _toFuzziness(String fuzzyString) {
 		switch (fuzzyString) {
