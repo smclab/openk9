@@ -7,8 +7,8 @@ import io.openk9.search.query.internal.query.parser.util.Itertools;
 import io.openk9.search.query.internal.query.parser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,38 +59,31 @@ public class Grammar {
 	public Mono<List<Parse>> parseInput(
 		long tenantId, String[] tokens) {
 
-		List<Mono<Map<Tuple, List<Parse>>>> frtMonoList =
-			IntStream.range(1, tokens.length + 1)
-				.boxed()
-				.flatMap(j ->
-					IntStream
-						.iterate(j - 1, i -> i != -1, i -> i - 1)
-						.mapToObj(i -> Mono.fromSupplier(() -> {
-							Map<Tuple, List<Parse>> innerChart = new HashMap<>();
-							Set<String> context = new HashSet<>();
-							applyAnnotators(innerChart, tokens, i, j, tenantId, context);
-							applyLexicalRules(innerChart, tokens, i, j);
-							return innerChart;
-						})
-							.onTerminateDetach()
-							.subscribeOn(Schedulers.boundedElastic()))
-				)
-				.collect(Collectors.toList());
-
-		Mono<Map<Tuple, List <Parse>>> aggregation =
-			Mono.zip(frtMonoList, objs -> {
-
-				Map<Tuple, List<Parse>> map = new HashMap<>(objs.length);
-
-				for (Object obj : objs) {
-					map.putAll((Map<Tuple, List<Parse>>) obj);
-				}
-
-				return map;
-
-			});
-
-		return aggregation.map(chart -> {
+		return Flux.fromStream(IntStream.range(1, tokens.length + 1).boxed())
+			.flatMap(j ->
+				Flux
+					.fromStream(
+						IntStream.iterate(
+							j - 1, i -> i != -1, i -> i - 1).boxed())
+					.flatMap(i ->
+							Mono.fromSupplier(() -> {
+								Map<Tuple, List<Parse>> innerChart =
+									new HashMap<>();
+								Set<String> context = new HashSet<>();
+								applyAnnotators(
+									innerChart, tokens, i, j, tenantId, context);
+								applyLexicalRules(innerChart, tokens, i, j);
+								return innerChart;
+							})
+					)
+			)
+			.reduce(
+				new HashMap<Tuple, List<Parse>>(),
+				(a, b) -> {
+					a.putAll(b);
+					return a;
+				})
+			.map(chart -> {
 				for (int j = 1; j < tokens.length + 1; j++) {
 					for (int i = j - 1; i != -1; i--) {
 						applyBinaryRules(chart, i, j);
