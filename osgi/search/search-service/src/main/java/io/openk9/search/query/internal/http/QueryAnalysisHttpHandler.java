@@ -13,6 +13,7 @@ import io.openk9.search.query.internal.query.parser.Grammar;
 import io.openk9.search.query.internal.query.parser.GrammarProvider;
 import io.openk9.search.query.internal.query.parser.Parse;
 import io.openk9.search.query.internal.query.parser.SemanticType;
+import io.openk9.search.query.internal.query.parser.SemanticTypes;
 import io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig;
 import io.openk9.search.query.internal.query.parser.util.Utils;
 import io.vavr.Tuple2;
@@ -153,7 +154,14 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 						}
 
 						for (Parse pars : parses) {
-							for (SemanticType maps : pars.getSemantics().apply()) {
+
+							SemanticTypes semanticTypes = pars.getSemantics().apply();
+
+							List<SemanticType> semanticTypeList =
+								semanticTypes.getSemanticTypes();
+
+							for (int i = semanticTypeList.size() - 1; i >= 0; i--) {
+								SemanticType maps = semanticTypeList.get(i);
 								for (Map<String, Object> map : maps) {
 									Object tokenType = map.get("tokenType");
 									if (!tokenType.equals("TOKEN")) {
@@ -161,6 +169,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 									}
 								}
 							}
+
 						}
 						List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
@@ -284,32 +293,43 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 			Map<String, Object> o1 = to1._2();
 			Map<String, Object> o2 = to2._2();
 
-			Set<String> lKeys = o1.keySet();
-			Set<String> rKeys = o2.keySet();
+			Object tokenType1 = o1.get("tokenType");
+			Object tokenType2 = o2.get("tokenType");
 
-			Set<String> keys = lKeys.size() >= rKeys.size() ? lKeys : rKeys;
+			if (!Objects.equals(tokenType1, tokenType2)) {
+
+				int scoreCompared = _getScoreCompared(o1, o2);
+
+				if (scoreCompared != 0) {
+					return scoreCompared;
+				}
+				return -1;
+			}
+
+			Object value1 = o1.get("value");
+			Object value2 = o2.get("value");
+
+			if (!Objects.deepEquals(value1, value2)) {
+
+				int scoreCompared = _getScoreCompared(o1, o2);
+
+				if (scoreCompared != 0) {
+					return scoreCompared;
+				}
+				return -1;
+			}
+
+			return 0;
+
+		}
+
+		private int _getScoreCompared(
+			Map<String, Object> o1, Map<String, Object> o2) {
 
 			double scoreO1 = toDouble(o1.getOrDefault("score", -1.0));
 			double scoreO2 = toDouble(o2.getOrDefault("score", -1.0));
 
-			int scoreCompared = -Double.compare(scoreO1, scoreO2);
-
-			for (String key : keys) {
-				if (!key.equals("score")) {
-					Object lValue = o1.get(key);
-					Object rValue = o2.get(key);
-					if (!Objects.deepEquals(lValue, rValue)) {
-
-						if (scoreCompared != 0) {
-							return scoreCompared;
-						}
-
-						return -1;
-					}
-				}
-			}
-
-			return 0;
+			return -Double.compare(scoreO1, scoreO2);
 
 		}
 
