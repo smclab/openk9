@@ -60,21 +60,22 @@ public class Grammar {
 		long tenantId, String[] tokens) {
 
 		List<Mono<Map<Tuple, List<Parse>>>> frtMonoList =
-			IntStream.range(1, tokens.length + 1).mapToObj(
-				j -> Mono.fromSupplier(() -> {
-
-					Map<Tuple, List<Parse>> innerChart = new HashMap<>();
-					Set<String> context = new HashSet<>();
-
-					for (int i = j - 1; i != -1; i--) {
-						applyAnnotators(innerChart, tokens, i, j, tenantId, context);
-						applyLexicalRules(innerChart, tokens, i, j);
-					}
-
-					return innerChart;
-
-				}).subscribeOn(Schedulers.boundedElastic())
-			).collect(Collectors.toList());
+			IntStream.range(1, tokens.length + 1)
+				.boxed()
+				.flatMap(j ->
+					IntStream
+						.iterate(j - 1, i -> i != -1, i -> i - 1)
+						.mapToObj(i -> Mono.fromSupplier(() -> {
+							Map<Tuple, List<Parse>> innerChart = new HashMap<>();
+							Set<String> context = new HashSet<>();
+							applyAnnotators(innerChart, tokens, i, j, tenantId, context);
+							applyLexicalRules(innerChart, tokens, i, j);
+							return innerChart;
+						})
+							.onTerminateDetach()
+							.subscribeOn(Schedulers.boundedElastic()))
+				)
+				.collect(Collectors.toList());
 
 		Mono<Map<Tuple, List <Parse>>> aggregation =
 			Mono.zip(frtMonoList, objs -> {
