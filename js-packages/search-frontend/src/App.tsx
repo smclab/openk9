@@ -23,6 +23,7 @@ import { Results } from "./components/ResultList";
 import { TokenSelect } from "./components/TokenSelect";
 import { useClickAway } from "./utils/useClickAway";
 import { getAutoSelections, useSelections } from "./logic/useSelections";
+import { Tooltip } from "./components/Tooltip";
 
 const DEBOUNCE = 300;
 
@@ -272,28 +273,32 @@ export function App() {
               }}
             ></input>
           </div>
-          <FontAwesomeIcon
-            icon={faSyncAlt}
-            style={{
-              paddingRight: "16px",
-              color: replaceText ? myTheme.redTextColor : "black",
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              setReplaceText(!replaceText);
-            }}
-          />
-          <FontAwesomeIcon
-            icon={faLightbulb}
-            style={{
-              paddingRight: "16px",
-              color: autoSelect ? myTheme.redTextColor : "black",
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              setAutoSelect(!autoSelect);
-            }}
-          />
+          <Tooltip description="Rimpiazza testo quando si seleziona un significato">
+            <FontAwesomeIcon
+              icon={faSyncAlt}
+              style={{
+                paddingRight: "16px",
+                color: replaceText ? myTheme.redTextColor : "black",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setReplaceText(!replaceText);
+              }}
+            />
+          </Tooltip>
+          <Tooltip description="Seleziona automaticamente il significato più pertinente">
+            <FontAwesomeIcon
+              icon={faLightbulb}
+              style={{
+                paddingRight: "16px",
+                color: autoSelect ? myTheme.redTextColor : "black",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setAutoSelect(!autoSelect);
+              }}
+            />
+          </Tooltip>
         </div>
       }
       result={
