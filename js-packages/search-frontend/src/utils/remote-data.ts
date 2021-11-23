@@ -131,6 +131,7 @@ async function fetchQueryAnalysis(request: AnalysisRequestDTO) {
     },
   });
   const data = (await response.json()) as AnalysisResponseDTO;
+  data.analysis.reverse(); // TODO togliere una volta implementata gestione sugestion sovrapposte
   return data;
 }
 
