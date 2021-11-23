@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,6 +76,7 @@ public class Grammar {
 								applyLexicalRules(innerChart, tokens, i, j);
 								return innerChart;
 							})
+								.subscribeOn(Schedulers.boundedElastic())
 					)
 			)
 			.reduce(
@@ -83,15 +85,17 @@ public class Grammar {
 					a.putAll(b);
 					return a;
 				})
-			.map(chart -> {
+			.flatMap(chart -> Mono.fromSupplier(() -> {
+
 				for (int j = 1; j < tokens.length + 1; j++) {
 					for (int i = j - 1; i != -1; i--) {
 						applyBinaryRules(chart, i, j);
 						applyUnaryRules(chart, i, j);
 					}
 				}
+
 				return chart;
-			})
+			}).subscribeOn(Schedulers.boundedElastic()))
 			.map(chart -> chart.getOrDefault(Tuple.of(0, tokens.length), List.of()))
 			.map(parses -> {
 				if (startSymbol != null && !startSymbol.isBlank()) {
