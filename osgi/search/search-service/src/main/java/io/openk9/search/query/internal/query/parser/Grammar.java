@@ -79,12 +79,8 @@ public class Grammar {
 								.subscribeOn(Schedulers.boundedElastic())
 					)
 			)
-			.reduce(
-				new HashMap<Tuple, List<Parse>>(),
-				(a, b) -> {
-					a.putAll(b);
-					return a;
-				})
+			.flatMapIterable(Map::entrySet)
+			.collectMap(Map.Entry::getKey, Map.Entry::getValue)
 			.flatMap(chart -> Mono.fromSupplier(() -> {
 
 				for (int j = 1; j < tokens.length + 1; j++) {

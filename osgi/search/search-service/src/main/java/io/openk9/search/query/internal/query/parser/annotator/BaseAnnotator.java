@@ -23,7 +23,7 @@ public abstract class BaseAnnotator implements Annotator {
 
 		List<CategorySemantics> result = annotate_(tenantId, tokens);
 
-		if (tokens.length == 1) {
+		if (tokens.length == 1 && !result.isEmpty()) {
 
 			String key = tokens[0];
 
