@@ -138,8 +138,8 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 						t2.getT1(), searchText);
 
 					return parsesMono
-						.timeout(_annotatorConfig.timeout(), Mono.just(List.of()))
-						.onTerminateDetach()
+						.take(_annotatorConfig.timeout())
+						.switchIfEmpty(Mono.just(List.of()))
 						.map(parses -> {
 
 						_log.info("parses count: " + parses.size());
