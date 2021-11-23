@@ -64,9 +64,10 @@ public class Grammar {
 				j -> Mono.fromSupplier(() -> {
 
 					Map<Tuple, List<Parse>> innerChart = new HashMap<>();
+					Set<String> context = new HashSet<>();
 
 					for (int i = j - 1; i != -1; i--) {
-						applyAnnotators(innerChart, tokens, i, j, tenantId);
+						applyAnnotators(innerChart, tokens, i, j, tenantId, context);
 						applyLexicalRules(innerChart, tokens, i, j);
 					}
 
@@ -214,14 +215,15 @@ public class Grammar {
 	}
 
 	private void applyAnnotators(
-		Map<Tuple, List<Parse>> chart, String[] tokens, int i, int j, long tenantId) {
+		Map<Tuple, List<Parse>> chart, String[] tokens, int i, int j,
+		long tenantId, Set<String> context) {
 
 		tokens = Arrays.stream(tokens, i, j).toArray(String[]::new);
 
 		Tuple<Integer> chartKey = Tuple.of(i, j);
 
 		for (Annotator annotator : annotators) {
-			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, tokens)) {
+			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, context, tokens)) {
 
 				String category = categorySemantics.getCategory();
 

@@ -8,6 +8,7 @@ import org.osgi.service.component.annotations.Reference;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component(
 	immediate = true,
@@ -17,6 +18,31 @@ import java.util.Map;
 	service = Annotator.class
 )
 public class TokenAnnotator extends BaseAnnotator {
+
+	@Override
+	public List<CategorySemantics> annotate(
+		long tenantId, Set<String> context, String... tokens) {
+
+		if (tokens.length == 1) {
+			String token = tokens[0];
+
+			if (!context.contains(token)) {
+				return List.of(
+					CategorySemantics.of(
+						"$TOKEN",
+						Map.of(
+							"tokenType", "TOKEN",
+							"value", token,
+							"score", 1.0f
+						)
+					)
+				);
+			}
+
+		}
+
+		return List.of();
+	}
 
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {

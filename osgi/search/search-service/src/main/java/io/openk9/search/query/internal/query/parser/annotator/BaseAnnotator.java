@@ -6,6 +6,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.List;
+import java.util.Set;
 
 public abstract class BaseAnnotator implements Annotator {
 
@@ -17,7 +18,27 @@ public abstract class BaseAnnotator implements Annotator {
 	}
 
 	@Override
-	public final List<CategorySemantics> annotate(
+	public List<CategorySemantics> annotate(
+		long tenantId, Set<String> context, String...tokens) {
+
+		List<CategorySemantics> result = annotate_(tenantId, tokens);
+
+		if (tokens.length == 1) {
+
+			String key = tokens[0];
+
+			context.add(key);
+
+		}
+
+		return result;
+
+
+
+	}
+
+	@Override
+	public List<CategorySemantics> annotate(
 		long tenantId, String...tokens) {
 		return annotate_(tenantId, tokens);
 	}
