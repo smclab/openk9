@@ -15,6 +15,7 @@ import io.openk9.search.query.internal.query.parser.Parse;
 import io.openk9.search.query.internal.query.parser.SemanticType;
 import io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig;
 import io.openk9.search.query.internal.query.parser.util.Utils;
+import io.vavr.Tuple2;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -144,12 +145,11 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 						_log.info("parses count: " + parses.size());
 
-						Map<Tuple<Integer>, TreeSet<Map<String, Object>>> aggregation = new HashMap<>();
+						Set<Tuple2<Tuple<Integer>, Map<String, Object>>> set =
+							new TreeSet<>(new ScoreComparator());
 
 						for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
-							aggregation.computeIfAbsent(
-									e.getKey(), (k) -> new TreeSet<>(new ScoreComparator()))
-								.add(e.getValue());
+							set.add(io.vavr.Tuple.of(e.getKey(), e.getValue()));
 						}
 
 						for (Parse pars : parses) {
@@ -157,44 +157,45 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 								for (Map<String, Object> map : maps) {
 									Object tokenType = map.get("tokenType");
 									if (!tokenType.equals("TOKEN")) {
-										aggregation.computeIfAbsent(
-											maps.getPos(), (k) -> new TreeSet<>(new ScoreComparator()))
-											.add(map);
+										set.add(io.vavr.Tuple.of(maps.getPos(), map));
 									}
 								}
 							}
 						}
+						List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
-						List<QueryAnalysisTokens> result =
-							new ArrayList<>(aggregation.size());
-
-						for (Map.Entry<Tuple<Integer>, TreeSet<Map<String, Object>>> entry : aggregation.entrySet()) {
-
-							Collection<Map<String, Object>> value =
-								entry.getValue();
-
-							if (!value.isEmpty()) {
-
-								Integer startPos =
-									entry.getKey().getOrDefault(0, -1);
-
-								Integer endPos =
-									entry.getKey().getOrDefault(1, -1);
-
-								String text = Arrays
-									.stream(tokens, startPos, endPos)
-									.collect(Collectors.joining(" "));
-
-								int indexOf = searchText.indexOf(text, startPos);
-
-								result.add(
-									QueryAnalysisTokens.of(
-										text,
-										indexOf,
-										indexOf + text.length(),
-										value)
+						Map<Tuple<Integer>, List<Map<String, Object>>> collect =
+							set
+								.stream()
+								.collect(
+									Collectors.groupingBy(
+										Tuple2::_1,
+										Collectors.mapping(
+											Tuple2::_2, Collectors.toList())
+									)
 								);
-							}
+
+						for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry : collect.entrySet()) {
+
+							Integer startPos =
+								entry.getKey().getOrDefault(0, -1);
+
+							Integer endPos =
+								entry.getKey().getOrDefault(1, -1);
+
+							String text = Arrays
+								.stream(tokens, startPos, endPos)
+								.collect(Collectors.joining(" "));
+
+							int indexOf = searchText.indexOf(text, startPos);
+
+							result.add(
+								QueryAnalysisTokens.of(
+									text,
+									indexOf,
+									indexOf + text.length(),
+									entry.getValue())
+							);
 						}
 
 						return QueryAnalysisResponse.of(
@@ -274,11 +275,14 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 	}
 
 	public static class ScoreComparator
-		implements Comparator<Map<String, Object>> {
+		implements Comparator<Tuple2<Tuple<Integer>, Map<String, Object>>> {
 
 		@Override
 		public int compare(
-			Map<String, Object> o1, Map<String, Object> o2) {
+			Tuple2<Tuple<Integer>, Map<String, Object>> to1, Tuple2<Tuple<Integer>, Map<String, Object>> to2) {
+
+			Map<String, Object> o1 = to1._2();
+			Map<String, Object> o2 = to2._2();
 
 			Set<String> lKeys = o1.keySet();
 			Set<String> rKeys = o2.keySet();
