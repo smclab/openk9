@@ -7,6 +7,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -23,6 +24,14 @@ public class BaseNerAnnotator extends BaseAnnotator {
 
 	public BaseNerAnnotator(String category) {
 		this.category = category;
+	}
+
+	@Override
+	protected QueryBuilder query(
+		String field, String token) {
+		return QueryBuilders
+			.fuzzyQuery(field, token)
+			.fuzziness(_annotatorConfig.nerAnnotatorFuzziness());
 	}
 
 	@Override
@@ -56,7 +65,7 @@ public class BaseNerAnnotator extends BaseAnnotator {
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-		searchSourceBuilder.size(10);
+		searchSourceBuilder.size(_annotatorConfig.nerSize());
 
 		searchSourceBuilder.query(builder);
 

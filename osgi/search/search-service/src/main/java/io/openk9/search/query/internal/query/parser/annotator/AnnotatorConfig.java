@@ -1,13 +1,20 @@
 package io.openk9.search.query.internal.query.parser.annotator;
 
+import org.elasticsearch.common.unit.Fuzziness;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @Component(immediate = true, service = AnnotatorConfig.class)
+@Designate(ocd = AnnotatorConfig.Config.class)
 public class AnnotatorConfig {
 
+	@ObjectClassDefinition(
+		name = "Annotator Configuration"
+	)
 	@interface Config {
 		String[] stopWords() default {
 			"ad", "al", "allo", "ai", "agli", "all", "agl", "alla", "alle",
@@ -40,6 +47,15 @@ public class AnnotatorConfig {
 			"stava", "stavamo", "stavate", "stavano", "stetti", "stesti", "stette", "stemmo", "steste", "stettero", "stessi",
 			"stesse", "stessimo", "stessero", "stando"
 		};
+
+		String nerAnnotatorFuzziness() default "1";
+
+		String restFuzziness() default "AUTO";
+
+		int nerSize() default 5;
+
+		int restSize() default 10;
+
 	}
 
 	@Activate
@@ -58,6 +74,35 @@ public class AnnotatorConfig {
 
 	public String[] stopWords() {
 		return _config.stopWords();
+	}
+
+	public Fuzziness nerAnnotatorFuzziness() {
+		return _toFuzziness(_config.nerAnnotatorFuzziness());
+	}
+
+	public Fuzziness restFuzziness() {
+		return _toFuzziness(_config.restFuzziness());
+	}
+
+	public int restSize() {
+		return _config.restSize();
+	}
+
+	public int nerSize() {
+		return _config.nerSize();
+	}
+
+	private Fuzziness _toFuzziness(String fuzzyString) {
+		switch (fuzzyString) {
+			case "0":
+				return Fuzziness.ZERO;
+			case "1":
+				return Fuzziness.ONE;
+			case "2":
+				return Fuzziness.TWO;
+			default:
+				return Fuzziness.AUTO;
+		}
 	}
 
 	private Config _config;
