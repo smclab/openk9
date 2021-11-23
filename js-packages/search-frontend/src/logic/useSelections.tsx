@@ -179,9 +179,9 @@ export function getAutoSelections(
     .map(getAutoSelection)
     .filter(isNotNull)
     .filter((entry, index, autoSelections) => {
-      return !selection
+      return selection
         .concat(autoSelections.slice(0, index))
-        .some((selection) => isOverlapping(entry, selection));
+        .every((selection) => !isOverlapping(entry, selection));
     });
 }
 
@@ -205,7 +205,7 @@ function isNotNull<Value>(value: Value | null): value is Value {
   return value !== null;
 }
 
-function isOverlapping<
+export function isOverlapping<
   A extends { start: number; end: number },
   B extends { start: number; end: number },
 >(a: A, b: B) {

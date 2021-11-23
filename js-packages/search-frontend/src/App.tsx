@@ -64,7 +64,11 @@ export function App() {
   );
   const searchQuery = useDebounce(searchQueryMemo, DEBOUNCE);
   React.useEffect(() => {
-    if (autoSelect && queryAnalysis.data) {
+    if (
+      autoSelect &&
+      queryAnalysis.data &&
+      queryAnalysis.data.searchText === state.text
+    ) {
       const autoSelections = getAutoSelections(
         state.selection,
         queryAnalysis.data.analysis,
@@ -77,7 +81,14 @@ export function App() {
         });
       }
     }
-  }, [autoSelect, dispatch, queryAnalysis.data, replaceText, state.selection]);
+  }, [
+    autoSelect,
+    dispatch,
+    queryAnalysis.data,
+    replaceText,
+    state.selection,
+    state.text,
+  ]);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;

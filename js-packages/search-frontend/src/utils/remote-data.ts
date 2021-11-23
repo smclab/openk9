@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useQuery } from "react-query";
+import { isOverlapping } from "../logic/useSelections";
 
 export function useInfiniteResults(searchQuery: Array<SearchTokenDTO>) {
   const pageSize = 10;
@@ -131,7 +132,14 @@ async function fetchQueryAnalysis(request: AnalysisRequestDTO) {
     },
   });
   const data = (await response.json()) as AnalysisResponseDTO;
-  data.analysis.reverse(); // TODO togliere una volta implementata gestione sugestion sovrapposte
+  data.analysis = data.analysis
+    .reverse()
+    .filter((entry, index, array) =>
+      array
+        .slice(0, index)
+        .every((previous) => !isOverlapping(previous, entry)),
+    )
+    .reverse(); // TODO togliere una volta implementata gestione sugestion sovrapposte
   return data;
 }
 
