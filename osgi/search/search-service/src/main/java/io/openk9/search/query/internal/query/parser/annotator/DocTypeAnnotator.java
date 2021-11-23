@@ -27,7 +27,7 @@ public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 			Map.of(
 				"tokenType", "DOCTYPE",
 				"value", aggregatorKey,
-				"score", 1.0f
+				"score", 50.0f
 			)
 		);
 
