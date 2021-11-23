@@ -18,6 +18,17 @@ public class AnnotatorConfig {
 		name = "Annotator Configuration"
 	)
 	@interface Config {
+
+		InternalFuzziness nerAnnotatorFuzziness() default InternalFuzziness.ONE;
+
+		InternalFuzziness restFuzziness() default InternalFuzziness.AUTO;
+
+		int nerSize() default 5;
+
+		int restSize() default 10;
+
+		long timeoutMs() default 10_000;
+
 		String[] stopWords() default {
 			"ad", "al", "allo", "ai", "agli", "all", "agl", "alla", "alle",
 			"con", "col", "coi", "da", "dal", "dallo", "dai", "dagli", "dall",
@@ -50,16 +61,6 @@ public class AnnotatorConfig {
 			"stesse", "stessimo", "stessero", "stando"
 		};
 
-		String nerAnnotatorFuzziness() default "1";
-
-		String restFuzziness() default "AUTO";
-
-		int nerSize() default 5;
-
-		int restSize() default 10;
-
-		long timeoutMs() default 10_000;
-
 	}
 
 	@Activate
@@ -81,11 +82,11 @@ public class AnnotatorConfig {
 	}
 
 	public Fuzziness nerAnnotatorFuzziness() {
-		return _toFuzziness(_config.nerAnnotatorFuzziness());
+		return _config.nerAnnotatorFuzziness().getFuzziness();
 	}
 
 	public Fuzziness restFuzziness() {
-		return _toFuzziness(_config.restFuzziness());
+		return _config.restFuzziness().getFuzziness();
 	}
 
 	public int restSize() {
@@ -100,18 +101,19 @@ public class AnnotatorConfig {
 		return Duration.ofMillis(_config.timeoutMs());
 	}
 
+	public enum InternalFuzziness {
+		ZERO(Fuzziness.ZERO), ONE(Fuzziness.ONE), TWO(Fuzziness.TWO), AUTO(Fuzziness.AUTO);
 
-	private Fuzziness _toFuzziness(String fuzzyString) {
-		switch (fuzzyString) {
-			case "0":
-				return Fuzziness.ZERO;
-			case "1":
-				return Fuzziness.ONE;
-			case "2":
-				return Fuzziness.TWO;
-			default:
-				return Fuzziness.AUTO;
+		InternalFuzziness(Fuzziness fuzziness) {
+			_fuzziness = fuzziness;
 		}
+
+		public Fuzziness getFuzziness() {
+			return _fuzziness;
+		}
+
+		private final Fuzziness _fuzziness;
+
 	}
 
 	private Config _config;

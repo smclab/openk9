@@ -23,6 +23,8 @@ import lombok.NoArgsConstructor;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -137,6 +139,8 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 					return parsesMono.map(parses -> {
 
+						_log.info("parses count: " + parses.size());
+
 						Map<Tuple<Integer>, TreeSet<Map<String, Object>>> aggregation = new HashMap<>();
 
 						for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
@@ -202,7 +206,10 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 		return _httpResponseWriter.write(
 			httpServerResponse,
-			response.timeout(_annotatorConfig.timeout())
+			response
+				.timeout(_annotatorConfig.timeout())
+				.onTerminateDetach()
+
 		);
 
 	}
@@ -221,6 +228,9 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 	@Reference
 	private AnnotatorConfig _annotatorConfig;
+
+	private static final Logger _log = LoggerFactory.getLogger(
+		QueryAnalysisHttpHandler.class);
 
 	@Data
 	@Builder
