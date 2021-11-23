@@ -107,8 +107,7 @@ public class TextQueryParser implements QueryParser {
 
 		}
 
-		query.must(boolQueryBuilder);
-
+		query.should(boolQueryBuilder);
 
 	}
 
