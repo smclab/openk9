@@ -137,7 +137,10 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 					Mono<List<Parse>> parsesMono = grammar.parseInput(
 						t2.getT1(), searchText);
 
-					return parsesMono.map(parses -> {
+					return parsesMono
+						.timeout(_annotatorConfig.timeout(), Mono.just(List.of()))
+						.onTerminateDetach()
+						.map(parses -> {
 
 						_log.info("parses count: " + parses.size());
 
@@ -207,9 +210,6 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		return _httpResponseWriter.write(
 			httpServerResponse,
 			response
-				.timeout(_annotatorConfig.timeout())
-				.onTerminateDetach()
-
 		);
 
 	}
