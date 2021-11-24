@@ -72,6 +72,8 @@ public abstract class BaseAnnotator implements Annotator {
 	protected static Tuple<Integer> getPos(
 		Tuple<Integer> chartKey, List<Token> tokenList) {
 
+		return chartKey;
+		/*
 		Integer startPos = chartKey.get(0);
 
 		for (int i = 0; i < tokenList.size(); i++) {
@@ -92,7 +94,7 @@ public abstract class BaseAnnotator implements Annotator {
 			}
 		}
 
-		return Tuple.of(startPos, endPos);
+		return Tuple.of(startPos, endPos);*/
 
 	}
 
