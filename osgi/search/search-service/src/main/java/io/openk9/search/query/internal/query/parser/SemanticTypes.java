@@ -74,7 +74,7 @@ public final class SemanticTypes implements Iterable<SemanticType> {
 		List<SemanticType> list =
 			semanticTypes
 				.stream()
-				.filter(maps -> maps.getValue().isEmpty())
+				.filter(maps -> !maps.getValue().isEmpty())
 				.collect(Collectors.toList());
 
 		return of(list);
