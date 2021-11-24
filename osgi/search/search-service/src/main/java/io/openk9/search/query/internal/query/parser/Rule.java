@@ -7,8 +7,6 @@ import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Getter
 @Setter
@@ -50,15 +48,11 @@ public class Rule {
 	}
 
 	public Semantic applySemantics(SemanticTypes sems) {
-		return Semantic.of(
-			this.sem.getPos(), t ->
-				this.sem.apply(
-					Stream
-						.concat(t.stream(), sems.stream())
-						.collect(
-							Collectors.collectingAndThen(
-								Collectors.toList(), SemanticTypes::of)))
-			);
+
+		if (this.sem instanceof Semantic.FunctionSemantic) {
+			Semantic.of(this.sem.getPos(), s -> this.sem.apply(sems));
+		}
+		return this.sem;
 	}
 
 	/**
