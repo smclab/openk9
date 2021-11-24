@@ -165,6 +165,7 @@ export function App() {
                         selectionEnd: inputRef.current.selectionEnd,
                       });
                     }
+                    setOpenedDropdown(null);
                   };
                   const isAutoSelected = selection?.isAuto ?? false;
                   return (
@@ -186,6 +187,7 @@ export function App() {
               onChange={(event) => {
                 dispatch({ type: "set-text", text: event.currentTarget.value });
                 setDetail(null);
+                setOpenedDropdown(null);
               }}
               css={css`
                 position: relative;
@@ -266,6 +268,7 @@ export function App() {
                         selectionEnd: event.currentTarget.selectionEnd,
                       });
                     }
+                    setOpenedDropdown(null);
                   }
                 } else if (event.key === "Escape") {
                   setOpenedDropdown(null);
