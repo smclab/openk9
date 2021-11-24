@@ -44,9 +44,19 @@ public class TextQueryParser implements QueryParser {
 		List<SearchToken> tokenTextList, BoolQueryBuilder query,
 		List<PluginDriverDTO> entityMapperList) {
 
-		for (SearchToken searchToken : tokenTextList) {
-			_termQueryPrefixValues(searchToken, query, entityMapperList);
+		if (!tokenTextList.isEmpty()) {
+
+			BoolQueryBuilder innerBoolQueryBuilder = QueryBuilders.boolQuery();
+
+			for (SearchToken searchToken : tokenTextList) {
+				_termQueryPrefixValues(
+					searchToken, innerBoolQueryBuilder, entityMapperList);
+			}
+
+			query.must(innerBoolQueryBuilder);
+
 		}
+
 	}
 
 	private void _termQueryPrefixValues(
