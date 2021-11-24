@@ -50,7 +50,7 @@ public class Rule {
 	public Semantic applySemantics(SemanticTypes sems) {
 
 		if (this.sem instanceof Semantic.FunctionSemantic) {
-			Semantic.of(this.sem.getPos(), s -> this.sem.apply(sems));
+			return Semantic.of(this.sem.getPos(), s -> this.sem.apply(sems));
 		}
 		return this.sem;
 	}
