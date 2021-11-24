@@ -230,7 +230,7 @@ hazelcast:
             # BINARY (default): keys and values will be stored as binary data
             # OBJECT : values will be stored in their object forms
             # NATIVE : values will be stored in non-heap region of JVM
-            in-memory-format: OBJECT
+            in-memory-format: BINARY
 
             # Metadata creation policy for this map. Hazelcast may process
             # objects of supported types ahead of time to create additional
@@ -254,7 +254,7 @@ hazelcast:
             # older than <time-to-live-seconds> and not updated for <time-to-live-seconds>
             # will get automatically evicted from the map.
             # Any integer between 0 and Integer.MAX_VALUE. 0 means infinite. Default is 0
-            time-to-live-seconds: 600
+            time-to-live-seconds: 900
 
             # Maximum number of seconds for each entry to stay idle in the map. Entries that are
             # idle(not touched) for more than <max-idle-seconds> will get
@@ -310,13 +310,21 @@ hazelcast:
             # implement a custom eviction policy, out-of-the-box
             # eviction policies work regardless of this setting.
             per-entry-stats-enabled: false
+
+            indexes:
+                - type: HASH
+                  attributes:
+                      - "id"
+                      - "graphId"
+                      - "associated"
+                      - "indexable"
         default:
             # Data type that will be used for storing recordMap.
             # Possible values:
             # BINARY (default): keys and values will be stored as binary data
             # OBJECT : values will be stored in their object forms
             # NATIVE : values will be stored in non-heap region of JVM
-            in-memory-format: OBJECT
+            in-memory-format: BINARY
 
             # Metadata creation policy for this map. Hazelcast may process
             # objects of supported types ahead of time to create additional
