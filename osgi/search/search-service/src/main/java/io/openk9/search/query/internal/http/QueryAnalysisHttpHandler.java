@@ -104,75 +104,78 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 						.switchIfEmpty(Mono.just(List.of()))
 						.map(parses -> {
 
-						_log.info("parses count: " + parses.size());
+							_log.info("parses count: " + parses.size());
 
-						Set<SemanticsPos> set = new TreeSet<>(
-							new ScoreComparator());
+							List<SemanticsPos> list = new ArrayList<>();
 
-						for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
-							set.add(SemanticsPos.of(e.getKey(), e.getValue()));
-						}
+							for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
+								list.add(SemanticsPos.of(e.getKey(), e.getValue()));
+							}
 
-						for (int i = parses.size() - 1; i >= 0; i--) {
-							SemanticTypes semanticTypes =
-								parses.get(i).getSemantics().apply();
+							for (int i = parses.size() - 1; i >= 0; i--) {
+								SemanticTypes semanticTypes =
+									parses.get(i).getSemantics().apply();
 
-							List<SemanticType> semanticTypeList =
-								semanticTypes.getSemanticTypes();
+								List<SemanticType> semanticTypeList =
+									semanticTypes.getSemanticTypes();
 
-							for (SemanticType maps : semanticTypeList) {
-								for (Map<String, Object> map : maps) {
-									Object tokenType = map.get("tokenType");
-									if (!tokenType.equals("TOKEN")) {
-										set.add(SemanticsPos.of(maps.getPos(), map));
+								for (SemanticType maps : semanticTypeList) {
+									for (Map<String, Object> map : maps) {
+										Object tokenType = map.get("tokenType");
+										if (!tokenType.equals("TOKEN")) {
+											list.add(SemanticsPos.of(maps.getPos(), map));
+										}
 									}
 								}
 							}
-						}
 
-						List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
+							list.sort(null);
 
-						Map<Tuple<Integer>, List<Map<String, Object>>> collect =
-							set
-								.stream()
-								.collect(
-									Collectors.groupingBy(
-										SemanticsPos::getPos,
-										Collectors.mapping(
-											SemanticsPos::getSemantics,
-											Collectors.toList())
-									)
+							Set<SemanticsPos> set = new TreeSet<>(list);
+
+							List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
+
+							Map<Tuple<Integer>, List<Map<String, Object>>> collect =
+								set
+									.stream()
+									.collect(
+										Collectors.groupingBy(
+											SemanticsPos::getPos,
+											Collectors.mapping(
+												SemanticsPos::getSemantics,
+												Collectors.toList())
+										)
+									);
+
+							for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry : collect.entrySet()) {
+
+								Integer startPos =
+									entry.getKey().getOrDefault(0, -1);
+
+								Integer endPos =
+									entry.getKey().getOrDefault(1, -1);
+
+								String text = Arrays
+									.stream(tokens, startPos, endPos)
+									.collect(Collectors.joining(" "));
+
+								int indexOf = searchText.indexOf(text, startPos);
+
+								result.add(
+									QueryAnalysisTokens.of(
+										text,
+										indexOf,
+										indexOf + text.length(),
+										entry.getValue())
 								);
+							}
 
-						for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry : collect.entrySet()) {
-
-							Integer startPos =
-								entry.getKey().getOrDefault(0, -1);
-
-							Integer endPos =
-								entry.getKey().getOrDefault(1, -1);
-
-							String text = Arrays
-								.stream(tokens, startPos, endPos)
-								.collect(Collectors.joining(" "));
-
-							int indexOf = searchText.indexOf(text, startPos);
-
-							result.add(
-								QueryAnalysisTokens.of(
-									text,
-									indexOf,
-									indexOf + text.length(),
-									entry.getValue())
+							return QueryAnalysisResponse.of(
+								searchText,
+								result
 							);
-						}
 
-						return QueryAnalysisResponse.of(
-							searchText,
-							result
-						);
-
-					});
+						});
 
 				})
 			);
@@ -294,9 +297,17 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor(staticName = "of")
-	public static class SemanticsPos {
+	public static class SemanticsPos implements Comparable<SemanticsPos> {
 		private Tuple<Integer> pos;
 		private Map<String, Object> semantics;
+
+		@Override
+		public int compareTo(SemanticsPos o) {
+			return COMPARATOR.compare(this, o);
+		}
+
+		public static final ScoreComparator COMPARATOR = new ScoreComparator();
+
 	}
 
 	public static class ScoreComparator implements Comparator<SemanticsPos> {
