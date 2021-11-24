@@ -31,6 +31,8 @@ import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Property;
 import org.neo4j.cypherdsl.core.Statement;
 import org.neo4j.cypherdsl.core.SymbolicName;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
@@ -161,28 +163,34 @@ public class CreateEntitiesRunnable
 				);
 			}
 
-			List<CompletableFuture<Entity>> completableFutureList =
+			List<Mono<Entity>> completableFutureList =
 				entityCandidateList
 					.stream()
 					.filter(
 						entityCandidates -> entityCandidates.getEntity().isLocal())
 					.map(entityCandidates ->
-						CompletableFuture.supplyAsync(
+							Mono.fromSupplier(
 							_getAndCreateEntityDisambiguate(
 								config, entityNameCleanerProvider, entityService,
 								entityGraphService,
 								entityCandidateList, entityCandidates,
 								entityCandidates.getEntity()
 							)
-						))
+						).subscribeOn(Schedulers.boundedElastic())
+					)
 					.collect(Collectors.toList());
 
-			CompletableFuture.allOf(
-				completableFutureList.toArray(
-					new CompletableFuture[0])).join();
+			Mono<List<Entity>> zip =
+				Mono.zip(completableFutureList, a -> {
+					List<Entity> entities = new ArrayList<>();
+					for (Object o : a) {
+						entities.add((Entity)o);
+					}
+					return entities;
+				})
+					.defaultIfEmpty(List.of());
 
-			for (CompletableFuture<Entity> future : completableFutureList) {
-				Entity currentEntityRequest = future.join();
+			for (Entity currentEntityRequest : zip.block()) {
 				entityMap.put(
 					EntityKey.of(
 						currentEntityRequest.getTenantId(),

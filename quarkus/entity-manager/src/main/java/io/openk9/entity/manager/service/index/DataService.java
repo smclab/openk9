@@ -6,7 +6,9 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -15,6 +17,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -99,7 +102,17 @@ public class DataService {
 
 			updateRequest.doc(dataDocument.toString(), XContentType.JSON);
 
-			_indexerBus.emit(updateRequest);
+			updateRequest.setRefreshPolicy(
+				WriteRequest.RefreshPolicy.WAIT_UNTIL);
+
+			UpdateResponse update =
+				_restHighLevelClient.update(
+					updateRequest,
+					RequestOptions.DEFAULT);
+
+			if (_logger.isDebugEnabled()) {
+				_logger.debug(update.toString());
+			}
 
 			return true;
 
@@ -129,5 +142,8 @@ public class DataService {
 
 	@Inject
 	IndexerBus _indexerBus;
+
+	@Inject
+	Logger _logger;
 
 }
