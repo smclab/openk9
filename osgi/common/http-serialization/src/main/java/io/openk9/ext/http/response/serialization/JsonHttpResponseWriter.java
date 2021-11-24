@@ -49,7 +49,7 @@ public class JsonHttpResponseWriter implements HttpResponseWriter {
 	public Publisher<Void> write(
 		HttpServerResponse httpResponse, Mono<?> value) {
 		return httpResponse
-			.header("Content-type", "application/json")
+			.header("Content-Type", "application/json")
 			.sendString(value.map(_jsonFactory::toJson));
 	}
 

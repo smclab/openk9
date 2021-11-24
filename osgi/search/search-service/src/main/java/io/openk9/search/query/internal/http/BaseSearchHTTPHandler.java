@@ -100,7 +100,6 @@ public abstract class BaseSearchHTTPHandler
 				t.getT1(), t.getT2(), t.getT3(), t.getT5(), t.getT4(),
 				t.getT6())
 			)
-			.map(_jsonFactory::toJson)
 			.transform(stringMono -> _httpResponseWriter.write(
 				httpResponse, stringMono));
 
