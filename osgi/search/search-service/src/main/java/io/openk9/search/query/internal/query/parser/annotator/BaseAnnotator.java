@@ -84,8 +84,8 @@ public abstract class BaseAnnotator implements Annotator {
 
 		Integer endPos = chartKey.get(1);
 
-		for (int i = tokenList.size() - 1; i >= 0; i--) {
-			Token token = tokenList.get(i);
+		for (int i = tokenList.size(); i >= 0; i--) {
+			Token token = tokenList.get(i - 1);
 			if (!token.isStopword()) {
 				endPos = chartKey.get(0) + i;
 				break;
