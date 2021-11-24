@@ -158,14 +158,13 @@ public class CreateEntitiesRunnable
 
 				Entity innerEntity = ingestionIdEntity.getEntity();
 
-				if (innerEntity.isIndexable()) {
-					entityCandidateList.add(
-						getEntityCandidates(
-							entityNameCleanerProvider,
-							entityService,
-							ingestionIdEntity, innerEntity)
-					);
-				}
+				entityCandidateList.add(
+					getEntityCandidates(
+						entityNameCleanerProvider,
+						entityService,
+						ingestionIdEntity, innerEntity)
+				);
+
 			}
 
 			List<Mono<Entity>> completableFutureList =

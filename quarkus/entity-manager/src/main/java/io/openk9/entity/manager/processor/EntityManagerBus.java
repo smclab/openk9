@@ -73,6 +73,9 @@ public class EntityManagerBus {
 				TransactionalMultiMap<String, String> entityContextMap =
 					transactionContext.getMultiMap("entityContextMap");
 
+				TransactionalMultiMap<String, String> documentEntityMap =
+					transactionContext.getMultiMap("documentEntityMap");
+
 				EntityManagerRequest payload = request.getPayload();
 
 				_loggerAggregator.emitLog(
@@ -168,38 +171,11 @@ public class EntityManagerBus {
 
 				if (!localEntityMap.isEmpty()) {
 
-					String cacheId = Long.toString(_entityFlakeId.newId());
-
 					String name =
 						payload.getDatasourceId() + "_" + payload.getContentId();
 
-					Entity documentEntity =
-						new Entity(
-							null, cacheId, tenantId, name, "document", null,
-							ingestionId, true, false);
-
-					entityTransactionalMap.set(
-						EntityKey.of(
-							tenantId, name, "document", cacheId, ingestionId),
-						documentEntity
-					);
-
 					for (Entity value : localEntityMap.values()) {
-
-						long entityRelationId = _entityRelationFlakeId.newId();
-
-						EntityRelation entityRelation = new EntityRelation(
-							entityRelationId, value.getCacheId(), ingestionId,
-							"related_to", cacheId);
-
-						transactionalEntityRelationMap.set(
-							EntityRelationKey.of(
-								entityRelationId,
-								cacheId,
-								ingestionId
-							),
-							entityRelation
-						);
+						documentEntityMap.put(name, value.getCacheId());
 					}
 				}
 

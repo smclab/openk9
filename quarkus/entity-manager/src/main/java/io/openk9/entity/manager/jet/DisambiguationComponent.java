@@ -32,7 +32,7 @@ public class DisambiguationComponent {
 
 		_disposableList.add(
 			createEntities.scheduleOnMemberAtFixedRate(
-				new CreateEntitiesRunnable(), localMember, 0, 30,
+				new CreateEntitiesRunnable(), localMember, 0, 10,
 				TimeUnit.SECONDS
 			)
 		);
@@ -43,7 +43,7 @@ public class DisambiguationComponent {
 
 		_disposableList.add(
 			associateEntities.scheduleOnMemberAtFixedRate(
-				new AssociateEntitiesRunnable(), localMember, 30, 30,
+				new AssociateEntitiesRunnable(), localMember, 0, 10,
 				TimeUnit.SECONDS
 			)
 		);
@@ -54,7 +54,18 @@ public class DisambiguationComponent {
 
 		_disposableList.add(
 			createRelation.scheduleOnMemberAtFixedRate(
-				new CreateRelationRunnable(), localMember, 0, 30,
+				new CreateRelationRunnable(), localMember, 0, 10,
+				TimeUnit.SECONDS
+			)
+		);
+
+		IScheduledExecutorService createDocumentEntity =
+			_hazelcastInstance.getScheduledExecutorService(
+				"createDocumentEntity");
+
+		_disposableList.add(
+			createDocumentEntity.scheduleOnMemberAtFixedRate(
+				new CreateDocumentEntitiesRunnable(), localMember, 0, 10,
 				TimeUnit.SECONDS
 			)
 		);

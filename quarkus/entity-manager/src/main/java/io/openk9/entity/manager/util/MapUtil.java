@@ -32,6 +32,11 @@ public class MapUtil {
 		return hazelcastInstance.getMultiMap("entityContextMultiMap");
 	}
 
+	public static MultiMap<String, String> getDocumentEntityMapMap(
+		HazelcastInstance hazelcastInstance) {
+		return hazelcastInstance.getMultiMap("documentEntityMap");
+	}
+
 	public static IMap<IngestionKey, IngestionEntity> getIngestionMap(
 		HazelcastInstance hazelcastInstance) {
 		return hazelcastInstance.getMap("ingestionMap");

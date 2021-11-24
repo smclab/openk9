@@ -14,6 +14,7 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,7 @@ public class AssociateEntitiesRunnable
 
 
 		Map<EntityKey, Entity> entitiesToUpdate = new HashMap<>();
+		List<String> ingestionIds = new ArrayList<>();
 
 		for (Map.Entry<String, List<Entity>> entry : groupingByIngestionId.entrySet()) {
 
@@ -103,6 +105,7 @@ public class AssociateEntitiesRunnable
 								entity.getIngestionId()
 							), entity);
 						entityContextMap.remove(entity.getCacheId());
+						ingestionIds.add(ingestionId);
 					}
 				}
 			}
@@ -112,7 +115,7 @@ public class AssociateEntitiesRunnable
 
 		}
 
-		_log.info("entities associated: " + entitiesToUpdate.size());
+		_log.info("entities associated: " + entitiesToUpdate.size() + " ingestionIds: " + ingestionIds);
 
 		entityIMap.setAll(entitiesToUpdate);
 
