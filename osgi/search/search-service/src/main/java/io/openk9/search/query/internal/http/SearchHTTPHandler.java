@@ -18,6 +18,7 @@
 package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
+import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
@@ -121,6 +122,13 @@ public class SearchHTTPHandler extends BaseSearchHTTPHandler {
 	@Override
 	protected void setJsonFactory(JsonFactory jsonFactory) {
 		super.setJsonFactory(jsonFactory);
+	}
+
+	@Override
+	@Reference
+	protected void setHttpResponseWriter(
+		HttpResponseWriter httpResponseWriter) {
+		super.setHttpResponseWriter(httpResponseWriter);
 	}
 
 }

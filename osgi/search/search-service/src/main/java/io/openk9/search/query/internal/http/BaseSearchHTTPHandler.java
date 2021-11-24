@@ -18,6 +18,7 @@
 package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
+import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
@@ -100,7 +101,8 @@ public abstract class BaseSearchHTTPHandler
 				t.getT6())
 			)
 			.map(_jsonFactory::toJson)
-			.transform(httpResponse::sendString);
+			.transform(stringMono -> _httpResponseWriter.write(
+				httpResponse, stringMono));
 
 	}
 
@@ -365,6 +367,10 @@ public abstract class BaseSearchHTTPHandler
 		_jsonFactory = jsonFactory;
 	}
 
+	protected void setHttpResponseWriter(HttpResponseWriter httpResponseWriter) {
+		_httpResponseWriter = httpResponseWriter;
+	}
+
 	private final List<QueryParser> _queryParsers = new ArrayList<>();
 
 	protected DatasourceClient _datasourceClient;
@@ -376,6 +382,8 @@ public abstract class BaseSearchHTTPHandler
 	protected PluginDriverManagerClient _pluginDriverManagerClient;
 
 	protected JsonFactory _jsonFactory;
+
+	protected HttpResponseWriter _httpResponseWriter;
 
 	private static final String[] _EMPTY_ARRAY = {};
 

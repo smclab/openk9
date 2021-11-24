@@ -18,6 +18,7 @@
 package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
+import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.web.RouterHandler;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
@@ -40,9 +41,6 @@ import reactor.util.function.Tuples;
 
 import java.util.List;
 import java.util.Objects;
-
-import static io.openk9.reactor.netty.util.HttpPredicateV2.get;
-import static io.openk9.reactor.netty.util.HttpPredicateV2.post;
 
 @Component(
 	immediate = true,
@@ -120,6 +118,13 @@ public class SearchByDatasourceHTTPHandler extends BaseSearchHTTPHandler {
 	@Override
 	protected void setJsonFactory(JsonFactory jsonFactory) {
 		super.setJsonFactory(jsonFactory);
+	}
+
+	@Override
+	@Reference
+	protected void setHttpResponseWriter(
+		HttpResponseWriter httpResponseWriter) {
+		super.setHttpResponseWriter(httpResponseWriter);
 	}
 
 }
