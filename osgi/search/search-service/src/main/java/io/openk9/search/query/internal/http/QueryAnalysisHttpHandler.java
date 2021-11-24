@@ -38,7 +38,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -131,7 +130,10 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 							list.sort(null);
 
-							Set<SemanticsPos> set = new TreeSet<>(list);
+							Set<SemanticsPos> set = new TreeSet<>(
+								SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
+
+							set.addAll(list);
 
 							List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
@@ -303,14 +305,25 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 		@Override
 		public int compareTo(SemanticsPos o) {
-			return COMPARATOR.compare(this, o);
+			return SCORE_COMPARATOR.compare(this, o);
 		}
 
-		public static final ScoreComparator COMPARATOR = new ScoreComparator();
+		public static final Comparator<SemanticsPos>
+			TOKEN_TYPE_VALUE_SCORE_COMPARATOR = new TokenTypeValueComparator();
+
+		public static final Comparator<SemanticsPos>
+			SCORE_COMPARATOR = new ScoreComparator();
 
 	}
 
 	public static class ScoreComparator implements Comparator<SemanticsPos> {
+		@Override
+		public int compare(SemanticsPos o1, SemanticsPos o2) {
+			return _getScoreCompared(o1.getSemantics(), o2.getSemantics());
+		}
+	}
+
+	public static class TokenTypeValueComparator implements Comparator<SemanticsPos> {
 
 		@Override
 		public int compare(
@@ -320,58 +333,40 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 			Map<String, Object> o1 = to1.semantics;
 			Map<String, Object> o2 = to2.semantics;
 
-			Object tokenType1 = o1.get("tokenType");
-			Object tokenType2 = o2.get("tokenType");
+			String tokenType1 =(String)o1.get("tokenType");
+			String tokenType2 =(String)o2.get("tokenType");
 
-			if (!Objects.equals(tokenType1, tokenType2)) {
+			int res = tokenType1.compareTo(tokenType2);
 
-				int scoreCompared = _getScoreCompared(o1, o2);
+			String value1 =(String)o1.get("value");
+			String value2 =(String)o2.get("value");
 
-				if (scoreCompared != 0) {
-					return scoreCompared;
-				}
-				return 1;
-			}
-
-			Object value1 = o1.get("value");
-			Object value2 = o2.get("value");
-
-			if (!Objects.deepEquals(value1, value2)) {
-
-				int scoreCompared = _getScoreCompared(o1, o2);
-
-				if (scoreCompared != 0) {
-					return scoreCompared;
-				}
-				return 1;
-			}
-
-			return 0;
+			return res != 0 ? res : value1.compareTo(value2);
 
 		}
 
-		private int _getScoreCompared(
-			Map<String, Object> o1, Map<String, Object> o2) {
+	}
 
-			double scoreO1 = toDouble(o1.getOrDefault("score", -1.0));
-			double scoreO2 = toDouble(o2.getOrDefault("score", -1.0));
+	private static int _getScoreCompared(
+		Map<String, Object> o1, Map<String, Object> o2) {
 
-			return -Double.compare(scoreO1, scoreO2);
+		double scoreO1 = _toDouble(o1.getOrDefault("score", -1.0));
+		double scoreO2 = _toDouble(o2.getOrDefault("score", -1.0));
 
+		return -Double.compare(scoreO1, scoreO2);
+
+	}
+
+	private static double _toDouble(Object score) {
+		if (score instanceof Double) {
+			return (Double)score;
 		}
-
-		double toDouble(Object score) {
-			if (score instanceof Double) {
-				return (Double)score;
-			}
-			else if (score instanceof Float) {
-				return ((Float)score).doubleValue();
-			}
-			else {
-				return -1.0;
-			}
+		else if (score instanceof Float) {
+			return ((Float)score).doubleValue();
 		}
-
+		else {
+			return -1.0;
+		}
 	}
 
 }
