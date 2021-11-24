@@ -7,7 +7,7 @@
 	{
 		"lhs": "$ROOT",
 		"rhs": "?$Optionals $Query ?$Optionals",
-		"sem": "IDENTITY"
+		"sem": "1"
 	},
 	{
 		"lhs": "$Query",
@@ -17,7 +17,7 @@
 	{
 		"lhs": "$IntentCollection",
 		"rhs": "$Intent ?$Optionals ?$IntentCollection",
-		"sem": "IDENTITY"
+		"sem": "MERGE"
 	},
 	{
 		"lhs": "$Entity",
