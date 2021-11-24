@@ -297,7 +297,7 @@ public class Grammar {
 
 		if (Rule.isCat(baseName)) {
 			String name = categories.stream()
-				.collect(Collectors.joining("_", baseName, ""));
+				.collect(Collectors.joining("_", baseName + "_", ""));
 			categories.add(name);
 			return name;
 		}
