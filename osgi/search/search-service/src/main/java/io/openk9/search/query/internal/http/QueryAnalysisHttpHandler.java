@@ -16,7 +16,6 @@ import io.openk9.search.query.internal.query.parser.SemanticType;
 import io.openk9.search.query.internal.query.parser.SemanticTypes;
 import io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig;
 import io.openk9.search.query.internal.query.parser.util.Utils;
-import io.vavr.Tuple2;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -92,47 +91,8 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 					List<QueryAnalysisHttpHandler.QueryAnalysisToken> requestTokens =
 						queryAnalysisRequest.getTokens();
 
-					Map<Tuple<Integer>, Map<String, Object>> chart;
-
-					if (!requestTokens.isEmpty()) {
-
-						chart = new HashMap<>();
-
-						for (QueryAnalysisToken token : requestTokens) {
-
-							String analyzed =
-								searchText
-									.substring(
-										token.getStart(), token.getEnd());
-
-							String prefix =
-								searchText.substring(0, token.getStart());
-
-							long prefixCount =
-								prefix
-									.codePoints()
-									.filter(Character::isWhitespace)
-									.count();
-
-							String[] splitAnalyzed = Utils.split(analyzed);
-
-							Tuple<Integer> pos =
-								Tuple.of(
-									(int)prefixCount,
-									(int)(prefixCount + splitAnalyzed.length));
-
-							Map<String, Object> copy = new HashMap<>(
-								token.getToken());
-
-							copy.put("score", 100.0f);
-
-							chart.put(pos, copy);
-
-						}
-					}
-					else {
-						chart = Map.of();
-					}
+					Map<Tuple<Integer>, Map<String, Object>> chart =
+						_getRequestTokensMap(searchText, requestTokens);
 
 					Grammar grammar = _grammarProvider.getGrammar();
 
@@ -146,31 +106,30 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 						_log.info("parses count: " + parses.size());
 
-						Set<Tuple2<Tuple<Integer>, Map<String, Object>>> set =
-							new TreeSet<>(new ScoreComparator());
+						Set<SemanticsPos> set = new TreeSet<>(
+							new ScoreComparator());
 
 						for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
-							set.add(io.vavr.Tuple.of(e.getKey(), e.getValue()));
+							set.add(SemanticsPos.of(e.getKey(), e.getValue()));
 						}
 
-						for (Parse pars : parses) {
-
-							SemanticTypes semanticTypes = pars.getSemantics().apply();
+						for (int i = parses.size() - 1; i >= 0; i--) {
+							SemanticTypes semanticTypes =
+								parses.get(i).getSemantics().apply();
 
 							List<SemanticType> semanticTypeList =
 								semanticTypes.getSemanticTypes();
 
-							for (int i = semanticTypeList.size() - 1; i >= 0; i--) {
-								SemanticType maps = semanticTypeList.get(i);
+							for (SemanticType maps : semanticTypeList) {
 								for (Map<String, Object> map : maps) {
 									Object tokenType = map.get("tokenType");
 									if (!tokenType.equals("TOKEN")) {
-										set.add(io.vavr.Tuple.of(maps.getPos(), map));
+										set.add(SemanticsPos.of(maps.getPos(), map));
 									}
 								}
 							}
-
 						}
+
 						List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
 						Map<Tuple<Integer>, List<Map<String, Object>>> collect =
@@ -178,9 +137,10 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 								.stream()
 								.collect(
 									Collectors.groupingBy(
-										Tuple2::_1,
+										SemanticsPos::getPos,
 										Collectors.mapping(
-											Tuple2::_2, Collectors.toList())
+											SemanticsPos::getSemantics,
+											Collectors.toList())
 									)
 								);
 
@@ -222,6 +182,53 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 			response
 		);
 
+	}
+
+	private Map<Tuple<Integer>, Map<String, Object>> _getRequestTokensMap(
+		String searchText, List<QueryAnalysisToken> requestTokens) {
+
+		Map<Tuple<Integer>, Map<String, Object>> chart;
+
+		if (!requestTokens.isEmpty()) {
+
+			chart = new HashMap<>();
+
+			for (QueryAnalysisToken token : requestTokens) {
+
+				String analyzed =
+					searchText
+						.substring(
+							token.getStart(), token.getEnd());
+
+				String prefix =
+					searchText.substring(0, token.getStart());
+
+				long prefixCount =
+					prefix
+						.codePoints()
+						.filter(Character::isWhitespace)
+						.count();
+
+				String[] splitAnalyzed = Utils.split(analyzed);
+
+				Tuple<Integer> pos =
+					Tuple.of(
+						(int)prefixCount,
+						(int)(prefixCount + splitAnalyzed.length));
+
+				Map<String, Object> copy = new HashMap<>(
+					token.getToken());
+
+				copy.put("score", 100.0f);
+
+				chart.put(pos, copy);
+
+			}
+		}
+		else {
+			chart = Map.of();
+		}
+		return chart;
 	}
 
 	@Reference
@@ -283,15 +290,24 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		private List<QueryAnalysisTokens> analysis;
 	}
 
-	public static class ScoreComparator
-		implements Comparator<Tuple2<Tuple<Integer>, Map<String, Object>>> {
+	@Data
+	@Builder
+	@NoArgsConstructor
+	@AllArgsConstructor(staticName = "of")
+	public static class SemanticsPos {
+		private Tuple<Integer> pos;
+		private Map<String, Object> semantics;
+	}
+
+	public static class ScoreComparator implements Comparator<SemanticsPos> {
 
 		@Override
 		public int compare(
-			Tuple2<Tuple<Integer>, Map<String, Object>> to1, Tuple2<Tuple<Integer>, Map<String, Object>> to2) {
+			SemanticsPos to1,
+			SemanticsPos to2) {
 
-			Map<String, Object> o1 = to1._2();
-			Map<String, Object> o2 = to2._2();
+			Map<String, Object> o1 = to1.semantics;
+			Map<String, Object> o2 = to2.semantics;
 
 			Object tokenType1 = o1.get("tokenType");
 			Object tokenType2 = o2.get("tokenType");
@@ -303,7 +319,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 				if (scoreCompared != 0) {
 					return scoreCompared;
 				}
-				return -1;
+				return 1;
 			}
 
 			Object value1 = o1.get("value");
@@ -316,7 +332,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 				if (scoreCompared != 0) {
 					return scoreCompared;
 				}
-				return -1;
+				return 1;
 			}
 
 			return 0;
