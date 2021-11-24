@@ -5,16 +5,18 @@ import java.util.Set;
 
 public interface Annotator extends Comparable<Annotator> {
 
-	default List<CategorySemantics> annotate(String...tokens) {
-		return annotate(-1, tokens);
+	default List<CategorySemantics> annotate(Tuple<Integer> chartKey, String...tokens) {
+		return annotate(chartKey, -1, tokens);
 	}
 
-	List<CategorySemantics> annotate(long tenantId, String...tokens);
+	List<CategorySemantics> annotate(
+		Tuple<Integer> chartKey, long tenantId, String...tokens);
 
 	default List<CategorySemantics> annotate(
+		Tuple<Integer> chartKey,
 		long tenantId,
 		Set<String> context, String...tokens) {
-		return annotate(tenantId, tokens);
+		return annotate(chartKey, tenantId, tokens);
 	}
 
 	int weight();

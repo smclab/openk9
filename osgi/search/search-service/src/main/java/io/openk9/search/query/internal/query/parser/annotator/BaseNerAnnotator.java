@@ -1,6 +1,7 @@
 package io.openk9.search.query.internal.query.parser.annotator;
 
 import io.openk9.search.api.query.parser.CategorySemantics;
+import io.openk9.search.api.query.parser.Tuple;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -35,9 +35,10 @@ public class BaseNerAnnotator extends BaseAnnotator {
 	}
 
 	@Override
-	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
+	public List<CategorySemantics> annotate_(
+		Tuple<Integer> pos, long tenantId, List<Token> tokenList) {
 
-		if (Arrays.stream(tokens).allMatch(stopWords::contains)) {
+		if (tokenList.stream().allMatch(Token::isStopword)) {
 			return List.of();
 		}
 
@@ -50,8 +51,10 @@ public class BaseNerAnnotator extends BaseAnnotator {
 			QueryBuilders.matchQuery(
 				"type.keyword", category));
 
-		for (String token : tokens) {
-			builder.must(query("name", token));
+		for (Token token : tokenList) {
+			if (!token.isStopword()) {
+				builder.must(query("name", token.getToken()));
+			}
 		}
 
 		SearchRequest searchRequest;
@@ -77,6 +80,8 @@ public class BaseNerAnnotator extends BaseAnnotator {
 			_log.debug(builder.toString());
 		}
 
+		Tuple<Integer> newPos = getPos(pos, tokenList);
+
 		try {
 			SearchResponse search =
 				restHighLevelClient.search(
@@ -94,7 +99,8 @@ public class BaseNerAnnotator extends BaseAnnotator {
 							"tenantId", senamtics.get("tenantId"),
 							"value", senamtics.get("id"),
 							"score", hit.getScore()
-						)
+						),
+						newPos
 					)
 				);
 			}

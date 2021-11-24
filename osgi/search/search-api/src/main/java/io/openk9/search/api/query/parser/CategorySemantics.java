@@ -14,4 +14,5 @@ import java.util.Map;
 public class CategorySemantics {
 	private final String category;
 	private final Map<String, Object> semantics;
+	private final Tuple<Integer> chartKey;
 }

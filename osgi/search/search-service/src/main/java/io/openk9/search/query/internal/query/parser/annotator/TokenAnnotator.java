@@ -2,6 +2,7 @@ package io.openk9.search.query.internal.query.parser.annotator;
 
 import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
+import io.openk9.search.api.query.parser.Tuple;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -21,7 +22,8 @@ public class TokenAnnotator extends BaseAnnotator {
 
 	@Override
 	public List<CategorySemantics> annotate(
-		long tenantId, Set<String> context, String... tokens) {
+		Tuple<Integer> pos,
+		long tenantId, Set<String> context, String...tokens) {
 
 		if (tokens.length == 1) {
 			String token = tokens[0];
@@ -34,7 +36,8 @@ public class TokenAnnotator extends BaseAnnotator {
 							"tokenType", "TOKEN",
 							"value", token,
 							"score", 1.0f
-						)
+						),
+						pos
 					)
 				);
 			}
@@ -45,18 +48,20 @@ public class TokenAnnotator extends BaseAnnotator {
 	}
 
 	@Override
-	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
+	public List<CategorySemantics> annotate_(
+		Tuple<Integer> pos, long tenantId, List<Token> tokenList) {
 
-		if (tokens.length == 1) {
-			String token = tokens[0];
+		if (tokenList.size() == 1) {
+			Token token = tokenList.get(0);
 			return List.of(
 				CategorySemantics.of(
 					"$TOKEN",
 					Map.of(
 						"tokenType", "TOKEN",
-						"value", token,
+						"value", token.getToken(),
 						"score", 1.0f
-					)
+					),
+					pos
 				)
 			);
 		}

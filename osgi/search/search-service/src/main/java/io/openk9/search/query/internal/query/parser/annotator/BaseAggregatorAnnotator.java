@@ -23,7 +23,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
@@ -44,23 +46,22 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 	}
 
 	@Override
-	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
+	public List<CategorySemantics> annotate_(
+		Tuple<Integer> pos, long tenantId, List<Token> tokenList) {
 
-		if (Arrays.stream(tokens).allMatch(stopWords::contains)) {
+		if (tokenList.stream().allMatch(Token::isStopword)) {
 			return List.of();
 		}
 
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();
 
-		String token;
-
-		if (tokens.length == 1) {
-			token = tokens[0];
-		}
-		else {
-			token = String.join(" ", tokens);
-		}
+		String token =
+			tokenList
+				.stream()
+				.filter(t -> !t.isStopword())
+				.map(Token::getToken)
+				.collect(Collectors.joining(" "));
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
@@ -104,6 +105,8 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 		List<Tuple> scoreKeys = new ArrayList<>();
 
+		Tuple<Integer> newPos = getPos(pos, tokenList);
+
 		try {
 			SearchResponse search =
 				restHighLevelClient.search(
@@ -117,7 +120,7 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 					if (token.equalsIgnoreCase(keyAsString)) {
 						return List.of(_createCategorySemantics(
-							terms.getName(), keyAsString));
+							terms.getName(), keyAsString, newPos));
 					}
 
 					scoreKeys.add(
@@ -147,12 +150,25 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		String key = (String)scoreKeys.get(0).get(1);
 		String name = (String)scoreKeys.get(0).get(2);
 
-		return List.of(_createCategorySemantics(name, key));
+		return List.of(_createCategorySemantics(name, key, newPos));
 
 	}
 
-	protected abstract CategorySemantics _createCategorySemantics(
-		String aggregatorName, String aggregatorKey);
+	protected CategorySemantics _createCategorySemantics(
+		String aggregatorName, String aggregatorKey, Tuple<Integer> pos) {
+
+		return CategorySemantics.of(
+			"$AGGREGATE",
+			Map.of(
+				"tokenType", "TEXT",
+				"keywordKey", aggregatorName,
+				"value", aggregatorKey,
+				"score", 1.0f
+			),
+			pos
+		);
+
+	}
 
 	protected void setRestHighLevelClientProvider(
 		RestHighLevelClientProvider restHighLevelClientProvider) {
