@@ -71,13 +71,13 @@ public class CreateDocumentEntitiesRunnable
 
 				for (Entity entity : entities) {
 					entityGraphService.createRelationship(
-						entityGraph.getId(), entity.getId(), "related_to");
+						entity.getId(), entityGraph.getId(), "related_to");
 				}
 
 				documentEntityMapMap.remove(contentId);
 
 			}
-			
+
 		}
 
 	}
