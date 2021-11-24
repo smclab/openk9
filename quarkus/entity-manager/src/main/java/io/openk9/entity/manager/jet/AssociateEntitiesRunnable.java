@@ -102,6 +102,7 @@ public class AssociateEntitiesRunnable
 								entity.getType(), entity.getCacheId(),
 								entity.getIngestionId()
 							), entity);
+						entityContextMap.remove(entity.getCacheId());
 					}
 				}
 			}
@@ -110,6 +111,8 @@ public class AssociateEntitiesRunnable
 			}
 
 		}
+
+		_log.info("entities associated: " + entitiesToUpdate.size());
 
 		entityIMap.setAll(entitiesToUpdate);
 

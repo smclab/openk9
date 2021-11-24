@@ -170,17 +170,17 @@ public class EntityManagerBus {
 
 					String cacheId = Long.toString(_entityFlakeId.newId());
 
+					String name =
+						payload.getDatasourceId() + "_" + payload.getContentId();
+
 					Entity documentEntity =
 						new Entity(
-							null, cacheId, tenantId,
-							payload.getDatasourceId() + "_" +
-							payload.getContentId(),
-							"document", null, ingestionId, true, false);
+							null, cacheId, tenantId, name, "document", null,
+							ingestionId, true, false);
 
 					entityTransactionalMap.set(
 						EntityKey.of(
-							tenantId, cacheId, "document", cacheId,
-							ingestionId),
+							tenantId, name, "document", cacheId, ingestionId),
 						documentEntity
 					);
 
