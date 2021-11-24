@@ -80,6 +80,9 @@ public class BaseNerAnnotator extends BaseAnnotator {
 			_log.debug(builder.toString());
 		}
 
+		List<CategorySemantics> optionalCategorySemantics =
+			getCategorySemantics(tokenList);
+
 		Tuple<Integer> newPos = getPos(pos, tokenList);
 
 		try {
@@ -114,6 +117,7 @@ public class BaseNerAnnotator extends BaseAnnotator {
 			_log.error(e.getMessage(), e);
 		}
 
+		list.addAll(optionalCategorySemantics);
 
 		return list;
 	}

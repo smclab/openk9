@@ -8,6 +8,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public abstract class BaseAnnotator implements Annotator {
@@ -72,8 +73,6 @@ public abstract class BaseAnnotator implements Annotator {
 	protected static Tuple<Integer> getPos(
 		Tuple<Integer> chartKey, List<Token> tokenList) {
 
-		return chartKey;
-		/*
 		Integer startPos = chartKey.get(0);
 
 		for (int i = 0; i < tokenList.size(); i++) {
@@ -94,8 +93,29 @@ public abstract class BaseAnnotator implements Annotator {
 			}
 		}
 
-		return Tuple.of(startPos, endPos);*/
+		return Tuple.of(startPos, endPos);
 
+	}
+
+	protected List<CategorySemantics> getCategorySemantics(
+		List<Token> tokenList) {
+
+		List<CategorySemantics> optionalCategorySemantics =
+			new ArrayList<>();
+
+		for (int i = 0; i < tokenList.size(); i++) {
+			Token token = tokenList.get(i);
+			if (token.isStopword()) {
+				optionalCategorySemantics.add(
+					CategorySemantics.of(
+						"$Optional",
+						Map.of(),
+						Tuple.of(i, i + 1)
+					)
+				);
+			}
+		}
+		return optionalCategorySemantics;
 	}
 
 	protected void setAnnotatorConfig(AnnotatorConfig annotatorConfig) {

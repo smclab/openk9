@@ -150,7 +150,12 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		String key = (String)scoreKeys.get(0).get(1);
 		String name = (String)scoreKeys.get(0).get(2);
 
-		return List.of(_createCategorySemantics(name, key, newPos));
+		List<CategorySemantics> categorySemantics =
+			getCategorySemantics(tokenList);
+
+		categorySemantics.add(_createCategorySemantics(name, key, newPos));
+
+		return categorySemantics;
 
 	}
 
