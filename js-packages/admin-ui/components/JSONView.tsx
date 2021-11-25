@@ -23,7 +23,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   json: {
     marginTop: "0.2rem",
     backgroundColor: theme.digitalLakeMainL2,
-    color: "white",
     padding: theme.spacingUnit * 2,
     borderRadius: theme.borderRadius,
   },
