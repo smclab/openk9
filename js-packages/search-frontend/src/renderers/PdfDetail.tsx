@@ -55,7 +55,7 @@ export function PdfDetail({ result }: PdfDetailProps) {
               title={binary.id}
               src={`/api/searcher/resources/${result.source.datasourceId}/${result.source.id}/${binary.id}`}
               css={css`
-                width: calc(50vw - 33px);
+                width: calc(100%);
                 height: 65vh;
                 border: none;
                 border-radius: 4px;
