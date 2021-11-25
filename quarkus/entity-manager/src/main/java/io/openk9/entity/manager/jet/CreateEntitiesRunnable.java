@@ -7,6 +7,7 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.map.IMap;
 import com.hazelcast.query.Predicates;
 import io.openk9.entity.manager.action.GetEntitiesCallable;
+import io.openk9.entity.manager.cache.model.AssociableEntityKey;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cleaner.EntityNameCleaner;
@@ -64,6 +65,9 @@ public class CreateEntitiesRunnable
 
 		IMap<EntityKey, Entity> entityIMap =
 			MapUtil.getEntityMap(_hazelcastInstance);
+
+		IMap<AssociableEntityKey, Entity> associableEntityMap =
+			MapUtil.getAssociableEntityMap(_hazelcastInstance);
 
 		Set<EntityKey> entityKeys = entityIMap.localKeySet(
 			Predicates.and(
@@ -148,9 +152,11 @@ public class CreateEntitiesRunnable
 		Collection<List<EntityMember>> values =
 			entitiesGroupingByIngestionId.values();
 
+		Map<EntityKey, Entity> entityMap = new HashMap<>();
+
 		for (List<EntityMember> ingestionIdEntities : values) {
 
-			Map<EntityKey, Entity> entityMap = new HashMap<>();
+			Map<AssociableEntityKey, Entity> localAssociableEntityMap = new HashMap<>();
 
 			List<EntityCandidates> entityCandidateList = new ArrayList<>();
 
@@ -195,6 +201,13 @@ public class CreateEntitiesRunnable
 					.defaultIfEmpty(List.of());
 
 			for (Entity currentEntityRequest : zip.block()) {
+
+				localAssociableEntityMap.put(
+					AssociableEntityKey.of(
+						currentEntityRequest.getCacheId(),
+						currentEntityRequest.getIngestionId()
+					), currentEntityRequest);
+
 				entityMap.put(
 					EntityKey.of(
 						currentEntityRequest.getTenantId(),
@@ -205,9 +218,11 @@ public class CreateEntitiesRunnable
 					), currentEntityRequest);
 			}
 
-			entityIMap.setAll(entityMap);
+			associableEntityMap.setAll(localAssociableEntityMap);
 
 		}
+
+		entityIMap.setAll(entityMap);
 
 	}
 
@@ -238,7 +253,8 @@ public class CreateEntitiesRunnable
 				currentEntityRequest.getGraphId(),
 				currentEntityRequest.getIngestionId(),
 				currentEntityRequest.isAssociated(),
-				currentEntityRequest.isIndexable());
+				currentEntityRequest.isIndexable(),
+				currentEntityRequest.getContext());
 
 			List<EntityIndex> restCandidates =
 				entityCandidateList

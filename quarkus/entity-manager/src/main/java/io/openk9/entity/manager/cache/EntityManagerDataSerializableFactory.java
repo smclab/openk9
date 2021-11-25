@@ -2,6 +2,7 @@ package io.openk9.entity.manager.cache;
 
 import com.hazelcast.nio.serialization.DataSerializableFactory;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import io.openk9.entity.manager.cache.model.AssociableEntityKey;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.EntityRelation;
@@ -20,6 +21,7 @@ public class EntityManagerDataSerializableFactory
 	public static final int ENTITY_RELATION_KEY_TYPE = 4;
 	public static final int INGESTION_KEY_TYPE = 6;
 	public static final int INGESTION_ENTITY_TYPE = 8;
+	public static final int ASSOCIABLE_ENTITY_KEY_TYPE = 9;
 
 	@Override
 	public IdentifiedDataSerializable create(int typeId) {
@@ -36,6 +38,8 @@ public class EntityManagerDataSerializableFactory
 				return new IngestionKey();
 			case INGESTION_ENTITY_TYPE:
 				return new IngestionEntity();
+			case ASSOCIABLE_ENTITY_KEY_TYPE:
+				return new AssociableEntityKey();
 			default:
 				return null;
 		}

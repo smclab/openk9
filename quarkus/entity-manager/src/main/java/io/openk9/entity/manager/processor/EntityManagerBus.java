@@ -70,9 +70,6 @@ public class EntityManagerBus {
 				TransactionalMap<EntityRelationKey, EntityRelation> transactionalEntityRelationMap =
 					transactionContext.getMap("entityRelationMap");
 
-				TransactionalMultiMap<String, String> entityContextMap =
-					transactionContext.getMultiMap("entityContextMap");
-
 				TransactionalMultiMap<String, String> documentEntityMap =
 					transactionContext.getMultiMap("documentEntityMap");
 
@@ -99,11 +96,7 @@ public class EntityManagerBus {
 
 					Entity entity = new Entity(
 						null, cacheId, tenantId, name, type, null,
-						ingestionId, false, true);
-
-					for (String context : entityRequest.getContext()) {
-						entityContextMap.put(cacheId, context);
-					}
+						ingestionId, false, true, entityRequest.getContext());
 
 					entityTransactionalMap.set(key, entity);
 

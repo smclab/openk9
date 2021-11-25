@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.io.IOException;
+import java.util.List;
 
 @Data
 @Builder
@@ -36,6 +37,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 	private String ingestionId;
 	private boolean associated;
 	private boolean indexable;
+	private List<String> context;
 
 	@Override
 	public int compareTo(Entity other) {
@@ -74,6 +76,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 		out.writeString(ingestionId);
 		out.writeBoolean(associated);
 		out.writeBoolean(indexable);
+		out.writeObject(context);
 	}
 
 	@Override
@@ -87,5 +90,6 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 		ingestionId = in.readString();
 		associated = in.readBoolean();
 		indexable = in.readBoolean();
+		context = in.readObject();
 	}
 }

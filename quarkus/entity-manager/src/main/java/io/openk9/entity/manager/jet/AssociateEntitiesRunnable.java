@@ -2,11 +2,10 @@ package io.openk9.entity.manager.jet;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
+import com.hazelcast.core.Pipelining;
 import com.hazelcast.map.IMap;
-import com.hazelcast.multimap.MultiMap;
-import com.hazelcast.query.Predicates;
+import io.openk9.entity.manager.cache.model.AssociableEntityKey;
 import io.openk9.entity.manager.cache.model.Entity;
-import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.IngestionEntity;
 import io.openk9.entity.manager.service.index.DataService;
 import io.openk9.entity.manager.util.MapUtil;
@@ -15,7 +14,6 @@ import org.jboss.logging.Logger;
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,23 +27,14 @@ public class AssociateEntitiesRunnable
 
 		_log.info("start AssociateEntitiesRunnable");
 
-		IMap<EntityKey, Entity> entityIMap =
-			MapUtil.getEntityMap(_hazelcastInstance);
+		IMap<AssociableEntityKey, Entity> associableEntityMap =
+			MapUtil.getAssociableEntityMap(_hazelcastInstance);
 
-		MultiMap<String, String> entityContextMap =
-			_hazelcastInstance.getMultiMap("entityContextMap");
+		Set<AssociableEntityKey> associableEntityKeys =
+			associableEntityMap.localKeySet();
 
-		Set<EntityKey> entityKeys = entityIMap.localKeySet(
-			Predicates.and(
-				Predicates.equal("indexable", true),
-				Predicates.notEqual("id", null),
-				Predicates.notEqual("graphId", null),
-				Predicates.equal("associated", false)
-			)
-		);
-
-		Map<EntityKey, Entity> localEntityMap =
-			entityIMap.getAll(entityKeys);
+		Map<AssociableEntityKey, Entity> localEntityMap =
+			associableEntityMap.getAll(associableEntityKeys);
 
 		_log.info("ingestionKeys: " + localEntityMap.size());
 
@@ -59,8 +48,8 @@ public class AssociateEntitiesRunnable
 						Collectors.mapping(
 							Map.Entry::getValue, Collectors.toList())));
 
+		List<AssociableEntityKey> entitiesToRemove = new ArrayList<>();
 
-		Map<EntityKey, Entity> entitiesToUpdate = new HashMap<>();
 		List<String> ingestionIds = new ArrayList<>();
 
 		for (Map.Entry<String, List<Entity>> entry : groupingByIngestionId.entrySet()) {
@@ -90,21 +79,18 @@ public class AssociateEntitiesRunnable
 						ingestionId,
 						v
 							.stream()
-							.map(entity -> IngestionEntity
-								.fromEntity(entity, entityContextMap.get(entity.getCacheId())))
+							.map(IngestionEntity::fromEntity)
 							.collect(Collectors.toList())
 					);
 
 				if (associated) {
 					for (Entity entity : v) {
-						entity.setAssociated(true);
-						entitiesToUpdate.put(
-							EntityKey.of(
-								entity.getTenantId(), entity.getName(),
-								entity.getType(), entity.getCacheId(),
+						entitiesToRemove.add(
+							AssociableEntityKey.of(
+								entity.getCacheId(),
 								entity.getIngestionId()
-							), entity);
-						entityContextMap.remove(entity.getCacheId());
+							)
+						);
 						ingestionIds.add(ingestionId);
 					}
 				}
@@ -115,9 +101,24 @@ public class AssociateEntitiesRunnable
 
 		}
 
-		_log.info("entities associated: " + entitiesToUpdate.size() + " ingestionIds: " + ingestionIds);
+		_log.info("entities associated: " + entitiesToRemove.size() + " ingestionIds: " + ingestionIds);
 
-		entityIMap.setAll(entitiesToUpdate);
+		try {
+
+			Pipelining pipelining = new Pipelining<>(10);
+
+			for (AssociableEntityKey associateEntityKey : entitiesToRemove) {
+				pipelining.add(
+					associableEntityMap.removeAsync(associateEntityKey)
+				);
+			}
+
+			pipelining.results();
+
+		}
+		catch (Exception e) {
+			_log.error(e.getMessage(), e);
+		}
 
 	}
 

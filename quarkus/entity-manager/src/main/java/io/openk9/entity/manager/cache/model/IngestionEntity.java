@@ -73,15 +73,14 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 		context = in.readObject();
 	}
 
-	public static IngestionEntity fromEntity(
-		Entity entity, Collection<String> context) {
+	public static IngestionEntity fromEntity(Entity entity) {
 		return new IngestionEntity(
 			entity.getId(),
 			entity.getCacheId(),
 			entity.getTenantId(),
 			entity.getName(),
 			entity.getType(),
-			context
+			entity.getContext()
 		);
 	}
 
