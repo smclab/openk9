@@ -338,11 +338,16 @@ function deriveSearchQuery(
           case "ENTITY":
             return {
               tokenType: "ENTITY",
+              keywordKey: token.keywordKey,
               entityType: token.entityType,
               values: [token.value],
             };
           case "TEXT":
-            return { tokenType: "TEXT", values: [token.value] };
+            return {
+              tokenType: "TEXT",
+              keywordKey: token.keywordKey,
+              values: [token.value],
+            };
         }
       }
       return { tokenType: "TEXT", values: [span.text] };
