@@ -53,7 +53,7 @@ public class TextQueryParser implements QueryParser {
 					searchToken, innerBoolQueryBuilder, entityMapperList);
 			}
 
-			query.must(innerBoolQueryBuilder);
+			query.should(innerBoolQueryBuilder);
 
 		}
 
