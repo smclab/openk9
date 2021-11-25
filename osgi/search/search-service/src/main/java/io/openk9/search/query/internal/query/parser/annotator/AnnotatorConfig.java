@@ -18,7 +18,6 @@ public class AnnotatorConfig {
 		name = "Annotator Configuration"
 	)
 	@interface Config {
-
 		InternalFuzziness nerAnnotatorFuzziness() default InternalFuzziness.ONE;
 
 		InternalFuzziness restFuzziness() default InternalFuzziness.AUTO;
@@ -28,6 +27,14 @@ public class AnnotatorConfig {
 		int restSize() default 10;
 
 		long timeoutMs() default 10_000;
+
+		String[] aggregatorAnnotator() default {
+
+		};
+
+		String[] nerAnnotator() default {
+			"person", "loc", "organization"
+		};
 
 		String[] stopWords() default {
 			"ad", "al", "allo", "ai", "agli", "all", "agl", "alla", "alle",
@@ -75,6 +82,14 @@ public class AnnotatorConfig {
 
 	@Deactivate
 	void deactivate() {
+	}
+
+	public String[] nerAnnotator() {
+		return _config.nerAnnotator();
+	}
+
+	public String[] aggregatorAnnotator() {
+		return _config.aggregatorAnnotator();
 	}
 
 	public String[] stopWords() {

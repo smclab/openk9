@@ -4,6 +4,10 @@ import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
 import io.openk9.search.api.query.parser.Annotator;
+import io.openk9.search.client.api.RestHighLevelClientProvider;
+import io.openk9.search.query.internal.query.parser.annotator.AggregatorAnnotator;
+import io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig;
+import io.openk9.search.query.internal.query.parser.annotator.NerAnnotator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -23,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component(
 	immediate = true, service = GrammarProvider.class
@@ -67,8 +72,30 @@ public class GrammarProvider {
 
 		}
 
+		String[] nerAnnotator = _annotatorConfig.nerAnnotator();
+
+		Stream<Annotator> nerAnnotatorStream =
+			Arrays
+				.stream(nerAnnotator)
+				.map(keyword -> new NerAnnotator(keyword, _annotatorConfig,
+					_restHighLevelClientProvider));
+
+		String[] aggregatorAnnotator = _annotatorConfig.aggregatorAnnotator();
+
+		Stream<Annotator> aggregatorAnnotatorStream =
+			Arrays
+				.stream(aggregatorAnnotator)
+				.map(keyword -> new AggregatorAnnotator(keyword, _annotatorConfig,
+					_restHighLevelClientProvider));
+
+		List<Annotator> newAnnotators =
+			Stream.of(
+				_annotatorList.stream(), nerAnnotatorStream, aggregatorAnnotatorStream)
+				.flatMap(Function.identity())
+				.collect(Collectors.toList());
+
 		_grammar = new Grammar(
-			List.of(GrammarMixin.of(rules, _annotatorList)));
+			List.of(GrammarMixin.of(rules, newAnnotators)));
 	}
 
 	private List<Rule> _toJavaRules(JsonNode jsonNode) {
@@ -140,6 +167,12 @@ public class GrammarProvider {
 		policyOption = ReferencePolicyOption.GREEDY
 	)
 	private List<Annotator> _annotatorList;
+
+	@Reference
+	private AnnotatorConfig _annotatorConfig;
+
+	@Reference
+	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
 	@Reference
 	private JsonFactory _jsonFactory;
