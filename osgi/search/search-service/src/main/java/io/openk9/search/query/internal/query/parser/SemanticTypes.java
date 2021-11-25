@@ -1,9 +1,12 @@
 package io.openk9.search.query.internal.query.parser;
 
+import io.openk9.search.api.query.parser.Tuple;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class SemanticTypes implements Iterable<SemanticType> {
@@ -71,13 +74,37 @@ public final class SemanticTypes implements Iterable<SemanticType> {
 
 	public static SemanticTypes merge(SemanticTypes semanticTypes) {
 
-		List<SemanticType> list =
-			semanticTypes
-				.stream()
-				.filter(maps -> !maps.getValue().isEmpty())
-				.collect(Collectors.toList());
+		if (semanticTypes.size() == 1) {
+			return semanticTypes;
+		}
 
-		return of(list);
+		int startPos = -1;
+		int endPos = -1;
+
+		List<Map<String, Object>> newSemantics = new ArrayList<>();
+
+		for (SemanticType semanticType : semanticTypes) {
+			Tuple<Integer> pos = semanticType.getPos();
+			if (!pos.isEmpty()) {
+
+				Integer start = pos.get(0);
+
+				if (startPos == -1 || startPos > start) {
+					startPos = start;
+				}
+
+				Integer end = pos.get(1);
+
+				if (endPos == -1 || endPos < end) {
+					endPos = end;
+				}
+
+			}
+
+			newSemantics.addAll(semanticType.getValue());
+		}
+
+		return of(SemanticType.of(Tuple.of(startPos, endPos), newSemantics));
 	}
 
 	public static SemanticTypes EMPTY_SEMANTIC_TYPES =

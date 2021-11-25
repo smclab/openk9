@@ -19,7 +19,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component(
 	immediate = true, service = GrammarProvider.class
@@ -93,12 +96,19 @@ public class GrammarProvider {
 					}
 					else {
 
-						int i = Integer.parseInt(sem);
-						rules.add(
-							Rule.of(
-								lhs, rhs,
-								Semantic.of(
-									sems -> SemanticTypes.of(sems.get(i)))));
+						String[] split = sem.split(",");
+
+						List<Integer> collect =
+							Arrays.stream(split)
+								.map(Integer::parseInt)
+								.collect(Collectors.toList());
+
+						Function<SemanticTypes, SemanticTypes> function =
+							s -> SemanticTypes.of(
+								collect.stream().map(s::get).toArray(SemanticType[]::new));
+
+						rules.add(Rule.of(lhs, rhs, Semantic.of(function)));
+
 					}
 			}
 

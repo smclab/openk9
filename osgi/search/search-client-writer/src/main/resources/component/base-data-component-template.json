@@ -9,6 +9,19 @@
 				"analyzer": {
 					"email": {
 						"tokenizer": "uax_url_email"
+					},
+					"standard_lowercase_italian_stop_words_filter": {
+						"tokenizer": "standard",
+						"filter": [
+							"lowercase",
+							"italian_stop_words_filter"
+						]
+					}
+				},
+				"filter": {
+					"italian_stop_words_filter": {
+						"type": "stop",
+						"stopwords":"_italian_"
 					}
 				}
 			}

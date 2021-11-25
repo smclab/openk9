@@ -5,59 +5,9 @@
 		"sem": ""
 	},
 	{
-		"lhs": "$Optional",
-		"rhs": "e",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "le",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "su",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "i",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "con",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "di",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "il",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "del",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "in",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "sulle",
-		"sem": ""
-	},
-	{
 		"lhs": "$ROOT",
 		"rhs": "?$Optionals $Query ?$Optionals",
-		"sem": "IDENTITY"
+		"sem": "1"
 	},
 	{
 		"lhs": "$Query",
