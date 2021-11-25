@@ -4,11 +4,17 @@ import { myTheme } from "../utils/myTheme";
 import { Logo } from "./Logo";
 
 type PageLayoutProps = {
+  dockbar: React.ReactNode;
   search: React.ReactNode;
   result: React.ReactNode;
   detail: React.ReactNode;
 };
-export function PageLayout({ search, result, detail }: PageLayoutProps) {
+export function PageLayout({
+  dockbar,
+  search,
+  result,
+  detail,
+}: PageLayoutProps) {
   return (
     <div
       css={css`
@@ -65,6 +71,15 @@ export function PageLayout({ search, result, detail }: PageLayoutProps) {
           >
             K9
           </span>
+        </div>
+        <div
+          css={css`
+            flex-grow: 1;
+            display: flex;
+            justify-content: flex-end;
+          `}
+        >
+          {dockbar}
         </div>
       </div>
       <div

@@ -1,12 +1,16 @@
 import { useInfiniteQuery, useQuery } from "react-query";
 import { isOverlapping } from "../logic/useSelections";
+import { LoginInfo, withAutorization } from "./useLogin";
 
-export function useInfiniteResults(searchQuery: Array<SearchTokenDTO>) {
+export function useInfiniteResults(
+  loginInfo: LoginInfo | null,
+  searchQuery: Array<SearchTokenDTO>,
+) {
   const pageSize = 10;
   return useInfiniteQuery(
     ["results", searchQuery] as const,
     async ({ queryKey: [, searchQuery], pageParam = 0 }) => {
-      return fetchResults(searchQuery, [
+      return fetchResults(loginInfo, searchQuery, [
         pageParam * pageSize,
         pageParam * pageSize + pageSize,
       ]);
@@ -27,6 +31,7 @@ export function useInfiniteResults(searchQuery: Array<SearchTokenDTO>) {
 }
 
 async function fetchResults(
+  loginInfo: LoginInfo | null,
   searchQuery: Array<SearchTokenDTO>,
   range: [number, number],
 ) {
@@ -36,10 +41,10 @@ async function fetchResults(
       range,
       searchQuery,
     }),
-    headers: {
+    headers: withAutorization(loginInfo, {
       Accept: "application/json",
       "Content-Type": "application/json",
-    },
+    }),
   });
   const data = (await response.json()) as ResultResponseDTO;
   return data;
@@ -117,21 +122,27 @@ export type ResultDTO = {
   };
 };
 
-export function useQueryAnalysis(request: AnalysisRequestDTO) {
+export function useQueryAnalysis(
+  loginInfo: LoginInfo | null,
+  request: AnalysisRequestDTO,
+) {
   return useQuery(
     ["query-anaylis", request] as const,
-    ({ queryKey: [, request] }) => fetchQueryAnalysis(request),
+    ({ queryKey: [, request] }) => fetchQueryAnalysis(loginInfo, request),
   );
 }
 
-async function fetchQueryAnalysis(request: AnalysisRequestDTO) {
+async function fetchQueryAnalysis(
+  loginInfo: LoginInfo | null,
+  request: AnalysisRequestDTO,
+) {
   const response = await fetch("/api/searcher/v1/query-analysis", {
     method: "POST",
     body: JSON.stringify(request),
-    headers: {
+    headers: withAutorization(loginInfo, {
       Accept: "application/json",
       "Content-Type": "application/json",
-    },
+    }),
   });
   const data = (await response.json()) as AnalysisResponseDTO;
   data.analysis = data.analysis

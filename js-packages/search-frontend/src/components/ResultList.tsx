@@ -7,20 +7,45 @@ import {
   useInfiniteResults,
 } from "../utils/remote-data";
 import { ResultMemo } from "../renderers/Result";
+import { LoginInfo } from "../utils/useLogin";
 
 type ResultsProps = {
+  loginInfo: LoginInfo | null;
   searchQuery: Array<SearchTokenDTO>;
   onDetail(result: ResultDTO): void;
   displayMode: { type: "finite" } | { type: "infinite" } | { type: "virtual" };
 };
-export function Results({ displayMode, onDetail, searchQuery }: ResultsProps) {
+export function Results({
+  displayMode,
+  onDetail,
+  searchQuery,
+  loginInfo,
+}: ResultsProps) {
   switch (displayMode.type) {
     case "finite":
-      return <FiniteResults searchQuery={searchQuery} onDetail={onDetail} />;
+      return (
+        <FiniteResults
+          loginInfo={loginInfo}
+          searchQuery={searchQuery}
+          onDetail={onDetail}
+        />
+      );
     case "infinite":
-      return <InfiniteResults searchQuery={searchQuery} onDetail={onDetail} />;
+      return (
+        <InfiniteResults
+          loginInfo={loginInfo}
+          searchQuery={searchQuery}
+          onDetail={onDetail}
+        />
+      );
     case "virtual":
-      return <VirtualResults searchQuery={searchQuery} onDetail={onDetail} />;
+      return (
+        <VirtualResults
+          loginInfo={loginInfo}
+          searchQuery={searchQuery}
+          onDetail={onDetail}
+        />
+      );
   }
 }
 
@@ -39,12 +64,17 @@ function ResultCount({ children }: ResultCountProps) {
   );
 }
 type ResulListProps = {
+  loginInfo: LoginInfo | null;
   searchQuery: Array<SearchTokenDTO>;
   onDetail(result: ResultDTO | null): void;
 };
 type FiniteResultsProps = ResulListProps & {};
-export function FiniteResults({ searchQuery, onDetail }: FiniteResultsProps) {
-  const results = useInfiniteResults(searchQuery);
+export function FiniteResults({
+  searchQuery,
+  onDetail,
+  loginInfo,
+}: FiniteResultsProps) {
+  const results = useInfiniteResults(loginInfo, searchQuery);
   return (
     <div>
       <ResultCount>{results.data?.pages[0].total}</ResultCount>
@@ -58,8 +88,9 @@ type InfiniteResultsProps = ResulListProps & {};
 export function InfiniteResults({
   searchQuery,
   onDetail,
+  loginInfo,
 }: InfiniteResultsProps) {
-  const results = useInfiniteResults(searchQuery);
+  const results = useInfiniteResults(loginInfo, searchQuery);
   return (
     <div>
       <ResultCount>{results.data?.pages[0].total}</ResultCount>
@@ -91,8 +122,12 @@ export function InfiniteResults({
   );
 }
 type VirtualResultsProps = ResulListProps & {};
-export function VirtualResults({ searchQuery, onDetail }: VirtualResultsProps) {
-  const results = useInfiniteResults(searchQuery);
+export function VirtualResults({
+  searchQuery,
+  onDetail,
+  loginInfo,
+}: VirtualResultsProps) {
+  const results = useInfiniteResults(loginInfo, searchQuery);
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
   return (
     <div

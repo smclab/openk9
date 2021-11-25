@@ -24,10 +24,13 @@ import { TokenSelect } from "./components/TokenSelect";
 import { useClickAway } from "./utils/useClickAway";
 import { getAutoSelections, useSelections } from "./logic/useSelections";
 import { Tooltip } from "./components/Tooltip";
+import { useLoginInfo } from "./utils/useLogin";
+import { LoginInfo } from "./components/LoginInfo";
 
 const DEBOUNCE = 300;
 
 export function App() {
+  const login = useLoginInfo();
   const [autoSelect, setAutoSelect] = React.useState(true);
   const [replaceText, setReplaceText] = React.useState(true);
   const [state, dispatch] = useSelections();
@@ -37,7 +40,7 @@ export function App() {
   } | null>(null);
   const [detail, setDetail] = React.useState<ResultDTO | null>(null);
   const debounced = useDebounce(state, DEBOUNCE);
-  const queryAnalysis = useQueryAnalysis({
+  const queryAnalysis = useQueryAnalysis(login.state?.loginInfo ?? null, {
     searchText: debounced.text,
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
       token ? [{ text, start, end, token }] : [],
@@ -103,6 +106,15 @@ export function App() {
   }, [adjustedSelection]);
   return (
     <PageLayout
+      dockbar={
+        false && (
+          <LoginInfo
+            loginState={login.state}
+            onLogin={login.login}
+            onLogout={login.logout}
+          />
+        )
+      }
       search={
         <div
           ref={clickAwayRef}
@@ -314,6 +326,7 @@ export function App() {
       }
       result={
         <Results
+          loginInfo={login.state?.loginInfo ?? null}
           displayMode={{ type: "virtual" }}
           searchQuery={searchQuery}
           onDetail={setDetail}
