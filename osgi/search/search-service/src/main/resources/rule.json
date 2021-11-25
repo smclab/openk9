@@ -57,7 +57,7 @@
 	{
 		"lhs": "$ROOT",
 		"rhs": "?$Optionals $Query ?$Optionals",
-		"sem": "1"
+		"sem": "IDENTITY"
 	},
 	{
 		"lhs": "$Query",
