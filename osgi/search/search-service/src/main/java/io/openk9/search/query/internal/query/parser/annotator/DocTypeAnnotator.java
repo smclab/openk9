@@ -2,11 +2,11 @@ package io.openk9.search.query.internal.query.parser.annotator;
 
 import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
-import io.openk9.search.api.query.parser.Tuple;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+import java.util.List;
 import java.util.Map;
 
 @Component(
@@ -20,7 +20,7 @@ public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 
 	@Override
 	protected CategorySemantics _createCategorySemantics(
-		String aggregatorName, String aggregatorKey, Tuple<Integer> pos) {
+		String aggregatorName, String aggregatorKey) {
 
 		return CategorySemantics.of(
 			"$DOCTYPE",
@@ -28,8 +28,7 @@ public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 				"tokenType", "DOCTYPE",
 				"value", aggregatorKey,
 				"score", 50.0f
-			),
-			pos
+			)
 		);
 
 	}

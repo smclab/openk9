@@ -23,9 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
@@ -46,22 +44,23 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 	}
 
 	@Override
-	public List<CategorySemantics> annotate_(
-		Tuple<Integer> pos, long tenantId, List<Token> tokenList) {
+	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
-		if (tokenList.stream().allMatch(Token::isStopword)) {
+		if (Arrays.stream(tokens).allMatch(stopWords::contains)) {
 			return List.of();
 		}
 
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();
 
-		String token =
-			tokenList
-				.stream()
-				.filter(t -> !t.isStopword())
-				.map(Token::getToken)
-				.collect(Collectors.joining(" "));
+		String token;
+
+		if (tokens.length == 1) {
+			token = tokens[0];
+		}
+		else {
+			token = String.join(" ", tokens);
+		}
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
@@ -105,8 +104,6 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 		List<Tuple> scoreKeys = new ArrayList<>();
 
-		Tuple<Integer> newPos = getPos(pos, tokenList);
-
 		try {
 			SearchResponse search =
 				restHighLevelClient.search(
@@ -120,7 +117,7 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 					if (token.equalsIgnoreCase(keyAsString)) {
 						return List.of(_createCategorySemantics(
-							terms.getName(), keyAsString, newPos));
+							terms.getName(), keyAsString));
 					}
 
 					scoreKeys.add(
@@ -150,30 +147,12 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		String key = (String)scoreKeys.get(0).get(1);
 		String name = (String)scoreKeys.get(0).get(2);
 
-		List<CategorySemantics> categorySemantics =
-			getCategorySemantics(tokenList);
-
-		categorySemantics.add(_createCategorySemantics(name, key, newPos));
-
-		return categorySemantics;
+		return List.of(_createCategorySemantics(name, key));
 
 	}
 
-	protected CategorySemantics _createCategorySemantics(
-		String aggregatorName, String aggregatorKey, Tuple<Integer> pos) {
-
-		return CategorySemantics.of(
-			"$AGGREGATE",
-			Map.of(
-				"tokenType", "TEXT",
-				"keywordKey", aggregatorName,
-				"value", aggregatorKey,
-				"score", 1.0f
-			),
-			pos
-		);
-
-	}
+	protected abstract CategorySemantics _createCategorySemantics(
+		String aggregatorName, String aggregatorKey);
 
 	protected void setRestHighLevelClientProvider(
 		RestHighLevelClientProvider restHighLevelClientProvider) {

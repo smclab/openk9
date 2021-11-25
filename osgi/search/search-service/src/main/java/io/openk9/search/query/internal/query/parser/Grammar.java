@@ -221,7 +221,7 @@ public class Grammar {
 		Tuple<Integer> chartKey = Tuple.of(i, j);
 
 		for (Annotator annotator : annotators) {
-			for (CategorySemantics categorySemantics : annotator.annotate(chartKey, tenantId, context, tokens)) {
+			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, context, tokens)) {
 
 				String category = categorySemantics.getCategory();
 
@@ -229,12 +229,11 @@ public class Grammar {
 					categorySemantics.getSemantics();
 
 				Rule rule = new Rule(
-					category, tokens, Semantic.of(
-						categorySemantics.getChartKey(), semantics));
+					category, tokens, Semantic.of(chartKey, semantics));
 
 				chart.computeIfAbsent(
-					categorySemantics.getChartKey(), (k) -> new ArrayList<>())
-					.add(Parse.of(rule, categorySemantics.getChartKey(), tokens));
+					chartKey, (k) -> new ArrayList<>())
+					.add(Parse.of(rule, chartKey, tokens));
 			}
 		}
 

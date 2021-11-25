@@ -5,9 +5,59 @@
 		"sem": ""
 	},
 	{
+		"lhs": "$Optional",
+		"rhs": "e",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optional",
+		"rhs": "le",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optional",
+		"rhs": "su",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optional",
+		"rhs": "i",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optional",
+		"rhs": "con",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optional",
+		"rhs": "di",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optional",
+		"rhs": "il",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optional",
+		"rhs": "del",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optional",
+		"rhs": "in",
+		"sem": ""
+	},
+	{
+		"lhs": "$Optional",
+		"rhs": "sulle",
+		"sem": ""
+	},
+	{
 		"lhs": "$ROOT",
 		"rhs": "?$Optionals $Query ?$Optionals",
-		"sem": "1"
+		"sem": "IDENTITY"
 	},
 	{
 		"lhs": "$Query",
@@ -17,7 +67,7 @@
 	{
 		"lhs": "$IntentCollection",
 		"rhs": "$Intent ?$Optionals ?$IntentCollection",
-		"sem": "MERGE"
+		"sem": "IDENTITY"
 	},
 	{
 		"lhs": "$Entity",

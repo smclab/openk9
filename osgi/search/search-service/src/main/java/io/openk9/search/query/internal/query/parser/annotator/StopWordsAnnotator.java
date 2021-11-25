@@ -2,7 +2,6 @@ package io.openk9.search.query.internal.query.parser.annotator;
 
 import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
-import io.openk9.search.api.query.parser.Tuple;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -11,32 +10,30 @@ import java.util.Map;
 
 @Component(
 	immediate = true,
-	service = Annotator.class
+	service = Annotator.class,
+	enabled = false
 )
 public class StopWordsAnnotator extends BaseAnnotator {
 
 	@Override
 	public List<CategorySemantics> annotate_(
-		Tuple<Integer> pos, long tenantId, List<Token> tokenList) {
+		long tenantId, String... tokens) {
 
-		if (tokenList.size() == 1) {
+		if (tokens.length == 1) {
 
-			Token token = tokenList.get(0);
+			String token = tokens[0];
 
-			if (token.isStopword()) {
+			if (stopWords.contains(token)) {
 				return List.of(
 					CategorySemantics.of(
 						"$Optional",
-						Map.of(),
-						pos
+						Map.of()
 					)
 				);
 			}
-
 		}
 
 		return List.of();
-
 	}
 
 	@Override
