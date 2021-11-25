@@ -14,6 +14,7 @@ type TokenSelectProps = {
   selected: TokenDTO | null;
   isOpen: boolean;
   optionIndex: number | null;
+  onOptionIndexChange(optionIndex: number): void;
   isAutoSlected: boolean;
 };
 export function TokenSelect({
@@ -22,6 +23,7 @@ export function TokenSelect({
   selected,
   isOpen,
   optionIndex,
+  onOptionIndexChange,
   isAutoSlected,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
@@ -63,7 +65,7 @@ export function TokenSelect({
             position: absolute;
             top: 100%;
             left: 0px;
-            width: 400px;
+            width: 600px;
             background-color: ${myTheme.backgroundColor1};
             border: 1px solid ${myTheme.searchBarBorderColor};
             border-radius: 4px;
@@ -73,6 +75,9 @@ export function TokenSelect({
           <div
             onClick={() => {
               onSelect(null);
+            }}
+            onMouseEnter={() => {
+              onOptionIndexChange(0);
             }}
             css={css`
               ${entryStyle(selected === null, optionIndex === 0)};
@@ -90,6 +95,9 @@ export function TokenSelect({
                 key={index}
                 onClick={() => {
                   onSelect(option);
+                }}
+                onMouseEnter={() => {
+                  onOptionIndexChange(index + 1);
                 }}
                 css={css`
                   ${entryStyle(isSelected, isHighlighted)};

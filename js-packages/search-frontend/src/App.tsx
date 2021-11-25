@@ -168,11 +168,19 @@ export function App() {
                     setOpenedDropdown(null);
                   };
                   const isAutoSelected = selection?.isAuto ?? false;
+                  const onOptionIndexChange = (optionIndex: number) => {
+                    setOpenedDropdown((openedDropdown) =>
+                      openedDropdown
+                        ? { ...openedDropdown, optionPosition: optionIndex }
+                        : openedDropdown,
+                    );
+                  };
                   return (
                     <TokenSelect
                       key={index}
                       span={span}
                       isOpen={isOpen}
+                      onOptionIndexChange={onOptionIndexChange}
                       optionIndex={optionIndex}
                       selected={selected}
                       onSelect={onSelect}
