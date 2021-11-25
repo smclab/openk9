@@ -88,6 +88,7 @@ export type ResultDTO = {
       imgUrl: string;
       pubDate: string;
       topic: string;
+      linkedUrls: Array<string>;
     };
     pubblicazioni?: {
       category: string;
@@ -95,6 +96,7 @@ export type ResultDTO = {
       pubDate: string;
       topic: string;
       authors: string;
+      linkedUrls: Array<string>;
     };
     resources: {
       binaries: {

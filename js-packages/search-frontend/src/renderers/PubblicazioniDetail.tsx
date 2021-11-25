@@ -39,11 +39,13 @@ export function PubblicazioniDetail({ result }: PubblicazioniDetailProps) {
           font-size: 0.8em;
         `}
       >
-        {result.highlight["web.url"] ? (
-          <HighlightedText text={result.highlight["web.url"][0]} />
-        ) : (
-          result.source.web?.url
-        )}
+        <a href={result.source.web?.url}>
+          {result.highlight["web.url"] ? (
+            <HighlightedText text={result.highlight["web.url"][0]} />
+          ) : (
+            result.source.web?.url
+          )}
+        </a>
       </div>
       <div>
         <strong>Category</strong> : {result.source.pubblicazioni?.category}
@@ -59,15 +61,25 @@ export function PubblicazioniDetail({ result }: PubblicazioniDetailProps) {
         {result.source.pubblicazioni?.pubDate}
       </div>
       <div>
-        {result.highlight["web.content"] ? (
-          result.highlight["web.content"].map((text, index) => (
-            <div key={index}>
-              <HighlightedText text={text} />
-            </div>
-          ))
-        ) : (
-          <div>{result.source.web?.content}</div>
-        )}
+        <strong>Linked urls: </strong>
+        <ul>
+          {result.source.pubblicazioni?.linkedUrls.slice(0, 3).map((url) => {
+            return (
+              <li key={url}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  css={css`
+                    word-break: break-all;
+                  `}
+                >
+                  {url}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </div>
   );
