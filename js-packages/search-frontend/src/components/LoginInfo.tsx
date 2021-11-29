@@ -34,10 +34,12 @@ export function LoginInfo({ loginState, onLogin, onLogout }: LoginInfoProps) {
             return <button onClick={() => setIsOpen(!isOpen)}>login</button>;
           default:
             return (
-              <FontAwesomeIcon
-                onClick={() => setIsOpen(!isOpen)}
-                icon={faUser}
-              />
+              <div onClick={() => setIsOpen(!isOpen)}>
+                {loginState.userInfo && loginState.userInfo.name}
+                <button>
+                  <FontAwesomeIcon icon={faUser} />
+                </button>
+              </div>
             );
         }
       })()}
@@ -50,6 +52,7 @@ export function LoginInfo({ loginState, onLogin, onLogout }: LoginInfoProps) {
             padding: 8px 16px;
             border-radius: 4px;
             border: 1px solid ${myTheme.searchBarBorderColor};
+            z-index: 1;
           `}
         >
           {canLogin && (
@@ -75,10 +78,14 @@ export function LoginInfo({ loginState, onLogin, onLogout }: LoginInfoProps) {
             </div>
           )}
           {loginState.type === "logged-in" && (
-            <button onClick={() => onLogout()}>logout</button>
-          )}
-          {loginState.type === "logged-in" && (
-            <pre>{JSON.stringify(loginState, null, 2)}</pre>
+            <div>
+              <div>
+                <button onClick={() => onLogout()}>logout</button>
+              </div>
+              <div>
+                <a href="/admin">admin</a>
+              </div>
+            </div>
           )}
         </div>
       )}

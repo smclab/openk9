@@ -7,7 +7,35 @@ export type LoginState =
   | { type: "logged-in"; loginInfo: LoginInfo; userInfo: UserInfo };
 
 export function useLoginInfo() {
-  const [state, setState] = React.useState<LoginState>({ type: "anonymous" });
+  const [state, setState] = React.useState<LoginState>(() => {
+    const persisted = localStorage.getItem("pq-admin-v1");
+    if (persisted) {
+      try {
+        const parsed = JSON.parse(persisted);
+        if (parsed.state && parsed.state.loginInfo && parsed.state.userInfo) {
+          return {
+            type: "logged-in",
+            userInfo: parsed.state.userInfo,
+            loginInfo: parsed.state.loginInfo,
+          };
+        }
+      } catch (error) {}
+    }
+    return { type: "anonymous" };
+  });
+  React.useEffect(() => {
+    localStorage.setItem(
+      "pq-admin-v1",
+      JSON.stringify({
+        state: {
+          sidebarOpen: true,
+          loginInfo: state.loginInfo,
+          userInfo: state.userInfo,
+        },
+        version: 0,
+      }),
+    );
+  }, [state.loginInfo, state.userInfo]);
   const login = React.useCallback(
     async (username: string, password: string) => {
       if (state.type === "anonymous" || state.type === "login-error") {

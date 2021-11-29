@@ -107,13 +107,11 @@ export function App() {
   return (
     <PageLayout
       dockbar={
-        false && (
-          <LoginInfo
-            loginState={login.state}
-            onLogin={login.login}
-            onLogout={login.logout}
-          />
-        )
+        <LoginInfo
+          loginState={login.state}
+          onLogin={login.login}
+          onLogout={login.logout}
+        />
       }
       search={
         <div
