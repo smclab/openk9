@@ -5,7 +5,10 @@ const isProd = process.env.PRODUCTION === "true";
 
 module.exports = {
   mode: isProd ? "production" : "development",
-  entry: "./src/index.tsx",
+  entry: {
+    index: "./src/index.tsx",
+    embeddable: "./src/embeddable/entry.tsx",
+  },
   devtool: isProd ? "source-map" : "inline-source-map",
   module: {
     rules: [
@@ -45,7 +48,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "index.js",
+    filename: "[name].js",
     libraryTarget: "umd",
   },
   devServer: {
