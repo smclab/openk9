@@ -172,7 +172,7 @@ export async function postDataSource(
 ): Promise<DataSourceInfo> {
   const request = await authFetch(`/api/datasource/v2/datasource`, loginInfo, {
     method: "POST",
-    headers: { ContentType: "application/json" },
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(data),
   });
   const response: DataSourceInfo = await request.json();
