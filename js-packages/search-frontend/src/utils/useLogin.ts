@@ -94,7 +94,7 @@ export function useLoginInfo() {
   return { state, login, logout };
 }
 
-export function withAutorization(
+export function withAuthentication(
   loginInfo: LoginInfo | null,
   headers: HeadersInit,
 ) {
@@ -169,7 +169,7 @@ async function doLogout(
     const request = await fetch(`/api/searcher/v1/auth/logout`, {
       method: "POST",
       body: JSON.stringify(payload),
-      headers: withAutorization(loginInfo, {
+      headers: withAuthentication(loginInfo, {
         "Content-Type": "application/json",
         Accept: "text/plain",
       }),
@@ -217,7 +217,7 @@ async function getUserInfo(
     const request = await fetch(`/api/searcher/v1/auth/user-info`, {
       method: "POST",
       body: "",
-      headers: withAutorization(loginInfo, {
+      headers: withAuthentication(loginInfo, {
         "Content-Type": "text/plain",
         Accept: "application/json",
       }),

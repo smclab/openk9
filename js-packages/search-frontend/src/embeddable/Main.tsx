@@ -14,6 +14,7 @@ import {
   AnalysisRequestEntryDTO,
   TokenDTO,
   SearchTokenDTO,
+  useTabTokens,
 } from "../utils/remote-data";
 import { DetailMemo } from "../renderers/Detail";
 import { myTheme } from "../utils/myTheme";
@@ -40,6 +41,12 @@ export function Main({ targetElements }: MainProps) {
     optionPosition: number;
   } | null>(null);
   const [detail, setDetail] = React.useState<ResultDTO | null>(null);
+  const tabs = useTabTokens(login.state.loginInfo ?? null);
+  const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
+  const tabTokens = React.useMemo(
+    () => tabs[selectedTabIndex]?.tokens ?? [],
+    [selectedTabIndex, tabs],
+  );
   const debounced = useDebounce(state, DEBOUNCE);
   const queryAnalysis = useQueryAnalysis(login.state?.loginInfo ?? null, {
     searchText: debounced.text,
@@ -58,14 +65,16 @@ export function Main({ targetElements }: MainProps) {
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
   const searchQueryMemo = React.useMemo(
-    () =>
-      deriveSearchQuery(
+    () => [
+      ...tabTokens,
+      ...deriveSearchQuery(
         spans,
         state.selection.flatMap(({ text, start, end, token }) =>
           token ? [{ text, start, end, token }] : [],
         ),
       ),
-    [spans, state.selection],
+    ],
+    [selectedTabIndex, spans, state.selection, tabs],
   );
   const searchQuery = useDebounce(searchQueryMemo, DEBOUNCE);
   React.useEffect(() => {
@@ -109,216 +118,256 @@ export function Main({ targetElements }: MainProps) {
     <React.Fragment>
       {targetElements.search !== null &&
         ReactDOM.createPortal(
-          <div
-            ref={clickAwayRef}
-            css={css`
-              display: flex;
-              border: 1px solid ${myTheme.searchBarBorderColor};
-              border-radius: 4px;
-              background-color: white;
-              align-items: center;
-            `}
-          >
-            <FontAwesomeIcon icon={faSearch} style={{ paddingLeft: "16px" }} />
+          <div>
             <div
               css={css`
-                flex-grow: 1;
-                position: relative;
                 display: flex;
+                margin-top: -8px;
+                padding: 0px 16px;
               `}
             >
+              {tabs.map((tab, index) => {
+                const isSelected = index === selectedTabIndex;
+                return (
+                  <div
+                    key={index}
+                    css={css`
+                      padding: 8px 16px;
+                      color: ${isSelected ? myTheme.redTextColor : ""};
+                      border-bottom: 2px solid
+                        ${isSelected ? myTheme.redTextColor : "transparent"};
+                      cursor: pointer;
+                      font-size: 0.8rem;
+                      color: ${myTheme.grayTexColor};
+                    `}
+                    onClick={() => {
+                      setSelectedTabIndex(index);
+                    }}
+                  >
+                    {tab.label.toUpperCase()}
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              ref={clickAwayRef}
+              css={css`
+                display: flex;
+                border: 1px solid ${myTheme.searchBarBorderColor};
+                border-radius: 4px;
+                background-color: white;
+                align-items: center;
+              `}
+            >
+              <FontAwesomeIcon
+                icon={faSearch}
+                style={{ paddingLeft: "16px", color: myTheme.grayTexColor }}
+              />
               <div
                 css={css`
-                  top: 0px;
-                  left: 0px;
-                  padding: 16px;
+                  flex-grow: 1;
+                  position: relative;
                   display: flex;
-                  position: absolute;
                 `}
               >
-                {showSyntax &&
-                  spans.map((span, index) => {
-                    const isOpen =
-                      openedDropdown !== null &&
-                      openedDropdown.textPosition > span.start &&
-                      openedDropdown.textPosition <= span.end;
-                    const optionIndex = openedDropdown?.optionPosition ?? null;
-                    const selection = state.selection.find(
-                      (selection) =>
-                        selection.start === span.start &&
-                        selection.end === span.end,
-                    );
-                    const selected = selection?.token ?? null;
-                    const onSelect = (token: TokenDTO | null): void => {
-                      dispatch({
-                        type: "set-selection",
-                        replaceText,
-                        selection: {
-                          text: span.text,
-                          start: span.start,
-                          end: span.end,
-                          token,
-                          isAuto: false,
-                        },
-                      });
-                      if (
-                        inputRef.current?.selectionStart &&
-                        inputRef.current?.selectionEnd
-                      ) {
-                        setAdjustedSelection({
-                          selectionStart: inputRef.current.selectionStart,
-                          selectionEnd: inputRef.current.selectionEnd,
-                        });
-                      }
-                      setOpenedDropdown(null);
-                    };
-                    const isAutoSelected = selection?.isAuto ?? false;
-                    const onOptionIndexChange = (optionIndex: number) => {
-                      setOpenedDropdown((openedDropdown) =>
-                        openedDropdown
-                          ? { ...openedDropdown, optionPosition: optionIndex }
-                          : openedDropdown,
-                      );
-                    };
-                    return (
-                      <TokenSelect
-                        key={index}
-                        span={span}
-                        isOpen={isOpen}
-                        onOptionIndexChange={onOptionIndexChange}
-                        optionIndex={optionIndex}
-                        selected={selected}
-                        onSelect={onSelect}
-                        isAutoSlected={isAutoSelected}
-                      />
-                    );
-                  })}
-              </div>
-              <input
-                ref={inputRef}
-                value={state.text}
-                onChange={(event) => {
-                  dispatch({
-                    type: "set-text",
-                    text: event.currentTarget.value,
-                  });
-                  setDetail(null);
-                  setOpenedDropdown(null);
-                }}
-                css={css`
-                  position: relative;
-                  flex-grow: 1;
-                  border: none;
-                  outline: none;
-                  padding: 16px;
-                  color: ${showSyntax ? "transparent" : "inherit"};
-                  caret-color: black;
-                  font-size: inherit;
-                  font-family: inherit;
-                  background-color: inherit;
-                `}
-                spellCheck="false"
-                onSelect={(event) => {
-                  if (
-                    (event.currentTarget.selectionDirection === "forward" ||
-                      event.currentTarget.selectionDirection === "none") &&
-                    event.currentTarget.selectionStart ===
-                      event.currentTarget.selectionEnd
-                  ) {
-                    setOpenedDropdown({
-                      textPosition: event.currentTarget
-                        .selectionStart as number,
-                      optionPosition: openedDropdown?.optionPosition ?? 0,
-                    });
-                  }
-                }}
-                onKeyDown={(event) => {
-                  const span =
-                    openedDropdown &&
-                    spans.find(
-                      (span) =>
+                <div
+                  css={css`
+                    top: 0px;
+                    left: 0px;
+                    padding: 16px;
+                    display: flex;
+                    position: absolute;
+                  `}
+                >
+                  {showSyntax &&
+                    spans.map((span, index) => {
+                      const isOpen =
+                        openedDropdown !== null &&
                         openedDropdown.textPosition > span.start &&
-                        openedDropdown.textPosition <= span.end,
-                    );
-                  const option =
-                    openedDropdown &&
-                    span?.tokens[openedDropdown.optionPosition - 1];
-                  if (event.key === "ArrowDown") {
-                    event.preventDefault();
-                    if (openedDropdown && span) {
-                      setOpenedDropdown({
-                        textPosition: openedDropdown.textPosition,
-                        optionPosition:
-                          openedDropdown.optionPosition < span.tokens.length
-                            ? openedDropdown.optionPosition + 1
-                            : 0,
-                      });
-                    }
-                  } else if (event.key === "ArrowUp") {
-                    event.preventDefault();
-                    if (openedDropdown && openedDropdown.optionPosition > 0) {
-                      setOpenedDropdown({
-                        textPosition: openedDropdown.textPosition,
-                        optionPosition: openedDropdown.optionPosition - 1,
-                      });
-                    }
-                  } else if (event.key === "Enter") {
-                    event.preventDefault();
-                    if (span) {
-                      dispatch({
-                        type: "set-selection",
-                        replaceText,
-                        selection: {
-                          text: span.text,
-                          start: span.start,
-                          end: span.end,
-                          token: option ?? null,
-                          isAuto: false,
-                        },
-                      });
-                      if (
-                        event.currentTarget.selectionStart &&
+                        openedDropdown.textPosition <= span.end;
+                      const optionIndex =
+                        openedDropdown?.optionPosition ?? null;
+                      const selection = state.selection.find(
+                        (selection) =>
+                          selection.start === span.start &&
+                          selection.end === span.end,
+                      );
+                      const selected = selection?.token ?? null;
+                      const onSelect = (token: TokenDTO | null): void => {
+                        dispatch({
+                          type: "set-selection",
+                          replaceText,
+                          selection: {
+                            text: span.text,
+                            start: span.start,
+                            end: span.end,
+                            token,
+                            isAuto: false,
+                          },
+                        });
+                        if (
+                          inputRef.current?.selectionStart &&
+                          inputRef.current?.selectionEnd
+                        ) {
+                          setAdjustedSelection({
+                            selectionStart: inputRef.current.selectionStart,
+                            selectionEnd: inputRef.current.selectionEnd,
+                          });
+                        }
+                        setOpenedDropdown(null);
+                      };
+                      const isAutoSelected = selection?.isAuto ?? false;
+                      const onOptionIndexChange = (optionIndex: number) => {
+                        setOpenedDropdown((openedDropdown) =>
+                          openedDropdown
+                            ? { ...openedDropdown, optionPosition: optionIndex }
+                            : openedDropdown,
+                        );
+                      };
+                      return (
+                        <TokenSelect
+                          key={index}
+                          span={span}
+                          isOpen={isOpen}
+                          onOptionIndexChange={onOptionIndexChange}
+                          optionIndex={optionIndex}
+                          selected={selected}
+                          onSelect={onSelect}
+                          isAutoSlected={isAutoSelected}
+                        />
+                      );
+                    })}
+                </div>
+                <input
+                  ref={inputRef}
+                  value={state.text}
+                  onChange={(event) => {
+                    dispatch({
+                      type: "set-text",
+                      text: event.currentTarget.value,
+                    });
+                    setDetail(null);
+                    setOpenedDropdown(null);
+                  }}
+                  css={css`
+                    position: relative;
+                    flex-grow: 1;
+                    border: none;
+                    outline: none;
+                    padding: 16px;
+                    color: ${showSyntax ? "transparent" : "inherit"};
+                    caret-color: black;
+                    font-size: inherit;
+                    font-family: inherit;
+                    background-color: inherit;
+                  `}
+                  spellCheck="false"
+                  onSelect={(event) => {
+                    if (
+                      (event.currentTarget.selectionDirection === "forward" ||
+                        event.currentTarget.selectionDirection === "none") &&
+                      event.currentTarget.selectionStart ===
                         event.currentTarget.selectionEnd
-                      ) {
-                        setAdjustedSelection({
-                          selectionStart: event.currentTarget.selectionStart,
-                          selectionEnd: event.currentTarget.selectionEnd,
+                    ) {
+                      setOpenedDropdown({
+                        textPosition: event.currentTarget
+                          .selectionStart as number,
+                        optionPosition: openedDropdown?.optionPosition ?? 0,
+                      });
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    const span =
+                      openedDropdown &&
+                      spans.find(
+                        (span) =>
+                          openedDropdown.textPosition > span.start &&
+                          openedDropdown.textPosition <= span.end,
+                      );
+                    const option =
+                      openedDropdown &&
+                      span?.tokens[openedDropdown.optionPosition - 1];
+                    if (event.key === "ArrowDown") {
+                      event.preventDefault();
+                      if (openedDropdown && span) {
+                        setOpenedDropdown({
+                          textPosition: openedDropdown.textPosition,
+                          optionPosition:
+                            openedDropdown.optionPosition < span.tokens.length
+                              ? openedDropdown.optionPosition + 1
+                              : 0,
                         });
                       }
+                    } else if (event.key === "ArrowUp") {
+                      event.preventDefault();
+                      if (openedDropdown && openedDropdown.optionPosition > 0) {
+                        setOpenedDropdown({
+                          textPosition: openedDropdown.textPosition,
+                          optionPosition: openedDropdown.optionPosition - 1,
+                        });
+                      }
+                    } else if (event.key === "Enter") {
+                      event.preventDefault();
+                      if (span) {
+                        dispatch({
+                          type: "set-selection",
+                          replaceText,
+                          selection: {
+                            text: span.text,
+                            start: span.start,
+                            end: span.end,
+                            token: option ?? null,
+                            isAuto: false,
+                          },
+                        });
+                        if (
+                          event.currentTarget.selectionStart &&
+                          event.currentTarget.selectionEnd
+                        ) {
+                          setAdjustedSelection({
+                            selectionStart: event.currentTarget.selectionStart,
+                            selectionEnd: event.currentTarget.selectionEnd,
+                          });
+                        }
+                        setOpenedDropdown(null);
+                      }
+                    } else if (event.key === "Escape") {
                       setOpenedDropdown(null);
                     }
-                  } else if (event.key === "Escape") {
-                    setOpenedDropdown(null);
-                  }
-                }}
-              ></input>
+                  }}
+                ></input>
+              </div>
+              <Tooltip description="Rimpiazza testo quando si seleziona un significato">
+                <FontAwesomeIcon
+                  icon={faSyncAlt}
+                  style={{
+                    paddingRight: "16px",
+                    color: replaceText
+                      ? myTheme.redTextColor
+                      : myTheme.grayTexColor,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setReplaceText(!replaceText);
+                  }}
+                />
+              </Tooltip>
+              <Tooltip description="Seleziona automaticamente il significato più pertinente">
+                <FontAwesomeIcon
+                  icon={faLightbulb}
+                  style={{
+                    paddingRight: "16px",
+                    color: autoSelect
+                      ? myTheme.redTextColor
+                      : myTheme.grayTexColor,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setAutoSelect(!autoSelect);
+                  }}
+                />
+              </Tooltip>
             </div>
-            <Tooltip description="Rimpiazza testo quando si seleziona un significato">
-              <FontAwesomeIcon
-                icon={faSyncAlt}
-                style={{
-                  paddingRight: "16px",
-                  color: replaceText ? myTheme.redTextColor : "black",
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  setReplaceText(!replaceText);
-                }}
-              />
-            </Tooltip>
-            <Tooltip description="Seleziona automaticamente il significato più pertinente">
-              <FontAwesomeIcon
-                icon={faLightbulb}
-                style={{
-                  paddingRight: "16px",
-                  color: autoSelect ? myTheme.redTextColor : "black",
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  setAutoSelect(!autoSelect);
-                }}
-              />
-            </Tooltip>
           </div>,
           targetElements.search,
         )}
@@ -368,7 +417,11 @@ function deriveSearchQuery(
           case "DATASOURCE":
             return { tokenType: "DATASOURCE", values: [token.value] };
           case "DOCTYPE":
-            return { tokenType: "DOCTYPE", values: [token.value] };
+            return {
+              tokenType: "DOCTYPE",
+              keywordKey: "type",
+              values: [token.value],
+            };
           case "ENTITY":
             return {
               tokenType: "ENTITY",

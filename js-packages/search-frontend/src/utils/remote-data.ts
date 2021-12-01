@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "react-query";
 import { isOverlapping } from "../logic/useSelections";
-import { LoginInfo, withAutorization } from "./useLogin";
+import { LoginInfo, withAuthentication } from "./useLogin";
 
 export function useInfiniteResults(
   loginInfo: LoginInfo | null,
@@ -41,7 +41,7 @@ async function fetchResults(
       range,
       searchQuery,
     }),
-    headers: withAutorization(loginInfo, {
+    headers: withAuthentication(loginInfo, {
       Accept: "application/json",
       "Content-Type": "application/json",
     }),
@@ -139,7 +139,7 @@ async function fetchQueryAnalysis(
   const response = await fetch("/api/searcher/v1/query-analysis", {
     method: "POST",
     body: JSON.stringify(request),
-    headers: withAutorization(loginInfo, {
+    headers: withAuthentication(loginInfo, {
       Accept: "application/json",
       "Content-Type": "application/json",
     }),
@@ -266,6 +266,7 @@ export type SearchTokenDTO =
     }
   | {
       tokenType: "DOCTYPE";
+      keywordKey: "type";
       values: string[];
     }
   | {
@@ -279,3 +280,90 @@ export type SearchTokenDTO =
       entityType: string;
       values: string[];
     };
+
+export function useTabTokens(
+  loginInfo: LoginInfo | null,
+): Array<{ label: string; tokens: Array<SearchTokenDTO> }> {
+  const tenantConfiguration = useQuery(
+    ["tenant-configuration"] as const,
+    ({ queryKey }) => {
+      return getTentantWithConfiguration(loginInfo);
+    },
+  );
+  if (tenantConfiguration.data?.config.querySourceBarShortcuts) {
+    return [
+      {
+        label: "All",
+        tokens: [],
+      },
+      ...tenantConfiguration.data.config.querySourceBarShortcuts.map(
+        (s): { label: string; tokens: Array<SearchTokenDTO> } => {
+          return {
+            label: s.text,
+            tokens: [
+              { tokenType: "DOCTYPE", keywordKey: "type", values: [s.id] },
+            ],
+          };
+        },
+      ),
+    ];
+  } else {
+    return defaultTabTokens;
+  }
+}
+
+const defaultTabTokens: Array<{
+  label: string;
+  tokens: Array<SearchTokenDTO>;
+}> = [
+  {
+    label: "All",
+    tokens: [],
+  },
+  {
+    label: "Web",
+    tokens: [{ tokenType: "DOCTYPE", keywordKey: "type", values: ["web"] }],
+  },
+  {
+    label: "Document",
+    tokens: [
+      { tokenType: "DOCTYPE", keywordKey: "type", values: ["document"] },
+    ],
+  },
+];
+
+async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
+  const tenants = await getTenants(loginInfo);
+  const tenant =
+    tenants.find((tenant) => window.location.host === tenant.virtualHost) ??
+    (window.location.hostname === "localhost" ? tenants[0] : undefined);
+  const config =
+    (tenant?.jsonConfig &&
+      (JSON.parse(tenant?.jsonConfig) as TenantJSONConfig)) ||
+    emptyTenantJSONConfig;
+  return { tenant, config };
+}
+
+async function getTenants(loginInfo: LoginInfo | null): Promise<Tenant[]> {
+  const response = await fetch(`/api/datasource/v2/tenant`, {
+    headers: withAuthentication(loginInfo, {
+      Accept: "application/json",
+    }),
+  });
+  const data = await response.json();
+  return data;
+}
+
+type Tenant = {
+  tenantId: number;
+  name: string;
+  virtualHost: string;
+  jsonConfig: string;
+};
+
+type TenantJSONConfig = {
+  querySourceBarShortcuts?: { id: string; text: string }[];
+  requireLogin?: boolean;
+};
+
+const emptyTenantJSONConfig: TenantJSONConfig = {};
