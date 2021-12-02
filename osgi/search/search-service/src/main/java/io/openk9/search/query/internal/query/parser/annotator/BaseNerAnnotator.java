@@ -51,7 +51,9 @@ public class BaseNerAnnotator extends BaseAnnotator {
 				"type.keyword", category));
 
 		for (String token : tokens) {
-			builder.must(query("name", token));
+			if (!stopWords.contains(token)) {
+				builder.must(query("name", token));
+			}
 		}
 
 		SearchRequest searchRequest;
