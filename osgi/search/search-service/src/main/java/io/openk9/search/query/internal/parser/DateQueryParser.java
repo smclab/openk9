@@ -60,10 +60,10 @@ public class DateQueryParser implements QueryParser {
 				.flatMap(searchKeywordDTO -> {
 
 					for (SearchToken searchToken : searchTokens) {
-						if (searchToken.getKeywordKey().equals(
-							searchKeywordDTO.getKeyword())) {
-							return Stream.of(SearchKeywordToken.of(searchKeywordDTO,
-								searchToken));
+						if (searchToken.getKeywordKey() != null
+							&& searchToken.getKeywordKey().equals(searchKeywordDTO.getKeyword())) {
+							return Stream.of(
+								SearchKeywordToken.of(searchKeywordDTO, searchToken));
 						}
 					}
 
