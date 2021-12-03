@@ -74,7 +74,7 @@ export function WebResult({ result }: WebResultProps) {
         css={css`
           grid-column: 2;
           grid-row: 3;
-          ${truncatedLineStyle};
+          ${result.highlight["web.content"] ? truncatedLineStyle : ""};
         `}
       >
         {result.highlight["web.content"] ? (

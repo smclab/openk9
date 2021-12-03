@@ -19,6 +19,7 @@ function Entry() {
 
 export type TargetElements = {
   search: Element | null;
+  tabs: Element | null;
   results: Element | null;
   details: Element | null;
   login: Element | null;
@@ -26,6 +27,7 @@ export type TargetElements = {
 
 const targetElements: TargetElements = {
   search: null,
+  tabs: null,
   results: null,
   details: null,
   login: null,
@@ -36,6 +38,10 @@ let updateTargetElements = (targetElements: TargetElements) => {};
 export const OpenK9: TargetElements = {
   set search(element: Element | null) {
     targetElements.search = element;
+    updateTargetElements({ ...targetElements });
+  },
+  set tabs(element: Element | null) {
+    targetElements.tabs = element;
     updateTargetElements({ ...targetElements });
   },
   set results(element: Element | null) {

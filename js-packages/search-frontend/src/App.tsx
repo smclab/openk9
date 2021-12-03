@@ -13,9 +13,10 @@ export function App() {
         height: 100vh;
         display: grid;
         grid-template-columns: 50% 50%;
-        grid-template-rows: auto auto 1fr;
+        grid-template-rows: auto auto auto 1fr;
         grid-template-areas:
           "dockbar dockbar"
+          "tabs tabs"
           "search search"
           "result detail";
       `}
@@ -26,6 +27,15 @@ export function App() {
           grid-area: search;
           background-color: ${myTheme.backgroundColor2};
           padding: 16px;
+        `}
+      ></div>
+      <div
+        ref={(element) => (OpenK9.tabs = element)}
+        css={css`
+          grid-area: tabs;
+          background-color: ${myTheme.backgroundColor2};
+          padding: 8px 16px 0px 16px;
+          margin-bottom: -16px;
         `}
       ></div>
       <div

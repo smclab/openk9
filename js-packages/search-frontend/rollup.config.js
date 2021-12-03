@@ -2,10 +2,10 @@ import dts from "rollup-plugin-dts";
 
 export default [
   {
-    input: "src/index.tsx",
+    input: "src/embeddable/entry.tsx",
     plugins: [dts()],
     output: {
-      file: `dist/index.d.ts`,
+      file: `dist/embeddable.d.ts`,
       format: "es",
     },
   },
