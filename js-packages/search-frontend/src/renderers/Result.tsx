@@ -4,9 +4,11 @@ import { WebResult } from "./WebResult";
 import { ResultDTO } from "../utils/remote-data";
 import { myTheme } from "../utils/myTheme";
 import { DocumentResult } from "./DocumentResult";
-import { NotizieResult } from "./NotizieResult";
-import { PubblicazioniResult } from "./PubblicazioniResult";
+import { NotizieResult } from "./bdi/NotizieResult";
+import { PubblicazioniResult } from "./bdi/PubblicazioniResult";
 import { PdfResult } from "./PdfResult";
+import { MostreResult } from "./cm/MostreResult";
+import { EventiResult } from "./cm/EventiResult";
 
 type ResultProps = {
   result: ResultDTO;
@@ -32,6 +34,12 @@ function Result({ result, onDetail }: ResultProps) {
           }
           if (result.source.documentTypes.includes("pubblicazioni")) {
             return <PubblicazioniResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("mostre")) {
+            return <MostreResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("eventi")) {
+            return <EventiResult result={result} />;
           }
           if (result.source.documentTypes.includes("pdf")) {
             return <PdfResult result={result} />;

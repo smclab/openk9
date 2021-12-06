@@ -66,6 +66,8 @@ export type ResultDTO = {
       | "notizie"
       | "pubblicazioni"
       | "pdf"
+      | "mostre"
+      | "eventi"
     >;
     istat?: {
       topic: Array<string>;
@@ -102,6 +104,23 @@ export type ResultDTO = {
       topic: string;
       authors: string;
       linkedUrls: Array<string>;
+    };
+    mostre?: {
+      endDate: string;
+      imgUrl: string;
+      location: string;
+      periods: Array<string>;
+      startDate: string;
+    };
+    eventi?: {
+      category?: string;
+      endDate?: string;
+      date?: string;
+      imgUrl: string;
+      location: string;
+      periods: string;
+      startDate?: string;
+      subLocation: string;
     };
     resources: {
       binaries: {

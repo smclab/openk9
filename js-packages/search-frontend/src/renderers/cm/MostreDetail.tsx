@@ -1,12 +1,12 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { HighlightedText } from "../components/HighlightedText";
-import { ResultDTO } from "../utils/remote-data";
+import { HighlightedText } from "../../components/HighlightedText";
+import { ResultDTO } from "../../utils/remote-data";
 
-type NotizieDetailProps = {
+type MostreDetailProps = {
   result: ResultDTO;
 };
-export function NotizieDetail({ result }: NotizieDetailProps) {
+export function MostreDetail({ result }: MostreDetailProps) {
   return (
     <div
       css={css`
@@ -16,7 +16,7 @@ export function NotizieDetail({ result }: NotizieDetailProps) {
       `}
     >
       <img
-        src={result.source.notizie?.imgUrl}
+        src={result.source.mostre?.imgUrl}
         alt=""
         css={css`
           max-width: calc(50vw - 32px);
@@ -48,35 +48,13 @@ export function NotizieDetail({ result }: NotizieDetailProps) {
         </a>
       </div>
       <div>
-        <strong>Category</strong> : {result.source.notizie?.category}
+        <strong>Start date</strong> : {result.source.mostre?.startDate}
       </div>
       <div>
-        <strong>Topic</strong> : {result.source.notizie?.topic}
+        <strong>End date</strong> : {result.source.mostre?.endDate}
       </div>
       <div>
-        <strong>Pubblication Date : </strong>
-        {result.source.notizie?.pubDate}
-      </div>
-      <div>
-        <strong>Linked urls: </strong>
-        <ul>
-          {result.source.notizie?.linkedUrls.slice(0, 3).map((url) => {
-            return (
-              <li key={url}>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  css={css`
-                    word-break: break-all;
-                  `}
-                >
-                  {url}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
+        <strong>Location</strong> : {result.source.mostre?.location}
       </div>
     </div>
   );

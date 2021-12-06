@@ -3,9 +3,11 @@ import { css } from "styled-components/macro";
 import { WebDetail } from "./WebDetail";
 import { ResultDTO } from "../utils/remote-data";
 import { DocumentDetail } from "./DocumentDetail";
-import { NotizieDetail } from "./NotizieDetail";
-import { PubblicazioniDetail } from "./PubblicazioniDetail";
+import { NotizieDetail } from "./bdi/NotizieDetail";
+import { PubblicazioniDetail } from "./bdi/PubblicazioniDetail";
 import { PdfDetail } from "./PdfDetail";
+import { MostreDetail } from "./cm/MostreDetail";
+import { EventiDetail } from "./cm/EventiDetail";
 
 type DetailProps = {
   result: ResultDTO;
@@ -23,6 +25,12 @@ function Detail({ result }: DetailProps) {
         }
         if (result.source.documentTypes.includes("pubblicazioni")) {
           return <PubblicazioniDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("mostre")) {
+          return <MostreDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("eventi")) {
+          return <EventiDetail result={result} />;
         }
         if (result.source.documentTypes.includes("pdf")) {
           return <PdfDetail result={result} />;
