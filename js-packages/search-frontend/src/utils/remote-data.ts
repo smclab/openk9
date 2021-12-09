@@ -59,20 +59,18 @@ export type ResultDTO = {
     datasourceId: number;
     id: string;
     documentTypes: Array<
-      | "istat"
       | "web"
       | "file"
       | "document"
+      | "pdf"
+      | "istat"
       | "notizie"
       | "pubblicazioni"
-      | "pdf"
       | "mostre"
       | "eventi"
+      | "petizioni"
+      | "processi"
     >;
-    istat?: {
-      topic: Array<string>;
-      category: string;
-    };
     web?: {
       favicon: string;
       title: string;
@@ -89,6 +87,17 @@ export type ResultDTO = {
       contentType: string;
       url: string;
       content: string;
+    };
+    resources: {
+      binaries: {
+        id: string;
+        name: string;
+        contentType: string;
+      }[];
+    };
+    istat?: {
+      topic: Array<string>;
+      category: string;
     };
     notizie?: {
       category: string;
@@ -122,12 +131,17 @@ export type ResultDTO = {
       startDate?: string;
       subLocation: string;
     };
-    resources: {
-      binaries: {
-        id: string;
-        name: string;
-        contentType: string;
-      }[];
+    petizioni?: {
+      pubDate: string;
+      status: string;
+    };
+    processi?: {
+      name: string;
+      startDate?: string;
+      endDate?: string;
+      partecipants?: string;
+      area?: string;
+      imgUrl?: string;
     };
   };
   highlight: {

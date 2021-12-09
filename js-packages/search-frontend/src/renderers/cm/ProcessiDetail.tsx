@@ -3,10 +3,10 @@ import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
 import { ResultDTO } from "../../utils/remote-data";
 
-type MostreDetailProps = {
+type ProcessiDetailProps = {
   result: ResultDTO;
 };
-export function MostreDetail({ result }: MostreDetailProps) {
+export function ProcessiDetail({ result }: ProcessiDetailProps) {
   return (
     <div
       css={css`
@@ -16,7 +16,7 @@ export function MostreDetail({ result }: MostreDetailProps) {
       `}
     >
       <img
-        src={result.source.mostre?.imgUrl}
+        src={result.source.processi?.imgUrl}
         alt=""
         css={css`
           max-width: 100%;
@@ -47,15 +47,31 @@ export function MostreDetail({ result }: MostreDetailProps) {
           )}
         </a>
       </div>
-      <div>
-        <strong>Start date</strong> : {result.source.mostre?.startDate}
-      </div>
-      <div>
-        <strong>End date</strong> : {result.source.mostre?.endDate}
-      </div>
-      <div>
-        <strong>Location</strong> : {result.source.mostre?.location}
-      </div>
+      {result.source.processi?.name && (
+        <div>
+          <strong>Name</strong> : {result.source.processi.name}
+        </div>
+      )}
+      {result.source.processi?.startDate && (
+        <div>
+          <strong>Start date</strong> : {result.source.processi.startDate}
+        </div>
+      )}
+      {result.source.processi?.endDate && (
+        <div>
+          <strong>End date</strong> : {result.source.processi.endDate}
+        </div>
+      )}
+      {result.source.processi?.partecipants && (
+        <div>
+          <strong>Partecipants</strong> : {result.source.processi.partecipants}
+        </div>
+      )}
+      {result.source.processi?.area && (
+        <div>
+          <strong>Area</strong> : {result.source.processi.area}
+        </div>
+      )}
     </div>
   );
 }

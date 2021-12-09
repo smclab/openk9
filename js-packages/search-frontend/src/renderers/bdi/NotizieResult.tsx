@@ -103,6 +103,8 @@ export function NotizieResult({ result }: NotizieResultProps) {
             css={css`
               max-height: calc(21px * 5);
               overflow-y: hidden;
+              word-wrap: break-word;
+              word-break: break-word;
             `}
           >
             {result.source.web?.content}

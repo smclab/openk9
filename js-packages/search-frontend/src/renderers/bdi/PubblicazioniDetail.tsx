@@ -19,7 +19,7 @@ export function PubblicazioniDetail({ result }: PubblicazioniDetailProps) {
         src={result.source.pubblicazioni?.imgUrl}
         alt=""
         css={css`
-          max-width: calc(50vw - 32px);
+          max-width: 100%;
         `}
       />
       <div

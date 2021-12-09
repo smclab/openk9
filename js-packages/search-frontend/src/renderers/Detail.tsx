@@ -8,6 +8,8 @@ import { PubblicazioniDetail } from "./bdi/PubblicazioniDetail";
 import { PdfDetail } from "./PdfDetail";
 import { MostreDetail } from "./cm/MostreDetail";
 import { EventiDetail } from "./cm/EventiDetail";
+import { PetizioniDetail } from "./cm/PetizioniDetail";
+import { ProcessiDetail } from "./cm/ProcessiDetail";
 
 type DetailProps = {
   result: ResultDTO;
@@ -31,6 +33,12 @@ function Detail({ result }: DetailProps) {
         }
         if (result.source.documentTypes.includes("eventi")) {
           return <EventiDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("petizioni")) {
+          return <PetizioniDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("processi")) {
+          return <ProcessiDetail result={result} />;
         }
         if (result.source.documentTypes.includes("pdf")) {
           return <PdfDetail result={result} />;

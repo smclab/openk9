@@ -19,7 +19,7 @@ export function EventiDetail({ result }: EventiDetailProps) {
         src={result.source.eventi?.imgUrl}
         alt=""
         css={css`
-          max-width: calc(50vw - 32px);
+          max-width: 100%;
         `}
       />
       <div

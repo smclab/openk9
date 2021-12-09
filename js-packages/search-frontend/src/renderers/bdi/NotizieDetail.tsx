@@ -19,7 +19,7 @@ export function NotizieDetail({ result }: NotizieDetailProps) {
         src={result.source.notizie?.imgUrl}
         alt=""
         css={css`
-          max-width: calc(50vw - 32px);
+          max-width: 100%;
         `}
       />
       <div

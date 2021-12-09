@@ -9,6 +9,8 @@ import { PubblicazioniResult } from "./bdi/PubblicazioniResult";
 import { PdfResult } from "./PdfResult";
 import { MostreResult } from "./cm/MostreResult";
 import { EventiResult } from "./cm/EventiResult";
+import { PetizioniResult } from "./cm/PetizioniResult";
+import { ProcessiResult } from "./cm/ProcessiResult";
 
 type ResultProps = {
   result: ResultDTO;
@@ -40,6 +42,12 @@ function Result({ result, onDetail }: ResultProps) {
           }
           if (result.source.documentTypes.includes("eventi")) {
             return <EventiResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("petizioni")) {
+            return <PetizioniResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("processi")) {
+            return <ProcessiResult result={result} />;
           }
           if (result.source.documentTypes.includes("pdf")) {
             return <PdfResult result={result} />;

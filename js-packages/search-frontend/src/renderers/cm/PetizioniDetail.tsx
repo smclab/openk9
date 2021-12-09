@@ -3,10 +3,10 @@ import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
 import { ResultDTO } from "../../utils/remote-data";
 
-type MostreDetailProps = {
+type PetizioniDetailProps = {
   result: ResultDTO;
 };
-export function MostreDetail({ result }: MostreDetailProps) {
+export function PetizioniDetail({ result }: PetizioniDetailProps) {
   return (
     <div
       css={css`
@@ -15,13 +15,7 @@ export function MostreDetail({ result }: MostreDetailProps) {
         grid-auto-flow: row;
       `}
     >
-      <img
-        src={result.source.mostre?.imgUrl}
-        alt=""
-        css={css`
-          max-width: 100%;
-        `}
-      />
+      <img src={result.source.web?.favicon} alt="" />
       <div
         css={css`
           font-size: 1.5em;
@@ -47,15 +41,16 @@ export function MostreDetail({ result }: MostreDetailProps) {
           )}
         </a>
       </div>
-      <div>
-        <strong>Start date</strong> : {result.source.mostre?.startDate}
-      </div>
-      <div>
-        <strong>End date</strong> : {result.source.mostre?.endDate}
-      </div>
-      <div>
-        <strong>Location</strong> : {result.source.mostre?.location}
-      </div>
+      {result.source.petizioni?.status && (
+        <div>
+          <strong>Status</strong> : {result.source.petizioni.status}
+        </div>
+      )}
+      {result.source.petizioni?.pubDate && (
+        <div>
+          <strong>Pubblication date</strong> : {result.source.petizioni.pubDate}
+        </div>
+      )}
     </div>
   );
 }

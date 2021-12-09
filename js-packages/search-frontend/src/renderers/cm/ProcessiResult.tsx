@@ -1,19 +1,18 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { ResultDTO } from "../utils/remote-data";
-import { truncatedLineStyle } from "../utils/truncatedLineStyle";
-import { HighlightedText } from "../components/HighlightedText";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileAlt } from "@fortawesome/free-solid-svg-icons";
+import { HighlightedText } from "../../components/HighlightedText";
+import { truncatedLineStyle } from "../../utils/truncatedLineStyle";
+import { ResultDTO } from "../../utils/remote-data";
+import { Badge } from "../../components/Badge";
 
-type DocumentResultProps = { result: ResultDTO };
-export function DocumentResult({ result }: DocumentResultProps) {
+type ProcessiResultProps = { result: ResultDTO };
+export function ProcessiResult({ result }: ProcessiResultProps) {
   return (
     <div
       css={css`
         display: grid;
         grid-template-columns: 30px auto;
-        grid-template-rows: auto auto auto;
+        grid-template-rows: auto auto auto auto;
         padding: 8px 16px;
         grid-column-gap: 16px;
         grid-row-gap: 8px;
@@ -31,7 +30,14 @@ export function DocumentResult({ result }: DocumentResultProps) {
           justify-content: center;
         `}
       >
-        <FontAwesomeIcon icon={faFileAlt} />
+        <img
+          src={result.source.web?.favicon}
+          alt=""
+          css={css`
+            max-height: 30px;
+            max-width: 30px;
+          `}
+        />
       </div>
       <div
         css={css`
@@ -42,14 +48,14 @@ export function DocumentResult({ result }: DocumentResultProps) {
           ${truncatedLineStyle}
         `}
       >
-        {result.highlight["document.title"] ? (
-          <HighlightedText text={result.highlight["document.title"][0]} />
+        {result.highlight["web.title"] ? (
+          <HighlightedText text={result.highlight["web.title"][0]} />
         ) : (
-          result.source.document?.title
+          result.source.web?.title
         )}
       </div>
       <a
-        href={result.source.document?.url}
+        href={result.source.web?.url}
         target="_blank"
         rel="noreferrer"
         css={css`
@@ -59,21 +65,32 @@ export function DocumentResult({ result }: DocumentResultProps) {
           ${truncatedLineStyle}
         `}
       >
-        {result.highlight["document.url"] ? (
-          <HighlightedText text={result.highlight["document.url"][0]} />
+        {result.highlight["web.url"] ? (
+          <HighlightedText text={result.highlight["web.url"][0]} />
         ) : (
-          result.source.document?.url
+          result.source.web?.url
         )}
       </a>
       <div
         css={css`
           grid-column: 2;
           grid-row: 3;
-          ${result.highlight["document.content"] ? truncatedLineStyle : null};
+          display: flex;
         `}
       >
-        {result.highlight["document.content"] ? (
-          result.highlight["document.content"].map((text, index) => (
+        {result.source.processi?.name && (
+          <Badge>{result.source.processi.name}</Badge>
+        )}
+      </div>
+      <div
+        css={css`
+          grid-column: 2;
+          grid-row: 4;
+          ${result.highlight["web.content"] ? truncatedLineStyle : null};
+        `}
+      >
+        {result.highlight["web.content"] ? (
+          result.highlight["web.content"].map((text, index) => (
             <div key={index} css={truncatedLineStyle}>
               <HighlightedText text={text} />
             </div>
@@ -87,7 +104,7 @@ export function DocumentResult({ result }: DocumentResultProps) {
               word-break: break-word;
             `}
           >
-            {result.source.document?.content}
+            {result.source.web?.content}
           </div>
         )}
       </div>
