@@ -57,6 +57,7 @@ Build Latest Plugin Driver Manager Docker Images:
               - osgi/util/groovy-script-api/**/*
               - osgi/util/groovy-script-service/**/*
               - osgi/util/groovy-script-web/**/*
+              - osgi/vertx/**/*
     script:
         - ./gradlew pushImagePluginDriverManager
     after_script:

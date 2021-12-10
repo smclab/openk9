@@ -60,6 +60,7 @@ Build Latest Plugin Driver Manager Docker Images:
               - osgi/util/groovy-script-service/**/*
               - osgi/util/groovy-script-web/**/*
               - .gitlab/.gitlab-ci-plugin-driver-manager-async-enrich-processor.yml
+              - osgi/vertx/**/*
     script:
         - ./gradlew pushImagePluginDriverManager
     after_script:

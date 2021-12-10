@@ -48,6 +48,7 @@ Build Latest Searcher Docker Images:
               - osgi/util/groovy-script-api/**/*
               - osgi/util/groovy-script-service/**/*
               - osgi/util/groovy-script-web/**/*
+              - osgi/vertx/**/*
     before_script:
         - export GRADLE_USER_HOME=`pwd`/.gradle
     script:

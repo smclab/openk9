@@ -55,6 +55,7 @@ Build Latest Index Writer Docker Images:
               - osgi/util/groovy-script-api/**/*
               - osgi/util/groovy-script-service/**/*
               - osgi/util/groovy-script-web/**/*
+              - osgi/vertx/**/*
               - .gitlab/.gitlab-ci-index-writer-async-enrich-processor.yml
     script:
         - ./gradlew pushImageIndexWriter
