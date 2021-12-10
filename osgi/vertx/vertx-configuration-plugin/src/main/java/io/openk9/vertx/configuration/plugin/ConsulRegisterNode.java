@@ -70,7 +70,4 @@ public class ConsulRegisterNode implements Supplier<String> {
 	@Reference
 	private ConsulClient _consulClient;
 
-	private static final Logger _log = LoggerFactory.getLogger(
-		ConsulRegisterNode.class);
-
 }
