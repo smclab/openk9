@@ -152,6 +152,7 @@ dependencies {
 
 	distIndexWriter project(path: ':osgi:third-party:vertx', transitive: false)
 	distIndexWriter project(path: ':osgi:vertx:vertx-service', transitive: false)
+	distIndexWriter project(path: ':osgi:vertx:vertx-configuration-plugin', transitive: false)
 
 	//GROOVY SCRIPT
 	distIndexWriter group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.8' , transitive: false
@@ -219,6 +220,11 @@ dependencies {
 
 	distSearcher project(path: ':osgi:fix:karaf-json-config-fix', transitive: false)
 
+
+	distSearcher project(path: ':osgi:third-party:vertx', transitive: false)
+	distSearcher project(path: ':osgi:vertx:vertx-service', transitive: false)
+	distSearcher project(path: ':osgi:vertx:vertx-configuration-plugin', transitive: false)
+
 	//GROOVY SCRIPT
 	distSearcher group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.8' , transitive: false
 	distSearcher project(path: ':osgi:util:groovy-script-api', transitive: false)
@@ -279,6 +285,11 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-identifier-generator-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-identifier-generator-service', transitive: false)
+
+
+	distPluginDriverManager project(path: ':osgi:third-party:vertx', transitive: false)
+	distPluginDriverManager project(path: ':osgi:vertx:vertx-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:vertx:vertx-configuration-plugin', transitive: false)
 
 	/*
 	distPluginDriverManager project(path: ':plugins:email', transitive: false)

@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Vertx Configuration Plugin
+Bundle-SymbolicName: io.openk9.vertx.configuration.plugin
+
+-include: ${project.rootDir}/osgi/common.bnd

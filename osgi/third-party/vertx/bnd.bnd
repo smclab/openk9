@@ -2,9 +2,10 @@ Bundle-Name: [OpenK9 - Third Party] Vertx
 Bundle-SymbolicName: io.openk9.third.party.vertx
 
 Include-Resource: \
- @vertx-*.jar
+ @vertx-*.jar, \
+ @netty-*.jar
 
-Export-Package: io.vertx.core, io.vertx.core.*
+Export-Package: io.vertx.core, io.vertx.core.*, io.vertx.*
 
 Import-Package: *;resolution:=optional
 

@@ -117,7 +117,24 @@ ext.libraries = [
 		neo4j_query_dsl_core: 'com.querydsl:querydsl-core:4.4.0',
 		guava: 'com.google.guava:guava:18.0',
 		groovy: 'org.codehaus.groovy:groovy:3.0.8',
-		vertx_core: 'io.vertx:vertx-core:4.1.4'
+		vertx_core: 'io.vertx:vertx-core:4.2.1',
+		vertx_service_discovery: [
+				'io.vertx:vertx-service-discovery:4.2.1',
+				'io.vertx:vertx-service-discovery-bridge-kubernetes:4.2.1'
+		],
+		vertx_config: [
+				'io.vertx:vertx-config:4.2.1',
+				'io.vertx:vertx-config-kubernetes-configmap:4.2.1'
+		],
+		vertx_web: 'io.vertx:vertx-web:4.2.1',
+		vertx_auth: [
+				'io.vertx:vertx-auth-oauth2:4.2.1',
+				'io.vertx:vertx-auth-jwt:4.2.1'
+		],
+		vertx_rabbitmq: 'io.vertx:vertx-rabbitmq-client:4.2.1',
+		vertx_rxjava3: 'io.vertx:vertx-rx-java3:4.2.1',
+		vertx_consul_client: 'io.vertx:vertx-consul-client:4.2.1',
+		vertx_service_discovery_bridge_consul: 'io.vertx:vertx-service-discovery-bridge-consul:4.2.1'
 ]
 
 def projectVersion = findProperty("project.version")

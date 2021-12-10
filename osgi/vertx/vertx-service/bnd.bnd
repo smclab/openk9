@@ -2,3 +2,5 @@ Bundle-Name: [OpenK9] Vertx Service
 Bundle-SymbolicName: io.openk9.vertx.service
 
 -include: ${project.rootDir}/osgi/common.bnd
+
+Import-Package: *;resolution:=optional
