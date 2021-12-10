@@ -15,11 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 @Component(
 	immediate = true,
@@ -27,32 +26,11 @@ import java.util.List;
 )
 public class VertxActivator {
 
-	@interface Config {
-		String vertxConfigPath() default "";
-	}
-
 	@Activate
-	void activate(BundleContext bundleContext, Config config)
+	void activate(BundleContext bundleContext, Map<String, Object> config)
 		throws IOException {
 
-		String path = config.vertxConfigPath();
-
-		if (path != null && !path.isBlank()) {
-			_vertx = Vertx.vertx(
-				new VertxOptions(
-					new JsonObject(
-						new String(
-							Files.readAllBytes(
-								Paths.get(path)
-							)
-						)
-					)
-				)
-			);
-		}
-		else {
-			_vertx = Vertx.vertx();
-		}
+		_vertx = Vertx.vertx(new VertxOptions(JsonObject.mapFrom(config)));
 
 		_serviceRegistrations.add(
 			bundleContext.registerService(
@@ -69,7 +47,7 @@ public class VertxActivator {
 	}
 
 	@Modified
-	void modified(BundleContext bundleContext, Config config)
+	void modified(BundleContext bundleContext, Map<String, Object> config)
 		throws IOException{
 
 		deactivate();
@@ -80,14 +58,7 @@ public class VertxActivator {
 	@Deactivate
 	void deactivate() {
 
-		_vertx.close(result -> {
-			if (result.succeeded()) {
-				_log.info("[Vertx] STOPPED");
-			}
-			else {
-				_log.error("[Vertx] error during stopping");
-			}
-		});
+		_vertx.close().toCompletionStage().toCompletableFuture().join();
 
 		Iterator<ServiceRegistration> iterator =
 			_serviceRegistrations.iterator();
