@@ -274,7 +274,7 @@ public class ReactorNettyActivator {
 	public void removeRouterHandler(
 		ServiceReference serviceReference, RouterHandler routerHandler) {
 		_routerHandlerRegistry.remove(serviceReference);
-		_routerHandleCounter.decrementAndGet();
+		_routerHandleCounter.incrementAndGet();
 	}
 
 	@Reference(
