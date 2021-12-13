@@ -29,6 +29,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Exceptions;
@@ -37,16 +38,23 @@ import reactor.netty.Connection;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.server.HttpServer;
+import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 import reactor.netty.resources.LoopResources;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @Component(immediate = true, service = ReactorNettyActivator.class)
@@ -66,10 +74,81 @@ public class ReactorNettyActivator {
 		AdvancedByteBufFormat wiretapFormat() default AdvancedByteBufFormat.HEX_DUMP;
 	}
 
+	public class RouterHandlerProxy implements InvocationHandler {
+
+		@Override
+		public Object invoke(
+			Object proxy, Method method, Object[] args) throws Throwable {
+
+			if (method.getName().equals("apply")) {
+
+				HttpServerRoutes httpServerRoutes =
+					_prevHttpServerRouters.get();
+
+				if (httpServerRoutes == null) {
+					_updateState(
+						_currentState, _routerHandleCounter,
+						_getRouterHandler(), _prevHttpServerRouters);
+				}
+				else {
+					if (_routerHandleCounter.get() != _currentState.get()) {
+
+						_updateState(
+							_currentState, _routerHandleCounter,
+							_getRouterHandler(),
+							_prevHttpServerRouters);
+
+					}
+				}
+
+				return method.invoke(_prevHttpServerRouters.get(), args);
+
+			}
+			else {
+				return method.invoke(proxy, args);
+			}
+
+		}
+
+		private void _updateState(
+			AtomicLong currentState, AtomicLong routerHandleCounter,
+			RouterHandler _getRouterHandler,
+			AtomicReference<HttpServerRoutes> prevHttpServerRouters) {
+
+			currentState.set(routerHandleCounter.get());
+			HttpServerRoutes handle =
+				_getRouterHandler.handle(HttpServerRoutes.newRoutes());
+			prevHttpServerRouters.set(handle);
+		}
+
+		private RouterHandler _getRouterHandler() {
+
+			Collection<RouterHandler> values = _routerHandlerRegistry.values();
+
+			return values
+				.stream()
+				.reduce(RouterHandler.NOTHING, RouterHandler::andThen);
+
+		}
+
+		private final AtomicLong _currentState = new AtomicLong(0);
+
+		private final AtomicReference<HttpServerRoutes> _prevHttpServerRouters =
+			new AtomicReference<>();
+
+	}
+
 	@Activate
 	void activate(Config config) {
 
 		_thread = new Thread(() -> {
+
+			BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> proxy =
+				(BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>>)Proxy.newProxyInstance(
+					Thread.currentThread().getContextClassLoader(),
+					new Class[]{BiFunction.class},
+					new RouterHandlerProxy()
+				);
 
 			LoopResources loopResources = LoopResources
 				.create(
@@ -79,8 +158,6 @@ public class ReactorNettyActivator {
 						? LoopResources.DEFAULT_IO_WORKER_COUNT
 						: config.workerCount(),
 					config.daemon());
-
-			RouterHandler routerHandler = _getRouterHandler();
 
 			HttpServer httpServer =
 				HttpServer
@@ -92,7 +169,7 @@ public class ReactorNettyActivator {
 					.wiretap("openk9", LogLevel.DEBUG, config.wiretapFormat())
 					.runOn(loopResources)
 					.compress(config.compress())
-					.handle(routerHandler.handle(HttpServerRoutes.newRoutes()))
+					.handle(proxy)
 					.mapHandle(this::_mapHandle)
 					.port(config.port())
 					.protocol(config.httpProtocol());
@@ -153,16 +230,6 @@ public class ReactorNettyActivator {
 		);
 	}
 
-	private RouterHandler _getRouterHandler() {
-
-		Collection<RouterHandler> values = _routerHandlerRegistry.values();
-
-		return values
-			.stream()
-			.reduce(RouterHandler.NOTHING, RouterHandler::andThen);
-
-	}
-
 	private void callback(DisposableServer server) {
 		_log.info("HTTP server started on port: " + server.port());
 		try {
@@ -194,18 +261,20 @@ public class ReactorNettyActivator {
 		cardinality = ReferenceCardinality.AT_LEAST_ONE,
 		bind = "addRouterHandler",
 		unbind = "removeRouterHandler",
-		policy = ReferencePolicy.STATIC,
+		policy = ReferencePolicy.DYNAMIC,
 		policyOption = ReferencePolicyOption.GREEDY,
 		service = RouterHandler.class
 	)
 	public void addRouterHandler(
 		ServiceReference serviceReference, RouterHandler routerHandler) {
 		_routerHandlerRegistry.put(serviceReference, routerHandler);
+		_routerHandleCounter.incrementAndGet();
 	}
 
 	public void removeRouterHandler(
 		ServiceReference serviceReference, RouterHandler routerHandler) {
 		_routerHandlerRegistry.remove(serviceReference);
+		_routerHandleCounter.decrementAndGet();
 	}
 
 	@Reference(
@@ -228,6 +297,8 @@ public class ReactorNettyActivator {
 
 	private Map<ServiceReference, RouterHandler> _routerHandlerRegistry =
 		new TreeMap<>();
+
+	private final AtomicLong _routerHandleCounter = new AtomicLong(0);
 
 	private Map<
 		ServiceReference,
