@@ -256,7 +256,7 @@ public class ReactorNettyActivator {
 
 
 	@Reference(
-		cardinality = ReferenceCardinality.AT_LEAST_ONE,
+		cardinality = ReferenceCardinality.MULTIPLE,
 		bind = "addRouterHandler",
 		unbind = "removeRouterHandler",
 		policy = ReferencePolicy.DYNAMIC,

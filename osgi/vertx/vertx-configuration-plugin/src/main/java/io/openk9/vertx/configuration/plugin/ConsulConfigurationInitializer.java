@@ -154,7 +154,9 @@ public class ConsulConfigurationInitializer {
 	@Reference
 	private volatile ConsulClient _consulClient;
 
-	@Reference
+	@Reference(
+		target = "(service.name=this)"
+	)
 	private volatile Supplier<String> _serviceNameSupplier;
 
 	@Reference

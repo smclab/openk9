@@ -151,7 +151,9 @@ public class ConsulConfigurationListener {
 	@Reference
 	private ConsulClient _consulClient;
 
-	@Reference
+	@Reference(
+		target = "(service.name=this)"
+	)
 	private Supplier<String> _serviceNameSupplier;
 
 	@Reference
