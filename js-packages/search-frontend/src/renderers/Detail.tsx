@@ -10,6 +10,7 @@ import { MostreDetail } from "./cm/MostreDetail";
 import { EventiDetail } from "./cm/EventiDetail";
 import { PetizioniDetail } from "./cm/PetizioniDetail";
 import { ProcessiDetail } from "./cm/ProcessiDetail";
+import { WemiDetail } from "./cm/WemiDetail";
 
 type DetailProps = {
   result: ResultDTO;
@@ -39,6 +40,9 @@ function Detail({ result }: DetailProps) {
         }
         if (result.source.documentTypes.includes("processi")) {
           return <ProcessiDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("wemi")) {
+          return <WemiDetail result={result} />;
         }
         if (result.source.documentTypes.includes("pdf")) {
           return <PdfDetail result={result} />;

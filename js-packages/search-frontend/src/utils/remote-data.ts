@@ -70,6 +70,7 @@ export type ResultDTO = {
       | "eventi"
       | "petizioni"
       | "processi"
+      | "wemi"
     >;
     web?: {
       favicon: string;
@@ -142,6 +143,17 @@ export type ResultDTO = {
       partecipants?: string;
       area?: string;
       imgUrl?: string;
+    };
+    wemi?: {
+      destinatari: Array<string>;
+      attività: Array<string>;
+      sedi: Array<string>;
+      momento: Array<string>;
+      municipi: Array<string>;
+      prezzi: Array<{ label: string; value: string }>;
+      procedura: string;
+      categoria: string;
+      servizio: string;
     };
   };
   highlight: {
