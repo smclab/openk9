@@ -281,9 +281,10 @@ distConfigurations
 				environmentVariable("PATH", '$PATH:$KARAF_HOME/bin')
 				environmentVariable("EXTRA_JAVA_OPTS", "-javaagent:/reactor-tools.jar")
 
-				addFile(karafUrl, '/opt')
-				runCommand('tar -xzf /opt/' + "apache-karaf-${karafVersion}.tar.gz -C /opt/")
-				runCommand('rm /opt/' + "apache-karaf-${karafVersion}.tar.gz")
+				addFile(karafUrl, "/opt/apache-karaf-${karafVersion}.zip")
+				runCommand('apt-get update && apt-get install unzip -y && rm -rf /var/lib/apt/lists/*')
+				runCommand('unzip -qq /opt/' + "apache-karaf-${karafVersion}.zip -d /opt/")
+				runCommand('rm /opt/' + "apache-karaf-${karafVersion}.zip")
 				runCommand('ls /opt/')
 
 				runCommand('set -x && ln -s /opt/apache-karaf* $KARAF_HOME')
