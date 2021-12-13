@@ -23,6 +23,7 @@ import io.openk9.http.web.RouterHandler;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
@@ -52,12 +53,16 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-@Component(immediate = true, service = ReactorNettyActivator.class)
+@Component(
+	immediate = true,
+	service = ReactorNettyActivator.class,
+	configurationPolicy = ConfigurationPolicy.REQUIRE
+)
 public class ReactorNettyActivator {
 
 	@interface Config {
@@ -87,17 +92,14 @@ public class ReactorNettyActivator {
 
 				if (httpServerRoutes == null) {
 					_updateState(
-						_currentState, _routerHandleCounter,
-						_getRouterHandler(), _prevHttpServerRouters);
+						_semaphore, _getRouterHandler(),
+						_prevHttpServerRouters);
 				}
 				else {
-					if (_routerHandleCounter.get() != _currentState.get()) {
-
+					if (!_semaphore.get()) {
 						_updateState(
-							_currentState, _routerHandleCounter,
-							_getRouterHandler(),
+							_semaphore, _getRouterHandler(),
 							_prevHttpServerRouters);
-
 					}
 				}
 
@@ -111,13 +113,11 @@ public class ReactorNettyActivator {
 		}
 
 		private void _updateState(
-			AtomicLong currentState, AtomicLong routerHandleCounter,
-			RouterHandler _getRouterHandler,
+			AtomicBoolean semaphore, RouterHandler _getRouterHandler,
 			AtomicReference<HttpServerRoutes> prevHttpServerRouters) {
-
-			currentState.set(routerHandleCounter.get());
-			HttpServerRoutes handle =
-				_getRouterHandler.handle(HttpServerRoutes.newRoutes());
+			semaphore.set(true);
+			HttpServerRoutes handle = _getRouterHandler
+				.handle(HttpServerRoutes.newRoutes());
 			prevHttpServerRouters.set(handle);
 		}
 
@@ -130,8 +130,6 @@ public class ReactorNettyActivator {
 				.reduce(RouterHandler.NOTHING, RouterHandler::andThen);
 
 		}
-
-		private final AtomicLong _currentState = new AtomicLong(0);
 
 		private final AtomicReference<HttpServerRoutes> _prevHttpServerRouters =
 			new AtomicReference<>();
@@ -268,13 +266,13 @@ public class ReactorNettyActivator {
 	public void addRouterHandler(
 		ServiceReference serviceReference, RouterHandler routerHandler) {
 		_routerHandlerRegistry.put(serviceReference, routerHandler);
-		_routerHandleCounter.incrementAndGet();
+		_semaphore.set(false);
 	}
 
 	public void removeRouterHandler(
 		ServiceReference serviceReference, RouterHandler routerHandler) {
 		_routerHandlerRegistry.remove(serviceReference);
-		_routerHandleCounter.incrementAndGet();
+		_semaphore.set(false);
 	}
 
 	@Reference(
@@ -298,7 +296,7 @@ public class ReactorNettyActivator {
 	private Map<ServiceReference, RouterHandler> _routerHandlerRegistry =
 		new TreeMap<>();
 
-	private final AtomicLong _routerHandleCounter = new AtomicLong(0);
+	private final AtomicBoolean _semaphore = new AtomicBoolean(false);
 
 	private Map<
 		ServiceReference,
