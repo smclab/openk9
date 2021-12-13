@@ -33,6 +33,12 @@ apply plugin: 'de.undercouch.download'
 
 def karafVersion = findProperty("karaf.version")
 
+def karafUrl = findProperty("karaf.${karafVersion}.patch_url")
+
+if (karafUrl == null) {
+	karafUrl = "http://archive.apache.org/dist/karaf/${karafVersion}/apache-karaf-${karafVersion}.tar.gz"
+}
+
 ext.libraries = [
 		vavr: 'io.vavr:vavr:0.10.3',
 		jackson_annotations: 'com.fasterxml.jackson.core:jackson-annotations:2.11.3',
@@ -202,7 +208,7 @@ if (System.getenv("CI_REGISTRY_NAME") != null) {
 }
 
 task downloadKaraf(type: Download) {
-	src "http://archive.apache.org/dist/karaf/${karafVersion}/apache-karaf-${karafVersion}.tar.gz"
+	src karafUrl
 	dest "$rootDir/build/karaf/apache-karaf.tar.gz"
 	overwrite false
 	onlyIfModified true
@@ -275,7 +281,7 @@ distConfigurations
 				environmentVariable("PATH", '$PATH:$KARAF_HOME/bin')
 				environmentVariable("EXTRA_JAVA_OPTS", "-javaagent:/reactor-tools.jar")
 
-				addFile("http://archive.apache.org/dist/karaf/${karafVersion}/apache-karaf-${karafVersion}.tar.gz", '/opt')
+				addFile(karafUrl, '/opt')
 				runCommand('tar -xzf /opt/' + "apache-karaf-${karafVersion}.tar.gz -C /opt/")
 				runCommand('rm /opt/' + "apache-karaf-${karafVersion}.tar.gz")
 				runCommand('ls /opt/')
