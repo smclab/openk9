@@ -33,7 +33,8 @@ import java.util.stream.Collectors;
 	property = {
 		"consul.config.disabled=true"
 	},
-	service = ConsulConfigurationInitializer.class
+	service = ConsulConfigurationInitializer.class,
+	enabled = false
 )
 public class ConsulConfigurationInitializer {
 

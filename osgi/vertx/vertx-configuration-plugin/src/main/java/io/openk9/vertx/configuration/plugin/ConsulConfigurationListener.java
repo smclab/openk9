@@ -90,9 +90,9 @@ public class ConsulConfigurationListener {
 								properties.put(key, dict.get(key));
 							}
 
-							configuration.updateIfDifferent(properties);
-
-							_log.info("update configuration: " + pid);
+							if (configuration.updateIfDifferent(properties)) {
+								_log.info("update configuration: " + pid);
+							}
 
 						}
 						catch (IOException e) {
