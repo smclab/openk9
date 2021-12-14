@@ -79,6 +79,10 @@ public class ConsulConfigurationListener {
 							Dictionary<String, Object> properties =
 								configuration.getProperties();
 
+							if (properties == null) {
+								properties = new Hashtable<>();
+							}
+
 							Enumeration<String> keys = dict.keys();
 
 							while (keys.hasMoreElements()) {
