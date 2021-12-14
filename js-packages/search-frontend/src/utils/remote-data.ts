@@ -146,7 +146,7 @@ export type ResultDTO = {
     };
     wemi?: {
       destinatari: Array<string>;
-      attività: Array<string>;
+      attivita: Array<string>;
       sedi: Array<string>;
       momento: Array<string>;
       municipi: Array<string>;

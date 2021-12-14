@@ -56,7 +56,7 @@ export function WemiDetail({ result }: WemiDetailProps) {
       <div>
         <strong>Attività</strong> :
         <ul>
-          {result.source.wemi?.attività?.map((item, index) => {
+          {result.source.wemi?.attivita?.map((item, index) => {
             return <li key={index}>{item}</li>;
           })}
         </ul>
