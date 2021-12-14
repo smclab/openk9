@@ -48,7 +48,7 @@ export function WemiDetail({ result }: WemiDetailProps) {
       <div>
         <strong>Destinatari</strong> :
         <ul>
-          {result.source.wemi?.destinatari.map((item, index) => {
+          {result.source.wemi?.destinatari?.map((item, index) => {
             return <li key={index}>{item}</li>;
           })}
         </ul>
@@ -56,7 +56,7 @@ export function WemiDetail({ result }: WemiDetailProps) {
       <div>
         <strong>Attività</strong> :
         <ul>
-          {result.source.wemi?.attività.map((item, index) => {
+          {result.source.wemi?.attività?.map((item, index) => {
             return <li key={index}>{item}</li>;
           })}
         </ul>
@@ -64,7 +64,7 @@ export function WemiDetail({ result }: WemiDetailProps) {
       <div>
         <strong>Prezzi</strong> :
         <ul>
-          {result.source.wemi?.prezzi.map((item, index) => {
+          {result.source.wemi?.prezzi?.map((item, index) => {
             return (
               <li key={index}>
                 {item.label}: {item.value}
@@ -76,7 +76,7 @@ export function WemiDetail({ result }: WemiDetailProps) {
       <div>
         <strong>Momento</strong> :
         <ul>
-          {result.source.wemi?.momento.map((item, index) => {
+          {result.source.wemi?.momento?.map((item, index) => {
             return <li key={index}>{item}</li>;
           })}
         </ul>
@@ -84,7 +84,7 @@ export function WemiDetail({ result }: WemiDetailProps) {
       <div>
         <strong>Sedi</strong> :
         <ul>
-          {result.source.wemi?.sedi.map((item, index) => {
+          {result.source.wemi?.sedi?.map((item, index) => {
             return <li key={index}>{item}</li>;
           })}
         </ul>
