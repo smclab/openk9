@@ -43,9 +43,6 @@ export function WemiDetail({ result }: WemiDetailProps) {
         <strong>Categoria</strong> : {result.source.wemi?.categoria}
       </div>
       <div>
-        <strong>Categoria</strong> : {result.source.wemi?.categoria}
-      </div>
-      <div>
         <strong>Servizio</strong> : {result.source.wemi?.servizio}
       </div>
       <div>
