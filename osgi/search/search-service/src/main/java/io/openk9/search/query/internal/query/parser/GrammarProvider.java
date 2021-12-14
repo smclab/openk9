@@ -32,9 +32,9 @@ import java.util.stream.Stream;
 
 @Component(
 	immediate = true,
-	service = GrammarProvider.class
+	service = GrammarProvider.class,
+	configurationPid = AnnotatorConfig.PID
 )
-@Designate(ocd = AnnotatorConfig.class)
 public class GrammarProvider {
 
 	@Activate

@@ -21,7 +21,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -45,9 +47,16 @@ import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
-	service = RouterHandler.class
+	service = RouterHandler.class,
+	configurationPid = AnnotatorConfig.PID
 )
 public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
+
+	@Activate
+	@Modified
+	void activate(AnnotatorConfig annotatorConfig) {
+		_annotatorConfig = annotatorConfig;
+	}
 
 	@Override
 	public HttpServerRoutes handle(
@@ -237,6 +246,8 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		return chart;
 	}
 
+	private AnnotatorConfig _annotatorConfig;
+
 	@Reference
 	private GrammarProvider _grammarProvider;
 
@@ -248,9 +259,6 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 	@Reference
 	private DatasourceClient _datasourceClient;
-
-	@Reference
-	private AnnotatorConfig _annotatorConfig;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		QueryAnalysisHttpHandler.class);

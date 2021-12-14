@@ -12,9 +12,9 @@ import org.osgi.service.metatype.annotations.Designate;
 import java.util.Map;
 
 @Component(
-	immediate = true, service = Annotator.class
+	immediate = true, service = Annotator.class,
+	configurationPid = AnnotatorConfig.PID
 )
-@Designate(ocd = AnnotatorConfig.class)
 public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 
 	@Activate

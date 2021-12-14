@@ -13,9 +13,9 @@ import java.util.Map;
 @Component(
 	immediate = true,
 	service = Annotator.class,
-	enabled = false
+	enabled = false,
+	configurationPid = AnnotatorConfig.PID
 )
-@Designate(ocd = AnnotatorConfig.class)
 public class StopWordsAnnotator extends BaseAnnotator {
 
 	@Activate

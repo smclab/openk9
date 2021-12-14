@@ -17,9 +17,9 @@ import java.util.Set;
 	property = {
 		Constants.SERVICE_RANKING + ":Integer=1000"
 	},
-	service = Annotator.class
+	service = Annotator.class,
+	configurationPid = AnnotatorConfig.PID
 )
-@Designate(ocd = AnnotatorConfig.class)
 public class TokenAnnotator extends BaseAnnotator {
 
 	@Activate

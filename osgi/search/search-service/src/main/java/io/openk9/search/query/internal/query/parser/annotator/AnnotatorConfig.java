@@ -4,9 +4,13 @@ import org.elasticsearch.common.unit.Fuzziness;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(
-	name = "Annotator Configuration"
+	name = "Annotator Configuration",
+	pid = "$"
 )
 public @interface AnnotatorConfig {
+
+	String OCD = "io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig";
+	String PID = "io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig";
 
 	InternalFuzziness nerAnnotatorFuzziness() default InternalFuzziness.ONE;
 
