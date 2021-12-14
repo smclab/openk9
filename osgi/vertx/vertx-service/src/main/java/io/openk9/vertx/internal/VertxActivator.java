@@ -22,7 +22,10 @@ import java.util.Map;
 
 @Component(
 	immediate = true,
-	service = VertxActivator.class
+	service = VertxActivator.class,
+	property = {
+		"consul.config.disabled=true"
+	}
 )
 public class VertxActivator {
 

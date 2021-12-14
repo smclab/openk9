@@ -19,7 +19,7 @@ import java.util.Objects;
 	immediate = true,
 	service = VertxConsulActivator.class,
 	property = {
-		"host=localhost",
+		"host=consul",
 		"port:Integer=8500",
 		"scan-period:Integer=2000"
 	}
