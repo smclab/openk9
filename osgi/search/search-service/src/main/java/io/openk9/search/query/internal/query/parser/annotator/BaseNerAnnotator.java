@@ -31,7 +31,7 @@ public class BaseNerAnnotator extends BaseAnnotator {
 		String field, String token) {
 		return QueryBuilders
 			.fuzzyQuery(field, token)
-			.fuzziness(_annotatorConfig.nerAnnotatorFuzziness());
+			.fuzziness(_annotatorConfig.nerAnnotatorFuzziness().getFuzziness());
 	}
 
 	@Override

@@ -31,6 +31,7 @@ import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -99,7 +100,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 						t2.getT1(), searchText);
 
 					return parsesMono
-						.take(_annotatorConfig.timeout())
+						.take(Duration.ofMillis(_annotatorConfig.timeoutMs()))
 						.switchIfEmpty(Mono.just(List.of()))
 						.map(parses -> {
 

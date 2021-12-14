@@ -3,8 +3,10 @@ package io.openk9.search.query.internal.query.parser.annotator;
 import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.metatype.annotations.Designate;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,14 @@ import java.util.Set;
 	},
 	service = Annotator.class
 )
+@Designate(ocd = AnnotatorConfig.class)
 public class TokenAnnotator extends BaseAnnotator {
+
+	@Activate
+	@Modified
+	void activate(AnnotatorConfig annotatorConfig) {
+		setAnnotatorConfig(annotatorConfig);
+	}
 
 	@Override
 	public List<CategorySemantics> annotate(
@@ -68,13 +77,6 @@ public class TokenAnnotator extends BaseAnnotator {
 	@Override
 	public int weight() {
 		return 10;
-	}
-
-	@Override
-	@Reference
-	public void setAnnotatorConfig(
-		AnnotatorConfig annotatorConfig) {
-		super.setAnnotatorConfig(annotatorConfig);
 	}
 
 }

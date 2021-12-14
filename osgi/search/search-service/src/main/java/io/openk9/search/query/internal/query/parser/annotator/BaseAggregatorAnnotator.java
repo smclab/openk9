@@ -40,7 +40,7 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		String field, String token) {
 		return QueryBuilders
 			.fuzzyQuery(field, token)
-			.fuzziness(_annotatorConfig.restFuzziness());
+			.fuzziness(_annotatorConfig.restFuzziness().getFuzziness());
 	}
 
 	@Override
