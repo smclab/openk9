@@ -32,7 +32,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-smallrye-reactive-messaging-amqp'
     implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'io.quarkus:quarkus-panache-common'
-
+    implementation 'io.quarkus:quarkus-consul-config'
     implementation 'org.jboss.logging:commons-logging-jboss-logging'
 
     implementation 'io.projectreactor:reactor-core:3.4.11'

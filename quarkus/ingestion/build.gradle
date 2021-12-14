@@ -25,6 +25,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-kubernetes'
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-resteasy-reactive'
+    implementation 'io.quarkus:quarkus-consul-config'
     implementation 'org.jboss.logging:commons-logging-jboss-logging'
 
     implementation 'org.projectlombok:lombok:1.18.18'
