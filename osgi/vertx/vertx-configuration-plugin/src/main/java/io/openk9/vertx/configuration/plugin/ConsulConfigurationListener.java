@@ -47,17 +47,19 @@ public class ConsulConfigurationListener {
 				if (list1 != null) {
 
 					for (KeyValue keyValue : list1) {
+
 						String pid = keyValue.getKey();
 
-						if (pid.equals(_serviceNameSupplier.get())) {
+						String v = keyValue.getValue();
+
+						if (pid.equals(_serviceNameSupplier.get()) || pid.equals(_serviceNameSupplier.get() + "/") || v == null) {
 							continue;
 						}
 						else if (pid.startsWith(_serviceNameSupplier.get())) {
 							pid = pid.substring(_serviceNameSupplier.get().length() + 1);
 						}
 
-						JsonObject jsonConfig =
-							new JsonObject(keyValue.getValue());
+						JsonObject jsonConfig = new JsonObject(v);
 
 						try {
 							Configuration configuration =
