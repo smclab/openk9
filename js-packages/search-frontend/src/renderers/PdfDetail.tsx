@@ -22,6 +22,8 @@ export function PdfDetail({ result }: PdfDetailProps) {
         css={css`
           font-size: 1.5em;
           font-weight: 500;
+          word-wrap: break-word;
+          word-break: break-word;
         `}
       >
         {result.highlight["document.title"] ? (
@@ -33,6 +35,8 @@ export function PdfDetail({ result }: PdfDetailProps) {
       <div
         css={css`
           font-size: 0.8em;
+          word-wrap: break-word;
+          word-break: break-word;
         `}
       >
         {result.highlight["document.url"] ? (
@@ -55,8 +59,8 @@ export function PdfDetail({ result }: PdfDetailProps) {
               title={binary.id}
               src={`/api/searcher/resources/${result.source.datasourceId}/${result.source.id}/${binary.id}`}
               css={css`
-                width: calc(100%);
-                height: 65vh;
+                width: 100%;
+                height: 50vh;
                 border: none;
                 border-radius: 4px;
               `}
@@ -64,7 +68,12 @@ export function PdfDetail({ result }: PdfDetailProps) {
           );
         })}
       </div>
-      <div>
+      <div
+        css={css`
+          word-wrap: break-word;
+          word-break: break-word;
+        `}
+      >
         {result.highlight["document.content"] ? (
           result.highlight["document.content"].map((text, index) => (
             <div key={index}>

@@ -69,7 +69,7 @@ export function PdfResult({ result }: PdfResultProps) {
         css={css`
           grid-column: 2;
           grid-row: 3;
-          ${result.highlight["document.content"] ? truncatedLineStyle : null};
+          ${result.highlight["document.content"] ? truncatedLineStyle : ""};
         `}
       >
         {result.highlight["document.content"] ? (
@@ -83,6 +83,8 @@ export function PdfResult({ result }: PdfResultProps) {
             css={css`
               max-height: calc(21px * 5);
               overflow-y: hidden;
+              word-wrap: break-word;
+              word-break: break-word;
             `}
           >
             {result.source.document?.content}
