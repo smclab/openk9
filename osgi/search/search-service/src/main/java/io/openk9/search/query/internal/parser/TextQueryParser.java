@@ -8,7 +8,6 @@ import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchToken;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.osgi.service.component.annotations.Component;
 import reactor.core.publisher.Mono;
 
@@ -46,14 +45,10 @@ public class TextQueryParser implements QueryParser {
 
 		if (!tokenTextList.isEmpty()) {
 
-			BoolQueryBuilder innerBoolQueryBuilder = QueryBuilders.boolQuery();
-
 			for (SearchToken searchToken : tokenTextList) {
 				_termQueryPrefixValues(
-					searchToken, innerBoolQueryBuilder, entityMapperList);
+					searchToken, query, entityMapperList);
 			}
-
-			query.should(innerBoolQueryBuilder);
 
 		}
 
@@ -90,8 +85,6 @@ public class TextQueryParser implements QueryParser {
 					Collectors.toMap(
 						FieldBoostDTO::getKeyword, FieldBoostDTO::getBoost));
 
-		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-
 		for (String value : values) {
 
 			MultiMatchQueryBuilder multiMatchQueryBuilder =
@@ -99,25 +92,27 @@ public class TextQueryParser implements QueryParser {
 
 			multiMatchQueryBuilder.fields(keywordBoostMap);
 
-			boolQueryBuilder.should(multiMatchQueryBuilder);
+			query.should(multiMatchQueryBuilder);
 
-			multiMatchQueryBuilder =
-				new MultiMatchQueryBuilder(value);
+			if (value.split("\\s+").length > 1) {
 
-			multiMatchQueryBuilder.fields(keywordBoostMap);
+				multiMatchQueryBuilder =
+					new MultiMatchQueryBuilder(value);
 
-			multiMatchQueryBuilder.type(
-				MultiMatchQueryBuilder.Type.PHRASE);
+				multiMatchQueryBuilder.fields(keywordBoostMap);
 
-			multiMatchQueryBuilder.slop(2);
+				multiMatchQueryBuilder.type(
+					MultiMatchQueryBuilder.Type.PHRASE);
 
-			multiMatchQueryBuilder.boost(2.0f);
+				multiMatchQueryBuilder.slop(2);
 
-			boolQueryBuilder.should(multiMatchQueryBuilder);
+				multiMatchQueryBuilder.boost(2.0f);
+
+				query.should(multiMatchQueryBuilder);
+
+			}
 
 		}
-
-		query.should(boolQueryBuilder);
 
 	}
 
