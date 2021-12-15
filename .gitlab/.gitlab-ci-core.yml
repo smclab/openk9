@@ -1,7 +1,7 @@
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
-Build Tagged OSGI Docker Images:
+Build Latest Plugin Driver Manager Tagged Docker Image:
   image: smclab/docker-java-11:latest
   services:
     - docker:19.03.13-dind
@@ -13,10 +13,109 @@ Build Tagged OSGI Docker Images:
   only:
     - tags
   script:
-    - ./gradlew pushImages
-    - ./gradlew build -p ./quarkus/datasource -Dquarkus.package.type=native -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true
+    - ./gradlew pushImagePluginDriverManager
   cache:
     key: build-docker-cache
     paths:
       - $CI_PROJECT_DIR/.m2/**/*
       - $CI_PROJECT_DIR/.gradle/**/*
+
+Build Latest Searcher Tagged Docker Image:
+  image: smclab/docker-java-11:latest
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    - tags
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+    - ./gradlew pushImageSearcher
+  cache:
+    key: build-docker-cache
+    paths:
+      - $CI_PROJECT_DIR/.m2/**/*
+      - $CI_PROJECT_DIR/.gradle/**/*
+
+Build Latest Index Writer Tagged Docker Image:
+  image: smclab/docker-java-11:latest
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    - tags
+  script:
+    - ./gradlew pushImageIndexWriter
+  cache:
+    key: build-docker-cache
+    paths:
+      - $CI_PROJECT_DIR/.m2/**/*
+      - $CI_PROJECT_DIR/.gradle/**/*
+
+Build Latest Ingestion Tagged Docker Image:
+  image: smclab/docker-java-11:latest
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    - tags
+  script:
+    - ./gradlew build -p ./quarkus/ingestion -Dquarkus.package.type=mutable-jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+
+Build Latest Datasource Tagged Docker Image:
+  image: smclab/docker-java-11:latest
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    - tags
+  script:
+    - ./gradlew build -p ./quarkus/datasource -Dquarkus.package.type=mutable-jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+
+
+Build Latest Entity Manager Tagged Docker Image:
+  image: smclab/docker-java-11:latest
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+    JAVA_ENABLE_DEBUG: 'true'
+  only:
+    - tags
+  script:
+    - ./gradlew build -p ./quarkus/entity-manager -Dquarkus.package.type=mutable-jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest -Dquarkus.log.category.\"io.openk9.entity.manager.jet.CreateEntitiesRunnable\".level=DEBUG
+
+trigger_demo_deploy:
+  image: curlimages/curl
+  stage: deploy
+  only:
+    - tags
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$STAGING_TOKEN -F "variables[TRIGGER_JOB]=deploy-demo" -F ref=master $STAGING_TRIGGER_URL
