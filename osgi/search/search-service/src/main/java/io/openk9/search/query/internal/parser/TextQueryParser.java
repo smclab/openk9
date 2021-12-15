@@ -12,6 +12,7 @@ import org.osgi.service.component.annotations.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -78,12 +79,16 @@ public class TextQueryParser implements QueryParser {
 				.map(DocumentTypeDTO::getSearchKeywords)
 				.flatMap(Collection::stream)
 				.filter(SearchKeywordDTO::isText)
-				.distinct()
 				.filter(keywordKeyPredicate)
 				.map(SearchKeywordDTO::getFieldBoost)
 				.collect(
 					Collectors.toMap(
-						FieldBoostDTO::getKeyword, FieldBoostDTO::getBoost));
+						FieldBoostDTO::getKeyword,
+						FieldBoostDTO::getBoost,
+						Math::max,
+						HashMap::new
+					)
+				);
 
 		for (String value : values) {
 
