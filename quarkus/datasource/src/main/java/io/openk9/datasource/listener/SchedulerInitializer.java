@@ -22,13 +22,13 @@ import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
 
-@ApplicationScoped
+@Singleton
 public class SchedulerInitializer {
 
 	@PostConstruct
