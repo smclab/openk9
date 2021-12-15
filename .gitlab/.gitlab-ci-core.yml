@@ -74,7 +74,7 @@ Build Latest Ingestion Tagged Docker Image:
   only:
     - tags
   script:
-    - ./gradlew build -p ./quarkus/ingestion -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./gradlew build -p ./quarkus/ingestion -Dquarkus.container-image.push=true
 
 Build Latest Datasource Tagged Docker Image:
   image: smclab/docker-java-11:latest
@@ -90,7 +90,7 @@ Build Latest Datasource Tagged Docker Image:
   only:
     - tags
   script:
-    - ./gradlew build -p ./quarkus/datasource -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./gradlew build -p ./quarkus/datasource -Dquarkus.container-image.push=true
 
 
 Build Latest Entity Manager Tagged Docker Image:
@@ -108,7 +108,7 @@ Build Latest Entity Manager Tagged Docker Image:
   only:
     - tags
   script:
-    - ./gradlew build -p ./quarkus/entity-manager -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest -Dquarkus.log.category.\"io.openk9.entity.manager.jet.CreateEntitiesRunnable\".level=DEBUG
+    - ./gradlew build -p ./quarkus/entity-manager -Dquarkus.container-image.push=true
 
 trigger_demo_deploy:
   image: curlimages/curl
