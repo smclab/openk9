@@ -16,6 +16,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -29,12 +30,14 @@ public class DateOrderQueryParser implements QueryParser {
 	@ObjectClassDefinition
 	@interface Config {
 		String scale() default "3650d";
+		float boost() default 0.1f;
 	}
 
 	@Activate
 	@Modified
 	void activate(Config config) {
 		_scale = config.scale();
+		_boost = config.boost();
 	}
 
 	@Override
@@ -45,7 +48,7 @@ public class DateOrderQueryParser implements QueryParser {
 			List<PluginDriverDTO> pluginDriverDocumentTypeList =
 				context.getPluginDriverDocumentTypeList();
 
-			pluginDriverDocumentTypeList
+			Iterator<String> iterator = pluginDriverDocumentTypeList
 				.stream()
 				.map(PluginDriverDTO::getDocumentTypes)
 				.flatMap(Collection::stream)
@@ -54,7 +57,17 @@ public class DateOrderQueryParser implements QueryParser {
 				.filter(SearchKeywordDTO::isDate)
 				.distinct()
 				.map(SearchKeywordDTO::getKeyword)
-				.forEach(keyword -> {
+				.iterator();
+
+			if (iterator.hasNext()) {
+
+				BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+				boolQueryBuilder.boost(_boost);
+
+				while (iterator.hasNext()) {
+
+					String keyword = iterator.next();
 
 					FunctionScoreQueryBuilder.FilterFunctionBuilder
 						filterFunctionBuilder =
@@ -62,18 +75,24 @@ public class DateOrderQueryParser implements QueryParser {
 							ScoreFunctionBuilders.linearDecayFunction(
 								keyword, null, _scale));
 
-					bool.should(
+					boolQueryBuilder.should(
 						QueryBuilders.functionScoreQuery(
 							QueryBuilders.existsQuery(keyword),
-							new FunctionScoreQueryBuilder.FilterFunctionBuilder[] {filterFunctionBuilder}
+							new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
+								filterFunctionBuilder}
 						)
 					);
 
-				});
+				}
+
+				bool.should(boolQueryBuilder);
+
+			}
 
 		});
 	}
 
 	private String _scale;
+	private float _boost;
 
 }

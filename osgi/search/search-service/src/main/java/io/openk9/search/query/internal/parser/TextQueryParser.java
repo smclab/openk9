@@ -8,7 +8,12 @@ import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchToken;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
@@ -23,7 +28,19 @@ import java.util.stream.Collectors;
 	immediate = true,
 	service = QueryParser.class
 )
+@Designate(ocd = TextQueryParser.Config.class)
 public class TextQueryParser implements QueryParser {
+
+	@ObjectClassDefinition
+	@interface Config {
+		float boost() default 1.0f;
+	}
+
+	@Activate
+	@Modified
+	void activate(TextQueryParser.Config config) {
+		_boost = config.boost();
+	}
 
 	@Override
 	public Mono<Consumer<BoolQueryBuilder>> apply(Context context) {
@@ -90,6 +107,10 @@ public class TextQueryParser implements QueryParser {
 					)
 				);
 
+		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+		boolQueryBuilder.boost(_boost);
+
 		for (String value : values) {
 
 			MultiMatchQueryBuilder multiMatchQueryBuilder =
@@ -97,7 +118,7 @@ public class TextQueryParser implements QueryParser {
 
 			multiMatchQueryBuilder.fields(keywordBoostMap);
 
-			query.should(multiMatchQueryBuilder);
+			boolQueryBuilder.should(multiMatchQueryBuilder);
 
 			if (value.split("\\s+").length > 1) {
 
@@ -113,13 +134,17 @@ public class TextQueryParser implements QueryParser {
 
 				multiMatchQueryBuilder.boost(2.0f);
 
-				query.should(multiMatchQueryBuilder);
+				boolQueryBuilder.should(multiMatchQueryBuilder);
 
 			}
 
 		}
 
+		query.should(boolQueryBuilder);
+
 	}
+
+	private float _boost;
 
 	private static final String TYPE = "TEXT";
 
