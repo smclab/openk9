@@ -139,11 +139,7 @@ public class SchedulerInitializer {
 	}
 
 	@DisallowConcurrentExecution
-	@ApplicationScoped
-	public static class DatasourceJob implements Job {
-
-		@Inject
-		SchedulerInitializer taskBean;
+	public class DatasourceJob implements Job {
 
 		@Transactional
 		public void execute(JobExecutionContext context) throws
@@ -151,8 +147,7 @@ public class SchedulerInitializer {
 
 			JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
-			taskBean.performTask(
-				jobDataMap.getLong("datasourceId"));
+			performTask(jobDataMap.getLong("datasourceId"));
 		}
 
 	}
