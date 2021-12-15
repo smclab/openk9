@@ -8,11 +8,13 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor(staticName = "of")
 @Builder
 public class SearchKeywordDTO {
+	@EqualsAndHashCode.Include
 	private String keyword;
+	@EqualsAndHashCode.Include
 	private Type type;
 	private FieldBoostDTO fieldBoost;
 
