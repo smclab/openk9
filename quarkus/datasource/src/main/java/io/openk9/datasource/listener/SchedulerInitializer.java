@@ -22,6 +22,7 @@ import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
 import javax.annotation.PostConstruct;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.transaction.Transactional;
@@ -55,7 +56,7 @@ public class SchedulerInitializer {
 
 		JobKey jobKey = JobKey.jobKey(name);
 
-		if (_scheduler.checkExists(jobKey)) {
+		if (_scheduler.get().checkExists(jobKey)) {
 
 			Trigger trigger = TriggerBuilder.newTrigger()
 				.withIdentity(name)
@@ -65,7 +66,7 @@ public class SchedulerInitializer {
 						datasource.getScheduling()))
 				.build();
 
-			_scheduler.rescheduleJob(TriggerKey.triggerKey(name), trigger);
+			_scheduler.get().rescheduleJob(TriggerKey.triggerKey(name), trigger);
 
 		}
 		else {
@@ -83,7 +84,7 @@ public class SchedulerInitializer {
 						datasource.getScheduling()))
 				.build();
 
-			_scheduler.scheduleJob(job, trigger);
+			_scheduler.get().scheduleJob(job, trigger);
 
 		}
 
@@ -91,7 +92,7 @@ public class SchedulerInitializer {
 
 	public void deleteScheduler(Datasource datasource)
 		throws SchedulerException {
-		_scheduler.deleteJob(JobKey.jobKey(datasource.getName()));
+		_scheduler.get().deleteJob(JobKey.jobKey(datasource.getName()));
 	}
 
 	public void performTask(Long datasourceId) {
@@ -153,7 +154,7 @@ public class SchedulerInitializer {
 	}
 
 	@Inject
-	Scheduler _scheduler;
+	Instance<Scheduler> _scheduler;
 
 	@Inject
 	@RestClient
