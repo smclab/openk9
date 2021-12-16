@@ -7,6 +7,7 @@ import io.openk9.datasource.model.Datasource;
 import org.jboss.logging.Logger;
 import org.quartz.SchedulerException;
 
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.POST;
@@ -32,7 +33,7 @@ public class ReindexResource {
 
 			try {
 
-				_schedulerInitializer.triggerJob(
+				_schedulerInitializer.get().triggerJob(
 					datasource.getDatasourceId(), datasource.getName());
 
 				response.add(
@@ -67,7 +68,7 @@ public class ReindexResource {
 	}
 
 	@Inject
-	SchedulerInitializer _schedulerInitializer;
+	Instance<SchedulerInitializer> _schedulerInitializer;
 
 	@Inject
 	Logger _logger;

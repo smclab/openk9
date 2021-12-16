@@ -8,6 +8,7 @@ import org.jboss.logging.Logger;
 import org.quartz.SchedulerException;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.PostPersist;
 import javax.persistence.PostRemove;
@@ -31,7 +32,7 @@ public class DatasourceListener {
 	@PostRemove
 	public void postRemove(Datasource datasource) {
 		try {
-			_schedulerInitializer.deleteScheduler(datasource);
+			_schedulerInitializer.get().deleteScheduler(datasource);
 		}
 		catch (SchedulerException e) {
 			_log.error(e.getMessage(), e);
@@ -44,7 +45,7 @@ public class DatasourceListener {
 	private void _createOrUpdateScheduler(Datasource datasource) {
 
 		try {
-			_schedulerInitializer.createOrUpdateScheduler(datasource);
+			_schedulerInitializer.get().createOrUpdateScheduler(datasource);
 		}
 		catch (SchedulerException e) {
 			_log.error(e.getMessage(), e);
@@ -62,7 +63,7 @@ public class DatasourceListener {
 	UpdateEmitter _updateEmitter;
 
 	@Inject
-	SchedulerInitializer _schedulerInitializer;
+	Instance<SchedulerInitializer> _schedulerInitializer;
 
 	private static final Logger _log = Logger.getLogger(
 		DatasourceListener.class);
