@@ -4,6 +4,7 @@ import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
 import io.openk9.datasource.model.Datasource;
+import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.quartz.CronScheduleBuilder;
@@ -21,7 +22,8 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
-import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -29,11 +31,10 @@ import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
 
-@Singleton
+@ApplicationScoped
 public class SchedulerInitializer {
 
-	@PostConstruct
-	public void onStart() throws SchedulerException {
+	void onStart(@Observes StartupEvent ev) throws SchedulerException {
 
 		List<Datasource> datasourceList = Datasource.listAll();
 
