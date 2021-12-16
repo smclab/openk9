@@ -28,6 +28,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-resteasy-reactive'
     implementation 'io.quarkus:quarkus-elasticsearch-rest-high-level-client'
     implementation 'io.quarkus:quarkus-neo4j'
+    implementation 'io.quarkus:quarkus-consul-config'
     
     implementation 'org.jboss.logging:commons-logging-jboss-logging'
     implementation 'com.hazelcast:hazelcast:5.0'
