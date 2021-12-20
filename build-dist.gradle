@@ -325,6 +325,7 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:util:groovy-script-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:util:groovy-script-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:util:groovy-script-web', transitive: false)
+	distPluginDriverManager project(path: ':osgi:util:bundle-installer-via-config', transitive: false)
 
 	// </PluginDriverManager>
 

@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Bundle Installer Via Config
+Bundle-SymbolicName: io.openk9.bundle.installer.via.config
+
+-include: ${project.rootDir}/osgi/common.bnd

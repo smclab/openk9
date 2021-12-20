@@ -39,61 +39,84 @@ public class ConsulConfigurationListener {
 		_executorService.scheduleAtFixedRate(() ->
 			_consulClient.getValues(_serviceNameSupplier.get(), list -> {
 
-			if (list.succeeded()) {
-				KeyValueList result = list.result();
+				String prefix = _serviceNameSupplier.get();
 
-				List<KeyValue> list1 = result.getList();
+				if (list.succeeded()) {
+					KeyValueList result = list.result();
+
+					List<KeyValue> list1 = result.getList();
 
 				if (list1 != null) {
 
 					for (KeyValue keyValue : list1) {
 
-						String pid = keyValue.getKey();
-
-						String v = keyValue.getValue();
-
-						if (pid.equals(_serviceNameSupplier.get()) || pid.equals(_serviceNameSupplier.get() + "/") || v == null) {
-							continue;
-						}
-						else if (pid.startsWith(_serviceNameSupplier.get())) {
-							pid = pid.substring(_serviceNameSupplier.get().length() + 1);
-						}
-
-						JsonObject jsonConfig = new JsonObject(v);
+						String jsonValue = keyValue.getValue();
 
 						try {
-							Configuration configuration =
-								_configurationAdmin.getConfiguration(pid, null);
 
-							Dictionary<String, Object> dict = new Hashtable<>();
+							if (!jsonValue.isBlank()) {
 
-							for (Map.Entry<String, Object> entry : jsonConfig) {
-								Object value = entry.getValue();
+								String kvKey = keyValue.getKey();
 
-								if (value instanceof JsonArray) {
-									dict.put(entry.getKey(), _createArray(((JsonArray) value)));
+								String substring = kvKey.substring(prefix.length() + 1);
+
+								String[] split = substring.split(FOLDER_SEPARATOR);
+
+								boolean isFactory = split.length == 2;
+
+								Configuration configuration;
+
+								String pid = split[0];
+
+								if (isFactory) {
+									String name = split[1];
+									configuration = _configurationAdmin.getFactoryConfiguration(
+										pid, name, null);
 								}
 								else {
-									dict.put(entry.getKey(), value);
+									configuration = _configurationAdmin.getConfiguration(
+											pid, null);
 								}
-							}
 
-							Dictionary<String, Object> properties =
-								configuration.getProperties();
+								JsonObject jsonConfig = new JsonObject(jsonValue);
 
-							if (properties == null) {
-								properties = new Hashtable<>();
-							}
+								Dictionary<String, Object> dict = new Hashtable<>();
 
-							Enumeration<String> keys = dict.keys();
+								for (Map.Entry<String, Object> entry : jsonConfig) {
+									Object value = entry.getValue();
 
-							while (keys.hasMoreElements()) {
-								String key = keys.nextElement();
-								properties.put(key, dict.get(key));
-							}
+									if (value instanceof JsonArray) {
+										dict.put(entry.getKey(), _createArray(((JsonArray) value)));
+									}
+									else {
+										dict.put(entry.getKey(), value);
+									}
+								}
 
-							if (configuration.updateIfDifferent(properties)) {
-								_log.info("update configuration: " + pid);
+								Dictionary<String, Object> properties =
+									configuration.getProperties();
+
+								if (properties == null) {
+									properties = new Hashtable<>();
+								}
+
+								Enumeration<String> keys = dict.keys();
+
+								while (keys.hasMoreElements()) {
+									String key = keys.nextElement();
+									properties.put(key, dict.get(key));
+								}
+
+								if (configuration.updateIfDifferent(properties)) {
+									if (isFactory) {
+										_log.info("update configuration: " + configuration.getFactoryPid());
+									}
+									else {
+										_log.info("update configuration: " + configuration.getPid());
+									}
+
+								}
+
 							}
 
 						}
@@ -167,5 +190,7 @@ public class ConsulConfigurationListener {
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		ConsulConfigurationListener.class);
+
+	public static final String FOLDER_SEPARATOR = "/";
 
 }
