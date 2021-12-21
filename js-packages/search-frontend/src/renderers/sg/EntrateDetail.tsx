@@ -41,14 +41,13 @@ export function EntrateDetail({ result }: EntrateDetailProps) {
         </a>
       </div>
       <div>
-        <strong>Topic</strong> :
-        <ul>
-          {result.source.topic?.topics?.map((item, index) => {
-            return <li key={index}>{item}</li>;
-          })}
-        </ul>
-      </div>
-      <div>
+            <strong>Topic</strong> :
+            <ul>
+              {result.source.topic?.topics?.map((item, index) => {
+                return <li key={index}>{item}</li>;
+              })}
+            </ul>
+       <div>
     </div>
   );
 }
