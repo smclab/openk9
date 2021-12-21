@@ -20,7 +20,7 @@ import { useRouter } from "next/router";
 import useSWR from "swr";
 import ansicolor from "ansicolor";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { getContainerLogs, getContainerStatus } from "@openk9/http-api";
+import { getContainerLogs, getContainerStatus } from "@openk9/rest-api";
 import { Layout } from "../../components/Layout";
 import { useLoginCheck } from "../../state";
 

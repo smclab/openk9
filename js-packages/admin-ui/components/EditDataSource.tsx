@@ -33,7 +33,7 @@ import {
   getServices,
   Plugin,
   PluginInfo,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 import { CronInput, CronInputType } from "./CronInput";
 import { AutocompleteItemIcon } from "./AutocompleteItemIcon";
 import { isServer, useLoginInfo } from "../state";

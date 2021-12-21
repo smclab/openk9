@@ -21,7 +21,7 @@ import { add, format } from "date-fns";
 import Link from "next/link";
 import useSWR from "swr";
 import { ThemeType } from "@openk9/search-ui-components";
-import { getContainerStatus } from "@openk9/http-api";
+import { getContainerStatus } from "@openk9/rest-api";
 import { Layout } from "../components/Layout";
 import { useLoginCheck, useLoginInfo } from "../state";
 

@@ -24,7 +24,7 @@ import ClayButton from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 import { pluginLoader, ThemeType } from "@openk9/search-ui-components";
-import { getPlugins, PluginInfo } from "@openk9/http-api";
+import { getPlugins, PluginInfo } from "@openk9/rest-api";
 import { Layout } from "../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../state";
 
@@ -187,7 +187,10 @@ function Controls({
 function TRow({ pluginInfo }: { pluginInfo: PluginInfo }) {
   const classes = useStyles();
 
-  const plugin = pluginLoader.read(pluginInfo.pluginId, pluginInfo.bundleInfo.lastModified);
+  const plugin = pluginLoader.read(
+    pluginInfo.pluginId,
+    pluginInfo.bundleInfo.lastModified,
+  );
 
   return (
     <tr>

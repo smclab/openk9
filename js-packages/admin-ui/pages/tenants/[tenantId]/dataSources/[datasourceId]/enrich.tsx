@@ -34,7 +34,7 @@ import {
   PluginInfo,
   postEnrichItem,
   postEnrichPipeline,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 import { Layout } from "../../../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";

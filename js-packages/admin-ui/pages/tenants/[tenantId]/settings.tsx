@@ -23,7 +23,7 @@ import { useRouter } from "next/router";
 import useSWR, { mutate } from "swr";
 import { ClayInput } from "@clayui/form";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { putTenant, getTenant, Tenant } from "@openk9/http-api";
+import { putTenant, getTenant, Tenant } from "@openk9/rest-api";
 import { Layout } from "../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
 import { useToast } from "../../_app";

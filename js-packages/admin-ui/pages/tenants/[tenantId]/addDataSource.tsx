@@ -20,7 +20,7 @@ import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import { mutate } from "swr";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { DataSourceInfo, postDataSource } from "@openk9/http-api";
+import { DataSourceInfo, postDataSource } from "@openk9/rest-api";
 import { isServer, useLoginCheck } from "../../../state";
 import { Layout } from "../../../components/Layout";
 import { EditDataSource } from "../../../components/EditDataSource";

@@ -26,7 +26,7 @@ import {
   doSearch,
   GenericResultItem,
   getDataSourceInfo,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 import { Layout } from "../../../../../components/Layout";

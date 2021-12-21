@@ -17,7 +17,7 @@
 
 const withTM = require("next-transpile-modules")([
   "@openk9/search-ui-components",
-  "@openk9/http-api",
+  "@openk9/rest-api",
 ]);
 
 const isProd = process.env.NODE_ENV === "production";

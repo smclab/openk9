@@ -20,7 +20,7 @@ import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayForm, { ClayInput } from "@clayui/form";
 import { ThemeType, Brand } from "@openk9/search-ui-components";
-import { doLogin, getUserInfo } from "@openk9/http-api";
+import { doLogin, getUserInfo } from "@openk9/rest-api";
 import { useLoginCheck, useStore } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
