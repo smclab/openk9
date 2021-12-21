@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
@@ -46,9 +47,22 @@ public class ConsulConfigurationListener {
 
 					List<KeyValue> list1 = result.getList();
 
-				if (list1 != null) {
+					if (list1 != null) {
 
-					for (KeyValue keyValue : list1) {
+						if (_log.isDebugEnabled()) {
+
+							_log.debug(
+								"keys length: " + list1.size()
+							);
+
+							List<String> collect =
+								list1.stream().map(KeyValue::getKey).collect(
+									Collectors.toList());
+
+							_log.debug("keys found: " + collect);
+						}
+
+						for (KeyValue keyValue : list1) {
 
 						String jsonValue = keyValue.getValue();
 
@@ -72,10 +86,16 @@ public class ConsulConfigurationListener {
 									String name = split[1];
 									configuration = _configurationAdmin.getFactoryConfiguration(
 										pid, name, null);
+									if (_log.isDebugEnabled()) {
+										_log.debug("getFactoryConfig: " + pid + " name: " + name);
+									}
 								}
 								else {
 									configuration = _configurationAdmin.getConfiguration(
 											pid, null);
+									if (_log.isDebugEnabled()) {
+										_log.debug("getConfig: " + pid);
+									}
 								}
 
 								JsonObject jsonConfig = new JsonObject(jsonValue);
