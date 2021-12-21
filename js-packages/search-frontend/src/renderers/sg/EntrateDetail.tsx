@@ -15,6 +15,7 @@ export function EntrateDetail({ result }: EntrateDetailProps) {
         grid-auto-flow: row;
       `}
     >
+      <img src={result.source.web?.favicon} alt="" />
       <div
         css={css`
           font-size: 1.5em;
@@ -32,22 +33,31 @@ export function EntrateDetail({ result }: EntrateDetailProps) {
           font-size: 0.8em;
         `}
       >
-        <a href={result.source.web?.url}>
-          {result.highlight["web.url"] ? (
-            <HighlightedText text={result.highlight["web.url"][0]} />
-          ) : (
-            result.source.web?.url
-          )}
-        </a>
+        {result.highlight["web.url"] ? (
+          <HighlightedText text={result.highlight["web.url"][0]} />
+        ) : (
+          result.source.web?.url
+        )}
       </div>
       <div>
-            <strong>Topic</strong> :
-            <ul>
-              {result.source.topic?.topics?.map((item, index) => {
-                return <li key={index}>{item}</li>;
-              })}
-            </ul>
-       <div>
+              <strong>Topic</strong> :
+              <ul>
+                {result.source.topic?.topics?.map((item, index) => {
+                  return <li key={index}>{item}</li>;
+                })}
+              </ul>
+            </div>
+      <div>
+        {result.highlight["web.content"] ? (
+          result.highlight["web.content"].map((text, index) => (
+            <div key={index}>
+              <HighlightedText text={text} />
+            </div>
+          ))
+        ) : (
+          <div>{result.source.web?.content}</div>
+        )}
+      </div>
     </div>
   );
 }
