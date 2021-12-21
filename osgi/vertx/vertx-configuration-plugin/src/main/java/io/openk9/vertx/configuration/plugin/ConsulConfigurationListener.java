@@ -108,6 +108,9 @@ public class ConsulConfigurationListener {
 									if (value instanceof JsonArray) {
 										dict.put(entry.getKey(), _createArray(((JsonArray) value)));
 									}
+									else if (value instanceof JsonObject) {
+										dict.put(entry.getKey(), value.toString());
+									}
 									else {
 										dict.put(entry.getKey(), value);
 									}

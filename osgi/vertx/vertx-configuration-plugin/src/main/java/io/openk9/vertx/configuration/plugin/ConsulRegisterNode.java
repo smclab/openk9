@@ -39,8 +39,6 @@ public class ConsulRegisterNode implements Supplier<String> {
 
 		_name = getenv.getOrDefault("CONSUL_SERVICE_NAME", address);
 
-		String checkUrl = getenv.getOrDefault("CONSUL_SERVICE_CHECK_URL", "");
-
 		_nodeId = _name + "-" + UUID.randomUUID();
 
 		int port = Integer.parseInt(
@@ -54,9 +52,9 @@ public class ConsulRegisterNode implements Supplier<String> {
 		options.setPort(port);
 		options.setCheckOptions(
 			new CheckOptions()
-				.setTtl("15s")
-				.setTlsSkipVerify(true)
-				.setHttp(checkUrl)
+				.setTlsSkipVerify(Boolean.parseBoolean(getenv.getOrDefault("CONSUL_SERVICE_CHECK_TLS_SKIP_VERIFY", "false")))
+				.setHttp(getenv.getOrDefault("CONSUL_SERVICE_CHECK_URL", ""))
+				.setInterval(getenv.getOrDefault("CONSUL_SERVICE_CHECK_INTERVAL", "15s"))
 		);
 
 		_consulClient
@@ -64,7 +62,6 @@ public class ConsulRegisterNode implements Supplier<String> {
 			.toCompletionStage()
 			.toCompletableFuture()
 			.join();
-
 
 	}
 
