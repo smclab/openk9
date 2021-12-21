@@ -11,6 +11,7 @@ import { EventiDetail } from "./cm/EventiDetail";
 import { PetizioniDetail } from "./cm/PetizioniDetail";
 import { ProcessiDetail } from "./cm/ProcessiDetail";
 import { WemiDetail } from "./cm/WemiDetail";
+import { EntrateDetail } from "./sg/EntrateDetail";
 
 type DetailProps = {
   result: ResultDTO;
@@ -52,6 +53,9 @@ function Detail({ result }: DetailProps) {
         }
         if (result.source.documentTypes.includes("web")) {
           return <WebDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("topic")) {
+          return <EntrateDetail result={result} />;
         }
         return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
       })()}

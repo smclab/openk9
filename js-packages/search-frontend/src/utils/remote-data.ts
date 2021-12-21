@@ -71,6 +71,7 @@ export type ResultDTO = {
       | "petizioni"
       | "processi"
       | "wemi"
+      | "topic"
     >;
     web?: {
       favicon: string;
@@ -154,6 +155,9 @@ export type ResultDTO = {
       procedura: string;
       categoria: string;
       servizio: string;
+    };
+    topic?: {
+      topics: Array<string>;
     };
   };
   highlight: {
