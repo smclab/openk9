@@ -47,6 +47,7 @@ export function AssistenzaDetail({ result }: AssistenzaDetailProps) {
                 })}
               </ul>
             </div>
+      <div>
         {result.highlight["web.content"] ? (
           result.highlight["web.content"].map((text, index) => (
             <div key={index}>
