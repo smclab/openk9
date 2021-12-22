@@ -22,6 +22,7 @@ import reactor.core.scheduler.Schedulers;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -64,7 +65,8 @@ public class DatasourceProcessor {
 
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
-	@Blocking
+	@Blocking("datasource")
+	@Transactional
 	public IngestionDatasourcePayload process(JsonObject jsonObject) {
 
 		IngestionPayload ingestionPayload =
