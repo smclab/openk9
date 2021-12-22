@@ -33,6 +33,8 @@ dependencies {
     implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'io.quarkus:quarkus-panache-common'
     implementation 'io.quarkus:quarkus-consul-config'
+    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-consul-client'
+
     implementation 'org.jboss.logging:commons-logging-jboss-logging'
 
     implementation 'io.projectreactor:reactor-core:3.4.11'
