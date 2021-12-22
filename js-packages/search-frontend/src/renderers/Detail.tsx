@@ -45,6 +45,9 @@ function Detail({ result }: DetailProps) {
         if (result.source.documentTypes.includes("wemi")) {
           return <WemiDetail result={result} />;
         }
+        if (result.source.documentTypes.includes("topic")) {
+          return <EntrateDetail result={result} />;
+        }
         if (result.source.documentTypes.includes("pdf")) {
           return <PdfDetail result={result} />;
         }
@@ -53,9 +56,6 @@ function Detail({ result }: DetailProps) {
         }
         if (result.source.documentTypes.includes("web")) {
           return <WebDetail result={result} />;
-        }
-        if (result.source.documentTypes.includes("topic")) {
-          return <EntrateDetail result={result} />;
         }
         return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
       })()}
