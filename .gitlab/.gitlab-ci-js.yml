@@ -58,6 +58,10 @@ Build Tagged JS Docker Images:
     - docker build -t js-scripts-executor:${CI_COMMIT_REF_NAME} -f js-packages/js-scripts-executor/Dockerfile .
     - docker tag js-scripts-executor:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/js-scripts-executor:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/js-scripts-executor:${CI_COMMIT_REF_NAME}
+
+    - docker build -t search-frontend:${CI_COMMIT_REF_NAME} -f js-packages/search-frontend/Dockerfile .
+    - docker tag search-frontend:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-frontend:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/search-frontend:${CI_COMMIT_REF_NAME}
   allow_failure: false
 
 Build Latest Frontend Docker Image:
