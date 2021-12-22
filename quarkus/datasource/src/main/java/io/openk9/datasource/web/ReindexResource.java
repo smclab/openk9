@@ -4,9 +4,11 @@ import io.openk9.datasource.dto.ReindexRequestDto;
 import io.openk9.datasource.dto.ReindexResponseDto;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
+import io.smallrye.common.annotation.Blocking;
 import org.jboss.logging.Logger;
 import org.quartz.SchedulerException;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -17,10 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Path("/v1/index")
+@ApplicationScoped
 public class ReindexResource {
 
 	@POST
 	@Path("/reindex")
+	@Blocking
 	@Transactional
 	public List<ReindexResponseDto> reindex(ReindexRequestDto dto) {
 
@@ -44,7 +48,7 @@ public class ReindexResource {
 				);
 
 				datasource.setLastIngestionDate(Instant.EPOCH);
-				datasource.persistAndFlush();
+				datasource.persist();
 
 			}
 			catch (SchedulerException e) {
