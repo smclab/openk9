@@ -12,6 +12,7 @@ import { PetizioniDetail } from "./cm/PetizioniDetail";
 import { ProcessiDetail } from "./cm/ProcessiDetail";
 import { WemiDetail } from "./cm/WemiDetail";
 import { EntrateDetail } from "./sg/EntrateDetail";
+import { AssistenzaDetail } from "./sg/AssistenzaDetail";
 
 type DetailProps = {
   result: ResultDTO;
@@ -45,8 +46,14 @@ function Detail({ result }: DetailProps) {
         if (result.source.documentTypes.includes("wemi")) {
           return <WemiDetail result={result} />;
         }
-        if (result.source.documentTypes.includes("topic")) {
+        if (result.source.documentTypes.includes("entrate")) {
           return <EntrateDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("entratel")) {
+          return <AssistenzaDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("fisco")) {
+          return <AssistenzaDetail result={result} />;
         }
         if (result.source.documentTypes.includes("pdf")) {
           return <PdfDetail result={result} />;

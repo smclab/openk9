@@ -40,10 +40,31 @@ export function EntrateDetail({ result }: EntrateDetailProps) {
         )}
       </div>
       <div>
-              <strong>Topic</strong> :
+              <strong>Topics</strong> :
               <ul>
                 {result.source.topic?.topics?.map((item, index) => {
                   return <li key={index}>{item}</li>;
+                })}
+              </ul>
+            </div>
+      <div>
+              <strong>Linked urls: </strong>
+              <ul>
+                {result.source.entrate?.linkedUrls.slice(0, 3).map((url) => {
+                  return (
+                    <li key={url}>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        css={css`
+                          word-break: break-all;
+                        `}
+                      >
+                        {url}
+                      </a>
+                    </li>
+                  );
                 })}
               </ul>
             </div>

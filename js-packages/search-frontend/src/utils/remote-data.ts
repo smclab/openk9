@@ -72,6 +72,9 @@ export type ResultDTO = {
       | "processi"
       | "wemi"
       | "topic"
+      | "entrate"
+      | "entratel"
+      | "fisco"
     >;
     web?: {
       favicon: string;
@@ -158,6 +161,9 @@ export type ResultDTO = {
     };
     topic?: {
       topics: Array<string>;
+    };
+    entrate?: {
+      linkedUrls: Array<string>;
     };
   };
   highlight: {
