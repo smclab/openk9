@@ -4,6 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.multimap.MultiMap;
 import io.openk9.entity.manager.cache.model.AssociableEntityKey;
+import io.openk9.entity.manager.cache.model.DocumentKey;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.EntityRelation;
@@ -38,7 +39,7 @@ public class MapUtil {
 		return hazelcastInstance.getMultiMap("entityContextMultiMap");
 	}
 
-	public static MultiMap<String, String> getDocumentEntityMapMap(
+	public static MultiMap<DocumentKey, String> getDocumentEntityMapMap(
 		HazelcastInstance hazelcastInstance) {
 		return hazelcastInstance.getMultiMap("documentEntityMap");
 	}
