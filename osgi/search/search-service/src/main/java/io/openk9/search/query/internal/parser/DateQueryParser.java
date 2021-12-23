@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -84,31 +85,78 @@ public class DateQueryParser implements QueryParser {
 
 				SearchToken searchToken = searchKeywordToken.getSearchToken();
 
-				String[] values = searchToken.getValues();
+				Map<String, Object> extra = searchToken.getExtra();
 
-				String gte;
-				String lte;
+				if (extra == null) {
 
-				if (values.length != 0) {
+					String[] values = searchToken.getValues();
+
+					String gte;
+					String lte;
+
+					if (values.length != 0) {
+
+						RangeQueryBuilder rangeQueryBuilder =
+							QueryBuilders.rangeQuery(
+								searchToken.getKeywordKey());
+
+						if (values.length == 1) {
+							gte = values[0];
+							rangeQueryBuilder.gte(gte);
+						}
+						else if (values.length == 2) {
+							gte = values[0];
+							lte = values[1];
+							if (gte == null || gte.isBlank()) {
+								rangeQueryBuilder.lte(lte);
+							}
+							else {
+								rangeQueryBuilder
+									.gte(gte)
+									.lte(lte);
+							}
+						}
+
+						flag = true;
+
+						internalBool.should(rangeQueryBuilder);
+
+					}
+				}
+				else {
+
+					Object gte = extra.get("gte");
+					Object lte = extra.get("lte");
+					Object lt = extra.get("lt");
+					Object gt = extra.get("gt");
+					String format =(String)extra.get("format");
+					String timeZone = (String)extra.get("time_zone");
+					String relation = (String)extra.get("relation");
 
 					RangeQueryBuilder rangeQueryBuilder =
-						QueryBuilders.rangeQuery(searchToken.getKeywordKey());
+						QueryBuilders.rangeQuery(
+							searchToken.getKeywordKey());
 
-					if (values.length == 1) {
-						gte = values[0];
+					if (gte != null) {
 						rangeQueryBuilder.gte(gte);
 					}
-					else if (values.length == 2) {
-						gte = values[0];
-						lte = values[1];
-						if (gte == null || gte.isBlank()) {
-							rangeQueryBuilder.lte(lte);
-						}
-						else {
-							rangeQueryBuilder
-								.gte(gte)
-								.lte(lte);
-						}
+					if (lte != null) {
+						rangeQueryBuilder.lte(lte);
+					}
+					if (gt != null) {
+						rangeQueryBuilder.gt(gt);
+					}
+					if (lt != null) {
+						rangeQueryBuilder.lt(lt);
+					}
+					if (format != null) {
+						rangeQueryBuilder.format(format);
+					}
+					if (timeZone != null) {
+						rangeQueryBuilder.timeZone(timeZone);
+					}
+					if (relation != null && (relation.equals("INTERSECTS") || relation.equals("CONTAINS") || relation.equals("WITHIN"))) {
+						rangeQueryBuilder.relation(relation);
 					}
 
 					flag = true;

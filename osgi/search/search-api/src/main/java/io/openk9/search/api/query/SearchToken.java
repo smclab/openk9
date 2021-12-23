@@ -19,7 +19,7 @@ package io.openk9.search.api.query;
 
 import lombok.Data;
 
-import java.util.List;
+import java.util.Map;
 
 @Data
 public class SearchToken {
@@ -27,4 +27,5 @@ public class SearchToken {
 	private String tokenType;
 	private String keywordKey;
 	private String[] values;
+	private Map<String, Object> extra;
 }
