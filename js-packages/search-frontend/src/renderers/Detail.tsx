@@ -3,6 +3,7 @@ import { css } from "styled-components/macro";
 import { WebDetail } from "./WebDetail";
 import { ResultDTO } from "../utils/remote-data";
 import { DocumentDetail } from "./DocumentDetail";
+import { EmailDetail } from "./EmailDetail";
 import { NotizieDetail } from "./bdi/NotizieDetail";
 import { PubblicazioniDetail } from "./bdi/PubblicazioniDetail";
 import { PdfDetail } from "./PdfDetail";
@@ -13,6 +14,8 @@ import { ProcessiDetail } from "./cm/ProcessiDetail";
 import { WemiDetail } from "./cm/WemiDetail";
 import { EntrateDetail } from "./sg/EntrateDetail";
 import { AssistenzaDetail } from "./sg/AssistenzaDetail";
+import { OpendataDetail } from "./cm/OpendataDetail";
+
 
 type DetailProps = {
   result: ResultDTO;
@@ -25,6 +28,9 @@ function Detail({ result }: DetailProps) {
       `}
     >
       {(() => {
+        if (result.source.documentTypes.includes("opendata")) {
+          return <OpendataDetail result={result} />;
+        }
         if (result.source.documentTypes.includes("notizie")) {
           return <NotizieDetail result={result} />;
         }
@@ -63,6 +69,9 @@ function Detail({ result }: DetailProps) {
         }
         if (result.source.documentTypes.includes("web")) {
           return <WebDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("email")) {
+          return <EmailDetail result={result} />;
         }
         return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
       })()}

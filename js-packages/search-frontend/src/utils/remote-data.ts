@@ -75,6 +75,8 @@ export type ResultDTO = {
       | "entrate"
       | "entratel"
       | "fisco"
+      | "opendata"
+      | "email"
     >;
     web?: {
       favicon: string;
@@ -92,6 +94,15 @@ export type ResultDTO = {
       contentType: string;
       url: string;
       content: string;
+    };
+    email: {
+      cc?: string;
+      date: number; // timestamp
+      htmlBody: string;
+      body: string;
+      from: string;
+      subject: string;
+      to: string;
     };
     resources: {
       binaries: {
@@ -164,6 +175,17 @@ export type ResultDTO = {
     };
     entrate?: {
       linkedUrls: Array<string>;
+    };
+    opendata?: {
+      dataDiModifica: string;
+      titolare: string;
+      coperturaGeografica: string;
+      autore: string;
+      temiDelDataset: Array<string>;
+      tags: Array<string>;
+      summary: string;
+      startDate: string;
+      endDate: string;
     };
   };
   highlight: {

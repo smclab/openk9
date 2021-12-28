@@ -1,6 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { WebResult } from "./WebResult";
+import { EmailResult } from "./EmailResult";
 import { ResultDTO } from "../utils/remote-data";
 import { myTheme } from "../utils/myTheme";
 import { DocumentResult } from "./DocumentResult";
@@ -11,6 +12,8 @@ import { MostreResult } from "./cm/MostreResult";
 import { EventiResult } from "./cm/EventiResult";
 import { PetizioniResult } from "./cm/PetizioniResult";
 import { ProcessiResult } from "./cm/ProcessiResult";
+import { OpendataResult } from "./cm/OpendataResult";
+
 
 type ResultProps = {
   result: ResultDTO;
@@ -31,6 +34,9 @@ function Result({ result, onDetail }: ResultProps) {
         onMouseEnter={() => onDetail(result)}
       >
         {(() => {
+          if (result.source.documentTypes.includes("opendata")) {
+            return <OpendataResult result={result} />;
+          }
           if (result.source.documentTypes.includes("notizie")) {
             return <NotizieResult result={result} />;
           }
@@ -57,6 +63,9 @@ function Result({ result, onDetail }: ResultProps) {
           }
           if (result.source.documentTypes.includes("web")) {
             return <WebResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("email")) {
+            return <EmailResult result={result} />;
           }
           return (
             <pre
