@@ -192,7 +192,7 @@ export type ResultDTO = {
       screenName: string;
       emailAddress: string;
       coperturaGeografica: string;
-      employeeNumber: string;
+      phoneNumber: string;
       jobTitle: string;
       jobClass: string;
       fullName: string;

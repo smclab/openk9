@@ -50,7 +50,7 @@ export function UserResult({ result }: UserResultProps) {
       </div>
       <div
         css={css`
-          grid-column: 1;
+          grid-column: 2;
           grid-row: 2;
           font-size: 1em;
         `}
