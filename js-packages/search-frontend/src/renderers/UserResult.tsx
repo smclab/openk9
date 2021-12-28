@@ -52,7 +52,7 @@ export function UserResult({ result }: UserResultProps) {
         css={css`
           font-size: 1em;
         `}
-      >
+        >
         {result.highlight["user.jobTitle"] ? (
           <HighlightedText text={result.highlight["user.jobTitle"][0]} />
         ) : (
@@ -61,9 +61,11 @@ export function UserResult({ result }: UserResultProps) {
       </div>
       <div
         css={css`
+          grid-column: 1;
+          grid-row: 1;
           font-size: 1em;
         `}
-      >
+        >
         {result.highlight["user.emailAddress"] ? (
           <HighlightedText text={result.highlight["user.emailAddress"][0]} />
         ) : (
@@ -72,9 +74,11 @@ export function UserResult({ result }: UserResultProps) {
       </div>
       <div
         css={css`
+          grid-column: 1;
+          grid-row: 1;
           font-size: 1em;
         `}
-      >
+        >
         {result.highlight["user.employeeNumber"] ? (
           <HighlightedText text={result.highlight["user.employeeNumber"][0]} />
         ) : (
