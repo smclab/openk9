@@ -51,7 +51,7 @@ export function UserResult({ result }: UserResultProps) {
       <div
         css={css`
           grid-column: 1;
-          grid-row: 1;
+          grid-row: 2;
           font-size: 1em;
         `}
         >
@@ -64,7 +64,7 @@ export function UserResult({ result }: UserResultProps) {
       <div
         css={css`
           grid-column: 1;
-          grid-row: 1;
+          grid-row: 3;
           font-size: 1em;
         `}
         >
@@ -77,7 +77,7 @@ export function UserResult({ result }: UserResultProps) {
       <div
         css={css`
           grid-column: 1;
-          grid-row: 1;
+          grid-row: 4;
           font-size: 1em;
         `}
         >
