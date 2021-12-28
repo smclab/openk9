@@ -83,7 +83,7 @@ export function UserResult({ result }: UserResultProps) {
         {result.highlight["user.phoneNumber"] ? (
           <HighlightedText text={result.highlight["user.phoneNumber"][0]} />
         ) : (
-          result.source.user?.employeeNumber
+          result.source.user?.phoneNumber
         )}
       </div>
     </div>
