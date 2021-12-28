@@ -36,6 +36,33 @@ export function UserDetail({ result }: UserDetailProps) {
       <div>
         <strong>Job Title</strong> : {result.source.user?.jobTitle}
       </div>
+      <div>
+        <strong>Job Class</strong> : {result.source.user?.jobClass}
+      </div>
+      <div>
+        <strong>Email</strong> : {result.source.user?.emailAddress}
+      </div>
+      <div>
+        <strong>Birthday</strong> : {result.source.user?.birthday}
+      </div>
+      <div>
+        <strong>Job Title</strong> : {result.source.user?.jobTitle}
+      </div>
+      <div>
+        <strong>Phone Number</strong> : {result.source.user?.phoneNumber}
+      </div>
+      <div>
+        <strong>Facebook</strong> : {result.source.user?.facebookSn}
+      </div>
+      <div>
+        <strong>Twitter</strong> : {result.source.user?.twitterSn}
+      </div>
+      <div>
+        <strong>Skype</strong> : {result.source.user?.skypeSn}
+      </div>
+      <div>
+        <strong>User Id</strong> : {result.source.user?.userId}
+      </div>
     </div>
   );
 }
