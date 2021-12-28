@@ -63,7 +63,6 @@ export function UserResult({ result }: UserResultProps) {
       </div>
       <div
         css={css`
-          grid-column: 1;
           grid-row: 3;
           font-size: 1em;
         `}
@@ -81,7 +80,7 @@ export function UserResult({ result }: UserResultProps) {
           font-size: 1em;
         `}
         >
-        {result.highlight["user.employeeNumber"] ? (
+        {result.highlight["user.phoneNumber"] ? (
           <HighlightedText text={result.highlight["user.phoneNumber"][0]} />
         ) : (
           result.source.user?.employeeNumber
