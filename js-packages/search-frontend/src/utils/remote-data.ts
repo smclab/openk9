@@ -77,6 +77,7 @@ export type ResultDTO = {
       | "fisco"
       | "opendata"
       | "email"
+      | "user"
     >;
     web?: {
       favicon: string;
@@ -186,6 +187,15 @@ export type ResultDTO = {
       summary: string;
       startDate: string;
       endDate: string;
+    };
+     user?: {
+      screenName: string;
+      emailAddress: string;
+      coperturaGeografica: string;
+      employeeNumber: string;
+      jobTitle: string;
+      jobClass: string;
+      fullName: string;
     };
   };
   highlight: {

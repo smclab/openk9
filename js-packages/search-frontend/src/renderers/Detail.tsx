@@ -4,6 +4,7 @@ import { WebDetail } from "./WebDetail";
 import { ResultDTO } from "../utils/remote-data";
 import { DocumentDetail } from "./DocumentDetail";
 import { EmailDetail } from "./EmailDetail";
+import { UserDetail } from "./UserDetail";
 import { NotizieDetail } from "./bdi/NotizieDetail";
 import { PubblicazioniDetail } from "./bdi/PubblicazioniDetail";
 import { PdfDetail } from "./PdfDetail";
@@ -72,6 +73,9 @@ function Detail({ result }: DetailProps) {
         }
         if (result.source.documentTypes.includes("email")) {
           return <EmailDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("user")) {
+          return <UserDetail result={result} />;
         }
         return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
       })()}

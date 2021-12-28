@@ -2,6 +2,7 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { WebResult } from "./WebResult";
 import { EmailResult } from "./EmailResult";
+import { UserResult } from "./UserResult";
 import { ResultDTO } from "../utils/remote-data";
 import { myTheme } from "../utils/myTheme";
 import { DocumentResult } from "./DocumentResult";
@@ -66,6 +67,9 @@ function Result({ result, onDetail }: ResultProps) {
           }
           if (result.source.documentTypes.includes("email")) {
             return <EmailResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("user")) {
+            return <UserResult result={result} />;
           }
           return (
             <pre
