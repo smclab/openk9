@@ -1,4 +1,4 @@
-import { faFileAlt } from "@fortawesome/free-solid-svg-icons";
+import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { css } from "styled-components/macro";
@@ -17,7 +17,7 @@ export function EmailDetail({ result }: EmailDetailProps) {
         grid-auto-flow: row;
       `}
     >
-      <FontAwesomeIcon icon={faFileAlt} />
+      <FontAwesomeIcon icon={faEnvelope} />
       <div
         css={css`
           font-size: 1.5em;
