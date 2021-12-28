@@ -1,5 +1,6 @@
 package io.openk9.entity.manager.service.graph;
 
+import io.openk9.entity.manager.model.graph.DocumentGraph;
 import io.openk9.entity.manager.model.graph.EntityGraph;
 import io.quarkus.arc.Unremovable;
 import org.jboss.logging.Logger;
@@ -78,6 +79,29 @@ public class EntityGraphService {
 		}
 	}
 
+	public DocumentGraph insertDocument(DocumentGraph entityGraph) {
+
+		try (Session session = driver.session()) {
+
+			return session.writeTransaction(tx -> {
+				Result result = tx.run(
+					"CREATE (f:document" +
+					" {contentId: $contentId, datasourceId: $datasourceId, tenantId: $tenantId}) RETURN f",
+					Values.parameters(
+						"contentId", entityGraph.getContentId(),
+						"datasourceId", entityGraph.getDatasourceId(),
+						"tenantId", entityGraph.getTenantId()
+					)
+				);
+
+				Node node = result.single().get("f").asNode();
+
+				return DocumentGraph.from(node);
+
+			});
+		}
+	}
+
 	public EntityGraph insertEntity(
 		String type, EntityGraph entityGraph) {
 
@@ -97,6 +121,36 @@ public class EntityGraphService {
 				Node node = result.single().get("f").asNode();
 
 				return EntityGraph.from(type, node);
+
+			});
+		}
+
+	}
+
+	public void createDocumentRelationship(
+		String entityId, long documentId, String relationName) {
+
+		try (Session session = driver.session()) {
+
+			session.writeTransaction(tx -> {
+				Result result = tx.run(
+					"MATCH (a), (b)\n" +
+					"WHERE a.id = $id1 AND ID(b) = $id2\n" +
+					"MERGE (a)-[r:" + relationName + "]->(b)\n" +
+					"RETURN type(r)",
+					Values.parameters(
+						"id1", entityId,
+						"id2", documentId
+					)
+				);
+
+				List<Record> list = result.list();
+
+				if (_logger.isDebugEnabled()) {
+					_logger.debug(list);
+				}
+
+				return list;
 
 			});
 		}

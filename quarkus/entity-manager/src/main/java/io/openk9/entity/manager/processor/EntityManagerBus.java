@@ -6,6 +6,7 @@ import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionalMap;
 import com.hazelcast.transaction.TransactionalMultiMap;
+import io.openk9.entity.manager.cache.model.DocumentKey;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.EntityRelation;
@@ -70,7 +71,7 @@ public class EntityManagerBus {
 				TransactionalMap<EntityRelationKey, EntityRelation> transactionalEntityRelationMap =
 					transactionContext.getMap("entityRelationMap");
 
-				TransactionalMultiMap<String, String> documentEntityMap =
+				TransactionalMultiMap<DocumentKey, String> documentEntityMap =
 					transactionContext.getMultiMap("documentEntityMap");
 
 				EntityManagerRequest payload = request.getPayload();
@@ -164,11 +165,13 @@ public class EntityManagerBus {
 
 				if (!localEntityMap.isEmpty()) {
 
-					String name =
-						payload.getDatasourceId() + "_" + payload.getContentId();
+					DocumentKey key = DocumentKey.of(
+						payload.getDatasourceId(),
+						payload.getContentId(),
+						tenantId);
 
 					for (Entity value : localEntityMap.values()) {
-						documentEntityMap.put(name, value.getCacheId());
+						documentEntityMap.put(key, value.getCacheId());
 					}
 				}
 

@@ -6,9 +6,10 @@ import com.hazelcast.map.IMap;
 import com.hazelcast.multimap.MultiMap;
 import com.hazelcast.projection.Projections;
 import com.hazelcast.query.Predicates;
+import io.openk9.entity.manager.cache.model.DocumentKey;
 import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
-import io.openk9.entity.manager.model.graph.EntityGraph;
+import io.openk9.entity.manager.model.graph.DocumentGraph;
 import io.openk9.entity.manager.service.graph.EntityGraphService;
 import io.openk9.entity.manager.util.MapUtil;
 import org.jboss.logging.Logger;
@@ -28,16 +29,16 @@ public class CreateDocumentEntitiesRunnable
 		IMap<EntityKey, Entity> entityIMap =
 			MapUtil.getEntityMap(_hazelcastInstance);
 
-		MultiMap<String, String> documentEntityMapMap =
+		MultiMap<DocumentKey, String> documentEntityMapMap =
 			MapUtil.getDocumentEntityMapMap(_hazelcastInstance);
 
 		EntityGraphService entityGraphService = CDI.current().select(
 			EntityGraphService.class).get();
 
-		for (String contentId : documentEntityMapMap.localKeySet()) {
+		for (DocumentKey documentKey : documentEntityMapMap.localKeySet()) {
 
 			Collection<String> entityCacheIds =
-				documentEntityMapMap.get(contentId);
+				documentEntityMapMap.get(documentKey);
 
 			String[] arr = entityCacheIds.toArray(String[]::new);
 
@@ -56,25 +57,21 @@ public class CreateDocumentEntitiesRunnable
 				Collection<Entity> entities =
 					entityIMap.values(Predicates.in("cacheId", arr));
 
-				Long tenantId =
-					entities
-						.stream()
-						.map(Entity::getTenantId)
-						.findFirst()
-						.orElse(-1L);
-
-				EntityGraph entityGraph =
-					entityGraphService.insertEntity(
-						"document", EntityGraph.of(
-							contentId, null, tenantId, contentId, "document")
+				DocumentGraph document =
+					entityGraphService.insertDocument(
+						DocumentGraph.of(
+							null,
+							documentKey.getDatasourceId(),
+							documentKey.getTenantId(),
+							documentKey.getContentId())
 					);
 
 				for (Entity entity : entities) {
-					entityGraphService.createRelationship(
-						entity.getId(), entityGraph.getId(), "related_to");
+					entityGraphService.createDocumentRelationship(
+						entity.getId(), document.getId(), "related_to");
 				}
 
-				documentEntityMapMap.remove(contentId);
+				documentEntityMapMap.remove(documentKey);
 
 			}
 

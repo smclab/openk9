@@ -37,6 +37,9 @@ public class ReindexResource {
 
 			try {
 
+				datasource.setLastIngestionDate(Instant.EPOCH);
+				datasource.persist();
+
 				_schedulerInitializer.get().triggerJob(
 					datasource.getDatasourceId(), datasource.getName());
 
@@ -46,9 +49,6 @@ public class ReindexResource {
 						true
 					)
 				);
-
-				datasource.setLastIngestionDate(Instant.EPOCH);
-				datasource.persist();
 
 			}
 			catch (SchedulerException e) {
