@@ -65,6 +65,9 @@ function Detail({ result }: DetailProps) {
         if (result.source.documentTypes.includes("pdf")) {
           return <PdfDetail result={result} />;
         }
+        if (result.source.documentTypes.includes("excel")) {
+          return <PdfDetail result={result} />;
+        }
         if (result.source.documentTypes.includes("document")) {
           return <DocumentDetail result={result} />;
         }

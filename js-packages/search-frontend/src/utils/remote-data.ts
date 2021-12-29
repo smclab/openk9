@@ -63,6 +63,7 @@ export type ResultDTO = {
       | "file"
       | "document"
       | "pdf"
+      | "excel"
       | "istat"
       | "notizie"
       | "pubblicazioni"
