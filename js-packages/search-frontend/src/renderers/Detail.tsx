@@ -15,7 +15,7 @@ import { ProcessiDetail } from "./cm/ProcessiDetail";
 import { WemiDetail } from "./cm/WemiDetail";
 import { EntrateDetail } from "./sg/EntrateDetail";
 import { AssistenzaDetail } from "./sg/AssistenzaDetail";
-import { AssistenzaDetail } from "./sg/GaraDetail";
+import { GaraDetail } from "./sg/GaraDetail";
 import { OpendataDetail } from "./cm/OpendataDetail";
 
 
