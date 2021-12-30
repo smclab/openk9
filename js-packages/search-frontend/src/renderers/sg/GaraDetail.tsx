@@ -78,7 +78,7 @@ export function GaraDetail({ result }: GaraDetailProps) {
       <div>
         <strong>Linked urls: </strong>
         <ul>
-          {result.source.entrate?.linkedUrls.slice(0, 3).map((url) => {
+          {result.source.gara?.linkedUrls.slice(0, 3).map((url) => {
             return (
               <li key={url}>
                 <a
