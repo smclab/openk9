@@ -202,7 +202,7 @@ export type ResultDTO = {
       criterio: string;
       nominativo: string;
       email: string;
-      linkedUrls: Array<string>;
+      linkedUrls?: Array<string>;
     };
     user?: {
       screenName: string;
