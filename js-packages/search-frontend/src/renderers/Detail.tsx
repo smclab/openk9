@@ -15,6 +15,7 @@ import { ProcessiDetail } from "./cm/ProcessiDetail";
 import { WemiDetail } from "./cm/WemiDetail";
 import { EntrateDetail } from "./sg/EntrateDetail";
 import { AssistenzaDetail } from "./sg/AssistenzaDetail";
+import { AssistenzaDetail } from "./sg/GaraDetail";
 import { OpendataDetail } from "./cm/OpendataDetail";
 
 
@@ -29,6 +30,9 @@ function Detail({ result }: DetailProps) {
       `}
     >
       {(() => {
+        if (result.source.documentTypes.includes("gara")) {
+          return <GaraDetail result={result} />;
+        }
         if (result.source.documentTypes.includes("opendata")) {
           return <OpendataDetail result={result} />;
         }

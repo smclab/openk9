@@ -79,6 +79,7 @@ export type ResultDTO = {
       | "opendata"
       | "email"
       | "user"
+      | "gara"
     >;
     web?: {
       favicon: string;
@@ -189,7 +190,21 @@ export type ResultDTO = {
       startDate: string;
       endDate: string;
     };
-     user?: {
+    gara?: {
+      descrizione: string;
+      tipologia: string;
+      regione: string;
+      provincia: string;
+      stazione: string;
+      datapubblicazione: string;
+      datascadenza: string;
+      importo: string;
+      criterio: string;
+      nominativo: string;
+      email: string;
+      linkedUrls: Array<string>;
+    };
+    user?: {
       screenName: string;
       emailAddress: string;
       coperturaGeografica: string;
