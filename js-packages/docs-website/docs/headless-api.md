@@ -13,16 +13,16 @@ More info about the Headless API is coming soon.
 
 ## TypeScript Interface library
 
-If you are using our Headless API in a browser or Node.JS environment you may want to use our TypeScript wrapper, available as [NPM package](https://www.npmjs.com/package/@openk9/http-api).
+If you are using our Headless API in a browser or Node.JS environment you may want to use our TypeScript wrapper, available as [NPM package](https://www.npmjs.com/package/@openk9/rest-api).
 
 ```bash
-npm install --save @openk9/http-api
+npm install --save @openk9/rest-api
 ```
 
 ### Example using the TypeScript library
 
 ```ts
-import { SearchQuery, doSearch } from "@openk9/http-api";
+import { SearchQuery, doSearch } from "@openk9/rest-api";
 
 async function testSearch() {
   const searchQuery: SearchQuery = [

@@ -73,7 +73,7 @@ Build Latest Frontend Docker Image:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - js-packages/http-api/**/*
+        - js-packages/rest-api/**/*
         - js-packages/search-ui-components/**/*
         - js-packages/plugin-scripts/**/*
         - js-packages/search-customizable-ui/**/*
@@ -102,7 +102,7 @@ Build Query Understanding Frontend Docker Image:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - js-packages/http-api/**/*
+        - js-packages/rest-api/**/*
         - js-packages/search-ui-components/**/*
         - js-packages/plugin-scripts/**/*
         - js-packages/search-customizable-ui/**/*
@@ -154,7 +154,7 @@ Build Latest Admin Ui Docker Image:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - js-packages/http-api/**/*
+        - js-packages/rest-api/**/*
         - js-packages/search-ui-components/**/*
         - js-packages/plugin-scripts/**/*
         - js-packages/admin-ui/**/*

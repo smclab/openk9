@@ -47,7 +47,7 @@ const getBabelOptions = ({ useESModules }, targets) => ({
 const externalGlobalsDefault = {
   react: "OpenK9.deps.React",
   "react-dom": "OpenK9.deps.ReactDOM",
-  "@openk9/http-api": "OpenK9.deps.ok9API",
+  "@openk9/rest-api": "OpenK9.deps.ok9API",
   "@openk9/search-ui-components": "OpenK9.deps.ok9Components",
   "@clayui/icon": "OpenK9.deps.clayIcon",
   "react-jss": "OpenK9.deps.reactJSS",

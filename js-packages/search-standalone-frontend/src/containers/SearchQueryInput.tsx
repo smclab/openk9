@@ -23,11 +23,10 @@ import ClickAwayListener from "react-click-away-listener";
 import {
   SuggestionResult,
   readQueryParamToken,
-  SearchQuery,
   SearchToken,
   setQueryParamToken,
   DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 import {
   ThemeType,
   MultipleSelectionBar,

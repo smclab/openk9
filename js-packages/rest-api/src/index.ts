@@ -153,6 +153,7 @@ type SearchResult<E> = {
 export type SearchToken =
   | {
       tokenType: "DATASOURCE";
+      keywordKey?: undefined;
       values: string[];
     }
   | {
@@ -794,6 +795,28 @@ export async function getPlugins(
   return data;
 }
 
+export async function loadPlugin<E>(
+  id: string,
+  lastModified: number,
+): Promise<Plugin<E>> {
+  const defaultPlugin: Plugin<any> = {
+    pluginId: id,
+    displayName: id,
+    pluginServices: [],
+  };
+
+  try {
+    const jsURL = `/api/plugin-driver-manager/plugins/${id}/static/build/index.js?t=${lastModified}`;
+    // @ts-ignore
+    const code = await import(/* webpackIgnore: true */ jsURL);
+    const plugin = code.plugin as Plugin<E>;
+    return plugin;
+  } catch (err) {
+    console.warn(err);
+    return defaultPlugin;
+  }
+}
+
 // TODO remove
 export function getServices<E>(plugins: Plugin<E>[]) {
   return plugins.flatMap((p) =>
@@ -845,6 +868,15 @@ export type EntityDescription = {
   entityId: string;
   name: string;
 };
+export interface EntityLookupRequest {
+  entityId?: string;
+  all?: string;
+  type?: string;
+}
+export type EntityLookupResponse = {
+  result: EntityDescription[];
+  total: number;
+};
 
 // DEPRECATED
 // TODO: remove
@@ -891,3 +923,136 @@ export type TenantJSONConfig = {
   querySourceBarShortcuts?: { id: string; text: string }[];
   requireLogin?: boolean;
 };
+
+// DEPRECATED
+// TODO: remove
+export function readQueryParamToken(
+  query: SearchToken[],
+  keywordKey: string,
+): (string | number)[] | null {
+  const item = query.find((i) => i.keywordKey === keywordKey);
+  if (item) {
+    return item.values;
+  } else {
+    return null;
+  }
+}
+
+// DEPRECATED
+// TODO: remove
+export function setQueryParamToken({
+  query,
+  keywordKey,
+  values,
+  entityType,
+  tokenType,
+}: {
+  query: SearchToken[];
+  keywordKey: string;
+  values: string[] | number[] | null;
+  tokenType: SearchToken["tokenType"];
+  entityType?: string;
+}): SearchToken[] {
+  if (values === null) {
+    return query.filter((i) => i.keywordKey !== keywordKey);
+  } else if (query.find((i) => i.keywordKey === keywordKey)) {
+    return query.map((i) =>
+      i.keywordKey === keywordKey &&
+      (i.tokenType !== "ENTITY" || i.entityType === entityType) &&
+      i.tokenType === tokenType
+        ? { ...i, values: values as any }
+        : i,
+    );
+  } else {
+    const item: any = {
+      tokenType,
+      keywordKey,
+      values,
+      entityType,
+    };
+    // @ts-ignore
+    return [...query, item];
+  }
+}
+
+// DEPRECATED
+// TODO: remove
+export const ROOT_SUGGESTION_CATEGORY_ID = -1;
+export const ALL_SUGGESTION_CATEGORY_ID = 100000;
+export const DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID = 99999;
+
+// DEPRECATED
+// TODO: remove
+export async function doSearchEntities(
+  query: EntityLookupRequest,
+  loginInfo: LoginInfo | null,
+): Promise<EntityLookupResponse> {
+  const request = await authFetch(`/api/searcher/v1/entity`, loginInfo, {
+    method: "POST",
+    body: JSON.stringify(query),
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
+  return await request.json();
+}
+
+// DEPRECATED
+// TODO: remove
+export async function getSuggestionCategories(
+  loginInfo: LoginInfo | null,
+): Promise<SuggestionsCategoriesResult> {
+  const response = await authFetch(
+    `/api/searcher/suggestion-categories`,
+    loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+  const data = (await response.json()) as SuggestionsCategoriesResult;
+  return [
+    {
+      name: "All",
+      parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      suggestionCategoryId: ALL_SUGGESTION_CATEGORY_ID,
+      tenantId: NaN,
+    },
+    {
+      name: "Keywords",
+      parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
+      suggestionCategoryId: DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+      tenantId: NaN,
+    },
+    ...data,
+  ];
+}
+
+// DEPRECATED
+// TODO: remove
+type SuggestionsCategoriesResult = Array<{
+  name: string;
+  parentCategoryId: number;
+  suggestionCategoryId: number;
+  tenantId: number;
+}>;
+
+// DEPRECATED
+// TODO: remove
+export async function getDocumentTypes(
+  loginInfo: LoginInfo | null,
+): Promise<Record<string, Array<string>>> {
+  const request = await authFetch(
+    `/api/searcher/v1/document-types`,
+    loginInfo,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+  const response = await request.json();
+  return response;
+}
