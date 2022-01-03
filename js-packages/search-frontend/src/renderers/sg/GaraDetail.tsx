@@ -43,6 +43,12 @@ export function GaraDetail({ result }: GaraDetailProps) {
         <strong>Descrizione</strong> : {result.source.gara?.descrizione}
       </div>
       <div>
+        <strong>Oggetto della gara</strong> : {result.source.gara?.oggettoGara}
+      </div>
+      <div>
+        <strong>Stato gara</strong> : {result.source.gara?.status}
+      </div>
+      <div>
         <strong>Tipologia</strong> : {result.source.gara?.tipologia}
       </div>
       <div>
@@ -64,6 +70,9 @@ export function GaraDetail({ result }: GaraDetailProps) {
         <strong>Data di scadenza</strong> : {result.source.gara?.datascadenza}
       </div>
       <div>
+        <strong>Data esito</strong> : {result.source.gara?.dataEsito}
+      </div>
+      <div>
         <strong>Importo</strong> : {result.source.gara?.importo}
       </div>
       <div>
@@ -76,9 +85,30 @@ export function GaraDetail({ result }: GaraDetailProps) {
         <strong>Email</strong> : {result.source.gara?.email}
       </div>
       <div>
-        <strong>Linked urls: </strong>
+        <strong>Documenti di gara: </strong>
         <ul>
-          {result.source.gara?.linkedUrls?.slice(0, 3).map((url) => {
+          {result.source.gara?.documentiGara?.map((url) => {
+            return (
+              <li key={url}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  css={css`
+                    word-break: break-all;
+                  `}
+                >
+                  {url}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      <div>
+        <strong>Documenti di esito: </strong>
+        <ul>
+          {result.source.gara?.documentiEsito?.map((url) => {
             return (
               <li key={url}>
                 <a
