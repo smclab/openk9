@@ -26,7 +26,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
@@ -140,8 +139,12 @@ public class SchedulerInitializer {
 		}
 	}
 
+	@ApplicationScoped
 	@DisallowConcurrentExecution
-	public class DatasourceJob implements Job {
+	public static class DatasourceJob implements Job {
+
+		@Inject
+		SchedulerInitializer taskBean;
 
 		@Transactional
 		public void execute(JobExecutionContext context) throws
@@ -149,7 +152,8 @@ public class SchedulerInitializer {
 
 			JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
-			performTask(jobDataMap.getLong("datasourceId"));
+			taskBean.performTask(
+				jobDataMap.getLong("datasourceId"));
 		}
 
 	}
