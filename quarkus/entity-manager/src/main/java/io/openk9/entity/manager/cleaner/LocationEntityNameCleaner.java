@@ -15,17 +15,22 @@ public class LocationEntityNameCleaner extends DefaultEntityNameCleaner {
 		return "loc";
 	}
 
-	@Override
 	protected QueryBuilder createQueryBuilder(String entityName) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-		boolQueryBuilder.must(
-			QueryBuilders.matchQuery("name.keyword", entityName)
-		);
+		String[] tokens = entityName.split("\\s+");
 
-		boolQueryBuilder.must(
-			QueryBuilders.matchQuery("type.keyword", getEntityType())
+		for (String token : tokens) {
+
+			boolQueryBuilder.must(
+					QueryBuilders.matchQuery("name", token)
+			);
+
+		}
+
+		boolQueryBuilder.filter(
+				QueryBuilders.matchQuery("type.keyword", getEntityType())
 		);
 
 		return boolQueryBuilder;
