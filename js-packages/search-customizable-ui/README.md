@@ -1,3 +1,5 @@
+DEPRECATED
+
 # OpenK9 search customizable ui
 
 ## Develop
