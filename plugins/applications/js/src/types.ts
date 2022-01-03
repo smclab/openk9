@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { GenericResultItem } from "@openk9/http-api";
+import { GenericResultItem } from "@openk9/rest-api";
 
 export type ApplicationResultItem = GenericResultItem<{
   application: {
