@@ -18,6 +18,7 @@ Build Latest Ingestion Docker Images:
               - quarkus/ingestion/**/*
               - quarkus/ingestion/*
               - .gitlab/.gitlab-ci-ingestion.yml
+              - gradle.properties
     script:
         - ./gradlew build -p ./quarkus/ingestion -Dquarkus.package.type=mutable-jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
     after_script:
