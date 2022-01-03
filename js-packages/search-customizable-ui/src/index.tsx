@@ -36,7 +36,7 @@ const queryClient = new QueryClient();
 function initOpenK9({
   widgets = {},
   templates = {},
-  interactions = {}
+  interactions = {},
 }: OpenK9UIConfiguration) {
   const root = document.createElement("div");
   ReactDOM.render(
@@ -83,4 +83,4 @@ declare global {
 }
 window.OpenK9 = openK9API;
 
-export * from "@openk9/http-api";
+export * from "@openk9/rest-api";

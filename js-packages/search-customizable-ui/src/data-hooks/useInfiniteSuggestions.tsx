@@ -1,4 +1,4 @@
-import { getSuggestions, SearchQuery } from "@openk9/http-api";
+import { getSuggestions, SearchToken } from "@openk9/rest-api";
 import {
   filterSuggestionByActiveSuggestionCategory,
   filterSuggestionBySearchQuery,
@@ -8,7 +8,7 @@ import { useInfiniteQuery } from "react-query";
 const ENABLED = true;
 
 export function useInfiniteSuggestions(
-  searchQuery: SearchQuery | null,
+  searchQuery: SearchToken[] | null,
   activeSuggestionCategory: number,
 ) {
   const pageSize = ENABLED ? 8 : 100;

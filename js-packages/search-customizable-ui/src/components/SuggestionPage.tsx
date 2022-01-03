@@ -1,5 +1,5 @@
 import React from "react";
-import { SuggestionResult } from "@openk9/http-api";
+import { SuggestionResult } from "@openk9/rest-api";
 import { OpenK9UITemplates } from "../api";
 import { EmbedElement } from "./EmbedElement";
 import { ScrollIntoView } from "./ScrollIntoView";

@@ -150,7 +150,7 @@ type SearchResult<E> = {
   total: number;
 };
 
-type SearchToken =
+export type SearchToken =
   | {
       tokenType: "DATASOURCE";
       values: string[];
@@ -257,6 +257,8 @@ export async function getItemsInDatasource<E>(
   );
 }
 
+// DEPRECATED
+// TODO: remove
 export type SuggestionResult =
   | {
       tokenType: "DATASOURCE";
@@ -835,3 +837,57 @@ export async function getContainerLogs(
   const data: string = await response.text();
   return data;
 }
+
+// DEPRECATED
+// TODO: remove
+export type EntityDescription = {
+  type: string;
+  entityId: string;
+  name: string;
+};
+
+// DEPRECATED
+// TODO: remove
+export async function getSuggestions({
+  searchQuery,
+  range,
+  afterKey,
+  loginInfo,
+}: {
+  searchQuery: SearchToken[];
+  range?: [number, number]; // for pagination
+  afterKey?: string; // for pagination
+  loginInfo: LoginInfo | null;
+}): Promise<{ result: SuggestionResult[]; afterKey: string }> {
+  const request = await authFetch(`/api/searcher/v1/suggestions`, loginInfo, {
+    method: "POST",
+    body: JSON.stringify({ searchQuery, range, afterKey }),
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  });
+  const response = await request.json();
+  return response;
+}
+
+// DEPRECATED
+// TODO: remove
+export async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
+  const tenants = await getTenants(loginInfo);
+  const tenant =
+    tenants.find((tenant) => window.location.host === tenant.virtualHost) ??
+    (window.location.hostname === "localhost" ? tenants[0] : undefined);
+  const config =
+    (tenant?.jsonConfig &&
+      (JSON.parse(tenant?.jsonConfig) as TenantJSONConfig)) ||
+    {};
+  return { tenant, config };
+}
+
+// DEPRECATED
+// TODO: remove
+export type TenantJSONConfig = {
+  querySourceBarShortcuts?: { id: string; text: string }[];
+  requireLogin?: boolean;
+};
