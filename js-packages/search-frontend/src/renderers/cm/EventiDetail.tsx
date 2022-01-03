@@ -1,10 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
-import { ResultDTO } from "../../utils/remote-data";
+import { EventiResultItem } from "./EventiItem";
 
 type EventiDetailProps = {
-  result: ResultDTO;
+  result: EventiResultItem;
 };
 export function EventiDetail({ result }: EventiDetailProps) {
   return (

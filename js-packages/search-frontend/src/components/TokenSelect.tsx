@@ -1,17 +1,13 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import {
-  AnalysisResponseEntryDTO,
-  AnalysisTokenDTO,
-  TokenDTO,
-} from "../utils/remote-data";
+import { AnalysisResponseEntry, AnalysisToken } from "@openk9/rest-api";
 import { myTheme } from "../utils/myTheme";
 import { TokenIcon } from "./TokenIcon";
 
 type TokenSelectProps = {
-  span: AnalysisResponseEntryDTO;
-  onSelect(token: TokenDTO | null): void;
-  selected: TokenDTO | null;
+  span: AnalysisResponseEntry;
+  onSelect(token: AnalysisToken | null): void;
+  selected: AnalysisToken | null;
   isOpen: boolean;
   optionIndex: number | null;
   onOptionIndexChange(optionIndex: number): void;
@@ -142,7 +138,7 @@ const statusStyles: Record<Status, any> = {
     color: black;
   `,
 };
-function getTokenLabel(token: AnalysisTokenDTO) {
+function getTokenLabel(token: AnalysisToken) {
   switch (token.tokenType) {
     case "DATASOURCE":
       return token.value;

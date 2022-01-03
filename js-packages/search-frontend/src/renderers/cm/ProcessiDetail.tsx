@@ -1,10 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
-import { ResultDTO } from "../../utils/remote-data";
+import { ProcessiResultItem } from "./ProcessiItem";
 
 type ProcessiDetailProps = {
-  result: ResultDTO;
+  result: ProcessiResultItem;
 };
 export function ProcessiDetail({ result }: ProcessiDetailProps) {
   return (

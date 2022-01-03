@@ -1,10 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
-import { ResultDTO } from "../../utils/remote-data";
+import { NotizieResultItem } from "./NotizieItem";
 
 type NotizieDetailProps = {
-  result: ResultDTO;
+  result: NotizieResultItem;
 };
 export function NotizieDetail({ result }: NotizieDetailProps) {
   return (

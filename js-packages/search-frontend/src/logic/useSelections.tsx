@@ -1,5 +1,5 @@
 import React from "react";
-import { AnalysisResponseEntryDTO, TokenDTO } from "../utils/remote-data";
+import { AnalysisResponseEntry, AnalysisToken } from "@openk9/rest-api";
 import { loadQueryString, saveQueryString } from "../utils/queryString";
 
 export function useSelections() {
@@ -36,7 +36,7 @@ type Selection = {
   text: string;
   start: number;
   end: number;
-  token: TokenDTO | null;
+  token: AnalysisToken | null;
   isAuto: boolean;
 };
 
@@ -152,7 +152,7 @@ function findCommonSuffixLength(a: string, b: string, startFromIndex: number) {
   return suffixLength;
 }
 
-function getTokenText(token: TokenDTO) {
+function getTokenText(token: AnalysisToken) {
   switch (token.tokenType) {
     case "DATASOURCE":
       return token.value;
@@ -170,9 +170,9 @@ export function getAutoSelections(
     text: string;
     start: number;
     end: number;
-    token: TokenDTO | null;
+    token: AnalysisToken | null;
   }>,
-  entries: Array<AnalysisResponseEntryDTO>,
+  entries: Array<AnalysisResponseEntry>,
 ) {
   return entries
     .filter(({ text }) => text.length > 0)
@@ -185,7 +185,7 @@ export function getAutoSelections(
     });
 }
 
-function getAutoSelection(entry: AnalysisResponseEntryDTO) {
+function getAutoSelection(entry: AnalysisResponseEntry) {
   const [first, second] = [...entry.tokens].sort((a, b) => a.score - b.score);
   if (first) {
     if (!second || first.score >= second.score * 2) {

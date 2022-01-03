@@ -2,10 +2,10 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
 import { truncatedLineStyle } from "../../utils/truncatedLineStyle";
-import { ResultDTO } from "../../utils/remote-data";
 import { Badge } from "../../components/Badge";
+import { ProcessiResultItem } from "./ProcessiItem";
 
-type ProcessiResultProps = { result: ResultDTO };
+type ProcessiResultProps = { result: ProcessiResultItem };
 export function ProcessiResult({ result }: ProcessiResultProps) {
   return (
     <div

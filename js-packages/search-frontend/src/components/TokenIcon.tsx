@@ -8,10 +8,10 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { AnalysisTokenDTO } from "../utils/remote-data";
 import { css } from "styled-components/macro";
+import { AnalysisToken } from "@openk9/rest-api";
 
-type TokenIconProps = { token: AnalysisTokenDTO };
+type TokenIconProps = { token: AnalysisToken };
 export function TokenIcon({ token }: TokenIconProps) {
   return (
     <div

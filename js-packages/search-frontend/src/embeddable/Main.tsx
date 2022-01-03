@@ -7,15 +7,7 @@ import {
   faSyncAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { useDebounce } from "../utils/useDebounce";
-import {
-  ResultDTO,
-  useQueryAnalysis,
-  AnalysisResponseEntryDTO,
-  AnalysisRequestEntryDTO,
-  TokenDTO,
-  SearchTokenDTO,
-  useTabTokens,
-} from "../utils/remote-data";
+import { useQueryAnalysis, useTabTokens } from "../utils/remote-data";
 import { DetailMemo } from "../renderers/Detail";
 import { myTheme } from "../utils/myTheme";
 import { Results } from "../components/ResultList";
@@ -27,6 +19,13 @@ import { useLoginInfo } from "../utils/useLogin";
 import { LoginInfo } from "../components/LoginInfo";
 import { TargetElements } from "./entry";
 import ReactDOM from "react-dom";
+import {
+  AnalysisRequestEntry,
+  AnalysisResponseEntry,
+  AnalysisToken,
+  GenericResultItem,
+  SearchToken,
+} from "@openk9/rest-api";
 
 const DEBOUNCE = 300;
 
@@ -40,7 +39,9 @@ export function Main({ targetElements }: MainProps) {
     textPosition: number;
     optionPosition: number;
   } | null>(null);
-  const [detail, setDetail] = React.useState<ResultDTO | null>(null);
+  const [detail, setDetail] = React.useState<GenericResultItem<unknown> | null>(
+    null,
+  );
   const tabs = useTabTokens(login.state.loginInfo ?? null);
   const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
   const tabTokens = React.useMemo(
@@ -161,7 +162,7 @@ export function Main({ targetElements }: MainProps) {
                         selection.end === span.end,
                     );
                     const selected = selection?.token ?? null;
-                    const onSelect = (token: TokenDTO | null): void => {
+                    const onSelect = (token: AnalysisToken | null): void => {
                       dispatch({
                         type: "set-selection",
                         replaceText,
@@ -400,13 +401,13 @@ export function Main({ targetElements }: MainProps) {
 }
 
 function deriveSearchQuery(
-  spans: AnalysisResponseEntryDTO[],
-  selection: AnalysisRequestEntryDTO[],
+  spans: AnalysisResponseEntry[],
+  selection: AnalysisRequestEntry[],
 ) {
   return spans
     .map((span) => ({ ...span, text: span.text.trim() }))
     .filter((span) => span.text)
-    .map((span): SearchTokenDTO => {
+    .map((span): SearchToken => {
       const token =
         selection.find(
           (selection) =>
@@ -443,9 +444,9 @@ function deriveSearchQuery(
 
 function calculateSpans(
   text: string,
-  analysis: AnalysisResponseEntryDTO[] | undefined,
-): AnalysisResponseEntryDTO[] {
-  const spans: Array<AnalysisResponseEntryDTO> = [
+  analysis: AnalysisResponseEntry[] | undefined,
+): AnalysisResponseEntry[] {
+  const spans: Array<AnalysisResponseEntry> = [
     { text: "", start: 0, end: 0, tokens: [] },
   ];
   for (let i = 0; i < text.length; ) {

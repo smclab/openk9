@@ -2,10 +2,10 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
 import { truncatedLineStyle } from "../../utils/truncatedLineStyle";
-import { ResultDTO } from "../../utils/remote-data";
 import { Badge } from "../../components/Badge";
+import { PubblicaziioniResultItem } from "./PubblicazioniItem";
 
-type PubblicazioniResultProps = { result: ResultDTO };
+type PubblicazioniResultProps = { result: PubblicaziioniResultItem };
 export function PubblicazioniResult({ result }: PubblicazioniResultProps) {
   return (
     <div

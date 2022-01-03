@@ -3,10 +3,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../components/HighlightedText";
-import { ResultDTO } from "../utils/remote-data";
+import { DocumentResultItem } from "./DocumentItem";
 
 type DocumentDetailProps = {
-  result: ResultDTO;
+  result: DocumentResultItem;
 };
 export function DocumentDetail({ result }: DocumentDetailProps) {
   return (

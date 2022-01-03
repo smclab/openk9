@@ -1,26 +1,22 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { Virtuoso } from "react-virtuoso";
-import {
-  ResultDTO,
-  SearchTokenDTO,
-  useInfiniteResults,
-} from "../utils/remote-data";
+import { useInfiniteResults } from "../utils/remote-data";
 import { ResultMemo } from "../renderers/Result";
-import { LoginInfo } from "../utils/useLogin";
+import { GenericResultItem, LoginInfo, SearchToken } from "@openk9/rest-api";
 
-type ResultsProps = {
+type ResultsProps<E> = {
   loginInfo: LoginInfo | null;
-  searchQuery: Array<SearchTokenDTO>;
-  onDetail(result: ResultDTO): void;
+  searchQuery: Array<SearchToken>;
+  onDetail(result: GenericResultItem<E>): void;
   displayMode: { type: "finite" } | { type: "infinite" } | { type: "virtual" };
 };
-export function Results({
+export function Results<E>({
   displayMode,
   onDetail,
   searchQuery,
   loginInfo,
-}: ResultsProps) {
+}: ResultsProps<E>) {
   switch (displayMode.type) {
     case "finite":
       return (
@@ -63,18 +59,18 @@ function ResultCount({ children }: ResultCountProps) {
     </div>
   );
 }
-type ResulListProps = {
+type ResulListProps<E> = {
   loginInfo: LoginInfo | null;
-  searchQuery: Array<SearchTokenDTO>;
-  onDetail(result: ResultDTO | null): void;
+  searchQuery: Array<SearchToken>;
+  onDetail(result: GenericResultItem<E> | null): void;
 };
-type FiniteResultsProps = ResulListProps & {};
-export function FiniteResults({
+type FiniteResultsProps<E> = ResulListProps<E> & {};
+export function FiniteResults<E>({
   searchQuery,
   onDetail,
   loginInfo,
-}: FiniteResultsProps) {
-  const results = useInfiniteResults(loginInfo, searchQuery);
+}: FiniteResultsProps<E>) {
+  const results = useInfiniteResults<E>(loginInfo, searchQuery);
   return (
     <div>
       <ResultCount>{results.data?.pages[0].total}</ResultCount>
@@ -84,13 +80,13 @@ export function FiniteResults({
     </div>
   );
 }
-type InfiniteResultsProps = ResulListProps & {};
-export function InfiniteResults({
+type InfiniteResultsProps<E> = ResulListProps<E> & {};
+export function InfiniteResults<E>({
   searchQuery,
   onDetail,
   loginInfo,
-}: InfiniteResultsProps) {
-  const results = useInfiniteResults(loginInfo, searchQuery);
+}: InfiniteResultsProps<E>) {
+  const results = useInfiniteResults<E>(loginInfo, searchQuery);
   return (
     <div>
       <ResultCount>{results.data?.pages[0].total}</ResultCount>
@@ -121,13 +117,13 @@ export function InfiniteResults({
     </div>
   );
 }
-type VirtualResultsProps = ResulListProps & {};
-export function VirtualResults({
+type VirtualResultsProps<E> = ResulListProps<E> & {};
+export function VirtualResults<E>({
   searchQuery,
   onDetail,
   loginInfo,
-}: VirtualResultsProps) {
-  const results = useInfiniteResults(loginInfo, searchQuery);
+}: VirtualResultsProps<E>) {
+  const results = useInfiniteResults<E>(loginInfo, searchQuery);
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
   return (
     <div

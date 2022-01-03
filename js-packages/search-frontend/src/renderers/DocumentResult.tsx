@@ -1,12 +1,12 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { ResultDTO } from "../utils/remote-data";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
 import { HighlightedText } from "../components/HighlightedText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileAlt } from "@fortawesome/free-solid-svg-icons";
+import { DocumentResultItem } from "./DocumentItem";
 
-type DocumentResultProps = { result: ResultDTO };
+type DocumentResultProps = { result: DocumentResultItem };
 export function DocumentResult({ result }: DocumentResultProps) {
   return (
     <div

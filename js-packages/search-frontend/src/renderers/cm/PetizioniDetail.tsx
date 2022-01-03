@@ -1,10 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
-import { ResultDTO } from "../../utils/remote-data";
+import { PetizioniResultItem } from "./PetizioniItem";
 
 type PetizioniDetailProps = {
-  result: ResultDTO;
+  result: PetizioniResultItem;
 };
 export function PetizioniDetail({ result }: PetizioniDetailProps) {
   return (

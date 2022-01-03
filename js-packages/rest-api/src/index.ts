@@ -187,6 +187,13 @@ export type GenericResultItem<E = {}> = {
       context: DeepKeys<Without<GenericResultItem<E>["source"], "entities">>[];
       id: string;
     }>;
+    resources: {
+      binaries: {
+        id: string;
+        name: string;
+        contentType: string;
+      }[];
+    };
   } & E;
   highlight: {
     [field in DeepKeys<
@@ -861,6 +868,76 @@ export async function getContainerLogs(
   return data;
 }
 
+export type AnalysisRequest = {
+  searchText: string;
+  tokens: Array<AnalysisRequestEntry>;
+};
+
+export type AnalysisRequestEntry = {
+  text: string;
+  start: number;
+  end: number;
+  token: AnalysisToken;
+};
+
+export type AnalysisResponse = {
+  searchText: string;
+  analysis: Array<AnalysisResponseEntry>;
+};
+
+export type AnalysisResponseEntry = {
+  text: string;
+  start: number;
+  end: number;
+  tokens: Array<
+    AnalysisToken & {
+      score: number; // 0 - 1
+    }
+  >;
+};
+
+export type AnalysisToken =
+  | {
+      tokenType: "DOCTYPE";
+      value: string;
+    }
+  | {
+      tokenType: "DATASOURCE";
+      value: string;
+    }
+  | {
+      tokenType: "ENTITY";
+      entityType: string;
+      entityName: string;
+      keywordKey?: string;
+      value: string;
+    }
+  | {
+      tokenType: "TEXT";
+      keywordKey?: string;
+      value: string;
+    };
+
+export async function fetchQueryAnalysis(
+  request: AnalysisRequest,
+  loginInfo: LoginInfo | null,
+): Promise<AnalysisResponse> {
+  const response = await authFetch(
+    "/api/searcher/v1/query-analysis",
+    loginInfo,
+    {
+      method: "POST",
+      body: JSON.stringify(request),
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  const data = await response.json();
+  return data;
+}
+
 // DEPRECATED
 // TODO: remove
 export type EntityDescription = {
@@ -903,8 +980,6 @@ export async function getSuggestions({
   return response;
 }
 
-// DEPRECATED
-// TODO: remove
 export async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
   const tenants = await getTenants(loginInfo);
   const tenant =
@@ -917,8 +992,6 @@ export async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
   return { tenant, config };
 }
 
-// DEPRECATED
-// TODO: remove
 export type TenantJSONConfig = {
   querySourceBarShortcuts?: { id: string; text: string }[];
   requireLogin?: boolean;
