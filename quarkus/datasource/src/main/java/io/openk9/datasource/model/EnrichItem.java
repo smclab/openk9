@@ -18,6 +18,7 @@
 package io.openk9.datasource.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Sort;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,10 +27,8 @@ import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 
-import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -65,7 +64,8 @@ public class EnrichItem extends PanacheEntityBase {
     public static List<EnrichItem> findByEnrichPipelineId(
         Long enrichPipelineId) {
 
-        return EnrichItem.list("enrichPipelineId", enrichPipelineId);
+        return EnrichItem.list(
+            "enrichPipelineId", Sort.by("_position"), enrichPipelineId);
     }
 
     @Override
