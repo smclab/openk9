@@ -54,7 +54,8 @@ public class ConsulRegisterNode implements Supplier<String> {
 			new CheckOptions()
 				.setTlsSkipVerify(Boolean.parseBoolean(getenv.getOrDefault("CONSUL_SERVICE_CHECK_TLS_SKIP_VERIFY", "false")))
 				.setHttp(getenv.getOrDefault("CONSUL_SERVICE_CHECK_URL", ""))
-				.setInterval(getenv.getOrDefault("CONSUL_SERVICE_CHECK_INTERVAL", "15s"))
+				.setTtl(getenv.getOrDefault("CONSUL_SERVICE_CHECK_TTL", null))
+				.setInterval(getenv.getOrDefault("CONSUL_SERVICE_CHECK_INTERVAL", null))
 		);
 
 		_consulClient
