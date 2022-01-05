@@ -1,10 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
-import { ResultDTO } from "../../utils/remote-data";
+import { EntrateResultItem } from "./EntrateItem";
 
 type EntrateDetailProps = {
-  result: ResultDTO;
+  result: EntrateResultItem;
 };
 export function EntrateDetail({ result }: EntrateDetailProps) {
   return (
@@ -40,34 +40,34 @@ export function EntrateDetail({ result }: EntrateDetailProps) {
         )}
       </div>
       <div>
-              <strong>Topics</strong> :
-              <ul>
-                {result.source.topic?.topics?.map((item, index) => {
-                  return <li key={index}>{item}</li>;
-                })}
-              </ul>
-            </div>
+        <strong>Topics</strong> :
+        <ul>
+          {result.source.topic?.topics?.map((item, index) => {
+            return <li key={index}>{item}</li>;
+          })}
+        </ul>
+      </div>
       <div>
-              <strong>Linked urls: </strong>
-              <ul>
-                {result.source.entrate?.linkedUrls.slice(0, 3).map((url) => {
-                  return (
-                    <li key={url}>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
-                        css={css`
-                          word-break: break-all;
-                        `}
-                      >
-                        {url}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+        <strong>Linked urls: </strong>
+        <ul>
+          {result.source.entrate?.linkedUrls.slice(0, 3).map((url) => {
+            return (
+              <li key={url}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  css={css`
+                    word-break: break-all;
+                  `}
+                >
+                  {url}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
       <div>
         {result.highlight["web.content"] ? (
           result.highlight["web.content"].map((text, index) => (

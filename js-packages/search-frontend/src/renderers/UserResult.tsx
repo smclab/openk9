@@ -1,12 +1,12 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { ResultDTO } from "../utils/remote-data";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
 import { HighlightedText } from "../components/HighlightedText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { UserResultItem } from "./UserItem";
 
-type UserResultProps = { result: ResultDTO };
+type UserResultProps = { result: UserResultItem };
 export function UserResult({ result }: UserResultProps) {
   return (
     <div
@@ -42,7 +42,7 @@ export function UserResult({ result }: UserResultProps) {
           ${truncatedLineStyle}
         `}
       >
-        {result.highlight["email.fullName"] ? (
+        {result.highlight["user.fullName"] ? (
           <HighlightedText text={result.highlight["user.fullName"][0]} />
         ) : (
           result.source.user?.fullName
@@ -54,7 +54,7 @@ export function UserResult({ result }: UserResultProps) {
           grid-row: 2;
           font-size: 1em;
         `}
-        >
+      >
         {result.highlight["user.jobTitle"] ? (
           <HighlightedText text={result.highlight["user.jobTitle"][0]} />
         ) : (
@@ -66,7 +66,7 @@ export function UserResult({ result }: UserResultProps) {
           grid-row: 3;
           font-size: 1em;
         `}
-        >
+      >
         {result.highlight["user.emailAddress"] ? (
           <HighlightedText text={result.highlight["user.emailAddress"][0]} />
         ) : (
@@ -79,7 +79,7 @@ export function UserResult({ result }: UserResultProps) {
           grid-row: 4;
           font-size: 1em;
         `}
-        >
+      >
         {result.highlight["user.phoneNumber"] ? (
           <HighlightedText text={result.highlight["user.phoneNumber"][0]} />
         ) : (

@@ -7,7 +7,7 @@ import {
   SearchQuery,
   SearchToken,
   SuggestionResult,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 import { useQuery } from "react-query";
 import useDebounce from "../hooks/useDebounce";
 import { TokenComponent } from "./Token";

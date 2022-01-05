@@ -1,6 +1,6 @@
 import React from "react";
 import useSWR from "swr";
-import { getItemsInDatasource } from "@openk9/http-api";
+import { getItemsInDatasource } from "@openk9/rest-api";
 import { useLoginInfo } from "../state";
 
 export function DSItemsCountShow({ datasourceId }: { datasourceId: number }) {

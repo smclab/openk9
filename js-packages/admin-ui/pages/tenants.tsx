@@ -29,7 +29,6 @@ import {
   DataSourceIcon,
   SettingsIcon,
   ThemeType,
-  UsersIcon,
 } from "@openk9/search-ui-components";
 import {
   deleteTenant,
@@ -37,7 +36,7 @@ import {
   LoginInfo,
   postTenant,
   Tenant,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 
 import { Layout } from "../components/Layout";
 import { useLoginCheck, useLoginInfo } from "../state";

@@ -29,7 +29,7 @@ import {
   EnrichPlugin,
   getServices,
   PluginInfo,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 import { isServer } from "../state";
 import { AutocompleteItemIcon } from "./AutocompleteItemIcon";
 
@@ -79,7 +79,10 @@ export function EditEnrichItem({
   const classes = useStyles();
 
   const plugins = useMemo(
-    () => (pluginInfos || []).map((pi) => pluginLoader.read(pi.pluginId, pi.bundleInfo.lastModified)),
+    () =>
+      (pluginInfos || []).map((pi) =>
+        pluginLoader.read(pi.pluginId, pi.bundleInfo.lastModified),
+      ),
     [pluginInfos],
   );
   const pluginServices = useMemo(

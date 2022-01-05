@@ -1,10 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
-import { ResultDTO } from "../../utils/remote-data";
+import { GaraResultItem } from "./GaraItem";
 
 type GaraDetailProps = {
-  result: ResultDTO;
+  result: GaraResultItem;
 };
 export function GaraDetail({ result }: GaraDetailProps) {
   return (
@@ -64,7 +64,8 @@ export function GaraDetail({ result }: GaraDetailProps) {
         <strong>stazione</strong> : {result.source.gara?.stazione}
       </div>
       <div>
-        <strong>Data di pubblicazione</strong> : {result.source.gara?.datapubblicazione}
+        <strong>Data di pubblicazione</strong> :{" "}
+        {result.source.gara?.datapubblicazione}
       </div>
       <div>
         <strong>Data di scadenza</strong> : {result.source.gara?.datascadenza}

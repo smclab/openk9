@@ -1,12 +1,12 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { ResultDTO } from "../utils/remote-data";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
 import { HighlightedText } from "../components/HighlightedText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
+import { EmailResultItem } from "./EmailItem";
 
-type EmailResultProps = { result: ResultDTO };
+type EmailResultProps = { result: EmailResultItem };
 export function EmailResult({ result }: EmailResultProps) {
   return (
     <div

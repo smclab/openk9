@@ -3,7 +3,7 @@ import {
   GenericResultItem,
   SearchToken,
   SuggestionResult,
-} from "../../http-api/src";
+} from "@openk9/rest-api";
 
 export type OpenK9UIConfiguration = {
   widgets?: OpenK9UIWidgets;

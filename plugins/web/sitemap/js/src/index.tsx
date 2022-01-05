@@ -17,7 +17,7 @@
 
 import React from "react";
 import ClayIcon from "@clayui/icon";
-import { Plugin } from "@openk9/http-api";
+import { Plugin } from "@openk9/rest-api";
 
 import { WebResultType } from "./types";
 import { PageResultCard } from "./PageResultCard";

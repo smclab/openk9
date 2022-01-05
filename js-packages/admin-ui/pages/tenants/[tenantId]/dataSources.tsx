@@ -43,7 +43,7 @@ import {
   toggleDataSource,
   triggerReindex,
   triggerScheduler,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 import { Layout } from "../../../components/Layout";
 import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
 import { ConfirmationModal } from "../../../components/ConfirmationModal";
@@ -407,7 +407,12 @@ function Inside({
         const pluginInfo = (pluginInfos || []).find((p) =>
           ds.driverServiceName.startsWith(p.bundleInfo.symbolicName),
         );
-        const plugin = pluginInfo && pluginLoader.read(pluginInfo.pluginId, pluginInfo.bundleInfo.lastModified);
+        const plugin =
+          pluginInfo &&
+          pluginLoader.read(
+            pluginInfo.pluginId,
+            pluginInfo.bundleInfo.lastModified,
+          );
 
         return (
           <DSItemRender

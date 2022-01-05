@@ -1,19 +1,31 @@
 import { useInfiniteQuery, useQuery } from "react-query";
 import { isOverlapping } from "../logic/useSelections";
-import { LoginInfo, withAuthentication } from "./useLogin";
+import {
+  doSearch,
+  getTentantWithConfiguration,
+  LoginInfo,
+  SearchToken,
+  AnalysisRequest,
+  AnalysisResponse,
+  AnalysisToken,
+  fetchQueryAnalysis,
+} from "@openk9/rest-api";
 
-export function useInfiniteResults(
+export function useInfiniteResults<E>(
   loginInfo: LoginInfo | null,
-  searchQuery: Array<SearchTokenDTO>,
+  searchQuery: Array<SearchToken>,
 ) {
   const pageSize = 10;
   return useInfiniteQuery(
     ["results", searchQuery] as const,
     async ({ queryKey: [, searchQuery], pageParam = 0 }) => {
-      return fetchResults(loginInfo, searchQuery, [
-        pageParam * pageSize,
-        pageParam * pageSize + pageSize,
-      ]);
+      return doSearch<E>(
+        {
+          range: [pageParam * pageSize, pageParam * pageSize + pageSize],
+          searchQuery,
+        },
+        loginInfo,
+      );
     },
     {
       keepPreviousData: true,
@@ -30,238 +42,35 @@ export function useInfiniteResults(
   );
 }
 
-async function fetchResults(
-  loginInfo: LoginInfo | null,
-  searchQuery: Array<SearchTokenDTO>,
-  range: [number, number],
-) {
-  const response = await fetch("/api/searcher/v1/search", {
-    method: "POST",
-    body: JSON.stringify({
-      range,
-      searchQuery,
-    }),
-    headers: withAuthentication(loginInfo, {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    }),
-  });
-  const data = (await response.json()) as ResultResponseDTO;
-  return data;
-}
-type ResultResponseDTO = {
-  total: number;
-  result: ResultDTO[];
-};
-
-export type ResultDTO = {
-  source: {
-    datasourceId: number;
-    id: string;
-    documentTypes: Array<
-      | "web"
-      | "file"
-      | "document"
-      | "pdf"
-      | "excel"
-      | "istat"
-      | "notizie"
-      | "pubblicazioni"
-      | "mostre"
-      | "eventi"
-      | "petizioni"
-      | "processi"
-      | "wemi"
-      | "topic"
-      | "entrate"
-      | "entratel"
-      | "fisco"
-      | "opendata"
-      | "email"
-      | "user"
-      | "gara"
-    >;
-    web?: {
-      favicon: string;
-      title: string;
-      url: string;
-      content: string;
-    };
-    file?: {
-      path: string;
-      lastModifiedDate: string;
-    };
-    document?: {
-      title: string;
-      relativeUrl: Array<string>;
-      contentType: string;
-      url: string;
-      content: string;
-    };
-    email: {
-      cc?: string;
-      date: number; // timestamp
-      htmlBody: string;
-      body: string;
-      from: string;
-      subject: string;
-      to: string;
-    };
-    resources: {
-      binaries: {
-        id: string;
-        name: string;
-        contentType: string;
-      }[];
-    };
-    istat?: {
-      topic: Array<string>;
-      category: string;
-    };
-    notizie?: {
-      category: string;
-      imgUrl: string;
-      pubDate: string;
-      topic: string;
-      linkedUrls: Array<string>;
-    };
-    pubblicazioni?: {
-      category: string;
-      imgUrl: string;
-      pubDate: string;
-      topic: string;
-      authors: string;
-      linkedUrls: Array<string>;
-    };
-    mostre?: {
-      endDate: string;
-      imgUrl: string;
-      location: string;
-      periods: Array<string>;
-      startDate: string;
-    };
-    eventi?: {
-      category?: string;
-      endDate?: string;
-      date?: string;
-      imgUrl: string;
-      location: string;
-      periods: string;
-      startDate?: string;
-      subLocation: string;
-    };
-    petizioni?: {
-      pubDate: string;
-      status: string;
-    };
-    processi?: {
-      name: string;
-      startDate?: string;
-      endDate?: string;
-      partecipants?: string;
-      area?: string;
-      imgUrl?: string;
-    };
-    wemi?: {
-      destinatari: Array<string>;
-      attivita: Array<string>;
-      sedi: Array<string>;
-      momento: Array<string>;
-      municipi: Array<string>;
-      prezzi: Array<{ label: string; value: string }>;
-      procedura: string;
-      categoria: string;
-      servizio: string;
-    };
-    topic?: {
-      topics: Array<string>;
-    };
-    entrate?: {
-      linkedUrls: Array<string>;
-    };
-    opendata?: {
-      dataDiModifica: string;
-      titolare: string;
-      coperturaGeografica: string;
-      autore: string;
-      temiDelDataset: Array<string>;
-      tags: Array<string>;
-      summary: string;
-      startDate: string;
-      endDate: string;
-    };
-    gara?: {
-      descrizione: string;
-      tipologia: string;
-      regione: string;
-      provincia: string;
-      stazione: string;
-      datapubblicazione: string;
-      datascadenza: string;
-      importo: string;
-      criterio: string;
-      nominativo: string;
-      email: string;
-      linkedUrls?: Array<string>;
-    };
-    user?: {
-      screenName: string;
-      emailAddress: string;
-      coperturaGeografica: string;
-      phoneNumber: string;
-      jobTitle: string;
-      jobClass: string;
-      fullName: string;
-    };
-  };
-  highlight: {
-    "web.title"?: string[];
-    "web.content"?: string[];
-    "web.url"?: string[];
-    "file.path"?: string[];
-    "document.url"?: string[];
-    "document.title"?: string[];
-    "document.content"?: string[];
-  };
-};
-
 export function useQueryAnalysis(
   loginInfo: LoginInfo | null,
-  request: AnalysisRequestDTO,
+  request: AnalysisRequest,
 ) {
   return useQuery(
     ["query-anaylis", request] as const,
-    ({ queryKey: [, request] }) => fetchQueryAnalysis(loginInfo, request),
+    async ({ queryKey: [, request] }) =>
+      fixQueryAnalysisResult(await fetchQueryAnalysis(request, loginInfo)),
   );
 }
 
-async function fetchQueryAnalysis(
-  loginInfo: LoginInfo | null,
-  request: AnalysisRequestDTO,
-) {
-  const response = await fetch("/api/searcher/v1/query-analysis", {
-    method: "POST",
-    body: JSON.stringify(request),
-    headers: withAuthentication(loginInfo, {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    }),
-  });
-  const data = (await response.json()) as AnalysisResponseDTO;
-  data.analysis = data.analysis
-    .reverse()
-    .filter((entry, index, array) =>
-      array
-        .slice(0, index)
-        .every((previous) => !isOverlapping(previous, entry)),
-    )
-    .reverse(); // TODO togliere una volta implementata gestione sugestion sovrapposte
-  return data;
+// TODO: togliere una volta implementata gestione sugestion sovrapposte
+function fixQueryAnalysisResult(data: AnalysisResponse) {
+  return {
+    ...data,
+    analysis: data.analysis
+      .reverse()
+      .filter((entry, index, array) =>
+        array
+          .slice(0, index)
+          .every((previous) => !isOverlapping(previous, entry)),
+      )
+      .reverse(),
+  };
 }
 
 async function fetchQueryAnalysisMock(
-  request: AnalysisRequestDTO,
-): Promise<AnalysisResponseDTO> {
+  request: AnalysisRequest,
+): Promise<AnalysisResponse> {
   const words = request.searchText.split(/\s/).filter((w) => w !== "");
   return {
     searchText: request.searchText,
@@ -274,7 +83,11 @@ async function fetchQueryAnalysisMock(
           start,
           end,
           text: word,
-          tokens: ((): Array<AnalysisTokenDTO> => {
+          tokens: ((): Array<
+            AnalysisToken & {
+              score: number; // 0 - 1
+            }
+          > => {
             if (word === "pdf" || word === "pof") {
               return [{ tokenType: "DOCTYPE", value: "pdf", score: 0.3 }];
             }
@@ -312,81 +125,9 @@ async function fetchQueryAnalysisMock(
   };
 }
 
-type AnalysisRequestDTO = {
-  searchText: string;
-  tokens: Array<AnalysisRequestEntryDTO>;
-};
-
-export type AnalysisRequestEntryDTO = {
-  text: string;
-  start: number;
-  end: number;
-  token: TokenDTO;
-};
-
-type AnalysisResponseDTO = {
-  searchText: string;
-  analysis: Array<AnalysisResponseEntryDTO>;
-};
-
-export type AnalysisResponseEntryDTO = {
-  text: string;
-  start: number;
-  end: number;
-  tokens: Array<AnalysisTokenDTO>;
-};
-
-export type TokenDTO =
-  | {
-      tokenType: "DOCTYPE";
-      value: string;
-    }
-  | {
-      tokenType: "DATASOURCE";
-      value: string;
-    }
-  | {
-      tokenType: "ENTITY";
-      entityType: string;
-      entityName: string;
-      keywordKey?: string;
-      value: string;
-    }
-  | {
-      tokenType: "TEXT";
-      keywordKey?: string;
-      value: string;
-    };
-
-export type AnalysisTokenDTO = TokenDTO & {
-  score: number; // 0 - 1
-};
-
-export type SearchTokenDTO =
-  | {
-      tokenType: "DATASOURCE";
-      values: string[];
-    }
-  | {
-      tokenType: "DOCTYPE";
-      keywordKey: "type";
-      values: string[];
-    }
-  | {
-      tokenType: "TEXT";
-      keywordKey?: string;
-      values: string[];
-    }
-  | {
-      tokenType: "ENTITY";
-      keywordKey?: string;
-      entityType: string;
-      values: string[];
-    };
-
 export function useTabTokens(
   loginInfo: LoginInfo | null,
-): Array<{ label: string; tokens: Array<SearchTokenDTO> }> {
+): Array<{ label: string; tokens: Array<SearchToken> }> {
   const tenantConfiguration = useQuery(
     ["tenant-configuration"] as const,
     ({ queryKey }) => {
@@ -400,7 +141,7 @@ export function useTabTokens(
         tokens: [],
       },
       ...tenantConfiguration.data.config.querySourceBarShortcuts.map(
-        (s): { label: string; tokens: Array<SearchTokenDTO> } => {
+        (s): { label: string; tokens: Array<SearchToken> } => {
           return {
             label: s.text,
             tokens: [
@@ -417,7 +158,7 @@ export function useTabTokens(
 
 const defaultTabTokens: Array<{
   label: string;
-  tokens: Array<SearchTokenDTO>;
+  tokens: Array<SearchToken>;
 }> = [
   {
     label: "All",
@@ -434,39 +175,3 @@ const defaultTabTokens: Array<{
     ],
   },
 ];
-
-async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
-  const tenants = await getTenants(loginInfo);
-  const tenant =
-    tenants.find((tenant) => window.location.host === tenant.virtualHost) ??
-    (window.location.hostname === "localhost" ? tenants[0] : undefined);
-  const config =
-    (tenant?.jsonConfig &&
-      (JSON.parse(tenant?.jsonConfig) as TenantJSONConfig)) ||
-    emptyTenantJSONConfig;
-  return { tenant, config };
-}
-
-async function getTenants(loginInfo: LoginInfo | null): Promise<Tenant[]> {
-  const response = await fetch(`/api/datasource/v2/tenant`, {
-    headers: withAuthentication(loginInfo, {
-      Accept: "application/json",
-    }),
-  });
-  const data = await response.json();
-  return data;
-}
-
-type Tenant = {
-  tenantId: number;
-  name: string;
-  virtualHost: string;
-  jsonConfig: string;
-};
-
-type TenantJSONConfig = {
-  querySourceBarShortcuts?: { id: string; text: string }[];
-  requireLogin?: boolean;
-};
-
-const emptyTenantJSONConfig: TenantJSONConfig = {};

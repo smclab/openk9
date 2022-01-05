@@ -16,7 +16,7 @@
  */
 
 import React from "react";
-import { Plugin } from "@openk9/http-api";
+import { Plugin } from "@openk9/rest-api";
 import { SettingsIcon } from "@openk9/search-ui-components";
 
 import AceEditor from "react-ace";

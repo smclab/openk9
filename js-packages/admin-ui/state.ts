@@ -24,7 +24,7 @@ import {
   getUserInfo,
   LoginInfo,
   UserInfo,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 import { firstOrString } from "@openk9/search-ui-components";
 
 export const isServer = typeof window === "undefined";

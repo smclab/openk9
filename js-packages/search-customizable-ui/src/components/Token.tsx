@@ -1,5 +1,5 @@
 import React from "react";
-import { SearchToken } from "@openk9/http-api";
+import { SearchToken } from "@openk9/rest-api";
 import { OpenK9UIInteractions } from "../api";
 import { useEntity } from "@openk9/search-ui-components";
 

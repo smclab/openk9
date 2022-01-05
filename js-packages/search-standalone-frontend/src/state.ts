@@ -21,18 +21,12 @@ import { devtools } from "zustand/middleware";
 import { useHistory, useParams } from "react-router-dom";
 
 import {
-  isSearchQueryEmpty,
-  SearchQuery,
-  SearchResults,
+  SearchToken,
   doSearch,
-  SearchRequest,
-  despaceString,
-  undespaceString,
   getSuggestions,
   PluginInfo,
   getPlugins,
   TenantJSONConfig,
-  emptyTenantJSONConfig,
   LoginInfo,
   UserInfo,
   doLoginRefresh,
@@ -40,7 +34,8 @@ import {
   getTentantWithConfiguration,
   SuggestionResult,
   ALL_SUGGESTION_CATEGORY_ID,
-} from "@openk9/http-api";
+  GenericResultItem,
+} from "@openk9/rest-api";
 import {
   debounce,
   filterSuggestionByActiveSuggestionCategory,
@@ -55,9 +50,9 @@ const localStorageLoginPersistKey = "openk9-login-info";
 
 export type StateType = {
   initial: boolean;
-  searchQuery: SearchQuery;
-  setSearchQuery(query: SearchQuery): void;
-  results: SearchResults<unknown> | null;
+  searchQuery: SearchToken[];
+  setSearchQuery(query: SearchToken[]): void;
+  results: { result: Array<GenericResultItem<unknown>>; total: number } | null;
   range: [number, number] | null;
   loading: boolean;
   doLoadMore(): void;
@@ -96,7 +91,7 @@ export const useStore = create<StateType>(
     focusToken: null,
     selectedResult: null,
     pluginInfos: [],
-    tenantConfig: emptyTenantJSONConfig,
+    tenantConfig: {},
     loginInfo,
     userInfo,
 
@@ -110,7 +105,7 @@ export const useStore = create<StateType>(
       }));
     },
 
-    async setSearchQuery(searchQuery: SearchQuery) {
+    async setSearchQuery(searchQuery: SearchToken[]) {
       set((state) => ({
         ...state,
         searchQuery,
@@ -129,12 +124,13 @@ export const useStore = create<StateType>(
         myOpId: number,
         opRef: { lastOpId: number },
       ) {
-        const request: SearchRequest = {
-          searchQuery,
-          range: [0, resultsChunkNumber],
-        };
-
-        const resultsPromise = doSearch(request, get().loginInfo);
+        const resultsPromise = doSearch(
+          {
+            searchQuery,
+            range: [0, resultsChunkNumber],
+          },
+          get().loginInfo,
+        );
 
         const [results] = await Promise.all([resultsPromise]);
 
@@ -154,16 +150,22 @@ export const useStore = create<StateType>(
       const prev = get();
       if (prev.range) {
         set((state) => ({ ...state, loading: true }));
-        const request: SearchRequest = {
-          searchQuery: prev.searchQuery,
-          range: [prev.range[0], prev.range[1] + resultsChunkNumber],
-        };
-        const results = await doSearch(request, get().loginInfo);
+        const range = [prev.range[0], prev.range[1] + resultsChunkNumber] as [
+          number,
+          number,
+        ];
+        const results = await doSearch(
+          {
+            searchQuery: prev.searchQuery,
+            range,
+          },
+          get().loginInfo,
+        );
         set((state) => ({
           ...state,
           results,
           loading: false,
-          range: request.range,
+          range,
         }));
       }
     },
@@ -199,7 +201,7 @@ export const useStore = create<StateType>(
                 activeSuggestionCategoryId,
               ),
             )
-            .filter(filterSuggestionBySearchQuery(searchQuery)),
+            .filter(filterSuggestionBySearchQuery(searchQuery as any)),
         }));
       }
     },
@@ -258,7 +260,7 @@ export function useSearchQuery() {
   }, [storedSetSearchQuery, params]);
 
   const setSearchQuery = useCallback(
-    (searchQuery: SearchQuery) => {
+    (searchQuery: SearchToken[]) => {
       storedSetSearchQuery(searchQuery);
       history.push("/q/" + despaceString(JSON.stringify(searchQuery)));
     },
@@ -354,6 +356,18 @@ export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
   }, [invalidateLogin, setLoginInfo]);
 
   return { loginInfo, userInfo, canEnter, isGuest, goToLogin, loginValid };
+}
+
+function despaceString(str: string) {
+  return str.replaceAll(" ", "+");
+}
+
+function undespaceString(str: string) {
+  return str.replaceAll("+", " ");
+}
+
+function isSearchQueryEmpty(query: SearchToken[]) {
+  return query.length === 0;
 }
 
 declare global {

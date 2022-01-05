@@ -5,10 +5,9 @@ import {
   getDocumentTypes,
   getSuggestionCategories,
   LoginInfo,
-  SearchQuery,
   SearchToken,
   SuggestionResult,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 import { isEqual } from "lodash";
 import React from "react";
 import { useQuery } from "react-query";
@@ -19,7 +18,7 @@ export const filterSuggestionByActiveSuggestionCategory =
     suggestion.suggestionCategoryId === activeSuggestionCategoryId;
 
 export const filterSuggestionBySearchQuery =
-  (searchQuery: SearchQuery) => (suggestion: SuggestionResult) => {
+  (searchQuery: SearchToken[]) => (suggestion: SuggestionResult) => {
     const searchToken = mapSuggestionToSearchToken(suggestion);
     return !searchQuery.some((st) => isEqual(st, searchToken));
   };

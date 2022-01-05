@@ -30,7 +30,7 @@ import {
   getSchedulerItems,
   triggerReindex,
   triggerScheduler,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { useLoginInfo } from "../state";
 import { useToast } from "../pages/_app";

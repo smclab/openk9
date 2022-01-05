@@ -18,7 +18,7 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
-import {  SuggestionResult } from "@openk9/http-api";
+import { SuggestionResult } from "@openk9/rest-api";
 import { DXPLogo, EmailIcon, OSLogo } from "../icons";
 import { ThemeType } from "../theme";
 
@@ -31,11 +31,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 
 // TODO: move these inside plugins as a pluginservice
 // HARDCODED
-export function TokenIcon({
-  suggestion,
-}: {
-  suggestion: SuggestionResult;
-}) {
+export function TokenIcon({ suggestion }: { suggestion: SuggestionResult }) {
   const classes = useStyles();
 
   if (suggestion.tokenType === "ENTITY") {

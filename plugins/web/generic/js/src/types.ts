@@ -16,7 +16,7 @@
  */
 
 
-import { GenericResultItem } from "@openk9/http-api";
+import { GenericResultItem } from "@openk9/rest-api";
 
 export type WebResultType = 
   | DocumentResultItem

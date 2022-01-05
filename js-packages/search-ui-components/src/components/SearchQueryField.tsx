@@ -20,7 +20,7 @@ import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 
 import { ThemeType } from "../theme";
-import { SearchQuery, SearchToken } from "@openk9/http-api";
+import { SearchToken } from "@openk9/rest-api";
 import { mergeRefs } from "../utils";
 import { useEntity } from ".";
 
@@ -153,7 +153,7 @@ export function ParamTokenDisplay({
           token={{ ...token, keywordKey: undefined }}
           outerKeywordKey={token.keywordKey}
           onTokenChange={(ntok) =>
-            onTokenChange({ ...ntok, keywordKey: token.keywordKey })
+            onTokenChange({ ...ntok, keywordKey: token.keywordKey } as any)
           }
           onTokenDelete={onTokenDelete}
           {...rest}
@@ -314,8 +314,8 @@ function SingleToken({
 export const SearchQueryField = React.forwardRef<
   HTMLInputElement | null,
   {
-    searchQuery: SearchQuery;
-    onSearchQueryChange(searchQuery: SearchQuery): void;
+    searchQuery: SearchToken[];
+    onSearchQueryChange(searchQuery: SearchToken[]): void;
     focusToken: number | null;
     onFocusToken(token: number | null): void;
     onInputKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;

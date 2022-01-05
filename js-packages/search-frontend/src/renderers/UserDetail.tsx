@@ -3,10 +3,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../components/HighlightedText";
-import { ResultDTO } from "../utils/remote-data";
+import { UserResultItem } from "./UserItem";
 
 type UserDetailProps = {
-  result: ResultDTO;
+  result: UserResultItem;
 };
 export function UserDetail({ result }: UserDetailProps) {
   return (

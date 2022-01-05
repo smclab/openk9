@@ -1,0 +1,43 @@
+{
+  "name": "@openk9/rest-api",
+  "version": "0.3.1",
+  "description": "OpenK9 core type definitions, search and admin rest API",
+  "author": "SMC",
+  "license": "AGPL-3.0-or-later",
+  "keywords": [
+    "search",
+    "api",
+    "openk9"
+  ],
+  "homepage": "https://openk9.io/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smclab/openk9.git",
+    "directory": "js-packages/rest-api"
+  },
+  "bugs": {
+    "url": "https://github.com/smclab/openk9/issues"
+  },
+  "main": "lib/index.js",
+  "module": "lib/index.esm.js",
+  "files": [
+    "lib",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
+    "precommit": "lint-staged"
+  },
+  "devDependencies": {
+    "rollup": "^2.61.1",
+    "rollup-plugin-typescript2": "^0.31.1",
+    "typescript": "^4.5.4",
+    "lint-staged": "^12.1.2",
+    "prettier": "^2.5.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false
+}

@@ -1,19 +1,18 @@
-import { doSearch, SearchQuery } from "@openk9/http-api";
+import { doSearch, SearchToken } from "@openk9/rest-api";
 import { useInfiniteQuery } from "react-query";
 
-export function useInfiniteResults(searchQuery: SearchQuery | null) {
+export function useInfiniteResults(searchQuery: SearchToken[] | null) {
   const pageSize = 8;
   return useInfiniteQuery(
     ["search", searchQuery] as const,
     async ({ queryKey, pageParam = 0 }) => {
-      if (!queryKey[1])
-        throw new Error();
+      if (!queryKey[1]) throw new Error();
       const result = await doSearch(
         {
           searchQuery: queryKey[1],
           range: [pageParam * pageSize, pageParam * pageSize + pageSize],
         },
-        null
+        null,
       );
       return {
         ...result,
@@ -25,10 +24,9 @@ export function useInfiniteResults(searchQuery: SearchQuery | null) {
       enabled: searchQuery !== null,
       keepPreviousData: true,
       getNextPageParam(lastPage, pages) {
-        if (lastPage.last)
-          return undefined;
+        if (lastPage.last) return undefined;
         return lastPage.page + 1;
       },
-    }
+    },
   );
 }

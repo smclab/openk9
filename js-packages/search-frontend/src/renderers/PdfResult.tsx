@@ -1,12 +1,12 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { ResultDTO } from "../utils/remote-data";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
 import { HighlightedText } from "../components/HighlightedText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
+import { PdfResultItem } from "./PdfItem";
 
-type PdfResultProps = { result: ResultDTO };
+type PdfResultProps = { result: PdfResultItem };
 export function PdfResult({ result }: PdfResultProps) {
   return (
     <div

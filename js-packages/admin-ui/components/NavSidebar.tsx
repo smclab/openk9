@@ -29,7 +29,7 @@ import {
   firstOrString,
   DataSourceIcon,
 } from "@openk9/search-ui-components";
-import { getTenant } from "@openk9/http-api";
+import { getTenant } from "@openk9/rest-api";
 import { useLoginInfo } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({

@@ -18,7 +18,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import * as ok9Components from "@openk9/search-ui-components";
-import * as ok9API from "@openk9/http-api";
+import * as ok9API from "@openk9/rest-api";
 import * as reactJSS from "react-jss";
 import clayIcon from "@clayui/icon";
 
@@ -29,7 +29,7 @@ import {
   ResultRendererPlugin,
   ResultRendererProps,
   SidebarRendererProps,
-} from "@openk9/http-api";
+} from "@openk9/rest-api";
 
 /**
  * This object is to be used when loading plugins in a React Suspense environment.

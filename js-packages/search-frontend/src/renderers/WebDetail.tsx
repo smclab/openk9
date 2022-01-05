@@ -1,10 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../components/HighlightedText";
-import { ResultDTO } from "../utils/remote-data";
+import { WebResultItem } from "./WebItem";
 
 type WebDetailProps = {
-  result: ResultDTO;
+  result: WebResultItem;
 };
 export function WebDetail({ result }: WebDetailProps) {
   return (

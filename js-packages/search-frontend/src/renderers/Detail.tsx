@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { WebDetail } from "./WebDetail";
-import { ResultDTO } from "../utils/remote-data";
+import { GenericResultItem } from "@openk9/rest-api";
 import { DocumentDetail } from "./DocumentDetail";
 import { EmailDetail } from "./EmailDetail";
 import { UserDetail } from "./UserDetail";
@@ -18,11 +18,11 @@ import { AssistenzaDetail } from "./sg/AssistenzaDetail";
 import { GaraDetail } from "./sg/GaraDetail";
 import { OpendataDetail } from "./cm/OpendataDetail";
 
-
-type DetailProps = {
-  result: ResultDTO;
+type DetailProps<E> = {
+  result: GenericResultItem<E>;
 };
-function Detail({ result }: DetailProps) {
+function Detail<E>(props: DetailProps<E>) {
+  const result = props.result as any;
   return (
     <div
       css={css`

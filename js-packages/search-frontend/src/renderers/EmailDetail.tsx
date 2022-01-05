@@ -3,10 +3,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../components/HighlightedText";
-import { ResultDTO } from "../utils/remote-data";
+import { EmailResultItem } from "./EmailItem";
 
 type EmailDetailProps = {
-  result: ResultDTO;
+  result: EmailResultItem;
 };
 export function EmailDetail({ result }: EmailDetailProps) {
   return (
@@ -24,7 +24,7 @@ export function EmailDetail({ result }: EmailDetailProps) {
           font-weight: 500;
         `}
       >
-        {result.highlight["document.title"] ? (
+        {result.highlight["email.subject"] ? (
           <HighlightedText text={result.highlight["email.subject"][0]} />
         ) : (
           result.source.email?.subject

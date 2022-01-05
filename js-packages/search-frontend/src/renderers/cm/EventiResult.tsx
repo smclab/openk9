@@ -2,10 +2,10 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
 import { truncatedLineStyle } from "../../utils/truncatedLineStyle";
-import { ResultDTO } from "../../utils/remote-data";
 import { Badge } from "../../components/Badge";
+import { EventiResultItem } from "./EventiItem";
 
-type EventiResultProps = { result: ResultDTO };
+type EventiResultProps = { result: EventiResultItem };
 export function EventiResult({ result }: EventiResultProps) {
   return (
     <div

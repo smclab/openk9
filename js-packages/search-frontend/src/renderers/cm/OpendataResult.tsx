@@ -2,10 +2,10 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
 import { truncatedLineStyle } from "../../utils/truncatedLineStyle";
-import { ResultDTO } from "../../utils/remote-data";
 import { Badge } from "../../components/Badge";
+import { OpendataResultItem } from "./OpendataItem";
 
-type OpendataResultProps = { result: ResultDTO };
+type OpendataResultProps = { result: OpendataResultItem };
 export function OpendataResult({ result }: OpendataResultProps) {
   return (
     <div
@@ -79,7 +79,7 @@ export function OpendataResult({ result }: OpendataResultProps) {
         `}
       >
         {result.source.opendata?.temiDelDataset?.map((item, index) => {
-          return <Badge>{item}</Badge>
+          return <Badge>{item}</Badge>;
         })}
       </div>
       <div

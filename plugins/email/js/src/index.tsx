@@ -16,7 +16,7 @@
  */
 
 import React from "react";
-import { Plugin } from "@openk9/http-api";
+import { Plugin } from "@openk9/rest-api";
 
 import { EmailResultItem } from "./types";
 import { EmailResultCard } from "./EmailResultCard";

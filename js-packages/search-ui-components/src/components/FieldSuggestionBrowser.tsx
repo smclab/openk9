@@ -19,7 +19,7 @@ import React, { useEffect, useRef } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
-import { ALL_SUGGESTION_CATEGORY_ID, SuggestionResult } from "@openk9/http-api";
+import { ALL_SUGGESTION_CATEGORY_ID, SuggestionResult } from "@openk9/rest-api";
 import {
   ThemeType,
   useSuggestionCategories,

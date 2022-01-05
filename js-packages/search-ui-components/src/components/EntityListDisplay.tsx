@@ -17,7 +17,7 @@
 
 import React from "react";
 import { createUseStyles } from "react-jss";
-import { GenericResultItem } from "@openk9/http-api";
+import { GenericResultItem } from "@openk9/rest-api";
 import { ThemeType } from "../theme";
 import { useEntity } from ".";
 

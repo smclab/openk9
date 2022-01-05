@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericResultItem } from "@openk9/http-api";
+import { GenericResultItem } from "@openk9/rest-api";
 import { Result } from "./Result";
 import { PluginResultRenderes } from "@openk9/search-ui-components";
 import { OpenK9UITemplates } from "../api";

@@ -1,10 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
-import { ResultDTO } from "../../utils/remote-data";
+import { OpendataResultItem } from "./OpendataItem";
 
 type OpendataDetailProps = {
-  result: ResultDTO;
+  result: OpendataResultItem;
 };
 export function OpendataDetail({ result }: OpendataDetailProps) {
   return (
@@ -46,13 +46,15 @@ export function OpendataDetail({ result }: OpendataDetailProps) {
         <strong>Data di fine</strong> : {result.source.opendata?.endDate}
       </div>
       <div>
-        <strong>Ultima data di modifica</strong> : {result.source.opendata?.dataDiModifica}
+        <strong>Ultima data di modifica</strong> :{" "}
+        {result.source.opendata?.dataDiModifica}
       </div>
       <div>
         <strong>Titolare</strong> : {result.source.opendata?.titolare}
       </div>
       <div>
-        <strong>Copertura geografica</strong> : {result.source.opendata?.coperturaGeografica}
+        <strong>Copertura geografica</strong> :{" "}
+        {result.source.opendata?.coperturaGeografica}
       </div>
       <div>
         <strong>Autore</strong> : {result.source.opendata?.autore}

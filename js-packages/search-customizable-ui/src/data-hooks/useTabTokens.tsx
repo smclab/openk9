@@ -1,14 +1,18 @@
-import { getTentantWithConfiguration, LoginInfo, SearchToken } from "@openk9/http-api";
+import {
+  getTentantWithConfiguration,
+  LoginInfo,
+  SearchToken,
+} from "@openk9/rest-api";
 import { useQuery } from "react-query";
 
 export function useTabTokens(
-  loginInfo: LoginInfo | null
-): Array<{ label: string; tokens: Array<SearchToken>; }> {
+  loginInfo: LoginInfo | null,
+): Array<{ label: string; tokens: Array<SearchToken> }> {
   const tenantConfiguration = useQuery(
     ["tenant-configuration"] as const,
     ({ queryKey }) => {
       return getTentantWithConfiguration(loginInfo);
-    }
+    },
   );
   if (tenantConfiguration.data?.config.querySourceBarShortcuts) {
     return [
@@ -17,14 +21,14 @@ export function useTabTokens(
         tokens: [],
       },
       ...tenantConfiguration.data.config.querySourceBarShortcuts.map(
-        (s): { label: string; tokens: Array<SearchToken>; } => {
+        (s): { label: string; tokens: Array<SearchToken> } => {
           return {
             label: s.text,
             tokens: [
               { tokenType: "DOCTYPE", keywordKey: "type", values: [s.id] },
             ],
           };
-        }
+        },
       ),
     ];
   } else {
@@ -32,7 +36,7 @@ export function useTabTokens(
   }
 }
 
-const defaultTabTokens: Array<{ label: string; tokens: Array<SearchToken>; }> = [
+const defaultTabTokens: Array<{ label: string; tokens: Array<SearchToken> }> = [
   {
     label: "All",
     tokens: [],

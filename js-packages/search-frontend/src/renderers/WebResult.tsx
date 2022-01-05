@@ -2,9 +2,9 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../components/HighlightedText";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
-import { ResultDTO } from "../utils/remote-data";
+import { WebResultItem } from "./WebItem";
 
-type WebResultProps = { result: ResultDTO };
+type WebResultProps = { result: WebResultItem };
 export function WebResult({ result }: WebResultProps) {
   return (
     <div
