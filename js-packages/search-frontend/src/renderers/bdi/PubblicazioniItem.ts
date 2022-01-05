@@ -1,6 +1,6 @@
 import { GenericResultItem } from "@openk9/rest-api";
 
-export type PubblicaziioniResultItem = GenericResultItem<{
+export type PubblicazioniResultItem = GenericResultItem<{
   web: {
     favicon: string;
     title: string;

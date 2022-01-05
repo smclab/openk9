@@ -1,10 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
-import { ResultDTO } from "../../utils/remote-data";
+import { PubblicazioniResultItem } from "./PubblicazioniItem";
 
 type PubblicazioniDetailProps = {
-  result: ResultDTO;
+  result: PubblicazioniResultItem;
 };
 export function PubblicazioniDetail({ result }: PubblicazioniDetailProps) {
   return (

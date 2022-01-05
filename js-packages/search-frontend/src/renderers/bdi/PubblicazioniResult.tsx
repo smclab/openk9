@@ -3,9 +3,9 @@ import { css } from "styled-components/macro";
 import { HighlightedText } from "../../components/HighlightedText";
 import { truncatedLineStyle } from "../../utils/truncatedLineStyle";
 import { Badge } from "../../components/Badge";
-import { PubblicaziioniResultItem } from "./PubblicazioniItem";
+import { PubblicazioniResultItem } from "./PubblicazioniItem";
 
-type PubblicazioniResultProps = { result: PubblicaziioniResultItem };
+type PubblicazioniResultProps = { result: PubblicazioniResultItem };
 export function PubblicazioniResult({ result }: PubblicazioniResultProps) {
   return (
     <div
