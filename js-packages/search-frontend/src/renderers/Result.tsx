@@ -1,6 +1,9 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { WebResult } from "./WebResult";
+import { EmailResult } from "./EmailResult";
+import { UserResult } from "./UserResult";
+import { GenericResultItem } from "@openk9/rest-api";
 import { myTheme } from "../utils/myTheme";
 import { DocumentResult } from "./DocumentResult";
 import { NotizieResult } from "./bdi/NotizieResult";
@@ -10,13 +13,15 @@ import { MostreResult } from "./cm/MostreResult";
 import { EventiResult } from "./cm/EventiResult";
 import { PetizioniResult } from "./cm/PetizioniResult";
 import { ProcessiResult } from "./cm/ProcessiResult";
-import { GenericResultItem } from "@openk9/rest-api";
+import { OpendataResult } from "./cm/OpendataResult";
 
 type ResultProps<E> = {
   result: GenericResultItem<E>;
   onDetail(result: GenericResultItem<E> | null): void;
 };
-function Result<E>({ result, onDetail }: ResultProps<E>) {
+function Result<E>(props: ResultProps<E>) {
+  const result = props.result as any;
+  const { onDetail } = props;
   return (
     <div
       css={css`
@@ -31,33 +36,41 @@ function Result<E>({ result, onDetail }: ResultProps<E>) {
         onMouseEnter={() => onDetail(result)}
       >
         {(() => {
-          const resultAny = result as any;
-          if (resultAny.source.documentTypes.includes("notizie")) {
-            return <NotizieResult result={resultAny} />;
+          if (result.source.documentTypes.includes("opendata")) {
+            return <OpendataResult result={result} />;
           }
-          if (resultAny.source.documentTypes.includes("pubblicazioni")) {
-            return <PubblicazioniResult result={resultAny} />;
+          if (result.source.documentTypes.includes("notizie")) {
+            return <NotizieResult result={result} />;
           }
-          if (resultAny.source.documentTypes.includes("mostre")) {
-            return <MostreResult result={resultAny} />;
+          if (result.source.documentTypes.includes("pubblicazioni")) {
+            return <PubblicazioniResult result={result} />;
           }
-          if (resultAny.source.documentTypes.includes("eventi")) {
-            return <EventiResult result={resultAny} />;
+          if (result.source.documentTypes.includes("mostre")) {
+            return <MostreResult result={result} />;
           }
-          if (resultAny.source.documentTypes.includes("petizioni")) {
-            return <PetizioniResult result={resultAny} />;
+          if (result.source.documentTypes.includes("eventi")) {
+            return <EventiResult result={result} />;
           }
-          if (resultAny.source.documentTypes.includes("processi")) {
-            return <ProcessiResult result={resultAny} />;
+          if (result.source.documentTypes.includes("petizioni")) {
+            return <PetizioniResult result={result} />;
           }
-          if (resultAny.source.documentTypes.includes("pdf")) {
-            return <PdfResult result={resultAny} />;
+          if (result.source.documentTypes.includes("processi")) {
+            return <ProcessiResult result={result} />;
           }
-          if (resultAny.source.documentTypes.includes("document")) {
-            return <DocumentResult result={resultAny} />;
+          if (result.source.documentTypes.includes("pdf")) {
+            return <PdfResult result={result} />;
           }
-          if (resultAny.source.documentTypes.includes("web")) {
-            return <WebResult result={resultAny} />;
+          if (result.source.documentTypes.includes("document")) {
+            return <DocumentResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("web")) {
+            return <WebResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("email")) {
+            return <EmailResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("user")) {
+            return <UserResult result={result} />;
           }
           return (
             <pre
