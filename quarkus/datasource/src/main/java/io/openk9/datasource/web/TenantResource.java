@@ -38,6 +38,16 @@ public class TenantResource {
 		return Tenant.findById(id);
 	}
 
+	@GET
+	@Path("/virtual-host/{virtualHost}")
+	@Produces()
+	@Transactional
+	public Tenant findByVirtualHost(@PathParam("virtualHost") String virtualHost){
+		return Tenant
+			.find("virtualHost", virtualHost)
+			.firstResult();
+	}
+
 	@POST
 	@Path("/filter")
 	@Produces()
