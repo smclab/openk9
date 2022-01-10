@@ -188,18 +188,22 @@ public abstract class Parse {
 			}
 			else {
 
-				SemanticTypes childSemantics =
-					getChildren()
-						.stream()
-						.map(Parse::getSemantics)
-						.map(Semantic::apply)
-						.map(SemanticTypes::getSemanticTypes)
-						.flatMap(Collection::stream)
-						.collect(
-							Collectors.collectingAndThen(
-								Collectors.toList(), SemanticTypes::of));
+				List<SemanticType> collect = getChildren()
+					.stream()
+					.map(Parse::getSemantics)
+					.map(Semantic::apply)
+					.filter(SemanticTypes::isNotEmpty)
+					.map(SemanticTypes::getSemanticTypes)
+					.flatMap(Collection::stream)
+					.collect(Collectors.toList());
 
-				return rule.applySemantics(childSemantics);
+				if (collect.isEmpty()) {
+					return rule.applySemantics(SemanticTypes.of());
+				}
+				else {
+					return rule.applySemantics(SemanticTypes.of(collect));
+				}
+
 			}
 		}
 

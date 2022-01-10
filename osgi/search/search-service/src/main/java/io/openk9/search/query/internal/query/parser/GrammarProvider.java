@@ -108,47 +108,8 @@ public class GrammarProvider {
 
 			String lhs = node.get("lhs").asText();
 			String rhs = node.get("rhs").asText();
-			String sem = node.get("sem").asText();
 
-			switch (sem) {
-				case "IDENTITY":
-					rules.add(Rule.of(lhs, rhs, Semantic.identity()));
-					break;
-				case "MERGE":
-					rules.add(Rule.of(lhs, rhs, Semantic.of(SemanticTypes::merge)));
-					break;
-				default:
-					if (sem.isBlank()) {
-						rules.add(Rule.of(lhs, rhs));
-					}
-					else {
-
-						String[] split = sem.split(",");
-
-						List<Integer> collect =
-							Arrays.stream(split)
-								.map(Integer::parseInt)
-								.collect(Collectors.toList());
-
-						Function<SemanticTypes, SemanticTypes> function =
-							s -> SemanticTypes.of(
-								collect
-									.stream()
-									.flatMap(index -> {
-										try {
-											return Stream.of(s.get(index));
-										}
-										catch (IndexOutOfBoundsException e) {
-											return Stream.empty();
-										}
-									})
-									.toArray(SemanticType[]::new)
-							);
-
-						rules.add(Rule.of(lhs, rhs, Semantic.of(function)));
-
-					}
-			}
+			rules.add(Rule.of(lhs, rhs, Semantic.identity()));
 
 		}
 

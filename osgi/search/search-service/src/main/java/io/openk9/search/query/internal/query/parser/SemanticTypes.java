@@ -110,4 +110,7 @@ public final class SemanticTypes implements Iterable<SemanticType> {
 	public static SemanticTypes EMPTY_SEMANTIC_TYPES =
 		new SemanticTypes(List.of());
 
+	public boolean isNotEmpty() {
+		return !isEmpty();
+	}
 }

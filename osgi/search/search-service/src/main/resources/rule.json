@@ -1,82 +1,70 @@
 [
 	{
-		"lhs": "$Optionals",
-		"rhs": "$Optional",
-		"sem": "IDENTITY"
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "$StopWord ?$StopWord",
-		"sem": "IDENTITY"
+		"lhs": "$NotIntent",
+		"rhs": "$StopWord"
 	},
 	{
 		"lhs": "$ROOT",
-		"rhs": "?$Optionals $Query ?$Optionals",
-		"sem": "1"
+		"rhs": "$Query"
 	},
 	{
 		"lhs": "$Query",
-		"rhs": "$IntentCollection",
-		"sem": "IDENTITY"
+		"rhs": "$Collection"
 	},
 	{
-		"lhs": "$IntentCollection",
-		"rhs": "$Intent ?$Optionals ?$IntentCollection",
-		"sem": "IDENTITY"
+		"lhs": "$Collection",
+		"rhs": "$Part ?$Collection"
 	},
 	{
-		"lhs": "$Entity",
-		"rhs": "$person",
-		"sem": "0"
+		"lhs": "$Part",
+		"rhs": "$Intent"
 	},
 	{
-		"lhs": "$Entity",
-		"rhs": "$organization",
-		"sem": "0"
+		"lhs": "$Part",
+		"rhs": "$NotIntent"
 	},
 	{
 		"lhs": "$Entity",
-		"rhs": "$date",
-		"sem": "0"
+		"rhs": "$person"
 	},
 	{
 		"lhs": "$Entity",
-		"rhs": "$loc",
-		"sem": "0"
+		"rhs": "$organization"
+	},
+	{
+		"lhs": "$Entity",
+		"rhs": "$date"
+	},
+	{
+		"lhs": "$Entity",
+		"rhs": "$loc"
 	},
 	{
 		"lhs": "$Intent",
-		"rhs": "$Entity",
-		"sem": "0"
+		"rhs": "$Entity"
 	},
 	{
 		"lhs": "$Content",
-		"rhs": "$DOCTYPE",
-		"sem": "0"
+		"rhs": "$DOCTYPE"
 	},
 	{
 		"lhs": "$Content",
-		"rhs": "$AGGREGATE",
-		"sem": "0"
+		"rhs": "$AGGREGATE"
 	},
 	{
 		"lhs": "$Intent",
-		"rhs": "$Content",
-		"sem": "0"
+		"rhs": "$Content"
 	},
 	{
 		"lhs": "$Optional",
-		"rhs": "contenuti",
-		"sem": ""
+		"rhs": "contenuti"
 	},
 	{
-		"lhs": "$Intent",
-		"rhs": "$TOKEN",
-		"sem": "0"
+		"lhs": "$NotIntent",
+		"rhs": "$TOKEN"
 	},
 	{
 		"lhs": "$Entity",
-		"rhs": "$bank",
-		"sem": "0"
+		"rhs": "$bank"
 	}
 ]
