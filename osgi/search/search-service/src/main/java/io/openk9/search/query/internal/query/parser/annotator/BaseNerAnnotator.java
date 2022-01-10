@@ -37,7 +37,7 @@ public class BaseNerAnnotator extends BaseAnnotator {
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
-		if (Arrays.stream(tokens).allMatch(stopWords::contains)) {
+		if (_containsStopword(tokens)) {
 			return List.of();
 		}
 

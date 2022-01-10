@@ -5,6 +5,7 @@ import io.openk9.search.api.query.parser.CategorySemantics;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +17,26 @@ public abstract class BaseAnnotator implements Annotator {
 	protected QueryBuilder query(String field, String token) {
 		return QueryBuilders.fuzzyQuery(field, token);
 	}
+
+	protected boolean _containsStopword(String[] tokens) {
+
+		if (Arrays.stream(tokens).allMatch(stopWords::contains)) {
+			return true;
+		}
+
+		int length = tokens.length;
+
+		if (length > 1) {
+
+			return stopWords.contains(tokens[0]) ||
+				   stopWords.contains(tokens[length - 1]);
+
+		}
+
+		return false;
+
+	}
+
 
 	@Override
 	public List<CategorySemantics> annotate(
@@ -32,8 +53,6 @@ public abstract class BaseAnnotator implements Annotator {
 		}
 
 		return result;
-
-
 
 	}
 
