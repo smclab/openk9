@@ -118,6 +118,10 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 								_log.info("parses count: " + parses.size());
 
+								if (_log.isDebugEnabled()) {
+									_log.debug(parses.toString());
+								}
+
 								List<SemanticsPos> list = new ArrayList<>();
 
 								for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {

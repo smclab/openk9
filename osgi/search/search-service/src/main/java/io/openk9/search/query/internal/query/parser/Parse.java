@@ -95,7 +95,7 @@ public abstract class Parse {
 
 		@Override
 		public String toString() {
-			return _value;
+			return "ParseCat(" + _value + ")";
 		}
 	}
 
@@ -140,7 +140,7 @@ public abstract class Parse {
 			String childrenString = children.stream().map(Parse::toString).collect(
 				Collectors.joining(" "));
 
-			return String.format("(%s %s pos: %s)", rule.getLhs(), childrenString, pos);
+			return String.format("Parse(%s %s pos: %s)", rule.getLhs(), childrenString, pos);
 
 		}
 
