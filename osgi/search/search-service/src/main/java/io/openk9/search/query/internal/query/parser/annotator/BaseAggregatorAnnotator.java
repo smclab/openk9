@@ -50,6 +50,21 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 			return List.of();
 		}
 
+		List<String> normalizedKeywords = new ArrayList<>();
+
+		for (String keyword : keywords) {
+			if (keyword.contains(";")) {
+				String[] split = keyword.split(";");
+				int aggregatorTenant = Integer.parseInt(split[0]);
+				if (aggregatorTenant == tenantId) {
+					normalizedKeywords.add(split[1]);
+				}
+			}
+			else {
+				normalizedKeywords.add(keyword);
+			}
+		}
+
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();
 
@@ -66,7 +81,7 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-		for (String keyword : keywords) {
+		for (String keyword : normalizedKeywords) {
 			boolQueryBuilder.should(query(keyword, token));
 		}
 
@@ -87,7 +102,7 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 		searchSourceBuilder.query(builder);
 
-		for (String keyword : keywords) {
+		for (String keyword : normalizedKeywords) {
 			searchSourceBuilder.aggregation(
 				AggregationBuilders
 					.terms(keyword)
@@ -197,6 +212,10 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 	private static int _costOfSubstitution(char a, char b) {
 		return a == b ? 0 : 1;
+	}
+
+	private static String _normalizeKeyword(String keyword) {
+		return keyword.substring(keyword.indexOf(";"));
 	}
 
 	private static final Logger _log = LoggerFactory.getLogger(
