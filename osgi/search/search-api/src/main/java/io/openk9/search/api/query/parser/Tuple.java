@@ -1,6 +1,8 @@
 package io.openk9.search.api.query.parser;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -43,6 +45,23 @@ public final class Tuple<T> {
 
 	@SafeVarargs
 	public static <T> Tuple<T> of(T...args) {
+
+		if (args.length == 2) {
+			T frt = args[0];
+			if (frt instanceof Integer) {
+				Map<Integer, Tuple<?>> integerTupleMap = _CACHE.get(frt);
+				if (integerTupleMap != null) {
+					T snd = args[1];
+					if (snd instanceof Integer) {
+						Tuple<?> tuple = integerTupleMap.get(snd);
+						if (tuple != null) {
+							return (Tuple<T>)tuple;
+						}
+					}
+				}
+			}
+		}
+
 		return new Tuple<>(args);
 	}
 
@@ -74,5 +93,15 @@ public final class Tuple<T> {
 	private final T[] _args;
 
 	public static final Tuple EMPTY_TUPLE = new Tuple(new Object[0]);
+
+	private static final Map<Integer, Map<Integer, Tuple<?>>> _CACHE = new HashMap<>();
+
+	static {
+		for (int i = 0; i < 20; i++) {
+			for (int j = 0; j < 20; j++) {
+				_CACHE.put(i, Map.of(j, Tuple.of(i, j)));
+			}
+		}
+	}
 
 }
