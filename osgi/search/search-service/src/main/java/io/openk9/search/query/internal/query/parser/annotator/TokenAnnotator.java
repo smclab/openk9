@@ -6,7 +6,6 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
-import org.osgi.service.metatype.annotations.Designate;
 
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,10 @@ public class TokenAnnotator extends BaseAnnotator {
 
 		if (tokens.length == 1) {
 			String token = tokens[0];
+
+			if (stopWords.contains(token)) {
+				return List.of();
+			}
 
 			if (!context.contains(token)) {
 				return List.of(
