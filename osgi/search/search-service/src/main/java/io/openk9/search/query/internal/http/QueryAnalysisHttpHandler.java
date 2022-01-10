@@ -1,5 +1,6 @@
 package io.openk9.search.query.internal.http;
 
+import io.openk9.common.api.reactor.util.ReactorStopWatch;
 import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.util.HttpUtil;
@@ -28,6 +29,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -111,83 +113,84 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 					return parsesMono
 						.take(Duration.ofMillis(_annotatorConfig.timeoutMs()))
 						.switchIfEmpty(Mono.just(List.of()))
-						.map(parses -> {
+						.flatMap(parses ->
+							stopWatch("[after parseInput]", Mono.fromSupplier(() -> {
 
-							_log.info("parses count: " + parses.size());
+								_log.info("parses count: " + parses.size());
 
-							List<SemanticsPos> list = new ArrayList<>();
+								List<SemanticsPos> list = new ArrayList<>();
 
-							for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
-								list.add(SemanticsPos.of(e.getKey(), e.getValue()));
-							}
+								for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
+									list.add(SemanticsPos.of(e.getKey(), e.getValue()));
+								}
 
-							for (int i = parses.size() - 1; i >= 0; i--) {
-								SemanticTypes semanticTypes =
-									parses.get(i).getSemantics().apply();
+								for (int i = parses.size() - 1; i >= 0; i--) {
+									SemanticTypes semanticTypes =
+										parses.get(i).getSemantics().apply();
 
-								List<SemanticType> semanticTypeList =
-									semanticTypes.getSemanticTypes();
+									List<SemanticType> semanticTypeList =
+										semanticTypes.getSemanticTypes();
 
-								for (SemanticType maps : semanticTypeList) {
-									for (Map<String, Object> map : maps) {
-										Object tokenType = map.get("tokenType");
-										if (!tokenType.equals("TOKEN")) {
-											list.add(SemanticsPos.of(maps.getPos(), map));
+									for (SemanticType maps : semanticTypeList) {
+										for (Map<String, Object> map : maps) {
+											Object tokenType = map.get("tokenType");
+											if (!tokenType.equals("TOKEN")) {
+												list.add(SemanticsPos.of(maps.getPos(), map));
+											}
 										}
 									}
 								}
-							}
 
-							list.sort(null);
+								list.sort(null);
 
-							Set<SemanticsPos> set = new TreeSet<>(
-								SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
+								Set<SemanticsPos> set = new TreeSet<>(
+									SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
 
-							set.addAll(list);
+								set.addAll(list);
 
-							List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
+								List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
-							Map<Tuple<Integer>, List<Map<String, Object>>> collect =
-								set
-									.stream()
-									.collect(
-										Collectors.groupingBy(
-											SemanticsPos::getPos,
-											Collectors.mapping(
-												SemanticsPos::getSemantics,
-												Collectors.toList())
-										)
+								Map<Tuple<Integer>, List<Map<String, Object>>> collect =
+									set
+										.stream()
+										.collect(
+											Collectors.groupingBy(
+												SemanticsPos::getPos,
+												Collectors.mapping(
+													SemanticsPos::getSemantics,
+													Collectors.toList())
+											)
+										);
+
+								for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry : collect.entrySet()) {
+
+									Integer startPos =
+										entry.getKey().getOrDefault(0, -1);
+
+									Integer endPos =
+										entry.getKey().getOrDefault(1, -1);
+
+									String text = Arrays
+										.stream(tokens, startPos, endPos)
+										.collect(Collectors.joining(" "));
+
+									int indexOf = searchText.indexOf(text, startPos);
+
+									result.add(
+										QueryAnalysisTokens.of(
+											text,
+											indexOf,
+											indexOf + text.length(),
+											entry.getValue())
 									);
+								}
 
-							for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry : collect.entrySet()) {
-
-								Integer startPos =
-									entry.getKey().getOrDefault(0, -1);
-
-								Integer endPos =
-									entry.getKey().getOrDefault(1, -1);
-
-								String text = Arrays
-									.stream(tokens, startPos, endPos)
-									.collect(Collectors.joining(" "));
-
-								int indexOf = searchText.indexOf(text, startPos);
-
-								result.add(
-									QueryAnalysisTokens.of(
-										text,
-										indexOf,
-										indexOf + text.length(),
-										entry.getValue())
+								return QueryAnalysisResponse.of(
+									searchText,
+									result
 								);
-							}
 
-							return QueryAnalysisResponse.of(
-								searchText,
-								result
-							);
-
-						});
+						})));
 
 				})
 			);
@@ -376,6 +379,28 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		else {
 			return -1.0;
 		}
+	}
+
+	private static <T> Flux<T> stopWatch(String message, Flux<T> request) {
+
+		if (_log.isDebugEnabled()) {
+			return ReactorStopWatch.stopWatch(
+				request, message, _log::debug);
+		}
+
+		return request;
+
+	}
+
+	private static <T> Mono<T> stopWatch(String message, Mono<T> request) {
+
+		if (_log.isDebugEnabled()) {
+			return ReactorStopWatch.stopWatch(
+				request, message, _log::debug);
+		}
+
+		return request;
+
 	}
 
 }
