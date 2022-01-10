@@ -138,7 +138,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 									for (SemanticType maps : semanticTypeList) {
 										for (Map<String, Object> map : maps) {
 											Object tokenType = map.get("tokenType");
-											if (!tokenType.equals("TOKEN")) {
+											if (tokenType != null && !tokenType.equals("TOKEN")) {
 												list.add(SemanticsPos.of(maps.getPos(), map));
 											}
 										}

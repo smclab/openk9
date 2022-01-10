@@ -2,12 +2,12 @@
 	{
 		"lhs": "$Optionals",
 		"rhs": "$Optional ?$Optionals",
-		"sem": ""
+		"sem": "IDENTITY"
 	},
 	{
 		"lhs": "$Optional",
 		"rhs": "$StopWord",
-		"sem": ""
+		"sem": "0"
 	},
 	{
 		"lhs": "$ROOT",
