@@ -1,5 +1,6 @@
 package io.openk9.search.query.internal.query.parser;
 
+import io.openk9.common.api.reactor.util.ReactorStopWatch;
 import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.api.query.parser.CategorySemantics;
 import io.openk9.search.api.query.parser.Tuple;
@@ -62,22 +63,25 @@ public class Grammar {
 
 		return Flux.fromStream(IntStream.range(1, tokens.length + 1).boxed())
 			.flatMap(j ->
-				Flux
-					.fromStream(
-						IntStream.iterate(
-							j - 1, i -> i != -1, i -> i - 1).boxed())
-					.flatMap(i ->
-							Mono.fromSupplier(() -> {
-								Map<Tuple, List<Parse>> innerChart =
-									new HashMap<>();
-								Set<String> context = new HashSet<>();
-								applyAnnotators(
-									innerChart, tokens, i, j, tenantId, context);
-								applyLexicalRules(innerChart, tokens, i, j);
-								return innerChart;
-							})
-								.subscribeOn(Schedulers.boundedElastic())
-					)
+				stopWatch(
+					"parseInput j: " + j,
+					Flux
+						.fromStream(
+							IntStream.iterate(
+								j - 1, i -> i != -1, i -> i - 1).boxed())
+						.flatMap(i ->
+								Mono.fromSupplier(() -> {
+									Map<Tuple, List<Parse>> innerChart =
+										new HashMap<>();
+									Set<String> context = new HashSet<>();
+									applyAnnotators(
+										innerChart, tokens, i, j, tenantId, context);
+									applyLexicalRules(innerChart, tokens, i, j);
+									return innerChart;
+								})
+									.subscribeOn(Schedulers.boundedElastic())
+						)
+				)
 			)
 			.reduce(
 				new HashMap<Tuple, List<Parse>>(),
@@ -85,17 +89,20 @@ public class Grammar {
 					a.putAll(b);
 					return a;
 				})
-			.flatMap(chart -> Mono.fromSupplier(() -> {
+			.flatMap(chart ->
+				stopWatch("applyBinaryRules | applyUnaryRules",
+					Mono.fromSupplier(() -> {
 
-				for (int j = 1; j < tokens.length + 1; j++) {
-					for (int i = j - 1; i != -1; i--) {
-						applyBinaryRules(chart, i, j);
-						applyUnaryRules(chart, i, j);
-					}
-				}
+						for (int j = 1; j < tokens.length + 1; j++) {
+							for (int i = j - 1; i != -1; i--) {
+								applyBinaryRules(chart, i, j);
+								applyUnaryRules(chart, i, j);
+							}
+						}
 
-				return chart;
-			}).subscribeOn(Schedulers.boundedElastic()))
+						return chart;
+					})
+				).subscribeOn(Schedulers.boundedElastic()))
 			.map(chart -> chart.getOrDefault(Tuple.of(0, tokens.length), List.of()))
 			.map(parses -> {
 				if (startSymbol != null && !startSymbol.isBlank()) {
@@ -362,6 +369,28 @@ public class Grammar {
 				Stream.concat(Arrays.stream(prefix), Arrays.stream(suffix)).toArray(String[]::new),
 				sem)
 		);
+
+	}
+
+	private static <T> Flux<T> stopWatch(String message, Flux<T> request) {
+
+		if (_log.isDebugEnabled()) {
+			return ReactorStopWatch.stopWatch(
+				request, message, _log::debug);
+		}
+
+		return request;
+
+	}
+
+	private static <T> Mono<T> stopWatch(String message, Mono<T> request) {
+
+		if (_log.isDebugEnabled()) {
+			return ReactorStopWatch.stopWatch(
+				request, message, _log::debug);
+		}
+
+		return request;
 
 	}
 
