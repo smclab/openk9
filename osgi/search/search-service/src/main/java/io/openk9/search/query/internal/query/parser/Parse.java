@@ -1,5 +1,8 @@
 package io.openk9.search.query.internal.query.parser;
 
+import io.openk9.json.api.ArrayNode;
+import io.openk9.json.api.JsonFactory;
+import io.openk9.json.api.ObjectNode;
 import io.openk9.search.api.query.parser.Tuple;
 import lombok.Getter;
 
@@ -11,6 +14,8 @@ import java.util.stream.Collectors;
 
 @Getter
 public abstract class Parse {
+
+	public abstract ObjectNode toJson(JsonFactory jsonFactory);
 
 	public abstract Semantic getSemantics();
 
@@ -76,6 +81,11 @@ public abstract class Parse {
 		}
 
 		@Override
+		public ObjectNode toJson(JsonFactory jsonFactory) {
+			return jsonFactory.createObjectNode().put("value", _value);
+		}
+
+		@Override
 		public Semantic getSemantics() {
 			return Semantic.of(_pos, Map.of("token", _value));
 		}
@@ -113,6 +123,34 @@ public abstract class Parse {
 			score = Float.NaN;
 			denotation = null;
 			_validateParse();
+		}
+
+		@Override
+		public ObjectNode toJson(JsonFactory jsonFactory) {
+
+			ArrayNode reduce =
+				children
+					.stream()
+					.map(p -> p.toJson(jsonFactory))
+					.reduce(
+						jsonFactory.createArrayNode(), ArrayNode::add, (a, b) -> b);
+
+			ObjectNode result = jsonFactory.createObjectNode();
+
+			result.put("lhs", rule.getLhs());
+			result.put("children", reduce);
+
+			ArrayNode posArrayNode = jsonFactory.createArrayNode();
+
+			if (!pos.isEmpty()) {
+				for (Integer integer : pos.toArray()) {
+					posArrayNode.add(integer.toString());
+				}
+			}
+
+			result.put("pos", posArrayNode);
+
+			return result;
 		}
 
 		@Override

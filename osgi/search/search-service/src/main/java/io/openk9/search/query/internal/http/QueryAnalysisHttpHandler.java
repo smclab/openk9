@@ -6,6 +6,7 @@ import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.RouterHandler;
+import io.openk9.json.api.ArrayNode;
 import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Tenant;
 import io.openk9.reactor.netty.util.ReactorNettyUtils;
@@ -119,7 +120,17 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 								_log.info("parses count: " + parses.size());
 
 								if (_log.isDebugEnabled()) {
-									_log.debug(parses.toString());
+
+									ArrayNode reduce = parses
+										.stream()
+										.map(
+											parse -> parse.toJson(_jsonFactory))
+										.reduce(
+											_jsonFactory.createArrayNode(),
+											ArrayNode::add, (a, b) -> b);
+
+									_log.debug(reduce.toString());
+
 								}
 
 								List<SemanticsPos> list = new ArrayList<>();
