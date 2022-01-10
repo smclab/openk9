@@ -2,12 +2,12 @@
 	{
 		"lhs": "$Optionals",
 		"rhs": "$Optional",
-		"sem": "0"
+		"sem": "IDENTITY"
 	},
 	{
 		"lhs": "$Optional",
-		"rhs": "$StopWord",
-		"sem": "0"
+		"rhs": "$StopWord ?$StopWord",
+		"sem": "IDENTITY"
 	},
 	{
 		"lhs": "$ROOT",
@@ -22,7 +22,7 @@
 	{
 		"lhs": "$IntentCollection",
 		"rhs": "$Intent ?$Optionals ?$IntentCollection",
-		"sem": "MERGE"
+		"sem": "IDENTITY"
 	},
 	{
 		"lhs": "$Entity",
