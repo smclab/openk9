@@ -16,7 +16,6 @@ import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
-import org.osgi.service.metatype.annotations.Designate;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -133,7 +132,18 @@ public class GrammarProvider {
 
 						Function<SemanticTypes, SemanticTypes> function =
 							s -> SemanticTypes.of(
-								collect.stream().map(s::get).toArray(SemanticType[]::new));
+								collect
+									.stream()
+									.flatMap(index -> {
+										try {
+											return Stream.of(s.get(index));
+										}
+										catch (IndexOutOfBoundsException e) {
+											return Stream.empty();
+										}
+									})
+									.toArray(SemanticType[]::new)
+							);
 
 						rules.add(Rule.of(lhs, rhs, Semantic.of(function)));
 
