@@ -97,8 +97,8 @@ public final class Tuple<T> {
 	private static final Map<Integer, Map<Integer, Tuple<?>>> _CACHE = new HashMap<>();
 
 	static {
-		for (int i = 0; i < 20; i++) {
-			for (int j = 0; j < 20; j++) {
+		for (int i = 0; i < 50; i++) {
+			for (int j = 0; j < 50; j++) {
 				_CACHE.put(i, Map.of(j, Tuple.of(i, j)));
 			}
 		}
