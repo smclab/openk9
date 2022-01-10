@@ -9,6 +9,8 @@ import org.osgi.service.component.annotations.Modified;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component(
 	immediate = true,
@@ -28,7 +30,10 @@ public class StopWordsAnnotator extends BaseAnnotator {
 		long tenantId, String... tokens) {
 
 		if (Arrays.stream(tokens).allMatch(stopWords::contains)) {
-			return _RESULT;
+			return Stream
+				.generate(() -> _RESULT)
+				.limit(tokens.length)
+				.collect(Collectors.toList());
 		}
 
 		return List.of();
@@ -39,11 +44,10 @@ public class StopWordsAnnotator extends BaseAnnotator {
 		return 1;
 	}
 
-	private static final List<CategorySemantics> _RESULT = List.of(
+	private static final CategorySemantics _RESULT =
 		CategorySemantics.of(
 			"$StopWord",
 			Map.of()
-		)
-	);
+		);
 
 }
