@@ -50,20 +50,31 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 			return List.of();
 		}
 
-		List<String> normalizedKeywords = new ArrayList<>();
+		List<String> normalizedKeywords = null;
 
 		for (String keyword : keywords) {
 			if (keyword.contains(";")) {
 				String[] split = keyword.split(";");
 				int aggregatorTenant = Integer.parseInt(split[0]);
 				if (aggregatorTenant == tenantId) {
+					if (normalizedKeywords == null) {
+						normalizedKeywords = new ArrayList<>();
+					}
 					normalizedKeywords.add(split[1]);
 				}
 			}
 			else {
+				if (normalizedKeywords == null) {
+					normalizedKeywords = new ArrayList<>();
+				}
 				normalizedKeywords.add(keyword);
 			}
 		}
+
+		if (normalizedKeywords == null) {
+			return List.of();
+		}
+
 
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();
