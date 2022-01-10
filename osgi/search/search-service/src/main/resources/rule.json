@@ -1,18 +1,18 @@
 [
 	{
 		"lhs": "$Optionals",
-		"rhs": "$Optional ?$Optionals",
-		"sem": "IDENTITY"
+		"rhs": "$Optional",
+		"sem": "0"
 	},
 	{
 		"lhs": "$Optional",
 		"rhs": "$StopWord",
-		"sem": "0"
+		"sem": ""
 	},
 	{
 		"lhs": "$ROOT",
 		"rhs": "?$Optionals $Query ?$Optionals",
-		"sem": "IDENTITY"
+		"sem": "1"
 	},
 	{
 		"lhs": "$Query",

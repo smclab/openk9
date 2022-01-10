@@ -6,6 +6,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -26,13 +27,8 @@ public class StopWordsAnnotator extends BaseAnnotator {
 	public List<CategorySemantics> annotate_(
 		long tenantId, String... tokens) {
 
-		if (tokens.length == 1) {
-
-			String token = tokens[0];
-
-			if (stopWords.contains(token)) {
-				return _RESULT;
-			}
+		if (Arrays.stream(tokens).allMatch(stopWords::contains)) {
+			return _RESULT;
 		}
 
 		return List.of();
