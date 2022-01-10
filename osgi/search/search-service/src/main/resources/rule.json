@@ -6,52 +6,7 @@
 	},
 	{
 		"lhs": "$Optional",
-		"rhs": "e",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "le",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "su",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "i",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "con",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "di",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "il",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "del",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "in",
-		"sem": ""
-	},
-	{
-		"lhs": "$Optional",
-		"rhs": "sulle",
+		"rhs": "$StopWord",
 		"sem": ""
 	},
 	{
@@ -66,7 +21,7 @@
 	},
 	{
 		"lhs": "$IntentCollection",
-		"rhs": "$Intent $Optional ?$IntentCollection",
+		"rhs": "$Intent ?$Optionals ?$IntentCollection",
 		"sem": "IDENTITY"
 	},
 	{

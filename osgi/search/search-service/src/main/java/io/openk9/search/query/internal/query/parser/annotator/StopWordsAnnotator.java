@@ -5,7 +5,6 @@ import io.openk9.search.api.query.parser.CategorySemantics;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
-import org.osgi.service.metatype.annotations.Designate;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import java.util.Map;
 @Component(
 	immediate = true,
 	service = Annotator.class,
-	enabled = false,
 	configurationPid = AnnotatorConfig.PID
 )
 public class StopWordsAnnotator extends BaseAnnotator {
@@ -33,12 +31,7 @@ public class StopWordsAnnotator extends BaseAnnotator {
 			String token = tokens[0];
 
 			if (stopWords.contains(token)) {
-				return List.of(
-					CategorySemantics.of(
-						"$Optional",
-						Map.of()
-					)
-				);
+				return _RESULT;
 			}
 		}
 
@@ -49,5 +42,12 @@ public class StopWordsAnnotator extends BaseAnnotator {
 	public int weight() {
 		return 1;
 	}
+
+	private static final List<CategorySemantics> _RESULT = List.of(
+		CategorySemantics.of(
+			"$StopWord",
+			Map.of()
+		)
+	);
 
 }
