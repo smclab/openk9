@@ -90,8 +90,10 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 
 		int[] range = searchRequest.getRange();
 
-		searchSourceBuilder.from(range[0]);
-		searchSourceBuilder.size(range[1]);
+		if (range != null) {
+			searchSourceBuilder.from(range[0]);
+			searchSourceBuilder.size(range[1]);
+		}
 
 		List<String> autocompleteKeywords =
 			searchRequest
