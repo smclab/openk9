@@ -124,7 +124,12 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 				.filter(predicate)
 				.toArray(String[]::new);
 
-		searchSourceBuilder.fetchSource(includes, null);
+		if (includes.length > 0) {
+			searchSourceBuilder.fetchSource(includes, null);
+		}
+		else {
+			searchSourceBuilder.fetchSource(false);
+		}
 
 	}
 
