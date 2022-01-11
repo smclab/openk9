@@ -30,7 +30,11 @@ public class SearchKeywordDTO {
 		return type == Type.NUMBER;
 	}
 
+	public boolean isAutocomplete() {
+		return type == Type.AUTOCOMPLETE;
+	}
+
 	public enum Type {
-		DATE,TEXT,NUMBER
+		DATE,TEXT,NUMBER,AUTOCOMPLETE
 	}
 }

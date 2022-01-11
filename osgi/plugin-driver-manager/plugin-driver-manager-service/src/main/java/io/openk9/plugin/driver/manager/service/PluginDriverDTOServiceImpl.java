@@ -134,6 +134,7 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 			case DATE: return SearchKeywordDTO.Type.DATE;
 			case TEXT: return SearchKeywordDTO.Type.TEXT;
 			case NUMBER: return SearchKeywordDTO.Type.NUMBER;
+			case AUTOCOMPLETE: return SearchKeywordDTO.Type.AUTOCOMPLETE;
 		}
 
 		return SearchKeywordDTO.Type.TEXT;

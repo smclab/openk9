@@ -101,6 +101,14 @@ public abstract class SearchKeyword {
 		return new BaseSearchKeyword(keyword, prefix, Type.DATE);
 	}
 
+	public static SearchKeyword autocomplete(String keyword) {
+		return new BaseSearchKeyword(keyword, Type.AUTOCOMPLETE);
+	}
+
+	public static SearchKeyword autocomplete(String keyword, String prefix) {
+		return new BaseSearchKeyword(keyword, prefix, Type.AUTOCOMPLETE);
+	}
+
 	static class BoostSearchKeyword extends SearchKeyword {
 
 		public BoostSearchKeyword(
@@ -143,7 +151,7 @@ public abstract class SearchKeyword {
 	private final Type type;
 
 	public enum Type {
-		DATE,TEXT,NUMBER
+		DATE,TEXT,NUMBER,AUTOCOMPLETE
 	}
 
 }
