@@ -52,7 +52,6 @@ import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -154,21 +153,9 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 
 			Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 
-			Map<String, Object> sourceMap;
-
-			if (sourceAsMap != null) {
-
-				sourceMap = new HashMap<>(
-					sourceAsMap.size() + 1, 1);
-
-				sourceMap.putAll(sourceAsMap);
-
-			}
-			else {
-				sourceMap = Map.of();
-			}
-
-			result.add(Map.of("source", sourceMap));
+			result.add(
+				Map.of(
+					"source", Objects.requireNonNullElseGet(sourceAsMap, Map::of)));
 
 		}
 
