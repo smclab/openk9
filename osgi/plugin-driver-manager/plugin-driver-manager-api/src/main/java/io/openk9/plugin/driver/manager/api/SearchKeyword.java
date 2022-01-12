@@ -26,21 +26,24 @@ import java.util.Map;
 public abstract class SearchKeyword {
 
 	protected SearchKeyword(String keyword, String prefix, Type type) {
-		this.type = type;
-		if (prefix == null || prefix.isEmpty()) {
-			this.keyword = keyword;
-		}
-		else {
-			this.keyword = prefix + Strings.PERIOD + keyword;
-		}
+		this(Keyword.sample(keyword, prefix), type);
 	}
 
 	protected SearchKeyword(String keyword, Type type) {
 		this(keyword, Strings.BLANK, type);
 	}
 
+	protected SearchKeyword(Keyword keywordObject, Type type) {
+		this.type = type;
+		this.keywordObject = keywordObject;
+	}
+
 	public String getKeyword() {
-		return keyword;
+		return keywordObject.getKeyword();
+	}
+
+	public String getReferenceKeyword() {
+		return keywordObject.getReferenceKeyword();
 	}
 
 	public Type getType() {
@@ -109,6 +112,10 @@ public abstract class SearchKeyword {
 		return new BaseSearchKeyword(keyword, prefix, Type.AUTOCOMPLETE);
 	}
 
+	public static SearchKeyword autocomplete(Keyword keyword) {
+		return new BaseSearchKeyword(keyword, Type.AUTOCOMPLETE);
+	}
+
 	static class BoostSearchKeyword extends SearchKeyword {
 
 		public BoostSearchKeyword(
@@ -141,14 +148,18 @@ public abstract class SearchKeyword {
 			super(keyword, prefix, type);
 		}
 
+		public BaseSearchKeyword(Keyword keyword, Type type) {
+			super(keyword, type);
+		}
+
 		public BaseSearchKeyword(String keyword, Type type) {
 			super(keyword, type);
 		}
 
 	}
 
-	private final String keyword;
 	private final Type type;
+	private final Keyword keywordObject;
 
 	public enum Type {
 		DATE,TEXT,NUMBER,AUTOCOMPLETE

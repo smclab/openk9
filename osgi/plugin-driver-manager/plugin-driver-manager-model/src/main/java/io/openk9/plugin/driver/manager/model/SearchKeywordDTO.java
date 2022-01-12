@@ -15,6 +15,8 @@ public class SearchKeywordDTO {
 	@EqualsAndHashCode.Include
 	private String keyword;
 	@EqualsAndHashCode.Include
+	private String referenceKeyword;
+	@EqualsAndHashCode.Include
 	private Type type;
 	private FieldBoostDTO fieldBoost;
 

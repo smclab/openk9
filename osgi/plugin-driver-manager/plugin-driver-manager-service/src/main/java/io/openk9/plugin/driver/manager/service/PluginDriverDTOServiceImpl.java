@@ -117,6 +117,7 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 			.map(searchKeyword ->
 				SearchKeywordDTO.of(
 					searchKeyword.getKeyword(),
+					searchKeyword.getReferenceKeyword(),
 					_toSearchKeywordDTOType(searchKeyword.getType()),
 					FieldBoostDTO.of(
 						searchKeyword.getFieldBoost().getKey(),

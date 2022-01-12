@@ -129,7 +129,7 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 				.map(DocumentTypeDTO::getSearchKeywords)
 				.flatMap(Collection::stream)
 				.filter(SearchKeywordDTO::isAutocomplete)
-				.map(SearchKeywordDTO::getKeyword)
+				.map(SearchKeywordDTO::getReferenceKeyword)
 				.filter(predicate)
 				.toArray(String[]::new);
 
