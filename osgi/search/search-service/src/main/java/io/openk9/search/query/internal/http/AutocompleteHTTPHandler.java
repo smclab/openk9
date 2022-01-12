@@ -137,7 +137,8 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 			searchSourceBuilder.fetchSource(includes, null);
 		}
 		else {
-			searchSourceBuilder.fetchSource(false);
+			searchSourceBuilder.from(0);
+			searchSourceBuilder.size(0);
 		}
 
 	}
