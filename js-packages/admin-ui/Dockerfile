@@ -17,8 +17,10 @@ COPY ./yarn.lock /app
 RUN yarn install --frozen-lockfile
 
 COPY . /app
+WORKDIR /app/js-packages/rest-api
+RUN yarn build
 WORKDIR /app/js-packages/admin-ui
 RUN yarn build
-EXPOSE 3000
 
+EXPOSE 3000
 CMD "yarn" "run" "start"

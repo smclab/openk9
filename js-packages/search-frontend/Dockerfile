@@ -12,6 +12,8 @@ COPY ./yarn.lock /app
 RUN yarn install --frozen-lockfile
 
 COPY ./ /app
+WORKDIR /app/js-packages/rest-api
+RUN yarn build
 WORKDIR /app/js-packages/search-frontend
 RUN yarn build
 
