@@ -33,6 +33,11 @@ import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
+import io.openk9.search.query.internal.response.Response;
+import org.apache.lucene.search.TotalHits;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,8 +50,11 @@ import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -133,6 +141,40 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 			searchSourceBuilder.fetchSource(false);
 		}
 
+	}
+
+	@Override
+	protected Object searchHitToResponse(SearchResponse searchResponse) {
+
+		SearchHits hits = searchResponse.getHits();
+
+		List<Map<String, Object>> result = new ArrayList<>();
+
+		for (SearchHit hit : hits.getHits()) {
+
+			Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+
+			Map<String, Object> sourceMap;
+
+			if (sourceAsMap != null) {
+
+				sourceMap = new HashMap<>(
+					sourceAsMap.size() + 1, 1);
+
+				sourceMap.putAll(sourceAsMap);
+
+			}
+			else {
+				sourceMap = Map.of();
+			}
+
+			result.add(Map.of("source", sourceMap));
+
+		}
+
+		TotalHits totalHits = hits.getTotalHits();
+
+		return new Response(result, totalHits.value);
 	}
 
 	@Reference(
