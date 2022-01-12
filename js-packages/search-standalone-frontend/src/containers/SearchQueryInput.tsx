@@ -217,7 +217,7 @@ export function SearchQueryInput() {
                 <SearchQueryField
                   ref={focusedInputRef}
                   searchQuery={searchQuery}
-                  onSearchQueryChange={(query: SearchQuery) => {
+                  onSearchQueryChange={(query) => {
                     setSearchQuery(query);
                     setSearchOpen(true);
                   }}

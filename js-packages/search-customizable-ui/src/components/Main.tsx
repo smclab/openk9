@@ -4,12 +4,10 @@ import {
   DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
   GenericResultItem,
   getPlugins,
-  SearchQuery,
   SearchToken,
   SuggestionResult,
 } from "@openk9/rest-api";
 import { useQuery } from "react-query";
-import useDebounce from "../hooks/useDebounce";
 import { TokenComponent } from "./Token";
 import {
   getPluginResultRenderers,
@@ -45,7 +43,7 @@ type State = {
   tabIndex: number;
   focusedToken: number | null;
   text: string;
-  searchQuery: SearchQuery | null;
+  searchQuery: SearchToken[] | null;
   showSuggestions: boolean;
   selectedSuggestion: SuggestionResult | null;
   activeSuggestionCategory: number;
@@ -72,7 +70,7 @@ export function Main({ children, templates, interactions }: MainProps) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const suggestionsRef = React.useRef<HTMLInputElement | null>(null);
   const results = useInfiniteResults(searchQuery);
-  const debouncedSearchQuery: SearchQuery = React.useMemo(
+  const debouncedSearchQuery: SearchToken[] = React.useMemo(
     () =>
       text
         ? [
@@ -109,7 +107,7 @@ export function Main({ children, templates, interactions }: MainProps) {
       // ATTENTION reread from state otherwise it will lag 1 interactions behind
       const { text, tokens } = state;
       const selectedTabTokens = tabTokens[state.tabIndex].tokens;
-      const searchQuery: SearchQuery = text
+      const searchQuery: SearchToken[] = text
         ? [
             ...tokens,
             ...selectedTabTokens,

@@ -10,7 +10,7 @@
     "prettier": "^2.5.1"
   },
   "scripts": {
-    "build": "lerna run --stream build",
+    "build": "lerna run --scope @openk9/rest-api build && lerna run --stream build",
     "docker-build": "lerna run --stream docker-build",
     "publish": "lerna publish",
     "format": "lerna run --stream format",
