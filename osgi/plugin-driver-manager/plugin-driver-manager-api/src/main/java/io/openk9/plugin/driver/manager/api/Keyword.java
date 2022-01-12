@@ -8,12 +8,8 @@ public abstract class Keyword {
 	public abstract String getReferenceKeyword();
 
 	private static String _addPrefix(String keyword, String prefix) {
-		if (prefix == null || prefix.isEmpty()) {
-			return keyword;
-		}
-		else {
-			return prefix + Strings.PERIOD + keyword;
-		}
+		return prefix == null || prefix.isEmpty() ? keyword :
+			prefix + Strings.PERIOD + keyword;
 	}
 		
 	public static Keyword sample(String keyword, String prefix) {
