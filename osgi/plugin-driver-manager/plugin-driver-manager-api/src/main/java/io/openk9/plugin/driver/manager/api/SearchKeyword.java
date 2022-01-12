@@ -116,6 +116,14 @@ public abstract class SearchKeyword {
 		return new BaseSearchKeyword(keyword, Type.AUTOCOMPLETE);
 	}
 
+	public static SearchKeyword autocompleteReference(String keyword, String referenceKeyword, String prefix) {
+		return new BaseSearchKeyword(Keyword.link(keyword, referenceKeyword, prefix), Type.AUTOCOMPLETE);
+	}
+
+	public static SearchKeyword autocompleteReference(String keyword, String referenceKeyword) {
+		return new BaseSearchKeyword(Keyword.link(keyword, referenceKeyword), Type.AUTOCOMPLETE);
+	}
+
 	static class BoostSearchKeyword extends SearchKeyword {
 
 		public BoostSearchKeyword(
