@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(staticName = "of")
 @Builder
 public class SearchKeywordDTO {
+
 	@EqualsAndHashCode.Include
 	private String keyword;
 	@EqualsAndHashCode.Include
