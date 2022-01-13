@@ -210,17 +210,18 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 					values,
 					(Map<String, Object>)acc.computeIfAbsent(key, k -> new HashMap<>()));
 			}
-			else if (value instanceof String[]) {
+			else if (value instanceof Collection) {
 
-				String[] newValues = Arrays
-					.stream(((String[]) value))
-					.filter(s -> values.stream().anyMatch(s1 -> s.toLowerCase().contains(s1)))
-					.toArray(String[]::new);
+				List<String> newValues =
+					((Collection<String>)value)
+						.stream()
+						.filter(s -> values.stream().anyMatch(s1 -> s.toLowerCase().contains(s1)))
+						.collect(Collectors.toList());
 
-				if (newValues.length == 1) {
-					acc.put(key, newValues[0]);
+				if (newValues.size() == 1) {
+					acc.put(key, newValues.get(0));
 				}
-				else if(newValues.length > 1) {
+				else if(newValues.size() > 1) {
 					acc.put(key, newValues);
 				}
 
