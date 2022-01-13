@@ -100,7 +100,7 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 
 			multiMatchQueryBuilder.fields(keywordBoostMap);
 
-			query.should(multiMatchQueryBuilder);
+			query.must(multiMatchQueryBuilder);
 
 		}
 
