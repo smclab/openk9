@@ -27,6 +27,7 @@ import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
@@ -51,7 +52,10 @@ import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -143,26 +147,95 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 
 	}
 
-	@Override
-	protected Object searchHitToResponse(SearchResponse searchResponse) {
+	protected Mono<Object> searchHitToResponseMono(
+		Tenant tenant, List<Datasource> datasourceList,
+		PluginDriverDTOList pluginDriverDTOList,
+		HttpServerRequest httpServerRequest, SearchRequest searchRequest,
+		SearchResponse searchResponse) {
 
-		SearchHits hits = searchResponse.getHits();
+		return Mono.fromSupplier(() -> {
 
-		List<Map<String, Object>> result = new ArrayList<>();
+			List<String> values =
+				searchRequest
+					.getSearchQuery()
+					.stream()
+					.filter(searchToken -> searchToken.getTokenType().equals(
+						"AUTOCOMPLETE"))
+					.map(SearchToken::getValues)
+					.flatMap(Arrays::stream)
+					.map(String::toLowerCase)
+					.collect(Collectors.toList());
 
-		for (SearchHit hit : hits.getHits()) {
+			SearchHits hits = searchResponse.getHits();
 
-			Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+			List<Map<String, Object>> result = new ArrayList<>();
 
-			result.add(
-				Map.of(
-					"source", Objects.requireNonNullElseGet(sourceAsMap, Map::of)));
+			for (SearchHit hit : hits.getHits()) {
+
+				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+
+				if (sourceAsMap != null) {
+
+					Map<String, Object> innerResult = new HashMap<>();
+
+					_findAndReplaceLeaf(
+						sourceAsMap.entrySet().iterator(), values, innerResult);
+
+					result.add(Map.of("source", innerResult));
+
+				}
+
+			}
+
+			TotalHits totalHits = hits.getTotalHits();
+
+			return new Response(result, totalHits.value);
+
+		});
+	}
+
+	private void _findAndReplaceLeaf(
+		Iterator<Map.Entry<String, Object>> iterator,
+		List<String> values,
+		Map<String, Object> acc) {
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, Object> e = iterator.next();
+			String key = e.getKey();
+			Object value = e.getValue();
+
+			if (value instanceof Map) {
+				_findAndReplaceLeaf(
+					((Map<String, Object>)value).entrySet().iterator(),
+					values,
+					(Map<String, Object>)acc.computeIfAbsent(key, k -> new HashMap<>()));
+			}
+			else if (value instanceof String[]) {
+
+				String[] newValues = Arrays
+					.stream(((String[]) value))
+					.filter(s -> values.stream().anyMatch(s1 -> s.toLowerCase().contains(s1)))
+					.toArray(String[]::new);
+
+				if (newValues.length == 1) {
+					acc.put(key, newValues[0]);
+				}
+				else if(newValues.length > 1) {
+					acc.put(key, newValues);
+				}
+
+			}
+			else if (value instanceof String) {
+				if (values.stream().anyMatch(s1 -> ((String) value).toLowerCase().contains(s1))) {
+					acc.put(key, value);
+				}
+			}
+			else {
+				acc.put(key, value);
+			}
 
 		}
 
-		TotalHits totalHits = hits.getTotalHits();
-
-		return new Response(result, totalHits.value);
 	}
 
 	@Reference(

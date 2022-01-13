@@ -8,6 +8,7 @@ import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchToken;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.osgi.service.component.annotations.Component;
 import reactor.core.publisher.Mono;
 
@@ -90,6 +91,8 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 					)
 				);
 
+		BoolQueryBuilder innerBoolQueryBuilder = QueryBuilders.boolQuery();
+
 		for (String value : values) {
 
 			MultiMatchQueryBuilder multiMatchQueryBuilder =
@@ -100,9 +103,11 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 
 			multiMatchQueryBuilder.fields(keywordBoostMap);
 
-			query.must(multiMatchQueryBuilder);
+			innerBoolQueryBuilder.should(multiMatchQueryBuilder);
 
 		}
+
+		query.must(innerBoolQueryBuilder);
 
 	}
 
