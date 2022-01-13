@@ -182,7 +182,9 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 					_findAndReplaceLeaf(
 						sourceAsMap.entrySet().iterator(), values, innerResult);
 
-					result.add(Map.of("source", innerResult));
+					if (!innerResult.isEmpty()) {
+						result.add(Map.of("source", innerResult));
+					}
 
 				}
 
