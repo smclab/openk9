@@ -1,8 +1,8 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { HighlightedText } from "../../components/HighlightedText";
+import { HighlightedText } from "../../renderer-components/HighlightedText";
 import { truncatedLineStyle } from "../../utils/truncatedLineStyle";
-import { Badge } from "../../components/Badge";
+import { Badge } from "../../renderer-components/Badge";
 import { OpendataResultItem } from "./OpendataItem";
 
 type OpendataResultProps = { result: OpendataResultItem };

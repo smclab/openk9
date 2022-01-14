@@ -2,7 +2,7 @@ import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { css } from "styled-components/macro";
-import { HighlightedText } from "../components/HighlightedText";
+import { HighlightedText } from "../renderer-components/HighlightedText";
 import { PdfResultItem } from "./PdfItem";
 
 type PdfDetailProps = {

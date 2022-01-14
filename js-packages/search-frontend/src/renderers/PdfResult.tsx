@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
-import { HighlightedText } from "../components/HighlightedText";
+import { HighlightedText } from "../renderer-components/HighlightedText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { PdfResultItem } from "./PdfItem";

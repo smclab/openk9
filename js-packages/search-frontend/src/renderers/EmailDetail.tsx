@@ -2,7 +2,8 @@ import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { css } from "styled-components/macro";
-import { HighlightedText } from "../components/HighlightedText";
+import { HighlightedText } from "../renderer-components/HighlightedText";
+import { myTheme } from "../utils/myTheme";
 import { EmailResultItem } from "./EmailItem";
 
 type EmailDetailProps = {
@@ -36,17 +37,33 @@ export function EmailDetail({ result }: EmailDetailProps) {
       <div>
         <strong>To</strong> : {result.source.email?.to}
       </div>
+      {result.source.email?.cc && (
+        <div>
+          <strong>Cc</strong> : {result.source.email?.cc}
+        </div>
+      )}
       <div>
-        {result.highlight["email.body"] ? (
+        {result.highlight["email.body"] &&
           result.highlight["email.body"].map((text, index) => (
             <div key={index}>
               <HighlightedText text={text} />
             </div>
-          ))
-        ) : (
-          <div>{result.source.email?.body}</div>
-        )}
+          ))}
       </div>
+      {!result.highlight["email.body"] && !result.source.email.htmlBody && (
+        <div>{result.source.email?.body}</div>
+      )}
+      {result.source.email.htmlBody && (
+        <iframe
+          title={result.source.contentId}
+          srcDoc={result.source.email.htmlBody}
+          css={css`
+            width: 100%;
+            height: 50vh;
+            border: 1px solid ${myTheme.searchBarBorderColor};
+          `}
+        />
+      )}
     </div>
   );
 }

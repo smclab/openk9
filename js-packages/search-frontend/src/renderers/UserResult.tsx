@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
-import { HighlightedText } from "../components/HighlightedText";
+import { HighlightedText } from "../renderer-components/HighlightedText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { UserResultItem } from "./UserItem";
@@ -55,6 +55,7 @@ export function UserResult({ result }: UserResultProps) {
           font-size: 1em;
         `}
       >
+        <strong>Job: </strong>
         {result.highlight["user.jobTitle"] ? (
           <HighlightedText text={result.highlight["user.jobTitle"][0]} />
         ) : (
@@ -64,9 +65,11 @@ export function UserResult({ result }: UserResultProps) {
       <div
         css={css`
           grid-row: 3;
+          grid-column: 2;
           font-size: 1em;
         `}
       >
+        <strong>Email: </strong>
         {result.highlight["user.emailAddress"] ? (
           <HighlightedText text={result.highlight["user.emailAddress"][0]} />
         ) : (
@@ -75,11 +78,12 @@ export function UserResult({ result }: UserResultProps) {
       </div>
       <div
         css={css`
-          grid-column: 1;
+          grid-column: 2;
           grid-row: 4;
           font-size: 1em;
         `}
       >
+        <strong>Phone: </strong>
         {result.highlight["user.phoneNumber"] ? (
           <HighlightedText text={result.highlight["user.phoneNumber"][0]} />
         ) : (

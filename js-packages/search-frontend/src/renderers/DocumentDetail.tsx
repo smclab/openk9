@@ -2,7 +2,7 @@ import { faFileAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { css } from "styled-components/macro";
-import { HighlightedText } from "../components/HighlightedText";
+import { HighlightedText } from "../renderer-components/HighlightedText";
 import { DocumentResultItem } from "./DocumentItem";
 
 type DocumentDetailProps = {

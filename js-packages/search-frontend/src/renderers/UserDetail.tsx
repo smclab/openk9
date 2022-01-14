@@ -2,7 +2,7 @@ import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { css } from "styled-components/macro";
-import { HighlightedText } from "../components/HighlightedText";
+import { HighlightedText } from "../renderer-components/HighlightedText";
 import { UserResultItem } from "./UserItem";
 
 type UserDetailProps = {
@@ -36,9 +36,11 @@ export function UserDetail({ result }: UserDetailProps) {
       <div>
         <strong>Job Title</strong> : {result.source.user?.jobTitle}
       </div>
-      <div>
-        <strong>Job Class</strong> : {result.source.user?.jobClass}
-      </div>
+      {result.source.user?.jobClass && (
+        <div>
+          <strong>Job Class</strong> : {result.source.user?.jobClass}
+        </div>
+      )}
       <div>
         <strong>Email</strong> : {result.source.user?.emailAddress}
       </div>
@@ -54,12 +56,16 @@ export function UserDetail({ result }: UserDetailProps) {
       <div>
         <strong>Facebook</strong> : {result.source.user?.facebookSn}
       </div>
-      <div>
-        <strong>Twitter</strong> : {result.source.user?.twitterSn}
-      </div>
-      <div>
-        <strong>Skype</strong> : {result.source.user?.skypeSn}
-      </div>
+      {result.source.user?.twitterSn && (
+        <div>
+          <strong>Twitter</strong> : {result.source.user?.twitterSn}
+        </div>
+      )}
+      {result.source.user?.skypeSn && (
+        <div>
+          <strong>Skype</strong> : {result.source.user?.skypeSn}
+        </div>
+      )}
       <div>
         <strong>User Id</strong> : {result.source.user?.userId}
       </div>

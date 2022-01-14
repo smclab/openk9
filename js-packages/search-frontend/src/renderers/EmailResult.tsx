@@ -1,10 +1,11 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { truncatedLineStyle } from "../utils/truncatedLineStyle";
-import { HighlightedText } from "../components/HighlightedText";
+import { HighlightedText } from "../renderer-components/HighlightedText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { EmailResultItem } from "./EmailItem";
+import { Badge } from "../renderer-components/Badge";
 
 type EmailResultProps = { result: EmailResultItem };
 export function EmailResult({ result }: EmailResultProps) {
@@ -51,6 +52,25 @@ export function EmailResult({ result }: EmailResultProps) {
       <div
         css={css`
           grid-column: 2;
+          grid-row: 2;
+        `}
+      >
+        <div>
+          <strong>date: </strong>
+          {datetimeFormatter.format(result.source.email.date)}
+        </div>
+        <div>
+          <strong>from: </strong>
+          {result.source.email.from}
+        </div>
+        <div>
+          <strong>to: </strong>
+          {result.source.email.to}
+        </div>
+      </div>
+      <div
+        css={css`
+          grid-column: 2;
           grid-row: 3;
           ${result.highlight["email.body"] ? truncatedLineStyle : ""};
         `}
@@ -77,3 +97,8 @@ export function EmailResult({ result }: EmailResultProps) {
     </div>
   );
 }
+
+const datetimeFormatter = new Intl.DateTimeFormat(undefined, {
+  dateStyle: "full",
+  timeStyle: "medium",
+});
