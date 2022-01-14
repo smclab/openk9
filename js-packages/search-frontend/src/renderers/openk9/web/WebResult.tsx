@@ -2,7 +2,7 @@ import React from "react";
 import { HighlightableText } from "../../../renderer-components/HighlightableText";
 import { ResultTextContent } from "../../../renderer-components/ResultTextContent";
 import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { ResultFavicon } from "../../../renderer-components/ResultIcon";
+import { ResultFavicon } from "../../../renderer-components/ResultFavicon";
 import { ResultLink } from "../../../renderer-components/ResultLink";
 import { ResultTitle } from "../../../renderer-components/ResultTitle";
 import { WebResultItem } from "./WebItem";

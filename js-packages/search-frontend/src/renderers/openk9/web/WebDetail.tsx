@@ -1,5 +1,5 @@
 import React from "react";
-import { DetialContainer } from "../../../renderer-components/DetailContainer";
+import { DetailContainer } from "../../../renderer-components/DetailContainer";
 import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
 import { DetailLink } from "../../../renderer-components/DetailLink";
 import { DetailTextContent } from "../../../renderer-components/DetailTextContent";
@@ -12,7 +12,7 @@ type WebDetailProps = {
 };
 export function WebDetail({ result }: WebDetailProps) {
   return (
-    <DetialContainer>
+    <DetailContainer>
       <DetailFavicon src={result.source.web?.favicon} />
       <DetailTitle>
         <HighlightableText result={result} path="web.title" />
@@ -21,6 +21,6 @@ export function WebDetail({ result }: WebDetailProps) {
         <HighlightableText result={result} path="web.url" />
       </DetailLink>
       <DetailTextContent result={result} path="web.content" />
-    </DetialContainer>
+    </DetailContainer>
   );
 }

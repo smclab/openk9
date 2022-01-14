@@ -18,7 +18,17 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
           width: 30px;
         `}
       >
-        {icon}
+        <div
+          css={css`
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          `}
+        >
+          {icon}
+        </div>
       </div>
       <div
         css={css`
