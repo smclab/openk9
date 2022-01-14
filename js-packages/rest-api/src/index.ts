@@ -196,11 +196,13 @@ export type GenericResultItem<E = {}> = {
     };
   } & E;
   highlight: {
-    [field in DeepKeys<
-      Without<GenericResultItem<E>["source"], "type" | "entities">
-    >]?: string[];
+    [field in GenericResultItemFields<E>]?: string[];
   };
 };
+
+export type GenericResultItemFields<E> = DeepKeys<
+  Without<GenericResultItem<E>["source"], "type" | "entities">
+>;
 
 type PathImpl<T, Key extends keyof T> = Key extends string
   ? T[Key] extends Record<string, any>

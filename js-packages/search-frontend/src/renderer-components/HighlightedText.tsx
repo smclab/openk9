@@ -22,6 +22,7 @@ export function HighlightedText({
     </>
   );
 }
+
 function HighLight({ children }: { children?: React.ReactNode }) {
   return (
     <span

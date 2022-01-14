@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { HighlightedText } from "../../renderer-components/HighlightedText";
-import { truncatedLineStyle } from "../../utils/truncatedLineStyle";
+import { truncatedLineStyle } from "../../renderer-components/truncatedLineStyle";
 import { Badge } from "../../renderer-components/Badge";
 import { OpendataResultItem } from "./OpendataItem";
 

@@ -1,11 +1,10 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { truncatedLineStyle } from "../utils/truncatedLineStyle";
+import { truncatedLineStyle } from "../renderer-components/truncatedLineStyle";
 import { HighlightedText } from "../renderer-components/HighlightedText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { EmailResultItem } from "./EmailItem";
-import { Badge } from "../renderer-components/Badge";
 
 type EmailResultProps = { result: EmailResultItem };
 export function EmailResult({ result }: EmailResultProps) {
