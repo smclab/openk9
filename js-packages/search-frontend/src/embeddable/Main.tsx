@@ -6,16 +6,16 @@ import {
   faSearch,
   faSyncAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import { useDebounce } from "../utils/useDebounce";
-import { useQueryAnalysis, useTabTokens } from "../utils/remote-data";
-import { DetailMemo } from "../renderers/Detail";
-import { myTheme } from "../utils/myTheme";
+import { useDebounce } from "../components/useDebounce";
+import { useQueryAnalysis, useTabTokens } from "../components/remote-data";
+import { DetailMemo } from "../components/Detail";
+import { myTheme } from "../components/myTheme";
 import { Results } from "../components/ResultList";
 import { TokenSelect } from "../components/TokenSelect";
-import { useClickAway } from "../utils/useClickAway";
-import { getAutoSelections, useSelections } from "../logic/useSelections";
+import { useClickAway } from "../components/useClickAway";
+import { getAutoSelections, useSelections } from "../components/useSelections";
 import { Tooltip } from "../components/Tooltip";
-import { useLoginInfo } from "../utils/useLogin";
+import { useLoginInfo } from "../components/useLogin";
 import { LoginInfo } from "../components/LoginInfo";
 import { TargetElements } from "./entry";
 import ReactDOM from "react-dom";

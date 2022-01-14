@@ -2,7 +2,7 @@ import React from "react";
 import "./index.css";
 import { OpenK9 } from "./embeddable/entry";
 import { css } from "styled-components/macro";
-import { myTheme } from "./utils/myTheme";
+import { myTheme } from "./components/myTheme";
 import { Logo } from "./components/Logo";
 
 export function App() {

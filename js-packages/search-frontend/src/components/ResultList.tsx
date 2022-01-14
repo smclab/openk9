@@ -1,8 +1,8 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { Virtuoso } from "react-virtuoso";
-import { useInfiniteResults } from "../utils/remote-data";
-import { ResultMemo } from "../renderers/Result";
+import { useInfiniteResults } from "./remote-data";
+import { ResultMemo } from "./Result";
 import { GenericResultItem, LoginInfo, SearchToken } from "@openk9/rest-api";
 
 type ResultsProps<E> = {

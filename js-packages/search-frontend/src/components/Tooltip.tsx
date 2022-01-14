@@ -1,6 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { myTheme } from "../utils/myTheme";
+import { myTheme } from "./myTheme";
 
 type TooltipProps = {
   children: React.ReactNode;
