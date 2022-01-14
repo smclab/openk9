@@ -42,6 +42,7 @@ export function PdfDetail({ result }: PdfDetailProps) {
               css={css`
                 width: 100%;
                 height: 50vh;
+                background-color: white;
                 border: 1px solid ${myTheme.searchBarBorderColor};
                 border-radius: 4px;
               `}
