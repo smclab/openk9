@@ -15,6 +15,7 @@ import { ProcessiDetail } from "./cm/ProcessiDetail";
 import { WemiDetail } from "./cm/WemiDetail";
 import { EntrateDetail } from "./sg/EntrateDetail";
 import { AssistenzaDetail } from "./sg/AssistenzaDetail";
+import { VenditeDetail } from "./sg/VenditeDetail";
 import { GaraDetail } from "./sg/GaraDetail";
 import { OpendataDetail } from "./cm/OpendataDetail";
 
@@ -61,6 +62,9 @@ function Detail<E>(props: DetailProps<E>) {
           return <EntrateDetail result={result} />;
         }
         if (result.source.documentTypes.includes("entratel")) {
+          return <AssistenzaDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("vendite")) {
           return <AssistenzaDetail result={result} />;
         }
         if (result.source.documentTypes.includes("fisco")) {
