@@ -46,9 +46,9 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
-		if (_containsStopword(tokens)) {
+		/*if (_containsStopword(tokens)) {
 			return List.of();
-		}
+		}*/
 
 		List<String> normalizedKeywords = null;
 
