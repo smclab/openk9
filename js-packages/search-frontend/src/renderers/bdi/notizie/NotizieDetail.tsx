@@ -1,6 +1,11 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { HighlightedText } from "../../../renderer-components/HighlightedText";
+import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
+import { DetailContainer } from "../../../renderer-components/DetailContainer";
+import { DetailHeaderImage } from "../../../renderer-components/DetailHeaderImage";
+import { DetailLink } from "../../../renderer-components/DetailLink";
+import { DetailTitle } from "../../../renderer-components/DetailTitle";
+import { HighlightableText } from "../../../renderer-components/HighlightableText";
 import { NotizieResultItem } from "./NotizieItem";
 
 type NotizieDetailProps = {
@@ -8,57 +13,24 @@ type NotizieDetailProps = {
 };
 export function NotizieDetail({ result }: NotizieDetailProps) {
   return (
-    <div
-      css={css`
-        display: grid;
-        grid-row-gap: 8px;
-        grid-auto-flow: row;
-      `}
-    >
-      <img
-        src={result.source.notizie?.imgUrl}
-        alt=""
-        css={css`
-          max-width: 100%;
-        `}
-      />
-      <div
-        css={css`
-          font-size: 1.5em;
-          font-weight: 500;
-        `}
-      >
-        {result.highlight["web.title"] ? (
-          <HighlightedText text={result.highlight["web.title"][0]} />
-        ) : (
-          result.source.web?.title
-        )}
-      </div>
-      <div
-        css={css`
-          font-size: 0.8em;
-        `}
-      >
-        <a href={result.source.web?.url}>
-          {result.highlight["web.url"] ? (
-            <HighlightedText text={result.highlight["web.url"][0]} />
-          ) : (
-            result.source.web?.url
-          )}
-        </a>
-      </div>
-      <div>
-        <strong>Category</strong> : {result.source.notizie?.category}
-      </div>
-      <div>
-        <strong>Topic</strong> : {result.source.notizie?.topic}
-      </div>
-      <div>
-        <strong>Pubblication Date : </strong>
+    <DetailContainer>
+      <DetailHeaderImage src={result.source.notizie?.imgUrl} />
+      <DetailTitle>
+        <HighlightableText result={result} path="web.title" />
+      </DetailTitle>
+      <DetailLink href={result.source.web.url}>
+        <HighlightableText result={result} path="web.url" />
+      </DetailLink>
+      <DetailAttribute label="Category">
+        {result.source.notizie?.category}
+      </DetailAttribute>
+      <DetailAttribute label="Topic">
+        {result.source.notizie?.topic}
+      </DetailAttribute>
+      <DetailAttribute label="Pubblication Date">
         {result.source.notizie?.pubDate}
-      </div>
-      <div>
-        <strong>Linked urls: </strong>
+      </DetailAttribute>
+      <DetailAttribute label="Linked Urls">
         <ul>
           {result.source.notizie?.linkedUrls.slice(0, 3).map((url) => {
             return (
@@ -77,7 +49,7 @@ export function NotizieDetail({ result }: NotizieDetailProps) {
             );
           })}
         </ul>
-      </div>
-    </div>
+      </DetailAttribute>
+    </DetailContainer>
   );
 }

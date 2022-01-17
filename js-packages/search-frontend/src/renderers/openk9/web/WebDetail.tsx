@@ -17,7 +17,7 @@ export function WebDetail({ result }: WebDetailProps) {
       <DetailTitle>
         <HighlightableText result={result} path="web.title" />
       </DetailTitle>
-      <DetailLink>
+      <DetailLink href={result.source.web.url}>
         <HighlightableText result={result} path="web.url" />
       </DetailLink>
       <DetailTextContent result={result} path="web.content" />

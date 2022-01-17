@@ -23,7 +23,7 @@ export function DocumentDetail({ result }: DocumentDetailProps) {
       <DetailTitle>
         <HighlightableText result={result} path="document.title" />
       </DetailTitle>
-      <DetailLink>
+      <DetailLink href={result.source.document.url}>
         <HighlightableText result={result} path="document.url" />
       </DetailLink>
       <DetailTextContent result={result} path="document.content" />
