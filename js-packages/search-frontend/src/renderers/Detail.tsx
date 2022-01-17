@@ -65,7 +65,7 @@ function Detail<E>(props: DetailProps<E>) {
           return <AssistenzaDetail result={result} />;
         }
         if (result.source.documentTypes.includes("vendite")) {
-          return <AssistenzaDetail result={result} />;
+          return <VenditeDetail result={result} />;
         }
         if (result.source.documentTypes.includes("fisco")) {
           return <AssistenzaDetail result={result} />;
