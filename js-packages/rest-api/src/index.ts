@@ -196,11 +196,13 @@ export type GenericResultItem<E = {}> = {
     };
   } & E;
   highlight: {
-    [field in DeepKeys<
-      Without<GenericResultItem<E>["source"], "type" | "entities">
-    >]?: string[];
+    [field in GenericResultItemFields<E>]?: string[];
   };
 };
+
+export type GenericResultItemFields<E> = DeepKeys<
+  Without<GenericResultItem<E>["source"], "type" | "entities">
+>;
 
 type PathImpl<T, Key extends keyof T> = Key extends string
   ? T[Key] extends Record<string, any>
@@ -980,11 +982,15 @@ export async function getSuggestions({
   return response;
 }
 
+const tenantDomain =
+  window.location.hostname === "localhost"
+    ? prompt("tentant domain")
+    : window.location.host;
+
 export async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
   const tenants = await getTenants(loginInfo);
   const tenant =
-    tenants.find((tenant) => window.location.host === tenant.virtualHost) ??
-    (window.location.hostname === "localhost" ? tenants[0] : undefined);
+    tenants.find((tenant) => tenant.virtualHost === tenantDomain) || tenants[0];
   const config =
     (tenant?.jsonConfig &&
       (JSON.parse(tenant?.jsonConfig) as TenantJSONConfig)) ||

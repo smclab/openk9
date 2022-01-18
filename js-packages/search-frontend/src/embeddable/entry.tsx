@@ -61,7 +61,12 @@ export const OpenK9: TargetElements = {
 window.OpenK9rootElement =
   window.OpenK9rootElement ?? document.createDocumentFragment();
 
-ReactDOM.render(<Entry />, window.OpenK9rootElement);
+ReactDOM.render(
+  <React.StrictMode>
+    <Entry />
+  </React.StrictMode>,
+  window.OpenK9rootElement,
+);
 
 window.OpenK9 = OpenK9;
 declare global {

@@ -1,6 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { myTheme } from "../utils/myTheme";
+import { myTheme } from "../components/myTheme";
 
 export function HighlightedText({
   text,
@@ -22,6 +22,7 @@ export function HighlightedText({
     </>
   );
 }
+
 function HighLight({ children }: { children?: React.ReactNode }) {
   return (
     <span

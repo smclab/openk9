@@ -1,6 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { myTheme } from "../utils/myTheme";
+import { myTheme } from "../components/myTheme";
 
 type BadgeProps = {
   children: React.ReactNode;

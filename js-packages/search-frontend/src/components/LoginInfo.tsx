@@ -2,9 +2,9 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
-import { myTheme } from "../utils/myTheme";
-import { useClickAway } from "../utils/useClickAway";
-import { LoginState } from "../utils/useLogin";
+import { myTheme } from "./myTheme";
+import { useClickAway } from "./useClickAway";
+import { LoginState } from "./useLogin";
 
 type LoginInfoProps = {
   loginState: LoginState;
