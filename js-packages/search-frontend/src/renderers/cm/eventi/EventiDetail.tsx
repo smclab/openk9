@@ -1,6 +1,10 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { HighlightedText } from "../../../renderer-components/HighlightedText";
+import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
+import { DetailContainer } from "../../../renderer-components/DetailContainer";
+import { DetailHeaderImage } from "../../../renderer-components/DetailHeaderImage";
+import { DetailLink } from "../../../renderer-components/DetailLink";
+import { DetailTitle } from "../../../renderer-components/DetailTitle";
+import { HighlightableText } from "../../../renderer-components/HighlightableText";
 import { EventiResultItem } from "./EventiItem";
 
 type EventiDetailProps = {
@@ -8,68 +12,39 @@ type EventiDetailProps = {
 };
 export function EventiDetail({ result }: EventiDetailProps) {
   return (
-    <div
-      css={css`
-        display: grid;
-        grid-row-gap: 8px;
-        grid-auto-flow: row;
-      `}
-    >
-      <img
-        src={result.source.eventi?.imgUrl}
-        alt=""
-        css={css`
-          max-width: 100%;
-        `}
-      />
-      <div
-        css={css`
-          font-size: 1.5em;
-          font-weight: 500;
-        `}
-      >
-        {result.highlight["web.title"] ? (
-          <HighlightedText text={result.highlight["web.title"][0]} />
-        ) : (
-          result.source.web?.title
-        )}
-      </div>
-      <div
-        css={css`
-          font-size: 0.8em;
-        `}
-      >
-        <a href={result.source.web?.url}>
-          {result.highlight["web.url"] ? (
-            <HighlightedText text={result.highlight["web.url"][0]} />
-          ) : (
-            result.source.web?.url
-          )}
-        </a>
-      </div>
+    <DetailContainer>
+      <DetailHeaderImage src={result.source.eventi?.imgUrl} />
+      <DetailTitle>
+        <HighlightableText result={result} path="web.title" />
+      </DetailTitle>
+      <DetailLink href={result.source.web.url}>
+        <HighlightableText result={result} path="web.url" />
+      </DetailLink>
       {result.source.eventi?.date && (
-        <div>
-          <strong>Date</strong> : {result.source.eventi.date}
-        </div>
+        <DetailAttribute label="Date">
+          {result.source.eventi.date}
+        </DetailAttribute>
       )}
       {result.source.eventi?.startDate && (
-        <div>
-          <strong>Start date</strong> : {result.source.eventi.startDate}
-        </div>
+        <DetailAttribute label="Start Date">
+          {result.source.eventi.startDate}
+        </DetailAttribute>
       )}
       {result.source.eventi?.endDate && (
-        <div>
-          <strong>End date</strong> : {result.source.eventi.endDate}
-        </div>
+        <DetailAttribute label="End Date">
+          {result.source.eventi.endDate}
+        </DetailAttribute>
       )}
       {result.source.eventi?.category && (
-        <div>
-          <strong>Category</strong> : {result.source.eventi.category}
-        </div>
+        <DetailAttribute label="Category">
+          {result.source.eventi.category}
+        </DetailAttribute>
       )}
-      <div>
-        <strong>Location</strong> : {result.source.eventi?.location}
-      </div>
-    </div>
+      {result.source.eventi?.location && (
+        <DetailAttribute label="Location">
+          {result.source.eventi.location}
+        </DetailAttribute>
+      )}
+    </DetailContainer>
   );
 }

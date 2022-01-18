@@ -1,6 +1,10 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { HighlightedText } from "../../../renderer-components/HighlightedText";
+import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
+import { DetailContainer } from "../../../renderer-components/DetailContainer";
+import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
+import { DetailLink } from "../../../renderer-components/DetailLink";
+import { DetailTitle } from "../../../renderer-components/DetailTitle";
+import { HighlightableText } from "../../../renderer-components/HighlightableText";
 import { WemiResultItem } from "./WemiItem";
 
 type WemiDetailProps = {
@@ -8,61 +12,35 @@ type WemiDetailProps = {
 };
 export function WemiDetail({ result }: WemiDetailProps) {
   return (
-    <div
-      css={css`
-        display: grid;
-        grid-row-gap: 8px;
-        grid-auto-flow: row;
-      `}
-    >
-      <img src={result.source.web?.favicon} alt="" />
-      <div
-        css={css`
-          font-size: 1.5em;
-          font-weight: 500;
-        `}
-      >
-        {result.highlight["web.title"] ? (
-          <HighlightedText text={result.highlight["web.title"][0]} />
-        ) : (
-          result.source.web?.title
-        )}
-      </div>
-      <div
-        css={css`
-          font-size: 0.8em;
-        `}
-      >
-        {result.highlight["web.url"] ? (
-          <HighlightedText text={result.highlight["web.url"][0]} />
-        ) : (
-          result.source.web?.url
-        )}
-      </div>
-      <div>
-        <strong>Categoria</strong> : {result.source.wemi?.categoria}
-      </div>
-      <div>
-        <strong>Servizio</strong> : {result.source.wemi?.servizio}
-      </div>
-      <div>
-        <strong>Destinatari</strong> :
+    <DetailContainer>
+      <DetailFavicon src={result.source.web.favicon} />
+      <DetailTitle>
+        <HighlightableText result={result} path="web.title" />
+      </DetailTitle>
+      <DetailLink href={result.source.web.url}>
+        <HighlightableText result={result} path="web.url" />
+      </DetailLink>
+      <DetailAttribute label="Categoria">
+        {result.source.wemi.categoria}
+      </DetailAttribute>
+      <DetailAttribute label="Servizio">
+        {result.source.wemi.servizio}
+      </DetailAttribute>
+      <DetailAttribute label="Destinatari">
         <ul>
-          {result.source.wemi?.destinatari?.map((item, index) => {
+          {result.source.wemi.destinatari.map((item, index) => {
             return <li key={index}>{item}</li>;
           })}
         </ul>
-      </div>
-      <div>
-        <strong>Attività</strong> :
+      </DetailAttribute>
+      <DetailAttribute label="Attività">
         <ul>
-          {result.source.wemi?.attivita?.map((item, index) => {
+          {result.source.wemi.attivita.map((item, index) => {
             return <li key={index}>{item}</li>;
           })}
         </ul>
-      </div>
-      <div>
-        <strong>Prezzi</strong> :
+      </DetailAttribute>
+      <DetailAttribute label="Prezzi">
         <ul>
           {result.source.wemi?.prezzi?.map((item, index) => {
             return (
@@ -72,26 +50,24 @@ export function WemiDetail({ result }: WemiDetailProps) {
             );
           })}
         </ul>
-      </div>
-      <div>
-        <strong>Momento</strong> :
+      </DetailAttribute>
+      <DetailAttribute label="Momento">
         <ul>
-          {result.source.wemi?.momento?.map((item, index) => {
+          {result.source.wemi.momento.map((item, index) => {
             return <li key={index}>{item}</li>;
           })}
         </ul>
-      </div>
-      <div>
-        <strong>Sedi</strong> :
+      </DetailAttribute>
+      <DetailAttribute label="Sedi">
         <ul>
-          {result.source.wemi?.sedi?.map((item, index) => {
+          {result.source.wemi.sedi.map((item, index) => {
             return <li key={index}>{item}</li>;
           })}
         </ul>
-      </div>
-      <div>
-        <strong>Procedura</strong> : {result.source.wemi?.procedura}
-      </div>
-    </div>
+      </DetailAttribute>
+      <DetailAttribute label="Procedura">
+        {result.source.wemi.procedura}
+      </DetailAttribute>
+    </DetailContainer>
   );
 }

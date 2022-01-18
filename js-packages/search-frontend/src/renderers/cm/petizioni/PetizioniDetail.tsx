@@ -1,6 +1,10 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { HighlightedText } from "../../../renderer-components/HighlightedText";
+import { DetailContainer } from "../../../renderer-components/DetailContainer";
+import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
+import { DetailLink } from "../../../renderer-components/DetailLink";
+import { DetailTitle } from "../../../renderer-components/DetailTitle";
+import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { ResultAttribute } from "../../../renderer-components/ResultAttribute";
 import { PetizioniResultItem } from "./PetizioniItem";
 
 type PetizioniDetailProps = {
@@ -8,49 +12,24 @@ type PetizioniDetailProps = {
 };
 export function PetizioniDetail({ result }: PetizioniDetailProps) {
   return (
-    <div
-      css={css`
-        display: grid;
-        grid-row-gap: 8px;
-        grid-auto-flow: row;
-      `}
-    >
-      <img src={result.source.web?.favicon} alt="" />
-      <div
-        css={css`
-          font-size: 1.5em;
-          font-weight: 500;
-        `}
-      >
-        {result.highlight["web.title"] ? (
-          <HighlightedText text={result.highlight["web.title"][0]} />
-        ) : (
-          result.source.web?.title
-        )}
-      </div>
-      <div
-        css={css`
-          font-size: 0.8em;
-        `}
-      >
-        <a href={result.source.web?.url}>
-          {result.highlight["web.url"] ? (
-            <HighlightedText text={result.highlight["web.url"][0]} />
-          ) : (
-            result.source.web?.url
-          )}
-        </a>
-      </div>
-      {result.source.petizioni?.status && (
-        <div>
-          <strong>Status</strong> : {result.source.petizioni.status}
-        </div>
+    <DetailContainer>
+      <DetailFavicon src={result.source.web.favicon} />
+      <DetailTitle>
+        <HighlightableText result={result} path="web.title" />
+      </DetailTitle>
+      <DetailLink href={result.source.web.url}>
+        <HighlightableText result={result} path="web.url" />
+      </DetailLink>
+      {result.source.petizioni.status && (
+        <ResultAttribute label="Status">
+          {result.source.petizioni.status}
+        </ResultAttribute>
       )}
-      {result.source.petizioni?.pubDate && (
-        <div>
-          <strong>Pubblication date</strong> : {result.source.petizioni.pubDate}
-        </div>
+      {result.source.petizioni.pubDate && (
+        <ResultAttribute label="Pubblication date">
+          {result.source.petizioni.pubDate}
+        </ResultAttribute>
       )}
-    </div>
+    </DetailContainer>
   );
 }
