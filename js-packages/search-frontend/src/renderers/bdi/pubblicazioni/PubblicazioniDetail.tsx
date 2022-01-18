@@ -22,20 +22,20 @@ export function PubblicazioniDetail({ result }: PubblicazioniDetailProps) {
         <HighlightableText result={result} path="web.url" />
       </DetailLink>
       <DetailAttribute label="Category">
-        {result.source.pubblicazioni?.category}
+        {result.source.pubblicazioni.category}
       </DetailAttribute>
       <DetailAttribute label="Topic">
-        {result.source.pubblicazioni?.topic}
+        {result.source.pubblicazioni.topic}
       </DetailAttribute>
       <DetailAttribute label="Authors">
-        {result.source.pubblicazioni?.authors}
+        {result.source.pubblicazioni.authors}
       </DetailAttribute>
       <DetailAttribute label="Pubblication Date">
-        {result.source.pubblicazioni?.pubDate}
+        {result.source.pubblicazioni.pubDate}
       </DetailAttribute>
       <DetailAttribute label="Linked Urls">
         <ul>
-          {result.source.pubblicazioni?.linkedUrls.slice(0, 3).map((url) => {
+          {result.source.pubblicazioni.linkedUrls.slice(0, 3).map((url) => {
             return (
               <li key={url}>
                 <a

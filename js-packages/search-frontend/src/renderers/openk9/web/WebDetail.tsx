@@ -13,7 +13,7 @@ type WebDetailProps = {
 export function WebDetail({ result }: WebDetailProps) {
   return (
     <DetailContainer>
-      <DetailFavicon src={result.source.web?.favicon} />
+      <DetailFavicon src={result.source.web.favicon} />
       <DetailTitle>
         <HighlightableText result={result} path="web.title" />
       </DetailTitle>

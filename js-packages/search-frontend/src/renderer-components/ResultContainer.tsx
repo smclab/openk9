@@ -16,6 +16,7 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
       <div
         css={css`
           width: 30px;
+          margin-right: 8px;
         `}
       >
         <div

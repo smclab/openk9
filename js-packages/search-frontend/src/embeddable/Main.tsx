@@ -7,7 +7,8 @@ import {
   faSyncAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { useDebounce } from "../components/useDebounce";
-import { useQueryAnalysis, useTabTokens } from "../components/remote-data";
+import { useQueryAnalysis } from "../components/remote-data";
+import { useTabTokens } from "../components/useTabTokens";
 import { DetailMemo } from "../components/Detail";
 import { myTheme } from "../components/myTheme";
 import { Results } from "../components/ResultList";

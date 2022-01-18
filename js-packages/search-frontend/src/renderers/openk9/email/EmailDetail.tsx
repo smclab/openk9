@@ -32,7 +32,7 @@ export function EmailDetail({ result }: EmailDetailProps) {
       <DetailAttribute label="To">
         <HighlightableText result={result} path="email.to" />
       </DetailAttribute>
-      {result.source.email?.cc && (
+      {result.source.email.cc && (
         <DetailAttribute label="Cc">
           <HighlightableText result={result} path="email.cc" />
         </DetailAttribute>

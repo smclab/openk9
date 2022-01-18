@@ -27,7 +27,7 @@ export function PdfDetail({ result }: PdfDetailProps) {
       <DetailLink href={result.source.document.url}>
         <HighlightableText result={result} path="document.url" />
       </DetailLink>
-      {result.source.file?.lastModifiedDate && (
+      {result.source.file.lastModifiedDate && (
         <DetailAttribute label="Last modified">
           {new Date(result.source.file.lastModifiedDate).toLocaleString()}
         </DetailAttribute>

@@ -14,7 +14,7 @@ type NotizieDetailProps = {
 export function NotizieDetail({ result }: NotizieDetailProps) {
   return (
     <DetailContainer>
-      <DetailHeaderImage src={result.source.notizie?.imgUrl} />
+      <DetailHeaderImage src={result.source.notizie.imgUrl} />
       <DetailTitle>
         <HighlightableText result={result} path="web.title" />
       </DetailTitle>
@@ -22,17 +22,17 @@ export function NotizieDetail({ result }: NotizieDetailProps) {
         <HighlightableText result={result} path="web.url" />
       </DetailLink>
       <DetailAttribute label="Category">
-        {result.source.notizie?.category}
+        {result.source.notizie.category}
       </DetailAttribute>
       <DetailAttribute label="Topic">
-        {result.source.notizie?.topic}
+        {result.source.notizie.topic}
       </DetailAttribute>
       <DetailAttribute label="Pubblication Date">
-        {result.source.notizie?.pubDate}
+        {result.source.notizie.pubDate}
       </DetailAttribute>
       <DetailAttribute label="Linked Urls">
         <ul>
-          {result.source.notizie?.linkedUrls.slice(0, 3).map((url) => {
+          {result.source.notizie.linkedUrls.slice(0, 3).map((url) => {
             return (
               <li key={url}>
                 <a

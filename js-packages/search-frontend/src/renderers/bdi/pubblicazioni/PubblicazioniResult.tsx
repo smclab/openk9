@@ -12,7 +12,7 @@ import { BadgeContainer } from "../../../renderer-components/BadgeContainer";
 type PubblicazioniResultProps = { result: PubblicazioniResultItem };
 export function PubblicazioniResult({ result }: PubblicazioniResultProps) {
   return (
-    <ResultContainer icon={<ResultFavicon src={result.source.web?.favicon} />}>
+    <ResultContainer icon={<ResultFavicon src={result.source.web.favicon} />}>
       <ResultTitle>
         <HighlightableText result={result} path="web.title" />
       </ResultTitle>
@@ -20,10 +20,10 @@ export function PubblicazioniResult({ result }: PubblicazioniResultProps) {
         <HighlightableText result={result} path="web.url" />
       </ResultLink>
       <BadgeContainer>
-        {result.source.pubblicazioni?.pubDate && (
+        {result.source.pubblicazioni.pubDate && (
           <Badge>{result.source.pubblicazioni.pubDate}</Badge>
         )}
-        {result.source.pubblicazioni?.topic && (
+        {result.source.pubblicazioni.topic && (
           <Badge>{result.source.pubblicazioni.topic}</Badge>
         )}
       </BadgeContainer>

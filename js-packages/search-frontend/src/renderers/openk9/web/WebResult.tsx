@@ -10,7 +10,7 @@ import { WebResultItem } from "./WebItem";
 type WebResultProps = { result: WebResultItem };
 export function WebResult({ result }: WebResultProps) {
   return (
-    <ResultContainer icon={<ResultFavicon src={result.source.web?.favicon} />}>
+    <ResultContainer icon={<ResultFavicon src={result.source.web.favicon} />}>
       <ResultTitle>
         <HighlightableText result={result} path="web.title" />
       </ResultTitle>

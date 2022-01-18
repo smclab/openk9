@@ -12,7 +12,7 @@ import { ResultTextContent } from "../../../renderer-components/ResultTextConten
 type NotizieResultProps = { result: NotizieResultItem };
 export function NotizieResult({ result }: NotizieResultProps) {
   return (
-    <ResultContainer icon={<ResultFavicon src={result.source.web?.favicon} />}>
+    <ResultContainer icon={<ResultFavicon src={result.source.web.favicon} />}>
       <ResultTitle>
         <HighlightableText result={result} path="web.title" />
       </ResultTitle>
@@ -20,10 +20,10 @@ export function NotizieResult({ result }: NotizieResultProps) {
         <HighlightableText result={result} path="web.url" />
       </ResultLink>
       <BadgeContainer>
-        {result.source.notizie?.pubDate && (
+        {result.source.notizie.pubDate && (
           <Badge>{result.source.notizie.pubDate}</Badge>
         )}
-        {result.source.notizie?.topic && (
+        {result.source.notizie.topic && (
           <Badge>{result.source.notizie.topic}</Badge>
         )}
       </BadgeContainer>
