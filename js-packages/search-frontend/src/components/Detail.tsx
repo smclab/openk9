@@ -17,6 +17,7 @@ import { EntrateDetail } from "../renderers/sg/entrate/EntrateDetail";
 import { AssistenzaDetail } from "../renderers/sg/assistenza/AssistenzaDetail";
 import { GaraDetail } from "../renderers/sg/gara/GaraDetail";
 import { OpendataDetail } from "../renderers/cm/opendata/OpendataDetail";
+import { VenditeDetail } from "../renderers/sg/vendite/VenditeDetail";
 
 type DetailProps<E> = {
   result: GenericResultItem<E>;
@@ -62,6 +63,9 @@ function Detail<E>(props: DetailProps<E>) {
         }
         if (result.source.documentTypes.includes("entratel")) {
           return <AssistenzaDetail result={result} />;
+        }
+        if (result.source.documentTypes.includes("vendite")) {
+          return <VenditeDetail result={result} />;
         }
         if (result.source.documentTypes.includes("fisco")) {
           return <AssistenzaDetail result={result} />;

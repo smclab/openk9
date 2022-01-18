@@ -6,12 +6,12 @@ import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
 import { DetailLink } from "../../../renderer-components/DetailLink";
 import { DetailTitle } from "../../../renderer-components/DetailTitle";
 import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { GaraResultItem } from "./GaraItem";
+import { VenditeResultItem } from "./VenditeItem";
 
-type GaraDetailProps = {
-  result: GaraResultItem;
+type VenditeDetailProps = {
+  result: VenditeResultItem;
 };
-export function GaraDetail({ result }: GaraDetailProps) {
+export function VenditeDetail({ result }: VenditeDetailProps) {
   return (
     <DetailContainer>
       <DetailFavicon src={result.source.web.favicon} />
@@ -22,53 +22,68 @@ export function GaraDetail({ result }: GaraDetailProps) {
         <HighlightableText result={result} path="web.url" />
       </DetailLink>
       <DetailAttribute label="Descrizione">
-        {result.source.gara.descrizione}
+        {result.source.vendite.descrizione}
       </DetailAttribute>
-      <DetailAttribute label="Oggetto della gara">
-        {result.source.gara.oggettoGara}
-      </DetailAttribute>
-      <DetailAttribute label="Stato gara">
-        {result.source.gara.status}
+      <DetailAttribute label="Categoria">
+        {result.source.vendite.category}
       </DetailAttribute>
       <DetailAttribute label="Tipologia">
-        {result.source.gara.tipologia}
+        {result.source.vendite.tipologia}
+      </DetailAttribute>
+      <DetailAttribute label="Modalità">
+        {result.source.vendite.modalita}
+      </DetailAttribute>
+      <DetailAttribute label="Classificazione">
+        {result.source.vendite.classificazione}
+      </DetailAttribute>
+      <DetailAttribute label="Tipologia">
+        {result.source.vendite.tipologia}
+      </DetailAttribute>
+      <DetailAttribute label="Destinazione">
+        {result.source.vendite.destinazione}
       </DetailAttribute>
       <DetailAttribute label="Regione">
-        {result.source.gara.regione}
+        {result.source.vendite.regione}
       </DetailAttribute>
       <DetailAttribute label="Provincia">
-        {result.source.gara.provincia}
+        {result.source.vendite.provincia}
       </DetailAttribute>
       <DetailAttribute label="Comune">
-        {result.source.gara.comune}
+        {result.source.vendite.comune}
       </DetailAttribute>
-      <DetailAttribute label="Stazione">
-        {result.source.gara.stazione}
+      <DetailAttribute label="Indirizzo">
+        {result.source.vendite.indirizzo}
       </DetailAttribute>
-      <DetailAttribute label="Data di pubblicazione">
-        {result.source.gara.datapubblicazione}
+      <DetailAttribute label="Provincia">
+        {result.source.vendite.foglio}
+      </DetailAttribute>
+      <DetailAttribute label="Comune">
+        {result.source.vendite.mappale}
+      </DetailAttribute>
+      <DetailAttribute label="Indirizzo">
+        {result.source.vendite.subalterno}
       </DetailAttribute>
       <DetailAttribute label="Data di scadenza">
-        {result.source.gara.datascadenza}
+        {result.source.vendite.scadenzaOfferte}
       </DetailAttribute>
-      <DetailAttribute label="Data esito">
-        {result.source.gara.dataEsito}
+      <DetailAttribute label="Data esame offerte">
+        {result.source.vendite.esameOfferte}
       </DetailAttribute>
-      <DetailAttribute label="Importo">
-        {result.source.gara.importo}
+      <DetailAttribute label="Prezzo base">
+        {result.source.vendite.prezzoBase}
       </DetailAttribute>
-      <DetailAttribute label="Criterio">
-        {result.source.gara.criterio}
+      <DetailAttribute label="Prezzo di aggiudicazione">
+        {result.source.vendite.prezzoDiAggiudicazione}
       </DetailAttribute>
-      <DetailAttribute label="Nominativo">
-        {result.source.gara.nominativo}
+      <DetailAttribute label="Referente">
+        {result.source.vendite.referente}
       </DetailAttribute>
       <DetailAttribute label="Email">
-        {result.source.gara.email}
+        {result.source.vendite.email}
       </DetailAttribute>
-      <DetailAttribute label="Documenti di gara">
+      <DetailAttribute label="Documenti di vendite">
         <ul>
-          {result.source.gara.documentiGara.map((url) => {
+          {result.source.vendite.documentiVendite?.map((url) => {
             return (
               <li key={url}>
                 <a
@@ -84,27 +99,7 @@ export function GaraDetail({ result }: GaraDetailProps) {
               </li>
             );
           })}
-        </ul>
-      </DetailAttribute>
-      <DetailAttribute label="Documenti di esito">
-        <ul>
-          {result.source.gara.documentiEsito.map((url) => {
-            return (
-              <li key={url}>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  css={css`
-                    word-break: break-all;
-                  `}
-                >
-                  {url}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
+        </ul>{" "}
       </DetailAttribute>
     </DetailContainer>
   );
