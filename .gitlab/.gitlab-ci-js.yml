@@ -5,26 +5,6 @@ cache:
   paths:
     - .yarn-cache/
 
-JS Format Lint Test and Build Check:
-  image: node:13.13
-  stage: quality
-  rules:
-    - changes:
-      - js-packages/**/*
-  before_script:
-    - echo -e "$NPM_TOKEN" > ~/.npmrc
-    - chmod 600  ~/.npmrc
-    - cd openk9
-    - ls
-    - cd js-packages
-    - yarn install --prefer-offline --frozen-lockfile --cache-folder $YARN_CACHE_FOLDER
-  script:
-    - yarn format
-    - yarn lint
-    - yarn test
-    - yarn build
-  allow_failure: true
-
 Build Tagged JS Docker Images:
   image: docker:19.03.13
   services:
