@@ -31,6 +31,7 @@ import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
+import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
 import io.openk9.search.query.internal.response.SuggestionsResponse;
@@ -86,11 +87,13 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 	@interface Config {
 		String[] datasourceFieldAggregations() default {"topic", "category"};
+		boolean enableEntityAggregation() default false;
 	}
 	@Activate
 	@Modified
 	void activate(Config config) {
 		_datasourceFieldAggregations = config.datasourceFieldAggregations();
+		_enableEntityAggregation = config.enableEntityAggregation();
 	}
 
 	@Override
@@ -143,13 +146,17 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						.map(suffix -> name + "." + suffix)
 				);
 
-		Stream<String> rest =
-			Stream.of(
-				"entities.id",
-				// "entities.context",
-				"datasourceId",
-				"documentTypes"
-			);
+		Stream.Builder<String> builder = Stream.builder();
+
+		if (_enableEntityAggregation) {
+			builder.accept("entities.id");
+		}
+
+		builder
+			.add("datasourceId")
+			.add("documentTypes");
+
+		Stream<String> rest = builder.build();
 
 		CompositeAggregationBuilder compositeAggregation =
 			Stream
@@ -187,6 +194,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		searchSourceBuilder.from(0);
 		searchSourceBuilder.size(0);
 
+		searchSourceBuilder.highlighter(null);
+
 	}
 
 	@Override
@@ -196,208 +205,248 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		HttpServerRequest httpServerRequest, SearchRequest searchRequest,
 		SearchResponse searchResponse) {
 
-		return _search.search(factory -> {
+		if (_enableEntityAggregation) {
+			return _search
+				.search(factory -> {
 
-				org.elasticsearch.action.search.SearchRequest
-					searchRequestEntity =
-					factory.createSearchRequestEntity(tenant.getTenantId());
+					org.elasticsearch.action.search.SearchRequest
+						searchRequestEntity =
+						factory.createSearchRequestEntity(tenant.getTenantId());
 
-				Aggregations aggregations = searchResponse.getAggregations();
+					Aggregations aggregations = searchResponse.getAggregations();
 
-				CompositeAggregation compositeAggregation =
-					aggregations.get("composite");
+					CompositeAggregation compositeAggregation =
+						aggregations.get("composite");
 
-				List<? extends CompositeAggregation.Bucket> buckets =
-					compositeAggregation.getBuckets();
+					List<? extends CompositeAggregation.Bucket> buckets =
+						compositeAggregation.getBuckets();
 
-				BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+					BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-				buckets
-					.stream()
-					.map(bucket -> (String)bucket.getKey().get("entities.id"))
-					.filter(Objects::nonNull)
-					.distinct()
-					.forEach(entityId -> boolQueryBuilder.should(
-						QueryBuilders.matchQuery("id", entityId)
-					));
+					buckets
+						.stream()
+						.map(bucket -> (String)bucket.getKey().get("entities.id"))
+						.filter(Objects::nonNull)
+						.distinct()
+						.forEach(entityId -> boolQueryBuilder.should(
+							QueryBuilders.matchQuery("id", entityId)
+						));
 
-				if (_log.isDebugEnabled()) {
-					_log.debug("entities query: " + boolQueryBuilder);
+					if (_log.isDebugEnabled()) {
+						_log.debug("entities query: " + boolQueryBuilder);
+					}
+
+					SearchSourceBuilder ssb = new SearchSourceBuilder();
+
+					ssb.query(boolQueryBuilder);
+					ssb.size(1000);
+					ssb.fetchSource(new String[]{"name", "id", "type"}, null);
+
+					return searchRequestEntity.source(ssb);
+				})
+				.flatMap(entityResponse ->
+					_datasourceClient
+						.findSuggestionCategoryFields()
+						.map(fields -> {
+
+							Map<String, String[]> entityMap = new HashMap<>();
+
+							for (SearchHit hit : entityResponse.getHits()) {
+								Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+								String name =(String)sourceAsMap.get("name");
+								String type =(String)sourceAsMap.get("type");
+								String entityId =(String)sourceAsMap.get("id");
+								entityMap.put(entityId, new String[]{type, name});
+							}
+
+							return _getSuggestionsResponse(
+								datasourceList, pluginDriverDTOList,
+								searchRequest, searchResponse, fields,
+								entityMap);
+
+						}));
+		}
+		else {
+			return _datasourceClient
+				.findSuggestionCategoryFields()
+				.map(fields ->
+					_getSuggestionsResponse(
+						datasourceList, pluginDriverDTOList,
+						searchRequest, searchResponse, fields,
+						Map.of()));
+		}
+
+	}
+
+	private SuggestionsResponse _getSuggestionsResponse(
+		List<Datasource> datasourceList,
+		PluginDriverDTOList pluginDriverDTOList, SearchRequest searchRequest,
+		SearchResponse searchResponse, List<SuggestionCategoryField> fields,
+		Map<String, String[]> entityMap) {
+		Aggregations aggregations = searchResponse.getAggregations();
+
+		CompositeAggregation compositeAggregation =
+			aggregations.get("composite");
+
+		Map<String, Long> fieldNameCategoryIdMap =
+			fields
+				.stream()
+				.collect(
+					Collectors.toMap(
+						SuggestionCategoryField::getFieldName,
+						SuggestionCategoryField::getCategoryId,
+						(a1, a2) -> a2));
+
+		Long datasourceIdCategoryId =
+			fieldNameCategoryIdMap.getOrDefault(
+				"datasourceId", 1L);
+		Long entityIdCategoryId =
+			fieldNameCategoryIdMap.getOrDefault(
+				"entities.id", 2L);
+		Long entitiesContextCategoryId =
+			fieldNameCategoryIdMap.getOrDefault(
+				"entities.context", entityIdCategoryId);
+		Long documentTypesCategoryId =
+			fieldNameCategoryIdMap.getOrDefault(
+				"documentTypes", 4L);
+
+		List<? extends CompositeAggregation.Bucket> buckets =
+			compositeAggregation.getBuckets();
+
+		LinkedList<Suggestions> suggestions =
+			new LinkedList<>();
+
+		String suggestKeyword =
+			searchRequest.getSuggestKeyword();
+
+		BiConsumer<String, Suggestions> addSuggestions;
+
+		if (suggestKeyword != null) {
+			addSuggestions = (key, sugg) -> {
+
+				if (!suggestions.contains(sugg)) {
+					if (key.contains(suggestKeyword)) {
+						suggestions.addFirst(sugg);
+					}
+					else {
+						suggestions.addLast(sugg);
+					}
+				}
+			};
+		}
+		else {
+			addSuggestions = (key, sugg) -> {
+				if (!suggestions.contains(sugg)) {
+					suggestions.add(sugg);
+				}
+			};
+		}
+
+
+		for (CompositeAggregation.Bucket bucket : buckets) {
+
+			Map<String, Object> keys = new HashMap<>(bucket.getKey());
+
+			for (Map.Entry<String, Object> entry : keys.entrySet()) {
+
+				String key = entry.getKey();
+				String value = (String)entry.getValue();
+
+				if (value == null) {
+					continue;
 				}
 
-				SearchSourceBuilder ssb = new SearchSourceBuilder();
+				switch (key) {
+					case "datasourceId":
 
-				ssb.query(boolQueryBuilder);
-				ssb.size(1000);
-				ssb.fetchSource(new String[]{"name", "id", "type"}, null);
+						long datasourceIdL = Long.parseLong(value);
 
-				return searchRequestEntity.source(ssb);
-			})
-			.flatMap(entityResponse ->
-				_datasourceClient
-					.findSuggestionCategoryFields()
-					.map(fields -> {
+						_datasource(
+							datasourceList,
+							pluginDriverDTOList,
+							datasourceIdCategoryId,
+							addSuggestions, datasourceIdL);
 
-						Map<String, String[]> entityMap = new HashMap<>();
+						break;
+					case "entities.context":
+						break;
+					case "entities.id":
+						String[] typeName = entityMap.get(value);
 
-						for (SearchHit hit : entityResponse.getHits()) {
-							Map<String, Object> sourceAsMap = hit.getSourceAsMap();
-							String name =(String)sourceAsMap.get("name");
-							String type =(String)sourceAsMap.get("type");
-							String entityId =(String)sourceAsMap.get("id");
-							entityMap.put(entityId, new String[]{type, name});
-						}
+						if (typeName != null) {
+							String type = typeName[0];
+							String name = typeName[1];
 
-						Aggregations aggregations = searchResponse.getAggregations();
+							String entitiesContext =
+								(String)keys.get("entities.context");
 
-						CompositeAggregation compositeAggregation =
-							aggregations.get("composite");
-
-						Map<String, Long> fieldNameCategoryIdMap =
-							fields
-								.stream()
-								.collect(
-									Collectors.toMap(
-										SuggestionCategoryField::getFieldName,
-										SuggestionCategoryField::getCategoryId,
-										(a1, a2) -> a2));
-
-						Long datasourceIdCategoryId =
-							fieldNameCategoryIdMap.getOrDefault(
-								"datasourceId", 1L);
-						Long entityIdCategoryId =
-							fieldNameCategoryIdMap.getOrDefault(
-								"entities.id", 2L);
-						Long entitiesContextCategoryId =
-							fieldNameCategoryIdMap.getOrDefault(
-								"entities.context", entityIdCategoryId);
-						Long documentTypesCategoryId =
-							fieldNameCategoryIdMap.getOrDefault(
-								"documentTypes", 4L);
-
-						List<? extends CompositeAggregation.Bucket> buckets =
-							compositeAggregation.getBuckets();
-
-						LinkedList<Suggestions> suggestions =
-							new LinkedList<>();
-
-						String suggestKeyword =
-							searchRequest.getSuggestKeyword();
-
-						BiConsumer<String, Suggestions> addSuggestions;
-
-						if (suggestKeyword != null) {
-							addSuggestions = (key, sugg) -> {
-
-								if (!suggestions.contains(sugg)) {
-									if (key.contains(suggestKeyword)) {
-										suggestions.addFirst(sugg);
-									}
-									else {
-										suggestions.addLast(sugg);
-									}
-								}
-							};
-						}
-						else {
-							addSuggestions = (key, sugg) -> {
-								if (!suggestions.contains(sugg)) {
-									suggestions.add(sugg);
-								}
-							};
-						}
-
-
-						for (CompositeAggregation.Bucket bucket : buckets) {
-
-							Map<String, Object> keys = new HashMap<>(bucket.getKey());
-
-							for (Map.Entry<String, Object> entry : keys.entrySet()) {
-
-								String key = entry.getKey();
-								String value = (String)entry.getValue();
-
-								if (value == null) {
-									continue;
-								}
-
-								switch (key) {
-									case "datasourceId":
-
-										long datasourceIdL = Long.parseLong(value);
-
-										_datasource(
-											datasourceList,
-											pluginDriverDTOList,
-											datasourceIdCategoryId,
-											addSuggestions, datasourceIdL);
-
-										break;
-									case "entities.context":
-										break;
-									case "entities.id":
-										String[] typeName = entityMap.get(value);
-
-										if (typeName != null) {
-											String type = typeName[0];
-											String name = typeName[1];
-
-											String entitiesContext =
-												(String)keys.get("entities.context");
-
-											if (entitiesContext != null) {
-												addSuggestions.accept(
-													name,
-													Suggestions.entity(
-														value,
-														entitiesContextCategoryId,
-														type, name, entitiesContext)
-												);
-											}
-											else {
-												addSuggestions.accept(
-													name,
-													Suggestions.entity(
-														value, entityIdCategoryId,
-														type, name)
-												);
-											}
-										}
-										break;
-									case "documentTypes":
-										addSuggestions.accept(
-											value,
-											Suggestions.docType(
-												value,
-												documentTypesCategoryId)
-										);
-										break;
-									default:
-										Long textCategoryId =
-											fieldNameCategoryIdMap.getOrDefault(
-												key, 5L);
-
-										addSuggestions.accept(
-											value, Suggestions.text(
-												value, textCategoryId, key)
-										);
-
-								}
+							if (entitiesContext != null) {
+								addSuggestions.accept(
+									name,
+									Suggestions.entity(
+										value,
+										entitiesContextCategoryId,
+										type, name, entitiesContext)
+								);
+							}
+							else {
+								addSuggestions.accept(
+									name,
+									Suggestions.entity(
+										value, entityIdCategoryId,
+										type, name)
+								);
 							}
 						}
+						break;
+					case "documentTypes":
+						addSuggestions.accept(
+							value,
+							Suggestions.docType(
+								value,
+								documentTypesCategoryId)
+						);
+						break;
+					default:
+						Long textCategoryId =
+							fieldNameCategoryIdMap.getOrDefault(
+								key, 5L);
 
-						Map<String, Object> map = compositeAggregation.afterKey();
-						String afterKey = null;
+						addSuggestions.accept(
+							value, Suggestions.text(
+								value, textCategoryId, key)
+						);
 
-						if (map != null) {
-							afterKey = _jsonFactory.toJson(map);
-							afterKey = Base64.getEncoder().encodeToString(
-								afterKey.getBytes(StandardCharsets.UTF_8));
-						}
+				}
+			}
+		}
 
-						return SuggestionsResponse.of(suggestions, afterKey);
+		Map<String, Object> map = compositeAggregation.afterKey();
+		String afterKey = null;
 
-					}));
+		if (map != null) {
+			afterKey = _jsonFactory.toJson(map);
+			afterKey = Base64.getEncoder().encodeToString(
+				afterKey.getBytes(StandardCharsets.UTF_8));
+		}
+
+		return SuggestionsResponse.of(suggestions, afterKey);
+	}
+
+	@Override
+	protected QueryParser.Context createQueryParserContext(
+		Tenant tenant, List<Datasource> datasources,
+		HttpServerRequest httpRequest,
+		Map<String, List<SearchToken>> tokenTypeGroup,
+		List<PluginDriverDTO> documentTypeList) {
+		return QueryParser.Context.of(
+			tenant,
+			datasources,
+			documentTypeList,
+			tokenTypeGroup,
+			httpRequest,
+			QueryParser.QueryCondition.MUST
+		);
 	}
 
 	private void _datasource(
@@ -497,6 +546,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	}
 
 	private String[] _datasourceFieldAggregations;
+
+	private boolean _enableEntityAggregation;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		SuggestionsHTTPHandler.class);

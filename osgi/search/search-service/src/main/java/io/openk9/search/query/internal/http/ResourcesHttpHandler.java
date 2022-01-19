@@ -142,7 +142,7 @@ public class ResourcesHttpHandler implements RouterHandler {
 		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return _queryParser.apply(
-			QueryParser.Context.of(tenant, null, null, null, httpRequest))
+			QueryParser.Context.of(tenant, null, null, null, httpRequest, QueryParser.QueryCondition.DEFAULT))
 			.flatMap(consumer ->
 
 				_search.search(factory -> {

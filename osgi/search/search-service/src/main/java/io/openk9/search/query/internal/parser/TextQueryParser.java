@@ -52,20 +52,21 @@ public class TextQueryParser implements QueryParser {
 
 			return bool -> _textEntityQuery(
 				searchTokens, bool,
-				context.getPluginDriverDocumentTypeList());
+				context.getPluginDriverDocumentTypeList(),
+				context.getQueryCondition());
 
 		});
 	}
 
 	private void _textEntityQuery(
 		List<SearchToken> tokenTextList, BoolQueryBuilder query,
-		List<PluginDriverDTO> entityMapperList) {
+		List<PluginDriverDTO> entityMapperList, QueryCondition queryCondition) {
 
 		if (!tokenTextList.isEmpty()) {
 
 			for (SearchToken searchToken : tokenTextList) {
 				_termQueryPrefixValues(
-					searchToken, query, entityMapperList);
+					searchToken, query, entityMapperList, queryCondition);
 			}
 
 		}
@@ -74,7 +75,7 @@ public class TextQueryParser implements QueryParser {
 
 	private void _termQueryPrefixValues(
 		SearchToken tokenText, BoolQueryBuilder query,
-		List<PluginDriverDTO> entityMapperList) {
+		List<PluginDriverDTO> entityMapperList, QueryCondition queryCondition) {
 
 		String[] values = tokenText.getValues();
 
@@ -140,7 +141,7 @@ public class TextQueryParser implements QueryParser {
 
 		}
 
-		query.should(boolQueryBuilder);
+		queryCondition.accept(query, boolQueryBuilder);
 
 	}
 

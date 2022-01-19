@@ -211,13 +211,9 @@ public abstract class BaseSearchHTTPHandler
 					.reduce(QueryParser.NOTHING, QueryParser::andThen);
 
 			return queryParser.apply(
-				QueryParser.Context.of(
-					tenant,
-					datasources,
-					documentTypeList,
-					tokenTypeGroup,
-					httpRequest
-				)
+				createQueryParserContext(
+					tenant, datasources, httpRequest, tokenTypeGroup,
+					documentTypeList)
 			).flatMap(boolQueryBuilderConsumer ->
 				_search.search(factory -> {
 
@@ -274,6 +270,22 @@ public abstract class BaseSearchHTTPHandler
 
 	}
 
+	protected QueryParser.Context createQueryParserContext(
+		Tenant tenant, List<Datasource> datasources,
+		HttpServerRequest httpRequest,
+		Map<String, List<SearchToken>> tokenTypeGroup,
+		List<PluginDriverDTO> documentTypeList) {
+
+		return QueryParser.Context.of(
+			tenant,
+			datasources,
+			documentTypeList,
+			tokenTypeGroup,
+			httpRequest,
+			QueryParser.QueryCondition.DEFAULT
+		);
+	}
+
 	private Mono<PluginDriverDTOList> _getPluginDriverDTOList(List<Datasource> datasources) {
 		return Mono.defer(() -> {
 
@@ -311,8 +323,10 @@ public abstract class BaseSearchHTTPHandler
 
 		int[] range = searchRequest.getRange();
 
-		searchSourceBuilder.from(range[0]);
-		searchSourceBuilder.size(range[1]);
+		if (range != null) {
+			searchSourceBuilder.from(range[0]);
+			searchSourceBuilder.size(range[1]);
+		}
 
 		HighlightBuilder highlightBuilder = new HighlightBuilder();
 

@@ -34,8 +34,6 @@ import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
-import io.openk9.search.query.internal.response.Response;
-import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -51,15 +49,13 @@ import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -106,6 +102,8 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 			searchSourceBuilder.from(range[0]);
 			searchSourceBuilder.size(range[1]);
 		}
+
+		searchSourceBuilder.trackTotalHits(false);
 
 		List<String> autocompleteKeywords =
 			searchRequest
@@ -169,77 +167,90 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 
 			SearchHits hits = searchResponse.getHits();
 
-			Set<Map<String, Object>> result = new HashSet<>();
+			Map<String, Collection<String>> innerResult = new HashMap<>();
 
 			for (SearchHit hit : hits.getHits()) {
 
 				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 
 				if (sourceAsMap != null) {
-
-					Map<String, Object> innerResult = new HashMap<>();
-
-					_findAndReplaceLeaf(
-						sourceAsMap.entrySet().iterator(), values, innerResult);
-
-					if (!innerResult.isEmpty()) {
-						result.add(Map.of("source", innerResult));
-					}
-
+					_findAndReplaceLeaf(null, sourceAsMap, values, innerResult);
 				}
 
 			}
 
-			TotalHits totalHits = hits.getTotalHits();
-
-			return new Response(result, totalHits.value);
+			return innerResult;
 
 		});
 	}
 
 	private void _findAndReplaceLeaf(
-		Iterator<Map.Entry<String, Object>> iterator,
+		String initialKey,
+		Map<String, Object> originalMap,
 		List<String> values,
-		Map<String, Object> acc) {
+		Map<String, Collection<String>> acc) {
 
-		while (iterator.hasNext()) {
-			Map.Entry<String, Object> e = iterator.next();
+		for (Map.Entry<String, Object> e : originalMap.entrySet()) {
 			String key = e.getKey();
 			Object value = e.getValue();
 
+			String currentKey = (initialKey == null || initialKey.isBlank())
+				? key
+				: initialKey + "." + key;
+
 			if (value instanceof Map) {
 				_findAndReplaceLeaf(
-					((Map<String, Object>)value).entrySet().iterator(),
-					values,
-					(Map<String, Object>)acc.computeIfAbsent(key, k -> new HashMap<>()));
+					currentKey, ((Map<String, Object>) value), values, acc);
 			}
 			else if (value instanceof Collection) {
 
 				List<String> newValues =
-					((Collection<String>)value)
+					((Collection<String>) value)
 						.stream()
-						.filter(s -> values.stream().anyMatch(s1 -> s.toLowerCase().contains(s1)))
+						.filter(s -> values.stream().anyMatch(
+							s1 -> s.toLowerCase().contains(s1)))
 						.collect(Collectors.toList());
 
-				if (newValues.size() == 1) {
-					acc.put(key, newValues.get(0));
-				}
-				else if(newValues.size() > 1) {
-					acc.put(key, newValues);
+				if (!newValues.isEmpty()) {
+
+					acc.compute(currentKey, (a, b) -> {
+
+						if (b == null) {
+							b = new ArrayList<>();
+						}
+
+						for (String newValue : newValues) {
+							if (!b.contains(newValue)) {
+								b.add(newValue);
+							}
+						}
+
+						return b;
+
+					});
+
 				}
 
 			}
 			else if (value instanceof String) {
-				if (values.stream().anyMatch(s1 -> ((String) value).toLowerCase().contains(s1))) {
-					acc.put(key, value);
+				if (values.stream().anyMatch(
+					s1 -> ((String) value).toLowerCase().contains(s1))) {
+					acc.compute(currentKey, (a, b) -> {
+
+						if (b == null) {
+							b = new ArrayList<>();
+						}
+
+						if (!b.contains(value)) {
+							b.add((String) value);
+						}
+
+						return b;
+
+					});
 				}
 			}
-			else {
-				acc.put(key, value);
-			}
-
 		}
-
 	}
 
 	@Reference(

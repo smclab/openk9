@@ -23,6 +23,7 @@ import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -54,6 +55,33 @@ public interface QueryParser
 		final List<PluginDriverDTO> pluginDriverDocumentTypeList;
 		final Map<String, List<SearchToken>> tokenTypeGroup;
 		final HttpServerRequest httpRequest;
+		final QueryCondition queryCondition;
+	}
+
+	enum QueryCondition {
+		FILTER {
+			public void accept(BoolQueryBuilder l, QueryBuilder r) {
+				l.filter(r);
+			}
+		},
+		MUST {
+			public void accept(BoolQueryBuilder l, QueryBuilder r) {
+				l.must(r);
+			}
+		},
+		SHOULD {
+			public void accept(BoolQueryBuilder l, QueryBuilder r) {
+				l.should(r);
+			}
+		},
+		DEFAULT {
+			public void accept(BoolQueryBuilder l, QueryBuilder r) {
+				l.should(r);
+			}
+		};
+
+		public abstract void accept(BoolQueryBuilder l, QueryBuilder r);
+
 	}
 
 }
