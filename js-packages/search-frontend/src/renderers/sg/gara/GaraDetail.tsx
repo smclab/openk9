@@ -22,53 +22,53 @@ export function GaraDetail({ result }: GaraDetailProps) {
         <HighlightableText result={result} path="web.url" />
       </DetailLink>
       <DetailAttribute label="Descrizione">
-        {result.source.gara.descrizione}
+        {result.source.gare.descrizione}
       </DetailAttribute>
       <DetailAttribute label="Oggetto della gara">
-        {result.source.gara.oggettoGara}
+        {result.source.gare.oggettoGara}
       </DetailAttribute>
       <DetailAttribute label="Stato gara">
-        {result.source.gara.status}
+        {result.source.gare.status}
       </DetailAttribute>
       <DetailAttribute label="Tipologia">
-        {result.source.gara.tipologia}
+        {result.source.gare.tipologia}
       </DetailAttribute>
       <DetailAttribute label="Regione">
-        {result.source.gara.regione}
+        {result.source.gare.regione}
       </DetailAttribute>
       <DetailAttribute label="Provincia">
-        {result.source.gara.provincia}
+        {result.source.gare.provincia}
       </DetailAttribute>
       <DetailAttribute label="Comune">
-        {result.source.gara.comune}
+        {result.source.gare.comune}
       </DetailAttribute>
       <DetailAttribute label="Stazione">
-        {result.source.gara.stazione}
+        {result.source.gare.stazione}
       </DetailAttribute>
       <DetailAttribute label="Data di pubblicazione">
-        {result.source.gara.datapubblicazione}
+        {result.source.gare.datapubblicazione}
       </DetailAttribute>
       <DetailAttribute label="Data di scadenza">
-        {result.source.gara.datascadenza}
+        {result.source.gare.datascadenza}
       </DetailAttribute>
       <DetailAttribute label="Data esito">
-        {result.source.gara.dataEsito}
+        {result.source.gare.dataEsito}
       </DetailAttribute>
       <DetailAttribute label="Importo">
-        {result.source.gara.importo}
+        {result.source.gare.importo}
       </DetailAttribute>
       <DetailAttribute label="Criterio">
-        {result.source.gara.criterio}
+        {result.source.gare.criterio}
       </DetailAttribute>
       <DetailAttribute label="Nominativo">
-        {result.source.gara.nominativo}
+        {result.source.gare.nominativo}
       </DetailAttribute>
       <DetailAttribute label="Email">
-        {result.source.gara.email}
+        {result.source.gare.email}
       </DetailAttribute>
       <DetailAttribute label="Documenti di gara">
         <ul>
-          {result.source.gara.documentiGara?.map((url) => {
+          {result.source.gare.documentiGara?.map((url) => {
             return (
               <li key={url}>
                 <a
@@ -88,7 +88,7 @@ export function GaraDetail({ result }: GaraDetailProps) {
       </DetailAttribute>
       <DetailAttribute label="Documenti di esito">
         <ul>
-          {result.source.gara.documentiEsito?.map((url) => {
+          {result.source.gare.documentiEsito?.map((url) => {
             return (
               <li key={url}>
                 <a

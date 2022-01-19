@@ -1,7 +1,7 @@
 import { GenericResultItem } from "@openk9/rest-api";
 
 export type GaraResultItem = GenericResultItem<{
-  gara: {
+  gare: {
     descrizione: string;
     tipologia: string;
     regione: string;
