@@ -31,7 +31,7 @@ function Detail<E>(props: DetailProps<E>) {
       `}
     >
       {(() => {
-        if (result.source.documentTypes.includes("gara")) {
+        if (result.source.documentTypes.includes("gare")) {
           return <GaraDetail result={result} />;
         }
         if (result.source.documentTypes.includes("opendata")) {

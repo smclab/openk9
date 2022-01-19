@@ -18,8 +18,8 @@ export type GaraResultItem = GenericResultItem<{
     status: string;
     comune: string;
     dataEsito: string;
-    documentiGara: Array<string>;
-    documentiEsito: Array<string>;
+    documentiGara?: Array<string>;
+    documentiEsito?: Array<string>;
   };
   web: {
     favicon: string;

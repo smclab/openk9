@@ -83,7 +83,7 @@ export function VenditeDetail({ result }: VenditeDetailProps) {
       </DetailAttribute>
       <DetailAttribute label="Documenti di vendite">
         <ul>
-          {result.source.vendite.documentiVendite?.map((url) => {
+          {result.source.vendite.documentiVendita?.map((url) => {
             return (
               <li key={url}>
                 <a

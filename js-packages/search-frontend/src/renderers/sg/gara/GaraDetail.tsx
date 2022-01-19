@@ -68,7 +68,7 @@ export function GaraDetail({ result }: GaraDetailProps) {
       </DetailAttribute>
       <DetailAttribute label="Documenti di gara">
         <ul>
-          {result.source.gara.documentiGara.map((url) => {
+          {result.source.gara.documentiGara?.map((url) => {
             return (
               <li key={url}>
                 <a
@@ -88,7 +88,7 @@ export function GaraDetail({ result }: GaraDetailProps) {
       </DetailAttribute>
       <DetailAttribute label="Documenti di esito">
         <ul>
-          {result.source.gara.documentiEsito.map((url) => {
+          {result.source.gara.documentiEsito?.map((url) => {
             return (
               <li key={url}>
                 <a

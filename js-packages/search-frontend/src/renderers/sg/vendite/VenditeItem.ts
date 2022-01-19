@@ -30,7 +30,7 @@ export type VenditeResultItem = GenericResultItem<{
     comune: string;
     scadenzaOfferte: string;
     esameOfferte: string;
-    documentiVendite?: Array<string>;
+    documentiVendita?: Array<string>;
   };
   web: {
     favicon: string;
