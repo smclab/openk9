@@ -25,7 +25,7 @@ public class DatasourceProcessor {
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
 	@Blocking("datasource")
-	public IngestionDatasourcePayload process(JsonObject jsonObject) {
+	public IngestionDatasourcePayload process(JsonObject jsonObject) throws Exception {
 
 		IngestionPayload ingestionPayload =
 			jsonObject.mapTo(IngestionPayload.class);

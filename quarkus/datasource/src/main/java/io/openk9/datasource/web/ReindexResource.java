@@ -26,7 +26,8 @@ public class ReindexResource {
 	@Path("/reindex")
 	@Blocking
 	@Transactional
-	public List<ReindexResponseDto> reindex(ReindexRequestDto dto) {
+	public List<ReindexResponseDto> reindex(ReindexRequestDto dto)
+		throws SchedulerException {
 
 		List<Datasource> datasourceList =
 			Datasource.list("datasourceId in ?1", dto.getDatasourceIds());
@@ -35,35 +36,18 @@ public class ReindexResource {
 
 		for (Datasource datasource : datasourceList) {
 
-			try {
+			datasource.setLastIngestionDate(Instant.EPOCH);
+			datasource.persist();
 
-				datasource.setLastIngestionDate(Instant.EPOCH);
-				datasource.persist();
+			_schedulerInitializer.get().triggerJob(
+				datasource.getDatasourceId(), datasource.getName());
 
-				_schedulerInitializer.get().triggerJob(
-					datasource.getDatasourceId(), datasource.getName());
-
-				response.add(
-					ReindexResponseDto.of(
-						datasource.getDatasourceId(),
-						true
-					)
-				);
-
-			}
-			catch (SchedulerException e) {
-
-				_logger.error(e, e);
-
-				response.add(
-					ReindexResponseDto.of(
-						datasource.getDatasourceId(),
-						false
-					)
-				);
-
-			}
-
+			response.add(
+				ReindexResponseDto.of(
+					datasource.getDatasourceId(),
+					true
+				)
+			);
 
 		}
 

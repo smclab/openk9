@@ -4,7 +4,6 @@ import io.openk9.datasource.emitter.datasource.DeleteEmitter;
 import io.openk9.datasource.emitter.datasource.InsertEmitter;
 import io.openk9.datasource.emitter.datasource.UpdateEmitter;
 import io.openk9.datasource.model.Datasource;
-import org.jboss.logging.Logger;
 import org.quartz.SchedulerException;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -18,38 +17,27 @@ import javax.persistence.PreUpdate;
 public class DatasourceListener {
 
 	@PostPersist
-	public void beforeAdd(Datasource datasource) {
+	public void beforeAdd(Datasource datasource) throws SchedulerException {
 		_createOrUpdateScheduler(datasource);
 		_insertEmitter.send(datasource);
 	}
 
 	@PreUpdate
-	public void beforeUpdate(Datasource datasource) {
+	public void beforeUpdate(Datasource datasource) throws SchedulerException {
 		_createOrUpdateScheduler(datasource);
 		_updateEmitter.send(datasource);
 	}
 
 	@PostRemove
-	public void postRemove(Datasource datasource) {
-		try {
-			_schedulerInitializer.get().deleteScheduler(datasource);
-		}
-		catch (SchedulerException e) {
-			_log.error(e.getMessage(), e);
-		}
-
+	public void postRemove(Datasource datasource) throws SchedulerException {
+		_schedulerInitializer.get().deleteScheduler(datasource);
 		_deleteEmitter.send(datasource);
 
 	}
 
-	private void _createOrUpdateScheduler(Datasource datasource) {
-
-		try {
-			_schedulerInitializer.get().createOrUpdateScheduler(datasource);
-		}
-		catch (SchedulerException e) {
-			_log.error(e.getMessage(), e);
-		}
+	private void _createOrUpdateScheduler(Datasource datasource)
+		throws SchedulerException {
+		_schedulerInitializer.get().createOrUpdateScheduler(datasource);
 
 	}
 
@@ -64,8 +52,5 @@ public class DatasourceListener {
 
 	@Inject
 	Instance<SchedulerInitializer> _schedulerInitializer;
-
-	private static final Logger _log = Logger.getLogger(
-		DatasourceListener.class);
 
 }
