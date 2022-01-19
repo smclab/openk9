@@ -24,7 +24,7 @@ public class DatasourceProcessor {
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
 	@Blocking("datasource")
-	@Transactional
+	@Transactional(Transactional.TxType.REQUIRES_NEW)
 	public IngestionDatasourcePayload process(JsonObject jsonObject) {
 
 		IngestionPayload ingestionPayload =
