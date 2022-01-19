@@ -53,7 +53,6 @@ Build Latest Frontend Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  needs: [JS Format Lint Test and Build Check]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
@@ -82,7 +81,6 @@ Build Query Understanding Frontend Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  needs: [JS Format Lint Test and Build Check]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
@@ -111,7 +109,6 @@ Build Latest Site Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  needs: [JS Format Lint Test and Build Check]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
@@ -134,7 +131,6 @@ Build Latest Admin Ui Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  needs: [JS Format Lint Test and Build Check]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
@@ -163,7 +159,6 @@ Build Latest Admin Logs Service Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  needs: [JS Format Lint Test and Build Check]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
@@ -188,7 +183,6 @@ Build Latest Js Executor Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  needs: [JS Format Lint Test and Build Check]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
