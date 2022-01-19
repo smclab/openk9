@@ -283,7 +283,7 @@ distConfigurations
 			def createDockerFile = tasks.register("createDockerFile${distPrimaryName}", Dockerfile, {
 				dependsOn(copyConfigs, buildDistTask)
 
-				from("adoptopenjdk:11-jdk-hotspot")
+				from("eclipse-temurin:17.0.1_12-jre-alpine")
 				environmentVariable("KARAF_INSTALL_PATH", "/opt")
 				environmentVariable("KARAF_HOME", '$KARAF_INSTALL_PATH/apache-karaf')
 				environmentVariable("KARAF_EXEC", "exec")
