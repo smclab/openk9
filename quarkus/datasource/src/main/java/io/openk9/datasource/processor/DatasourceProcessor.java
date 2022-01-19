@@ -19,12 +19,12 @@ import java.time.Instant;
 import java.util.List;
 
 @ApplicationScoped
+@Transactional
 public class DatasourceProcessor {
 
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
 	@Blocking("datasource")
-	@Transactional(Transactional.TxType.REQUIRES_NEW)
 	public IngestionDatasourcePayload process(JsonObject jsonObject) {
 
 		IngestionPayload ingestionPayload =
