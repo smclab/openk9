@@ -57,10 +57,10 @@ export function VenditeDetail({ result }: VenditeDetailProps) {
       <DetailAttribute label="Provincia">
         {result.source.vendite.foglio}
       </DetailAttribute>
-      <DetailAttribute label="Comune">
+      <DetailAttribute label="Mappale">
         {result.source.vendite.mappale}
       </DetailAttribute>
-      <DetailAttribute label="Indirizzo">
+      <DetailAttribute label="Subalterno">
         {result.source.vendite.subalterno}
       </DetailAttribute>
       <DetailAttribute label="Data di scadenza">
