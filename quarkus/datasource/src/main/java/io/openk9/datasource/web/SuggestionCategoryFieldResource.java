@@ -59,7 +59,7 @@ public class SuggestionCategoryFieldResource {
 
 		Page page = null;
 
-		if (pageIndex == -1 && pageSize == -1) {
+		if (pageIndex != -1 && pageSize != -1) {
 			page = Page.of(pageIndex, pageSize);
 		}
 
