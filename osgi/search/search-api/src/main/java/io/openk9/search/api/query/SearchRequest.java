@@ -27,4 +27,5 @@ public class SearchRequest {
 	private int[] range;
 	private String afterKey;
 	private String suggestKeyword;
+	private Long suggestionCategoryId;
 }

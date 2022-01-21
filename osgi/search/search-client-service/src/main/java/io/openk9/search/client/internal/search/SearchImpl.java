@@ -57,6 +57,12 @@ public class SearchImpl implements Search {
 		return Mono.defer(() -> search(function.apply(_searchRequestFactory)));
 	}
 
+	@Override
+	public Mono<SearchResponse> flatMapSearch(
+		Function<SearchRequestFactory, Mono<SearchRequest>> searchRequestBuilderFunction) {
+		return Mono.defer(() -> searchRequestBuilderFunction.apply(_searchRequestFactory).flatMap(this::search));
+	}
+
 	@Reference
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
 

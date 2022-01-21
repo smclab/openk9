@@ -26,7 +26,6 @@ import io.openk9.model.Datasource;
 import io.openk9.model.SuggestionCategoryField;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
-import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.search.api.query.QueryParser;
@@ -63,9 +62,7 @@ import reactor.netty.http.server.HttpServerRoutes;
 import reactor.util.function.Tuple2;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -74,7 +71,6 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component(
 	immediate = true,
@@ -121,80 +117,76 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 	}
 
 	@Override
-	protected void customizeSearchSourceBuilder(
-		Tenant tenant, List<Datasource> datasources, SearchRequest searchRequest,
-		List<PluginDriverDTO> documentTypeList,
+	protected Mono<org.elasticsearch.action.search.SearchRequest> customizeSearchSourceBuilderMono(
+		Tenant tenant, List<Datasource> datasources,
+		SearchRequest searchRequest, List<PluginDriverDTO> documentTypeList,
 		SearchSourceBuilder searchSourceBuilder,
 		org.elasticsearch.action.search.SearchRequest elasticSearchQuery) {
 
-		Function<String, CompositeValuesSourceBuilder<?>> fieldToTerms =
-			nameField ->
-				new TermsValuesSourceBuilder(nameField)
-					.field(nameField)
-					.missingBucket(true);
+		return Mono.defer(() -> {
 
-		Stream<String> datasourceFields =
-			documentTypeList
-				.stream()
-				.map(PluginDriverDTO::getDocumentTypes)
-				.flatMap(Collection::stream)
-				.map(DocumentTypeDTO::getName)
-				.distinct()
-				.flatMap(name ->
-					Arrays
-						.stream(_datasourceFieldAggregations)
-						.map(suffix -> name + "." + suffix)
-				);
+			Long suggestionCategoryId =
+				searchRequest.getSuggestionCategoryId();
 
-		Stream.Builder<String> builder = Stream.builder();
+			if (suggestionCategoryId == null) {
+				return _datasourceClient
+					.findSuggestionCategoryFields();
+			}
+			else {
+				return _datasourceClient
+					.findSuggestionCategoryFieldsByCategoryId(
+						suggestionCategoryId);
+			}
+		})
+			.map(fields -> {
 
-		if (_enableEntityAggregation) {
-			builder.accept("entities.id");
-		}
+				Function<String, CompositeValuesSourceBuilder<?>> fieldToTerms =
+					nameField ->
+						new TermsValuesSourceBuilder(nameField)
+							.field(nameField)
+							.missingBucket(true);
 
-		builder
-			.add("datasourceId")
-			.add("documentTypes");
+				CompositeAggregationBuilder compositeAggregation =
+					fields.stream()
+						.map(SuggestionCategoryField::getFieldName)
+						.map(fieldToTerms)
+						.collect(
+							Collectors.collectingAndThen(
+								Collectors.toList(),
+								list -> AggregationBuilders
+									.composite("composite", list)
+							)
+						);
 
-		Stream<String> rest = builder.build();
+				String afterKey = searchRequest.getAfterKey();
 
-		CompositeAggregationBuilder compositeAggregation =
-			Stream
-				.concat(datasourceFields, rest)
-				.map(fieldToTerms)
-				.collect(
-					Collectors.collectingAndThen(
-						Collectors.toList(),
-						list -> AggregationBuilders
-							.composite("composite", list)
-					)
-				);
+				if (afterKey != null) {
+					byte[] afterKeyDecoded = Base64.getDecoder().decode(afterKey);
 
-		String afterKey = searchRequest.getAfterKey();
+					Map<String, Object> map =
+						_jsonFactory.fromJsonMap(
+							new String(afterKeyDecoded), Object.class);
 
-		if (afterKey != null) {
-			byte[] afterKeyDecoded = Base64.getDecoder().decode(afterKey);
+					compositeAggregation.aggregateAfter(map);
+				}
 
-			Map<String, Object> map =
-				_jsonFactory.fromJsonMap(
-					new String(afterKeyDecoded), Object.class);
+				int[] range = searchRequest.getRange();
 
-			compositeAggregation.aggregateAfter(map);
-		}
+				if (range != null && range.length == 2) {
+					int size = range[1];
+					compositeAggregation.size(size);
+				}
 
-		int[] range = searchRequest.getRange();
+				searchSourceBuilder.aggregation(compositeAggregation);
 
-		if (range != null && range.length == 2) {
-			int size = range[1];
-			compositeAggregation.size(size);
-		}
+				searchSourceBuilder.from(0);
+				searchSourceBuilder.size(0);
 
-		searchSourceBuilder.aggregation(compositeAggregation);
+				searchSourceBuilder.highlighter(null);
 
-		searchSourceBuilder.from(0);
-		searchSourceBuilder.size(0);
+				return elasticSearchQuery.source(searchSourceBuilder);
 
-		searchSourceBuilder.highlighter(null);
+			});
 
 	}
 

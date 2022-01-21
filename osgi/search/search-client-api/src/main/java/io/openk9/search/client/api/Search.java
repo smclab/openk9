@@ -31,4 +31,8 @@ public interface Search {
 		Function<SearchRequestFactory, SearchRequest>
 			searchRequestBuilderFunction);
 
+	Mono<SearchResponse> flatMapSearch(
+		Function<SearchRequestFactory, Mono<SearchRequest>>
+			searchRequestBuilderFunction);
+
 }

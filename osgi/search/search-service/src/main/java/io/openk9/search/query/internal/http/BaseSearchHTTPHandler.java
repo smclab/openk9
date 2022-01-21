@@ -215,12 +215,12 @@ public abstract class BaseSearchHTTPHandler
 					tenant, datasources, httpRequest, tokenTypeGroup,
 					documentTypeList)
 			).flatMap(boolQueryBuilderConsumer ->
-				_search.search(factory -> {
+				_search.flatMapSearch(factory -> {
 
 					long tenantId = tenant.getTenantId();
 
 					if (documentTypeList.isEmpty()) {
-						return SearchUtil.EMPTY_SEARCH_REQUEST;
+						return Mono.just(SearchUtil.EMPTY_SEARCH_REQUEST);
 					}
 
 					BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
@@ -254,15 +254,9 @@ public abstract class BaseSearchHTTPHandler
 
 					searchSourceBuilder.query(boolQuery);
 
-					customizeSearchSourceBuilder(
+					return customizeSearchSourceBuilderMono(
 						tenant, datasources, searchRequest, documentTypeList,
 						searchSourceBuilder, elasticSearchQuery);
-
-					if (_log.isDebugEnabled()) {
-						_log.debug(searchSourceBuilder.toString());
-					}
-
-					return elasticSearchQuery.source(searchSourceBuilder);
 
 				}));
 
@@ -313,6 +307,21 @@ public abstract class BaseSearchHTTPHandler
 
 	protected String[] includeFields() {
 		return _EMPTY_ARRAY;
+	}
+
+	protected Mono<org.elasticsearch.action.search.SearchRequest> customizeSearchSourceBuilderMono(
+		Tenant tenant, List<Datasource> datasources, SearchRequest searchRequest,
+		List<PluginDriverDTO> documentTypeList,
+		SearchSourceBuilder searchSourceBuilder,
+		org.elasticsearch.action.search.SearchRequest elasticSearchQuery) {
+
+		return Mono.fromSupplier(() -> {
+			customizeSearchSourceBuilder(
+				tenant, datasources, searchRequest, documentTypeList,
+				searchSourceBuilder, elasticSearchQuery);
+			return elasticSearchQuery.source(searchSourceBuilder);
+		});
+
 	}
 
 	protected void customizeSearchSourceBuilder(
