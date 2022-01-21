@@ -140,44 +140,50 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		})
 			.map(fields -> {
 
-				Function<String, CompositeValuesSourceBuilder<?>> fieldToTerms =
-					nameField ->
-						new TermsValuesSourceBuilder(nameField)
-							.field(nameField)
-							.missingBucket(true);
+				if (!(fields == null || fields.isEmpty())) {
 
-				CompositeAggregationBuilder compositeAggregation =
-					fields.stream()
-						.map(SuggestionCategoryField::getFieldName)
-						.map(fieldToTerms)
-						.collect(
-							Collectors.collectingAndThen(
-								Collectors.toList(),
-								list -> AggregationBuilders
-									.composite("composite", list)
-							)
-						);
+					Function<String, CompositeValuesSourceBuilder<?>>
+						fieldToTerms =
+						nameField ->
+							new TermsValuesSourceBuilder(nameField)
+								.field(nameField)
+								.missingBucket(true);
 
-				String afterKey = searchRequest.getAfterKey();
+					CompositeAggregationBuilder compositeAggregation =
+						fields.stream()
+							.map(SuggestionCategoryField::getFieldName)
+							.map(fieldToTerms)
+							.collect(
+								Collectors.collectingAndThen(
+									Collectors.toList(),
+									list -> AggregationBuilders
+										.composite("composite", list)
+								)
+							);
 
-				if (afterKey != null) {
-					byte[] afterKeyDecoded = Base64.getDecoder().decode(afterKey);
+					String afterKey = searchRequest.getAfterKey();
 
-					Map<String, Object> map =
-						_jsonFactory.fromJsonMap(
-							new String(afterKeyDecoded), Object.class);
+					if (afterKey != null) {
+						byte[] afterKeyDecoded =
+							Base64.getDecoder().decode(afterKey);
 
-					compositeAggregation.aggregateAfter(map);
+						Map<String, Object> map =
+							_jsonFactory.fromJsonMap(
+								new String(afterKeyDecoded), Object.class);
+
+						compositeAggregation.aggregateAfter(map);
+					}
+
+					int[] range = searchRequest.getRange();
+
+					if (range != null && range.length == 2) {
+						int size = range[1];
+						compositeAggregation.size(size);
+					}
+
+					searchSourceBuilder.aggregation(compositeAggregation);
+
 				}
-
-				int[] range = searchRequest.getRange();
-
-				if (range != null && range.length == 2) {
-					int size = range[1];
-					compositeAggregation.size(size);
-				}
-
-				searchSourceBuilder.aggregation(compositeAggregation);
 
 				searchSourceBuilder.from(0);
 				searchSourceBuilder.size(0);
