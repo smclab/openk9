@@ -27,6 +27,7 @@ import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
 import io.openk9.model.DatasourceContext;
 import io.openk9.model.EnrichItem;
+import io.openk9.model.IngestionPayload;
 import io.openk9.osgi.util.AutoCloseables;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.enrich.api.AsyncEnrichProcessor;
@@ -203,6 +204,12 @@ class EnrichProcessorServiceTracker
 
 					ObjectNode objectNode = context.get("payload").toObjectNode();
 
+					IngestionPayload ingestionPayload =
+						m_jsonFactory.fromJson(objectNode.toString(),
+							IngestionPayload.class);
+
+					boolean isValid = _enrichProcessor.validate(ingestionPayload);
+
 					JsonNode datasourceContextJson =
 						context.get("datasourceContext");
 
@@ -224,12 +231,25 @@ class EnrichProcessorServiceTracker
 						.filter(e -> e.getServiceName().equals(_enrichProcessor.name()))
 						.findFirst().orElseThrow(IllegalStateException::new);
 
+					String routingKey;
+
+					if (dependencies.isEmpty()) {
+						routingKey = "index-writer";
+					}
+					else {
+						routingKey =
+							dependencies.remove(0).asText();
+					}
+
 					if (_enrichProcessor instanceof AsyncEnrichProcessor) {
+
+						String destinationName = isValid
+							? ((AsyncEnrichProcessor)_enrichProcessor).destinationName()
+							: routingKey;
 
 						BundleSender bundleSender =
 							m_bundleSenderProvider.getBundleSender(
-								((AsyncEnrichProcessor)_enrichProcessor)
-									.destinationName());
+								destinationName);
 
 						ObjectNode ob = m_jsonFactory.createObjectNode();
 
@@ -243,18 +263,14 @@ class EnrichProcessorServiceTracker
 						ob.put("datasourceContext", datasourceContextJson);
 						ob.put("pluginDriver", pluginDriverJson);
 
-						if (dependencies.isEmpty()) {
+						if (routingKey.equals("index-writer")) {
 							ob.put("dependencies", m_jsonFactory.createArrayNode());
-							ob.put("replyTo", "index-writer");
 						}
 						else {
-
-							String routingKey =
-								dependencies.remove(0).asText();
-
-							ob.put("replyTo", routingKey);
 							ob.put("dependencies", dependencies);
 						}
+
+						ob.put("replyTo", routingKey);
 
 						return bundleSender.send(
 							Mono.just(ob.toString().getBytes())
@@ -262,12 +278,17 @@ class EnrichProcessorServiceTracker
 
 					}
 					else if (_enrichProcessor instanceof SyncEnrichProcessor) {
-						return ((SyncEnrichProcessor)_enrichProcessor).process(
-								objectNode,
-								datasourceContext,
-								enrichItem,
-								pluginDriver
-							)
+
+						return (
+							isValid
+								? ((SyncEnrichProcessor)_enrichProcessor).process(
+									objectNode,
+									datasourceContext,
+									enrichItem,
+									pluginDriver
+								)
+								: Mono.just(objectNode)
+						)
 							.flatMap(
 								jsonNode -> {
 
@@ -286,9 +307,6 @@ class EnrichProcessorServiceTracker
 
 										return m_endEnrichProcessor.exec(ob2);
 									}
-
-									String routingKey =
-										dependencies.remove(0).asText();
 
 									ob2.put("replyTo", routingKey);
 

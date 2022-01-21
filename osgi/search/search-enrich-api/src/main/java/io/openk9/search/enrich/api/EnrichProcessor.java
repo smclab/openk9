@@ -17,6 +17,13 @@
 
 package io.openk9.search.enrich.api;
 
+import io.openk9.model.IngestionPayload;
+
 public interface EnrichProcessor {
 	String name();
+
+	default boolean validate(IngestionPayload ingestionPayload) {
+		return true;
+	}
+
 }
