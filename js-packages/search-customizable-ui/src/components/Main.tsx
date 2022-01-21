@@ -1,7 +1,7 @@
 import React from "react";
 import {
   ALL_SUGGESTION_CATEGORY_ID,
-  DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+  KEYWORDS_SUGGESTION_CATEGORY_ID,
   GenericResultItem,
   getPlugins,
   SearchToken,
@@ -452,7 +452,7 @@ export function Main({ children, templates, interactions }: MainProps) {
           }}
         >
           {state.activeSuggestionCategory ===
-            DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID && (
+            KEYWORDS_SUGGESTION_CATEGORY_ID && (
             <SuggestionPageMemo
               suggestions={documentTypeSuggestions}
               templates={templates}

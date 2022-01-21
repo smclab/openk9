@@ -961,18 +961,25 @@ export type EntityLookupResponse = {
 // TODO: remove
 export async function getSuggestions({
   searchQuery,
+  suggestionCategoryId,
   range,
   afterKey,
   loginInfo,
 }: {
   searchQuery: SearchToken[];
+  suggestionCategoryId?: number;
   range?: [number, number]; // for pagination
   afterKey?: string; // for pagination
   loginInfo: LoginInfo | null;
 }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
   const request = await authFetch(`/api/searcher/v1/suggestions`, loginInfo, {
     method: "POST",
-    body: JSON.stringify({ searchQuery, range, afterKey }),
+    body: JSON.stringify({
+      searchQuery,
+      range,
+      afterKey,
+      suggestionCategoryId,
+    }),
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
@@ -1058,7 +1065,7 @@ export function setQueryParamToken({
 // TODO: remove
 export const ROOT_SUGGESTION_CATEGORY_ID = -1;
 export const ALL_SUGGESTION_CATEGORY_ID = 100000;
-export const DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID = 99999;
+export const KEYWORDS_SUGGESTION_CATEGORY_ID = 99999;
 
 // DEPRECATED
 // TODO: remove
@@ -1102,7 +1109,7 @@ export async function getSuggestionCategories(
     {
       name: "Keywords",
       parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
-      suggestionCategoryId: DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+      suggestionCategoryId: KEYWORDS_SUGGESTION_CATEGORY_ID,
       tenantId: NaN,
     },
     ...data,

@@ -361,6 +361,7 @@ export function Main({ targetElements }: MainProps) {
                     cursor: pointer;
                     font-size: 0.8rem;
                     color: ${myTheme.grayTexColor};
+                    user-select: none;
                   `}
                   onClick={() => {
                     setSelectedTabIndex(index);
