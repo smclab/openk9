@@ -39,6 +39,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregation;
@@ -281,10 +282,17 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		PluginDriverDTOList pluginDriverDTOList, SearchRequest searchRequest,
 		SearchResponse searchResponse, List<SuggestionCategoryField> fields,
 		Map<String, String[]> entityMap) {
+
 		Aggregations aggregations = searchResponse.getAggregations();
 
+		Map<String, Aggregation> aggregationMap = aggregations.asMap();
+
+		if (!aggregationMap.containsKey("composite")) {
+			return SuggestionsResponse.of(List.of(), null);
+		}
+
 		CompositeAggregation compositeAggregation =
-			aggregations.get("composite");
+			(CompositeAggregation)aggregationMap.get("composite");
 
 		Map<String, Long> fieldNameCategoryIdMap =
 			fields
