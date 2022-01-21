@@ -285,6 +285,10 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 		Aggregations aggregations = searchResponse.getAggregations();
 
+		if (aggregations == null) {
+			return SuggestionsResponse.of(List.of(), null);
+		}
+
 		Map<String, Aggregation> aggregationMap = aggregations.asMap();
 
 		if (!aggregationMap.containsKey("composite")) {
