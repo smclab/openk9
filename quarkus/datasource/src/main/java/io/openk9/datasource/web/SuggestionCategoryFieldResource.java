@@ -53,13 +53,26 @@ public class SuggestionCategoryFieldResource {
 	@Produces()
 	public List<SuggestionCategoryField> findAll(
 		@QueryParam("sort") List<String> sortQuery,
-		@QueryParam("page") @DefaultValue("0") int pageIndex,
-		@QueryParam("size") @DefaultValue("20") int pageSize
+		@QueryParam("page") @DefaultValue("-1") int pageIndex,
+		@QueryParam("size") @DefaultValue("-1") int pageSize
 	){
-		Page page = Page.of(pageIndex, pageSize);
-		Sort sort = Sort.by(sortQuery.toArray(String[]::new));
 
-		return SuggestionCategoryField.findAll(sort).page(page).list();
+		Page page = null;
+
+		if (pageIndex == -1 && pageSize == -1) {
+			page = Page.of(pageIndex, pageSize);
+		}
+
+		if (sortQuery == null || sortQuery.isEmpty()) {
+			return SuggestionCategoryField.findAll().page(page).list();
+		}
+		else {
+			return SuggestionCategoryField
+				.findAll(Sort.by(sortQuery.toArray(String[]::new)))
+				.page(page)
+				.list();
+		}
+
 	}
 
 	@POST
