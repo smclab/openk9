@@ -74,6 +74,21 @@ public interface QueryParser
 				l.should(r);
 			}
 		},
+		SHOULD_MIN_1 {
+			public void accept(BoolQueryBuilder l, QueryBuilder r) {
+				l.should(r).minimumShouldMatch(1);
+			}
+		},
+		SHOULD_MIN_2 {
+			public void accept(BoolQueryBuilder l, QueryBuilder r) {
+				l.should(r).minimumShouldMatch(2);
+			}
+		},
+		SHOULD_MIN_3 {
+			public void accept(BoolQueryBuilder l, QueryBuilder r) {
+				l.should(r).minimumShouldMatch(3);
+			}
+		},
 		DEFAULT {
 			public void accept(BoolQueryBuilder l, QueryBuilder r) {
 				l.should(r);
