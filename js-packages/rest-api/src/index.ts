@@ -1,3 +1,5 @@
+import type * as React from "react";
+
 export type LoginInfo = {
   access_token: string;
   expires_in: number;
