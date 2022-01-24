@@ -24,70 +24,70 @@ public class EntityQueryParser implements QueryParser {
 	@Override
 	public Mono<Consumer<BoolQueryBuilder>> apply(Context context) {
 
-		return Mono.fromSupplier(() -> {
+		List<SearchToken> searchTokens = context
+			.getTokenTypeGroup()
+			.getOrDefault(TYPE, List.of());
 
-			List<SearchToken> searchTokens = context
-				.getTokenTypeGroup()
-				.getOrDefault(TYPE, List.of());
+		if (searchTokens.isEmpty()) {
+			return QueryParser.NOTHING_CONSUMER;
+		}
 
-			return bool -> {
+		return Mono.fromSupplier(() -> bool -> {
 
-				Map<String, List<SearchToken>> searchTokenGroupingByType =
-					searchTokens
-						.stream()
-						.collect(Collectors.groupingBy(
-								searchToken ->
-									searchToken.getEntityType() == null
-										? ""
-										: searchToken.getEntityType()
-							)
-						);
+			Map<String, List<SearchToken>> searchTokenGroupingByType =
+				searchTokens
+					.stream()
+					.collect(Collectors.groupingBy(
+							searchToken ->
+								searchToken.getEntityType() == null
+									? ""
+									: searchToken.getEntityType()
+						)
+					);
 
-				BoolQueryBuilder outerBoolQueryBuilder =
-					QueryBuilders.boolQuery();
+			BoolQueryBuilder outerBoolQueryBuilder =
+				QueryBuilders.boolQuery();
 
-				for (Map.Entry<String, List<SearchToken>> groupSearchTokens : searchTokenGroupingByType.entrySet()) {
+			for (Map.Entry<String, List<SearchToken>> groupSearchTokens : searchTokenGroupingByType.entrySet()) {
 
-					String type = groupSearchTokens.getKey();
+				String type = groupSearchTokens.getKey();
 
-					if (!type.isBlank()) {
-						outerBoolQueryBuilder
-							.must(QueryBuilders.matchQuery(
-								ENTITIES_ENTITY_TYPE, type));
-					}
-
-					List<SearchToken> value = groupSearchTokens.getValue();
-
-					String[] ids =
-						value
-							.stream()
-							.map(SearchToken::getValues)
-							.flatMap(Arrays::stream)
-							.distinct()
-							.toArray(String[]::new);
-
-					if (ids.length != 0) {
-						outerBoolQueryBuilder.must(
-							_multiMatchValues(ENTITIES_ID, ids));
-					}
-
-					String[] keywordKeys =
-						value
-							.stream()
-							.map(SearchToken::getKeywordKey)
-							.filter(Objects::nonNull)
-							.toArray(String[]::new);
-
-					if (keywordKeys.length != 0) {
-						outerBoolQueryBuilder.must(
-							_multiMatchValues(ENTITIES_CONTEXT, keywordKeys));
-					}
-
+				if (!type.isBlank()) {
+					outerBoolQueryBuilder
+						.must(QueryBuilders.matchQuery(
+							ENTITIES_ENTITY_TYPE, type));
 				}
 
-				context.getQueryCondition().accept(bool, outerBoolQueryBuilder);
+				List<SearchToken> value = groupSearchTokens.getValue();
 
-			};
+				String[] ids =
+					value
+						.stream()
+						.map(SearchToken::getValues)
+						.flatMap(Arrays::stream)
+						.distinct()
+						.toArray(String[]::new);
+
+				if (ids.length != 0) {
+					outerBoolQueryBuilder.must(
+						_multiMatchValues(ENTITIES_ID, ids));
+				}
+
+				String[] keywordKeys =
+					value
+						.stream()
+						.map(SearchToken::getKeywordKey)
+						.filter(Objects::nonNull)
+						.toArray(String[]::new);
+
+				if (keywordKeys.length != 0) {
+					outerBoolQueryBuilder.must(
+						_multiMatchValues(ENTITIES_CONTEXT, keywordKeys));
+				}
+
+			}
+
+			context.getQueryCondition().accept(bool, outerBoolQueryBuilder);
 
 		});
 	}

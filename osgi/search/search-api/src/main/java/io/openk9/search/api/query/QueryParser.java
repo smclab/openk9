@@ -47,6 +47,8 @@ public interface QueryParser
 
 	QueryParser NOTHING = (context) -> Mono.just((ignore) -> {});
 
+	Mono<Consumer<BoolQueryBuilder>> NOTHING_CONSUMER = Mono.just((ignore) -> {});
+
 	@Data
 	@RequiredArgsConstructor(staticName = "of")
 	class Context {
