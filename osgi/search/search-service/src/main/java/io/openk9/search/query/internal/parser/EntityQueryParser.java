@@ -85,7 +85,7 @@ public class EntityQueryParser implements QueryParser {
 
 				}
 
-				bool.filter(outerBoolQueryBuilder);
+				context.getQueryCondition().accept(bool, outerBoolQueryBuilder);
 
 			};
 
