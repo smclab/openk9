@@ -60,13 +60,13 @@ public class SearchHTTPHandler extends BaseSearchHTTPHandler {
 
 	@ObjectClassDefinition
 	@interface Config {
-		float minScale() default 0.5f;
+		float minScore() default 0.5f;
 	}
 
 	@Activate
 	@Modified
 	public void activate(Config config) {
-		_minScore = config.minScale();
+		_minScore = config.minScore();
 	}
 
 	@Override
