@@ -18,7 +18,7 @@ import { getAutoSelections, useSelections } from "../components/useSelections";
 import { Tooltip } from "../components/Tooltip";
 import { useLoginInfo } from "../components/useLogin";
 import { LoginInfo } from "../components/LoginInfo";
-import { TargetElements } from "./entry";
+import { OpenK9ConfigFacade } from "./entry";
 import ReactDOM from "react-dom";
 import {
   AnalysisRequestEntry,
@@ -30,8 +30,8 @@ import {
 
 const DEBOUNCE = 300;
 
-type MainProps = { targetElements: TargetElements };
-export function Main({ targetElements }: MainProps) {
+type MainProps = { config: OpenK9ConfigFacade };
+export function Main({ config }: MainProps) {
   const login = useLoginInfo();
   const [autoSelect, setAutoSelect] = React.useState(true);
   const [replaceText, setReplaceText] = React.useState(true);
@@ -66,9 +66,14 @@ export function Main({ targetElements }: MainProps) {
     !queryAnalysis.isPreviousData;
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
+  const {
+    onQueryStateChange,
+    queryState: { hiddenSearchQuery },
+  } = config;
   const searchQueryMemo = React.useMemo(
     () => [
       ...tabTokens,
+      ...hiddenSearchQuery,
       ...deriveSearchQuery(
         spans,
         state.selection.flatMap(({ text, start, end, token }) =>
@@ -76,8 +81,13 @@ export function Main({ targetElements }: MainProps) {
         ),
       ),
     ],
-    [spans, state.selection, tabTokens],
+    [spans, state.selection, tabTokens, hiddenSearchQuery],
   );
+  React.useEffect(() => {
+    onQueryStateChange?.({
+      hiddenSearchQuery: hiddenSearchQuery,
+    });
+  }, [onQueryStateChange, hiddenSearchQuery, searchQueryMemo]);
   const searchQuery = useDebounce(searchQueryMemo, DEBOUNCE);
   React.useEffect(() => {
     if (
@@ -121,7 +131,7 @@ export function Main({ targetElements }: MainProps) {
   }, [searchQuery]);
   return (
     <React.Fragment>
-      {targetElements.search !== null &&
+      {config.search !== null &&
         ReactDOM.createPortal(
           <div
             ref={clickAwayRef}
@@ -341,9 +351,9 @@ export function Main({ targetElements }: MainProps) {
               />
             </Tooltip>
           </div>,
-          targetElements.search,
+          config.search,
         )}
-      {targetElements.tabs !== null &&
+      {config.tabs !== null &&
         ReactDOM.createPortal(
           <div
             css={css`
@@ -375,9 +385,9 @@ export function Main({ targetElements }: MainProps) {
               );
             })}
           </div>,
-          targetElements.tabs,
+          config.tabs,
         )}
-      {targetElements.results !== null &&
+      {config.results !== null &&
         ReactDOM.createPortal(
           <Results
             loginInfo={login.state?.loginInfo ?? null}
@@ -385,21 +395,21 @@ export function Main({ targetElements }: MainProps) {
             searchQuery={searchQuery}
             onDetail={setDetail}
           />,
-          targetElements.results,
+          config.results,
         )}
-      {targetElements.details !== null &&
+      {config.details !== null &&
         ReactDOM.createPortal(
           detail && <DetailMemo result={detail} />,
-          targetElements.details,
+          config.details,
         )}
-      {targetElements.login !== null &&
+      {config.login !== null &&
         ReactDOM.createPortal(
           <LoginInfo
             loginState={login.state}
             onLogin={login.login}
             onLogout={login.logout}
           />,
-          targetElements.login,
+          config.login,
         )}
     </React.Fragment>
   );

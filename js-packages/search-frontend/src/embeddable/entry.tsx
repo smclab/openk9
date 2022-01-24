@@ -2,59 +2,77 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Main } from "./Main";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { SearchToken } from "@openk9/rest-api";
 
 const queryClient = new QueryClient();
 
 function Entry() {
-  const [targets, setTargets] = React.useState<TargetElements>(targetElements);
+  const [config, setConfig] = React.useState<OpenK9ConfigFacade>(openk9Config);
   React.useLayoutEffect(() => {
-    updateTargetElements = setTargets;
+    updateConfig = setConfig;
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
-      <Main targetElements={targets} />;
+      <Main config={config} />;
     </QueryClientProvider>
   );
 }
 
-export type TargetElements = {
+type QueryState = {
+  hiddenSearchQuery: Array<SearchToken>;
+};
+
+export type OpenK9ConfigFacade = {
   search: Element | null;
   tabs: Element | null;
   results: Element | null;
   details: Element | null;
   login: Element | null;
+  onQueryStateChange?(queryState: QueryState): void;
+  queryState: QueryState;
 };
 
-const targetElements: TargetElements = {
+const openk9Config: OpenK9ConfigFacade = {
   search: null,
   tabs: null,
   results: null,
   details: null,
   login: null,
+  queryState: {
+    hiddenSearchQuery: [],
+  },
 };
 
-let updateTargetElements = (targetElements: TargetElements) => {};
+let updateConfig = (targetElements: OpenK9ConfigFacade) => {};
 
-export const OpenK9: TargetElements = {
+export const OpenK9: OpenK9ConfigFacade = {
   set search(element: Element | null) {
-    targetElements.search = element;
-    updateTargetElements({ ...targetElements });
+    openk9Config.search = element;
+    updateConfig({ ...openk9Config });
   },
   set tabs(element: Element | null) {
-    targetElements.tabs = element;
-    updateTargetElements({ ...targetElements });
+    openk9Config.tabs = element;
+    updateConfig({ ...openk9Config });
   },
   set results(element: Element | null) {
-    targetElements.results = element;
-    updateTargetElements({ ...targetElements });
+    openk9Config.results = element;
+    updateConfig({ ...openk9Config });
   },
   set details(element: Element | null) {
-    targetElements.details = element;
-    updateTargetElements({ ...targetElements });
+    openk9Config.details = element;
+    updateConfig({ ...openk9Config });
   },
   set login(element: Element | null) {
-    targetElements.login = element;
-    updateTargetElements({ ...targetElements });
+    openk9Config.login = element;
+    updateConfig({ ...openk9Config });
+  },
+  set onQueryStateChange(onQueryStateChange: (queryState: QueryState) => void) {
+    openk9Config.onQueryStateChange = onQueryStateChange;
+    updateConfig({ ...openk9Config });
+  },
+  set queryState(queryState: QueryState) {
+    openk9Config.queryState = queryState;
+    updateConfig({ ...openk9Config });
   },
 };
 
