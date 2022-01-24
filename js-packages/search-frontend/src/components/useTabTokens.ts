@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "react-query";
 import {
   getTentantWithConfiguration,
@@ -5,40 +6,40 @@ import {
   SearchToken,
 } from "@openk9/rest-api";
 
-export function useTabTokens(
-  loginInfo: LoginInfo | null,
-): Array<{ label: string; tokens: Array<SearchToken> }> {
+type Tab = { label: string; tokens: Array<SearchToken> };
+
+export function useTabTokens(loginInfo: LoginInfo | null): Array<Tab> {
   const tenantConfiguration = useQuery(
     ["tenant-configuration"] as const,
     ({ queryKey }) => {
       return getTentantWithConfiguration(loginInfo);
     },
   );
-  if (tenantConfiguration.data?.config.querySourceBarShortcuts) {
-    return [
-      {
-        label: "All",
-        tokens: [],
-      },
-      ...tenantConfiguration.data.config.querySourceBarShortcuts.map(
-        (s): { label: string; tokens: Array<SearchToken> } => {
-          return {
-            label: s.text,
-            tokens: [
-              { tokenType: "DOCTYPE", keywordKey: "type", values: [s.id] },
-            ],
-          };
+  const tabTokens = React.useMemo(() => {
+    if (tenantConfiguration.data?.config.querySourceBarShortcuts) {
+      return [
+        {
+          label: "All",
+          tokens: [],
         },
-      ),
-    ];
-  } else {
-    return defaultTabTokens;
-  }
+        ...tenantConfiguration.data.config.querySourceBarShortcuts.map(
+          (s): Tab => {
+            return {
+              label: s.text,
+              tokens: [
+                { tokenType: "DOCTYPE", keywordKey: "type", values: [s.id] },
+              ],
+            };
+          },
+        ),
+      ];
+    } else {
+      return defaultTabTokens;
+    }
+  }, [tenantConfiguration.data?.config.querySourceBarShortcuts]);
+  return tabTokens;
 }
-const defaultTabTokens: Array<{
-  label: string;
-  tokens: Array<SearchToken>;
-}> = [
+const defaultTabTokens: Array<Tab> = [
   {
     label: "All",
     tokens: [],

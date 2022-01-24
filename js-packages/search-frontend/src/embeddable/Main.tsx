@@ -116,6 +116,9 @@ export function Main({ targetElements }: MainProps) {
       inputRef.current.selectionEnd = adjustedSelection.selectionEnd;
     }
   }, [adjustedSelection]);
+  React.useEffect(() => {
+    setDetail(null);
+  }, [searchQuery]);
   return (
     <React.Fragment>
       {targetElements.search !== null &&
