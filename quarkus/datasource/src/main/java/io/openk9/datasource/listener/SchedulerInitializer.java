@@ -4,6 +4,7 @@ import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
 import io.openk9.datasource.model.Datasource;
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -35,24 +36,27 @@ public class SchedulerInitializer {
 
 	void onStart(@Observes StartupEvent ev) throws SchedulerException {
 
-		Datasource
-			.<Datasource>listAll()
-			.onItem()
-			.invoke(list -> {
-				for (Datasource datasource : list) {
-					try {
-						createOrUpdateScheduler(datasource);
-					}
-					catch (RuntimeException e) {
-						throw e;
-					}
-					catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-				}
-			})
+		Panache.withTransaction(() ->
+				Datasource
+					.<Datasource>listAll()
+					.onItem()
+					.invoke(list -> {
+						for (Datasource datasource : list) {
+							try {
+								createOrUpdateScheduler(datasource);
+							}
+							catch (RuntimeException e) {
+								throw e;
+							}
+							catch (Exception e) {
+								throw new RuntimeException(e);
+							}
+						}
+			}))
 			.subscribe()
 			.with(datasources -> logger.info("Datasources initialized"));
+
+
 	}
 
 	public void triggerJob(long datasourceId, String name) throws SchedulerException {
