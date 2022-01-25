@@ -254,6 +254,8 @@ public abstract class BaseSearchHTTPHandler
 
 					searchSourceBuilder.query(boolQuery);
 
+					searchSourceBuilder.trackTotalHits(true);
+
 					return customizeSearchSourceBuilderMono(
 						tenant, datasources, searchRequest, documentTypeList,
 						searchSourceBuilder, elasticSearchQuery);

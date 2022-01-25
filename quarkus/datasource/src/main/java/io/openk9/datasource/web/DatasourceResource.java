@@ -4,13 +4,15 @@ import io.openk9.datasource.dto.DatasourceDto;
 import io.openk9.datasource.mapper.DatasourceIgnoreNullMapper;
 import io.openk9.datasource.mapper.DatasourceNullAwareMapper;
 import io.openk9.datasource.model.Datasource;
+import io.quarkus.hibernate.reactive.panache.Panache;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonObject;
 
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -33,16 +35,14 @@ public class DatasourceResource {
 	@GET
 	@Path("/{id}")
 	@Produces()
-	@Transactional
-	public Datasource findById(@PathParam("id") long id){
+	public Uni<Datasource> findById(@PathParam("id") long id){
 		return Datasource.findById(id);
 	}
 
 	@POST
 	@Path("/filter")
 	@Produces()
-	@Transactional
-	public List<Datasource> filter(DatasourceDto dto){
+	public Uni<List<Datasource>> filter(DatasourceDto dto){
 
 		Map<String, Object> map = JsonObject.mapFrom(dto).getMap();
 
@@ -53,8 +53,7 @@ public class DatasourceResource {
 
 	@GET
 	@Produces()
-	@Transactional
-	public List<Datasource> findAll(
+	public Uni<List<Datasource>> findAll(
 		@QueryParam("sort") List<String> sortQuery,
 		@QueryParam("page") @DefaultValue("0") int pageIndex,
 		@QueryParam("size") @DefaultValue("20") int pageSize
@@ -67,76 +66,69 @@ public class DatasourceResource {
 
 	@POST
 	@Consumes("application/json")
-	@Transactional
-	public Datasource create(@Valid DatasourceDto dto) {
+	public Uni<Datasource> create(@Valid DatasourceDto dto) {
 
 		Datasource datasource = _datasourceMapper.toDatasource(dto);
 
-		datasource.persistAndFlush();
-
-		return datasource;
+		return Panache.withTransaction(datasource::persistAndFlush);
 
 	}
 
 	@POST
 	@Path("/{id}")
 	@Consumes("application/json")
-	@Transactional
-	public Datasource update(
+	public Uni<Datasource> update(
 		@PathParam("id") long id, @Valid DatasourceDto dto) {
 
-		Datasource entity = Datasource.findById(id);
-
-		if (entity == null) {
-			throw new WebApplicationException(
-				"Datasource with id of " + id + " does not exist.", 404);
-		}
-
-		entity = _datasourceMapper.update(entity, dto);
-
-		entity.persistAndFlush();
-
-		return entity;
+		return Datasource
+			.findById(id)
+			.onItem()
+			.ifNull()
+			.failWith(() -> new WebApplicationException(
+				"Datasource with id of " + id + " does not exist.", 404))
+			.flatMap(datasource -> {
+				Datasource newDatasource =
+					_datasourceMapper.update((Datasource)datasource, dto);
+				return Panache.withTransaction(newDatasource::persist);
+			});
 
 	}
 
 	@PATCH
 	@Path("/{id}")
 	@Consumes("application/json")
-	@Transactional
-	public Datasource patch(
+	public Uni<Datasource> patch(
 		@PathParam("id") long id, @Valid DatasourceDto dto) {
 
-		Datasource entity = Datasource.findById(id);
-
-		if (entity == null) {
-			throw new WebApplicationException(
-				"Datasource with id of " + id + " does not exist.", 404);
-		}
-
-		entity = _datasourceIgnoreNullMapper.update(entity, dto);
-
-		entity.persistAndFlush();
-
-		return entity;
+		return Datasource
+			.findById(id)
+			.onItem()
+			.ifNull()
+			.failWith(() -> new WebApplicationException(
+				"Datasource with id of " + id + " does not exist.", 404))
+			.flatMap(datasource -> {
+				Datasource newDatasource =
+					_datasourceIgnoreNullMapper.update((Datasource)datasource, dto);
+				return Panache.withTransaction(newDatasource::persist);
+			});
 
 	}
 
 	@DELETE
 	@Path("/{id}")
-	@Transactional
-	public Response deleteById(@PathParam("id") long id){
+	public Uni<Response> deleteById(@PathParam("id") long id){
 
-		Datasource entity = Datasource.findById(id);
+		return Panache.withTransaction(() ->
+			Datasource
+				.findById(id)
+				.onItem()
+				.ifNull()
+				.failWith(() -> new WebApplicationException(
+					"Datasource with id of " + id + " does not exist.", 404))
+				.flatMap(PanacheEntityBase::delete)
+				.map(unused -> Response.status(204).build())
+		);
 
-		if (entity == null) {
-			throw new WebApplicationException(
-				"Datasource with id of " + id + " does not exist.", 404);
-		}
-
-		entity.delete();
-
-		return Response.status(204).build();
 	}
 
 	@Inject

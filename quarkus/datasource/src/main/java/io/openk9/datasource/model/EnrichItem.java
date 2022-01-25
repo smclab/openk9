@@ -17,8 +17,9 @@
 
 package io.openk9.datasource.model;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.Uni;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +62,7 @@ public class EnrichItem extends PanacheEntityBase {
     @Column(nullable = false)
     private String serviceName;
 
-    public static List<EnrichItem> findByEnrichPipelineId(
+    public static Uni<List<EnrichItem>> findByEnrichPipelineId(
         Long enrichPipelineId) {
 
         return EnrichItem.list(

@@ -4,13 +4,15 @@ import io.openk9.datasource.dto.EnrichPipelineDto;
 import io.openk9.datasource.mapper.EnrichPipelineIgnoreNullMapper;
 import io.openk9.datasource.mapper.EnrichPipelineNullAwareMapper;
 import io.openk9.datasource.model.EnrichPipeline;
+import io.quarkus.hibernate.reactive.panache.Panache;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonObject;
 
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -33,14 +35,14 @@ public class EnrichPipelineResource {
 	@GET
 	@Path("/{id}")
 	@Produces()
-	public EnrichPipeline findById(@PathParam("id") long id){
+	public Uni<EnrichPipeline> findById(@PathParam("id") long id){
 		return EnrichPipeline.findById(id);
 	}
 
 	@POST
 	@Path("/filter")
 	@Produces()
-	public List<EnrichPipeline> filter(EnrichPipeline dto){
+	public Uni<List<EnrichPipeline>> filter(EnrichPipeline dto){
 
 		Map<String, Object> map = JsonObject.mapFrom(dto).getMap();
 
@@ -51,7 +53,7 @@ public class EnrichPipelineResource {
 
 	@GET
 	@Produces()
-	public List<EnrichPipeline> findAll(
+	public Uni<List<EnrichPipeline>> findAll(
 		@QueryParam("sort") List<String> sortQuery,
 		@QueryParam("page") @DefaultValue("0") int pageIndex,
 		@QueryParam("size") @DefaultValue("20") int pageSize
@@ -64,76 +66,69 @@ public class EnrichPipelineResource {
 
 	@POST
 	@Consumes("application/json")
-	@Transactional
-	public EnrichPipeline create(@Valid EnrichPipelineDto dto) {
+	public Uni<EnrichPipeline> create(@Valid EnrichPipelineDto dto) {
 
 		EnrichPipeline enrichPipeline = _enrichPipelineMapper.toEnrichPipeline(dto);
 
-		enrichPipeline.persistAndFlush();
-
-		return enrichPipeline;
+		return enrichPipeline.persistAndFlush();
 
 	}
 
 	@POST
 	@Path("/{id}")
 	@Consumes("application/json")
-	@Transactional
-	public EnrichPipeline update(
+	public Uni<EnrichPipeline> update(
 		@PathParam("id") long id, @Valid EnrichPipelineDto dto) {
 
-		EnrichPipeline entity = EnrichPipeline.findById(id);
-
-		if (entity == null) {
-			throw new WebApplicationException(
-				"EnrichPipeline with id of " + id + " does not exist.", 404);
-		}
-
-		entity = _enrichPipelineMapper.update(entity, dto);
-
-		entity.persistAndFlush();
-
-		return entity;
+		return EnrichPipeline
+			.findById(id)
+			.onItem()
+			.ifNull()
+			.failWith(() -> new WebApplicationException(
+				"EnrichPipeline with id of " + id + " does not exist.", 404))
+			.flatMap(datasource -> {
+				EnrichPipeline newEnrichPipeline =
+					_enrichPipelineMapper.update((EnrichPipeline)datasource, dto);
+				return Panache.withTransaction(newEnrichPipeline::persist);
+			});
 
 	}
 
 	@PATCH
 	@Path("/{id}")
 	@Consumes("application/json")
-	@Transactional
-	public EnrichPipeline patch(
+	public Uni<EnrichPipeline> patch(
 		@PathParam("id") long id, @Valid EnrichPipelineDto dto) {
 
-		EnrichPipeline entity = EnrichPipeline.findById(id);
-
-		if (entity == null) {
-			throw new WebApplicationException(
-				"EnrichPipeline with id of " + id + " does not exist.", 404);
-		}
-
-		entity = _enrichPipelineIgnoreNullMapper.update(entity, dto);
-
-		entity.persistAndFlush();
-
-		return entity;
+		return EnrichPipeline
+			.findById(id)
+			.onItem()
+			.ifNull()
+			.failWith(() -> new WebApplicationException(
+				"EnrichPipeline with id of " + id + " does not exist.", 404))
+			.flatMap(datasource -> {
+				EnrichPipeline newEnrichPipeline =
+					_enrichPipelineIgnoreNullMapper.update((EnrichPipeline)datasource, dto);
+				return Panache.withTransaction(newEnrichPipeline::persist);
+			});
 
 	}
 
 	@DELETE
 	@Path("/{id}")
-	@Transactional
-	public Response deleteById(@PathParam("id") long id){
+	public Uni<Response> deleteById(@PathParam("id") long id){
 
-		EnrichPipeline entity = EnrichPipeline.findById(id);
+		return Panache.withTransaction(() ->
+			EnrichPipeline
+				.findById(id)
+				.onItem()
+				.ifNull()
+				.failWith(() -> new WebApplicationException(
+					"EnrichPipeline with id of " + id + " does not exist.", 404))
+				.flatMap(PanacheEntityBase::delete)
+				.map(unused -> Response.status(204).build())
+		);
 
-		if (entity == null) {
-			throw new WebApplicationException(
-				"EnrichPipeline with id of " + id + " does not exist.", 404);
-		}
-
-		entity.delete();
-
-		return Response.status(204).build();
 	}
 
 	@Inject

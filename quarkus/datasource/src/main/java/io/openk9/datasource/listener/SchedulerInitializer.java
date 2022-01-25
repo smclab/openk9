@@ -5,6 +5,7 @@ import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.runtime.StartupEvent;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.quartz.CronScheduleBuilder;
@@ -28,20 +29,30 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.util.Date;
-import java.util.List;
 
 @ApplicationScoped
 public class SchedulerInitializer {
 
 	void onStart(@Observes StartupEvent ev) throws SchedulerException {
 
-		List<Datasource> datasourceList = Datasource.listAll();
-
-		for (Datasource datasource : datasourceList) {
-
-			createOrUpdateScheduler(datasource);
-
-		}
+		Datasource
+			.<Datasource>listAll()
+			.onItem()
+			.invoke(list -> {
+				for (Datasource datasource : list) {
+					try {
+						createOrUpdateScheduler(datasource);
+					}
+					catch (RuntimeException e) {
+						throw e;
+					}
+					catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
+			})
+			.subscribe()
+			.with(datasources -> logger.info("Datasources initialized"));
 	}
 
 	public void triggerJob(long datasourceId, String name) throws SchedulerException {
@@ -97,46 +108,49 @@ public class SchedulerInitializer {
 
 	public void performTask(Long datasourceId) {
 
-		boolean schedulerEnabled = false;
-
-		Datasource datasource =
+		Uni<Datasource> datasourceUni =
 			Datasource.findById(datasourceId);
 
-		String driverServiceName = datasource.getDriverServiceName();
+		datasourceUni.subscribe().with(datasource -> {
 
-		try {
-			SchedulerEnabledDTO schedulerEnabledDTO = _pluginDriverClient
-				.schedulerEnabled(driverServiceName);
+			boolean schedulerEnabled = false;
 
-			schedulerEnabled = schedulerEnabledDTO.isSchedulerEnabled();
-		}
-		catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
-
-		if (schedulerEnabled) {
+			String driverServiceName = datasource.getDriverServiceName();
 
 			try {
+				SchedulerEnabledDTO schedulerEnabledDTO = _pluginDriverClient
+					.schedulerEnabled(driverServiceName);
 
-				_pluginDriverClient
-					.invokeDataParser(
-						InvokeDataParserDTO
-							.of(
-								driverServiceName, datasource,
-								Date.from(datasource.getLastIngestionDate()),
-								new Date()));
+				schedulerEnabled = schedulerEnabledDTO.isSchedulerEnabled();
 			}
 			catch (Exception e) {
 				logger.error(e.getMessage(), e);
 			}
 
-		}
-		else {
-			logger.warn(
-				"[SCHEDULER] datasourceId: " + datasourceId +
-				" service: " + driverServiceName + " not found"
-			);
-		}
+			if (schedulerEnabled) {
+
+				try {
+
+					_pluginDriverClient
+						.invokeDataParser(
+							InvokeDataParserDTO
+								.of(
+									driverServiceName, datasource,
+									Date.from(datasource.getLastIngestionDate()),
+									new Date()));
+				}
+				catch (Exception e) {
+					logger.error(e.getMessage(), e);
+				}
+
+			}
+			else {
+				logger.warn(
+					"[SCHEDULER] datasourceId: " + datasourceId +
+					" service: " + driverServiceName + " not found"
+				);
+			}
+		});
 	}
 
 	@ApplicationScoped

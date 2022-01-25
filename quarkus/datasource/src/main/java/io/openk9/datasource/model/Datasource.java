@@ -18,7 +18,7 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.listener.DatasourceListener;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

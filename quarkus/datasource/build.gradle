@@ -16,14 +16,16 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.quarkus:quarkus-rest-client'
-    implementation 'io.quarkus:quarkus-rest-client-jackson'
+    implementation 'io.quarkus:quarkus-rest-client-reactive'
+    implementation 'io.quarkus:quarkus-rest-client-reactive-jackson'
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
     implementation 'io.quarkus:quarkus-scheduler'
     implementation 'io.quarkus:quarkus-quartz'
+    implementation 'io.quarkus:quarkus-resteasy-reactive'
+    //implementation 'io.quarkus:quarkus-resteasy-mutiny'
     implementation 'io.quarkus:quarkus-resteasy-reactive-jackson'
-    implementation 'io.quarkus:quarkus-hibernate-orm-panache'
-    implementation 'io.quarkus:quarkus-jdbc-postgresql'
+    implementation 'io.quarkus:quarkus-hibernate-reactive-panache'
+    implementation 'io.quarkus:quarkus-reactive-pg-client'
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-smallrye-openapi'
     implementation 'io.quarkus:quarkus-kubernetes'
@@ -36,8 +38,6 @@ dependencies {
     implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-consul-client'
 
     implementation 'org.jboss.logging:commons-logging-jboss-logging'
-
-    implementation 'io.projectreactor:reactor-core:3.4.11'
 
 
     implementation 'com.cronutils:cron-utils:9.1.5'
