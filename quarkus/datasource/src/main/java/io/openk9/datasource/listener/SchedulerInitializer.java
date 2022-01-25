@@ -6,7 +6,9 @@ import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
+import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.quartz.CronScheduleBuilder;
@@ -27,12 +29,24 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import java.util.Date;
 
 @ApplicationScoped
 public class SchedulerInitializer {
 
-	void onStart(@Observes StartupEvent ev) throws SchedulerException {
+	@Inject
+	EventBus eventBus;
+
+	public void startUp(@Observes StartupEvent event) {
+		eventBus.send("initialize_scheduler", "initialize_scheduler");
+	}
+
+	@ConsumeEvent(value = "initialize_scheduler", blocking = true)
+	@Transactional
+	public void initScheduler(String testMessage) {
+
+		logger.info("init scheduler");
 
 		Panache.withTransaction(() ->
 			Datasource
@@ -50,9 +64,9 @@ public class SchedulerInitializer {
 							throw new RuntimeException(e);
 						}
 					}
-			}))
-			.subscribe()
-			.with(datasources -> logger.info("Datasources initialized"));
+				}))
+			.await()
+			.indefinitely();
 
 	}
 
