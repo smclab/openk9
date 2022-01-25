@@ -28,6 +28,7 @@ import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
+import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -98,9 +99,17 @@ public class SearchHTTPHandler extends BaseSearchHTTPHandler {
 		SearchRequest searchRequest, List<PluginDriverDTO> documentTypeList,
 		SearchSourceBuilder searchSourceBuilder,
 		org.elasticsearch.action.search.SearchRequest elasticSearchQuery) {
-		super.customizeSearchSourceBuilder(tenant, datasources, searchRequest,
-			documentTypeList, searchSourceBuilder, elasticSearchQuery);
-		searchSourceBuilder.minScore(_minScore);
+
+		super.customizeSearchSourceBuilder(
+			tenant, datasources, searchRequest, documentTypeList,
+			searchSourceBuilder, elasticSearchQuery);
+
+		List<SearchToken> searchQuery = searchRequest.getSearchQuery();
+
+		if (searchQuery != null && !searchQuery.isEmpty()) {
+			searchSourceBuilder.minScore(_minScore);
+		}
+
 	}
 
 	@Reference(
