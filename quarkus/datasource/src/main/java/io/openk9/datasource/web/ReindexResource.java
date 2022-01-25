@@ -40,26 +40,13 @@ public class ReindexResource {
 						unis.add(datasource.persist());
 
 						unis.add(
-							Uni
-								.createFrom()
-								.item(() -> {
-
-									try {
-										_schedulerInitializer.get().triggerJob(
-											datasource.getDatasourceId(), datasource.getName());
-									}
-									catch (RuntimeException re) {
-										throw re;
-									}
-									catch (Exception e) {
-										throw new RuntimeException(e);
-									}
-
-									return ReindexResponseDto.of(
+							_schedulerInitializer.get().triggerJob(
+								datasource.getDatasourceId(), datasource.getName())
+								.map(unused ->
+									ReindexResponseDto.of(
 										datasource.getDatasourceId(),
-										true
-									);
-								})
+										true)
+								)
 						);
 
 					}

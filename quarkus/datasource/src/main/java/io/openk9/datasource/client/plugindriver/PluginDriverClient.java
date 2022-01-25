@@ -4,6 +4,7 @@ import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.PluginDriverDTO;
 import io.openk9.datasource.client.plugindriver.dto.PluginDriverDTOList;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.ws.rs.GET;
@@ -18,23 +19,23 @@ public interface PluginDriverClient {
 
 	@POST
 	@Path("/invoke-data-parser/")
-	void invokeDataParser(InvokeDataParserDTO invokeDataParserDTO);
+	Uni<Void> invokeDataParser(InvokeDataParserDTO invokeDataParserDTO);
 
 	@GET
 	@Path("/scheduler-enabled/{serviceDriverName}")
-	SchedulerEnabledDTO schedulerEnabled(@PathParam("serviceDriverName") String serviceDriverName);
+	Uni<SchedulerEnabledDTO> schedulerEnabled(@PathParam("serviceDriverName") String serviceDriverName);
 
 	@GET
 	@Path("/{serviceDriverName}")
-	PluginDriverDTO getPluginDriver(@PathParam("serviceDriverName") String serviceDriverName);
+	Uni<PluginDriverDTO> getPluginDriver(@PathParam("serviceDriverName") String serviceDriverName);
 
 	@POST
 	@Path("/")
-	PluginDriverDTOList getPluginDriverList(
+	Uni<PluginDriverDTOList> getPluginDriverList(
 		Collection<String> serviceDriverNames);
 
 	@GET
 	@Path("/")
-	PluginDriverDTOList getPluginDriverList();
+	Uni<PluginDriverDTOList> getPluginDriverList();
 	
 }

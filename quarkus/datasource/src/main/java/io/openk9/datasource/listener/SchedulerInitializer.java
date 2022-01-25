@@ -16,7 +16,6 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -28,7 +27,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import java.util.Date;
 
 @ApplicationScoped
@@ -37,31 +35,30 @@ public class SchedulerInitializer {
 	void onStart(@Observes StartupEvent ev) throws SchedulerException {
 
 		Panache.withTransaction(() ->
-				Datasource
-					.<Datasource>listAll()
-					.onItem()
-					.invoke(list -> {
-						for (Datasource datasource : list) {
-							try {
-								createOrUpdateScheduler(datasource);
-							}
-							catch (RuntimeException e) {
-								throw e;
-							}
-							catch (Exception e) {
-								throw new RuntimeException(e);
-							}
+			Datasource
+				.<Datasource>listAll()
+				.onItem()
+				.invoke(list -> {
+					for (Datasource datasource : list) {
+						try {
+							createOrUpdateScheduler(datasource);
 						}
+						catch (RuntimeException e) {
+							throw e;
+						}
+						catch (Exception e) {
+							throw new RuntimeException(e);
+						}
+					}
 			}))
 			.subscribe()
 			.with(datasources -> logger.info("Datasources initialized"));
 
-
 	}
 
-	public void triggerJob(long datasourceId, String name) throws SchedulerException {
+	public Uni<Void> triggerJob(long datasourceId, String name) {
 		logger.info("datasourceId: " + datasourceId + "trigger: " + name);
-		performTask(datasourceId);
+		return performTask(datasourceId);
 	}
 
 	public void createOrUpdateScheduler(
@@ -110,32 +107,21 @@ public class SchedulerInitializer {
 		_scheduler.get().deleteJob(JobKey.jobKey(datasource.getName()));
 	}
 
-	public void performTask(Long datasourceId) {
+	public Uni<Void> performTask(Long datasourceId) {
 
 		Uni<Datasource> datasourceUni =
 			Datasource.findById(datasourceId);
 
-		datasourceUni.subscribe().with(datasource -> {
-
-			boolean schedulerEnabled = false;
-
+		return datasourceUni.flatMap(datasource -> {
 			String driverServiceName = datasource.getDriverServiceName();
 
-			try {
-				SchedulerEnabledDTO schedulerEnabledDTO = _pluginDriverClient
-					.schedulerEnabled(driverServiceName);
+			Uni<SchedulerEnabledDTO> schedulerEnabledDTOUni = _pluginDriverClient
+				.schedulerEnabled(driverServiceName);
 
-				schedulerEnabled = schedulerEnabledDTO.isSchedulerEnabled();
-			}
-			catch (Exception e) {
-				logger.error(e.getMessage(), e);
-			}
+			return schedulerEnabledDTOUni.flatMap(schedulerEnabledDTO -> {
 
-			if (schedulerEnabled) {
-
-				try {
-
-					_pluginDriverClient
+				if (schedulerEnabledDTO.isSchedulerEnabled()) {
+					return _pluginDriverClient
 						.invokeDataParser(
 							InvokeDataParserDTO
 								.of(
@@ -143,18 +129,18 @@ public class SchedulerInitializer {
 									Date.from(datasource.getLastIngestionDate()),
 									new Date()));
 				}
-				catch (Exception e) {
-					logger.error(e.getMessage(), e);
-				}
 
-			}
-			else {
 				logger.warn(
 					"[SCHEDULER] datasourceId: " + datasourceId +
 					" service: " + driverServiceName + " not found"
 				);
-			}
+
+				return Uni.createFrom().nothing();
+
+			});
+
 		});
+
 	}
 
 	@ApplicationScoped
@@ -164,14 +150,14 @@ public class SchedulerInitializer {
 		@Inject
 		SchedulerInitializer taskBean;
 
-		@Transactional
-		public void execute(JobExecutionContext context) throws
-			JobExecutionException {
+		public void execute(JobExecutionContext context) {
 
 			JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
-			taskBean.performTask(
-				jobDataMap.getLong("datasourceId"));
+			Panache.withTransaction(
+				() -> taskBean.performTask(jobDataMap.getLong("datasourceId")))
+				.await()
+				.indefinitely();
 		}
 
 	}
