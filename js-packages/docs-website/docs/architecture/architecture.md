@@ -1,7 +1,7 @@
 ---
-id: architecture-overview
+id: architecture
 title: Architecture Overview
-slug: /architecture-overview
+slug: /architecture
 
 ---
 
@@ -23,5 +23,8 @@ custom components.
 - [**Elasticsearch**](https://www.elastic.co/): open source search and analytics engine.
 - [**Neo4j**](https://neo4j.com/): open source graph database.
 - [**RabbitMQ**](https://www.rabbitmq.com/): open source message broker.
+
+<br />
+<br />
 
 ![img](../../static/img/architecture.png)

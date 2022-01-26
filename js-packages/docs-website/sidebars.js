@@ -3,7 +3,7 @@ module.exports = {
     OpenK9: ["intro", "standalone-app", "headless-api"],
     "Getting Started": ["using-docker"],
     "OSGi project": ["osgi-requirements", "deploy-osgi-project", "how-to-create-a-plugin"],
-    "Architecture": ["architecture/architecture-overview", "architecture/ingestion", "architecture/datasource",
+    "Architecture": ["architecture/architecture", "architecture/ingestion", "architecture/datasource",
     "architecture/plugin-driver-manager", "architecture/indexer", "architecture/entity-manager",
     "architecture/searcher"],
     "Rest Api": ["api/api", "api/searcher/searcher-api", "api/datasource/datasource-api", "api/ingestion/ingestion-api",
