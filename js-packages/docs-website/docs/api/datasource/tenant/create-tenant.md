@@ -12,13 +12,24 @@ POST /v2/tenant
 {
 	"name": "openk9.io",
 	"virtualHost": "openk9.io",
-	"jsonConfig": "{}"
+	"jsonConfig": {
+      "querySourceBarShortcuts": [
+        { "id": "web", "text": "web" },
+        { "id": "document", "text": "document" },
+        { "id": "pdf", "text": "pdf" }
+      ]
+    }
 }
 ```
 
 ### Description
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Create new tenant and define his configuration.
 
 ### Request Body
+
+`name`: (string) Name of tenant
+
+`virtualHost`: (string) VirtualHost associated with tenant
+
+`jsonConfig`: (dict) Json configuration for tenant (i.e. configuration of shortcuts for search standalone frontend)

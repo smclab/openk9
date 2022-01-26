@@ -13,13 +13,23 @@ PUT /v2/tenant
     "tenantId": 2,
     "name": "openk9.io",
     "virtualHost": "openk9.io",
-    "jsonConfig": "{}"
+    "jsonConfig": {
+          "querySourceBarShortcuts": [
+            { "id": "web", "text": "web" },
+            { "id": "excel", "text": "excel" }
+          ]
+        }
   }
 ```
 
 ### Description
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Update existing tenant, changing its name, virtualHost or configuration.
 
 ### Request Body
+
+`name`: (string) Name of tenant
+
+`virtualHost`: (string) VirtualHost associated with tenant
+
+`jsonConfig`: (dict) Json configuration for tenant (i.e. configuration of shortcuts for search standalone frontend)
