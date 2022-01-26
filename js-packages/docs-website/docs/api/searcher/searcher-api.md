@@ -15,6 +15,10 @@ These are APIs exposed by Openk9 Searcher component. It includes Search and Auth
 - [Get supported datasource](supported-datasources)
 - [Get suggestions](suggestions)
 
+## Query Analysis APIs
+
+- [Query analysis](query-analysis)
+
 ## Auth APIs
 
 - [Login](login)
