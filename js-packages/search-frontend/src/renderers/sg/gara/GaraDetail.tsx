@@ -3,6 +3,7 @@ import { css } from "styled-components/macro";
 import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
 import { DetailContainer } from "../../../renderer-components/DetailContainer";
 import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
+import { DetailHeaderImage } from "../../../renderer-components/DetailHeaderImage";
 import { DetailLink } from "../../../renderer-components/DetailLink";
 import { DetailTitle } from "../../../renderer-components/DetailTitle";
 import { HighlightableText } from "../../../renderer-components/HighlightableText";
@@ -14,7 +15,11 @@ type GaraDetailProps = {
 export function GaraDetail({ result }: GaraDetailProps) {
   return (
     <DetailContainer>
-      <DetailFavicon src={result.source.web.favicon} />
+      {result.source.gare.imgUrl ? (
+        <DetailHeaderImage src={result.source.gare.imgUrl} />
+      ) : (
+        <DetailFavicon src={result.source.web.favicon} />
+      )}
       <DetailTitle>
         <HighlightableText result={result} path="web.title" />
       </DetailTitle>

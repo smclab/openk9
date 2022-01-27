@@ -2,6 +2,7 @@ import { GenericResultItem } from "@openk9/rest-api";
 
 export type GaraResultItem = GenericResultItem<{
   gare: {
+    imgUrl: string;
     descrizione: string;
     tipologia: string;
     regione: string;
