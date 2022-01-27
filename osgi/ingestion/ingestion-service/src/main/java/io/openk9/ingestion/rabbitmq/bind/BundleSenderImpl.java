@@ -17,6 +17,7 @@
 
 package io.openk9.ingestion.rabbitmq.bind;
 
+import com.rabbitmq.client.AMQP;
 import io.openk9.ingestion.api.BundleSender;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -42,19 +43,25 @@ public class BundleSenderImpl implements BundleSender {
 	@Override
 	public Mono<Void> send(Flux<byte[]> publisher) {
 
-		return _sender.send(publisher
-			.map(bytes -> new OutboundMessage(_exchange, _routingKey, bytes)));
+		return _sender.send(publisher.map(this::_createOutboundMessage));
 
 	}
 
 	@Override
 	public Mono<Void> send(Mono<byte[]> publisher) {
-		return _sender.send(publisher
-			.map(bytes -> new OutboundMessage(_exchange, _routingKey, bytes)));
+		return _sender.send(publisher.map(this::_createOutboundMessage));
 	}
 
 	private final Sender _sender;
 	private final String _exchange;
 	private final String _routingKey;
+
+	private OutboundMessage _createOutboundMessage(byte[] bytes) {
+		return new OutboundMessage(_exchange, _routingKey,
+			new AMQP.BasicProperties()
+				.builder()
+				.contentType("application/json").build(),
+			bytes);
+	}
 
 }
