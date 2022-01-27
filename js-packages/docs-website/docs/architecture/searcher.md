@@ -1,6 +1,6 @@
 ---
 id: searcher
-title: Searcher Component
+title: Searcher
 slug: /searcher
 
 ---
