@@ -4,6 +4,8 @@ import { Virtuoso } from "react-virtuoso";
 import { useInfiniteResults } from "./remote-data";
 import { ResultMemo } from "./Result";
 import { GenericResultItem, LoginInfo, SearchToken } from "@openk9/rest-api";
+import { Logo } from "./Logo";
+import { myTheme } from "./myTheme";
 
 type ResultsProps<E> = {
   loginInfo: LoginInfo | null;
@@ -73,10 +75,18 @@ export function FiniteResults<E>({
   const results = useInfiniteResults<E>(loginInfo, searchQuery);
   return (
     <div>
-      <ResultCount>{results.data?.pages[0].total}</ResultCount>
-      {results.data?.pages[0].result.map((result, index) => {
-        return <ResultMemo key={index} result={result} onDetail={onDetail} />;
-      })}
+      {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
+        <>
+          <ResultCount>{results.data?.pages[0].total}</ResultCount>
+          {results.data?.pages[0].result.map((result, index) => {
+            return (
+              <ResultMemo key={index} result={result} onDetail={onDetail} />
+            );
+          })}
+        </>
+      ) : (
+        <NoResults />
+      )}
     </div>
   );
 }
@@ -89,30 +99,36 @@ export function InfiniteResults<E>({
   const results = useInfiniteResults<E>(loginInfo, searchQuery);
   return (
     <div>
-      <ResultCount>{results.data?.pages[0].total}</ResultCount>
-      {results.data?.pages.map((page, pageIndex) => {
-        return (
-          <React.Fragment key={pageIndex}>
-            {page.result.map((result, resultIndex) => {
-              return (
-                <ResultMemo
-                  key={resultIndex}
-                  result={result}
-                  onDetail={onDetail}
-                />
-              );
-            })}
-          </React.Fragment>
-        );
-      })}
-      {results.hasNextPage && (
-        <button
-          onClick={() => {
-            results.fetchNextPage();
-          }}
-        >
-          load more
-        </button>
+      {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
+        <>
+          <ResultCount>{results.data?.pages[0].total}</ResultCount>
+          {results.data?.pages.map((page, pageIndex) => {
+            return (
+              <React.Fragment key={pageIndex}>
+                {page.result.map((result, resultIndex) => {
+                  return (
+                    <ResultMemo
+                      key={resultIndex}
+                      result={result}
+                      onDetail={onDetail}
+                    />
+                  );
+                })}
+              </React.Fragment>
+            );
+          })}
+          {results.hasNextPage && (
+            <button
+              onClick={() => {
+                results.fetchNextPage();
+              }}
+            >
+              load more
+            </button>
+          )}
+        </>
+      ) : (
+        <NoResults />
       )}
     </div>
   );
@@ -133,23 +149,48 @@ export function VirtualResults<E>({
         height: 100%;
       `}
     >
-      <ResultCount>{results.data?.pages[0].total}</ResultCount>
-      <Virtuoso
-        style={{ flexGrow: 1 }}
-        totalCount={resultsFlat?.length ?? 0}
-        itemContent={(index) => {
-          const result = resultsFlat?.[index];
-          if (result) {
-            return <ResultMemo result={result} onDetail={onDetail} />;
-          }
-          return null;
-        }}
-        endReached={() => {
-          if (results.hasNextPage) {
-            results.fetchNextPage();
-          }
-        }}
-      />
+      {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
+        <>
+          <ResultCount>{results.data?.pages[0].total}</ResultCount>
+          <Virtuoso
+            style={{ flexGrow: 1 }}
+            totalCount={resultsFlat?.length ?? 0}
+            itemContent={(index) => {
+              const result = resultsFlat?.[index];
+              if (result) {
+                return <ResultMemo result={result} onDetail={onDetail} />;
+              }
+              return null;
+            }}
+            endReached={() => {
+              if (results.hasNextPage) {
+                results.fetchNextPage();
+              }
+            }}
+          />
+        </>
+      ) : (
+        <NoResults />
+      )}
+    </div>
+  );
+}
+
+function NoResults() {
+  return (
+    <div
+      css={css`
+        color: ${myTheme.grayTexColor};
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+      `}
+    >
+      <Logo size={128} />
+      <h3>No results were found.</h3>
+      <div>Try with another query</div>
     </div>
   );
 }

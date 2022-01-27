@@ -27,6 +27,7 @@ import {
   GenericResultItem,
   SearchToken,
 } from "@openk9/rest-api";
+import { Logo } from "../components/Logo";
 
 const DEBOUNCE = 300;
 
@@ -399,7 +400,7 @@ export function Main({ config }: MainProps) {
         )}
       {config.details !== null &&
         ReactDOM.createPortal(
-          detail && <DetailMemo result={detail} />,
+          detail ? <DetailMemo result={detail} /> : <NoDetail />,
           config.details,
         )}
       {config.login !== null &&
@@ -480,4 +481,23 @@ function calculateSpans(
     }
   }
   return spans.filter((span) => span.text);
+}
+
+function NoDetail() {
+  return (
+    <div
+      css={css`
+        color: ${myTheme.grayTexColor};
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+      `}
+    >
+      <Logo size={128} />
+      <h3>No details</h3>
+      <div>Move the mouse over a result to see details about it</div>
+    </div>
+  );
 }
