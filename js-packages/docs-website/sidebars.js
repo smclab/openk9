@@ -4,7 +4,7 @@ module.exports = {
     "Getting Started": ["using-docker"],
     "OSGi project": ["osgi-requirements", "deploy-osgi-project", "how-to-create-a-plugin"],
     "Architecture": ["architecture/architecture", "architecture/ingestion", "architecture/datasource",
-    "architecture/plugin-driver-manager", "architecture/indexer", "architecture/entity-manager",
+    "architecture/plugin-driver-manager", "architecture/index-writer", "architecture/entity-manager",
     "architecture/searcher"],
     "Rest Api": ["api/api", "api/searcher/searcher-api", "api/datasource/datasource-api", "api/ingestion/ingestion-api",
     "api/entity-manager/entity-manager-api", "api/index-writer/index-writer-api"]
