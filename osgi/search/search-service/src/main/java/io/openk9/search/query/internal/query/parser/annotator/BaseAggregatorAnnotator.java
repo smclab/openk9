@@ -22,17 +22,64 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
+
+	private final Map<Long, List<String>> tenantKeywordsMap;
 
 	public BaseAggregatorAnnotator(String...keywords) {
 		this(List.of(keywords));
 	}
 
 	public BaseAggregatorAnnotator(List<String> keywords) {
-		this.keywords = keywords;
+		this.tenantKeywordsMap = _createTenantKeywordsMap(keywords);
+	}
+
+	private Map<Long, List<String>> _createTenantKeywordsMap(
+		List<String> keywords) {
+
+		if (keywords == null) {
+			return Map.of();
+		}
+
+		Map<Long, List<String>> tenantKeywordsMap = new HashMap<>();
+
+		for (String keyword : keywords) {
+			long tenantId = -1;
+			if (keyword.contains(";")) {
+				String[] split = keyword.split(";");
+				tenantId = Long.parseLong(split[0]);
+				keyword = split[1];
+			}
+
+			List<String> value = tenantKeywordsMap.computeIfAbsent(
+				tenantId, (k) -> new ArrayList<>());
+
+			if (!value.contains(keyword)) {
+				value.add(keyword);
+			}
+
+		}
+
+		List<String> allTenantKeywords = tenantKeywordsMap.remove(-1L);
+
+		if (allTenantKeywords != null) {
+			for (Map.Entry<Long, List<String>> e : tenantKeywordsMap.entrySet()) {
+				List<String> value = e.getValue();
+				for (String allTenantKeyword : allTenantKeywords) {
+					if (!value.contains(allTenantKeyword)) {
+						value.add(allTenantKeyword);
+					}
+				}
+			}
+		}
+
+		return tenantKeywordsMap;
+
 	}
 
 	@Override
@@ -46,35 +93,11 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
-		/*if (_containsStopword(tokens)) {
-			return List.of();
-		}*/
-
-		List<String> normalizedKeywords = null;
-
-		for (String keyword : keywords) {
-			if (keyword.contains(";")) {
-				String[] split = keyword.split(";");
-				int aggregatorTenant = Integer.parseInt(split[0]);
-				if (aggregatorTenant == tenantId) {
-					if (normalizedKeywords == null) {
-						normalizedKeywords = new ArrayList<>();
-					}
-					normalizedKeywords.add(split[1]);
-				}
-			}
-			else {
-				if (normalizedKeywords == null) {
-					normalizedKeywords = new ArrayList<>();
-				}
-				normalizedKeywords.add(keyword);
-			}
-		}
+		List<String> normalizedKeywords = tenantKeywordsMap.get(tenantId);
 
 		if (normalizedKeywords == null) {
 			return List.of();
 		}
-
 
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();
@@ -187,8 +210,6 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 	protected RestHighLevelClientProvider restHighLevelClientProvider;
 
-	protected final List<String> keywords;
-
 	private static double _levenshteinDistance(String x, String y) {
 
 		int xLength = x.length();
@@ -223,10 +244,6 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 	private static int _costOfSubstitution(char a, char b) {
 		return a == b ? 0 : 1;
-	}
-
-	private static String _normalizeKeyword(String keyword) {
-		return keyword.substring(keyword.indexOf(";"));
 	}
 
 	private static final Logger _log = LoggerFactory.getLogger(
