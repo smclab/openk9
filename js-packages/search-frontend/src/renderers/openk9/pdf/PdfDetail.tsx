@@ -43,7 +43,7 @@ export function PdfDetail({ result }: PdfDetailProps) {
                 width: 100%;
                 height: 50vh;
                 background-color: white;
-                border: 1px solid ${myTheme.searchBarBorderColor};
+                border: 1px solid var(--openk9-embeddable-search--border-color);
                 border-radius: 4px;
               `}
             />

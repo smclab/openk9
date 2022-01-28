@@ -25,7 +25,7 @@ export function Tooltip({ children, description }: TooltipProps) {
             padding: 8px 16px;
             background-color: ${myTheme.backgroundColor2};
             width: 200px;
-            border: 1px solid ${myTheme.searchBarBorderColor};
+            border: 1px solid var(--openk9-embeddable-search--border-color);
             border-radius: 4px;
           `}
         >

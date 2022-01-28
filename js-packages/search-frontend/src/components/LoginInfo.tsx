@@ -51,7 +51,7 @@ export function LoginInfo({ loginState, onLogin, onLogout }: LoginInfoProps) {
             background-color: ${myTheme.backgroundColor1};
             padding: 8px 16px;
             border-radius: 4px;
-            border: 1px solid ${myTheme.searchBarBorderColor};
+            border: 1px solid var(--openk9-embeddable-search--border-color);
             z-index: 1;
           `}
         >

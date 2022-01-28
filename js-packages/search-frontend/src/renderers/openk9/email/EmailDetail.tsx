@@ -46,7 +46,7 @@ export function EmailDetail({ result }: EmailDetailProps) {
           srcDoc={result.source.email.htmlBody}
           css={css`
             width: 100%;
-            border: 1px solid ${myTheme.searchBarBorderColor};
+            border: 1px solid var(--openk9-embeddable-search--border-color);
             border-radius: 4px;
             background-color: white;
           `}

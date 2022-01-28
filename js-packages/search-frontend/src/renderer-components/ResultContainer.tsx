@@ -26,6 +26,7 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--openk9-embeddable-search--primary-color);
           `}
         >
           {icon}

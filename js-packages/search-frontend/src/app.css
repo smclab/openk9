@@ -1,0 +1,24 @@
+/* COPY, CUSTOMIZE and INCLUDE this stylesheet to adapt look&feel */
+
+:root {
+  --openk9-embeddable-search--primary-color: #c22525;
+  --openk9-embeddable-search--active-color: #c22525;
+  --openk9-embeddable-search--border-color: #ced4da;
+  --openk9-embeddable-search--input-padding: 16px;
+}
+
+.openk9-embeddable-search--input-container {
+  border: 1px solid var(--openk9-embeddable-search--border-color);
+  border-radius: 4px;
+  background-color: white;
+}
+
+.openk9-embeddable-search--result-container {
+  margin: 0px 16px 16px 16px;
+  border: 1px solid var(--openk9-embeddable-search--border-color);
+  border-radius: 4px;
+}
+
+.openk9-embeddable-search--result-container:hover {
+  border: 1px solid var(--openk9-embeddable-search--active-color);
+}

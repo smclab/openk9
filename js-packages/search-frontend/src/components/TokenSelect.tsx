@@ -38,7 +38,9 @@ export function TokenSelect({
       ? myTheme.backgroundColor2
       : myTheme.backgroundColor1};
     cursor: pointer;
-    border-left: ${isSelected ? `8px solid ${myTheme.redTextColor}` : "none"};
+    border-left: ${isSelected
+      ? `8px solid var(--openk9-embeddable-search--active-color)`
+      : "none"};
     padding-left: ${isSelected ? "8px" : "16px"};
   `;
   return (
@@ -63,7 +65,7 @@ export function TokenSelect({
             left: 0px;
             width: 600px;
             background-color: ${myTheme.backgroundColor1};
-            border: 1px solid ${myTheme.searchBarBorderColor};
+            border: 1px solid var(--openk9-embeddable-search--border-color);
             border-radius: 4px;
             z-index: 1;
           `}

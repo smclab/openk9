@@ -136,11 +136,9 @@ export function Main({ config }: MainProps) {
         ReactDOM.createPortal(
           <div
             ref={clickAwayRef}
+            className="openk9-embeddable-search--input-container"
             css={css`
               display: flex;
-              border: 1px solid ${myTheme.searchBarBorderColor};
-              border-radius: 4px;
-              background-color: white;
               align-items: center;
             `}
           >
@@ -159,7 +157,7 @@ export function Main({ config }: MainProps) {
                 css={css`
                   top: 0px;
                   left: 0px;
-                  padding: 16px;
+                  padding: var(--openk9-embeddable-search--input-padding);
                   display: flex;
                   position: absolute;
                 `}
@@ -238,7 +236,7 @@ export function Main({ config }: MainProps) {
                   flex-grow: 1;
                   border: none;
                   outline: none;
-                  padding: 16px;
+                  padding: var(--openk9-embeddable-search--input-padding);
                   color: ${showSyntax ? "transparent" : "inherit"};
                   caret-color: black;
                   font-size: inherit;
@@ -327,7 +325,7 @@ export function Main({ config }: MainProps) {
                 style={{
                   paddingRight: "16px",
                   color: replaceText
-                    ? myTheme.redTextColor
+                    ? "var(--openk9-embeddable-search--primary-color)"
                     : myTheme.grayTexColor,
                   cursor: "pointer",
                 }}
@@ -342,7 +340,7 @@ export function Main({ config }: MainProps) {
                 style={{
                   paddingRight: "16px",
                   color: autoSelect
-                    ? myTheme.redTextColor
+                    ? "var(--openk9-embeddable-search--primary-color)"
                     : myTheme.grayTexColor,
                   cursor: "pointer",
                 }}
@@ -369,9 +367,13 @@ export function Main({ config }: MainProps) {
                   key={index}
                   css={css`
                     padding: 8px 16px;
-                    color: ${isSelected ? myTheme.redTextColor : ""};
+                    color: ${isSelected
+                      ? "var(--openk9-embeddable-search--primary-color)"
+                      : ""};
                     border-bottom: 2px solid
-                      ${isSelected ? myTheme.redTextColor : "transparent"};
+                      ${isSelected
+                        ? "var(--openk9-embeddable-search--active-color)"
+                        : "transparent"};
                     cursor: pointer;
                     font-size: 0.8rem;
                     color: ${myTheme.grayTexColor};

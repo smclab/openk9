@@ -27,7 +27,7 @@ export function ResultTextContent<E>({
         <div
           css={css`
             max-height: calc(21px * 5);
-            overflow-y: hidden;
+            overflow: hidden;
             word-wrap: break-word;
             word-break: break-word;
           `}

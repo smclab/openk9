@@ -27,7 +27,7 @@ function HighLight({ children }: { children?: React.ReactNode }) {
   return (
     <span
       css={css`
-        color: ${myTheme.redTextColor};
+        color: var(--openk9-embeddable-search--primary-color);
       `}
     >
       {children}

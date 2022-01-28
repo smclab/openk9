@@ -1,9 +1,10 @@
 import React from "react";
-import "./index.css";
 import { OpenK9 } from "./embeddable/entry";
 import { css } from "styled-components/macro";
 import { myTheme } from "./components/myTheme";
 import { Logo } from "./components/Logo";
+import "./index.css";
+import "./app.css";
 
 export function App() {
   return (
@@ -57,7 +58,7 @@ export function App() {
         >
           <span
             css={css`
-              color: ${myTheme.redTextColor};
+              color: var(--openk9-embeddable-search--primary-color);
               margin-right: 8px;
             `}
           >
