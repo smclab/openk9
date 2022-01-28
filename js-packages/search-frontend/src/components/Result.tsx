@@ -14,6 +14,7 @@ import { EventiResult } from "../renderers/cm/eventi/EventiResult";
 import { PetizioniResult } from "../renderers/cm/petizioni/PetizioniResult";
 import { ProcessiResult } from "../renderers/cm/processi/ProcessiResult";
 import { OpendataResult } from "../renderers/cm/opendata/OpendataResult";
+import { CalendarResult } from "../renderers/openk9/calendar/CalendarResult";
 
 type ResultProps<E> = {
   result: GenericResultItem<E>;
@@ -71,6 +72,9 @@ function Result<E>(props: ResultProps<E>) {
           }
           if (result.source.documentTypes.includes("user")) {
             return <UserResult result={result} />;
+          }
+          if (result.source.documentTypes.includes("calendar")) {
+            return <CalendarResult result={result} />;
           }
           return (
             <pre

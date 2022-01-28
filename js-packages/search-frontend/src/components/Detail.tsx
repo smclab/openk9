@@ -18,6 +18,7 @@ import { AssistenzaDetail } from "../renderers/sg/assistenza/AssistenzaDetail";
 import { GaraDetail } from "../renderers/sg/gara/GaraDetail";
 import { OpendataDetail } from "../renderers/cm/opendata/OpendataDetail";
 import { VenditeDetail } from "../renderers/sg/vendite/VenditeDetail";
+import { CalendarDetail } from "../renderers/openk9/calendar/CalendarDetail";
 
 type DetailProps<E> = {
   result: GenericResultItem<E>;
@@ -99,6 +100,9 @@ function Detail<E>(props: DetailProps<E>) {
           }
           if (result.source.documentTypes.includes("user")) {
             return <UserDetail result={result} />;
+          }
+          if (result.source.documentTypes.includes("calendar")) {
+            return <CalendarDetail result={result} />;
           }
           return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
         })()}
