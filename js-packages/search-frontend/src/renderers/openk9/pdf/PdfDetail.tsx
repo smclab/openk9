@@ -2,7 +2,6 @@ import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { css } from "styled-components/macro";
-import { myTheme } from "../../../components/myTheme";
 import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
 import { DetailContainer } from "../../../renderer-components/DetailContainer";
 import { DetailIconContainer } from "../../../renderer-components/DetailIconContainer";
@@ -34,23 +33,43 @@ export function PdfDetail({ result }: PdfDetailProps) {
       )}
       <div>
         {result.source.resources.binaries.map((binary) => {
+          const url = `/api/searcher/resources/${result.source.datasourceId}/${result.source.id}/${binary.id}`;
           return (
-            <iframe
-              key={binary.id}
-              title={binary.id}
-              src={`/api/searcher/resources/${result.source.datasourceId}/${result.source.id}/${binary.id}`}
-              css={css`
-                width: 100%;
-                height: 50vh;
-                background-color: white;
-                border: 1px solid var(--openk9-embeddable-search--border-color);
-                border-radius: 4px;
-              `}
-            />
+            <ViewIfUrlOk key={binary.id} url={url}>
+              <iframe
+                title={binary.id}
+                src={url}
+                css={css`
+                  width: 100%;
+                  height: 50vh;
+                  background-color: white;
+                  border: 1px solid
+                    var(--openk9-embeddable-search--border-color);
+                  border-radius: 4px;
+                `}
+              />
+            </ViewIfUrlOk>
           );
         })}
       </div>
       <DetailTextContent result={result} path="document.content" />
     </DetailContainer>
   );
+}
+
+function ViewIfUrlOk({
+  url,
+  children,
+}: {
+  url: string;
+  children: React.ReactNode;
+}) {
+  const [isOk, setIsOk] = React.useState(false);
+  React.useEffect(() => {
+    fetch(url).then((response) => {
+      if (response.ok) setIsOk(true);
+    });
+    return () => setIsOk(false);
+  }, [url]);
+  return <React.Fragment>{isOk ? children : null}</React.Fragment>;
 }

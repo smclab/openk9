@@ -86,9 +86,6 @@ function Detail<E>(props: DetailProps<E>) {
           if (result.source.documentTypes.includes("pdf")) {
             return <PdfDetail result={result} />;
           }
-          if (result.source.documentTypes.includes("excel")) {
-            return <PdfDetail result={result} />;
-          }
           if (result.source.documentTypes.includes("document")) {
             return <DocumentDetail result={result} />;
           }

@@ -9,6 +9,7 @@ export function DetailIconContainer({ children }: DetailIconContainerProps) {
     <div
       css={css`
         margin-bottom: 8px;
+        color: var(--openk9-embeddable-search--primary-color);
       `}
     >
       {children}
