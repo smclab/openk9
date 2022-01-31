@@ -52,7 +52,12 @@ public class EntityManagerConsumer {
 	@Incoming("entity-manager-request")
 	@Outgoing("entity-manager-response")
 	@Blocking
-	public Message<JsonObject> consume(JsonObject jsonObject) throws InterruptedException {
+	public Message<JsonObject> consume(Object obj) throws InterruptedException {
+
+		JsonObject jsonObject =
+			obj instanceof JsonObject
+				? (JsonObject)obj
+				: new JsonObject(new String((byte[])obj));
 
 		Payload payload = jsonObject.mapTo(Payload.class);
 
