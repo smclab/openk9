@@ -52,10 +52,9 @@ public class EntityManagerConsumer {
 	@Incoming("entity-manager-request")
 	@Outgoing("entity-manager-response")
 	@Blocking
-	public Message<byte[]> consume(byte[] bytes) throws InterruptedException {
+	public Message<JsonObject> consume(JsonObject jsonObject) throws InterruptedException {
 
-		Payload payload =
-			new JsonObject(new String(bytes)).mapTo(Payload.class);
+		Payload payload = jsonObject.mapTo(Payload.class);
 
 		_entityManagerQueue.offer(
 			payload,
@@ -64,7 +63,7 @@ public class EntityManagerConsumer {
 		String replyTo = payload.getReplyTo();
 
 		return Message.of(
-			bytes, Metadata.of(
+			jsonObject, Metadata.of(
 				new OutgoingRabbitMQMetadata.Builder()
 					.withRoutingKey(replyTo)
 					.withTimestamp(ZonedDateTime.now())
