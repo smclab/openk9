@@ -12,6 +12,6 @@ export type NotizieResultItem = GenericResultItem<{
     imgUrl: string;
     pubDate: string;
     topic: string;
-    linkedUrls: Array<string>;
+    linkedUrls?: Array<string>;
   };
 }>;

@@ -959,20 +959,20 @@ export type EntityLookupResponse = {
   total: number;
 };
 
-// DEPRECATED
-// TODO: remove
 export async function getSuggestions({
   searchQuery,
   suggestionCategoryId,
   range,
   afterKey,
   loginInfo,
+  suggestKeyword,
 }: {
   searchQuery: SearchToken[];
   suggestionCategoryId?: number;
   range?: [number, number]; // for pagination
   afterKey?: string; // for pagination
   loginInfo: LoginInfo | null;
+  suggestKeyword?: string; // to source by text in suggestions
 }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
   const request = await authFetch(`/api/searcher/v1/suggestions`, loginInfo, {
     method: "POST",
@@ -981,6 +981,7 @@ export async function getSuggestions({
       range,
       afterKey,
       suggestionCategoryId,
+      suggestKeyword,
     }),
     headers: {
       Accept: "application/json",

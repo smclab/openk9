@@ -14,15 +14,21 @@ export function UserResult({ result }: UserResultProps) {
       <ResultTitle>
         <HighlightableText result={result} path="user.fullName" />
       </ResultTitle>
-      <ResultAttribute label="Job">
-        <HighlightableText result={result} path="user.jobTitle" />
-      </ResultAttribute>
-      <ResultAttribute label="Email">
-        <HighlightableText result={result} path="user.emailAddress" />
-      </ResultAttribute>
-      <ResultAttribute label="Phone">
-        <HighlightableText result={result} path="user.phoneNumber" />
-      </ResultAttribute>
+      {result.source.user.jobTitle && (
+        <ResultAttribute label="Job">
+          <HighlightableText result={result} path="user.jobTitle" />
+        </ResultAttribute>
+      )}
+      {result.source.user.emailAddress && (
+        <ResultAttribute label="Email">
+          <HighlightableText result={result} path="user.emailAddress" />
+        </ResultAttribute>
+      )}
+      {result.source.user.phoneNumber && (
+        <ResultAttribute label="Phone">
+          <HighlightableText result={result} path="user.phoneNumber" />
+        </ResultAttribute>
+      )}
     </ResultContainer>
   );
 }

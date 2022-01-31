@@ -25,6 +25,7 @@ type QueryState = {
 export type OpenK9ConfigFacade = {
   search: Element | null;
   tabs: Element | null;
+  filters: Element | null;
   results: Element | null;
   details: Element | null;
   login: Element | null;
@@ -35,6 +36,7 @@ export type OpenK9ConfigFacade = {
 const openk9Config: OpenK9ConfigFacade = {
   search: null,
   tabs: null,
+  filters: null,
   results: null,
   details: null,
   login: null,
@@ -52,6 +54,10 @@ export const OpenK9: OpenK9ConfigFacade = {
   },
   set tabs(element: Element | null) {
     openk9Config.tabs = element;
+    updateConfig({ ...openk9Config });
+  },
+  set filters(element: Element | null) {
+    openk9Config.filters = element;
     updateConfig({ ...openk9Config });
   },
   set results(element: Element | null) {

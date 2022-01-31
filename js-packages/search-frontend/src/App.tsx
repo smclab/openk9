@@ -13,13 +13,13 @@ export function App() {
         width: 100vw;
         height: 100vh;
         display: grid;
-        grid-template-columns: 50% 50%;
+        grid-template-columns: 20% 40% 40%;
         grid-template-rows: auto auto auto 1fr;
         grid-template-areas:
-          "dockbar dockbar"
-          "tabs tabs"
-          "search search"
-          "result detail";
+          "dockbar dockbar dockbar"
+          "tabs tabs tabs"
+          "search search search"
+          "filters result detail";
       `}
     >
       <div
@@ -82,6 +82,15 @@ export function App() {
           `}
         ></div>
       </div>
+      <div
+        ref={(element) => (OpenK9.filters = element)}
+        css={css`
+          grid-area: filters;
+          overflow-y: auto;
+          padding: 0px 16px;
+          background-color: ${myTheme.backgroundColor2};
+        `}
+      ></div>
       <div
         ref={(element) => (OpenK9.results = element)}
         css={css`

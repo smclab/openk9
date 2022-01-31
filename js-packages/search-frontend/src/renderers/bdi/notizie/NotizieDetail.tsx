@@ -32,7 +32,7 @@ export function NotizieDetail({ result }: NotizieDetailProps) {
       </DetailAttribute>
       <DetailAttribute label="Linked Urls">
         <ul>
-          {result.source.notizie.linkedUrls.slice(0, 3).map((url) => {
+          {result.source.notizie.linkedUrls?.slice(0, 3).map((url) => {
             return (
               <li key={url}>
                 <a

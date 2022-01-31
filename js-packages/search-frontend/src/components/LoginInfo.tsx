@@ -11,7 +11,11 @@ type LoginInfoProps = {
   onLogin(username: string, password: string): void;
   onLogout(): void;
 };
-export function LoginInfo({ loginState, onLogin, onLogout }: LoginInfoProps) {
+export function LoginInfoComponent({
+  loginState,
+  onLogin,
+  onLogout,
+}: LoginInfoProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");

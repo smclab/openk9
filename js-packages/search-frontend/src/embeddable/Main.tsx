@@ -17,7 +17,7 @@ import { useClickAway } from "../components/useClickAway";
 import { getAutoSelections, useSelections } from "../components/useSelections";
 import { Tooltip } from "../components/Tooltip";
 import { useLoginInfo } from "../components/useLogin";
-import { LoginInfo } from "../components/LoginInfo";
+import { LoginInfoComponent } from "../components/LoginInfo";
 import { OpenK9ConfigFacade } from "./entry";
 import ReactDOM from "react-dom";
 import {
@@ -25,9 +25,16 @@ import {
   AnalysisResponseEntry,
   AnalysisToken,
   GenericResultItem,
+  LoginInfo,
+  getSuggestionCategories,
   SearchToken,
+  getSuggestions,
+  SuggestionResult,
 } from "@openk9/rest-api";
 import { Logo } from "../components/Logo";
+import { useInfiniteQuery, useQuery } from "react-query";
+import { isEqual } from "lodash";
+import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 
 const DEBOUNCE = 300;
 
@@ -71,10 +78,25 @@ export function Main({ config }: MainProps) {
     onQueryStateChange,
     queryState: { hiddenSearchQuery },
   } = config;
+  const [filterSearchTokens, setFilterSearchTokens] = React.useState<
+    Array<SearchToken>
+  >([]);
+  const addFilterSearchToken = React.useCallback((searchToken: SearchToken) => {
+    setFilterSearchTokens((tokens) => [...tokens, searchToken]);
+  }, []);
+  const removeFilterSearchToken = React.useCallback(
+    (searchToken: SearchToken) => {
+      setFilterSearchTokens((tokens) =>
+        tokens.filter((token) => !isEqual(token, searchToken)),
+      );
+    },
+    [],
+  );
   const searchQueryMemo = React.useMemo(
     () => [
       ...tabTokens,
       ...hiddenSearchQuery,
+      ...filterSearchTokens,
       ...deriveSearchQuery(
         spans,
         state.selection.flatMap(({ text, start, end, token }) =>
@@ -82,7 +104,7 @@ export function Main({ config }: MainProps) {
         ),
       ),
     ],
-    [spans, state.selection, tabTokens, hiddenSearchQuery],
+    [spans, state.selection, tabTokens, hiddenSearchQuery, filterSearchTokens],
   );
   React.useEffect(() => {
     onQueryStateChange?.({
@@ -130,6 +152,9 @@ export function Main({ config }: MainProps) {
   React.useEffect(() => {
     setDetail(null);
   }, [searchQuery]);
+  const suggestionCategories = useSuggestionCategories(
+    login.state.loginInfo ?? null,
+  );
   return (
     <React.Fragment>
       {config.search !== null &&
@@ -390,6 +415,24 @@ export function Main({ config }: MainProps) {
           </div>,
           config.tabs,
         )}
+      {config.filters !== null &&
+        ReactDOM.createPortal(
+          <div>
+            {suggestionCategories.data?.slice(2).map((suggestionCategory) => {
+              return (
+                <FilterCategory
+                  key={suggestionCategory.suggestionCategoryId}
+                  suggestionCategoryName={suggestionCategory.name}
+                  suggestionCategoryId={suggestionCategory.suggestionCategoryId}
+                  tokens={filterSearchTokens}
+                  onAdd={addFilterSearchToken}
+                  onRemove={removeFilterSearchToken}
+                />
+              );
+            })}
+          </div>,
+          config.filters,
+        )}
       {config.results !== null &&
         ReactDOM.createPortal(
           <Results
@@ -402,12 +445,18 @@ export function Main({ config }: MainProps) {
         )}
       {config.details !== null &&
         ReactDOM.createPortal(
-          detail ? <DetailMemo result={detail} /> : <NoDetail />,
+          detail ? (
+            <SimpleErrorBoundary>
+              <DetailMemo result={detail} />
+            </SimpleErrorBoundary>
+          ) : (
+            <NoDetail />
+          ),
           config.details,
         )}
       {config.login !== null &&
         ReactDOM.createPortal(
-          <LoginInfo
+          <LoginInfoComponent
             loginState={login.state}
             onLogin={login.login}
             onLogout={login.logout}
@@ -500,6 +549,189 @@ function NoDetail() {
       <Logo size={128} />
       <h3>No details</h3>
       <div>Move the mouse over a result to see details about it</div>
+    </div>
+  );
+}
+
+function useSuggestionCategories(loginInfo: LoginInfo | null) {
+  return useQuery(["suggestion-categories"], async ({ queryKey }) => {
+    const result = await getSuggestionCategories(loginInfo);
+    return result;
+  });
+}
+
+function useInfiniteSuggestions(
+  searchQuery: SearchToken[] | null,
+  activeSuggestionCategory: number,
+  suggestKeyword: string,
+) {
+  const ENABLED = true;
+  const pageSize = ENABLED ? 10 : 100;
+  return useInfiniteQuery(
+    [
+      "suggestions",
+      searchQuery,
+      activeSuggestionCategory,
+      suggestKeyword,
+    ] as const,
+    async ({
+      queryKey: [_, searchQuery, activeSuggestionCategory],
+      pageParam,
+    }) => {
+      if (!searchQuery) throw new Error();
+      const result = await getSuggestions({
+        searchQuery,
+        range: [0, pageSize],
+        afterKey: pageParam,
+        loginInfo: null,
+        suggestionCategoryId: activeSuggestionCategory,
+        suggestKeyword,
+      });
+      return {
+        result: result.result,
+        afterKey: result.afterKey,
+      };
+    },
+    {
+      enabled: searchQuery !== null,
+      keepPreviousData: true,
+      getNextPageParam(lastPage, pages) {
+        if (ENABLED) {
+          if (!lastPage.afterKey) return undefined;
+          return lastPage.afterKey;
+        } else {
+          return undefined;
+        }
+      },
+    },
+  );
+}
+
+const mapSuggestionToSearchToken = (
+  suggestion: SuggestionResult,
+): SearchToken => {
+  switch (suggestion.tokenType) {
+    case "DATASOURCE": {
+      return { tokenType: "DATASOURCE", values: [suggestion.value] };
+    }
+    case "DOCTYPE": {
+      return {
+        tokenType: "DOCTYPE",
+        keywordKey: "type",
+        values: [suggestion.value],
+      };
+    }
+    case "ENTITY": {
+      return {
+        tokenType: "ENTITY",
+        keywordKey: suggestion.keywordKey,
+        entityType: suggestion.entityType,
+        values: [suggestion.value],
+      };
+    }
+    case "TEXT": {
+      return {
+        tokenType: "TEXT",
+        keywordKey: suggestion.keywordKey,
+        values: [suggestion.value],
+      };
+    }
+  }
+};
+
+type FilterCategoryProps = {
+  suggestionCategoryId: number;
+  suggestionCategoryName: string;
+  tokens: SearchToken[];
+  onAdd(searchToken: SearchToken): void;
+  onRemove(searchToken: SearchToken): void;
+};
+function FilterCategory({
+  suggestionCategoryId,
+  suggestionCategoryName,
+  tokens,
+  onAdd,
+  onRemove,
+}: FilterCategoryProps) {
+  const [text, setText] = React.useState("");
+  const suggestions = useInfiniteSuggestions(
+    tokens,
+    suggestionCategoryId,
+    text,
+  );
+  if (!suggestions.data) return null;
+  if (
+    suggestions.data?.pages[0] &&
+    suggestions.data.pages[0].result.length === 0
+  ) {
+    return null;
+  }
+  return (
+    <div
+      css={css`
+        margin-top: 8px;
+      `}
+    >
+      <div
+        css={css`
+          margin-bottom: 8px;
+        `}
+      >
+        {suggestionCategoryName}
+        <input
+          value={text}
+          onChange={(event) => setText(event.currentTarget.value)}
+        />
+      </div>
+      {suggestions.data?.pages.map(({ result }, index) => {
+        return (
+          <React.Fragment key={index}>
+            {result.map((suggestion, index) => {
+              const asSearchToken = mapSuggestionToSearchToken(suggestion);
+              const isChecked = tokens.some((searchToken) =>
+                isEqual(searchToken, asSearchToken),
+              );
+              return (
+                <div key={index}>
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={(event) => {
+                      if (event.currentTarget.checked) {
+                        onAdd(asSearchToken);
+                      } else {
+                        onRemove(asSearchToken);
+                      }
+                    }}
+                  />
+                  {suggestion.tokenType === "ENTITY" ? (
+                    <>
+                      <strong>{suggestion.entityType}</strong>:{" "}
+                      {suggestion.entityValue}
+                    </>
+                  ) : (
+                    suggestion.value
+                  )}
+                </div>
+              );
+            })}
+          </React.Fragment>
+        );
+      })}
+      {suggestions.hasNextPage && (
+        <button
+          css={css`
+            width: 100%;
+            textalign: center;
+          `}
+          disabled={suggestions.isFetching}
+          onClick={() => {
+            suggestions.fetchNextPage();
+          }}
+        >
+          load more
+        </button>
+      )}
     </div>
   );
 }
