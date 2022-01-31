@@ -6,14 +6,18 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.impl.MapService;
 import io.openk9.entity.manager.dto.Payload;
 import io.smallrye.reactive.messaging.annotations.Blocking;
+import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Message;
+import org.eclipse.microprofile.reactive.messaging.Metadata;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -46,15 +50,27 @@ public class EntityManagerConsumer {
 	}
 
 	@Incoming("entity-manager-request")
-	@Outgoing("index-writer")
+	@Outgoing("entity-manager-response")
 	@Blocking
-	public byte[] consume(byte[] bytes) throws InterruptedException {
+	public Message<byte[]> consume(byte[] bytes) throws InterruptedException {
+
+		Payload payload =
+			new JsonObject(new String(bytes)).mapTo(Payload.class);
 
 		_entityManagerQueue.offer(
-			new JsonObject(new String(bytes)).mapTo(Payload.class),
+			payload,
 			45, TimeUnit.SECONDS);
 
-		return bytes;
+		String replyTo = payload.getReplyTo();
+
+		return Message.of(
+			bytes, Metadata.of(
+				new OutgoingRabbitMQMetadata.Builder()
+					.withRoutingKey(replyTo)
+					.withTimestamp(ZonedDateTime.now())
+					.build()
+			)
+		);
 
 	}
 

@@ -15,4 +15,5 @@ import java.util.List;
 public class Payload implements Serializable {
 	private EntityManagerRequest payload;
 	private List<EntityRequest> entities;
+	private String replyTo;
 }
