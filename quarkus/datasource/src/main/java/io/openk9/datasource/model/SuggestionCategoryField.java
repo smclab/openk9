@@ -36,6 +36,7 @@ public class SuggestionCategoryField extends PanacheEntityBase {
 	@Column(unique = true)
 	private String fieldName;
 	private String name;
+	@Column(columnDefinition = "boolean default true")
 	private boolean enabled;
 
 	public static PanacheQuery<SuggestionCategoryField> findAll() {
