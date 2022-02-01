@@ -5,7 +5,11 @@ import io.openk9.search.api.query.SearchToken;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
@@ -19,7 +23,19 @@ import java.util.stream.Collectors;
 	immediate = true,
 	service = QueryParser.class
 )
+@Designate(ocd = EntityQueryParser.Config.class)
 public class EntityQueryParser implements QueryParser {
+
+	@ObjectClassDefinition
+	@interface Config {
+		float boost() default 50.0f;
+	}
+
+	@Activate
+	@Modified
+	void activate(TextQueryParser.Config config) {
+		_boost = config.boost();
+	}
 
 	@Override
 	public Mono<Consumer<BoolQueryBuilder>> apply(Context context) {
@@ -87,6 +103,8 @@ public class EntityQueryParser implements QueryParser {
 
 			}
 
+			outerBoolQueryBuilder.boost(_boost);
+
 			context.getQueryCondition().accept(bool, outerBoolQueryBuilder);
 
 		});
@@ -103,6 +121,8 @@ public class EntityQueryParser implements QueryParser {
 		return boolQuery;
 
 	}
+
+	private float _boost;
 
 	public static final String TYPE = "ENTITY";
 	public static final String ENTITIES_ID = "entities.id";
