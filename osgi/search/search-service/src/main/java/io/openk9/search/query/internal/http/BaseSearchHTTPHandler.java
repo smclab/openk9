@@ -278,7 +278,7 @@ public abstract class BaseSearchHTTPHandler
 			documentTypeList,
 			tokenTypeGroup,
 			httpRequest,
-			QueryParser.QueryCondition.SHOULD
+			QueryParser.QueryCondition.DEFAULT
 		);
 	}
 
