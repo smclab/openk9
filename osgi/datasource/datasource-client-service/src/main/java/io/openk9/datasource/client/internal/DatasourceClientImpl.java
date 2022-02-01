@@ -227,6 +227,28 @@ public class DatasourceClientImpl implements DatasourceClient {
 				response, SuggestionCategoryField.class));
 	}
 
+	@Override
+	public Mono<List<SuggestionCategoryField>> findSuggestionCategoryFieldsByCategoryIdEnabled(
+		long categoryId) {
+		return Mono.from(
+				_httpClient
+					.request(
+						HttpHandler.POST,
+						"/v2/suggestion-category-field/filter",
+						_jsonFactory
+							.createObjectNode()
+							.put("categoryId", categoryId)
+							.put("enabled", true)
+							.toString(),
+						Map.of(
+							"Content-Type", "application/json"
+						)
+					)
+			)
+			.map(response -> _jsonFactory.fromJsonList(
+				response, SuggestionCategoryField.class));
+	}
+
 	private HttpClient _httpClient;
 
 	@Reference

@@ -135,7 +135,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 			}
 			else {
 				return _datasourceClient
-					.findSuggestionCategoryFieldsByCategoryId(
+					.findSuggestionCategoryFieldsByCategoryIdEnabled(
 						suggestionCategoryId);
 			}
 		})
