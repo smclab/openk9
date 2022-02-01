@@ -33,6 +33,7 @@ public class SuggestionCategory extends PanacheEntityBase {
 	private Long tenantId;
 	private Long parentCategoryId;
 	private String name;
+	@Column(columnDefinition = "boolean default true")
 	private boolean enabled;
 
 	public static PanacheQuery<SuggestionCategory> findAll() {
