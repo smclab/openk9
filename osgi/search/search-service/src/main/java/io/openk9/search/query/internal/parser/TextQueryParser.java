@@ -85,9 +85,20 @@ public class TextQueryParser implements QueryParser {
 
 		String keywordKey = tokenText.getKeywordKey();
 
-		Predicate<SearchKeywordDTO> keywordKeyPredicate =
-			searchKeyword -> keywordKey == null || keywordKey.isEmpty() ||
-							 searchKeyword.getKeyword().equals(keywordKey);
+		boolean keywordKeyIsPresent =
+			keywordKey != null && !keywordKey.isBlank();
+
+		Predicate<SearchKeywordDTO> keywordKeyPredicate;
+
+		if (keywordKeyIsPresent) {
+			keywordKeyPredicate = searchKeyword ->
+				searchKeyword.getKeyword().equals(keywordKey);
+			queryCondition = QueryCondition.MUST;
+		}
+		else {
+			keywordKeyPredicate = ignore -> true;
+			queryCondition = QueryCondition.SHOULD;
+		}
 
 		Map<String, Float> keywordBoostMap =
 			entityMapperList
@@ -119,7 +130,7 @@ public class TextQueryParser implements QueryParser {
 
 			multiMatchQueryBuilder.fields(keywordBoostMap);
 
-			boolQueryBuilder.should(multiMatchQueryBuilder);
+			queryCondition.accept(boolQueryBuilder, multiMatchQueryBuilder);
 
 			if (value.split("\\s+").length > 1) {
 
@@ -135,7 +146,7 @@ public class TextQueryParser implements QueryParser {
 
 				multiMatchQueryBuilder.boost(2.0f);
 
-				boolQueryBuilder.should(multiMatchQueryBuilder);
+				queryCondition.accept(boolQueryBuilder, multiMatchQueryBuilder);
 
 			}
 
