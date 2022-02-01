@@ -338,9 +338,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 					if (key.contains(suggestKeyword)) {
 						suggestions.addFirst(sugg);
 					}
-					else {
-						suggestions.addLast(sugg);
-					}
 				}
 			};
 		}
@@ -433,6 +430,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 		Map<String, Object> map = compositeAggregation.afterKey();
 		String afterKey = null;
+
+		int[] range = searchRequest.getRange();
 
 		if (map != null) {
 			afterKey = _jsonFactory.toJson(map);

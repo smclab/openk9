@@ -28,4 +28,5 @@ public class SearchToken {
 	private String keywordKey;
 	private String[] values;
 	private Map<String, Object> extra;
+	private Boolean filter;
 }
