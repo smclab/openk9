@@ -1,6 +1,8 @@
 package io.openk9.datasource.model;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import io.quarkus.hibernate.reactive.panache.PanacheQuery;
+import io.quarkus.panache.common.Sort;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,6 +36,15 @@ public class SuggestionCategoryField extends PanacheEntityBase {
 	@Column(unique = true)
 	private String fieldName;
 	private String name;
+	private boolean enabled;
+
+	public static PanacheQuery<SuggestionCategoryField> findAll() {
+		return SuggestionCategoryField.find("enabled",true);
+	}
+
+	public static PanacheQuery<SuggestionCategoryField> findAll(Sort sort) {
+		return SuggestionCategoryField.find("enabled", sort, true);
+	}
 
 	@Override
 	public boolean equals(Object o) {

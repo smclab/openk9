@@ -60,9 +60,16 @@ public class SuggestionCategoryFieldResource {
 		@QueryParam("size") @DefaultValue("20") int pageSize
 	){
 		Page page = Page.of(pageIndex, pageSize);
-		Sort sort = Sort.by(sortQuery.toArray(String[]::new));
 
-		return SuggestionCategoryField.findAll(sort).page(page).list();
+		if (sortQuery.isEmpty()) {
+			return SuggestionCategoryField.findAll().page(page).list();
+		}
+		else {
+			return SuggestionCategoryField
+				.findAll(Sort.by(sortQuery.toArray(String[]::new)))
+				.page(page)
+				.list();
+		}
 	}
 
 	@POST

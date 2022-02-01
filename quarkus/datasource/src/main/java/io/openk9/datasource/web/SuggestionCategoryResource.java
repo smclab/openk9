@@ -59,9 +59,17 @@ public class SuggestionCategoryResource {
 		@QueryParam("size") @DefaultValue("20") int pageSize
 	){
 		Page page = Page.of(pageIndex, pageSize);
-		Sort sort = Sort.by(sortQuery.toArray(String[]::new));
 
-		return SuggestionCategory.findAll(sort).page(page).list();
+		if (sortQuery.isEmpty()) {
+			return SuggestionCategory.findAll().page(page).list();
+		}
+		else {
+			return SuggestionCategory
+				.findAll(Sort.by(sortQuery.toArray(String[]::new)))
+				.page(page)
+				.list();
+		}
+
 	}
 
 	@POST
