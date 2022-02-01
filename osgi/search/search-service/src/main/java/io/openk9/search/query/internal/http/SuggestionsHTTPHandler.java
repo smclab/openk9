@@ -204,6 +204,21 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		HttpServerRequest httpServerRequest, SearchRequest searchRequest,
 		SearchResponse searchResponse) {
 
+		Long suggestionCategoryId =
+			searchRequest.getSuggestionCategoryId();
+
+		Mono<List<SuggestionCategoryField>> suggestionCategoryFields;
+
+		if (suggestionCategoryId == null) {
+			suggestionCategoryFields =_datasourceClient
+				.findSuggestionCategoryFields();
+		}
+		else {
+			suggestionCategoryFields = _datasourceClient
+				.findSuggestionCategoryFieldsByCategoryIdEnabled(
+					suggestionCategoryId);
+		}
+
 		if (_enableEntityAggregation) {
 			return _search
 				.search(factory -> {
@@ -244,8 +259,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 					return searchRequestEntity.source(ssb);
 				})
 				.flatMap(entityResponse ->
-					_datasourceClient
-						.findSuggestionCategoryFields()
+					suggestionCategoryFields
 						.map(fields -> {
 
 							Map<String, String[]> entityMap = new HashMap<>();
@@ -266,8 +280,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						}));
 		}
 		else {
-			return _datasourceClient
-				.findSuggestionCategoryFields()
+			return suggestionCategoryFields
 				.map(fields ->
 					_getSuggestionsResponse(
 						datasourceList, pluginDriverDTOList,
