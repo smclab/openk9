@@ -167,17 +167,9 @@ public class AuthVerifierImpl implements AuthVerifier {
 			return Mono.just(GUEST);
 		}
 
-		return
-			nameSupplier
-				.flatMap(name ->
-					Mono
-						.justOrEmpty(
-							_userTokenUserInfoAsyncLoadingCache
-								.synchronous()
-								.getIfPresent(UserToken.of(name, token.substring(7)))
-							)
-						.defaultIfEmpty(GUEST)
-				);
+		return nameSupplier
+			.flatMap(name -> _keycloakClient.introspect(name, token));
+
 	}
 
 	private AsyncLoadingCache<UserToken, UserInfo>
