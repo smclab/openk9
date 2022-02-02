@@ -170,9 +170,12 @@ public class AuthVerifierImpl implements AuthVerifier {
 		return
 			nameSupplier
 				.flatMap(name ->
-					Mono.fromFuture(
-						_userTokenUserInfoAsyncLoadingCache
-							.getIfPresent(UserToken.of(name, token.substring(7))))
+					Mono
+						.justOrEmpty(
+							_userTokenUserInfoAsyncLoadingCache
+								.synchronous()
+								.getIfPresent(UserToken.of(name, token.substring(7)))
+							)
 						.defaultIfEmpty(GUEST)
 				);
 	}
