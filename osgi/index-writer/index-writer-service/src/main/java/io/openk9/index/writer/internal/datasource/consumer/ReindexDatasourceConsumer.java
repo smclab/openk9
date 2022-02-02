@@ -98,11 +98,10 @@ public class ReindexDatasourceConsumer {
 							new ReactorActionListener<>(sink)
 						))
 				)
-				.onErrorResume(throwable -> {
+				.onErrorContinue((throwable, ignore) -> {
 					if (_log.isErrorEnabled()) {
 						_log.error(throwable.getMessage());
 					}
-					return Mono.empty();
 				})
 				.subscribe();
 	}
