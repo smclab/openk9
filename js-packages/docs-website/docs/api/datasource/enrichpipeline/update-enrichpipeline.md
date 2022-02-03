@@ -5,7 +5,7 @@ slug: /api/update-enrichpipeline
 
 ---
 
-Update existing datasource
+Update existing enrichpipeline
 
 ```bash
 PUT /v2/datasource
@@ -19,7 +19,12 @@ PUT /v2/datasource
 
 ### Description
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Update entire enrichpipeline with information specified in request body
 
 ### Request Body
+
+`active`: (boolean) Specific if datasource is enabled or not
+
+`name`: (date) Name of enrichpipeline
+
+`datasourceId`: (int) Id of related datasourceId

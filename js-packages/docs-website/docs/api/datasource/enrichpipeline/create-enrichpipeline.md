@@ -10,14 +10,9 @@ Create new datasource
 ```bash
 POST /v2/datasource
 {
-    "active": true,
-    "description": "example",
-    "jsonConfig": "{}",
-    "lastIngestionDate": 0,
-    "name": "example-datasource",
-    "tenantId": 1,
-    "scheduling": "0 */30 * ? * *",
-    "driverServiceName": "io.openk9.plugins.example.driver.ExamplePluginDriver"
+  "active": true,
+  "datasourceId": 123,
+  "name": "example pipeline"
 }
 ```
 
@@ -29,16 +24,6 @@ Allows you to create a new datasource.
 
 `active`: (boolean) Specific if datasource is enabled or not
 
-`description`: (string) Description about the datasource
-
-`jsonConfig`: (dict) Configuration of the datasource. Normally includes the information to be sent to the external connector.
-
 `name`: (date) Name of datasource
 
-`tenantId`: (int) Id of related tenant
-
-`scheduling`: (cron expression) Quartz cron expression to adjust the scheduler
-
-`driverServiceName`: (string) Symbolic name of related plugin
-
-
+`datasourceId`: (int) Id of related datasourceId

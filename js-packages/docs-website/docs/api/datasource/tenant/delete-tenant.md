@@ -15,6 +15,6 @@ POST /v2/tenant/{id}
 
 Delete tenant by id.
 
-### Url parameter
+### Parameters
 
 `id`: (int) Id of tenant

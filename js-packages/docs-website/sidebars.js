@@ -6,8 +6,34 @@ module.exports = {
     "Architecture": ["architecture/architecture", "architecture/ingestion", "architecture/datasource",
     "architecture/plugin-driver-manager", "architecture/index-writer", "architecture/entity-manager",
     "architecture/searcher"],
-    "Rest Api": ["api/api", "api/searcher/searcher-api", "api/datasource/datasource-api", "api/ingestion/ingestion-api",
-    "api/entity-manager/entity-manager-api", "api/index-writer/index-writer-api"]
+    "Rest Api": ["api/api",
+    {
+       "type": "category",
+       "label": "Searcher Apis",
+       "items": [
+         "api/searcher/searcher-api",
+         "api/searcher/search/search-documents",
+         "api/searcher/search/search-entities",
+         "api/searcher/search/supported-datasources",
+         "api/searcher/search/suggestions",
+         "api/searcher/query-analysis/query-analysis",
+         "api/searcher/auth/login",
+         "api/searcher/auth/logout",
+         "api/searcher/auth/user-info"
+       ]
+     },
+     {
+      "type": "category",
+      "label": "Datasource Apis",
+      "items": [
+        "api/datasource/datasource-api-overwiew",
+        "api/datasource/tenant/tenant-api",
+        "api/datasource/datasource/datasource-api",
+        "api/datasource/enrichpipeline/enrichpipeline-api",
+        "api/datasource/enrichitem/enrichitem-api"
+      ]
+    },
+     "api/ingestion/ingestion-api"]
     // "Data Source Plugins": ["datasource"],
     // "Enrich Plugins": ["enrich"],
     // "UI Components": ["ui"],

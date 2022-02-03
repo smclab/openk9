@@ -10,35 +10,31 @@ Create new enrichitem
 ```bash
 POST /v2/enrichitem
 {
+    "_position": 1,
     "active": true,
-    "description": "example",
     "jsonConfig": "{}",
-    "lastIngestionDate": 0,
-    "name": "example-datasource",
-    "tenantId": 1,
-    "scheduling": "0 */30 * ? * *",
-    "driverServiceName": "io.openk9.plugins.example.driver.ExamplePluginDriver"
+    "enrichPipelineId": 123,
+    "name": "example",
+    "serviceName": "io.openk9.plugins.example.enrichprocessor.ExampleNerEnrichProcessor"
 }
 ```
 
 ### Description
 
-Allows you to create a new datasource.
+Allows you to create a new enrichitem.
 
 ### Request Body
 
-`active`: (boolean) Specific if datasource is enabled or not
+`enrichPipelineId`: (int) Id of related enrichpipeline
 
-`description`: (string) Description about the datasource
+`active`: (boolean) Specific if enrichitem is enabled or not
 
-`jsonConfig`: (dict) Configuration of the datasource. Normally includes the information to be sent to the external connector.
+`jsonConfig`: (dict) Configuration of the enrichitem. Normally includes some configuration of enrichitem.
 
-`name`: (date) Name of datasource
+`name`: (date) Name of enrichitem
 
-`tenantId`: (int) Id of related tenant
+`_position`: (int) Id of position of enrichitem in pipeline
 
-`scheduling`: (cron expression) Quartz cron expression to adjust the scheduler
-
-`driverServiceName`: (string) Symbolic name of related plugin
+`driverServiceName`: (string) Symbolic name of related enrichprocessor
 
 

@@ -1,27 +1,23 @@
 ---
-id: update-enrichitem
-title: Update enrichitem API
-slug: /api/update-enrichitem
+id: patch-enrichitem
+title: patch enrichitem API
+slug: /api/patch-enrichitem
 
 ---
 
-Update existing enrichitem
+Patch enrichitem
+
 
 ```bash
-POST /v2/enrichitem
+PATCH /v2/enrichitem
 {
-    "_position": 1,
-    "active": true,
-    "jsonConfig": "{}",
-    "enrichPipelineId": 123,
-    "name": "example",
-    "serviceName": "io.openk9.plugins.example.enrichprocessor.ExampleNerEnrichProcessor"
+    "active": false
 }
 ```
 
 ### Description
 
-Update entire enrichitem with information specified in request body
+Allows you to update individual information in enrichitem
 
 ### Request Body
 

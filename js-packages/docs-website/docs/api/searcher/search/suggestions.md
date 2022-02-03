@@ -1,6 +1,6 @@
 ---
 id: suggestions
-title: Search Document API
+title: Suggestions API
 slug: /api/suggestions
 
 ---

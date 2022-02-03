@@ -1,29 +1,22 @@
 ---
-id: update-datasource
-title: Update datasource API
-slug: /api/update-datasource
+id: patch-datasource
+title: patch datasource API
+slug: /api/patch-datasource
 
 ---
 
-Update existing datasource
+Patch existing datasource
 
 ```bash
-POST /v2/datasource
+PATCH /v2/datasource
 {
-    "active": true,
-    "description": "example",
-    "jsonConfig": "{}",
-    "lastIngestionDate": 0,
-    "name": "example-datasource",
-    "tenantId": 1,
-    "scheduling": "0 */30 * ? * *",
-    "driverServiceName": "io.openk9.plugins.example.driver.ExamplePluginDriver"
+    "active": false
 }
 ```
 
 ### Description
 
-Update entire datasource with information specified in request body
+Allows you to update individual information in datasource
 
 ### Request Body
 

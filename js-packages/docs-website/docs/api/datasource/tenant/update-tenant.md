@@ -7,6 +7,7 @@ slug: /api/update-tenant
 
 Update existing Tenant
 
+
 ```bash
 PUT /v2/tenant
 {
