@@ -59,7 +59,7 @@ public class SuggestionCategoriesHttpHandler
 						() -> new RuntimeException(
 							"tenant not found for virtualhost: " + hostName)))
 				.map(Tenant::getTenantId)
-				.map(response)
+				.flatMap(response)
 		);
 
 	}
