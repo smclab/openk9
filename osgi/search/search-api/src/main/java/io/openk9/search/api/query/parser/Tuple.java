@@ -1,8 +1,6 @@
 package io.openk9.search.api.query.parser;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -43,22 +41,37 @@ public final class Tuple<T> {
 		return (Tuple<T>)EMPTY_TUPLE;
 	}
 
+	public static Tuple<Integer> of(Integer frt, Integer snd) {
+
+		try {
+			return _CACHE[frt][snd];
+		}
+		catch (IndexOutOfBoundsException ioobe) {
+			// ignore
+		}
+
+		return new Tuple<>(new Integer[] {frt, snd});
+	}
+
 	@SafeVarargs
 	public static <T> Tuple<T> of(T...args) {
 
 		if (args.length == 2) {
-			T frt = args[0];
-			if (frt instanceof Integer) {
-				Map<Integer, Tuple<?>> integerTupleMap = _CACHE.get(frt);
-				if (integerTupleMap != null) {
+			try {
+				T frt = args[0];
+				if (frt instanceof Integer) {
+					Tuple<?>[] tupleArray = _CACHE[(Integer)frt];
 					T snd = args[1];
 					if (snd instanceof Integer) {
-						Tuple<?> tuple = integerTupleMap.get(snd);
+						Tuple<?> tuple = tupleArray[(Integer)snd];
 						if (tuple != null) {
 							return (Tuple<T>)tuple;
 						}
 					}
 				}
+			}
+			catch (IndexOutOfBoundsException ioobe) {
+				// ignore
 			}
 		}
 
@@ -94,12 +107,12 @@ public final class Tuple<T> {
 
 	public static final Tuple EMPTY_TUPLE = new Tuple(new Object[0]);
 
-	private static final Map<Integer, Map<Integer, Tuple<?>>> _CACHE = new HashMap<>();
+	private static final Tuple<Integer>[][] _CACHE = new Tuple[50][50];
 
 	static {
 		for (int i = 0; i < 50; i++) {
 			for (int j = 0; j < 50; j++) {
-				_CACHE.put(i, Map.of(j, Tuple.of(i, j)));
+				_CACHE[i][j] = Tuple.of(i, j);
 			}
 		}
 	}
