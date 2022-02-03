@@ -41,7 +41,7 @@ public final class Tuple<T> {
 		return (Tuple<T>)EMPTY_TUPLE;
 	}
 
-	public static Tuple<Integer> of(Integer frt, Integer snd) {
+	public static Tuple<Integer> of(int frt, int snd) {
 
 		try {
 			return _CACHE[frt][snd];
@@ -112,7 +112,7 @@ public final class Tuple<T> {
 	static {
 		for (int i = 0; i < 50; i++) {
 			for (int j = 0; j < 50; j++) {
-				_CACHE[i][j] = Tuple.of(i, j);
+				_CACHE[i][j] = new Tuple<>(new Integer[] {i, j});
 			}
 		}
 	}
