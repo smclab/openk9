@@ -152,7 +152,8 @@ public class DatasourceClientImpl implements DatasourceClient {
 	}
 
 	@Override
-	public Mono<List<SuggestionCategory>> findSuggestionCategories(long tenantId) {
+	public Mono<List<SuggestionCategory>> findSuggestionCategories(
+		long tenantId) {
 		return Mono.from(
 				_httpClient
 					.request(
@@ -195,7 +196,7 @@ public class DatasourceClientImpl implements DatasourceClient {
 						"/v2/suggestion-category/filter",
 						_jsonFactory
 							.createObjectNode()
-							.put("categoryId", categoryId)
+							.put("suggestionCategoryId", categoryId)
 							.put("tenantId", tenantId)
 							.put("enabled", true)
 							.toString(),
