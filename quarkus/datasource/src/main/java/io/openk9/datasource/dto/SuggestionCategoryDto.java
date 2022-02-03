@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(staticName = "of")
 public class SuggestionCategoryDto{
 	private Long tenantId;
-	private Long categoryId;
+	private Long suggestionCategoryId;
 	private Long parentCategoryId;
 	private String name;
 	private boolean enabled;
