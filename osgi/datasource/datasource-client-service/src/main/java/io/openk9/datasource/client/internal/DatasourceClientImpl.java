@@ -152,6 +152,27 @@ public class DatasourceClientImpl implements DatasourceClient {
 	}
 
 	@Override
+	public Mono<List<SuggestionCategory>> findSuggestionCategories(long tenantId) {
+		return Mono.from(
+				_httpClient
+					.request(
+						HttpHandler.GET,
+						"/v2/suggestion-category/filter",
+						_jsonFactory
+							.createObjectNode()
+							.put("tenantId", tenantId)
+							.put("enabled", true)
+							.toString(),
+						Map.of(
+							"Content-Type", "application/json"
+						)
+					)
+			)
+			.map(response ->
+				_jsonFactory.fromJsonList(response, SuggestionCategory.class));
+	}
+
+	@Override
 	public Mono<SuggestionCategory> findSuggestionCategory(long categoryId) {
 		return Mono.from(
 				_httpClient
@@ -161,6 +182,30 @@ public class DatasourceClientImpl implements DatasourceClient {
 					)
 			)
 			.map(response -> _jsonFactory.fromJson(response, SuggestionCategory.class));
+	}
+
+	@Override
+	public Mono<List<SuggestionCategory>> findSuggestionCategoryByTenantIdAndCategoryId(
+		long tenantId, long categoryId) {
+
+		return Mono.from(
+				_httpClient
+					.request(
+						HttpHandler.GET,
+						"/v2/suggestion-category/filter",
+						_jsonFactory
+							.createObjectNode()
+							.put("categoryId", categoryId)
+							.put("tenantId", tenantId)
+							.put("enabled", true)
+							.toString(),
+						Map.of(
+							"Content-Type", "application/json"
+						)
+					)
+			)
+			.map(response ->
+				_jsonFactory.fromJsonList(response, SuggestionCategory.class));
 	}
 
 	@Override

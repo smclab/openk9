@@ -2,8 +2,10 @@ package io.openk9.search.query.internal.http;
 
 import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpResponseWriter;
+import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.RouterHandler;
+import io.openk9.model.Tenant;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
@@ -11,6 +13,8 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
+
+import java.util.function.Function;
 
 @Component(
 	immediate = true,
@@ -32,19 +36,32 @@ public class SuggestionCategoriesHttpHandler
 		HttpServerRequest httpServerRequest,
 		HttpServerResponse httpServerResponse) {
 
+		String hostName = HttpUtil.getHostName(httpServerRequest);
+
 		String categoryId = httpServerRequest.param("categoryId");
 
-		Mono<?> response;
+		Function<Long, Mono<?>> response;
 
 		if (categoryId != null) {
-			response = _datasourceClient.findSuggestionCategory(
-				Long.parseLong(categoryId));
+			response = (tenantId) -> _datasourceClient.findSuggestionCategoryByTenantIdAndCategoryId(
+				tenantId, Long.parseLong(categoryId));
 		}
 		else {
-			response = _datasourceClient.findSuggestionCategories();
+			response = (tenantId) -> _datasourceClient.findSuggestionCategories(tenantId);
 		}
 
-		return _httpResponseWriter.write(httpServerResponse,response);
+		return _httpResponseWriter.write(
+			httpServerResponse,
+			_datasourceClient
+				.findTenantByVirtualHost(hostName)
+				.switchIfEmpty(
+					Mono.error(
+						() -> new RuntimeException(
+							"tenant not found for virtualhost: " + hostName)))
+				.map(Tenant::getTenantId)
+				.map(response)
+		);
+
 	}
 
 	@Reference

@@ -14,4 +14,5 @@ public class SuggestionCategoryDto{
 	private Long categoryId;
 	private Long parentCategoryId;
 	private String name;
+	private boolean enabled;
 }

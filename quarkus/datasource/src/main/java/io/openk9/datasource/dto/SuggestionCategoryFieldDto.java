@@ -14,4 +14,5 @@ public class SuggestionCategoryFieldDto{
 	private Long categoryId;
 	private String fieldName;
 	private String name;
+	private boolean enabled;
 }
