@@ -344,7 +344,7 @@ export function Main({ config }: MainProps) {
                 }}
               ></input>
             </div>
-            <Tooltip description="Rimpiazza testo quando si seleziona un significato">
+            <Tooltip description="Sostituzione del testo quando si seleziona un suggerimento">
               <FontAwesomeIcon
                 icon={faSyncAlt}
                 style={{
@@ -359,7 +359,7 @@ export function Main({ config }: MainProps) {
                 }}
               />
             </Tooltip>
-            <Tooltip description="Seleziona automaticamente il significato più pertinente">
+            <Tooltip description="Seleziona automaticamente il suggerimento più pertinente">
               <FontAwesomeIcon
                 icon={faLightbulb}
                 style={{
