@@ -157,7 +157,7 @@ public class DatasourceClientImpl implements DatasourceClient {
 		return Mono.from(
 				_httpClient
 					.request(
-						HttpHandler.GET,
+						HttpHandler.POST,
 						"/v2/suggestion-category/filter",
 						_jsonFactory
 							.createObjectNode()
@@ -192,7 +192,7 @@ public class DatasourceClientImpl implements DatasourceClient {
 		return Mono.from(
 				_httpClient
 					.request(
-						HttpHandler.GET,
+						HttpHandler.POST,
 						"/v2/suggestion-category/filter",
 						_jsonFactory
 							.createObjectNode()
