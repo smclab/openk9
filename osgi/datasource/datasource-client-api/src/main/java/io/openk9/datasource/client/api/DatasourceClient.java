@@ -37,6 +37,12 @@ public interface DatasourceClient {
 
 	Mono<List<SuggestionCategoryField>> findSuggestionCategoryFields();
 
+	Mono<List<SuggestionCategoryField>> findSuggestionCategoryFieldsByTenantId(
+		long tenantId);
+
+	Mono<List<SuggestionCategoryField>> findSuggestionCategoryFieldsByTenantIdAndCategoryId(
+		long tenantId, long categoryId);
+
 	Mono<List<SuggestionCategoryField>> findSuggestionCategoryFieldsByCategoryId(
 		long categoryId);
 

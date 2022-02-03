@@ -131,12 +131,12 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 			if (suggestionCategoryId == null) {
 				return _datasourceClient
-					.findSuggestionCategoryFields();
+					.findSuggestionCategoryFieldsByTenantId(tenant.getTenantId());
 			}
 			else {
 				return _datasourceClient
-					.findSuggestionCategoryFieldsByCategoryIdEnabled(
-						suggestionCategoryId);
+					.findSuggestionCategoryFieldsByTenantIdAndCategoryId(
+						tenant.getTenantId(), suggestionCategoryId);
 			}
 		})
 			.map(fields -> {
@@ -210,13 +210,13 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		Mono<List<SuggestionCategoryField>> suggestionCategoryFields;
 
 		if (suggestionCategoryId == null) {
-			suggestionCategoryFields =_datasourceClient
-				.findSuggestionCategoryFields();
+			suggestionCategoryFields = _datasourceClient
+				.findSuggestionCategoryFieldsByTenantId(tenant.getTenantId());
 		}
 		else {
 			suggestionCategoryFields = _datasourceClient
-				.findSuggestionCategoryFieldsByCategoryIdEnabled(
-					suggestionCategoryId);
+				.findSuggestionCategoryFieldsByTenantIdAndCategoryId(
+					tenant.getTenantId(), suggestionCategoryId);
 		}
 
 		if (_enableEntityAggregation) {

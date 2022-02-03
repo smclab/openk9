@@ -207,6 +207,51 @@ public class DatasourceClientImpl implements DatasourceClient {
 	}
 
 	@Override
+	public Mono<List<SuggestionCategoryField>> findSuggestionCategoryFieldsByTenantId(
+		long tenantId) {
+		return Mono.from(
+				_httpClient
+					.request(
+						HttpHandler.POST,
+						"/v2/suggestion-category-field/filter",
+						_jsonFactory
+							.createObjectNode()
+							.put("tenantId", tenantId)
+							.put("enabled", true)
+							.toString(),
+						Map.of(
+							"Content-Type", "application/json"
+						)
+					)
+			)
+			.map(response -> _jsonFactory.fromJsonList(
+				response, SuggestionCategoryField.class));
+	}
+
+	@Override
+	public Mono<List<SuggestionCategoryField>> findSuggestionCategoryFieldsByTenantIdAndCategoryId(
+		long tenantId, long categoryId) {
+		return Mono.from(
+				_httpClient
+					.request(
+						HttpHandler.POST,
+						"/v2/suggestion-category-field/filter",
+						_jsonFactory
+							.createObjectNode()
+							.put("tenantId", tenantId)
+							.put("categoryId", categoryId)
+							.put("enabled", true)
+							.toString(),
+						Map.of(
+							"Content-Type", "application/json"
+						)
+					)
+			)
+			.map(response -> _jsonFactory.fromJsonList(
+				response, SuggestionCategoryField.class));
+	}
+
+	@Override
 	public Mono<List<SuggestionCategoryField>> findSuggestionCategoryFieldsByCategoryId(
 		long categoryId) {
 		return Mono.from(
