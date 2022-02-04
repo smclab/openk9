@@ -43,8 +43,10 @@ public class SuggestionCategoriesHttpHandler
 		Function<Long, Mono<?>> response;
 
 		if (categoryId != null) {
-			response = (tenantId) -> _datasourceClient.findSuggestionCategoryByTenantIdAndCategoryId(
-				tenantId, Long.parseLong(categoryId));
+			response = (tenantId) -> _datasourceClient
+				.findSuggestionCategoryByTenantIdAndCategoryId(tenantId, Long.parseLong(categoryId))
+				.flatMapIterable(Function.identity())
+				.next();
 		}
 		else {
 			response = (tenantId) -> _datasourceClient.findSuggestionCategories(tenantId);
