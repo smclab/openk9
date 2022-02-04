@@ -15,6 +15,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 @Path("/v1/trigger")
 @ApplicationScoped
@@ -22,19 +23,24 @@ public class TriggerResource {
 
 	@POST
 	@Consumes("application/json")
-	public Uni<Void> reindex(TriggerRequestDto dto) {
+	public Uni<List<Long>> reindex(TriggerRequestDto dto) {
 
-		List<Uni<Void>> triggers = new ArrayList<>();
+		List<Uni<Long>> triggers = new ArrayList<>();
 
 		for (long datasourceId : dto.getDatasourceIds()) {
 			triggers.add(
 				_schedulerInitializer
 					.get()
 					.triggerJob(datasourceId, String.valueOf(datasourceId))
+					.map(unused -> datasourceId)
 			);
 		}
 
-		return Uni.combine().all().unis(triggers).discardItems();
+		return Uni
+			.combine()
+			.all()
+			.unis(triggers)
+			.combinedWith(Long.class, Function.identity());
 
 	}
 
@@ -46,7 +52,7 @@ public class TriggerResource {
 	@RegisterForReflection
 	@AllArgsConstructor
 	public static class TriggerRequestDto {
-		long[] datasourceIds;
+		private long[] datasourceIds;
 	}
 
 }
