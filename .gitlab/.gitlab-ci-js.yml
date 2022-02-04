@@ -89,7 +89,7 @@ Build Latest Frontend Docker Image:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-frontend" -F ref=master $DEV_TRIGGER_URL
   allow_failure: false
 
-Build Latest Site Docker Image:
+Build Dev Site Docker Image:
   image: docker:19.03.13
   services:
     - docker:19.03.13-dind
@@ -98,10 +98,10 @@ Build Latest Site Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  needs: [JS Format Lint Test and Build Check]
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "137-aggiornamento-documentazione-sito-getting-started"'
       changes:
+        - .gitlab/.gitlab-ci-js.yml
         - js-packages/docs-website/**/*
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
@@ -110,6 +110,8 @@ Build Latest Site Docker Image:
     - docker build -t docs-website:latest -f js-packages/docs-website/Dockerfile .
     - docker tag docs-website:latest $CI_REGISTRY_NAME/openk9/docs-website:latest
     - docker push $CI_REGISTRY_NAME/openk9/docs-website:latest
+  after_script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-dev-site" -F ref=master $DEV_TRIGGER_URL
   allow_failure: false
 
 Build Latest Admin Ui Docker Image:
