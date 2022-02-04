@@ -122,10 +122,11 @@ export function FilterCategory({
                       />
                       <label
                         css={css`
-                          display: "block";
+                          display: block;
                           :first-letter {
                             text-transform: uppercase;
                           }
+                          word-break: break-all;
                         `}
                       >
                         {suggestion.tokenType === "ENTITY" ? (

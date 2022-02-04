@@ -105,12 +105,12 @@ export function Main({ config }: MainProps) {
     ],
     [spans, state.selection, tabTokens, hiddenSearchQuery, filterSearchTokens],
   );
+  const searchQuery = useDebounce(searchQueryMemo, DEBOUNCE);
   React.useEffect(() => {
     onQueryStateChange?.({
-      hiddenSearchQuery: hiddenSearchQuery,
+      hiddenSearchQuery: searchQuery,
     });
-  }, [onQueryStateChange, hiddenSearchQuery, searchQueryMemo]);
-  const searchQuery = useDebounce(searchQueryMemo, DEBOUNCE);
+  }, [onQueryStateChange, searchQuery]);
   React.useEffect(() => {
     if (
       autoSelect &&
@@ -423,7 +423,7 @@ export function Main({ config }: MainProps) {
                   key={suggestionCategory.suggestionCategoryId}
                   suggestionCategoryName={suggestionCategory.name}
                   suggestionCategoryId={suggestionCategory.suggestionCategoryId}
-                  tokens={filterSearchTokens}
+                  tokens={searchQuery}
                   onAdd={addFilterSearchToken}
                   onRemove={removeFilterSearchToken}
                 />
