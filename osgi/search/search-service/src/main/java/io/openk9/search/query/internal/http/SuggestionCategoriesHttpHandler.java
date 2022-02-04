@@ -5,6 +5,7 @@ import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.HttpHandler;
 import io.openk9.http.web.RouterHandler;
+import io.openk9.model.SuggestionCategory;
 import io.openk9.model.Tenant;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -14,6 +15,7 @@ import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
 
+import java.util.List;
 import java.util.function.Function;
 
 @Component(
@@ -40,13 +42,11 @@ public class SuggestionCategoriesHttpHandler
 
 		String categoryId = httpServerRequest.param("categoryId");
 
-		Function<Long, Mono<?>> response;
+		Function<Long, Mono<List<SuggestionCategory>>> response;
 
 		if (categoryId != null) {
 			response = (tenantId) -> _datasourceClient
-				.findSuggestionCategoryByTenantIdAndCategoryId(tenantId, Long.parseLong(categoryId))
-				.flatMapIterable(Function.identity())
-				.next();
+				.findSuggestionCategoryByTenantIdAndCategoryId(tenantId, Long.parseLong(categoryId));
 		}
 		else {
 			response = (tenantId) -> _datasourceClient.findSuggestionCategories(tenantId);
@@ -62,6 +62,7 @@ public class SuggestionCategoriesHttpHandler
 							"tenant not found for virtualhost: " + hostName)))
 				.map(Tenant::getTenantId)
 				.flatMap(response)
+				.flatMapIterable(Function.identity())
 		);
 
 	}
