@@ -108,8 +108,8 @@ Build Dev Site Docker Image:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
     - docker build -t docs-website:latest -f js-packages/docs-website/Dockerfile .
-    - docker tag docs-website:latest $CI_REGISTRY_NAME/openk9/docs-website:latest
-    - docker push $CI_REGISTRY_NAME/openk9/docs-website:latest
+    - docker tag docs-website:latest $CI_REGISTRY_NAME/openk9/docs-website:dev
+    - docker push $CI_REGISTRY_NAME/openk9/docs-website:dev
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-dev-site" -F ref=master $DEV_TRIGGER_URL
   allow_failure: false
