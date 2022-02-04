@@ -1,6 +1,6 @@
 ---
 id: update-datasource
-title: Update datasource API
+title: Update Datasource API
 slug: /api/update-datasource
 
 ---
@@ -31,12 +31,14 @@ Update entire datasource with information specified in request body
 
 `description`: (string) Description about the datasource
 
-`jsonConfig`: (dict) Configuration of the datasource. Normally includes the information to be sent to the external connector.
+`jsonConfig`: (string) Configuration of the datasource. Normally includes the information to be sent to the external connector.
 
-`name`: (date) Name of datasource
+`name`: (string) Name of datasource
 
-`tenantId`: (int) Id of related tenant
+`tenantId`: (integer:$int64) Id of related tenant
 
-`scheduling`: (cron expression) Quartz cron expression to adjust the scheduler
+`scheduling`: (string) Quartz cron expression to adjust the scheduler
 
 `driverServiceName`: (string) Symbolic name of related plugin
+
+`lastIngestionDate`: (string:$date-time) Symbolic name of related plugin

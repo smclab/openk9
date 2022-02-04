@@ -1,19 +1,20 @@
 ---
 id: delete-enrichpipeline
-title: Delete enrichpipeline API
+title: Delete Enrich Pipeline API
 slug: /api/delete-enrichpipeline
 
 ---
 
-Delete datasource
+Delete enrich pipeline
 
 ```bash
-DELETE /v2/datasource/{id}
+DELETE /v2/enrichpipeline/{id}
 ```
 
 ### Description
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Delete enrich pipeline by id
 
-### Request Body
+### Parameters
+
+`id`: (integer) Id of enrich pipeline

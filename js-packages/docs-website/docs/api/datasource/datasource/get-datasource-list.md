@@ -1,6 +1,6 @@
 ---
 id: get-datasource-list
-title: Get datasource list API
+title: Get Datasource List API
 slug: /api/get-datasource-list
 
 ---
@@ -17,6 +17,6 @@ Get list of all datasource returning all information
 
 ### Parameters
 
-`page`: (int) Number of page to return
+`page`: (integer) Number of page to return
 
-`size`: (int) Size of page
+`size`: (integer) Size of page

@@ -1,6 +1,6 @@
 ---
 id: create-datasource
-title: Create datasource API
+title: Create Datasource API
 slug: /api/create-datasource
 
 ---
@@ -31,14 +31,16 @@ Allows you to create a new datasource.
 
 `description`: (string) Description about the datasource
 
-`jsonConfig`: (dict) Configuration of the datasource. Normally includes the information to be sent to the external connector.
+`jsonConfig`: (string) Configuration of the datasource. Normally includes the information to be sent to the external connector.
 
-`name`: (date) Name of datasource
+`name`: (string) Name of datasource
 
-`tenantId`: (int) Id of related tenant
+`tenantId`: (integer:$int64) Id of related tenant
 
-`scheduling`: (cron expression) Quartz cron expression to adjust the scheduler
+`scheduling`: (string) Quartz cron expression to adjust the scheduler
 
 `driverServiceName`: (string) Symbolic name of related plugin
+
+`lastIngestionDate`: (string:$date-time) Symbolic name of related plugin
 
 

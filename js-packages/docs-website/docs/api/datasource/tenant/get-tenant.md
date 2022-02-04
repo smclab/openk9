@@ -1,6 +1,6 @@
 ---
 id: get-tenant
-title: Get tenant API
+title: Get Tenant API
 slug: /api/get-tenant
 
 ---
@@ -17,4 +17,4 @@ Get tenant configuration by id
 
 ### Parameters
 
-`id`: (int) Id of tenant
+`id`: (intger) Id of tenant

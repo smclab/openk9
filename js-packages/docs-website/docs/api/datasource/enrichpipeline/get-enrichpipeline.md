@@ -1,11 +1,11 @@
 ---
 id: get-enrichpipeline
-title: Get enrichpipeline API
+title: Get Enrich Pipeline API
 slug: /api/get-enrichpipeline
 
 ---
 
-Get enrichpipeline
+Get enrich pipeline
 
 ```bash
 GET /v2/enrichpipeline/{id}
@@ -13,8 +13,8 @@ GET /v2/enrichpipeline/{id}
 
 ### Description
 
-Get enrichpipeline by id
+Get enrich pipeline by id
 
 ### Parameters
 
-`id`: (int) Id of enrichpipeline
+`id`: (integer) Id of enrich pipeline

@@ -1,6 +1,6 @@
 ---
 id: get-datasource
-title: Get datasource API
+title: Get Datasource API
 slug: /api/get-datasource
 
 ---
@@ -17,4 +17,4 @@ Get datasource by id
 
 ### Parameters
 
-`id`: (int) Id of datasource
+`id`: (integer) Id of datasource

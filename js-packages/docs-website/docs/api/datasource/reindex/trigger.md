@@ -8,7 +8,7 @@ slug: /api/trigger
 Send trigger for datasources
 
 ```bash
-POST /v1/index/reindex/
+POST /v1/index/trigger
 {
 	"datasourceIds" : [
 		1,2,3,4

@@ -1,14 +1,14 @@
 ---
 id: create-enrichpipeline
-title: Create enrichpipeline API
+title: Create Enrich Pipeline API
 slug: /api/create-enrichpipeline
 
 ---
 
-Create new datasource
+Create new enrich pipeline
 
 ```bash
-POST /v2/datasource
+POST /v2/enrichpipeline
 {
   "active": true,
   "datasourceId": 123,
@@ -18,12 +18,12 @@ POST /v2/datasource
 
 ### Description
 
-Allows you to create a new datasource.
+Allows you to create a new enrich pipeline.
 
 ### Request Body
 
-`active`: (boolean) Specific if datasource is enabled or not
+`active`: (boolean) Specific if enrich pipeline is enabled or not
 
-`name`: (date) Name of datasource
+`name`: (string) Name of enrich pipeline
 
-`datasourceId`: (int) Id of related datasourceId
+`datasourceId`: (integer) Id of related datasourceId

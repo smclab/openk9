@@ -30,10 +30,20 @@ module.exports = {
         "api/datasource/tenant/tenant-api",
         "api/datasource/datasource/datasource-api",
         "api/datasource/enrichpipeline/enrichpipeline-api",
-        "api/datasource/enrichitem/enrichitem-api"
+        "api/datasource/suggestion-category/suggestion-category-api",
+        "api/datasource/suggestion-category-field/suggestion-category-field-api",
+        "api/datasource/reindex/reindex-api"
       ]
     },
-     "api/ingestion/ingestion-api"]
+    {
+      "type": "category",
+      "label": "Ingestion Apis",
+      "items": [
+        "api/ingestion/ingestion-api",
+        "api/ingestion/ingestion"
+      ]
+    }
+    ]
     // "Data Source Plugins": ["datasource"],
     // "Enrich Plugins": ["enrich"],
     // "UI Components": ["ui"],

@@ -1,6 +1,6 @@
 ---
 id: get-tenant-list
-title: Get tenant list API
+title: Get Tenant List API
 slug: /api/get-tenant-list
 
 ---
@@ -17,6 +17,6 @@ Get list and configuration of all tenant
 
 ### Parameters
 
-`page`: (int) Number of page to return
+`page`: (integer) Number of page to return
 
-`size`: (int) Size of page
+`size`: (integer) Size of page

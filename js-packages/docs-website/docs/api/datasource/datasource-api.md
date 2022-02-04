@@ -13,5 +13,7 @@ We collected these in five different groups, based on nature of objects and perf
 - [Datasource APIs](datasource-api)
 - [Enrichpipeline API](enrichpipeline-api)
 - [Enrichitem API](enrichitem-api)
+- [Suggestion Category API](suggestion-category-api)
+- [Suggestion Category Field API](suggestion-category-field-api)
 - [Reindex API](reindex-api)
 

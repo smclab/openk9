@@ -1,14 +1,14 @@
 ---
 id: enrichpipeline-api
-title: Enrichpipeline APIs
+title: Enrich Pipeline APIs
 slug: /api/enrichpipeline-api
 
 ---
 
-These are APIs used to managed enrichpipeline objects in database
+These are APIs used to managed enrich pipeline objects in database
 
 
-## Enrichpipeline APIs
+## Enrich Pipeline APIs
 
 - [Create](create-enrichpipeline)
 - [Update](update-enrichpipeline)

@@ -1,11 +1,11 @@
 ---
 id: patch-enrichpipeline
-title: patch enrichpipeline API
+title: patch Enrich Pipeline API
 slug: /api/patch-enrichpipeline
 
 ---
 
-Patch enrichpipeline
+Patch enrich pipeline
 
 
 ```bash
@@ -17,12 +17,12 @@ PATCH /v2/enrichpipeline
 
 ### Description
 
-Allows you to update individual information in enrichpipeline
+Allows you to update individual information in enrich pipeline
 
 ### Request Body
 
-`active`: (boolean) Specific if enrichpipeline is enabled or not
+`active`: (boolean) Specific if enrich pipeline is enabled or not
 
-`name`: (date) Name of datasource
+`name`: (string) Name of enrich pipeline
 
-`datasourceId`: (int) Id of related datasourceId
+`datasourceId`: (integer) Id of related datasourceId

@@ -9,4 +9,4 @@ These are APIs exposed by Openk9 Index Writer component.
 
 ## Index Writer APIs
 
-- [get-or-add-entities](get-or-add-entities)
+- [delete-data-documents](delete-data-documents)

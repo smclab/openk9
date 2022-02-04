@@ -17,3 +17,4 @@ Some content might not be included yet.
 - [Searcher APIs](api/searcher-api)
 - [Datasource APIs](api/datasource-api)
 - [Ingestion API](api/ingestion-api)
+- [Index Writer API](api/index-writer-api)

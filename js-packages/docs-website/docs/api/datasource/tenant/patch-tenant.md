@@ -1,6 +1,6 @@
 ---
 id: patch-tenant
-title: patch tenant API
+title: patch Tenant API
 slug: /api/patch-tenant
 
 ---
@@ -10,7 +10,7 @@ Patch tenant
 ```bash
 PATCH /v2/tenant
 {
-    "active": false
+    "name": "test.openk9.io"
 }
 ```
 
@@ -24,4 +24,4 @@ Allows you to update individual information in tenant
 
 `virtualHost`: (string) VirtualHost associated with tenant
 
-`jsonConfig`: (dict) Json configuration for tenant (i.e. configuration of shortcuts for search standalone frontend)
+`jsonConfig`: (string) Json configuration for tenant (i.e. configuration of shortcuts for search standalone frontend)

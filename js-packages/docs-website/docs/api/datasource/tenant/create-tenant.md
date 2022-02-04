@@ -1,6 +1,6 @@
 ---
 id: create-tenant
-title: Create tenant API
+title: Create Tenant API
 slug: /api/create-tenant
 
 ---
@@ -32,4 +32,4 @@ Create new tenant and define his configuration.
 
 `virtualHost`: (string) VirtualHost associated with tenant
 
-`jsonConfig`: (dict) Json configuration for tenant (i.e. configuration of shortcuts for search standalone frontend)
+`jsonConfig`: (string) Json configuration for tenant (i.e. configuration of shortcuts for search standalone frontend)

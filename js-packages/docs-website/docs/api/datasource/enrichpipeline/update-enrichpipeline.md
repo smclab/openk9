@@ -1,30 +1,29 @@
 ---
 id: update-enrichpipeline
-title: Update enrichpipeline API
+title: Update Enrich Pipeline API
 slug: /api/update-enrichpipeline
 
 ---
 
-Update existing enrichpipeline
+Update existing enrich pipeline
 
 ```bash
-PUT /v2/datasource
+PUT /v2/enrichpipeline
 {
-    "tenantId": 2,
-    "name": "openk9.io",
-    "virtualHost": "openk9.io",
-    "jsonConfig": "{}"
-  }
+  "active": true,
+  "datasourceId": 222,
+  "name": "example2 pipeline"
+}
 ```
 
 ### Description
 
-Update entire enrichpipeline with information specified in request body
+Allows you to update individual information in enrich pipeline
 
 ### Request Body
 
-`active`: (boolean) Specific if datasource is enabled or not
+`active`: (boolean) Specific if enrich pipeline is enabled or not
 
-`name`: (date) Name of enrichpipeline
+`name`: (string) Name of enrich pipeline
 
-`datasourceId`: (int) Id of related datasourceId
+`datasourceId`: (integer) Id of related datasourceId

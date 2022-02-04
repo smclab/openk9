@@ -1,6 +1,6 @@
 ---
 id: delete-tenant
-title: Delete tenant API
+title: Delete Tenant API
 slug: /api/delete-tenant
 
 ---
@@ -17,4 +17,4 @@ Delete tenant by id.
 
 ### Parameters
 
-`id`: (int) Id of tenant
+`id`: (integer) Id of tenant

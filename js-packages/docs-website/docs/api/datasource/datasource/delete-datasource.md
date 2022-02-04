@@ -1,6 +1,6 @@
 ---
 id: delete-datasource
-title: Delete datasource API
+title: Delete Datasource API
 slug: /api/delete-datasource
 
 ---
@@ -13,8 +13,8 @@ DELETE /v2/datasource/{id}
 
 ### Description
 
-Delete datasource by di
+Delete datasource by id
 
 ### Parameters
 
-`id`: (int) Id of datasource
+`id`: (integer) Id of datasource
