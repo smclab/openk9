@@ -94,7 +94,7 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 
 
 			return PluginDriverDTO.of(
-				pluginDriver.getClass().getName(),
+				pluginDriver.getDriverServiceName(),
 				pluginDriver.getName(),
 				pluginDriver.schedulerEnabled(),
 				documentTypeDTOS,
