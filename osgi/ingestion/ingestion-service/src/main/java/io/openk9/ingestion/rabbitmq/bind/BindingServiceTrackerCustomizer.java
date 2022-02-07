@@ -88,7 +88,11 @@ public class BindingServiceTrackerCustomizer
 		if (queue != null) {
 
 			Mono<AMQP.Queue.DeclareOk> mono2 = _sender.declareQueue(
-				QueueSpecification.queue(queue).durable(service.queueDurable()));
+				QueueSpecification
+					.queue(queue)
+					.durable(service.queueDurable())
+					.arguments(service.getArguments())
+			);
 
 			BindingSpecification binding =
 				BindingSpecification.binding(exchange, routingKey, queue);

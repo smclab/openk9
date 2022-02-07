@@ -22,6 +22,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Map;
+
 public interface Binding {
 
 	String RABBIT_EXCHANGE = "Rabbit-Exchange";
@@ -42,6 +44,13 @@ public interface Binding {
 
 	default boolean exchangeDurable() {
 		return false;
+	}
+
+	default Map<String, Object> getArguments() {
+		return Map.of(
+			"x-dead-letter-exchange", "DLX",
+			"x-dead-letter-routing-key", getQueue()
+		);
 	}
 
 	static Binding of(
