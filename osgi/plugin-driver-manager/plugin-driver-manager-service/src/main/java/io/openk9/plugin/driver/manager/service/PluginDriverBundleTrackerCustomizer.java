@@ -148,8 +148,8 @@ public class PluginDriverBundleTrackerCustomizer
 				String method =
 					(String)options.getOrDefault("method", "GET");
 
-				String[] jsonKeys =
-					(String[])options.getOrDefault("jsonKeys", new String[0]);
+				List<String> jsonKeys =
+					(List<String>)options.getOrDefault("jsonKeys", new String[0]);
 
 				int methodN = _findHttpMethod(method);
 
@@ -179,7 +179,7 @@ public class PluginDriverBundleTrackerCustomizer
 
 					@Override
 					protected String[] jsonKeys() {
-						return jsonKeys;
+						return jsonKeys.toArray(new String[0]);
 					}
 
 					@Override
