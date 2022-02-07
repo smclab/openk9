@@ -135,6 +135,10 @@ public class PluginDriverBundleTrackerCustomizer
 
 				Map<String, Object> options = pluginDriverConfig.getOptions();
 
+				if (options == null) {
+					options = Map.of();
+				}
+
 				String path =(String)options.getOrDefault("path", "");
 
 				Map<String, Object> headersObject =
@@ -387,6 +391,10 @@ public class PluginDriverBundleTrackerCustomizer
 		for (SearchKeywordConfig searchKeyword : searchKeywords) {
 
 			Map<String, Object> options = searchKeyword.getOptions();
+
+			if (options == null) {
+				options = Map.of();
+			}
 
 			Double boost =(Double)options.get("boost");
 
