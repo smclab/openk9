@@ -17,82 +17,122 @@
 
 package io.openk9.plugin.driver.manager.api;
 
-import lombok.Data;
+import lombok.Getter;
 
 import java.util.Collections;
 import java.util.Map;
 
-@Data
-public class Field {
+public abstract class Field {
 
-	private Field(String name) {
-		this(name, FieldType.NULL, NIL, Collections.emptyMap());
+	public abstract String getName();
+	public abstract FieldType getFieldType();
+	public abstract Field getChild();
+	public abstract Map<String, Object> getExtra();
+
+	@Getter
+	public static class FieldObj extends Field {
+		private FieldObj(String name) {
+			this(name, FieldType.NULL, NIL, Collections.emptyMap());
+		}
+
+		public FieldObj(String name, Field child) {
+			this(name, FieldType.NULL, child, Collections.emptyMap());
+		}
+
+		private FieldObj(String name, FieldType fieldType) {
+			this(name, fieldType, NIL, Collections.emptyMap());
+		}
+
+		private FieldObj(
+			String name, FieldType fieldType, Map<String, Object> extra) {
+			this(name, fieldType, NIL, extra);
+		}
+
+		private FieldObj(String name, FieldType fieldType, Field child) {
+			this(name, fieldType, child, Collections.emptyMap());
+		}
+
+		private FieldObj(
+			String name, FieldType fieldType, Field child,
+			Map<String, Object> extra) {
+
+			this.name = name;
+			this.fieldType = fieldType;
+			this.child = child == null ? NIL : child;
+			this.extra = extra;
+		}
+
+		private final String name;
+		private final FieldType fieldType;
+		private final Field child;
+		private final Map<String, Object> extra;
+
+		public static final Field NIL = new FieldObj(
+			"nil", FieldType.TEXT);
+
 	}
 
-	public Field(String name, Field child) {
-		this(name, FieldType.NULL, child, Collections.emptyMap());
-	}
+	public static class FieldMappings extends Field {
 
-	private Field(String name, FieldType fieldType) {
-		this(name, fieldType, NIL, Collections.emptyMap());
-	}
+		public FieldMappings(Map<String, Object> mappings) {
+			_mappings = mappings;
+		}
 
-	private Field(
-		String name, FieldType fieldType, Map<String, Object> extra) {
-		this(name, fieldType, NIL, extra);
-	}
+		@Override
+		public String getName() {
+			throw new IllegalStateException();
+		}
 
-	private Field(String name, FieldType fieldType, Field child) {
-		this(name, fieldType, child, Collections.emptyMap());
-	}
+		@Override
+		public FieldType getFieldType() {
+			throw new IllegalStateException();
+		}
 
-	private Field(
-		String name, FieldType fieldType, Field child,
-		Map<String, Object> extra) {
+		@Override
+		public Field getChild() {
+			throw new IllegalStateException();
+		}
 
-		this.name = name;
-		this.fieldType = fieldType;
-		this.child = child == null ? NIL : child;
-		this.extra = extra;
+		@Override
+		public Map<String, Object> getExtra() {
+			return _mappings;
+		}
+
+		private final Map<String, Object> _mappings;
 
 	}
 
 	public static Field of(String name) {
-		return new Field(name);
+		return new FieldObj(name);
 	}
 
 	public static Field of(String name, FieldType fieldType) {
-		return new Field(name, fieldType);
+		return new FieldObj(name, fieldType);
 	}
 
 	public static Field of(
 		String name, FieldType fieldType, Map<String, Object> extra) {
 
-		return new Field(name, fieldType, extra);
+		return new FieldObj(name, fieldType, extra);
 	}
 
 	public static Field of(String name, Field child) {
-		return new Field(name, child);
+		return new FieldObj(name, child);
 	}
 
 	public static Field of(String name, FieldType fieldType, Field child) {
-		return new Field(name, fieldType, child);
+		return new FieldObj(name, fieldType, child);
 	}
 
 	public static Field of(
 		String name, FieldType fieldType, Field child,
 		Map<String, Object> extra) {
 
-		return new Field(name, fieldType, child, extra);
-
+		return new FieldObj(name, fieldType, child, extra);
 	}
 
-	private final String name;
-	private final FieldType fieldType;
-	private Field child;
-	private Map<String, Object> extra;
-
-	public static final Field NIL = new Field(
-		"nil", FieldType.TEXT);
+	public static Field ofMapping(Map<String, Object> mapping) {
+		return new FieldMappings(mapping);
+	}
 
 }

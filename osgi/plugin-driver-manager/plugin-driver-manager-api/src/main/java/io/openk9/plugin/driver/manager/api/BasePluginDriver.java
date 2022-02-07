@@ -52,10 +52,7 @@ public abstract class BasePluginDriver implements PluginDriver {
 
 		requestJson.put("datasourceId", datasource.getDatasourceId());
 
-		Map<String, Object> headers = Arrays
-			.stream(headers())
-			.map(s -> s.split(":"))
-			.collect(Collectors.toMap(e -> e[0], e -> e[1]));
+		Map<String, Object> headers = headersObject();
 
 		Publisher<byte[]> request = getHttpClient().request(
 			method(), path(), requestJson.toString(), headers);
@@ -71,6 +68,14 @@ public abstract class BasePluginDriver implements PluginDriver {
 		}
 		return false;
 	}
+
+	protected Map<String, Object> headersObject() {
+		return Arrays
+			.stream(headers())
+			.map(s -> s.split(":"))
+			.collect(Collectors.toMap(e -> e[0], e -> e[1]));
+	}
+
 
 	protected abstract String[] headers();
 

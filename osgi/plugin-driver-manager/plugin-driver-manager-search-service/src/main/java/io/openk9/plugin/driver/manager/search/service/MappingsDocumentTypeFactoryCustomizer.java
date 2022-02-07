@@ -56,12 +56,43 @@ public class MappingsDocumentTypeFactoryCustomizer
 					return Stream.empty();
 				}
 
+				if (sourceFields.size() == 1) {
+					Field field = sourceFields.get(0);
+					if (field instanceof Field.FieldMappings) {
+						return Stream.of(field);
+					}
+				}
+
 				return sourceFields
 					.stream()
 					.map(child -> Field.of(
 						documentType.getName(), child));
 			})
 			.collect(Collectors.toList());
+
+		if (collect.stream().allMatch(f -> f instanceof Field.FieldMappings)) {
+
+			Map<String, Object> accumulator = new HashMap<>();
+
+			for (Field field : collect) {
+				deepMerge(accumulator, field.getExtra());
+			}
+
+			String pluginDriverName = entry.getKey();
+
+			return _indexWriterEventPublisher.publishCreateIndexTemplate(
+				IndexTemplateDTO.of(
+					pluginDriverName + "_template",
+					null,
+					List.of(
+						"*-" + pluginDriverName + "-data"),
+					_jsonFactory.toJson(accumulator),
+					List.of("data"),
+					10
+				)
+			);
+
+		}
 
 		Map<String, Object> objectNode = new HashMap<>();
 
@@ -73,7 +104,7 @@ public class MappingsDocumentTypeFactoryCustomizer
 
 			Field child = parent.getChild();
 
-			while (child != Field.NIL) {
+			while (child != Field.FieldObj.NIL) {
 
 				Map<String, Object> parentNode =(Map<String, Object>)
 					parentNodeWithName.get(parent.getName());
@@ -145,6 +176,27 @@ public class MappingsDocumentTypeFactoryCustomizer
 		result.put(field.getName(), fieldNode);
 
 		return result;
+	}
+
+	private static Map deepMerge(Map original, Map newMap) {
+		for (Object key : newMap.keySet()) {
+			if (newMap.get(key) instanceof Map && original.get(key) instanceof Map) {
+				Map originalChild = (Map) original.get(key);
+				Map newChild = (Map) newMap.get(key);
+				original.put(key, deepMerge(originalChild, newChild));
+			} else if (newMap.get(key) instanceof List && original.get(key) instanceof List) {
+				List originalChild = (List) original.get(key);
+				List newChild = (List) newMap.get(key);
+				for (Object each : newChild) {
+					if (!originalChild.contains(each)) {
+						originalChild.add(each);
+					}
+				}
+			} else {
+				original.put(key, newMap.get(key));
+			}
+		}
+		return original;
 	}
 
 	@Reference

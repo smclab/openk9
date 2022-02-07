@@ -63,10 +63,7 @@ public class SenderImpl implements SenderReactor {
 
 	}
 
-
-
 	@Reference(target = "(rabbit=sender)")
 	private Supplier<reactor.rabbitmq.Sender> _senderProvider;
-
 
 }

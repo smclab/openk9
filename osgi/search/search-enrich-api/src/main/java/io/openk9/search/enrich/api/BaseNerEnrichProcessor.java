@@ -210,15 +210,15 @@ public abstract class BaseNerEnrichProcessor implements SyncEnrichProcessor {
 		return Constants.ID;
 	}
 
-	protected void setHttpClient(HttpClient httpClient) {
+	public void setHttpClient(HttpClient httpClient) {
 		_httpClient = httpClient;
 	}
 
-	protected void setJsonFactory(JsonFactory jsonFactory) {
+	public void setJsonFactory(JsonFactory jsonFactory) {
 		_jsonFactory = jsonFactory;
 	}
 
-	protected void setEntityManagerClient(
+	public void setEntityManagerClient(
 		EntityManagerClient entityManagerClient) {
 		_entityManagerClient = entityManagerClient;
 	}
