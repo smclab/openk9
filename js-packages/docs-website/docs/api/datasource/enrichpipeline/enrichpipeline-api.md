@@ -13,7 +13,7 @@ These are APIs used to managed enrich pipeline objects in database
 - [Create](create-enrichpipeline)
 - [Update](update-enrichpipeline)
 - [Delete](delete-enrichpipeline)
-- [Filter](api-introduction)
+- [Filter](filter-enrichpipeline)
 - [Find By Id](get-enrichpipeline)
 - [List](get-enrichpipeline-list)
 - [Patch](patch-enrichpipeline)

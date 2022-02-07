@@ -5,7 +5,7 @@ slug: /api/create-suggestion-category-field
 
 ---
 
-Create new suggestion category
+Create new suggestion category field
 
 ```bash
 POST /v2/suggestion-category-field
@@ -18,12 +18,17 @@ POST /v2/suggestion-category-field
 
 ### Description
 
-Allows you to create a new datasource.
+Allows you to create a new suggestion category field.
 
 ### Request Body
 
-`active`: (boolean) Specific if datasource is enabled or not
+`enabled: (boolean) Specific if suggestion category field is enabled or not
 
-`name`: (date) Name of datasource
+`name`: (date) Name of suggestion category field
 
-`datasourceId`: (int) Id of related datasourceId
+`tenantId`: (integer  ) Id of related tenant
+
+`categoryId`: (integer) Id of related category
+
+`fieldName`: (integer) Name of suggestion category field
+

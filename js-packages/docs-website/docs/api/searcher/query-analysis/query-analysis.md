@@ -17,6 +17,11 @@ POST /v1/query-analysis
 
 ### Description
 
-Allows you to execute a search query to get back the list of document types .
+Allows you to perfom an understanding analysis on natural language query. In particular it returns a list of
+search tokens based on different concepts and meanings founded in query.
 
 ### Request Body
+
+`searchText`: (string) Textual content of the query
+
+`tokens`: ([string]) List of search tokens confirmed by user

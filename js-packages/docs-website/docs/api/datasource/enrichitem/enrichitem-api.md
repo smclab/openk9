@@ -13,7 +13,7 @@ These are APIs used to managed enrichitem objects in database
 - [Create](create-enrichitem)
 - [Update](update-enrichitem)
 - [Delete](delete-enrichitem)
-- [Filter](api-introduction)
+- [Filter](filter-enrichitem)
 - [Find By Id](get-enrichitem)
 - [List](get-enrichitem-list)
 - [Patch](patch-enrichitem)

@@ -13,7 +13,7 @@ These are APIs used to managed datasource objects in database
 - [Create](create-datasource)
 - [Update](update-datasource)
 - [Delete](delete-datasource)
-- [Filter](api-introduction)
+- [Filter](filter-datasource)
 - [Get By Id](get-datasource)
 - [List](get-datasource-list)
 - [Patch](patch-datasource)

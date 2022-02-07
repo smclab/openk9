@@ -1,26 +1,22 @@
 ---
-id: create-suggestion category
-title: Create Suggestion Category API
-slug: /api/create-suggestion-category
+id: filter-suggestion-category
+title: Filter Suggestion Category API
+slug: /api/filter-suggestion-category
 
 ---
 
-Create new suggestion category
+Filter suggestion category
 
 ```bash
-POST /v2/suggestion category
+POST /v2/suggestion-category/filter
 {
-  "suggestionCategoryId": 1,
-  "tenantId": 1,
-  "parentCategoryId": -1,
-  "name": "Test",
-  "enabled": true
+  "name": "test-suggestion-category"
 }
 ```
 
 ### Description
 
-Allows you to create a new suggestion category.
+Get suggestion categories that match filter information passed in request body
 
 ### Request Body
 
@@ -33,3 +29,4 @@ Allows you to create a new suggestion category.
 `categoryId`: (integer) Id of parent category
 
 `fieldName`: (integer) Name of suggestion category
+

@@ -13,7 +13,7 @@ These are APIs used to managed tenant objects in database
 - [Create](create-tenant)
 - [Update](update-tenant)
 - [Delete](delete-tenant)
-- [Filter](api-introduction)
+- [Filter](filter-tenant)
 - [Get By Id](get-tenant)
 - [List](get-tenant-list)
 - [Patch](patch-tenant)

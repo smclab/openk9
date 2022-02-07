@@ -19,9 +19,8 @@ POST v1/auth/login
 
 Allows you to log into Openk9. You log in specifying username and password.
 
-
 ### Request Body
 
-`username`
+`username`: (string)
 
-`password`:
+`password`: (string)

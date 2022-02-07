@@ -13,7 +13,7 @@ These are APIs used to managed suggestion category objects in database
 - [Create](create-suggestion-category)
 - [Update](update-suggestion-category)
 - [Delete](delete-suggestion-category)
-- [Filter](api-introduction)
+- [Filter](filter-suggestion-category)
 - [Find By Id](get-suggestion-category)
 - [List](get-suggestion-category-list)
 - [Patch](patch-suggestion-category)

@@ -1,14 +1,14 @@
 ---
-id: delete-data-documents-api
-title: Delete Data Documents APIs
-slug: /api/delete-data-documents-api
+id: clean-orphan-entities-api
+title: Clean Orphan Entities APIs
+slug: /api/clean-orphan-entities-api
 
 ---
 
 Delete documents in Elasticsearch by Content Ids
 
 ```bash
-POST /v1/delete-data-documents/
+POST /v1/clean-orphan-entities/
 {
     "datasourceId": "3",
     "contentIds": [
