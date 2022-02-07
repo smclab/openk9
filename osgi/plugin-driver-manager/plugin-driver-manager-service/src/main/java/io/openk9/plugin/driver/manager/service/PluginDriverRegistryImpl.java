@@ -93,7 +93,7 @@ public class PluginDriverRegistryImpl implements PluginDriverRegistry {
 			PluginDriver service = PluginDriverRegistryImpl
 				.this._bundleContext.getService(reference);
 
-			_pluginDriverMap.put(service.getClass().getName(), service);
+			_pluginDriverMap.put(service.getDriverServiceName(), service);
 
 			return service;
 		}
@@ -115,7 +115,7 @@ public class PluginDriverRegistryImpl implements PluginDriverRegistry {
 			PluginDriverRegistryImpl
 				.this._bundleContext.ungetService(reference);
 
-			_pluginDriverMap.remove(service.getClass().getName());
+			_pluginDriverMap.remove(service.getDriverServiceName());
 
 		}
 	}

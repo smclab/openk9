@@ -12,6 +12,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class PluginDriverConfig {
 	private String name;
+	private String driverServiceName;
 	private boolean schedulerEnabled;
 	private Type type = Type.HTTP;
 	private Map<String, Object> options;

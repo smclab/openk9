@@ -119,6 +119,11 @@ public class PluginDriverBundleTrackerCustomizer
 
 		String pluginDriverName = pluginDriverConfig.getName();
 
+		String driverServiceName =
+			pluginDriverConfig.getDriverServiceName() != null
+				? pluginDriverConfig.getDriverServiceName()
+				: pluginDriverName;
+
 		boolean schedulerEnabled = pluginDriverConfig.isSchedulerEnabled();
 
 		PluginDriverConfig.Type type = pluginDriverConfig.getType();
@@ -191,6 +196,11 @@ public class PluginDriverBundleTrackerCustomizer
 					@Override
 					public boolean schedulerEnabled() {
 						return schedulerEnabled;
+					}
+
+					@Override
+					public String getDriverServiceName() {
+						return driverServiceName;
 					}
 				};
 				break;

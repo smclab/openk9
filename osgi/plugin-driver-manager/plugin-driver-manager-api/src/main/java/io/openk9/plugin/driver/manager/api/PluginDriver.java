@@ -31,4 +31,8 @@ public interface PluginDriver {
 
 	boolean schedulerEnabled();
 
+	default String getDriverServiceName() {
+		return this.getClass().getName();
+	}
+
 }
