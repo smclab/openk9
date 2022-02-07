@@ -157,22 +157,26 @@ export type SearchToken =
       tokenType: "DATASOURCE";
       keywordKey?: undefined;
       values: string[];
+      filter: boolean;
     }
   | {
       tokenType: "DOCTYPE";
       keywordKey: "type";
       values: string[];
+      filter: boolean;
     }
   | {
       tokenType: "TEXT";
       keywordKey?: string;
       values: string[];
+      filter: boolean;
     }
   | {
       tokenType: "ENTITY";
       keywordKey?: string;
       entityType: string;
       values: string[];
+      filter: boolean;
     };
 
 export type GenericResultItem<E = {}> = {

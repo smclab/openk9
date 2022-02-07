@@ -39,14 +39,12 @@ export function FilterCategory({
   return (
     <div
       css={css`
-        margin-top: 8px;
+        margin-bottom: 8px;
       `}
     >
       <div css={css``}>
         <div
           css={css`
-            border-bottom: 1px solid
-              var(--openk9-embeddable-search--border-color);
             user-select: none;
             display: flex;
             align-items: center;
@@ -58,7 +56,7 @@ export function FilterCategory({
               flex-grow: 1;
             `}
           >
-            {suggestionCategoryName}
+            <strong>{suggestionCategoryName}</strong>
           </div>
           <FontAwesomeIcon
             icon={isOpen ? faChevronUp : faChevronDown}
@@ -81,7 +79,14 @@ export function FilterCategory({
               css={css`
                 flex-grow: 1;
                 margin-right: -24px;
-                padding-right: 24px;
+                padding: 8px 16px 8px 8px;
+                border-radius: 4px;
+                border: 1px solid var(--openk9-embeddable-search--border-color);
+                :focus {
+                  border: 1px solid
+                    var(--openk9-embeddable-search--active-color);
+                  outline: none;
+                }
               `}
             />
             <FontAwesomeIcon
@@ -93,7 +98,10 @@ export function FilterCategory({
             return (
               <React.Fragment key={index}>
                 {result.map((suggestion, index) => {
-                  const asSearchToken = mapSuggestionToSearchToken(suggestion);
+                  const asSearchToken = mapSuggestionToSearchToken(
+                    suggestion,
+                    true,
+                  );
                   const isChecked = tokens.some((searchToken) =>
                     isEqual(searchToken, asSearchToken),
                   );
@@ -190,7 +198,7 @@ export function useInfiniteSuggestions(
   suggestKeyword: string,
 ) {
   const ENABLED = true;
-  const pageSize = ENABLED ? 10 : 100;
+  const pageSize = 50;
   return useInfiniteQuery(
     [
       "suggestions",
@@ -233,16 +241,22 @@ export function useInfiniteSuggestions(
 
 export const mapSuggestionToSearchToken = (
   suggestion: SuggestionResult,
+  filter: boolean,
 ): SearchToken => {
   switch (suggestion.tokenType) {
     case "DATASOURCE": {
-      return { tokenType: "DATASOURCE", values: [suggestion.value] };
+      return {
+        tokenType: "DATASOURCE",
+        values: [suggestion.value],
+        filter,
+      };
     }
     case "DOCTYPE": {
       return {
         tokenType: "DOCTYPE",
         keywordKey: "type",
         values: [suggestion.value],
+        filter,
       };
     }
     case "ENTITY": {
@@ -251,6 +265,7 @@ export const mapSuggestionToSearchToken = (
         keywordKey: suggestion.keywordKey,
         entityType: suggestion.entityType,
         values: [suggestion.value],
+        filter,
       };
     }
     case "TEXT": {
@@ -258,6 +273,7 @@ export const mapSuggestionToSearchToken = (
         tokenType: "TEXT",
         keywordKey: suggestion.keywordKey,
         values: [suggestion.value],
+        filter,
       };
     }
   }

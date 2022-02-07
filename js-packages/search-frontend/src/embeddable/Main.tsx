@@ -482,12 +482,17 @@ function deriveSearchQuery(
       if (token) {
         switch (token.tokenType) {
           case "DATASOURCE":
-            return { tokenType: "DATASOURCE", values: [token.value] };
+            return {
+              tokenType: "DATASOURCE",
+              values: [token.value],
+              filter: false,
+            };
           case "DOCTYPE":
             return {
               tokenType: "DOCTYPE",
               keywordKey: "type",
               values: [token.value],
+              filter: false,
             };
           case "ENTITY":
             return {
@@ -495,16 +500,18 @@ function deriveSearchQuery(
               keywordKey: token.keywordKey,
               entityType: token.entityType,
               values: [token.value],
+              filter: false,
             };
           case "TEXT":
             return {
               tokenType: "TEXT",
               keywordKey: token.keywordKey,
               values: [token.value],
+              filter: false,
             };
         }
       }
-      return { tokenType: "TEXT", values: [span.text] };
+      return { tokenType: "TEXT", values: [span.text], filter: false };
     });
 }
 
