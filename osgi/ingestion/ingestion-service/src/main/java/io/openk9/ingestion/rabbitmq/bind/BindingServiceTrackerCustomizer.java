@@ -79,7 +79,8 @@ public class BindingServiceTrackerCustomizer
 			ExchangeSpecification
 				.exchange(exchange)
 				.type(exchangeType.name())
-				.durable(exchange.startsWith("amq"))
+				.durable(
+					exchange.startsWith("amq") || service.exchangeDurable())
 		);
 
 		List<AutoCloseable> autoCloseables = new ArrayList<>();
@@ -87,7 +88,7 @@ public class BindingServiceTrackerCustomizer
 		if (queue != null) {
 
 			Mono<AMQP.Queue.DeclareOk> mono2 = _sender.declareQueue(
-				QueueSpecification.queue(queue));
+				QueueSpecification.queue(queue).durable(service.queueDurable()));
 
 			BindingSpecification binding =
 				BindingSpecification.binding(exchange, routingKey, queue);

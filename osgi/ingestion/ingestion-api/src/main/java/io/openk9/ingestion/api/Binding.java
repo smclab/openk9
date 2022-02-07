@@ -36,6 +36,14 @@ public interface Binding {
 		return null;
 	}
 
+	default boolean queueDurable() {
+		return true;
+	}
+
+	default boolean exchangeDurable() {
+		return false;
+	}
+
 	static Binding of(
 		Exchange exchange, String routingKey, String queue) {
 
