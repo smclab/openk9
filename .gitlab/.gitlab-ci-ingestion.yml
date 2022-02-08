@@ -20,7 +20,7 @@ Build Latest Ingestion Docker Images:
               - .gitlab/.gitlab-ci-ingestion.yml
               - gradle.properties
     script:
-        - ./gradlew build -p ./quarkus/ingestion -Dquarkus.package.type=mutable-jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+        - ./gradlew build -p ./quarkus/ingestion -Dquarkus.package.type=jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
     after_script:
         - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-ingestion" -F ref=master $DEV_TRIGGER_URL
     cache:
