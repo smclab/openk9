@@ -78,7 +78,7 @@ public class IngestionEndpoint {
 	}
 
 	@Channel("ingestion")
-	Emitter<Message<IngestionPayload>> _emitter;
+	Emitter<IngestionPayload> _emitter;
 
 	@Data
 	@Builder
