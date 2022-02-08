@@ -1,15 +1,12 @@
 package io.openk9.datasource.web;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.Message;
-import org.eclipse.microprofile.reactive.messaging.Metadata;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -28,26 +25,18 @@ public class IngestionEndpoint {
 		ResourcesPayload resourcesPayload = _dtoToPayload(dto.getResources());
 
 		_emitter.send(
-			Message.of(
-				IngestionPayload.of(
-					UUID.randomUUID().toString(),
-					dto.getDatasourceId(),
-					dto.getContentId(),
-					dto.getParsingDate(),
-					dto.getRawContent(),
-					dto.getDatasourcePayload(),
-					-1,
-					dto.getDatasourcePayload()
-						.keySet()
-						.toArray(new String[0]),
-					resourcesPayload
-				),
-				Metadata.of(
-					new OutgoingRabbitMQMetadata.Builder()
-						.withContentType("application/json")
-						.withRoutingKey("ingestion")
-						.build()
-				)
+			IngestionPayload.of(
+				UUID.randomUUID().toString(),
+				dto.getDatasourceId(),
+				dto.getContentId(),
+				dto.getParsingDate(),
+				dto.getRawContent(),
+				dto.getDatasourcePayload(),
+				-1,
+				dto.getDatasourcePayload()
+					.keySet()
+					.toArray(new String[0]),
+				resourcesPayload
 			)
 		);
 
