@@ -201,6 +201,14 @@ Build Latest Js Executor Docker Image:
 trigger_mvp:
   image: curlimages/curl
   stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/rest-api/**/*
+        - js-packages/search-ui-components/**/*
+        - js-packages/plugin-scripts/**/*
+        - js-packages/search-customizable-ui/**/*
+        - js-packages/search-frontend/**/*
   needs: ['Build Query Understanding Frontend Docker Image']
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
