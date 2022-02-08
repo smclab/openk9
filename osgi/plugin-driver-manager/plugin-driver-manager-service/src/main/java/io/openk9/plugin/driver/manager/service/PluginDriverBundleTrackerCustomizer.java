@@ -140,6 +140,7 @@ public class PluginDriverBundleTrackerCustomizer
 				}
 
 				String path =(String)options.getOrDefault("path", "");
+				String url =(String)options.getOrDefault("url", "");
 
 				Map<String, Object> headersObject =
 					(Map<String, Object>)options.getOrDefault(
@@ -153,7 +154,7 @@ public class PluginDriverBundleTrackerCustomizer
 
 				int methodN = _findHttpMethod(method);
 
-				HttpClient httpClient = _httpClientFactory.getHttpClient(path);
+				HttpClient httpClient = _httpClientFactory.getHttpClient(url);
 
 				pluginDriver = new BasePluginDriver() {
 
