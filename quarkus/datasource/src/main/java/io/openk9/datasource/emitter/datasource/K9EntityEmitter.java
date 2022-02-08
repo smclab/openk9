@@ -43,7 +43,7 @@ public class K9EntityEmitter {
 	}
 
 	@Inject
-	@Channel("openk9.datasource.direct")
+	@Channel("openk9-datasource-direct")
 	Emitter<Message<K9Entity>> _k9EntityEmitter;
 
 	@Inject
