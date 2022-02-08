@@ -40,7 +40,7 @@ public class AutoCloseables {
 		};
 	}
 
-	public static AutoCloseableSafe mergeAutoCloseableToSafe(
+	public static AutoCloseableSafe reduceAutoCloseableSafe(
 		Iterable<AutoCloseableSafe> autoCloseables) {
 
 		return () -> {
@@ -51,7 +51,7 @@ public class AutoCloseables {
 
 	}
 
-	public static AutoCloseableSafe mergeAutoCloseableToSafe(
+	public static AutoCloseableSafe reduceAutoCloseableSafe(
 		AutoCloseableSafe...autoCloseables) {
 
 		return () -> {

@@ -372,7 +372,7 @@ public class PluginDriverBundleTrackerCustomizer
 
 		_registrationMap.put(
 			bundle, AutoCloseables
-				.mergeAutoCloseableToSafe(autoCloseableList));
+				.reduceAutoCloseableSafe(autoCloseableList));
 
 		return null;
 	}
