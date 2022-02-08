@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import io.openk9.datasource.listener.K9EntityListener;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.smallrye.mutiny.Uni;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,7 @@ import org.hibernate.Hibernate;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -41,7 +43,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Builder
 @AllArgsConstructor(staticName = "of")
-public class EnrichPipeline extends PanacheEntityBase {
+@EntityListeners(K9EntityListener.class)
+public class EnrichPipeline extends PanacheEntityBase implements K9Entity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,4 +78,10 @@ public class EnrichPipeline extends PanacheEntityBase {
     public int hashCode() {
         return 0;
     }
+
+    @Override
+    public Class<? extends K9Entity> getType() {
+        return EnrichPipeline.class;
+    }
+
 }

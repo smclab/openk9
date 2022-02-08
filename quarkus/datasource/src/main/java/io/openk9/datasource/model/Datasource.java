@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.model;
 
-import io.openk9.datasource.listener.DatasourceListener;
+import io.openk9.datasource.listener.K9EntityListener;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,14 +26,10 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.type.TextType;
 
-import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -47,8 +43,8 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor(staticName = "of")
-@EntityListeners(DatasourceListener.class)
-public class Datasource extends PanacheEntityBase {
+@EntityListeners(K9EntityListener.class)
+public class Datasource extends PanacheEntityBase implements K9Entity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long datasourceId;
@@ -87,4 +83,10 @@ public class Datasource extends PanacheEntityBase {
     public int hashCode() {
         return 0;
     }
+
+    @Override
+    public Class<? extends K9Entity> getType() {
+        return Datasource.class;
+    }
+
 }

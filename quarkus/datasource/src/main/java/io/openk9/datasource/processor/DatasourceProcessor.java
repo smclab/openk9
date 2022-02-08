@@ -23,7 +23,12 @@ public class DatasourceProcessor {
 
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
-	public Uni<IngestionDatasourcePayload> process(JsonObject jsonObject) throws Exception {
+	public Uni<IngestionDatasourcePayload> process(Object obj) {
+
+		JsonObject jsonObject =
+			obj instanceof JsonObject
+				? (JsonObject)obj
+				: new JsonObject(new String((byte[])obj));
 
 		long datasourceId = jsonObject.getLong("datasourceId");
 
