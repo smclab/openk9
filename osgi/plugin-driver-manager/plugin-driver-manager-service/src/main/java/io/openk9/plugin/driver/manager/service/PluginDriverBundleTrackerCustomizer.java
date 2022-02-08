@@ -27,6 +27,7 @@ import io.openk9.plugin.driver.manager.api.BasePluginDriver;
 import io.openk9.plugin.driver.manager.api.Constants;
 import io.openk9.plugin.driver.manager.api.DocumentType;
 import io.openk9.plugin.driver.manager.api.DocumentTypeFactory;
+import io.openk9.plugin.driver.manager.api.DocumentTypeFactoryRegistry;
 import io.openk9.plugin.driver.manager.api.Field;
 import io.openk9.plugin.driver.manager.api.PluginDriver;
 import io.openk9.plugin.driver.manager.api.SearchKeyword;
@@ -58,7 +59,6 @@ import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
@@ -214,14 +214,18 @@ public class PluginDriverBundleTrackerCustomizer
 				throw new IllegalStateException("type: " + type + " not supported");
 		}
 
-		List<ServiceRegistration> serviceRegistrations = new ArrayList<>();
+		List<AutoCloseables.AutoCloseableSafe> autoCloseableList = new ArrayList<>();
 
-		serviceRegistrations.add(
+		ServiceRegistration<PluginDriver> pluginDriverServiceRegistration =
 			bundle
 				.getBundleContext()
 				.registerService(
 					PluginDriver.class, pluginDriver, null
-				)
+				);
+
+		autoCloseableList.add(
+			AutoCloseables.mergeAutoCloseableToSafe(
+				pluginDriverServiceRegistration::unregister)
 		);
 
 		for (DocumentTypeConfig documentType : pluginDriverConfig.getDocumentTypes()) {
@@ -244,13 +248,8 @@ public class PluginDriverBundleTrackerCustomizer
 						.build()
 				);
 
-			serviceRegistrations.add(
-				bundle
-					.getBundleContext()
-					.registerService(
-						DocumentTypeFactory.class, documentTypeFactory, null
-					)
-			);
+			autoCloseableList.add(
+				_documentTypeFactoryRegistry.register(documentTypeFactory));
 
 		}
 
@@ -355,22 +354,21 @@ public class PluginDriverBundleTrackerCustomizer
 			}
 
 			if (enrichProcessorService != null) {
-				serviceRegistrations.add(
-					bundle
-						.getBundleContext()
-						.registerService(
-							EnrichProcessor.class, enrichProcessorService, null
-						)
+				ServiceRegistration<EnrichProcessor>
+					enrichProcessorServiceRegistration = bundle
+					.getBundleContext()
+					.registerService(
+						EnrichProcessor.class, enrichProcessorService, null
+					);
+
+				autoCloseableList.add(
+					AutoCloseables
+						.mergeAutoCloseableToSafe(
+							enrichProcessorServiceRegistration::unregister)
 				);
 			}
 
 		}
-
-		List<AutoCloseable> autoCloseableList =
-			serviceRegistrations
-				.stream()
-				.map(sr -> (AutoCloseable) sr::unregister)
-				.collect(Collectors.toList());
 
 		_registrationMap.put(
 			bundle, AutoCloseables
@@ -500,6 +498,9 @@ public class PluginDriverBundleTrackerCustomizer
 
 	@Reference
 	private EntityManagerClient _entityManagerClient;
+
+	@Reference
+	private DocumentTypeFactoryRegistry _documentTypeFactoryRegistry;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		PluginDriverBundleTrackerCustomizer.class);

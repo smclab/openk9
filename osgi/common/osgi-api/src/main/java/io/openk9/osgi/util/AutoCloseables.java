@@ -41,6 +41,28 @@ public class AutoCloseables {
 	}
 
 	public static AutoCloseableSafe mergeAutoCloseableToSafe(
+		Iterable<AutoCloseableSafe> autoCloseables) {
+
+		return () -> {
+			for (AutoCloseableSafe autoCloseable : autoCloseables) {
+				autoCloseable.close();
+			}
+		};
+
+	}
+
+	public static AutoCloseableSafe mergeAutoCloseableToSafe(
+		AutoCloseableSafe...autoCloseables) {
+
+		return () -> {
+			for (AutoCloseableSafe autoCloseable : autoCloseables) {
+				autoCloseable.close();
+			}
+		};
+
+	}
+
+	public static AutoCloseableSafe mergeAutoCloseableToSafe(
 		AutoCloseable... autoCloseables) {
 
 		return () -> {
@@ -53,9 +75,8 @@ public class AutoCloseables {
 					_log.warn(e.getMessage(), e);
 				}
 			}
-
-
 		};
+
 	}
 
 	public static AutoCloseableSafe mergeAutoCloseableToSafe(
