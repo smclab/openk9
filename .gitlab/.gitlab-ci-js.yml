@@ -197,3 +197,12 @@ Build Latest Js Executor Docker Image:
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-js" -F ref=master $DEV_TRIGGER_URL
   allow_failure: false
+
+trigger_mvp:
+  image: curlimages/curl
+  stage: deploy
+  needs: ['Build Query Understanding Frontend Docker Image']
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$MVP_TOKEN -F ref=main $MVP_TRIGGER_URL
