@@ -27,4 +27,4 @@ This endpoint allows you to delete documents of specific datasource in Elasticse
 
 `datasourceId`: (int) Id of datasource
 
-`contentIds`: (list) List of document contentIds to delete
+`contentIds`: ([integer]) List of document contentIds to delete

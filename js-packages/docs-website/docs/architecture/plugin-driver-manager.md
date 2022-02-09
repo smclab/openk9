@@ -40,7 +40,3 @@ for a single plugin. Then a new enrich pipeline in datasource configuration can 
 
 Adapter to send data on queuing system. It is developed for the message broker used. Openk9 uses RabbitMQ
 as message broker. See [client documentation](https://www.rabbitmq.com/clients.html) to realize adapter.
-
-### Rest Api
-
-See more on [Api Documentation](/docs/api/plugin-driver-manager-api)

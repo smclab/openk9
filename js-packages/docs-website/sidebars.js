@@ -43,6 +43,15 @@ module.exports = {
         "api/ingestion/ingestion-api",
         "api/ingestion/ingestion"
       ]
+    },
+    {
+      "type": "category",
+      "label": "Index Writer Apis",
+      "items": [
+        "api/index-writer/index-writer-api",
+        "api/index-writer/delete-data-documents-api",
+        "api/index-writer/clean-orphan-entities-api"
+      ]
     }
     ]
     // "Data Source Plugins": ["datasource"],
