@@ -8,23 +8,14 @@ slug: /api/clean-orphan-entities-api
 Delete documents in Elasticsearch by Content Ids
 
 ```bash
-POST /v1/clean-orphan-entities/
-{
-    "datasourceId": "3",
-    "contentIds": [
-        "123",
-        "124",
-        "1125"
-    ]
-}
+DELETE /v1/clean-orphan-entities/{tenantId}
 ```
 
 ### Description
 
-This endpoint allows you to delete documents of specific datasource in Elasticsearch index
+This endpoint allows you to delete orphan entities of specific tenant.
+Orphan entities are those that are no longer tied to any document
 
-### Request Body
+### Parameters
 
-`datasourceId`: (int) Id of datasource
-
-`contentIds`: (list) List of document contentIds to delete
+`id`: (integer) Id of datasource
