@@ -36,6 +36,11 @@ export function FilterCategory({
     text,
   );
   const [isOpen, setIsOpen] = React.useState(true);
+  const show = Boolean(
+    text ||
+      (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
+  );
+  if (!show) return null;
   return (
     <div
       css={css`
