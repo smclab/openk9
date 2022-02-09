@@ -20,9 +20,15 @@ Get suggestion category fields that match filter information passed in request b
 
 ### Request Body
 
-`active`: (boolean) Specific if enrich pipeline is enabled or not
+`enabled: (boolean) Specific if suggestion category field is enabled or not
 
-`name`: (string) Name of enrich pipeline
+`name`: (date) Name of suggestion category field
 
-`datasourceId`: (integer) Id of related datasourceId
+`tenantId`: (integer) Id of related tenant
+
+`categoryId`: (integer) Id of related category
+
+`suggestionCategoryFieldId`: (integer) Id of suggestion category field
+
+`fieldName`: (integer) Field name of suggestion category field
 

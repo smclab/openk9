@@ -11,18 +11,22 @@ Patch suggestion category
 ```bash
 PATCH /v2/suggestion-category
 {
-    "active": false
+    "enabled": false
 }
 ```
 
 ### Description
 
-Allows you to update individual information in enrichpipeline
+Allows you to update individual information in suggestion category
 
 ### Request Body
 
-`active`: (boolean) Specific if enrichpipeline is enabled or not
+`enabled: (boolean) Specific if suggestion category is enabled or not
 
-`name`: (date) Name of datasource
+`name`: (date) Name of suggestion category
 
-`datasourceId`: (int) Id of related datasourceId
+`tenantId`: (integer) Id of related tenant
+
+`categoryId`: (integer) Id of category
+
+`parentcategoryId`: (integer) Id of parent category

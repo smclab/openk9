@@ -10,11 +10,13 @@ Update existing suggestion category field
 ```bash
 PUT /v2/suggestion-category-field
 {
-    "tenantId": 2,
-    "name": "openk9.io",
-    "virtualHost": "openk9.io",
-    "jsonConfig": "{}"
-  }
+  "suggestionCategoryId": 1,
+  "tenantId": 1,
+  "categoryId": 1,
+  "fieldName": "web.category",
+  "enabled": true,
+  "name": "Category"
+}
 ```
 
 ### Description
@@ -23,8 +25,14 @@ Update entire suggestion category field with information specified in request bo
 
 ### Request Body
 
-`active`: (boolean) Specific if datasource is enabled or not
+`enabled: (boolean) Specific if suggestion category field is enabled or not
 
 `name`: (date) Name of suggestion category field
 
-`datasourceId`: (int) Id of related datasourceId
+`tenantId`: (integer) Id of related tenant
+
+`categoryId`: (integer) Id of related category
+
+`suggestionCategoryFieldId`: (integer) Id of suggestion category field
+
+`fieldName`: (integer) Field name of suggestion category field

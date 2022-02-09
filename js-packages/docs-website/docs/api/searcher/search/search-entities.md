@@ -22,8 +22,8 @@ You can provide search queries using the following request body.
 
 ### Request Body
 
-`all`: query for search
+`all`: (string) Query for search
 
-`range`: range to get results
+`range`: ([integer]) Range to get results
 
 

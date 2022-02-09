@@ -35,12 +35,12 @@ Allows you to create a new datasource.
 
 `name`: (string) Name of datasource
 
-`tenantId`: (integer:$int64) Id of related tenant
+`tenantId`: (integer) Id of related tenant
 
 `scheduling`: (string) Quartz cron expression to adjust the scheduler
 
 `driverServiceName`: (string) Symbolic name of related plugin
 
-`lastIngestionDate`: (string:$date-time) Symbolic name of related plugin
+`lastIngestionDate`: (date) Symbolic name of related plugin
 
 

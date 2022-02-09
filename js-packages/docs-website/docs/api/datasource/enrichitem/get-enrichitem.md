@@ -1,11 +1,11 @@
 ---
 id: get-enrichitem
-title: Get enrichitem API
+title: Get Enrich Item API
 slug: /api/get-enrichitem
 
 ---
 
-Get enrichitem
+Get Enrich Item
 
 ```bash
 GET /v2/enrichitem/{id}
@@ -13,8 +13,8 @@ GET /v2/enrichitem/{id}
 
 ### Description
 
-Get enrichitem configuration by id
+Get enrich item configuration by id
 
 ### Parameters
 
-`id`: (int) Id of enrichitem
+`id`: (int) Id of enrich item

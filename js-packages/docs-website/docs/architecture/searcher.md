@@ -5,23 +5,25 @@ slug: /searcher
 
 ---
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Searcher is the component delegated to perform every search action in Openk9 indexes. It exposes headless api,
+which can be used to perform searches and other actions on indexed data
 
 ![img](../../static/img/searcher.png)
 
 ### Query Builder
 
-definisce in base a dei criteri l'insieme di query contributor da applicare alla query di ricerca
+Defines, based on criteria, the set of contributor queries to apply to the search query
 
 ### Query Contributor
 
-Diverse categorie (text, doctype, ....). Pezzettini che si occupano di intercettare i token di ricerca e transformarli in query elastic
+Pieces that deal with intercepting search tokens and transforming them into elastic queries.
+They can be of different types(DOCTYPE, TEXT, DATASOURCE, ENTITY,...)
 
 ### Query Analisys
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Query analisys perfoms an understanding analysis on natural language query. In particular it returns a list of
+search tokens based on different concepts and meanings founded in query. It is developed using a modern technique
+called [Semantic Parsing](https://en.wikipedia.org/wiki/Semantic_parsing)
 
 ### Elastic Adapter
 

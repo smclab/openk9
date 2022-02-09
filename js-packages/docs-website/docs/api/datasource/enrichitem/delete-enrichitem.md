@@ -1,11 +1,11 @@
 ---
 id: delete-enrichitem
-title: Delete enrichitem API
+title: Delete Enrich Item API
 slug: /api/delete-enrichitem
 
 ---
 
-Delete enrichitem
+Delete enrich item
 
 ```bash
 DELETE /v2/enrichitem/{id}
@@ -13,8 +13,8 @@ DELETE /v2/enrichitem/{id}
 
 ### Description
 
-Delete enrichitem by di
+Delete enrich item by di
 
 ### Parameters
 
-`id`: (int) Id of enrichitem
+`id`: (int) Id of enrich item

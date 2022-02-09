@@ -16,7 +16,7 @@ POST /v2/datasource/filter
 
 ### Description
 
-Get datasources that match filter information passed in request body
+Get datasources which match filter information passed in request body
 
 ### Request Body
 
@@ -28,10 +28,10 @@ Get datasources that match filter information passed in request body
 
 `name`: (string) Name of datasource
 
-`tenantId`: (integer:$int64) Id of related tenant
+`tenantId`: (integer) Id of related tenant
 
 `scheduling`: (string) Quartz cron expression to adjust the scheduler
 
 `driverServiceName`: (string) Symbolic name of related plugin
 
-`lastIngestionDate`: (string:$date-time) Symbolic name of related plugin
+`lastIngestionDate`: (date) Symbolic name of related plugin

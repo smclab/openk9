@@ -13,7 +13,9 @@ DELETE /v2/suggestion-category/{id}
 
 ### Description
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard
-dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+Delte suggestion category by id
 
-### Request Body
+### Parameters
+
+`id`: (int) Id of suggestion category
+

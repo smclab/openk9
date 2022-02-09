@@ -24,9 +24,8 @@ Get suggestion categories that match filter information passed in request body
 
 `name`: (date) Name of suggestion category
 
-`tenantId`: (integer  ) Id of related tenant
+`tenantId`: (integer) Id of related tenant
 
-`categoryId`: (integer) Id of parent category
+`categoryId`: (integer) Id of category
 
-`fieldName`: (integer) Name of suggestion category
-
+`parentcategoryId`: (integer) Id of parent category

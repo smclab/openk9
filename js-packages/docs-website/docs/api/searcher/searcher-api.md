@@ -13,7 +13,10 @@ These are APIs exposed by Openk9 Searcher component. It includes Search and Auth
 - [Search documents](search-documents)
 - [Search entities](search-entities)
 - [Get supported datasource](supported-datasources)
+- [Get document types](suggestions)
 - [Get suggestions](suggestions)
+- [Get suggestion-categories](suggestions-categories)
+
 
 ## Query Analysis APIs
 

@@ -5,7 +5,7 @@ slug: /api/filter-enrichitem
 
 ---
 
-Filter enrichitem
+Filter Enrich Item
 
 ```bash
 POST /v2/enrichitem/filter

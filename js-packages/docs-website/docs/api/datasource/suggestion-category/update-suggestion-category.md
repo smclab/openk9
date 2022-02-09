@@ -10,21 +10,26 @@ Update existing enrichpipeline
 ```bash
 PUT /v2/suggestion-category
 {
-    "tenantId": 2,
-    "name": "openk9.io",
-    "virtualHost": "openk9.io",
-    "jsonConfig": "{}"
-  }
+  "suggestionCategoryId": 1,
+  "tenantId": 1,
+  "parentCategoryId": -1,
+  "name": "Test2",
+  "enabled": true
+}
 ```
 
 ### Description
 
-Update entire enrichpipeline with information specified in request body
+Update entire suggestion category with information specified in request body
 
 ### Request Body
 
-`active`: (boolean) Specific if datasource is enabled or not
+`enabled: (boolean) Specific if suggestion category is enabled or not
 
-`name`: (date) Name of enrichpipeline
+`name`: (date) Name of suggestion category
 
-`datasourceId`: (int) Id of related datasourceId
+`tenantId`: (integer) Id of related tenant
+
+`categoryId`: (integer) Id of category
+
+`parentcategoryId`: (integer) Id of parent category

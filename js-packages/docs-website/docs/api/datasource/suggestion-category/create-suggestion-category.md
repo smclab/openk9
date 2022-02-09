@@ -13,7 +13,7 @@ POST /v2/suggestion category
   "suggestionCategoryId": 1,
   "tenantId": 1,
   "parentCategoryId": -1,
-  "name": "Test",
+  "name": "Category",
   "enabled": true
 }
 ```
@@ -28,8 +28,8 @@ Allows you to create a new suggestion category.
 
 `name`: (date) Name of suggestion category
 
-`tenantId`: (integer  ) Id of related tenant
+`tenantId`: (integer) Id of related tenant
 
-`categoryId`: (integer) Id of parent category
+`categoryId`: (integer) Id of category
 
-`fieldName`: (integer) Name of suggestion category
+`parentcategoryId`: (integer) Id of parent category

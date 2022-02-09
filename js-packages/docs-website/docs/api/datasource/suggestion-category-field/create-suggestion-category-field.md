@@ -10,9 +10,12 @@ Create new suggestion category field
 ```bash
 POST /v2/suggestion-category-field
 {
-  "active": true,
-  "datasourceId": 123,
-  "name": "example pipeline"
+  "suggestionCategoryId": 1,
+  "tenantId": 1,
+  "categoryId": 1,
+  "fieldName": "web.category",
+  "enabled": true,
+  "name": "Category"
 }
 ```
 
@@ -26,9 +29,10 @@ Allows you to create a new suggestion category field.
 
 `name`: (date) Name of suggestion category field
 
-`tenantId`: (integer  ) Id of related tenant
+`tenantId`: (integer) Id of related tenant
 
 `categoryId`: (integer) Id of related category
 
-`fieldName`: (integer) Name of suggestion category field
+`suggestionCategoryFieldId`: (integer) Id of suggestion category field
 
+`fieldName`: (integer) Field name of suggestion category field

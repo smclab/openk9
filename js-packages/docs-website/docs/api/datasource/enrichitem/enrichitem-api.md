@@ -1,14 +1,14 @@
 ---
 id: enrichitem-api
-title: Enrichitem APIs
+title: Enrich Item APIs
 slug: /api/enrichitem-api
 
 ---
 
-These are APIs used to managed enrichitem objects in database
+These are APIs used to managed enrich item objects in database
 
 
-## Enrichitem APIs
+## Enrich Item APIs
 
 - [Create](create-enrichitem)
 - [Update](update-enrichitem)

@@ -1,11 +1,11 @@
 ---
 id: get-enrichitem-list
-title: Get enrichitem list API
+title: Get Enrich Item list API
 slug: /api/get-enrichitem-list
 
 ---
 
-Get list of enrichitem
+Get list of Enrich Item
 
 ```bash
 POST /v2/enrichitem?page=0&size=20
@@ -13,7 +13,7 @@ POST /v2/enrichitem?page=0&size=20
 
 ### Description
 
-Get list and configuration of all enrichitem
+Get list and configuration of all enrich item
 
 ### Parameters
 

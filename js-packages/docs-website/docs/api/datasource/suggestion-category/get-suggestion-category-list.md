@@ -13,7 +13,7 @@ POST /v2/suggestion-category?page=0&size=20
 
 ### Description
 
-Get list and configuration of all enrichpipeline
+Get list and configuration of all suggestion categories
 
 ### Parameters
 

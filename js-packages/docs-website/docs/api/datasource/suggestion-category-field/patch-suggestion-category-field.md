@@ -11,7 +11,7 @@ Patch suggestion category field
 ```bash
 PATCH /v2/suggestion-category-field
 {
-    "active": false
+    "enabled": false
 }
 ```
 
@@ -21,8 +21,14 @@ Allows you to update individual information in suggestion category field
 
 ### Request Body
 
-`active`: (boolean) Specific if suggestion category field is enabled or not
+`enabled: (boolean) Specific if suggestion category field is enabled or not
 
-`name`: (date) Name of datasource
+`name`: (date) Name of suggestion category field
 
-`datasourceId`: (int) Id of related datasourceId
+`tenantId`: (integer) Id of related tenant
+
+`categoryId`: (integer) Id of related category
+
+`suggestionCategoryFieldId`: (integer) Id of suggestion category field
+
+`fieldName`: (integer) Field name of suggestion category field

@@ -1,11 +1,11 @@
 ---
 id: update-enrichitem
-title: Update enrichitem API
+title: Update Enrich Item API
 slug: /api/update-enrichitem
 
 ---
 
-Update existing enrichitem
+Update existing Enrich Item
 
 ```bash
 POST /v2/enrichitem
@@ -21,18 +21,18 @@ POST /v2/enrichitem
 
 ### Description
 
-Update entire enrichitem with information specified in request body
+Update entire enrich item with information specified in request body
 
 ### Request Body
 
-`enrichPipelineId`: (int) Id of related enrichpipeline
+`enrichPipelineId`: (int) Id of related enrich pipeline
 
-`active`: (boolean) Specific if enrichitem is enabled or not
+`active`: (boolean) Specific if enrich item is enabled or not
 
-`jsonConfig`: (dict) Configuration of the enrichitem. Normally includes some configuration of enrichitem.
+`jsonConfig`: (dict) Configuration of the enrich item. Normally includes some configuration of enrich item.
 
-`name`: (date) Name of enrichitem
+`name`: (date) Name of enrich item
 
-`_position`: (int) Id of position of enrichitem in pipeline
+`_position`: (int) Id of position of enrich item in pipeline
 
-`driverServiceName`: (string) Symbolic name of related enrichprocessor
+`driverServiceName`: (string) Symbolic name of related enrich processor

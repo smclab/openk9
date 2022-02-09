@@ -18,7 +18,7 @@ PUT /v2/enrichpipeline
 
 ### Description
 
-Allows you to update individual information in enrich pipeline
+Update entire enrich pipeline with information specified in request body
 
 ### Request Body
 
