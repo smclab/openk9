@@ -141,6 +141,9 @@ export function VirtualResults<E>({
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(loginInfo, searchQuery);
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
+  const thereAreResults = Boolean(
+    results.data?.pages[0].total && results.data.pages[0].total > 0,
+  );
   return (
     <div
       css={css`
@@ -149,29 +152,45 @@ export function VirtualResults<E>({
         height: 100%;
       `}
     >
-      {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
-        <>
-          <ResultCount>{results.data?.pages[0].total}</ResultCount>
-          <Virtuoso
-            style={{ flexGrow: 1 }}
-            totalCount={resultsFlat?.length ?? 0}
-            itemContent={(index) => {
-              const result = resultsFlat?.[index];
-              if (result) {
-                return <ResultMemo result={result} onDetail={onDetail} />;
-              }
-              return null;
-            }}
-            endReached={() => {
-              if (results.hasNextPage) {
-                results.fetchNextPage();
-              }
-            }}
-          />
-        </>
-      ) : (
-        <NoResults />
+      {thereAreResults && (
+        <ResultCount>{results.data?.pages[0].total}</ResultCount>
       )}
+      <Virtuoso
+        hidden={!thereAreResults}
+        style={{ flexGrow: 1 }}
+        totalCount={resultsFlat?.length ?? 0}
+        itemContent={(index) => {
+          const result = resultsFlat?.[index];
+          if (result) {
+            return <ResultMemo result={result} onDetail={onDetail} />;
+          }
+          return null;
+        }}
+        endReached={() => {
+          if (results.hasNextPage) {
+            results.fetchNextPage();
+          }
+        }}
+        components={{
+          Footer() {
+            return (
+              <div
+                css={css`
+                  padding: 0 16px 16px 16px;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                `}
+              >
+                {results.hasNextPage
+                  ? "loading more results..."
+                  : "all results loaded"}
+              </div>
+            );
+          },
+        }}
+      />
+      {!thereAreResults && <NoResults />}
     </div>
   );
 }
