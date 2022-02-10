@@ -1,6 +1,6 @@
 ---
-id: how-to-create-a-plugin
-title: Create Custom Plugin
+id: create-plugin-using-json
+title: Create a plugin using Json
 ---
 
 In OpenK9 you can create custom plugin.
@@ -13,12 +13,7 @@ Prerequisites are described in [`OSGi project requirements`](/docs/osgi-requirem
 
 A complete example is present at the link https://github.com/smclab/openk9-example-java-datasource
 
-You can a create a new plugin in two different wa:
-
-- [Using a json configuration](/docs/create-plugin-using-json)
-- [Using Java](/docs/create-plugin-using-java)
-
-To create a new plugin you need to have a gradle project with this structure:
+To create a new plugin with Java you need to have a gradle project with this structure:
 
 ```
 example-plugin/
@@ -35,6 +30,8 @@ example-plugin/
                                 ├── DocumentTypeDefinition.java
                                 └── ExamplePluginDriver.java
 ```
+
+Your project needs to contains following files:
 
 - `bnd.bnd` identifies plugin as bundle
 ```aidl
@@ -73,5 +70,8 @@ dependencies {
 	compile 'io.openk9:io.openk9.release.api:OPENK9_VERSION'
 }
 ```
+
+### Driver Definition
+
 - `ExamplePluginDriver.java` contains java code to enable plugin inside OpenK9.
-- `DocumentTypeDefinition.java` contains java code to define indexed document types, fields and search keywords
+

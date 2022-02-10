@@ -2,7 +2,17 @@ module.exports = {
   sidebar: {
     OpenK9: ["intro", "standalone-app", "headless-api"],
     "Getting Started": ["using-docker"],
-    "OSGi project": ["osgi-requirements", "deploy-osgi-project", "how-to-create-a-plugin"],
+    "OSGi project": [
+    "osgi-requirements",
+    "deploy-osgi-project",
+    {
+     "type": "category",
+     "label": "Create Plugin",
+     "items": [
+       "create-plugin-using-java",
+       "create-plugin-using-json"
+     ]
+   }],
     "Architecture": ["architecture/architecture", "architecture/ingestion", "architecture/datasource",
     "architecture/plugin-driver-manager", "architecture/index-writer", "architecture/entity-manager",
     "architecture/searcher"],
