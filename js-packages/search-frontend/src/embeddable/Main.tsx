@@ -405,6 +405,8 @@ export function Main({ config }: MainProps) {
                   `}
                   onClick={() => {
                     setSelectedTabIndex(index);
+                    setFilterSearchTokens([]);
+                    window.OpenK9.queryState = { hiddenSearchQuery: [] }; // DEBT: do not use global api
                   }}
                 >
                   {tab.label.toUpperCase()}

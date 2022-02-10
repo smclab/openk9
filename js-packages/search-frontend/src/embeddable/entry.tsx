@@ -4,7 +4,13 @@ import { Main } from "./Main";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { SearchToken } from "@openk9/rest-api";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      notifyOnChangeProps: ["data", "error"],
+    },
+  },
+});
 
 function Entry() {
   const [config, setConfig] = React.useState<OpenK9ConfigFacade>(openk9Config);
