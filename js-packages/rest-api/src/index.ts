@@ -784,14 +784,11 @@ export type ResultRendererPlugin<E> = {
 };
 
 export type ResultRendererProps<E> = {
-  data: GenericResultItem<E>;
-  onSelect(): void;
-  loginInfo: LoginInfo | null;
+  result: GenericResultItem<E>;
 };
 
 export type SidebarRendererProps<E> = {
   result: GenericResultItem<E>;
-  loginInfo: LoginInfo | null;
 };
 
 export async function getPlugins(

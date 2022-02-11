@@ -16,7 +16,7 @@ export function useInfiniteResults<E>(
 ) {
   const pageSize = 10;
   return useInfiniteQuery(
-    ["results", searchQuery] as const,
+    ["results", searchQuery, loginInfo] as const,
     async ({ queryKey: [, searchQuery], pageParam = 0 }) => {
       return doSearch<E>(
         {

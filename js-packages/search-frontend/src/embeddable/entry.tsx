@@ -53,7 +53,12 @@ const openk9Config: OpenK9ConfigFacade = {
 
 let updateConfig = (targetElements: OpenK9ConfigFacade) => {};
 
-export const OpenK9: OpenK9ConfigFacade = {
+export const OpenK9: OpenK9ConfigFacade & {
+  deps: {
+    React: typeof React;
+    ReactDOM: typeof ReactDOM;
+  };
+} = {
   set search(element: Element | null) {
     openk9Config.search = element;
     updateConfig({ ...openk9Config });
@@ -85,6 +90,10 @@ export const OpenK9: OpenK9ConfigFacade = {
   set queryState(queryState: QueryState) {
     openk9Config.queryState = queryState;
     updateConfig({ ...openk9Config });
+  },
+  deps: {
+    React,
+    ReactDOM,
   },
 };
 

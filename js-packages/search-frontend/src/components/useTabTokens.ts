@@ -10,7 +10,7 @@ type Tab = { label: string; tokens: Array<SearchToken> };
 
 export function useTabTokens(loginInfo: LoginInfo | null): Array<Tab> {
   const tenantConfiguration = useQuery(
-    ["tenant-configuration"] as const,
+    ["tenant-configuration", loginInfo] as const,
     ({ queryKey }) => {
       return getTentantWithConfiguration(loginInfo);
     },
@@ -27,7 +27,12 @@ export function useTabTokens(loginInfo: LoginInfo | null): Array<Tab> {
             return {
               label: s.text,
               tokens: [
-                { tokenType: "DOCTYPE", keywordKey: "type", values: [s.id] },
+                {
+                  tokenType: "DOCTYPE",
+                  keywordKey: "type",
+                  values: [s.id],
+                  filter: false,
+                },
               ],
             };
           },
@@ -46,12 +51,24 @@ const defaultTabTokens: Array<Tab> = [
   },
   {
     label: "Web",
-    tokens: [{ tokenType: "DOCTYPE", keywordKey: "type", values: ["web"] }],
+    tokens: [
+      {
+        tokenType: "DOCTYPE",
+        keywordKey: "type",
+        values: ["web"],
+        filter: false,
+      },
+    ],
   },
   {
     label: "Document",
     tokens: [
-      { tokenType: "DOCTYPE", keywordKey: "type", values: ["document"] },
+      {
+        tokenType: "DOCTYPE",
+        keywordKey: "type",
+        values: ["document"],
+        filter: false,
+      },
     ],
   },
 ];

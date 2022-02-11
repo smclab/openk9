@@ -6,14 +6,17 @@ import { ResultMemo } from "./Result";
 import { GenericResultItem, LoginInfo, SearchToken } from "@openk9/rest-api";
 import { Logo } from "./Logo";
 import { myTheme } from "./myTheme";
+import { Renderers } from "./useRenderers";
 
 type ResultsProps<E> = {
+  renderers: Renderers;
   loginInfo: LoginInfo | null;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E>): void;
   displayMode: { type: "finite" } | { type: "infinite" } | { type: "virtual" };
 };
 export function Results<E>({
+  renderers,
   displayMode,
   onDetail,
   searchQuery,
@@ -23,6 +26,7 @@ export function Results<E>({
     case "finite":
       return (
         <FiniteResults
+          renderers={renderers}
           loginInfo={loginInfo}
           searchQuery={searchQuery}
           onDetail={onDetail}
@@ -31,6 +35,7 @@ export function Results<E>({
     case "infinite":
       return (
         <InfiniteResults
+          renderers={renderers}
           loginInfo={loginInfo}
           searchQuery={searchQuery}
           onDetail={onDetail}
@@ -39,6 +44,7 @@ export function Results<E>({
     case "virtual":
       return (
         <VirtualResults
+          renderers={renderers}
           loginInfo={loginInfo}
           searchQuery={searchQuery}
           onDetail={onDetail}
@@ -61,13 +67,17 @@ function ResultCount({ children }: ResultCountProps) {
     </div>
   );
 }
+
 type ResulListProps<E> = {
+  renderers: Renderers;
   loginInfo: LoginInfo | null;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E> | null): void;
 };
+
 type FiniteResultsProps<E> = ResulListProps<E> & {};
 export function FiniteResults<E>({
+  renderers,
   searchQuery,
   onDetail,
   loginInfo,
@@ -80,7 +90,12 @@ export function FiniteResults<E>({
           <ResultCount>{results.data?.pages[0].total}</ResultCount>
           {results.data?.pages[0].result.map((result, index) => {
             return (
-              <ResultMemo key={index} result={result} onDetail={onDetail} />
+              <ResultMemo<E>
+                renderers={renderers}
+                key={index}
+                result={result}
+                onDetail={onDetail}
+              />
             );
           })}
         </>
@@ -92,6 +107,7 @@ export function FiniteResults<E>({
 }
 type InfiniteResultsProps<E> = ResulListProps<E> & {};
 export function InfiniteResults<E>({
+  renderers,
   searchQuery,
   onDetail,
   loginInfo,
@@ -107,7 +123,8 @@ export function InfiniteResults<E>({
               <React.Fragment key={pageIndex}>
                 {page.result.map((result, resultIndex) => {
                   return (
-                    <ResultMemo
+                    <ResultMemo<E>
+                      renderers={renderers}
                       key={resultIndex}
                       result={result}
                       onDetail={onDetail}
@@ -135,6 +152,7 @@ export function InfiniteResults<E>({
 }
 type VirtualResultsProps<E> = ResulListProps<E> & {};
 export function VirtualResults<E>({
+  renderers,
   searchQuery,
   onDetail,
   loginInfo,
@@ -162,7 +180,13 @@ export function VirtualResults<E>({
         itemContent={(index) => {
           const result = resultsFlat?.[index];
           if (result) {
-            return <ResultMemo result={result} onDetail={onDetail} />;
+            return (
+              <ResultMemo
+                renderers={renderers}
+                result={result}
+                onDetail={onDetail}
+              />
+            );
           }
           return null;
         }}

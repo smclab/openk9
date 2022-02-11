@@ -34,6 +34,7 @@ import { useQuery } from "react-query";
 import { isEqual } from "lodash";
 import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 import { FilterCategory } from "../components/FilterCategory";
+import { useRenderers } from "../components/useRenderers";
 
 const DEBOUNCE = 300;
 
@@ -154,6 +155,7 @@ export function Main({ config }: MainProps) {
   const suggestionCategories = useSuggestionCategories(
     login.state.loginInfo ?? null,
   );
+  const renderers = useRenderers(login.state.loginInfo ?? null);
   return (
     <React.Fragment>
       {config.search !== null &&
@@ -437,6 +439,7 @@ export function Main({ config }: MainProps) {
       {config.results !== null &&
         ReactDOM.createPortal(
           <Results
+            renderers={renderers}
             loginInfo={login.state?.loginInfo ?? null}
             displayMode={{ type: "virtual" }}
             searchQuery={searchQuery}
@@ -448,7 +451,7 @@ export function Main({ config }: MainProps) {
         ReactDOM.createPortal(
           detail ? (
             <SimpleErrorBoundary>
-              <DetailMemo result={detail} />
+              <DetailMemo renderers={renderers} result={detail} />
             </SimpleErrorBoundary>
           ) : (
             <NoDetail />
@@ -562,8 +565,11 @@ function NoDetail() {
 }
 
 function useSuggestionCategories(loginInfo: LoginInfo | null) {
-  return useQuery(["suggestion-categories"], async ({ queryKey }) => {
-    const result = await getSuggestionCategories(loginInfo);
-    return result;
-  });
+  return useQuery(
+    ["suggestion-categories", loginInfo],
+    async ({ queryKey }) => {
+      const result = await getSuggestionCategories(loginInfo);
+      return result;
+    },
+  );
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { WebDetail } from "../renderers/openk9/web/WebDetail";
-import { GenericResultItem } from "@openk9/rest-api";
+import { GenericResultItem, SidebarRendererProps } from "@openk9/rest-api";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { EmailDetail } from "../renderers/openk9/email/EmailDetail";
 import { UserDetail } from "../renderers/openk9/user/UserDetail";
@@ -19,12 +19,15 @@ import { GaraDetail } from "../renderers/sg/gara/GaraDetail";
 import { OpendataDetail } from "../renderers/cm/opendata/OpendataDetail";
 import { VenditeDetail } from "../renderers/sg/vendite/VenditeDetail";
 import { CalendarDetail } from "../renderers/openk9/calendar/CalendarDetail";
+import { Renderers } from "./useRenderers";
 
 type DetailProps<E> = {
+  renderers: Renderers;
   result: GenericResultItem<E>;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
+  const { renderers } = props;
   return (
     <div
       css={css`
@@ -44,6 +47,13 @@ function Detail<E>(props: DetailProps<E>) {
         `}
       >
         {(() => {
+          const Renderer: React.FC<SidebarRendererProps<E>> =
+            result.source.documentTypes
+              .map((k: string) => renderers?.sidebarRenderers[k])
+              .find(Boolean);
+          if (Renderer) {
+            return <Renderer result={result} />;
+          }
           if (result.source.documentTypes.includes("gare")) {
             return <GaraDetail result={result} />;
           }
