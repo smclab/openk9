@@ -36,8 +36,6 @@ import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 import { FilterCategory } from "../components/FilterCategory";
 import { useRenderers } from "../components/useRenderers";
 
-const DEBOUNCE = 300;
-
 type MainProps = { config: OpenK9ConfigFacade };
 export function Main({ config }: MainProps) {
   const login = useLoginInfo();
@@ -57,7 +55,7 @@ export function Main({ config }: MainProps) {
     () => tabs[selectedTabIndex]?.tokens ?? [],
     [selectedTabIndex, tabs],
   );
-  const debounced = useDebounce(state, DEBOUNCE);
+  const debounced = useDebounce(state, 600);
   const queryAnalysis = useQueryAnalysis(login.state?.loginInfo ?? null, {
     searchText: debounced.text,
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
@@ -106,7 +104,7 @@ export function Main({ config }: MainProps) {
     ],
     [spans, state.selection, tabTokens, hiddenSearchQuery, filterSearchTokens],
   );
-  const searchQuery = useDebounce(searchQueryMemo, DEBOUNCE);
+  const searchQuery = useDebounce(searchQueryMemo, 600);
   React.useEffect(() => {
     onQueryStateChange?.({
       hiddenSearchQuery: searchQuery,

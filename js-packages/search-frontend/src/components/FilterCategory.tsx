@@ -34,7 +34,7 @@ export function FilterCategory({
   const suggestions = useInfiniteSuggestions(
     tokens,
     suggestionCategoryId,
-    useDebounce(text, 300),
+    useDebounce(text, 600),
   );
   const [isOpen, setIsOpen] = React.useState(true);
   const show = Boolean(
