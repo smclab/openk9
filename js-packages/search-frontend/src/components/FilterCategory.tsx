@@ -14,6 +14,7 @@ import {
 } from "@openk9/rest-api";
 import { isEqual } from "lodash";
 import { useInfiniteQuery } from "react-query";
+import { useDebounce } from "./useDebounce";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -33,7 +34,7 @@ export function FilterCategory({
   const suggestions = useInfiniteSuggestions(
     tokens,
     suggestionCategoryId,
-    text,
+    useDebounce(text, 300),
   );
   const [isOpen, setIsOpen] = React.useState(true);
   const show = Boolean(
