@@ -212,7 +212,7 @@ export function useInfiniteSuggestions(
       suggestKeyword,
     ] as const,
     async ({
-      queryKey: [_, searchQuery, activeSuggestionCategory],
+      queryKey: [_, searchQuery, activeSuggestionCategory, suggestKeyword],
       pageParam,
     }) => {
       if (!searchQuery) throw new Error();
