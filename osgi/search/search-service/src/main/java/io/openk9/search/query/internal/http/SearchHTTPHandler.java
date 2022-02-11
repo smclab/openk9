@@ -106,8 +106,14 @@ public class SearchHTTPHandler extends BaseSearchHTTPHandler {
 
 		List<SearchToken> searchQuery = searchRequest.getSearchQuery();
 
-		if (searchQuery != null && !searchQuery.isEmpty()) {
+		if (searchQuery != null
+			&& !searchQuery.isEmpty()
+			&& searchQuery
+				.stream()
+				.anyMatch(st -> st.getFilter() == null || !st.getFilter())) {
+
 			searchSourceBuilder.minScore(_minScore);
+
 		}
 
 	}

@@ -101,7 +101,7 @@ public class TextQueryParser implements QueryParser {
 		if (queryCondition == QueryCondition.DEFAULT) {
 			queryCondition =
 				tokenText.getFilter() != null && tokenText.getFilter()
-					? QueryCondition.MUST
+					? QueryCondition.FILTER
 					: QueryCondition.SHOULD;
 		}
 
