@@ -22,7 +22,7 @@ export function EntrateDetail({ result }: EntrateDetailProps) {
       <DetailLink href={result.source.web.url}>
         <HighlightableText result={result} path="web.url" />
       </DetailLink>
-      <DetailAttribute label="Topic">
+      <DetailAttribute label="Category">
         {result.source.entrate.category}
       </DetailAttribute>
       <DetailAttribute label="Topics">
@@ -32,9 +32,9 @@ export function EntrateDetail({ result }: EntrateDetailProps) {
           })}
         </ul>
       </DetailAttribute>
-      <DetailAttribute label="Linked urls">
+      <DetailAttribute label="Linked Documents">
         <ul>
-          {result.source.entrate.linkedDocuments.slice(0, 3).map((url) => {
+          {result.source.entrate.linkedUrls.slice(0, 3).map((url) => {
             return (
               <li key={url}>
                 <a
