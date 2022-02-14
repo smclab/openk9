@@ -247,7 +247,10 @@ and enrich it with these information. Two different type of Enrich Processor can
 these services.
 
 - `AsyncEnrichProcessor.java` contains java code to define enrich processor which communicate in asynchronous
-way with external service, then using a queue to send data e get response
+way with external service. It defines destination name, which is queue name where data are sent,
+to be analyzed by the external service that performs the enrichment on the data.
+
+When the enrichment activity is finished the external service sends the data to
 
 ```java
 package io.openk9.plugins.example.enrichprocessor;
