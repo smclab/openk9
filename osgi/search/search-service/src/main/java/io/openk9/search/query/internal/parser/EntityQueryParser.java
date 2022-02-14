@@ -10,6 +10,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import reactor.core.publisher.Mono;
@@ -168,6 +169,7 @@ public class EntityQueryParser implements QueryParser {
 
 	@Reference(
 		cardinality = ReferenceCardinality.OPTIONAL,
+		policyOption = ReferencePolicyOption.GREEDY,
 		target = "(component.name=io.openk9.search.query.internal.parser.TextQueryParser)"
 	)
 	private QueryParser _textQueryParser;
