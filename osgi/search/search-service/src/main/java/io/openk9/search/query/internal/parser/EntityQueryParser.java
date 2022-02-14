@@ -8,6 +8,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import reactor.core.publisher.Mono;
@@ -29,12 +31,14 @@ public class EntityQueryParser implements QueryParser {
 	@ObjectClassDefinition
 	@interface Config {
 		float boost() default 50.0f;
+		boolean manageEntityName() default true;
 	}
 
 	@Activate
 	@Modified
-	void activate(TextQueryParser.Config config) {
+	void activate(EntityQueryParser.Config config) {
 		_boost = config.boost();
+		_manageEntityName = config.manageEntityName();
 	}
 
 	@Override
@@ -48,6 +52,46 @@ public class EntityQueryParser implements QueryParser {
 			return QueryParser.NOTHING_CONSUMER;
 		}
 
+		Mono<Consumer<BoolQueryBuilder>> entityQueryConsumerMono =
+			_createEntityQueryConsumer(context, searchTokens);
+
+		if (_manageEntityName && _textQueryParser != null) {
+			List<SearchToken> collect =
+				searchTokens
+					.stream()
+					.filter(searchToken ->
+						searchToken.getEntityName() != null &&
+						!searchToken.getEntityName().isBlank())
+					.map(SearchToken::getEntityName)
+					.distinct()
+					.map(SearchToken::ofText)
+					.collect(Collectors.toList());
+
+			if (!collect.isEmpty()) {
+
+				return entityQueryConsumerMono
+					.then(
+					_textQueryParser.apply(
+						Context.of(
+							context.getTenant(),
+							context.getDatasourceList(),
+							context.getPluginDriverDocumentTypeList(),
+							Map.of("TEXT", collect),
+							context.getHttpRequest(),
+							context.getQueryCondition()
+						)
+					)
+				);
+
+			}
+
+		}
+
+		return entityQueryConsumerMono;
+	}
+
+	private Mono<Consumer<BoolQueryBuilder>> _createEntityQueryConsumer(
+		Context context, List<SearchToken> searchTokens) {
 		return Mono.fromSupplier(() -> bool -> {
 
 			Map<String, List<SearchToken>> searchTokenGroupingByType =
@@ -122,7 +166,14 @@ public class EntityQueryParser implements QueryParser {
 
 	}
 
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		target = "(component.name=io.openk9.search.query.internal.parser.TextQueryParser)"
+	)
+	private QueryParser _textQueryParser;
+
 	private float _boost;
+	private boolean _manageEntityName;
 
 	public static final String TYPE = "ENTITY";
 	public static final String ENTITIES_ID = "entities.id";

@@ -17,16 +17,41 @@
 
 package io.openk9.search.api.query;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SearchToken {
 	private String entityType;
+	private String entityName;
 	private String tokenType;
 	private String keywordKey;
 	private String[] values;
 	private Map<String, Object> extra;
 	private Boolean filter;
+
+	public static SearchToken ofText(String value) {
+		return ofText(new String[] {value}, null, false);
+	}
+
+	public static SearchToken ofText(String[] values) {
+		return ofText(values, null, false);
+	}
+
+	public static SearchToken ofText(String[] values, String keywordKey) {
+		return ofText(values, keywordKey, false);
+	}
+
+	public static SearchToken ofText(
+		String[] values, String keywordKey, boolean filter) {
+
+		return new SearchToken(
+			null, null, "TEXT", keywordKey, values, Map.of(), filter);
+	}
+
 }
