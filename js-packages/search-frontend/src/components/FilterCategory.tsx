@@ -45,7 +45,7 @@ export function FilterCategory({
   return (
     <div
       css={css`
-        margin-bottom: 8px;
+        margin-bottom: 16px;
       `}
     >
       <div css={css``}>
@@ -77,6 +77,7 @@ export function FilterCategory({
               display: flex;
               align-items: center;
               margin-top: 8px;
+              margin-bottom: 8px;
             `}
           >
             <input
@@ -140,7 +141,13 @@ export function FilterCategory({
                           :first-letter {
                             text-transform: uppercase;
                           }
-                          word-break: break-all;
+                          white-space: nowrap;
+                          overflow-x: hidden;
+                          text-overflow: ellipsis;
+                          :hover {
+                            word-break: break-all;
+                            white-space: normal;
+                          }
                         `}
                       >
                         {suggestion.tokenType === "ENTITY" ? (
