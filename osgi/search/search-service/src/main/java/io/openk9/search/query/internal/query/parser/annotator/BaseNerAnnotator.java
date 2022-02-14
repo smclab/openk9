@@ -52,7 +52,8 @@ public class BaseNerAnnotator extends BaseAnnotator {
 
 		for (String token : tokens) {
 			if (!stopWords.contains(token)) {
-				builder.must(query("name", token));
+				String cleanedToken = token.replaceAll("\\p{Punct}", " ");
+				builder.must(query("name", cleanedToken));
 			}
 		}
 
