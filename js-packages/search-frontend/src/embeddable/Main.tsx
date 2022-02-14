@@ -41,11 +41,11 @@ export function Main({ config }: MainProps) {
   const login = useLoginInfo();
   const autoSelect = config.searchAutoselect;
   const setAutoSelect = React.useCallback((autoSelect: boolean) => {
-    window.OpenK9.searchAutoselect = autoSelect; // TODO do not use global api
+    window.OpenK9.searchAutoselect = autoSelect; // DEBT do not use global api
   }, []);
   const replaceText = config.searchReplaceText;
   const setReplaceText = React.useCallback((replaceText: boolean) => {
-    window.OpenK9.searchReplaceText = replaceText; // TODO do not use global api
+    window.OpenK9.searchReplaceText = replaceText; // DEBT do not use global api
   }, []);
   const [state, dispatch] = useSelections();
   const [openedDropdown, setOpenedDropdown] = React.useState<{
@@ -78,44 +78,55 @@ export function Main({ config }: MainProps) {
     !queryAnalysis.isPreviousData;
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
-  const {
-    onQueryStateChange,
-    queryState: { hiddenSearchQuery },
-  } = config;
-  const [filterSearchTokens, setFilterSearchTokens] = React.useState<
-    Array<SearchToken>
-  >([]);
+  const filterSearchTokens = config.queryState.filterTokens;
   const addFilterSearchToken = React.useCallback((searchToken: SearchToken) => {
-    setFilterSearchTokens((tokens) => [...tokens, searchToken]);
+    // DEBT do not use global api
+    window.OpenK9.queryState = {
+      ...window.OpenK9.queryState,
+      filterTokens: [...window.OpenK9.queryState.filterTokens, searchToken],
+    };
   }, []);
   const removeFilterSearchToken = React.useCallback(
     (searchToken: SearchToken) => {
-      setFilterSearchTokens((tokens) =>
-        tokens.filter((token) => !isEqual(token, searchToken)),
-      );
+      // DEBT do not use global api
+      window.OpenK9.queryState = {
+        ...window.OpenK9.queryState,
+        filterTokens: window.OpenK9.queryState.filterTokens.filter(
+          (token) => !isEqual(token, searchToken),
+        ),
+      };
     },
     [],
   );
-  const searchQueryMemo = React.useMemo(
-    () => [
-      ...tabTokens,
-      ...hiddenSearchQuery,
-      ...filterSearchTokens,
-      ...deriveSearchQuery(
+  const derivedSearchQuery = React.useMemo(
+    () =>
+      deriveSearchQuery(
         spans,
         state.selection.flatMap(({ text, start, end, token }) =>
           token ? [{ text, start, end, token }] : [],
         ),
       ),
-    ],
-    [spans, state.selection, tabTokens, hiddenSearchQuery, filterSearchTokens],
+    [spans, state.selection],
+  );
+  const searchQueryMemo = React.useMemo(
+    () => [...tabTokens, ...filterSearchTokens, ...derivedSearchQuery],
+    [tabTokens, filterSearchTokens, derivedSearchQuery],
   );
   const searchQuery = useDebounce(searchQueryMemo, 600);
+  const { onQueryStateChange } = config;
   React.useEffect(() => {
     onQueryStateChange?.({
-      hiddenSearchQuery: searchQuery,
+      tabTokens,
+      filterTokens: filterSearchTokens,
+      searchTokens: derivedSearchQuery,
     });
-  }, [onQueryStateChange, searchQuery]);
+  }, [
+    onQueryStateChange,
+    derivedSearchQuery,
+    filterSearchTokens,
+    searchQuery,
+    tabTokens,
+  ]);
   React.useEffect(() => {
     if (
       autoSelect &&
@@ -411,8 +422,11 @@ export function Main({ config }: MainProps) {
                   `}
                   onClick={() => {
                     setSelectedTabIndex(index);
-                    setFilterSearchTokens([]);
-                    window.OpenK9.queryState = { hiddenSearchQuery: [] }; // DEBT: do not use global api
+                    // DEBT: do not use global api
+                    window.OpenK9.queryState = {
+                      ...window.OpenK9.queryState,
+                      filterTokens: [],
+                    };
                   }}
                 >
                   {tab.label.toUpperCase()}

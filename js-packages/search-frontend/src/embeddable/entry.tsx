@@ -25,7 +25,9 @@ function Entry() {
 }
 
 type QueryState = {
-  hiddenSearchQuery: Array<SearchToken>;
+  tabTokens: Array<SearchToken>;
+  filterTokens: Array<SearchToken>;
+  searchTokens: Array<SearchToken>;
 };
 
 export type OpenK9ConfigFacade = {
@@ -49,7 +51,9 @@ const openk9Config: OpenK9ConfigFacade = {
   details: null,
   login: null,
   queryState: {
-    hiddenSearchQuery: [],
+    tabTokens: [],
+    filterTokens: [],
+    searchTokens: [],
   },
   searchAutoselect: true,
   searchReplaceText: true,
@@ -94,6 +98,9 @@ export const OpenK9: OpenK9ConfigFacade & {
   set queryState(queryState: QueryState) {
     openk9Config.queryState = queryState;
     updateConfig({ ...openk9Config });
+  },
+  get queryState() {
+    return openk9Config.queryState;
   },
   set searchAutoselect(searchAutoselect: boolean) {
     openk9Config.searchAutoselect = searchAutoselect;
