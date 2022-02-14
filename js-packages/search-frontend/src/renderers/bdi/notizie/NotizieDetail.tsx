@@ -21,18 +21,32 @@ export function NotizieDetail({ result }: NotizieDetailProps) {
       <DetailLink href={result.source.web.url}>
         <HighlightableText result={result} path="web.url" />
       </DetailLink>
-      <DetailAttribute label="Category">
-        {result.source.notizie.category}
-      </DetailAttribute>
-      <DetailAttribute label="Topic">
-        {result.source.notizie.topic}
+      <DetailAttribute label="Linked Urls">
+        <ul>
+          {result.source.notizie.categories?.slice(0, 2).map((url) => {
+            return (
+              <li key={url}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  css={css`
+                    word-break: break-all;
+                  `}
+                >
+                  {url}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
       </DetailAttribute>
       <DetailAttribute label="Pubblication Date">
         {result.source.notizie.pubDate}
       </DetailAttribute>
       <DetailAttribute label="Linked Urls">
         <ul>
-          {result.source.notizie.linkedUrls?.slice(0, 3).map((url) => {
+          {result.source.notizie.linkedDocuments?.slice(0, 3).map((url) => {
             return (
               <li key={url}>
                 <a
