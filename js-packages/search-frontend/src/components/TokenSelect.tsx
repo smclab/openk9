@@ -108,7 +108,7 @@ export function TokenSelect({
                       margin-right: 8px;
                     `}
                   >
-                    {option.keywordKey}:
+                    {option.keywordName}:
                   </strong>
                 )}
                 <TokenIcon token={option} />
