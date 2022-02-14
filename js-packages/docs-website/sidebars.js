@@ -10,7 +10,8 @@ module.exports = {
      "label": "Create Plugin",
      "items": [
        "create-plugin-using-java",
-       "create-plugin-using-json"
+       "create-plugin-using-json",
+       "create-external-data-parser"
      ]
    }],
     "Architecture": ["architecture/architecture", "architecture/ingestion", "architecture/datasource",

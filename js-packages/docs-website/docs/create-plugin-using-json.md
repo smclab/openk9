@@ -11,18 +11,19 @@ Prerequisites are described in [`OSGi project requirements`](/docs/osgi-requirem
 
 ### Create Plugin
 
-A complete example is present at the link https://github.com/smclab/openk9-example-java-datasource
+A complete example is present at the link https://github.com/smclab/openk9-example-json-datasource
 
 To create a new plugin with Java you need to have a gradle project with this structure:
 
 ```
-example-plugin/
+openk9-example-json-datasource
 ├── bnd.bnd
 ├── build.gradle
+├── settings.gradle
 └── src
     └── main
         └── resources
-               ├── plugin-driver-config.json
+            └── plugin-driver-config.json
 ```
 
 Your project needs to contains following files:
@@ -68,7 +69,7 @@ dependencies {
 ### Plugin Definition using Json
 
 - `plugin-driver-config.json` contains json object where driver, mapping of different document types and enrich processor
-are defined
+are defined.
 
 ```json
 {

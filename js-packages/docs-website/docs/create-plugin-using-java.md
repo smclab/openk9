@@ -16,19 +16,22 @@ A complete example is present at the link https://github.com/smclab/openk9-examp
 To create a new plugin with Java you need to have a gradle project with this structure:
 
 ```
-example-plugin/
+example-datasource/
 ├── bnd.bnd
 ├── build.gradle
 └── src
     └── main
         └── java
-            └── com
+            └── io
                 └── openk9
                     └── plugins
-                        └── example
-                            └── driver
-                                ├── DocumentTypeDefinition.java
-                                └── ExamplePluginDriver.java
+                        └── exampledatasource
+                            ├── driver
+                            │   ├── DocumentTypeDefinition.java
+                            │   └── ExamplePluginDriver.java
+                            └── enrichprocessor
+                                ├── ExampleAsyncEnrichProcessor.java
+                                └── ExampleSyncEnrichProcessor.java
 ```
 
 Your project needs to contains following files:
@@ -73,7 +76,8 @@ dependencies {
 
 ### Driver Definition
 
-- `ExamplePluginDriver.java` contains java code to enable plugin inside OpenK9.
+- `ExamplePluginDriver.java` contains java code to enable plugin inside OpenK9. It defines also, which data source to
+ingest the data from and how to communicate with it.
 
 
 ```java
@@ -173,7 +177,7 @@ public class ExamplePluginDriver implements PluginDriver {
 
 ### Document Type Definition
 
-- `DocumentTypeDefinition.java` contains java code to define indexed document types, fields and search keywords
+- `DocumentTypeDefinition.java` contains java code to define indexed document types, fields and search keywords.
 
 ```java
 package io.openk9.plugins.exampledatasource.driver;
