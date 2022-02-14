@@ -130,7 +130,7 @@ public class EntityQueryParser implements QueryParser {
 
 				if (ids.length != 0) {
 					outerBoolQueryBuilder.must(
-						_multiMatchValues(ENTITIES_ID, ids));
+						_multiMatchValues(ENTITIES_ID, ids, _boost));
 				}
 
 				String[] keywordKeys =
@@ -142,25 +142,27 @@ public class EntityQueryParser implements QueryParser {
 
 				if (keywordKeys.length != 0) {
 					outerBoolQueryBuilder.must(
-						_multiMatchValues(ENTITIES_CONTEXT, keywordKeys));
+						_multiMatchValues(
+							ENTITIES_CONTEXT, keywordKeys, 1.0f));
 				}
 
 			}
-
-			outerBoolQueryBuilder.boost(_boost);
 
 			context.getQueryCondition().accept(bool, outerBoolQueryBuilder);
 
 		});
 	}
 
-	private QueryBuilder _multiMatchValues(String field, String[] ids) {
+	private QueryBuilder _multiMatchValues(
+		String field, String[] ids, float boost) {
 
 		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
 
 		for (String id : ids) {
 			boolQuery.should(QueryBuilders.matchQuery(field, id));
 		}
+
+		boolQuery.boost(boost);
 
 		return boolQuery;
 
