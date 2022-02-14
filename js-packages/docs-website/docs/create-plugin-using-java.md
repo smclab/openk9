@@ -246,7 +246,7 @@ Enrich processor normally use external services, like Machine Learning models or
 and enrich it with these information. Two different type of Enrich Processor can be developed, based on communication with
 these services.
 
-- `AsyncEnrichProcessor.java` contains java code to define enrich processor which communicate in asynchronous
+- `AsyncExampleNerEnrichProcessor.java` contains java code to define enrich processor which communicate in asynchronous
 way with external service. It defines destination name, which is queue name where data are sent,
 to be analyzed by the external service that performs the enrichment on the data.
 
@@ -280,7 +280,7 @@ public class AsyncExampleNerEnrichProcessor implements AsyncEnrichProcessor {
 }
 ```
 
-- `SyncEnrichProcessor.java` contains java code to define enrich processor which communicate in synchronous
+- `ExampleSyncEnrichProcessor.java` contains java code to define enrich processor which communicate in synchronous
 way with external service
 
 
