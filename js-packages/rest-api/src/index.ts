@@ -921,6 +921,7 @@ export type AnalysisToken =
   | {
       tokenType: "TEXT";
       keywordKey?: string;
+      keywordName?: string;
       value: string;
     };
 
