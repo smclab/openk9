@@ -502,6 +502,7 @@ function deriveSearchQuery(
               tokenType: "ENTITY",
               keywordKey: token.keywordKey,
               entityType: token.entityType,
+              entityName: token.entityName,
               values: [token.value],
               filter: false,
             };

@@ -175,6 +175,7 @@ export type SearchToken =
       tokenType: "ENTITY";
       keywordKey?: string;
       entityType: string;
+      entityName: string;
       values: string[];
       filter: boolean;
     };

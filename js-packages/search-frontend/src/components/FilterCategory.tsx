@@ -270,6 +270,7 @@ export const mapSuggestionToSearchToken = (
         tokenType: "ENTITY",
         keywordKey: suggestion.keywordKey,
         entityType: suggestion.entityType,
+        entityName: suggestion.entityValue,
         values: [suggestion.value],
         filter,
       };
