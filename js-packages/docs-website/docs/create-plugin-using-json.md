@@ -3,7 +3,7 @@ id: create-plugin-using-json
 title: Create a plugin using Json
 ---
 
-In OpenK9 you can create custom plugin.
+In OpenK9 you can create custom plugin using Json.
 
 ## Prerequisites
 
@@ -21,14 +21,8 @@ example-plugin/
 ├── build.gradle
 └── src
     └── main
-        └── java
-            └── com
-                └── openk9
-                    └── plugins
-                        └── example
-                            └── driver
-                                ├── DocumentTypeDefinition.java
-                                └── ExamplePluginDriver.java
+        └── resources
+               ├── plugin-driver-config.json
 ```
 
 Your project needs to contains following files:
@@ -71,7 +65,86 @@ dependencies {
 }
 ```
 
-### Driver Definition
+### Plugin Definition using Json
 
-- `ExamplePluginDriver.java` contains java code to enable plugin inside OpenK9.
+- `plugin-driver-config.json` contains json object where driver, mapping of different document types and enrich processor
+are defined
+
+```json
+{
+  "name": "example",
+  "schedulerEnabled": true,
+  "type": "HTTP",
+  "options": {
+    "url": "http://example-parser/",
+    "path": "/execute",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonKeys": [
+      "timestamp",
+      "startUrls",
+      "allowedDomains",
+      "allowedPaths",
+      "datasourceId",
+      "excludedPaths",
+      "bodyTag"
+    ]
+  },
+  "documentTypes": [
+    {
+      "name": "web",
+      "icon": "",
+      "defaultDocumentType": true,
+      "searchKeywords": [
+        {
+          "type": "TEXT",
+          "keyword": "web.title",
+          "options": {
+            "boost": 10.0
+          }
+        },
+        {
+          "type": "TEXT",
+          "keyword": "web.content"
+        }
+      ],
+      "mappings": {
+        "properties": {
+          "web": {
+            "properties": {
+              "title": {
+                "type": "text",
+                "analyzer": "standard_lowercase_italian_stop_words_filter"
+              },
+              "content": {
+                "type": "text",
+                "analyzer": "standard_lowercase_italian_stop_words_filter"
+              },
+              "url": {
+                "type": "text"
+              },
+              "favicon": {
+                "type": "text"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "enrichProcessors": [
+    {
+      "name": "example-ner",
+      "type": "ASYNC",
+      "options": {
+        "destinationName": "io.openk9.ner"
+      }
+    }
+  ]
+}
+
+```
+
 
