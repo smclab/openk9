@@ -23,7 +23,6 @@ public class AggregatorAnnotator extends BaseAggregatorAnnotator {
 			"$AGGREGATE",
 			Map.of(
 				"tokenType", "TEXT",
-				"keywordKey", aggregatorName,
 				"value", aggregatorKey,
 				"score", 1.0f
 			)
