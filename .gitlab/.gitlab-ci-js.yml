@@ -19,10 +19,6 @@ Build Tagged JS Docker Images:
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
   script:
-    - docker build -t search-standalone-frontend:${CI_COMMIT_REF_NAME} -f js-packages/search-standalone-frontend/Dockerfile .
-    - docker tag search-standalone-frontend:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-standalone-frontend:${CI_COMMIT_REF_NAME}
-    - docker push $CI_REGISTRY_NAME/openk9/search-standalone-frontend:${CI_COMMIT_REF_NAME}
-    
     - docker build -t docs-website:${CI_COMMIT_REF_NAME} -f js-packages/docs-website/Dockerfile .
     - docker tag docs-website:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/docs-website:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/docs-website:${CI_COMMIT_REF_NAME}
@@ -42,34 +38,6 @@ Build Tagged JS Docker Images:
     - docker build -t search-frontend:${CI_COMMIT_REF_NAME} -f js-packages/search-frontend/Dockerfile .
     - docker tag search-frontend:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-frontend:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/search-frontend:${CI_COMMIT_REF_NAME}
-  allow_failure: false
-
-Build Latest Frontend Docker Image:
-  image: docker:19.03.13
-  services:
-    - docker:19.03.13-dind
-  stage: build-docker
-  variables:
-    TEST_NAME: local/test
-    DOCKER_HOST: tcp://localhost:2375
-    DOCKER_TLS_CERTDIR: ""
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/rest-api/**/*
-        - js-packages/search-ui-components/**/*
-        - js-packages/plugin-scripts/**/*
-        - js-packages/search-customizable-ui/**/*
-        - js-packager/search-standalone-frontend/**/*
-  before_script:
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
-    - docker build -t search-standalone-frontend:latest -f js-packages/search-standalone-frontend/Dockerfile .
-    - docker tag search-standalone-frontend:latest $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
-    - docker push $CI_REGISTRY_NAME/openk9/search-standalone-frontend:latest
-  after_script:
-    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-frontend" -F ref=master $DEV_TRIGGER_URL
   allow_failure: false
 
 Build Query Understanding Frontend Docker Image:
