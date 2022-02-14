@@ -102,7 +102,7 @@ export function TokenSelect({
                   display: flex;
                 `}
               >
-                {"keywordKey" in option && (
+                {"keywordName" in option && (
                   <strong
                     css={css`
                       margin-right: 8px;
