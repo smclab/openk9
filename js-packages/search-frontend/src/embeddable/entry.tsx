@@ -37,6 +37,8 @@ export type OpenK9ConfigFacade = {
   login: Element | null;
   onQueryStateChange?(queryState: QueryState): void;
   queryState: QueryState;
+  searchAutoselect: boolean;
+  searchReplaceText: boolean;
 };
 
 const openk9Config: OpenK9ConfigFacade = {
@@ -49,6 +51,8 @@ const openk9Config: OpenK9ConfigFacade = {
   queryState: {
     hiddenSearchQuery: [],
   },
+  searchAutoselect: true,
+  searchReplaceText: true,
 };
 
 let updateConfig = (targetElements: OpenK9ConfigFacade) => {};
@@ -89,6 +93,14 @@ export const OpenK9: OpenK9ConfigFacade & {
   },
   set queryState(queryState: QueryState) {
     openk9Config.queryState = queryState;
+    updateConfig({ ...openk9Config });
+  },
+  set searchAutoselect(searchAutoselect: boolean) {
+    openk9Config.searchAutoselect = searchAutoselect;
+    updateConfig({ ...openk9Config });
+  },
+  set searchReplaceText(searchReplaceText: boolean) {
+    openk9Config.searchReplaceText = searchReplaceText;
     updateConfig({ ...openk9Config });
   },
   deps: {

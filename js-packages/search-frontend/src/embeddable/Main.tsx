@@ -39,8 +39,14 @@ import { useRenderers } from "../components/useRenderers";
 type MainProps = { config: OpenK9ConfigFacade };
 export function Main({ config }: MainProps) {
   const login = useLoginInfo();
-  const [autoSelect, setAutoSelect] = React.useState(true);
-  const [replaceText, setReplaceText] = React.useState(true);
+  const autoSelect = config.searchAutoselect;
+  const setAutoSelect = React.useCallback((autoSelect: boolean) => {
+    window.OpenK9.searchAutoselect = autoSelect; // TODO do not use global api
+  }, []);
+  const replaceText = config.searchReplaceText;
+  const setReplaceText = React.useCallback((replaceText: boolean) => {
+    window.OpenK9.searchReplaceText = replaceText; // TODO do not use global api
+  }, []);
   const [state, dispatch] = useSelections();
   const [openedDropdown, setOpenedDropdown] = React.useState<{
     textPosition: number;
