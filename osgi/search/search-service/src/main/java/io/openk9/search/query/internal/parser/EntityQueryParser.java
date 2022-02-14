@@ -70,8 +70,8 @@ public class EntityQueryParser implements QueryParser {
 
 			if (!collect.isEmpty()) {
 
-				return entityQueryConsumerMono
-					.then(
+				return Mono.zip(
+					entityQueryConsumerMono,
 					_textQueryParser.apply(
 						Context.of(
 							context.getTenant(),
@@ -81,8 +81,7 @@ public class EntityQueryParser implements QueryParser {
 							context.getHttpRequest(),
 							context.getQueryCondition()
 						)
-					)
-				);
+					), Consumer::andThen);
 
 			}
 
