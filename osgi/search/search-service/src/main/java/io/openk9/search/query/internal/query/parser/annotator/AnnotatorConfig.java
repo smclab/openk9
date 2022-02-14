@@ -28,6 +28,8 @@ public @interface AnnotatorConfig {
 		"person", "loc", "organization"
 	};
 
+	boolean aggregatorKeywordKeyEnable() default false;
+
 	String[] stopWords() default {
 		"ad", "al", "allo", "ai", "agli", "all", "agl", "alla", "alle",
 		"con", "col", "coi", "da", "dal", "dallo", "dai", "dagli", "dall",
