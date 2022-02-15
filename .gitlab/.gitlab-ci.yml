@@ -52,10 +52,8 @@ trigger_deploy:
 
 push-github:
   stage: push-github
-  image:
-    name: alpine/git:latest
+  image: alpine/git:latest
   rules:
     - if: '$TRIGGER_JOB == "push-github"'
   script:
-    - cd openk9
     - ls -l
