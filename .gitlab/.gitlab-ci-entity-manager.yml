@@ -19,6 +19,8 @@ Build Latest Entity Manager Docker Images:
               - quarkus/entity-manager/*
               - .gitlab/.gitlab-ci-entity-manager.yml
               - gradle.properties
+    except:
+        - schedules
     script:
         - ./gradlew build -p ./quarkus/entity-manager -Dquarkus.package.type=jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
     after_script:

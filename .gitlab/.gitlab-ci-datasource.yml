@@ -18,6 +18,8 @@ Build Latest Datasource Docker Images:
               - quarkus/datasource/**/*
               - .gitlab/.gitlab-ci-datasource.yml
               - gradle.properties
+    except:
+        - schedules
     script:
         - ./gradlew build -p ./quarkus/datasource -Dquarkus.package.type=jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
     after_script:

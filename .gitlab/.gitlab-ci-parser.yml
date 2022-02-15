@@ -39,6 +39,8 @@ Build Latest Email Parser Docker Image:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - plugins/email/email-parser/**/*
+  except:
+    - schedules
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
@@ -63,6 +65,8 @@ Build Latest Web Parser Docker Image:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - plugins/web/web-parser/**/*
+  except:
+    - schedules
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*

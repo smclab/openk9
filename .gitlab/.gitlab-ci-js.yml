@@ -60,6 +60,8 @@ Build Query Understanding Frontend Docker Image:
         - js-packages/plugin-scripts/**/*
         - js-packages/search-customizable-ui/**/*
         - js-packages/search-frontend/**/*
+  except:
+    - schedules
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
@@ -84,6 +86,8 @@ Build Latest Site Docker Image:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - js-packages/docs-website/**/*
+  except:
+    - schedules
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
@@ -109,6 +113,8 @@ Build Latest Admin Ui Docker Image:
         - js-packages/search-ui-components/**/*
         - js-packages/plugin-scripts/**/*
         - js-packages/admin-ui/**/*
+  except:
+    - schedules
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
@@ -134,6 +140,8 @@ Build Latest Admin Logs Service Docker Image:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - js-packages/admin-logs-service/**/*
+  except:
+    - schedules
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
@@ -158,6 +166,8 @@ Build Latest Js Executor Docker Image:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - js-packages/js-scripts-executor/**/*
+  except:
+    - schedules
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
@@ -180,6 +190,8 @@ trigger_mvp:
         - js-packages/plugin-scripts/**/*
         - js-packages/search-customizable-ui/**/*
         - js-packages/search-frontend/**/*
+  except:
+    - schedules
   needs: ['Build Query Understanding Frontend Docker Image']
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
