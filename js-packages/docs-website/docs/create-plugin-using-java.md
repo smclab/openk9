@@ -252,9 +252,8 @@ these services.
 
 - `AsyncExampleNerEnrichProcessor.java` contains java code to define enrich processor which communicate in asynchronous
 way with external service. It defines destination name, which is queue name where data are sent,
-to be analyzed by the external service that performs the enrichment on the data.
-
-When the enrichment activity is finished the external service sends the data to
+to be analyzed by the external service that performs the enrichment on the data. When the enrichment activity is finished
+the external service sends the data to next step of enrich pipeline or to index writer component.
 
 ```java
 package io.openk9.plugins.example.enrichprocessor;
@@ -285,8 +284,10 @@ public class AsyncExampleNerEnrichProcessor implements AsyncEnrichProcessor {
 ```
 
 - `ExampleSyncEnrichProcessor.java` contains java code to define enrich processor which communicate in synchronous
-way with external service
-
+way with external service. The enrich processor implements logic for analyze and enrich data directly within himself
+or by calling an external service that carries out the data enrichment activity.
+When the enrichment activity is finished the external service sends the data to next step of enrich pipeline
+or to index writer component.
 
 ```java
 /*

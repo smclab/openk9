@@ -15,4 +15,3 @@ The only constraint lies in respecting the interface defined by the ingestion AP
 
 A complete example is present at the link https://github.com/smclab/openk9-example-python-datasource
 
-
