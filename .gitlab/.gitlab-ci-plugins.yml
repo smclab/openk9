@@ -16,8 +16,6 @@ build plugins:
               - plugins/*
               - plugins/**
               - .gitlab/.gitlab-ci-plugins.yml
-    except:
-        - schedules
     before_script:
         - export GRADLE_USER_HOME=`pwd`/.gradle
     script:
