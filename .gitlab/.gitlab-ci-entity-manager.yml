@@ -13,7 +13,7 @@ Build Latest Entity Manager Docker Images:
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
   only:
-      - main
+    - main
     changes:
       - quarkus/entity-manager/**/*
       - quarkus/entity-manager/*
