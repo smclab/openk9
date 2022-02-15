@@ -1,4 +1,6 @@
 Bundle-Name: [OpenK9] Auth Service
 Bundle-SymbolicName: io.openk9.auth.service
 
+Import-Package: org.reactivestreams, *
+
 -include: ${project.rootDir}/osgi/common.bnd
