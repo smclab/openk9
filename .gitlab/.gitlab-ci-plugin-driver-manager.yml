@@ -10,54 +10,55 @@ Build Latest Plugin Driver Manager Docker Images:
         TEST_NAME: local/test
         DOCKER_HOST: tcp://localhost:2375
         DOCKER_TLS_CERTDIR: ""
-    rules:
-        - if: '$CI_COMMIT_BRANCH == "main"'
-          changes:
-              - plugin-driver-manager/configs/*
-              - osgi/common/reactory-netty-util/**/*
-              - osgi/web/http-api/**/*
-              - osgi/web/http-service/**/*
-              - osgi/web/http-bundle-ext/**/*
-              - osgi/web/open-api/**/*
-              - osgi/metrics/metrics-api/**/*
-              - osgi/metrics/metrics-service/**/*
-              - osgi/common/common-api/**/*
-              - osgi/common/core-api/**/*
-              - osgi/common/model/**/*
-              - osgi/common/osgi-api/**/*
-              - osgi/common/serialization-api/**/*
-              - osgi/common/serialization-service/**/*
-              - osgi/third-party/reactor/**/*
-              - osgi/third-party/reactor-netty/**/*
-              - osgi/third-party/reactive-streams/**/*
-              - osgi/third-party/micrometer/**/*
-              - osgi/third-party/jackson/**/*
-              - osgi/third-party/vavr/**/*
-              - osgi/third-party/apache/**/*
-              - osgi/common/http-serialization/**/*
-              - osgi/index-writer/index-writer-model/**/*
-              - osgi/index-writer/index-writer-mappings-publisher-api/**/*
-              - osgi/index-writer/index-writer-mappings-publisher-service/**/*
-              - osgi/index-writer/index-writer-mappings-pub-sub/**/*
-              - osgi/plugin-driver-manager/**/*
-              - osgi/search/search-enrich-service/**/*
-              - osgi/search/search-enrich-api/**/*
-              - osgi/plugin/plugin-api/**/*
-              - osgi/plugin/plugin-service/**/*
-              - osgi/plugin/plugin-web/**/*
-              - osgi/ingestion/**/*
-              - plugins/email/**/*
-              - plugins/liferay/**/*
-              - plugins/web/**/*
-              - plugins/applications/**/*
-              - plugins/js-enrich-plugin/**/*
-              - osgi/entity-manager/**/*
-              - osgi/config/enviroment-variable-propagation/**/*
-              - osgi/fix/karaf-json-config-fix/**/*
-              - osgi/util/groovy-script-api/**/*
-              - osgi/util/groovy-script-service/**/*
-              - osgi/util/groovy-script-web/**/*
-              - osgi/vertx/**/*
+    only:
+        refs:
+            - main
+      changes:
+          - plugin-driver-manager/configs/*
+          - osgi/common/reactory-netty-util/**/*
+          - osgi/web/http-api/**/*
+          - osgi/web/http-service/**/*
+          - osgi/web/http-bundle-ext/**/*
+          - osgi/web/open-api/**/*
+          - osgi/metrics/metrics-api/**/*
+          - osgi/metrics/metrics-service/**/*
+          - osgi/common/common-api/**/*
+          - osgi/common/core-api/**/*
+          - osgi/common/model/**/*
+          - osgi/common/osgi-api/**/*
+          - osgi/common/serialization-api/**/*
+          - osgi/common/serialization-service/**/*
+          - osgi/third-party/reactor/**/*
+          - osgi/third-party/reactor-netty/**/*
+          - osgi/third-party/reactive-streams/**/*
+          - osgi/third-party/micrometer/**/*
+          - osgi/third-party/jackson/**/*
+          - osgi/third-party/vavr/**/*
+          - osgi/third-party/apache/**/*
+          - osgi/common/http-serialization/**/*
+          - osgi/index-writer/index-writer-model/**/*
+          - osgi/index-writer/index-writer-mappings-publisher-api/**/*
+          - osgi/index-writer/index-writer-mappings-publisher-service/**/*
+          - osgi/index-writer/index-writer-mappings-pub-sub/**/*
+          - osgi/plugin-driver-manager/**/*
+          - osgi/search/search-enrich-service/**/*
+          - osgi/search/search-enrich-api/**/*
+          - osgi/plugin/plugin-api/**/*
+          - osgi/plugin/plugin-service/**/*
+          - osgi/plugin/plugin-web/**/*
+          - osgi/ingestion/**/*
+          - plugins/email/**/*
+          - plugins/liferay/**/*
+          - plugins/web/**/*
+          - plugins/applications/**/*
+          - plugins/js-enrich-plugin/**/*
+          - osgi/entity-manager/**/*
+          - osgi/config/enviroment-variable-propagation/**/*
+          - osgi/fix/karaf-json-config-fix/**/*
+          - osgi/util/groovy-script-api/**/*
+          - osgi/util/groovy-script-service/**/*
+          - osgi/util/groovy-script-web/**/*
+          - osgi/vertx/**/*
     except:
         - schedules
     script:

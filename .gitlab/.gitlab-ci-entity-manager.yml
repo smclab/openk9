@@ -12,13 +12,14 @@ Build Latest Entity Manager Docker Images:
         TEST_NAME: local/test
         DOCKER_HOST: tcp://localhost:2375
         DOCKER_TLS_CERTDIR: ""
-    rules:
-        - if: '$CI_COMMIT_BRANCH == "main"'
-          changes:
-              - quarkus/entity-manager/**/*
-              - quarkus/entity-manager/*
-              - .gitlab/.gitlab-ci-entity-manager.yml
-              - gradle.properties
+    only:
+        refs:
+            - main
+      changes:
+          - quarkus/entity-manager/**/*
+          - quarkus/entity-manager/*
+          - .gitlab/.gitlab-ci-entity-manager.yml
+          - gradle.properties
     except:
         - schedules
     script:

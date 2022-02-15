@@ -12,8 +12,9 @@ Build Latest Ingestion Docker Images:
         TEST_NAME: local/test
         DOCKER_HOST: tcp://localhost:2375
         DOCKER_TLS_CERTDIR: ""
-    rules:
-        - if: '$CI_COMMIT_BRANCH == "main"'
+    only:
+        refs:
+            - main
           changes:
               - quarkus/ingestion/**/*
               - quarkus/ingestion/*
