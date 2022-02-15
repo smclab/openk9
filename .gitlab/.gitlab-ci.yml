@@ -1,10 +1,10 @@
 stages:
-  - push-github
   - quality
   - build
   - test
   - build-docker
   - deploy
+  - push-github
 
 include:
   - local: '/.gitlab/.gitlab-ci-js.yml'
@@ -53,7 +53,8 @@ trigger_deploy:
 push-github:
   stage: push-github
   image: alpine/git:latest
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+  only:
+    variables:
+      - ($CI_PIPELINE_SOURCE == "schedule" || $TRIGGER == "push")
   script:
     - ls -la
