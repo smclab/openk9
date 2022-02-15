@@ -56,4 +56,4 @@ push-github:
   rules:
     - if: '$TRIGGER_JOB == "push-github"'
   script:
-    - ls -l
+    - ls -la
