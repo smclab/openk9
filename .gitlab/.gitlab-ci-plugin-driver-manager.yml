@@ -11,7 +11,8 @@ Build Latest Plugin Driver Manager Docker Images:
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
   only:
-    - main
+    refs:
+      - main
     changes:
       - plugin-driver-manager/configs/*
       - osgi/common/reactory-netty-util/**/*

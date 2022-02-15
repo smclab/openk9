@@ -11,7 +11,8 @@ Build Latest Index Writer Docker Images:
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
   only:
-    - main
+    refs:
+      - main
     changes:
       - index-writer/configs/*
       - osgi/index-writer/**/*

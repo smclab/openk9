@@ -13,11 +13,12 @@ Build Latest Datasource Docker Images:
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
   only:
-    - main
-  changes:
-    - quarkus/datasource/**/*
-    - .gitlab/.gitlab-ci-datasource.yml
-    - gradle.properties
+    refs:
+      - main
+    changes:
+      - quarkus/datasource/**/*
+      - .gitlab/.gitlab-ci-datasource.yml
+      - gradle.properties
   except:
     - schedules
   script:

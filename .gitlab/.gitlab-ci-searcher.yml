@@ -11,7 +11,8 @@ Build Latest Searcher Docker Images:
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
   only:
-    - main
+    refs:
+      - main
     changes:
       - searcher/configs/*
       - osgi/common/reactory-netty-util/**/*
