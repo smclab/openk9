@@ -21,6 +21,7 @@ export function Tooltip({ children, description }: TooltipProps) {
         <div
           css={css`
             position: absolute;
+            z-index: 1;
             right: 0px;
             padding: 8px 16px;
             background-color: ${myTheme.backgroundColor2};
