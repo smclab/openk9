@@ -52,14 +52,15 @@ Build Query Understanding Frontend Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/rest-api/**/*
-        - js-packages/search-ui-components/**/*
-        - js-packages/plugin-scripts/**/*
-        - js-packages/search-customizable-ui/**/*
-        - js-packages/search-frontend/**/*
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/rest-api/**/*
+      - js-packages/search-ui-components/**/*
+      - js-packages/plugin-scripts/**/*
+      - js-packages/search-customizable-ui/**/*
+      - js-packages/search-frontend/**/*
   except:
     - schedules
   before_script:
@@ -82,10 +83,11 @@ Build Latest Site Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/docs-website/**/*
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/docs-website/**/*
   except:
     - schedules
   before_script:
@@ -106,13 +108,14 @@ Build Latest Admin Ui Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/rest-api/**/*
-        - js-packages/search-ui-components/**/*
-        - js-packages/plugin-scripts/**/*
-        - js-packages/admin-ui/**/*
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/rest-api/**/*
+      - js-packages/search-ui-components/**/*
+      - js-packages/plugin-scripts/**/*
+      - js-packages/admin-ui/**/*
   except:
     - schedules
   before_script:
@@ -136,10 +139,11 @@ Build Latest Admin Logs Service Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/admin-logs-service/**/*
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/admin-logs-service/**/*
   except:
     - schedules
   before_script:
@@ -162,10 +166,11 @@ Build Latest Js Executor Docker Image:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/js-scripts-executor/**/*
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/js-scripts-executor/**/*
   except:
     - schedules
   before_script:
@@ -182,14 +187,15 @@ Build Latest Js Executor Docker Image:
 trigger_mvp:
   image: curlimages/curl
   stage: deploy
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/rest-api/**/*
-        - js-packages/search-ui-components/**/*
-        - js-packages/plugin-scripts/**/*
-        - js-packages/search-customizable-ui/**/*
-        - js-packages/search-frontend/**/*
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/rest-api/**/*
+      - js-packages/search-ui-components/**/*
+      - js-packages/plugin-scripts/**/*
+      - js-packages/search-customizable-ui/**/*
+      - js-packages/search-frontend/**/*
   except:
     - schedules
   needs: ['Build Query Understanding Frontend Docker Image']
