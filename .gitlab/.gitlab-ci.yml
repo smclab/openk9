@@ -54,7 +54,7 @@ push-github:
   stage: push-github
   image: alpine/git:latest
   only:
-    variables:
-      - ($CI_PIPELINE_SOURCE == "schedule" && $TRIGGER == "push")
+    refs:
+      - schedules
   script:
     - ls -la
