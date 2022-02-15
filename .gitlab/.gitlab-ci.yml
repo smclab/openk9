@@ -4,6 +4,7 @@ stages:
   - test
   - build-docker
   - deploy
+  - push-github
 
 include:
   - local: '/.gitlab/.gitlab-ci-js.yml'
@@ -47,3 +48,15 @@ trigger_deploy:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
     - curl -X POST -F token=$STAGING_TOKEN -F "variables[TRIGGER_JOB]=deploy-demo" -F ref=master $STAGING_TRIGGER_URL
+
+
+push-github:
+  stage: push-github
+  image:
+    name: alpine/git:latest
+  rules:
+    - if: '$TRIGGER_JOB == "push-github"'
+  script:
+    - cd openk9
+    - ls -l
+  allow_failure: true
