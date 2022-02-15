@@ -38,6 +38,8 @@ sonarqube-check:
   only:
     - merge_requests
     - main
+  except:
+    - schedules
 
 trigger_deploy:
   image: curlimages/curl
