@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Auth Keycloak API
-Bundle-SymbolicName: io.openk9.auth.keycloak.api
-
-Export-Package: io.openk9.auth.keycloak.api
-
--include: ${project.rootDir}/osgi/common.bnd

@@ -1,0 +1,4 @@
+Bundle-Name: [OpenK9] Auth Service
+Bundle-SymbolicName: io.openk9.auth.service
+
+-include: ${project.rootDir}/osgi/common.bnd

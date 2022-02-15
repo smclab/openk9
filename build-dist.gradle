@@ -202,10 +202,9 @@ dependencies {
 	distSearcher project(path: ':osgi:datasource:datasource-client-api', transitive: false)
 	distSearcher project(path: ':osgi:datasource:datasource-client-service', transitive: false)
 
-	distSearcher project(path: ':osgi:auth:auth-keycloak-api', transitive: false)
-	distSearcher project(path: ':osgi:auth:auth-keycloak-service', transitive: false)
-	distSearcher project(path: ':osgi:auth:auth-keycloak-query-parser', transitive: false)
-	distSearcher project(path: ':osgi:auth:auth-keycloak-web', transitive: false)
+	distSearcher project(path: ':osgi:auth:auth-api', transitive: false)
+	distSearcher project(path: ':osgi:auth:auth-service', transitive: false)
+	distSearcher project(path: ':osgi:auth:auth-query-parser', transitive: false)
 
 	distSearcher project(path: ':osgi:ingestion:ingestion-api', transitive: false)
 	distSearcher project(path: ':osgi:ingestion:ingestion-service', transitive: false)
