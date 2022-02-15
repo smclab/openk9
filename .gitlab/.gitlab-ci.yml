@@ -54,6 +54,6 @@ push-github:
   stage: push-github
   image: alpine/git:latest
   rules:
-    - if: '$TRIGGER_JOB == "push-github"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
   script:
     - ls -la
