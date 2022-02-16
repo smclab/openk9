@@ -13,7 +13,7 @@ custom components.
 - [**Ingestion**](ingestion): is the component that handles data ingestion logic.
 - [**Datasource**](datasource): is the component that handles data source management logic.
 - [**Plugin Driver Manager**](plugin-driver-manager): is the component that handles plugin management logic and enrichment activity.
-- [**Indexer**](indexer): is the component which manages the writing of data on elastic.
+- [**Index Writer**](index-writer): is the component which manages the writing of data on elastic.
 - [**Entity Manager**](entity-manager): is the component that handles entities and ontologies extracted from data.
 - [**Searcher**](searcher): is the component that defines search logic.
 - [**Api Gateway**](searcher): routes http to delegated components and handles authentication via keycloak
