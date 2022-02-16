@@ -65,10 +65,13 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 		}
 
-		List<String> allTenantKeywords = tenantKeywordsMap.remove(-1L);
+		List<String> allTenantKeywords = tenantKeywordsMap.get(-1L);
 
 		if (allTenantKeywords != null) {
 			for (Map.Entry<Long, List<String>> e : tenantKeywordsMap.entrySet()) {
+				if (e.getKey() == -1L) {
+					continue;
+				}
 				List<String> value = e.getValue();
 				for (String allTenantKeyword : allTenantKeywords) {
 					if (!value.contains(allTenantKeyword)) {
