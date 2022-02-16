@@ -59,9 +59,15 @@ module.exports = {
           position: "left",
         },
         {
-          to: "comingsoon/",
+          to: "docs/api",
           activeBasePath: "api",
-          label: "API",
+          label: "Api",
+          position: "left",
+        },
+        {
+          to: "docs/architecture",
+          activeBasePath: "architecture",
+          label: "Architecture",
           position: "left",
         },
         {
@@ -126,7 +132,7 @@ module.exports = {
             },
             {
               label: "API",
-              to: "/comingsoon",
+              to: "/api",
             },
             {
               label: "Plugins",

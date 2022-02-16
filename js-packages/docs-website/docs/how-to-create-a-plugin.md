@@ -1,6 +1,6 @@
 ---
 id: how-to-create-a-plugin
-title: How to create a plugin
+title: Create Custom Plugin
 ---
 
 In OpenK9 you can create custom plugin.
@@ -11,7 +11,12 @@ Prerequisites are described in [`OSGi project requirements`](/docs/osgi-requirem
 
 ### Create Plugin
 
-A complete example is present at the link https://github.com/smclab/openk9-example-java-datasource 
+A complete example is present at the link https://github.com/smclab/openk9-example-java-datasource
+
+You can a create a new plugin in two different wa:
+
+- [Using a json configuration](/docs/create-plugin-using-json)
+- [Using Java](/docs/create-plugin-using-java)
 
 To create a new plugin you need to have a gradle project with this structure:
 
@@ -40,7 +45,7 @@ Bundle-Version: 0.0.1
 
 -noimportjava: true
 ```
-- `build.gradle` defines java dependencies and adds bndtools plugin 
+- `build.gradle` defines java dependencies and adds bndtools plugin
 ```aidl
 buildscript {
 	repositories {

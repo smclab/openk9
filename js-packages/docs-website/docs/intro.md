@@ -7,7 +7,7 @@ slug: /
 
 OpenK9 is a powerful modular Open Source Cognitive Enterprise Search System, enhanced through AI and Machine Learning. Using state-of-art Information Retrieval and Machine Learning algorithms, OpenK9 is able to enrich and index data from different data sources.
 
-## Architecture Overview
+## How It Works
 
 The system is composed by several modules that make up a data processing pipeline.
 
