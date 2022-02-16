@@ -96,7 +96,9 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
-		List<String> normalizedKeywords = tenantKeywordsMap.get(tenantId);
+		List<String> normalizedKeywords =
+			tenantKeywordsMap.getOrDefault(
+				tenantId, tenantKeywordsMap.get(-1L));
 
 		if (normalizedKeywords == null) {
 			return List.of();
