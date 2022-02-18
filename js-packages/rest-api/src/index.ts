@@ -105,6 +105,29 @@ export async function doLogin(
   }
 }
 
+export async function doLogout(
+  payload: {
+    accessToken: string;
+    refreshToken: string;
+  },
+  loginInfo: LoginInfo,
+): Promise<{ ok: boolean; response: any }> {
+  try {
+    const request = await authFetch(`/api/searcher/v1/auth/logout`, loginInfo, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/plain",
+      },
+    });
+    const response = await request.text();
+    return { ok: request.ok, response };
+  } catch (err) {
+    return { ok: false, response: err };
+  }
+}
+
 export async function doLoginRefresh(
   payload: {
     refreshToken: string;

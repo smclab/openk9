@@ -5,13 +5,19 @@ import {
   doLogin,
   LoginInfo,
   UserInfo,
+  doLogout,
 } from "@openk9/rest-api";
 
 export type LoginState =
   | { type: "anonymous"; loginInfo?: undefined; userInfo?: undefined }
   | { type: "logging-in"; loginInfo?: undefined; userInfo?: undefined }
   | { type: "login-error"; loginInfo?: undefined; userInfo?: undefined }
-  | { type: "logged-in"; loginInfo: LoginInfo; userInfo: UserInfo };
+  | {
+      type: "logged-in";
+      loginInfo: LoginInfo;
+      userInfo: UserInfo;
+      timestamp: number;
+    };
 
 export function useLoginInfo() {
   const [state, setState] = React.useState<LoginState>(() => {
@@ -24,6 +30,7 @@ export function useLoginInfo() {
             type: "logged-in",
             userInfo: parsed.state.userInfo,
             loginInfo: parsed.state.loginInfo,
+            timestamp: parsed.state.timestamp,
           };
         }
       } catch (error) {}
@@ -58,6 +65,7 @@ export function useLoginInfo() {
             type: "logged-in",
             loginInfo: loginInfoResponse.response,
             userInfo: userInfoResponse.response,
+            timestamp: Date.now(),
           });
         } catch (error) {
           setState({ type: "anonymous" });
@@ -69,9 +77,15 @@ export function useLoginInfo() {
   const logout = React.useCallback(() => {
     if (state.type === "logged-in") {
       setState({ type: "anonymous" });
-      // TODO call logout endpoint
+      doLogout(
+        {
+          accessToken: state.loginInfo.access_token,
+          refreshToken: state.loginInfo.refresh_token,
+        },
+        state.loginInfo,
+      );
     }
-  }, [state.type]);
+  }, [state.type, state.loginInfo]);
   React.useEffect(() => {
     if (state.type === "logged-in") {
       const timeoutId = setTimeout(async () => {
@@ -89,10 +103,11 @@ export function useLoginInfo() {
                 type: "logged-in",
                 loginInfo: loginRefreshResponse.response,
                 userInfo: userInfoResponse.response,
+                timestamp: Date.now(),
               }
             : s,
         );
-      }, state.loginInfo.expires_in * 700);
+      }, state.timestamp + state.loginInfo.expires_in * 1000 * 0.9 - Date.now());
       return () => {
         clearTimeout(timeoutId);
       };
