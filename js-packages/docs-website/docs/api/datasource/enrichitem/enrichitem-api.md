@@ -1,6 +1,6 @@
 ---
 id: enrichitem-api
-title: Enrich Item APIs
+title: Enrich Item APIs Overview
 slug: /api/enrichitem-api
 
 ---

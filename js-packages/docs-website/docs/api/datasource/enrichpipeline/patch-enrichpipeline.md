@@ -1,8 +1,8 @@
 ---
 id: patch-enrichpipeline
-title: patch Enrich Pipeline API
+title: Patch Enrich Pipeline API
 slug: /api/patch-enrichpipeline
-
+.
 ---
 
 Patch enrich pipeline

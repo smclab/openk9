@@ -22,15 +22,34 @@ module.exports = {
        "type": "category",
        "label": "Searcher Apis",
        "items": [
-         "api/searcher/searcher-api",
-         "api/searcher/search/search-documents",
-         "api/searcher/search/search-entities",
-         "api/searcher/search/supported-datasources",
-         "api/searcher/search/suggestions",
-         "api/searcher/query-analysis/query-analysis",
-         "api/searcher/auth/login",
-         "api/searcher/auth/logout",
-         "api/searcher/auth/user-info"
+                "api/searcher/searcher-api",
+        {
+          "type": "category",
+          "label": "Search Apis",
+          "items": [
+             "api/searcher/search/search-documents",
+             "api/searcher/search/search-entities",
+             "api/searcher/search/supported-datasources",
+             "api/searcher/search/suggestions",
+          ]
+        },
+        {
+           "type": "category",
+           "label": "Auth Apis",
+           "items": [
+              "api/searcher/auth/login",
+              "api/searcher/auth/logout",
+              "api/searcher/auth/user-info"
+           ]
+         },
+         {
+          "type": "category",
+          "label": "Query Understanding Apis",
+          "items": [
+            "api/searcher/query-understanding/query-analysis",
+            "api/searcher/query-understanding/query-autocomplete"
+          ]
+        },
        ]
      },
      {
@@ -38,13 +57,100 @@ module.exports = {
       "label": "Datasource Apis",
       "items": [
         "api/datasource/datasource-api-overwiew",
-        "api/datasource/tenant/tenant-api",
-        "api/datasource/datasource/datasource-api",
-        "api/datasource/enrichpipeline/enrichpipeline-api",
-        "api/datasource/enrichitem/enrichitem-api",
-        "api/datasource/suggestion-category/suggestion-category-api",
-        "api/datasource/suggestion-category-field/suggestion-category-field-api",
-        "api/datasource/reindex/reindex-api"
+        {
+          "type": "category",
+          "label": "Tenant Apis",
+          "items": [
+            "api/datasource/tenant/tenant-api",
+            "api/datasource/tenant/create-tenant",
+            "api/datasource/tenant/delete-tenant",
+            "api/datasource/tenant/filter-tenant",
+            "api/datasource/tenant/get-tenant",
+            "api/datasource/tenant/get-tenant-list",
+            "api/datasource/tenant/patch-tenant",
+            "api/datasource/tenant/update-tenant"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Datasource Apis",
+          "items": [
+            "api/datasource/datasource/datasource-api",
+            "api/datasource/datasource/create-datasource",
+            "api/datasource/datasource/delete-datasource",
+            "api/datasource/datasource/filter-datasource",
+            "api/datasource/datasource/get-datasource",
+            "api/datasource/datasource/get-datasource-list",
+            "api/datasource/datasource/patch-datasource",
+            "api/datasource/datasource/update-datasource"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Enrich Pipeline Apis",
+          "items": [
+            "api/datasource/enrichpipeline/enrichpipeline-api",
+            "api/datasource/enrichpipeline/create-enrichpipeline",
+            "api/datasource/enrichpipeline/delete-enrichpipeline",
+            "api/datasource/enrichpipeline/filter-enrichpipeline",
+            "api/datasource/enrichpipeline/get-enrichpipeline",
+            "api/datasource/enrichpipeline/get-enrichpipeline-list",
+            "api/datasource/enrichpipeline/patch-enrichpipeline",
+            "api/datasource/enrichpipeline/update-enrichpipeline"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Enrich Item Apis",
+          "items": [
+            "api/datasource/enrichitem/enrichitem-api",
+            "api/datasource/enrichitem/create-enrichitem",
+            "api/datasource/enrichitem/delete-enrichitem",
+            "api/datasource/enrichitem/filter-enrichitem",
+            "api/datasource/enrichitem/get-enrichitem",
+            "api/datasource/enrichitem/get-enrichitem-list",
+            "api/datasource/enrichitem/patch-enrichitem",
+            "api/datasource/enrichitem/update-enrichitem"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Suggestion Category Apis",
+          "items": [
+            "api/datasource/suggestion-category/suggestion-category-api",
+            "api/datasource/suggestion-category/create-suggestion-category",
+            "api/datasource/suggestion-category/delete-suggestion-category",
+            "api/datasource/suggestion-category/filter-suggestion-category",
+            "api/datasource/suggestion-category/get-suggestion-category",
+            "api/datasource/suggestion-category/get-suggestion-category-list",
+            "api/datasource/suggestion-category/patch-suggestion-category",
+            "api/datasource/suggestion-category/update-suggestion-category"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Suggestion Category Field Apis",
+          "items": [
+            "api/datasource/suggestion-category-field/suggestion-category-field-api",
+            "api/datasource/suggestion-category-field/create-suggestion-category-field",
+            "api/datasource/suggestion-category-field/delete-suggestion-category-field",
+            "api/datasource/suggestion-category-field/filter-suggestion-category-field",
+            "api/datasource/suggestion-category-field/get-suggestion-category-field",
+            "api/datasource/suggestion-category-field/get-suggestion-category-field-list",
+            "api/datasource/suggestion-category-field/patch-suggestion-category-field",
+            "api/datasource/suggestion-category-field/update-suggestion-category-field"
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Reindex Apis",
+          "items": [
+            "api/datasource/reindex/reindex-api",
+            "api/datasource/reindex/reindex",
+            "api/datasource/reindex/trigger",
+
+          ]
+        },
       ]
     },
     {

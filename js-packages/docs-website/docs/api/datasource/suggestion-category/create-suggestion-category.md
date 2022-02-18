@@ -1,5 +1,5 @@
 ---
-id: create-suggestion category
+id: create-suggestion-category
 title: Create Suggestion Category API
 slug: /api/create-suggestion-category
 

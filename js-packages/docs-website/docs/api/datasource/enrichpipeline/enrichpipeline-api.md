@@ -1,6 +1,6 @@
 ---
 id: enrichpipeline-api
-title: Enrich Pipeline APIs
+title: Enrich Pipeline APIs Overview
 slug: /api/enrichpipeline-api
 
 ---

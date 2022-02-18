@@ -1,6 +1,6 @@
 ---
 id: reindex-api
-title: Reindex APIs
+title: Reindex APIs Overview
 slug: /api/reindex-api
 
 ---

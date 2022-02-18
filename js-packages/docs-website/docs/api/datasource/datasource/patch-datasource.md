@@ -1,6 +1,6 @@
 ---
 id: patch-datasource
-title: patch Datasource API
+title: Patch Datasource API
 slug: /api/patch-datasource
 
 ---

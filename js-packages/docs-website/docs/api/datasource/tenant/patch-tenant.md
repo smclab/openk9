@@ -1,6 +1,6 @@
 ---
 id: patch-tenant
-title: patch Tenant API
+title: Patch Tenant API
 slug: /api/patch-tenant
 
 ---

@@ -1,6 +1,6 @@
 ---
 id: searcher-api
-title: APIs Overwiew
+title: Searcher APIs Overwiew
 slug: /api/searcher-api
 
 ---

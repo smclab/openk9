@@ -1,6 +1,6 @@
 ---
 id: tenant-api
-title: Tenant APIs
+title: Tenant APIs Overview
 slug: /api/tenant-api
 
 ---

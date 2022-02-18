@@ -1,6 +1,6 @@
 ---
 id: suggestion-category-api
-title: Suggestion Category APIs
+title: Suggestion Category APIs Overview
 slug: /api/suggestion-category-api
 
 ---
