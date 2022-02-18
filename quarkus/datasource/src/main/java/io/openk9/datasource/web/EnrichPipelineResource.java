@@ -33,6 +33,24 @@ import java.util.Map;
 public class EnrichPipelineResource {
 
 	@GET
+	@Path("/count")
+	public Uni<Long> count(){
+		return EnrichPipeline.count();
+	}
+
+	@POST
+	@Path("/filter/count")
+	public Uni<Long> filterCount(EnrichPipelineDto dto){
+
+		Map<String, Object> map = JsonObject.mapFrom(dto).getMap();
+
+		Tuple2<String, Map<String, Object>> query =
+			ResourceUtil.getFilterQuery(map);
+
+		return EnrichPipeline.count(query.getItem1(), query.getItem2());
+	}
+
+	@GET
 	@Path("/{id}")
 	@Produces()
 	public Uni<EnrichPipeline> findById(@PathParam("id") long id){

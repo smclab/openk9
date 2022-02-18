@@ -33,6 +33,24 @@ import java.util.Map;
 public class DatasourceResource {
 
 	@GET
+	@Path("/count")
+	public Uni<Long> count(){
+		return Datasource.count();
+	}
+
+	@POST
+	@Path("/filter/count")
+	public Uni<Long> filterCount(DatasourceDto dto){
+
+		Map<String, Object> map = JsonObject.mapFrom(dto).getMap();
+
+		Tuple2<String, Map<String, Object>> query =
+			ResourceUtil.getFilterQuery(map);
+
+		return Datasource.count(query.getItem1(), query.getItem2());
+	}
+
+	@GET
 	@Path("/{id}")
 	@Produces()
 	public Uni<Datasource> findById(@PathParam("id") long id){
