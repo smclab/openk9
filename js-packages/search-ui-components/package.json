@@ -1,6 +1,6 @@
 {
   "name": "@openk9/search-ui-components",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": "SMC",
   "description": "OpenK9 search UI React components",
   "main": "src/index.ts",
@@ -37,8 +37,8 @@
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-jss": "^10.4.0",
-    "use-asset": "^1.0.2",
-    "react-query": "^3.27.0"
+    "react-query": "^3.27.0",
+    "use-asset": "^1.0.2"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.175",

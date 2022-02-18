@@ -1,6 +1,6 @@
 {
   "name": "@openk9/search-customizable-ui",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": "SMC",
   "description": "OpenK9 search UI customizable widget",
   "main": "dist/index.js",
@@ -26,7 +26,7 @@
   },
   "homepage": "https://openk9.io/",
   "scripts": {
-    "dev": "webpack serve --config dev.webpack.config.js", 
+    "dev": "webpack serve --config dev.webpack.config.js",
     "build": "webpack && rollup -c",
     "test-build": "yarn build && node build-test/server.js",
     "lint": "eslint --ext js,ts,tsx src",
@@ -36,7 +36,6 @@
   "targets": {
     "main": false
   },
-  "dependencies": {},
   "devDependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",

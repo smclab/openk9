@@ -1,6 +1,6 @@
 {
   "name": "@openk9/rest-api",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "OpenK9 core type definitions, search and admin rest API",
   "author": "SMC",
   "license": "AGPL-3.0-or-later",
@@ -30,12 +30,12 @@
     "precommit": "lint-staged"
   },
   "devDependencies": {
-    "rollup": "^2.61.1",
-    "rollup-plugin-typescript2": "^0.31.1",
-    "typescript": "^4.5.4",
+    "@types/react": "^17.0.0",
     "lint-staged": "^12.1.2",
     "prettier": "^2.5.1",
-    "@types/react": "^17.0.0"
+    "rollup": "^2.61.1",
+    "rollup-plugin-typescript2": "^0.31.1",
+    "typescript": "^4.5.4"
   },
   "publishConfig": {
     "access": "public"
