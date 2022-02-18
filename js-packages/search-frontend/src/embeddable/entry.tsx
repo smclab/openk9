@@ -67,8 +67,8 @@ type OpenK9Global = OpenK9ConfigFacade & {
   dependencies: {
     React: typeof React;
     ReactDOM: typeof ReactDOM;
-    "rest-api": typeof RestApi;
-    "search-frontend": {
+    "RestApi": typeof RestApi;
+    "SearchFrontend": {
       OpenK9: OpenK9Global;
       rendererComponents: typeof RendererComponents;
     };
@@ -122,8 +122,8 @@ export const OpenK9: OpenK9Global = {
   dependencies: {
     React,
     ReactDOM,
-    "rest-api": RestApi,
-    "search-frontend": {
+    RestApi,
+    SearchFrontend: {
       get OpenK9() {
         return OpenK9;
       },

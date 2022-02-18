@@ -1,7 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { WebResult } from "../renderers/openk9/web/WebResult";
-import { EmailResult } from "../renderers/openk9/email/EmailResult";
 import { UserResult } from "../renderers/openk9/user/UserResult";
 import { GenericResultItem, ResultRendererProps } from "@openk9/rest-api";
 import { DocumentResult } from "../renderers/openk9/document/DocumentResult";
@@ -66,9 +65,6 @@ function Result<E>(props: ResultProps<E>) {
         }
         if (result.source.documentTypes.includes("web")) {
           return <WebResult result={result} />;
-        }
-        if (result.source.documentTypes.includes("email")) {
-          return <EmailResult result={result} />;
         }
         if (result.source.documentTypes.includes("user")) {
           return <UserResult result={result} />;

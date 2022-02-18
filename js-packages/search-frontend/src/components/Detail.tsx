@@ -3,7 +3,6 @@ import { css } from "styled-components/macro";
 import { WebDetail } from "../renderers/openk9/web/WebDetail";
 import { GenericResultItem, SidebarRendererProps } from "@openk9/rest-api";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
-import { EmailDetail } from "../renderers/openk9/email/EmailDetail";
 import { UserDetail } from "../renderers/openk9/user/UserDetail";
 import { NotizieDetail } from "../renderers/bdi/notizie/NotizieDetail";
 import { PubblicazioniDetail } from "../renderers/bdi/pubblicazioni/PubblicazioniDetail";
@@ -101,9 +100,6 @@ function Detail<E>(props: DetailProps<E>) {
           }
           if (result.source.documentTypes.includes("web")) {
             return <WebDetail result={result} />;
-          }
-          if (result.source.documentTypes.includes("email")) {
-            return <EmailDetail result={result} />;
           }
           if (result.source.documentTypes.includes("user")) {
             return <UserDetail result={result} />;
