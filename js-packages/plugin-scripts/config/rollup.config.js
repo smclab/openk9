@@ -47,8 +47,8 @@ const getBabelOptions = ({ useESModules }, targets) => ({
 const externalGlobalsDefault = {
   react: "OpenK9.dependencies.React",
   "react-dom": "OpenK9.dependencies.ReactDOM",
-  "@openk9/rest-api": `OpenK9.dependencies[@openk9/rest-api"]`,
-  "@openk9/search-frontend": `OpenK9.dependencies[@openk9/search-frontend"]`,
+  "@openk9/rest-api": `OpenK9.dependencies.restApi`,
+  "@openk9/search-frontend": `OpenK9.dependencies.searchFrontend`,
 };
 
 module.exports = (srcPath, buildPath, buildGraph) => [
