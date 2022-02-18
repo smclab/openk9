@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 import { Main } from "./Main";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { SearchToken } from "@openk9/rest-api";
+import * as RestApi from "@openk9/rest-api";
+import * as RendererComponents from "../renderer-components";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,12 +63,19 @@ const openk9Config: OpenK9ConfigFacade = {
 
 let updateConfig = (targetElements: OpenK9ConfigFacade) => {};
 
-export const OpenK9: OpenK9ConfigFacade & {
-  deps: {
+type OpenK9Global = OpenK9ConfigFacade & {
+  dependencies: {
     React: typeof React;
     ReactDOM: typeof ReactDOM;
+    "@openk9/rest-api": typeof RestApi;
+    "@openk9/search-frontend": {
+      OpenK9: OpenK9Global;
+      rendererComponents: typeof RendererComponents;
+    };
   };
-} = {
+};
+
+export const OpenK9: OpenK9Global = {
   set search(element: Element | null) {
     openk9Config.search = element;
     updateConfig({ ...openk9Config });
@@ -110,11 +119,20 @@ export const OpenK9: OpenK9ConfigFacade & {
     openk9Config.searchReplaceText = searchReplaceText;
     updateConfig({ ...openk9Config });
   },
-  deps: {
+  dependencies: {
     React,
     ReactDOM,
+    "@openk9/rest-api": RestApi,
+    "@openk9/search-frontend": {
+      get OpenK9() {
+        return OpenK9;
+      },
+      rendererComponents: RendererComponents,
+    },
   },
 };
+
+export const rendererComponents = RendererComponents;
 
 window.OpenK9rootElement =
   window.OpenK9rootElement ?? document.createDocumentFragment();

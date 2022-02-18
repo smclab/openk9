@@ -3,13 +3,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { EmailResultItem } from "./EmailItem";
 import { GenericResultItem } from "@openk9/rest-api";
-import {
+import { rendererComponents } from "@openk9/search-frontend";
+
+const {
   ResultContainer,
   ResultTitle,
   HighlightableText,
   ResultAttribute,
   ResultTextContent,
-} from "../../../renderer-components";
+} = rendererComponents;
 
 type EmailResultProps = { result: GenericResultItem<EmailResultItem> };
 export function EmailResult({ result }: EmailResultProps) {

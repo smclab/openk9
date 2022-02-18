@@ -1,9 +1,8 @@
 import React from "react";
 import { Plugin } from "@openk9/rest-api";
-
-import { EmailResultItem } from "./types";
-import { EmailResultCard } from "./EmailResultCard";
-import { EmailSidebar } from "./EmailSidebar";
+import { EmailResultItem } from "./EmailItem";
+import { EmailResult } from "./EmailResult";
+import { EmailDetail } from "./EmailDetail";
 
 export const plugin: Plugin<EmailResultItem> = {
   pluginId: "email-datasource",
@@ -42,8 +41,8 @@ export const plugin: Plugin<EmailResultItem> = {
     {
       type: "RESULT_RENDERER",
       resultType: "email",
-      resultRenderer: EmailResultCard,
-      sidebarRenderer: EmailSidebar,
+      resultRenderer: EmailResult,
+      sidebarRenderer: EmailDetail,
     },
   ],
 };

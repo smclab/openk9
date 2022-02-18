@@ -8,4 +8,11 @@ export type EmailResultItem = {
     subject: string;
     to: string;
   };
+  document: {
+    title: string;
+    relativeUrl: Array<string>;
+    contentType: string;
+    url: string;
+    content: string;
+  };
 };

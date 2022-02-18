@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type EmailResultItem = GenericResultItem<{
+export type EmailResultItem = {
   email: {
     cc?: string;
     date: number; // timestamp
@@ -17,4 +15,4 @@ export type EmailResultItem = GenericResultItem<{
     url: string;
     content: string;
   };
-}>;
+};
