@@ -36,10 +36,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Entity Manager
+      - name: Build and Push Entity Manager
         run: ./gradlew build -p ./quarkus/entity-manager -Dquarkus.package.type=jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.name=openk9-entity-manager -Dquarkus.container-image.tag=latest
 
-      - name: Push Entity Manager
-        run: |
-          docker tag openk9-entity-manager:latest smclab/openk9-entity-manager:latest
-          docker push smclab/openk9-entity-manager:latest
+      - name: Build and Push Datasource
+        run: ./gradlew build -p ./quarkus/datasource -Dquarkus.package.type=jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.name=datasource -Dquarkus.container-image.tag=latest
+
+      - name: Build and Push Ingestion
+        run: ./gradlew build -p ./quarkus/ingestion -Dquarkus.package.type=jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.name=ingestion -Dquarkus.container-image.tag=latest
