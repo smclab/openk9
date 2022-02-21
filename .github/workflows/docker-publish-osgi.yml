@@ -58,24 +58,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push Openk9 Datasource
-        id: docker_build_openk9_datasource
-        uses: docker/build-push-action@v2
-        with:
-          context: ./build/datasource/
-          file: ./build/datasource/docker/Dockerfile
-          push: true
-          tags: smclab/openk9-datasource:${{ steps.prep.outputs.version }}
-      -
-        name: Build and push Openk9 Entity Manager
-        id: docker_build_openk9_entity
-        uses: docker/build-push-action@v2
-        with:
-          context: ./build/entity-manager/
-          file: ./build/entity-manager/docker/Dockerfile
-          push: true
-          tags: smclab/openk9-entity-manager:${{ steps.prep.outputs.version }}
-      -
         name: Build and push Openk9 Index Writer
         id: docker_build_openk9_index
         uses: docker/build-push-action@v2
@@ -84,15 +66,6 @@ jobs:
           file: ./build/index-writer/docker/Dockerfile
           push: true
           tags: smclab/openk9-index-writer:${{ steps.prep.outputs.version }}
-      -
-        name: Build and push Openk9 Karaf Ingestion
-        id: docker_build_openk9_ingestion
-        uses: docker/build-push-action@v2
-        with:
-          context: ./build/ingestion/
-          file: ./build/ingestion/docker/Dockerfile
-          push: true
-          tags: smclab/openk9-ingestion:${{ steps.prep.outputs.version }}
       -
         name: Build and push Openk9 Karaf Plugin Driver Manager
         id: docker_build_openk9_plugin
