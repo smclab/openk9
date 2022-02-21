@@ -177,7 +177,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/smclab/openk9",
+          editUrl: "https://github.com/smclab/openk9/tree/main/js-packages/docs-website/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),

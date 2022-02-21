@@ -16,7 +16,7 @@ custom components.
 - [**Index Writer**](index-writer): is the component which manages the writing of data on elastic.
 - [**Entity Manager**](entity-manager): is the component that handles entities and ontologies extracted from data.
 - [**Searcher**](searcher): is the component that defines search logic.
-- [**Api Gateway**](searcher): routes http to delegated components and handles authentication via keycloak
+- **Api Gateway**: routes http to delegated components and handles authentication via keycloak
 
 
 ### Third-party components

@@ -11,25 +11,20 @@ Get Query Autocompletion
 POST /v1/query-autocomplete
 {
 	"searchQuery" : [
-  		{
-  			"entityType" : "type",
-  			"tokenType": "TEXT",
-  			"keywordKey": "",
-  			"values": ["name surname"]
-  		}
-  ],
-  "range" : [0, 10]
+		{
+			"tokenType": "AUTOCOMPLETE",
+			"values": ["sear"]
+		}
+	]
 }
 ```
 
 ### Description
 
-Allows you to perfom an understanding analysis on natural language query. In particular it returns a list of
-search tokens based on different concepts and meanings founded in query.
+Allows you to search all possible autocompletion in field set as autocomplete. This functionality can be used by search
+frontend to get autocompletion to show to user as suggestions in query writing.
 
 ### Request Body
 
-`searchText`: (string) Textual content of the query
-
-`tokens`: ([string]) List of search tokens confirmed by user, and postponed to possible subsequent calls,
-in case new text is typed
+`searchQuery`: ([searchToken]) Array of search tokens of AUTOCOMPLETE type. A token of this type has tokenType set
+as AUTOCOMPLETE and a string value use to get all possible autocompletion
