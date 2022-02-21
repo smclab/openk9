@@ -27,11 +27,11 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Build Frontend image
-        run: docker build -t search-standalone-frontend -f js-packages/search-standalone-frontend/Dockerfile .
+        run: docker build -t search-frontend -f js-packages/search-frontend/Dockerfile .
 
       - name: Push Frontend image
         run: |
-          IMAGE_NAME=search-standalone-frontend
+          IMAGE_NAME=search-frontend
           IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
 
           # Change all uppercase to lowercase
@@ -103,6 +103,7 @@ jobs:
 
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
+
   # Push image to Docker Hub.
   push-js-to-docker:
     runs-on: ubuntu-latest
@@ -134,9 +135,9 @@ jobs:
         id: docker_build_frontend
         uses: docker/build-push-action@v2
         with:
-          file: js-packages/search-standalone-frontend/Dockerfile
+          file: js-packages/search-frontend/Dockerfile
           push: true
-          tags: smclab/openk9-search-standalone-frontend:${{ steps.prep.outputs.version }}
+          tags: smclab/openk9-search-frontend:${{ steps.prep.outputs.version }}
       -
         name: Build and push Admin UI image
         id: docker_build_admin_ui
@@ -161,11 +162,3 @@ jobs:
           file: js-packages/js-scripts-executor/Dockerfile
           push: true
           tags: smclab/openk9-js-scripts-executor:${{ steps.prep.outputs.version }}
-      -
-        name: Build and push Docs Website image
-        id: docker_build_docs_website
-        uses: docker/build-push-action@v2
-        with:
-          file: js-packages/docs-website/Dockerfile
-          push: true
-          tags: smclab/openk9-docs-website:${{ steps.prep.outputs.version }}
