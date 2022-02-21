@@ -2,7 +2,7 @@
 id: patch-enrichpipeline
 title: Patch Enrich Pipeline API
 slug: /api/patch-enrichpipeline
-.
+
 ---
 
 Patch enrich pipeline
