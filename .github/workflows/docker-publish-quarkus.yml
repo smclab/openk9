@@ -37,7 +37,13 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Entity Manager
-        run: ./gradlew build -p ./quarkus/entity-manager -Dquarkus.package.type=jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true-Dquarkus.container-image.name=openk9-entity-manager  -Dquarkus.container-image.tag=latest
+        run: |
+        ./gradlew build -p ./quarkus/entity-manager -Dquarkus.package.type=jar
+        -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true
+        -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }}
+        -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }}
+        -Dquarkus.container-image.name=openk9-entity-manager
+        -Dquarkus.container-image.tag=latest
 
       - name: Push Entity Manager
         run: |
