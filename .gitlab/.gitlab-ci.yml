@@ -59,4 +59,5 @@ push-github:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
   script:
     - git remote add public https://$GITHUB_TOKEN@github.com/smclab/openk9.git
+    - git checkout main
     - git branch
