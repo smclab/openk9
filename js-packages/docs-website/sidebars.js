@@ -30,7 +30,7 @@ module.exports = {
              "api/searcher/search/search-documents",
              "api/searcher/search/search-entities",
              "api/searcher/search/supported-datasources",
-             "api/searcher/search/suggestions",
+             "api/searcher/search/suggestions"
           ]
         },
         {
@@ -147,10 +147,9 @@ module.exports = {
           "items": [
             "api/datasource/reindex/reindex-api",
             "api/datasource/reindex/reindex",
-            "api/datasource/reindex/trigger",
-
+            "api/datasource/reindex/trigger"
           ]
-        },
+        }
       ]
     },
     {
