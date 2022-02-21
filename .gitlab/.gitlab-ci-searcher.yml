@@ -1,61 +1,62 @@
 variables:
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
 Build Latest Searcher Docker Images:
-    image: smclab/docker-java-11:latest
-    services:
-        - docker:19.03.13-dind
-    stage: build-docker
-    variables:
-        TEST_NAME: local/test
-        DOCKER_HOST: tcp://localhost:2375
-        DOCKER_TLS_CERTDIR: ""
-    rules:
-        - if: '$CI_COMMIT_BRANCH == "main"'
-          changes:
-              - searcher/configs/*
-              - osgi/common/reactory-netty-util/**/*
-              - osgi/web/http-api/**/*
-              - osgi/web/http-service/**/*
-              - osgi/web/http-bundle-ext/**/*
-              - osgi/web/open-api/**/*
-              - osgi/metrics/metrics-api/**/*
-              - osgi/metrics/metrics-service/**/*
-              - osgi/common/common-api/**/*
-              - osgi/common/core-api/**/*
-              - osgi/common/model/**/*
-              - osgi/common/osgi-api/**/*
-              - osgi/common/serialization-api/**/*
-              - osgi/common/serialization-service/**/*
-              - osgi/third-party/**/*
-              - osgi/common/http-serialization/**/*
-              - osgi/index-writer/index-writer-model/**/*
-              - osgi/search/**/*
-              - osgi/datasource/datasource-client-api/**/*
-              - osgi/datasource/datasource-client-service/**/*
-              - osgi/auth/auth-api/**/*
-              - osgi/auth/auth-service/**/*
-              - osgi/auth/auth-query-parser/**/*
-              - osgi/ingestion/ingestion-api/**/*
-              - osgi/ingestion/ingestion-service/**/*
-              - osgi/plugin-driver-manager/plugin-driver-manager-client-api/**/*
-              - osgi/plugin-driver-manager/plugin-driver-manager-client-service/**/*
-              - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
-              - osgi/third-party/caffeine/**/*
-              - osgi/config/enviroment-variable-propagation/**/*
-              - osgi/fix/karaf-json-config-fix/**/*
-              - osgi/util/groovy-script-api/**/*
-              - osgi/util/groovy-script-service/**/*
-              - osgi/util/groovy-script-web/**/*
-              - osgi/vertx/**/*
-    before_script:
-        - export GRADLE_USER_HOME=`pwd`/.gradle
-    script:
-        - ./gradlew pushImageSearcher
-    after_script:
-        - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
-    cache:
-        key: build-docker-cache
-        paths:
-            - $CI_PROJECT_DIR/.m2/**/*
-            - $CI_PROJECT_DIR/.gradle/**/*
+  image: smclab/docker-java-11:latest
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    refs:
+      - main
+    changes:
+      - searcher/configs/*
+      - osgi/common/reactory-netty-util/**/*
+      - osgi/web/http-api/**/*
+      - osgi/web/http-service/**/*
+      - osgi/web/http-bundle-ext/**/*
+      - osgi/web/open-api/**/*
+      - osgi/metrics/metrics-api/**/*
+      - osgi/metrics/metrics-service/**/*
+      - osgi/common/common-api/**/*
+      - osgi/common/core-api/**/*
+      - osgi/common/model/**/*
+      - osgi/common/osgi-api/**/*
+      - osgi/common/serialization-api/**/*
+      - osgi/common/serialization-service/**/*
+      - osgi/third-party/**/*
+      - osgi/common/http-serialization/**/*
+      - osgi/index-writer/index-writer-model/**/*
+      - osgi/search/**/*
+      - osgi/datasource/datasource-client-api/**/*
+      - osgi/datasource/datasource-client-service/**/*
+      - osgi/auth/auth-api/**/*
+      - osgi/auth/auth-service/**/*
+      - osgi/auth/auth-query-parser/**/*
+      - osgi/ingestion/ingestion-api/**/*
+      - osgi/ingestion/ingestion-service/**/*
+      - osgi/plugin-driver-manager/plugin-driver-manager-client-api/**/*
+      - osgi/plugin-driver-manager/plugin-driver-manager-client-service/**/*
+      - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
+      - osgi/third-party/caffeine/**/*
+      - osgi/config/enviroment-variable-propagation/**/*
+      - osgi/fix/karaf-json-config-fix/**/*
+      - osgi/util/groovy-script-api/**/*
+      - osgi/util/groovy-script-service/**/*
+      - osgi/util/groovy-script-web/**/*
+      - osgi/vertx/**/*
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+    - ./gradlew pushImageSearcher
+  after_script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
+  cache:
+    key: build-docker-cache
+    paths:
+      - $CI_PROJECT_DIR/.m2/**/*
+      - $CI_PROJECT_DIR/.gradle/**/*
