@@ -1,6 +1,5 @@
 import {
   ALL_SUGGESTION_CATEGORY_ID,
-  DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
   doSearchEntities,
   getDocumentTypes,
   getSuggestionCategories,
@@ -28,13 +27,14 @@ export const mapSuggestionToSearchToken = (
 ): SearchToken => {
   switch (suggestion.tokenType) {
     case "DATASOURCE": {
-      return { tokenType: "DATASOURCE", values: [suggestion.value] };
+      return { tokenType: "DATASOURCE", values: [suggestion.value], filter: false };
     }
     case "DOCTYPE": {
       return {
         tokenType: "DOCTYPE",
         keywordKey: "type",
         values: [suggestion.value],
+        filter: false
       };
     }
     case "ENTITY": {
@@ -42,7 +42,9 @@ export const mapSuggestionToSearchToken = (
         tokenType: "ENTITY",
         keywordKey: suggestion.keywordKey,
         entityType: suggestion.entityType,
+        entityName: suggestion.entityValue,
         values: [suggestion.value],
+        filter: false
       };
     }
     case "TEXT": {
@@ -50,6 +52,7 @@ export const mapSuggestionToSearchToken = (
         tokenType: "TEXT",
         keywordKey: suggestion.keywordKey,
         values: [suggestion.value],
+        filter: false
       };
     }
   }
@@ -66,7 +69,7 @@ export function useDocumentTypeSuggestions(text: string) {
           return keywordKeys.map((keywordKey): SuggestionResult => {
             return {
               tokenType: "TEXT",
-              suggestionCategoryId: DOCUMENT_TYPES_SUGGESTION_CATEGORY_ID,
+              suggestionCategoryId: 0,
               keywordKey,
               value: "",
             };

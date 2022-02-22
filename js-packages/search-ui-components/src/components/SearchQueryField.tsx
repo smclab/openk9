@@ -345,11 +345,12 @@ export const SearchQueryField = React.forwardRef<
   const hasWriteableField =
     searchQuery.length > 0 &&
     searchQuery.some((t) => t.tokenType === "TEXT" && !t.keywordKey);
-  const tokens = [
+  const tokens: Array<SearchToken | false> = [
     ...searchQuery,
     !hasWriteableField && {
       tokenType: "TEXT" as const,
       values: [""],
+      filter: false
     },
   ];
 

@@ -1019,9 +1019,11 @@ export async function getSuggestions({
 }
 
 const tenantDomain =
-  window.location.hostname === "localhost"
-    ? prompt("tentant domain")
-    : window.location.host;
+  typeof window !== "undefined"
+    ? window.location.hostname === "localhost"
+      ? prompt("tentant domain")
+      : window.location.host
+    : "";
 
 export async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
   const tenants = await getTenants(loginInfo);

@@ -35,7 +35,13 @@ function ResultDisplay<E>({
     .map((k) => renderers[k])
     .filter(Boolean)[0];
   if (Renderer) {
-    return <Renderer data={data} onSelect={onSelect} {...otherProps} />;
+    return (
+      <Renderer
+        result={data}
+        // onSelect={onSelect}
+        // {...otherProps}
+      />
+    );
   } else {
     console.warn("No renderer for", data.source.documentTypes);
     return null;
