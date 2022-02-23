@@ -4,7 +4,6 @@ import { WebDetail } from "../renderers/openk9/web/WebDetail";
 import { GenericResultItem, SidebarRendererProps } from "@openk9/rest-api";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { UserDetail } from "../renderers/openk9/user/UserDetail";
-import { NotizieDetail } from "../renderers/bdi/notizie/NotizieDetail";
 import { PubblicazioniDetail } from "../renderers/bdi/pubblicazioni/PubblicazioniDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
 import { MostreDetail } from "../renderers/cm/mostre/MostreDetail";
@@ -58,9 +57,6 @@ function Detail<E>(props: DetailProps<E>) {
           }
           if (result.source.documentTypes.includes("opendata")) {
             return <OpendataDetail result={result} />;
-          }
-          if (result.source.documentTypes.includes("notizie")) {
-            return <NotizieDetail result={result} />;
           }
           if (result.source.documentTypes.includes("pubblicazioni")) {
             return <PubblicazioniDetail result={result} />;

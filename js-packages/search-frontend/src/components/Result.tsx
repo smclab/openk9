@@ -4,7 +4,6 @@ import { WebResult } from "../renderers/openk9/web/WebResult";
 import { UserResult } from "../renderers/openk9/user/UserResult";
 import { GenericResultItem, ResultRendererProps } from "@openk9/rest-api";
 import { DocumentResult } from "../renderers/openk9/document/DocumentResult";
-import { NotizieResult } from "../renderers/bdi/notizie/NotizieResult";
 import { PubblicazioniResult } from "../renderers/bdi/pubblicazioni/PubblicazioniResult";
 import { PdfResult } from "../renderers/openk9/pdf/PdfResult";
 import { MostreResult } from "../renderers/cm/mostre/MostreResult";
@@ -38,9 +37,6 @@ function Result<E>(props: ResultProps<E>) {
         }
         if (result.source.documentTypes.includes("opendata")) {
           return <OpendataResult result={result} />;
-        }
-        if (result.source.documentTypes.includes("notizie")) {
-          return <NotizieResult result={result} />;
         }
         if (result.source.documentTypes.includes("pubblicazioni")) {
           return <PubblicazioniResult result={result} />;
