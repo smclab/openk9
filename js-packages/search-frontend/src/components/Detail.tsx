@@ -52,9 +52,6 @@ function Detail<E>(props: DetailProps<E>) {
           if (Renderer) {
             return <Renderer result={result} />;
           }
-          if (result.source.documentTypes.includes("gare")) {
-            return <GaraDetail result={result} />;
-          }
           if (result.source.documentTypes.includes("opendata")) {
             return <OpendataDetail result={result} />;
           }
@@ -75,18 +72,6 @@ function Detail<E>(props: DetailProps<E>) {
           }
           if (result.source.documentTypes.includes("wemi")) {
             return <WemiDetail result={result} />;
-          }
-          if (result.source.documentTypes.includes("entrate")) {
-            return <EntrateDetail result={result} />;
-          }
-          if (result.source.documentTypes.includes("entratel")) {
-            return <AssistenzaDetail result={result} />;
-          }
-          if (result.source.documentTypes.includes("vendite")) {
-            return <VenditeDetail result={result} />;
-          }
-          if (result.source.documentTypes.includes("fisco")) {
-            return <AssistenzaDetail result={result} />;
           }
           if (result.source.documentTypes.includes("pdf")) {
             return <PdfDetail result={result} />;
