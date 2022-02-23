@@ -10,7 +10,6 @@ import { MostreResult } from "../renderers/cm/mostre/MostreResult";
 import { EventiResult } from "../renderers/cm/eventi/EventiResult";
 import { PetizioniResult } from "../renderers/cm/petizioni/PetizioniResult";
 import { ProcessiResult } from "../renderers/cm/processi/ProcessiResult";
-import { OpendataResult } from "../renderers/cm/opendata/OpendataResult";
 import { CalendarResult } from "../renderers/openk9/calendar/CalendarResult";
 import { Renderers } from "./useRenderers";
 
@@ -34,9 +33,6 @@ function Result<E>(props: ResultProps<E>) {
             .find(Boolean);
         if (Renderer) {
           return <Renderer result={result} />;
-        }
-        if (result.source.documentTypes.includes("opendata")) {
-          return <OpendataResult result={result} />;
         }
         if (result.source.documentTypes.includes("pubblicazioni")) {
           return <PubblicazioniResult result={result} />;

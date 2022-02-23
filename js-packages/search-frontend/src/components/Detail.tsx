@@ -10,11 +10,9 @@ import { MostreDetail } from "../renderers/cm/mostre/MostreDetail";
 import { EventiDetail } from "../renderers/cm/eventi/EventiDetail";
 import { PetizioniDetail } from "../renderers/cm/petizioni/PetizioniDetail";
 import { ProcessiDetail } from "../renderers/cm/processi/ProcessiDetail";
-import { WemiDetail } from "../renderers/cm/wemi/WemiDetail";
 import { EntrateDetail } from "../renderers/sg/entrate/EntrateDetail";
 import { AssistenzaDetail } from "../renderers/sg/assistenza/AssistenzaDetail";
 import { GaraDetail } from "../renderers/sg/gara/GaraDetail";
-import { OpendataDetail } from "../renderers/cm/opendata/OpendataDetail";
 import { VenditeDetail } from "../renderers/sg/vendite/VenditeDetail";
 import { CalendarDetail } from "../renderers/openk9/calendar/CalendarDetail";
 import { Renderers } from "./useRenderers";
@@ -52,9 +50,6 @@ function Detail<E>(props: DetailProps<E>) {
           if (Renderer) {
             return <Renderer result={result} />;
           }
-          if (result.source.documentTypes.includes("opendata")) {
-            return <OpendataDetail result={result} />;
-          }
           if (result.source.documentTypes.includes("pubblicazioni")) {
             return <PubblicazioniDetail result={result} />;
           }
@@ -69,9 +64,6 @@ function Detail<E>(props: DetailProps<E>) {
           }
           if (result.source.documentTypes.includes("processi")) {
             return <ProcessiDetail result={result} />;
-          }
-          if (result.source.documentTypes.includes("wemi")) {
-            return <WemiDetail result={result} />;
           }
           if (result.source.documentTypes.includes("pdf")) {
             return <PdfDetail result={result} />;
