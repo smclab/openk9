@@ -1,15 +1,17 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailHeaderImage } from "../../../renderer-components/DetailHeaderImage";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { GenericResultItem } from "@openk9/rest-api";
 import { PubblicazioniResultItem } from "./PubblicazioniItem";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailHeaderImage,
+  DetailLink,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type PubblicazioniDetailProps = {
-  result: PubblicazioniResultItem;
+  result: GenericResultItem<PubblicazioniResultItem>;
 };
 export function PubblicazioniDetail({ result }: PubblicazioniDetailProps) {
   return (
@@ -42,9 +44,7 @@ export function PubblicazioniDetail({ result }: PubblicazioniDetailProps) {
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  css={css`
-                    word-break: break-all;
-                  `}
+                  style={{ wordBreak: "break-all" }}
                 >
                   {url}
                 </a>

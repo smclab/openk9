@@ -1,14 +1,17 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
+import { GenericResultItem } from "@openk9/rest-api";
 import { PdfResultItem } from "./PdfItem";
-import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { ResultTitle } from "../../../renderer-components/ResultTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultLink } from "../../../renderer-components/ResultLink";
-import { ResultTextContent } from "../../../renderer-components/ResultTextContent";
+import {
+  ResultContainer,
+  ResultTitle,
+  HighlightableText,
+  ResultLink,
+  ResultTextContent,
+} from "../../../renderer-components";
 
-type PdfResultProps = { result: PdfResultItem };
+type PdfResultProps = { result: GenericResultItem<PdfResultItem> };
 export function PdfResult({ result }: PdfResultProps) {
   return (
     <ResultContainer icon={<FontAwesomeIcon icon={faFilePdf} />}>

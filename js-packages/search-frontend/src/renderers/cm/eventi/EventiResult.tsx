@@ -1,15 +1,18 @@
 import React from "react";
-import { Badge } from "../../../renderer-components/Badge";
+import { GenericResultItem } from "@openk9/rest-api";
 import { EventiResultItem } from "./EventiItem";
-import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { ResultFavicon } from "../../../renderer-components/ResultFavicon";
-import { ResultTitle } from "../../../renderer-components/ResultTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultLink } from "../../../renderer-components/ResultLink";
-import { ResultTextContent } from "../../../renderer-components/ResultTextContent";
-import { BadgeContainer } from "../../../renderer-components/BadgeContainer";
+import {
+  Badge,
+  ResultContainer,
+  ResultFavicon,
+  ResultTitle,
+  HighlightableText,
+  ResultLink,
+  ResultTextContent,
+  BadgeContainer,
+} from "../../../renderer-components";
 
-type EventiResultProps = { result: EventiResultItem };
+type EventiResultProps = { result: GenericResultItem<EventiResultItem> };
 export function EventiResult({ result }: EventiResultProps) {
   return (
     <ResultContainer icon={<ResultFavicon src={result.source.web?.favicon} />}>

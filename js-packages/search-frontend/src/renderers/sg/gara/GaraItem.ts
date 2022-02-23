@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type GaraResultItem = GenericResultItem<{
+export type GaraResultItem = {
   gare: {
     imgUrl: string;
     descrizione: string;
@@ -28,4 +26,4 @@ export type GaraResultItem = GenericResultItem<{
     url: string;
     content: string;
   };
-}>;
+};

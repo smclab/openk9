@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type ProcessiResultItem = GenericResultItem<{
+export type ProcessiResultItem = {
   web: {
     favicon: string;
     title: string;
@@ -15,4 +13,4 @@ export type ProcessiResultItem = GenericResultItem<{
     area?: string;
     imgUrl?: string;
   };
-}>;
+}

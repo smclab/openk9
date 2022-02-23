@@ -1,14 +1,17 @@
 import React from "react";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultAttribute } from "../../../renderer-components/ResultAttribute";
+import { GenericResultItem } from "@openk9/rest-api";
 import { PetizioniResultItem } from "./PetizioniItem";
+import {
+  DetailContainer,
+  DetailFavicon,
+  DetailLink,
+  DetailTitle,
+  HighlightableText,
+  ResultAttribute,
+} from "../../../renderer-components";
 
 type PetizioniDetailProps = {
-  result: PetizioniResultItem;
+  result: GenericResultItem<PetizioniResultItem>;
 };
 export function PetizioniDetail({ result }: PetizioniDetailProps) {
   return (

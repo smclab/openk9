@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type VenditeResultItem = GenericResultItem<{
+export type VenditeResultItem = {
   vendite: {
     descrizione: string;
     tipologia: string;
@@ -38,4 +36,4 @@ export type VenditeResultItem = GenericResultItem<{
     url: string;
     content: string;
   };
-}>;
+};

@@ -1,18 +1,19 @@
+import React from "react";
+import { GenericResultItem } from "@openk9/rest-api";
+import { DocumentResultItem } from "./DocumentItem";
 import { faFileAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react";
-import { css } from "styled-components/macro";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailIconContainer } from "../../../renderer-components/DetailIconContainer";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTextContent } from "../../../renderer-components/DetailTextContent";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { HighlightedText } from "../../../renderer-components/HighlightedText";
-import { DocumentResultItem } from "./DocumentItem";
+import {
+  DetailContainer,
+  DetailIconContainer,
+  DetailLink,
+  DetailTextContent,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type DocumentDetailProps = {
-  result: DocumentResultItem;
+  result: GenericResultItem<DocumentResultItem>;
 };
 export function DocumentDetail({ result }: DocumentDetailProps) {
   return (

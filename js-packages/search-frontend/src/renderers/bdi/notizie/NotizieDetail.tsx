@@ -1,15 +1,17 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailHeaderImage } from "../../../renderer-components/DetailHeaderImage";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { GenericResultItem } from "@openk9/rest-api";
 import { NotizieResultItem } from "./NotizieItem";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailHeaderImage,
+  DetailLink,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type NotizieDetailProps = {
-  result: NotizieResultItem;
+  result: GenericResultItem<NotizieResultItem>;
 };
 export function NotizieDetail({ result }: NotizieDetailProps) {
   return (
@@ -30,9 +32,7 @@ export function NotizieDetail({ result }: NotizieDetailProps) {
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  css={css`
-                    word-break: break-all;
-                  `}
+                  style={{ wordBreak: "break-all" }}
                 >
                   {url}
                 </a>
@@ -53,9 +53,7 @@ export function NotizieDetail({ result }: NotizieDetailProps) {
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  css={css`
-                    word-break: break-all;
-                  `}
+                  style={{ wordBreak: "break-all" }}
                 >
                   {url}
                 </a>

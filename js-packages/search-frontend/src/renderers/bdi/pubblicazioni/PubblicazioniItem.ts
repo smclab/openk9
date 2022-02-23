@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type PubblicazioniResultItem = GenericResultItem<{
+export type PubblicazioniResultItem = {
   web: {
     favicon: string;
     title: string;
@@ -15,4 +13,4 @@ export type PubblicazioniResultItem = GenericResultItem<{
     authors: string;
     linkedUrls: Array<string>;
   };
-}>;
+};

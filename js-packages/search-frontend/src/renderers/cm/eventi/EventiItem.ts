@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type EventiResultItem = GenericResultItem<{
+export type EventiResultItem = {
   web: {
     favicon: string;
     title: string;
@@ -17,4 +15,4 @@ export type EventiResultItem = GenericResultItem<{
     startDate?: string;
     subLocation: string;
   };
-}>;
+};

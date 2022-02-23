@@ -1,13 +1,16 @@
 import React from "react";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { ResultTitle } from "../../../renderer-components/ResultTitle";
+import { GenericResultItem } from "@openk9/rest-api";
 import { CalendarResultItem } from "./CalendarItem";
 import { faCalendar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ResultAttribute } from "../../../renderer-components/ResultAttribute";
+import {
+  HighlightableText,
+  ResultContainer,
+  ResultTitle,
+  ResultAttribute,
+} from "../../../renderer-components";
 
-type CalendarResultProps = { result: CalendarResultItem };
+type CalendarResultProps = { result: GenericResultItem<CalendarResultItem> };
 export function CalendarResult({ result }: CalendarResultProps) {
   return (
     <ResultContainer icon={<FontAwesomeIcon icon={faCalendar} />}>

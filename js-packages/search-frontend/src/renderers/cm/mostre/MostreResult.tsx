@@ -1,15 +1,18 @@
 import React from "react";
-import { Badge } from "../../../renderer-components/Badge";
+import { GenericResultItem } from "@openk9/rest-api";
 import { MostreResultItem } from "./MostreItem";
-import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { ResultFavicon } from "../../../renderer-components/ResultFavicon";
-import { ResultTitle } from "../../../renderer-components/ResultTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultLink } from "../../../renderer-components/ResultLink";
-import { BadgeContainer } from "../../../renderer-components/BadgeContainer";
-import { ResultTextContent } from "../../../renderer-components/ResultTextContent";
+import {
+  Badge,
+  ResultContainer,
+  ResultFavicon,
+  ResultTitle,
+  HighlightableText,
+  ResultLink,
+  BadgeContainer,
+  ResultTextContent,
+} from "../../../renderer-components";
 
-type MostreResultProps = { result: MostreResultItem };
+type MostreResultProps = { result: GenericResultItem<MostreResultItem> };
 export function MostreResult({ result }: MostreResultProps) {
   return (
     <ResultContainer icon={<ResultFavicon src={result.source.web?.favicon} />}>

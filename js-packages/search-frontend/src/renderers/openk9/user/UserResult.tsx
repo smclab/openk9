@@ -1,13 +1,16 @@
 import React from "react";
+import { GenericResultItem } from "@openk9/rest-api";
+import { UserResultItem } from "./UserItem";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
-import { UserResultItem } from "./UserItem";
-import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { ResultTitle } from "../../../renderer-components/ResultTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultAttribute } from "../../../renderer-components/ResultAttribute";
+import {
+  ResultContainer,
+  ResultTitle,
+  HighlightableText,
+  ResultAttribute,
+} from "../../../renderer-components";
 
-type UserResultProps = { result: UserResultItem };
+type UserResultProps = { result: GenericResultItem<UserResultItem> };
 export function UserResult({ result }: UserResultProps) {
   return (
     <ResultContainer icon={<FontAwesomeIcon icon={faUser} />}>

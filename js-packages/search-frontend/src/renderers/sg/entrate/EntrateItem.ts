@@ -1,8 +1,7 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type EntrateResultItem = GenericResultItem<{
+export type EntrateResultItem = {
   entrate: {
     linkedUrls: Array<string>;
+    category: string
   };
   topic: {
     topics: Array<string>;
@@ -13,4 +12,4 @@ export type EntrateResultItem = GenericResultItem<{
     url: string;
     content: string;
   };
-}>;
+};

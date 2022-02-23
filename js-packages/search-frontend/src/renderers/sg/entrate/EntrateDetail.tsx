@@ -1,16 +1,18 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTextContent } from "../../../renderer-components/DetailTextContent";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { GenericResultItem } from "@openk9/rest-api";
 import { EntrateResultItem } from "./EntrateItem";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailFavicon,
+  DetailLink,
+  DetailTextContent,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type EntrateDetailProps = {
-  result: EntrateResultItem;
+  result: GenericResultItem<EntrateResultItem>;
 };
 export function EntrateDetail({ result }: EntrateDetailProps) {
   return (
@@ -41,9 +43,7 @@ export function EntrateDetail({ result }: EntrateDetailProps) {
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  css={css`
-                    word-break: break-all;
-                  `}
+                  style={{ wordBreak: "break-all" }}
                 >
                   {url}
                 </a>

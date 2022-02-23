@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type AssistenzaResultItem = GenericResultItem<{
+export type AssistenzaResultItem = {
   entrate: {
     linkedUrls: Array<string>;
   };
@@ -13,4 +11,4 @@ export type AssistenzaResultItem = GenericResultItem<{
     url: string;
     content: string;
   };
-}>;
+};

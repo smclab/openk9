@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type CalendarResultItem = GenericResultItem<{
+export type CalendarResultItem = {
   calendar: {
     allDay: boolean;
     calendarBookingId: string;
@@ -10,4 +8,4 @@ export type CalendarResultItem = GenericResultItem<{
     endTime: string;
     title: string;
   };
-}>;
+};

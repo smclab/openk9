@@ -1,14 +1,17 @@
 import React from "react";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTextContent } from "../../../renderer-components/DetailTextContent";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { GenericResultItem } from "@openk9/rest-api";
 import { WebResultItem } from "./WebItem";
+import {
+  DetailContainer,
+  DetailFavicon,
+  DetailLink,
+  DetailTextContent,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type WebDetailProps = {
-  result: WebResultItem;
+  result: GenericResultItem<WebResultItem>;
 };
 export function WebDetail({ result }: WebDetailProps) {
   return (

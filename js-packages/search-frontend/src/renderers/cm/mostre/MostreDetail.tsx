@@ -1,14 +1,17 @@
 import React from "react";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailHeaderImage } from "../../../renderer-components/DetailHeaderImage";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
 import { MostreResultItem } from "./MostreItem";
+import { GenericResultItem } from "@openk9/rest-api";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailHeaderImage,
+  DetailLink,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type MostreDetailProps = {
-  result: MostreResultItem;
+  result: GenericResultItem<MostreResultItem>;
 };
 export function MostreDetail({ result }: MostreDetailProps) {
   return (

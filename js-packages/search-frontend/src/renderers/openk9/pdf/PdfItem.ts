@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type PdfResultItem = GenericResultItem<{
+export type PdfResultItem = {
   document: {
     title: string;
     relativeUrl: Array<string>;
@@ -12,4 +10,4 @@ export type PdfResultItem = GenericResultItem<{
     path: string;
     lastModifiedDate: string;
   };
-}>;
+};

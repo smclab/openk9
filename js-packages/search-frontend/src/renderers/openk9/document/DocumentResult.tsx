@@ -1,17 +1,17 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { truncatedLineStyle } from "../../../renderer-components/truncatedLineStyle";
-import { HighlightedText } from "../../../renderer-components/HighlightedText";
+import { GenericResultItem } from "@openk9/rest-api";
+import { DocumentResultItem } from "./DocumentItem";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileAlt } from "@fortawesome/free-solid-svg-icons";
-import { DocumentResultItem } from "./DocumentItem";
-import { ResultTitle } from "../../../renderer-components/ResultTitle";
-import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultLink } from "../../../renderer-components/ResultLink";
-import { ResultTextContent } from "../../../renderer-components/ResultTextContent";
+import {
+  ResultTitle,
+  ResultContainer,
+  HighlightableText,
+  ResultLink,
+  ResultTextContent,
+} from "../../../renderer-components";
 
-type DocumentResultProps = { result: DocumentResultItem };
+type DocumentResultProps = { result: GenericResultItem<DocumentResultItem> };
 export function DocumentResult({ result }: DocumentResultProps) {
   return (
     <ResultContainer icon={<FontAwesomeIcon icon={faFileAlt} />}>

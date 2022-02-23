@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type PetizioniResultItem = GenericResultItem<{
+export type PetizioniResultItem = {
   web: {
     favicon: string;
     title: string;
@@ -11,4 +9,4 @@ export type PetizioniResultItem = GenericResultItem<{
     pubDate: string;
     status: string;
   };
-}>;
+};

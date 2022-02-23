@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type WemiResultItem = GenericResultItem<{
+export type WemiResultItem = {
   web: {
     favicon: string;
     title: string;
@@ -18,4 +16,4 @@ export type WemiResultItem = GenericResultItem<{
     categoria: string;
     servizio: string;
   };
-}>;
+};

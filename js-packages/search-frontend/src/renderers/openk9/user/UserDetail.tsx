@@ -1,15 +1,18 @@
+import React from "react";
+import { UserResultItem } from "./UserItem";
+import { GenericResultItem } from "@openk9/rest-api";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailIconContainer } from "../../../renderer-components/DetailIconContainer";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { UserResultItem } from "./UserItem";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailIconContainer,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type UserDetailProps = {
-  result: UserResultItem;
+  result: GenericResultItem<UserResultItem>;
 };
 export function UserDetail({ result }: UserDetailProps) {
   return (

@@ -1,15 +1,18 @@
-import { faCalendar, faUser } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailIconContainer } from "../../../renderer-components/DetailIconContainer";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { GenericResultItem } from "@openk9/rest-api";
 import { CalendarResultItem } from "./CalendarItem";
+import { faCalendar } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailIconContainer,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type CalendarDetailProps = {
-  result: CalendarResultItem;
+  result: GenericResultItem<CalendarResultItem>;
 };
 export function CalendarDetail({ result }: CalendarDetailProps) {
   return (

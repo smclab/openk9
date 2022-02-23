@@ -1,15 +1,18 @@
 import React from "react";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTextContent } from "../../../renderer-components/DetailTextContent";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { GenericResultItem } from "@openk9/rest-api";
 import { AssistenzaResultItem } from "./AssistenzaItem";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailFavicon,
+  DetailLink,
+  DetailTextContent,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type AssistenzaDetailProps = {
-  result: AssistenzaResultItem;
+  result: GenericResultItem<AssistenzaResultItem>;
 };
 export function AssistenzaDetail({ result }: AssistenzaDetailProps) {
   return (

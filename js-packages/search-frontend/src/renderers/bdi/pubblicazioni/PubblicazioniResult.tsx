@@ -1,15 +1,20 @@
 import React from "react";
-import { Badge } from "../../../renderer-components/Badge";
+import { GenericResultItem } from "@openk9/rest-api";
 import { PubblicazioniResultItem } from "./PubblicazioniItem";
-import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { ResultTitle } from "../../../renderer-components/ResultTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultLink } from "../../../renderer-components/ResultLink";
-import { ResultTextContent } from "../../../renderer-components/ResultTextContent";
-import { ResultFavicon } from "../../../renderer-components/ResultFavicon";
-import { BadgeContainer } from "../../../renderer-components/BadgeContainer";
+import {
+  Badge,
+  ResultContainer,
+  ResultTitle,
+  HighlightableText,
+  ResultLink,
+  ResultTextContent,
+  ResultFavicon,
+  BadgeContainer,
+} from "../../../renderer-components";
 
-type PubblicazioniResultProps = { result: PubblicazioniResultItem };
+type PubblicazioniResultProps = {
+  result: GenericResultItem<PubblicazioniResultItem>;
+};
 export function PubblicazioniResult({ result }: PubblicazioniResultProps) {
   return (
     <ResultContainer icon={<ResultFavicon src={result.source.web.favicon} />}>

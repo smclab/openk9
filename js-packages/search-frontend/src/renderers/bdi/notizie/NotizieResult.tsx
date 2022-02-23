@@ -1,15 +1,18 @@
 import React from "react";
-import { Badge } from "../../../renderer-components/Badge";
 import { NotizieResultItem } from "./NotizieItem";
-import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { ResultFavicon } from "../../../renderer-components/ResultFavicon";
-import { ResultTitle } from "../../../renderer-components/ResultTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultLink } from "../../../renderer-components/ResultLink";
-import { BadgeContainer } from "../../../renderer-components/BadgeContainer";
-import { ResultTextContent } from "../../../renderer-components/ResultTextContent";
+import { GenericResultItem } from "@openk9/rest-api";
+import {
+  Badge,
+  ResultContainer,
+  ResultFavicon,
+  ResultTitle,
+  HighlightableText,
+  ResultLink,
+  BadgeContainer,
+  ResultTextContent,
+} from "../../../renderer-components";
 
-type NotizieResultProps = { result: NotizieResultItem };
+type NotizieResultProps = { result: GenericResultItem<NotizieResultItem> };
 export function NotizieResult({ result }: NotizieResultProps) {
   return (
     <ResultContainer icon={<ResultFavicon src={result.source.web.favicon} />}>

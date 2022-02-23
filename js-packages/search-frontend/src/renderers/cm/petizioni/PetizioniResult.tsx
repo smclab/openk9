@@ -1,15 +1,18 @@
 import React from "react";
-import { Badge } from "../../../renderer-components/Badge";
+import { GenericResultItem } from "@openk9/rest-api";
 import { PetizioniResultItem } from "./PetizioniItem";
-import { ResultContainer } from "../../../renderer-components/ResultContainer";
-import { ResultFavicon } from "../../../renderer-components/ResultFavicon";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { ResultTitle } from "../../../renderer-components/ResultTitle";
-import { ResultLink } from "../../../renderer-components/ResultLink";
-import { ResultTextContent } from "../../../renderer-components/ResultTextContent";
-import { BadgeContainer } from "../../../renderer-components/BadgeContainer";
+import {
+  Badge,
+  ResultContainer,
+  ResultFavicon,
+  HighlightableText,
+  ResultTitle,
+  ResultLink,
+  ResultTextContent,
+  BadgeContainer,
+} from "../../../renderer-components";
 
-type PetizioniResultProps = { result: PetizioniResultItem };
+type PetizioniResultProps = { result: GenericResultItem<PetizioniResultItem> };
 export function PetizioniResult({ result }: PetizioniResultProps) {
   return (
     <ResultContainer icon={<ResultFavicon src={result.source.web.favicon} />}>

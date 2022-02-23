@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type NotizieResultItem = GenericResultItem<{
+export type NotizieResultItem = {
   web: {
     favicon: string;
     title: string;
@@ -9,9 +7,10 @@ export type NotizieResultItem = GenericResultItem<{
   };
   notizie: {
     category: string;
+    categories?: Array<string>;
     imgUrl: string;
     pubDate: string;
     topic: string;
     linkedUrls?: Array<string>;
   };
-}>;
+};

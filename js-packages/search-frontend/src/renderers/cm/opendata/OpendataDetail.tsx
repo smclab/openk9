@@ -1,14 +1,17 @@
 import React from "react";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { GenericResultItem } from "@openk9/rest-api";
 import { OpendataResultItem } from "./OpendataItem";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailFavicon,
+  DetailLink,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type OpendataDetailProps = {
-  result: OpendataResultItem;
+  result: GenericResultItem<OpendataResultItem>;
 };
 export function OpendataDetail({ result }: OpendataDetailProps) {
   return (

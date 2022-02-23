@@ -1,6 +1,4 @@
-import { GenericResultItem } from "@openk9/rest-api";
-
-export type UserResultItem = GenericResultItem<{
+export type UserResultItem = {
   user: {
     screenName: string;
     emailAddress: string;
@@ -15,4 +13,4 @@ export type UserResultItem = GenericResultItem<{
     skypeSn: string;
     userId: string;
   };
-}>;
+};

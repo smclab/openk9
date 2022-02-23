@@ -1,15 +1,17 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { GenericResultItem } from "@openk9/rest-api";
 import { VenditeResultItem } from "./VenditeItem";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailFavicon,
+  DetailLink,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type VenditeDetailProps = {
-  result: VenditeResultItem;
+  result: GenericResultItem<VenditeResultItem>;
 };
 export function VenditeDetail({ result }: VenditeDetailProps) {
   return (
@@ -90,9 +92,9 @@ export function VenditeDetail({ result }: VenditeDetailProps) {
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  css={css`
-                    word-break: break-all;
-                  `}
+                  style={{
+                    wordBreak: "break-all",
+                  }}
                 >
                   {url}
                 </a>

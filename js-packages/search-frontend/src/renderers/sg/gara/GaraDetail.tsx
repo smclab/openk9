@@ -1,16 +1,18 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailFavicon } from "../../../renderer-components/DetailFavicon";
-import { DetailHeaderImage } from "../../../renderer-components/DetailHeaderImage";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
+import { GenericResultItem } from "@openk9/rest-api";
 import { GaraResultItem } from "./GaraItem";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailFavicon,
+  DetailHeaderImage,
+  DetailLink,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
 
 type GaraDetailProps = {
-  result: GaraResultItem;
+  result: GenericResultItem<GaraResultItem>;
 };
 export function GaraDetail({ result }: GaraDetailProps) {
   return (
@@ -80,9 +82,7 @@ export function GaraDetail({ result }: GaraDetailProps) {
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  css={css`
-                    word-break: break-all;
-                  `}
+                  style={{ wordBreak: "break-all" }}
                 >
                   {url}
                 </a>
@@ -100,9 +100,7 @@ export function GaraDetail({ result }: GaraDetailProps) {
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  css={css`
-                    word-break: break-all;
-                  `}
+                  style={{ wordBreak: "break-all" }}
                 >
                   {url}
                 </a>

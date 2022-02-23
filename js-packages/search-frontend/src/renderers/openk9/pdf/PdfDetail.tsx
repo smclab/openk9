@@ -1,18 +1,20 @@
+import React from "react";
+import { PdfResultItem } from "./PdfItem";
 import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react";
-import { css } from "styled-components/macro";
-import { DetailAttribute } from "../../../renderer-components/DetailAttribute";
-import { DetailContainer } from "../../../renderer-components/DetailContainer";
-import { DetailIconContainer } from "../../../renderer-components/DetailIconContainer";
-import { DetailLink } from "../../../renderer-components/DetailLink";
-import { DetailTextContent } from "../../../renderer-components/DetailTextContent";
-import { DetailTitle } from "../../../renderer-components/DetailTitle";
-import { HighlightableText } from "../../../renderer-components/HighlightableText";
-import { PdfResultItem } from "./PdfItem";
+import {
+  DetailAttribute,
+  DetailContainer,
+  DetailIconContainer,
+  DetailLink,
+  DetailTextContent,
+  DetailTitle,
+  HighlightableText,
+} from "../../../renderer-components";
+import { GenericResultItem } from "@openk9/rest-api";
 
 type PdfDetailProps = {
-  result: PdfResultItem;
+  result: GenericResultItem<PdfResultItem>;
 };
 export function PdfDetail({ result }: PdfDetailProps) {
   return (
@@ -39,14 +41,14 @@ export function PdfDetail({ result }: PdfDetailProps) {
               <iframe
                 title={binary.id}
                 src={url}
-                css={css`
-                  width: 100%;
-                  height: 50vh;
-                  background-color: white;
-                  border: 1px solid
-                    var(--openk9-embeddable-search--border-color);
-                  border-radius: 4px;
-                `}
+                style={{
+                  width: "100%",
+                  height: "50vh",
+                  backgroundColor: "white",
+                  borderRadius: "4px",
+                  border:
+                    "1px solid var(--openk9-embeddable-search--border-color)",
+                }}
               />
             </ViewIfUrlOk>
           );
