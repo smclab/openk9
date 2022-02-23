@@ -97,7 +97,7 @@ function Inner({
   const { data: searchResults } = useSWR(`/api/v1/search`, () =>
     doSearch(
       {
-        searchQuery: [{ tokenType: "DATASOURCE", values: [] }],
+        searchQuery: [{ tokenType: "DATASOURCE", values: [], filter: false }],
         range: [0, 20],
       },
       loginInfo,
