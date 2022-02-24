@@ -4,7 +4,6 @@ import { WebDetail } from "../renderers/openk9/web/WebDetail";
 import { GenericResultItem, SidebarRendererProps } from "@openk9/rest-api";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
-i
 import { Renderers } from "./useRenderers";
 
 type DetailProps<E> = {
