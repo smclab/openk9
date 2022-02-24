@@ -1,16 +1,9 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { WebResult } from "../renderers/openk9/web/WebResult";
-import { UserResult } from "../renderers/openk9/user/UserResult";
 import { GenericResultItem, ResultRendererProps } from "@openk9/rest-api";
 import { DocumentResult } from "../renderers/openk9/document/DocumentResult";
-import { PubblicazioniResult } from "../renderers/bdi/pubblicazioni/PubblicazioniResult";
 import { PdfResult } from "../renderers/openk9/pdf/PdfResult";
-import { MostreResult } from "../renderers/cm/mostre/MostreResult";
-import { EventiResult } from "../renderers/cm/eventi/EventiResult";
-import { PetizioniResult } from "../renderers/cm/petizioni/PetizioniResult";
-import { ProcessiResult } from "../renderers/cm/processi/ProcessiResult";
-import { CalendarResult } from "../renderers/openk9/calendar/CalendarResult";
 import { Renderers } from "./useRenderers";
 
 type ResultProps<E> = {
@@ -34,21 +27,6 @@ function Result<E>(props: ResultProps<E>) {
         if (Renderer) {
           return <Renderer result={result} />;
         }
-        if (result.source.documentTypes.includes("pubblicazioni")) {
-          return <PubblicazioniResult result={result} />;
-        }
-        if (result.source.documentTypes.includes("mostre")) {
-          return <MostreResult result={result} />;
-        }
-        if (result.source.documentTypes.includes("eventi")) {
-          return <EventiResult result={result} />;
-        }
-        if (result.source.documentTypes.includes("petizioni")) {
-          return <PetizioniResult result={result} />;
-        }
-        if (result.source.documentTypes.includes("processi")) {
-          return <ProcessiResult result={result} />;
-        }
         if (result.source.documentTypes.includes("pdf")) {
           return <PdfResult result={result} />;
         }
@@ -57,12 +35,6 @@ function Result<E>(props: ResultProps<E>) {
         }
         if (result.source.documentTypes.includes("web")) {
           return <WebResult result={result} />;
-        }
-        if (result.source.documentTypes.includes("user")) {
-          return <UserResult result={result} />;
-        }
-        if (result.source.documentTypes.includes("calendar")) {
-          return <CalendarResult result={result} />;
         }
         return (
           <pre
