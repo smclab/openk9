@@ -32,7 +32,7 @@ public class DataService {
 		throws IOException {
 
 		MatchQueryBuilder query =
-			QueryBuilders.matchQuery("ingestionId", ingestionId);
+			QueryBuilders.matchQuery("ingestionId.keyword", ingestionId);
 
 		SearchResponse searchResponse = search(tenantId, query);
 
@@ -74,7 +74,7 @@ public class DataService {
 		throws IOException {
 
 		MatchQueryBuilder query =
-			QueryBuilders.matchQuery("ingestionId", ingestionId);
+			QueryBuilders.matchQuery("ingestionId.keyword", ingestionId);
 
 		SearchResponse searchResponse = search(tenantId, query);
 
