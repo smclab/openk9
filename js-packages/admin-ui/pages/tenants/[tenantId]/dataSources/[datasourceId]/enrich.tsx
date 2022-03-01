@@ -99,7 +99,7 @@ function NoEnrichPipelineMessage({
       <h2>
         {datasource.datasourceId}: {datasource.name}
       </h2>
-      <p>This datasource currently doesn&apos;t have an enrich pipeline.</p>
+      <p>This datasource currently doesn&apos;t have an enrich item.</p>
       <button className="btn btn-primary" onClick={createEnrichPipeline}>
         Create a new one
       </button>
@@ -310,7 +310,7 @@ function Inner({ datasourceId }: { datasourceId: number }) {
       active: false,
       enrichPipelineId: dsEnrichPipeline?.enrichPipelineId,
       jsonConfig: "{}",
-      name: "New Enrich Pipeline",
+      name: "New Enrich Item",
       serviceName: "",
       _position: newPosition,
     };

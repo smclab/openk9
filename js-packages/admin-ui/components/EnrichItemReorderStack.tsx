@@ -213,7 +213,7 @@ export function EnrichPipelineReorderStack({
 
   return (
     <div className={classes.enrichStack}>
-      <h5>Enrich Pipeline</h5>
+      <h5>Enrich Item</h5>
 
       <div className={classes.stackColumns}>
         <div className={classes.reorderColumn}>
