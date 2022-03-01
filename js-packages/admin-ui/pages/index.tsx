@@ -16,14 +16,9 @@
  */
 
 import { createUseStyles } from "react-jss";
-import clsx from "clsx";
-import { add, format } from "date-fns";
-import Link from "next/link";
-import useSWR from "swr";
 import { ThemeType } from "@openk9/search-ui-components";
-import { getContainerStatus } from "@openk9/rest-api";
 import { Layout } from "../components/Layout";
-import { useLoginCheck, useLoginInfo } from "../state";
+import { useLoginCheck } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   wrap: {
@@ -86,123 +81,6 @@ function QuickStart() {
   );
 }
 
-function ServiceStatusInside() {
-  const classes = useStyles();
-
-  const loginInfo = useLoginInfo();
-
-  const { data } = useSWR(`/logs/status`, () => getContainerStatus(loginInfo));
-
-  if (!data) {
-    return <span className="loading-animation" />;
-  }
-
-  const services = [
-    { id: "elasticsearch", label: "ElasticSearch" },
-    { id: "openk9-core", label: "Backend" },
-    { id: "search-standalone-frontend", label: "Frontend" },
-    { id: "postgres", label: "Postgres" },
-    { id: "rabbitmq", label: "Queue Service" },
-    { id: "docker_reverse-proxy_1", label: "Reverse Proxy" },
-  ];
-
-  return (
-    <div className={classes.dataList}>
-      {services.map((s) => {
-        const record = data.find((d) => d.Names === s.id);
-        const status = record?.Status || "Down";
-        return (
-          <div key={s.id}>
-            <div className={classes.dataListName}>{s.label}</div>
-            <div className={classes.dataListData}>
-              <Link href={`/logs/${record?.ID}/`} passHref>
-                {status.startsWith("Up") ? (
-                  <a className="label label-success">
-                    <span className="label-item label-item-expand">
-                      {status}
-                    </span>
-                  </a>
-                ) : (
-                  <a className="label label-danger">
-                    <span className="label-item label-item-expand">
-                      {status}
-                    </span>
-                  </a>
-                )}
-              </Link>
-            </div>
-          </div>
-        );
-      })}
-
-      <Link passHref href="/logs">
-        <a className={clsx("btn btn-primary", classes.rightButton)}>
-          View Logs
-        </a>
-      </Link>
-    </div>
-  );
-}
-
-function ServiceStatus() {
-  const classes = useStyles();
-  return (
-    <div className={clsx(classes.card, classes.statsCard)}>
-      <h3>Status</h3>
-      <ServiceStatusInside />
-    </div>
-  );
-}
-
-function GlobalStats() {
-  const classes = useStyles();
-  return (
-    <div className={clsx(classes.card, classes.statsCard)}>
-      <h3>Global Stats</h3>
-      <div className={classes.dataList}>
-        <div>
-          <div className={classes.dataListName}>Indexed Results</div>
-          <div className={classes.dataListData}>3425</div>
-        </div>
-        <div>
-          <div className={classes.dataListName}>Last Index Time</div>
-          <div className={classes.dataListData}>
-            {format(new Date().setMinutes(0), "dd/MM/yyyy, HH:mm")}
-          </div>
-        </div>
-        <div>
-          <div className={classes.dataListName}>Next Index Time</div>
-          <div className={classes.dataListData}>
-            {format(add(new Date(), { days: 2 }), "dd/MM/yyyy, HH:mm")}
-          </div>
-        </div>
-        <div>
-          <div className={classes.dataListName}>Found Entities</div>
-          <div className={classes.dataListData}>235369</div>
-        </div>
-        <div>
-          <div className={classes.dataListName}>Disk Usage</div>
-          <div className={classes.dataListData}>58.23% (81 GB/120GB)</div>
-        </div>
-        <div>
-          <div className={classes.dataListName}>RAM Usage</div>
-          <div className={classes.dataListData}>81.00% (12.9 GB/16GB)</div>
-        </div>
-      </div>
-      <a className={clsx("btn btn-primary", classes.rightButton)}>See More</a>
-    </div>
-  );
-}
-
-function SystemLoadChart() {
-  const classes = useStyles();
-  return (
-    <div className={clsx(classes.card, classes.slCard)}>
-      <h3>System Load</h3>
-    </div>
-  );
-}
-
 function Dashboard() {
   const classes = useStyles();
 
@@ -215,9 +93,6 @@ function Dashboard() {
         <QuickStart />
       </div>
       <div className={classes.wrap}>
-        {/* <GlobalStats /> */}
-        <ServiceStatus />
-        {/* <SystemLoadChart /> */}
       </div>
     </Layout>
   );

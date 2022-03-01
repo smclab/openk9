@@ -297,8 +297,6 @@ export async function getItemsInDatasource<E>(
   );
 }
 
-// DEPRECATED
-// TODO: remove
 export type SuggestionResult =
   | {
       tokenType: "DATASOURCE";
@@ -860,25 +858,6 @@ export function getServices<E>(plugins: Plugin<E>[]) {
   );
 }
 
-export type ContainerStatus = {
-  ID: string;
-  Image: string;
-  Names: string;
-  Status: string;
-};
-
-export async function getContainerStatus(
-  loginInfo: LoginInfo | null,
-): Promise<ContainerStatus[]> {
-  const response = await authFetch(`/api/logs/status`, loginInfo, {
-    headers: {
-      Accept: "application/json",
-    },
-  });
-  const data: ContainerStatus[] = await response.json();
-  return data;
-}
-
 export async function getContainerLogs(
   id: string,
   tail = 300,
@@ -968,8 +947,6 @@ export async function fetchQueryAnalysis(
   return data;
 }
 
-// DEPRECATED
-// TODO: remove
 export type EntityDescription = {
   type: string;
   entityId: string;
@@ -1115,8 +1092,6 @@ export async function doSearchEntities(
   return await request.json();
 }
 
-// DEPRECATED
-// TODO: remove
 export async function getSuggestionCategories(
   loginInfo: LoginInfo | null,
 ): Promise<SuggestionsCategoriesResult> {
@@ -1147,8 +1122,6 @@ export async function getSuggestionCategories(
   ];
 }
 
-// DEPRECATED
-// TODO: remove
 type SuggestionsCategoriesResult = Array<{
   name: string;
   parentCategoryId: number;
