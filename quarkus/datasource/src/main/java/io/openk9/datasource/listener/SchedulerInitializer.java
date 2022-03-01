@@ -26,6 +26,7 @@ import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -164,6 +165,7 @@ public class SchedulerInitializer {
 		@Inject
 		SchedulerInitializer taskBean;
 
+		@ActivateRequestContext
 		public void execute(JobExecutionContext context) {
 
 			JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
