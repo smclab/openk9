@@ -294,9 +294,12 @@ export function EditDataSource<
 }) {
   const loginInfo = useLoginInfo();
 
+  useSWR(`OpenK9`, () => import("@openk9/search-frontend"), { suspense: true });
+
   const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
     getPlugins(loginInfo),
   );
+
   const plugins = (pluginInfos || []).map((pi) =>
     pluginLoader.read(pi.pluginId, pi.bundleInfo.lastModified),
   );

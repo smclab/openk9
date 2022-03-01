@@ -6,6 +6,8 @@ import { Logo } from "./components/Logo";
 import "./index.css";
 import "./app.css";
 
+OpenK9.enabled = true
+
 export function App() {
   return (
     <div

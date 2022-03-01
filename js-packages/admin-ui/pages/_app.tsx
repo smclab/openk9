@@ -26,17 +26,11 @@ import { AppPropsType } from "next/dist/next-server/lib/utils";
 import { useRouter } from "next/router";
 import { ThemeProvider } from "react-jss";
 import { ClayIconSpriteContext } from "@clayui/icon";
-import {
-  defaultTheme,
-  loadPluginDepsIntoGlobal,
-} from "@openk9/search-ui-components";
-
+import { defaultTheme } from "@openk9/search-ui-components";
 import "@clayui/css/lib/css/atlas.css";
 import "../styles.css";
 import { Toasts } from "../components/Toasts";
 import { isServer } from "../state";
-
-loadPluginDepsIntoGlobal();
 
 const ToastContext = createContext<{
   pushToast(label: string): void;

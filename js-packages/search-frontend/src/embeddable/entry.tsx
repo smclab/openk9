@@ -19,6 +19,7 @@ function Entry() {
   React.useLayoutEffect(() => {
     updateConfig = setConfig;
   }, []);
+  if (!config.enabled) return null;
   return (
     <QueryClientProvider client={queryClient}>
       <Main config={config} />;
@@ -33,6 +34,7 @@ type QueryState = {
 };
 
 export type OpenK9ConfigFacade = {
+  enabled: boolean;
   search: Element | null;
   tabs: Element | null;
   filters: Element | null;
@@ -46,6 +48,7 @@ export type OpenK9ConfigFacade = {
 };
 
 const openk9Config: OpenK9ConfigFacade = {
+  enabled: false,
   search: null,
   tabs: null,
   filters: null,
@@ -67,8 +70,8 @@ type OpenK9Global = OpenK9ConfigFacade & {
   dependencies: {
     React: typeof React;
     ReactDOM: typeof ReactDOM;
-    "RestApi": typeof RestApi;
-    "SearchFrontend": {
+    RestApi: typeof RestApi;
+    SearchFrontend: {
       OpenK9: OpenK9Global;
       rendererComponents: typeof RendererComponents;
     };
@@ -76,6 +79,10 @@ type OpenK9Global = OpenK9ConfigFacade & {
 };
 
 export const OpenK9: OpenK9Global = {
+  set enabled(enabled: boolean) {
+    openk9Config.enabled = enabled;
+    updateConfig({ ...openk9Config });
+  },
   set search(element: Element | null) {
     openk9Config.search = element;
     updateConfig({ ...openk9Config });
@@ -134,6 +141,7 @@ export const OpenK9: OpenK9Global = {
 
 export const rendererComponents = RendererComponents;
 
+// this is needed for hot reloading in development
 window.OpenK9rootElement =
   window.OpenK9rootElement ?? document.createDocumentFragment();
 
