@@ -7,6 +7,7 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Metadata;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Instance;
@@ -35,7 +36,8 @@ public class K9EntityEmitter {
 					new OutgoingRabbitMQMetadata.Builder()
 						.withContentType("application/json")
 						.withExpiration("10000")
-						.withRoutingKey(type.generateRoutingKey(k9Entity))
+						.withRoutingKey(
+							type.generateRoutingKey(k9Entity, _logger))
 						.build()
 				)
 			)
@@ -49,29 +51,37 @@ public class K9EntityEmitter {
 	@Inject
 	Instance<SchedulerInitializer> _schedulerInitializer;
 
+	@Inject
+	Logger _logger;
+
 	enum Type {
 		DELETE {
 			@Override
 			public String generateRoutingKey(K9Entity k9Entity) {
-				return "datasource-DELETE-" + k9Entity.getClass().getSimpleName();
+				return "datasource-DELETE-" + k9Entity.getType().getSimpleName();
 			}
 		},
 		INSERT {
 			@Override
 			public String generateRoutingKey(K9Entity k9Entity) {
-				return "datasource-INSERT-" + k9Entity.getClass().getSimpleName();
+				return "datasource-INSERT-" + k9Entity.getType().getSimpleName();
 			}
 		},
 		UPDATE {
 			@Override
 			public String generateRoutingKey(K9Entity k9Entity) {
-				return "datasource-UPDATE-" + k9Entity.getClass().getSimpleName();
+				return "datasource-UPDATE-" + k9Entity.getType().getSimpleName();
 			}
 		};
 
 		public abstract String generateRoutingKey(K9Entity k9Entity);
 
-	}
+		public String generateRoutingKey(K9Entity k9Entity, Logger logger) {
+			String routingKey = generateRoutingKey(k9Entity);
+			logger.info("send message into: " + routingKey);
+			return routingKey;
+		}
 
+	}
 
 }
