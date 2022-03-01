@@ -17,8 +17,8 @@
 
 package io.openk9.ingestion.rabbitmq;
 
-import io.openk9.osgi.util.AutoCloseables;
 import com.rabbitmq.client.ConnectionFactory;
+import io.openk9.osgi.util.AutoCloseables;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -30,9 +30,11 @@ import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.SenderOptions;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -44,6 +46,7 @@ public class RabbitMQActivator {
 
 	@interface Config {
 		String uri() default "amqp://projectq:projectq@localhost:5672";
+		String connectionNameSuffix() default "_rabbitmq_osgi";
 	}
 
 	@Activate
@@ -53,6 +56,23 @@ public class RabbitMQActivator {
 		ConnectionFactory connectionFactory = new ConnectionFactory();
 
 		connectionFactory.useNio();
+
+		String hostName = InetAddress.getLocalHost().getHostName();
+
+		Map<String, Object> clientProperties =
+			connectionFactory.getClientProperties();
+
+		Map<String, Object> newClientProperties =
+			clientProperties != null
+				? new HashMap<>(clientProperties)
+				: new HashMap<>();
+
+		newClientProperties.put(
+			"connection_name",
+			hostName + config.connectionNameSuffix()
+		);
+
+		connectionFactory.setClientProperties(newClientProperties);
 
 		connectionFactory.setUri(config.uri());
 
