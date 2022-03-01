@@ -53,19 +53,19 @@ public class K9EntityEmitter {
 		DELETE {
 			@Override
 			public String generateRoutingKey(K9Entity k9Entity) {
-				return "datasource-DELETE-" + k9Entity.getClass().getName();
+				return "datasource-DELETE-" + k9Entity.getClass().getSimpleName();
 			}
 		},
 		INSERT {
 			@Override
 			public String generateRoutingKey(K9Entity k9Entity) {
-				return "datasource-INSERT-" + k9Entity.getClass().getName();
+				return "datasource-INSERT-" + k9Entity.getClass().getSimpleName();
 			}
 		},
 		UPDATE {
 			@Override
 			public String generateRoutingKey(K9Entity k9Entity) {
-				return "datasource-UPDATE-" + k9Entity.getClass().getName();
+				return "datasource-UPDATE-" + k9Entity.getClass().getSimpleName();
 			}
 		};
 
