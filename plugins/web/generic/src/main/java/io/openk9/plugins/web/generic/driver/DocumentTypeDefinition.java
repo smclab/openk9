@@ -31,6 +31,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 import java.util.List;
+import java.util.Map;
 
 @Component(
 	immediate = true,
@@ -47,28 +48,30 @@ public class DocumentTypeDefinition implements
 
 		return documentTypeFactoryRegistry
 			.register(
-				DocumentTypeFactory.DefaultDocumentTypeFactory.of(
-					pluginDriverName, true,
-					DocumentType
-						.builder()
-						.icon(Strings.BLANK)
-						.name("web")
-						.searchKeywords(
-							List.of(
-								SearchKeyword.text("title", "web"),
-								SearchKeyword.text("content", "web")
-							)
-						)
-						.sourceFields(
-							List.of(
-								Field.of("title", FieldType.TEXT),
-								Field.of("content", FieldType.TEXT),
-								Field.of("url", FieldType.TEXT),
-								Field.of("favicon", FieldType.TEXT)
-							)
-						)
-						.build()
-				)
+					DocumentTypeFactory.DefaultDocumentTypeFactory.of(
+							pluginDriverName, true,
+							DocumentType
+									.builder()
+									.icon(Strings.BLANK)
+									.name("web")
+									.searchKeywords(
+											List.of(
+													SearchKeyword.boostText("title", "web", 10.0f),
+													SearchKeyword.text("content", "web")
+											)
+									)
+									.sourceFields(
+											List.of(
+													Field.of("title", FieldType.TEXT,
+															Map.of("analyzer", "standard_lowercase_italian_stop_words_filter")),
+													Field.of("content", FieldType.TEXT,
+															Map.of("analyzer", "standard_lowercase_italian_stop_words_filter")),
+													Field.of("url", FieldType.TEXT),
+													Field.of("favicon", FieldType.TEXT)
+											)
+									)
+									.build()
+					)
 			);
 	}
 

@@ -1,76 +1,58 @@
-/*
- * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 import React from "react";
-import ClayIcon from "@clayui/icon";
 import { Plugin } from "@openk9/rest-api";
+import { WebResultItem } from "@openk9/search-frontend";
 
-import { WebResultType } from "./types";
-import { PageResultCard } from "./PageResultCard";
-import { DocumentResultCard } from "./DocumentResultCard";
-import { DocumentSidebar } from "./DocumentSidebar";
-import { PageSidebar } from "./PageSidebar";
-
-export const plugin: Plugin<WebResultType> = {
-  pluginId: "sitemap-web-datasource",
-  displayName: "Sitemap Web DataSource",
+export const plugin: Plugin<WebResultItem> = {
+  pluginId: "web-sitemap-datasource",
+  displayName: "Web Sitemap DataSource",
   pluginServices: [
     {
       type: "DATASOURCE",
-      displayName: "Sitemap Web DataSource",
-      driverServiceName: "io.openk9.plugins.web.driver.sitemap.SitemapWebPluginDriver",
+      displayName: "Web Generic DataSource",
+      driverServiceName: "io.openk9.plugins.web.sitemap.driver.SitemapWebPluginDriver",
       iconRenderer,
       initialSettings: `
         {
-          "startUrls": ["https://www.google.com/"],
-          "allowedDomains": ["google.com"],
-          "allowedPaths": ["https://www.google.com/"],
-          "excludedPaths": [".pdf"],
-          "datasourceId": 99,
-          "timestamp": 0,
-          "depth": 2,
-          "max_length": 5000,
-          "page_count": 3000
+            "datasourceId": 1,
+            "timestamp": 0,
+            "sitemapUrls": ["https://www.smc.it/sitemap.xml"],
+            "bodyTag": "body",
+            "allowedDomains": ["smc.it"],
+        	"maxLength": 10000
         }
       `,
     },
     {
       type: "ENRICH",
-      displayName: "Web NER",
+      displayName: "Web Async NER",
       serviceName:
-        "WebNerEnrichProcessor",
+        "io.openk9.plugins.web.sitemap.enrichprocessor.AsyncWebNerEnrichProcessor",
       iconRenderer,
-      initialSettings: `{"entities": ["person", "organization"], "confidence": 0.90}`,
-    },
-    {
-      type: "RESULT_RENDERER",
-      resultType: "document",
-      resultRenderer: DocumentResultCard as any,
-      sidebarRenderer: DocumentSidebar as any,
-    },
-    {
-      type: "RESULT_RENDERER",
-      resultType: "web",
-      resultRenderer: PageResultCard as any,
-      sidebarRenderer: PageSidebar as any,
+      initialSettings: `{
+                            "entityConfiguration": {
+                                "person": 0.70,
+                                "organization": 0.70,
+                                "loc": 0.70,
+                                "email": 0.90
+                            },
+                            "defaultConfidence": 0.80,
+                            "relations": [
+                                {
+                                    "startType": "person",
+                                    "endType": "organization",
+                                    "name": "interacts_with"
+                                },
+                                {
+                                    "startType": "person",
+                                    "endType": "email",
+                                    "name": "has_email"
+                                }
+                            ]
+                        }`,
     },
   ],
 };
 
-function iconRenderer(props: any) {
-  return <ClayIcon symbol="globe" {...props} />;
+function iconRenderer() {
+  return <span>📧</span>; // TODO
 }

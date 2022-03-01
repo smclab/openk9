@@ -1,1 +1,1 @@
-# Web Plugin
+# Web Sitemap Plugin

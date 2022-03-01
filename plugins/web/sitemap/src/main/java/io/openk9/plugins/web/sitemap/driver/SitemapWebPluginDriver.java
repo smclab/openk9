@@ -40,7 +40,7 @@ public class SitemapWebPluginDriver extends BasePluginDriver {
 		String[] headers() default "Content-Type:application/json";
 		boolean schedulerEnabled() default true;
 		String[] jsonKeys() default {
-			"sitemapUrls", "allowedDomains", "bodyTag", "titleTag", "datasourceId"
+			"sitemapUrls", "allowedDomains", "bodyTag", "titleTag", "datasourceId", "maxLength"
 		};
 	}
 

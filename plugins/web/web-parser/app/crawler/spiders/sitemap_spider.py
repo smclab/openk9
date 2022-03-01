@@ -19,7 +19,6 @@ import logging
 import ast
 import json
 import hashlib
-import concurrent.futures
 from datetime import datetime
 
 from scrapy.spiders import SitemapSpider
@@ -30,7 +29,7 @@ from scrapy.utils.gz import gunzip, gzip_magic_number
 
 from crawler.items import GenericWebItem, Payload
 from .util.generic.utility import get_favicon, get_title, get_content, post_message
-from .util.tika.utility import parse_document_by_url
+from .util.file.utility import parse_document_by_url
 from .util.sitemap.utility import iterloc, regex
 
 logger = logging.getLogger(__name__)
@@ -49,8 +48,8 @@ class CustomSitemapSpider(SitemapSpider):
 
     cont = 0
 
-    def __init__(self, sitemap_urls, allowed_domains, body_tag, title_tag, datasource_id, ingestion_url, delete_url,
-                 timestamp, max_length, *a, **kw):
+    def __init__(self, sitemap_urls, allowed_domains, body_tag, title_tag, replace_rule, datasource_id, ingestion_url,
+                 delete_url, timestamp, max_length, *a, **kw):
         super(SitemapSpider, self).__init__(*a, **kw)
 
         self._cbs = []
@@ -71,21 +70,8 @@ class CustomSitemapSpider(SitemapSpider):
         self.delete_url = delete_url
         self.timestamp = timestamp
         self.allowed_domains = ast.literal_eval(allowed_domains)
-
+        self.replace_rule = ast.literal_eval(replace_rule)
         self.max_length = int(max_length)
-
-        try:
-            with open("./crawler/spiders/mapping_config.json") as config_file:
-                self.config = json.load(config_file)
-        except (FileNotFoundError, json.decoder.JSONDecodeError):
-            logger.error("Ingestion configuration file is missing or there is some error in it.")
-            return
-
-        self.type_mapping = self.config["TYPE_MAPPING"]
-        self.allowed_types = self.type_mapping.keys()
-        logger.info(self.allowed_types)
-
-        self.executor = concurrent.futures.ThreadPoolExecutor(8)
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -94,8 +80,6 @@ class CustomSitemapSpider(SitemapSpider):
         return spider
 
     def spider_closed(self, spider):
-        if spider.executor is not None:
-            spider.executor.shutdown(wait=True)
 
         logger.info("Ingestion completed")
 
@@ -104,13 +88,15 @@ class CustomSitemapSpider(SitemapSpider):
             "contentIds": self.crawled_ids
         }
 
-        logger.info(payload)
-
-        post_message(self.delete_url, payload)
+        # post_message(self.delete_url, payload)
 
     def start_requests(self):
         for url in self.sitemap_urls:
             yield Request(url, self._parse_sitemap)
+            
+    def sitemap_replace(self, loc, rule):
+        new_loc = loc.replace(rule[0], rule[1])
+        return new_loc
 
     def sitemap_filter(self, entries):
         """This method can be used to filter sitemap entries by their
@@ -143,7 +129,7 @@ class CustomSitemapSpider(SitemapSpider):
             elif s.type == 'urlset':
                 it = self.sitemap_filter(s)
                 for loc in iterloc(it, self.sitemap_alternate_links):
-                    loc = loc.replace("https://staging.", "https://")
+                    loc = self.sitemap_replace(loc, self.replace_rule)
                     yield Request(loc, callback=self.parse)
 
     def _get_sitemap_body(self, response):
@@ -184,6 +170,19 @@ class CustomSitemapSpider(SitemapSpider):
                 "web": dict(web_item)
             }
 
+            tmp_document_anchors = response.css("a")
+
+            document_urls = []
+            for anchor in tmp_document_anchors:
+                try:
+                    href = anchor.attrib['href']
+                    document_title = anchor.css("a::text").get()
+                    next_page = response.urljoin(href)
+                    document_urls.append(next_page)
+                    parse_document_by_url(next_page, self, response.url, document_title)
+                except KeyError:
+                    continue
+
             payload = Payload()
 
             url = response.url
@@ -204,4 +203,4 @@ class CustomSitemapSpider(SitemapSpider):
 
         else:
 
-            self.executor.submit(parse_document_by_url, response.url, self)
+            return

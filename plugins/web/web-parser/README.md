@@ -30,7 +30,8 @@ This endpoint takes different arguments in JSON raw body:
 - **depth**: depth to search contents
 - **follow**: boolean to set if follow links from crawled pages; default is *True*
 - **bodyTag**: html tag for main content to extract from page
-- **titleTag*+: html tag for title to assign to extracted page
+- **titleTag**: html tag for title to assign to extracted page
+- **pageCount**: count of page limit to crawl
 
 Follows an example of Curl call:
 
@@ -60,10 +61,12 @@ This endpoint takes different arguments in JSON raw body:
 
 - **sitemapUrls**: robots.txt file or sitemap list
 - **allowedDomains**: username of specific liferay account
-- **datasourceId**: id of datasource
+- **datasourceId**: id of datasource in Openk9
 - **timestamp**: timestamp to check data to be extracted
 - **bodyTag**: html tag for main content to extract from page
-- **titleTag*+: html tag for title to assign to extracted page
+- **titleTag**: html tag for title to assign to extracted page (optional parameter, if not specified title from title tag is taken)
+- **maxLength**: max length in characters for extracted content. If content length exceeds maxLength is truncated.
+- **replaceRule**: rule expressed as list of two elements, where first is element to replace and second string with which to replace (optional parameter, if not specified, no replacement is done)
 
 Follows an example of Curl call:
 
@@ -76,7 +79,8 @@ curl --location --request POST 'http://localhost:5008/execute-sitemap' \
     "bodyTag": "div#main-content",
     "titleTag": "title::text",
     "datasourceId": 1,
-    "timestamp": 0
+    "timestamp": 0,
+    "maxLength": 10000
 }'
 ```
 

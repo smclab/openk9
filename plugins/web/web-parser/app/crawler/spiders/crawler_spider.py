@@ -20,7 +20,6 @@ import json
 from datetime import datetime
 import logging
 import hashlib
-import concurrent.futures
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -28,7 +27,7 @@ from scrapy import signals
 
 from crawler.items import GenericWebItem, Payload
 from .util.generic.utility import get_favicon, get_title, get_content, post_message, str_to_bool
-from .util.tika.utility import parse_document_by_url
+from .util.file.utility import parse_document_by_url
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class CustomGenericSpider(CrawlSpider):
     type_mapping = []
 
     def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, title_tag, follow,
-                max_length, datasource_id, ingestion_url, delete_url, *args, **kwargs):
+                 max_length, datasource_id, ingestion_url, delete_url, *args, **kwargs):
         super(CustomGenericSpider, self).__init__(*args, **kwargs)
 
         self.allowed_domains = ast.literal_eval(allowed_domains)
@@ -68,19 +67,6 @@ class CustomGenericSpider(CrawlSpider):
         super(CustomGenericSpider, self)._compile_rules()
         self.end_timestamp = datetime.utcnow().timestamp() * 1000
 
-        try:
-            with open("./crawler/spiders/mapping_config.json") as config_file:
-                self.config = json.load(config_file)
-        except (FileNotFoundError, json.decoder.JSONDecodeError):
-            self.logger.error("Ingestion configuration file is missing or there is some error in it.")
-            return
-
-        self.type_mapping = self.config["TYPE_MAPPING"]
-        self.allowed_types = self.type_mapping.keys()
-        self.logger.info(self.allowed_types)
-
-        self.executor = concurrent.futures.ThreadPoolExecutor(8)
-
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super(CustomGenericSpider, cls).from_crawler(crawler, *args, **kwargs)
@@ -88,8 +74,6 @@ class CustomGenericSpider(CrawlSpider):
         return spider
 
     def spider_closed(self, spider):
-        if spider.executor is not None:
-            spider.executor.shutdown(wait=True)
 
         logger.info("Ingestion completed")
 
@@ -98,9 +82,7 @@ class CustomGenericSpider(CrawlSpider):
             "contentIds": self.crawled_ids
         }
 
-        logger.info(payload)
-
-        post_message(self.delete_url, payload)
+        # post_message(self.delete_url, payload)
 
     def parse(self, response, **kwargs):
 
@@ -119,6 +101,19 @@ class CustomGenericSpider(CrawlSpider):
             datasource_payload = {
                 "web": dict(web_item)
             }
+
+            tmp_document_anchors = response.css("a")
+
+            document_urls = []
+            for anchor in tmp_document_anchors:
+                try:
+                    href = anchor.attrib['href']
+                    document_title = anchor.css("a::text").get()
+                    next_page = response.urljoin(href)
+                    document_urls.append(next_page)
+                    parse_document_by_url(next_page, self, response.url, document_title)
+                except KeyError:
+                    continue
 
             payload = Payload()
 
@@ -140,4 +135,4 @@ class CustomGenericSpider(CrawlSpider):
 
         else:
 
-            self.executor.submit(parse_document_by_url, response.url, self)
+            return

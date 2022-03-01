@@ -1,1 +1,1 @@
-# Web Plugin
+# Web Generic Plugin

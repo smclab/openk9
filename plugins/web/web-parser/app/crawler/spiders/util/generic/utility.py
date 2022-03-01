@@ -44,7 +44,7 @@ def get_content(response, max_length, body_tag=None):
         body = response.css(body_tag).get()
 
     try:
-        soup = BeautifulSoup(body, 'lxml').get_text()
+        soup = BeautifulSoup(body, 'lxml').get_text(separator=u' ')
     except TypeError:
         return content
 
@@ -90,7 +90,7 @@ def post_message(url, payload, timeout=30):
 
 
 def get_as_base64(response):
-    data = base64.b64encode(response.content).decode('utf-8')
+    data = base64.b64encode(response).decode('utf-8')
     return data
 
 

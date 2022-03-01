@@ -41,11 +41,11 @@ class CustomPipeline:
 
     def process_item(self, item, spider):
         if item['contentId'] in spider.crawled_ids:
-            raise DropItem(f"Duplicate item found: {item!r}")
+            raise DropItem(f"Duplicate item found: {item['contentId']!r}")
         else:
             self.exporter.export_item(item)
 
-            post_message(ingestion_url, dict(item))
+            # post_message(ingestion_url, dict(item))
 
             spider.crawled_ids.append(str(item['contentId']))
             spider.cont = spider.cont + 1

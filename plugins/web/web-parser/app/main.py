@@ -34,9 +34,10 @@ logger = logging.getLogger("uvicorn.access")
 class SitemapRequest(BaseModel):
     sitemapUrls: list
     bodyTag: str
-    titleTag: str
+    titleTag: Optional[str] = "title::text"
     datasourceId: int
     timestamp: int
+    replaceRule: Optional[list] = ["", ""]
     allowedDomains: list
     maxLength: Optional[int] = None
 
@@ -47,13 +48,13 @@ class GenericRequest(BaseModel):
     allowedPaths: list
     excludedPaths: list
     bodyTag: str
-    titleTag: str
+    titleTag: Optional[str] = "title::text"
     pageCount: Optional[int] = 0
     depth: Optional[int] = 0
     datasourceId: int
     timestamp: int
     follow: Optional[bool] = True
-    maxLength: Optional[int] = None
+    maxLength: Optional[int] = 0
 
 
 def post_message(url, payload, timeout):
@@ -77,13 +78,10 @@ def execute_generic(request: GenericRequest):
     allowed_domains = request["allowedDomains"]
     allowed_paths = request["allowedPaths"]
     excluded_paths = request["excludedPaths"]
-
     body_tag = request["bodyTag"]
     title_tag = request["titleTag"]
-
     datasource_id = request['datasourceId']
     timestamp = request["timestamp"]
-
     page_count = request["pageCount"]
     depth = request["depth"]
     follow = request["follow"]
@@ -134,6 +132,7 @@ def execute(request: SitemapRequest):
     timestamp = request["timestamp"]
     allowed_domains = request["allowedDomains"]
     max_length = request["maxLength"]
+    replace_rule = request["replaceRule"]
 
     payload = {
         "project": "crawler",
@@ -142,6 +141,7 @@ def execute(request: SitemapRequest):
         "allowed_domains": json.dumps(allowed_domains),
         "body_tag": body_tag,
         "title_tag": title_tag,
+        "replace_rule": json.dumps(replace_rule),
         "datasource_id": datasource_id,
         "ingestion_url": ingestion_url,
         "delete_url": delete_url,
