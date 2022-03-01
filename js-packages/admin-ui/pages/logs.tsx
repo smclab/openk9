@@ -16,13 +16,9 @@
  */
 
 import { createUseStyles } from "react-jss";
-import ClayIcon from "@clayui/icon";
-import Link from "next/link";
-import useSWR from "swr";
 import { ThemeType } from "@openk9/search-ui-components";
-import { getContainerStatus } from "@openk9/rest-api";
 import { Layout } from "../components/Layout";
-import { useLoginCheck, useLoginInfo } from "../state";
+import { useLoginCheck } from "../state";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -52,56 +48,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
   },
 }));
 
-function TBody() {
-  const classes = useStyles();
-
-  const loginInfo = useLoginInfo();
-
-  const { data } = useSWR(`/logs/status`, () => getContainerStatus(loginInfo));
-
-  if (!data) {
-    return <span className="loading-animation" />;
-  }
-
-  return (
-    <tbody>
-      {data.map((container) => (
-        <tr key={container.ID}>
-          <td>{container.ID}</td>
-          <td className="table-cell-expand">
-            <p className="table-list-title">{container.Names}</p>
-          </td>
-          <td className="table-cell-expand">{container.Image}</td>
-          <td>
-            {container.Status.startsWith("Up") ? (
-              <span className="label label-success">
-                <span className="label-item label-item-expand">
-                  {container.Status}
-                </span>
-              </span>
-            ) : (
-              <span className="label label-warning">
-                <span className="label-item label-item-expand">
-                  {container.Status}
-                </span>
-              </span>
-            )}
-          </td>
-          <td>
-            <div className={classes.actions}>
-              <Link href={`/logs/${container.ID}/`} passHref>
-                <a className="component-action quick-action-item" role="button">
-                  <ClayIcon symbol="forms" />
-                </a>
-              </Link>
-            </div>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  );
-}
-
 function Logs() {
   const classes = useStyles();
 
@@ -121,7 +67,6 @@ function Logs() {
               <th>Logs</th>
             </tr>
           </thead>
-          <TBody />
         </table>
       </div>
     </Layout>

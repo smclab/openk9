@@ -20,7 +20,7 @@ import { useRouter } from "next/router";
 import useSWR from "swr";
 import ansicolor from "ansicolor";
 import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { getContainerLogs, getContainerStatus } from "@openk9/rest-api";
+import { getContainerLogs } from "@openk9/rest-api";
 import { Layout } from "../../components/Layout";
 import { useLoginCheck } from "../../state";
 
@@ -91,10 +91,6 @@ function LogId() {
 
   const { loginValid, loginInfo } = useLoginCheck();
 
-  const { data: info } = useSWR(`/logs/status`, getContainerStatus, {
-    refreshInterval: 10000,
-  });
-
   const { data: log } = useSWR(
     `/logs/status/${contId}/${N}`,
     () => getContainerLogs(contId || "", N, loginInfo),
@@ -106,12 +102,7 @@ function LogId() {
   const parsed = ansicolor.parse(log);
 
   return (
-    <Layout
-      breadcrumbsPath={[
-        { label: "Logs", path: "/logs" },
-        { label: (info || []).find((e) => e.ID === contId)?.Names || "" },
-      ]}
-    >
+    <Layout breadcrumbsPath={[{ label: "Logs", path: "/logs" }]}>
       <div className={classes.container}>
         <div className={classes.root}>
           <pre className={classes.code}>
