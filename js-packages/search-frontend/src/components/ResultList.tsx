@@ -7,6 +7,7 @@ import { GenericResultItem, LoginInfo, SearchToken } from "@openk9/rest-api";
 import { Logo } from "./Logo";
 import { myTheme } from "./myTheme";
 import { Renderers } from "./useRenderers";
+import { CustomScrollbar } from "./CustomScrollbar";
 
 type ResultsProps<E> = {
   renderers: Renderers;
@@ -61,6 +62,7 @@ function ResultCount({ children }: ResultCountProps) {
     <div
       css={css`
         padding: 8px 16px;
+        border-bottom: 1px solid var(--openk9-embeddable-search--border-color);
       `}
     >
       {children} results
@@ -196,6 +198,7 @@ export function VirtualResults<E>({
           }
         }}
         components={{
+          Scroller: CustomScrollbar as any,
           Footer() {
             return (
               <div

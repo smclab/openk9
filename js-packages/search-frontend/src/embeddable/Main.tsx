@@ -35,6 +35,8 @@ import { isEqual } from "lodash";
 import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 import { FilterCategory } from "../components/FilterCategory";
 import { useRenderers } from "../components/useRenderers";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import "overlayscrollbars/css/OverlayScrollbars.css";
 
 type MainProps = { config: OpenK9ConfigFacade };
 export function Main({ config }: MainProps) {
@@ -447,20 +449,36 @@ export function Main({ config }: MainProps) {
         )}
       {config.filters !== null &&
         ReactDOM.createPortal(
-          <div>
-            {suggestionCategories.data?.slice(2).map((suggestionCategory) => {
-              return (
-                <FilterCategory
-                  key={suggestionCategory.suggestionCategoryId}
-                  suggestionCategoryName={suggestionCategory.name}
-                  suggestionCategoryId={suggestionCategory.suggestionCategoryId}
-                  tokens={searchQuery}
-                  onAdd={addFilterSearchToken}
-                  onRemove={removeFilterSearchToken}
-                />
-              );
-            })}
-          </div>,
+          <OverlayScrollbarsComponent
+            style={{
+              overflowY: "auto",
+              position: "relative",
+              height: "100%",
+            }}
+          >
+            <div
+              css={css`
+                position: absolute;
+                width: calc(100% - 32px);
+                padding: 16px 16px 0px 16px;
+              `}
+            >
+              {suggestionCategories.data?.slice(2).map((suggestionCategory) => {
+                return (
+                  <FilterCategory
+                    key={suggestionCategory.suggestionCategoryId}
+                    suggestionCategoryName={suggestionCategory.name}
+                    suggestionCategoryId={
+                      suggestionCategory.suggestionCategoryId
+                    }
+                    tokens={searchQuery}
+                    onAdd={addFilterSearchToken}
+                    onRemove={removeFilterSearchToken}
+                  />
+                );
+              })}
+            </div>
+          </OverlayScrollbarsComponent>,
           config.filters,
         )}
       {config.results !== null &&

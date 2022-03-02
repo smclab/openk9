@@ -5,6 +5,8 @@ import { GenericResultItem, SidebarRendererProps } from "@openk9/rest-api";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
 import { Renderers } from "./useRenderers";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import "overlayscrollbars/css/OverlayScrollbars.css";
 
 type DetailProps<E> = {
   renderers: Renderers;
@@ -14,14 +16,14 @@ function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
   const { renderers } = props;
   return (
-    <div
-      css={css`
-        position: relative;
-        width: 100%;
-        height: 100%;
-        box-sizing: border-box;
-        overflow: auto;
-      `}
+    <OverlayScrollbarsComponent
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
+        overflow: "auto",
+      }}
     >
       <div
         css={css`
@@ -51,7 +53,7 @@ function Detail<E>(props: DetailProps<E>) {
           return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
         })()}
       </div>
-    </div>
+    </OverlayScrollbarsComponent>
   );
 }
 export const DetailMemo = React.memo(Detail);

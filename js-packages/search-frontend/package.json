@@ -65,6 +65,8 @@
     "http-proxy-middleware": "^2.0.0",
     "lint-staged": "^12.1.2",
     "lodash": "^4.17.21",
+    "overlayscrollbars": "^1.13.1",
+    "overlayscrollbars-react": "^0.2.3",
     "prettier": "^2.5.1",
     "react": "^17.0.0",
     "react-click-away-listener": "^2.0.3",

@@ -126,8 +126,6 @@ export function App() {
         ref={(element) => (OpenK9.filters = element)}
         css={css`
           grid-area: filters;
-          overflow-y: auto;
-          padding: 0px 16px;
           background-color: ${myTheme.backgroundColor1};
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
