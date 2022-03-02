@@ -26,6 +26,8 @@ import io.openk9.plugin.driver.manager.api.Field;
 import io.openk9.plugin.driver.manager.api.FieldType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
@@ -150,8 +152,16 @@ public class MappingsDocumentTypeFactoryCustomizer
 		)
 			.collect(Collectors.toMap(
 				Map.Entry::getKey, Map.Entry::getValue,
-				(o, o2) -> _merge(
-					(Map<String, Object>)o, (Map<String, Object>)o2)));
+				(o, o2) -> {
+
+					if (!(o instanceof Map || o2 instanceof Map)) {
+						_log.debug("element1: " + o + " element2: " + o2);
+					}
+
+					return _merge(
+						(Map<String, Object>)o, (Map<String, Object>)o2);
+
+				}));
 	}
 
 	private Map<String, Object> _createFieldNode(Field field) {
@@ -204,5 +214,8 @@ public class MappingsDocumentTypeFactoryCustomizer
 
 	@Reference
 	private IndexWriterEventPublisher _indexWriterEventPublisher;
+
+	private static final Logger _log = LoggerFactory.getLogger(
+		MappingsDocumentTypeFactoryCustomizer.class);
 
 }
