@@ -34,7 +34,7 @@ export function useInfiniteResults<E>(
           0,
         );
         if (totalDownloaded < lastPage.total) {
-          return pages.length + 1;
+          return pages.length;
         }
       },
     },
