@@ -226,7 +226,7 @@ export function useInfiniteSuggestions(
       if (!searchQuery) throw new Error();
       const result = await getSuggestions({
         searchQuery,
-        range: [0, pageSize],
+        range: [0, pageSize + 1],
         afterKey: pageParam,
         loginInfo: null,
         suggestionCategoryId: activeSuggestionCategory,
@@ -241,12 +241,10 @@ export function useInfiniteSuggestions(
       enabled: searchQuery !== null,
       keepPreviousData: true,
       getNextPageParam(lastPage, pages) {
-        if (ENABLED) {
+          if (!ENABLED) return undefined
           if (!lastPage.afterKey) return undefined;
+          if (pages[pages.length -1].result.length < pageSize) return undefined;
           return lastPage.afterKey;
-        } else {
-          return undefined;
-        }
       },
     },
   );

@@ -81,6 +81,7 @@ export function App() {
         css={css`
           grid-area: dockbar;
           padding: 8px 16px;
+          margin: 0px -16px;
           box-shadow: ${myTheme.separationBoxShadow};
           display: flex;
           align-items: center;

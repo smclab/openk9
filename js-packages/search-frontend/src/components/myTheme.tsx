@@ -1,3 +1,4 @@
+// TODO refactor to css
 export const myTheme = {
   backgroundColor1: "#ffffff",
   backgroundColor2: "#f7f7f7",
