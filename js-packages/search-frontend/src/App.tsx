@@ -6,7 +6,7 @@ import { Logo } from "./components/Logo";
 import "./index.css";
 import "./app.css";
 
-OpenK9.enabled = true
+OpenK9.enabled = true;
 
 export function App() {
   return (
@@ -14,8 +14,46 @@ export function App() {
       css={css`
         width: 100vw;
         height: 100vh;
+        background-color: ${myTheme.backgroundColor2};
         display: grid;
-        grid-template-columns: 20% 40% 40%;
+        grid-column-gap : 16px;
+        padding-bottom: 16px;
+        padding-left: 16px;
+        padding-right: 16px;
+        box-sizing: border-box;
+        @media (min-width: 320px) and (max-width: 480px) {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto 1fr 0px 0px;
+          grid-template-areas:
+            "dockbar"
+            "tabs"
+            "search"
+            "result"
+            "filters"
+            "detail";
+        }
+        @media (min-width: 481px) and (max-width: 768px) {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto 1fr 0px 0px;
+          grid-template-areas:
+            "dockbar"
+            "tabs"
+            "search"
+            "result"
+            "filters"
+            "detail";
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+          grid-template-columns: 1fr 2fr;
+          grid-template-rows: auto auto auto 1fr 0px;
+          grid-template-areas:
+            "dockbar dockbar"
+            "tabs tabs"
+            "search search"
+            "filters result"
+            "detail detail";
+        }
+        grid-template-columns: 1fr 2fr 2fr;
         grid-template-rows: auto auto auto 1fr;
         grid-template-areas:
           "dockbar dockbar dockbar"
@@ -28,15 +66,13 @@ export function App() {
         ref={(element) => (OpenK9.search = element)}
         css={css`
           grid-area: search;
-          background-color: ${myTheme.backgroundColor2};
-          padding: 16px;
+          padding: 16px 0px 16px 0px;
         `}
       ></div>
       <div
         ref={(element) => (OpenK9.tabs = element)}
         css={css`
           grid-area: tabs;
-          background-color: ${myTheme.backgroundColor2};
           padding: 8px 16px 0px 16px;
           margin-bottom: -16px;
         `}
@@ -48,6 +84,7 @@ export function App() {
           box-shadow: ${myTheme.separationBoxShadow};
           display: flex;
           align-items: center;
+          background-color: ${myTheme.backgroundColor1};
         `}
       >
         <div
@@ -90,7 +127,9 @@ export function App() {
           grid-area: filters;
           overflow-y: auto;
           padding: 0px 16px;
-          background-color: ${myTheme.backgroundColor2};
+          background-color: ${myTheme.backgroundColor1};
+          border-radius: 4px;
+          border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
       ></div>
       <div
@@ -98,6 +137,9 @@ export function App() {
         css={css`
           grid-area: result;
           overflow-y: auto;
+          background-color: ${myTheme.backgroundColor1};
+          border-radius: 4px;
+          border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
       ></div>
       <div
@@ -105,7 +147,9 @@ export function App() {
         css={css`
           grid-area: detail;
           overflow-y: auto;
-          background-color: ${myTheme.backgroundColor2};
+          background-color: ${myTheme.backgroundColor1};
+          border-radius: 4px;
+          border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
       ></div>
     </div>

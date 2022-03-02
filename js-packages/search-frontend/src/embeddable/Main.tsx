@@ -397,42 +397,51 @@ export function Main({ config }: MainProps) {
         ReactDOM.createPortal(
           <div
             css={css`
-              display: flex;
-              padding: 0px 16px;
+              position: relative;
+              overflow-x: auto;
+              height: 35px;
             `}
           >
-            {tabs.map((tab, index) => {
-              const isSelected = index === selectedTabIndex;
-              return (
-                <div
-                  key={index}
-                  css={css`
-                    padding: 8px 16px;
-                    color: ${isSelected
-                      ? "var(--openk9-embeddable-search--primary-color)"
-                      : ""};
-                    border-bottom: 2px solid
-                      ${isSelected
-                        ? "var(--openk9-embeddable-search--active-color)"
-                        : "transparent"};
-                    cursor: pointer;
-                    font-size: 0.8rem;
-                    color: ${myTheme.grayTexColor};
-                    user-select: none;
-                  `}
-                  onClick={() => {
-                    setSelectedTabIndex(index);
-                    // DEBT: do not use global api
-                    window.OpenK9.queryState = {
-                      ...window.OpenK9.queryState,
-                      filterTokens: [],
-                    };
-                  }}
-                >
-                  {tab.label.toUpperCase()}
-                </div>
-              );
-            })}
+            <div
+              css={css`
+                position: absolute;
+                display: flex;
+                padding: 0px 16px;
+              `}
+            >
+              {tabs.map((tab, index) => {
+                const isSelected = index === selectedTabIndex;
+                return (
+                  <div
+                    key={index}
+                    css={css`
+                      padding: 8px 16px;
+                      color: ${isSelected
+                        ? "var(--openk9-embeddable-search--primary-color)"
+                        : ""};
+                      border-bottom: 2px solid
+                        ${isSelected
+                          ? "var(--openk9-embeddable-search--active-color)"
+                          : "transparent"};
+                      cursor: pointer;
+                      font-size: 0.8rem;
+                      color: ${myTheme.grayTexColor};
+                      user-select: none;
+                    `}
+                    onClick={() => {
+                      setSelectedTabIndex(index);
+                      // DEBT: do not use global api
+                      window.OpenK9.queryState = {
+                        ...window.OpenK9.queryState,
+                        filterTokens: [],
+                      };
+                    }}
+                  >
+                    {tab.label.toUpperCase()}
+                  </div>
+                );
+              })}
+            </div>
           </div>,
           config.tabs,
         )}
