@@ -8,7 +8,7 @@ export const plugin: Plugin<WebResultItem> = {
   pluginServices: [
     {
       type: "DATASOURCE",
-      displayName: "Web Generic DataSource",
+      displayName: "Web Sitemap DataSource",
       driverServiceName: "io.openk9.plugins.web.sitemap.driver.SitemapWebPluginDriver",
       iconRenderer,
       initialSettings: `
