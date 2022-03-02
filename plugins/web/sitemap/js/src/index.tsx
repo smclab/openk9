@@ -28,31 +28,28 @@ export const plugin: Plugin<WebResultItem> = {
       serviceName:
         "io.openk9.plugins.web.sitemap.enrichprocessor.AsyncWebNerEnrichProcessor",
       iconRenderer,
-      initialSettings: `{
-                            "entityConfiguration": {
-                                "person": 0.70,
-                                "organization": 0.70,
-                                "loc": 0.70,
-                                "email": 0.90
-                            },
-                            "defaultConfidence": 0.80,
-                            "relations": [
-                                {
-                                    "startType": "person",
-                                    "endType": "organization",
-                                    "name": "interacts_with"
-                                },
-                                {
-                                    "startType": "person",
-                                    "endType": "email",
-                                    "name": "has_email"
-                                }
-                            ]
-                        }`,
+      initialSettings: `
+      {
+            "entityConfiguration": {
+                "person": 0.70,
+                "organization": 0.70,
+                "loc": 0.70,
+                "email": 0.90
+            },
+            "defaultConfidence": 0.80,
+            "relations": [
+                {
+                    "startType": "person",
+                    "endType": "organization",
+                    "name": "interacts_with"
+                },
+                {
+                    "startType": "person",
+                    "endType": "email",
+                    "name": "has_email"
+                }
+            ]
+        }`,
     },
   ],
 };
-
-function iconRenderer() {
-  return <span>📧</span>; // TODO
-}

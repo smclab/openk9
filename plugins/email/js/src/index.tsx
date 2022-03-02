@@ -32,11 +32,31 @@ export const plugin: Plugin<EmailResultItem> = {
     },
     {
       type: "ENRICH",
-      displayName: "Email NER",
+      displayName: "Async Email NER",
       serviceName:
-        "io.openk9.plugins.email.enrichprocessor.EmailNerEnrichProcessor",
+        "io.openk9.plugins.email.enrichprocessor.AsyncEmailNerEnrichProcessor",
       iconRenderer,
-      initialSettings: `{"entities": ["person", "email","organization"], "confidence": 0.90}`,
+      initialSettings: `{
+                            "entityConfiguration": {
+                                "person": 0.7,
+                                "organization": 0.7,
+                                "loc": 0.7,
+                                "email": 0.9
+                            },
+                            "defaultConfidence": 0.8,
+                            "relations": [
+                                {
+                                    "startType": "person",
+                                    "endType": "organization",
+                                    "name": "interacts_with"
+                                },
+                                {
+                                    "startType": "person",
+                                    "endType": "email",
+                                    "name": "has_email"
+                                }
+                            ]
+                        }`,
     },
     {
       type: "RESULT_RENDERER",
@@ -46,7 +66,3 @@ export const plugin: Plugin<EmailResultItem> = {
     },
   ],
 };
-
-function iconRenderer() {
-  return <span>📧</span>; // TODO
-}

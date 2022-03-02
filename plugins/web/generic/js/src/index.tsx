@@ -54,7 +54,3 @@ export const plugin: Plugin<WebResultItem> = {
     },
   ],
 };
-
-function iconRenderer() {
-  return <span>📧</span>; // TODO
-}
