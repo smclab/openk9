@@ -90,7 +90,7 @@ def parse_document_by_url(url, spider, relative_url=None, title=None):
             }
 
             if content_id not in spider.crawled_ids:
-                # post_message(spider.ingestion_url, dict(payload))
+                post_message(spider.ingestion_url, dict(payload))
 
                 spider.crawled_ids.append(content_id)
 
