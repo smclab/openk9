@@ -14,21 +14,13 @@ export const plugin: Plugin<EmailResultItem> = {
       driverServiceName: "io.openk9.plugins.email.driver.EmailPluginDriver",
       initialSettings: `
         {
-            "entities": ["person", "organization", "loc", "email"],
-            "confidence": 0.80,
-            "relations": [
-                  {
-                      "startType": "person",
-                      "endType": "organization",
-                      "name": "interacts_with"
-                  },
-                  {
-                      "startType": "person",
-                      "endType": "email",
-                      "name": "has_email"
-                }
-              ]
-          }
+            "mailServer":"mail.test.com",
+            "port":"993",
+            "username":"test",
+            "password":"test",
+            "datasourceId":1,
+            "folder":"INBOX"
+        }
       `,
     },
     {
