@@ -10,7 +10,6 @@ export const plugin: Plugin<WebResultItem> = {
       type: "DATASOURCE",
       displayName: "Web Sitemap DataSource",
       driverServiceName: "io.openk9.plugins.web.sitemap.driver.SitemapWebPluginDriver",
-      iconRenderer,
       initialSettings: `
         {
             "datasourceId": 1,
@@ -27,7 +26,6 @@ export const plugin: Plugin<WebResultItem> = {
       displayName: "Web Sitemap Async NER",
       serviceName:
         "io.openk9.plugins.web.sitemap.enrichprocessor.AsyncWebNerEnrichProcessor",
-      iconRenderer,
       initialSettings: `
       {
         "entities": ["person", "organization", "loc", "email"],

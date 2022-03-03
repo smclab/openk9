@@ -10,7 +10,6 @@ export const plugin: Plugin<WebResultItem> = {
       type: "DATASOURCE",
       displayName: "Web Generic DataSource",
       driverServiceName: "io.openk9.plugins.web.generic.driver.GenericWebPluginDriver",
-      iconRenderer,
       initialSettings: `
         {
             "datasourceId": 1,
@@ -29,7 +28,6 @@ export const plugin: Plugin<WebResultItem> = {
       displayName: "Web Generic Async NER",
       serviceName:
         "io.openk9.plugins.web.generic.enrichprocessor.AsyncWebNerEnrichProcessor",
-      iconRenderer,
       initialSettings: `{
       "entities": ["person", "organization", "loc", "email"],
       "confidence": 0.80,
