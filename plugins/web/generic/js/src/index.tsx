@@ -26,31 +26,26 @@ export const plugin: Plugin<WebResultItem> = {
     },
     {
       type: "ENRICH",
-      displayName: "Web Async NER",
+      displayName: "Web Generic Async NER",
       serviceName:
         "io.openk9.plugins.web.generic.enrichprocessor.AsyncWebNerEnrichProcessor",
       iconRenderer,
       initialSettings: `{
-                            "entityConfiguration": {
-                                "person": 0.70,
-                                "organization": 0.70,
-                                "loc": 0.70,
-                                "email": 0.90
-                            },
-                            "defaultConfidence": 0.80,
-                            "relations": [
-                                {
-                                    "startType": "person",
-                                    "endType": "organization",
-                                    "name": "interacts_with"
-                                },
-                                {
-                                    "startType": "person",
-                                    "endType": "email",
-                                    "name": "has_email"
-                                }
-                            ]
-                        }`,
+      "entities": ["person", "organization", "loc", "email"],
+      "confidence": 0.80,
+      "relations": [
+            {
+                "startType": "person",
+                "endType": "organization",
+                "name": "interacts_with"
+            },
+            {
+                "startType": "person",
+                "endType": "email",
+                "name": "has_email"
+            }
+            ]
+        }`,
     },
   ],
 };
