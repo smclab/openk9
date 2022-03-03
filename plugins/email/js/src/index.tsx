@@ -12,22 +12,23 @@ export const plugin: Plugin<EmailResultItem> = {
       type: "DATASOURCE",
       displayName: "Email DataSource",
       driverServiceName: "io.openk9.plugins.email.driver.EmailPluginDriver",
-      iconRenderer,
       initialSettings: `
         {
-          "entities": [
-              "person",
-              "email",
-              "organization"
-          ],
-          "confidence": 0.9,
-          "mailServer": "172.20.20.1",
-          "port": "993",
-          "username": "test",
-          "password": "test",
-          "datasourceId": 99,
-          "folder": "INBOX"
-        }
+            "entities": ["person", "organization", "loc", "email"],
+            "confidence": 0.80,
+            "relations": [
+                  {
+                      "startType": "person",
+                      "endType": "organization",
+                      "name": "interacts_with"
+                  },
+                  {
+                      "startType": "person",
+                      "endType": "email",
+                      "name": "has_email"
+                }
+              ]
+          }
       `,
     },
     {
@@ -35,28 +36,23 @@ export const plugin: Plugin<EmailResultItem> = {
       displayName: "Async Email NER",
       serviceName:
         "io.openk9.plugins.email.enrichprocessor.AsyncEmailNerEnrichProcessor",
-      iconRenderer,
-      initialSettings: `{
-                            "entityConfiguration": {
-                                "person": 0.7,
-                                "organization": 0.7,
-                                "loc": 0.7,
-                                "email": 0.9
-                            },
-                            "defaultConfidence": 0.8,
-                            "relations": [
-                                {
-                                    "startType": "person",
-                                    "endType": "organization",
-                                    "name": "interacts_with"
-                                },
-                                {
-                                    "startType": "person",
-                                    "endType": "email",
-                                    "name": "has_email"
-                                }
-                            ]
-                        }`,
+      initialSettings: `
+      {
+        "entities": ["person", "organization", "loc", "email"],
+        "confidence": 0.80,
+        "relations": [
+              {
+                  "startType": "person",
+                  "endType": "organization",
+                  "name": "interacts_with"
+              },
+              {
+                  "startType": "person",
+                  "endType": "email",
+                  "name": "has_email"
+            }
+          ]
+      }`,
     },
     {
       type: "RESULT_RENDERER",
