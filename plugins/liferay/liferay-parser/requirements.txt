@@ -1,4 +1,5 @@
-Flask==1.1.2
-beautifulsoup4==4.9.3
-requests==2.25.1
+fastapi
+uvicorn[standard]
+beautifulsoup4
+requests
 Pillow==8.1.0

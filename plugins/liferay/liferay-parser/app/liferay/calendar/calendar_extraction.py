@@ -20,9 +20,14 @@ import logging
 from datetime import datetime
 from typing import Optional
 from requests.auth import HTTPBasicAuth
+from logging.config import dictConfig
 import json
 import time
 import requests
+from ..util.utility import call_extraction_api, post_message, map_type
+from ..util.log_config import LogConfig
+
+dictConfig(LogConfig().dict())
 
 N_RETRY = 10
 RETRY_TIMEOUT = 10
@@ -30,22 +35,21 @@ TIMEOUT = 10
 N_MAX_ERRORS = 30
 
 
-class AsyncCalendarExtraction(threading.Thread):
+class CalendarExtraction(threading.Thread):
 
-    def __init__(self, domain, username, password, timestamp, company_id, datasource_id, ingestion_url):
+    def __init__(self, domain, username, password, timestamp, datasource_id, ingestion_url):
 
-        super(AsyncCalendarExtraction, self).__init__()
-        self.domain = domain
+        super(CalendarExtraction, self).__init__()
+        self.extraction_url = domain
         self.username = username
         self.password = password
         self.timestamp = timestamp
-        self.companyId = company_id
-        self.datasourceId = datasource_id
+        self.datasource_id = datasource_id
         self.ingestion_url = ingestion_url
 
         self.status = "RUNNING"
 
-        self.status_logger = logging.getLogger("status-logger")
+        self.status_logger = logging.getLogger("mycoolapp")
 
         self.basic_auth = HTTPBasicAuth(self.username, self.password)
 
@@ -54,178 +58,100 @@ class AsyncCalendarExtraction(threading.Thread):
         self.timeout = TIMEOUT
         self.n_max_errors = N_MAX_ERRORS
 
-    def call_extraction_api(self, url, payload):
-
-        for i in range(self.n_retry):
-            try:
-                r = requests.post(self.domain + url, auth=self.basic_auth, data=payload, timeout=self.timeout)
-                if r.status_code == 200:
-                    return r.text
-                else:
-                    r.raise_for_status()
-            except requests.RequestException as e:
-                self.status_logger.warning("Retry number " + str(i) + " " + str(e) + " during request at url: "
-                                           + str(self.domain + url))
-                if i < self.n_retry-1:
-                    time.sleep(self.retry_timeout)
-                    continue
-                else:
-                    self.status_logger.error(str(e) + " during request at url: " + str(self.domain + url))
-                    raise e
-
-    def post_message(self, url, payload, timeout):
-
-        try:
-            r = requests.post(url, json=payload, timeout=timeout)
-            if r.status_code == 200:
-                return
-            else:
-                r.raise_for_status()
-        except requests.RequestException as e:
-            self.status_logger.error(str(e) + " during request at url: " + str(url))
-            raise e
-
-    def extract(self):
-
-        try:
-            payload = {
-                "companyId": self.companyId,
-                "keywords": '',
-                "calendarResourceIds": '',
-                "andOperator": 'true',
-                "groupIds": '' 
-            }
-            calendar_count = self.call_extraction_api("/api/jsonws/calendar.calendar/search-count", payload)
-        except requests.RequestException:
-            self.status_logger.error("No calendar count extracted. Extraction process aborted.")
-            self.status = "ERROR"
-            return
-
-        self.status_logger.info(str(calendar_count) + " calendars founded")
+    def manage_data(self, calendar_bookings):
 
         calendar_bookings_number = 0
+        end_timestamp = datetime.utcnow().timestamp() * 1000
 
-        start_datetime = datetime.fromtimestamp(self.timestamp/1000)
-        start_date = datetime.strftime(start_datetime, "%d-%b-%Y")
+        self.status_logger.info("Posting calendar bookings")
 
-        self.status_logger.info("Getting calendar bookings created from " + start_date)
-
-        end_timestamp = datetime.utcnow().timestamp()*1000
-
-        start = 0
-
-        while start < int(calendar_count):
-
-            end = start + 10
-
-            payload = {
-                "companyId": self.companyId,
-                "start": start,
-                "end": end,
-                "keywords": '',
-                "calendarResourceIds": '',
-                "andOperator": 'true',
-                "groupIds": '',
-                "-orderByComparator": ''
-            }
-
+        for calendar_booking in calendar_bookings:
             try:
-                calendar_response = self.call_extraction_api('/api/jsonws/calendar.calendar/search', payload)
-            except requests.RequestException:
-                self.status_logger.error("Error during extraction of calendars from " + str(start)
-                                         + " to " + str(end) + ". Extraction process aborted.")
-                self.status = "ERROR"
-                return
+                if calendar_booking["status"] == 0:
 
-            calendar_list = json.loads(calendar_response)
+                    start_time = datetime.fromtimestamp(int(calendar_booking['startTime']) / 1000) \
+                        .strftime("%d-%m-%Y %H:%M:%S")
+                    end_time = datetime.fromtimestamp(int(calendar_booking['endTime']) / 1000) \
+                        .strftime("%d-%m-%Y %H:%M:%S")
 
-            for calendar in calendar_list:
+                    calendar_values = {
+                        "calendarBookingId": calendar_booking['calendarBookingId'],
+                        "description": calendar_booking['description'],
+                        "location": calendar_booking['location'],
+                        "title": calendar_booking['title'],
+                        "startTime": start_time,
+                        "endTime": end_time,
+                        "allDay": calendar_booking['allDay']
+                    }
 
-                start = start + 1
+                    datasource_payload = {"calendar": calendar_values}
 
-                self.status_logger.info("Extracting calendar " + str(start) + " of " + str(calendar_count))
+                    raw_content = str(calendar_booking['title']) \
+                                  + " " + calendar_booking['description'] + " " \
+                                  + str(calendar_booking['location'])
 
-                payload = {
-                    "calendarId": calendar["calendarId"],
-                    "statuses": 0
-                }
-
-                try:
-                    calendar_bookings_response = \
-                        self.call_extraction_api('/api/jsonws/calendar.calendarbooking/get-calendar-bookings', payload)
-                except requests.RequestException:
-                    self.status_logger.error("Error during extraction of calendars from "
-                                             + str(start) + " to " + str(end) + ". Extraction process aborted.")
-                    self.status = "ERROR"
-                    return
-                
-                calendar_bookings = json.loads(calendar_bookings_response)
-
-                for calendar_booking in calendar_bookings:
+                    payload = {
+                        "datasourceId": self.datasource_id,
+                        "contentId": str(calendar_booking['calendarBookingId']),
+                        "parsingDate": int(end_timestamp),
+                        "rawContent": raw_content,
+                        "datasourcePayload": datasource_payload,
+                        "resources": {
+                            "binaries": []
+                        }
+                    }
 
                     try:
-                        if calendar_booking["modifiedDate"] > self.timestamp and calendar_booking["status"] == 0:
-
-                            calendar_values = {
-                                "calendarBookingId": calendar_booking['calendarBookingId'],
-                                "description": calendar_booking['description'],
-                                "location": calendar_booking['location'],
-                                "title": calendar_booking['title'],
-                                "titleCurrentValue": calendar_booking['titleCurrentValue'],
-                                "startTime": calendar_booking['startTime'],
-                                "endTime": calendar_booking['endTime'],
-                                "allDay": calendar_booking['allDay']
-                            }
-
-                            datasource_payload = {"calendar": calendar_values}
-
-                            payload = {
-                                "datasourceId": self.datasourceId,
-                                "contentId": str(calendar_booking['calendarBookingId']),
-                                "parsingDate": int(end_timestamp),
-                                "rawContent": str(calendar_booking['titleCurrentValue'])
-                                                  + " " + str(calendar_booking['description']),
-                                "datasourcePayload": datasource_payload,
-                                "resources": {
-                                    "binaries": []
-                                }
-                            }
-                            
-                            self.status_logger.info(str(calendar_booking['titleCurrentValue'])
-                                                  + " " + str(calendar_booking['description']))
-                            try:
-                                self.post_message(self.ingestion_url, payload, 10)
-                            except requests.RequestException:
-                                self.status_logger.error("Problems during extraction of calendar booking with "
-                                                         + str(calendar_booking['calendarBookingId']))
-                                self.status = "ERROR"
-                                continue 
-                            
-                            calendar_bookings_number = calendar_bookings_number + 1
-                            
-                    except json.decoder.JSONDecodeError:
+                        # post_message(self.ingestion_url, payload, self.timeout)
+                        self.status_logger.info(payload)
+                        calendar_bookings_number = calendar_bookings_number + 1
+                    except requests.RequestException:
+                        self.status_logger.error("Problems during posting of calendar booking with "
+                                                 + str(calendar_booking['calendarBookingId']))
                         continue
-            
-        self.status_logger.info("Extraction ended")
-        self.status_logger.info("Have been extracted " + str(calendar_bookings_number) + " calendars bookings")
+
+            except json.decoder.JSONDecodeError:
+                continue
+
+        self.status_logger.info("Posting ended")
+        self.status_logger.info("Have been posted " + str(calendar_bookings_number) + " calendars bookings")
+
         return
 
-    def join(self, timeout: Optional[float] = ...) -> str:
-        threading.Thread.join(self)
-        return self.status
-
-    def run(self):
+    def extract_all(self):
 
         try:
-            self.extract()
-        except KeyError as error:
-            self.status = "ERROR"
-            self.status_logger.error("Some problem with key " + str(error) + ". It could be a problem or with some "
-                                                                             "config variables badly specified or with"
-                                                                             " some key missing in train data file or "
-                                                                             "in api response.")
+            calendar_bookings = call_extraction_api(self.extraction_url, '/o/dml-exporter/calendarBookings',
+                                                    self.basic_auth, self.timeout, self.n_retry, self.retry_timeout)
+        except requests.RequestException:
+            self.status_logger.error("No calendar bookings extracted. Extraction process aborted.")
             return
 
-    def start(self) -> str:
-        threading.Thread.start(self)
-        return self.status
+        self.status_logger.info("Getting all calendar bookings")
+
+        calendar_bookings = json.loads(calendar_bookings)
+
+        self.status_logger.info("Extraction ended")
+        self.status_logger.info("Have been extracted " + str(len(calendar_bookings)) + " calendars bookings")
+
+        self.manage_data(calendar_bookings)
+        return
+
+    def extract_recent(self):
+        try:
+            calendar_bookings = call_extraction_api(self.extraction_url, '/o/dml-exporter/calendarBookings/modified/'
+                                                    + str(self.timestamp), self.basic_auth, self.timeout,
+                                                    self.n_retry, self.retry_timeout)
+        except requests.RequestException:
+            self.status_logger.error("No calendar bookings extracted. Extraction process aborted.")
+            return
+
+        self.status_logger.info("Getting recent calendar bookings")
+
+        calendar_bookings = json.loads(calendar_bookings)
+
+        self.status_logger.info("Extraction ended")
+        self.status_logger.info("Have been extracted " + str(len(calendar_bookings)) + " calendars bookings")
+
+        self.manage_data(calendar_bookings)
+        return

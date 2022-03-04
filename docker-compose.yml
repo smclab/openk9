@@ -1,7 +1,7 @@
 version: "3.5"
 services:
     rabbitmq:
-        image: rabbitmq:3-management
+        image: rabbitmq:3.8-management
         container_name: rabbitmq
         hostname: rabbitmq
         environment:
@@ -38,18 +38,25 @@ services:
         environment:
             ELASTICSEARCH_URL: http://elasticsearch:9200
             ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-            ELASTICSEARCHì_USERNAME: elastic
+            ELASTICSEARCH_USERNAME: elastic
             ELASTICSEARCH_PASSWORD: elastic
     datasource:
-        image: smclab/openk9-datasource:latest
-        container_name: openk9-datasource
-        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        image: registry.smc.it:49083/openk9/openk9-datasource:latest
+        container_name: datasource
         environment:
-            WAIT_HOSTS: postgres:5432, rabbitmq:5672
-            WAIT_HOSTS_TIMEOUT: 300
-            JAVA_DEBUG_PORT: '*:5005'
-        volumes:
-            - ./datasource/configs:/opt/apache-karaf/configs
+            RABBITMQ_HOST: 'rabbitmq'
+            RABBITMQ_PASSWORD: 'openk9'
+            RABBITMQ_USERNAME: 'openk9'
+            RABBITMQ_PORT: '5672'
+            QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgres/openk9'
+            QUARKUS_DATASOURCE_USERNAME: 'openk9'
+            QUARKUS_DATASOURCE_PASSWORD: 'openk9'
+            QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: 'update'
+            QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+            QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+            QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT: 'consul:8500'
+            SERVICE_DISCOVERY_REGISTRATION_SERVICE_ADDRESS: 'datasource'
+            SERVICE_DISCOVERY_REGISTRATION_SERVICE_PORT: '8080'
         expose:
             - "1099"
             - "8080"
@@ -57,23 +64,26 @@ services:
             - "8101"
             - "8181"
             - "5005"
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.services.datasource-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.datasource-strip.stripprefix.prefixes=/api/datasource"
-            - "traefik.http.routers.datasource.entrypoints=web"
-            - "traefik.http.routers.datasource.rule=PathPrefix(`/api/datasource`)"
-            - "traefik.http.middlewares.datasource_compress.compress=true"
     entity-manager:
-        image: smclab/openk9-entity-manager:latest
-        container_name: openk9-entity-manager
-        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        image: registry.smc.it:49083/openk9/openk9-entity-manager:latest
+        container_name: entity-manager
         environment:
-            WAIT_HOSTS: rabbitmq:5672, neo4j:7687
-            WAIT_HOSTS_TIMEOUT: 300
-            JAVA_DEBUG_PORT: '*:5005'
-        volumes:
-            - ./entity-manager/configs:/opt/apache-karaf/configs
+            RABBITMQ_HOST: 'rabbitmq'
+            RABBITMQ_PASSWORD: 'openk9'
+            RABBITMQ_USERNAME: 'openk9'
+            RABBITMQ_PORT: '5672'
+            QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+            QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+            QUARKUS_ELASTICSEARCH_HOST: elasticsearch:9200
+            QUARKUS_ELASTICSEARCH_USERNAME: elastic
+            QUARKUS_ELASTICSEARCH_PASSWORD: elastic
+            OPENK9_ENTITY_UNIQUE_ENTITIES: 'date,organization,loc,email,document,bank,person'
+            OPENK9_ENTITY_MIN_HOPS: '1'
+            OPENK9_ENTITY_MAX_HOPS: '2'
+            OPENK9_ENTITY_SCORE_THRESHOLD: '0.8'
+            QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT: 'consul:8500'
+            HZ_NETWORK_JOIN_KUBERNETES_NAMESPACE: 'k9-develop'
+            docker: 'false'
         expose:
             - "1099"
             - "8080"
@@ -82,25 +92,15 @@ services:
             - "8181"
             - "5005"
         ports:
-            - 8185:8181
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.services.entity-manager-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.entity-manager-strip.stripprefix.prefixes=/api/entity-manager"
-            - "traefik.http.routers.entity-manager.entrypoints=web"
-            - "traefik.http.routers.entity-manager.rule=PathPrefix(`/api/entity-manager`)"
-            - "traefik.http.middlewares.entity-manager_compress.compress=true"
-            - "traefik.http.routers.entity-manager.middlewares=entity-manager-strip@docker,entity-manager_compress@docker"
+            - 8186:8181
     index-writer:
-        image: smclab/openk9-index-writer:latest
-        container_name: openk9-index-writer
-        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        image: registry.smc.it:49083/openk9/openk9-index-writer:latest
+        container_name: index-writer
+        command: sh -c "/wait && karaf run debug"
         environment:
             WAIT_HOSTS: rabbitmq:5672, elasticsearch:9200
             WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
-        volumes:
-            - ./index-writer/configs:/opt/apache-karaf/configs
         expose:
             - "1099"
             - "8080"
@@ -110,24 +110,18 @@ services:
             - "5005"
         ports:
             - 8185:8181
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.services.index-writer-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.index-writer-strip.stripprefix.prefixes=/api/index-writer"
-            - "traefik.http.routers.index-writer.entrypoints=web"
-            - "traefik.http.routers.index-writer.rule=PathPrefix(`/api/index-writer`)"
-            - "traefik.http.middlewares.index-writer_compress.compress=true"
-            - "traefik.http.routers.index-writer.middlewares=index-writer-strip@docker,index-writer_compress@docker"
     ingestion:
-        image: smclab/openk9-ingestion:latest
-        container_name: openk9-ingestion
-        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        image: registry.smc.it:49083/openk9/openk9-ingestion:latest
+        container_name: ingestion
         environment:
-            WAIT_HOSTS: rabbitmq:5672
-            WAIT_HOSTS_TIMEOUT: 300
-            JAVA_DEBUG_PORT: '*:5005'
-        volumes:
-            - ./ingestion/configs:/opt/apache-karaf/configs
+            RABBITMQ_HOST: 'rabbitmq'
+            RABBITMQ_PASSWORD: 'openk9'
+            RABBITMQ_USERNAME: 'openk9'
+            RABBITMQ_PORT: '5672'
+            QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+            QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+            QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT: 'consul:8500'
+            QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
         expose:
             - "1099"
             - "8080"
@@ -135,24 +129,14 @@ services:
             - "8101"
             - "8181"
             - "5005"
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.services.ingestion-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.ingestion-strip.stripprefix.prefixes=/api/ingestion"
-            - "traefik.http.routers.ingestion.entrypoints=web"
-            - "traefik.http.routers.ingestion.rule=PathPrefix(`/api/ingestion`)"
-            - "traefik.http.middlewares.ingestion_compress.compress=true"
-            - "traefik.http.routers.ingestion.middlewares=ingestion-strip@docker,ingestion_compress@docker"
     plugin-driver-manager:
-        image: smclab/openk9-plugin-driver-manager:latest
-        container_name: openk9-plugin-driver-manager
-        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        image: registry.smc.it:49083/openk9/openk9-plugin-driver-manager:latest
+        container_name: plugin-driver-manager
+        command: sh -c "/wait && karaf run debug"
         environment:
             WAIT_HOSTS: rabbitmq:5672
             WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
-        volumes:
-            - ./plugin-driver-manager/configs:/opt/apache-karaf/configs
         expose:
             - "1099"
             - "8080"
@@ -162,24 +146,14 @@ services:
             - "5005"
         ports:
             - 8183:8181
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.services.plugin-driver-manager-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.plugin-driver-manager-strip.stripprefix.prefixes=/api/plugin-driver-manager"
-            - "traefik.http.routers.plugin-driver-manager.entrypoints=web"
-            - "traefik.http.routers.plugin-driver-manager.rule=PathPrefix(`/api/plugin-driver-manager`)"
-            - "traefik.http.middlewares.plugin-driver-manager_compress.compress=true"
-            - "traefik.http.routers.plugin-driver-manager.middlewares=plugin-driver-manager-strip@docker,plugin-driver-manager_compress@docker"
     searcher:
         image: smclab/openk9-searcher:latest
-        container_name: openk9-searcher
-        command: sh -c "/wait && cp -a /opt/apache-karaf/configs/. /opt/apache-karaf/etc && karaf run debug"
+        container_name: searcher
+        command: sh -c "/wait && karaf run debug"
         environment:
             WAIT_HOSTS: elasticsearch:9200
             WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
-        volumes:
-            - ./searcher/configs:/opt/apache-karaf/configs
         expose:
             - "1099"
             - "8080"
@@ -190,16 +164,6 @@ services:
         ports:
             - 8080:8080
             - 8181:8181
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.services.searcher-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.searcher-strip.stripprefix.prefixes=/api/searcher"
-            - "traefik.http.routers.searcher.entrypoints=web"
-            - "traefik.http.routers.searcher.rule=PathPrefix(`/api/searcher`)"
-            - "traefik.http.middlewares.searcher_compress.compress=true"
-            - "traefik.http.routers.searcher.middlewares=searcher-strip@docker,searcher_compress@docker"
-            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=openk9.io"
-            - "traefik.http.routers.searcher.middlewares=searcher-strip@docker,searcher_compress@docker,openk9-forwarded-host@docker"
     postgres:
         image: postgres:latest
         container_name: postgres
@@ -217,16 +181,17 @@ services:
         ports:
             - 5050:8080
     web-parser:
-        image: smclab/openk9-web-parser:latest
+        image: registry.smc.it:49083/openk9/web-parser:latest
         container_name: web-parser
         environment:
             INGESTION_URL: "http://openk9.io/api/v1/ingestion/"
+            DELETE_URL: "http://openk9.io/api/v1/ingestion/"
         ports:
             - "5008:80"
             - "6800:6800"
-    search-standalone-frontend:
-        image: smclab/openk9-search-standalone-frontend:latest
-        container_name: search-standalone-frontend
+    search-frontend:
+        image: registry.smc.it:49083/openk9/search-frontend:latest
+        container_name: search-frontend
         ports:
             - "8081:80"
         labels:
@@ -234,7 +199,7 @@ services:
             - "traefik.http.routers.frontend.entrypoints=web"
             - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
     search-admin:
-        image: smclab/openk9-admin-ui:latest
+        image: registry.smc.it:49083/openk9/search-admin:latest
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.admin.entrypoints=web"
@@ -251,63 +216,68 @@ services:
         ports:
             - '8888:80'
             - '8182:8080'
-    admin-logs-service:
-        image: smclab/openk9-admin-logs-service:latest
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-            - /bin/docker:/bin/docker
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.middlewares.logs-strip.stripprefix.prefixes=/api/logs"
-            - "traefik.http.routers.logs.entrypoints=web"
-            - "traefik.http.routers.logs.rule=PathPrefix(`/api/logs`)"
-            - "traefik.http.routers.logs.middlewares=logs-strip@docker"
-            - "traefik.http.routers.traefik.middlewares=traefik-compress"
-            - "traefik.http.middlewares.traefik-compress.compress=true"
-    js-scripts-executor:
-        image: smclab/openk9-js-scripts-executor:latest
-        container_name: js-scripts-executor
-        ports:
-            - 3000:3000
-    ner-en:
-        image: flair_flair-ner-relations:latest
-        container_name: ner-en
-        command: gunicorn -w 1 -t 600 -b 0.0.0.0:80 main:app
-        ports:
-            - 5009:80
+    ner-rabbit:
+        image: registry.smc.it:49083/openk9/spacy-ner-rabbit:latest
+        container_name: ner-rabbit
+        command: 'sh -c /wait && python main.py'
+        environment:
+            WAIT_HOSTS: 'rabbitmq:5672'
+            WAIT_HOSTS_TIMEOUT: '300'
+            RABBIT_HOST: 'rabbitmq'
+            RABBIT_PORT: '5672'
+            RABBIT_EXCHANGE: 'amq.topic'
+            RABBIT_QUEUE_NAME: 'io.openk9.ner'
+            RABBIT_PUB_ROUTING_KEY: 'entity-manager-request'
+            RABBITMQ_USER: 'openk9'
+            RABBITMQ_PASSWORD: 'openk9'
     keycloak:
         image: quay.io/keycloak/keycloak:12.0.2
         environment:
             DB_VENDOR: POSTGRES
-            DB_ADDR: postgres-keycloak:5432
-            DB_DATABASE: keycloak
+            DB_ADDR: postgres:5432
+            DB_DATABASE: openk9
             DB_USER: openk9
             DB_SCHEMA: public
             DB_PASSWORD: openk9
             KEYCLOAK_USER: openk9
             KEYCLOAK_PASSWORD: openk9
+            PROXY_ADDRESS_FORWARDING: "true"
             KK_TO_RMQ_URL: rabbitmq
-            KK_TO_RMQ_PORT: 5672
+            KK_TO_RMQ_PORT: "5672"
             KK_TO_RMQ_USERNAME: openk9
             KK_TO_RMQ_PASSWORD: openk9
             KK_TO_RMQ_VHOST: /
             KK_TO_RMQ_EXCHANGE: auth.topic
-        volumes:
-            - ./keycloak/opt/jboss/keycloak/standalone/deployments/:/opt/jboss/keycloak/standalone/deployments/
         ports:
             - 7070:8080
         depends_on:
-            - postgres-keycloak
+            - postgres
             - rabbitmq
-    postgres-keycloak:
-        image: postgres:latest
-        container_name: postgres-keycloak
-        hostname: postgres-keycloak
+    api-aggregator:
+        image: registry.smc.it:49083/openk9/openk9-api-aggregator:latest
         environment:
-            - POSTGRES_PASSWORD=openk9
-            - POSTGRES_USER=openk9
-            - POSTGRES_DB=keycloak
-            - PGDATA=/var/lib/postgresql/data/pgdata
+            QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgres/openk9'
+            QUARKUS_DATASOURCE_USERNAME: 'openk9'
+            QUARKUS_DATASOURCE_PASSWORD: 'openk9'
+            QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: 'update'
+            QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+            QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+            QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak:8080/auth/realms/openk9'
+            QUARKUS_OIDC_CLIENT_ID: 'openk9'
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.frontend.entrypoints=web"
+            - "traefik.http.middlewares.searcher-strip.stripprefix.prefixes=/api"
+            - "traefik.http.routers.frontend.rule=PathPrefix(`/api`)"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=local.openk9.io"
+            - "traefik.http.routers.api-aggregator.middlewares=openk9-forwarded-host@docker"
+
+    consul:
+        image: consul:1.7
+        command: 'agent -dev -ui -client=0.0.0.0 -bind=0.0.0.0 --https-port=8501'
+        ports:
+            - "8500:8500"
+            - "8501:8501"
     neo4j:
         image: neo4j:latest
         container_name: neo4j

@@ -11,10 +11,12 @@
     "build": "plugin-scripts build"
   },
   "dependencies": {
-    "@clayui/icon": "^3.1.0",
-    "clsx": "^1.1.0",
-    "date-fns": "^2.17.0",
     "react": "^17.0.0",
-    "react-jss": "^10.4.0"
+    "@fortawesome/fontawesome-svg-core": "^1.2.36",
+    "@fortawesome/free-solid-svg-icons": "^5.15.4",
+    "@fortawesome/react-fontawesome": "^0.1.15"
+  },
+  "devDependencies": {
+    "browserslist-config-clay": "^3.0.0"
   }
 }
