@@ -720,6 +720,7 @@ export async function postTenant(
   });
 }
 
+/*
 export async function putTenant(
   data: Tenant,
   loginInfo: LoginInfo | null,
@@ -728,6 +729,24 @@ export async function putTenant(
     data.jsonConfig = "{}";
   }
   await authFetch(`/api/datasource/v2/tenant`, loginInfo, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+}
+*/
+
+export async function putTenant(
+  data: {
+      name: string;
+      virtualHost: string;
+      jsonConfig: string;
+    },
+    loginInfo: LoginInfo | null,
+) {
+  await authFetch(`/api/datasource/v2/tenant/${tenantId}`, loginInfo, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
