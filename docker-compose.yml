@@ -41,7 +41,7 @@ services:
             ELASTICSEARCH_USERNAME: elastic
             ELASTICSEARCH_PASSWORD: elastic
     datasource:
-        image: registry.smc.it:49083/openk9/openk9-datasource:latest
+        image: smclab/openk9-datasource:latest
         container_name: datasource
         environment:
             RABBITMQ_HOST: 'rabbitmq'
@@ -65,7 +65,7 @@ services:
             - "8181"
             - "5005"
     entity-manager:
-        image: registry.smc.it:49083/openk9/openk9-entity-manager:latest
+        image: smclab/openk9-entity-manager:latest
         container_name: entity-manager
         environment:
             RABBITMQ_HOST: 'rabbitmq'
@@ -94,7 +94,7 @@ services:
         ports:
             - 8186:8181
     index-writer:
-        image: registry.smc.it:49083/openk9/openk9-index-writer:latest
+        image: smclab/openk9-index-writer:latest
         container_name: index-writer
         command: sh -c "/wait && karaf run debug"
         environment:
@@ -111,7 +111,7 @@ services:
         ports:
             - 8185:8181
     ingestion:
-        image: registry.smc.it:49083/openk9/openk9-ingestion:latest
+        image: smclab/openk9-ingestion:latest
         container_name: ingestion
         environment:
             RABBITMQ_HOST: 'rabbitmq'
@@ -130,7 +130,7 @@ services:
             - "8181"
             - "5005"
     plugin-driver-manager:
-        image: registry.smc.it:49083/openk9/openk9-plugin-driver-manager:latest
+        image: smclab/openk9-plugin-driver-manager:latest
         container_name: plugin-driver-manager
         command: sh -c "/wait && karaf run debug"
         environment:
@@ -181,7 +181,7 @@ services:
         ports:
             - 5050:8080
     web-parser:
-        image: registry.smc.it:49083/openk9/web-parser:latest
+        image: smclab/web-parser:latest
         container_name: web-parser
         environment:
             INGESTION_URL: "http://openk9.io/api/v1/ingestion/"
@@ -190,7 +190,7 @@ services:
             - "5008:80"
             - "6800:6800"
     search-frontend:
-        image: registry.smc.it:49083/openk9/search-frontend:latest
+        image: smclab/search-frontend:latest
         container_name: search-frontend
         ports:
             - "8081:80"
@@ -199,7 +199,7 @@ services:
             - "traefik.http.routers.frontend.entrypoints=web"
             - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
     search-admin:
-        image: registry.smc.it:49083/openk9/search-admin:latest
+        image: smclab/openk9-admin-ui:latest
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.admin.entrypoints=web"
@@ -217,7 +217,7 @@ services:
             - '8888:80'
             - '8182:8080'
     ner-rabbit:
-        image: registry.smc.it:49083/openk9/spacy-ner-rabbit:latest
+        image: smclab/spacy-ner-rabbit:latest
         container_name: ner-rabbit
         command: 'sh -c /wait && python main.py'
         environment:
@@ -231,7 +231,7 @@ services:
             RABBITMQ_USER: 'openk9'
             RABBITMQ_PASSWORD: 'openk9'
     keycloak:
-        image: quay.io/keycloak/keycloak:12.0.2
+        image: quay.io/keycloak/keycloak:16.1.0
         environment:
             DB_VENDOR: POSTGRES
             DB_ADDR: postgres:5432
@@ -254,7 +254,7 @@ services:
             - postgres
             - rabbitmq
     api-aggregator:
-        image: registry.smc.it:49083/openk9/openk9-api-aggregator:latest
+        image: smclab/openk9-api-aggregator:latest
         environment:
             QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgres/openk9'
             QUARKUS_DATASOURCE_USERNAME: 'openk9'
