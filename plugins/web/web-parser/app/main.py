@@ -106,13 +106,7 @@ def execute_generic(request: GenericRequest):
         "max_length": max_length
     }
 
-    if timestamp == 0:
-        response = post_message("http://localhost:6800/schedule.json", payload, 10)
-    else:
-        response = {
-            "status": "error",
-            "message": "timestamp greater than zero"
-        }
+    response = post_message("http://localhost:6800/schedule.json", payload, 10)
 
     if response["status"] == 'ok':
         return "Crawling process started with job " + str(response["jobid"])
