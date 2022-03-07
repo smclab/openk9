@@ -181,7 +181,7 @@ services:
         ports:
             - 5050:8080
     web-parser:
-        image: smclab/web-parser:latest
+        image: smclab/openk9-web-parser:latest
         container_name: web-parser
         environment:
             INGESTION_URL: "http://openk9.io/api/v1/ingestion/"
@@ -190,7 +190,7 @@ services:
             - "5008:80"
             - "6800:6800"
     search-frontend:
-        image: smclab/search-frontend:latest
+        image: smclab/openk9-search-frontend:latest
         container_name: search-frontend
         ports:
             - "8081:80"
