@@ -158,11 +158,11 @@ function Inner({
           {(() => {
             try {
               return format(
-                datasource.lastIngestionDate * 1000,
+                new Date(datasource.lastIngestionDate),
                 "dd/MM/yyyy, HH:mm",
               );
             } catch (error) {
-              return;
+              return datasource.lastIngestionDate;
             }
           })()}
         </div>
