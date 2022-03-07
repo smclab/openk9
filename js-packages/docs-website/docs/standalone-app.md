@@ -13,6 +13,53 @@ You can look at the frontend code in our [GitHub repository](https://github.com/
 
 ## Usage
 
+### With package manager
+
+- install the dependency
+  - with npm  `npm install @openk9/search-frontend`
+  - or with yarn `yarn add @openk9/search-frontend`
+- configure the ui
+```javascript
+import { OpenK9 } from "@openk9/search-frontend";
+
+Openk9.search = docuement.querySelector('#search');
+Openk9.tabs = document.querySelector('#tabs');
+Openk9.results = docuement.querySelector('#results');
+Openk9.details = docuement.querySelector('#details');
+```
+
+### Without package manager
+
+- Download the script from https://unpkg.com/@openk9/search-frontend@latest
+- Or build the script from sources
+  - `openk9/js-packages/search-frontend/dist` will contain a file named `embeddable.js` that must be included on your site
+
+```html
+<html>
+  <body>
+    <div id="search"></div>
+    <div id="tabs"></div>
+    <div id="results"></div>
+    <div id="details"></div>
+    <!-- this is the file from dist directory-->
+    <script src="embeddable.js"></script>
+    <!-- tell the script where to render parts of the interface -->
+    <script>
+      Openk9.search = docuement.querySelector('#search');
+      Openk9.tabs = document.querySelector('#tabs');
+      Openk9.results = docuement.querySelector('#results');
+      Openk9.details = docuement.querySelector('#details');
+    </script>
+  </body>
+</html>
+```
+
+### Docker
+
+Prebuild docker image is available on [docker hub](https://hub.docker.com/r/smclab/openk9-search-frontend) 
+
+## From Sources
+
 ### Prerequisites
 
 This software is neeeded for the build process
@@ -48,45 +95,7 @@ yarn build # build static resources
 
 - `openk9/js-packages/search-frontend/dist` will contain the static resources that can be served with a static web server (NOTE: the backend must be located ad the same domain)
 
-### Embded
-
-It is possibile to embed the standard search experience into any site
-
-```bash
-git clone https://git.smc.it/openk9/openk9.git # clone repository
-cd openk9
-yarn # install dependencies
-cd js-packages/search-frontend
-yarn build # build static resources
-```
-
-- `openk9/js-packages/search-frontend/dist` will contain a file named `embeddable.js` that must be included on your site
-
-```html
-<html>
-  <body>
-    <div id="search"></div>
-    <div id="tabs"></div>
-    <div id="results"></div>
-    <div id="details"></div>
-    <!-- this is the file from dist directory-->
-    <script src="embeddable.js"></script>
-    <!-- tell the script where to render parts of the interface -->
-    <script>
-      Openk9.search = docuement.querySelector('#search');
-      Openk9.tabs = document.querySelector('#tabs');
-      Openk9.results = docuement.querySelector('#results');
-      Openk9.details = docuement.querySelector('#details');
-    </script>
-  </body>
-</html>
-```
-
-### Docker
-
-Prebuild docker image is available on [docker hub](https://hub.docker.com/r/smclab/openk9-search-frontend) 
-
-#### Build & run docker image locally
+### Build & run docker image locally
 
 ```bash
 git clone https://git.smc.it/openk9/openk9.git # clone repository

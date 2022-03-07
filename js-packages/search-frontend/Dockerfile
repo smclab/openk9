@@ -15,7 +15,7 @@ COPY ./ /app
 WORKDIR /app/js-packages/rest-api
 RUN yarn build
 WORKDIR /app/js-packages/search-frontend
-RUN PRODUCTION=true yarn build
+RUN NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
 FROM nginx:alpine
