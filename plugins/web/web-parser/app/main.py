@@ -26,7 +26,16 @@ import json
 app = FastAPI()
 
 ingestion_url = os.environ.get("INGESTION_URL")
+if ingestion_url is None:
+    ingestion_url = "http://ingestion:8080/v1/ingestion/"
+
 delete_url = os.environ.get("DELETE_URL")
+if delete_url is None:
+    delete_url = "http://index-writer:8080/v1/delete-data-documents"
+
+log_level = os.environ.get("INPUT_LOG_LEVEL")
+if log_level is None:
+    log_level = "INFO"
 
 logger = logging.getLogger("uvicorn.access")
 
@@ -57,7 +66,7 @@ class GenericRequest(BaseModel):
     maxLength: Optional[int] = 0
 
 
-def post_message(url, payload, timeout):
+def post_message(url, payload, timeout=30):
     try:
         r = requests.post(url, data=payload, timeout=timeout)
         if r.status_code == 200:
@@ -97,7 +106,7 @@ def execute_generic(request: GenericRequest):
         "excluded_paths": json.dumps(excluded_paths),
         "body_tag": body_tag,
         "title_tag": title_tag,
-        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "DEPTH_LIMIT=%s" % depth],
+        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "DEPTH_LIMIT=%s" % depth, "LOG_LEVEL=%s" % log_level],
         "datasource_id": datasource_id,
         "ingestion_url": ingestion_url,
         "delete_url": delete_url,
@@ -106,7 +115,7 @@ def execute_generic(request: GenericRequest):
         "max_length": max_length
     }
 
-    response = post_message("http://localhost:6800/schedule.json", payload, 10)
+    response = post_message("http://localhost:6800/schedule.json", payload)
 
     if response["status"] == 'ok':
         return "Crawling process started with job " + str(response["jobid"])
@@ -140,10 +149,11 @@ def execute(request: SitemapRequest):
         "ingestion_url": ingestion_url,
         "delete_url": delete_url,
         "timestamp": timestamp,
-        "max_length": max_length
+        "max_length": max_length,
+        "setting": ["LOG_LEVEL=%s" % log_level]
     }
 
-    response = post_message("http://localhost:6800/schedule.json", payload, 10)
+    response = post_message("http://localhost:6800/schedule.json", payload)
 
     if response["status"] == 'ok':
         return "Crawling process started with job " + str(response["jobid"])

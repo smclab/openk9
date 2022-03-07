@@ -84,7 +84,7 @@ class CustomGenericSpider(CrawlSpider):
 
         # post_message(self.delete_url, payload)
 
-    def parse(self, response, **kwargs):
+    def parse(self, response):
 
         if hasattr(response, "text"):
 

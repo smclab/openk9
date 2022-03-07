@@ -43,7 +43,8 @@ class CustomPipeline:
         if item['contentId'] in spider.crawled_ids:
             raise DropItem(f"Duplicate item found: {item['contentId']!r}")
         else:
-            self.exporter.export_item(item)
+            # uncomment next line to save crawled data to csv files
+            # self.exporter.export_item(item)
 
             post_message(ingestion_url, dict(item))
 

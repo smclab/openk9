@@ -73,7 +73,7 @@ def parse_document_by_url(url, spider, relative_url=None, title=None):
             binary_item = BinaryItem()
             binary_item["id"] = content_id
             binary_item["name"] = url
-            binary_item["contentType"] = ""
+            binary_item["contentType"] = None
             binary_item["data"] = get_as_base64(payload)
 
             binaries = [dict(binary_item)]
@@ -83,7 +83,7 @@ def parse_document_by_url(url, spider, relative_url=None, title=None):
             payload["parsingDate"] = int(spider.end_timestamp)
             payload['datasourceId'] = spider.datasource_id
             payload['contentId'] = content_id
-            payload['rawContent'] = ""
+            payload['rawContent'] = None
             payload['datasourcePayload'] = datasource_payload
             payload["resources"] = {
                 "binaries": binaries

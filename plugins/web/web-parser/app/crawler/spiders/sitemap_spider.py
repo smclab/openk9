@@ -104,9 +104,13 @@ class CustomSitemapSpider(SitemapSpider):
         than a given date (see docs).
         """
         for entry in entries:
-            date_time = datetime.fromisoformat(entry['lastmod'])
-            lastmod_timestamp = datetime.timestamp(date_time)
-            if int(lastmod_timestamp) >= int(self.timestamp):
+            try:
+                date_time = datetime.fromisoformat(entry['lastmod'])
+                lastmod_timestamp = datetime.timestamp(date_time)
+                if int(lastmod_timestamp) >= int(self.timestamp):
+                    yield entry
+            except KeyError:
+                logger.info("No lastmod present, so proceeding with ingestion without data validation")
                 yield entry
 
     def _parse_sitemap(self, response):
@@ -152,7 +156,7 @@ class CustomSitemapSpider(SitemapSpider):
         elif response.url.endswith('.xml') or response.url.endswith('.xml.gz'):
             return response.body
 
-    def parse(self, response, **kwargs):
+    def parse(self, response):
 
         if hasattr(response, "text"):
 
