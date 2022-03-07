@@ -1,6 +1,6 @@
 {
   "name": "@openk9/search-frontend",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "SMC",
   "description": "OpenK9 search UI customizable widget",
   "main": "dist/embeddable.js",

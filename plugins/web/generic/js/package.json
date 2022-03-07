@@ -1,6 +1,6 @@
 {
   "name": "@openk9/web-generic-datasource",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "author": "SMC",
   "description": "OpenK9 Web Generic Data Source Frontend Module",
@@ -11,10 +11,10 @@
     "build": "plugin-scripts build"
   },
   "dependencies": {
-    "react": "^17.0.0",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
-    "@fortawesome/react-fontawesome": "^0.1.15"
+    "@fortawesome/react-fontawesome": "^0.1.15",
+    "react": "^17.0.0"
   },
   "devDependencies": {
     "browserslist-config-clay": "^3.0.0"

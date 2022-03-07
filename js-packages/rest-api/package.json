@@ -1,6 +1,6 @@
 {
   "name": "@openk9/rest-api",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "OpenK9 core type definitions, search and admin rest API",
   "author": "SMC",
   "license": "AGPL-3.0-or-later",
