@@ -643,7 +643,6 @@ export async function triggerReindex(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Accept: "text/plain",
       },
       body: JSON.stringify({ datasourceIds: ids }),
     },
