@@ -7,6 +7,7 @@ import "./index.css";
 import "./app.css";
 
 OpenK9.enabled = true;
+OpenK9.searchAutoselect = false;
 
 export function App() {
   return (
