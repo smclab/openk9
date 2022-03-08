@@ -28,7 +28,9 @@ public class ReindexResource {
 
 		return Panache.withTransaction(() ->
 			Datasource
-				.<Datasource>list("datasourceId in ?1", dto.getDatasourceIds())
+				.<Datasource>list(
+					"active = ?1 and datasourceId in ?2",
+					true, dto.getDatasourceIds())
 				.flatMap(datasourceList -> {
 
 					List<Uni<?>> unis = new ArrayList<>();

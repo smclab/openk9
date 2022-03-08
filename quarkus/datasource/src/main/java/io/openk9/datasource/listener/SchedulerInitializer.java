@@ -79,6 +79,11 @@ public class SchedulerInitializer {
 	public void createOrUpdateScheduler(
 		Datasource datasource) throws SchedulerException {
 
+		if (!datasource.getActive()) {
+			deleteScheduler(datasource);
+			return;
+		}
+
 		String name = datasource.getName();
 
 		JobKey jobKey = JobKey.jobKey(name);
@@ -93,7 +98,9 @@ public class SchedulerInitializer {
 						datasource.getScheduling()))
 				.build();
 
-			_scheduler.get().rescheduleJob(TriggerKey.triggerKey(name), trigger);
+			TriggerKey triggerKey = TriggerKey.triggerKey(name);
+
+			_scheduler.get().rescheduleJob(triggerKey, trigger);
 
 		}
 		else {
