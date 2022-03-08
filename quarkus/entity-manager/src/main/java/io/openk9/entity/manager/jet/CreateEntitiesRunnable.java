@@ -322,7 +322,7 @@ public class CreateEntitiesRunnable
 
 				}
 				catch (Exception ioe) {
-					_log.error(ioe.getMessage());
+					_log.error(ioe.getMessage(), ioe);
 				}
 			}
 			else {

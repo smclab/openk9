@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one or more
+  ~ contributor license agreements.  See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright ownership.
+  ~ The ASF licenses this file to You under the Apache License, Version 2.0
+  ~ (the "License"); you may not use this file except in compliance with
+  ~ the License.  You may obtain a copy of the License at
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<properties>
+	<parsers>
+		<!-- Load TesseractOCRParser (could use DefaultParser if you want others too) -->
+		<parser class="org.apache.tika.parser.ocr.TesseractOCRParser">
+			<params>
+				<!-- these are the defaults; you only need to specify the ones you want
+					 to modify -->
+				<param name="applyRotation" type="bool">false</param>
+				<param name="colorSpace" type="string">gray</param>
+				<param name="density" type="int">300</param>
+				<param name="depth" type="int">4</param>
+				<param name="enableImagePreprocessing" type="bool">false</param>
+				<param name="filter" type="string">triangle</param>
+				<param name="language" type="string">ita+eng</param>
+				<param name="maxFileSizeToOcr" type="long">2147483647</param>
+				<param name="minFileSizeToOcr" type="long">0</param>
+				<param name="pageSegMode" type="string">1</param>
+				<param name="preserveInterwordSpacing" type="bool">false</param>
+				<param name="resize" type="int">200</param>
+				<param name="skipOcr" type="bool">false</param>
+				<!--param name="timeout" type="int">60</param-->
+			</params>
+		</parser>
+
+		<!-- OCR on Rendered Pages -->
+		<parser class="org.apache.tika.parser.pdf.PDFParser">
+			<params>
+				<!-- no_ocr - extract text only
+					 ocr_only - don't extract text and just attempt OCR
+					 ocr_and_text - extract text and attempt OCR (from Tika 1.24)
+					 auto - extract text but if < 10 characters try OCR
+				-->
+				<param name="extractInlineImages" type="bool">true</param>
+				<param name="ocrStrategy" type="string">auto</param>
+				<param name="ocrImageType" type="string">rgb</param>
+				<param name="ocrDPI" type="int">100</param>
+			</params>
+		</parser>
+
+		<parser class="org.apache.tika.parser.microsoft.OfficeParser"/>
+		<parser class="org.apache.tika.parser.csv.TextAndCSVParser"/>
+		<parser class="org.apache.tika.parser.odf.OpenDocumentParser"/>
+		<parser class="org.apache.tika.parser.epub.EpubParser"/>
+		<parser class="org.apache.tika.parser.microsoft.ooxml.OOXMLParser"/>
+
+	</parsers>
+</properties>

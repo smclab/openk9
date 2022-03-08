@@ -1,0 +1,119 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    app.quarkus.io/commit-id: 8917684b988f5bda6e050d893912de59aa0b0f92
+    app.quarkus.io/build-timestamp: 2022-02-10 - 14:06:31 +0000
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /q/metrics
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: http
+  labels:
+    app.kubernetes.io/name: openk9-api-aggregator
+    app.kubernetes.io/version: latest
+  name: openk9-api-aggregator
+  namespace: k9-develop
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: openk9-api-aggregator
+    app.kubernetes.io/version: latest
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    app.quarkus.io/commit-id: 8917684b988f5bda6e050d893912de59aa0b0f92
+    app.quarkus.io/build-timestamp: 2022-02-10 - 14:06:31 +0000
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /q/metrics
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: http
+  labels:
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/name: openk9-api-aggregator
+  name: openk9-api-aggregator
+  namespace: k9-develop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/version: latest
+      app.kubernetes.io/name: openk9-api-aggregator
+  template:
+    metadata:
+      annotations:
+        app.quarkus.io/commit-id: 8917684b988f5bda6e050d893912de59aa0b0f92
+        app.quarkus.io/build-timestamp: 2022-02-10 - 14:06:31 +0000
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /q/metrics
+        prometheus.io/port: "8080"
+        prometheus.io/scheme: http
+      labels:
+        app.kubernetes.io/version: latest
+        app.kubernetes.io/name: openk9-api-aggregator
+      namespace: k9-develop
+    spec:
+      containers:
+        - env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          envFrom:
+            - configMapRef:
+                name: api-aggregator-config-map
+          image: registry.smc.it:49083/openk9/openk9-api-aggregator:latest
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/live
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+          name: openk9-api-aggregator
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 45
+            successThreshold: 1
+            timeoutSeconds: 10
+      imagePullSecrets:
+        - name: registry.smc.it
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: k9-develop
+  name: api-aggregator-config-map
+  labels:
+    app: openk9-api-aggregator
+data:
+  QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgres/openk9'
+  QUARKUS_DATASOURCE_USERNAME: 'openk9'
+  QUARKUS_DATASOURCE_PASSWORD: 'openk9'
+  QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: 'update'
+  QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+  QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+  QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak:8080/auth/realms/openk9'
+  QUARKUS_OIDC_CLIENT_ID: 'openk9'
+

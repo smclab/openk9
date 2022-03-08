@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<artifactId>tika</artifactId>
+		<groupId>io.openk9</groupId>
+		<version>0.0.1</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>tika-common</artifactId>
+
+	<properties>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.quarkiverse.config</groupId>
+			<artifactId>quarkus-config-consul</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-mutiny</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkiverse.tika</groupId>
+			<artifactId>quarkus-tika</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-arc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkiverse.rabbitmqclient</groupId>
+			<artifactId>quarkus-rabbitmq-client</artifactId>
+			<version>0.5.0.Final</version>
+		</dependency>
+	</dependencies>
+
+</project>
