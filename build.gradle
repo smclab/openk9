@@ -295,6 +295,7 @@ distConfigurations
 				runCommand('rm /opt/' + "apache-karaf-*.tar.gz")
 				runCommand('ls /opt/')
 
+				runCommand('chmod g+rwx $KARAF_HOME/data')
 				runCommand('set -x && ln -s /opt/apache-karaf* $KARAF_HOME')
 				exposePort(8101, 1099, 44444, 8181, 9999, 8080)
 
