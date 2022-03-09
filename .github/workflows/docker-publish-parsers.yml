@@ -111,14 +111,6 @@ jobs:
           push: true
           tags: smclab/openk9-email-parser:${{ steps.prep.outputs.version }}
       -
-        name: Build and push Liferay Parser
-        id: docker_build_liferay_parser
-        uses: docker/build-push-action@v2
-        with:
-          file: plugins/liferay/liferay-parser/Dockerfile
-          push: true
-          tags: smclab/openk9-liferay-parser:${{ steps.prep.outputs.version }}
-      -
         name: Build and push Web Parser
         id: docker_build_web_parser
         uses: docker/build-push-action@v2
