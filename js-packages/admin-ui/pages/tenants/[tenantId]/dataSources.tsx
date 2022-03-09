@@ -38,7 +38,6 @@ import {
   deleteDataSource,
   getDataSources,
   getPlugins,
-  getSchedulerItems,
   Plugin,
   toggleDataSource,
   triggerReindex,
@@ -520,12 +519,8 @@ function DataSources() {
   if (!tenantId) return null;
 
   async function schedule(ids: number[]) {
-    const schedulerItems = await getSchedulerItems(loginInfo);
-    const schedulerItemsToRestart = schedulerItems
-      .filter((job) => ids.includes(job.datasourceId))
-      .map((job) => job.jobName);
-    const resp = await triggerScheduler(schedulerItemsToRestart, loginInfo);
-    pushToast(`Reindex requested for ${resp.length} item`);
+    await triggerScheduler(ids, loginInfo);
+    pushToast(`Reindex requested for ${ids.length} items`);
   }
 
   async function reindex(ids: number[]) {

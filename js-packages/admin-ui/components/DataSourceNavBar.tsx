@@ -27,7 +27,6 @@ import ClayDropDown from "@clayui/drop-down";
 import { ThemeType } from "@openk9/search-ui-components";
 import {
   deleteDataSource,
-  getSchedulerItems,
   triggerReindex,
   triggerScheduler,
 } from "@openk9/rest-api";
@@ -67,17 +66,8 @@ export function DataSourceNavBar({
   const { pushToast } = useToast();
 
   async function schedule(ids: number[]) {
-    const schedulerItems = await getSchedulerItems(loginInfo);
-    const schedulerItemsToRestart = schedulerItems
-      .filter((job) => ids.includes(job.datasourceId))
-      .map((job) => job.jobName);
-    const resp = await triggerScheduler(schedulerItemsToRestart, loginInfo);
-    if (!resp || !resp.errors || resp.errors.length == 0) {
-      pushToast(`Reindex requested for 1 item`);
-    } else {
-      pushToast(`Failed. Check console for more info.`);
-      console.warn(resp);
-    }
+    await triggerScheduler(ids, loginInfo);
+    pushToast(`Reindex requested for ${ids.length} items`);
   }
 
   async function reindex(datasourceId: number) {

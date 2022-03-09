@@ -609,25 +609,17 @@ export async function reorderEnrichItems(
 }
 
 export async function triggerScheduler(
-  schedulerJobs: string[],
+  datasourceIds: Array<number>,
   loginInfo: LoginInfo | null,
-): Promise<
-  {
-    errors: string[];
-  } & { [key: string]: boolean }
-> {
-  const response = await authFetch(
-    `/api/datasource/v1/scheduler/trigger`,
-    loginInfo,
-    {
-      method: "POST",
-      body: JSON.stringify(schedulerJobs),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+): Promise<unknown> {
+  const response = await authFetch(`/api/datasource/v1/trigger`, loginInfo, {
+    method: "POST",
+    body: JSON.stringify({ datasourceIds }),
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
     },
-  );
+  });
   const data = await response.json();
   return data;
 }
@@ -657,14 +649,6 @@ export type SchedulerItem = {
   scheduling: string;
   datasourceName: string;
 };
-
-export async function getSchedulerItems(
-  loginInfo: LoginInfo | null,
-): Promise<SchedulerItem[]> {
-  const response = await authFetch(`/api/datasource/v1/scheduler`, loginInfo);
-  const data = await response.json();
-  return data;
-}
 
 export type Tenant = {
   tenantId: number;
@@ -719,7 +703,6 @@ export async function postTenant(
   });
 }
 
-
 export async function putTenant(
   data: Tenant,
   loginInfo: LoginInfo | null,
@@ -735,7 +718,6 @@ export async function putTenant(
     body: JSON.stringify(data),
   });
 }
-
 
 export async function deleteTenant(
   tenantId: number,
