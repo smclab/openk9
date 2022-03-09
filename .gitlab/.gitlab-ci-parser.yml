@@ -20,10 +20,6 @@ Build Tagged Parser Docker Images:
     - docker build -t email-parser:${CI_COMMIT_REF_NAME} -f plugins/email/email-parser/Dockerfile .
     - docker tag email-parser:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/email-parser:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/email-parser:${CI_COMMIT_REF_NAME}
-    
-    - docker build -t liferay-parser:${CI_COMMIT_REF_NAME} -f plugins/liferay/liferay-parser/Dockerfile .
-    - docker tag liferay-parser:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/liferay-parser:${CI_COMMIT_REF_NAME}
-    - docker push $CI_REGISTRY_NAME/openk9/liferay-parser:${CI_COMMIT_REF_NAME}
 
 Build Latest Email Parser Docker Image:
   image: docker:19.03.13
@@ -78,30 +74,3 @@ Build Latest Web Parser Docker Image:
     - docker push $CI_REGISTRY_NAME/openk9/web-parser:latest
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-web-parser" -F ref=master $DEV_TRIGGER_URL
-
-Build Latest Liferay Parser Docker Image:
-  image: docker:19.03.13
-  services:
-    - docker:19.03.13-dind
-  stage: build-docker
-  needs: []
-  variables:
-    TEST_NAME: local/test
-    DOCKER_HOST: tcp://localhost:2375
-    DOCKER_TLS_CERTDIR: ""
-  only:
-    refs:
-      - main
-    changes:
-      - plugins/liferay/liferay-parser/**/*
-  except:
-    - schedules
-  before_script:
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
-    - docker build -t liferay-parser:latest -f plugins/liferay/liferay-parser/Dockerfile .
-    - docker tag liferay-parser:latest $CI_REGISTRY_NAME/openk9/liferay-parser:latest
-    - docker push $CI_REGISTRY_NAME/openk9/liferay-parser:latest
-  after_script:
-    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-liferay-parser" -F ref=master $DEV_TRIGGER_URL
