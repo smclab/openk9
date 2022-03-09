@@ -6,6 +6,7 @@
 		<artifactId>tika</artifactId>
 		<groupId>io.openk9</groupId>
 		<version>0.0.1</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -24,7 +25,6 @@
 		<dependency>
 			<groupId>io.openk9</groupId>
 			<artifactId>tika-common</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 

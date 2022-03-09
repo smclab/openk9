@@ -6,6 +6,7 @@
 		<artifactId>quarkus</artifactId>
 		<groupId>io.openk9</groupId>
 		<version>0.0.1</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
