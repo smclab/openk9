@@ -24,7 +24,7 @@
 		<dependency>
 			<groupId>io.openk9</groupId>
 			<artifactId>tika-common</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 
