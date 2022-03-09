@@ -11,32 +11,29 @@ import org.hibernate.Hibernate;
 import javax.persistence.Entity;
 import javax.persistence.Index;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import java.util.Objects;
 
 @Entity(name = "security_tenant")
 @Table(indexes = {
-	@Index(name = "idx_tenant_name", columnList = "name")
-}, uniqueConstraints = {
-	@UniqueConstraint(name = "uc_tenant_name", columnNames = {"name"})
+	@Index(name = "idx_tenant_realm_name", columnList = "realmName")
 })
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 public class Tenant extends PanacheEntity {
-	private String name;
-	private String authServerUrl;
+	private String realmName;
+	private String virtualHost;
 	private String clientId;
 	private String clientSecret;
 	private boolean active;
 
-	public static Uni<Tenant> findByName(String name){
-		return find("name", name).firstResult();
+	public static Uni<Tenant> findByRealmName(String name){
+		return find("realmName", name).firstResult();
 	}
 
-	public static Uni<Long> countByName(String name){
-		return find("name", name).count();
+	public static Uni<Long> countByRealmName(String name){
+		return find("realmName", name).count();
 	}
 
 	@Override

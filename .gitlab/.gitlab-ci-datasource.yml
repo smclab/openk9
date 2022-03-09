@@ -6,38 +6,24 @@ Build Latest Datasource Docker Images:
   services:
     - docker:19.03.13-dind
   stage: build-docker
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
   variables:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
       - main
     changes:
       - quarkus/datasource/**/*
       - .gitlab/.gitlab-ci-datasource.yml
-      - gradle.properties
+      - quarkus/pom.xml
   except:
     - schedules
   script:
-    - ./gradlew build -p ./quarkus/datasource -Dquarkus.package.type=jar -Dquarkus.native.container-build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./quarkus/mvnw clean package -pl ./quarkus/datasource -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-datasource" -F ref=master $DEV_TRIGGER_URL
   cache:
-    key: build-docker-cache
-    untracked: true
     paths:
-      - $CI_PROJECT_DIR/.m2/**/*
-      - .gradle/caches
-      - .gradle/wrapper
-    policy: push
-cache:
-  key: build-docker-cache
-  untracked: true
-  paths:
-    - $CI_PROJECT_DIR/.m2/**/*
-    - .gradle/wrapper
-    - .gradle/caches
-  policy: pull
+      - .m2/repository

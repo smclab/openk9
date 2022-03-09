@@ -43,7 +43,7 @@ public class TenantRegistry {
 		Map<String, Tenant> map = new HashMap<>(listTenant.size());
 
 		for (Tenant tenant : listTenant) {
-			map.put(tenant.getName(), tenant);
+			map.put(tenant.getVirtualHost(), tenant);
 		}
 
 		_tenantMap.clear();

@@ -39,8 +39,7 @@ public class AuthResource {
 
 		Tenant tenant = _findTenant(host);
 
-		host = tenant.getName();
-
+		String realmName =  tenant.getRealmName();
 		String clientSecret = tenant.getClientSecret();
 		String clientId = tenant.getClientId();
 		String username = request.getUsername();
@@ -56,7 +55,7 @@ public class AuthResource {
 
 		if (clientSecret != null) {
 			return _authClient.login(
-				host,
+				realmName,
 				username,
 				password,
 				clientId,
@@ -66,7 +65,7 @@ public class AuthResource {
 		}
 		else {
 			return _authClient.login(
-				host,
+				realmName,
 				username,
 				password,
 				clientId,
@@ -86,6 +85,7 @@ public class AuthResource {
 
 		Tenant tenant = _findTenant(host);
 
+		String realmName = tenant.getRealmName();
 		String clientSecret = tenant.getClientSecret();
 		String clientId = tenant.getClientId();
 
@@ -97,7 +97,7 @@ public class AuthResource {
 
 		if (clientSecret != null) {
 			return _authClient.refresh(
-				host,
+				realmName,
 				clientId,
 				clientSecret,
 				refreshToken,
@@ -106,7 +106,7 @@ public class AuthResource {
 		}
 		else {
 			return _authClient.refresh(
-				host,
+				realmName,
 				clientId,
 				refreshToken,
 				"refresh_token"
@@ -128,6 +128,7 @@ public class AuthResource {
 
 		Tenant tenant = _findTenant(host);
 
+		String realmName = tenant.getRealmName();
 		String clientSecret = tenant.getClientSecret();
 		String clientId = tenant.getClientId();
 
@@ -135,7 +136,7 @@ public class AuthResource {
 
 		if (clientSecret != null) {
 			return _authClient.userInfo(
-				host,
+				realmName,
 				clientId,
 				clientSecret,
 				rawToken
@@ -143,7 +144,7 @@ public class AuthResource {
 		}
 		else {
 			return _authClient.userInfo(
-				host,
+				realmName,
 				clientId,
 				rawToken
 			);
@@ -161,6 +162,7 @@ public class AuthResource {
 
 		Tenant tenant = _findTenant(host);
 
+		String realmName = tenant.getRealmName();
 		String clientSecret = tenant.getClientSecret();
 		String clientId = tenant.getClientId();
 		String refreshToken = request.getRefreshToken();
@@ -171,7 +173,7 @@ public class AuthResource {
 
 		if (clientSecret != null) {
 			return _authClient.logout(
-				host,
+				realmName,
 				clientId,
 				clientSecret,
 				refreshToken
@@ -179,7 +181,7 @@ public class AuthResource {
 		}
 		else {
 			return _authClient.logout(
-				host,
+				realmName,
 				clientId,
 				refreshToken
 			);
