@@ -21,7 +21,7 @@ Build Latest Tika No Ocr Docker Images:
   before_script:
     - cd quarkus
   script:
-    - ./mvnw clean package -pl ./tika/tika-no-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./mvnw -f tika clean package -pl ./tika/tika-no-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   cache:
     paths:
       - .m2/repository
