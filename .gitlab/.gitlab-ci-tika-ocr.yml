@@ -21,7 +21,7 @@ Build Latest Tika Ocr Docker Images:
   before_script:
     - cd quarkus
   script:
-    ./mvnw -f tika install
+    ./mvnw install
     ./mvnw -f tika clean package -pl tika-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   cache:
     paths:
