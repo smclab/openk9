@@ -297,7 +297,10 @@ distConfigurations
 				exposePort(8101, 1099, 44444, 8181, 9999, 8080)
 
 				addFile("https://repo1.maven.org/maven2/io/projectreactor/reactor-tools/3.4.6/reactor-tools-3.4.6.jar", "/reactor-tools.jar")
+				copyFile("libs/", "opt/apache-karaf/deploy")
+				copyFile("configs/", "opt/apache-karaf/etc")
 				addFile("https://github.com/ufoscout/docker-compose-wait/releases/download/2.8.0/wait", "/wait")
+
 				runCommand(
 					'''chmod +x /wait \\
                        && chmod g+rx /reactor-tools.jar \\
