@@ -1,6 +1,3 @@
-variables:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-
 Build Latest Ingestion Docker Images:
   image: smclab/docker-java-11:latest
   services:
@@ -20,10 +17,28 @@ Build Latest Ingestion Docker Images:
       - quarkus/pom.xml
   except:
     - schedules
+  before_script:
+    - cd quarkus
   script:
-    - ./quarkus/mvnw clean package -pl ./quarkus/ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
-  after_script:
-    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-ingestion" -F ref=master $DEV_TRIGGER_URL
+    - ./mvnw clean package -pl ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   cache:
     paths:
       - .m2/repository
+
+trigger_deploy_ingestion:
+  image: curlimages/curl
+  stage: deploy
+  needs: ['Build Latest Ingestion Docker Images']
+  only:
+    refs:
+      - main
+    changes:
+      - quarkus/ingestion/**/*
+      - .gitlab/.gitlab-ci-ingestion.yml
+      - quarkus/pom.xml
+  except:
+    - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-ingestion" -F ref=master $DEV_TRIGGER_URL
