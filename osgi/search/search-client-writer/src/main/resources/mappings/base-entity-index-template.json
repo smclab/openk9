@@ -1,44 +1,55 @@
 {
-	"priority": 1,
-	"index_patterns": [
-		"*-entity"
-	],
-	"template": {
-		"settings": {
-			"index": {
-				"number_of_shards": "1",
-				"number_of_replicas": "1"
-			},
-			"analysis" : {
-				"analyzer": {
-					"email": {
-						"tokenizer": "uax_url_email"
-					}
-				}
-			}
-		},
-		"mappings": {
-			"properties": {
-				"name": {
-					"type": "text",
-					"analyzer": "email",
-					"fields" : {
-						"keyword" : {
-							"type" : "keyword",
-							"ignore_above" : 256
-						}
-					}
-				},
-				"type" : {
-					"type" : "text",
-					"fields" : {
-						"keyword" : {
-							"type" : "keyword",
-							"ignore_above" : 256
-						}
-					}
-				}
-			}
-		}
-	}
+   "priority":1,
+   "index_patterns":[
+      "*-entity"
+   ],
+   "template":{
+      "settings":{
+         "index":{
+            "number_of_shards":"1",
+            "number_of_replicas":"1"
+         },
+         "analysis":{
+            "analyzer":{
+               "email_apex_filter":{
+                  "tokenizer":"uax_url_email",
+                  "char_filter":[
+                     "apex_char_filter"
+                  ]
+               }
+            },
+            "char_filter":{
+               "apex_char_filter":{
+                  "type":"mapping",
+                  "mappings":[
+                     "' => ,"
+                  ]
+               }
+            }
+         }
+      },
+      "mappings":{
+         "properties":{
+            "name":{
+               "type":"text",
+               "analyzer":"email_apex_filter",
+               "fields":{
+                  "keyword":{
+                     "type":"keyword",
+                     "ignore_above":256
+                  }
+               }
+            },
+            "type":{
+               "type":"text",
+               "fields":{
+                  "keyword":{
+                     "type":"keyword",
+                     "ignore_above":256
+                  }
+               }
+            }
+         }
+      }
+   }
 }
