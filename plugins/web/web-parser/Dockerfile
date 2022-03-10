@@ -25,6 +25,8 @@ RUN dos2unix /app/wait_for_scrapyd.sh
 
 RUN chmod a+x /app/wait_for_scrapyd.sh
 
+RUN chmod g+rw /app
+
 WORKDIR /app
 
 ENTRYPOINT ["/bin/bash"]
