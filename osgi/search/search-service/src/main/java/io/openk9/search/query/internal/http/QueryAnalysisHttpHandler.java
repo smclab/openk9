@@ -98,9 +98,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 					String searchText = queryAnalysisRequest.getSearchText();
 
-					String searchCleanedText = searchText.replaceAll("\\p{Punct}", " ");
-
-					String[] tokens = Utils.split(searchCleanedText);
+					String[] tokens = Utils.split(searchText);
 
 					List<QueryAnalysisHttpHandler.QueryAnalysisToken> requestTokens =
 						queryAnalysisRequest.getTokens();
@@ -111,7 +109,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 					Grammar grammar = _grammarProvider.getGrammar();
 
 					Mono<List<Parse>> parsesMono = grammar.parseInput(
-						t2.getT1(), searchCleanedText);
+						t2.getT1(), searchText);
 
 					return parsesMono
 						.take(Duration.ofMillis(_annotatorConfig.timeoutMs()))
