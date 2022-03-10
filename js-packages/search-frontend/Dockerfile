@@ -6,9 +6,9 @@ RUN mkdir -p /app/js-packages/search-frontend/src
 RUN mkdir -p /app/js-packages/search-frontend/public
 
 COPY ./package*.json /app
-COPY ./js-packages/rest-api/package*.json ./js-packages/rest-api/rollup.config.js ./js-packages/rest-api/tsconfig.json /app/js-packages/rest-api
+COPY ./js-packages/rest-api/package*.json ./js-packages/rest-api/rollup.config.js ./js-packages/rest-api/tsconfig.json /app/js-packages/rest-api/
 COPY ./js-packages/rest-api/src /app/js-packages/rest-api/src
-COPY ./js-packages/search-frontend/package*.json ./js-packages/search-frontend/tsconfig.json ./js-packages/search-frontend/*.js ./js-packages/search-frontend/nginx.conf /app/js-packages/search-frontend
+COPY ./js-packages/search-frontend/package*.json ./js-packages/search-frontend/tsconfig.json ./js-packages/search-frontend/*.js ./js-packages/search-frontend/nginx.conf /app/js-packages/search-frontend/
 COPY ./js-packages/search-frontend/src /app/js-packages/search-frontend/src
 COPY ./js-packages/search-frontend/public /app/js-packages/search-frontend/public
 COPY ./yarn.lock /app
