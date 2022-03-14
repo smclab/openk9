@@ -61,13 +61,8 @@ public class CreateEntitiesRunnable
 	@Override
 	public void run_() {
 
-		_log.info("start CreateEntitiesRunnable");
-
 		IMap<EntityKey, Entity> entityIMap =
 			MapUtil.getEntityMap(_hazelcastInstance);
-
-		IMap<AssociableEntityKey, Entity> associableEntityMap =
-			MapUtil.getAssociableEntityMap(_hazelcastInstance);
 
 		Set<EntityKey> entityKeys = entityIMap.localKeySet(
 			Predicates.and(
@@ -75,6 +70,18 @@ public class CreateEntitiesRunnable
 				Predicates.equal("graphId", null)
 			)
 		);
+
+		if (entityKeys.isEmpty()) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("entityKeys is empty. skip");
+			}
+			return;
+		}
+
+		_log.info("start CreateEntitiesRunnable");
+
+		IMap<AssociableEntityKey, Entity> associableEntityMap =
+			MapUtil.getAssociableEntityMap(_hazelcastInstance);
 
 		EntityGraphConfig config =
 			CDI.current().select(EntityGraphConfig.class).get();

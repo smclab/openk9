@@ -37,6 +37,13 @@ public class CreateRelationRunnable
 			)
 		);
 
+		if (entityKeys.isEmpty()) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("entityKeys is empty. skip");
+			}
+			return;
+		}
+
 		_log.info("entityKeys: " + entityKeys.size());
 
 		Map<EntityKey, Entity> entityIMapAll = entityIMap.getAll(entityKeys);

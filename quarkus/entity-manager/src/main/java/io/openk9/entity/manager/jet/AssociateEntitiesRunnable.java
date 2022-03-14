@@ -25,10 +25,17 @@ public class AssociateEntitiesRunnable
 	@Override
 	public void run_() {
 
-		_log.info("start AssociateEntitiesRunnable");
-
 		IMap<AssociableEntityKey, Entity> associableEntityMap =
 			MapUtil.getAssociableEntityMap(_hazelcastInstance);
+
+		if (associableEntityMap.isEmpty()) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("associableEntityMap is empty. skip");
+			}
+			return;
+		}
+
+		_log.info("start AssociateEntitiesRunnable");
 
 		Set<AssociableEntityKey> associableEntityKeys =
 			associableEntityMap.localKeySet();

@@ -17,6 +17,7 @@ import org.jboss.logging.Logger;
 import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Set;
 
 public class CreateDocumentEntitiesRunnable
 	implements StopWatchRunnable, HazelcastInstanceAware, Serializable {
@@ -24,18 +25,27 @@ public class CreateDocumentEntitiesRunnable
 	@Override
 	public void run_() {
 
+		MultiMap<DocumentKey, String> documentEntityMapMap =
+			MapUtil.getDocumentEntityMapMap(_hazelcastInstance);
+
+		Set<DocumentKey> documentKeys = documentEntityMapMap.localKeySet();
+
+		if (documentKeys.isEmpty()) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("documentKeys is empty. skip");
+			}
+			return;
+		}
+
 		_log.info("start CreateEntitiesRunnable");
 
 		IMap<EntityKey, Entity> entityIMap =
 			MapUtil.getEntityMap(_hazelcastInstance);
 
-		MultiMap<DocumentKey, String> documentEntityMapMap =
-			MapUtil.getDocumentEntityMapMap(_hazelcastInstance);
-
 		EntityGraphService entityGraphService = CDI.current().select(
 			EntityGraphService.class).get();
 
-		for (DocumentKey documentKey : documentEntityMapMap.localKeySet()) {
+		for (DocumentKey documentKey : documentKeys) {
 
 			Collection<String> entityCacheIds =
 				documentEntityMapMap.get(documentKey);
