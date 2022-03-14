@@ -37,8 +37,6 @@ public class BaseNerAnnotator extends BaseAnnotator {
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
-		_log.debug(Arrays.toString(tokens));
-
 		if (_containsStopword(tokens)) {
 			return List.of();
 		}
