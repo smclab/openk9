@@ -6,16 +6,20 @@ public interface StopWatchRunnable extends Runnable {
 
 	default void run() {
 
-		long ms = System.currentTimeMillis();
+		if (logger.isDebugEnabled()) {
 
-		run_();
+			long ms = System.currentTimeMillis();
 
-		logger.info(this.getClass().getName() + ".run execution time: " + (System.currentTimeMillis() - ms) + "ms");
+			run_();
+
+			logger.debug(this.getClass().getName() + ".run execution time: " +
+						(System.currentTimeMillis() - ms) + "ms");
+		}
 
 	}
 
 	void run_();
 
-	 static final Logger logger = Logger.getLogger(StopWatchRunnable.class);
+	 Logger logger = Logger.getLogger(StopWatchRunnable.class);
 
 }
