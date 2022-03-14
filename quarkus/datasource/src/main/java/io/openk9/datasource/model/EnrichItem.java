@@ -29,6 +29,7 @@ import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -46,6 +47,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @AllArgsConstructor(staticName = "of")
 @EntityListeners(K9EntityListener.class)
+@Cacheable
 public class EnrichItem extends PanacheEntityBase implements K9Entity {
 
     @Id

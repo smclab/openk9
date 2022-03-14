@@ -12,6 +12,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -28,6 +29,7 @@ import java.util.Objects;
 @Builder
 @AllArgsConstructor(staticName = "of")
 @EntityListeners(K9EntityListener.class)
+@Cacheable
 public class SuggestionCategory extends PanacheEntityBase implements K9Entity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
