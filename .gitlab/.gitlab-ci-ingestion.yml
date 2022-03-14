@@ -24,6 +24,7 @@ Build Latest Ingestion Docker Images:
     - ./mvnw install
     - ./mvnw package -pl ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   cache:
+    key: quarkus-maven
     paths:
       - .m2/repository
 

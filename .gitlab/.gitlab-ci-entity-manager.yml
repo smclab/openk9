@@ -26,6 +26,7 @@ Build Latest Entity Manager Docker Images:
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-entity-manager" -F ref=master $DEV_TRIGGER_URL
   cache:
+    key: quarkus-maven
     paths:
       - .m2/repository
 
