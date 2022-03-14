@@ -65,10 +65,10 @@ jobs:
         run: |
           cd quarkus
           ./mvnw install
-          ./mvnw package -pl tika-no-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
+          ./mvnw -f tika package -pl tika-no-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
 
       - name: Build and Push Tika Ocr
         run: |
           cd quarkus
           ./mvnw install
-          ./mvnw package -pl tika-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
+          ./mvnw -f tika package -pl tika-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
