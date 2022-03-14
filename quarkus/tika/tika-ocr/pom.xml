@@ -56,7 +56,6 @@
 		<dependency>
 			<groupId>io.openk9</groupId>
 			<artifactId>resources-common</artifactId>
-			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 
