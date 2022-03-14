@@ -107,10 +107,6 @@
 			<artifactId>quarkus-panache-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.quarkiverse.config</groupId>
-			<artifactId>quarkus-config-consul</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>io.smallrye.reactive</groupId>
 			<artifactId>smallrye-mutiny-vertx-consul-client</artifactId>
 		</dependency>
