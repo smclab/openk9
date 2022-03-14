@@ -35,6 +35,7 @@ trigger_deploy_ingestion:
     refs:
       - main
     changes:
+      - quarkus/resources-common/**/*
       - quarkus/ingestion/**/*
       - .gitlab/.gitlab-ci-ingestion.yml
       - quarkus/pom.xml

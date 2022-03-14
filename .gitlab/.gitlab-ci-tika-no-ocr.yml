@@ -36,6 +36,7 @@ trigger_deploy_tika_no_ocr:
     refs:
       - main
     changes:
+      - quarkus/resources-common/**/*
       - quarkus/tika/tika-no-ocr/**/*
       - quarkus/tika/tika-common/**/*
       - .gitlab/.gitlab-ci-tika-no-ocr.yml

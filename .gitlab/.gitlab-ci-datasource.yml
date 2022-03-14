@@ -35,6 +35,7 @@ trigger_deploy_datasource:
     refs:
       - main
     changes:
+      - quarkus/resources-common/**/*
       - quarkus/datasource/**/*
       - .gitlab/.gitlab-ci-datasource.yml
       - quarkus/pom.xml

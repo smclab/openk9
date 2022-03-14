@@ -35,6 +35,7 @@ trigger_deploy_api_aggregator:
     refs:
       - main
     changes:
+      - quarkus/resources-common/**/*
       - quarkus/api-aggregator/**/*
       - .gitlab/.gitlab-ci-api-aggregator.yml
       - quarkus/pom.xml
