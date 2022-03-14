@@ -14,7 +14,8 @@ public final class Release {
 		String output =
 			Logo.getLogo() +
 			Logo.getEmptySpace() +
-			String.format("%s (%s)", getProductName(), getVersion());
+			String.format("%s (%s)", getProductName(), getVersion()) +
+			Logo.getEmptySpace();
 
 		System.out.println(output);
 	}
