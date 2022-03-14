@@ -83,7 +83,7 @@ services:
             OPENK9_ENTITY_SCORE_THRESHOLD: '0.8'
             QUARKUS_CONSUL_CONFIG_AGENT_HOST_PORT: 'consul:8500'
             HZ_NETWORK_JOIN_KUBERNETES_NAMESPACE: 'k9-develop'
-            docker: 'false'
+            HZ_NETWORK_JOIN_KUBERNETES_ENABLED: 'false'
         expose:
             - "1099"
             - "8080"
@@ -219,7 +219,7 @@ services:
     ner-rabbit:
         image: smclab/spacy-ner-rabbit:latest
         container_name: ner-rabbit
-        command: 'sh -c /wait && python main.py'
+        command: ['sh', '-c', '/wait && python main.py']
         environment:
             WAIT_HOSTS: 'rabbitmq:5672'
             WAIT_HOSTS_TIMEOUT: '300'
@@ -252,7 +252,6 @@ services:
             - 7070:8080
         depends_on:
             - postgres
-            - rabbitmq
     api-aggregator:
         image: smclab/openk9-api-aggregator:latest
         environment:
@@ -264,14 +263,17 @@ services:
             QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
             QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak:8080/auth/realms/openk9'
             QUARKUS_OIDC_CLIENT_ID: 'openk9'
+            OPENK9_AUTHSERVERURL_TEMPLATE: 'http://keycloak:8080/auth/realms/{realm}'
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.frontend.entrypoints=web"
-            - "traefik.http.middlewares.searcher-strip.stripprefix.prefixes=/api"
-            - "traefik.http.routers.frontend.rule=PathPrefix(`/api`)"
-            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=local.openk9.io"
-            - "traefik.http.routers.api-aggregator.middlewares=openk9-forwarded-host@docker"
-
+            - "traefik.http.services.aggregator-docker.loadbalancer.server.port=8080"
+            - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api"
+            - "traefik.http.routers.aggregator.entrypoints=web"
+            - "traefik.http.routers.aggregator.rule=PathPrefix(`/api`)"
+            - "traefik.http.middlewares.aggregator_compress.compress=true"
+            - "traefik.http.routers.aggregator.middlewares=api-strip@docker,aggregator_compress@docker"
+            - "traefik.http.middlewares.aggregator-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=local.openk9.io"
+            - "traefik.http.routers.aggregator.middlewares=aggregator-forwarded-host@docker"
     consul:
         image: consul:1.7
         command: 'agent -dev -ui -client=0.0.0.0 -bind=0.0.0.0 --https-port=8501'
