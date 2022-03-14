@@ -12,6 +12,7 @@ Build Latest Datasource Docker Images:
     refs:
       - main
     changes:
+      - quarkus/resources-common/**/*
       - quarkus/datasource/**/*
       - .gitlab/.gitlab-ci-datasource.yml
       - quarkus/pom.xml

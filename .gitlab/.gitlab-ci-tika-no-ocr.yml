@@ -12,6 +12,7 @@ Build Latest Tika No Ocr Docker Images:
     refs:
       - main
     changes:
+      - quarkus/resources-common/**/*
       - quarkus/tika/tika-no-ocr/**/*
       - quarkus/tika/tika-common/**/*
       - .gitlab/.gitlab-ci-tika-no-ocr.yml

@@ -12,6 +12,7 @@ Build Latest Tika Ocr Docker Images:
     refs:
       - main
     changes:
+      - quarkus/resources-common/**/*
       - quarkus/tika/tika-ocr/**/*
       - quarkus/tika/tika-common/**/*
       - .gitlab/.gitlab-ci-tika-ocr.yml

@@ -12,6 +12,7 @@ Build Latest Entity Manager Docker Images:
     refs:
       - main
     changes:
+      - quarkus/resources-common/**/*
       - quarkus/entity-manager/**/*
       - .gitlab/.gitlab-ci-entity-manager.yml
       - quarkus/pom.xml

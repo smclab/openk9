@@ -12,6 +12,7 @@ Build Latest Api Aggregator Docker Images:
     refs:
       - main
     changes:
+      - quarkus/resources-common/**/*
       - quarkus/api-aggregator/**/*
       - .gitlab/.gitlab-ci-api-aggregator.yml
       - quarkus/pom.xml
