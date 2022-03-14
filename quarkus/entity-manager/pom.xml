@@ -12,11 +12,38 @@
 
 	<artifactId>entity-manager</artifactId>
 
-	<properties>
-		<quarkus.platform.version>2.6.3.Final</quarkus.platform.version>
-		<maven.compiler.release>11</maven.compiler.release>
-		<maven.compiler.target>11</maven.compiler.target>
-	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jboss.jandex</groupId>
+				<artifactId>jandex-maven-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+			</plugin>
+
+			<plugin>
+				<groupId>io.quarkus</groupId>
+				<artifactId>quarkus-maven-plugin</artifactId>
+				<version>${quarkus-plugin.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
 
 	<dependencies>
 		<dependency>
@@ -54,7 +81,7 @@
 		<dependency>
 			<groupId>io.quarkiverse.neo4j</groupId>
 			<artifactId>quarkus-neo4j</artifactId>
-			<version>1.0.2</version>
+			<version>1.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkiverse.config</groupId>
@@ -63,7 +90,7 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>5.0.1</version>
+			<version>5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.neo4j</groupId>
@@ -73,7 +100,11 @@
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
-			<version>3.4.14</version>
+			<version>3.4.15</version>
+		</dependency>
+		<dependency>
+			<groupId>io.openk9</groupId>
+			<artifactId>resources-common</artifactId>
 		</dependency>
 	</dependencies>
 

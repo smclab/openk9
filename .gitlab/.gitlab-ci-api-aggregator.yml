@@ -20,7 +20,8 @@ Build Latest Api Aggregator Docker Images:
   before_script:
     - cd quarkus
   script:
-    - ./mvnw clean package -pl api-aggregator -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./mvnw install
+    - ./mvnw package -pl api-aggregator -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   cache:
     paths:
       - .m2/repository

@@ -20,7 +20,8 @@ Build Latest Entity Manager Docker Images:
   before_script:
     - cd quarkus
   script:
-    - ./mvnw clean package -pl entity-manager -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./mvnw install
+    - ./mvnw package -pl entity-manager -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-entity-manager" -F ref=master $DEV_TRIGGER_URL
   cache:
