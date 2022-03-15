@@ -17,6 +17,7 @@ import io.smallrye.reactive.messaging.MutinyEmitter;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Message;
+import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -113,10 +114,11 @@ public class DatasourceProcessor {
 								Instant.ofEpochMilli(
 									jsonObject.getLong("parsingDate")));
 
-							return Panache.withTransaction(datasource::persist);
+							return Panache.withTransaction(datasource::persistAndFlush);
 
 						})
 					)
+					.onFailure().invoke(t -> logger.error(t.getMessage(), t))
 					.call(ingestionDatasourceEmitter::send)
 					.eventually(message::ack);
 			})
@@ -139,6 +141,9 @@ public class DatasourceProcessor {
 	}
 
 	private Cancellable _cancellable;
+
+	@Inject
+	Logger logger;
 
 	@Inject
 	@Channel("ingestion-datasource")
