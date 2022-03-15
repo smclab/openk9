@@ -16,6 +16,7 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
@@ -27,6 +28,7 @@ public class DatasourceProcessor {
 	Emitter<IngestionDatasourcePayload> emitter;
 
 	@Incoming("ingestion")
+	@Transactional
 	public CompletionStage<Void> process(Message<?> message) {
 
 		Object obj = message.getPayload();
