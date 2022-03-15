@@ -8,7 +8,6 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -42,84 +41,82 @@ public class DatasourceProcessor {
 		Uni<Datasource> datasourceUni =
 			Datasource.findById(datasourceId);
 
-		return Panache.withTransaction(() ->
-			datasourceUni
-				.flatMap(datasource ->
-					EnrichPipeline
-						.findByDatasourceId(datasource.getDatasourceId())
-						.onItem()
-						.ifNull()
-						.continueWith(EnrichPipeline::new)
-						.flatMap(enrichPipeline -> {
+		return datasourceUni
+			.flatMap(datasource ->
+				EnrichPipeline
+					.findByDatasourceId(datasource.getDatasourceId())
+					.onItem()
+					.ifNull()
+					.continueWith(EnrichPipeline::new)
+					.flatMap(enrichPipeline -> {
 
-							Uni<List<EnrichItem>> enrichItemUni;
+						Uni<List<EnrichItem>> enrichItemUni;
 
-							if (enrichPipeline.getEnrichPipelineId() !=
-								null) {
+						if (enrichPipeline.getEnrichPipelineId() !=
+							null) {
 
-								enrichItemUni = EnrichItem
-									.findByEnrichPipelineId(
-										enrichPipeline.getEnrichPipelineId())
-									.onItem()
-									.ifNull()
-									.continueWith(List::of);
+							enrichItemUni = EnrichItem
+								.findByEnrichPipelineId(
+									enrichPipeline.getEnrichPipelineId())
+								.onItem()
+								.ifNull()
+								.continueWith(List::of);
 
-							}
-							else {
-								enrichItemUni =
-									Uni.createFrom().item(List.of());
-							}
+						}
+						else {
+							enrichItemUni =
+								Uni.createFrom().item(List.of());
+						}
 
-							return Uni
-								.combine()
-								.all()
-								.unis(
-									Tenant.findById(
-										datasource.getTenantId()),
-									enrichItemUni)
-								.combinedWith(
-									(tenantObj, enrichItemList) -> {
+						return Uni
+							.combine()
+							.all()
+							.unis(
+								Tenant.findById(
+									datasource.getTenantId()),
+								enrichItemUni)
+							.combinedWith(
+								(tenantObj, enrichItemList) -> {
 
-										Tenant tenant = (Tenant) tenantObj;
+									Tenant tenant = (Tenant) tenantObj;
 
-										IngestionPayload ingestionPayload =
-											jsonObject.mapTo(
-												IngestionPayload.class);
+									IngestionPayload ingestionPayload =
+										jsonObject.mapTo(
+											IngestionPayload.class);
 
-										ingestionPayload.setTenantId(
-											tenant.getTenantId());
+									ingestionPayload.setTenantId(
+										tenant.getTenantId());
 
-										DatasourceContext
-											datasourceContext =
-											DatasourceContext.of(
-												datasource, tenant,
-												enrichPipeline,
-												enrichItemList
-											);
+									DatasourceContext
+										datasourceContext =
+										DatasourceContext.of(
+											datasource, tenant,
+											enrichPipeline,
+											enrichItemList
+										);
 
-										return IngestionDatasourcePayload.of(
-											ingestionPayload,
-											datasourceContext);
-									});
+									return IngestionDatasourcePayload.of(
+										ingestionPayload,
+										datasourceContext);
+								});
 
-						}))
-				.eventually(() -> Datasource
-					.<Datasource>findById(datasourceId)
-					.flatMap(datasource -> {
+					}))
+			.eventually(() -> Datasource
+				.<Datasource>findById(datasourceId)
+				.flatMap(datasource -> {
 
-						datasource.setLastIngestionDate(
-							Instant.ofEpochMilli(
-								jsonObject.getLong("parsingDate")));
+					datasource.setLastIngestionDate(
+						Instant.ofEpochMilli(
+							jsonObject.getLong("parsingDate")));
 
-						return datasource.persist();
+					return datasource.persist();
 
-					})
-				)
-		)
-			.call(idp -> Uni.createFrom().completionStage(emitter.send(idp)))
-			.call(() -> Uni.createFrom().completionStage(message.ack()))
-			.replaceWithVoid()
-			.subscribeAsCompletionStage();
+				})
+			)
+		.call(idp -> Uni.createFrom().completionStage(emitter.send(idp)))
+		.call(() -> Uni.createFrom().completionStage(message.ack()))
+		.replaceWithVoid()
+		.subscribeAsCompletionStage();
 
 	}
 
