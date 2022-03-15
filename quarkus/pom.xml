@@ -13,6 +13,7 @@
 		<module>api-aggregator</module>
 		<module>tika</module>
 		<module>resources-common</module>
+		<module>resources-validator</module>
 	</modules>
 	<properties>
 		<dependency.version.lombok>1.18.10</dependency.version.lombok>
