@@ -8,12 +8,13 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.time.Instant;
@@ -24,22 +25,23 @@ public class DatasourceProcessor {
 
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
-	@ReactiveTransactional
 	public Uni<IngestionDatasourcePayload> process(Message<?> message) {
 
-		Object obj = message.getPayload();
+		return Panache.withTransaction(() -> {
 
-		JsonObject jsonObject =
-			obj instanceof JsonObject
-				? (JsonObject)obj
-				: new JsonObject(new String((byte[])obj));
+			Object obj = message.getPayload();
 
-		long datasourceId = jsonObject.getLong("datasourceId");
+			JsonObject jsonObject =
+				obj instanceof JsonObject
+					? (JsonObject)obj
+					: new JsonObject(new String((byte[])obj));
 
-		Uni<Datasource> datasourceUni =
-			Datasource.findById(datasourceId);
+			long datasourceId = jsonObject.getLong("datasourceId");
 
-		return datasourceUni
+			Uni<Datasource> datasourceUni =
+				Datasource.findById(datasourceId);
+
+			return datasourceUni
 				.flatMap(datasource ->
 					EnrichPipeline
 						.findByDatasourceId(datasource.getDatasourceId())
@@ -61,7 +63,8 @@ public class DatasourceProcessor {
 
 							}
 							else {
-								enrichItemUni = Uni.createFrom().item(List.of());
+								enrichItemUni =
+									Uni.createFrom().item(List.of());
 							}
 
 							return Uni
@@ -72,16 +75,20 @@ public class DatasourceProcessor {
 									enrichItemUni)
 								.combinedWith((tenantObj, enrichItemList) -> {
 
-									Tenant tenant = (Tenant)tenantObj;
+									Tenant tenant = (Tenant) tenantObj;
 
 									IngestionPayload ingestionPayload =
-										jsonObject.mapTo(IngestionPayload.class);
+										jsonObject.mapTo(
+											IngestionPayload.class);
 
-									ingestionPayload.setTenantId(tenant.getTenantId());
+									ingestionPayload.setTenantId(
+										tenant.getTenantId());
 
-									DatasourceContext datasourceContext = DatasourceContext.of(
-										datasource, tenant, enrichPipeline, enrichItemList
-									);
+									DatasourceContext datasourceContext =
+										DatasourceContext.of(
+											datasource, tenant, enrichPipeline,
+											enrichItemList
+										);
 
 									return IngestionDatasourcePayload.of(
 										ingestionPayload, datasourceContext);
@@ -99,7 +106,11 @@ public class DatasourceProcessor {
 						return datasource.persist();
 
 					})
-				);
+				)
+				.onTermination().call(() ->
+					Panache.getSession().invoke(Mutiny.Closeable::close));
+			}
+		);
 
 	}
 
