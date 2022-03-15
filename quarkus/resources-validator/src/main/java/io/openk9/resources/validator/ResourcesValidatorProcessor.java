@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
+import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 @ApplicationScoped
@@ -68,11 +69,15 @@ public class ResourcesValidatorProcessor {
 
 		boolQueryBuilder.must(matchQuery("contentId", contentId));
 
+		boolQueryBuilder.must(existsQuery("hashCodes"));
+
 		SearchRequest searchRequest = new SearchRequest(tenantId + "*-data");
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
 		searchSourceBuilder.query(boolQueryBuilder);
+
+		searchSourceBuilder.fetchField("hashCodes");
 
 		searchRequest.source(searchSourceBuilder);
 
