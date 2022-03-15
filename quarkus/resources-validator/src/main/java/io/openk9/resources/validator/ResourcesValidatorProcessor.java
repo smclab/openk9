@@ -49,9 +49,9 @@ public class ResourcesValidatorProcessor {
 
 		JsonObject payload = jsonObject.getJsonObject("payload");
 
-		Long tenantId = jsonObject.getLong("tenantId");
+		Long tenantId = payload.getLong("tenantId");
 
-		Long datasourceId = jsonObject.getLong("datasourceId");
+		Long datasourceId = payload.getLong("datasourceId");
 
 		String rawContent = payload.getString("rawContent");
 
