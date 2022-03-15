@@ -71,7 +71,7 @@ public class ResourcesValidatorProcessor {
 
 		boolQueryBuilder.must(existsQuery("hashCodes"));
 
-		SearchRequest searchRequest = new SearchRequest(tenantId + "*-data");
+		SearchRequest searchRequest = new SearchRequest(tenantId + "-*-data");
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
