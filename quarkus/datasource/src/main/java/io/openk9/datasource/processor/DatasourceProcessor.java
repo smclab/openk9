@@ -43,93 +43,94 @@ public class DatasourceProcessor {
 
 				long datasourceId = jsonObject.getLong("datasourceId");
 
-				return Panache.withTransaction(() -> {
+				Uni<Datasource> datasourceUni =
+					Datasource.findById(datasourceId);
 
-					Uni<Datasource> datasourceUni =
-						Datasource.findById(datasourceId);
+				return datasourceUni
+					.flatMap(datasource ->
+						_getEnrichPipelineByDatasourceId(
+							datasource.getDatasourceId())
+							.flatMap(enrichPipeline -> {
 
-					return datasourceUni
-						.flatMap(datasource ->
-							EnrichPipeline
-								.findByDatasourceId(
-									datasource.getDatasourceId())
-								.onItem()
-								.ifNull()
-								.continueWith(EnrichPipeline::new)
-								.flatMap(enrichPipeline -> {
+								Uni<List<EnrichItem>> enrichItemUni;
 
-									Uni<List<EnrichItem>> enrichItemUni;
+								if (enrichPipeline.getEnrichPipelineId() !=
+									null) {
 
-									if (enrichPipeline.getEnrichPipelineId() !=
-										null) {
+									enrichItemUni = EnrichItem
+										.findByEnrichPipelineId(
+											enrichPipeline.getEnrichPipelineId())
+										.onItem()
+										.ifNull()
+										.continueWith(List::of);
 
-										enrichItemUni = EnrichItem
-											.findByEnrichPipelineId(
-												enrichPipeline.getEnrichPipelineId())
-											.onItem()
-											.ifNull()
-											.continueWith(List::of);
+								}
+								else {
+									enrichItemUni =
+										Uni.createFrom().item(List.of());
+								}
 
-									}
-									else {
-										enrichItemUni =
-											Uni.createFrom().item(List.of());
-									}
+								return Uni
+									.combine()
+									.all()
+									.unis(
+										Tenant.findById(
+											datasource.getTenantId()),
+										enrichItemUni)
+									.combinedWith(
+										(tenantObj, enrichItemList) -> {
 
-									return Uni
-										.combine()
-										.all()
-										.unis(
-											Tenant.findById(
-												datasource.getTenantId()),
-											enrichItemUni)
-										.combinedWith(
-											(tenantObj, enrichItemList) -> {
+											Tenant tenant =
+												(Tenant) tenantObj;
 
-												Tenant tenant =
-													(Tenant) tenantObj;
+											IngestionPayload
+												ingestionPayload =
+												jsonObject.mapTo(
+													IngestionPayload.class);
 
-												IngestionPayload
-													ingestionPayload =
-													jsonObject.mapTo(
-														IngestionPayload.class);
+											ingestionPayload.setTenantId(
+												tenant.getTenantId());
 
-												ingestionPayload.setTenantId(
-													tenant.getTenantId());
+											DatasourceContext
+												datasourceContext =
+												DatasourceContext.of(
+													datasource, tenant,
+													enrichPipeline,
+													enrichItemList
+												);
 
-												DatasourceContext
-													datasourceContext =
-													DatasourceContext.of(
-														datasource, tenant,
-														enrichPipeline,
-														enrichItemList
-													);
+											return IngestionDatasourcePayload.of(
+												ingestionPayload,
+												datasourceContext);
+										});
 
-												return IngestionDatasourcePayload.of(
-													ingestionPayload,
-													datasourceContext);
-											});
+							}))
+					.eventually(() -> Datasource
+						.<Datasource>findById(datasourceId)
+						.flatMap(datasource -> {
 
-								}))
-						.eventually(() -> Datasource
-							.<Datasource>findById(datasourceId)
-							.flatMap(datasource -> {
+							datasource.setLastIngestionDate(
+								Instant.ofEpochMilli(
+									jsonObject.getLong("parsingDate")));
 
-								datasource.setLastIngestionDate(
-									Instant.ofEpochMilli(
-										jsonObject.getLong("parsingDate")));
+							return Panache.withTransaction(datasource::persist);
 
-								return datasource.persist();
-
-							})
-						)
-						.call(ingestionDatasourceEmitter::send)
-						.invoke(message::ack);
-				});
-
+						})
+					)
+					.call(ingestionDatasourceEmitter::send)
+					.eventually(message::ack);
 			})
 			.subscribe()
 			.with(message -> {});
+	}
+
+	private Uni<EnrichPipeline> _getEnrichPipelineByDatasourceId(
+		long datasourceId) {
+		return EnrichPipeline
+			.findByDatasourceId(datasourceId)
+			.onItem()
+			.ifNull()
+			.continueWith(EnrichPipeline::new);
 	}
 
 	@PreDestroy
