@@ -9,109 +9,143 @@ import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.quarkus.hibernate.reactive.panache.Panache;
+import io.quarkus.runtime.Startup;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.subscription.Cancellable;
+import io.smallrye.reactive.messaging.MutinyEmitter;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Message;
-import org.eclipse.microprofile.reactive.messaging.Outgoing;
-import org.hibernate.reactive.mutiny.Mutiny;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.time.Instant;
 import java.util.List;
 
 @ApplicationScoped
+@Startup
 public class DatasourceProcessor {
 
-	@Incoming("ingestion")
-	@Outgoing("ingestion-datasource")
-	public Uni<IngestionDatasourcePayload> process(Message<?> message) {
+	@PostConstruct
+	public void start() {
+		_cancellable = ingestionMulti
+			.onItem().call((message) -> {
 
-		return Panache.withTransaction(() -> {
+				Object obj = message.getPayload();
 
-			Object obj = message.getPayload();
+				JsonObject jsonObject =
+					obj instanceof JsonObject
+						? (JsonObject) obj
+						: new JsonObject(new String((byte[]) obj));
 
-			JsonObject jsonObject =
-				obj instanceof JsonObject
-					? (JsonObject)obj
-					: new JsonObject(new String((byte[])obj));
+				long datasourceId = jsonObject.getLong("datasourceId");
 
-			long datasourceId = jsonObject.getLong("datasourceId");
+				return Panache.withTransaction(() -> {
 
-			Uni<Datasource> datasourceUni =
-				Datasource.findById(datasourceId);
+					Uni<Datasource> datasourceUni =
+						Datasource.findById(datasourceId);
 
-			return datasourceUni
-				.flatMap(datasource ->
-					EnrichPipeline
-						.findByDatasourceId(datasource.getDatasourceId())
-						.onItem()
-						.ifNull()
-						.continueWith(EnrichPipeline::new)
-						.flatMap(enrichPipeline -> {
+					return datasourceUni
+						.flatMap(datasource ->
+							EnrichPipeline
+								.findByDatasourceId(
+									datasource.getDatasourceId())
+								.onItem()
+								.ifNull()
+								.continueWith(EnrichPipeline::new)
+								.flatMap(enrichPipeline -> {
 
-							Uni<List<EnrichItem>> enrichItemUni;
+									Uni<List<EnrichItem>> enrichItemUni;
 
-							if (enrichPipeline.getEnrichPipelineId() != null) {
+									if (enrichPipeline.getEnrichPipelineId() !=
+										null) {
 
-								enrichItemUni = EnrichItem
-									.findByEnrichPipelineId(
-										enrichPipeline.getEnrichPipelineId())
-									.onItem()
-									.ifNull()
-									.continueWith(List::of);
+										enrichItemUni = EnrichItem
+											.findByEnrichPipelineId(
+												enrichPipeline.getEnrichPipelineId())
+											.onItem()
+											.ifNull()
+											.continueWith(List::of);
 
-							}
-							else {
-								enrichItemUni =
-									Uni.createFrom().item(List.of());
-							}
+									}
+									else {
+										enrichItemUni =
+											Uni.createFrom().item(List.of());
+									}
 
-							return Uni
-								.combine()
-								.all()
-								.unis(
-									Tenant.findById(datasource.getTenantId()),
-									enrichItemUni)
-								.combinedWith((tenantObj, enrichItemList) -> {
+									return Uni
+										.combine()
+										.all()
+										.unis(
+											Tenant.findById(
+												datasource.getTenantId()),
+											enrichItemUni)
+										.combinedWith(
+											(tenantObj, enrichItemList) -> {
 
-									Tenant tenant = (Tenant) tenantObj;
+												Tenant tenant =
+													(Tenant) tenantObj;
 
-									IngestionPayload ingestionPayload =
-										jsonObject.mapTo(
-											IngestionPayload.class);
+												IngestionPayload
+													ingestionPayload =
+													jsonObject.mapTo(
+														IngestionPayload.class);
 
-									ingestionPayload.setTenantId(
-										tenant.getTenantId());
+												ingestionPayload.setTenantId(
+													tenant.getTenantId());
 
-									DatasourceContext datasourceContext =
-										DatasourceContext.of(
-											datasource, tenant, enrichPipeline,
-											enrichItemList
-										);
+												DatasourceContext
+													datasourceContext =
+													DatasourceContext.of(
+														datasource, tenant,
+														enrichPipeline,
+														enrichItemList
+													);
 
-									return IngestionDatasourcePayload.of(
-										ingestionPayload, datasourceContext);
-								});
+												return IngestionDatasourcePayload.of(
+													ingestionPayload,
+													datasourceContext);
+											});
 
-						}))
-				.eventually(() -> Datasource
-					.<Datasource>findById(datasourceId)
-					.flatMap(datasource -> {
+								}))
+						.eventually(() -> Datasource
+							.<Datasource>findById(datasourceId)
+							.flatMap(datasource -> {
 
-						datasource.setLastIngestionDate(
-							Instant.ofEpochMilli(
-								jsonObject.getLong("parsingDate")));
+								datasource.setLastIngestionDate(
+									Instant.ofEpochMilli(
+										jsonObject.getLong("parsingDate")));
 
-						return datasource.persist();
+								return datasource.persist();
 
-					})
-				)
-				.onTermination().call(() ->
-					Panache.getSession().invoke(Mutiny.Closeable::close));
-			}
-		);
+							})
+						)
+						.call(ingestionDatasourceEmitter::send)
+						.invoke(message::ack);
+				});
 
+			})
+			.subscribe()
+			.with(message -> {});
 	}
+
+	@PreDestroy
+	public void stop() {
+		_cancellable.cancel();
+	}
+
+	private Cancellable _cancellable;
+
+	@Inject
+	@Channel("ingestion-datasource")
+	MutinyEmitter<IngestionDatasourcePayload> ingestionDatasourceEmitter;
+
+	@Inject
+	@Channel("ingestion")
+	Multi<Message<?>> ingestionMulti;
+
 
 }
