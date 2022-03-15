@@ -10,22 +10,27 @@ import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import org.eclipse.microprofile.reactive.messaging.Message;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class DatasourceProcessor {
 
+	@Channel("ingestion-datasource")
+	Emitter<IngestionDatasourcePayload> emitter;
+
 	@Incoming("ingestion")
-	@Outgoing("ingestion-datasource")
-	@Blocking("datasource")
-	public Uni<IngestionDatasourcePayload> process(Object obj) {
+	public CompletionStage<Void> process(Message<?> message) {
+
+		Object obj = message.getPayload();
 
 		JsonObject jsonObject =
 			obj instanceof JsonObject
@@ -49,7 +54,8 @@ public class DatasourceProcessor {
 
 							Uni<List<EnrichItem>> enrichItemUni;
 
-							if (enrichPipeline.getEnrichPipelineId() != null) {
+							if (enrichPipeline.getEnrichPipelineId() !=
+								null) {
 
 								enrichItemUni = EnrichItem
 									.findByEnrichPipelineId(
@@ -60,31 +66,41 @@ public class DatasourceProcessor {
 
 							}
 							else {
-								enrichItemUni = Uni.createFrom().item(List.of());
+								enrichItemUni =
+									Uni.createFrom().item(List.of());
 							}
 
 							return Uni
 								.combine()
 								.all()
 								.unis(
-									Tenant.findById(datasource.getTenantId()),
+									Tenant.findById(
+										datasource.getTenantId()),
 									enrichItemUni)
-								.combinedWith((tenantObj, enrichItemList) -> {
+								.combinedWith(
+									(tenantObj, enrichItemList) -> {
 
-									Tenant tenant = (Tenant)tenantObj;
+										Tenant tenant = (Tenant) tenantObj;
 
-									IngestionPayload ingestionPayload =
-										jsonObject.mapTo(IngestionPayload.class);
+										IngestionPayload ingestionPayload =
+											jsonObject.mapTo(
+												IngestionPayload.class);
 
-									ingestionPayload.setTenantId(tenant.getTenantId());
+										ingestionPayload.setTenantId(
+											tenant.getTenantId());
 
-									DatasourceContext datasourceContext = DatasourceContext.of(
-										datasource, tenant, enrichPipeline, enrichItemList
-									);
+										DatasourceContext
+											datasourceContext =
+											DatasourceContext.of(
+												datasource, tenant,
+												enrichPipeline,
+												enrichItemList
+											);
 
-									return IngestionDatasourcePayload.of(
-										ingestionPayload, datasourceContext);
-								});
+										return IngestionDatasourcePayload.of(
+											ingestionPayload,
+											datasourceContext);
+									});
 
 						}))
 				.eventually(() -> Datasource
@@ -99,7 +115,11 @@ public class DatasourceProcessor {
 
 					})
 				)
-		);
+		)
+			.call(idp -> Uni.createFrom().completionStage(emitter.send(idp)))
+			.call(() -> Uni.createFrom().completionStage(message.ack()))
+			.replaceWithVoid()
+			.subscribeAsCompletionStage();
 
 	}
 
