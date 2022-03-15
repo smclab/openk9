@@ -15,6 +15,9 @@ public interface StopWatchRunnable extends Runnable {
 			logger.debug(this.getClass().getName() + ".run execution time: " +
 						(System.currentTimeMillis() - ms) + "ms");
 		}
+		else {
+			run_();
+		}
 
 	}
 
