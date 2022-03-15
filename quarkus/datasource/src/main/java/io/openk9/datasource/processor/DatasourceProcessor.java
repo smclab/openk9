@@ -47,10 +47,10 @@ public class DatasourceProcessor {
 					Datasource.findById(datasourceId);
 
 				return datasourceUni
-					.flatMap(datasource ->
+					.chain(datasource ->
 						_getEnrichPipelineByDatasourceId(
 							datasource.getDatasourceId())
-							.flatMap(enrichPipeline -> {
+							.chain(enrichPipeline -> {
 
 								Uni<List<EnrichItem>> enrichItemUni;
 
@@ -105,7 +105,7 @@ public class DatasourceProcessor {
 										});
 
 							}))
-					.eventually(() -> Datasource
+					.call(() -> Datasource
 						.<Datasource>findById(datasourceId)
 						.flatMap(datasource -> {
 
