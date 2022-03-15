@@ -106,21 +106,26 @@ public class DatasourceProcessor {
 										});
 
 							}))
+					.log()
 					.call(() -> Datasource
 						.<Datasource>findById(datasourceId)
 						.flatMap(datasource -> {
+
+							logger.info("persist: " + datasource);
 
 							datasource.setLastIngestionDate(
 								Instant.ofEpochMilli(
 									jsonObject.getLong("parsingDate")));
 
-							return Panache.withTransaction(datasource::persistAndFlush);
+							return Panache.withTransaction(
+								datasource::persistAndFlush);
 
 						})
 					)
+					.invoke(ingestionDatasourceEmitter::sendAndForget)
 					.onFailure().invoke(t -> logger.error(t.getMessage(), t))
-					.call(ingestionDatasourceEmitter::send)
-					.eventually(message::ack);
+					.eventually(message::ack)
+					.log();
 			})
 			.subscribe()
 			.with(message -> {});
