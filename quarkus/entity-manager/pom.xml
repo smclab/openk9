@@ -103,6 +103,16 @@
 			<version>3.4.15</version>
 		</dependency>
 		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>io.openk9</groupId>
 			<artifactId>resources-common</artifactId>
 		</dependency>
