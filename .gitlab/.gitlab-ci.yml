@@ -20,6 +20,7 @@ include:
   - local: '/.gitlab/.gitlab-ci-api-aggregator.yml'
   - local: '/.gitlab/.gitlab-ci-tika-no-ocr.yml'
   - local: '/.gitlab/.gitlab-ci-tika-ocr.yml'
+  - local: '/.gitlab/.gitlab-ci-resources-validator.yml'
 
 sonarqube-check:
   stage: quality
