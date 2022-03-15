@@ -11,6 +11,7 @@ import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 import io.vertx.core.json.JsonObject;
@@ -54,8 +55,7 @@ public class DatasourceProcessor {
 
 								Uni<List<EnrichItem>> enrichItemUni;
 
-								if (enrichPipeline.getEnrichPipelineId() !=
-									null) {
+								if (enrichPipeline.getEnrichPipelineId() != null) {
 
 									enrichItemUni = EnrichItem
 										.findByEnrichPipelineId(
@@ -103,12 +103,10 @@ public class DatasourceProcessor {
 												ingestionPayload,
 												datasourceContext);
 										});
-
 							}))
-					.log()
 					.call(() -> Datasource
 						.<Datasource>findById(datasourceId)
-						.flatMap(datasource -> {
+						.chain(datasource -> {
 
 							logger.info("persist: " + datasource);
 
@@ -121,12 +119,12 @@ public class DatasourceProcessor {
 						})
 					)
 					.invoke(ingestionDatasourceEmitter::sendAndForget)
-					.onFailure().invoke(t -> logger.error(t.getMessage(), t))
-					.eventually(message::ack)
 					.log();
 			})
+			.onFailure().invoke(t -> logger.error(t.getMessage(), t))
+			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
 			.subscribe()
-			.with(message -> {});
+			.with(Message::ack);
 	}
 
 	private Uni<EnrichPipeline> _getEnrichPipelineByDatasourceId(
