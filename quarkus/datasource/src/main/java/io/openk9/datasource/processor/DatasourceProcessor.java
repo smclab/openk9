@@ -10,6 +10,7 @@ import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
@@ -23,6 +24,7 @@ public class DatasourceProcessor {
 
 	@Incoming("ingestion")
 	@Outgoing("ingestion-datasource")
+	@Blocking("datasource")
 	public Uni<IngestionDatasourcePayload> process(Object obj) {
 
 		JsonObject jsonObject =
