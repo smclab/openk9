@@ -12,9 +12,9 @@ import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.Startup;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.reactive.messaging.MutinyEmitter;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
@@ -98,12 +98,11 @@ public class DatasourceProcessor {
 				Instant.ofEpochMilli(
 					jsonObject.getLong("parsingDate")));
 
-			_await(Panache.withTransaction(datasource::persistAndFlush));
+			_await(Panache.withTransaction(datasource::persist));
 
 			_await(Panache.flush());
 
-			ingestionDatasourceEmitter.sendAndAwait(
-				ingestionDatasourcePayload);
+			ingestionDatasourceEmitter.send(ingestionDatasourcePayload);
 
 		}
 		catch (Exception e) {
@@ -123,6 +122,6 @@ public class DatasourceProcessor {
 
 	@Inject
 	@Channel("ingestion-datasource")
-	MutinyEmitter<IngestionDatasourcePayload> ingestionDatasourceEmitter;
+	Emitter<IngestionDatasourcePayload> ingestionDatasourceEmitter;
 
 }
