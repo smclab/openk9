@@ -8,7 +8,6 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.Startup;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
@@ -98,9 +97,7 @@ public class DatasourceProcessor {
 				Instant.ofEpochMilli(
 					jsonObject.getLong("parsingDate")));
 
-			_await(Panache.withTransaction(datasource::persist));
-
-			_await(Panache.flush());
+			_await(datasource.persist());
 
 			ingestionDatasourceEmitter.send(ingestionDatasourcePayload);
 
