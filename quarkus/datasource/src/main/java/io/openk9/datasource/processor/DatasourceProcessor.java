@@ -8,6 +8,7 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.Startup;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
@@ -30,76 +31,79 @@ import java.util.concurrent.CompletionStage;
 @Startup
 public class DatasourceProcessor {
 
-	@ConsumeEvent(value = _EVENT_NAME, blocking = true)
+	@ConsumeEvent(value = _EVENT_NAME)
 	@ActivateRequestContext
 	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
 
-		try {
+		long datasourceId = jsonObject.getLong("datasourceId");
 
-			long datasourceId = jsonObject.getLong("datasourceId");
+		Uni<Datasource> datasourceUni = Datasource.findById(datasourceId);
 
-			Datasource datasource = _await(Datasource.findById(datasourceId));
-
-			EnrichPipeline enrichPipeline =
-				_await(
+		return Panache.withTransaction(() ->
+			datasourceUni
+				.flatMap(datasource ->
 					EnrichPipeline
-						.findByDatasourceId(datasourceId)
+						.findByDatasourceId(datasource.getDatasourceId())
 						.onItem()
 						.ifNull()
 						.continueWith(EnrichPipeline::new)
-				);
+						.flatMap(enrichPipeline -> {
 
-			List<EnrichItem> enrichItemList;
+							Uni<List<EnrichItem>> enrichItemUni;
 
-			if (enrichPipeline.getEnrichPipelineId() != null) {
+							if (enrichPipeline.getEnrichPipelineId() != null) {
 
-				enrichItemList = _await(
-					EnrichItem
-						.findByEnrichPipelineId(
-							enrichPipeline.getEnrichPipelineId())
-						.onItem()
-						.ifNull()
-						.continueWith(List::of)
-				);
+								enrichItemUni = EnrichItem
+									.findByEnrichPipelineId(
+										enrichPipeline.getEnrichPipelineId())
+									.onItem()
+									.ifNull()
+									.continueWith(List::of);
 
-			}
-			else {
-				enrichItemList = List.of();
-			}
+							}
+							else {
+								enrichItemUni = Uni.createFrom().item(List.of());
+							}
 
-			Tenant tenant = _await(Tenant.findById(datasource.getTenantId()));
+							return Uni
+								.combine()
+								.all()
+								.unis(
+									Tenant.findById(datasource.getTenantId()),
+									enrichItemUni)
+								.combinedWith((tenantObj, enrichItemList) -> {
 
-			IngestionPayload ingestionPayload =
-				jsonObject.mapTo(IngestionPayload.class);
+									Tenant tenant = (Tenant)tenantObj;
 
-			ingestionPayload.setTenantId(tenant.getTenantId());
+									IngestionPayload ingestionPayload =
+										jsonObject.mapTo(IngestionPayload.class);
 
-			DatasourceContext datasourceContext =
-				DatasourceContext.of(
-					datasource, tenant,
-					enrichPipeline,
-					enrichItemList
-				);
+									ingestionPayload.setTenantId(tenant.getTenantId());
 
-			IngestionDatasourcePayload ingestionDatasourcePayload =
-				IngestionDatasourcePayload.of(
-					ingestionPayload,
-					datasourceContext);
+									DatasourceContext datasourceContext = DatasourceContext.of(
+										datasource, tenant, enrichPipeline, enrichItemList
+									);
 
-			datasource.setLastIngestionDate(
-				Instant.ofEpochMilli(
-					jsonObject.getLong("parsingDate")));
+									return IngestionDatasourcePayload.of(
+										ingestionPayload, datasourceContext);
+								});
 
-			_await(datasource.persist());
+						}))
+				.eventually(() -> Datasource
+					.<Datasource>findById(datasourceId)
+					.flatMap(datasource -> {
 
-			ingestionDatasourceEmitter.send(ingestionDatasourcePayload);
+						datasource.setLastIngestionDate(
+							Instant.ofEpochMilli(
+								jsonObject.getLong("parsingDate")));
 
-			return Uni.createFrom().voidItem();
+						return datasource.persist();
 
-		} catch(Throwable t) {
-			logger.error("It broke", t);
-			return Uni.createFrom().failure(t);
-		}
+					})
+				)
+				.replaceWithVoid()
+		);
+
 	}
 
 	@Incoming("ingestion")
