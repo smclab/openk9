@@ -101,6 +101,7 @@ public class DatasourceProcessor {
 
 					})
 				)
+				.onItem().invoke(ingestionDatasourceEmitter::send)
 				.replaceWithVoid()
 		);
 
