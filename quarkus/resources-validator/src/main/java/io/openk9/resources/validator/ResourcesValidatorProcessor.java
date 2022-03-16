@@ -102,7 +102,11 @@ public class ResourcesValidatorProcessor {
 					Collection<Integer> documentHashCodesList =
 						(Collection<Integer>)documentHashCodes;
 
-					if (hashCodes.containsAll(documentHashCodesList)) {
+					if (hashCodes.size() == documentHashCodesList.size() &&
+						hashCodes.containsAll(documentHashCodesList)) {
+						logger.info(
+							"document found. dropped message with contentId: "
+							+ contentId);
 						return message.ack();
 					}
 
