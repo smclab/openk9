@@ -23,7 +23,7 @@ Build Latest Datasource Docker Images:
   script:
     - ./mvnw install
     - ./mvnw package -pl datasource -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
-    - ./mvnw package -pl datasource -Dquarkus.container-image.build=true -Dquarkus.package.type=mutable-jar -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=dev -Dquarkus.live-reload.password=openk9
+    - ./mvnw package -pl datasource -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=dev -Dquarkus.live-reload.password=openk9
   cache:
     key: quarkus-maven
     paths:
