@@ -8,140 +8,115 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.Startup;
-import io.smallrye.mutiny.Multi;
+import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.subscription.Cancellable;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 @Startup
 public class DatasourceProcessor {
 
-	@PostConstruct
-	public void start() {
-		_cancellable = ingestionMulti
-			.onItem().call((message) -> {
+	@Incoming("ingestion")
+	@Blocking
+	public CompletionStage<Void> precess(Message<?> message) {
 
-				Object obj = message.getPayload();
+		try {
 
-				JsonObject jsonObject =
-					obj instanceof JsonObject
-						? (JsonObject) obj
-						: new JsonObject(new String((byte[]) obj));
+			Object obj = message.getPayload();
 
-				long datasourceId = jsonObject.getLong("datasourceId");
+			JsonObject jsonObject =
+				obj instanceof JsonObject
+					? (JsonObject) obj
+					: new JsonObject(new String((byte[]) obj));
 
-				Uni<Datasource> datasourceUni =
-					Datasource.findById(datasourceId);
+			long datasourceId = jsonObject.getLong("datasourceId");
 
-				return datasourceUni
-					.chain(datasource ->
-						_getEnrichPipelineByDatasourceId(
-							datasource.getDatasourceId())
-							.chain(enrichPipeline -> {
+			Datasource datasource = _await(Datasource.findById(datasourceId));
 
-								Uni<List<EnrichItem>> enrichItemUni;
+			EnrichPipeline enrichPipeline =
+				_await(
+					EnrichPipeline
+						.findByDatasourceId(datasourceId)
+						.onItem()
+						.ifNull()
+						.continueWith(EnrichPipeline::new)
+				);
 
-								if (enrichPipeline.getEnrichPipelineId() != null) {
+			List<EnrichItem> enrichItemList;
 
-									enrichItemUni = EnrichItem
-										.findByEnrichPipelineId(
-											enrichPipeline.getEnrichPipelineId())
-										.onItem()
-										.ifNull()
-										.continueWith(List::of);
+			if (enrichPipeline.getEnrichPipelineId() != null) {
 
-								}
-								else {
-									enrichItemUni =
-										Uni.createFrom().item(List.of());
-								}
+				enrichItemList = _await(
+					EnrichItem
+						.findByEnrichPipelineId(
+							enrichPipeline.getEnrichPipelineId())
+						.onItem()
+						.ifNull()
+						.continueWith(List::of)
+				);
 
-								return Uni
-									.combine()
-									.all()
-									.unis(
-										Tenant.findById(
-											datasource.getTenantId()),
-										enrichItemUni)
-									.combinedWith(
-										(tenantObj, enrichItemList) -> {
+			}
+			else {
+				enrichItemList = List.of();
+			}
 
-											Tenant tenant =
-												(Tenant) tenantObj;
+			Tenant tenant = _await(Tenant.findById(datasource.getTenantId()));
 
-											IngestionPayload
-												ingestionPayload =
-												jsonObject.mapTo(
-													IngestionPayload.class);
+			IngestionPayload ingestionPayload =
+				jsonObject.mapTo(IngestionPayload.class);
 
-											ingestionPayload.setTenantId(
-												tenant.getTenantId());
+			ingestionPayload.setTenantId(tenant.getTenantId());
 
-											DatasourceContext
-												datasourceContext =
-												DatasourceContext.of(
-													datasource, tenant,
-													enrichPipeline,
-													enrichItemList
-												);
+			DatasourceContext datasourceContext =
+				DatasourceContext.of(
+					datasource, tenant,
+					enrichPipeline,
+					enrichItemList
+				);
 
-											return IngestionDatasourcePayload.of(
-												ingestionPayload,
-												datasourceContext);
-										});
-							}))
-					.call(() -> Datasource
-						.<Datasource>findById(datasourceId)
-						.chain(datasource -> {
+			IngestionDatasourcePayload ingestionDatasourcePayload =
+				IngestionDatasourcePayload.of(
+					ingestionPayload,
+					datasourceContext);
 
-							logger.info("persist: " + datasource);
+			logger.info("persist: " + datasource);
 
-							datasource.setLastIngestionDate(
-								Instant.ofEpochMilli(
-									jsonObject.getLong("parsingDate")));
+			datasource.setLastIngestionDate(
+				Instant.ofEpochMilli(
+					jsonObject.getLong("parsingDate")));
 
-							return datasource.persistAndFlush();
+			_await(Panache.withTransaction(datasource::persistAndFlush));
 
-						})
-					)
-					.invoke(ingestionDatasourceEmitter::sendAndForget)
-					.log();
-			})
-			.onFailure().invoke(t -> logger.error(t.getMessage(), t))
-			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-			.subscribe()
-			.with(Message::ack);
+			_await(Panache.flush());
+
+			ingestionDatasourceEmitter.sendAndAwait(
+				ingestionDatasourcePayload);
+
+		}
+		catch (Exception e) {
+			return message.nack(e);
+		}
+
+		return message.ack();
+
 	}
 
-	private Uni<EnrichPipeline> _getEnrichPipelineByDatasourceId(
-		long datasourceId) {
-		return EnrichPipeline
-			.findByDatasourceId(datasourceId)
-			.onItem()
-			.ifNull()
-			.continueWith(EnrichPipeline::new);
+	private static <T> T _await(Uni<T> uni) {
+		return uni.await().indefinitely();
 	}
-
-	@PreDestroy
-	public void stop() {
-		_cancellable.cancel();
-	}
-
-	private Cancellable _cancellable;
 
 	@Inject
 	Logger logger;
@@ -149,10 +124,5 @@ public class DatasourceProcessor {
 	@Inject
 	@Channel("ingestion-datasource")
 	MutinyEmitter<IngestionDatasourcePayload> ingestionDatasourceEmitter;
-
-	@Inject
-	@Channel("ingestion")
-	Multi<Message<?>> ingestionMulti;
-
 
 }
