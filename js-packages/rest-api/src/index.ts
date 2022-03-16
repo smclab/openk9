@@ -710,7 +710,7 @@ export async function putTenant(
   if (!data.jsonConfig) {
     data.jsonConfig = "{}";
   }
-  await authFetch(`/api/datasource/v2/tenant`, loginInfo, {
+  await authFetch(`/api/datasource/v2/tenant/${data.tenantId}`, loginInfo, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
