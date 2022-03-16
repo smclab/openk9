@@ -9,9 +9,10 @@ import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.quarkus.runtime.Startup;
-import io.smallrye.common.annotation.Blocking;
+import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -19,6 +20,7 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import java.time.Instant;
 import java.util.List;
@@ -28,18 +30,11 @@ import java.util.concurrent.CompletionStage;
 @Startup
 public class DatasourceProcessor {
 
-	@Incoming("ingestion")
-	@Blocking
-	public CompletionStage<Void> precess(Message<?> message) {
+	@ConsumeEvent(value = _EVENT_NAME, blocking = true)
+	@ActivateRequestContext
+	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
 
 		try {
-
-			Object obj = message.getPayload();
-
-			JsonObject jsonObject =
-				obj instanceof JsonObject
-					? (JsonObject) obj
-					: new JsonObject(new String((byte[]) obj));
 
 			long datasourceId = jsonObject.getLong("datasourceId");
 
@@ -91,8 +86,6 @@ public class DatasourceProcessor {
 					ingestionPayload,
 					datasourceContext);
 
-			logger.info("persist: " + datasource);
-
 			datasource.setLastIngestionDate(
 				Instant.ofEpochMilli(
 					jsonObject.getLong("parsingDate")));
@@ -101,10 +94,25 @@ public class DatasourceProcessor {
 
 			ingestionDatasourceEmitter.send(ingestionDatasourcePayload);
 
+			return Uni.createFrom().voidItem();
+
+		} catch(Throwable t) {
+			logger.error("It broke", t);
+			return Uni.createFrom().failure(t);
 		}
-		catch (Exception e) {
-			return message.nack(e);
-		}
+	}
+
+	@Incoming("ingestion")
+	public CompletionStage<Void> precess(Message<?> message) {
+
+		Object obj = message.getPayload();
+
+		JsonObject jsonObject =
+			obj instanceof JsonObject
+				? (JsonObject) obj
+				: new JsonObject(new String((byte[]) obj));
+
+		bus.requestAndForget(_EVENT_NAME, jsonObject);
 
 		return message.ack();
 
@@ -115,10 +123,15 @@ public class DatasourceProcessor {
 	}
 
 	@Inject
+	EventBus bus;
+
+	@Inject
 	Logger logger;
 
 	@Inject
 	@Channel("ingestion-datasource")
 	Emitter<IngestionDatasourcePayload> ingestionDatasourceEmitter;
+
+	private static final String _EVENT_NAME = "handle_ingestion_event";
 
 }
