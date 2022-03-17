@@ -111,7 +111,8 @@ class CustomGenericSpider(CrawlSpider):
                     document_title = anchor.css("a::text").get()
                     next_page = response.urljoin(href)
                     document_urls.append(next_page)
-                    parse_document_by_url(next_page, self, response.url, document_title)
+                    if ".pdf" in next_page:
+                        parse_document_by_url(next_page, self, response.url, document_title)
                 except KeyError:
                     continue
 
