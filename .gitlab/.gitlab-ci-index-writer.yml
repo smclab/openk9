@@ -60,11 +60,14 @@ Build Latest Index Writer Docker Images:
   except:
     - schedules
   script:
-    - ./gradlew pushImageIndexWriter
+    - ./gradlew --build-cache --gradle-user-home cache/ pushImageIndexWriter
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-index-writer" -F ref=master $DEV_TRIGGER_URL
   cache:
-    key: build-docker-cache
+    key:
+      files:
+        - gradle/wrapper/gradle-wrapper.properties
     paths:
-      - $CI_PROJECT_DIR/.m2/**/*
-      - $CI_PROJECT_DIR/.gradle/**/*
+      - cache/caches/
+      - cache/notifications/
+      - cache/wrapper/

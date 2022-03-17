@@ -54,11 +54,14 @@ Build Latest Searcher Docker Images:
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
-    - ./gradlew pushImageSearcher
+    - ./gradlew --build-cache --gradle-user-home cache/ pushImageSearcher
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
   cache:
-    key: build-docker-cache
+    key:
+      files:
+        - gradle/wrapper/gradle-wrapper.properties
     paths:
-      - $CI_PROJECT_DIR/.m2/**/*
-      - $CI_PROJECT_DIR/.gradle/**/*
+      - cache/caches/
+      - cache/notifications/
+      - cache/wrapper/
