@@ -94,6 +94,7 @@ dependencies {
 
 	distSearcher project(path: ':osgi:metrics:metrics-api', transitive: false)
 	distSearcher project(path: ':osgi:metrics:metrics-service', transitive: false)
+	distSearcher project(path: ':osgi:metrics:metrics-ext', transitive: false)
 
 	distSearcher project(path: ':osgi:common:common-api', transitive: false)
 	distSearcher project(path: ':osgi:common:core-api', transitive: false)
@@ -153,6 +154,7 @@ dependencies {
 
 	distPluginDriverManager project(path: ':osgi:metrics:metrics-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:metrics:metrics-service', transitive: false)
+	distPluginDriverManager project(path: ':osgi:metrics:metrics-ext', transitive: false)
 
 	distPluginDriverManager project(path: ':osgi:common:common-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:common:core-api', transitive: false)
