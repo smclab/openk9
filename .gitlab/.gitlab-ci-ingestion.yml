@@ -7,6 +7,7 @@ Build Latest Ingestion Docker Images:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
+    MAVEN_CLI_OPTS: "--batch-mode"
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
@@ -21,8 +22,8 @@ Build Latest Ingestion Docker Images:
   before_script:
     - cd quarkus
   script:
-    - ./mvnw install
-    - ./mvnw package -pl ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./mvnw install $MAVEN_CLI_OPTS
+    - ./mvnw package $MAVEN_CLI_OPTS -pl ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   cache:
     key: quarkus-maven
     paths:

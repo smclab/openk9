@@ -7,7 +7,7 @@ Build Latest Tika Ocr Docker Images:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-    MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+    MAVEN_CLI_OPTS: "--batch-mode"
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
