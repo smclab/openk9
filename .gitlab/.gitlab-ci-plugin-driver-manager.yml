@@ -65,9 +65,7 @@ Build Latest Plugin Driver Manager Docker Images:
     key:
       files:
         - gradle/wrapper/gradle-wrapper.properties
-        - yarn.lock
     paths:
       - cache/caches/
       - cache/notifications/
       - cache/wrapper/
-      - .yarn-cache/
