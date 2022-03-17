@@ -75,9 +75,12 @@ dependencies {
 	distIndexWriter project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-service', transitive: false)
 	distIndexWriter project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
 
+	distIndexWriter project(path: ':osgi:datasource:datasource-event-consumer-api', transitive: false)
+	distIndexWriter project(path: ':osgi:datasource:datasource-event-consumer-service', transitive: false)
 	distIndexWriter project(path: ':osgi:third-party:vertx', transitive: false)
 	distIndexWriter project(path: ':osgi:vertx:vertx-service', transitive: false)
 	distIndexWriter project(path: ':osgi:vertx:vertx-configuration-plugin', transitive: false)
+
 
 	// </INDEX WRITER>
 
