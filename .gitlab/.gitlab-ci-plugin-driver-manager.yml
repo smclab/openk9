@@ -53,11 +53,6 @@ Build Latest Plugin Driver Manager Docker Images:
       - plugins/applications/**/*
       - plugins/js-enrich-plugin/**/*
       - osgi/entity-manager/**/*
-      - osgi/config/enviroment-variable-propagation/**/*
-      - osgi/fix/karaf-json-config-fix/**/*
-      - osgi/util/groovy-script-api/**/*
-      - osgi/util/groovy-script-service/**/*
-      - osgi/util/groovy-script-web/**/*
       - osgi/vertx/**/*
       - .gitlab/.gitlab-ci-plugin-driver-manager.yml
   except:

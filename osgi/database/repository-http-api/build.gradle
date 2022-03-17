@@ -1,4 +1,0 @@
-dependencies {
-    compile project(':osgi:web:http-api')
-    compile project(':osgi:database:sql-api')
-}

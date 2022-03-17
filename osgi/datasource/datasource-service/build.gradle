@@ -1,7 +1,0 @@
-dependencies {
-	compile project(':osgi:common:osgi-api')
-	compile project(':osgi:datasource:datasource-api')
-	compile project(':osgi:database:sql-api')
-	compile project(":osgi:database:repository-http-api")
-	compile libraries.karaf_scheduler
-}

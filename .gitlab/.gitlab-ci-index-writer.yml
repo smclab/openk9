@@ -44,18 +44,11 @@ Build Latest Index Writer Docker Images:
       - osgi/web/http-service/**/*
       - osgi/web/http-bundle-ext/**/*
       - osgi/web/open-api/**/*
-      - osgi/datasource/datasource-event-consumer-api/**/*
-      - osgi/datasource/datasource-event-consumer-service/**/*
       - osgi/datasource/datasource-client-api/**/*
       - osgi/datasource/datasource-client-service/**/*
       - osgi/plugin-driver-manager/plugin-driver-manager-client-api/**/*
       - osgi/plugin-driver-manager/plugin-driver-manager-client-service/**/*
       - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
-      - osgi/config/enviroment-variable-propagation/**/*
-      - osgi/fix/karaf-json-config-fix/**/*
-      - osgi/util/groovy-script-api/**/*
-      - osgi/util/groovy-script-service/**/*
-      - osgi/util/groovy-script-web/**/*
       - osgi/vertx/**/*
       - .gitlab/.gitlab-ci-index-writer.yml
   except:

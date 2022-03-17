@@ -1,4 +1,0 @@
-Bundle-Name: [OpenK9] SQL JDBC Service
-Bundle-SymbolicName: io.openk9.sql.jdbc.service
-
--include: ${project.rootDir}/osgi/common.bnd

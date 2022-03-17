@@ -1,3 +1,0 @@
-FROM smclab/apache-karaf:4.3.0
-
-COPY ./build/core/libs/ opt/apache-karaf/deploy

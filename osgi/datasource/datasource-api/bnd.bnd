@@ -1,8 +1,0 @@
-Bundle-Name: [OpenK9] Datasource Api
-Bundle-SymbolicName: io.openk9.datasource.api
-
-Export-Package: io.openk9.datasource.*
-
-Import-Package: org.reactivestreams, *
-
--include: ${project.rootDir}/osgi/common.bnd

@@ -43,11 +43,6 @@ Build Latest Searcher Docker Images:
       - osgi/plugin-driver-manager/plugin-driver-manager-client-service/**/*
       - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
       - osgi/third-party/caffeine/**/*
-      - osgi/config/enviroment-variable-propagation/**/*
-      - osgi/fix/karaf-json-config-fix/**/*
-      - osgi/util/groovy-script-api/**/*
-      - osgi/util/groovy-script-service/**/*
-      - osgi/util/groovy-script-web/**/*
       - osgi/vertx/**/*
       - .gitlab/.gitlab-ci-searcher.yml
   except:

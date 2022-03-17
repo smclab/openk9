@@ -1,4 +1,0 @@
-Bundle-Name: [OpenK9] Ingestion Identifier Generator Service
-Bundle-SymbolicName: io.openk9.ingestion.identifier.generator.service
-
--include: ${project.rootDir}/osgi/common.bnd

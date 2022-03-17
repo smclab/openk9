@@ -68,8 +68,6 @@ dependencies {
 	distIndexWriter project(path: ':osgi:web:http-bundle-ext', transitive: false)
 	distIndexWriter project(path: ':osgi:web:open-api', transitive: false)
 
-	distIndexWriter project(path: ':osgi:datasource:datasource-event-consumer-api', transitive: false)
-	distIndexWriter project(path: ':osgi:datasource:datasource-event-consumer-service', transitive: false)
 	distIndexWriter project(path: ':osgi:datasource:datasource-client-api', transitive: false)
 	distIndexWriter project(path: ':osgi:datasource:datasource-client-service', transitive: false)
 
@@ -77,19 +75,9 @@ dependencies {
 	distIndexWriter project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-client-service', transitive: false)
 	distIndexWriter project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
 
-	distIndexWriter project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
-
-	
-
 	distIndexWriter project(path: ':osgi:third-party:vertx', transitive: false)
 	distIndexWriter project(path: ':osgi:vertx:vertx-service', transitive: false)
 	distIndexWriter project(path: ':osgi:vertx:vertx-configuration-plugin', transitive: false)
-
-	//GROOVY SCRIPT
-	distIndexWriter group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.8' , transitive: false
-	distIndexWriter project(path: ':osgi:util:groovy-script-api', transitive: false)
-	distIndexWriter project(path: ':osgi:util:groovy-script-service', transitive: false)
-	distIndexWriter project(path: ':osgi:util:groovy-script-web', transitive: false)
 
 	// </INDEX WRITER>
 
@@ -146,17 +134,9 @@ dependencies {
 
 	distSearcher project(path: ':osgi:third-party:caffeine', transitive: false)
 
-	distSearcher project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
-
 	distSearcher project(path: ':osgi:third-party:vertx', transitive: false)
 	distSearcher project(path: ':osgi:vertx:vertx-service', transitive: false)
 	distSearcher project(path: ':osgi:vertx:vertx-configuration-plugin', transitive: false)
-
-	//GROOVY SCRIPT
-	distSearcher group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.8' , transitive: false
-	distSearcher project(path: ':osgi:util:groovy-script-api', transitive: false)
-	distSearcher project(path: ':osgi:util:groovy-script-service', transitive: false)
-	distSearcher project(path: ':osgi:util:groovy-script-web', transitive: false)
 
 	// </SEARCHER>
 
@@ -193,7 +173,6 @@ dependencies {
 
 	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-api', transitive: false)
 	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-service', transitive: false)
-	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-ingestion', transitive: false)
 	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-model', transitive: false)
 	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-search-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-web', transitive: false)
@@ -210,8 +189,6 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
-	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-identifier-generator-api', transitive: false)
-	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-identifier-generator-service', transitive: false)
 
 
 	distPluginDriverManager project(path: ':osgi:third-party:vertx', transitive: false)
@@ -222,27 +199,11 @@ dependencies {
 	distPluginDriverManager project(path: ':plugins:web:sitemap', transitive: false)
 	distPluginDriverManager project(path: ':plugins:email', transitive: false)
 
-	/*
-	distPluginDriverManager project(path: ':plugins:email', transitive: false)
-	distPluginDriverManager project(path: ':plugins:liferay', transitive: false)
-	distPluginDriverManager project(path: ':plugins:applications', transitive: false)
-	distPluginDriverManager project(path: ':plugins:js-enrich-plugin', transitive: false)
-	 */
-
 	// felix dependency manager
 
 	distPluginDriverManager group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager', version: '4.6.0' , transitive: false
 	distPluginDriverManager group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.shell', version: '4.0.8' , transitive: false
 	distPluginDriverManager group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
-
-	distPluginDriverManager project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
-
-	//GROOVY SCRIPT
-	distPluginDriverManager group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.8' , transitive: false
-	distPluginDriverManager project(path: ':osgi:util:groovy-script-api', transitive: false)
-	distPluginDriverManager project(path: ':osgi:util:groovy-script-service', transitive: false)
-	distPluginDriverManager project(path: ':osgi:util:groovy-script-web', transitive: false)
-	distPluginDriverManager project(path: ':osgi:util:bundle-installer-via-config', transitive: false)
 
 	// </PluginDriverManager>
 

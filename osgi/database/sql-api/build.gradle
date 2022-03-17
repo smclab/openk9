@@ -1,5 +1,0 @@
-dependencies {
-	compile libraries.r2dbc_spi
-	compile libraries.r2dbc_pool
-	compile project(":osgi:common:common-api")
-}

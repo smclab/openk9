@@ -1,9 +1,0 @@
-{
-	"enrichItemId" : 1,
-	"enrichPipelineId" : 1,
-	"name" : "web-ner",
-	"_position" : 1,
-	"active" : true,
-	"serviceName" : "io.openk9.plugins.web.generic.enrichprocessor.WebNerEnrichProcessor",
-	"jsonConfig" : "{\"entities\":[\"person\",\"organization\",\"document\"],\"confidence\":0.9,\"relations\":[{\"startType\":\"person\",\"endType\":\"organization\",\"name\":\"work_for\"},{\"startType\":\"person\",\"endType\":\"document\",\"name\":\"mentioned_in\"}]}"
-}

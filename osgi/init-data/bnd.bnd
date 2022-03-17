@@ -1,4 +1,0 @@
-Bundle-Name: [OpenK9] Initialize Database
-Bundle-SymbolicName: io.openk9.init.data
-
--include: ${project.rootDir}/osgi/common.bnd

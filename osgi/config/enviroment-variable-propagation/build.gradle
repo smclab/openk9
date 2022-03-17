@@ -1,7 +1,0 @@
-dependencies {
-	compile libraries.osgi
-	compile libraries.osgi_cmpn
-	compile libraries.slf4j_api
-	compile libraries.felix_file_install
-
-}

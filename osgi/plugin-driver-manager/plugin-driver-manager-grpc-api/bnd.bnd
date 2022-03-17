@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Plugin Driver Manager gRPC Api
-Bundle-SymbolicName: io.openk9.plugin.driver.manager.grpc.api
-
-Export-Package: io.openk9.plugin.driver.manager.grpc.api
-
--include: ${project.rootDir}/osgi/common.bnd

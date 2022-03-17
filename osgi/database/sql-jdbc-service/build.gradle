@@ -1,4 +1,0 @@
-dependencies {
-	compile libraries.micrometer
-	compile libraries.karaf_jdbc_core
-}
