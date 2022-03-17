@@ -57,6 +57,7 @@ Build Latest Searcher Docker Images:
     key:
       files:
         - gradle/wrapper/gradle-wrapper.properties
+        - $CI_PROJECT_DIR/config/searcher/cache.lock
     paths:
       - cache/caches/
       - cache/notifications/

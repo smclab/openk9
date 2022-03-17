@@ -61,6 +61,7 @@ Build Latest Index Writer Docker Images:
     key:
       files:
         - gradle/wrapper/gradle-wrapper.properties
+        - $CI_PROJECT_DIR/config/index-writer/cache.lock
     paths:
       - cache/caches/
       - cache/notifications/

@@ -65,6 +65,7 @@ Build Latest Plugin Driver Manager Docker Images:
     key:
       files:
         - gradle/wrapper/gradle-wrapper.properties
+        - $CI_PROJECT_DIR/config/plugin-driver-manager/cache.lock
     paths:
       - cache/caches/
       - cache/notifications/
