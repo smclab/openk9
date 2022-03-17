@@ -6,6 +6,5 @@ dependencies {
 	compile project(":osgi:plugin-driver-manager:plugin-driver-manager-api")
 	compile project(':osgi:common:serialization-api')
 	compile project(':osgi:common:osgi-api')
-	compile project(':osgi:database:sql-api')
 	compile project(":osgi:ingestion:ingestion-logic-api")
 }
