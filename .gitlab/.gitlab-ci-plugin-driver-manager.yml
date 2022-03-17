@@ -62,10 +62,7 @@ Build Latest Plugin Driver Manager Docker Images:
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-plugin-driver-manager" -F ref=master $DEV_TRIGGER_URL
   cache:
-    key:
-      files:
-        - gradle/wrapper/gradle-wrapper.properties
-        - $CI_PROJECT_DIR/config/plugin-driver-manager/cache.lock
+    key: plugin-driver-manager
     paths:
       - cache/caches/
       - cache/notifications/

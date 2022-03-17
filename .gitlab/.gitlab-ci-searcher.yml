@@ -54,10 +54,7 @@ Build Latest Searcher Docker Images:
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
   cache:
-    key:
-      files:
-        - gradle/wrapper/gradle-wrapper.properties
-        - $CI_PROJECT_DIR/config/searcher/cache.lock
+    key: searcher
     paths:
       - cache/caches/
       - cache/notifications/

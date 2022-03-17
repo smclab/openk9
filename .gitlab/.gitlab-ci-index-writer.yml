@@ -58,10 +58,7 @@ Build Latest Index Writer Docker Images:
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-index-writer" -F ref=master $DEV_TRIGGER_URL
   cache:
-    key:
-      files:
-        - gradle/wrapper/gradle-wrapper.properties
-        - $CI_PROJECT_DIR/config/index-writer/cache.lock
+    key: index-writer
     paths:
       - cache/caches/
       - cache/notifications/
