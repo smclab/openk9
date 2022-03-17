@@ -1,0 +1,9 @@
+dependencies {
+	compile project(":osgi:ingestion:ingestion-api")
+	compile project(":osgi:common:model")
+	compile project(":osgi:common:serialization-api")
+
+	compile project(':osgi:plugin-driver-manager:plugin-driver-manager-api')
+
+	compile libraries.slf4j_api
+}

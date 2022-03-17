@@ -194,6 +194,7 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-logic-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-service', transitive: false)
 	distPluginDriverManager project(path: ':osgi:ingestion:ingestion-queue', transitive: false)
+	distPluginDriverManager project(path: ':osgi:plugin-driver-manager:plugin-driver-manager-ingestion', transitive: false)
 
 
 	distPluginDriverManager project(path: ':osgi:third-party:vertx', transitive: false)
