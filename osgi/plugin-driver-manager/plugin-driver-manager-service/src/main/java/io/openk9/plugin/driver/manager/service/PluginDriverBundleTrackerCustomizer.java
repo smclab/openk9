@@ -17,7 +17,6 @@
 
 package io.openk9.plugin.driver.manager.service;
 
-import io.openk9.entity.manager.client.api.EntityManagerClient;
 import io.openk9.http.client.HttpClient;
 import io.openk9.http.client.HttpClientFactory;
 import io.openk9.http.web.HttpHandler;
@@ -36,7 +35,6 @@ import io.openk9.plugin.driver.manager.api.config.EnrichProcessorConfig;
 import io.openk9.plugin.driver.manager.api.config.PluginDriverConfig;
 import io.openk9.plugin.driver.manager.api.config.SearchKeywordConfig;
 import io.openk9.search.enrich.api.AsyncEnrichProcessor;
-import io.openk9.search.enrich.api.BaseNerEnrichProcessor;
 import io.openk9.search.enrich.api.EnrichProcessor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -281,6 +279,7 @@ public class PluginDriverBundleTrackerCustomizer
 			switch (typeEP) {
 
 				case SYNC:
+					/*
 
 					Map<String, Object> headersEP =
 						(Map<String, Object>)options.getOrDefault("headers", Map.of());
@@ -293,38 +292,7 @@ public class PluginDriverBundleTrackerCustomizer
 
 					int methodEP = _findHttpMethod(methodStringEP);
 
-					BaseNerEnrichProcessor baseNerEnrichProcessor =
-						new BaseNerEnrichProcessor() {
-							@Override
-							public String name() {
-								return name;
-							}
-
-							@Override
-							protected Map<String, Object> getHeaders() {
-								return headersEP;
-							}
-
-							@Override
-							protected int getMethod() {
-								return methodEP;
-							}
-
-							@Override
-							protected String getPath() {
-								return pathEP;
-							}
-						};
-
-					baseNerEnrichProcessor.setHttpClient(
-						_httpClientFactory.getHttpClient(urlEP));
-
-					baseNerEnrichProcessor.setJsonFactory(_jsonFactory);
-
-					baseNerEnrichProcessor.setEntityManagerClient(
-						_entityManagerClient);
-
-					enrichProcessorService = baseNerEnrichProcessor;
+					 */
 
 					break;
 				case ASYNC:
@@ -495,9 +463,6 @@ public class PluginDriverBundleTrackerCustomizer
 
 	@Reference
 	private HttpClientFactory _httpClientFactory;
-
-	@Reference
-	private EntityManagerClient _entityManagerClient;
 
 	@Reference
 	private DocumentTypeFactoryRegistry _documentTypeFactoryRegistry;
