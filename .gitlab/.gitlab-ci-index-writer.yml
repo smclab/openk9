@@ -57,6 +57,7 @@ Build Latest Index Writer Docker Images:
       - osgi/util/groovy-script-service/**/*
       - osgi/util/groovy-script-web/**/*
       - osgi/vertx/**/*
+      - .gitlab/.gitlab-ci-index-writer.yml
   except:
     - schedules
   script:
