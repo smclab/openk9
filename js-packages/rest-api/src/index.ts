@@ -438,7 +438,7 @@ export type EnrichItem = {
 export async function getEnrichItem(
   loginInfo: LoginInfo | null,
 ): Promise<EnrichItem[]> {
-  const response = await authFetch(`/api/datasource/v2/enrichItem`, loginInfo, {
+  const response = await authFetch(`/api/datasource/v2/enrichItem?page=0&size=50`, loginInfo, {
     headers: {
       Accept: "application/json",
     },
