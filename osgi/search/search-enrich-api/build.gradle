@@ -5,7 +5,6 @@ dependencies {
 	compile project(":osgi:common:core-api")
 	compile project(':osgi:common:model')
 	compile project(":osgi:web:http-api")
-	compile project(":osgi:entity-manager:entity-manager-client-api")
 	compile project(':osgi:plugin-driver-manager:plugin-driver-manager-model')
 
 	compile libraries.elasticsearch
