@@ -44,7 +44,7 @@ public class InsertIndexWriter {
 				.consumeAutoAck(_binding.getQueue())
 				.bufferUntil(delivery -> instance.hasReindexInProcess())
 				.flatMapIterable(Function.identity())
-				.flatMap(
+				.concatMap(
 					delivery -> {
 
 						ObjectNode enrichProcessorContext =

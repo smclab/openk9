@@ -42,7 +42,7 @@ public class ReindexDatasourceConsumer {
 		_disposable =
 			_datasourceEventConsumer
 				.datasourceUpdateEvents()
-				.flatMap(datasource ->
+				.concatMap(datasource ->
 					_pluginDriverManagerClient
 						.getPluginDriver(
 							datasource.getDriverServiceName())
@@ -70,9 +70,9 @@ public class ReindexDatasourceConsumer {
 								new ReactorActionListener<>(sink)
 							))
 				)
-				.bufferUntil(datasource -> !reindexSemaphore.tryReindex())
+				.bufferUntil(datasource -> !reindexSemaphore.tryLock())
 				.flatMapIterable(Function.identity())
-				.flatMap(t2 ->
+				.concatMap(t2 ->
 					Mono.<GetSettingsResponse>create(sink ->
 						restHighLevelClient
 							.indices()
@@ -95,7 +95,7 @@ public class ReindexDatasourceConsumer {
 				)
 				.log()
 				.filter(t3 -> t3.getT1().getLastIngestionDate().isBefore(t3.getT3()))
-				.flatMap(t3 -> Mono.<AcknowledgedResponse>create(sink ->
+				.concatMap(t3 -> Mono.<AcknowledgedResponse>create(sink ->
 					restHighLevelClient
 						.indices()
 						.deleteAsync(

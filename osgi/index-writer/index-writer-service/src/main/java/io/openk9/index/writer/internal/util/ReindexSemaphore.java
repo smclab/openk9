@@ -1,30 +1,26 @@
 package io.openk9.index.writer.internal.util;
 
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ReindexSemaphore {
 
-	private  ReindexSemaphore() {
-		this(1);
+	private ReindexSemaphore() {
+		_semaphore = new AtomicBoolean(false);
 	}
 
-	private ReindexSemaphore(int slotLimit) {
-		_semaphore = new Semaphore(slotLimit);
-	}
-
-	public boolean tryReindex() {
-		return _semaphore.tryAcquire();
+	public boolean tryLock() {
+		return _semaphore.compareAndSet(false, true);
 	}
 
 	public void release() {
-		_semaphore.release();
+		_semaphore.compareAndSet(true, false);
 	}
 
 	public boolean hasReindexInProcess() {
-		return _semaphore.availablePermits() == 0;
+		return _semaphore.get();
 	}
 
-	private final Semaphore _semaphore;
+	private final AtomicBoolean _semaphore;
 
 	public static ReindexSemaphore getInstance() {
 		return INSTANCE;
