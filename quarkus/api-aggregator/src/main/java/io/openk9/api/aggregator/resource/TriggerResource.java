@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 @Path("/api/datasource")
-public class TriggerResource implements TriggerHttp {
+public class TriggerResource extends FaultTolerance implements TriggerHttp {
 	@RestClient
 	@Inject
 	@Delegate

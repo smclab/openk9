@@ -10,6 +10,7 @@ import javax.ws.rs.Path;
 
 @Path("/api/datasource")
 public class SuggestionCategoryFieldResource
+	extends FaultTolerance
 	implements SuggestionCategoryFieldHttp {
 	@RestClient
 	@Inject

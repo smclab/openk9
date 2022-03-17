@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 @Path("/api/datasource")
-public class TenantResource implements TenantHttp {
+public class TenantResource extends FaultTolerance implements TenantHttp {
 	@RestClient
 	@Inject
 	@Delegate

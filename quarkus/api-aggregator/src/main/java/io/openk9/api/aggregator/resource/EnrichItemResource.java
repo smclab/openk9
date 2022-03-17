@@ -9,7 +9,8 @@ import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 @Path("/api/datasource")
-public class EnrichItemResource implements EnrichItemHttp {
+public class EnrichItemResource
+	extends FaultTolerance implements EnrichItemHttp {
 	@RestClient
 	@Inject
 	@Delegate

@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -27,7 +28,7 @@ import javax.ws.rs.core.Context;
 
 @Path("/api/searcher")
 @RequestScoped
-public class AuthResource {
+public class AuthResource extends FaultTolerance {
 
 	@PermitAll
 	@Path("/v1/auth/login")

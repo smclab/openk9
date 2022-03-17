@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 @Path("/api/datasource")
-public class ReindexResource implements ReindexHttp {
+public class ReindexResource extends FaultTolerance implements ReindexHttp {
 	@RestClient
 	@Inject
 	@Delegate

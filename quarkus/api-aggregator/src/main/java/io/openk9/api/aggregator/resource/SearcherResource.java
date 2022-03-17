@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 @Path("/api/searcher")
-public class SearcherResource implements SearcherHttp {
+public class SearcherResource extends FaultTolerance implements SearcherHttp {
 	@RestClient
 	@Inject
 	@Delegate

@@ -9,7 +9,9 @@ import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 @Path("/api/datasource")
-public class SuggestionCategoryResource implements SuggestionCategoryHttp {
+public class SuggestionCategoryResource
+	extends FaultTolerance
+	implements SuggestionCategoryHttp {
 	@RestClient
 	@Inject
 	@Delegate

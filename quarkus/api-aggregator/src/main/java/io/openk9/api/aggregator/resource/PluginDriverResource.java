@@ -9,7 +9,8 @@ import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 @Path("/api/plugin-driver-manager")
-public class PluginDriverResource implements PluginDriverHttp {
+public class PluginDriverResource
+	extends FaultTolerance implements PluginDriverHttp {
 	@RestClient
 	@Inject
 	@Delegate
