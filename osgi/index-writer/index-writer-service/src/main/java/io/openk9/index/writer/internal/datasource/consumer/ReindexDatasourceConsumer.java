@@ -1,6 +1,7 @@
 package io.openk9.index.writer.internal.datasource.consumer;
 
 import io.openk9.datasource.event.consumer.api.DatasourceEventConsumer;
+import io.openk9.index.writer.internal.util.ReindexSemaphore;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.search.client.api.ReactorActionListener;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
 import java.time.Instant;
+import java.util.function.Function;
 
 @Component(
 	immediate = true,
@@ -34,6 +36,8 @@ public class ReindexDatasourceConsumer {
 
 		RestHighLevelClient restHighLevelClient =
 			_restHighLevelClientProvider.get();
+
+		ReindexSemaphore reindexSemaphore = ReindexSemaphore.getInstance();
 
 		_disposable =
 			_datasourceEventConsumer
@@ -66,6 +70,8 @@ public class ReindexDatasourceConsumer {
 								new ReactorActionListener<>(sink)
 							))
 				)
+				.bufferUntil(datasource -> !reindexSemaphore.tryReindex())
+				.flatMapIterable(Function.identity())
 				.flatMap(t2 ->
 					Mono.<GetSettingsResponse>create(sink ->
 						restHighLevelClient
@@ -103,6 +109,7 @@ public class ReindexDatasourceConsumer {
 						_log.error(throwable.getMessage());
 					}
 				})
+				.doOnNext(ignore -> reindexSemaphore.release())
 				.subscribe();
 	}
 
