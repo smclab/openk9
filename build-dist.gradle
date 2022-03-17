@@ -235,16 +235,6 @@ dependencies {
 	distPluginDriverManager group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.shell', version: '4.0.8' , transitive: false
 	distPluginDriverManager group: 'org.apache.felix', name: 'org.apache.felix.dependencymanager.runtime', version: '4.0.7' , transitive: false
 
-	//ENTITY MANAGER CLIENT
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-api', transitive: false)
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-client-service', transitive: false)
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-pub-sub-binding', transitive: false)
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-publisher-api', transitive: false)
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-publisher-service', transitive: false)
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-subscriber-api', transitive: false)
-	distPluginDriverManager project(path: ':osgi:entity-manager:entity-manager-subscriber-service', transitive: false)
-
 	distPluginDriverManager project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
 
 	//GROOVY SCRIPT
