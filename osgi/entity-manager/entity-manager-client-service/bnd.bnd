@@ -1,4 +1,0 @@
-Bundle-Name: [OpenK9] Entity Manager Client Service
-Bundle-SymbolicName: io.openk9.entity.manager.client.service
-
--include: ${project.rootDir}/osgi/common.bnd

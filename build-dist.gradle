@@ -1,10 +1,6 @@
 apply plugin: 'java'
 
 configurations {
-	distEntityManager {
-		transitive = false
-		visible = false
-	}
 	distIndexWriter {
 		transitive = false
 		visible = false
@@ -29,71 +25,6 @@ repositories {
 }
 
 dependencies {
-	// <ENTITY MANAGER>
-
-	distEntityManager project(path: ':osgi:common:common-api', transitive: false)
-	distEntityManager project(path: ':osgi:common:core-api', transitive: false)
-	distEntityManager project(path: ':osgi:common:http-serialization', transitive: false)
-	distEntityManager project(path: ':osgi:common:model', transitive: false)
-	distEntityManager project(path: ':osgi:common:osgi-api', transitive: false)
-	distEntityManager project(path: ':osgi:common:serialization-api', transitive: false)
-	distEntityManager project(path: ':osgi:common:serialization-service', transitive: false)
-	distEntityManager project(path: ':osgi:third-party:reactor', transitive: false)
-	distEntityManager project(path: ':osgi:third-party:reactor-netty', transitive: false)
-	distEntityManager project(path: ':osgi:third-party:reactive-streams', transitive: false)
-	distEntityManager project(path: ':osgi:third-party:micrometer', transitive: false)
-	distEntityManager project(path: ':osgi:third-party:jackson', transitive: false)
-	distEntityManager project(path: ':osgi:third-party:vavr', transitive: false)
-	distEntityManager project(path: ':osgi:third-party:apache', transitive: false)
-
-	distEntityManager project(path: ':osgi:index-writer:index-writer-model', transitive: false)
-	distEntityManager project(path: ':osgi:index-writer:index-writer-entity-model', transitive: false)
-	distEntityManager project(path: ':osgi:index-writer:index-writer-entity-client-api', transitive: false)
-	distEntityManager project(path: ':osgi:index-writer:index-writer-entity-client-service', transitive: false)
-
-
-	distEntityManager project(path:':osgi:common:reactory-netty-util', transitive: false)
-	distEntityManager project(path: ':osgi:web:http-api', transitive: false)
-	distEntityManager project(path: ':osgi:web:http-service', transitive: false)
-	distEntityManager project(path: ':osgi:web:http-bundle-ext', transitive: false)
-	distEntityManager project(path: ':osgi:web:open-api', transitive: false)
-
-
-	distEntityManager project(path: ':osgi:metrics:metrics-api', transitive: false)
-	distEntityManager project(path: ':osgi:metrics:metrics-service', transitive: false)
-	distEntityManager project(path: ':osgi:metrics:metrics-ext', transitive: false)
-
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-api', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-service', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-model', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-logic', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-pub-sub-binding', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-publisher-api', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-publisher-service', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-subscriber-api', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:entity-manager-subscriber-service', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:neo4j-relationship-graph-impl', transitive: false)
-	distEntityManager project(path: ':osgi:entity-manager:relationship-graph-api', transitive: false)
-
-	distEntityManager project(path: ':osgi:ingestion:ingestion-api', transitive: false)
-	distEntityManager project(path: ':osgi:ingestion:ingestion-service', transitive: false)
-
-	distEntityManager project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
-
-	
-
-	//GROOVY SCRIPT
-	distEntityManager group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.8' , transitive: false
-	distEntityManager project(path: ':osgi:util:groovy-script-api', transitive: false)
-	distEntityManager project(path: ':osgi:util:groovy-script-service', transitive: false)
-	distEntityManager project(path: ':osgi:util:groovy-script-web', transitive: false)
-
-	distEntityManager project(path: ':osgi:search:search-client-api', transitive: false)
-	distEntityManager project(path: ':osgi:search:search-client-service', transitive: false)
-	distEntityManager project(path: ':osgi:search:search-client-metrics', transitive: false)
-	distEntityManager project(path: ':osgi:search:search-client-writer', transitive: false)
-
-	// </ENTITY MANAGER>
 
 	// <INDEX WRITER>
 
@@ -217,9 +148,6 @@ dependencies {
 
 	distSearcher project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
 
-	
-
-
 	distSearcher project(path: ':osgi:third-party:vertx', transitive: false)
 	distSearcher project(path: ':osgi:vertx:vertx-service', transitive: false)
 	distSearcher project(path: ':osgi:vertx:vertx-configuration-plugin', transitive: false)
@@ -319,8 +247,6 @@ dependencies {
 
 	distPluginDriverManager project(path: ':osgi:config:enviroment-variable-propagation', transitive: false)
 
-	
-
 	//GROOVY SCRIPT
 	distPluginDriverManager group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.8' , transitive: false
 	distPluginDriverManager project(path: ':osgi:util:groovy-script-api', transitive: false)
@@ -329,7 +255,6 @@ dependencies {
 	distPluginDriverManager project(path: ':osgi:util:bundle-installer-via-config', transitive: false)
 
 	// </PluginDriverManager>
-
 
 	distPlugin project(path: ':plugins:email', transitive: false)
 	distPlugin project(path: ':plugins:web:generic', transitive: false)

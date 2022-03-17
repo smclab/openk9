@@ -1,7 +1,0 @@
-dependencies {
-	compile project(":osgi:entity-manager:relationship-graph-api")
-	compile project(":osgi:entity-manager:entity-manager-model")
-	compile project(':osgi:search:search-api')
-	compile libraries.neo4j_cypher_dsl
-	compile libraries.reactor
-}

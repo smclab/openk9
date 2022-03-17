@@ -249,7 +249,7 @@ distConfigurations
 			})
 
 			def copyConfigs = tasks.register("copyConfigs${distPrimaryName}", Copy, {
-				from(file("$rootDir/$distName/configs"))
+				from(file("$rootDir/config/$distName/configs"))
 				into "$rootDir/build/$distName/configs"
 			})
 

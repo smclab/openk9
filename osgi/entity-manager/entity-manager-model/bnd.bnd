@@ -1,8 +1,0 @@
-Bundle-Name: [OpenK9] Entity Manager Model
-Bundle-SymbolicName: io.openk9.entity.manager.model
-
--include: ${project.rootDir}/osgi/common.bnd
-
-Export-Package: \
- io.openk9.entity.manager.model,\
- io.openk9.entity.manager.model.payload

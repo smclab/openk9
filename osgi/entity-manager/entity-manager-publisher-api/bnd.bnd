@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Entity Manager Publisher Api
-Bundle-SymbolicName: io.openk9.entity.manager.publisher.api
-
-Export-Package: io.openk9.entity.manager.publisher.api
-
--include: ${project.rootDir}/osgi/common.bnd

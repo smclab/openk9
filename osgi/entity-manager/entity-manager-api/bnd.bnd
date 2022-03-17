@@ -1,8 +1,0 @@
-Bundle-Name: [OpenK9] Entity Manager Api
-Bundle-SymbolicName: io.openk9.entity.manager.api
-
--include: ${project.rootDir}/osgi/common.bnd
-
-Export-Package: \
- io.openk9.entity.manager.api,\
- io.openk9.entity.manager.api.*
