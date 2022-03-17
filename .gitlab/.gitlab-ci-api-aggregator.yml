@@ -22,10 +22,9 @@ Build Latest Api Aggregator Docker Images:
   before_script:
     - cd quarkus
   script:
-    - ./mvnw install $MAVEN_CLI_OPTS
-    - ./mvnw package $MAVEN_CLI_OPTS -pl api-aggregator -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./mvnw package $MAVEN_CLI_OPTS -pl api-aggregator -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   cache:
-    key: quarkus-maven
+    key: api-aggregator
     paths:
       - .m2/repository
 

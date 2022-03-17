@@ -22,10 +22,9 @@ Build Latest Ingestion Docker Images:
   before_script:
     - cd quarkus
   script:
-    - ./mvnw install $MAVEN_CLI_OPTS
-    - ./mvnw package $MAVEN_CLI_OPTS -pl ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./mvnw package $MAVEN_CLI_OPTS -pl ingestion -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   cache:
-    key: quarkus-maven
+    key: ingestion
     paths:
       - .m2/repository
 
