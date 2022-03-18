@@ -20,10 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuples;
 
 import java.time.Instant;
-import java.util.function.Function;
 
 @Component(
 	immediate = true,
@@ -70,8 +70,6 @@ public class ReindexDatasourceConsumer {
 								new ReactorActionListener<>(sink)
 							))
 				)
-				.bufferUntil(datasource -> !reindexSemaphore.tryLock())
-				.flatMapIterable(Function.identity())
 				.concatMap(t2 ->
 					Mono.<GetSettingsResponse>create(sink ->
 						restHighLevelClient
@@ -95,6 +93,13 @@ public class ReindexDatasourceConsumer {
 				)
 				.log()
 				.filter(t3 -> t3.getT1().getLastIngestionDate().isBefore(t3.getT3()))
+				.delaySubscription(Mono.create(sink -> {
+					while (!reindexSemaphore.tryLock()) {
+						_log.info("reindex in process..");
+					}
+					_log.info("start reindex ");
+					sink.success();
+				}).subscribeOn(Schedulers.boundedElastic()))
 				.concatMap(t3 -> Mono.<AcknowledgedResponse>create(sink ->
 					restHighLevelClient
 						.indices()
@@ -104,12 +109,15 @@ public class ReindexDatasourceConsumer {
 							new ReactorActionListener<>(sink)
 						))
 				)
+				.doOnNext(ignore -> {
+					_log.info("end reindex ");
+					reindexSemaphore.release();
+				})
 				.onErrorContinue((throwable, ignore) -> {
 					if (_log.isErrorEnabled()) {
 						_log.error(throwable.getMessage());
 					}
 				})
-				.doOnNext(ignore -> reindexSemaphore.release())
 				.subscribe();
 	}
 

@@ -12,8 +12,8 @@ public class ReindexSemaphore {
 		return _semaphore.compareAndSet(false, true);
 	}
 
-	public void release() {
-		_semaphore.compareAndSet(true, false);
+	public boolean release() {
+		return _semaphore.compareAndSet(true, false);
 	}
 
 	public boolean hasReindexInProcess() {

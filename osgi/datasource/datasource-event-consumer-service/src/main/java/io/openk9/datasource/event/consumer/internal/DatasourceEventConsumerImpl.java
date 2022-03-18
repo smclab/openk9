@@ -19,7 +19,7 @@ public class DatasourceEventConsumerImpl implements DatasourceEventConsumer {
 	@Override
 	public Flux<Datasource> datasourceUpdateEvents() {
 		return _receiverReactor.consumeAutoAck(
-			Constants.QUEUE_PREFIX + Constants.UPDATE + "-" + DATASOURCE)
+			Constants.QUEUE_PREFIX + Constants.UPDATE + "-" + DATASOURCE, 1)
 			.transform(this::_deserialize);
 	}
 
