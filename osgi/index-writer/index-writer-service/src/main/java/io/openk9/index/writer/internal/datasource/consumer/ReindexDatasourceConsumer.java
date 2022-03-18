@@ -93,13 +93,16 @@ public class ReindexDatasourceConsumer {
 				)
 				.log()
 				.filter(t3 -> t3.getT1().getLastIngestionDate().isBefore(t3.getT3()))
-				.delaySubscription(Mono.create(sink -> {
-					while (!reindexSemaphore.tryLock()) {
-						_log.info("reindex in process..");
-					}
-					_log.info("start reindex ");
-					sink.success();
-				}).subscribeOn(Schedulers.boundedElastic()))
+				.delaySubscription(
+					Mono.defer(() ->
+						Mono.create(sink -> {
+							while (!reindexSemaphore.tryLock()) {
+								_log.info("reindex in process..");
+							}
+							_log.info("start reindex ");
+							sink.success();
+						})
+					).subscribeOn(Schedulers.boundedElastic()))
 				.concatMap(t3 -> Mono.<AcknowledgedResponse>create(sink ->
 					restHighLevelClient
 						.indices()
