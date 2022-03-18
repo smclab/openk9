@@ -1,7 +1,5 @@
 package io.openk9.index.writer.internal.writer;
 
-import io.openk9.index.writer.internal.util.ReindexSemaphore;
-import io.openk9.ingestion.api.AcknowledgableDelivery;
 import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.ReceiverReactor;
 import io.openk9.json.api.JsonFactory;
@@ -36,22 +34,9 @@ public class InsertIndexWriter {
 	@Activate
 	void activate() {
 
-		ReindexSemaphore instance = ReindexSemaphore.getInstance();
-
 		_disposable =
 			_receiverReactor
-				.consumeManualAck(_binding.getQueue(), 1)
-				.concatMap(acknowledgableDelivery -> {
-
-					if (instance.hasReindexInProcess()) {
-						acknowledgableDelivery.nack(true);
-						return Mono.empty();
-					}
-
-					return Mono.just(acknowledgableDelivery);
-
-				})
-				.doOnNext(AcknowledgableDelivery::ack)
+				.consumeAutoAck(_binding.getQueue(), 1)
 				.concatMap(
 					delivery -> {
 

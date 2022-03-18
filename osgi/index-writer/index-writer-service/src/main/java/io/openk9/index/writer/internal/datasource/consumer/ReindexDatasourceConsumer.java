@@ -1,7 +1,6 @@
 package io.openk9.index.writer.internal.datasource.consumer;
 
 import io.openk9.datasource.event.consumer.api.DatasourceEventConsumer;
-import io.openk9.index.writer.internal.util.ReindexSemaphore;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.search.client.api.ReactorActionListener;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
@@ -20,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuples;
 
 import java.time.Instant;
@@ -36,8 +34,6 @@ public class ReindexDatasourceConsumer {
 
 		RestHighLevelClient restHighLevelClient =
 			_restHighLevelClientProvider.get();
-
-		ReindexSemaphore reindexSemaphore = ReindexSemaphore.getInstance();
 
 		_disposable =
 			_datasourceEventConsumer
@@ -93,16 +89,6 @@ public class ReindexDatasourceConsumer {
 				)
 				.log()
 				.filter(t3 -> t3.getT1().getLastIngestionDate().isBefore(t3.getT3()))
-				.delaySubscription(
-					Mono.defer(() ->
-						Mono.create(sink -> {
-							while (!reindexSemaphore.tryLock()) {
-								_log.info("reindex in process..");
-							}
-							_log.info("start reindex ");
-							sink.success();
-						})
-					).subscribeOn(Schedulers.boundedElastic()))
 				.concatMap(t3 -> Mono.<AcknowledgedResponse>create(sink ->
 					restHighLevelClient
 						.indices()
@@ -112,10 +98,6 @@ public class ReindexDatasourceConsumer {
 							new ReactorActionListener<>(sink)
 						))
 				)
-				.doOnEach(ignore -> {
-					_log.info("end reindex ");
-					reindexSemaphore.release();
-				})
 				.onErrorContinue((throwable, ignore) -> {
 					if (_log.isErrorEnabled()) {
 						_log.error(throwable.getMessage());
