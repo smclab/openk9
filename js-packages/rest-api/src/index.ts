@@ -517,7 +517,7 @@ export async function getEnrichPipeline(
   loginInfo: LoginInfo | null,
 ): Promise<EnrichPipeline[]> {
   const response = await authFetch(
-    `/api/datasource/v2/enrichPipeline`,
+    `/api/datasource/v2/enrichPipeline?page=0&size=50`,
     loginInfo,
     {
       headers: {
