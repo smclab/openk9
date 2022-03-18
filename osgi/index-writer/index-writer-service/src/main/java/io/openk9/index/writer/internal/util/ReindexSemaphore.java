@@ -9,11 +9,11 @@ public class ReindexSemaphore {
 	}
 
 	public boolean tryLock() {
-		return _semaphore.compareAndSet(false, true);
+		return _semaphore.getAndSet(true);
 	}
 
-	public boolean release() {
-		return _semaphore.compareAndSet(true, false);
+	public void release() {
+		_semaphore.set(false);
 	}
 
 	public boolean hasReindexInProcess() {
