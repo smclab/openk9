@@ -109,7 +109,7 @@ public class ReindexDatasourceConsumer {
 							new ReactorActionListener<>(sink)
 						))
 				)
-				.doOnNext(ignore -> {
+				.doOnEach(ignore -> {
 					_log.info("end reindex ");
 					reindexSemaphore.release();
 				})
