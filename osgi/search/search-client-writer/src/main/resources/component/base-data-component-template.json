@@ -16,12 +16,23 @@
 							"lowercase",
 							"italian_stop_words_filter"
 						]
+					},
+					"standard_lowercase_english_stop_words_filter": {
+						"tokenizer": "standard",
+						"filter": [
+							"lowercase",
+							"english_stop_words_filter"
+						]
 					}
 				},
 				"filter": {
 					"italian_stop_words_filter": {
 						"type": "stop",
 						"stopwords":"_italian_"
+					},
+					"english_stop_words_filter": {
+						"type": "stop",
+						"stopwords":"_english_"
 					}
 				}
 			}
