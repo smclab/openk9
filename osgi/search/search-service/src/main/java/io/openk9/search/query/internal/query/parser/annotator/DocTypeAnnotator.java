@@ -24,7 +24,7 @@ public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 	}
 
 	public DocTypeAnnotator() {
-		super("documentTypes.keyword");
+		super("documentTypes");
 	}
 
 	@Override
