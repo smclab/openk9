@@ -9,7 +9,7 @@ public class ReindexSemaphore {
 	}
 
 	public boolean tryLock() {
-		return _semaphore.getAndSet(true);
+		return _semaphore.compareAndSet(false, true);
 	}
 
 	public void release() {
