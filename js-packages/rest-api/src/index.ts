@@ -407,7 +407,7 @@ export async function deleteDataSource(
 export async function getDataSources(
   loginInfo: LoginInfo | null,
 ): Promise<DataSourceInfo[]> {
-  const response = await authFetch(`/api/datasource/v2/datasource`, loginInfo, {
+  const response = await authFetch(`/api/datasource/v2/datasource?page=0&size=50`, loginInfo, {
     headers: {
       Accept: "application/json",
     },
