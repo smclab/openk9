@@ -7,7 +7,7 @@ Build Latest Index Writer Docker Images:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository --batch-mode"
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
 
   only:
     refs:
