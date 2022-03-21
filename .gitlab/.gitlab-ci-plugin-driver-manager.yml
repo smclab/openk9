@@ -59,7 +59,7 @@ Build Latest Plugin Driver Manager Docker Images:
   script:
     - ./mvnw install -pl bom -am $MAVEN_CLI_OPTS
     - ./mvnw install -pl assemblies/plugin-driver-manager/plugin-driver-manager-kar -am $MAVEN_CLI_OPTS
-    - ./mvnw --file assemblies/plugin-driver-manager/plugin-driver-manager-karaf package jib:build -Djib.to.image=$CI_REGISTRY_NAME/openk9/plugin-driver-manager -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
+    - ./mvnw --file assemblies/plugin-driver-manager/plugin-driver-manager-karaf package jib:build -Djib.to.image=$CI_REGISTRY_NAME/openk9/openk9-plugin-driver-manager -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-plugin-driver-manager" -F ref=master $DEV_TRIGGER_URL
   cache:
