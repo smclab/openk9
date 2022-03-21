@@ -20,10 +20,8 @@ Build Latest Tika No Ocr Docker Images:
       - quarkus/pom.xml
   except:
     - schedules
-  before_script:
-    - cd quarkus
   script:
-    - ./mvnw package $MAVEN_CLI_OPTS -pl tika/tika-no-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./mvnw package $MAVEN_CLI_OPTS -pl quarkus/tika/tika-no-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   cache:
     key: tika-no-ocr
     paths:

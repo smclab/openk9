@@ -19,10 +19,8 @@ Build Latest Entity Manager Docker Images:
       - quarkus/pom.xml
   except:
     - schedules
-  before_script:
-    - cd quarkus
   script:
-    - ./mvnw package $MAVEN_CLI_OPTS -pl entity-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
+    - ./mvnw package $MAVEN_CLI_OPTS -pl quarkus/entity-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=latest
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-entity-manager" -F ref=master $DEV_TRIGGER_URL
   cache:
