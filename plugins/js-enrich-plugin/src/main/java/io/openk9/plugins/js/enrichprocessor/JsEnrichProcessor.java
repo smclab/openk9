@@ -34,6 +34,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
@@ -157,10 +158,10 @@ public class JsEnrichProcessor implements SyncEnrichProcessor {
 
 	private HttpClient _httpClient;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpClientFactory _httpClientFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
 }

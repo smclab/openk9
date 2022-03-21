@@ -26,6 +26,7 @@ import io.openk9.plugin.driver.manager.api.PluginDriver;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 @Component(
 	immediate = true,
@@ -94,10 +95,14 @@ public class SitemapWebPluginDriver extends BasePluginDriver {
 
 	private HttpClient _httpClient;
 
-	@Reference
+	@Reference(
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	private HttpClientFactory _httpClientFactory;
 
-	@Reference
+	@Reference(
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	private JsonFactory _jsonFactory;
 
 }

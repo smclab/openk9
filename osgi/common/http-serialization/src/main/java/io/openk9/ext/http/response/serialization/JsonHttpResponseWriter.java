@@ -21,6 +21,7 @@ import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.json.api.JsonFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

@@ -25,6 +25,7 @@ import io.openk9.search.enrich.api.EndEnrichProcessor;
 import io.openk9.search.enrich.api.StartEnrichProcessor;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import reactor.core.publisher.Mono;
 
 @Component(

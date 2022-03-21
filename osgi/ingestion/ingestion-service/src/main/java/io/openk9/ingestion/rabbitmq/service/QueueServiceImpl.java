@@ -4,6 +4,7 @@ import com.rabbitmq.client.AMQP;
 import io.openk9.ingestion.api.QueueService;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -47,7 +48,7 @@ public class QueueServiceImpl implements QueueService {
 		return deleteOkMono.then();
 	}
 
-	@Reference(target = "(rabbit=sender)")
+	@Reference(target = "(rabbit=sender)", policyOption = ReferencePolicyOption.GREEDY)
 	private Supplier<Sender> _senderProvider;
 
 }

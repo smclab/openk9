@@ -10,6 +10,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
@@ -58,10 +59,16 @@ public class IngestionDatasourcePubSub {
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference(target = "(queue=ingestion-datasource)")
+	@Reference(
+		target = "(queue=ingestion-datasource)",
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	private BundleReceiver _bundleReceiver;
 
-	@Reference(target = "(routingKey=io.openk9.ingestion.datasource.plugin-driver-manager)")
+	@Reference(
+		target = "(routingKey=io.openk9.ingestion.datasource.plugin-driver-manager)",
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	private BundleSender _bundleSender;
 
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)

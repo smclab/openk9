@@ -25,6 +25,7 @@ import io.openk9.ingestion.rabbitmq.wrapper.AcknowledgableDeliveryWrapper;
 import io.openk9.ingestion.rabbitmq.wrapper.DeliveryWrapper;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import reactor.core.publisher.Flux;
 import reactor.rabbitmq.ConsumeOptions;
 
@@ -88,7 +89,7 @@ public class ReceiverImpl implements ReceiverReactor {
 			.map(AcknowledgableDeliveryWrapper::new);
 	}
 
-	@Reference(target = "(rabbit=receiver)")
+	@Reference(target = "(rabbit=receiver)", policyOption = ReferencePolicyOption.GREEDY)
 	private Supplier<reactor.rabbitmq.Receiver> _senderProvider;
 
 }

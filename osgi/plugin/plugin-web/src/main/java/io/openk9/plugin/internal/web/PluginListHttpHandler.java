@@ -23,6 +23,7 @@ import io.openk9.http.web.RouterHandler;
 import io.openk9.plugin.api.PluginInfoProvider;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.reactivestreams.Publisher;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -52,7 +53,7 @@ public class PluginListHttpHandler
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private PluginInfoProvider _pluginInfoProvider;
 
-	@Reference(target = "(type=json)")
+	@Reference(target = "(type=json)", policyOption = ReferencePolicyOption.GREEDY)
 	private HttpResponseWriter _httpResponseWriter;
 
 

@@ -9,6 +9,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
@@ -60,7 +61,10 @@ public class IndexWriterEventConsumerImpl {
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private IndexTemplateService _indexTemplateService;
 
-	@Reference(target = "(component.name=io.openk9.index.writer.mappings.pub.sub.binding.MappingsBinding)")
+	@Reference(
+		target = "(component.name=io.openk9.index.writer.mappings.pub.sub.binding.MappingsBinding)",
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	private Binding _binding;
 
 	private static final Logger _log = LoggerFactory.getLogger(

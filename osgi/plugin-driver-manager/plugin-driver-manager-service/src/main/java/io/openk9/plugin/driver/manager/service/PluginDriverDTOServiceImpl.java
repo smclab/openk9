@@ -13,6 +13,7 @@ import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 import java.util.Collection;
 import java.util.List;

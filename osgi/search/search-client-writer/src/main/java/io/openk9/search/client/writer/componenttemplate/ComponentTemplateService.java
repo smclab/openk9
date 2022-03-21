@@ -25,6 +25,7 @@ import org.elasticsearch.client.indices.PutComponentTemplateRequest;
 import org.elasticsearch.cluster.metadata.ComponentTemplate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

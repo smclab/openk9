@@ -8,6 +8,7 @@ import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import reactor.core.publisher.Flux;
 
 @Component(

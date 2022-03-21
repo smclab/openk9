@@ -36,6 +36,10 @@
 			<groupId>io.openk9.osgi</groupId>
 			<artifactId>release-api</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.component.annotations</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

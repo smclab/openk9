@@ -12,6 +12,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
@@ -156,7 +157,8 @@ public class ConsulConfigurationInitializer {
 	private volatile ConsulClient _consulClient;
 
 	@Reference(
-		target = "(service.name=this)"
+		target = "(service.name=this)",
+		policyOption = ReferencePolicyOption.GREEDY
 	)
 	private volatile Supplier<String> _serviceNameSupplier;
 

@@ -22,6 +22,7 @@ import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchTokenizer;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 @Component(
 	immediate = true,

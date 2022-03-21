@@ -23,6 +23,7 @@ import io.openk9.search.client.api.util.IndexUtil;
 import org.elasticsearch.action.search.SearchRequest;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 import java.util.Arrays;
 import java.util.Objects;

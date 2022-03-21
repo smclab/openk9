@@ -26,6 +26,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.ServiceTracker;
 import reactor.rabbitmq.Sender;
@@ -76,7 +77,7 @@ public class BindingRabbitMQQueue {
 
 	private ServiceTracker<Binding, Binding> _serviceTracker;
 
-	@Reference(target = "(rabbit=sender)")
+	@Reference(target = "(rabbit=sender)", policyOption = ReferencePolicyOption.GREEDY)
 	private Supplier<Sender> _senderProvider;
 
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)

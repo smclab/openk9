@@ -27,6 +27,7 @@ import io.openk9.json.api.ObjectNode;
 import io.openk9.json.exception.JsonException;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 import java.io.IOException;
 import java.util.List;

@@ -23,6 +23,7 @@ import io.openk9.ingestion.api.SenderReactor;
 import io.openk9.ingestion.rabbitmq.wrapper.OutboundMessageWrapper;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -63,7 +64,7 @@ public class SenderImpl implements SenderReactor {
 
 	}
 
-	@Reference(target = "(rabbit=sender)")
+	@Reference(target = "(rabbit=sender)", policyOption = ReferencePolicyOption.GREEDY)
 	private Supplier<reactor.rabbitmq.Sender> _senderProvider;
 
 }

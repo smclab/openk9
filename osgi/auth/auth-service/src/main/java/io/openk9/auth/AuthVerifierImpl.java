@@ -6,6 +6,7 @@ import io.openk9.http.util.HttpUtil;
 import io.openk9.json.api.JsonFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 

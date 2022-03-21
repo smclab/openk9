@@ -29,6 +29,7 @@ import io.openk9.plugin.driver.manager.api.PluginDriver;
 import io.openk9.plugin.driver.manager.api.SearchKeyword;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 import java.util.Collections;
 import java.util.List;
@@ -90,7 +91,8 @@ public class DocumentTypeDefinition implements
 	}
 
 	@Reference(
-		target = "(component.name=io.openk9.plugins.email.driver.EmailPluginDriver)"
+		target = "(component.name=io.openk9.plugins.email.driver.EmailPluginDriver)",
+		policyOption = ReferencePolicyOption.GREEDY
 	)
 	private PluginDriver _pluginDriver;
 

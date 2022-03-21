@@ -30,6 +30,7 @@ import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

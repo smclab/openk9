@@ -26,6 +26,7 @@ import io.openk9.plugin.driver.manager.api.Field;
 import io.openk9.plugin.driver.manager.api.FieldType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;

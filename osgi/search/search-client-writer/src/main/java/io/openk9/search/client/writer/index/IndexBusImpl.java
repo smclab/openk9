@@ -24,6 +24,7 @@ import io.openk9.search.client.writer.ElasticSearchIndexer;
 import org.elasticsearch.action.DocWriteRequest;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 import java.util.function.Function;
 

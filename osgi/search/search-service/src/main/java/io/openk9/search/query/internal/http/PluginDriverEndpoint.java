@@ -25,6 +25,7 @@ import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.reactivestreams.Publisher;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;

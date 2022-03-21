@@ -28,6 +28,7 @@ import io.openk9.json.internal.ArrayNodeWrapper;
 import io.openk9.json.internal.ObjectNodeWrapper;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 import java.util.List;
 import java.util.Map;

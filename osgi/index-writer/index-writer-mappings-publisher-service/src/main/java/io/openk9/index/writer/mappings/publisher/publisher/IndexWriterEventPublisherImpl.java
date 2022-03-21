@@ -8,6 +8,7 @@ import io.openk9.ingestion.api.SenderReactor;
 import io.openk9.json.api.JsonFactory;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -56,7 +57,10 @@ public class IndexWriterEventPublisherImpl implements
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference(target = "(component.name=io.openk9.index.writer.mappings.pub.sub.binding.MappingsBinding)")
+	@Reference(
+		target = "(component.name=io.openk9.index.writer.mappings.pub.sub.binding.MappingsBinding)",
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	private Binding _binding;
 
 	private static final Logger _log = LoggerFactory.getLogger(
