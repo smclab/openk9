@@ -33,7 +33,7 @@
 	<name>OpenK9 :: Plugins</name>
 
 	<properties>
-		<js.nodeVersion>v14.9.0</js.nodeVersion>
+		<js.nodeVersion>v16.14.2</js.nodeVersion>
 		<js.yarnVersion>v1.22.18</js.yarnVersion>
 		<js.installDirectory>${project.build.directory}</js.installDirectory>
 		<js.workingDirectory>js</js.workingDirectory>
