@@ -154,6 +154,14 @@
 						</execution>
 					</executions>
 				</plugin>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>${compiler-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.projectlombok</groupId>
+					<artifactId>lombok-maven-plugin</artifactId>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>

@@ -1,5 +1,0 @@
-{
-	"host": "consul",
-	"port" : 8500,
-	"scan-period": 2000
-}

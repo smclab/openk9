@@ -135,7 +135,7 @@
 			<dependency>
 				<groupId>org.apache.karaf</groupId>
 				<artifactId>org.apache.karaf.util</artifactId>
-				<version>${project.version}</version>
+				<version>${karaf.version}</version>
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
@@ -247,11 +247,6 @@
 				<groupId>org.apache.felix</groupId>
 				<artifactId>org.apache.felix.dependencymanager</artifactId>
 				<version>${org.apache.felix.dependencymanager.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-lang3</artifactId>
-				<version>${org.apache.commons.lang.version}</version>
 			</dependency>
 
 			<dependency>

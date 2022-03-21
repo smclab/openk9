@@ -1,6 +1,4 @@
 Bundle-Name: [OpenK9] Vertx Service
 Bundle-SymbolicName: io.openk9.vertx.service
 
-Bundle-Activator: io.openk9.vertx.internal.VertxActivator
-
 Import-Package: *;resolution:=optional

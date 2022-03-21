@@ -60,7 +60,6 @@
 		<module>util</module>
 		<module>vertx</module>
 		<module>web</module>
-		<module>assemblies</module>
 	</modules>
 
 	<build>
@@ -86,6 +85,14 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${compiler-plugin.version}</version>
+			</plugin>
+			<plugin>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>

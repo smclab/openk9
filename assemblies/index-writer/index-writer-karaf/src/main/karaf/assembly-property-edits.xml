@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<property-edits xmlns="http://karaf.apache.org/tools/property-edits/1.0.0">
+    <edits>
+        <edit>
+            <file>org.apache.karaf.management.cfg</file>
+            <operation>put</operation>
+            <key>rmiRegistryHost</key>
+            <value>0.0.0.0</value>
+        </edit>
+        <edit>
+            <file>org.apache.karaf.management.cfg</file>
+            <operation>put</operation>
+            <key>rmiServerHost</key>
+            <value>0.0.0.0</value>
+        </edit>
+    </edits>
+</property-edits>

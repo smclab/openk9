@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<!--
+		Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+
+		This program is free software: you can redistribute it and/or modify
+		it under the terms of the GNU Affero General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		(at your option) any later version.
+
+		This program is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU Affero General Public License for more details.
+
+		You should have received a copy of the GNU Affero General Public License
+		along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	-->
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>io.openk9</groupId>
+		<artifactId>openk9</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<groupId>io.openk9.assemblies</groupId>
+	<artifactId>assemblies</artifactId>
+	<packaging>pom</packaging>
+	<name>OpenK9 :: Assemblies</name>
+
+	<modules>
+		<module>index-writer</module>
+		<module>plugin-driver-manager</module>
+		<module>searcher</module>
+	</modules>
+
+	<properties>
+		<karaf.version>4.3.5</karaf.version>
+		<base.docker.image.name>smclab/openk9-${artifactId}:${project.version}</base.docker.image.name>
+		<base.from.image>eclipse-temurin:17.0.1_12-jre-alpine</base.from.image>
+	</properties>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<executions>
+						<execution>
+							<phase>generate-resources</phase>
+							<goals>
+								<goal>copy-dependencies</goal>
+							</goals>
+							<configuration>
+								<outputDirectory>${project.build.directory}/classes/resources/deploy</outputDirectory>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>com.google.cloud.tools</groupId>
+					<artifactId>jib-maven-plugin</artifactId>
+					<version>3.2.0</version>
+					<configuration>
+						<allowInsecureRegistries>true</allowInsecureRegistries>
+						<from>
+							<image>${base.from.image}</image>
+						</from>
+						<to>
+							<image>${base.docker.image.name}</image>
+							<tags>
+								<tag>latest</tag>
+							</tags>
+						</to>
+						<container>
+							<entrypoint>
+								<entrypoint>/karaf/bin/karaf</entrypoint>
+								<entrypoint>run</entrypoint>
+							</entrypoint>
+							<workingDirectory>/karaf</workingDirectory>
+							<ports>
+								<port>8101</port>
+								<port>1099</port>
+								<port>44444</port>
+								<port>8181</port>
+							</ports>
+						</container>
+						<extraDirectories>
+							<paths>
+								<path>target/assembly</path>
+							</paths>
+							<permissions>
+								<permission>
+									<file>/karaf/bin/karaf</file>
+									<mode>755</mode>
+								</permission>
+								<permission>
+									<file>/karaf/data</file>
+									<mode>755</mode>
+								</permission>
+							</permissions>
+						</extraDirectories>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+</project>

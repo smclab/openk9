@@ -1,14 +1,9 @@
 package io.openk9.vertx.internal.consul;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.file.FileSystem;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.consul.ConsulClient;
 import io.vertx.ext.consul.ConsulClientOptions;
-import org.apache.karaf.util.tracker.BaseActivator;
-import org.apache.karaf.util.tracker.annotation.ProvideService;
-import org.apache.karaf.util.tracker.annotation.Services;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
@@ -30,10 +25,7 @@ import java.util.Objects;
 		"scan-period:Integer=2000"
 	}
 )
-@Services(provides = {
-	@ProvideService(ConsulClient.class)
-})
-public class VertxConsulActivator extends BaseActivator {
+public class VertxConsulActivator {
 
 	@Activate
 	void activate(Map<String, Object> config, BundleContext context) {

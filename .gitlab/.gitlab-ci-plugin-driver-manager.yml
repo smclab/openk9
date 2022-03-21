@@ -1,6 +1,3 @@
-variables:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-
 Build Latest Plugin Driver Manager Docker Images:
   image: smclab/docker-java-11:latest
   services:
@@ -10,6 +7,8 @@ Build Latest Plugin Driver Manager Docker Images:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository --batch-mode"
+
   only:
     refs:
       - main
@@ -57,12 +56,12 @@ Build Latest Plugin Driver Manager Docker Images:
   except:
     - schedules
   script:
-    - ./gradlew --build-cache --gradle-user-home cache/ pushImagePluginDriverManager
+    - ./mvnw install -pl pom
+    - ./mvnw install -pl assemblies/plugin-driver-manager/plugin-driver-manager-kar
+    - ./mvnw --file assemblies/plugin-driver-manager/plugin-driver-manager-karaf package jib:build -Djib.to.image=registry.smc.it:49083/openk9/plugin-driver-manager -Djib.to.auth.username=$CI_REGISTRY_NAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-plugin-driver-manager" -F ref=master $DEV_TRIGGER_URL
   cache:
     key: plugin-driver-manager
     paths:
-      - cache/caches/
-      - cache/notifications/
-      - cache/wrapper/
+      - .m2/repository

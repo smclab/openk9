@@ -30,6 +30,7 @@
 		<module>osgi</module>
 		<module>quarkus</module>
 		<module>plugins</module>
+		<module>assemblies</module>
 	</modules>
 
 	<name>OpenK9</name>
@@ -71,6 +72,8 @@
 
 		<maven-plugin-annotations.version>3.6.0</maven-plugin-annotations.version>
 		<maven.resolver.version>1.3.1</maven.resolver.version>
+
+		<karaf.version>4.3.5</karaf.version>
 
 		<osgi.version>7.0.0</osgi.version>
 		<org.osgi.service.cm.version>1.6.0</org.osgi.service.cm.version>
@@ -141,39 +144,43 @@
 					<releaseProfiles>releases</releaseProfiles>
 				</configuration>
 			</plugin>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${compiler-plugin.version}</version>
-				<configuration>
-					<forceJavacCompilerUse>true</forceJavacCompilerUse>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-							<version>${dependency.version.lombok}</version>
-						</path>
-						<path>
-							<groupId>org.mapstruct</groupId>
-							<artifactId>mapstruct-processor</artifactId>
-							<version>${dependency.version.mapstruct}</version>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok-maven-plugin</artifactId>
-				<version>1.18.20.0</version>
-				<executions>
-					<execution>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>delombok</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>${compiler-plugin.version}</version>
+					<configuration>
+						<forceJavacCompilerUse>true</forceJavacCompilerUse>
+						<annotationProcessorPaths>
+							<path>
+								<groupId>org.projectlombok</groupId>
+								<artifactId>lombok</artifactId>
+								<version>${dependency.version.lombok}</version>
+							</path>
+							<path>
+								<groupId>org.mapstruct</groupId>
+								<artifactId>mapstruct-processor</artifactId>
+								<version>${dependency.version.mapstruct}</version>
+							</path>
+						</annotationProcessorPaths>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.projectlombok</groupId>
+					<artifactId>lombok-maven-plugin</artifactId>
+					<version>1.18.20.0</version>
+					<executions>
+						<execution>
+							<phase>generate-sources</phase>
+							<goals>
+								<goal>delombok</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 </project>

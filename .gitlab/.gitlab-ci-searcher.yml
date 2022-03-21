@@ -1,6 +1,3 @@
-variables:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-
 Build Latest Searcher Docker Images:
   image: smclab/docker-java-11:latest
   services:
@@ -10,6 +7,8 @@ Build Latest Searcher Docker Images:
     TEST_NAME: local/test
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository --batch-mode"
+
   only:
     refs:
       - main
@@ -46,15 +45,13 @@ Build Latest Searcher Docker Images:
       - .gitlab/.gitlab-ci-searcher.yml
   except:
     - schedules
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
-    - ./gradlew --build-cache --gradle-user-home cache/ pushImageSearcher
+    - ./mvnw install -pl pom
+    - ./mvnw install -pl assemblies/searcher/searcher-kar
+    - ./mvnw --file assemblies/searcher/searcher-karaf package jib:build -Djib.to.image=registry.smc.it:49083/openk9/searcher -Djib.to.auth.username=$CI_REGISTRY_NAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
   cache:
     key: searcher
     paths:
-      - cache/caches/
-      - cache/notifications/
-      - cache/wrapper/
+      - .m2/repository
