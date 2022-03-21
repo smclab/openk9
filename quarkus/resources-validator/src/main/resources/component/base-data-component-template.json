@@ -1,0 +1,100 @@
+{
+	"template": {
+		"settings": {
+			"index": {
+				"number_of_shards": "1",
+				"number_of_replicas": "1"
+			},
+			"analysis" : {
+				"analyzer": {
+					"email": {
+						"tokenizer": "uax_url_email"
+					},
+					"standard_lowercase_italian_stop_words_filter": {
+						"tokenizer": "standard",
+						"filter": [
+							"lowercase",
+							"italian_stop_words_filter"
+						]
+					}
+				},
+				"filter": {
+					"italian_stop_words_filter": {
+						"type": "stop",
+						"stopwords":"_italian_"
+					}
+				}
+			}
+		},
+		"mappings": {
+			"properties": {
+				"acl": {
+					"properties": {
+						"allow": {
+							"properties": {
+								"users": {
+									"type": "keyword"
+								}
+							}
+						}
+					}
+				},
+				"contentId": {
+					"type": "keyword",
+					"index": true
+				},
+				"datasourceId": {
+					"type": "keyword",
+					"index": true
+				},
+				"datasourceName": {
+					"type": "keyword",
+					"index": true
+				},
+				"documentTypes": {
+					"type": "keyword",
+					"index": true
+				},
+				"entities": {
+					"properties": {
+						"entityType": {
+							"type": "keyword"
+						},
+						"context": {
+							"type": "keyword"
+						},
+						"id": {
+							"type": "keyword"
+						}
+					}
+				},
+				"rawContent": {
+					"type": "text",
+					"index": false
+				},
+				"resources" : {
+					"properties": {
+						"binaries" : {
+							"type": "nested",
+							"properties": {
+								"id": {
+									"type": "keyword"
+								},
+								"name" : {
+									"type" : "text"
+								},
+								"contentType" : {
+									"type" : "keyword"
+								},
+								"data" : {
+									"type" : "binary",
+									"index": false
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

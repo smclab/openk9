@@ -51,13 +51,13 @@ public class IndexWriterEventConsumerImpl {
 
 	private Disposable _disposable;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ReceiverReactor _receiverReactor;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private IndexTemplateService _indexTemplateService;
 
 	@Reference(target = "(component.name=io.openk9.index.writer.mappings.pub.sub.binding.MappingsBinding)")

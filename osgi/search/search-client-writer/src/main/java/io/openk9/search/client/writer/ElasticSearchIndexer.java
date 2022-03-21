@@ -150,13 +150,13 @@ public class ElasticSearchIndexer {
 	private final List<AutoCloseables.AutoCloseableSafe> _registrationList =
 		new ArrayList<>();
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ElasticSearchConfiguration _elasticSearchConfiguration;
 
 	private static final Logger _log = LoggerFactory

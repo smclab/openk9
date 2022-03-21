@@ -55,7 +55,7 @@ public class IngestionDatasourcePubSub {
 
 	private Disposable _disposable;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
 	@Reference(target = "(queue=ingestion-datasource)")
@@ -64,7 +64,7 @@ public class IngestionDatasourcePubSub {
 	@Reference(target = "(routingKey=io.openk9.ingestion.datasource.plugin-driver-manager)")
 	private BundleSender _bundleSender;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private PluginDriverDTOService _pluginDriverDTOService;
 
 	private static final Logger _log =

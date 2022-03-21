@@ -51,7 +51,7 @@ public class AuthVerifierImpl implements AuthVerifier {
 		});
 
 	}
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
 }

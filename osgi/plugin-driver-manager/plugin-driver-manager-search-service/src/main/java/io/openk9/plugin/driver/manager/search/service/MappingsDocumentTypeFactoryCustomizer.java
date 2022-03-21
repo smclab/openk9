@@ -209,10 +209,10 @@ public class MappingsDocumentTypeFactoryCustomizer
 		return original;
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private IndexWriterEventPublisher _indexWriterEventPublisher;
 
 	private static final Logger _log = LoggerFactory.getLogger(

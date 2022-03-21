@@ -1,4 +1,0 @@
-dependencies {
-	compile libraries.reactor
-	compile libraries.reactor_netty
-}

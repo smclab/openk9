@@ -1,0 +1,5 @@
+Bundle-Name: [OpenK9] Auth Common
+Bundle-SymbolicName: io.openk9.auth.common
+
+Export-Package: io.openk9.auth.common
+

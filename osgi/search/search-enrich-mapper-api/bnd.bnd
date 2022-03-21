@@ -3,4 +3,3 @@ Bundle-SymbolicName: io.openk9.search.enrich.mapper.api
 
 Export-Package: io.openk9.search.enrich.mapper.api
 
--include: ${project.rootDir}/osgi/common.bnd

@@ -342,10 +342,10 @@ public class DatasourceClientImpl implements DatasourceClient {
 
 	private HttpClient _httpClient;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpClientFactory _httpClientFactory;
 
 }

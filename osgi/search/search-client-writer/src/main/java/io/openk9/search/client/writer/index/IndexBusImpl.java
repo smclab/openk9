@@ -42,10 +42,10 @@ public class IndexBusImpl implements IndexBus {
 		sendRequest(requestFunction.apply(_docWriteRequestFactory));
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ElasticSearchIndexer _elasticSearchIndexer;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DocWriteRequestFactory _docWriteRequestFactory;
 
 }

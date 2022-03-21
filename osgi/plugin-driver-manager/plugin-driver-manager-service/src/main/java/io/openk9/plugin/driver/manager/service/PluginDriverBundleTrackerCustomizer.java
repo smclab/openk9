@@ -458,13 +458,13 @@ public class PluginDriverBundleTrackerCustomizer
 	private final Map<Bundle, AutoCloseables.AutoCloseableSafe> _registrationMap =
 		new ConcurrentHashMap<>();
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpClientFactory _httpClientFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DocumentTypeFactoryRegistry _documentTypeFactoryRegistry;
 
 	private static final Logger _log = LoggerFactory.getLogger(

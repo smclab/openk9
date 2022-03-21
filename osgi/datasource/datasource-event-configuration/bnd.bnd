@@ -3,4 +3,3 @@ Bundle-SymbolicName: io.openk9.datasource.event.configuration
 
 Export-Package: io.openk9.datasource.event.configuration
 
--include: ${project.rootDir}/osgi/common.bnd

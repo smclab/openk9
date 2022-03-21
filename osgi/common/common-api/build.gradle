@@ -1,5 +1,0 @@
-dependencies {
-	compile libraries.reactor
-	compile libraries.apache_commons_lang3
-	compile libraries.slf4j_api
-}

@@ -19,7 +19,6 @@ Build Latest Searcher Docker Images:
       - osgi/web/http-api/**/*
       - osgi/web/http-service/**/*
       - osgi/web/http-bundle-ext/**/*
-      - osgi/web/open-api/**/*
       - osgi/metrics/metrics-api/**/*
       - osgi/metrics/metrics-service/**/*
       - osgi/common/common-api/**/*

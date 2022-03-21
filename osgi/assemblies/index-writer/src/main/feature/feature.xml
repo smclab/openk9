@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.6.0" name="index-writer">
+    <feature name="index-writer" description="OpenK9 :: OSGi :: Assemblies :: Index Writer" version="0.0.1.SNAPSHOT">
+        <feature prerequisite="true">scr</feature>
+        <feature prerequisite="true">webconsole</feature>
+        <feature prerequisite="true" dependency="false">wrap</feature>
+        <bundle>mvn:io.openk9.osgi.index-writer/index-writer-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.index-writer/index-writer-mappings-consumer/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.index-writer/index-writer-model/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.index-writer/index-writer-entity-model/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.index-writer/index-writer-entity-web/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.index-writer/index-writer-mappings-pub-sub/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.search/search-client-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.search/search-client-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.search/search-client-writer/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.metrics/metrics-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.metrics/metrics-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.metrics/metrics-ext/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.common/common-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.common/core-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.common/model/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.common/osgi-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.common/serialization-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.common/serialization-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.third-party/reactor/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.third-party/reactor-netty/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.third-party/reactive-streams/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.third-party/micrometer/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.third-party/jackson/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.third-party/vavr/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.third-party/apache/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.common/http-serialization/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.ingestion/ingestion-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.ingestion/ingestion-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.common/reactory-netty-util/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.web/http-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.web/http-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.web/http-bundle-ext/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.datasource/datasource-client-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.datasource/datasource-client-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.plugin-driver-manager/plugin-driver-manager-client-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.plugin-driver-manager/plugin-driver-manager-client-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.plugin-driver-manager/plugin-driver-manager-model/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.datasource/datasource-event-consumer-api/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.datasource/datasource-event-consumer-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.third-party/vertx/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.vertx/vertx-service/0.0.1-SNAPSHOT</bundle>
+        <bundle>mvn:io.openk9.osgi.vertx/vertx-configuration-plugin/0.0.1-SNAPSHOT</bundle>
+    </feature>
+</features>

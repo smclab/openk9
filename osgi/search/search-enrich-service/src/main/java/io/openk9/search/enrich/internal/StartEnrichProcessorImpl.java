@@ -62,10 +62,10 @@ public class StartEnrichProcessorImpl implements StartEnrichProcessor {
 
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private BundleSenderProvider _bundleSenderProvider;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private EndEnrichProcessor _endEnrichProcessor;
 
 }

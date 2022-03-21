@@ -1,4 +1,3 @@
 Bundle-Name: [OpenK9] Http Response Serialization
 Bundle-SymbolicName: io.openk9.ext.http.response.serialization
 
--include: ${project.rootDir}/osgi/common.bnd

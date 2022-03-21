@@ -53,7 +53,7 @@ public class JsonHttpResponseWriter implements HttpResponseWriter {
 			.sendString(value.map(_jsonFactory::toJson));
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
 }

@@ -70,7 +70,7 @@ public class PluginIndexDefinitionProviderImpl implements
 	private PluginIndexDefinitionServiceTracker
 		_pluginIndexDefinitionServiceTracker;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private IndexTemplateService _indexTemplateService;
 
 }

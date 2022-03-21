@@ -1,9 +1,8 @@
 Bundle-Name: [OpenK9] Common Api
 Bundle-SymbolicName: io.openk9.common.api
 
-
 Export-Package: \
  io.openk9.common.api.constant,\
  io.openk9.common.api.reactor.util
 
--include: ${project.rootDir}/osgi/common.bnd
+

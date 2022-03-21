@@ -43,7 +43,7 @@ public class HealthCheckEndpoint implements HttpHandler, RouterHandler {
 		private String status;
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpResponseWriter _httpResponseWriter;
 
 }

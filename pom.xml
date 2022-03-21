@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<!--
+		Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+
+		This program is free software: you can redistribute it and/or modify
+		it under the terms of the GNU Affero General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		(at your option) any later version.
+
+		This program is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU Affero General Public License for more details.
+
+		You should have received a copy of the GNU Affero General Public License
+		along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	-->
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>io.openk9</groupId>
+	<artifactId>openk9</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>bom</module>
+		<module>osgi</module>
+		<module>quarkus</module>
+		<module>plugins</module>
+	</modules>
+
+	<name>OpenK9</name>
+
+	<licenses>
+		<license>
+			<name>The GNU Affero General Public License, Version 3</name>
+			<url>https://www.gnu.org/licenses/agpl-3.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>${scm.connection}</connection>
+		<developerConnection>${scm.developerConnection}</developerConnection>
+		<url>${scm.url}</url>
+		<tag>HEAD</tag>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>1</id>
+			<name>The smclab Openk9 Team</name>
+			<email>openk9@smc.it</email>
+			<url>https://openk9.io</url>
+			<organization>SMC</organization>
+			<organizationUrl>https://www.smc.it</organizationUrl>
+		</developer>
+	</developers>
+
+	<properties>
+		<maven.compiler.release>11</maven.compiler.release>
+		<maven.compiler.target>11</maven.compiler.target>
+		<project.build.outputTimestamp>1</project.build.outputTimestamp>
+
+		<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
+		<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
+		<scm.url>https://github.com/smclab/openk9.git;a=summary</scm.url>
+
+		<maven-plugin-annotations.version>3.6.0</maven-plugin-annotations.version>
+		<maven.resolver.version>1.3.1</maven.resolver.version>
+
+		<osgi.version>7.0.0</osgi.version>
+		<org.osgi.service.cm.version>1.6.0</org.osgi.service.cm.version>
+		<org.osgi.service.component.version>1.4.0</org.osgi.service.component.version>
+		<org.osgi.service.component.annotations.version>1.4.0</org.osgi.service.component.annotations.version>
+		<org.osgi.service.event.version>1.4.0</org.osgi.service.event.version>
+		<org.osgi.service.log.version>1.4.0</org.osgi.service.log.version>
+		<org.osgi.service.metatype.version>1.4.0</org.osgi.service.metatype.version>
+		<org.osgi.service.metatype.annotations.version>${org.osgi.service.metatype.version}</org.osgi.service.metatype.annotations.version>
+		<org.osgi.util.promise.version>1.2.0</org.osgi.util.promise.version>
+
+		<osgi-component-annotations.version>1.4.0</osgi-component-annotations.version>
+
+		<io.vavr.version>0.10.2</io.vavr.version>
+		<org.slf4j.version>1.7.33</org.slf4j.version>
+		<io.micrometer.version>1.6.2</io.micrometer.version>
+		<com.fasterxml.jackson.version>2.11.3</com.fasterxml.jackson.version>
+		<org.reactivestreams.version>1.0.3</org.reactivestreams.version>
+		<caffeine.version>2.8.8</caffeine.version>
+		<org.elasticsearch.client.version>7.15.0</org.elasticsearch.client.version>
+		<vertx.version>4.2.5</vertx.version>
+		<org.apache.commons.lang.version>3.12.0</org.apache.commons.lang.version>
+		<org.apache.felix.dependencymanager.version>4.6.0</org.apache.felix.dependencymanager.version>
+		<commons-codec.version>1.15</commons-codec.version>
+		<checker-qual.version>3.8.0</checker-qual.version>
+		<com.google.errorprone.error_prone_annotations.version>2.4.0</com.google.errorprone.error_prone_annotations.version>
+		<LatencyUtils.version>2.0.3</LatencyUtils.version>
+		<!-- Further used maven plugin versions; e.g. in the docs -->
+		<surefire.argLine />
+		<!-- General Settings -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<compiler-plugin.version>3.10.1</compiler-plugin.version>
+		<dependency.version.lombok>1.18.22</dependency.version.lombok>
+		<dependency.version.mapstruct>1.4.2.Final</dependency.version.mapstruct>
+		<biz.aQute.bnd.version>6.2.0</biz.aQute.bnd.version>
+
+	</properties>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>sonatype-nexus-snapshots</id>
+			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>sonatype-nexus-release</id>
+			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${dependency.version.lombok}</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>3.0.0-M5</version>
+				<configuration>
+					<tagNameFormat>v@{project.version}</tagNameFormat>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<releaseProfiles>releases</releaseProfiles>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${compiler-plugin.version}</version>
+				<configuration>
+					<forceJavacCompilerUse>true</forceJavacCompilerUse>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${dependency.version.lombok}</version>
+						</path>
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${dependency.version.mapstruct}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok-maven-plugin</artifactId>
+				<version>1.18.20.0</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>delombok</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

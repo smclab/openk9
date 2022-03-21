@@ -106,7 +106,7 @@ public class CBORFactoryImpl implements CBORFactory {
 			_objectMapperProvider.getObjectMapper().createArrayNode());
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ObjectMapperProvider _objectMapperProvider;
 
 }

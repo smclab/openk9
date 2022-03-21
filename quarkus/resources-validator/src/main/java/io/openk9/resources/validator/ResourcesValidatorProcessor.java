@@ -16,7 +16,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.jboss.logging.Logger;
 
@@ -54,13 +53,6 @@ public class ResourcesValidatorProcessor {
 
 		Long datasourceId = payload.getLong("datasourceId");
 
-		String rawContent = payload.getString("rawContent");
-
-		JsonArray binaries =
-			payload
-				.getJsonObject("resources")
-				.getJsonArray("binaries", new JsonArray());
-
 		String contentId = payload.getString("contentId");
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -81,6 +73,13 @@ public class ResourcesValidatorProcessor {
 
 		searchRequest.source(searchSourceBuilder);
 
+		JsonArray binaries =
+			payload
+				.getJsonObject("resources")
+				.getJsonArray("binaries");
+
+		String rawContent = payload.getString("rawContent");
+
 		List<Integer> hashCodes = _getHashCodes(rawContent, binaries);
 
 		try {
@@ -89,9 +88,7 @@ public class ResourcesValidatorProcessor {
 				restHighLevelClient.search(
 					searchRequest, RequestOptions.DEFAULT);
 
-			SearchHits searchHits = searchResponse.getHits();
-
-			for (SearchHit hit : searchHits.getHits()) {
+			for (SearchHit hit : searchResponse.getHits()) {
 
 				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 
@@ -140,14 +137,22 @@ public class ResourcesValidatorProcessor {
 
 	private List<Integer> _getHashCodes(String rawContent, JsonArray binaries) {
 
+		if (rawContent == null && (binaries == null || binaries.isEmpty())) {
+			return List.of();
+		}
+
 		List<Integer> hashCodes = new ArrayList<>();
 
-		for (int i = 0; i < binaries.size(); i++) {
+		if (binaries != null) {
 
-			String dataBase64 =
-				binaries.getJsonObject(i).getString("data");
+			for (int i = 0; i < binaries.size(); i++) {
 
-			hashCodes.add(dataBase64.hashCode());
+				String dataBase64 =
+					binaries.getJsonObject(i).getString("data");
+
+				hashCodes.add(dataBase64.hashCode());
+			}
+
 		}
 
 		if (rawContent != null) {

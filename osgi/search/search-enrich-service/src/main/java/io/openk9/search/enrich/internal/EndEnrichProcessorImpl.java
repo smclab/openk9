@@ -74,10 +74,10 @@ public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 	private String _routingKeySuffix;
 	private String _exchange;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private SenderReactor _senderReactor;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private OutboundMessageFactory _outboundMessageFactory;
 
 }

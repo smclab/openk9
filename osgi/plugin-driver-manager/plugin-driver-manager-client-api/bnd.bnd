@@ -3,4 +3,3 @@ Bundle-SymbolicName: io.openk9.plugin.driver.manager.client.api
 
 Export-Package: io.openk9.plugin.driver.manager.client.api
 
--include: ${project.rootDir}/osgi/common.bnd

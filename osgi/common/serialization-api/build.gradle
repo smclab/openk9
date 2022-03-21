@@ -1,4 +1,0 @@
-dependencies {
-	compile libraries.vavr
-	compile libraries.reactor
-}

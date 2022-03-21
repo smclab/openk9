@@ -75,7 +75,7 @@ public class ConsulRegisterNode implements Supplier<String> {
 			.join();
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ConsulClient _consulClient;
 
 	private volatile String _name;

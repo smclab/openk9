@@ -1,9 +1,0 @@
-dependencies {
-	compile project(':osgi:web:http-api')
-	compile libraries.vertx_core
-	compile libraries.vertx_consul_client
-	compile libraries.osgi
-	compile libraries.slf4j_api
-	compile libraries.metatype
-	compile libraries.osgi_cmpn
-}

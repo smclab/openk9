@@ -14,4 +14,3 @@ Import-Package: !org.apache.commons.lang3
 
 -fixupmessages: Classes found in the wrong directory: ...;is:=ignore
 
--include: ${project.rootDir}/osgi/common.bnd

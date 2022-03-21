@@ -101,7 +101,7 @@ public class DocumentTypeFactoryCustomizerHandle {
 		DocumentTypeFactoryCustomizer, DocumentTypeFactoryCustomizer>
 			_serviceTracker;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DocumentTypeProvider _documentTypeProvider;
 
 }

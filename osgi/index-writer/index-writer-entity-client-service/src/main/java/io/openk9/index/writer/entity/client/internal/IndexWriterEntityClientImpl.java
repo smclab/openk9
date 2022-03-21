@@ -88,9 +88,9 @@ public class IndexWriterEntityClientImpl implements IndexWriterEntityClient {
 
 	private HttpClient _indexWriterHttpClient;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpClientFactory _httpClientFactory;
 }

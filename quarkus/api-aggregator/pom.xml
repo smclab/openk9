@@ -5,12 +5,13 @@
 	<parent>
 		<artifactId>quarkus</artifactId>
 		<groupId>io.openk9</groupId>
-		<version>0.0.1</version>
+		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>api-aggregator</artifactId>
+	<name>OpenK9 :: Quarkus :: Api Aggregator</name>
 
 	<build>
 		<plugins>

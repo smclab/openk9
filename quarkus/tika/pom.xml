@@ -5,9 +5,11 @@
 	<parent>
 		<artifactId>quarkus</artifactId>
 		<groupId>io.openk9</groupId>
-		<version>0.0.1</version>
+		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
+
+	<name>OpenK9 :: Quarkus :: Tika</name>
 
 	<modelVersion>4.0.0</modelVersion>
 

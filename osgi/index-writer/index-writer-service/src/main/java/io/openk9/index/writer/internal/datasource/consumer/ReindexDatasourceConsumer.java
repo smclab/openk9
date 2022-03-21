@@ -113,13 +113,13 @@ public class ReindexDatasourceConsumer {
 
 	private Disposable _disposable;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private PluginDriverManagerClient _pluginDriverManagerClient;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DatasourceEventConsumer _datasourceEventConsumer;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
 	private static final Logger _log =

@@ -204,7 +204,7 @@ public class JsonFactoryImpl implements JsonFactory {
 			_objectMapperProvider.getObjectMapper().valueToTree(object));
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ObjectMapperProvider _objectMapperProvider;
 
 }

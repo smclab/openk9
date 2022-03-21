@@ -1,7 +1,7 @@
 Bundle-Name: [OpenK9 - Third Party] Caffeine
 Bundle-SymbolicName: io.openk9.third.party.caffeine
 
--include: ${project.rootDir}/osgi/common.bnd
+
 
 Export-Package: \
  com.github.benmanes.caffeine,\

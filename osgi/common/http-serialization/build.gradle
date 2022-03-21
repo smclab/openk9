@@ -1,8 +1,0 @@
-dependencies {
-
-    compile project(':osgi:common:serialization-api')
-    compile project(':osgi:web:http-api')
-
-
-
-}

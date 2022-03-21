@@ -1,5 +1,0 @@
-dependencies {
-	compile libraries.caffeine
-	compile libraries.checkerframework_checker_qual
-	compile libraries.google_errorprone_error_prone_annotations
-}

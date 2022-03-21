@@ -3,4 +3,4 @@ Bundle-SymbolicName: io.openk9.model
 
 Export-Package: io.openk9.model
 
--include: ${project.rootDir}/osgi/common.bnd
+

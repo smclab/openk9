@@ -11,4 +11,3 @@ Import-Package: *;resolution:=optional
 
 -fixupmessages: Classes found in the wrong directory: ...;is:=ignore
 
--include: ${project.rootDir}/osgi/common.bnd

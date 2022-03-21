@@ -6,4 +6,3 @@ Include-Resource: \
  @simpleclient-*.jar,\
  @simpleclient_common-*.jar
 
--include: ${project.rootDir}/osgi/common.bnd

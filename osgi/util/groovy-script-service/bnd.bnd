@@ -1,7 +1,0 @@
-Bundle-Name: [OpenK9] Groovy Script Service
-Bundle-SymbolicName: io.openk9.util.script.groovy.service
-Require-Bundle: groovy
-
-DynamicImport-Package: *
-
--include: ${project.rootDir}/osgi/common.bnd

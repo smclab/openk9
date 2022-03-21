@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <parent>
+    <groupId>io.openk9</groupId>
+    <artifactId>openk9</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
   <modelVersion>4.0.0</modelVersion>
-  <groupId>io.openk9</groupId>
+  <name>OpenK9 :: Quarkus</name>
   <artifactId>quarkus</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
     <module>ingestion</module>
@@ -16,9 +24,6 @@
     <module>resources-validator</module>
   </modules>
   <properties>
-    <compiler-plugin.version>3.8.1</compiler-plugin.version>
-    <dependency.version.lombok>1.18.10</dependency.version.lombok>
-    <dependency.version.mapstruct>1.4.2.Final</dependency.version.mapstruct>
     <failsafe.useModulePath>false</failsafe.useModulePath>
     <jandex-maven-plugin.version>1.2.2</jandex-maven-plugin.version>
     <maven.compiler.release>11</maven.compiler.release>
@@ -76,7 +81,6 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.22</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -103,24 +107,6 @@
               </goals>
             </execution>
           </executions>
-        </plugin>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>${compiler-plugin.version}</version>
-          <configuration>
-            <annotationProcessorPaths>
-              <path>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${dependency.version.lombok}</version>
-              </path>
-              <path>
-                <groupId>org.mapstruct</groupId>
-                <artifactId>mapstruct-processor</artifactId>
-                <version>${dependency.version.mapstruct}</version>
-              </path>
-            </annotationProcessorPaths>
-          </configuration>
         </plugin>
         <plugin>
           <groupId>io.quarkus</groupId>

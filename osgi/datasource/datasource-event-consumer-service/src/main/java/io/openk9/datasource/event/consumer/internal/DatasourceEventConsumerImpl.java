@@ -44,10 +44,10 @@ public class DatasourceEventConsumerImpl implements DatasourceEventConsumer {
 		);
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ReceiverReactor _receiverReactor;
 
 	private static final String DATASOURCE = Datasource.class.getSimpleName();

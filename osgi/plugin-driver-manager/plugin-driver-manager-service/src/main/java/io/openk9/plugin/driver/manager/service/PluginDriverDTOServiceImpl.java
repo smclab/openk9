@@ -141,10 +141,10 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 		return SearchKeywordDTO.Type.TEXT;
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private PluginDriverRegistry _pluginDriverRegistry;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DocumentTypeProvider _documentTypeProvider;
 
 }

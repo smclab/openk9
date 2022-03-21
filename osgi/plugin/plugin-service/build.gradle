@@ -1,9 +1,0 @@
-dependencies {
-	compile project(":osgi:plugin:plugin-api")
-	compile project(":osgi:common:common-api")
-	compile project(":osgi:common:osgi-api")
-	compile project(':osgi:web:http-api')
-	compile project(':osgi:common:reactory-netty-util')
-
-	compile libraries.slf4j_api
-}

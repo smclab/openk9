@@ -43,7 +43,7 @@ public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 	}
 
 	@Override
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	public void setRestHighLevelClientProvider(
 		RestHighLevelClientProvider restHighLevelClientProvider) {
 		super.setRestHighLevelClientProvider(restHighLevelClientProvider);

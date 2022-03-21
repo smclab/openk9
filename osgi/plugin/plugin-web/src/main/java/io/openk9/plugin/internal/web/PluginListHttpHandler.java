@@ -49,7 +49,7 @@ public class PluginListHttpHandler
 			httpResponse, _pluginInfoProvider.getPluginInfoList());
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private PluginInfoProvider _pluginInfoProvider;
 
 	@Reference(target = "(type=json)")

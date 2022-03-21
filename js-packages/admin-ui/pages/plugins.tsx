@@ -82,6 +82,8 @@ function AddModal({
 
   if (!visible) return null;
 
+  
+
   function handleDrag(e: React.DragEvent) {
     e.preventDefault();
     console.log(e);

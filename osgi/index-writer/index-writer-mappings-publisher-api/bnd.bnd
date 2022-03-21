@@ -3,4 +3,3 @@ Bundle-SymbolicName: io.openk9.index.writer.mappings.publisher.api
 
 Export-Package: io.openk9.index.writer.mappings.publisher.api
 
--include: ${project.rootDir}/osgi/common.bnd

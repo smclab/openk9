@@ -121,10 +121,10 @@ public class IndexImpl implements Index {
 				requestFunction.apply(_docWriteRequestFactory)));
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DocWriteRequestFactory _docWriteRequestFactory;
 
 }

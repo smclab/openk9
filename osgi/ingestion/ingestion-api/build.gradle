@@ -1,5 +1,0 @@
-dependencies {
-	compile project(":osgi:common:osgi-api")
-
-	compile libraries.reactor
-}

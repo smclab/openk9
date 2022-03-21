@@ -18,7 +18,6 @@ Build Latest Index Writer Docker Images:
       - osgi/index-writer/**/*
       - osgi/search/search-client-api/**/*
       - osgi/search/search-client-service/**/*
-      - osgi/search/search-client-metrics/**/*
       - osgi/search/search-client-writer/**/*
       - osgi/metrics/metrics-api/**/*
       - osgi/metrics/metrics-service/**/*
@@ -43,7 +42,6 @@ Build Latest Index Writer Docker Images:
       - osgi/web/http-api/**/*
       - osgi/web/http-service/**/*
       - osgi/web/http-bundle-ext/**/*
-      - osgi/web/open-api/**/*
       - osgi/datasource/datasource-client-api/**/*
       - osgi/datasource/datasource-client-service/**/*
       - osgi/plugin-driver-manager/plugin-driver-manager-client-api/**/*

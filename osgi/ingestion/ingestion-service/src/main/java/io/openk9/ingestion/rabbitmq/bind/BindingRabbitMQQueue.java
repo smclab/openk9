@@ -79,7 +79,7 @@ public class BindingRabbitMQQueue {
 	@Reference(target = "(rabbit=sender)")
 	private Supplier<Sender> _senderProvider;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ReceiverReactor _receiverReactor;
 
 }

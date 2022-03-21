@@ -3,4 +3,4 @@ Bundle-SymbolicName: io.openk9.json.api
 
 Export-Package: io.openk9.json.*, io.openk9.cbor.*
 
--include: ${project.rootDir}/osgi/common.bnd
+

@@ -149,16 +149,16 @@ public class InsertIndexWriter {
 
 	private Disposable _disposable;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ReceiverReactor _receiverReactor;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private IndexBus _indexBus;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private Search _search;
 
 	@Reference(

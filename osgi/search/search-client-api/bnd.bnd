@@ -5,17 +5,18 @@ Include-Resource: \
  @elasticsearch-*.jar
 
 Export-Package: \
- org.elasticsearch.*, \
- org.apache.lucene.*, \
- org.apache.http.*, \
- org.joda.time, \
- org.joda.time.format, \
- com.carrotsearch.*, \
+ org.elasticsearch.*;-split-package:=merge-last , \
+ org.apache.lucene.*;-split-package:=merge-last , \
+ org.apache.http.*;-split-package:=merge-last , \
+ org.joda.time;-split-package:=merge-last, \
+ org.joda.time.format;-split-package:=merge-last, \
+ com.carrotsearch.*;-split-package:=merge-last , \
  io.openk9.search.client.api, \
  io.openk9.search.client.api.*
+
+-split-package:=merge-first
 
 Import-Package: *;resolution:=optional
 
 -fixupmessages: Classes found in the wrong directory: ...;is:=ignore
 
--include: ${project.rootDir}/osgi/common.bnd

@@ -51,10 +51,10 @@ public class SendToQueue {
 	)
 	private BundleSender _bundleSender;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private IngestionLogic _ingestionLogicReceiver;
 
 }

@@ -3,4 +3,3 @@ Bundle-SymbolicName: io.openk9.http.bundle.ext
 
 Bundle-Activator: io.openk9.http.bundle.ext.HttpBundleExtender
 
--include: ${project.rootDir}/osgi/common.bnd

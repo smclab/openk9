@@ -74,7 +74,7 @@ public class SearchRequestFactoryImpl implements SearchRequestFactory {
 
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ElasticSearchConfiguration _elasticSearchConfiguration;
 
 }

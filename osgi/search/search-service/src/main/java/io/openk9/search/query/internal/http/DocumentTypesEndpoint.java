@@ -132,13 +132,13 @@ public class DocumentTypesEndpoint
 
  	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpResponseWriter _httpResponseWriter;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DatasourceClient _datasourceClient;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private PluginDriverManagerClient _pluginDriverManagerClient;
 
 	private static final Logger _log = LoggerFactory.getLogger(

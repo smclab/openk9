@@ -1,4 +1,3 @@
 Bundle-Name: [OpenK9] Plugin Web
 Bundle-SymbolicName: io.openk9.plugin.web
 
--include: ${project.rootDir}/osgi/common.bnd

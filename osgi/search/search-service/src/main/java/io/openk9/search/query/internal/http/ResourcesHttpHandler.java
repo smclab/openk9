@@ -234,19 +234,19 @@ public class ResourcesHttpHandler implements RouterHandler {
 
 	private Instant lastModifiedDate;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DatasourceClient _datasourceClient;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private Search _search;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private PluginDriverManagerClient _pluginDriverManagerClient;
 
 	@Reference(target = "(component.name=io.openk9.auth.query.parser.AuthQueryParser)")
 	private QueryParser _queryParser;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
 	private static final String _RESOURCES_BINARIES_CONTENT_TYPE =

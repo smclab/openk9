@@ -44,7 +44,7 @@ public class DataComponentTemplateInitializer extends
 	}
 
 	@Override
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	public void setComponentTemplateService(
 		ComponentTemplateService componentTemplateService) {
 		super.setComponentTemplateService(componentTemplateService);

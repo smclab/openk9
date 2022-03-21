@@ -152,7 +152,7 @@ public class ConsulConfigurationInitializer {
 
 	private ServiceTracker<Object, Object> _serviceTracker;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private volatile ConsulClient _consulClient;
 
 	@Reference(
@@ -160,7 +160,7 @@ public class ConsulConfigurationInitializer {
 	)
 	private volatile Supplier<String> _serviceNameSupplier;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ConfigurationAdmin _configurationAdmin;
 
 	private static final Logger _log = LoggerFactory.getLogger(

@@ -1,6 +1,0 @@
-dependencies {
-	compile project(':osgi:web:http-api')
-	compile project(":osgi:plugin-driver-manager:plugin-driver-manager-model")
-
-	compile libraries.elasticsearch
-}

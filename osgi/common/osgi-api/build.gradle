@@ -1,3 +1,0 @@
-dependencies {
-	compile libraries.slf4j_api
-}

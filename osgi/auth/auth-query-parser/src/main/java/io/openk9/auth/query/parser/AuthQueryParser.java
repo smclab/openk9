@@ -90,7 +90,7 @@ public class AuthQueryParser implements QueryParser {
 	)
 	private List<ACLQueryContributor> _aclQueryParsers;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private AuthVerifier _authVerifier;
 
 	private static final Consumer<BoolQueryBuilder> _NOTHING = ignore -> {};

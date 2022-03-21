@@ -1,4 +1,3 @@
 Bundle-Name: [OpenK9] Http Service
 Bundle-SymbolicName: io.openk9.http.service
 
--include: ${project.rootDir}/osgi/common.bnd

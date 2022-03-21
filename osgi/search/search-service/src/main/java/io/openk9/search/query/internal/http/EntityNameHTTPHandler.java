@@ -117,16 +117,16 @@ public class EntityNameHTTPHandler
 		return searchRequest.source(searchSourceBuilder);
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DatasourceClient _datasourceClient;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private SearchRequestFactory _searchRequestFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private Search _search;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpResponseWriter _httpResponseWriter;
 
 }

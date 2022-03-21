@@ -63,10 +63,10 @@ public class SearchImpl implements Search {
 		return Mono.defer(() -> searchRequestBuilderFunction.apply(_searchRequestFactory).flatMap(this::search));
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private SearchRequestFactory _searchRequestFactory;
 
 	private static final Object _EMPTY_OBJECT = new Object();

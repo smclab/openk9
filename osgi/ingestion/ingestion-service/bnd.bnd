@@ -7,6 +7,6 @@ Include-Resource: \
 
 Import-Package: *;resolution:=optional
 
--include: ${project.rootDir}/osgi/common.bnd
+
 
 -metatype: io.openk9.ingestion.rabbitmq.configuration.BindingRabbitMQConfiguration

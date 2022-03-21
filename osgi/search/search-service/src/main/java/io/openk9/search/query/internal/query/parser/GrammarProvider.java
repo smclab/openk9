@@ -142,10 +142,10 @@ public class GrammarProvider {
 	)
 	private List<Annotator> _annotatorList;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
 }

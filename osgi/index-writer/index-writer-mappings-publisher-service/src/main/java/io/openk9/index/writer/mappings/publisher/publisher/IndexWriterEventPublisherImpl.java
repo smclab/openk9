@@ -47,13 +47,13 @@ public class IndexWriterEventPublisherImpl implements
 
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private SenderReactor _senderReactor;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private OutboundMessageFactory _outboundMessageFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
 	@Reference(target = "(component.name=io.openk9.index.writer.mappings.pub.sub.binding.MappingsBinding)")

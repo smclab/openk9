@@ -1,4 +1,0 @@
-dependencies {
-	compile libraries.osgi
-	compile libraries.slf4j_api
-}

@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Groovy Script Web
-Bundle-SymbolicName: io.openk9.util.script.groovy.web
-Require-Bundle: groovy
-
--include: ${project.rootDir}/osgi/common.bnd

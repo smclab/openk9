@@ -87,41 +87,41 @@ public class SearchByDatasourceHTTPHandler extends BaseSearchHTTPHandler {
 		super.removeQueryParser(queryParser);
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	@Override
 	protected void setDatasourceClient(
 		DatasourceClient datasourceClient) {
 		super.setDatasourceClient(datasourceClient);
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	@Override
 	protected void setSearch(Search search) {
 		super.setSearch(search);
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	@Override
 	protected void setSearchTokenizer(
 		SearchTokenizer searchTokenizer) {
 		super.setSearchTokenizer(searchTokenizer);
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	@Override
 	protected void setPluginDriverManagerClient(
 		PluginDriverManagerClient pluginDriverManagerClient) {
 		super.setPluginDriverManagerClient(pluginDriverManagerClient);
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	@Override
 	protected void setJsonFactory(JsonFactory jsonFactory) {
 		super.setJsonFactory(jsonFactory);
 	}
 
 	@Override
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	protected void setHttpResponseWriter(
 		HttpResponseWriter httpResponseWriter) {
 		super.setHttpResponseWriter(httpResponseWriter);

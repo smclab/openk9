@@ -64,13 +64,13 @@ public class RabbitGOGOCommand {
 					delivery.getProperties().toString())));
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private OutboundMessageFactory _outboundMessageFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ReceiverReactor _receiver;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private SenderReactor _sender;
 
 	private static final Logger _log = LoggerFactory.getLogger(

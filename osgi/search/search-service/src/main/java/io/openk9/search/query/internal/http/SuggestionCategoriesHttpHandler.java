@@ -67,10 +67,10 @@ public class SuggestionCategoriesHttpHandler
 
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DatasourceClient _datasourceClient;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpResponseWriter _httpResponseWriter;
 
 }

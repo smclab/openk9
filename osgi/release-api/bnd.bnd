@@ -1,4 +1,4 @@
 Bundle-Name: [OpenK9] Release Api
 Bundle-SymbolicName: io.openk9.release.api
 
--include: ${project.rootDir}/osgi/common.bnd
+Export-Package: *;-split-package:=merge-last

@@ -1,7 +1,7 @@
 Bundle-Name: [OpenK9] Ingestion Queue
 Bundle-SymbolicName: io.openk9.ingestion.queue
 
--include: ${project.rootDir}/osgi/common.bnd
+
 
 Rabbit-Exchange: io.openk9.ingestion.topic
 Rabbit-Routing-Key: io.openk9.ingestion

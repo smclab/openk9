@@ -84,7 +84,7 @@ public class DatasourceEventBinding {
 	private static final Set<String> _EVENT_TYPES =
 		Set.of("UPDATE", "INSERT", "DELETE", Constants.ALL_OCCURRENCE);
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private BindingRegistry _bindingRegistry;
 
 }

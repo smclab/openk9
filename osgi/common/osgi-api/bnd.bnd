@@ -3,4 +3,3 @@ Bundle-SymbolicName: io.openk9.osgi.api
 
 Export-Package: io.openk9.osgi.*
 
--include: ${project.rootDir}/osgi/common.bnd

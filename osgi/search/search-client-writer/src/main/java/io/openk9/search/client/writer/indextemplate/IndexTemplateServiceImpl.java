@@ -122,7 +122,7 @@ public class IndexTemplateServiceImpl implements IndexTemplateService {
 		}
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
 	private static final Logger _log = LoggerFactory.getLogger(

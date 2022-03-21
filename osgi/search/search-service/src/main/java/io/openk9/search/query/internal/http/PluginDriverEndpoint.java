@@ -58,10 +58,10 @@ public class PluginDriverEndpoint
 
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpResponseWriter _httpResponseWriter;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private PluginDriverManagerClient _pluginDriverManagerClient;
 
 }

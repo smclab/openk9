@@ -1,4 +1,0 @@
-dependencies {
-	compile project(':osgi:ingestion:ingestion-api')
-	compile project(":osgi:index-writer:index-writer-model")
-}

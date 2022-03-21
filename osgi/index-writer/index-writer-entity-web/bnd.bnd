@@ -1,4 +1,3 @@
 Bundle-Name: [OpenK9] Index Writer Entity Web
 Bundle-SymbolicName: io.openk9.index.writer.entity.web
 
--include: ${project.rootDir}/osgi/common.bnd

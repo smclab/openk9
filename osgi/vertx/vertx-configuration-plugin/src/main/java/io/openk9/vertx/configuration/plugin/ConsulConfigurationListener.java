@@ -200,7 +200,7 @@ public class ConsulConfigurationListener {
 
 	private ScheduledExecutorService _executorService;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ConsulClient _consulClient;
 
 	@Reference(
@@ -208,7 +208,7 @@ public class ConsulConfigurationListener {
 	)
 	private Supplier<String> _serviceNameSupplier;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ConfigurationAdmin _configurationAdmin;
 
 	private static final Logger _log = LoggerFactory.getLogger(

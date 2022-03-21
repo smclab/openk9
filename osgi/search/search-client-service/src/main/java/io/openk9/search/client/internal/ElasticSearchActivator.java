@@ -115,7 +115,7 @@ public class ElasticSearchActivator {
 	private final List<AutoCloseables.AutoCloseableSafe> _registrationList =
 		new ArrayList<>();
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ElasticSearchConfiguration _elasticSearchConfiguration;
 
 }

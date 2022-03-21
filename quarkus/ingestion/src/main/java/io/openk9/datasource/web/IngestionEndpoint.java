@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -67,6 +68,7 @@ public class IngestionEndpoint {
 	}
 
 	@Channel("ingestion")
+	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
 	Emitter<IngestionPayload> _emitter;
 
 	@Data
@@ -112,6 +114,7 @@ public class IngestionEndpoint {
 	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor(staticName = "of")
+	@RegisterForReflection
 	public static class IngestionDTO {
 		private long datasourceId;
 		private String contentId;
@@ -125,6 +128,7 @@ public class IngestionEndpoint {
 	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor(staticName = "of")
+	@RegisterForReflection
 	public static class ResourcesDTO {
 		private List<BinaryDTO> binaries;
 	}
@@ -134,6 +138,7 @@ public class IngestionEndpoint {
 	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor(staticName = "of")
+	@RegisterForReflection
 	public static class BinaryDTO {
 		private String id;
 		private String name;

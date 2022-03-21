@@ -3,4 +3,3 @@ Bundle-SymbolicName: io.openk9.plugin.driver.manager.service
 
 Import-Package: org.reactivestreams, *
 
--include: ${project.rootDir}/osgi/common.bnd

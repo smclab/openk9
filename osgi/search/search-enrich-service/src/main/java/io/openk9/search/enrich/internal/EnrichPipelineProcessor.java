@@ -189,10 +189,10 @@ public class EnrichPipelineProcessor {
 
 	private AutoCloseables.AutoCloseableSafe _autoCloseableSafe;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private CBORFactory _cborFactory;
 
 	@Reference(
@@ -200,7 +200,7 @@ public class EnrichPipelineProcessor {
 	)
 	private BundleReceiver _bundleReceiver;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private StartEnrichProcessor _startEnrichProcessor;
 
 	private static final Logger _log = LoggerFactory.getLogger(

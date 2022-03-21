@@ -109,7 +109,7 @@ public class DocumentTypeFactoryRegistryAwareInterceptor {
 		DocumentTypeFactoryRegistryAware, AutoCloseables.AutoCloseableSafe>
 			_serviceTracker;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DocumentTypeFactoryRegistry _documentTypeFactoryRegistry;
 
 }

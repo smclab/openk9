@@ -1,6 +1,3 @@
 Bundle-Name: [OpenK9] Datasource Event Consumer Service
 Bundle-SymbolicName: io.openk9.datasource.event.consumer.service
-
--include: ${project.rootDir}/osgi/common.bnd
-
-Include-Resource: @io.openk9.datasource.event.configuration-*.jar
+Include-Resource: @datasource-event-configuration-*.jar

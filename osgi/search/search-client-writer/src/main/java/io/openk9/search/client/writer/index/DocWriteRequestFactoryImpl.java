@@ -94,7 +94,7 @@ public class DocWriteRequestFactoryImpl implements DocWriteRequestFactory {
 				tenantId, _elasticSearchConfiguration.getEntityIndex()), id);
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private ElasticSearchConfiguration _elasticSearchConfiguration;
 
 }

@@ -3,4 +3,3 @@ Bundle-SymbolicName: io.openk9.ingestion.logic.api
 
 Export-Package: io.openk9.ingestion.logic.api
 
--include: ${project.rootDir}/osgi/common.bnd

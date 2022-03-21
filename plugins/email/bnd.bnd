@@ -1,7 +1,6 @@
 Bundle-Name: [OpenK9 - Plugin] Email
 Bundle-SymbolicName: io.openk9.plugins.email
 
--include: ${project.rootDir}/osgi/common.bnd
 
 OpenK9-Plugin: true
 OpenK9-Plugin-Web-Id: email-datasource

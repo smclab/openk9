@@ -1,5 +1,0 @@
-dependencies {
-	compile libraries.reactor_netty
-	compile libraries.vavr
-	compile project(":osgi:web:http-api")
-}

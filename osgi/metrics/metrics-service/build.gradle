@@ -1,4 +1,0 @@
-dependencies {
-	compile project(":osgi:metrics:metrics-api")
-	compile project(':osgi:web:http-api')
-}

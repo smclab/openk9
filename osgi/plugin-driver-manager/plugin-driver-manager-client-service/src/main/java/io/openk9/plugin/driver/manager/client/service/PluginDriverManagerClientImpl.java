@@ -139,10 +139,10 @@ public class PluginDriverManagerClientImpl
 
 	private HttpClient _pluginDriverManagerClient;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private HttpClientFactory _httpClientFactory;
 
 }

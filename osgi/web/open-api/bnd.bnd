@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Rest API Doc
-Bundle-SymbolicName: io.openk9.documentation
-
-Export-Package: io.openk9.documentation.model
-
--include: ${project.rootDir}/osgi/common.bnd

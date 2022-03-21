@@ -43,7 +43,7 @@ public class MetricsIndexTemplateInitializer extends
 	}
 
 	@Override
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	public void setIndexTemplateService(
 		IndexTemplateService indexTemplateService) {
 		super.setIndexTemplateService(indexTemplateService);

@@ -5,4 +5,3 @@ Export-Package: io.openk9.search.api.*, io.openk9.search.api.query.parser
 
 Import-Package: org.reactivestreams, *
 
--include: ${project.rootDir}/osgi/common.bnd

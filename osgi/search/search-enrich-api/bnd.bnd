@@ -5,4 +5,3 @@ Export-Package: io.openk9.search.enrich.api, io.openk9.search.enrich.api.dto
 
 Import-Package: org.reactivestreams, *
 
--include: ${project.rootDir}/osgi/common.bnd

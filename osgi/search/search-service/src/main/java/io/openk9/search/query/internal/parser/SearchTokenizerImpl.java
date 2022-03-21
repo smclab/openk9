@@ -39,7 +39,7 @@ public class SearchTokenizerImpl implements SearchTokenizer {
 		return jsonFactory.fromJson(query, SearchRequest.class);
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	protected JsonFactory jsonFactory;
 
 }

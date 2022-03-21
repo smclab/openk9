@@ -5,4 +5,3 @@ Rabbit-Exchange: io.openk9.ingestion.topic
 Rabbit-Routing-Key: io.openk9.ingestion.datasource.plugin-driver-manager
 Rabbit-Queue: data-ingestion
 
--include: ${project.rootDir}/osgi/common.bnd

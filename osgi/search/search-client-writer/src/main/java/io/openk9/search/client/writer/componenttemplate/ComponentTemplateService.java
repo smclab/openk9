@@ -58,7 +58,7 @@ public class ComponentTemplateService {
 		}
 	}
 
-	@Reference
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private RestHighLevelClientProvider _restHighLevelClientProvider;
 
 	private static final Logger _log = LoggerFactory.getLogger(
