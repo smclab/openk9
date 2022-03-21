@@ -74,6 +74,7 @@
 							<image>${base.docker.image.name}</image>
 							<tags>
 								<tag>latest</tag>
+								<tag>${project.version}</tag>
 							</tags>
 						</to>
 						<container>

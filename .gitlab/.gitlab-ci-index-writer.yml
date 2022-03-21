@@ -54,7 +54,7 @@ Build Latest Index Writer Docker Images:
   script:
     - ./mvnw install -pl bom -am $MAVEN_CLI_OPTS
     - ./mvnw install -pl assemblies/index-writer/index-writer-kar -am $MAVEN_CLI_OPTS
-    - ./mvnw --file assemblies/index-writer/index-writer-karaf package jib:build -Djib.to.image=registry.smc.it:49083/openk9/index-writer -Djib.to.auth.username=$CI_REGISTRY_NAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
+    - ./mvnw --file assemblies/index-writer/index-writer-karaf package jib:build -Djib.to.image=$CI_REGISTRY_NAME/openk9/index-writer -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-index-writer" -F ref=master $DEV_TRIGGER_URL
   cache:
