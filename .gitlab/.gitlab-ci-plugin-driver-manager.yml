@@ -56,7 +56,7 @@ Build Latest Plugin Driver Manager Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw install -pl pom
+    - ./mvnw install -pl bom
     - ./mvnw install -pl assemblies/plugin-driver-manager/plugin-driver-manager-kar
     - ./mvnw --file assemblies/plugin-driver-manager/plugin-driver-manager-karaf package jib:build -Djib.to.image=registry.smc.it:49083/openk9/plugin-driver-manager -Djib.to.auth.username=$CI_REGISTRY_NAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
   after_script:

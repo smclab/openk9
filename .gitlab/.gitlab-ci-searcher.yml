@@ -46,7 +46,7 @@ Build Latest Searcher Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw install -pl pom
+    - ./mvnw install -pl bom
     - ./mvnw install -pl assemblies/searcher/searcher-kar
     - ./mvnw --file assemblies/searcher/searcher-karaf package jib:build -Djib.to.image=registry.smc.it:49083/openk9/searcher -Djib.to.auth.username=$CI_REGISTRY_NAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
   after_script:

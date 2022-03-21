@@ -51,7 +51,7 @@ Build Latest Index Writer Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw install -pl pom
+    - ./mvnw install -pl bom
     - ./mvnw install -pl assemblies/index-writer/index-writer-kar
     - ./mvnw --file assemblies/index-writer/index-writer-karaf package jib:build -Djib.to.image=registry.smc.it:49083/openk9/index-writer -Djib.to.auth.username=$CI_REGISTRY_NAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
   after_script:
