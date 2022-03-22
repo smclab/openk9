@@ -39,7 +39,6 @@
 	</modules>
 
 	<properties>
-		<karaf.version>4.3.5</karaf.version>
 		<base.docker.image.name>smclab/openk9-${artifactId}:${project.version}</base.docker.image.name>
 		<base.from.image>eclipse-temurin:17.0.1_12-jre-alpine</base.from.image>
 	</properties>
