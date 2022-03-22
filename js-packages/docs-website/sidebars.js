@@ -1,7 +1,17 @@
 module.exports = {
   sidebar: {
     OpenK9: ["intro", "standalone-app", "headless-api"],
-    "Getting Started": ["using-docker"],
+    "Getting Started": ["using-docker",
+          {
+            "type": "category",
+            "label": "Getting Started using Kubernetes",
+            "items": [
+                            "kubernetes-configuration",
+                            "openk9-prerequisites",
+                            "kubernetes-openk9-core"
+                    ]
+                    },
+          "keycloak-configuration", "openk9-configuration"],
     "OSGi project": [
     "osgi-requirements",
     "deploy-osgi-project",
