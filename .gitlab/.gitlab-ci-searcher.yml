@@ -43,6 +43,7 @@ Build Latest Searcher Docker Images:
       - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
       - osgi/third-party/caffeine/**/*
       - osgi/vertx/**/*
+      - assemblies/searcher/**/*
       - .gitlab/.gitlab-ci-searcher.yml
   except:
     - schedules

@@ -53,6 +53,7 @@ Build Latest Plugin Driver Manager Docker Images:
       - plugins/js-enrich-plugin/**/*
       - osgi/entity-manager/**/*
       - osgi/vertx/**/*
+      - assemblies/plugin-driver-manager/**/*
       - .gitlab/.gitlab-ci-plugin-driver-manager.yml
   except:
     - schedules

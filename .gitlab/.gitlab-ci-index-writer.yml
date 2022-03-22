@@ -48,6 +48,7 @@ Build Latest Index Writer Docker Images:
       - osgi/plugin-driver-manager/plugin-driver-manager-client-service/**/*
       - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
       - osgi/vertx/**/*
+      - assemblies/index-writer/**/*
       - .gitlab/.gitlab-ci-index-writer.yml
   except:
     - schedules
