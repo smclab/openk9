@@ -13,12 +13,12 @@ Prerequisites are described in [`OSGi project requirements`](/docs/osgi-requirem
 
 A complete example is present at the link https://github.com/smclab/openk9-example-java-datasource
 
-To create a new plugin with Java you need to have a gradle project with this structure:
+To create a new plugin with Java you need to have a maven project with this structure:
 
 ```
 example-datasource/
 ├── bnd.bnd
-├── build.gradle
+├── pom.xml
 └── src
     └── main
         └── java
@@ -45,33 +45,68 @@ Bundle-Version: 0.0.1
 
 -noimportjava: true
 ```
-- `build.gradle` defines java dependencies and adds bndtools plugin
+- `pom.xml` defines java dependencies and adds bndtools plugin
 ```aidl
-buildscript {
-	repositories {
-		maven {
-			url "https://plugins.gradle.org/m2/"
-		}
-	}
-	dependencies {
-		classpath "biz.aQute.bnd:biz.aQute.bnd.gradle:5.2.0"
-	}
-}
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-apply plugin: 'java'
-apply plugin: 'biz.aQute.bnd.builder'
+	<!--
+		Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
 
-sourceCompatibility = 11
-targetCompatibility = 11
+		This program is free software: you can redistribute it and/or modify
+		it under the terms of the GNU Affero General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		(at your option) any later version.
 
-repositories {
-	mavenLocal()
-	mavenCentral()
-}
+		This program is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU Affero General Public License for more details.
 
-dependencies {
-	compile 'io.openk9:io.openk9.release.api:OPENK9_VERSION'
-}
+		You should have received a copy of the GNU Affero General Public License
+		along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	-->
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+      <groupId>io.openk9.plugins</groupId>
+      <artifactId>plugins</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
+	<artifactId>example</artifactId>
+	<packaging>jar</packaging>
+	<name>OpenK9 :: Plugins :: Example</name>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.openk9.osgi</groupId>
+			<artifactId>release-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.component.annotations</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>biz.aQute.bnd</groupId>
+				<artifactId>bnd-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
 ```
 
 ### Driver Definition
