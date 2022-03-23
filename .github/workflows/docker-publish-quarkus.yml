@@ -39,36 +39,30 @@ jobs:
       - name: Build and Push Entity Manager
         run: |
           cd quarkus
-          ./mvnw install
-          ./mvnw package -pl entity-manager -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
+          ./mvnw package --batch-mode -pl entity-manager -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
 
       - name: Build and Push Datasource
         run: |
           cd quarkus
-          ./mvnw install
-          ./mvnw package -pl datasource -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
+          ./mvnw package --batch-mode -pl datasource -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
 
       - name: Build and Push Ingestion
         run: |
           cd quarkus
-          ./mvnw install
-          ./mvnw package -pl ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
+          ./mvnw package --batch-mode -pl ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
 
 
       - name: Build and Push Api Aggregator
         run: |
           cd quarkus
-          ./mvnw install
-          ./mvnw package -pl api-aggregator -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
+          ./mvnw package --batch-mode -pl api-aggregator -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
 
       - name: Build and Push Tika No Ocr
         run: |
           cd quarkus
-          ./mvnw install
-          ./mvnw -f tika package -pl tika-no-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
+          ./mvnw -f tika package --batch-mode -pl tika-no-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
 
       - name: Build and Push Tika Ocr
         run: |
           cd quarkus
-          ./mvnw install
-          ./mvnw -f tika package -pl tika-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
+          ./mvnw -f tika package --batch-mode -pl tika-ocr -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab -Dquarkus.container-image.tag=latest
