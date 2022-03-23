@@ -95,8 +95,8 @@ trigger_deploy_searcher:
       - osgi/vertx/**/*
       - assemblies/searcher/**/*
       - .gitlab/.gitlab-ci-searcher.yml
-    except:
-      - schedules
+  except:
+    - schedules
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:

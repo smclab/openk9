@@ -104,8 +104,8 @@ trigger_deploy_index_writer:
       - osgi/vertx/**/*
       - assemblies/index-writer/**/*
       - .gitlab/.gitlab-ci-index-writer.yml
-    except:
-      - schedules
+  except:
+    - schedules
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
