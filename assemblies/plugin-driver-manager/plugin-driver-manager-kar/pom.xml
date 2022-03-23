@@ -583,43 +583,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>io.openk9.plugins.web</groupId>
-			<artifactId>generic</artifactId>
-			<version>${project.version}</version>
-			<scope>runtime</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.openk9.plugins.web</groupId>
-			<artifactId>sitemap</artifactId>
-			<version>${project.version}</version>
-			<scope>runtime</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.openk9.plugins</groupId>
-			<artifactId>email</artifactId>
-			<version>${project.version}</version>
-			<scope>runtime</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.dependencymanager</artifactId>
 			<version>4.6.0</version>
@@ -675,6 +638,50 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>base-plugins</id>
+			<dependencies>
+				<dependency>
+					<groupId>io.openk9.plugins.web</groupId>
+					<artifactId>generic</artifactId>
+					<version>${project.version}</version>
+					<scope>runtime</scope>
+					<exclusions>
+						<exclusion>
+							<groupId>*</groupId>
+							<artifactId>*</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
+				<dependency>
+					<groupId>io.openk9.plugins.web</groupId>
+					<artifactId>sitemap</artifactId>
+					<version>${project.version}</version>
+					<scope>runtime</scope>
+					<exclusions>
+						<exclusion>
+							<groupId>*</groupId>
+							<artifactId>*</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
+				<dependency>
+					<groupId>io.openk9.plugins</groupId>
+					<artifactId>email</artifactId>
+					<version>${project.version}</version>
+					<scope>runtime</scope>
+					<exclusions>
+						<exclusion>
+							<groupId>*</groupId>
+							<artifactId>*</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
 
 
 </project>
