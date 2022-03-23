@@ -17,6 +17,7 @@ public class SearchTokenDTO {
 	private String entityType;
 	private String tokenType;
 	private String keywordKey;
+	private String entityName;
 	private String[] values;
 	private Map<String, Object> extra;
 	private Boolean filter;
