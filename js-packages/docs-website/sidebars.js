@@ -11,7 +11,7 @@ module.exports = {
                             "kubernetes-openk9-core"
                     ]
                     },
-          "keycloak-configuration", "openk9-configuration"],
+          "keycloak-configuration", "openk9-configuration", "using-frontend"],
     "OSGi project": [
     "osgi-requirements",
     "deploy-osgi-project",

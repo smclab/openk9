@@ -16,7 +16,8 @@ To run OpenK9 under Docker you need to have installed:
 :::caution
 OpenK9 requires the use of Elasticsearch in Docker, which may require some specific OS–level configuration regarding swap memory.
 
-To learn more about using Elasticsearch in docker read the official article about [using Docker images in production](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-prod-prerequisites).
+To learn more about using Elasticsearch in docker read the official article about
+[using Docker images in production](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-prod-prerequisites).
 :::
 
 ### Clone the repository

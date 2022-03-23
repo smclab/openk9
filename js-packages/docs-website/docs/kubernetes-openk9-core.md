@@ -3,11 +3,12 @@ id: kubernetes-openk9-core
 title: Install Openk9 Core
 ---
 
-## INGESTION
+## Ingestion
 
-La componente "Ingestion" espone le API Rest attravero le quali i diversi "datasource" configurati forniscono le informazioni da indicizzare.
+The [Ingestion](ingestion) component exposes the Rest API through which the various "datasource" configured provide the information to be indexed.
 
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
 helm install ingestion 01-core-charts/openk9-ingestion \
@@ -15,29 +16,22 @@ helm install ingestion 01-core-charts/openk9-ingestion \
   -f 01-core-charts/openk9-ingestion/scenarios/local-runtime.yaml
 ```
 
+### Verify installation
 
-
-### Verifica installazione
-
-Verifico nei log di avvio del pod l'assenza di errori gravi
+Check the pod startup logs for the absence of serious errors
 
 ```bash
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-ingestion" -o name)
 ```
 
+Port forward the pod or service and request "http://localhost:8080/q/openapi" to get the api's yaml
 
+## Datasource
 
-Fare un port-forward del pod o del servizio e richiedere "http://localhost:8080/q/openapi" per ottenere lo yaml delle api
+The [Datasource](datasource) component represents the manager of the various indexed data sources.
 
-
-
-
-
-## DATASOURCE
-
-La componente "Datasource" rappresenta il gestore delle diverse fonte dati indicizzate.
-
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
 helm install datasource 01-core-charts/openk9-datasource \
@@ -45,27 +39,24 @@ helm install datasource 01-core-charts/openk9-datasource \
   -f 01-core-charts/openk9-datasource/scenarios/local-runtime.yaml
 ```
 
+### Verify installation
 
-
-### Verifica installazione
-
-Verifico nei log di avvio del pod l'assenza di errori gravi
+Check the pod startup logs for the absence of serious errors.
 
 ```bash
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-datasource" -o name)
 ```
 
-La componente "Dashboard" si auto-registra all'interno di Consul. Accedendo alla [dashboard](#consul-dashboard) dovremmo vedere il nostro componente tra i servizi.
+"Dashboard" component self-registers within Consul.
+By accessing the [dashboard](#consul-dashboard) we should see our component among the services.
 
 
+## Entity Manager
 
+[Entity Manager](entity-manager) component represents <mark>TODO</mark>
 
-
-## ENTITY-MANAGER
-
-La componente "Entity Manager" rappresenta <mark>TODO</mark>
-
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
 helm install entitymanager 01-core-charts/openk9-entity-manager \
@@ -75,23 +66,19 @@ helm install entitymanager 01-core-charts/openk9-entity-manager \
 
 
 
-### Verifica installazione
+### Verify installation
 
-Verifico nei log di avvio del pod l'assenza di errori gravi
+Check the pod startup logs for the absence of serious errors.
 
 ```bash
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-entity-manager" -o name)
 ```
 
+## Index writer
+[Index Writer](index-writer) component represents <mark>TODO</mark>
 
-
-
-
-## INDEX-WRITER
-
-La componente "Index Writer" rappresenta <mark>TODO</mark>
-
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
 helm install indexwriter 01-core-charts/openk9-index-writer \
@@ -101,23 +88,20 @@ helm install indexwriter 01-core-charts/openk9-index-writer \
 
 
 
-### Verifica installazione
+### Verify installation
 
-Verifico nei log di avvio del pod l'assenza di errori gravi
+Check the pod startup logs for the absence of serious errors.
 
 ```bash
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-index-writer" -o name)
 ```
 
+## Plugin Driver Manager
 
+[Plugin Driver Manager](plugin-driver-manager) represents <mark>TODO</mark>
 
-
-
-## PLUGIN-DRIVER-MANAGER
-
-La componente "Plugin Driver Manager" rappresenta <mark>TODO</mark>
-
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
 helm install pdm 01-core-charts/openk9-plugin-driver-manager \
@@ -125,25 +109,24 @@ helm install pdm 01-core-charts/openk9-plugin-driver-manager \
   -f 01-core-charts/openk9-plugin-driver-manager/scenarios/local-runtime.yaml
 ```
 
+### Verify installation
 
-
-### Verifica installazione
-
-Verifico nei log di avvio del pod l'assenza di errori gravi
+Check the pod startup logs for the absence of serious errors
 
 ```bash
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-plugin-driver-manager" -o name)
 ```
 
-La componente "Plugin Driver Manager" si auto-registra all'interno di Consul. Accedendo alla [dashboard](#consul-dashboard) dovremmo vedere il nostro componente tra i servizi.
+Plugin Driver Manager component self-registers within Consul.
+By accessing the [dashboard](#consul-dashboard) we should see our component among the services.
 
 
+## Searcher
 
-## SEARCHER
+[Searcher"](searcher) component rappresents <mark>TODO</mark>
 
-La componente "Searcher" rappresenta <mark>TODO</mark>
-
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
 helm install searcher 01-core-charts/openk9-searcher \
@@ -151,27 +134,23 @@ helm install searcher 01-core-charts/openk9-searcher \
   -f 01-core-charts/openk9-searcher/scenarios/local-runtime.yaml
 ```
 
+### Verify installation
 
-
-### Verifica installazione
-
-Verifico nei log di avvio del pod l'assenza di errori gravi
+Check the pod startup logs for the absence of serious errors
 
 ```bash
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-searcher" -o name)
 ```
 
-La componente "Searcher" si auto-registra all'interno di Consul. Accedo alla [dashboard](#consul-dashboard) dovremmo vedere il nostro componente tra i servizi.
+Searcher component self-registers within Consul.
+I access the [dashboard] (# consul-dashboard) we should see our component among the services.
 
+## Api Aggregator
 
+Api Aggregator component represents <mark>TODO</mark>
 
-
-
-## API-AGGREGATOR
-
-La componente "API Aggregator" rappresenta <mark>TODO</mark>
-
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
 helm install api-aggregator 01-core-charts/openk9-api-aggregator \
@@ -179,29 +158,26 @@ helm install api-aggregator 01-core-charts/openk9-api-aggregator \
   -f 01-core-charts/openk9-api-aggregator/scenarios/local-runtime.yaml
 ```
 
-Nel contesto `local-runtime` la componente espone un Ingress su "http://demo.openk9.local".
+In the `local-runtime` context the component exposes an Ingress on "http: //demo.openk9.local".
 
 
+### Verify installation
 
-### Verifica installazione
-
-Verifico nei log di avvio del pod l'assenza di errori gravi
+Check the pod startup logs for the absence of serious errors
 
 ```bash
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-api-aggregator" -o name)
 ```
 
- Accedere a "[http://demo.openk9.local/q/swagger-ui](http://demo.openk9.local/q/swagger-ui)" per accedere alla UI di Swagger con la descrizione delle API esposte
+Go to "[http: //demo.openk9.local/q/swagger-ui](http://demo.openk9.local/q/swagger-ui)"
+to access the Swagger UI with the description of the exposed APIs
 
+## Search Admin
 
+Search Admin component represents <mark>TODO</mark>
 
-
-
-## SEARCH-ADMIN
-
-La componente "Search Admin" rappresenta <mark>TODO</mark>
-
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that * adapts * it to the chosen scenario.
 
 ```bash
 helm install search-admin 01-core-charts/openk9-search-admin \
@@ -234,7 +210,7 @@ dove accedendo con le credenziali dell'unico utente censito ("test:test")
 attero nella console per il momento povera di contenuti.
 
 
-## QUERY-FRONTEND
+## Searc Frontend
 
 La componente "Query FrontEnd" rappresenta <mark>TODO</mark>
 
