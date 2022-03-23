@@ -42,6 +42,8 @@ import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerRoutes;
+import reactor.netty.http.server.logging.AccessLogArgProvider;
+import reactor.netty.http.server.logging.AccessLogFactory;
 import reactor.netty.resources.LoopResources;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
@@ -57,6 +59,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component(
 	immediate = true,
@@ -73,6 +78,7 @@ public class ReactorNettyActivator {
 		boolean daemon() default true;
 		boolean wiretap() default true;
 		boolean accessLog() default true;
+		String accessLogExcludePattern() default "(^/monitoring.*)|(^/v1/prometheus)";
 		boolean compress() default false;
 		boolean forwarded() default true;
 		HttpProtocol httpProtocol() default HttpProtocol.HTTP11;
@@ -161,7 +167,6 @@ public class ReactorNettyActivator {
 				HttpServer
 					.create()
 					.metrics(true, Function.identity())
-					.accessLog(config.accessLog())
 					.forwarded(config.forwarded())
 					.wiretap(config.wiretap())
 					.wiretap("openk9", LogLevel.DEBUG, config.wiretapFormat())
@@ -171,6 +176,18 @@ public class ReactorNettyActivator {
 					.mapHandle(this::_mapHandle)
 					.port(config.port())
 					.protocol(config.httpProtocol());
+
+			if (config.accessLog()) {
+				if (config.accessLogExcludePattern() != null &&
+					!config.accessLogExcludePattern().isBlank()) {
+					httpServer = httpServer.accessLog(
+						true, AccessLogFactory.createFilter(
+							_excludePattern(config.accessLogExcludePattern())));
+				}
+				else {
+					httpServer = httpServer.accessLog(true);
+				}
+			}
 
 			httpServer.warmup().block();
 
@@ -195,6 +212,26 @@ public class ReactorNettyActivator {
 
 		_thread.start();
 
+	}
+
+	private Predicate<AccessLogArgProvider> _excludePattern(
+		String accessLogExcludePattern) {
+
+		Pattern compile = Pattern.compile(accessLogExcludePattern);
+
+		return accessLogArgProvider -> {
+
+			CharSequence uri = accessLogArgProvider.uri();
+
+			if (uri == null) {
+				return true;
+			}
+
+			Matcher matcher = compile.matcher(uri);
+
+			return !matcher.matches();
+
+		};
 	}
 
 	private Mono<Void> _mapHandle(Mono<Void> voidMono, Connection connection) {
