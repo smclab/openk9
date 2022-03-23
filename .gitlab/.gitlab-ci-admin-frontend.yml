@@ -1,0 +1,46 @@
+Build Latest Admin Ui Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/rest-api/**/*
+      - js-packages/search-ui-components/**/*
+      - js-packages/plugin-scripts/**/*
+      - js-packages/admin-ui/**/*
+  except:
+    - schedules
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - docker build -t search-admin:latest -f js-packages/admin-ui/Dockerfile .
+    - docker tag search-admin:latest $CI_REGISTRY_NAME/openk9/search-admin:latest
+    - docker push $CI_REGISTRY_NAME/openk9/search-admin:latest
+
+
+trigger_deploy_admin_frontend:
+  image: curlimages/curl
+  stage: deploy
+  needs: ['Build Latest Admin Ui Docker Image']
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/rest-api/**/*
+      - js-packages/search-ui-components/**/*
+      - js-packages/plugin-scripts/**/*
+      - js-packages/admin-ui/**/*
+  except:
+    - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-admin-ui" -F ref=master $DEV_TRIGGER_URL

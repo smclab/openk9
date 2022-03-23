@@ -1,0 +1,24 @@
+Build Latest Site Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/docs-website/**/*
+  except:
+    - schedules
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - docker build -t docs-website:latest -f js-packages/docs-website/Dockerfile .
+    - docker tag docs-website:latest $CI_REGISTRY_NAME/openk9/docs-website:latest
+    - docker push $CI_REGISTRY_NAME/openk9/docs-website:latest
+  allow_failure: false

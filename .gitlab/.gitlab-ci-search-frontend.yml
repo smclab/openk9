@@ -1,0 +1,69 @@
+Build Search Frontend Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/rest-api/**/*
+      - js-packages/search-ui-components/**/*
+      - js-packages/plugin-scripts/**/*
+      - js-packages/search-customizable-ui/**/*
+      - js-packages/search-frontend/**/*
+  except:
+    - schedules
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - docker build -t search-frontend:latest -f js-packages/search-frontend/Dockerfile .
+    - docker tag search-frontend:latest $CI_REGISTRY_NAME/openk9/search-frontend:latest
+    - docker push $CI_REGISTRY_NAME/openk9/search-frontend:latest
+
+
+trigger_deploy_search_frontend:
+  image: curlimages/curl
+  stage: deploy
+  needs: ['Build Search Frontend Docker Image']
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/rest-api/**/*
+      - js-packages/search-ui-components/**/*
+      - js-packages/plugin-scripts/**/*
+      - js-packages/search-customizable-ui/**/*
+      - js-packages/search-frontend/**/*
+  except:
+    - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-query-frontend" -F ref=master $DEV_TRIGGER_URL
+
+
+trigger_mvp:
+  image: curlimages/curl
+  stage: deploy
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/rest-api/**/*
+      - js-packages/search-ui-components/**/*
+      - js-packages/plugin-scripts/**/*
+      - js-packages/search-customizable-ui/**/*
+      - js-packages/search-frontend/**/*
+  except:
+    - schedules
+  needs: ['Build Search Frontend Docker Image']
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$MVP_TOKEN -F ref=main $MVP_TRIGGER_URL

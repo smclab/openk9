@@ -7,9 +7,10 @@ stages:
   - push-github
 
 include:
-  - local: '/.gitlab/.gitlab-ci-js.yml'
+  - local: '/.gitlab/.gitlab-ci-search-frontend.yml'
+  - local: '/.gitlab/.gitlab-ci-admin-frontend.yml'
+  - local: '/.gitlab/.gitlab-ci-site.yml'
   - local: '/.gitlab/.gitlab-ci-parser.yml'
-  - local: '/.gitlab/.gitlab-ci-core.yml'
   - local: '/.gitlab/.gitlab-ci-datasource.yml'
   - local: '/.gitlab/.gitlab-ci-entity-manager.yml'
   - local: '/.gitlab/.gitlab-ci-index-writer.yml'
