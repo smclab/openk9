@@ -19,7 +19,7 @@ services:
             - cluster.name=docker-cluster
             - cluster.initial_master_nodes=elasticsearch
             - bootstrap.memory_lock=true
-            - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+            - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
             - ELASTIC_USERNAME=elastic
             - ELASTIC_PASSWORD=elastic
         ports:
@@ -197,6 +197,7 @@ services:
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.frontend.entrypoints=web"
+            - "traefik.http.services.api-aggregator-docker.loadbalancer.server.port=8080"
             - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
     search-admin:
         image: smclab/openk9-admin-ui:latest
@@ -266,14 +267,14 @@ services:
             OPENK9_AUTHSERVERURL_TEMPLATE: 'http://keycloak:8080/auth/realms/{realm}'
         labels:
             - "traefik.enable=true"
-            - "traefik.http.services.api-aggregator-docker.loadbalancer.server.port=8080"
             - "traefik.http.middlewares.api-aggregator-strip.stripprefix.prefixes=/"
             - "traefik.http.routers.api-aggregator.entrypoints=web"
             - "traefik.http.routers.api-aggregator.rule=PathPrefix(`/api`)"
             - "traefik.http.middlewares.api-aggregator_compress.compress=true"
             - "traefik.http.routers.api-aggregator.middlewares=searcher-strip@docker,api-aggregator_compress@docker"
-            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.Host=local.openk9.io"
-            - "traefik.http.routers.api-aggregator.middlewares=api-aggregator-strip@docker,api-aggregator_compress@docker,openk9-forwarded-host@docker"
+            - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=local.openk9.io"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=local.openk9.io"
+            - "traefik.http.routers.api-aggregator.middlewares=api-aggregator-strip@docker,api-aggregator_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
     consul:
         image: consul:1.7
         command: 'agent -dev -ui -client=0.0.0.0 -bind=0.0.0.0 --https-port=8501'
