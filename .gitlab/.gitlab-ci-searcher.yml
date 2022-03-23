@@ -9,7 +9,6 @@ Build Latest Searcher Docker Images:
     DOCKER_TLS_CERTDIR: ""
     MAVEN_CLI_OPTS: "--batch-mode"
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
-
   only:
     refs:
       - main
@@ -51,9 +50,54 @@ Build Latest Searcher Docker Images:
     - ./mvnw install -pl bom -am $MAVEN_CLI_OPTS
     - ./mvnw install -pl assemblies/searcher/searcher-kar -am $MAVEN_CLI_OPTS
     - ./mvnw --file assemblies/searcher/searcher-karaf package jib:build -Djib.to.image=$CI_REGISTRY_NAME/openk9/openk9-searcher -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
-  after_script:
-    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
   cache:
     key: searcher
     paths:
       - .m2/repository
+
+
+trigger_deploy_searcher:
+  image: curlimages/curl
+  stage: deploy
+  needs: ['Build Latest Searcher Docker Images']
+  only:
+    refs:
+      - main
+    changes:
+      - searcher/configs/*
+      - osgi/common/reactory-netty-util/**/*
+      - osgi/web/http-api/**/*
+      - osgi/web/http-service/**/*
+      - osgi/web/http-bundle-ext/**/*
+      - osgi/metrics/metrics-api/**/*
+      - osgi/metrics/metrics-service/**/*
+      - osgi/common/common-api/**/*
+      - osgi/common/core-api/**/*
+      - osgi/common/model/**/*
+      - osgi/common/osgi-api/**/*
+      - osgi/common/serialization-api/**/*
+      - osgi/common/serialization-service/**/*
+      - osgi/third-party/**/*
+      - osgi/common/http-serialization/**/*
+      - osgi/index-writer/index-writer-model/**/*
+      - osgi/search/**/*
+      - osgi/datasource/datasource-client-api/**/*
+      - osgi/datasource/datasource-client-service/**/*
+      - osgi/auth/auth-api/**/*
+      - osgi/auth/auth-service/**/*
+      - osgi/auth/auth-query-parser/**/*
+      - osgi/ingestion/ingestion-api/**/*
+      - osgi/ingestion/ingestion-service/**/*
+      - osgi/plugin-driver-manager/plugin-driver-manager-client-api/**/*
+      - osgi/plugin-driver-manager/plugin-driver-manager-client-service/**/*
+      - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
+      - osgi/third-party/caffeine/**/*
+      - osgi/vertx/**/*
+      - assemblies/searcher/**/*
+      - .gitlab/.gitlab-ci-searcher.yml
+    except:
+      - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL

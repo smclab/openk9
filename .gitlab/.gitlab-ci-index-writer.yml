@@ -9,7 +9,6 @@ Build Latest Index Writer Docker Images:
     DOCKER_TLS_CERTDIR: ""
     MAVEN_CLI_OPTS: "--batch-mode"
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
-
   only:
     refs:
       - main
@@ -56,9 +55,58 @@ Build Latest Index Writer Docker Images:
     - ./mvnw install -pl bom -am $MAVEN_CLI_OPTS
     - ./mvnw install -pl assemblies/index-writer/index-writer-kar -am $MAVEN_CLI_OPTS
     - ./mvnw --file assemblies/index-writer/index-writer-karaf package jib:build -Djib.to.image=$CI_REGISTRY_NAME/openk9/openk9-index-writer -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
-  after_script:
-    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-index-writer" -F ref=master $DEV_TRIGGER_URL
   cache:
     key: index-writer
     paths:
       - .m2/repository
+
+trigger_deploy_index_writer:
+  image: curlimages/curl
+  stage: deploy
+  needs: ['Build Latest Index Writer Docker Images']
+  only:
+    refs:
+      - main
+    changes:
+      - index-writer/configs/*
+      - osgi/index-writer/**/*
+      - osgi/search/search-client-api/**/*
+      - osgi/search/search-client-service/**/*
+      - osgi/search/search-client-writer/**/*
+      - osgi/metrics/metrics-api/**/*
+      - osgi/metrics/metrics-service/**/*
+      - osgi/metrics/metrics-ext/**/*
+      - osgi/common/common-api/**/*
+      - osgi/common/core-api/**/*
+      - osgi/common/model/**/*
+      - osgi/common/osgi-api/**/*
+      - osgi/common/serialization-api/**/*
+      - osgi/common/serialization-service/**/*
+      - osgi/third-party/reactor/**/*
+      - osgi/third-party/reactor-netty/**/*
+      - osgi/third-party/reactive-streams/**/*
+      - osgi/third-party/micrometer/**/*
+      - osgi/third-party/jackson/**/*
+      - osgi/third-party/vavr/**/*
+      - osgi/third-party/apache/**/*
+      - osgi/common/http-serialization/**/*
+      - osgi/ingestion/ingestion-api/**/*
+      - osgi/ingestion/ingestion-service/**/*
+      - osgi/common/reactory-netty-util/**/*
+      - osgi/web/http-api/**/*
+      - osgi/web/http-service/**/*
+      - osgi/web/http-bundle-ext/**/*
+      - osgi/datasource/datasource-client-api/**/*
+      - osgi/datasource/datasource-client-service/**/*
+      - osgi/plugin-driver-manager/plugin-driver-manager-client-api/**/*
+      - osgi/plugin-driver-manager/plugin-driver-manager-client-service/**/*
+      - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
+      - osgi/vertx/**/*
+      - assemblies/index-writer/**/*
+      - .gitlab/.gitlab-ci-index-writer.yml
+    except:
+      - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-index-writer" -F ref=master $DEV_TRIGGER_URL
