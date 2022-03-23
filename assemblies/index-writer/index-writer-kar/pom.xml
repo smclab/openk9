@@ -33,6 +33,18 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>io.openk9.osgi.util</groupId>
+			<artifactId>bundle-installer-via-config</artifactId>
+			<version>${project.version}</version>
+			<scope>runtime</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>io.openk9.osgi.index-writer</groupId>
 			<artifactId>index-writer-service</artifactId>
 			<version>${project.version}</version>

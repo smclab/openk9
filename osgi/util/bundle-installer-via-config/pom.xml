@@ -27,7 +27,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>auth-api</artifactId>
+	<artifactId>bundle-installer-via-config</artifactId>
 	<packaging>jar</packaging>
 	<name>OpenK9 :: OSGi :: Util :: Bundle Installer Via Config</name>
 
