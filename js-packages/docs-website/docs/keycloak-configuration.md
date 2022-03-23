@@ -44,7 +44,7 @@ At saving will be visible card "Credentials" with "Client Secret"
 
 ![image-20220302123854495](../static/img/installation/image-20220302123854495.png)
 
-### Tenant census
+### Adding tenant
 
 Using "Adminer" or other client SQL we have to register the newly created Realm/Tenant in the PostgreSQL database used by OpenK9.
 
@@ -83,7 +83,7 @@ The roles that I will have to create do not require complex information, the nam
 
  Specifically, I have to create the following (non-composite) roles:
 
-| Nome                        | Descrizione |
+| Name                        | Description |
 | --------------------------- | ----------- |
 | admin                       |             |
 | datasource-read             |             |
@@ -115,35 +115,37 @@ I need to create the following Client Scope
 
 
 
-### Censimento Utenti
+### Adding Users
 
-Procedo quindi al censimento degli utenti. Per questo ambiente demo locale è possibile avere un solo utente con privilegi amministrativi.
+Then proceed to add the users. For this local demo environment it is possible to have only one user with administrative privileges.
 
-Nella sezione "Users" procedo alla creazione dell'utente "test" indicando solo il campo obbligatorio "username". Quindi "Save"![image-20220302135802074](../static/img/installation/image-20220302135802074.png)
+In the "Users" section proceed to create the "test" user indicating only the mandatory "username" field.
+So "Save"
+![Image-20220302135802074](../static/img/installation/image-20220302135802074.png)
 
-Quindi passo alla scheda "Credentials" per impostare una password non temporanea, ad esempio "test" ![image-20220302135936730](../static/img/installation/image-20220302135936730.png)
+Then switch to the "Credentials" tab to set a non-temporary password, for example "test"
+![Image-20220302135936730] (../static/img/installation/image-20220302135936730.png)
 
-Quindi passo alla scheda "Role Mappings" per associare l'utente ai ruoli "admin", "datasource-read", "offline_access" e "uma_authorization"![image-20220302140149025](../static/img/installation/image-20220302140149025.png)
+Then switch to the "Role Mappings" tab to associate the user with the "admin", "datasource-read", "offline_access" and "uma_authorization" roles
+![Image-20220302140149025] (../static/img/installation/image-20220302140149025.png)
 
 
+### Client Enhancement
 
-### Perfezionamento Client
-
-Ritorno nella sezione "Clients" in modifica del client "OpenK9".
+Return to the "Clients" section in editing the "OpenK9" client.
 
 ![image-20220302233006422](../static/img/installation/image-20220302233006422.png)
 
-Mi sposto nella scheda "Roles" ed aggiungo il ruolo "uma_protection" (mi basta il nome)![image-20220302232651513](../static/img/installation/image-20220302232651513.png)
+Move to the "Roles" tab and add the role "uma_protection"
+![image-20220302232651513](../static/img/installation/image-20220302232651513.png)
 
-Nella scheda "Client Scopes" ed aggiungo i nuovi "Client Scope" all'elenco "Assigned Default Client Scopes"
+In the "Client Scopes" tab and add the new "Client Scopes" to the "Assigned Default Client Scopes" list
 
 ![image-20220302232759358](../static/img/installation/image-20220302232759358.png)
 
+In the "Mappers" tab "Create" 3 elements
 
-
-Nella scheda "Mappers" devo "Creare" 3 elementi
-
-| Attributo                        | Elemento 1        | Elemento 2        | Elemento 3        |
+| Attribute                        | Element 1         | Element 2         | Element 3         |
 | -------------------------------- | ----------------- | ----------------- | ----------------- |
 | Name                             | Client IP Address | Client Host       | Client ID         |
 | Mapper Type                      | User Session Note | User Session Note | User Session Note |
