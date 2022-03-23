@@ -184,8 +184,8 @@ services:
         image: smclab/openk9-web-parser:latest
         container_name: web-parser
         environment:
-            INGESTION_URL: "http://openk9.io/api/v1/ingestion/"
-            DELETE_URL: "http://openk9.io/api/v1/ingestion/"
+            INGESTION_URL: " http://ingestion:8080/v1/ingestion/"
+            DELETE_URL: "http://ingestion:8080/v1/ingestion/"
         ports:
             - "5008:80"
             - "6800:6800"
@@ -210,7 +210,7 @@ services:
         networks:
             default:
                 aliases:
-                    - openk9.io
+                    - local.openk9.io
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         ports:
@@ -266,14 +266,14 @@ services:
             OPENK9_AUTHSERVERURL_TEMPLATE: 'http://keycloak:8080/auth/realms/{realm}'
         labels:
             - "traefik.enable=true"
-            - "traefik.http.services.aggregator-docker.loadbalancer.server.port=8080"
-            - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api"
-            - "traefik.http.routers.aggregator.entrypoints=web"
-            - "traefik.http.routers.aggregator.rule=PathPrefix(`/api`)"
-            - "traefik.http.middlewares.aggregator_compress.compress=true"
-            - "traefik.http.routers.aggregator.middlewares=api-strip@docker,aggregator_compress@docker"
-            - "traefik.http.middlewares.aggregator-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=local.openk9.io"
-            - "traefik.http.routers.aggregator.middlewares=aggregator-forwarded-host@docker"
+            - "traefik.http.services.api-aggregator-docker.loadbalancer.server.port=8080"
+            - "traefik.http.middlewares.api-aggregator-strip.stripprefix.prefixes=/"
+            - "traefik.http.routers.api-aggregator.entrypoints=web"
+            - "traefik.http.routers.api-aggregator.rule=PathPrefix(`/api`)"
+            - "traefik.http.middlewares.api-aggregator_compress.compress=true"
+            - "traefik.http.routers.api-aggregator.middlewares=searcher-strip@docker,api-aggregator_compress@docker"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.Host=local.openk9.io"
+            - "traefik.http.routers.api-aggregator.middlewares=api-aggregator-strip@docker,api-aggregator_compress@docker,openk9-forwarded-host@docker"
     consul:
         image: consul:1.7
         command: 'agent -dev -ui -client=0.0.0.0 -bind=0.0.0.0 --https-port=8501'
