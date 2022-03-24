@@ -221,6 +221,7 @@ public class TikaProcessor {
                                     response.toString().getBytes()
                                 )
                             );
+                            logger.info("Send parsed document to next pipeline step");
 
                             return;
 
@@ -238,7 +239,6 @@ public class TikaProcessor {
                             jsonObject.toString().getBytes()
                         )
                     );
-                    logger.info("Send document to next pipeline step");
 
                 }
 
