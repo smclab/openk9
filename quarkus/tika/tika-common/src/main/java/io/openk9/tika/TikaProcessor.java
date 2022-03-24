@@ -180,7 +180,7 @@ public class TikaProcessor {
                                             jsonObject.toString().getBytes()
                                         )
                                     );
-                                    return;
+                                    logger.info("Send document to ocr");
                                 }
 
                             }
@@ -238,6 +238,7 @@ public class TikaProcessor {
                             jsonObject.toString().getBytes()
                         )
                     );
+                    logger.info("Send document to next pipeline step");
 
                 }
 
