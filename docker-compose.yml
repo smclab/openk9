@@ -101,6 +101,15 @@ services:
             WAIT_HOSTS: rabbitmq:5672, elasticsearch:9200
             WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
+            JAVA_MIN_MEM: '3096M'
+            JAVA_MAX_MEM: '3096M'
+            JAVA_PERM_MEM: '1024M'
+            JAVA_MAX_PERM_MEM: '1024M'
+            CONSUL_SERVICE_ADDRESS: 'index-writer'
+            CONSUL_SERVICE_PORT: '8080'
+            CONSUL_SERVICE_CHECK_URL: 'http://index-writer:8080/monitoring/health'
+            #CONSUL_SERVICE_CHECK_TTL: '15s'
+            CONSUL_SERVICE_CHECK_INTERVAL: '15s'
         expose:
             - "1099"
             - "8080"
@@ -137,6 +146,15 @@ services:
             WAIT_HOSTS: rabbitmq:5672
             WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
+            JAVA_MIN_MEM: '3096M'
+            JAVA_MAX_MEM: '3096M'
+            JAVA_PERM_MEM: '1024M'
+            JAVA_MAX_PERM_MEM: '1024M'
+            CONSUL_SERVICE_ADDRESS: 'plugin-driver-manager'
+            CONSUL_SERVICE_PORT: '8080'
+            CONSUL_SERVICE_CHECK_URL: 'http://plugin-driver-manager:8080/monitoring/health'
+            #CONSUL_SERVICE_CHECK_TTL: '15s'
+            CONSUL_SERVICE_CHECK_INTERVAL: '15s'
         expose:
             - "1099"
             - "8080"
@@ -154,6 +172,15 @@ services:
             WAIT_HOSTS: elasticsearch:9200
             WAIT_HOSTS_TIMEOUT: 300
             JAVA_DEBUG_PORT: '*:5005'
+            JAVA_MIN_MEM: '3096M'
+            JAVA_MAX_MEM: '3096M'
+            JAVA_PERM_MEM: '1024M'
+            JAVA_MAX_PERM_MEM: '1024M'
+            CONSUL_SERVICE_ADDRESS: 'searcher'
+            CONSUL_SERVICE_PORT: '8080'
+            CONSUL_SERVICE_CHECK_URL: 'http://searcher:8080/monitoring/health'
+            #CONSUL_SERVICE_CHECK_TTL: '15s'
+            CONSUL_SERVICE_CHECK_INTERVAL: '15s'
         expose:
             - "1099"
             - "8080"
@@ -175,6 +202,17 @@ services:
             - PGDATA=/var/lib/postgresql/data/pgdata
         volumes:
             - ./postgres/db-data:/var/lib/postgresql/data
+    postgres-keycloak:
+        image: postgres:latest
+        container_name: postgres-keycloak
+        hostname: postgres-keycloak
+        environment:
+            - POSTGRES_PASSWORD=keycloak
+            - POSTGRES_USER=keycloak
+            - POSTGRES_DB=keycloak
+            - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - ./postgres-keycloak/db-data:/var/lib/postgresql/data
     adminer:
         image: adminer
         restart: always
@@ -235,11 +273,11 @@ services:
         image: quay.io/keycloak/keycloak:16.1.0
         environment:
             DB_VENDOR: POSTGRES
-            DB_ADDR: postgres:5432
-            DB_DATABASE: openk9
-            DB_USER: openk9
+            DB_ADDR: postgres-keycloak:5432
+            DB_DATABASE: keycloak
+            DB_USER: keycloak
             DB_SCHEMA: public
-            DB_PASSWORD: openk9
+            DB_PASSWORD: keycloak
             KEYCLOAK_USER: openk9
             KEYCLOAK_PASSWORD: openk9
             PROXY_ADDRESS_FORWARDING: "true"
