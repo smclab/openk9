@@ -30,7 +30,4 @@ public class TikaConfiguration {
 	@ConfigProperty(name = "openk9.tika.rabbitmq.queue.name")
 	String currentQueueName;
 
-	@ConfigProperty(name = "openk9.tika.rabbitmq.x-expires", defaultValue = "3600000")
-	int xExpires;
-
 }

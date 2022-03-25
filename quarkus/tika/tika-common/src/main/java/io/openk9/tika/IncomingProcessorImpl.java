@@ -147,8 +147,7 @@ public class IncomingProcessorImpl {
 				Map.of(
 					"x-dead-letter-exchange", "DLX",
 					"x-dead-letter-routing-key",
-					tikaConfiguration.getCurrentRoutingKey(),
-					"x-expires", tikaConfiguration.getXExpires()
+					tikaConfiguration.getCurrentRoutingKey()
 				)
 			);
 			channel.queueBind(
