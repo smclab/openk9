@@ -185,41 +185,36 @@ helm install search-admin 01-core-charts/openk9-search-admin \
   -f 01-core-charts/openk9-search-admin/scenarios/local-runtime.yaml
 ```
 
+### Verify installation
 
-
-### Verifica installazione
-
-Verifico nei log di avvio del pod l'assenza di errori gravi
+Check the pod startup logs for the absence of serious errors
 
 ```bash
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-search-admin" -o name)
 ```
 
+### Access Console
 
-
-### Accesso Console
-
-Accedo alla console di amministrazione di OpenK9 sfruttando la url "[http://demo.openk9.local/admin](http://demo.openk9.local/admin)"
+Access to Openk9 admin console using url "[http://demo.openk9.local/admin](http://demo.openk9.local/admin)"
 
 ![image-20220303214347128](../static/img/installation/image-20220303214347128.png)
 
-dove accedendo con le credenziali dell'unico utente censito ("test:test")
+Log in with credentials ("test:test")
 
 ![image-20220303214849436](../static/img/installation/image-20220303214849436.png)
-
-attero nella console per il momento povera di contenuti.
 
 
 ## Searc Frontend
 
-La componente "Query FrontEnd" rappresenta <mark>TODO</mark>
+Search FrontEnd represents <mark>TODO</mark>
 
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente,
+ed il file di configurazione che la *adegua* allo scenario scelto
 
 ```bash
-helm install query-frontend 01-core-charts/openk9-query-frontend \
+helm install query-frontend 01-core-charts/openk9-search-frontend \
   -n openk9 \
-  -f 01-core-charts/openk9-query-frontend/scenarios/local-runtime.yaml
+  -f 01-core-charts/openk9-search-frontend/scenarios/local-runtime.yaml
 ```
 
 
