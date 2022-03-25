@@ -3,6 +3,8 @@ id: kubernetes-openk9-core
 title: Install Openk9 Core
 ---
 
+In this section <mark>TODO</mark>
+
 ## Ingestion
 
 The [Ingestion](ingestion) component exposes the Rest API through which the various "datasource" configured provide the information to be indexed.
@@ -177,7 +179,7 @@ to access the Swagger UI with the description of the exposed APIs
 Search Admin component represents <mark>TODO</mark>
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
-and the configuration file that * adapts * it to the chosen scenario.
+and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
 helm install search-admin 01-core-charts/openk9-search-admin \
@@ -208,8 +210,8 @@ Log in with credentials ("test:test")
 
 Search FrontEnd represents <mark>TODO</mark>
 
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente,
-ed il file di configurazione che la *adegua* allo scenario scelto
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that *adapts* it to the chosen scenario
 
 ```bash
 helm install query-frontend 01-core-charts/openk9-search-frontend \
@@ -219,9 +221,9 @@ helm install query-frontend 01-core-charts/openk9-search-frontend \
 
 
 
-### Verifica installazione
+### Verify installation
 
-Verifico nei log di avvio del pod l'assenza di errori gravi
+Check the pod startup logs for the absence of serious errors
 
 ```bash
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-query-frontend" -o name)
