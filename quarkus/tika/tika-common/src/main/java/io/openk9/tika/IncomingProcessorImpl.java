@@ -131,9 +131,7 @@ public class IncomingProcessorImpl {
 			catch (Exception e) {
 				multiEmitter.fail(e);
 			}
-		})
-			.onItem()
-			.call(Message::ack);
+		});
 
 	}
 

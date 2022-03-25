@@ -43,6 +43,7 @@ public class TikaProcessor {
         );
 
         _cancellable = tikaStream
+            .emitOn(_executorService)
             .onItem()
             .invoke(message -> {
 
@@ -249,7 +250,7 @@ public class TikaProcessor {
                 }
 
             })
-            .runSubscriptionOn(_executorService)
+            .call(Message::ack)
             .subscribe()
             .with(message -> {});
     }
