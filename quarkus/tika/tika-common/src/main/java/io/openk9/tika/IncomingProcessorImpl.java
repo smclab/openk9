@@ -5,6 +5,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.ShutdownSignalException;
 import io.openk9.tika.api.Message;
 import io.openk9.tika.api.OutgoingMessage;
 import io.openk9.tika.api.Publisher;
@@ -96,11 +97,25 @@ public class IncomingProcessorImpl {
 
 								multiEmitter.emit(
 									new MessageImpl(
-										channel, consumerTag, envelope, properties,
-										body)
+										channel, consumerTag, envelope,
+										properties, body)
 								);
 
 							}
+
+							@Override
+							public void handleCancel(String consumerTag)
+								throws IOException {
+								multiEmitter.complete();
+							}
+
+							@Override
+							public void handleShutdownSignal(
+								String consumerTag,
+								ShutdownSignalException sig) {
+								multiEmitter.fail(sig);
+							}
+
 						});
 
 				multiEmitter.onTermination(() -> {
@@ -111,8 +126,6 @@ public class IncomingProcessorImpl {
 						logger.error(e.getMessage(), e);
 					}
 				});
-
-				channel.addShutdownListener(cause -> multiEmitter.complete());
 
 			}
 			catch (Exception e) {
@@ -133,7 +146,8 @@ public class IncomingProcessorImpl {
 				Map.of(
 					"x-dead-letter-exchange", "DLX",
 					"x-dead-letter-routing-key",
-					tikaConfiguration.getCurrentRoutingKey()
+					tikaConfiguration.getCurrentRoutingKey(),
+					"x-expires", tikaConfiguration.getXExpires()
 				)
 			);
 			channel.queueBind(
