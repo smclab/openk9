@@ -13,6 +13,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.metadata.HttpHeaders;
 import org.apache.tika.mime.MediaType;
 import org.jboss.logging.Logger;
@@ -47,8 +48,9 @@ public class TikaProcessor {
             .onItem()
             .invoke(message -> {
 
-                JsonObject jsonObject =
-                    new JsonObject(new String(message.body()));
+                String messageJson = new String(message.body());
+
+                JsonObject jsonObject = new JsonObject(messageJson);
 
                 String replyTo = jsonObject.getString("replyTo");
 
@@ -58,6 +60,10 @@ public class TikaProcessor {
                     payload
                         .getJsonObject("resources")
                         .getJsonArray("binaries");
+
+                logger.info(
+                    "dequeue message: " +
+                    StringUtils.abbreviate(messageJson, 25));
 
                 if (!binaries.isEmpty()) {
 
@@ -187,7 +193,7 @@ public class TikaProcessor {
                                             jsonObject.toString().getBytes()
                                         )
                                     );
-                                    logger.info("Send document to ocr");
+                                    return;
                                 }
 
                             }
@@ -228,8 +234,6 @@ public class TikaProcessor {
                                     response.toString().getBytes()
                                 )
                             );
-                            logger.info("Send parsed document to next pipeline step");
-
                             return;
 
                         }
