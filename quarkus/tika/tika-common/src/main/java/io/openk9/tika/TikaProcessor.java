@@ -63,7 +63,7 @@ public class TikaProcessor {
 
                 logger.info(
                     "dequeue message: " +
-                    StringUtils.abbreviate(messageJson, 25));
+                    StringUtils.abbreviate(messageJson, 25, 75));
 
                 if (!binaries.isEmpty()) {
 
