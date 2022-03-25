@@ -39,7 +39,7 @@ public class TikaProcessor {
     void activate() {
 
         _executorService = Executors.newSingleThreadExecutor(
-            _newThreadThread(_THREAD_NAME)
+            _newThreadFacory(_THREAD_NAME)
         );
 
         _cancellable = tikaStream
@@ -260,7 +260,7 @@ public class TikaProcessor {
         _executorService.shutdown();
     }
 
-    private static ThreadFactory _newThreadThread(String name) {
+    private static ThreadFactory _newThreadFacory(String name) {
 
         return r -> {
 
