@@ -8,7 +8,9 @@ module.exports = {
             "items": [
                             "kubernetes-configuration",
                             "openk9-prerequisites",
-                            "kubernetes-openk9-core"
+                            "kubernetes-openk9-core",
+                            "kubernetes-openk9-parsers"
+                            "kubernetes-openk9-enrichers"
                     ]
                     },
           "keycloak-configuration", "openk9-configuration", "using-frontend"],
