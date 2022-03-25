@@ -131,7 +131,10 @@ public class IncomingProcessorImpl {
 			catch (Exception e) {
 				multiEmitter.fail(e);
 			}
-		});
+		})
+			.onFailure()
+			.retry()
+			.atMost(4);
 
 	}
 
