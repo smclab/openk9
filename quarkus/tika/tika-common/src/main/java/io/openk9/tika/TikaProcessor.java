@@ -10,7 +10,6 @@ import io.quarkus.tika.TikaContent;
 import io.quarkus.tika.TikaMetadata;
 import io.quarkus.tika.TikaParser;
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.Cancellable;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -28,6 +27,9 @@ import java.io.ByteArrayInputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 @ApplicationScoped
 @Startup
@@ -35,8 +37,12 @@ public class TikaProcessor {
 
     @PostConstruct
     void activate() {
+
+        _executorService = Executors.newSingleThreadExecutor(
+            _newThreadThread(_THREAD_NAME)
+        );
+
         _cancellable = tikaStream
-            .emitOn(Infrastructure.getDefaultWorkerPool())
             .onItem()
             .invoke(message -> {
 
@@ -243,6 +249,7 @@ public class TikaProcessor {
                 }
 
             })
+            .runSubscriptionOn(_executorService)
             .subscribe()
             .with(message -> {});
     }
@@ -250,9 +257,34 @@ public class TikaProcessor {
     @PreDestroy
     public void stop() {
         _cancellable.cancel();
+        _executorService.shutdown();
+    }
+
+    private static ThreadFactory _newThreadThread(String name) {
+
+        return r -> {
+
+            Thread thread = new Thread(r, name);
+
+            thread.setDaemon(true);
+
+            ClassLoader classLoader =
+                Thread.currentThread().getContextClassLoader();
+
+            if (classLoader != null) {
+                thread.setContextClassLoader(classLoader);
+            }
+
+            return thread;
+        };
+
     }
 
     private Cancellable _cancellable;
+
+    private ExecutorService _executorService;
+
+    private static final String _THREAD_NAME = "tika-thread";
 
     @Inject
     @Named("io.openk9.tika")
