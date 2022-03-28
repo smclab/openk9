@@ -14,7 +14,6 @@ import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import org.eclipse.microprofile.opentracing.Traced;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -34,7 +33,6 @@ public class DatasourceProcessor {
 
 	@ConsumeEvent(value = _EVENT_NAME)
 	@ActivateRequestContext
-	@Traced
 	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
 
 		long datasourceId = jsonObject.getLong("datasourceId");
@@ -110,7 +108,6 @@ public class DatasourceProcessor {
 	}
 
 	@Incoming("ingestion")
-	@Traced
 	public CompletionStage<Void> precess(Message<?> message) {
 
 		Object obj = message.getPayload();

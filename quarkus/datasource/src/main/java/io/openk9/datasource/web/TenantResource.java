@@ -11,7 +11,6 @@ import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.opentracing.Traced;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -30,7 +29,6 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 
-@Traced
 @Path("/v2/tenant")
 public class TenantResource {
 
