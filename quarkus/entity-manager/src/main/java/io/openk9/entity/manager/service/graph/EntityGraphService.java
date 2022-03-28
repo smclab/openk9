@@ -3,6 +3,7 @@ package io.openk9.entity.manager.service.graph;
 import io.openk9.entity.manager.model.graph.DocumentGraph;
 import io.openk9.entity.manager.model.graph.EntityGraph;
 import io.quarkus.arc.Unremovable;
+import org.eclipse.microprofile.opentracing.Traced;
 import org.jboss.logging.Logger;
 import org.neo4j.cypherdsl.core.Statement;
 import org.neo4j.driver.Driver;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @ApplicationScoped
 @Unremovable
+@Traced
 public class EntityGraphService {
 
 	public EntityGraph getEntity(String id) {

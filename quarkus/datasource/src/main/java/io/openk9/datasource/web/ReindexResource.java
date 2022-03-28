@@ -6,6 +6,7 @@ import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.opentracing.Traced;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Traced
 @Path("/v1/index")
 @ApplicationScoped
 public class ReindexResource {

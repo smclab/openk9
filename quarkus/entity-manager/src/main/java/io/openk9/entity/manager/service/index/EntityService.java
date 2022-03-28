@@ -2,6 +2,7 @@ package io.openk9.entity.manager.service.index;
 
 import io.openk9.entity.manager.model.index.EntityIndex;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.opentracing.Traced;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
+@Traced
 public class EntityService {
 
 	public EntityIndex get(long tenantId, long id) throws IOException {

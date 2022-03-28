@@ -21,6 +21,8 @@ import io.openk9.http.client.HttpClient;
 import io.openk9.http.client.HttpClientFactory;
 import org.osgi.service.component.annotations.Component;
 
+import java.util.function.Function;
+
 @Component(
 	immediate = true,
 	service = HttpClientFactory.class
@@ -33,6 +35,7 @@ public class HttpClientFactoryImpl implements HttpClientFactory {
 			reactor.netty.http.client.HttpClient
 				.create()
 				.baseUrl(baseUrl)
+				.metrics(true, Function.identity())
 		);
 	}
 

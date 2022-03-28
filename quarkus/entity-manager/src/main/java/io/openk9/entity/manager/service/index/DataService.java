@@ -4,6 +4,7 @@ import io.openk9.entity.manager.cache.model.IngestionEntity;
 import io.openk9.entity.manager.model.index.DataEntityIndex;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.opentracing.Traced;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.util.List;
 
 @ApplicationScoped
+@Traced
 public class DataService {
 
 	public boolean associateEntity(
