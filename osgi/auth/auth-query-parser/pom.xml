@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>io.openk9.osgi.auth</groupId>
 		<artifactId>auth</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -56,4 +56,8 @@
 		</dependency>
 	</dependencies>
 
+
+  <scm>
+    <tag>v0.0.1</tag>
+  </scm>
 </project>

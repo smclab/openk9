@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>io.openk9.assemblies.searcher</groupId>
 		<artifactId>searcher</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -138,4 +138,8 @@
 	</build>
 
 
+
+  <scm>
+    <tag>v0.0.1</tag>
+  </scm>
 </project>
