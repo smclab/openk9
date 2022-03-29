@@ -49,7 +49,7 @@
       <dependency>
         <groupId>io.openk9</groupId>
         <artifactId>resources-common</artifactId>
-        <version>${product.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.projectlombok</groupId>

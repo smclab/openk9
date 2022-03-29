@@ -7,7 +7,7 @@ public final class Release {
 	}
 
 	public static String getVersion() {
-		return "${product.version}";
+		return "${project.version}";
 	}
 
 	public static void printRelease() {
