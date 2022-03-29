@@ -52,9 +52,9 @@ Build Latest Index Writer Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw install -pl bom -am $MAVEN_CLI_OPTS
-    - ./mvnw install -pl assemblies/index-writer/index-writer-kar -am $MAVEN_CLI_OPTS
-    - ./mvnw --file assemblies/index-writer/index-writer-karaf package jib:build -Djib.to.image=$CI_REGISTRY_NAME/openk9/openk9-index-writer -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
+    - ./mvnw install -Psmc,bom $MAVEN_CLI_OPTS
+    - ./mvnw install -Psmc,assemblies -pl assemblies/index-writer/index-writer-kar -am $MAVEN_CLI_OPTS
+    - ./mvnw -Psmc,assemblies --file assemblies/index-writer/index-writer-karaf package jib:build -Djib.to.image=$CI_REGISTRY_NAME/openk9/openk9-index-writer -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
   cache:
     key: index-writer
     paths:

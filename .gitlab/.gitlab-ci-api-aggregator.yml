@@ -20,7 +20,7 @@ Build Latest Api Aggregator Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw package $MAVEN_CLI_OPTS -pl quarkus/api-aggregator -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/api-aggregator -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: api-aggregator
     paths:

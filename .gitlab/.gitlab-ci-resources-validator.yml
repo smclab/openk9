@@ -20,7 +20,7 @@ Build Latest Resources Validator Docker Images:
   except:
     - schedules
   script:
-   - ./mvnw package $MAVEN_CLI_OPTS -pl quarkus/resources-validator -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+   - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/resources-validator -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: resources-validator
     paths:

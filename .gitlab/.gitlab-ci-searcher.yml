@@ -47,9 +47,9 @@ Build Latest Searcher Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw install -pl bom -am $MAVEN_CLI_OPTS
-    - ./mvnw install -pl assemblies/searcher/searcher-kar -am $MAVEN_CLI_OPTS
-    - ./mvnw --file assemblies/searcher/searcher-karaf package jib:build -Djib.to.image=$CI_REGISTRY_NAME/openk9/openk9-searcher -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
+    - ./mvnw install -Psmc,bom $MAVEN_CLI_OPTS
+    - ./mvnw install -Psmc,assemblies -pl assemblies/searcher/searcher-kar -am $MAVEN_CLI_OPTS
+    - ./mvnw -Psmc,assemblies --file assemblies/searcher/searcher-karaf package jib:build -Djib.to.image=$CI_REGISTRY_NAME/openk9/openk9-searcher -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
   cache:
     key: searcher
     paths:

@@ -25,14 +25,6 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<modules>
-		<module>bom</module>
-		<module>osgi</module>
-		<module>quarkus</module>
-		<module>plugins</module>
-		<module>assemblies</module>
-	</modules>
-
 	<name>OpenK9</name>
 
 	<licenses>
@@ -114,26 +106,6 @@
 
 	</properties>
 
-	<distributionManagement>
-		<snapshotRepository>
-			<id>sonatype-nexus-snapshots</id>
-			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>sonatype-nexus-release</id>
-			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
-
-	<dependencies>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>${dependency.version.lombok}</version>
-			<scope>provided</scope>
-		</dependency>
-	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -184,5 +156,93 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>smc</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<repositories>
+				<repository>
+					<id>maven-openk9-public-group</id>
+					<url>https://registry.smc.it/repository/maven-openk9-public-group/</url>
+				</repository>
+			</repositories>
+			<distributionManagement>
+				<repository>
+					<id>maven-openk9-public-releases</id>
+					<url>https://registry.smc.it/repository/maven-openk9-public-releases/</url>
+				</repository>
+				<snapshotRepository>
+					<id>maven-openk9-public-snapshots</id>
+					<url>https://registry.smc.it/repository/maven-openk9-public-snapshots/</url>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+		<profile>
+			<id>public</id>
+			<properties>
+				<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
+				<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
+				<scm.url>https://github.com/smclab/openk9.git;a=summary</scm.url>
+			</properties>
+			<distributionManagement>
+				<repository>
+					<id>sonatype-nexus-release</id>
+					<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+				</repository>
+				<snapshotRepository>
+					<id>sonatype-nexus-snapshots</id>
+					<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+		<profile>
+			<id>all</id>
+			<modules>
+				<module>bom</module>
+				<module>osgi</module>
+				<module>quarkus</module>
+				<module>assemblies</module>
+				<module>plugins</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>bom</id>
+			<modules>
+				<module>bom</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>osgi</id>
+			<modules>
+				<module>bom</module>
+				<module>osgi</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>assemblies</id>
+			<modules>
+				<module>bom</module>
+				<module>osgi</module>
+				<module>assemblies</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>quarkus</id>
+			<modules>
+				<module>bom</module>
+				<module>quarkus</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>base-plugins</id>
+			<modules>
+				<module>bom</module>
+				<module>plugins</module>
+			</modules>
+		</profile>
+	</profiles>
 
 </project>

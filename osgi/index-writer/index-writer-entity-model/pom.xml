@@ -31,4 +31,12 @@
 	<packaging>jar</packaging>
 	<name>OpenK9 :: OSGi :: Index Writer :: Index Writer Entity Model</name>
 
+	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
 </project>

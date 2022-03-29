@@ -54,7 +54,6 @@
 		<module>metrics</module>
 		<module>plugin</module>
 		<module>plugin-driver-manager</module>
-		<module>release-api</module>
 		<module>search</module>
 		<module>third-party</module>
 		<module>util</module>

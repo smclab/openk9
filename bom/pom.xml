@@ -55,6 +55,12 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${dependency.version.lombok}</version>
+				<scope>provided</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.osgi</groupId>
 				<artifactId>osgi.core</artifactId>
 				<version>${osgi.version}</version>
@@ -382,11 +388,6 @@
 			<dependency>
 				<groupId>io.openk9.osgi.index-writer</groupId>
 				<artifactId>index-writer-entity-client-api</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.openk9.osgi</groupId>
-				<artifactId>release-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
