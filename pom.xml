@@ -54,6 +54,8 @@
 	</developers>
 
 	<properties>
+		<autoVersionSubmodules>true</autoVersionSubmodules>
+
 		<product.name>OpenK9 Powered by SMC Treviso SRL</product.name>
 		<maven.compiler.release>11</maven.compiler.release>
 		<maven.compiler.target>11</maven.compiler.target>
