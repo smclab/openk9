@@ -74,7 +74,8 @@
 						<![CDATA[
 						Bundle-Version: ${project.version}
 						-noimportjava: true
-						-metatypeannotations: *]]>
+						-metatypeannotations: *
+						DynamicImport-Package: *]]>
 					</bnd>
 				</configuration>
 				<executions>
