@@ -195,3 +195,5 @@ nb-configuration.xml
 .jbang
 .sdkmanrc
 .envrc
+
+release.properties
