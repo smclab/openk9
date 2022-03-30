@@ -28,7 +28,7 @@
 				<param name="depth" type="int">4</param>
 				<param name="enableImagePreprocessing" type="bool">false</param>
 				<param name="filter" type="string">triangle</param>
-				<param name="language" type="string">ita+eng</param>
+				<param name="language" type="string">eng</param>
 				<param name="maxFileSizeToOcr" type="long">2147483647</param>
 				<param name="minFileSizeToOcr" type="long">0</param>
 				<param name="pageSegMode" type="string">1</param>
