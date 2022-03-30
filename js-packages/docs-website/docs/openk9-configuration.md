@@ -5,14 +5,14 @@ title: Openk9 Configuration and First Ingestion
 
 ## Tenant Configuration
 
-After having prepared the * core * component of OpenK9, I can proceed with the creation of an example Tenant,
-connected to the Realm that I previously registered in Keycloak, where to test the product.
+After having prepared the *core* component of OpenK9, I can proceed with the creation of an example Tenant,
+connected to the Realm previously registered in Keycloak, to test the product.
 
 Access to [administration console](http://demo.openk9.local/admin) e goes to "Tenants" section.
 
 ![image-20220303222133620](../static/img/installation/image-20220303222133620.png)
 
-Add new tenant with name "demo.openk9.local" (use both as name and virtualHost)
+Add new tenant with name "demo.openk9.local"(use both as name and virtualHost)
 
 ![image-20220303222526604](../static/img/installation/image-20220303222526604.png)
 
@@ -78,3 +78,9 @@ Then "Save" to accept the default values.
 Return to Enrich Pipeline detail to see a graphic representation of pipeline
 
 ![image-20220304125842958](../static/img/installation/image-20220304125842958.png)
+
+
+Now is time to start first data ingestion.
+
+
+## First data ingestion

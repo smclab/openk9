@@ -3,11 +3,14 @@ id: kubernetes-openk9-core
 title: Install Openk9 Core
 ---
 
-In this section <mark>TODO</mark>
+In this section is described how to install Openk9 core components. To install components helm charts are used.
+
+Every Helm chart used in this guide is present on [openk9-kubernetes github repository](https://github.com/smclab/openk9-kubernetes).
+So clone this repository before start to install.
 
 ## Ingestion
 
-The [Ingestion](ingestion) component exposes the Rest API through which the various "datasource" configured provide the information to be indexed.
+See architecture [Ingestion](ingestion) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -30,7 +33,7 @@ Port forward the pod or service and request "http://localhost:8080/q/openapi" to
 
 ## Datasource
 
-The [Datasource](datasource) component represents the manager of the various indexed data sources.
+See architecture [Datasource](ingestion) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -55,7 +58,7 @@ By accessing the [dashboard](#consul-dashboard) we should see our component amon
 
 ## Entity Manager
 
-[Entity Manager](entity-manager) component represents <mark>TODO</mark>
+See architecture [Entity Manager](ingestion) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -77,7 +80,8 @@ kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io
 ```
 
 ## Index writer
-[Index Writer](index-writer) component represents <mark>TODO</mark>
+
+See architecture [Index writer](ingestion) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -100,7 +104,7 @@ kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io
 
 ## Plugin Driver Manager
 
-[Plugin Driver Manager](plugin-driver-manager) represents <mark>TODO</mark>
+See architecture [Plugin Driver Manager](ingestion) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -125,7 +129,7 @@ By accessing the [dashboard](#consul-dashboard) we should see our component amon
 
 ## Searcher
 
-[Searcher"](searcher) component rappresents <mark>TODO</mark>
+See architecture [Searcher](ingestion) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -145,11 +149,12 @@ kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io
 ```
 
 Searcher component self-registers within Consul.
-I access the [dashboard] (# consul-dashboard) we should see our component among the services.
+
+Access the [dashboard](http://consul.demo.openk9.local) we should see our component among the services.
 
 ## Api Aggregator
 
-Api Aggregator component represents <mark>TODO</mark>
+See architecture [Api Aggregator](ingestion) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -176,7 +181,7 @@ to access the Swagger UI with the description of the exposed APIs
 
 ## Search Admin
 
-Search Admin component represents <mark>TODO</mark>
+Search Admin component represents an admin ui to handle configuration aspects of Openk9.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -206,9 +211,9 @@ Log in with credentials ("test:test")
 ![image-20220303214849436](../static/img/installation/image-20220303214849436.png)
 
 
-## Searc Frontend
+## Search Frontend
 
-Search FrontEnd represents <mark>TODO</mark>
+Search FrontEnd represents search standalone frontend for Openk9.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario
@@ -218,7 +223,6 @@ helm install query-frontend 01-core-charts/openk9-search-frontend \
   -n openk9 \
   -f 01-core-charts/openk9-search-frontend/scenarios/local-runtime.yaml
 ```
-
 
 
 ### Verify installation

@@ -49,6 +49,11 @@ or if you want to see logs for a specific container run:
 docker-compose logs -f <container-name>
 ```
 
+In default configuration docker-compose file starts environment with:
+
+- openk9 prerequisites
+-
+
 Once the startup is finished go to [http://localhost:8888/](http://localhost:8888/) to access the browser OpenK9 interface or [http://localhost:8888/admin](http://localhost:8888/admin) for the admin interface.
 
 ### Basic environment
