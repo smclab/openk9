@@ -3,7 +3,7 @@ id: kubernetes-openk9-parsers
 title: Install Openk9 Parsers
 ---
 
-In this section <mark>TODO</mark>
+In this section is described how to install Openk9 parser components. To install components helm charts are used.
 
 ## Web Parser
 
@@ -13,9 +13,9 @@ Install using the local chart, which is already set up to use the latest stable 
 configuration that *adapts* it to the chosen scenario.
 
 ```bash
-helm install web-parser 01-core-charts/openk9-web-parser \
+helm install web-parser 02-parsers/openk9-web-parser \
   -n openk9 \
-  -f 01-core-charts/openk9-web-parser/scenarios/local-runtime.yaml
+  -f 02-parsers/openk9-web-parser/scenarios/local-runtime.yaml
 ```
 
 ### Verify installation
@@ -43,12 +43,10 @@ Install using the local chart, which is already set up to use the latest stable 
 configuration that *adapts* it to the chosen scenario.
 
 ```bash
-helm install web-parser 01-core-charts/openk9-email-parser \
+helm install web-parser 02-parsers/openk9-email-parser \
   -n openk9 \
-  -f 01-core-charts/openk9-email-parser/scenarios/local-runtime.yaml
+  -f 02-parsers/openk9-email-parser/scenarios/local-runtime.yaml
 ```
-
-
 
 ### Verify installation
 

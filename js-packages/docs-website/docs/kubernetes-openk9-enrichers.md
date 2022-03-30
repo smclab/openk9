@@ -3,19 +3,19 @@ id: kubernetes-openk9-enrichers
 title: Install Openk9 Enrichers
 ---
 
-In this section <mark>TODO</mark>
+In this section is described how to install Openk9 enricher components. To install components helm charts are used.
 
 ## Named Entity Recognition
 
-Named Entity Recognition represents <mark>TODO</mark>
+Named Entity Recognition enricher <mark>TODO</mark>
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that * adapts * it to the chosen scenario.
 
 ```bash
-helm install ner-rabbit 01-core-charts/openk9-ner-it \
+helm install ner-rabbit 03-enrichers/openk9-ner-it \
   -n openk9 \
-  -f 01-core-charts/openk9-ner-it/scenarios/local-runtime.yaml
+  -f 03-enrichers/openk9-ner-it/scenarios/local-runtime.yaml
 ```
 
 
@@ -30,45 +30,41 @@ kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io
 
 ## Tika
 
-La componente "Named Entity Recognition" (brevemente NER) rappresenta <mark>TODO</mark>
+Tika enricher <mark>TODO</mark>
 
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
+### Tika without Ocr
+
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that * adapts * it to the chosen scenario.
 
 ```bash
-helm install ner-rabbit 01-core-charts/openk9-ner-it \
+helm install openk9-tika 03-enrichers/openk9-tika \
   -n openk9 \
-  -f 01-core-charts/openk9-ner-it/scenarios/local-runtime.yaml
+  -f 03-enrichers/openk9-tika/scenarios/local-runtime.yaml
 ```
 
+### Tika with ocr
 
+Tika with Ocr perform <mark>TODO</mark>
 
-### Verifica installazione
+Install using the local chart, which is already set up to use the latest stable version of the component,
+and the configuration file that * adapts * it to the chosen scenario.
+
+```bash
+helm install openk9-tika-ocr 03-enrichers/openk9-tika-ocr \
+  -n openk9 \
+  -f 03-enrichers/openk9-tika-ocr/scenarios/local-runtime.yaml
+```
+
+### Verify installation
 
 Verifico nei log di avvio del pod l'assenza di errori gravi
 
 ```bash
-kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-ner-it" -o name)
+kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-tika" -o name)
 ```
 
-## Tika with ocr
-
-La componente "Named Entity Recognition" (brevemente NER) rappresenta <mark>TODO</mark>
-
-Installo usando il chart locale, che è già predisposto per usare l'ultima versione stabile del componente, ed il file di configurazione che la *adegua* allo scenario scelto
-
 ```bash
-helm install ner-rabbit 01-core-charts/openk9-ner-it \
-  -n openk9 \
-  -f 01-core-charts/openk9-ner-it/scenarios/local-runtime.yaml
-```
-
-
-
-### Verifica installazione
-
-Verifico nei log di avvio del pod l'assenza di errori gravi
-
-```bash
-kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-ner-it" -o name)
+kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-tika-ocr" -o name)
 ```
 

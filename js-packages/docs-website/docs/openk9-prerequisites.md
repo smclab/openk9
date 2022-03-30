@@ -3,23 +3,29 @@ id: openk9-prerequisites
 title: Install Openk9 prerequisites
 ---
 
-In this guide we'll see how to install Openk9 prerequisites on K3s server.
+In this section is described how to install Openk9 prerequisites. To install components helm charts are used.
 
 ## Installation pre-requirements
 
 ### Preparing the installation
 
-OpenK9 uses established products for some aspects/functionality. These products must be present in Kubernets
-before installing OpenK9. Currently installing through [Helm Charts] (https://helm.sh/docs/topics/charts/) is the best choice.
+OpenK9 uses established products for some aspects/functionality. These products must be present in Kubernetes
+before installing OpenK9. Currently installing through [Helm Charts](https://helm.sh/docs/topics/charts/) is the best choice.
 
-Inside the "<mark> TODO </mark>" repository there is the `kubernetes/00-requirements` folder where, for each product,
-there are configuration files for the different installation scenarios.
+Inside the [openk9-kubernetes repository](https://github.com/smclab/openk9-kubernetes) there is the
+`kubernetes/00-requirements` folder where, for each product, there are configuration files for the different installation scenarios.
 
-Cloning or exporting the repository locally makes it easier to use these files.
+So clone this repository before start to install.
+
+## Elasticsearch v7.15.0
+
+### Preparing the installation
 
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration
-file [values.yaml](https://github.com/elastic/helm-charts/blob/v7.15.0/elasticsearch/values.yaml) for a local development
-scenario (as per `00-requirements/00-elasticsearch/local-runtime.yaml`)
+file [values.yaml](https://github.com/elastic/helm-charts/blob/v7.15.0/elasticsearch/values.yaml) for local development
+scenario using
+[00-requirements/00-elasticsearch/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/00-elasticsearch/local-runtime.yaml).
+Choose how to refine based on your needs.
 
 ```yaml
 # This scenario creates a single-instance standalone ElasticSearch
@@ -68,13 +74,13 @@ helm install elasticsearch elastic/elasticsearch \
 
 To verify correct installation:
 
-- make port 9200 visible from the local station
+- make port *9200* visible from the local station
 
 ```bash
 kubectl port-forward -n openk9 svc/elasticsearch-master 9200
 ```
 
-- openk browser on "http://localhost:9200" to get the informational JSON
+- openk browser on [http://localhost:9200](http://localhost:9200) to get the informational JSON
 
 ```
 {
@@ -96,11 +102,11 @@ kubectl port-forward -n openk9 svc/elasticsearch-master 9200
 }
 ```
 
-### elastic.demo.openk9.local
+### Expose using ingress
 
 If you want to expose ElasticSearch outside Kubernetes you need to configure an **Ingress**,
 preferably in https.
-The chart allows me to do this using "nginx-controller" as a backend while my K3s cluster has "traefik".
+The chart allows me to do this using *nginx-controller* as a backend while my K3s cluster has *traefik*.
 
 Create Ingress
 
@@ -133,14 +139,14 @@ _EOF_
 
 where:
 
-* expose ElasticSearch as "elastic.demo.openk9.local". In order to use this hostname I have to register it in my hosts file
+* expose ElasticSearch as *elastic.demo.openk9.local*. In order to use this hostname register it in my hosts file
 
-* provide both http and https access (using the self-signed certificates produced by the cert-manager)
+* provide both http and https access(using the self-signed certificates produced by the cert-manager)
 
 * use the headless service to get the IPs of the pods and allow Traefik to apply its load-balancing logics.
 
-At this point, after updating the hosts file, if you open a browser on "http: //elastic.demo.openk9.local" you should
-get the json with the server info.
+At this point, after updating the hosts file, if you open a browser on
+[http://elastic.demo.openk9.local](http://elastic.demo.openk9.local) you should get the json with the server info.
 
 
 ## Kibana v7.15.0
@@ -158,8 +164,10 @@ helm repo add elastic https://helm.elastic.co
 ```
 
 Before proceeding with the installation of the chart, it is necessary to refine some parameters present in the configuration
-file [values.yaml](https://github.com/elastic/helm-charts/blob/v7.15.0/kibana/values.yaml) for a local development
-scenario (as per `00-requirements/01-kibana/local-runtime.yaml`)
+file [values.yaml](https://github.com/elastic/helm-charts/blob/v7.15.0/kibana/values.yaml) for local development
+scenario using
+[00-requirements/01-kibana/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/01-kibana/local-runtime.yaml).
+Choose how to refine based on your needs.
 
 ```yaml
 ---
@@ -212,14 +220,14 @@ kibana-kibana-759bc99675-qt4n9   1/1     Running   0          67s
 kubectl port-forward -n openk9 deployment/kibana-kibana 5601
 ```
 
-- from local open "http://localhost:5601"
+- from local open [http://localhost:5601](http://localhost:5601)
 
 
-### kibana.demo.openk9.local
+### Expose using ingress
 
 
 If you want to expose Kibana outside of Kubernetes you need to configure an **Ingress**, preferably in https.
-The chart allows me to do this using "nginx-controller" as a backend while my K3s cluster has "traefik".
+The chart allows me to do this using *nginx-controller* as a backend while my K3s cluster has *traefik*.
 
 Create Ingress
 
@@ -252,15 +260,15 @@ _EOF_
 
 where:
 
-* I expose the Kibana console as "kibana.demo.openk9.local". In order to use this hostname you have to register it in my hosts file
+* I expose the Kibana console as *kibana.demo.openk9.local*. In order to use this hostname you have to register it in my hosts file
 
-* I provide both http and https access (using the self-signed certificates produced by the cert-manager)
+* I provide both http and https access(using the self-signed certificates produced by the cert-manager)
 
 * I use the headless service to get the IPs of the pods and allow Traefik to apply its load-balancing logics.
 
 
-
-At this point, after updating the hosts file, if I open a browser on "http: //kibana.demo.openk9.local" you should access the console.
+At this point, after updating the hosts file, if I open a browser on [http://kibana.demo.openk9.local](http://kibana.demo.openk9.local)
+you should access the console.
 
 
 ## RabbitMQ v3.8
@@ -280,8 +288,10 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 ``
 
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration file
-[values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/rabbitmq/values.yaml) for one local development scenario
-(as per `00-requirements/02-rabbitmq/local-runtime.yaml`)
+[values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/rabbitmq/values.yaml)
+for local development scenario using
+[00-requirements/02-rabbitmq/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/02-rabbitmq/local-runtime.yaml).
+Choose how to refine based on your needs.
 
 ```yaml
 # This scenario creates a single-instance standalone RabbitMQ
@@ -324,36 +334,6 @@ helm install rabbitmq bitnami/rabbitmq \
   -f 00-requirements/02-rabbitmq/local-runtime.yaml
 ```
 
-```
-....
-
-Credentials:
-    echo "Username      : openk9"
-    echo "Password      : $(kubectl get secret --namespace openk9 rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 --decode)"
-    echo "ErLang Cookie : $(kubectl get secret --namespace openk9 rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 --decode)"
-
-Note that the credentials are saved in persistent volume claims and will not be changed upon upgrade or reinstallation unless the persistent volume claim has been deleted. If this is not the first installation of this chart, the credentials may not be valid.
-This is applicable when no passwords are set and therefore the random password is autogenerated. In case of using a fixed password, you should specify it when upgrading.
-More information about the credentials may be found at https://docs.bitnami.com/general/how-to/troubleshoot-helm-chart-issues/#credential-errors-while-upgrading-chart-releases.
-
-RabbitMQ can be accessed within the cluster on port  at rabbitmq.openk9.svc.
-
-To access for outside the cluster, perform the following steps:
-
-To Access the RabbitMQ AMQP port:
-
-    echo "URL : amqp://127.0.0.1:5672/"
-    kubectl port-forward --namespace openk9 svc/rabbitmq 5672:5672
-
-To Access the RabbitMQ Management interface:
-
-    echo "URL : http://127.0.0.1:15672/"
-    kubectl port-forward --namespace openk9 svc/rabbitmq 15672:15672
-
-WARNING: Rolling tag detected (bitnami/rabbitmq:3.8), please note that it is strongly recommended to avoid using rolling tags in a production environment.
-+info https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/
-```
-
 ### Verify Installation
 
 As suggested by the installation notes
@@ -364,17 +344,16 @@ As suggested by the installation notes
 kubectl port-forward -n openk9 svc/rabbitmq 15672:15672
 ``
 
-* open a browser on "http: // localhost: 15672"
+* open a browser on [http://localhost:15672](http://localhost:15672)
 
-* log in with the user and password declared in `00-requirements/02-rabbitmq/local-devel.yaml`.
+* log in with the user and password declared in
+[00-requirements/02-rabbitmq/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/02-rabbitmq/local-runtime.yaml).
 
-I use CTRL-C to stop port forward.
 
+### Expose using ingress
 
-### rabbitmq.demo.openk9.local
-
-If you want to expose the RabbitMQ console outside Kubernetes it is necessary to configure an **Ingress**, preferably in https.
-The chart allows me to do this using "nginx-controller" as a backend while my K3s cluster has "traefik".
+To expose the RabbitMQ console outside Kubernetes it is necessary to configure an **Ingress**, preferably in https.
+The chart allows me to do this using *nginx-controller* as a backend while my K3s cluster has *traefik*.
 
 Create Ingress
 
@@ -407,15 +386,15 @@ _EOF_
 
 where:
 
-* expose the RabbitMQ console as "rabbitmq.demo.openk9.local". In order to use this hostname you have to register it in my hosts file
+* expose the RabbitMQ console as *rabbitmq.demo.openk9.local*. In order to use this hostname to register it in my hosts file
 
-* provide both http and https access (using the self-signed certificates produced by the cert-manager)
+* provide both http and https access(using the self-signed certificates produced by the cert-manager)
 
 * use the headless service to get the IPs of the pods and allow Traefik to apply its load-balanciong logics.
 
 
-
-At this point, after updating the hosts file, if you open a browser on "http://rabbitmq.demo.openk9.local" you should access the console.
+At this point, after updating the hosts file,
+open browser on [http://rabbitmq.demo.openk9.local](http://rabbitmq.demo.openk9.local) you should access the console.
 
 ## PostgreSQL v13.x
 
@@ -433,7 +412,10 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 
 Before chart installation is necessary to refine some parameters present in the configuration file
 [values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/postgresql/values.yaml)
-for a local development scenario (`00-requirements/03-postgresql/local-runtime.yaml`)
+for local development scenario using
+[00-requirements/03-postgresql/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/03-postgresql/local-runtime.yaml).
+Choose how to refine based on your needs.
+
 
 ```yaml
 # This scenario creates a single-instance standalone RabbitMQ
@@ -482,39 +464,9 @@ helm install postgresql bitnami/postgresql \
   -f 00-requirements/03-postgresql/local-runtime.yaml
 ```
 
-```
-...
-
-** Please be patient while the chart is being deployed **
-
-PostgreSQL can be accessed via port 5432 on the following DNS names from within your cluster:
-
-    postgresql.openk9.svc.cluster.local - Read/Write connection
-
-To get the password for "postgres" run:
-
-    export POSTGRES_ADMIN_PASSWORD=$(kubectl get secret --namespace openk9 postgresql -o jsonpath="{.data.postgres-password}" | base64 --decode)
-
-To get the password for "openk9" run:
-
-    export POSTGRES_PASSWORD=$(kubectl get secret --namespace openk9 postgresql -o jsonpath="{.data.password}" | base64 --decode)
-
-To connect to your database run the following command:
-
-    kubectl run postgresql-client --rm --tty -i --restart='Never' --namespace openk9 --image docker.io/bitnami/postgresql:13 --env="PGPASSWORD=$POSTGRES_PASSWORD" \
-      --command -- psql --host postgresql -U openk9 -d openk9 -p 5432
-
-To connect to your database from outside the cluster execute the following commands:
-
-    kubectl port-forward --namespace openk9 svc/postgresql 5432:5432 &
-    PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U openk9 -d openk9 -p 5432
-WARNING: Rolling tag detected (bitnami/postgresql:13), please note that it is strongly recommended to avoid using rolling tags in a production environment.
-+info https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/
-```
-
 ### Verify installation
 
-you can use kubectl to activate a temporary pod with psql command
+Use kubectl to activate a temporary pod with psql command
 
 ```bash
 $ export POSTGRES_PASSWORD=$(kubectl get secret --namespace openk9 postgresql -o jsonpath="{.data.password}" | base64 --decode)
@@ -525,9 +477,7 @@ $ kubectl run postgresql-client --rm --tty -i --restart='Never' \
    --command -- psql --host postgresql -U openk9 -d openk9 -p 5432
 ```
 
-When `If you don't see a command prompt, try pressing enter.` message appears, bisogna inserire la password dell'utente `openk9` e quindi premere invio.
-
-Da `psql` posso usare il comando `\l` per vedere i database ed i template presenti.
+Using `psql` use `\l` command to see list of databases.
 
 ```
 If you don't see a command prompt, try pressing enter.
@@ -558,13 +508,14 @@ pod "postgresql-client" deleted
 
 [Neo4J](https://neo4j.com/) is used by OpenK9 to manage/describe the relationships between indexed items.
 
-To install Neo4J I use the [Helm Chart](https://github.com/neo4j-contrib/neo4j-helm) made available by the community.
+To install Neo4J use the [Helm Chart](https://github.com/neo4j-contrib/neo4j-helm) made available by the community.
 
-> For Neo4J version 4.3 and later, the official [Helm Charts] (https://neo4j.com/labs/neo4j-helm/1.0.0/) are available
+> For Neo4J version 4.3 and later, the official [Helm Charts](https://neo4j.com/labs/neo4j-helm/1.0.0/) are available.
 
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration file
-[values.yaml](https://github.com/neo4j-contrib/neo4j-helm/blob/4.2.6-1/values. yaml) for a local development scenario
-(as per `00-requirements/04-neo4j/local-runtime.yaml`
+[values.yaml](https://github.com/neo4j-contrib/neo4j-helm/blob/4.2.6-1/values. yaml) for local development scenario
+[00-requirements/04-neo4j/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/04-neo4j/local-runtime.yaml).
+Choose how to refine based on your needs.
 
 ```yaml
 # This scenario creates a single-instance standalone Neo4j
@@ -604,7 +555,6 @@ neo4jPassword: openk9
 defaultDatabase: "neo4j"
 ```
 
-
 From chart:
 
 - default user is `neo4j`
@@ -615,7 +565,6 @@ From chart:
 
 - volumes "conf", "plugin", etc. are handles as directories in volume "data"
 
-Quindi installo il chart referenziandolo attraverso la Release URL in github
 
 ### Install Neo4j
 
@@ -671,7 +620,7 @@ kubectl get secrets neo4j-neo4j-secrets -o yaml --namespace openk9
 
 ### Verify installation
 
-Wait a couple of minutes for all the resources to be installed then use when indicated
+Wait a couple of minutes for all the resources to be installed, then use when indicated
 by the installation notes to verify the correct activation of the service.
 
 ```bash
@@ -707,16 +656,18 @@ Then you can access to [http://localhost:7474/browser](http://localhost:7474/bro
 
  * as URL Connect uso "bolt://localhost:7687"
  * as username use "neo4j"
- * as password use password specified in `00-requirements/04-neo4j/local-runtime.yaml`
+ * as password use password specified in
+ [00-requirements/04-neo4j/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/04-neo4j/local-runtime.yaml)
 
 Then you can perform queries using Cypher Query Language.
-
 
 ## Consul v1.11.2
 
 ### Preparing the installation
 
-[Consul](https://www.consul.io/) is a product developed by HashiCorp and provides "Service Discovery" and "KeyValue Store" features.
+[Consul](https://www.consul.io/) is a product developed by HashiCorp and provides
+[Service Discovery](https://www.consul.io/use-cases/discover-services) and
+[KeyValue Store](https://www.consul.io/docs/dynamic-app-config/kv) features.
 
 To install Consul use [Helm Chart](https://github.com/hashicorp/consul-k8s/tree/main/charts/consul)
 provided by HashiCorp.
@@ -729,7 +680,8 @@ helm repo add hashicorp https://helm.releases.hashicorp.com
 
 Before chart installation is necessary to change some parameters in
 [values.yaml](https://github.com/hashicorp/consul-k8s/blob/v0.40.0/charts/consul/values.yaml)
-for local development (as in `00-requirements/05-consul/local-runtime.yaml`)
+for local development
+[00-requirements/05-consul/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/tree/master/00-requirements/05-consul).
 
 ```yaml
 # This scenario creates a single-instance standalone Consul
@@ -794,13 +746,11 @@ helm install consul hashicorp/consul \
 ### Verify installation
 
 
-Acces to `consul` inside pod and get list of registered nodes
+Acces to *consul* inside pod and get list of registered nodes
 
 ```bash
 kubectl -n consul exec -it consul-server-0 -- consul members
 ```
-
-
 
 ```
 Node                 Address         Status  Type    Build   Protocol  DC   Partition  Segment
@@ -809,17 +759,18 @@ k3s-master.vm.local  10.85.0.6:8301  alive   client  1.11.2  2         dc1  defa
 
 ### Consul Dashboard
 
-Installation contains also a dashboard. We can do port-forward to connect locally to it.
+Installation contains also a dashboard. Perform port-forward to connect locally to it.
 
 ```
 kubectl -n consul port-forward consul-server-0 8500:8500
 ```
 
-Then access to url "http://localhost:8500/"
+Then access to url [http://localhost:8500](http://localhost:8500)
 
-### consul.demo.openk9.local
+### Expose using ingress
 
-Eventually I can permanently export, through an Ingress, the Consul console outside of Kubernetes
+To expose the Consul dashboard outside Kubernetes it is necessary to configure an **Ingress**, preferably in https.
+The chart allows me to do this using *nginx-controller* as a backend while my K3s cluster has *traefik*.
 
 ```bash
 cat <<_EOF_ | kubectl apply -n consul -f -
@@ -848,28 +799,28 @@ spec:
 _EOF_
 ```
 
-In practice:
+where:
 
-* expose the Consul console as "consul.demo.openk9.local". In order to use this hostname I have to register it in my hosts file
+* expose the Consul dashboard as *consul.demo.openk9.local*. In order to use this hostname register it in my hosts file
 
 * provide both http and https access (using the self-signed certificates produced by the cert-manager)
 
 * use the headless service to get the IPs of the pods and allow Traefik to apply its load-balanciong logics.
 
-At this point, after updating the hosts file, if you open a browser on "http://consul.demo.openk9.local" you should access the console
+At this point, after updating the hosts file, if you open a browser on
+[http://consul.demo.openk9.local](http://consul.demo.openk9.local) you should access the console
 
 ## Keycloack v16.1.1
 
-[Keycloak](https://www.keycloak.org/) viene utilizzato da OpenK9 per gestire, e delegare, le logiche di autenticazione degli utenti. Come pure alcuni aspetti delle logiche di autorizzazione.
-
-
+[Keycloak](https://www.keycloak.org/) is used by OpenK9 to manage and delegate user authentication logics.
+As well as some aspects of the authorization logic.
 
 ### Preparing the installation
 
 Keycloak needs relational database, preferably PostgreSQL.
 A `Job` to create database on postgres is provided as pre-requisite. Database is handled by specific user.
 
-Create `postgresql-keycloak.yaml` with following content
+Use [postgresql-keycloak.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/06-keycloak/extras/postgresql-keycloak.yaml).
 
 ```yaml
 apiVersion: batch/v1
@@ -900,17 +851,13 @@ spec:
       restartPolicy: Never
 ```
 
-
-
-Applico lo yaml predisposto
+Apply yaml
 
 ```bash
 kubectl -n openk9 apply -f postgresql-keycloak.yaml
 ```
 
-
-
-Per future necessità creo un Secret con le coordinate dell'utente appena creato
+For future needs create a Secret with the coordinates of the newly created user.
 
 ```bash
 kubectl -n openk9 create secret generic postgresql-keycloak-secret \
@@ -919,9 +866,10 @@ kubectl -n openk9 create secret generic postgresql-keycloak-secret \
   --from-literal=password=openk9
 ```
 
-For its installation within K3s we will use the [Helm Charts](https://github.com/codecentric/helm-charts/tree/master/charts/keycloak) provided by CodeCentric.
+For its installation within K3s we will use the
+[Helm Charts](https://github.com/codecentric/helm-charts/tree/master/charts/keycloak) provided by CodeCentric.
 
-Add to helm the repository that contains the charts
+Add to helm the repository that contains the charts.
 
 ```bash
 helm repo add codecentric https://codecentric.github.io/helm-charts
@@ -929,7 +877,9 @@ helm repo add codecentric https://codecentric.github.io/helm-charts
 
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration file
 [values.yaml](https://github.com/codecentric/helm-charts/blob/master/charts/keycloak/values.yaml)
-for a local development scenario (as per `00-requirements/06-keycloak/local-runtime.yaml`)
+for a local development scenario
+[00-requirements/06-keycloak/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/06-keycloak/local-runtime.yaml).
+Choose how to refine based on your needs.
 
 ```yaml
 # This scenario creates a single-instance standalone Keycloak
@@ -1020,22 +970,23 @@ helm install keycloak codecentric/keycloak \
 ```
 
 
-I have to log in to the console to create the admin user and to interact with the Keycloak console.
-Do port-forward to acces to console:
+Log in to the console to create the admin user and to interact with the Keycloak console.
+Port forward to acces to console:
 
 ```bash
 kubectl -n openk9 port-forward svc/keycloak-http 8280:80
 ```
 
-The access to console using url "http://localhost:8280" and define admin user "<u>admin</u>" with password "<u>openk9</u>"
+Access to console using url [http://localhost:8280](http://localhost:8280) and
+define admin user "<u>admin</u>" with password "<u>openk9</u>".
 
 ![image-20220226111139171](../static/img/installation/image-20220226111139171.png)
 
-After creation click on "Administration Console" to access on console with just created user
+After creation click on *Administration Console* to access on console with just created user.
 
 ![image-20220226111305989](../static/img/installation/image-20220226112558454.png)
 
-### keycloak.demo.openk9.local
+### Expose using ingress
 
 The chart made available by CodeCentric provides the possibility to create an Ingress using Traefik
 as seen from the `local-runtime.yaml`. It is therefore advisable to exploit the potential of
@@ -1046,12 +997,12 @@ the chart rather than create an ad-hoc Ingress.
 Adminer (also known as phpMinAdmin) is a database management tool written in PHP.
 The supported engines are MySQL, PostgreSQL, SQLite, MS SQL, Oracle, Firebird, SimpleDB, Elasticsearch and MongoDB.
 
-This is an ** optional ** requirement: in local scenarios I prefer to use "port-forwards" and access databases with desktop
+This is an **optional** requirement: in local scenarios is preferable to use "port-forwards" and access databases with desktop
 tools like [DBeaver](https://dbeaver.io/).
 However, it is true that in a cloud or non-local context,
 the availability of a tool that communicates with the DB without network latencies is an important help.
 
-For installation we use the chart prepared by us
+For installation we use the chart prepared by us:
 
 ```bash
 helm install adminer 00-requirements/07-adminer -n openk9
@@ -1068,5 +1019,3 @@ kubectl -n openk9 port-forward svc/adminer 18080:8080
 ```
 
 * access to url "[httpd://localhost:18080](httpd://localhost:18080)" and authenticate with PostgreSQL credentials.
-
-
