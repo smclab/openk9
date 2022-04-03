@@ -9,7 +9,7 @@ public class AsyncEmailEnrichProcessor implements AsyncEnrichProcessor {
 
     @Override
     public String destinationName() {
-        return "io.openk9.email";
+        return "io.openk9.ner";
     }
 
     @Override
