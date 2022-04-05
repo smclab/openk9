@@ -76,7 +76,7 @@ def parse_email(fetched_msg):
     struct_msg = {'date': (local_date*1000), 'from': msg_from, 'subject': msg_subject, 'to': msg_to, 'cc': msg_cc,
                   'body': body, "htmlBody": raw_body}
     
-    msg_date = datetime.fromtimestamp(local_date).strftime("%a, %d %b %Y %H:%M:%S")
+    msg_date = datetime.fromtimestamp(local_date).strftime("%d %b %Y %H:%M:%S")
 
     raw_msg = ""
     if msg_subject is not None:
