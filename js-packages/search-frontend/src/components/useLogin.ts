@@ -68,7 +68,7 @@ export function useLoginInfo() {
             timestamp: Date.now(),
           });
         } catch (error) {
-          setState({ type: "anonymous" });
+          setState({ type: "login-error" });
         }
       }
     },
@@ -89,29 +89,43 @@ export function useLoginInfo() {
   React.useEffect(() => {
     if (state.type === "logged-in") {
       const timeoutId = setTimeout(async () => {
-        const loginRefreshResponse = await doLoginRefresh({
-          refreshToken: state.loginInfo.refresh_token,
-        });
-        if (!loginRefreshResponse.ok) throw new Error();
-        const userInfoResponse = await getUserInfo(
-          loginRefreshResponse.response,
-        );
-        if (!userInfoResponse.ok) throw new Error();
-        setState((s) =>
-          s === state
-            ? {
-                type: "logged-in",
-                loginInfo: loginRefreshResponse.response,
-                userInfo: userInfoResponse.response,
-                timestamp: Date.now(),
-              }
-            : s,
-        );
+        try {
+          const loginRefreshResponse = await doLoginRefresh({
+            refreshToken: state.loginInfo.refresh_token,
+          });
+          if (!loginRefreshResponse.ok) throw new Error();
+          const userInfoResponse = await getUserInfo(
+            loginRefreshResponse.response,
+          );
+          if (!userInfoResponse.ok) throw new Error();
+          setState((s) =>
+            s === state
+              ? {
+                  type: "logged-in",
+                  loginInfo: loginRefreshResponse.response,
+                  userInfo: userInfoResponse.response,
+                  timestamp: Date.now(),
+                }
+              : s,
+          );
+        } catch (error) {
+          setState({ type: "anonymous" });
+        }
       }, state.timestamp + state.loginInfo.expires_in * 1000 * 0.9 - Date.now());
       return () => {
         clearTimeout(timeoutId);
       };
     }
   }, [state]);
+  React.useEffect(() => {
+    if (state.type === "logged-in") {
+      (async () => {
+        const userInfoResponse = await getUserInfo(state.loginInfo);
+        if (!userInfoResponse.ok) {
+          setState({ type: "anonymous" });
+        }
+      })();
+    }
+  }, [state.loginInfo, state.type]);
   return { state, login, logout };
 }

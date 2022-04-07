@@ -192,6 +192,7 @@ export function FilterCategory({
     </div>
   );
 }
+
 const buttonAsLinkStyle = css`
   color: -webkit-link;
   cursor: pointer;
