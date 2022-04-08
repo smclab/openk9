@@ -9,7 +9,7 @@ In this section is described how to install Openk9 prerequisites. To install com
 
 ### Preparing the installation
 
-OpenK9 uses established products for some aspects/functionality. These products must be present in Kubernetes
+OpenK9 uses established products for some aspects/functionalities. These products must be present in Kubernetes
 before installing OpenK9. Currently installing through [Helm Charts](https://helm.sh/docs/topics/charts/) is the best choice.
 
 Inside the [openk9-kubernetes repository](https://github.com/smclab/openk9-kubernetes) there is the
@@ -106,7 +106,7 @@ kubectl port-forward -n openk9 svc/elasticsearch-master 9200
 
 If you want to expose ElasticSearch outside Kubernetes you need to configure an **Ingress**,
 preferably in https.
-The chart allows me to do this using *nginx-controller* as a backend while my K3s cluster has *traefik*.
+The chart allows you to do this using *nginx-controller* as a backend while K3s cluster has *traefik*.
 
 Create Ingress
 
@@ -139,11 +139,11 @@ _EOF_
 
 where:
 
-* expose ElasticSearch as *elastic.demo.openk9.local*. In order to use this hostname register it in my hosts file
+* expose ElasticSearch as *elastic.demo.openk9.local*. In order to use this hostname register it in your hosts file
 
 * provide both http and https access(using the self-signed certificates produced by the cert-manager)
 
-* use the headless service to get the IPs of the pods and allow Traefik to apply its load-balancing logics.
+* use the headless service to get the IPs of the pods and allow Traefik to apply its load-balancing logic.
 
 At this point, after updating the hosts file, if you open a browser on
 [http://elastic.demo.openk9.local](http://elastic.demo.openk9.local) you should get the json with the server info.
@@ -157,7 +157,7 @@ Kibana is not a fundamental component for a local environment; if you don't need
 Elasticsearch you can skip this step.
 Also for Kibana you can use the official [Helm Charts](https://github.com/elastic/helm-charts).
 
-I add to helm the repository that contains the charts(if not already done)
+I add to helm the repository that contains the charts(if not already done for Elasticsearch)
 
 ```bash
 helm repo add elastic https://helm.elastic.co
@@ -208,7 +208,7 @@ To verify correct installation:
 kubectl get pod -n openk9
 ```
 
-```
+```bash
 NAME                             READY   STATUS    RESTARTS   AGE
 elasticsearch-master-0           1/1     Running   0          24m
 kibana-kibana-759bc99675-qt4n9   1/1     Running   0          67s
@@ -227,7 +227,7 @@ kubectl port-forward -n openk9 deployment/kibana-kibana 5601
 
 
 If you want to expose Kibana outside of Kubernetes you need to configure an **Ingress**, preferably in https.
-The chart allows me to do this using *nginx-controller* as a backend while my K3s cluster has *traefik*.
+The chart allows you to do this using *nginx-controller* as a backend while K3s cluster has *traefik*.
 
 Create Ingress
 
@@ -260,15 +260,15 @@ _EOF_
 
 where:
 
-* I expose the Kibana console as *kibana.demo.openk9.local*. In order to use this hostname you have to register it in my hosts file
+* expose the Kibana console as *kibana.demo.openk9.local*. In order to use this hostname you have to register it in your hosts file
 
-* I provide both http and https access(using the self-signed certificates produced by the cert-manager)
+* provide both http and https access(using the self-signed certificates produced by the cert-manager)
 
-* I use the headless service to get the IPs of the pods and allow Traefik to apply its load-balancing logics.
+* use the headless service to get the IPs of the pods and allow Traefik to apply its load-balancing logics.
 
 
-At this point, after updating the hosts file, if I open a browser on [http://kibana.demo.openk9.local](http://kibana.demo.openk9.local)
-you should access the console.
+At this point, after updating the hosts file, open a browser on [http://kibana.demo.openk9.local](http://kibana.demo.openk9.local).
+You should access the console.
 
 
 ## RabbitMQ v3.8
@@ -278,14 +278,14 @@ you should access the console.
 [RabbitMQ](https://www.rabbitmq.com/) is another fundamental element of OpenK9 as it allows asynchronous
 dialogue between the different components of the solution.
 
-To install RabbitMQ I use the helm Chart created by [Bitnami](https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq)
+To install RabbitMQ use the helm Chart created by [Bitnami](https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq)
 which manages in an excellent way the different needs both for stand-alone installation both for cluster installation.
 
-I add to helm the repository that contains the charts
+Add to helm the repository that contains the charts
 
-`` '' bash
+```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
-``
+```
 
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration file
 [values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/rabbitmq/values.yaml)
@@ -338,11 +338,11 @@ helm install rabbitmq bitnami/rabbitmq \
 
 As suggested by the installation notes
 
-* I expose the Management interface on the host PC
+* expose the Management interface on the host PC
 
-``bash
+```bash
 kubectl port-forward -n openk9 svc/rabbitmq 15672:15672
-``
+```
 
 * open a browser on [http://localhost:15672](http://localhost:15672)
 
@@ -353,11 +353,11 @@ kubectl port-forward -n openk9 svc/rabbitmq 15672:15672
 ### Expose using ingress
 
 To expose the RabbitMQ console outside Kubernetes it is necessary to configure an **Ingress**, preferably in https.
-The chart allows me to do this using *nginx-controller* as a backend while my K3s cluster has *traefik*.
+The chart allows you to do this using *nginx-controller* as a backend while K3s cluster has *traefik*.
 
 Create Ingress
 
-`` '' bash
+```bash
 cat << _ EOF_ | kubectl apply -n openk9 -f -
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -382,15 +382,15 @@ spec:
         - "rabbitmq.demo.openk9.local"
       secretName: selfsigned-ca-secret
 _EOF_
-``
+```
 
 where:
 
-* expose the RabbitMQ console as *rabbitmq.demo.openk9.local*. In order to use this hostname to register it in my hosts file
+* expose the RabbitMQ console as *rabbitmq.demo.openk9.local*. In order to use this hostname to register it in your hosts file
 
 * provide both http and https access(using the self-signed certificates produced by the cert-manager)
 
-* use the headless service to get the IPs of the pods and allow Traefik to apply its load-balanciong logics.
+* use the headless service to get the IPs of the pods and allow Traefik to apply its load-balanciong logic.
 
 
 At this point, after updating the hosts file,
@@ -506,14 +506,14 @@ pod "postgresql-client" deleted
 
 ### Preparing the installation
 
-[Neo4J](https://neo4j.com/) is used by OpenK9 to manage/describe the relationships between indexed items.
+[Neo4J](https://neo4j.com/) is used by OpenK9 to manage/describe the relationships between indexed items and construct a Knowledge graph for the solution.
 
 To install Neo4J use the [Helm Chart](https://github.com/neo4j-contrib/neo4j-helm) made available by the community.
 
 > For Neo4J version 4.3 and later, the official [Helm Charts](https://neo4j.com/labs/neo4j-helm/1.0.0/) are available.
 
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration file
-[values.yaml](https://github.com/neo4j-contrib/neo4j-helm/blob/4.2.6-1/values. yaml) for local development scenario
+[values.yaml](https://github.com/neo4j-contrib/neo4j-helm/blob/4.2.6-1/values.yaml) for local development scenario
 [00-requirements/04-neo4j/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/04-neo4j/local-runtime.yaml).
 Choose how to refine based on your needs.
 
@@ -559,7 +559,7 @@ From chart:
 
 - default user is `neo4j`
 
-- default database will be `neo4j`
+- default database is `neo4j`
 
 - APOC plugin, needed for OpenK9, is already included in image
 
@@ -575,8 +575,6 @@ helm install neo4j \
    -f  00-requirements/04-neo4j/local-runtime.yaml
 ```
 
-...
-
 Your cluster is now being deployed, and may take up to 5 minutes to become available.
 If you'd like to track status and wait on your rollout to complete, run:
 
@@ -586,8 +584,6 @@ $ kubectl rollout status \
     StatefulSet/neo4j-neo4j-core \
     --watch
 ```
-
-You can inspect your logs containers like so:
 
 We can see the content of the logs by running the following command:
 
@@ -620,8 +616,7 @@ kubectl get secrets neo4j-neo4j-secrets -o yaml --namespace openk9
 
 ### Verify installation
 
-Wait a couple of minutes for all the resources to be installed, then use when indicated
-by the installation notes to verify the correct activation of the service.
+Wait a couple of minutes for all the resources to be installed, the run following commands to verify the correct activation of the service.
 
 ```bash
 $ export NEO4J_PASSWORD=$(kubectl get secrets neo4j-neo4j-secrets --namespace openk9 -o jsonpath='{.data.neo4j-password}' | base64 -d)
@@ -660,6 +655,13 @@ Then you can access to [http://localhost:7474/browser](http://localhost:7474/bro
  [00-requirements/04-neo4j/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/04-neo4j/local-runtime.yaml)
 
 Then you can perform queries using Cypher Query Language.
+
+#### Notes
+
+
+As indicated in *External Exposure of Neo4j Clusters - Neo4j-Helm User Guide* it is possible to make Neo4J accessible
+from outside Kubernetes. Check
+[https://github.com/neo4j-contrib/neo4j-helm/tree/master/tools/external-exposure-legacy](https://github.com/neo4j-contrib/neo4j-helm/tree/master/tools/external-exposure-legacy)
 
 ## Consul v1.11.2
 
@@ -746,7 +748,7 @@ helm install consul hashicorp/consul \
 ### Verify installation
 
 
-Acces to *consul* inside pod and get list of registered nodes
+Acces to *consul*  inside pod and get list of registered nodes
 
 ```bash
 kubectl -n consul exec -it consul-server-0 -- consul members
@@ -770,7 +772,7 @@ Then access to url [http://localhost:8500](http://localhost:8500)
 ### Expose using ingress
 
 To expose the Consul dashboard outside Kubernetes it is necessary to configure an **Ingress**, preferably in https.
-The chart allows me to do this using *nginx-controller* as a backend while my K3s cluster has *traefik*.
+The chart allows to do this using *nginx-controller* as a backend while K3s cluster has *traefik*.
 
 ```bash
 cat <<_EOF_ | kubectl apply -n consul -f -
@@ -801,11 +803,11 @@ _EOF_
 
 where:
 
-* expose the Consul dashboard as *consul.demo.openk9.local*. In order to use this hostname register it in my hosts file
+* expose the Consul dashboard as *consul.demo.openk9.local*. In order to use this hostname register it in your hosts file
 
 * provide both http and https access (using the self-signed certificates produced by the cert-manager)
 
-* use the headless service to get the IPs of the pods and allow Traefik to apply its load-balanciong logics.
+* use the headless service to get the IPs of the pods and allow Traefik to apply its load-balanciong logic.
 
 At this point, after updating the hosts file, if you open a browser on
 [http://consul.demo.openk9.local](http://consul.demo.openk9.local) you should access the console
