@@ -8,7 +8,7 @@ In this guide we'll see how to prepare Openk9 environment on K3s server.
 ## Intro
 
 This guide assumes the presence of a server [K3s](https://k3s.io/) also in configuration
-[single node] where the "control plane" and "worker" roles coexist on the same server.
+[single node] where the *control plane* and *worker* roles coexist on the same server.
 
 All operations can be carried out from your workstation as indicated in [Kubernetes from PC Host].
 
@@ -38,7 +38,7 @@ search openk9.svc.cluster.local svc.cluster.local cluster.local localdomain
 nameserver x.x.x.x
 ``
 
-Therefore, although it is always preferable to indicate a service with ``<name>.<namespace>``,
+Therefore, although it is always preferable to indicate a service with ``x<name>.<namespace>``,
 if the service is within the same namespace it will also be found by indicating only its name.
 
 
