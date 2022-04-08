@@ -29,11 +29,11 @@ Check the pod startup logs for the absence of serious errors
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-ingestion" -o name)
 ```
 
-Port forward the pod or service and request "http://localhost:8080/q/openapi" to get the api's yaml
+Port forward the pod or service and request [http://localhost:8080/q/openapi](http://localhost:8080/q/openapi) to get the api's yaml.
 
 ## Datasource
 
-See architecture [Datasource](ingestion) documentation to go into detail.
+See architecture [Datasource](datasource) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -52,23 +52,22 @@ Check the pod startup logs for the absence of serious errors.
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-datasource" -o name)
 ```
 
-"Dashboard" component self-registers within Consul.
+Datasource component self-registers within Consul.
 By accessing the [dashboard](#consul-dashboard) we should see our component among the services.
 
 
 ## Entity Manager
 
-See architecture [Entity Manager](ingestion) documentation to go into detail.
+See architecture [Entity Manager](entity-manager) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
-helm install entitymanager 01-core-charts/openk9-entity-manager \
+helm install entity-manager 01-core-charts/openk9-entity-manager \
   -n openk9 \
   -f 01-core-charts/openk9-entity-manager/scenarios/local-runtime.yaml
 ```
-
 
 
 ### Verify installation
@@ -81,7 +80,7 @@ kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io
 
 ## Index writer
 
-See architecture [Index writer](ingestion) documentation to go into detail.
+See architecture [Index writer](index-writer) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -91,8 +90,6 @@ helm install indexwriter 01-core-charts/openk9-index-writer \
   -n openk9 \
   -f 01-core-charts/openk9-index-writer/scenarios/local-runtime.yaml
 ```
-
-
 
 ### Verify installation
 
@@ -104,13 +101,13 @@ kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io
 
 ## Plugin Driver Manager
 
-See architecture [Plugin Driver Manager](ingestion) documentation to go into detail.
+See architecture [Plugin Driver Manager](plugin-driver-manager) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
-helm install pdm 01-core-charts/openk9-plugin-driver-manager \
+helm install plugin-driver-manager 01-core-charts/openk9-plugin-driver-manager \
   -n openk9 \
   -f 01-core-charts/openk9-plugin-driver-manager/scenarios/local-runtime.yaml
 ```
@@ -129,7 +126,7 @@ By accessing the [dashboard](#consul-dashboard) we should see our component amon
 
 ## Searcher
 
-See architecture [Searcher](ingestion) documentation to go into detail.
+See architecture [Searcher](seacher) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -149,12 +146,11 @@ kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io
 ```
 
 Searcher component self-registers within Consul.
-
 Access the [dashboard](http://consul.demo.openk9.local) we should see our component among the services.
 
 ## Api Aggregator
 
-See architecture [Api Aggregator](ingestion) documentation to go into detail.
+See architecture [Api Aggregator](api-aggregator) documentation to go into detail.
 
 Install using the local chart, which is already set up to use the latest stable version of the component,
 and the configuration file that *adapts* it to the chosen scenario.
@@ -165,7 +161,7 @@ helm install api-aggregator 01-core-charts/openk9-api-aggregator \
   -f 01-core-charts/openk9-api-aggregator/scenarios/local-runtime.yaml
 ```
 
-In the `local-runtime` context the component exposes an Ingress on "http: //demo.openk9.local".
+In the `local-runtime` context the component exposes an Ingress on "http://demo.openk9.local".
 
 
 ### Verify installation
@@ -176,7 +172,7 @@ Check the pod startup logs for the absence of serious errors
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-api-aggregator" -o name)
 ```
 
-Go to "[http: //demo.openk9.local/q/swagger-ui](http://demo.openk9.local/q/swagger-ui)"
+Go to [http: //demo.openk9.local/q/swagger-ui](http://demo.openk9.local/q/swagger-ui)
 to access the Swagger UI with the description of the exposed APIs
 
 ## Search Admin
@@ -202,7 +198,7 @@ kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io
 
 ### Access Console
 
-Access to Openk9 admin console using url "[http://demo.openk9.local/admin](http://demo.openk9.local/admin)"
+Access to Openk9 admin console using url [http://demo.openk9.local/admin](http://demo.openk9.local/admin)
 
 ![image-20220303214347128](../static/img/installation/image-20220303214347128.png)
 
@@ -219,7 +215,7 @@ Install using the local chart, which is already set up to use the latest stable 
 and the configuration file that *adapts* it to the chosen scenario
 
 ```bash
-helm install query-frontend 01-core-charts/openk9-search-frontend \
+helm install search-frontend 01-core-charts/openk9-search-frontend \
   -n openk9 \
   -f 01-core-charts/openk9-search-frontend/scenarios/local-runtime.yaml
 ```
