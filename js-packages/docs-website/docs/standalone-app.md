@@ -9,54 +9,17 @@ With the **Standalone Search App** it's possible to perform multi-source, semant
 
 The Standalone Search App has its own [docker image](https://hub.docker.com/r/smclab/openk9-search-frontend) ready to be deployed with a Web Server to serve the app static files.
 
-You can look at the frontend code in our [GitHub repository](https://github.com/smclab/openk9/tree/main/js-packages/search-standalone-frontend).
+You can look at the frontend code in our [GitHub repository](https://github.com/smclab/openk9/tree/main/js-packages/search-frontend).
 
-## Usage
+A working example can be found here [demo.openk9.io](http://demo.openk9.io)
 
-### With package manager
+## Docker
 
-- install the dependency
-  - with npm  `npm install @openk9/search-frontend`
-  - or with yarn `yarn add @openk9/search-frontend`
-- configure the ui
-```javascript
-import { OpenK9 } from "@openk9/search-frontend";
+Prebuild docker image is available on [docker hub](https://hub.docker.com/r/smclab/openk9-search-frontend)
 
-Openk9.search = docuement.querySelector('#search');
-Openk9.tabs = document.querySelector('#tabs');
-Openk9.results = docuement.querySelector('#results');
-Openk9.details = docuement.querySelector('#details');
-```
+This image exposes `8080` port to serve the app static files.
 
-### Without package manager
-
-- Download the script from https://unpkg.com/@openk9/search-frontend@latest
-- Or build the script from sources
-  - `openk9/js-packages/search-frontend/dist` will contain a file named `embeddable.js` that must be included on your site
-
-```html
-<html>
-  <body>
-    <div id="search"></div>
-    <div id="tabs"></div>
-    <div id="results"></div>
-    <div id="details"></div>
-    <!-- this is the file from dist directory-->
-    <script src="embeddable.js"></script>
-    <!-- tell the script where to render parts of the interface -->
-    <script>
-      Openk9.search = docuement.querySelector('#search');
-      Openk9.tabs = document.querySelector('#tabs');
-      Openk9.results = docuement.querySelector('#results');
-      Openk9.details = docuement.querySelector('#details');
-    </script>
-  </body>
-</html>
-```
-
-### Docker
-
-Prebuild docker image is available on [docker hub](https://hub.docker.com/r/smclab/openk9-search-frontend) 
+This image expects that te api is available on the same domain under the route `/api`
 
 ## From Sources
 
@@ -68,18 +31,6 @@ This software is neeeded for the build process
 - [nodejs](https://nodejs.org/it/)
 - [yarn](https://yarnpkg.com/)
 - [docker](https://www.docker.com/)
-
-### Development
-
-This setup enables development with live-reload on changes
-
-```bash
-git clone https://git.smc.it/openk9/openk9.git # clone repository
-cd openk9
-yarn # install dependencies
-cd js-packages/search-frontend
-yarn dev # start development
-```
 
 ### Build
 
@@ -93,7 +44,7 @@ cd js-packages/search-frontend
 yarn build # build static resources
 ```
 
-- `openk9/js-packages/search-frontend/dist` will contain the static resources that can be served with a static web server (NOTE: the backend must be located ad the same domain)
+- `openk9/js-packages/search-frontend/dist` will contain the static resources that can be served with a static web server (NOTE: the backend must be located ad the same domain under the route `/api`)
 
 ### Build & run docker image locally
 
@@ -104,6 +55,8 @@ docker build -t search-frontend:latest -f js-packages/search-frontend/Dockerfile
 docker run openk9/search-frontend
 ```
 
-This image assumes that the backlend il located on the same domain.
+This image exposes `8080` port to serve the app static files.
+
+This image assumes that the backend il located on the same domain under the route `/api`.
 
 To run locally the full deployment refer to [Getting Started using Docker](using-docker)

@@ -1,6 +1,6 @@
 module.exports = {
   sidebar: {
-    OpenK9: ["intro", "standalone-app", "headless-api"],
+    OpenK9: ["intro", "standalone-app", "embeddable-app", "headless-api"],
     "Getting Started": ["using-docker",
           {
             "type": "category",
