@@ -114,7 +114,7 @@ Copy, modify and his [CSS file](https://github.com/smclab/openk9/blob/main/js-pa
 
 ### UI map
 
-coming soon
+![ui map](/img/ui-map.png)
 
 ### Internals
 
