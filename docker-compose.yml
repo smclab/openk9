@@ -249,7 +249,7 @@ services:
         networks:
             default:
                 aliases:
-                    - local.openk9.io
+                    - demo.openk9.local
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         ports:
@@ -310,8 +310,8 @@ services:
             - "traefik.http.routers.api-aggregator.rule=PathPrefix(`/api`)"
             - "traefik.http.middlewares.api-aggregator_compress.compress=true"
             - "traefik.http.routers.api-aggregator.middlewares=searcher-strip@docker,api-aggregator_compress@docker"
-            - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=local.openk9.io"
-            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=local.openk9.io"
+            - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=demo.openk9.local"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
             - "traefik.http.routers.api-aggregator.middlewares=api-aggregator-strip@docker,api-aggregator_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
     consul:
         image: consul:1.7
