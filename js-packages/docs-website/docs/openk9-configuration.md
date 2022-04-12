@@ -43,7 +43,7 @@ Now create new *Datasource*.
 
 The information present in the *datasource* is acquired through a plugin.
 Basically, only a few generic plugins are available; to see how to create new plugin goes to apposite section.
-As *Driver Service Name" choose `SitemapWebPluginDriver` to acquire the contents of a website using a crawler that relies on its sitemap.
+As *Driver Service Name* choose `SitemapWebPluginDriver` to acquire the contents of a website using a crawler that relies on its sitemap.
 
 ![image-20220303223805366](../static/img/installation/image-20220303223805366.png)
 
@@ -82,3 +82,11 @@ Return to Enrich Pipeline detail to see a graphic representation of pipeline.
 Now is time to start first data ingestion.
 
 ## First data ingestion
+
+To start first data ingestion you can wait for the scheduler to trigger ingestion, based on configured scheduling expression.
+
+Another option is to trigger a reindex manually. To do this you can click on reindex tab for a specific datasource.
+
+![image-20220304125842958](../static/img/installation/image-20220304125842958.png)
+
+Now go to Openk9 frontend using url [http://demo.openk9.local/](http://demo.openk9.local/) and you can see your data arriving.
