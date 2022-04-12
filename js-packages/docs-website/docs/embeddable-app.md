@@ -27,10 +27,10 @@ This package takes care oc complex interactions on your behalf.
 import { OpenK9 } from "@openk9/search-frontend";
 
 Openk9.enabled = true;
-Openk9.search = docuement.querySelector('#search');
+Openk9.search = document.querySelector('#search');
 Openk9.tabs = document.querySelector('#tabs');
-Openk9.results = docuement.querySelector('#results');
-Openk9.details = docuement.querySelector('#details');
+Openk9.results = document.querySelector('#results');
+Openk9.details = document.querySelector('#details');
 ```
 
 ### Without package manager
