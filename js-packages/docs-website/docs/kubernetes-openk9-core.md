@@ -229,3 +229,8 @@ Check the pod startup logs for the absence of serious errors
 kubectl -n openk9 logs $(kubectl -n openk9 get pod --selector="app.kubernetes.io/name=openk9-query-frontend" -o name)
 ```
 
+### Access UI
+
+Access to Openk9 frontend Ui using url [http://demo.openk9.local/](http://demo.openk9.local/)
+
+![image-20220304180312005](../static/img/installation/image-20220304180312005.png)
