@@ -3,7 +3,7 @@ import { css } from "styled-components/macro";
 import { Virtuoso } from "react-virtuoso";
 import { useInfiniteResults } from "./remote-data";
 import { ResultMemo } from "./Result";
-import { GenericResultItem, LoginInfo, SearchToken } from "@openk9/rest-api";
+import { GenericResultItem, SearchToken } from "@openk9/rest-api";
 import { Logo } from "./Logo";
 import { myTheme } from "./myTheme";
 import { Renderers } from "./useRenderers";
@@ -11,7 +11,6 @@ import { CustomScrollbar } from "./CustomScrollbar";
 
 type ResultsProps<E> = {
   renderers: Renderers;
-  loginInfo: LoginInfo | null;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E>): void;
   displayMode: { type: "finite" } | { type: "infinite" } | { type: "virtual" };
@@ -21,14 +20,12 @@ export function Results<E>({
   displayMode,
   onDetail,
   searchQuery,
-  loginInfo,
 }: ResultsProps<E>) {
   switch (displayMode.type) {
     case "finite":
       return (
         <FiniteResults
           renderers={renderers}
-          loginInfo={loginInfo}
           searchQuery={searchQuery}
           onDetail={onDetail}
         />
@@ -37,7 +34,6 @@ export function Results<E>({
       return (
         <InfiniteResults
           renderers={renderers}
-          loginInfo={loginInfo}
           searchQuery={searchQuery}
           onDetail={onDetail}
         />
@@ -46,7 +42,6 @@ export function Results<E>({
       return (
         <VirtualResults
           renderers={renderers}
-          loginInfo={loginInfo}
           searchQuery={searchQuery}
           onDetail={onDetail}
         />
@@ -72,7 +67,6 @@ function ResultCount({ children }: ResultCountProps) {
 
 type ResulListProps<E> = {
   renderers: Renderers;
-  loginInfo: LoginInfo | null;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E> | null): void;
 };
@@ -82,9 +76,8 @@ export function FiniteResults<E>({
   renderers,
   searchQuery,
   onDetail,
-  loginInfo,
 }: FiniteResultsProps<E>) {
-  const results = useInfiniteResults<E>(loginInfo, searchQuery);
+  const results = useInfiniteResults<E>(searchQuery);
   return (
     <div>
       {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
@@ -107,14 +100,14 @@ export function FiniteResults<E>({
     </div>
   );
 }
+
 type InfiniteResultsProps<E> = ResulListProps<E> & {};
 export function InfiniteResults<E>({
   renderers,
   searchQuery,
   onDetail,
-  loginInfo,
 }: InfiniteResultsProps<E>) {
-  const results = useInfiniteResults<E>(loginInfo, searchQuery);
+  const results = useInfiniteResults<E>(searchQuery);
   return (
     <div>
       {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
@@ -141,6 +134,17 @@ export function InfiniteResults<E>({
               onClick={() => {
                 results.fetchNextPage();
               }}
+              className="openk9-embeddable-search--result-container"
+              css={css`
+                background-color: inherit;
+                color: inherit;
+                font-family: inherit;
+                font-size: inherit;
+                padding: 8px 16px;
+                width: calc(100% - 32px);
+                margin-bottom: 16px;
+                display: block;
+              `}
             >
               load more
             </button>
@@ -152,14 +156,14 @@ export function InfiniteResults<E>({
     </div>
   );
 }
+
 type VirtualResultsProps<E> = ResulListProps<E> & {};
 export function VirtualResults<E>({
   renderers,
   searchQuery,
   onDetail,
-  loginInfo,
 }: VirtualResultsProps<E>) {
-  const results = useInfiniteResults<E>(loginInfo, searchQuery);
+  const results = useInfiniteResults<E>(searchQuery);
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
   const thereAreResults = Boolean(
     results.data?.pages[0].total && results.data.pages[0].total > 0,

@@ -1,30 +1,22 @@
 import { useInfiniteQuery, useQuery } from "react-query";
 import { isOverlapping } from "../components/useSelections";
 import {
-  doSearch,
-  LoginInfo,
   SearchToken,
   AnalysisRequest,
   AnalysisResponse,
   AnalysisToken,
-  fetchQueryAnalysis,
 } from "@openk9/rest-api";
+import { client } from "./client";
 
-export function useInfiniteResults<E>(
-  loginInfo: LoginInfo | null,
-  searchQuery: Array<SearchToken>,
-) {
-  const pageSize = 10;
+export function useInfiniteResults<E>(searchQuery: Array<SearchToken>) {
+  const pageSize = 25;
   return useInfiniteQuery(
-    ["results", searchQuery, loginInfo] as const,
+    ["results", searchQuery] as const,
     async ({ queryKey: [, searchQuery], pageParam = 0 }) => {
-      return doSearch<E>(
-        {
-          range: [pageParam * pageSize, pageParam * pageSize + pageSize],
-          searchQuery,
-        },
-        loginInfo,
-      );
+      return client.doSearch<E>({
+        range: [pageParam * pageSize, pageParam * pageSize + pageSize],
+        searchQuery,
+      });
     },
     {
       keepPreviousData: true,
@@ -41,14 +33,11 @@ export function useInfiniteResults<E>(
   );
 }
 
-export function useQueryAnalysis(
-  loginInfo: LoginInfo | null,
-  request: AnalysisRequest,
-) {
+export function useQueryAnalysis(request: AnalysisRequest) {
   return useQuery(
     ["query-anaylis", request] as const,
     async ({ queryKey: [, request] }) =>
-      fixQueryAnalysisResult(await fetchQueryAnalysis(request, loginInfo)),
+      fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
   );
 }
 

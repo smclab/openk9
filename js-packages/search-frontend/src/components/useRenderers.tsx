@@ -1,30 +1,24 @@
-import {
-  LoginInfo,
-  getPlugins,
-  loadPlugin,
-  ResultRendererPlugin,
-  Plugin,
-} from "@openk9/rest-api";
+import { ResultRendererPlugin, Plugin } from "@openk9/rest-api";
 import { useQuery } from "react-query";
+import { client } from "./client";
 
-export function useRenderers(loginInfo: LoginInfo | null) {
-  const { data: renderers } = useQuery(["renderers", loginInfo], () => {
-    return loadRenderers(loginInfo);
+export function useRenderers() {
+  const { data: renderers } = useQuery(["renderers"], () => {
+    return loadRenderers();
   });
   return renderers;
 }
 
 export type Renderers = ReturnType<typeof useRenderers>; // TODO explicit type
 
-async function loadRenderers(loginInfo: LoginInfo | null) {
-  const pluginInfos = await getPlugins(loginInfo);
+async function loadRenderers() {
+  const pluginInfos = await client.getPlugins();
   const plugins = (
     await Promise.all(
       pluginInfos.map((pluginInfo) =>
-        loadPlugin(
-          pluginInfo.pluginId,
-          pluginInfo.bundleInfo.lastModified,
-        ).catch(() => null),
+        client
+          .loadPlugin(pluginInfo.pluginId, pluginInfo.bundleInfo.lastModified)
+          .catch(() => null),
       ),
     )
   ).filter((plugin) => plugin !== null) as Plugin<unknown>[];

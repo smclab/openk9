@@ -25,18 +25,18 @@ import { ClayToggle, ClayInput } from "@clayui/form";
 import ClayAutocomplete from "@clayui/autocomplete";
 import ClayDropDown from "@clayui/drop-down";
 import ClayIcon from "@clayui/icon";
-import { pluginLoader, ThemeType } from "@openk9/search-ui-components";
 import {
   DataSourceInfo,
   DataSourcePlugin,
-  getPlugins,
-  getServices,
   Plugin,
   PluginInfo,
 } from "@openk9/rest-api";
 import { CronInput, CronInputType } from "./CronInput";
 import { AutocompleteItemIcon } from "./AutocompleteItemIcon";
-import { isServer, useLoginInfo } from "../state";
+import { isServer } from "../state";
+import { client } from "./client";
+import { ThemeType } from "./theme";
+import { pluginLoader } from "./pluginLoader";
 
 const DefaultSettingsEditor = dynamic(() => import("./DefaultSettingsEditor"), {
   ssr: false,
@@ -76,9 +76,11 @@ function Inner<T>({
 
   const pluginServices = useMemo(
     () =>
-      getServices(plugins).filter(
-        (p) => p.type === "DATASOURCE",
-      ) as DataSourcePlugin[],
+      plugins
+        .flatMap((p) =>
+          p.pluginServices.map((ps) => ({ ...ps, pluginId: p.pluginId })),
+        )
+        .filter((p) => p.type === "DATASOURCE") as DataSourcePlugin[],
     [plugins],
   );
 
@@ -292,12 +294,10 @@ export function EditDataSource<
   onAbort(): void;
   onSave(): void;
 }) {
-  const loginInfo = useLoginInfo();
-
   useSWR(`OpenK9`, () => import("@openk9/search-frontend"), { suspense: true });
 
   const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
-    getPlugins(loginInfo),
+    client.getPlugins(),
   );
 
   const plugins = (pluginInfos || []).map((pi) =>

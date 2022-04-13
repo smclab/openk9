@@ -19,8 +19,8 @@ import React from "react";
 import { createUseStyles } from "react-jss";
 import ClayIcon from "@clayui/icon";
 import clsx from "clsx";
-import { ThemeType } from "@openk9/search-ui-components";
 import Link from "next/link";
+import { ThemeType } from "./theme";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {

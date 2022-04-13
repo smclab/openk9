@@ -25,23 +25,14 @@ import { ClayTooltipProvider } from "@clayui/tooltip";
 import ClayButton from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import ClayDropDown from "@clayui/drop-down";
-import {
-  DataSourceIcon,
-  SettingsIcon,
-  ThemeType,
-} from "@openk9/search-ui-components";
-import {
-  deleteTenant,
-  getTenants,
-  LoginInfo,
-  postTenant,
-  Tenant,
-} from "@openk9/rest-api";
-
+import { Tenant } from "@openk9/rest-api";
 import { Layout } from "../components/Layout";
-import { useLoginCheck, useLoginInfo } from "../state";
 import { ConfirmationModal } from "../components/ConfirmationModal";
 import { useToast } from "./_app";
+import { client } from "../components/client";
+import { ThemeType } from "../components/theme";
+import { DataSourceIcon } from "../components/icons/DataSourceIcon";
+import { SettingsIcon } from "../components/icons/SettingsIcon";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -86,8 +77,6 @@ function AddModal({
 
   const [errorState, setErrorState] = useState<any>(null);
 
-  const loginInfo = useLoginInfo();
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const id = e.target.id;
@@ -103,7 +92,7 @@ function AddModal({
       return;
     }
 
-    await postTenant(newTenant, loginInfo);
+    await client.postTenant(newTenant);
     mutate(`/api/v2/tenant`);
 
     setNewTenant(() => ({
@@ -182,13 +171,7 @@ function AddModal({
   );
 }
 
-function TRow({
-  ten,
-  loginInfo,
-}: {
-  ten: Tenant;
-  loginInfo: LoginInfo | null;
-}) {
+function TRow({ ten }: { ten: Tenant }) {
   const classes = useStyles();
   const { pushToast } = useToast();
 
@@ -196,7 +179,7 @@ function TRow({
   const [deleting, setDeleting] = useState(false);
 
   async function handleDelete(tenantId: number) {
-    await deleteTenant(tenantId, loginInfo);
+    await client.deleteTenant(tenantId);
     mutate(`/api/v2/tenant`);
     pushToast("Delete Success");
   }
@@ -285,12 +268,18 @@ function TRow({
 }
 
 function TBody({ searchValue }: { searchValue: string }) {
-  const loginInfo = useLoginInfo();
-
-  const { data } = useSWR(`/api/v2/tenant`, () => getTenants(loginInfo));
+  const { data } = useSWR(`/api/v2/tenant`, () => client.getTenants());
 
   if (!data) {
-    return <span className="loading-animation" />;
+    return (
+      <tbody>
+        <tr>
+          <td>
+            <span className="loading-animation" />
+          </td>
+        </tr>
+      </tbody>
+    );
   }
 
   const filteredData = data.filter(
@@ -303,7 +292,7 @@ function TBody({ searchValue }: { searchValue: string }) {
   return (
     <tbody>
       {filteredData.map((ten) => (
-        <TRow key={ten.tenantId} ten={ten} loginInfo={loginInfo} />
+        <TRow key={ten.tenantId} ten={ten} />
       ))}
     </tbody>
   );
@@ -378,9 +367,6 @@ function Tenants() {
   const classes = useStyles();
 
   const [searchValue, setSearchValue] = useState("");
-
-  const { loginValid } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
 
   return (
     <Layout

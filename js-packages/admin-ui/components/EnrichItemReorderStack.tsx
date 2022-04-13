@@ -27,15 +27,11 @@ import {
   DropResult,
   DraggableProvided,
 } from "react-beautiful-dnd";
-import { pluginLoader, ThemeType } from "@openk9/search-ui-components";
-import {
-  EnrichItem,
-  EnrichPlugin,
-  PluginInfo,
-  reorderEnrichItems,
-} from "@openk9/rest-api";
-import { useLoginInfo } from "../state";
+import { EnrichItem, EnrichPlugin, PluginInfo } from "@openk9/rest-api";
 import { mutate } from "swr";
+import { client } from "./client";
+import { ThemeType } from "./theme";
+import { pluginLoader } from "./pluginLoader";
 
 export const useStyles = createUseStyles((theme: ThemeType) => ({
   enrichStack: {
@@ -138,7 +134,7 @@ function EnrichItemBlock({
     pluginLoader.read(pluginInfo.pluginId, pluginInfo.bundleInfo.lastModified);
 
   const enrichPlugin = plugin?.pluginServices.find(
-    (ps) => ps.type === "ENRICH" && ps.serviceName === item.serviceName,
+    (ps: any) => ps.type === "ENRICH" && ps.serviceName === item.serviceName,
   ) as EnrichPlugin | null;
 
   const displayName =
@@ -190,8 +186,6 @@ export function EnrichPipelineReorderStack({
 }) {
   const classes = useStyles();
 
-  const loginInfo = useLoginInfo();
-
   async function dragEnd(result: DropResult) {
     if (!dsEnrichItems || !result.destination) return;
 
@@ -205,9 +199,8 @@ export function EnrichPipelineReorderStack({
 
     mutate(`/api/v2/enrichItem`, reordered, false);
 
-    await reorderEnrichItems(
+    await client.reorderEnrichItems(
       reordered.map((e) => e.enrichItemId).filter(Boolean),
-      loginInfo,
     );
   }
 

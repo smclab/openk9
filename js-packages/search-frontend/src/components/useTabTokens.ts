@@ -1,18 +1,15 @@
 import React from "react";
 import { useQuery } from "react-query";
-import {
-  getTentantWithConfiguration,
-  LoginInfo,
-  SearchToken,
-} from "@openk9/rest-api";
+import { SearchToken } from "@openk9/rest-api";
+import { client } from "./client";
 
 type Tab = { label: string; tokens: Array<SearchToken> };
 
-export function useTabTokens(loginInfo: LoginInfo | null): Array<Tab> {
+export function useTabTokens(): Array<Tab> {
   const tenantConfiguration = useQuery(
-    ["tenant-configuration", loginInfo] as const,
+    ["tenant-configuration"] as const,
     ({ queryKey }) => {
-      return getTentantWithConfiguration(loginInfo);
+      return client.getTentantWithConfiguration();
     },
   );
   const tabTokens = React.useMemo(() => {

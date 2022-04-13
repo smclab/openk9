@@ -1,31 +1,657 @@
 import type * as React from "react";
 
+type ClientConfiguration = {
+  /**
+   * base url for all http requests
+   *
+   * @example https://demo.openk9.io
+   */
+  tenant: string;
+  /**
+   * needed if the tenant configuration is different than base url domain
+   */
+  tenantDomain?: string;
+  /**
+   * this function will be called in these cases
+   * - the client succesfully authenticates
+   * - the client refreshes authentication tokens
+   * - the client deauthenticates
+   */
+  onAuthenticationStateChange?(
+    state: { loginInfo: LoginInfo; userInfo: UserInfo } | null,
+  ): void;
+};
+
+export function OpenK9Client({
+  tenant,
+  tenantDomain = getDefaultTenantDomain(tenant),
+  onAuthenticationStateChange,
+}: ClientConfiguration) {
+  let loginInfo: LoginInfo | null = null;
+
+  let refreshTimeoutId: number | null = null;
+
+  let authenticationAction = Promise.resolve();
+
+  function updateLoginInfo(
+    state: { loginInfo: LoginInfo; userInfo: UserInfo } | null,
+  ) {
+    loginInfo = state?.loginInfo ?? null;
+    onAuthenticationStateChange?.(state);
+    if (refreshTimeoutId) {
+      clearTimeout(refreshTimeoutId);
+      refreshTimeoutId = null;
+    }
+    if (state && state.loginInfo.emitted_at) {
+      refreshTimeoutId = setTimeout(async () => {
+        await runAuthenticationAction(async () => {
+          try {
+            const refreshResponse = await refreshLoginInfo(state.loginInfo);
+            if (!refreshResponse.ok) throw new Error();
+            const userInfoResponse = await getUserInfo(
+              refreshResponse.response,
+            );
+            if (!userInfoResponse.ok) throw new Error();
+            const loginInfo = refreshResponse.response;
+            const userInfo = userInfoResponse.response;
+            updateLoginInfo({ loginInfo, userInfo });
+          } catch (error) {
+            console.error(error);
+            updateLoginInfo(null);
+          }
+        });
+      }, state.loginInfo.emitted_at + state.loginInfo.expires_in * 1000 * 0.9 - Date.now()) as any;
+    }
+  }
+
+  async function authFetch(route: string, init: RequestInit = {}) {
+    await authenticationAction;
+    return fetch(tenant + route, {
+      ...init,
+      headers: loginInfo
+        ? {
+            Authorization: `Bearer ${loginInfo.access_token}`,
+            ...init.headers,
+          }
+        : init.headers,
+    });
+  }
+
+  // used to validate loginInfo, if the call fails, then loginInfo is invalid
+  async function getUserInfo(
+    loginInfo: LoginInfo,
+  ): Promise<{ ok: true; response: UserInfo } | { ok: false; response: any }> {
+    try {
+      const response = await fetch(`/api/searcher/v1/auth/user-info`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${loginInfo.access_token}`,
+          "Content-Type": "text/plain",
+          Accept: "application/json",
+        },
+      });
+      const data: UserInfo = await response.json();
+      return { ok: response.ok, response: data };
+    } catch (err) {
+      return { ok: false, response: err };
+    }
+  }
+
+  async function refreshLoginInfo(
+    loginInfo: LoginInfo,
+  ): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
+    try {
+      const { refresh_token: refreshToken } = loginInfo;
+      const response = await fetch(`/api/searcher/v1/auth/refresh`, {
+        method: "POST",
+        body: JSON.stringify({ refreshToken }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+      const data = await response.json();
+      return { ok: response.ok, response: data };
+    } catch (err) {
+      return { ok: false, response: err };
+    }
+  }
+
+  async function revokeLoginInfo(
+    loginInfo: LoginInfo,
+  ): Promise<{ ok: boolean; response: any }> {
+    try {
+      const { access_token: accessToken, refresh_token: refreshToken } =
+        loginInfo;
+      const request = await authFetch(`/api/searcher/v1/auth/logout`, {
+        method: "POST",
+        body: JSON.stringify({ accessToken, refreshToken }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "text/plain",
+        },
+      });
+      const response = await request.text();
+      return { ok: request.ok, response };
+    } catch (err) {
+      return { ok: false, response: err };
+    }
+  }
+
+  async function runAuthenticationAction<T>(action: () => Promise<T>) {
+    await authenticationAction;
+    const result = action();
+    const noop = () => {};
+    authenticationAction = result.then(noop, noop);
+    return result;
+  }
+
+  return {
+    /**
+     * all subsequent calls to all other methods will be authenticated with the loginInfo provided
+     *
+     * eventual token refresh will be handled automatically
+     */
+    async authenticate(loginInfo: LoginInfo) {
+      return await runAuthenticationAction(async () => {
+        const userInfoResponse = await getUserInfo(loginInfo);
+        if (!userInfoResponse.ok) throw new Error();
+        const userInfo = userInfoResponse.response;
+        updateLoginInfo({ loginInfo, userInfo });
+      });
+    },
+
+    /**
+     * all subsequent calls to all other methods will be UNauthenticated
+     *
+     * eventual token revocation will be handled automatically
+     */
+    async deauthenticate() {
+      return await runAuthenticationAction(async () => {
+        if (loginInfo) {
+          revokeLoginInfo(loginInfo);
+        }
+        updateLoginInfo(null);
+      });
+    },
+
+    /**
+     * used to get loginInfo by username and password with openk9 default authentication
+     *
+     * it does not authenticate subsequent calls to all other methods
+     *
+     * @example client.getLoginInfoByUsernamePassword("admin", "admin").then(({response}) => client.authenticate(response))
+     */
+    async getLoginInfoByUsernamePassword(payload: {
+      username: string;
+      password: string;
+    }): Promise<
+      { ok: true; response: LoginInfo } | { ok: false; response: any }
+    > {
+      try {
+        const response = await fetch(`/api/searcher/v1/auth/login`, {
+          method: "POST",
+          body: JSON.stringify(payload),
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
+        const data: LoginInfo = await response.json();
+        return { ok: response.ok, response: data };
+      } catch (err) {
+        return { ok: false, response: err };
+      }
+    },
+
+    async doSearch<E>(searchRequest: SearchRequest): Promise<SearchResult<E>> {
+      const response = await authFetch(`/api/searcher/v1/search`, {
+        method: "POST",
+        body: JSON.stringify(searchRequest),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      return data;
+    },
+
+    async doSearchDatasource<E>(
+      searchRequest: SearchRequest,
+      datasourceId: number,
+    ): Promise<SearchResult<E>> {
+      const response = await authFetch(
+        `/api/searcher/v1/search/${datasourceId}`,
+        {
+          method: "POST",
+          body: JSON.stringify(searchRequest),
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
+    async getDataSourceInfo(datasourceId: number): Promise<DataSourceInfo> {
+      const response = await authFetch(
+        `/api/datasource/v2/datasource/${datasourceId}`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+      const data: DataSourceInfo = await response.json();
+      return data;
+    },
+
+    async postDataSource(
+      datasourceInfo: DataSourceInfo,
+    ): Promise<DataSourceInfo> {
+      const response = await authFetch(`/api/datasource/v2/datasource`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(datasourceInfo),
+      });
+      const data: DataSourceInfo = await response.json();
+      return data;
+    },
+
+    async changeDataSourceInfo(
+      datasourceId: number,
+      datasource: Partial<DataSourceInfo>,
+    ): Promise<DataSourceInfo> {
+      const response = await authFetch(
+        `/api/datasource/v2/datasource/${datasourceId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(datasource),
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
+    async deleteDataSource(datasourceId: number): Promise<string> {
+      const response = await authFetch(
+        `/api/datasource/v2/datasource/${datasourceId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Accept: "text/plain",
+          },
+        },
+      );
+      const data = await response.text();
+      return data;
+    },
+
+    async getDataSources(): Promise<DataSourceInfo[]> {
+      const response = await authFetch(
+        `/api/datasource/v2/datasource?page=0&size=50`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
+    async getEnrichItem(): Promise<EnrichItem[]> {
+      const response = await authFetch(
+        `/api/datasource/v2/enrichItem?page=0&size=50`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
+    async postEnrichItem(
+      enrichItem: Omit<EnrichItem, "enrichItemId">,
+    ): Promise<EnrichItem> {
+      const response = await authFetch(`/api/datasource/v2/enrichItem/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(enrichItem),
+      });
+      const data = await response.json();
+      return data;
+    },
+
+    async changeEnrichItem(
+      enrichItemId: number,
+      enrichItem: Partial<EnrichItem>,
+    ): Promise<EnrichItem> {
+      const response = await authFetch(
+        `/api/datasource/v2/enrichItem/${enrichItemId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(enrichItem),
+        },
+      );
+      const data: EnrichItem = await response.json();
+      return data;
+    },
+
+    async deleteEnrichItem(enrichItemId: number): Promise<string> {
+      const response = await authFetch(
+        `/api/datasource/v2/enrichItem/${enrichItemId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Accept: "text/plain",
+          },
+        },
+      );
+      const data = await response.text();
+      return data;
+    },
+
+    async getEnrichPipeline(): Promise<EnrichPipeline[]> {
+      const response = await authFetch(
+        `/api/datasource/v2/enrichPipeline?page=0&size=50`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
+    async postEnrichPipeline(
+      enrichPipeline: Omit<EnrichPipeline, "enrichPipelineId">,
+    ): Promise<EnrichPipeline> {
+      const response = await authFetch(`/api/datasource/v2/enrichPipeline/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(enrichPipeline),
+      });
+      const data: EnrichPipeline = await response.json();
+      return data;
+    },
+
+    async changeEnrichPipeline(
+      enrichPipelineId: number,
+      enrichPipeline: Partial<EnrichPipeline>,
+    ): Promise<EnrichPipeline[]> {
+      const response = await authFetch(
+        `/api/datasource/v2/enrichPipeline/${enrichPipelineId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(enrichPipeline),
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
+    async deleteEnrichPipeline(enrichPipelineId: number): Promise<string> {
+      const response = await authFetch(
+        `/api/datasource/v2/enrichPipeline/${enrichPipelineId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Accept: "text/plain",
+          },
+        },
+      );
+      const data = await response.text();
+      return data;
+    },
+
+    async reorderEnrichItems(enrichItemsIds: number[]): Promise<string> {
+      const response = await authFetch(
+        `/api/datasource/v1/enrich-item/reorder`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "text/plain",
+          },
+          body: JSON.stringify(enrichItemsIds),
+        },
+      );
+      const data = await response.text();
+      return data;
+    },
+
+    async triggerScheduler(datasourceIds: Array<number>): Promise<unknown> {
+      const response = await authFetch(`/api/datasource/v1/trigger`, {
+        method: "POST",
+        body: JSON.stringify({ datasourceIds }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+      const data = await response.json();
+      return data;
+    },
+
+    async triggerReindex(ids: number[]): Promise<string> {
+      const response = await authFetch(`/api/datasource/v1/index/reindex`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ datasourceIds: ids }),
+      });
+      const data = await response.text();
+      return data;
+    },
+
+    async getTenants(): Promise<Tenant[]> {
+      const response = await authFetch(`/api/datasource/v2/tenant`, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      const data: Tenant[] = await response.json();
+      return data;
+    },
+
+    async getTenant(tenantId: number): Promise<Tenant> {
+      const response = await authFetch(
+        `/api/datasource/v2/tenant/${tenantId}`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
+    async postTenant(data: {
+      name: string;
+      virtualHost: string;
+      jsonConfig: string;
+    }) {
+      await authFetch(`/api/datasource/v2/tenant`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+    },
+
+    async putTenant(data: Tenant): Promise<void> {
+      if (!data.jsonConfig) {
+        data.jsonConfig = "{}";
+      }
+      await authFetch(`/api/datasource/v2/tenant/${data.tenantId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+    },
+
+    async deleteTenant(tenantId: number) {
+      await authFetch(`/api/datasource/v2/tenant/${tenantId}`, {
+        method: "DELETE",
+      });
+    },
+
+    async getPlugins(): Promise<PluginInfo[]> {
+      const response = await authFetch(`/api/plugin-driver-manager/v1/plugin`, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      const data = await response.json();
+      return data;
+    },
+
+    async loadPlugin<E>(id: string, lastModified: number): Promise<Plugin<E>> {
+      const defaultPlugin: Plugin<any> = {
+        pluginId: id,
+        displayName: id,
+        pluginServices: [],
+      };
+
+      try {
+        const jsURL = `${tenant}/api/plugin-driver-manager/plugins/${id}/static/build/index.js?t=${lastModified}`;
+        // @ts-ignore
+        const code = await import(/* webpackIgnore: true */ jsURL);
+        const plugin = code.plugin as Plugin<E>;
+        return plugin;
+      } catch (err) {
+        console.warn(err);
+        return defaultPlugin;
+      }
+    },
+
+    async getContainerLogs(id: string, tail = 300): Promise<string> {
+      const response = await authFetch(`/api/logs/status/${id}/${tail}`, {
+        headers: {
+          Accept: "text/plain",
+        },
+      });
+      const data: string = await response.text();
+      return data;
+    },
+
+    async fetchQueryAnalysis(
+      request: AnalysisRequest,
+    ): Promise<AnalysisResponse> {
+      const response = await authFetch("/api/searcher/v1/query-analysis", {
+        method: "POST",
+        body: JSON.stringify(request),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      return data;
+    },
+
+    async getSuggestions({
+      searchQuery,
+      suggestionCategoryId,
+      range,
+      afterKey,
+      suggestKeyword,
+    }: {
+      searchQuery: SearchToken[];
+      suggestionCategoryId?: number;
+      range?: [number, number]; // for pagination
+      afterKey?: string; // for pagination
+      suggestKeyword?: string; // to source by text in suggestions
+    }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
+      const request = await authFetch(`/api/searcher/v1/suggestions`, {
+        method: "POST",
+        body: JSON.stringify({
+          searchQuery,
+          range,
+          afterKey,
+          suggestionCategoryId,
+          suggestKeyword,
+        }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      const response = await request.json();
+      return response;
+    },
+
+    async getTentantWithConfiguration() {
+      const tenants = await this.getTenants();
+      const tenant =
+        tenants.find((tenant) => tenant.virtualHost === tenantDomain) ||
+        tenants[0];
+      const config =
+        (tenant?.jsonConfig &&
+          (JSON.parse(tenant?.jsonConfig) as TenantJSONConfig)) ||
+        {};
+      return { tenant, config };
+    },
+
+    async getSuggestionCategories(): Promise<SuggestionsCategoriesResult> {
+      const response = await authFetch(`/api/searcher/suggestion-categories`, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      const data = await response.json();
+      return data;
+    },
+  };
+}
+
+/**
+ * An authentication token provided by Openk) backend
+ */
 export type LoginInfo = {
   access_token: string;
+  emitted_at: number; // TODO important ensure backend filled the field
   expires_in: number;
-  refresh_expires_in: number;
   refresh_token: string;
+  refresh_expires_in: number;
   token_type: string;
   "not-before-policy": number;
   session_state: string;
   scope: string;
 };
-
-function authFetch(
-  input: RequestInfo,
-  loginInfo: LoginInfo | null,
-  init: RequestInit = {},
-) {
-  return fetch(input, {
-    ...init,
-    headers: loginInfo
-      ? {
-          Authorization: `Bearer ${loginInfo.access_token}`,
-          ...init.headers,
-        }
-      : init.headers,
-  });
-}
 
 export type UserInfo = {
   exp: number;
@@ -52,118 +678,10 @@ export type UserInfo = {
   active: boolean;
 };
 
-// TODO better
-export async function getUserInfo(
-  loginInfo: LoginInfo,
-): Promise<{ ok: true; response: UserInfo } | { ok: false; response: any }> {
-  try {
-    const response = await authFetch(
-      `/api/searcher/v1/auth/user-info`,
-      loginInfo,
-      {
-        method: "POST",
-        body: "",
-        headers: {
-          "Content-Type": "text/plain",
-          Accept: "application/json",
-        },
-      },
-    );
-    const data: UserInfo = await response.json();
-    return { ok: response.ok, response: data };
-  } catch (err) {
-    return { ok: false, response: err };
-  }
-}
-
-const AUTH_TIMEOUT = 6000;
-
-export async function doLogin(
-  payload: {
-    username: string;
-    password: string;
-  },
-  timeout = AUTH_TIMEOUT,
-): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
-  async function innerLogin() {
-    const response = await fetch(`/api/searcher/v1/auth/login`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-    return [response, await response.json()] as const;
-  }
-
-  try {
-    const [response, data] = await promiseTimeoutReject(innerLogin(), timeout);
-    return { ok: response.ok, response: data };
-  } catch (err) {
-    return { ok: false, response: err };
-  }
-}
-
-export async function doLogout(
-  payload: {
-    accessToken: string;
-    refreshToken: string;
-  },
-  loginInfo: LoginInfo,
-): Promise<{ ok: boolean; response: any }> {
-  try {
-    const request = await authFetch(`/api/searcher/v1/auth/logout`, loginInfo, {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "text/plain",
-      },
-    });
-    const response = await request.text();
-    return { ok: request.ok, response };
-  } catch (err) {
-    return { ok: false, response: err };
-  }
-}
-
-export async function doLoginRefresh(
-  payload: {
-    refreshToken: string;
-  },
-  timeout = AUTH_TIMEOUT,
-): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
-  async function innerRefresh() {
-    const response = await fetch(`/api/searcher/v1/auth/refresh`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-    return [response, await response.json()] as const;
-  }
-
-  try {
-    const [response, data] = await promiseTimeoutReject(
-      innerRefresh(),
-      timeout,
-    );
-    return { ok: response.ok, response: data };
-  } catch (err) {
-    return { ok: false, response: err };
-  }
-}
-
-function abortTimeout<T>(ms: number) {
-  return new Promise<T>((_, reject) => setTimeout(() => reject("timeout"), ms));
-}
-
-function promiseTimeoutReject<T>(promise: Promise<T>, ms: number) {
-  return Promise.race([promise, abortTimeout<T>(ms)]);
-}
+export type ClientAuthenticationState = {
+  loginInfo: LoginInfo;
+  userInfo: UserInfo;
+} | null;
 
 type SearchRequest = {
   searchQuery: Array<SearchToken>;
@@ -248,55 +766,6 @@ type DeepKeys<T> = PathImpl2<T> extends string | keyof T
   : keyof T;
 type Without<T, K> = Pick<T, Exclude<keyof T, K>>;
 
-export async function doSearch<E>(
-  searchRequest: SearchRequest,
-  loginInfo: LoginInfo | null,
-): Promise<SearchResult<E>> {
-  const response = await authFetch(`/api/searcher/v1/search`, loginInfo, {
-    method: "POST",
-    body: JSON.stringify(searchRequest),
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-}
-
-export async function doSearchDatasource<E>(
-  searchRequest: SearchRequest,
-  datasourceId: number,
-  loginInfo: LoginInfo | null,
-): Promise<SearchResult<E>> {
-  const response = await authFetch(
-    `/api/searcher/v1/search/${datasourceId}`,
-    loginInfo,
-    {
-      method: "POST",
-      body: JSON.stringify(searchRequest),
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    },
-  );
-  const data = await response.json();
-  return data;
-}
-
-// TODO: remove
-export async function getItemsInDatasource<E>(
-  datasourceId: number,
-  loginInfo: LoginInfo | null,
-): Promise<SearchResult<E>> {
-  return doSearchDatasource(
-    { range: [0, 0], searchQuery: [] },
-    datasourceId,
-    loginInfo,
-  );
-}
-
 export type SuggestionResult =
   | {
       tokenType: "DATASOURCE";
@@ -335,96 +804,6 @@ export type DataSourceInfo = {
   driverServiceName: string;
 };
 
-export async function getDataSourceInfo(
-  datasourceId: number,
-  loginInfo: LoginInfo | null,
-): Promise<DataSourceInfo> {
-  const response = await authFetch(
-    `/api/datasource/v2/datasource/${datasourceId}`,
-    loginInfo,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-  const data: DataSourceInfo = await response.json();
-  return data;
-}
-
-export async function postDataSource(
-  datasourceInfo: DataSourceInfo,
-  loginInfo: LoginInfo | null,
-): Promise<DataSourceInfo> {
-  const response = await authFetch(`/api/datasource/v2/datasource`, loginInfo, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(datasourceInfo),
-  });
-  const data: DataSourceInfo = await response.json();
-  return data;
-}
-
-export async function changeDataSourceInfo(
-  datasourceId: number,
-  datasource: Partial<DataSourceInfo>,
-  loginInfo: LoginInfo | null,
-): Promise<DataSourceInfo> {
-  const response = await authFetch(
-    `/api/datasource/v2/datasource/${datasourceId}`,
-    loginInfo,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(datasource),
-    },
-  );
-  const data = await response.json();
-  return data;
-}
-
-export async function deleteDataSource(
-  datasourceId: number,
-  loginInfo: LoginInfo | null,
-): Promise<string> {
-  const response = await authFetch(
-    `/api/datasource/v2/datasource/${datasourceId}`,
-    loginInfo,
-    {
-      method: "DELETE",
-      headers: {
-        Accept: "text/plain",
-      },
-    },
-  );
-  const data = await response.text();
-  return data;
-}
-
-export async function getDataSources(
-  loginInfo: LoginInfo | null,
-): Promise<DataSourceInfo[]> {
-  const response = await authFetch(`/api/datasource/v2/datasource?page=0&size=50`, loginInfo, {
-    headers: {
-      Accept: "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-}
-
-// TODO: remove
-export async function toggleDataSource(
-  datasourceId: number,
-  loginInfo: LoginInfo | null,
-  active: boolean,
-): Promise<DataSourceInfo> {
-  return changeDataSourceInfo(datasourceId, { active }, loginInfo);
-}
-
 export type EnrichItem = {
   active: boolean;
   enrichItemId: number;
@@ -435,213 +814,12 @@ export type EnrichItem = {
   _position: number;
 };
 
-export async function getEnrichItem(
-  loginInfo: LoginInfo | null,
-): Promise<EnrichItem[]> {
-  const response = await authFetch(`/api/datasource/v2/enrichItem?page=0&size=50`, loginInfo, {
-    headers: {
-      Accept: "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-}
-
-export async function postEnrichItem(
-  enrichItem: Omit<EnrichItem, "enrichItemId">,
-  loginInfo: LoginInfo | null,
-): Promise<EnrichItem> {
-  const response = await authFetch(
-    `/api/datasource/v2/enrichItem/`,
-    loginInfo,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(enrichItem),
-    },
-  );
-  const data = await response.json();
-  return data;
-}
-
-export async function changeEnrichItem(
-  enrichItemId: number,
-  enrichItem: Partial<EnrichItem>,
-  loginInfo: LoginInfo | null,
-): Promise<EnrichItem> {
-  const response = await authFetch(
-    `/api/datasource/v2/enrichItem/${enrichItemId}`,
-    loginInfo,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(enrichItem),
-    },
-  );
-  const data: EnrichItem = await response.json();
-  return data;
-}
-
-export async function deleteEnrichItem(
-  enrichItemId: number,
-  loginInfo: LoginInfo | null,
-): Promise<string> {
-  const response = await authFetch(
-    `/api/datasource/v2/enrichItem/${enrichItemId}`,
-    loginInfo,
-    {
-      method: "DELETE",
-      headers: {
-        Accept: "text/plain",
-      },
-    },
-  );
-  const data = await response.text();
-  return data;
-}
-
 export type EnrichPipeline = {
   active: boolean;
   datasourceId: number;
   enrichPipelineId: number;
   name: string;
 };
-
-export async function getEnrichPipeline(
-  loginInfo: LoginInfo | null,
-): Promise<EnrichPipeline[]> {
-  const response = await authFetch(
-    `/api/datasource/v2/enrichPipeline?page=0&size=50`,
-    loginInfo,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-  const data = await response.json();
-  return data;
-}
-
-export async function postEnrichPipeline(
-  enrichPipeline: Omit<EnrichPipeline, "enrichPipelineId">,
-  loginInfo: LoginInfo | null,
-): Promise<EnrichPipeline> {
-  const response = await authFetch(
-    `/api/datasource/v2/enrichPipeline/`,
-    loginInfo,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(enrichPipeline),
-    },
-  );
-  const data: EnrichPipeline = await response.json();
-  return data;
-}
-
-export async function changeEnrichPipeline(
-  enrichPipelineId: number,
-  enrichPipeline: Partial<EnrichPipeline>,
-  loginInfo: LoginInfo | null,
-): Promise<EnrichPipeline[]> {
-  const response = await authFetch(
-    `/api/datasource/v2/enrichPipeline/${enrichPipelineId}`,
-    loginInfo,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(enrichPipeline),
-    },
-  );
-  const data = await response.json();
-  return data;
-}
-
-export async function deleteEnrichPipeline(
-  enrichPipelineId: number,
-  loginInfo: LoginInfo | null,
-): Promise<string> {
-  const response = await authFetch(
-    `/api/datasource/v2/enrichPipeline/${enrichPipelineId}`,
-    loginInfo,
-    {
-      method: "DELETE",
-      headers: {
-        Accept: "text/plain",
-      },
-    },
-  );
-  const data = await response.text();
-  return data;
-}
-
-export async function reorderEnrichItems(
-  enrichItemsIds: number[],
-  loginInfo: LoginInfo | null,
-): Promise<string> {
-  const response = await authFetch(
-    `/api/datasource/v1/enrich-item/reorder`,
-    loginInfo,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "text/plain",
-      },
-      body: JSON.stringify(enrichItemsIds),
-    },
-  );
-  const data = await response.text();
-  return data;
-}
-
-export async function triggerScheduler(
-  datasourceIds: Array<number>,
-  loginInfo: LoginInfo | null,
-): Promise<unknown> {
-  const response = await authFetch(`/api/datasource/v1/trigger`, loginInfo, {
-    method: "POST",
-    body: JSON.stringify({ datasourceIds }),
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
-  const data = await response.json();
-  return data;
-}
-
-export async function triggerReindex(
-  ids: number[],
-  loginInfo: LoginInfo | null,
-): Promise<string> {
-  const response = await authFetch(
-    `/api/datasource/v1/index/reindex`,
-    loginInfo,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ datasourceIds: ids }),
-    },
-  );
-  const data = await response.text();
-  return data;
-}
 
 export type SchedulerItem = {
   jobName: string;
@@ -656,77 +834,6 @@ export type Tenant = {
   virtualHost: string;
   jsonConfig: string;
 };
-
-export async function getTenants(
-  loginInfo: LoginInfo | null,
-): Promise<Tenant[]> {
-  const response = await authFetch(`/api/datasource/v2/tenant`, loginInfo, {
-    headers: {
-      Accept: "application/json",
-    },
-  });
-  const data: Tenant[] = await response.json();
-  return data;
-}
-
-export async function getTenant(
-  tenantId: number,
-  loginInfo: LoginInfo | null,
-): Promise<Tenant> {
-  const response = await authFetch(
-    `/api/datasource/v2/tenant/${tenantId}`,
-    loginInfo,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-  const data = await response.json();
-  return data;
-}
-
-export async function postTenant(
-  data: {
-    name: string;
-    virtualHost: string;
-    jsonConfig: string;
-  },
-  loginInfo: LoginInfo | null,
-) {
-  await authFetch(`/api/datasource/v2/tenant`, loginInfo, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-}
-
-export async function putTenant(
-  data: Tenant,
-  loginInfo: LoginInfo | null,
-): Promise<void> {
-  if (!data.jsonConfig) {
-    data.jsonConfig = "{}";
-  }
-  await authFetch(`/api/datasource/v2/tenant/${data.tenantId}`, loginInfo, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-}
-
-export async function deleteTenant(
-  tenantId: number,
-  loginInfo: LoginInfo | null,
-) {
-  await authFetch(`/api/datasource/v2/tenant/${tenantId}`, loginInfo, {
-    method: "DELETE",
-  });
-}
 
 export type Plugin<E> = {
   pluginId: string;
@@ -796,69 +903,6 @@ export type SidebarRendererProps<E> = {
   result: GenericResultItem<E>;
 };
 
-export async function getPlugins(
-  loginInfo: LoginInfo | null,
-): Promise<PluginInfo[]> {
-  const response = await authFetch(
-    `/api/plugin-driver-manager/v1/plugin`,
-    loginInfo,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-  const data = await response.json();
-  return data;
-}
-
-export async function loadPlugin<E>(
-  id: string,
-  lastModified: number,
-): Promise<Plugin<E>> {
-  const defaultPlugin: Plugin<any> = {
-    pluginId: id,
-    displayName: id,
-    pluginServices: [],
-  };
-
-  try {
-    const jsURL = `/api/plugin-driver-manager/plugins/${id}/static/build/index.js?t=${lastModified}`;
-    // @ts-ignore
-    const code = await import(/* webpackIgnore: true */ jsURL);
-    const plugin = code.plugin as Plugin<E>;
-    return plugin;
-  } catch (err) {
-    console.warn(err);
-    return defaultPlugin;
-  }
-}
-
-// TODO remove
-export function getServices<E>(plugins: Plugin<E>[]) {
-  return plugins.flatMap((p) =>
-    p.pluginServices.map((ps) => ({ ...ps, pluginId: p.pluginId })),
-  );
-}
-
-export async function getContainerLogs(
-  id: string,
-  tail = 300,
-  loginInfo: LoginInfo | null,
-): Promise<string> {
-  const response = await authFetch(
-    `/api/logs/status/${id}/${tail}`,
-    loginInfo,
-    {
-      headers: {
-        Accept: "text/plain",
-      },
-    },
-  );
-  const data: string = await response.text();
-  return data;
-}
-
 export type AnalysisRequest = {
   searchText: string;
   tokens: Array<AnalysisRequestEntry>;
@@ -910,26 +954,6 @@ export type AnalysisToken =
       value: string;
     };
 
-export async function fetchQueryAnalysis(
-  request: AnalysisRequest,
-  loginInfo: LoginInfo | null,
-): Promise<AnalysisResponse> {
-  const response = await authFetch(
-    "/api/searcher/v1/query-analysis",
-    loginInfo,
-    {
-      method: "POST",
-      body: JSON.stringify(request),
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    },
-  );
-  const data = await response.json();
-  return data;
-}
-
 export type EntityDescription = {
   type: string;
   entityId: string;
@@ -945,165 +969,10 @@ export type EntityLookupResponse = {
   total: number;
 };
 
-export async function getSuggestions({
-  searchQuery,
-  suggestionCategoryId,
-  range,
-  afterKey,
-  loginInfo,
-  suggestKeyword,
-}: {
-  searchQuery: SearchToken[];
-  suggestionCategoryId?: number;
-  range?: [number, number]; // for pagination
-  afterKey?: string; // for pagination
-  loginInfo: LoginInfo | null;
-  suggestKeyword?: string; // to source by text in suggestions
-}): Promise<{ result: SuggestionResult[]; afterKey: string }> {
-  const request = await authFetch(`/api/searcher/v1/suggestions`, loginInfo, {
-    method: "POST",
-    body: JSON.stringify({
-      searchQuery,
-      range,
-      afterKey,
-      suggestionCategoryId,
-      suggestKeyword,
-    }),
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-  });
-  const response = await request.json();
-  return response;
-}
-
-const tenantDomain =
-  typeof window !== "undefined"
-    ? window.location.hostname === "localhost"
-      ? prompt("tentant domain")
-      : window.location.host
-    : "";
-
-export async function getTentantWithConfiguration(loginInfo: LoginInfo | null) {
-  const tenants = await getTenants(loginInfo);
-  const tenant =
-    tenants.find((tenant) => tenant.virtualHost === tenantDomain) || tenants[0];
-  const config =
-    (tenant?.jsonConfig &&
-      (JSON.parse(tenant?.jsonConfig) as TenantJSONConfig)) ||
-    {};
-  return { tenant, config };
-}
-
 export type TenantJSONConfig = {
   querySourceBarShortcuts?: { id: string; text: string }[];
   requireLogin?: boolean;
 };
-
-// DEPRECATED
-// TODO: remove
-export function readQueryParamToken(
-  query: SearchToken[],
-  keywordKey: string,
-): (string | number)[] | null {
-  const item = query.find((i) => i.keywordKey === keywordKey);
-  if (item) {
-    return item.values;
-  } else {
-    return null;
-  }
-}
-
-// DEPRECATED
-// TODO: remove
-export function setQueryParamToken({
-  query,
-  keywordKey,
-  values,
-  entityType,
-  tokenType,
-}: {
-  query: SearchToken[];
-  keywordKey: string;
-  values: string[] | number[] | null;
-  tokenType: SearchToken["tokenType"];
-  entityType?: string;
-}): SearchToken[] {
-  if (values === null) {
-    return query.filter((i) => i.keywordKey !== keywordKey);
-  } else if (query.find((i) => i.keywordKey === keywordKey)) {
-    return query.map((i) =>
-      i.keywordKey === keywordKey &&
-      (i.tokenType !== "ENTITY" || i.entityType === entityType) &&
-      i.tokenType === tokenType
-        ? { ...i, values: values as any }
-        : i,
-    );
-  } else {
-    const item: any = {
-      tokenType,
-      keywordKey,
-      values,
-      entityType,
-    };
-    // @ts-ignore
-    return [...query, item];
-  }
-}
-
-// DEPRECATED
-// TODO: remove
-export const ROOT_SUGGESTION_CATEGORY_ID = -1;
-export const ALL_SUGGESTION_CATEGORY_ID = 100000;
-export const KEYWORDS_SUGGESTION_CATEGORY_ID = 99999;
-
-// DEPRECATED
-// TODO: remove
-export async function doSearchEntities(
-  query: EntityLookupRequest,
-  loginInfo: LoginInfo | null,
-): Promise<EntityLookupResponse> {
-  const request = await authFetch(`/api/searcher/v1/entity`, loginInfo, {
-    method: "POST",
-    body: JSON.stringify(query),
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
-  return await request.json();
-}
-
-export async function getSuggestionCategories(
-  loginInfo: LoginInfo | null,
-): Promise<SuggestionsCategoriesResult> {
-  const response = await authFetch(
-    `/api/searcher/suggestion-categories`,
-    loginInfo,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-  const data = (await response.json()) as SuggestionsCategoriesResult;
-  return [
-    {
-      name: "All",
-      parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
-      suggestionCategoryId: ALL_SUGGESTION_CATEGORY_ID,
-      tenantId: NaN,
-    },
-    {
-      name: "Keywords",
-      parentCategoryId: ROOT_SUGGESTION_CATEGORY_ID,
-      suggestionCategoryId: KEYWORDS_SUGGESTION_CATEGORY_ID,
-      tenantId: NaN,
-    },
-    ...data,
-  ];
-}
 
 type SuggestionsCategoriesResult = Array<{
   name: string;
@@ -1112,20 +981,10 @@ type SuggestionsCategoriesResult = Array<{
   tenantId: number;
 }>;
 
-// DEPRECATED
-// TODO: remove
-export async function getDocumentTypes(
-  loginInfo: LoginInfo | null,
-): Promise<Record<string, Array<string>>> {
-  const request = await authFetch(
-    `/api/searcher/v1/document-types`,
-    loginInfo,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-  const response = await request.json();
-  return response;
+function getDefaultTenantDomain(tenant: string) {
+  try {
+    return new URL(tenant).hostname;
+  } catch (error) {
+    return "";
+  }
 }

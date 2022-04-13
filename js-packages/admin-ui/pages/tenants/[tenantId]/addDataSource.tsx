@@ -19,11 +19,13 @@ import React, { Suspense, useState } from "react";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import { mutate } from "swr";
-import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { DataSourceInfo, postDataSource } from "@openk9/rest-api";
-import { isServer, useLoginCheck } from "../../../state";
+import { DataSourceInfo } from "@openk9/rest-api";
+import { isServer } from "../../../state";
 import { Layout } from "../../../components/Layout";
 import { EditDataSource } from "../../../components/EditDataSource";
+import { client } from "../../../components/client";
+import { ThemeType } from "../../../components/theme";
+import { firstOrString } from "../../../components/utils";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -55,9 +57,6 @@ function AddDataSource() {
     driverServiceName: "",
   });
 
-  const { loginValid, loginInfo } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
-
   if (!tenantId) {
     return null;
   }
@@ -70,7 +69,7 @@ function AddDataSource() {
   };
 
   async function handleSave() {
-    await postDataSource(fullDataSourceInfo, loginInfo);
+    await client.postDataSource(fullDataSourceInfo);
     mutate(`/api/v2/datasource`);
     push(`/tenants/${tenantId}/dataSources`);
   }

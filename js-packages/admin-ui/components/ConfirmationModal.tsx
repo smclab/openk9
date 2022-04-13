@@ -19,7 +19,7 @@ import React from "react";
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import ClayModal, { useModal } from "@clayui/modal";
-import { ThemeType } from "@openk9/search-ui-components";
+import { ThemeType } from "./theme";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   btnCloseModal: {

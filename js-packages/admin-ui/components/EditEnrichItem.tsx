@@ -23,15 +23,11 @@ import { ClayInput, ClayToggle } from "@clayui/form";
 import ClayIcon from "@clayui/icon";
 import ClayAutocomplete from "@clayui/autocomplete";
 import ClayDropDown from "@clayui/drop-down";
-import { pluginLoader, ThemeType } from "@openk9/search-ui-components";
-import {
-  EnrichItem,
-  EnrichPlugin,
-  getServices,
-  PluginInfo,
-} from "@openk9/rest-api";
+import { EnrichItem, EnrichPlugin, PluginInfo } from "@openk9/rest-api";
 import { isServer } from "../state";
 import { AutocompleteItemIcon } from "./AutocompleteItemIcon";
+import { ThemeType } from "./theme";
+import { pluginLoader } from "./pluginLoader";
 
 const DefaultSettingsEditor = dynamic(() => import("./DefaultSettingsEditor"), {
   ssr: false,
@@ -87,7 +83,11 @@ export function EditEnrichItem({
   );
   const pluginServices = useMemo(
     () =>
-      getServices(plugins).filter((p) => p.type === "ENRICH") as EnrichPlugin[],
+      plugins
+        .flatMap((p) =>
+          p.pluginServices.map((ps: any) => ({ ...ps, pluginId: p.pluginId })),
+        )
+        .filter((p) => p.type === "ENRICH") as EnrichPlugin[],
     [plugins],
   );
 

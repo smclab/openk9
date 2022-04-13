@@ -21,21 +21,17 @@ import { useRouter } from "next/router";
 import { format } from "date-fns";
 import useSWR from "swr";
 import ClayIcon from "@clayui/icon";
-
-import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import {
-  changeDataSourceInfo,
-  DataSourceInfo,
-  getDataSourceInfo,
-} from "@openk9/rest-api";
-
+import { DataSourceInfo } from "@openk9/rest-api";
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 import { EditDataSource } from "../../../../../components/EditDataSource";
 import { Layout } from "../../../../../components/Layout";
-import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
+import { isServer } from "../../../../../state";
 import { useToast } from "../../../../_app";
 import { JSONView } from "../../../../../components/JSONView";
 import { DSItemsCountShow } from "../../../../../components/DSItemsCountShow";
+import { client } from "../../../../../components/client";
+import { ThemeType } from "../../../../../components/theme";
+import { firstOrString } from "../../../../../components/utils";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -74,11 +70,9 @@ function Inner({
 }) {
   const classes = useStyles();
 
-  const loginInfo = useLoginInfo();
-
   const { data: datasource, mutate } = useSWR(
     `/api/v2/datasource/${datasourceId}`,
-    () => getDataSourceInfo(datasourceId, loginInfo),
+    () => client.getDataSourceInfo(datasourceId),
   );
 
   const [editingDataSource, setEditingDataSource] =
@@ -187,9 +181,6 @@ function DSSettings() {
 
   const { pushToast } = useToast();
 
-  const { loginValid, loginInfo } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
-
   if (isNaN(datasourceInt) || !tenantId || !datasourceId) {
     return null;
   }
@@ -209,10 +200,9 @@ function DSSettings() {
     });
 
     if (Object.entries(newDatasource).length !== 0) {
-      const saved = await changeDataSourceInfo(
+      const saved = await client.changeDataSourceInfo(
         datasourceId,
         newDatasource,
-        loginInfo,
       );
       pushToast(`The datasource has been updated`);
       return saved;

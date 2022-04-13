@@ -26,11 +26,12 @@ import { AppPropsType } from "next/dist/next-server/lib/utils";
 import { useRouter } from "next/router";
 import { ThemeProvider } from "react-jss";
 import { ClayIconSpriteContext } from "@clayui/icon";
-import { defaultTheme } from "@openk9/search-ui-components";
 import "@clayui/css/lib/css/atlas.css";
+import "@clayui/css/lib/css/base.css";
 import "../styles.css";
 import { Toasts } from "../components/Toasts";
-import { isServer } from "../state";
+import { isServer, useLoginRedirect } from "../state";
+import { defaultTheme } from "../components/theme";
 
 const ToastContext = createContext<{
   pushToast(label: string): void;
@@ -83,6 +84,9 @@ export default function MyApp({ Component, pageProps }: AppPropsType) {
   );
 
   const { basePath } = useRouter();
+
+  useLoginRedirect();
+
   return (
     <ToastContext.Provider value={toastContextValue}>
       <ThemeProvider theme={defaultTheme}>

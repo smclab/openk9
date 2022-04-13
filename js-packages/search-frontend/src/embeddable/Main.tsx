@@ -25,8 +25,6 @@ import {
   AnalysisResponseEntry,
   AnalysisToken,
   GenericResultItem,
-  LoginInfo,
-  getSuggestionCategories,
   SearchToken,
 } from "@openk9/rest-api";
 import { Logo } from "../components/Logo";
@@ -37,6 +35,7 @@ import { FilterCategory } from "../components/FilterCategory";
 import { useRenderers } from "../components/useRenderers";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
+import { client } from "../components/client";
 
 type MainProps = { config: OpenK9ConfigFacade };
 export function Main({ config }: MainProps) {
@@ -57,14 +56,14 @@ export function Main({ config }: MainProps) {
   const [detail, setDetail] = React.useState<GenericResultItem<unknown> | null>(
     null,
   );
-  const tabs = useTabTokens(login.state.loginInfo ?? null);
+  const tabs = useTabTokens();
   const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
   const tabTokens = React.useMemo(
     () => tabs[selectedTabIndex]?.tokens ?? [],
     [selectedTabIndex, tabs],
   );
   const debounced = useDebounce(state, 600);
-  const queryAnalysis = useQueryAnalysis(login.state?.loginInfo ?? null, {
+  const queryAnalysis = useQueryAnalysis({
     searchText: debounced.text,
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
       token ? [{ text, start, end, token }] : [],
@@ -169,10 +168,8 @@ export function Main({ config }: MainProps) {
   React.useEffect(() => {
     setDetail(null);
   }, [searchQuery]);
-  const suggestionCategories = useSuggestionCategories(
-    login.state.loginInfo ?? null,
-  );
-  const renderers = useRenderers(login.state.loginInfo ?? null);
+  const suggestionCategories = useSuggestionCategories();
+  const renderers = useRenderers();
   return (
     <React.Fragment>
       {config.search !== null &&
@@ -463,7 +460,7 @@ export function Main({ config }: MainProps) {
                 padding: 16px 16px 0px 16px;
               `}
             >
-              {suggestionCategories.data?.slice(2).map((suggestionCategory) => {
+              {suggestionCategories.data?.map((suggestionCategory) => {
                 return (
                   <FilterCategory
                     key={suggestionCategory.suggestionCategoryId}
@@ -485,7 +482,6 @@ export function Main({ config }: MainProps) {
         ReactDOM.createPortal(
           <Results
             renderers={renderers}
-            loginInfo={login.state?.loginInfo ?? null}
             displayMode={{ type: "virtual" }}
             searchQuery={searchQuery}
             onDetail={setDetail}
@@ -610,12 +606,9 @@ function NoDetail() {
   );
 }
 
-function useSuggestionCategories(loginInfo: LoginInfo | null) {
-  return useQuery(
-    ["suggestion-categories", loginInfo],
-    async ({ queryKey }) => {
-      const result = await getSuggestionCategories(loginInfo);
-      return result;
-    },
-  );
+function useSuggestionCategories() {
+  return useQuery(["suggestion-categories"], async ({ queryKey }) => {
+    const result = await client.getSuggestionCategories();
+    return result;
+  });
 }

@@ -1,13 +1,10 @@
 import React from "react";
 import useSWR from "swr";
-import { getItemsInDatasource } from "@openk9/rest-api";
-import { useLoginInfo } from "../state";
+import { client } from "./client";
 
 export function DSItemsCountShow({ datasourceId }: { datasourceId: number }) {
-  const loginInfo = useLoginInfo();
-
   const { data: results } = useSWR(`getItemsInDatasource/${datasourceId}`, () =>
-    getItemsInDatasource(datasourceId, loginInfo),
+    client.doSearchDatasource({ range: [0, 0], searchQuery: [] }, datasourceId),
   );
 
   return <>{results === undefined ? "?" : results.total}</>;
