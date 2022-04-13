@@ -1,9 +1,8 @@
-import * as restApi from "./index";
+import { OpenK9Client } from "./index";
 
-restApi.doSearch(
-  {
-    range: [0, 2],
-    searchQuery: [{ tokenType: "TEXT", values: ["palazzo"] }],
-  },
-  null,
-);
+const client = OpenK9Client({ tenant: "https://demo.openk9.io" });
+
+client.doSearch({
+  searchQuery: [{ tokenType: "TEXT", values: ["palazzo"], filter: false }],
+  range: [0, 2],
+});
