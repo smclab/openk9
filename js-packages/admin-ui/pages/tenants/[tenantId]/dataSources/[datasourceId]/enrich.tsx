@@ -20,29 +20,23 @@ import useSWR, { mutate } from "swr";
 import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import ClayIcon from "@clayui/icon";
-import { firstOrString, noop, ThemeType } from "@openk9/search-ui-components";
 import {
-  changeEnrichItem,
   DataSourceInfo,
-  deleteEnrichItem,
   EnrichItem,
   EnrichPipeline,
-  getDataSourceInfo,
-  getEnrichItem,
-  getEnrichPipeline,
-  getPlugins,
   PluginInfo,
-  postEnrichItem,
-  postEnrichPipeline,
 } from "@openk9/rest-api";
 import { Layout } from "../../../../../components/Layout";
-import { isServer, useLoginCheck, useLoginInfo } from "../../../../../state";
+import { isServer } from "../../../../../state";
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 import { JSONView } from "../../../../../components/JSONView";
 import { EditEnrichItem } from "../../../../../components/EditEnrichItem";
 import { EnrichPipelineReorderStack } from "../../../../../components/EnrichItemReorderStack";
 import { useToast } from "../../../../_app";
 import { ConfirmationModal } from "../../../../../components/ConfirmationModal";
+import { client } from "../../../../../components/client";
+import { ThemeType } from "../../../../../components/theme";
+import { firstOrString } from "../../../../../components/utils";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -78,7 +72,6 @@ function NoEnrichPipelineMessage({
 }: {
   datasource: DataSourceInfo;
 }) {
-  const loginInfo = useLoginInfo();
   async function createEnrichPipeline() {
     if (!datasource) return;
 
@@ -87,7 +80,7 @@ function NoEnrichPipelineMessage({
       datasourceId: datasource.datasourceId,
       name: `${datasource.datasourceId}-${datasource.name}-pipeline`,
     };
-    postEnrichPipeline(newPipeline, loginInfo);
+    client.postEnrichPipeline(newPipeline);
     mutate(`/api/v2/enrichPipeline`, (pipelines: EnrichPipeline[] | null) =>
       pipelines
         ? [...pipelines, { ...newPipeline, enrichPipelineId: -1 }]
@@ -125,7 +118,6 @@ function EnrichItemShow({
   const classes = useStyles();
 
   const { pushToast } = useToast();
-  const loginInfo = useLoginInfo();
 
   async function handleSave() {
     if (editing) {
@@ -140,10 +132,9 @@ function EnrichItemShow({
       });
 
       if (Object.entries(newEnrichItem).length !== 0) {
-        const saved = await changeEnrichItem(
+        const saved = await client.changeEnrichItem(
           prev.enrichItemId,
           newEnrichItem,
-          loginInfo,
         );
         pushToast(`The datasource has been updated`);
         mutate(`/api/v2/enrichItem`, (eis: EnrichItem[]) => [
@@ -158,7 +149,7 @@ function EnrichItemShow({
 
   const [deleteModalV, setDeleteModalV] = useState(false);
   async function doDelete() {
-    await deleteEnrichItem(selectedEnrich.enrichItemId, loginInfo);
+    await client.deleteEnrichItem(selectedEnrich.enrichItemId);
     pushToast(`Enrich Item Deleted`);
     setSelectedEnrichId(null);
     mutate(`/api/v2/enrichItem`, (eis: EnrichItem[]) =>
@@ -170,7 +161,7 @@ function EnrichItemShow({
     if (!editing || editing?.serviceName) {
       setEditing(null);
     } else {
-      await deleteEnrichItem(editing.enrichItemId, loginInfo);
+      await client.deleteEnrichItem(editing.enrichItemId);
       setSelectedEnrichId(null);
       setEditing(null);
       mutate(`/api/v2/enrichItem`, (eis: EnrichItem[]) =>
@@ -253,23 +244,21 @@ function EnrichItemShow({
 function Inner({ datasourceId }: { datasourceId: number }) {
   const classes = useStyles();
 
-  const loginInfo = useLoginInfo();
-
   const { data: datasource } = useSWR(
     `/api/v2/datasource/${datasourceId}`,
-    () => getDataSourceInfo(datasourceId, loginInfo),
+    () => client.getDataSourceInfo(datasourceId),
   );
 
   const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
-    getPlugins(loginInfo),
+    client.getPlugins(),
   );
 
   const { data: enrichPipelines } = useSWR(`/api/v2/enrichPipeline`, () =>
-    getEnrichPipeline(loginInfo),
+    client.getEnrichPipeline(),
   );
 
   const { data: enrichItem } = useSWR(`/api/v2/enrichItem`, () =>
-    getEnrichItem(loginInfo),
+    client.getEnrichItem(),
   );
 
   const [selectedEnrichId, setSelectedEnrichId] = useState<number | null>(null);
@@ -315,7 +304,7 @@ function Inner({ datasourceId }: { datasourceId: number }) {
       _position: newPosition,
     };
 
-    const result = await postEnrichItem(emptyEnrichItem, loginInfo);
+    const result = await client.postEnrichItem(emptyEnrichItem);
     setSelectedEnrichId(result.enrichItemId);
     setEditing(result);
     mutate(`/api/v2/enrichItem`);
@@ -366,9 +355,6 @@ function DSEnrich() {
   const tenantId = query.tenantId && firstOrString(query.tenantId);
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
 
-  const { loginValid } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
-
   if (!tenantId || !datasourceId) return null;
 
   return (
@@ -394,6 +380,10 @@ function DSEnrich() {
       </Layout>
     </>
   );
+}
+
+function noop() {
+  // do nothing
 }
 
 export default DSEnrich;

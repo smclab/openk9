@@ -24,15 +24,10 @@ import ClayNavigationBar from "@clayui/navigation-bar";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 import ClayDropDown from "@clayui/drop-down";
-import { ThemeType } from "@openk9/search-ui-components";
-import {
-  deleteDataSource,
-  triggerReindex,
-  triggerScheduler,
-} from "@openk9/rest-api";
 import { ConfirmationModal } from "./ConfirmationModal";
-import { useLoginInfo } from "../state";
 import { useToast } from "../pages/_app";
+import { client } from "./client";
+import { ThemeType } from "./theme";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   navMenu: {
@@ -62,16 +57,15 @@ export function DataSourceNavBar({
   const [scheduleModalV, setScheduleModalV] = useState(false);
   const [reindexModalV, setReindexModalV] = useState(false);
   const [deleteModalV, setDeleteModalV] = useState(false);
-  const loginInfo = useLoginInfo();
   const { pushToast } = useToast();
 
   async function schedule(ids: number[]) {
-    await triggerScheduler(ids, loginInfo);
+    await client.triggerScheduler(ids);
     pushToast(`Reindex requested for ${ids.length} items`);
   }
 
   async function reindex(datasourceId: number) {
-    const resp = await triggerReindex([datasourceId], loginInfo);
+    const resp = await client.triggerReindex([datasourceId]);
     if (resp.length === 1) {
       pushToast(`Full reindex requested for 1 item`);
     } else {
@@ -81,7 +75,7 @@ export function DataSourceNavBar({
   }
 
   async function doDelete(datasourceId: number) {
-    const resp = await deleteDataSource(datasourceId, loginInfo);
+    const resp = await client.deleteDataSource(datasourceId);
     if (resp.length === 1) {
       pushToast(`DataSource Deleted`);
       push(`/tenants/${tenantId}/dataSources`);

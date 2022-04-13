@@ -1,4 +1,4 @@
-DEPRECATED
+# DEPRECATED & BROKEN
 
 # OpenK9 Standalone Search UI
 

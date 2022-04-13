@@ -16,10 +16,12 @@
  */
 
 import { createUseStyles } from "react-jss";
-import { Dockbar, ThemeType } from "@openk9/search-ui-components";
 import { NavSidebar } from "../components/NavSidebar";
 import { useStore } from "../state";
 import { Breadcrumbs } from "./Breadcrumbs";
+import { client } from "./client";
+import { Dockbar } from "./Dockbar";
+import { ThemeType } from "./theme";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -69,7 +71,12 @@ export function Layout({
 
   return (
     <div className={classes.root} {...rest}>
-      <Dockbar onHamburgerAction={toggleSidebar} />
+      <Dockbar
+        onHamburgerAction={toggleSidebar}
+        onLogoutAction={() => {
+          client.deauthenticate();
+        }}
+      />
 
       <div className={classes.content}>
         <NavSidebar visible={sidebarOpen} />

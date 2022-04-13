@@ -25,29 +25,18 @@ import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 import ClayDropDown from "@clayui/drop-down";
 
-import {
-  DataSourceIcon,
-  firstOrString,
-  pluginLoader,
-  SettingsIcon,
-  ThemeType,
-} from "@openk9/search-ui-components";
-import {
-  DataSourceInfo,
-  DataSourcePlugin,
-  deleteDataSource,
-  getDataSources,
-  getPlugins,
-  Plugin,
-  toggleDataSource,
-  triggerReindex,
-  triggerScheduler,
-} from "@openk9/rest-api";
+import { DataSourceInfo, DataSourcePlugin, Plugin } from "@openk9/rest-api";
 import { Layout } from "../../../components/Layout";
-import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
+import { isServer } from "../../../state";
 import { ConfirmationModal } from "../../../components/ConfirmationModal";
 import { useToast } from "../../_app";
 import { DSItemsCountShow } from "../../../components/DSItemsCountShow";
+import { client } from "../../../components/client";
+import { ThemeType } from "../../../components/theme";
+import { firstOrString } from "../../../components/utils";
+import { DataSourceIcon } from "../../../components/icons/DataSourceIcon";
+import { SettingsIcon } from "../../../components/icons/SettingsIcon";
+import { pluginLoader } from "../../../components/pluginLoader";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -265,15 +254,11 @@ function Inside({
   const classes = useStyles();
   const { pushToast } = useToast();
 
-  const loginInfo = useLoginInfo();
-
   const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
-    getPlugins(loginInfo),
+    client.getPlugins(),
   );
 
-  const { data } = useSWR(`/api/v2/datasource`, () =>
-    getDataSources(loginInfo),
-  );
+  const { data } = useSWR(`/api/v2/datasource`, () => client.getDataSources());
 
   const tenantDSs = useMemo(
     () => data && data.filter((d) => String(d.tenantId) === tenantId),
@@ -308,13 +293,11 @@ function Inside({
     if (!tenantDSs) return;
     await Promise.all(
       ids.map((dsId) =>
-        toggleDataSource(
-          dsId,
-          loginInfo,
-          !(
+        client.changeDataSourceInfo(dsId, {
+          active: !(
             filteredData.find((ds) => ds.datasourceId === dsId)?.active || false
           ),
-        ),
+        }),
       ),
     );
     mutate(`/api/v2/datasource`);
@@ -513,24 +496,21 @@ function DataSources() {
   const [idToSchedule, setIdToSchedule] = useState<number[]>([]);
   const [idToDelete, setIdToDelete] = useState<number[]>([]);
 
-  const { loginValid, loginInfo } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
-
   if (!tenantId) return null;
 
   async function schedule(ids: number[]) {
-    await triggerScheduler(ids, loginInfo);
+    await client.triggerScheduler(ids);
     pushToast(`Reindex requested for ${ids.length} items`);
   }
 
   async function reindex(ids: number[]) {
-    const resp = await triggerReindex(ids, loginInfo);
+    const resp = await client.triggerReindex(ids);
     pushToast(`Full reindex requested for ${resp.length} item`);
   }
 
   async function doDelete(ids: number[]) {
     const resp = await Promise.all(
-      ids.map((id) => deleteDataSource(id, loginInfo)),
+      ids.map((id) => client.deleteDataSource(id)),
     );
     pushToast(`${resp.length} DataSources Deleted`);
     mutate(`/api/v2/datasource`);

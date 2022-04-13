@@ -19,13 +19,8 @@ import create from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
-import {
-  doLoginRefresh,
-  getUserInfo,
-  LoginInfo,
-  UserInfo,
-} from "@openk9/rest-api";
-import { firstOrString } from "@openk9/search-ui-components";
+import { LoginInfo, UserInfo } from "@openk9/rest-api";
+import { firstOrString } from "./components/utils";
 
 export const isServer = typeof window === "undefined";
 
@@ -61,78 +56,21 @@ export const useStore = create<StateType>(
   ),
 );
 
-export function useLoginInfo() {
-  const loginInfo = useStore((s) => s.loginInfo);
-  return loginInfo;
-}
-
-export function useLoginCheck({ isLoginPage } = { isLoginPage: false }) {
+export function useLoginRedirect() {
   const router = useRouter();
-
   const loginInfo = useStore((s) => s.loginInfo);
-  const userInfo = useStore((s) => s.userInfo);
-  const setLoginInfo = useStore((s) => s.setLoginInfo);
-  const invalidateLogin = useStore((s) => s.invalidateLogin);
-
-  const currentTimeSec = new Date().getTime() / 1000;
-  const loginValid = loginInfo && userInfo && currentTimeSec < userInfo.exp;
-
-  const redirect =
-    (router.query.redirect && firstOrString(router.query.redirect)) || "/";
-
-  //
-  // Login page redirect logic
-  //
+  const route = router.route;
+  const redirect = firstOrString(router.query.redirect ?? "");
   useEffect(() => {
-    if (isLoginPage && loginValid) {
+    const isLoginPage = route === "/login";
+    if (isLoginPage && loginInfo) {
       // login page and login already done, redirect
-      if (decodeURIComponent(redirect).startsWith("/login")) {
-        router.push("/");
-      } else {
-        router.push(decodeURIComponent(redirect));
-      }
-    } else if (!loginValid && !isLoginPage) {
+      router.push(decodeURIComponent(redirect || "/"));
+    } else if (!loginInfo && !isLoginPage) {
       // protected page ad no login, redirect to login
       router.push(
-        `/login?redirect=${redirect || encodeURIComponent(location.href)}`,
+        `/login?redirect=${encodeURIComponent(window.location.href)}`,
       );
     }
-  }, [loginValid, isLoginPage, router, redirect]);
-
-  //
-  // Refresh loop logic
-  //
-  useEffect(() => {
-    let refreshTimeout: ReturnType<typeof setTimeout> | null;
-
-    async function refreshStep() {
-      const { loginInfo } = useStore.getState();
-
-      if (loginInfo) {
-        const loginRefresh = await doLoginRefresh({
-          refreshToken: loginInfo.refresh_token,
-        });
-        const userInfo =
-          loginRefresh.ok && (await getUserInfo(loginRefresh.response));
-
-        if (loginRefresh.ok && userInfo && userInfo.ok) {
-          setLoginInfo(loginRefresh.response, userInfo.response);
-        } else {
-          invalidateLogin();
-        }
-      }
-
-      refreshTimeout = setTimeout(
-        refreshStep,
-        (loginInfo?.expires_in || 1) * 700,
-      );
-    }
-
-    refreshTimeout = setTimeout(refreshStep, 300);
-    return () => {
-      if (refreshTimeout) clearTimeout(refreshTimeout);
-    };
-  }, [invalidateLogin, setLoginInfo]);
-
-  return { loginInfo, userInfo, loginValid };
+  }, [loginInfo, redirect, route]); // do not include router here, it causes an infinite loop
 }

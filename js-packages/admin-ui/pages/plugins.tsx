@@ -23,10 +23,12 @@ import ClayIcon from "@clayui/icon";
 import ClayButton from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import { ClayTooltipProvider } from "@clayui/tooltip";
-import { pluginLoader, ThemeType } from "@openk9/search-ui-components";
-import { getPlugins, PluginInfo } from "@openk9/rest-api";
+import { PluginInfo } from "@openk9/rest-api";
 import { Layout } from "../components/Layout";
-import { isServer, useLoginCheck, useLoginInfo } from "../state";
+import { isServer } from "../state";
+import { client } from "../components/client";
+import { ThemeType } from "../components/theme";
+import { pluginLoader } from "../components/pluginLoader";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -81,8 +83,6 @@ function AddModal({
   });
 
   if (!visible) return null;
-
-  
 
   function handleDrag(e: React.DragEvent) {
     e.preventDefault();
@@ -239,12 +239,18 @@ function TRow({ pluginInfo }: { pluginInfo: PluginInfo }) {
 }
 
 function TBody({ searchValue }: { searchValue: string }) {
-  const loginInfo = useLoginInfo();
-
-  const { data } = useSWR(`/plugins`, () => getPlugins(loginInfo));
+  const { data } = useSWR(`/plugins`, () => client.getPlugins());
 
   if (!data) {
-    return <span className="loading-animation" />;
+    return (
+      <tbody>
+        <tr>
+          <td>
+            <span className="loading-animation" />
+          </td>
+        </tr>
+      </tbody>
+    );
   }
 
   const filteredData = data.filter(
@@ -257,7 +263,7 @@ function TBody({ searchValue }: { searchValue: string }) {
     <tbody>
       {filteredData.map((pluginInfo) =>
         isServer ? null : (
-          <Suspense fallback={<span className="loading-animation" />}>
+          <Suspense fallback={<span className="loading-animation" />} key={pluginInfo.pluginId}>
             <TRow key={pluginInfo.pluginId} pluginInfo={pluginInfo} />
           </Suspense>
         ),
@@ -270,9 +276,6 @@ function Plugins() {
   const classes = useStyles();
 
   const [searchValue, setSearchValue] = useState("");
-
-  const { loginValid } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
 
   return (
     <Layout

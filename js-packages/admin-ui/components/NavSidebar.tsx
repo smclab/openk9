@@ -21,16 +21,13 @@ import ClayIcon from "@clayui/icon";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import {
-  HomeIcon,
-  TenantsIcon,
-  SettingsIcon,
-  ThemeType,
-  firstOrString,
-  DataSourceIcon,
-} from "@openk9/search-ui-components";
-import { getTenant } from "@openk9/rest-api";
-import { useLoginInfo } from "../state";
+import { client } from "./client";
+import { ThemeType } from "./theme";
+import { firstOrString } from "./utils";
+import { SettingsIcon } from "./icons/SettingsIcon";
+import { DataSourceIcon } from "./icons/DataSourceIcon";
+import { HomeIcon } from "./icons/HomeIcon";
+import { TenantsIcon } from "./icons/TenantsIcon";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -142,10 +139,8 @@ function MenuEntry({
 function TenantSubMenu({ tenantId }: { tenantId: number }) {
   const classes = useStyles();
 
-  const loginInfo = useLoginInfo();
-
   const { data: tenant } = useSWR(`/api/v2/tenant/${tenantId}`, () =>
-    getTenant(tenantId, loginInfo),
+    client.getTenant(tenantId),
   );
 
   if (!tenant) {

@@ -24,13 +24,15 @@ type ClientConfiguration = {
 
 export function OpenK9Client({
   tenant,
-  tenantDomain = window.location.hostname === "localhost"
-    ? prompt("tentant domain") ?? ""
-    : new URL(tenant).host,
+  tenantDomain = getDefaultTenantDomain(tenant),
   onAuthenticationStateChange,
 }: ClientConfiguration) {
   let loginInfo: LoginInfo | null = null;
+
   let refreshTimeoutId: number | null = null;
+
+  let authenticationAction = Promise.resolve();
+
   function updateLoginInfo(
     state: { loginInfo: LoginInfo; userInfo: UserInfo } | null,
   ) {
@@ -42,23 +44,28 @@ export function OpenK9Client({
     }
     if (state && state.loginInfo.emitted_at) {
       refreshTimeoutId = setTimeout(async () => {
-        try {
-          const refreshResponse = await refreshLoginInfo(state.loginInfo);
-          if (!refreshResponse.ok) throw new Error();
-          const userInfoResponse = await getUserInfo(refreshResponse.response);
-          if (!userInfoResponse.ok) throw new Error();
-          const loginInfo = refreshResponse.response;
-          const userInfo = userInfoResponse.response;
-          updateLoginInfo({ loginInfo, userInfo });
-        } catch (error) {
-          console.error(error);
-          updateLoginInfo(null);
-        }
+        await runAuthenticationAction(async () => {
+          try {
+            const refreshResponse = await refreshLoginInfo(state.loginInfo);
+            if (!refreshResponse.ok) throw new Error();
+            const userInfoResponse = await getUserInfo(
+              refreshResponse.response,
+            );
+            if (!userInfoResponse.ok) throw new Error();
+            const loginInfo = refreshResponse.response;
+            const userInfo = userInfoResponse.response;
+            updateLoginInfo({ loginInfo, userInfo });
+          } catch (error) {
+            console.error(error);
+            updateLoginInfo(null);
+          }
+        });
       }, state.loginInfo.emitted_at + state.loginInfo.expires_in * 1000 * 0.9 - Date.now()) as any;
     }
   }
 
-  function authFetch(route: string, init: RequestInit = {}) {
+  async function authFetch(route: string, init: RequestInit = {}) {
+    await authenticationAction;
     return fetch(tenant + route, {
       ...init,
       headers: loginInfo
@@ -131,6 +138,14 @@ export function OpenK9Client({
     }
   }
 
+  async function runAuthenticationAction<T>(action: () => Promise<T>) {
+    await authenticationAction;
+    const result = action();
+    const noop = () => {};
+    authenticationAction = result.then(noop, noop);
+    return result;
+  }
+
   return {
     /**
      * all subsequent calls to all other methods will be authenticated with the loginInfo provided
@@ -138,11 +153,12 @@ export function OpenK9Client({
      * eventual token refresh will be handled automatically
      */
     async authenticate(loginInfo: LoginInfo) {
-      const userInfoResponse = await getUserInfo(loginInfo);
-      if (!userInfoResponse.ok) throw new Error();
-      const userInfo = userInfoResponse.response;
-      updateLoginInfo({ loginInfo, userInfo });
-      return userInfo;
+      return await runAuthenticationAction(async () => {
+        const userInfoResponse = await getUserInfo(loginInfo);
+        if (!userInfoResponse.ok) throw new Error();
+        const userInfo = userInfoResponse.response;
+        updateLoginInfo({ loginInfo, userInfo });
+      });
     },
 
     /**
@@ -151,10 +167,12 @@ export function OpenK9Client({
      * eventual token revocation will be handled automatically
      */
     async deauthenticate() {
-      if (loginInfo) {
-        revokeLoginInfo(loginInfo);
-      }
-      updateLoginInfo(null);
+      return await runAuthenticationAction(async () => {
+        if (loginInfo) {
+          revokeLoginInfo(loginInfo);
+        }
+        updateLoginInfo(null);
+      });
     },
 
     /**
@@ -962,3 +980,11 @@ type SuggestionsCategoriesResult = Array<{
   suggestionCategoryId: number;
   tenantId: number;
 }>;
+
+function getDefaultTenantDomain(tenant: string) {
+  try {
+    return new URL(tenant).hostname;
+  } catch (error) {
+    return "";
+  }
+}

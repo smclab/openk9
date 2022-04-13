@@ -19,9 +19,9 @@ import { useState } from "react";
 import clsx from "clsx";
 import { createUseStyles } from "react-jss";
 import ClayForm, { ClayInput } from "@clayui/form";
-import { ThemeType, Brand } from "@openk9/search-ui-components";
-import { doLogin, getUserInfo } from "@openk9/rest-api";
-import { useLoginCheck, useStore } from "../state";
+import { client } from "../components/client";
+import { ThemeType } from "../components/theme";
+import { Brand } from "../components/Brand";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -59,28 +59,26 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
-  const { loginValid } = useLoginCheck({ isLoginPage: true });
-
-  const setLoginInfo = useStore((s) => s.setLoginInfo);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(false);
 
-    const loginResult = await doLogin({ username, password });
-    const userInfo =
-      loginResult.ok && (await getUserInfo(loginResult.response));
-    if (loginResult.ok && userInfo && userInfo.ok) {
-      setLoginInfo(loginResult.response, userInfo.response);
-    } else {
-      setError(loginResult.response);
+    try {
+      const loginInfoResponse = await client.getLoginInfoByUsernamePassword({
+        username,
+        password,
+      });
+      if (!loginInfoResponse.ok) throw new Error();
+      const loginInfo = loginInfoResponse.response;
+      await client.authenticate(loginInfo);
+      setLoading(false);
+      setError(false);
+    } catch (error) {
+      setLoading(false);
+      setError(true);
     }
-
-    setLoading(false);
   }
-
-  if (loginValid) return <span className="loading-animation" />;
 
   return (
     <div className={classes.root}>

@@ -22,12 +22,14 @@ import clsx from "clsx";
 import { useRouter } from "next/router";
 import useSWR, { mutate } from "swr";
 import { ClayInput } from "@clayui/form";
-import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { putTenant, getTenant, Tenant } from "@openk9/rest-api";
+import { Tenant } from "@openk9/rest-api";
 import { Layout } from "../../../components/Layout";
-import { isServer, useLoginCheck, useLoginInfo } from "../../../state";
+import { isServer } from "../../../state";
 import { useToast } from "../../_app";
 import { JSONView } from "../../../components/JSONView";
+import { client } from "../../../components/client";
+import { ThemeType } from "../../../components/theme";
+import { firstOrString } from "../../../components/utils";
 
 const DefaultSettingsEditor = dynamic(
   () => import("./../../../components/DefaultSettingsEditor"),
@@ -86,8 +88,6 @@ function EditInside({
 
   const [tenant, setTenant] = useState({ ...data });
 
-  const loginInfo = useLoginInfo();
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const id = e.target.id;
@@ -98,7 +98,7 @@ function EditInside({
   };
 
   const handleSave = async () => {
-    await putTenant(tenant, loginInfo);
+    await client.putTenant(tenant);
     pushToast("Success");
     setIsEditMode(false);
     mutate(`/api/v2/tenant/${tenant.tenantId}`);
@@ -165,10 +165,8 @@ function EditInside({
 function Inside({ tenantId }: { tenantId: number }) {
   const classes = useStyles();
 
-  const loginInfo = useLoginInfo();
-
   const { data } = useSWR(`/api/v2/tenant/${tenantId}`, () =>
-    getTenant(tenantId, loginInfo),
+    client.getTenant(tenantId),
   );
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -211,9 +209,6 @@ function TenantSettings() {
 
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
-
-  const { loginValid } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
 
   if (!tenantId) return null;
 

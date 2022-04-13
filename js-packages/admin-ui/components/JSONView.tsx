@@ -17,7 +17,7 @@
 
 import { createUseStyles } from "react-jss";
 import ClayAlert from "@clayui/alert";
-import { ThemeType } from "@openk9/search-ui-components";
+import { ThemeType } from "./theme";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   json: {

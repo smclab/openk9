@@ -16,9 +16,8 @@
  */
 
 import { createUseStyles } from "react-jss";
-import { ThemeType } from "@openk9/search-ui-components";
 import { Layout } from "../components/Layout";
-import { useLoginCheck } from "../state";
+import { ThemeType } from "../components/theme";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -50,9 +49,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 
 function Logs() {
   const classes = useStyles();
-
-  const { loginValid } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
 
   return (
     <Layout breadcrumbsPath={[{ label: "Logs", path: "/logs" }]}>

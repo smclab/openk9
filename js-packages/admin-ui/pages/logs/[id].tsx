@@ -19,10 +19,10 @@ import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
 import useSWR from "swr";
 import ansicolor from "ansicolor";
-import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import { getContainerLogs } from "@openk9/rest-api";
 import { Layout } from "../../components/Layout";
-import { useLoginCheck } from "../../state";
+import { client } from "../../components/client";
+import { ThemeType } from "../../components/theme";
+import { firstOrString } from "../../components/utils";
 
 const convertStylesStringToObject = (stringStyles: string) =>
   typeof stringStyles === "string"
@@ -89,15 +89,13 @@ function LogId() {
   const { query } = useRouter();
   const contId = query.id && firstOrString(query.id);
 
-  const { loginValid, loginInfo } = useLoginCheck();
-
   const { data: log } = useSWR(
     `/logs/status/${contId}/${N}`,
-    () => getContainerLogs(contId || "", N, loginInfo),
+    () => client.getContainerLogs(contId || "", N),
     { refreshInterval: 5000 },
   );
 
-  if (!loginValid || !log) return <span className="loading-animation" />;
+  if (!log) return <span className="loading-animation" />;
 
   const parsed = ansicolor.parse(log);
 

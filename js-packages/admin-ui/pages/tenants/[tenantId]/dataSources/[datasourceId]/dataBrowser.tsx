@@ -21,16 +21,13 @@ import { useRouter } from "next/router";
 import useSWR from "swr";
 import { format } from "date-fns";
 
-import { firstOrString, ThemeType } from "@openk9/search-ui-components";
-import {
-  doSearch,
-  GenericResultItem,
-  getDataSourceInfo,
-} from "@openk9/rest-api";
+import { GenericResultItem } from "@openk9/rest-api";
 
 import { DataSourceNavBar } from "../../../../../components/DataSourceNavBar";
 import { Layout } from "../../../../../components/Layout";
-import { useLoginCheck, useLoginInfo } from "../../../../../state";
+import { client } from "../../../../../components/client";
+import { ThemeType } from "../../../../../components/theme";
+import { firstOrString } from "../../../../../components/utils";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -87,21 +84,16 @@ function Inner({
 }) {
   const classes = useStyles();
 
-  const loginInfo = useLoginInfo();
-
   const { data: datasource } = useSWR(
     `/api/v2/datasource/${datasourceId}`,
-    () => getDataSourceInfo(datasourceId, loginInfo),
+    () => client.getDataSourceInfo(datasourceId),
   );
 
   const { data: searchResults } = useSWR(`/api/v1/search`, () =>
-    doSearch(
-      {
-        searchQuery: [{ tokenType: "DATASOURCE", values: [], filter: false }],
-        range: [0, 20],
-      },
-      loginInfo,
-    ),
+    client.doSearch({
+      searchQuery: [{ tokenType: "DATASOURCE", values: [], filter: false }],
+      range: [0, 20],
+    }),
   );
 
   if (!datasource) {
@@ -134,9 +126,6 @@ function DSDataBrowser() {
   const tenantId = query.tenantId && firstOrString(query.tenantId);
   const datasourceId = query.datasourceId && firstOrString(query.datasourceId);
   const dataSourceInt = parseInt(datasourceId || "NaN");
-
-  const { loginValid } = useLoginCheck();
-  if (!loginValid) return <span className="loading-animation" />;
 
   if (isNaN(dataSourceInt) || !tenantId || !datasourceId) {
     return null;
