@@ -7,14 +7,11 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import { myTheme } from "./myTheme";
-import {
-  getSuggestions,
-  SearchToken,
-  SuggestionResult,
-} from "@openk9/rest-api";
+import { SearchToken, SuggestionResult } from "@openk9/rest-api";
 import { isEqual } from "lodash";
 import { useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
+import { client } from "./client";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -225,11 +222,10 @@ export function useInfiniteSuggestions(
       pageParam,
     }) => {
       if (!searchQuery) throw new Error();
-      const result = await getSuggestions({
+      const result = await client.getSuggestions({
         searchQuery,
         range: [0, pageSize + 1],
         afterKey: pageParam,
-        loginInfo: null,
         suggestionCategoryId: activeSuggestionCategory,
         suggestKeyword,
       });
@@ -242,10 +238,10 @@ export function useInfiniteSuggestions(
       enabled: searchQuery !== null,
       keepPreviousData: true,
       getNextPageParam(lastPage, pages) {
-          if (!ENABLED) return undefined
-          if (!lastPage.afterKey) return undefined;
-          if (pages[pages.length -1].result.length < pageSize) return undefined;
-          return lastPage.afterKey;
+        if (!ENABLED) return undefined;
+        if (!lastPage.afterKey) return undefined;
+        if (pages[pages.length - 1].result.length < pageSize) return undefined;
+        return lastPage.afterKey;
       },
     },
   );

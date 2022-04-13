@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { SearchToken } from "@openk9/rest-api";
 import * as RestApi from "@openk9/rest-api";
 import * as RendererComponents from "../renderer-components";
+import { clientAuthenticationChangeListeners } from "../components/client";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -12,6 +13,10 @@ const queryClient = new QueryClient({
       notifyOnChangeProps: ["data", "error"],
     },
   },
+});
+
+clientAuthenticationChangeListeners.add(() => {
+  queryClient.invalidateQueries();
 });
 
 function Entry() {
