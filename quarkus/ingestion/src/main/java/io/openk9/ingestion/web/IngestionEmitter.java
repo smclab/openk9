@@ -15,6 +15,7 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,6 +39,16 @@ public class IngestionEmitter {
 			new JsonObject(dto.getDatasourcePayload())
 				.getMap();
 
+		Map<String, List<String>> mappingAcl =
+			dto
+				.getAclMap()
+				.entrySet()
+				.stream()
+				.map(e -> Map.entry(e.getKey(),
+					new ArrayList<>(e.getValue().getValueList())))
+				.collect(Collectors.toMap(
+					Map.Entry::getKey, Map.Entry::getValue));
+
 		return IngestionPayload.of(
 			UUID.randomUUID().toString(),
 			dto.getDatasourceId(),
@@ -49,7 +60,8 @@ public class IngestionEmitter {
 			datasourcePayload
 				.keySet()
 				.toArray(new String[0]),
-			_dtoToPayload(dto.getResources())
+			_dtoToPayload(dto.getResources()),
+			mappingAcl
 		);
 	}
 
@@ -65,7 +77,8 @@ public class IngestionEmitter {
 			dto.getDatasourcePayload()
 				.keySet()
 				.toArray(new String[0]),
-			_dtoToPayload(dto.getResources())
+			_dtoToPayload(dto.getResources()),
+			dto.getAcl()
 		);
 	}
 

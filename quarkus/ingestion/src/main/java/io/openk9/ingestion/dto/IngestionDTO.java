@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -20,4 +21,5 @@ public class IngestionDTO {
 	private String rawContent;
 	private Map<String, Object> datasourcePayload;
 	private ResourcesDTO resources;
+	private Map<String, List<String>> acl;
 }

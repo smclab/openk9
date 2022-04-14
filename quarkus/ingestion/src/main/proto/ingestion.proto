@@ -22,6 +22,11 @@ message IngestionRequest {
   string rawContent = 4;
   string datasourcePayload = 5;
   optional Resources resources = 6;
+  map<string, Acl> acl  = 7;
+}
+
+message Acl {
+  repeated string value = 1;
 }
 
 message Resources {
