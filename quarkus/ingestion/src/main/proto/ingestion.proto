@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.ingestion.grpc";
+option java_outer_classname = "IngestionProto";
+
+package ingestion;
+
+// The Ingestion service definition.
+service Ingestion {
+  // Sends a IngestionRequest
+  rpc ingestion (IngestionRequest) returns (google.protobuf.Empty) {}
+}
+
+// The request message containing the user's name.
+message IngestionRequest {
+  int64 datasourceId = 1;
+  string contentId = 2;
+  int64 parsingDate = 3;
+  string rawContent = 4;
+  string datasourcePayload = 5;
+  optional Resources resources = 6;
+}
+
+message Resources {
+  repeated Binary binary = 1;
+}
+
+message Binary {
+  optional string id = 1;
+  string name = 2;
+  optional string contentType = 3;
+  string data = 4;
+}
