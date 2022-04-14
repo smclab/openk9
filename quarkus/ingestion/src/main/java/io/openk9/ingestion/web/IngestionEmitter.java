@@ -44,10 +44,12 @@ public class IngestionEmitter {
 				.getAclMap()
 				.entrySet()
 				.stream()
-				.map(e -> Map.entry(e.getKey(),
-					new ArrayList<>(e.getValue().getValueList())))
-				.collect(Collectors.toMap(
-					Map.Entry::getKey, Map.Entry::getValue));
+				.collect(
+					Collectors.toMap(
+						Map.Entry::getKey,
+						e -> new ArrayList<>(e.getValue().getValueList())
+					)
+				);
 
 		return IngestionPayload.of(
 			UUID.randomUUID().toString(),
