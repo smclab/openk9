@@ -41,10 +41,10 @@ Your project needs to contains following files:
 Bundle-Name: [OpenK9 - Plugin] Example
 Bundle-SymbolicName: io.openk9.plugins.example
 
-Bundle-Version: 0.0.1
-
--noimportjava: true
+OpenK9-Plugin: true
+OpenK9-Plugin-Web-Id: example-datasource
 ```
+
 - `pom.xml` defines java dependencies and adds bndtools plugin
 ```aidl
 <?xml version="1.0" encoding="UTF-8"?>
