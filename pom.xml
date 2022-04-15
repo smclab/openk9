@@ -22,7 +22,7 @@
 
 	<groupId>io.openk9</groupId>
 	<artifactId>openk9</artifactId>
-	<version>0.0.2</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>OpenK9</name>
@@ -59,7 +59,7 @@
 		<product.name>OpenK9 Powered by SMC Treviso SRL</product.name>
 		<maven.compiler.release>11</maven.compiler.release>
 		<maven.compiler.target>11</maven.compiler.target>
-		<project.build.outputTimestamp>1650038209</project.build.outputTimestamp>
+		<project.build.outputTimestamp>1650039077</project.build.outputTimestamp>
 
 		<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
 		<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
@@ -187,7 +187,7 @@
 				<plugins>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
+							<artifactId>maven-gpg-plugin</artifactId>
 						<version>1.5</version>
 						<executions>
 							<execution>
