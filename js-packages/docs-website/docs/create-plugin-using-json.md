@@ -35,7 +35,8 @@ Bundle-SymbolicName: io.openk9.plugins.example
 
 Bundle-Version: 0.0.1
 
--noimportjava: true
+OpenK9-Plugin: true
+OpenK9-Plugin-Web-Id: example-datasource
 ```
 - `build.gradle` defines java dependencies and adds bndtools plugin
 ```aidl
