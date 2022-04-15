@@ -176,7 +176,7 @@
 					<url>https://registry.smc.it/repository/maven-openk9-public-releases/</url>
 				</repository>
 				<snapshotRepository>
-					<id>maven-openk9-public-snapshots</id>
+					<id>smc</id>
 					<url>https://registry.smc.it/repository/maven-openk9-public-snapshots/</url>
 				</snapshotRepository>
 			</distributionManagement>
