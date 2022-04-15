@@ -12,6 +12,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
@@ -163,22 +164,29 @@ public abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 				restHighLevelClient.search(
 					searchRequest, RequestOptions.DEFAULT);
 
-			for (Aggregation aggregation : search.getAggregations()) {
+			Aggregations aggregations = search.getAggregations();
 
-				Terms terms =(Terms)aggregation;
-				for (Terms.Bucket bucket : terms.getBuckets()) {
-					String keyAsString = bucket.getKeyAsString();
+			if (aggregations != null) {
 
-					if (token.equalsIgnoreCase(keyAsString)) {
-						return List.of(_createCategorySemantics(
-							terms.getName(), keyAsString));
+				for (Aggregation aggregation : aggregations) {
+
+					Terms terms = (Terms) aggregation;
+					for (Terms.Bucket bucket : terms.getBuckets()) {
+						String keyAsString = bucket.getKeyAsString();
+
+						if (token.equalsIgnoreCase(keyAsString)) {
+							return List.of(_createCategorySemantics(
+								terms.getName(), keyAsString));
+						}
+
+						scoreKeys.add(
+							Tuple.of(
+								(Supplier<Double>) () -> _levenshteinDistance(
+									token, keyAsString),
+								keyAsString,
+								terms.getName()));
+
 					}
-
-					scoreKeys.add(
-						Tuple.of(
-							(Supplier<Double>)() -> _levenshteinDistance(token, keyAsString),
-							keyAsString,
-							terms.getName()));
 
 				}
 
