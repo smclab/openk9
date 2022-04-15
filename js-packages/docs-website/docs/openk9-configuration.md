@@ -87,6 +87,6 @@ To start first data ingestion you can wait for the scheduler to trigger ingestio
 
 Another option is to trigger a reindex manually. To do this you can click on reindex tab for a specific datasource.
 
-![image-20220304125842958](../static/img/installation/image-20220304125842958.png)
+![screen-reindex](../static/img/installation/screen-reindex.png)
 
 Now go to Openk9 frontend using url [http://demo.openk9.local/](http://demo.openk9.local/) and you can see your data arriving.
