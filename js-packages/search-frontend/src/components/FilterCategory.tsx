@@ -11,7 +11,7 @@ import { SearchToken, SuggestionResult } from "@openk9/rest-api";
 import { isEqual } from "lodash";
 import { useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
-import { client } from "./client";
+import { useOpenK9Client } from "./client";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -210,6 +210,7 @@ export function useInfiniteSuggestions(
 ) {
   const ENABLED = true;
   const pageSize = 50;
+  const client = useOpenK9Client()
   return useInfiniteQuery(
     [
       "suggestions",

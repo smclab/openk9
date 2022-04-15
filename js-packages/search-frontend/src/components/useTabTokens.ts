@@ -1,11 +1,12 @@
 import React from "react";
 import { useQuery } from "react-query";
 import { SearchToken } from "@openk9/rest-api";
-import { client } from "./client";
+import { useOpenK9Client } from "./client";
 
 type Tab = { label: string; tokens: Array<SearchToken> };
 
 export function useTabTokens(): Array<Tab> {
+  const client = useOpenK9Client();
   const tenantConfiguration = useQuery(
     ["tenant-configuration"] as const,
     ({ queryKey }) => {

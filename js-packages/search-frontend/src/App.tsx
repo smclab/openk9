@@ -6,8 +6,10 @@ import { Logo } from "./components/Logo";
 import "./index.css";
 import "./app.css";
 
-OpenK9.enabled = true;
-OpenK9.searchAutoselect = false;
+const openk9 = new OpenK9({
+  enabled: true,
+  searchAutoselect: true,
+});
 
 export function App() {
   return (
@@ -17,7 +19,7 @@ export function App() {
         height: 100vh;
         background-color: ${myTheme.backgroundColor2};
         display: grid;
-        grid-column-gap : 16px;
+        grid-column-gap: 16px;
         padding-bottom: 16px;
         padding-left: 16px;
         padding-right: 16px;
@@ -64,14 +66,7 @@ export function App() {
       `}
     >
       <div
-        ref={(element) => (OpenK9.search = element)}
-        css={css`
-          grid-area: search;
-          padding: 16px 0px 16px 0px;
-        `}
-      ></div>
-      <div
-        ref={(element) => (OpenK9.tabs = element)}
+        ref={(element) => openk9.updateConfiguration({ tabs: element })}
         css={css`
           grid-area: tabs;
           padding: 8px 16px 0px 16px;
@@ -115,7 +110,7 @@ export function App() {
           </span>
         </div>
         <div
-          ref={(element) => (OpenK9.login = element)}
+          ref={(element) => openk9.updateConfiguration({ login: element })}
           css={css`
             flex-grow: 1;
             display: flex;
@@ -124,7 +119,7 @@ export function App() {
         ></div>
       </div>
       <div
-        ref={(element) => (OpenK9.filters = element)}
+        ref={(element) => openk9.updateConfiguration({ filters: element })}
         css={css`
           grid-area: filters;
           background-color: ${myTheme.backgroundColor1};
@@ -133,7 +128,7 @@ export function App() {
         `}
       ></div>
       <div
-        ref={(element) => (OpenK9.results = element)}
+        ref={(element) => openk9.updateConfiguration({ results: element })}
         css={css`
           grid-area: result;
           overflow-y: auto;
@@ -143,13 +138,20 @@ export function App() {
         `}
       ></div>
       <div
-        ref={(element) => (OpenK9.details = element)}
+        ref={(element) => openk9.updateConfiguration({ details: element })}
         css={css`
           grid-area: detail;
           overflow-y: auto;
           background-color: ${myTheme.backgroundColor1};
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
+        `}
+      ></div>
+      <div
+        ref={(element) => openk9.updateConfiguration({ search: element })}
+        css={css`
+          grid-area: search;
+          padding: 16px 0px 16px 0px;
         `}
       ></div>
     </div>

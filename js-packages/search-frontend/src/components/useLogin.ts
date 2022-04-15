@@ -4,7 +4,7 @@ import {
   UserInfo,
   ClientAuthenticationState,
 } from "@openk9/rest-api";
-import { client, clientAuthenticationChangeListeners } from "./client";
+import { useOpenK9Client } from "./client";
 
 export type LoginState =
   | { type: "anonymous"; loginInfo?: undefined; userInfo?: undefined }
@@ -19,12 +19,14 @@ export type LoginState =
 export function useLoginInfo() {
   const [state, setState] = React.useState<LoginState>({ type: "anonymous" });
 
+  const client = useOpenK9Client();
+
   React.useEffect(() => {
     const persisted = load();
     if (persisted) {
       client.authenticate(persisted.loginInfo);
     }
-  }, []);
+  }, [client]);
 
   React.useEffect(() => {
     if (state.type === "logged-in") {
@@ -45,11 +47,11 @@ export function useLoginInfo() {
         });
       }
     };
-    clientAuthenticationChangeListeners.add(onAuthenticationStateChange);
+    client.addEventListener("authenticationStateChange", onAuthenticationStateChange);
     return () => {
-      clientAuthenticationChangeListeners.add(onAuthenticationStateChange);
+      client.removeEventListener("authenticationStateChange", onAuthenticationStateChange);
     };
-  }, []);
+  }, [client]);
 
   const login = React.useCallback(
     async (username: string, password: string) => {
@@ -70,14 +72,14 @@ export function useLoginInfo() {
         }
       }
     },
-    [state.type],
+    [state.type, client],
   );
 
   const logout = React.useCallback(() => {
     if (state.type === "logged-in") {
       client.deauthenticate();
     }
-  }, [state.type]);
+  }, [state.type, client]);
 
   return { state, login, logout };
 }

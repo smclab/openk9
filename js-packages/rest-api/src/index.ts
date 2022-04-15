@@ -11,21 +11,11 @@ type ClientConfiguration = {
    * needed if the tenant configuration is different than base url domain
    */
   tenantDomain?: string;
-  /**
-   * this function will be called in these cases
-   * - the client succesfully authenticates
-   * - the client refreshes authentication tokens
-   * - the client deauthenticates
-   */
-  onAuthenticationStateChange?(
-    state: { loginInfo: LoginInfo; userInfo: UserInfo } | null,
-  ): void;
 };
 
 export function OpenK9Client({
   tenant,
   tenantDomain = getDefaultTenantDomain(tenant),
-  onAuthenticationStateChange,
 }: ClientConfiguration) {
   let loginInfo: LoginInfo | null = null;
 
@@ -33,11 +23,9 @@ export function OpenK9Client({
 
   let authenticationAction = Promise.resolve();
 
-  function updateLoginInfo(
-    state: { loginInfo: LoginInfo; userInfo: UserInfo } | null,
-  ) {
+  function updateLoginInfo(state: AuthenticationState) {
     loginInfo = state?.loginInfo ?? null;
-    onAuthenticationStateChange?.(state);
+    notify("authenticationStateChange", state);
     if (refreshTimeoutId) {
       clearTimeout(refreshTimeoutId);
       refreshTimeoutId = null;
@@ -146,6 +134,14 @@ export function OpenK9Client({
     return result;
   }
 
+  const listeners: { [K in keyof Events]: Set<(payload: Events[K]) => void> } =
+    {
+      authenticationStateChange: new Set(),
+    };
+  function notify<E extends keyof Events>(event: E, payload: Events[E]) {
+    listeners[event].forEach((listener) => listener(payload));
+  }
+
   return {
     /**
      * all subsequent calls to all other methods will be authenticated with the loginInfo provided
@@ -202,6 +198,19 @@ export function OpenK9Client({
       } catch (err) {
         return { ok: false, response: err };
       }
+    },
+
+    addEventListener<E extends keyof Events>(
+      event: E,
+      listener: (payload: Events[E]) => void,
+    ) {
+      listeners[event].add(listener as any);
+    },
+    removeEventListener<E extends keyof Events>(
+      event: E,
+      listener: (payload: Events[E]) => void,
+    ) {
+      listeners[event].delete(listener as any);
     },
 
     async doSearch<E>(searchRequest: SearchRequest): Promise<SearchResult<E>> {
@@ -638,12 +647,27 @@ export function OpenK9Client({
   };
 }
 
+type Events = {
+  /**
+   * this function will be called in these cases
+   * - the client succesfully authenticates
+   * - the client refreshes authentication tokens
+   * - the client deauthenticates
+   */
+  authenticationStateChange: AuthenticationState;
+};
+
+export type AuthenticationState = {
+  loginInfo: LoginInfo;
+  userInfo: UserInfo;
+} | null;
+
 /**
  * An authentication token provided by Openk) backend
  */
 export type LoginInfo = {
   access_token: string;
-  emitted_at: number; // TODO important ensure backend filled the field
+  emitted_at: number;
   expires_in: number;
   refresh_token: string;
   refresh_expires_in: number;

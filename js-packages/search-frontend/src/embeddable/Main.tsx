@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -18,8 +19,6 @@ import { getAutoSelections, useSelections } from "../components/useSelections";
 import { Tooltip } from "../components/Tooltip";
 import { useLoginInfo } from "../components/useLogin";
 import { LoginInfoComponent } from "../components/LoginInfo";
-import { OpenK9ConfigFacade } from "./entry";
-import ReactDOM from "react-dom";
 import {
   AnalysisRequestEntry,
   AnalysisResponseEntry,
@@ -35,19 +34,38 @@ import { FilterCategory } from "../components/FilterCategory";
 import { useRenderers } from "../components/useRenderers";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
-import { client } from "../components/client";
+import { useOpenK9Client } from "../components/client";
+import { Configuration, MutableConfiguration } from "./entry";
 
-type MainProps = { config: OpenK9ConfigFacade };
-export function Main({ config }: MainProps) {
+type MainProps = {
+  configuration: Configuration;
+  onConfigurationChange(
+    configuration:
+      | Partial<MutableConfiguration>
+      | ((configuration: Configuration) => Partial<MutableConfiguration>),
+  ): void;
+  onQueryStateChange(queryState: QueryState): void;
+};
+export function Main({
+  configuration,
+  onConfigurationChange,
+  onQueryStateChange,
+}: MainProps) {
   const login = useLoginInfo();
-  const autoSelect = config.searchAutoselect;
-  const setAutoSelect = React.useCallback((autoSelect: boolean) => {
-    window.OpenK9.searchAutoselect = autoSelect; // DEBT do not use global api
-  }, []);
-  const replaceText = config.searchReplaceText;
-  const setReplaceText = React.useCallback((replaceText: boolean) => {
-    window.OpenK9.searchReplaceText = replaceText; // DEBT do not use global api
-  }, []);
+  const autoSelect = configuration.searchAutoselect;
+  const setAutoSelect = React.useCallback(
+    (searchAutoselect: boolean) => {
+      onConfigurationChange({ searchAutoselect });
+    },
+    [onConfigurationChange],
+  );
+  const replaceText = configuration.searchReplaceText;
+  const setReplaceText = React.useCallback(
+    (searchReplaceText: boolean) => {
+      onConfigurationChange({ searchReplaceText });
+    },
+    [onConfigurationChange],
+  );
   const [state, dispatch] = useSelections();
   const [openedDropdown, setOpenedDropdown] = React.useState<{
     textPosition: number;
@@ -79,25 +97,24 @@ export function Main({ config }: MainProps) {
     !queryAnalysis.isPreviousData;
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
-  const filterSearchTokens = config.queryState.filterTokens;
-  const addFilterSearchToken = React.useCallback((searchToken: SearchToken) => {
-    // DEBT do not use global api
-    window.OpenK9.queryState = {
-      ...window.OpenK9.queryState,
-      filterTokens: [...window.OpenK9.queryState.filterTokens, searchToken],
-    };
-  }, []);
+  const filterSearchTokens = configuration.filterTokens;
+  const addFilterSearchToken = React.useCallback(
+    (searchToken: SearchToken) => {
+      onConfigurationChange((configuration) => ({
+        filterTokens: [...configuration.filterTokens, searchToken],
+      }));
+    },
+    [onConfigurationChange],
+  );
   const removeFilterSearchToken = React.useCallback(
     (searchToken: SearchToken) => {
-      // DEBT do not use global api
-      window.OpenK9.queryState = {
-        ...window.OpenK9.queryState,
-        filterTokens: window.OpenK9.queryState.filterTokens.filter(
+      onConfigurationChange((configuration) => ({
+        filterTokens: configuration.filterTokens.filter(
           (token) => !isEqual(token, searchToken),
         ),
-      };
+      }));
     },
-    [],
+    [onConfigurationChange],
   );
   const derivedSearchQuery = React.useMemo(
     () =>
@@ -114,9 +131,8 @@ export function Main({ config }: MainProps) {
     [tabTokens, filterSearchTokens, derivedSearchQuery],
   );
   const searchQuery = useDebounce(searchQueryMemo, 600);
-  const { onQueryStateChange } = config;
   React.useEffect(() => {
-    onQueryStateChange?.({
+    onQueryStateChange({
       tabTokens,
       filterTokens: filterSearchTokens,
       searchTokens: derivedSearchQuery,
@@ -172,345 +188,350 @@ export function Main({ config }: MainProps) {
   const renderers = useRenderers();
   return (
     <React.Fragment>
-      {config.search !== null &&
-        ReactDOM.createPortal(
+      {renderPortal(
+        <div
+          ref={clickAwayRef}
+          className="openk9-embeddable-search--input-container"
+          css={css`
+            display: flex;
+            align-items: center;
+          `}
+        >
+          <FontAwesomeIcon
+            icon={faSearch}
+            style={{ paddingLeft: "16px", color: myTheme.grayTexColor }}
+          />
           <div
-            ref={clickAwayRef}
-            className="openk9-embeddable-search--input-container"
             css={css`
+              flex-grow: 1;
+              position: relative;
               display: flex;
-              align-items: center;
             `}
           >
-            <FontAwesomeIcon
-              icon={faSearch}
-              style={{ paddingLeft: "16px", color: myTheme.grayTexColor }}
-            />
             <div
               css={css`
-                flex-grow: 1;
-                position: relative;
+                top: 0px;
+                left: 0px;
+                padding: var(--openk9-embeddable-search--input-padding);
                 display: flex;
+                position: absolute;
               `}
             >
-              <div
-                css={css`
-                  top: 0px;
-                  left: 0px;
-                  padding: var(--openk9-embeddable-search--input-padding);
-                  display: flex;
-                  position: absolute;
-                `}
-              >
-                {showSyntax &&
-                  spans.map((span, index) => {
-                    const isOpen =
-                      openedDropdown !== null &&
-                      openedDropdown.textPosition > span.start &&
-                      openedDropdown.textPosition <= span.end;
-                    const optionIndex = openedDropdown?.optionPosition ?? null;
-                    const selection = state.selection.find(
-                      (selection) =>
-                        selection.start === span.start &&
-                        selection.end === span.end,
-                    );
-                    const selected = selection?.token ?? null;
-                    const onSelect = (token: AnalysisToken | null): void => {
-                      dispatch({
-                        type: "set-selection",
-                        replaceText,
-                        selection: {
-                          text: span.text,
-                          start: span.start,
-                          end: span.end,
-                          token,
-                          isAuto: false,
-                        },
+              {showSyntax &&
+                spans.map((span, index) => {
+                  const isOpen =
+                    openedDropdown !== null &&
+                    openedDropdown.textPosition > span.start &&
+                    openedDropdown.textPosition <= span.end;
+                  const optionIndex = openedDropdown?.optionPosition ?? null;
+                  const selection = state.selection.find(
+                    (selection) =>
+                      selection.start === span.start &&
+                      selection.end === span.end,
+                  );
+                  const selected = selection?.token ?? null;
+                  const onSelect = (token: AnalysisToken | null): void => {
+                    dispatch({
+                      type: "set-selection",
+                      replaceText,
+                      selection: {
+                        text: span.text,
+                        start: span.start,
+                        end: span.end,
+                        token,
+                        isAuto: false,
+                      },
+                    });
+                    if (
+                      inputRef.current?.selectionStart &&
+                      inputRef.current?.selectionEnd
+                    ) {
+                      setAdjustedSelection({
+                        selectionStart: inputRef.current.selectionStart,
+                        selectionEnd: inputRef.current.selectionEnd,
                       });
-                      if (
-                        inputRef.current?.selectionStart &&
-                        inputRef.current?.selectionEnd
-                      ) {
-                        setAdjustedSelection({
-                          selectionStart: inputRef.current.selectionStart,
-                          selectionEnd: inputRef.current.selectionEnd,
-                        });
-                      }
-                      setOpenedDropdown(null);
-                    };
-                    const isAutoSelected = selection?.isAuto ?? false;
-                    const onOptionIndexChange = (optionIndex: number) => {
-                      setOpenedDropdown((openedDropdown) =>
-                        openedDropdown
-                          ? { ...openedDropdown, optionPosition: optionIndex }
-                          : openedDropdown,
-                      );
-                    };
-                    return (
-                      <TokenSelect
-                        key={index}
-                        span={span}
-                        isOpen={isOpen}
-                        onOptionIndexChange={onOptionIndexChange}
-                        optionIndex={optionIndex}
-                        selected={selected}
-                        onSelect={onSelect}
-                        isAutoSlected={isAutoSelected}
-                      />
+                    }
+                    setOpenedDropdown(null);
+                  };
+                  const isAutoSelected = selection?.isAuto ?? false;
+                  const onOptionIndexChange = (optionIndex: number) => {
+                    setOpenedDropdown((openedDropdown) =>
+                      openedDropdown
+                        ? { ...openedDropdown, optionPosition: optionIndex }
+                        : openedDropdown,
                     );
-                  })}
-              </div>
-              <input
-                ref={inputRef}
-                value={state.text}
-                onChange={(event) => {
-                  dispatch({
-                    type: "set-text",
-                    text: event.currentTarget.value,
+                  };
+                  return (
+                    <TokenSelect
+                      key={index}
+                      span={span}
+                      isOpen={isOpen}
+                      onOptionIndexChange={onOptionIndexChange}
+                      optionIndex={optionIndex}
+                      selected={selected}
+                      onSelect={onSelect}
+                      isAutoSlected={isAutoSelected}
+                    />
+                  );
+                })}
+            </div>
+            <input
+              ref={inputRef}
+              value={state.text}
+              onChange={(event) => {
+                dispatch({
+                  type: "set-text",
+                  text: event.currentTarget.value,
+                });
+                setDetail(null);
+                setOpenedDropdown(null);
+              }}
+              css={css`
+                position: relative;
+                flex-grow: 1;
+                border: none;
+                outline: none;
+                padding: var(--openk9-embeddable-search--input-padding);
+                color: ${showSyntax ? "transparent" : "inherit"};
+                caret-color: black;
+                font-size: inherit;
+                font-family: inherit;
+                background-color: inherit;
+              `}
+              spellCheck="false"
+              onSelect={(event) => {
+                if (
+                  (event.currentTarget.selectionDirection === "forward" ||
+                    event.currentTarget.selectionDirection === "none") &&
+                  event.currentTarget.selectionStart ===
+                    event.currentTarget.selectionEnd
+                ) {
+                  setOpenedDropdown({
+                    textPosition: event.currentTarget.selectionStart as number,
+                    optionPosition: openedDropdown?.optionPosition ?? 0,
                   });
-                  setDetail(null);
-                  setOpenedDropdown(null);
-                }}
-                css={css`
-                  position: relative;
-                  flex-grow: 1;
-                  border: none;
-                  outline: none;
-                  padding: var(--openk9-embeddable-search--input-padding);
-                  color: ${showSyntax ? "transparent" : "inherit"};
-                  caret-color: black;
-                  font-size: inherit;
-                  font-family: inherit;
-                  background-color: inherit;
-                `}
-                spellCheck="false"
-                onSelect={(event) => {
-                  if (
-                    (event.currentTarget.selectionDirection === "forward" ||
-                      event.currentTarget.selectionDirection === "none") &&
-                    event.currentTarget.selectionStart ===
-                      event.currentTarget.selectionEnd
-                  ) {
+                }
+              }}
+              onKeyDown={(event) => {
+                const span =
+                  openedDropdown &&
+                  spans.find(
+                    (span) =>
+                      openedDropdown.textPosition > span.start &&
+                      openedDropdown.textPosition <= span.end,
+                  );
+                const option =
+                  openedDropdown &&
+                  span?.tokens[openedDropdown.optionPosition - 1];
+                if (event.key === "ArrowDown") {
+                  event.preventDefault();
+                  if (openedDropdown && span) {
                     setOpenedDropdown({
-                      textPosition: event.currentTarget
-                        .selectionStart as number,
-                      optionPosition: openedDropdown?.optionPosition ?? 0,
+                      textPosition: openedDropdown.textPosition,
+                      optionPosition:
+                        openedDropdown.optionPosition < span.tokens.length
+                          ? openedDropdown.optionPosition + 1
+                          : 0,
                     });
                   }
-                }}
-                onKeyDown={(event) => {
-                  const span =
-                    openedDropdown &&
-                    spans.find(
-                      (span) =>
-                        openedDropdown.textPosition > span.start &&
-                        openedDropdown.textPosition <= span.end,
-                    );
-                  const option =
-                    openedDropdown &&
-                    span?.tokens[openedDropdown.optionPosition - 1];
-                  if (event.key === "ArrowDown") {
-                    event.preventDefault();
-                    if (openedDropdown && span) {
-                      setOpenedDropdown({
-                        textPosition: openedDropdown.textPosition,
-                        optionPosition:
-                          openedDropdown.optionPosition < span.tokens.length
-                            ? openedDropdown.optionPosition + 1
-                            : 0,
+                } else if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  if (openedDropdown && openedDropdown.optionPosition > 0) {
+                    setOpenedDropdown({
+                      textPosition: openedDropdown.textPosition,
+                      optionPosition: openedDropdown.optionPosition - 1,
+                    });
+                  }
+                } else if (event.key === "Enter") {
+                  event.preventDefault();
+                  if (span) {
+                    dispatch({
+                      type: "set-selection",
+                      replaceText,
+                      selection: {
+                        text: span.text,
+                        start: span.start,
+                        end: span.end,
+                        token: option ?? null,
+                        isAuto: false,
+                      },
+                    });
+                    if (
+                      event.currentTarget.selectionStart &&
+                      event.currentTarget.selectionEnd
+                    ) {
+                      setAdjustedSelection({
+                        selectionStart: event.currentTarget.selectionStart,
+                        selectionEnd: event.currentTarget.selectionEnd,
                       });
                     }
-                  } else if (event.key === "ArrowUp") {
-                    event.preventDefault();
-                    if (openedDropdown && openedDropdown.optionPosition > 0) {
-                      setOpenedDropdown({
-                        textPosition: openedDropdown.textPosition,
-                        optionPosition: openedDropdown.optionPosition - 1,
-                      });
-                    }
-                  } else if (event.key === "Enter") {
-                    event.preventDefault();
-                    if (span) {
-                      dispatch({
-                        type: "set-selection",
-                        replaceText,
-                        selection: {
-                          text: span.text,
-                          start: span.start,
-                          end: span.end,
-                          token: option ?? null,
-                          isAuto: false,
-                        },
-                      });
-                      if (
-                        event.currentTarget.selectionStart &&
-                        event.currentTarget.selectionEnd
-                      ) {
-                        setAdjustedSelection({
-                          selectionStart: event.currentTarget.selectionStart,
-                          selectionEnd: event.currentTarget.selectionEnd,
-                        });
-                      }
-                      setOpenedDropdown(null);
-                    }
-                  } else if (event.key === "Escape") {
                     setOpenedDropdown(null);
                   }
-                }}
-              ></input>
-            </div>
-            <Tooltip description="Sostituzione del testo quando si seleziona un suggerimento">
-              <FontAwesomeIcon
-                icon={faSyncAlt}
-                style={{
-                  paddingRight: "16px",
-                  color: replaceText
-                    ? "var(--openk9-embeddable-search--primary-color)"
-                    : myTheme.grayTexColor,
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  setReplaceText(!replaceText);
-                }}
-              />
-            </Tooltip>
-            <Tooltip description="Seleziona automaticamente il suggerimento più pertinente">
-              <FontAwesomeIcon
-                icon={faLightbulb}
-                style={{
-                  paddingRight: "16px",
-                  color: autoSelect
-                    ? "var(--openk9-embeddable-search--primary-color)"
-                    : myTheme.grayTexColor,
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  setAutoSelect(!autoSelect);
-                }}
-              />
-            </Tooltip>
-          </div>,
-          config.search,
-        )}
-      {config.tabs !== null &&
-        ReactDOM.createPortal(
+                } else if (event.key === "Escape") {
+                  setOpenedDropdown(null);
+                }
+              }}
+            ></input>
+          </div>
+          <Tooltip description="Sostituzione del testo quando si seleziona un suggerimento">
+            <FontAwesomeIcon
+              icon={faSyncAlt}
+              style={{
+                paddingRight: "16px",
+                color: replaceText
+                  ? "var(--openk9-embeddable-search--primary-color)"
+                  : myTheme.grayTexColor,
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setReplaceText(!replaceText);
+              }}
+            />
+          </Tooltip>
+          <Tooltip description="Seleziona automaticamente il suggerimento più pertinente">
+            <FontAwesomeIcon
+              icon={faLightbulb}
+              style={{
+                paddingRight: "16px",
+                color: autoSelect
+                  ? "var(--openk9-embeddable-search--primary-color)"
+                  : myTheme.grayTexColor,
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setAutoSelect(!autoSelect);
+              }}
+            />
+          </Tooltip>
+        </div>,
+        configuration.search,
+      )}
+      {renderPortal(
+        <div
+          css={css`
+            position: relative;
+            overflow-x: auto;
+            height: 35px;
+          `}
+        >
           <div
             css={css`
-              position: relative;
-              overflow-x: auto;
-              height: 35px;
+              position: absolute;
+              display: flex;
+              padding: 0px 16px;
             `}
           >
-            <div
-              css={css`
-                position: absolute;
-                display: flex;
-                padding: 0px 16px;
-              `}
-            >
-              {tabs.map((tab, index) => {
-                const isSelected = index === selectedTabIndex;
-                return (
-                  <div
-                    key={index}
-                    css={css`
-                      padding: 8px 16px;
-                      color: ${isSelected
-                        ? "var(--openk9-embeddable-search--primary-color)"
-                        : ""};
-                      border-bottom: 2px solid
-                        ${isSelected
-                          ? "var(--openk9-embeddable-search--active-color)"
-                          : "transparent"};
-                      cursor: pointer;
-                      font-size: 0.8rem;
-                      color: ${myTheme.grayTexColor};
-                      user-select: none;
-                    `}
-                    onClick={() => {
-                      setSelectedTabIndex(index);
-                      // DEBT: do not use global api
-                      window.OpenK9.queryState = {
-                        ...window.OpenK9.queryState,
-                        filterTokens: [],
-                      };
-                    }}
-                  >
-                    {tab.label.toUpperCase()}
-                  </div>
-                );
-              })}
-            </div>
-          </div>,
-          config.tabs,
-        )}
-      {config.filters !== null &&
-        ReactDOM.createPortal(
-          <OverlayScrollbarsComponent
-            style={{
-              overflowY: "auto",
-              position: "relative",
-              height: "100%",
-            }}
+            {tabs.map((tab, index) => {
+              const isSelected = index === selectedTabIndex;
+              return (
+                <div
+                  key={index}
+                  css={css`
+                    padding: 8px 16px;
+                    color: ${isSelected
+                      ? "var(--openk9-embeddable-search--primary-color)"
+                      : ""};
+                    border-bottom: 2px solid
+                      ${isSelected
+                        ? "var(--openk9-embeddable-search--active-color)"
+                        : "transparent"};
+                    cursor: pointer;
+                    font-size: 0.8rem;
+                    color: ${myTheme.grayTexColor};
+                    user-select: none;
+                  `}
+                  onClick={() => {
+                    setSelectedTabIndex(index);
+                    onConfigurationChange({ filterTokens: [] });
+                  }}
+                >
+                  {tab.label.toUpperCase()}
+                </div>
+              );
+            })}
+          </div>
+        </div>,
+        configuration.tabs,
+      )}
+      {renderPortal(
+        <OverlayScrollbarsComponent
+          style={{
+            overflowY: "auto",
+            position: "relative",
+            height: "100%",
+          }}
+        >
+          <div
+            css={css`
+              position: absolute;
+              width: calc(100% - 32px);
+              padding: 16px 16px 0px 16px;
+            `}
           >
-            <div
-              css={css`
-                position: absolute;
-                width: calc(100% - 32px);
-                padding: 16px 16px 0px 16px;
-              `}
-            >
-              {suggestionCategories.data?.map((suggestionCategory) => {
-                return (
-                  <FilterCategory
-                    key={suggestionCategory.suggestionCategoryId}
-                    suggestionCategoryName={suggestionCategory.name}
-                    suggestionCategoryId={
-                      suggestionCategory.suggestionCategoryId
-                    }
-                    tokens={searchQuery}
-                    onAdd={addFilterSearchToken}
-                    onRemove={removeFilterSearchToken}
-                  />
-                );
-              })}
-            </div>
-          </OverlayScrollbarsComponent>,
-          config.filters,
-        )}
-      {config.results !== null &&
-        ReactDOM.createPortal(
-          <Results
-            renderers={renderers}
-            displayMode={{ type: "virtual" }}
-            searchQuery={searchQuery}
-            onDetail={setDetail}
-          />,
-          config.results,
-        )}
-      {config.details !== null &&
-        ReactDOM.createPortal(
-          detail ? (
-            <SimpleErrorBoundary>
-              <DetailMemo renderers={renderers} result={detail} />
-            </SimpleErrorBoundary>
-          ) : (
-            <NoDetail />
-          ),
-          config.details,
-        )}
-      {config.login !== null &&
-        ReactDOM.createPortal(
-          <LoginInfoComponent
-            loginState={login.state}
-            onLogin={login.login}
-            onLogout={login.logout}
-          />,
-          config.login,
-        )}
+            {suggestionCategories.data?.map((suggestionCategory) => {
+              return (
+                <FilterCategory
+                  key={suggestionCategory.suggestionCategoryId}
+                  suggestionCategoryName={suggestionCategory.name}
+                  suggestionCategoryId={suggestionCategory.suggestionCategoryId}
+                  tokens={searchQuery}
+                  onAdd={addFilterSearchToken}
+                  onRemove={removeFilterSearchToken}
+                />
+              );
+            })}
+          </div>
+        </OverlayScrollbarsComponent>,
+        configuration.filters,
+      )}
+      {renderPortal(
+        <Results
+          renderers={renderers}
+          displayMode={{ type: "virtual" }}
+          searchQuery={searchQuery}
+          onDetail={setDetail}
+        />,
+        configuration.results,
+      )}
+      {renderPortal(
+        detail ? (
+          <SimpleErrorBoundary>
+            <DetailMemo renderers={renderers} result={detail} />
+          </SimpleErrorBoundary>
+        ) : (
+          <NoDetail />
+        ),
+        configuration.details,
+      )}
+      {renderPortal(
+        <LoginInfoComponent
+          loginState={login.state}
+          onLogin={login.login}
+          onLogout={login.logout}
+        />,
+        configuration.login,
+      )}
     </React.Fragment>
   );
 }
+
+function renderPortal(
+  node: React.ReactNode,
+  container: Element | string | null,
+) {
+  const element =
+    typeof container === "string"
+      ? document.querySelector(container)
+      : container;
+  if (!element) return null;
+  return ReactDOM.createPortal(node, element);
+}
+
+export type QueryState = {
+  tabTokens: Array<SearchToken>;
+  filterTokens: Array<SearchToken>;
+  searchTokens: Array<SearchToken>;
+};
 
 function deriveSearchQuery(
   spans: AnalysisResponseEntry[],
@@ -607,6 +628,7 @@ function NoDetail() {
 }
 
 function useSuggestionCategories() {
+  const client = useOpenK9Client();
   return useQuery(["suggestion-categories"], async ({ queryKey }) => {
     const result = await client.getSuggestionCategories();
     return result;
