@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>io.openk9.osgi.datasource</groupId>
 		<artifactId>datasource</artifactId>
-		<version>0.0.3</version>
+		<version>0.0.4-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -74,6 +74,6 @@
 
 
   <scm>
-    <tag>v0.0.3</tag>
+    <tag>v0.0.2</tag>
   </scm>
 </project>
