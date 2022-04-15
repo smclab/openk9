@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>io.openk9.osgi.search</groupId>
 		<artifactId>search</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
+		<version>0.0.2</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -76,6 +76,6 @@
 
 
   <scm>
-    <tag>v0.0.1</tag>
+    <tag>v0.0.2</tag>
   </scm>
 </project>
