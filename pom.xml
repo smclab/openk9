@@ -166,13 +166,13 @@
 			</activation>
 			<repositories>
 				<repository>
-					<id>maven-openk9-public-group</id>
+					<id>smc</id>
 					<url>https://registry.smc.it/repository/maven-openk9-public-group/</url>
 				</repository>
 			</repositories>
 			<distributionManagement>
 				<repository>
-					<id>maven-openk9-public-releases</id>
+					<id>smc</id>
 					<url>https://registry.smc.it/repository/maven-openk9-public-releases/</url>
 				</repository>
 				<snapshotRepository>
@@ -183,6 +183,24 @@
 		</profile>
 		<profile>
 			<id>public</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 			<properties>
 				<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
 				<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
@@ -190,11 +208,11 @@
 			</properties>
 			<distributionManagement>
 				<repository>
-					<id>sonatype-nexus-release</id>
+					<id>public</id>
 					<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 				</repository>
 				<snapshotRepository>
-					<id>sonatype-nexus-snapshots</id>
+					<id>public</id>
 					<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
 				</snapshotRepository>
 			</distributionManagement>
