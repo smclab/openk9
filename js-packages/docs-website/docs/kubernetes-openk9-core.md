@@ -5,7 +5,15 @@ title: Install Openk9 Core
 
 In this section is described how to install Openk9 core components. To install components helm charts are used.
 
-Every Helm chart used in this guide is present on [openk9-kubernetes github repository](https://github.com/smclab/openk9-kubernetes).
+
+### Preparing the installation
+
+OpenK9 is formed by multiples core components to install.
+Currently installing through [Helm Charts](https://helm.sh/docs/topics/charts/) is the best choice.
+
+Inside the [openk9-kubernetes repository](https://github.com/smclab/openk9-kubernetes) there is the
+`kubernetes/ 01-core-charts` folder where, for each component, there are configuration files for the different installation scenarios.
+
 So clone this repository before start to install.
 
 ## Ingestion

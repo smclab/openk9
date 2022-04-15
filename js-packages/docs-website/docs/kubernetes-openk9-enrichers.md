@@ -5,6 +5,16 @@ title: Install Openk9 Enrichers
 
 In this section is described how to install Openk9 enricher components. To install components helm charts are used.
 
+### Preparing the installation
+
+OpenK9 uses enrichers to enrich data. You can use some core enrichers developed for Openk9.
+Currently installing through [Helm Charts](https://helm.sh/docs/topics/charts/) is the best choice.
+
+Inside the [openk9-kubernetes repository](https://github.com/smclab/openk9-kubernetes) there is the
+`kubernetes/03-enrichers` folder where, for each enricher, there are configuration files for the different installation scenarios.
+
+So clone this repository before start to install.
+
 ## Named Entity Recognition
 
 Named Entity Recognition enricher <mark>TODO</mark>
