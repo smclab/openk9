@@ -3,13 +3,14 @@ import { useStore } from "../state";
 
 export const client = OpenK9Client({
   tenant: "",
-  onAuthenticationStateChange(state) {
-    if (state) {
-      useStore.getState().setLoginInfo(state.loginInfo, state.userInfo);
-    } else {
-      useStore.getState().invalidateLogin();
-    }
-  },
+});
+
+client.addEventListener("authenticationStateChange", (state) => {
+  if (state) {
+    useStore.getState().setLoginInfo(state.loginInfo, state.userInfo);
+  } else {
+    useStore.getState().invalidateLogin();
+  }
 });
 
 (async () => {
