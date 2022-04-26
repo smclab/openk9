@@ -97,7 +97,7 @@ export function Main({
     !queryAnalysis.isPreviousData;
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
-  const filterSearchTokens = configuration.filterTokens;
+  const filterTokens = configuration.filterTokens;
   const addFilterSearchToken = React.useCallback(
     (searchToken: SearchToken) => {
       onConfigurationChange((configuration) => ({
@@ -116,6 +116,7 @@ export function Main({
     },
     [onConfigurationChange],
   );
+  const defaultTokens = configuration.defaultTokens;
   const derivedSearchQuery = React.useMemo(
     () =>
       deriveSearchQuery(
@@ -127,20 +128,25 @@ export function Main({
     [spans, state.selection],
   );
   const searchQueryMemo = React.useMemo(
-    () => [...tabTokens, ...filterSearchTokens, ...derivedSearchQuery],
-    [tabTokens, filterSearchTokens, derivedSearchQuery],
+    () => [
+      ...defaultTokens,
+      ...tabTokens,
+      ...filterTokens,
+      ...derivedSearchQuery,
+    ],
+    [defaultTokens, tabTokens, filterTokens, derivedSearchQuery],
   );
   const searchQuery = useDebounce(searchQueryMemo, 600);
   React.useEffect(() => {
     onQueryStateChange({
       tabTokens,
-      filterTokens: filterSearchTokens,
+      filterTokens: filterTokens,
       searchTokens: derivedSearchQuery,
     });
   }, [
     onQueryStateChange,
     derivedSearchQuery,
-    filterSearchTokens,
+    filterTokens,
     searchQuery,
     tabTokens,
   ]);

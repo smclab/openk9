@@ -165,6 +165,7 @@ export type MutableConfiguration = {
   searchAutoselect: boolean;
   searchReplaceText: boolean;
   filterTokens: Array<SearchToken>;
+  defaultTokens: Array<SearchToken>;
 };
 
 const defaultConfiguration: Configuration = {
@@ -179,6 +180,7 @@ const defaultConfiguration: Configuration = {
   searchAutoselect: false,
   searchReplaceText: false,
   filterTokens: [],
+  defaultTokens: []
 };
 
 type Events = {
