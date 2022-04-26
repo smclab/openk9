@@ -6,11 +6,12 @@ import { PluginCard } from "../components/PluginCard";
 
 const plugins = [
   {
-    type: "Type 1",
+    type: "Basic tier",
     cards: [
       {
         iconSrc: "img/plugins/email.svg",
-        title: "Email",
+        title: "Sitemap",
+        pluginHref: "/docs/standalone-app",
         description: (
           <>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
@@ -19,8 +20,9 @@ const plugins = [
         ),
       },
       {
-        iconSrc: "img/plugins/email.svg",
-        title: "Gmail",
+        iconSrc: "img/plugins/web-crawler.svg",
+        title: "Web Crawler",
+        pluginHref: "/docs/standalone-app",
         description: (
           <>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
@@ -31,6 +33,7 @@ const plugins = [
       {
         iconSrc: "img/plugins/email.svg",
         title: "Imap",
+        pluginHref: "/docs/plugins/imap-plugin",
         description: (
           <>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
@@ -38,14 +41,26 @@ const plugins = [
           </>
         ),
       },
+      {
+        iconSrc: "img/plugins/liferay.svg",
+        title: "Liferay",
+        pluginHref: "/docs/standalone-app",
+        description: (
+          <>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
+            est, laoreet vitae porttitor sed, aliquam et ex.
+          </>
+        ),
+      }
     ],
   },
   {
-    type: "Type 2",
+    type: "Advanced tier",
     cards: [
       {
         iconSrc: "img/plugins/email.svg",
         title: "Email",
+        pluginHref: "/docs/standalone-app",
         description: (
           <>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi

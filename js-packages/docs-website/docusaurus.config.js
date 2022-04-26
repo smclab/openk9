@@ -71,7 +71,7 @@ module.exports = {
           position: "left",
         },
         {
-          to: "comingsoon/",
+          to: "Plugins",
           activeBasePath: "plugins",
           label: "Plugins",
           position: "left",
@@ -136,7 +136,7 @@ module.exports = {
             },
             {
               label: "Plugins",
-              to: "/comingsoon",
+              to: "/Plugins",
             },
           ],
         },
