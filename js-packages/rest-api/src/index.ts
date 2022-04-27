@@ -48,7 +48,7 @@ export function OpenK9Client({
             updateLoginInfo(null);
           }
         });
-      }, state.loginInfo.emitted_at + state.loginInfo.expires_in * 1000 * 0.9 - Date.now()) as any;
+      }, state.loginInfo.expires_in * 0.5 * 1000 - (Date.now() - state.loginInfo.emitted_at * 1000)) as any;
     }
   }
 
@@ -70,7 +70,7 @@ export function OpenK9Client({
     loginInfo: LoginInfo,
   ): Promise<{ ok: true; response: UserInfo } | { ok: false; response: any }> {
     try {
-      const response = await fetch(`/api/searcher/v1/auth/user-info`, {
+      const response = await fetch(`${tenant}/api/searcher/v1/auth/user-info`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${loginInfo.access_token}`,
@@ -90,7 +90,7 @@ export function OpenK9Client({
   ): Promise<{ ok: true; response: LoginInfo } | { ok: false; response: any }> {
     try {
       const { refresh_token: refreshToken } = loginInfo;
-      const response = await fetch(`/api/searcher/v1/auth/refresh`, {
+      const response = await fetch(`${tenant}/api/searcher/v1/auth/refresh`, {
         method: "POST",
         body: JSON.stringify({ refreshToken }),
         headers: {
@@ -99,6 +99,9 @@ export function OpenK9Client({
         },
       });
       const data = await response.json();
+      if (!data.emitted_at) {
+        data.emitted_at = Date.now() / 1000;
+      }
       return { ok: response.ok, response: data };
     } catch (err) {
       return { ok: false, response: err };
@@ -111,7 +114,7 @@ export function OpenK9Client({
     try {
       const { access_token: accessToken, refresh_token: refreshToken } =
         loginInfo;
-      const request = await authFetch(`/api/searcher/v1/auth/logout`, {
+      const request = await authFetch(`${tenant}/api/searcher/v1/auth/logout`, {
         method: "POST",
         body: JSON.stringify({ accessToken, refreshToken }),
         headers: {
@@ -149,6 +152,9 @@ export function OpenK9Client({
      * eventual token refresh will be handled automatically
      */
     async authenticate(loginInfo: LoginInfo) {
+      if (!loginInfo.emitted_at) {
+        loginInfo.emitted_at = Date.now() / 1000;
+      }
       return await runAuthenticationAction(async () => {
         const userInfoResponse = await getUserInfo(loginInfo);
         if (!userInfoResponse.ok) throw new Error();
@@ -185,7 +191,7 @@ export function OpenK9Client({
       { ok: true; response: LoginInfo } | { ok: false; response: any }
     > {
       try {
-        const response = await fetch(`/api/searcher/v1/auth/login`, {
+        const response = await fetch(`${tenant}/api/searcher/v1/auth/login`, {
           method: "POST",
           body: JSON.stringify(payload),
           headers: {
@@ -194,6 +200,9 @@ export function OpenK9Client({
           },
         });
         const data: LoginInfo = await response.json();
+        if (!data.emitted_at) {
+          data.emitted_at = Date.now() / 1000;
+        }
         return { ok: response.ok, response: data };
       } catch (err) {
         return { ok: false, response: err };
