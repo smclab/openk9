@@ -1,6 +1,5 @@
 package io.openk9.auth.enrich;
 
-import io.openk9.json.api.JsonFactory;
 import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
 import io.openk9.model.DatasourceContext;
@@ -9,7 +8,6 @@ import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.enrich.api.EnrichProcessor;
 import io.openk9.search.enrich.api.SyncEnrichProcessor;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import reactor.core.publisher.Mono;
 
 @Component(
@@ -30,11 +28,9 @@ public class DefaultACLEnrichProcessor implements SyncEnrichProcessor {
 
 		return Mono.fromSupplier(() -> {
 
-			JsonNode aclNode = objectNode.get("acl");
+			JsonNode aclNode = objectNode.remove("acl");
 
-			JsonNode payload = objectNode.get("payload");
-
-			ObjectNode aclIndexNode = payload
+			ObjectNode aclIndexNode = objectNode
 				.toObjectNode()
 				.putObject("acl");
 
@@ -60,8 +56,5 @@ public class DefaultACLEnrichProcessor implements SyncEnrichProcessor {
 
 
 	}
-
-	@Reference
-	private JsonFactory _jsonFactory;
 
 }
