@@ -185,6 +185,8 @@ Semantic analysis is performed and results shown.
 
 The user can additionally associate a semantic meaning to portions of the search text by positioning the cursor over a word and selecting an entity from a dropdown.
 
+![dropdown](/img/ui-map-dropdown.png)
+
 A semantic entity and some other information forms a search token.
 
 The frontend sends to the backend the full text typed by the user and a list of search tokens. This list of search tokens if formed by the entities associated to portions of text, checkbox filters and the selected tab.
