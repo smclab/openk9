@@ -22,6 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -38,4 +39,5 @@ public class IngestionPayload {
 	private long tenantId;
 	private String[] documentTypes;
 	private ResourcesPayload resources;
+	private Map<String, List<String>> acl;
 }
