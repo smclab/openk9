@@ -1015,6 +1015,9 @@ type SuggestionsCategoriesResult = Array<{
 }>;
 
 function getDefaultTenantDomain(tenant: string) {
+  if (!tenant && typeof window !== undefined) {
+    return window.location.hostname;
+  }
   try {
     return new URL(tenant).hostname;
   } catch (error) {
