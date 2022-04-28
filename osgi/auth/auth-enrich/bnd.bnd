@@ -1,0 +1,5 @@
+Bundle-Name: [OpenK9] Auth Enrich
+Bundle-SymbolicName: io.openk9.auth.enrich
+
+Import-Package: org.reactivestreams, *
+

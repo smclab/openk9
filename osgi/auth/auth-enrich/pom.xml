@@ -21,24 +21,32 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>io.openk9.osgi</groupId>
-		<artifactId>osgi</artifactId>
+		<groupId>io.openk9.osgi.auth</groupId>
+		<artifactId>auth</artifactId>
 		<version>0.0.4-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<groupId>io.openk9.osgi.auth</groupId>
-	<artifactId>auth</artifactId>
-	<packaging>pom</packaging>
-	<name>OpenK9 :: OSGi :: Auth</name>
+	<artifactId>auth-enrich</artifactId>
+	<packaging>jar</packaging>
+	<name>OpenK9 :: OSGi :: Auth :: Auth Enrich</name>
 
-	<modules>
-		<module>auth-api</module>
-		<module>auth-common</module>
-		<module>auth-query-parser</module>
-		<module>auth-service</module>
-		<module>auth-enrich</module>
-	</modules>
+	<dependencies>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.component.annotations</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.metatype.annotations</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.openk9.osgi.search</groupId>
+			<artifactId>search-enrich-api</artifactId>
+		</dependency>
+	</dependencies>
 
 
   <scm>
