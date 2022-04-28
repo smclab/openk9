@@ -581,6 +581,18 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<dependency>
+			<groupId>io.openk9.osgi.auth</groupId>
+			<artifactId>auth-enrich</artifactId>
+			<version>${project.version}</version>
+			<scope>runtime</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.felix</groupId>
@@ -670,18 +682,6 @@
 				<dependency>
 					<groupId>io.openk9.plugins</groupId>
 					<artifactId>email</artifactId>
-					<version>${project.version}</version>
-					<scope>runtime</scope>
-					<exclusions>
-						<exclusion>
-							<groupId>*</groupId>
-							<artifactId>*</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-				<dependency>
-					<groupId>io.openk9.osgi.auth</groupId>
-					<artifactId>auth-enrich</artifactId>
 					<version>${project.version}</version>
 					<scope>runtime</scope>
 					<exclusions>
