@@ -25,7 +25,7 @@ This image expects that te api is available on the same domain under the route `
 
 ### Prerequisites
 
-This software is neeeded for the build process
+This software is needed for the build process
 
 - [git](https://git-scm.com/)
 - [nodejs](https://nodejs.org/it/)

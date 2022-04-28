@@ -68,7 +68,7 @@ new OpenK9({
 
 ### Prerequisites
 
-This software is neeeded for the build process
+This software is needed for the build process
 
 - [git](https://git-scm.com/)
 - [nodejs](https://nodejs.org/it/)
