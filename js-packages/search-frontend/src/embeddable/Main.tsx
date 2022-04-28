@@ -35,14 +35,14 @@ import { useRenderers } from "../components/useRenderers";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { useOpenK9Client } from "../components/client";
-import { Configuration, MutableConfiguration } from "./entry";
+import { Configuration } from "./entry";
 
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange(
     configuration:
-      | Partial<MutableConfiguration>
-      | ((configuration: Configuration) => Partial<MutableConfiguration>),
+      | Partial<Configuration>
+      | ((configuration: Configuration) => Partial<Configuration>),
   ): void;
   onQueryStateChange(queryState: QueryState): void;
 };
@@ -139,8 +139,9 @@ export function Main({
   const searchQuery = useDebounce(searchQueryMemo, 600);
   React.useEffect(() => {
     onQueryStateChange({
+      defaultTokens,
       tabTokens,
-      filterTokens: filterTokens,
+      filterTokens,
       searchTokens: derivedSearchQuery,
     });
   }, [
@@ -149,6 +150,7 @@ export function Main({
     filterTokens,
     searchQuery,
     tabTokens,
+    defaultTokens,
   ]);
   React.useEffect(() => {
     if (
@@ -534,6 +536,7 @@ function renderPortal(
 }
 
 export type QueryState = {
+  defaultTokens: Array<SearchToken>;
   tabTokens: Array<SearchToken>;
   filterTokens: Array<SearchToken>;
   searchTokens: Array<SearchToken>;

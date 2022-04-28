@@ -22,32 +22,28 @@ npm install --save @openk9/rest-api
 ### Example using the TypeScript library
 
 ```ts
-import { SearchQuery, doSearch } from "@openk9/rest-api";
+import { OpenK9Client } from "@openk9/rest-api";
 
-async function testSearch() {
-  const searchQuery: SearchQuery = [
-    {
-      tokenType: "DOCTYPE",
-      keywordKey: "type",
-      values: ["document"],
-    },
-    {
-      tokenType: "ENTITY",
-      entityType: "person",
-      values: ["vj4HsXcBabEqb3Lp0KJ8"],
-    },
-    {
-      tokenType: "TEXT",
-      values: ["Test Free text"],
-    },
-  ];
+const client = OpenK9Client({ tenant: "https://demo.openk9.io" });
 
-  const results = await doSearch({
-    searchQuery,
+client
+  .doSearch({
+    searchQuery: [
+      {
+        tokenType: "DOCTYPE",
+        keywordKey: "type",
+        values: ["document"],
+        filter: true,
+      },
+      { tokenType: "TEXT", values: ["free text search"], filter: false },
+    ],
     range: [0, 10],
-  });
-
-  console.log(results);
-}
-testSearch();
+  })
+  .then(console.log);
 ```
+
+### Docs
+
+Coming soon...
+
+In the meantime you can explore the api by harnessing typescript intellisense and JSDOC using an ide that supports it (ex: [vscode](https://code.visualstudio.com/))

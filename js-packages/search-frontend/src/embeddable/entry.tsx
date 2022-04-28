@@ -59,8 +59,8 @@ export class OpenK9 {
    */
   updateConfiguration = (
     configuration:
-      | Partial<MutableConfiguration>
-      | ((configuration: Configuration) => Partial<MutableConfiguration>),
+      | Partial<Configuration>
+      | ((configuration: Configuration) => Partial<Configuration>),
   ) => {
     if (typeof configuration === "function") {
       this.configuration = {
@@ -148,13 +148,8 @@ export class OpenK9 {
   };
 }
 
-export type Configuration = ImmutableConfiguration & MutableConfiguration;
-
-type ImmutableConfiguration = Readonly<{
+export type Configuration = {
   tenant: string;
-}>;
-
-export type MutableConfiguration = {
   enabled: boolean;
   search: Element | string | null;
   tabs: Element | string | null;
@@ -180,7 +175,7 @@ const defaultConfiguration: Configuration = {
   searchAutoselect: false,
   searchReplaceText: false,
   filterTokens: [],
-  defaultTokens: []
+  defaultTokens: [],
 };
 
 type Events = {

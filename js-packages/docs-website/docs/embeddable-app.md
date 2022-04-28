@@ -13,7 +13,7 @@ You can look at the frontend code in our [GitHub repository](https://github.com/
 
 A working example can be found here [demo.openk9.io](http://demo.openk9.io)
 
-This package takes care oc complex interactions on your behalf.
+This package takes care of complex interactions on your behalf.
 
 ## Usage
 
@@ -26,11 +26,13 @@ This package takes care oc complex interactions on your behalf.
 ```javascript
 import { OpenK9 } from "@openk9/search-frontend";
 
-Openk9.enabled = true;
-Openk9.search = document.querySelector('#search');
-Openk9.tabs = document.querySelector('#tabs');
-Openk9.results = document.querySelector('#results');
-Openk9.details = document.querySelector('#details');
+new OpenK9({
+  enabled: true,
+  search: "#search",
+  tabs: "#tabs",
+  results: "#results",
+  details: "#details",
+})
 ```
 
 ### Without package manager
@@ -50,11 +52,13 @@ Openk9.details = document.querySelector('#details');
     <script src="embeddable.js"></script>
     <!-- tell the script where to render parts of the interface -->
     <script>
-      Openk9.enabled = true;
-      Openk9.search = docuement.querySelector('#search');
-      Openk9.tabs = document.querySelector('#tabs');
-      Openk9.results = docuement.querySelector('#results');
-      Openk9.details = docuement.querySelector('#details');
+      new OpenK9({
+        enabled: true,
+        search: "#search",
+        tabs: "#tabs",
+        results: "#results",
+        details: "#details",
+      })
     </script>
   </body>
 </html>
@@ -86,23 +90,64 @@ yarn dev # start development
 
 The embeddable app expects HTML DOM elements where parts of the ui will be rendered.
 
-A global variable, single instance is availabe in global scope `window.OpenK9` once the script is included.
-
 ### Configuration
 
-This global variable has the following fields. That can be reassigned during runtime.
+The configuration can be passed to the constructor, for example:
 
-| Attribute           | Type    | Default | Description |
-|---------------------|---------|---------|-------------|
-| enabled             | boolean | `false` | If false the search interface is not rendered |
-| search              | element | `null`  | Target element where the searchbar will be rendered |
-| tabs                | element | `null`  | Target element where the result tabs will be rendered |
-| filters             | element | `null`  | Target element where the search flters will be rendered |
-| results             | element | `null`  | Target element where the search results will be rendered |
-| details             | element | `null`  | Target element where the detailed view about the highlighted will be rendered |
-| login               | element | `null` | Target element where the login button will be rendered |
-| searchAutoselect    | boolean | `true` | Whether or not to automatically select most meaningful semantic entity asociated to the search text |
-| searchReplaceText   | boolean | `true` | Whether or not to automaticallly replaced typed text with that of the manually chosen semantic entity |
+```javascript
+const openk9 = new OpenK9({ enabled: true })
+```
+
+And can be modified at any time by calling the `updateConfiguration()` method that will overwrite existing fields with the provided ones, example:
+
+```javascript
+const openk9 = new OpenK9({ tenant: "https://demo.openk9.io" });
+openk9.updateConfiguration({ enabled: true });
+console.log(openk9.getConfiguration()); // { tenant: "https://demo.openk9.io", enabled: true }
+```
+
+You can configure these fields, all the fields are optional.
+
+| Attribute           | Type    | Default | Description | Example |
+|---------------------|---------|---------|-------------|---------|
+| tenant              | `string`  | `""`    | The tenant url. An empty string means that the backend is located at the same domain as the frontend application | `"https://demo.openk9.io"` |
+| enabled             | `boolean` | `false` | If false the search interface is not rendered | `true` |
+| search              | `Element` or `string` | `null`  | Target element or query selector where the searchbar will be rendered | `#search-div` or `document.getElementById("search-div")` |
+| tabs                | `Element` or `string` | `null`  | Target element where the result tabs will be rendered | `#tabs-div` or `document.getElementById("tabs-div")` |
+| filters             | `Element` or `string` | `null`  | Target element where the search flters will be rendered | `#filters-div` or `document.getElementById("filters-div")` |
+| results             | `Element` or `string` | `null`  | Target element where the search results will be rendered | `#results-div` or `document.getElementById("results-div")` |
+| details             | `Element` or `string` | `null`  | Target element where the detailed view about the highlighted will be rendered | `#details-div` or `document.getElementById("details-div")` |
+| login               | `Element` or `string` | `null` | Target element where the login button will be rendered | `#login-div` or `document.getElementById("login-div")` |
+| searchAutoselect    | `boolean` | `true` | Whether or not to automatically select most meaningful semantic entity asociated to the search text | `true` |
+| searchReplaceText   | `boolean` | `true` | Whether or not to automaticallly replaced typed text with that of the manually chosen semantic entity | `true` |
+| defaultTokens        | `Array<SearchToken>` | `[]` | Search tokens that will be used in the search queries, they are **not displayed** anywhere | `[{ tokenType: "DATASOURCE", values: ["human-resources"], filter: false }]` |
+| filterTokens        | `Array<SearchToken>` | `[]` | Search tokens that will be used in the search queries, displayed in the **filters** section | `[{ tokenType: "TEXT", values: ["hello"], filter: true }]` |
+
+### Authentication
+
+To make authenticated requests to the backend you need to provide a valid token to the `authenticate()` method.
+
+If you rely on the default username/password authentication provided by openk9, you can obtain such a token by:
+
+```javascript
+const openk9 = new OpenK9();
+const token = await openk9.client.getLoginInfoByUsernamePassword({ username: "admin", password: "admin" })
+await openk9.authenticate(token);
+```
+
+Or you can retreive a valid token by other means:
+
+```javascript
+const openk9 = new OpenK9();
+const token = await fetch("/get-openk9-token").then(res => res.json());
+await openk9.authenticate(token);
+```
+
+You can also stop making authenticated requests by calling the `deauthenticate()` method.
+
+```javascript
+openk9.deauthenticate();
+```
 
 ### Look & Feel
 
@@ -112,9 +157,25 @@ Include this [CSS file](https://github.com/smclab/openk9/blob/main/js-packages/s
 
 Copy, modify and his [CSS file](https://github.com/smclab/openk9/blob/main/js-packages/search-frontend/src/app.css) in your page for custom styling.
 
+Beware, you MUST include a css file, because styling is not included in the javascript package.
+
 ### UI map
 
 ![ui map](/img/ui-map.png)
+
+### Event listeners
+
+```javascript
+const openk9 = new OpenK9();
+
+openk9.addEventListener("configurationChange", (configuration) => {
+  console.log("the configuration changed to", configuration)
+})
+
+openk9.addEventListener("queryStateChange", (queryState) => {
+  console.log("the user interacted, now searching results for", queryState)
+})
+```
 
 ### Internals
 
