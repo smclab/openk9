@@ -14,23 +14,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+import React from "react";
 import { createUseStyles } from "react-jss";
 import ClayAlert from "@clayui/alert";
 import { useToast } from "../pages/_app";
+import { useClientSideOnly } from "./useClientSideOnly";
 
-const useStyles = createUseStyles(() => ({
+const useStyles = createUseStyles({
   alert: {
     "& .alert-autofit-row": {
       alignItems: "center",
     },
   },
-}));
+});
 
 export function Toasts() {
   const classes = useStyles();
   const { toastItems, setToastItems } = useToast();
-
+  const isClientSide = useClientSideOnly();
+  if (!isClientSide) return null;
   return (
     <ClayAlert.ToastContainer>
       {toastItems.map((value) => (

@@ -263,7 +263,16 @@ function TBody({ searchValue }: { searchValue: string }) {
     <tbody>
       {filteredData.map((pluginInfo) =>
         isServer ? null : (
-          <Suspense fallback={<span className="loading-animation" />} key={pluginInfo.pluginId}>
+          <Suspense
+            fallback={
+              <tr>
+                <td colSpan={5}>
+                  <span className="loading-animation" />
+                </td>
+              </tr>
+            }
+            key={pluginInfo.pluginId}
+          >
             <TRow key={pluginInfo.pluginId} pluginInfo={pluginInfo} />
           </Suspense>
         ),
