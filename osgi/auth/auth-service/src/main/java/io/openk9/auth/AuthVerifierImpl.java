@@ -19,6 +19,27 @@ import java.util.Base64;
 public class AuthVerifierImpl implements AuthVerifier {
 
 	@Override
+	public UserInfo getUserInfo_(HttpServerRequest httpRequest) {
+
+		String token = httpRequest.requestHeaders().get("Authorization");
+
+		if (token == null || token.isEmpty()) {
+			return null;
+		}
+
+		String[] chunks = token.split("\\.");
+
+		String payloadBase64 = chunks[1];
+
+		Base64.Decoder decoder = Base64.getDecoder();
+
+		byte[] decode = decoder.decode(payloadBase64);
+
+		return _jsonFactory.fromJson(decode, UserInfo.class);
+
+	}
+
+	@Override
 	public Mono<UserInfo> getUserInfo(
 		HttpServerRequest httpRequest) {
 		return getUserInfo(
@@ -29,27 +50,7 @@ public class AuthVerifierImpl implements AuthVerifier {
 	public Mono<UserInfo> getUserInfo(
 		HttpServerRequest httpRequest, Mono<String> nameSupplier) {
 
-		return Mono.defer(() -> {
-
-			String token = httpRequest.requestHeaders().get("Authorization");
-
-			if (token == null || token.isEmpty()) {
-				return Mono.empty();
-			}
-
-			String[] chunks = token.split("\\.");
-
-			String payloadBase64 = chunks[1];
-
-			Base64.Decoder decoder = Base64.getDecoder();
-
-			byte[] decode = decoder.decode(payloadBase64);
-
-			UserInfo userInfo = _jsonFactory.fromJson(decode, UserInfo.class);
-
-			return Mono.just(userInfo);
-
-		});
+		return Mono.justOrEmpty(getUserInfo_(httpRequest));
 
 	}
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)

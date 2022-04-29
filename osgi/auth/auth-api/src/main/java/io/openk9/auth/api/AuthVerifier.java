@@ -5,6 +5,8 @@ import reactor.netty.http.server.HttpServerRequest;
 
 public interface AuthVerifier {
 
+	UserInfo getUserInfo_(HttpServerRequest httpRequest);
+
 	Mono<UserInfo> getUserInfo(HttpServerRequest httpRequest);
 
 	Mono<UserInfo> getUserInfo(HttpServerRequest httpRequest, Mono<String> nameSupplier);

@@ -1,5 +1,7 @@
 package io.openk9.plugin.driver.manager.service;
 
+import io.openk9.auth.api.ACLQueryContributorRegistry;
+import io.openk9.auth.api.UserInfo;
 import io.openk9.plugin.driver.manager.api.DocumentType;
 import io.openk9.plugin.driver.manager.api.DocumentTypeProvider;
 import io.openk9.plugin.driver.manager.api.PluginDriver;
@@ -8,9 +10,13 @@ import io.openk9.plugin.driver.manager.api.PluginDriverRegistry;
 import io.openk9.plugin.driver.manager.api.SearchKeyword;
 import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
 import io.openk9.plugin.driver.manager.model.FieldBoostDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverContextDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
+import org.elasticsearch.common.Strings;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
@@ -48,6 +54,21 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 					PluginDriverDTOList::of
 				)
 			);
+	}
+
+	@Override
+	public PluginDriverContextDTO findPluginDriverContextDTO(
+		Collection<String> names, UserInfo userInfo) {
+
+		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+		_aclQueryContributorRegistry.contribute(
+			names, userInfo, boolQueryBuilder);
+
+		return PluginDriverContextDTO.of(
+			findPluginDriverDTOByNames(names).getPluginDriverDTOList(),
+			Strings.toString(boolQueryBuilder)
+		);
 	}
 
 	@Override
@@ -147,5 +168,8 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private DocumentTypeProvider _documentTypeProvider;
+
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
+	private ACLQueryContributorRegistry _aclQueryContributorRegistry;
 
 }

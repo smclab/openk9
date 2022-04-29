@@ -228,6 +228,14 @@
 			</modules>
 		</profile>
 		<profile>
+			<id>release</id>
+			<modules>
+				<module>bom</module>
+				<module>osgi</module>
+				<module>quarkus</module>
+			</modules>
+		</profile>
+		<profile>
 			<id>bom</id>
 			<modules>
 				<module>bom</module>

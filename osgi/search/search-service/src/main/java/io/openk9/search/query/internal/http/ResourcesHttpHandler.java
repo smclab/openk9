@@ -1,5 +1,6 @@
 package io.openk9.search.query.internal.http;
 
+import io.openk9.common.api.constant.Strings;
 import io.openk9.datasource.client.api.DatasourceClient;
 import io.openk9.http.util.HttpUtil;
 import io.openk9.http.web.RouterHandler;
@@ -143,7 +144,8 @@ public class ResourcesHttpHandler implements RouterHandler {
 		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
 
 		return _queryParser.apply(
-			QueryParser.Context.of(tenant, null, null, null, httpRequest, QueryParser.QueryCondition.DEFAULT))
+			QueryParser.Context.of(tenant, null, null, null, httpRequest, QueryParser.QueryCondition.DEFAULT,
+				Strings.BLANK))
 			.flatMap(consumer ->
 
 				_search.search(factory -> {

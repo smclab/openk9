@@ -37,6 +37,10 @@
 			<artifactId>model</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.openk9.osgi.auth</groupId>
+			<artifactId>auth-api</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>io.openk9.osgi.plugin-driver-manager</groupId>
 			<artifactId>plugin-driver-manager-model</artifactId>
 		</dependency>

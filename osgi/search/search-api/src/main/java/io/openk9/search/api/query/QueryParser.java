@@ -58,6 +58,7 @@ public interface QueryParser
 		final Map<String, List<SearchToken>> tokenTypeGroup;
 		final HttpServerRequest httpRequest;
 		final QueryCondition queryCondition;
+		final String aclQuery;
 	}
 
 	enum QueryCondition {

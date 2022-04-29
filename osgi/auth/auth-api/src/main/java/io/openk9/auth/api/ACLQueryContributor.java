@@ -1,21 +1,27 @@
 package io.openk9.auth.api;
 
-import io.openk9.search.api.query.QueryParser;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 
-public interface ACLQueryContributor
-	extends BiFunction<
-		UserInfo, QueryParser.Context, Mono<Consumer<BoolQueryBuilder>>> {
+public interface ACLQueryContributor extends BiConsumer<UserInfo, BoolQueryBuilder> {
+
+	default String driverServiceName() {
+		return this.getClass().getName();
+	}
+
+	default ACLQueryContributor andThen(ACLQueryContributor after) {
+		Objects.requireNonNull(after);
+
+		return (l, r) -> {
+			accept(l, r);
+			after.accept(l, r);
+		};
+
+	}
 
 	ACLQueryContributor NOTHING =
-		(userInfo, context) -> Mono.just((ignore) -> {});
-
-	Mono<Consumer<BoolQueryBuilder>> NOTHING_CONSUMER =
-		Mono.just((ignore) -> {});
+		(userInfo, booleanClauses) -> {};
 
 }

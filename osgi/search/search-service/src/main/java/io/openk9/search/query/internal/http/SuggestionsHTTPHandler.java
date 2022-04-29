@@ -460,14 +460,16 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		Tenant tenant, List<Datasource> datasources,
 		HttpServerRequest httpRequest,
 		Map<String, List<SearchToken>> tokenTypeGroup,
-		List<PluginDriverDTO> documentTypeList) {
+		List<PluginDriverDTO> documentTypeList,
+		String aclQuery) {
 		return QueryParser.Context.of(
 			tenant,
 			datasources,
 			documentTypeList,
 			tokenTypeGroup,
 			httpRequest,
-			QueryParser.QueryCondition.MUST
+			QueryParser.QueryCondition.MUST,
+			aclQuery
 		);
 	}
 

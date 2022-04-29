@@ -17,6 +17,7 @@
 
 package io.openk9.internal.http.client;
 
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.openk9.http.client.HttpClient;
@@ -26,9 +27,13 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufMono;
 import reactor.netty.http.client.HttpClientResponse;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.util.context.ContextView;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 class HttpClientImpl implements HttpClient {
 
@@ -58,23 +63,31 @@ class HttpClientImpl implements HttpClient {
 	public Publisher<byte[]> request(
 		int method, String url, String dataRow, Map<String, Object> headers) {
 
-		reactor.netty.http.client.HttpClient requestHttpClient = _httpClient;
+		return Mono.deferContextual(contextView -> {
 
-		if (!headers.isEmpty()) {
-			requestHttpClient =
+			Map<String, Object> internalHeaders =
+				_populateHeadersMap(contextView, headers);
+
+			reactor.netty.http.client.HttpClient requestHttpClient = _httpClient;
+
+			if (!internalHeaders.isEmpty()) {
+				requestHttpClient =
+					requestHttpClient
+						.headers(entries -> internalHeaders.forEach(entries::add));
+			}
+
+			reactor.netty.http.client.HttpClient.RequestSender request =
 				requestHttpClient
-					.headers(entries -> headers.forEach(entries::add));
-		}
+					.followRedirect(false)
+					.request(_findHttpMethod(method));
 
-		reactor.netty.http.client.HttpClient.RequestSender request =
-			requestHttpClient
-				.followRedirect(false)
-				.request(_findHttpMethod(method));
+			return request
+				.send(ByteBufMono.fromString(Mono.just(dataRow)))
+				.uri(url)
+				.responseSingle(HttpClientImpl::_response);
 
-		return request
-			.send(ByteBufMono.fromString(Mono.just(dataRow)))
-			.uri(url)
-			.responseSingle(HttpClientImpl::_response);
+		});
+
 	}
 
 	@Override
@@ -82,31 +95,39 @@ class HttpClientImpl implements HttpClient {
 		int method, String url, Map<String, String> formDataAttr,
 		Map<String, Object> headers) {
 
-		reactor.netty.http.client.HttpClient requestHttpClient = _httpClient;
+		return Mono.deferContextual(contextView -> {
 
-		if (!headers.isEmpty()) {
-			requestHttpClient =
+			reactor.netty.http.client.HttpClient requestHttpClient =
+				_httpClient;
+
+			Map<String, Object> internalHeaders =
+				_populateHeadersMap(contextView, headers);
+
+			if (!internalHeaders.isEmpty()) {
+				requestHttpClient =
+					requestHttpClient
+						.headers(entries -> internalHeaders.forEach(entries::add));
+			}
+
+			reactor.netty.http.client.HttpClient.RequestSender request =
 				requestHttpClient
-					.headers(entries -> headers.forEach(entries::add));
-		}
+					.followRedirect(false)
+					.request(_findHttpMethod(method));
 
-		reactor.netty.http.client.HttpClient.RequestSender request =
-			requestHttpClient
-				.followRedirect(false)
-				.request(_findHttpMethod(method));
+			reactor.netty.http.client.HttpClient.ResponseReceiver<?> receiver =
+				request;
 
-		reactor.netty.http.client.HttpClient.ResponseReceiver<?> receiver =
-			request;
+			if (!formDataAttr.isEmpty()) {
+				receiver = request.sendForm(
+					(httpClientRequest, httpClientForm) ->
+						formDataAttr.forEach(httpClientForm::attr));
+			}
 
-		if (!formDataAttr.isEmpty()) {
-			receiver = request.sendForm(
-				(httpClientRequest, httpClientForm) ->
-					formDataAttr.forEach(httpClientForm::attr));
-		}
+			return receiver
+				.uri(url)
+				.responseSingle(HttpClientImpl::_response);
 
-		return receiver
-			.uri(url)
-			.responseSingle(HttpClientImpl::_response);
+		});
 
 	}
 
@@ -135,6 +156,34 @@ class HttpClientImpl implements HttpClient {
 			: method == HttpHandler.DELETE ? HttpMethod.DELETE
 			: method == HttpHandler.OPTIONS ? HttpMethod.OPTIONS
 			: HttpMethod.GET;
+	}
+
+	private Map<String, Object> _populateHeadersMap(
+		ContextView contextView, Map<String, Object> headers) {
+
+		Map<String, Object> internalHeaders;
+
+		Optional<HttpServerRequest> httpServerRequestOptional =
+			contextView.getOrEmpty("HTTP_REQUEST");
+
+		if (httpServerRequestOptional.isPresent()) {
+
+			HttpServerRequest httpServerRequest = httpServerRequestOptional.get();
+			HttpHeaders entries = httpServerRequest.requestHeaders();
+
+			internalHeaders = new HashMap<>(headers);
+
+			for (Map.Entry<String, String> entry : entries) {
+				internalHeaders.put(entry.getKey(), entry.getValue());
+			}
+
+		}
+		else {
+			internalHeaders = headers;
+		}
+
+		return internalHeaders;
+
 	}
 
 	private final reactor.netty.http.client.HttpClient _httpClient;

@@ -17,6 +17,8 @@
 
 package io.openk9.plugin.driver.manager.api;
 
+import io.openk9.auth.api.UserInfo;
+import io.openk9.plugin.driver.manager.model.PluginDriverContextDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 
@@ -28,6 +30,9 @@ public interface PluginDriverDTOService {
 	Optional<PluginDriverDTO> findPluginDriverDTOByName(String name);
 
 	PluginDriverDTOList findPluginDriverDTOByNames(Collection<String> names);
+
+	PluginDriverContextDTO findPluginDriverContextDTO(
+		Collection<String> names, UserInfo userInfo);
 
 	PluginDriverDTOList findPluginDriverDTOList();
 

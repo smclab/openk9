@@ -79,7 +79,8 @@ public class EntityQueryParser implements QueryParser {
 							context.getPluginDriverDocumentTypeList(),
 							Map.of("TEXT", collect),
 							context.getHttpRequest(),
-							context.getQueryCondition()
+							context.getQueryCondition(),
+							context.getAclQuery()
 						)
 					), Consumer::andThen);
 

@@ -1,0 +1,65 @@
+package io.openk9.auth;
+
+import io.openk9.auth.api.ACLQueryContributor;
+import io.openk9.auth.api.ACLQueryContributorRegistry;
+import io.openk9.auth.api.UserInfo;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
+
+import java.util.Collection;
+import java.util.List;
+
+@Component(
+	immediate = true,
+	service = ACLQueryContributorRegistry.class
+)
+public class ACLQueryContributorRegistryImpl
+	implements ACLQueryContributorRegistry {
+
+	@Override
+	public void contribute(
+		String driverServiceName, UserInfo userInfo,
+		BoolQueryBuilder booleanQuery) {
+
+		_findACLQueryContributor(driverServiceName)
+			.accept(userInfo, booleanQuery);
+
+	}
+
+	@Override
+	public void contribute(
+		Collection<String> driverServiceNames, UserInfo userInfo,
+		BoolQueryBuilder booleanQuery) {
+
+		_findACLQueryContributors(driverServiceNames)
+			.accept(userInfo, booleanQuery);
+
+	}
+
+	private ACLQueryContributor _findACLQueryContributor(
+		String driverServiceName) {
+
+		return _findACLQueryContributors(List.of(driverServiceName));
+
+	}
+
+	private ACLQueryContributor _findACLQueryContributors(
+		Collection<String> driverServiceNames) {
+
+		return _aclQueryContributorList
+			.stream()
+			.filter(aclQueryContributor -> driverServiceNames.contains(aclQueryContributor.driverServiceName()))
+			.reduce(ACLQueryContributor.NOTHING, ACLQueryContributor::andThen);
+
+	}
+
+	@Reference(
+		policyOption = ReferencePolicyOption.GREEDY,
+		cardinality = ReferenceCardinality.MULTIPLE
+	)
+	private List<ACLQueryContributor> _aclQueryContributorList;
+
+}

@@ -1,5 +1,6 @@
 package io.openk9.plugin.driver.manager.web;
 
+import io.openk9.auth.api.AuthVerifier;
 import io.openk9.http.exception.HttpException;
 import io.openk9.http.util.HttpResponseWriter;
 import io.openk9.http.web.RouterHandler;
@@ -8,6 +9,7 @@ import io.openk9.plugin.driver.manager.api.PluginDriver;
 import io.openk9.plugin.driver.manager.api.PluginDriverDTOService;
 import io.openk9.plugin.driver.manager.api.PluginDriverRegistry;
 import io.openk9.plugin.driver.manager.model.InvokeDataParserDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverContextDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.plugin.driver.manager.model.SchedulerEnabledDTO;
@@ -31,9 +33,27 @@ public class PluginDriverEndPoints implements RouterHandler {
 		return router
 			.get("/v1/plugin-driver/{serviceDriverName}", this::_findPluginDriverByName)
 			.post("/v1/plugin-driver/", this::_findPluginDriverByNames)
+			.post("/v1/plugin-driver/context", this::_createPluginDriverContext)
 			.get("/v1/plugin-driver/", this::_findAll)
 			.get("/v1/plugin-driver/scheduler-enabled/{serviceDriverName}", this::_schedulerEnabled)
 			.post("/v1/plugin-driver/invoke-data-parser/", this::_invokeDataParser);
+	}
+
+	private Publisher<Void> _createPluginDriverContext(
+		HttpServerRequest httpRequest, HttpServerResponse httpResponse) {
+
+		return Mono.defer(() -> {
+
+			Mono<PluginDriverContextDTO> response =
+				Mono
+					.from(ReactorNettyUtils.aggregateBodyAsString(httpRequest))
+					.map(json -> _jsonFactory.fromJsonList(json, String.class))
+					.map(names -> _pluginDriverDTOService.findPluginDriverContextDTO(
+						names, _authVerifier.getUserInfo_(httpRequest)));
+
+			return Mono.from(_httpResponseWriter.write(httpResponse, response));
+
+		});
 	}
 
 	private Publisher<Void> _invokeDataParser(
@@ -179,5 +199,8 @@ public class PluginDriverEndPoints implements RouterHandler {
 
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private JsonFactory _jsonFactory;
+
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
+	private AuthVerifier _authVerifier;
 
 }

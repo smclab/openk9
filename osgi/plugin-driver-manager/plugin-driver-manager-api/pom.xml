@@ -62,6 +62,10 @@
 			<artifactId>plugin-driver-manager-model</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.openk9.osgi.auth</groupId>
+			<artifactId>auth-api</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>

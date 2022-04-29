@@ -7,6 +7,7 @@ import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.InvokeDataParserDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverContextDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.plugin.driver.manager.model.SchedulerEnabledDTO;
@@ -121,6 +122,22 @@ public class PluginDriverManagerClientImpl
 					)
 			)
 			.map(bytes -> _jsonFactory.fromJson(bytes, PluginDriverDTOList.class));
+	}
+
+	@Override
+	public Mono<PluginDriverContextDTO> getPluginDriverContextDTO(
+		Collection<String> serviceDriverNames) {
+		return Mono
+			.from(
+				_pluginDriverManagerClient
+					.request(
+						HttpHandler.POST,
+						"/v1/plugin-driver/context",
+						_jsonFactory.toJson(serviceDriverNames),
+						Map.of()
+					)
+			)
+			.map(bytes -> _jsonFactory.fromJson(bytes, PluginDriverContextDTO.class));
 	}
 
 	@Override

@@ -26,6 +26,7 @@ import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.plugin.driver.manager.model.DocumentTypeDTO;
+import io.openk9.plugin.driver.manager.model.PluginDriverContextDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
@@ -74,7 +75,7 @@ public abstract class BaseSearchHTTPHandler
 
 		return  Mono.from(ReactorNettyUtils.aggregateBodyAsString(httpRequest))
 			.flatMap(body -> _getTenantAndDatasourceList(httpRequest, httpResponse)
-				.flatMap(tenantDatasources -> _getPluginDriverDTOList(tenantDatasources.getT2())
+				.flatMap(tenantDatasources -> _getPluginDriverContextDTO(tenantDatasources.getT2())
 					.flatMap(pluginDriverDTOList ->
 						_toQuerySearchRequest(
 							tenantDatasources.getT1(),
@@ -97,11 +98,15 @@ public abstract class BaseSearchHTTPHandler
 				)
 			)
 			.flatMap(t -> searchHitToResponseMono(
-				t.getT1(), t.getT2(), t.getT3(), t.getT5(), t.getT4(),
+				t.getT1(), t.getT2(), PluginDriverDTOList.of(
+					t.getT3().getPluginDriverDTOList()), t.getT5(), t.getT4(),
 				t.getT6())
 			)
 			.transform(stringMono -> _httpResponseWriter.write(
-				httpResponse, stringMono));
+				httpResponse, stringMono))
+			.contextWrite(
+				c -> c.put("HTTP_REQUEST", httpRequest)
+			);
 
 	}
 
@@ -166,7 +171,7 @@ public abstract class BaseSearchHTTPHandler
 
 	private Mono<SearchResponse> _toQuerySearchRequest(
 		Tenant tenant, List<Datasource> datasources,
-		PluginDriverDTOList pdDTOList, SearchRequest searchRequest,
+		PluginDriverContextDTO pdDTOList, SearchRequest searchRequest,
 		HttpServerRequest httpRequest) {
 
 		return Mono.defer(() -> {
@@ -213,7 +218,7 @@ public abstract class BaseSearchHTTPHandler
 			return queryParser.apply(
 				createQueryParserContext(
 					tenant, datasources, httpRequest, tokenTypeGroup,
-					documentTypeList)
+					documentTypeList, pdDTOList.getAclQuery())
 			).flatMap(boolQueryBuilderConsumer ->
 				_search.flatMapSearch(factory -> {
 
@@ -270,7 +275,8 @@ public abstract class BaseSearchHTTPHandler
 		Tenant tenant, List<Datasource> datasources,
 		HttpServerRequest httpRequest,
 		Map<String, List<SearchToken>> tokenTypeGroup,
-		List<PluginDriverDTO> documentTypeList) {
+		List<PluginDriverDTO> documentTypeList,
+		String aclQuery) {
 
 		return QueryParser.Context.of(
 			tenant,
@@ -278,11 +284,12 @@ public abstract class BaseSearchHTTPHandler
 			documentTypeList,
 			tokenTypeGroup,
 			httpRequest,
-			QueryParser.QueryCondition.DEFAULT
+			QueryParser.QueryCondition.DEFAULT,
+			aclQuery
 		);
 	}
 
-	private Mono<PluginDriverDTOList> _getPluginDriverDTOList(List<Datasource> datasources) {
+	private Mono<PluginDriverContextDTO> _getPluginDriverContextDTO(List<Datasource> datasources) {
 		return Mono.defer(() -> {
 
 			List<String> serviceDriverNames =
@@ -298,7 +305,8 @@ public abstract class BaseSearchHTTPHandler
 
 			}
 
-			return _pluginDriverManagerClient.getPluginDriverList(serviceDriverNames);
+			return _pluginDriverManagerClient
+				.getPluginDriverContextDTO(serviceDriverNames);
 
 		});
 	}
