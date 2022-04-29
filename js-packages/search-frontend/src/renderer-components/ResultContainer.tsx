@@ -15,6 +15,9 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
     >
       <div
         css={css`
+          @media (min-width: 320px) and (max-width: 480px) {
+            display: none;
+          }
           width: 30px;
           margin-right: 8px;
         `}

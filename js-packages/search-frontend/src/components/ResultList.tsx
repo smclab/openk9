@@ -145,6 +145,7 @@ export function InfiniteResults<E>({
                     results.fetchNextPage();
                   }
                 }}
+                className="openk9-embeddable-search--result-container"
                 css={css`
                   background-color: inherit;
                   color: inherit;
