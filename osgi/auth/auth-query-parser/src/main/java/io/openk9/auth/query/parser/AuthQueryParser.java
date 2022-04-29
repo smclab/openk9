@@ -44,18 +44,20 @@ public class AuthQueryParser implements QueryParser {
 			.fromSupplier(() ->
 				boolQueryBuilder -> {
 
+					BoolQueryBuilder innerQuery =
+						QueryBuilders
+							.boolQuery()
+							.minimumShouldMatch(1)
+							.should(QueryBuilders.matchQuery("acl.public", true));
+
 					QueryBuilder aclQueryBuilder =
 						_createAclQuery(pluginAclQuery);
 
-					boolQueryBuilder
-						.filter(
-							QueryBuilders
-								.boolQuery()
-								.minimumShouldMatch(1)
-								.should(QueryBuilders.matchQuery("acl.public", true))
-								.should(aclQueryBuilder)
-						);
+					if (aclQueryBuilder != null) {
+						innerQuery.should(aclQueryBuilder);
+					}
 
+					boolQueryBuilder.filter(innerQuery);
 
 			}
 		);
