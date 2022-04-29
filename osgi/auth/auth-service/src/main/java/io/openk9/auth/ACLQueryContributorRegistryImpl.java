@@ -8,6 +8,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
@@ -32,6 +34,10 @@ public class ACLQueryContributorRegistryImpl
 	public boolean contribute(
 		Collection<String> driverServiceNames, UserInfo userInfo,
 		BoolQueryBuilder booleanQuery) {
+
+		if (userInfo == null) {
+			return false;
+		}
 
 		ACLQueryContributor aclQueryContributor =
 			_findACLQueryContributors(driverServiceNames);
