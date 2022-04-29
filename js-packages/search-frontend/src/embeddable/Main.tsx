@@ -556,40 +556,44 @@ function deriveSearchQuery(
             selection.start === span.start && selection.end === span.end,
         )?.token ?? null;
       if (token) {
-        switch (token.tokenType) {
-          case "DATASOURCE":
-            return {
-              tokenType: "DATASOURCE",
-              values: [token.value],
-              filter: false,
-            };
-          case "DOCTYPE":
-            return {
-              tokenType: "DOCTYPE",
-              keywordKey: "type",
-              values: [token.value],
-              filter: false,
-            };
-          case "ENTITY":
-            return {
-              tokenType: "ENTITY",
-              keywordKey: token.keywordKey,
-              entityType: token.entityType,
-              entityName: token.entityName,
-              values: [token.value],
-              filter: false,
-            };
-          case "TEXT":
-            return {
-              tokenType: "TEXT",
-              keywordKey: token.keywordKey,
-              values: [token.value],
-              filter: false,
-            };
-        }
+        return analysisTokenToSearchToken(token);
       }
       return { tokenType: "TEXT", values: [span.text], filter: false };
     });
+}
+
+function analysisTokenToSearchToken(token: AnalysisToken): SearchToken {
+  switch (token.tokenType) {
+    case "DATASOURCE":
+      return {
+        tokenType: "DATASOURCE",
+        values: [token.value],
+        filter: false,
+      };
+    case "DOCTYPE":
+      return {
+        tokenType: "DOCTYPE",
+        keywordKey: "type",
+        values: [token.value],
+        filter: true,
+      };
+    case "ENTITY":
+      return {
+        tokenType: "ENTITY",
+        keywordKey: token.keywordKey,
+        entityType: token.entityType,
+        entityName: token.entityName,
+        values: [token.value],
+        filter: false,
+      };
+    case "TEXT":
+      return {
+        tokenType: "TEXT",
+        keywordKey: token.keywordKey,
+        values: [token.value],
+        filter: false,
+      };
+  }
 }
 
 function calculateSpans(
