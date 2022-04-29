@@ -1,10 +1,10 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "react-query";
 import * as RestApi from "@openk9/rest-api";
 import { OpenK9Client, SearchToken } from "@openk9/rest-api";
 import * as RendererComponents from "../renderer-components";
-import { OpenK9ClientProvider } from "../components/client";
+import { OpenK9ClientContext } from "../components/client";
 import { Main, QueryState } from "./Main";
 import { ResultsDisplayMode } from "../components/ResultList";
 
@@ -32,10 +32,11 @@ export class OpenK9 {
 
   constructor(configuration: Partial<Configuration> = {}) {
     this.configuration = { ...defaultConfiguration, ...configuration };
-    this.root = this.getRoot();
+    this.root = ReactDOM.createRoot(this.getRootElement());
     this.queryClient = new QueryClient({
       defaultOptions: {
         queries: {
+          suspense: true,
           notifyOnChangeProps: ["data", "error"], // for better performance
         },
       },
@@ -72,26 +73,28 @@ export class OpenK9 {
   };
 
   private render() {
-    ReactDOM.render(
-      <React.StrictMode>
-        {this.configuration.enabled ? (
-          <OpenK9ClientProvider.Provider value={this.client}>
-            <QueryClientProvider client={this.queryClient}>
-              <Main
-                configuration={this.configuration}
-                onConfigurationChange={this.updateConfiguration}
-                onQueryStateChange={this.onQueryStateChange}
-              />
-              ;
-            </QueryClientProvider>
-          </OpenK9ClientProvider.Provider>
-        ) : null}
-      </React.StrictMode>,
-      this.root,
-    );
+    if (this.configuration.enabled) {
+      this.root.render(
+        <React.StrictMode>
+          <React.Suspense>
+            <OpenK9ClientContext.Provider value={this.client}>
+              <QueryClientProvider client={this.queryClient}>
+                <Main
+                  configuration={this.configuration}
+                  onConfigurationChange={this.updateConfiguration}
+                  onQueryStateChange={this.onQueryStateChange}
+                />
+              </QueryClientProvider>
+            </OpenK9ClientContext.Provider>
+          </React.Suspense>
+        </React.StrictMode>,
+      );
+    } else {
+      this.root.unmount();
+    }
   }
 
-  private getRoot() {
+  private getRootElement() {
     const isDevelopment = process.env.NODE_ENV === "development";
     if (!isDevelopment) {
       return document.createDocumentFragment();

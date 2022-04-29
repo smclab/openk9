@@ -6,7 +6,7 @@ export function HighlightedText({
   Highlight = HighLight,
 }: {
   text: string;
-  Highlight?: React.FC<{}>;
+  Highlight?: React.FC<{ children: React.ReactNode }>;
 }) {
   return (
     <>

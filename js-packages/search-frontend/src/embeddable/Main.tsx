@@ -448,13 +448,13 @@ export function Main({
 function renderPortal(
   node: React.ReactNode,
   container: Element | string | null,
-) {
+): React.ReactNode {
   const element =
     typeof container === "string"
       ? document.querySelector(container)
       : container;
   if (!element) return null;
-  return ReactDOM.createPortal(node, element);
+  return ReactDOM.createPortal(node, element) as any;
 }
 
 export type QueryState = {

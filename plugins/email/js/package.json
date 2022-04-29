@@ -14,7 +14,7 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "^0.1.15",
-    "react": "^17.0.0"
+    "react": "^18.1.0"
   },
   "devDependencies": {
     "browserslist-config-clay": "^3.0.0"
