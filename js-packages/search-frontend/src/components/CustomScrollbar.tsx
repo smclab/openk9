@@ -2,10 +2,10 @@ import React from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 
-export const CustomScrollbar = React.forwardRef(
+export const CustomVirtualScrollbar = React.forwardRef(
   ({ children, className, style, ...props }: any, ref: any) => {
     const refSetter = React.useCallback(
-      (scrollbarsRef) => {
+      (scrollbarsRef: any) => {
         if (scrollbarsRef) {
           ref.current = scrollbarsRef.osInstance().getElements().viewport;
         }
@@ -25,3 +25,4 @@ export const CustomScrollbar = React.forwardRef(
     );
   },
 );
+

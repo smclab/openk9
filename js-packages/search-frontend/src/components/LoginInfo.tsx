@@ -20,12 +20,6 @@ function LoginInfoComponent({ loginState, onLogin, onLogout }: LoginInfoProps) {
   });
   const canLogin =
     loginState.type === "anonymous" || loginState.type === "login-error";
-  React.useEffect(() => {
-    console.log("mount");
-    return () => {
-      console.log("unmount");
-    };
-  }, []);
   return (
     <div
       ref={clickAwayRef}

@@ -55,5 +55,7 @@ function useSuggestionCategories() {
   return useQuery(["suggestion-categories"], async ({ queryKey }) => {
     const result = await client.getSuggestionCategories();
     return result;
+  }, {
+    suspense: true
   });
 }

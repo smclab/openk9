@@ -1,12 +1,15 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { Virtuoso } from "react-virtuoso";
-import { useInfiniteResults } from "./remote-data";
 import { ResultMemo } from "./Result";
 import { GenericResultItem, SearchToken } from "@openk9/rest-api";
 import { Logo } from "./Logo";
 import { Renderers, useRenderers } from "./useRenderers";
-import { CustomScrollbar } from "./CustomScrollbar";
+import { CustomVirtualScrollbar } from "./CustomScrollbar";
+import { useOpenK9Client } from "./client";
+import { useInfiniteQuery } from "react-query";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import "overlayscrollbars/css/OverlayScrollbars.css";
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -110,51 +113,57 @@ export function InfiniteResults<E>({
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery);
   return (
-    <div>
-      {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
-        <>
-          <ResultCount>{results.data?.pages[0].total}</ResultCount>
-          {results.data?.pages.map((page, pageIndex) => {
-            return (
-              <React.Fragment key={pageIndex}>
-                {page.result.map((result, resultIndex) => {
-                  return (
-                    <ResultMemo<E>
-                      renderers={renderers}
-                      key={resultIndex}
-                      result={result}
-                      onDetail={onDetail}
-                    />
-                  );
-                })}
-              </React.Fragment>
-            );
-          })}
-          {results.hasNextPage && (
-            <button
-              onClick={() => {
-                results.fetchNextPage();
-              }}
-              className="openk9-embeddable-search--result-container"
-              css={css`
-                background-color: inherit;
-                color: inherit;
-                font-family: inherit;
-                font-size: inherit;
-                padding: 8px 16px;
-                width: calc(100% - 32px);
-                margin-bottom: 16px;
-                display: block;
-              `}
-            >
-              load more
-            </button>
-          )}
-        </>
-      ) : (
-        <NoResults />
-      )}
-    </div>
+    <OverlayScrollbarsComponent
+      style={{
+        height: "100%",
+      }}
+    >
+      <div css={css`padding-bottom: 16px;`}>
+        {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
+          <>
+            <ResultCount>{results.data?.pages[0].total}</ResultCount>
+            {results.data?.pages.map((page, pageIndex) => {
+              return (
+                <React.Fragment key={pageIndex}>
+                  {page.result.map((result, resultIndex) => {
+                    return (
+                      <ResultMemo<E>
+                        renderers={renderers}
+                        key={resultIndex}
+                        result={result}
+                        onDetail={onDetail}
+                      />
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
+            {results.hasNextPage && (
+              <button
+                onClick={() => {
+                  if (!results.isFetching) {
+                    results.fetchNextPage();
+                  }
+                }}
+                css={css`
+                  background-color: inherit;
+                  color: inherit;
+                  font-family: inherit;
+                  font-size: inherit;
+                  padding: 8px 16px;
+                  width: calc(100% - 32px);
+                  display: block;
+                `}
+              >
+                {results.isFetching ? "Loading more results..." : "Load more results"}
+              </button>
+            )}
+          </>
+        ) : (
+          <NoResults />
+        )}
+      </div>
+    </OverlayScrollbarsComponent>
   );
 }
 
@@ -203,7 +212,7 @@ export function VirtualResults<E>({
           }
         }}
         components={{
-          Scroller: CustomScrollbar as any,
+          Scroller: CustomVirtualScrollbar as any,
           Footer() {
             return (
               <div
@@ -243,5 +252,33 @@ function NoResults() {
       <h3>No results were found.</h3>
       <div>Try with another query</div>
     </div>
+  );
+}
+
+function useInfiniteResults<E>(searchQuery: Array<SearchToken>) {
+  const pageSize = 25;
+  const client = useOpenK9Client();
+  return useInfiniteQuery(
+    ["results", searchQuery] as const,
+    async ({ queryKey: [, searchQuery], pageParam = 0 }) => {
+      return client.doSearch<E>({
+        range: [pageParam * pageSize, pageParam * pageSize + pageSize],
+        searchQuery,
+      });
+    },
+    {
+      keepPreviousData: true,
+      getNextPageParam(lastPage, pages) {
+        const totalDownloaded = pages.reduce(
+          (total, page) => total + page.result.length,
+          0,
+        );
+        if (totalDownloaded < lastPage.total) {
+          return pages.length;
+        }
+      },
+      suspense: true,
+      notifyOnChangeProps: ["isFetching"]
+    },
   );
 }

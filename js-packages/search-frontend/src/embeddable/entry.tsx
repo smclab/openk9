@@ -36,7 +36,7 @@ export class OpenK9 {
     this.queryClient = new QueryClient({
       defaultOptions: {
         queries: {
-          suspense: true,
+          refetchOnWindowFocus: false,
           notifyOnChangeProps: ["data", "error"], // for better performance
         },
       },
@@ -177,7 +177,7 @@ const defaultConfiguration: Configuration = {
   searchReplaceText: false,
   filterTokens: [],
   defaultTokens: [],
-  resultsDisplayMode: { type: "virtual" },
+  resultsDisplayMode: { type: "infinite" },
 };
 
 export type ConfigurationUpdateFunction = (

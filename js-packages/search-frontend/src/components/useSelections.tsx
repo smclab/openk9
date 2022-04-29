@@ -6,7 +6,7 @@ export function useSelections() {
   const [state, dispatch] = React.useReducer(
     reducer,
     initial,
-    (initial) => loadQueryString<State>() ?? initial,
+    (initial) => loadQueryString<SelectionsState>() ?? initial,
   );
   React.useEffect(() => {
     saveQueryString(state);
@@ -14,17 +14,17 @@ export function useSelections() {
   return [state, dispatch] as const;
 }
 
-type State = {
+export type SelectionsState = {
   text: string;
   selection: Array<Selection>;
 };
 
-const initial: State = {
+const initial: SelectionsState = {
   text: "",
   selection: [],
 };
 
-type Action =
+export type SelectionsAction =
   | { type: "set-text"; text: string }
   | {
       type: "set-selection";
@@ -40,7 +40,10 @@ type Selection = {
   isAuto: boolean;
 };
 
-function reducer(state: State, action: Action): State {
+function reducer(
+  state: SelectionsState,
+  action: SelectionsAction,
+): SelectionsState {
   switch (action.type) {
     case "set-text": {
       return {
