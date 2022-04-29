@@ -62,12 +62,12 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-		_aclQueryContributorRegistry.contribute(
+		boolean contribute = _aclQueryContributorRegistry.contribute(
 			names, userInfo, boolQueryBuilder);
 
 		return PluginDriverContextDTO.of(
 			findPluginDriverDTOByNames(names).getPluginDriverDTOList(),
-			Strings.toString(boolQueryBuilder)
+			contribute ? Strings.toString(boolQueryBuilder) : null
 		);
 	}
 

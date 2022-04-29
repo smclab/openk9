@@ -6,11 +6,11 @@ import java.util.Collection;
 
 public interface ACLQueryContributorRegistry {
 
-	void contribute(
+	boolean contribute(
 		String driverServiceName, UserInfo userInfo,
 		BoolQueryBuilder booleanQuery);
 
-	void contribute(
+	boolean contribute(
 		Collection<String> driverServiceName,
 		UserInfo userInfo,
 		BoolQueryBuilder booleanQuery);

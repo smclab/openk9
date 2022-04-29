@@ -21,7 +21,6 @@ public interface ACLQueryContributor extends BiConsumer<UserInfo, BoolQueryBuild
 
 	}
 
-	ACLQueryContributor NOTHING =
-		(userInfo, booleanClauses) -> {};
+	ACLQueryContributor NOTHING = (userInfo, booleanClauses) -> {};
 
 }

@@ -20,22 +20,29 @@ public class ACLQueryContributorRegistryImpl
 	implements ACLQueryContributorRegistry {
 
 	@Override
-	public void contribute(
+	public boolean contribute(
 		String driverServiceName, UserInfo userInfo,
 		BoolQueryBuilder booleanQuery) {
 
-		_findACLQueryContributor(driverServiceName)
-			.accept(userInfo, booleanQuery);
+		return contribute(List.of(driverServiceName), userInfo, booleanQuery);
 
 	}
 
 	@Override
-	public void contribute(
+	public boolean contribute(
 		Collection<String> driverServiceNames, UserInfo userInfo,
 		BoolQueryBuilder booleanQuery) {
 
-		_findACLQueryContributors(driverServiceNames)
-			.accept(userInfo, booleanQuery);
+		ACLQueryContributor aclQueryContributor =
+			_findACLQueryContributors(driverServiceNames);
+
+		if (aclQueryContributor == ACLQueryContributor.NOTHING) {
+			return false;
+		}
+
+		aclQueryContributor.accept(userInfo, booleanQuery);
+
+		return true;
 
 	}
 
