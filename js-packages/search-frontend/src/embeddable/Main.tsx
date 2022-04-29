@@ -9,16 +9,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useDebounce } from "../components/useDebounce";
 import { useQueryAnalysis } from "../components/remote-data";
-import { useTabTokens } from "../components/useTabTokens";
 import { DetailMemo } from "../components/Detail";
-import { myTheme } from "../components/myTheme";
-import { Results } from "../components/ResultList";
+import { ResultsMemo } from "../components/ResultList";
 import { TokenSelect } from "../components/TokenSelect";
 import { useClickAway } from "../components/useClickAway";
 import { getAutoSelections, useSelections } from "../components/useSelections";
 import { Tooltip } from "../components/Tooltip";
 import { useLoginInfo } from "../components/useLogin";
-import { LoginInfoComponent } from "../components/LoginInfo";
+import { LoginInfoComponentMemo } from "../components/LoginInfo";
 import {
   AnalysisRequestEntry,
   AnalysisResponseEntry,
@@ -26,24 +24,16 @@ import {
   GenericResultItem,
   SearchToken,
 } from "@openk9/rest-api";
-import { Logo } from "../components/Logo";
-import { useQuery } from "react-query";
 import { isEqual } from "lodash";
-import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
-import { FilterCategory } from "../components/FilterCategory";
 import { useRenderers } from "../components/useRenderers";
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
-import { useOpenK9Client } from "../components/client";
-import { Configuration } from "./entry";
+import { Configuration, ConfigurationUpdateFunction } from "./entry";
+import { TabsMemo, useTabTokens } from "../components/Tabs";
+import { FiltersMemo } from "../components/Filters";
 
 type MainProps = {
   configuration: Configuration;
-  onConfigurationChange(
-    configuration:
-      | Partial<Configuration>
-      | ((configuration: Configuration) => Partial<Configuration>),
-  ): void;
+  onConfigurationChange: ConfigurationUpdateFunction;
   onQueryStateChange(queryState: QueryState): void;
 };
 export function Main({
@@ -98,7 +88,7 @@ export function Main({
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
   const filterTokens = configuration.filterTokens;
-  const addFilterSearchToken = React.useCallback(
+  const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
       onConfigurationChange((configuration) => ({
         filterTokens: [...configuration.filterTokens, searchToken],
@@ -106,7 +96,7 @@ export function Main({
     },
     [onConfigurationChange],
   );
-  const removeFilterSearchToken = React.useCallback(
+  const removeFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
       onConfigurationChange((configuration) => ({
         filterTokens: configuration.filterTokens.filter(
@@ -192,7 +182,6 @@ export function Main({
   React.useEffect(() => {
     setDetail(null);
   }, [searchQuery]);
-  const suggestionCategories = useSuggestionCategories();
   const renderers = useRenderers();
   return (
     <React.Fragment>
@@ -207,7 +196,7 @@ export function Main({
         >
           <FontAwesomeIcon
             icon={faSearch}
-            style={{ paddingLeft: "16px", color: myTheme.grayTexColor }}
+            style={{ paddingLeft: "16px", color: "--openk9-embeddable-search--secondary-text-color" }}
           />
           <div
             css={css`
@@ -388,7 +377,7 @@ export function Main({
                 paddingRight: "16px",
                 color: replaceText
                   ? "var(--openk9-embeddable-search--primary-color)"
-                  : myTheme.grayTexColor,
+                  : "var(--openk9-embeddable-search--secondary-text-color)",
                 cursor: "pointer",
               }}
               onClick={() => {
@@ -403,7 +392,7 @@ export function Main({
                 paddingRight: "16px",
                 color: autoSelect
                   ? "var(--openk9-embeddable-search--primary-color)"
-                  : myTheme.grayTexColor,
+                  : "var(--openk9-embeddable-search--secondary-text-color)",
                 cursor: "pointer",
               }}
               onClick={() => {
@@ -415,104 +404,37 @@ export function Main({
         configuration.search,
       )}
       {renderPortal(
-        <div
-          css={css`
-            position: relative;
-            overflow-x: auto;
-            height: 35px;
-          `}
-        >
-          <div
-            css={css`
-              position: absolute;
-              display: flex;
-              padding: 0px 16px;
-            `}
-          >
-            {tabs.map((tab, index) => {
-              const isSelected = index === selectedTabIndex;
-              return (
-                <div
-                  key={index}
-                  css={css`
-                    padding: 8px 16px;
-                    color: ${isSelected
-                      ? "var(--openk9-embeddable-search--primary-color)"
-                      : ""};
-                    border-bottom: 2px solid
-                      ${isSelected
-                        ? "var(--openk9-embeddable-search--active-color)"
-                        : "transparent"};
-                    cursor: pointer;
-                    font-size: 0.8rem;
-                    color: ${myTheme.grayTexColor};
-                    user-select: none;
-                  `}
-                  onClick={() => {
-                    setSelectedTabIndex(index);
-                    onConfigurationChange({ filterTokens: [] });
-                  }}
-                >
-                  {tab.label.toUpperCase()}
-                </div>
-              );
-            })}
-          </div>
-        </div>,
+        <TabsMemo
+          tabs={tabs}
+          selectedTabIndex={selectedTabIndex}
+          onSelectedTabIndexChange={setSelectedTabIndex}
+          onConfigurationChange={onConfigurationChange}
+        />,
         configuration.tabs,
       )}
       {renderPortal(
-        <OverlayScrollbarsComponent
-          style={{
-            overflowY: "auto",
-            position: "relative",
-            height: "100%",
-          }}
-        >
-          <div
-            css={css`
-              position: absolute;
-              width: calc(100% - 32px);
-              padding: 16px 16px 0px 16px;
-            `}
-          >
-            {suggestionCategories.data?.map((suggestionCategory) => {
-              return (
-                <FilterCategory
-                  key={suggestionCategory.suggestionCategoryId}
-                  suggestionCategoryName={suggestionCategory.name}
-                  suggestionCategoryId={suggestionCategory.suggestionCategoryId}
-                  tokens={searchQuery}
-                  onAdd={addFilterSearchToken}
-                  onRemove={removeFilterSearchToken}
-                />
-              );
-            })}
-          </div>
-        </OverlayScrollbarsComponent>,
+        <FiltersMemo
+          searchQuery={searchQuery}
+          onAddFilterToken={addFilterToken}
+          onRemoveFilterToken={removeFilterToken}
+        />,
         configuration.filters,
       )}
       {renderPortal(
-        <Results
+        <ResultsMemo
           renderers={renderers}
-          displayMode={{ type: "virtual" }}
+          displayMode={configuration.resultsDisplayMode}
           searchQuery={searchQuery}
           onDetail={setDetail}
         />,
         configuration.results,
       )}
       {renderPortal(
-        detail ? (
-          <SimpleErrorBoundary>
-            <DetailMemo renderers={renderers} result={detail} />
-          </SimpleErrorBoundary>
-        ) : (
-          <NoDetail />
-        ),
+          <DetailMemo renderers={renderers} result={detail} />,
         configuration.details,
       )}
       {renderPortal(
-        <LoginInfoComponent
+        <LoginInfoComponentMemo
           loginState={login.state}
           onLogin={login.login}
           onLogout={login.logout}
@@ -619,31 +541,4 @@ function calculateSpans(
     }
   }
   return spans.filter((span) => span.text);
-}
-
-function NoDetail() {
-  return (
-    <div
-      css={css`
-        color: ${myTheme.grayTexColor};
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-      `}
-    >
-      <Logo size={128} />
-      <h3>No details</h3>
-      <div>Move the mouse over a result to see details about it</div>
-    </div>
-  );
-}
-
-function useSuggestionCategories() {
-  const client = useOpenK9Client();
-  return useQuery(["suggestion-categories"], async ({ queryKey }) => {
-    const result = await client.getSuggestionCategories();
-    return result;
-  });
 }

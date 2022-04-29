@@ -6,7 +6,6 @@ import {
   faChevronUp,
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
-import { myTheme } from "./myTheme";
 import { SearchToken, SuggestionResult } from "@openk9/rest-api";
 import { isEqual } from "lodash";
 import { useInfiniteQuery } from "react-query";
@@ -20,7 +19,7 @@ type FilterCategoryProps = {
   onAdd(searchToken: SearchToken): void;
   onRemove(searchToken: SearchToken): void;
 };
-export function FilterCategory({
+function FilterCategory({
   suggestionCategoryId,
   suggestionCategoryName,
   tokens,
@@ -63,7 +62,10 @@ export function FilterCategory({
           </div>
           <FontAwesomeIcon
             icon={isOpen ? faChevronUp : faChevronDown}
-            style={{ color: myTheme.grayTexColor, marginRight: "8px" }}
+            style={{
+              color: "var(--openk9-embeddable-search--secondary-text-color)",
+              marginRight: "8px",
+            }}
           />
         </div>
       </div>
@@ -95,7 +97,10 @@ export function FilterCategory({
             />
             <FontAwesomeIcon
               icon={faSearch}
-              style={{ color: myTheme.grayTexColor, marginRight: "8px" }}
+              style={{
+                color: "var(--openk9-embeddable-search--secondary-text-color)",
+                marginRight: "8px",
+              }}
             />
           </div>
           {suggestions.data?.pages.map(({ result }, index) => {
@@ -189,6 +194,7 @@ export function FilterCategory({
     </div>
   );
 }
+export const FilterCategoryMemo = React.memo(FilterCategory);
 
 const buttonAsLinkStyle = css`
   color: -webkit-link;
@@ -210,7 +216,7 @@ export function useInfiniteSuggestions(
 ) {
   const ENABLED = true;
   const pageSize = 50;
-  const client = useOpenK9Client()
+  const client = useOpenK9Client();
   return useInfiniteQuery(
     [
       "suggestions",
@@ -265,7 +271,7 @@ export const mapSuggestionToSearchToken = (
         tokenType: "DOCTYPE",
         keywordKey: "type",
         values: [suggestion.value],
-        filter,
+        filter: true,
       };
     }
     case "ENTITY": {

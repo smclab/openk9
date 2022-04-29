@@ -2,7 +2,6 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faKey, faUser } from "@fortawesome/free-solid-svg-icons";
-import { myTheme } from "./myTheme";
 import { useClickAway } from "./useClickAway";
 import { LoginState } from "./useLogin";
 
@@ -11,7 +10,7 @@ type LoginInfoProps = {
   onLogin(username: string, password: string): void;
   onLogout(): void;
 };
-export function LoginInfoComponent({
+function LoginInfoComponent({
   loginState,
   onLogin,
   onLogout,
@@ -73,7 +72,7 @@ export function LoginInfoComponent({
           css={css`
             position: absolute;
             right: 0px;
-            background-color: ${myTheme.backgroundColor1};
+            background-color: var(--openk9-embeddable-search--primary-background-color);
             padding: 8px;
             border-radius: 4px;
             border: 1px solid var(--openk9-embeddable-search--border-color);
@@ -161,6 +160,8 @@ export function LoginInfoComponent({
     </div>
   );
 }
+
+export const LoginInfoComponentMemo = React.memo(LoginInfoComponent);
 
 type InputProps = {
   type: string;

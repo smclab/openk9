@@ -1,6 +1,5 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { myTheme } from "./myTheme";
 
 type TooltipProps = {
   children: React.ReactNode;
@@ -24,7 +23,7 @@ export function Tooltip({ children, description }: TooltipProps) {
             z-index: 1;
             right: 0px;
             padding: 8px 16px;
-            background-color: ${myTheme.backgroundColor2};
+            background-color: var(--openk9-embeddable-search--secondary-background-color);
             width: 200px;
             border: 1px solid var(--openk9-embeddable-search--border-color);
             border-radius: 4px;

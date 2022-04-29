@@ -1,7 +1,6 @@
 import React from "react";
 import { OpenK9 } from "./embeddable/entry";
 import { css } from "styled-components/macro";
-import { myTheme } from "./components/myTheme";
 import { Logo } from "./components/Logo";
 import "./index.css";
 import "./app.css";
@@ -17,7 +16,7 @@ export function App() {
       css={css`
         width: 100vw;
         height: 100vh;
-        background-color: ${myTheme.backgroundColor2};
+        background-color: var(--openk9-embeddable-search--secondary-background-color);
         display: grid;
         grid-column-gap: 16px;
         padding-bottom: 16px;
@@ -78,16 +77,16 @@ export function App() {
           grid-area: dockbar;
           padding: 8px 16px;
           margin: 0px -16px;
-          box-shadow: ${myTheme.separationBoxShadow};
+          box-shadow: 0 1px 2px 0 rgb(0 0 0 / 10%);
           display: flex;
           align-items: center;
-          background-color: ${myTheme.backgroundColor1};
+          background-color: var(--openk9-embeddable-search--primary-background-color);
         `}
       >
         <div
           css={css`
             font-size: 20;
-            color: ${myTheme.dockbarTextColor};
+            color: #1e1c21;
             display: flex;
             align-items: center;
           `}
@@ -122,7 +121,7 @@ export function App() {
         ref={(element) => openk9.updateConfiguration({ filters: element })}
         css={css`
           grid-area: filters;
-          background-color: ${myTheme.backgroundColor1};
+          background-color: var(--openk9-embeddable-search--primary-background-color);
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
@@ -132,7 +131,7 @@ export function App() {
         css={css`
           grid-area: result;
           overflow-y: auto;
-          background-color: ${myTheme.backgroundColor1};
+          background-color: var(--openk9-embeddable-search--primary-background-color);
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
@@ -142,7 +141,7 @@ export function App() {
         css={css`
           grid-area: detail;
           overflow-y: auto;
-          background-color: ${myTheme.backgroundColor1};
+          background-color: var(--openk9-embeddable-search--primary-background-color);
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
         `}

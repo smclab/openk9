@@ -5,17 +5,18 @@ import { useInfiniteResults } from "./remote-data";
 import { ResultMemo } from "./Result";
 import { GenericResultItem, SearchToken } from "@openk9/rest-api";
 import { Logo } from "./Logo";
-import { myTheme } from "./myTheme";
 import { Renderers } from "./useRenderers";
 import { CustomScrollbar } from "./CustomScrollbar";
+
+export type ResultsDisplayMode = { type: "finite" } | { type: "infinite" } | { type: "virtual" }
 
 type ResultsProps<E> = {
   renderers: Renderers;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E>): void;
-  displayMode: { type: "finite" } | { type: "infinite" } | { type: "virtual" };
+  displayMode: ResultsDisplayMode;
 };
-export function Results<E>({
+function Results<E>({
   renderers,
   displayMode,
   onDetail,
@@ -48,6 +49,8 @@ export function Results<E>({
       );
   }
 }
+
+export const ResultsMemo = React.memo(Results)
 
 type ResultCountProps = {
   children: number | undefined;
@@ -230,7 +233,7 @@ function NoResults() {
   return (
     <div
       css={css`
-        color: ${myTheme.grayTexColor};
+        color: var(--openk9-embeddable-search--secondary-text-color);
         display: flex;
         flex-direction: column;
         align-items: center;

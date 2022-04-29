@@ -1,6 +1,5 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { myTheme } from "../components/myTheme";
 
 type BadgeProps = {
   children: React.ReactNode;
@@ -10,7 +9,7 @@ export function Badge({ children }: BadgeProps) {
     <div
       css={css`
         padding: 8px 16px;
-        background-color: ${myTheme.backgroundColor2};
+        background-color: var(--openk9-embeddable-search--secondary-background-color);
         margin-right: 8px;
         border-radius: 4px;
       `}

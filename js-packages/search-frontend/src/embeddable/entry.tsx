@@ -6,6 +6,7 @@ import { OpenK9Client, SearchToken } from "@openk9/rest-api";
 import * as RendererComponents from "../renderer-components";
 import { OpenK9ClientProvider } from "../components/client";
 import { Main, QueryState } from "./Main";
+import { ResultsDisplayMode } from "../components/ResultList";
 
 export const rendererComponents = RendererComponents;
 
@@ -57,11 +58,7 @@ export class OpenK9 {
    *
    * also accepts a function that produces an object with fields to update
    */
-  updateConfiguration = (
-    configuration:
-      | Partial<Configuration>
-      | ((configuration: Configuration) => Partial<Configuration>),
-  ) => {
+  updateConfiguration: ConfigurationUpdateFunction = (configuration) => {
     if (typeof configuration === "function") {
       this.configuration = {
         ...this.configuration,
@@ -161,6 +158,7 @@ export type Configuration = {
   searchReplaceText: boolean;
   filterTokens: Array<SearchToken>;
   defaultTokens: Array<SearchToken>;
+  resultsDisplayMode: ResultsDisplayMode;
 };
 
 const defaultConfiguration: Configuration = {
@@ -176,7 +174,14 @@ const defaultConfiguration: Configuration = {
   searchReplaceText: false,
   filterTokens: [],
   defaultTokens: [],
+  resultsDisplayMode: { type: "virtual" },
 };
+
+export type ConfigurationUpdateFunction = (
+  configuration:
+    | Partial<Configuration>
+    | ((configuration: Configuration) => Partial<Configuration>),
+) => void;
 
 type Events = {
   configurationChange: Configuration;

@@ -4,17 +4,21 @@ import { WebDetail } from "../renderers/openk9/web/WebDetail";
 import { GenericResultItem, SidebarRendererProps } from "@openk9/rest-api";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
-import { Renderers } from "./useRenderers";
+import { Renderers, useRenderers } from "./useRenderers";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
+import { Logo } from "./Logo";
 
 type DetailProps<E> = {
   renderers: Renderers;
-  result: GenericResultItem<E>;
+  result: GenericResultItem<E> | null;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
-  const { renderers } = props;
+  const renderers = useRenderers();
+  if (!result) {
+    return <NoDetail/>;
+  }
   return (
     <OverlayScrollbarsComponent
       style={{
@@ -57,3 +61,22 @@ function Detail<E>(props: DetailProps<E>) {
   );
 }
 export const DetailMemo = React.memo(Detail);
+
+function NoDetail() {
+  return (
+    <div
+      css={css`
+        color: var(--openk9-embeddable-search--secondary-text-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+      `}
+    >
+      <Logo size={128} />
+      <h3>No details</h3>
+      <div>Move the mouse over a result to see details about it</div>
+    </div>
+  );
+}

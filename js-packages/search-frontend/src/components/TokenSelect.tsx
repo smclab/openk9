@@ -1,7 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { AnalysisResponseEntry, AnalysisToken } from "@openk9/rest-api";
-import { myTheme } from "./myTheme";
 import { TokenIcon } from "./TokenIcon";
 
 type TokenSelectProps = {
@@ -35,8 +34,8 @@ export function TokenSelect({
     :hover {
     }
     background-color: ${isHighlighted
-      ? myTheme.backgroundColor2
-      : myTheme.backgroundColor1};
+      ? "var(--openk9-embeddable-search--secondary-background-color)"
+      : "var(--openk9-embeddable-search--primary-background-color)"};
     cursor: pointer;
     border-left: ${isSelected
       ? `8px solid var(--openk9-embeddable-search--active-color)`
@@ -64,7 +63,7 @@ export function TokenSelect({
             top: 100%;
             left: 0px;
             width: 600px;
-            background-color: ${myTheme.backgroundColor1};
+            background-color: var(--openk9-embeddable-search--primary-background-color);
             border: 1px solid var(--openk9-embeddable-search--border-color);
             border-radius: 4px;
             z-index: 1;
