@@ -10,7 +10,7 @@ import { useOpenK9Client } from "./client";
 
 export function useInfiniteResults<E>(searchQuery: Array<SearchToken>) {
   const pageSize = 25;
-  const client = useOpenK9Client()
+  const client = useOpenK9Client();
   return useInfiniteQuery(
     ["results", searchQuery] as const,
     async ({ queryKey: [, searchQuery], pageParam = 0 }) => {
@@ -35,7 +35,7 @@ export function useInfiniteResults<E>(searchQuery: Array<SearchToken>) {
 }
 
 export function useQueryAnalysis(request: AnalysisRequest) {
-  const client = useOpenK9Client()
+  const client = useOpenK9Client();
   return useQuery(
     ["query-anaylis", request] as const,
     async ({ queryKey: [, request] }) =>

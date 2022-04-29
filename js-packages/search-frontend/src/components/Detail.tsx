@@ -4,20 +4,19 @@ import { WebDetail } from "../renderers/openk9/web/WebDetail";
 import { GenericResultItem, SidebarRendererProps } from "@openk9/rest-api";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
-import { Renderers, useRenderers } from "./useRenderers";
+import { useRenderers } from "./useRenderers";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { Logo } from "./Logo";
 
 type DetailProps<E> = {
-  renderers: Renderers;
   result: GenericResultItem<E> | null;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
   const renderers = useRenderers();
   if (!result) {
-    return <NoDetail/>;
+    return <NoDetail />;
   }
   return (
     <OverlayScrollbarsComponent

@@ -25,11 +25,11 @@ import {
   SearchToken,
 } from "@openk9/rest-api";
 import { isEqual } from "lodash";
-import { useRenderers } from "../components/useRenderers";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
 import { TabsMemo, useTabTokens } from "../components/Tabs";
 import { FiltersMemo } from "../components/Filters";
+import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 
 type MainProps = {
   configuration: Configuration;
@@ -182,7 +182,6 @@ export function Main({
   React.useEffect(() => {
     setDetail(null);
   }, [searchQuery]);
-  const renderers = useRenderers();
   return (
     <React.Fragment>
       {renderPortal(
@@ -196,7 +195,10 @@ export function Main({
         >
           <FontAwesomeIcon
             icon={faSearch}
-            style={{ paddingLeft: "16px", color: "--openk9-embeddable-search--secondary-text-color" }}
+            style={{
+              paddingLeft: "16px",
+              color: "--openk9-embeddable-search--secondary-text-color",
+            }}
           />
           <div
             css={css`
@@ -422,17 +424,13 @@ export function Main({
       )}
       {renderPortal(
         <ResultsMemo
-          renderers={renderers}
           displayMode={configuration.resultsDisplayMode}
           searchQuery={searchQuery}
           onDetail={setDetail}
         />,
         configuration.results,
       )}
-      {renderPortal(
-          <DetailMemo renderers={renderers} result={detail} />,
-        configuration.details,
-      )}
+      {renderPortal(<DetailMemo result={detail} />, configuration.details)}
       {renderPortal(
         <LoginInfoComponentMemo
           loginState={login.state}
@@ -453,8 +451,13 @@ function renderPortal(
     typeof container === "string"
       ? document.querySelector(container)
       : container;
-  if (!element) return null;
-  return ReactDOM.createPortal(node, element) as any;
+  return (
+    <SimpleErrorBoundary>
+      <React.Suspense>
+        {element ? (ReactDOM.createPortal(node, element) as any) : null}
+      </React.Suspense>
+    </SimpleErrorBoundary>
+  );
 }
 
 export type QueryState = {

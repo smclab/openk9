@@ -16,7 +16,9 @@ export function App() {
       css={css`
         width: 100vw;
         height: 100vh;
-        background-color: var(--openk9-embeddable-search--secondary-background-color);
+        background-color: var(
+          --openk9-embeddable-search--secondary-background-color
+        );
         display: grid;
         grid-column-gap: 16px;
         padding-bottom: 16px;
@@ -80,7 +82,9 @@ export function App() {
           box-shadow: 0 1px 2px 0 rgb(0 0 0 / 10%);
           display: flex;
           align-items: center;
-          background-color: var(--openk9-embeddable-search--primary-background-color);
+          background-color: var(
+            --openk9-embeddable-search--primary-background-color
+          );
         `}
       >
         <div
@@ -121,7 +125,9 @@ export function App() {
         ref={(element) => openk9.updateConfiguration({ filters: element })}
         css={css`
           grid-area: filters;
-          background-color: var(--openk9-embeddable-search--primary-background-color);
+          background-color: var(
+            --openk9-embeddable-search--primary-background-color
+          );
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
@@ -131,7 +137,9 @@ export function App() {
         css={css`
           grid-area: result;
           overflow-y: auto;
-          background-color: var(--openk9-embeddable-search--primary-background-color);
+          background-color: var(
+            --openk9-embeddable-search--primary-background-color
+          );
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
@@ -141,7 +149,9 @@ export function App() {
         css={css`
           grid-area: detail;
           overflow-y: auto;
-          background-color: var(--openk9-embeddable-search--primary-background-color);
+          background-color: var(
+            --openk9-embeddable-search--primary-background-color
+          );
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
         `}

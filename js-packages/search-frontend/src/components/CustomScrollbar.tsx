@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 
@@ -10,7 +10,7 @@ export const CustomScrollbar = React.forwardRef(
           ref.current = scrollbarsRef.osInstance().getElements().viewport;
         }
       },
-      [ref]
+      [ref],
     );
 
     return (
@@ -23,5 +23,5 @@ export const CustomScrollbar = React.forwardRef(
         {children}
       </OverlayScrollbarsComponent>
     );
-  }
+  },
 );

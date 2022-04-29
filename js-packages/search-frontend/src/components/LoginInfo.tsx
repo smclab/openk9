@@ -10,11 +10,7 @@ type LoginInfoProps = {
   onLogin(username: string, password: string): void;
   onLogout(): void;
 };
-function LoginInfoComponent({
-  loginState,
-  onLogin,
-  onLogout,
-}: LoginInfoProps) {
+function LoginInfoComponent({ loginState, onLogin, onLogout }: LoginInfoProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -72,7 +68,9 @@ function LoginInfoComponent({
           css={css`
             position: absolute;
             right: 0px;
-            background-color: var(--openk9-embeddable-search--primary-background-color);
+            background-color: var(
+              --openk9-embeddable-search--primary-background-color
+            );
             padding: 8px;
             border-radius: 4px;
             border: 1px solid var(--openk9-embeddable-search--border-color);

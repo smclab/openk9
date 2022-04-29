@@ -9,7 +9,9 @@ export function Badge({ children }: BadgeProps) {
     <div
       css={css`
         padding: 8px 16px;
-        background-color: var(--openk9-embeddable-search--secondary-background-color);
+        background-color: var(
+          --openk9-embeddable-search--secondary-background-color
+        );
         margin-right: 8px;
         border-radius: 4px;
       `}

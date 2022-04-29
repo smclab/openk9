@@ -5,23 +5,21 @@ import { useInfiniteResults } from "./remote-data";
 import { ResultMemo } from "./Result";
 import { GenericResultItem, SearchToken } from "@openk9/rest-api";
 import { Logo } from "./Logo";
-import { Renderers } from "./useRenderers";
+import { Renderers, useRenderers } from "./useRenderers";
 import { CustomScrollbar } from "./CustomScrollbar";
 
-export type ResultsDisplayMode = { type: "finite" } | { type: "infinite" } | { type: "virtual" }
+export type ResultsDisplayMode =
+  | { type: "finite" }
+  | { type: "infinite" }
+  | { type: "virtual" };
 
 type ResultsProps<E> = {
-  renderers: Renderers;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E>): void;
   displayMode: ResultsDisplayMode;
 };
-function Results<E>({
-  renderers,
-  displayMode,
-  onDetail,
-  searchQuery,
-}: ResultsProps<E>) {
+function Results<E>({ displayMode, onDetail, searchQuery }: ResultsProps<E>) {
+  const renderers = useRenderers();
   switch (displayMode.type) {
     case "finite":
       return (
@@ -50,7 +48,7 @@ function Results<E>({
   }
 }
 
-export const ResultsMemo = React.memo(Results)
+export const ResultsMemo = React.memo(Results);
 
 type ResultCountProps = {
   children: number | undefined;

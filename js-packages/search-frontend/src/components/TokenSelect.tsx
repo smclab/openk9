@@ -63,7 +63,9 @@ export function TokenSelect({
             top: 100%;
             left: 0px;
             width: 600px;
-            background-color: var(--openk9-embeddable-search--primary-background-color);
+            background-color: var(
+              --openk9-embeddable-search--primary-background-color
+            );
             border: 1px solid var(--openk9-embeddable-search--border-color);
             border-radius: 4px;
             z-index: 1;

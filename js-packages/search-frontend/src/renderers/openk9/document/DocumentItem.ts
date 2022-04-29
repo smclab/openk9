@@ -6,4 +6,4 @@ export type DocumentResultItem = {
     url: string;
     content: string;
   };
-}
+};

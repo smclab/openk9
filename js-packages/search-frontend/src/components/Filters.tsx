@@ -12,7 +12,9 @@ type FiltersProps = {
   onRemoveFilterToken(searchToken: SearchToken): void;
 };
 function Filters({
-  searchQuery, onAddFilterToken, onRemoveFilterToken,
+  searchQuery,
+  onAddFilterToken,
+  onRemoveFilterToken,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   return (
@@ -38,7 +40,8 @@ function Filters({
               suggestionCategoryId={suggestionCategory.suggestionCategoryId}
               tokens={searchQuery}
               onAdd={onAddFilterToken}
-              onRemove={onRemoveFilterToken} />
+              onRemove={onRemoveFilterToken}
+            />
           );
         })}
       </div>

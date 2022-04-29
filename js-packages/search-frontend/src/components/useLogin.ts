@@ -47,9 +47,15 @@ export function useLoginInfo() {
         });
       }
     };
-    client.addEventListener("authenticationStateChange", onAuthenticationStateChange);
+    client.addEventListener(
+      "authenticationStateChange",
+      onAuthenticationStateChange,
+    );
     return () => {
-      client.removeEventListener("authenticationStateChange", onAuthenticationStateChange);
+      client.removeEventListener(
+        "authenticationStateChange",
+        onAuthenticationStateChange,
+      );
     };
   }, [client]);
 

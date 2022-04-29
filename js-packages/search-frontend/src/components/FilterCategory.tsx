@@ -44,7 +44,7 @@ function FilterCategory({
         margin-bottom: 16px;
       `}
     >
-      <div css={css``}>
+      <div>
         <div
           css={css`
             user-select: none;
