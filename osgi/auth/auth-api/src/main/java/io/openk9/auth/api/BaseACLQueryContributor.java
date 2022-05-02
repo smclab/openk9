@@ -21,13 +21,7 @@ public abstract class BaseACLQueryContributor implements ACLQueryContributor {
 
 			String fieldName = "acl." + getPluginName() + ".rolesName.keyword";
 
-			BoolQueryBuilder innerQuery = QueryBuilders.boolQuery();
-
-			for (String role : roles) {
-				innerQuery.should(QueryBuilders.matchQuery(fieldName, role));
-			}
-
-			boolQueryBuilder.must(innerQuery);
+			boolQueryBuilder.should(QueryBuilders.termsQuery(fieldName, roles));
 
 		}
 
