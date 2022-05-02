@@ -146,6 +146,10 @@ export function OpenK9Client({
   }
 
   return {
+    get tenant() {
+      return tenant;
+    },
+
     /**
      * all subsequent calls to all other methods will be authenticated with the loginInfo provided
      *

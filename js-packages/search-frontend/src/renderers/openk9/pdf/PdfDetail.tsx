@@ -12,11 +12,13 @@ import {
   HighlightableText,
 } from "../../../renderer-components";
 import { GenericResultItem } from "@openk9/rest-api";
+import { useOpenK9Client } from "../../../components/client";
 
 type PdfDetailProps = {
   result: GenericResultItem<PdfResultItem>;
 };
 export function PdfDetail({ result }: PdfDetailProps) {
+  const client = useOpenK9Client()
   return (
     <DetailContainer>
       <DetailIconContainer>
@@ -35,7 +37,7 @@ export function PdfDetail({ result }: PdfDetailProps) {
       )}
       <div>
         {result.source.resources.binaries.map((binary) => {
-          const url = `/api/searcher/resources/${result.source.datasourceId}/${result.source.id}/${binary.id}`;
+          const url = `${client.tenant}/api/searcher/resources/${result.source.datasourceId}/${result.source.id}/${binary.id}`;
           return (
             <ViewIfUrlOk key={binary.id} url={url}>
               <iframe
