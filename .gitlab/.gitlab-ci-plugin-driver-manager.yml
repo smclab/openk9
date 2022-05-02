@@ -14,6 +14,7 @@ Build Latest Plugin Driver Manager Docker Images:
       - main
     changes:
       - plugin-driver-manager/configs/*
+      - osgi/auth/auth-api/**/*
       - osgi/auth/auth-enrich/**/*
       - osgi/auth/auth-service/**/*
       - osgi/common/reactory-netty-util/**/*
