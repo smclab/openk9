@@ -140,9 +140,6 @@ function FilterCategory({
                       <label
                         css={css`
                           display: block;
-                          :first-letter {
-                            text-transform: uppercase;
-                          }
                           white-space: nowrap;
                           overflow-x: hidden;
                           text-overflow: ellipsis;

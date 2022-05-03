@@ -601,6 +601,9 @@ export function OpenK9Client({
           "Content-Type": "application/json",
         },
       });
+      if (!response.ok) {
+        throw new Error();
+      }
       const data = await response.json();
       return data;
     },
