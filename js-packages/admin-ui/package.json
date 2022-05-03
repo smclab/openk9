@@ -34,6 +34,7 @@
     "react-dom": "^18.1.0",
     "react-jss": "^10.9.0",
     "swr": "^0.4.1",
+    "use-asset": "^1.0.4",
     "zustand": "^3.7.2"
   },
   "devDependencies": {
