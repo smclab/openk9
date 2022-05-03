@@ -40,7 +40,9 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
 
 // Warning silencer to fix ClayUI dropdown
 const DumbFragment = forwardRef(
-  ({ children }, ref) => (void ref, (<>{children}</>)),
+  ({ children }: { children: React.ReactNode }, ref) => (
+    void ref, (<>{children}</>)
+  ),
 );
 
 export function DataSourceNavBar({

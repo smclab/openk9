@@ -294,8 +294,6 @@ export function EditDataSource<
   onAbort(): void;
   onSave(): void;
 }) {
-  useSWR(`OpenK9`, () => import("@openk9/search-frontend"), { suspense: true });
-
   const { data: pluginInfos } = useSWR(`/api/v1/plugin`, () =>
     client.getPlugins(),
   );

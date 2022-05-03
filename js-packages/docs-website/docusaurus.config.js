@@ -12,11 +12,7 @@ module.exports = {
     colorMode: {
       disableSwitch: true,
     },
-    googleAnalytics: {
-      trackingID: "UA-191444663-1",
-      anonymizeIP: true,
-    },
-    metadatas: [
+    metadata: [
       {
         name: "description",
         content:
@@ -177,10 +173,15 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/smclab/openk9/tree/main/js-packages/docs-website/",
+          editUrl:
+            "https://github.com/smclab/openk9/tree/main/js-packages/docs-website/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
+        },
+        googleAnalytics: {
+          trackingID: "UA-191444663-1",
+          anonymizeIP: true,
         },
       },
     ],

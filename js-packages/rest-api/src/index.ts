@@ -1,4 +1,4 @@
-import type * as React from "react";
+type ReactFC<Props extends Record<string, any>> = (props: Props) => any;
 
 type ClientConfiguration = {
   /**
@@ -902,9 +902,9 @@ export type DataSourcePlugin = {
   type: "DATASOURCE";
   displayName: string;
   driverServiceName: string;
-  iconRenderer?: React.FC<{ size?: number } & any>;
+  iconRenderer?: ReactFC<{ size?: number } & any>;
   initialSettings: string;
-  settingsRenderer?: React.FC<{
+  settingsRenderer?: ReactFC<{
     currentSettings: string;
     setCurrentSettings(a: string): void;
   }>;
@@ -914,9 +914,9 @@ export type EnrichPlugin = {
   type: "ENRICH";
   displayName: string;
   serviceName: string;
-  iconRenderer?: React.FC<{ size?: number } & any>;
+  iconRenderer?: ReactFC<{ size?: number } & any>;
   initialSettings: string;
-  settingsRenderer?: React.FC<{
+  settingsRenderer?: ReactFC<{
     currentSettings: string;
     setCurrentSettings(a: string): void;
   }>;
@@ -924,15 +924,15 @@ export type EnrichPlugin = {
 
 export type SuggestionsPlugin = {
   type: "SUGGESTIONS";
-  renderSuggestionIcons?: React.FC<{ suggestion: SuggestionResult }>;
+  renderSuggestionIcons?: ReactFC<{ suggestion: SuggestionResult }>;
 };
 
 export type ResultRendererPlugin<E> = {
   type: "RESULT_RENDERER";
   priority?: number;
   resultType: string;
-  resultRenderer: React.FC<ResultRendererProps<E>>;
-  sidebarRenderer: React.FC<SidebarRendererProps<E>>;
+  resultRenderer: ReactFC<ResultRendererProps<E>>;
+  sidebarRenderer: ReactFC<SidebarRendererProps<E>>;
 };
 
 export type ResultRendererProps<E> = {
@@ -1022,7 +1022,7 @@ type SuggestionsCategoriesResult = Array<{
 }>;
 
 function getDefaultTenantDomain(tenant: string) {
-  if (!tenant && typeof window !== undefined) {
+  if (!tenant && typeof window !== "undefined") {
     return window.location.hostname;
   }
   try {

@@ -9,7 +9,8 @@ import { CustomVirtualScrollbar } from "./CustomScrollbar";
 import { useOpenK9Client } from "./client";
 import { useInfiniteQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import "overlayscrollbars/css/OverlayScrollbars.css";
+
+const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -113,12 +114,16 @@ export function InfiniteResults<E>({
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery);
   return (
-    <OverlayScrollbarsComponent
+    <OverlayScrollbarsComponentDockerFix
       style={{
         height: "100%",
       }}
     >
-      <div css={css`padding-bottom: 16px;`}>
+      <div
+        css={css`
+          padding-bottom: 16px;
+        `}
+      >
         {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
           <>
             <ResultCount>{results.data?.pages[0].total}</ResultCount>
@@ -156,7 +161,9 @@ export function InfiniteResults<E>({
                   display: block;
                 `}
               >
-                {results.isFetching ? "Loading more results..." : "Load more results"}
+                {results.isFetching
+                  ? "Loading more results..."
+                  : "Load more results"}
               </button>
             )}
           </>
@@ -164,7 +171,7 @@ export function InfiniteResults<E>({
           <NoResults />
         )}
       </div>
-    </OverlayScrollbarsComponent>
+    </OverlayScrollbarsComponentDockerFix>
   );
 }
 
@@ -279,7 +286,7 @@ function useInfiniteResults<E>(searchQuery: Array<SearchToken>) {
         }
       },
       suspense: true,
-      notifyOnChangeProps: ["isFetching"]
+      notifyOnChangeProps: ["isFetching"],
     },
   );
 }

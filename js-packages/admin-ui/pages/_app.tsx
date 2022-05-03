@@ -22,9 +22,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { AppPropsType } from "next/dist/next-server/lib/utils";
 import { useRouter } from "next/router";
-import { ThemeProvider } from "react-jss";
+import { ThemeProvider as ThemeProviderReact18Fix } from "react-jss";
 import { ClayIconSpriteContext } from "@clayui/icon";
 import "@clayui/css/lib/css/atlas.css";
 import "@clayui/css/lib/css/base.css";
@@ -32,6 +31,9 @@ import "../styles.css";
 import { Toasts } from "../components/Toasts";
 import { isServer, useLoginRedirect } from "../state";
 import { defaultTheme } from "../components/theme";
+import useSWR from "swr";
+
+const ThemeProvider = ThemeProviderReact18Fix as any;
 
 const ToastContext = createContext<{
   pushToast(label: string): void;
@@ -57,7 +59,9 @@ export function useToast() {
   return ctxValue;
 }
 
-export default function MyApp({ Component, pageProps }: AppPropsType) {
+export default function MyApp({ Component, pageProps }: any) {
+  useSWR("@openk9/search-frontend", () => import("@openk9/search-frontend"));
+
   useEffect(() => {
     const style = document.getElementById("server-side-styles");
     if (style && style.parentNode) {

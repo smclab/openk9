@@ -19,11 +19,11 @@ import React from "react";
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import ClayIcon from "@clayui/icon";
-import { ParentSize } from "@vx/responsive";
+import { ParentSize as ParentSizeReact18Fix } from "@vx/responsive";
 import {
-  DragDropContext,
-  Droppable,
-  Draggable,
+  DragDropContext as DragDropContextReact18Fix,
+  Droppable as DroppableReact18Fix,
+  Draggable as DraggableReact18Fix,
   DropResult,
   DraggableProvided,
 } from "react-beautiful-dnd";
@@ -32,6 +32,11 @@ import { mutate } from "swr";
 import { client } from "./client";
 import { ThemeType } from "./theme";
 import { pluginLoader } from "./pluginLoader";
+
+const DragDropContext = DragDropContextReact18Fix as any;
+const Droppable = DroppableReact18Fix as any;
+const Draggable = DraggableReact18Fix as any;
+const ParentSize = ParentSizeReact18Fix as any;
 
 export const useStyles = createUseStyles((theme: ThemeType) => ({
   enrichStack: {
@@ -212,7 +217,7 @@ export function EnrichPipelineReorderStack({
         <div className={classes.reorderColumn}>
           <DragDropContext onDragEnd={dragEnd}>
             <Droppable droppableId="droppable">
-              {(droppableProvided) => (
+              {(droppableProvided: any) => (
                 <div ref={droppableProvided.innerRef}>
                   <div
                     className={clsx(
@@ -231,7 +236,7 @@ export function EnrichPipelineReorderStack({
                         draggableId={item.enrichItemId.toString()}
                         index={index}
                       >
-                        {(draggableProvided) => (
+                        {(draggableProvided: any) => (
                           <EnrichItemBlock
                             item={item}
                             selected={item.enrichItemId == selectedEnrichId}
@@ -279,7 +284,7 @@ export function EnrichPipelineReorderStack({
 
         <div className={classes.stackVertArrow} key={dsEnrichItems.length}>
           <ParentSize>
-            {({ width, height }) => (
+            {({ width, height }: any) => (
               <svg width={width} height={height}>
                 <defs>
                   <marker

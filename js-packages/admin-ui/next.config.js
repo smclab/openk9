@@ -15,15 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const withTM = require("next-transpile-modules")([
-  "@openk9/search-ui-components",
-  "@openk9/rest-api",
-]);
-
 const isProd = process.env.NODE_ENV === "production";
 
 module.exports = {
-  ...withTM(),
   basePath:
     typeof process.env.BASE_PATH == "string" ? process.env.BASE_PATH : "/admin",
   assetPrefix: isProd ? process.env.BASE_PATH_ASSETS : "",

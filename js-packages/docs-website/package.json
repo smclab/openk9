@@ -12,19 +12,19 @@
     "clear": "docusaurus clear"
   },
   "dependencies": {
-    "@docusaurus/core": "2.0.0-alpha.73",
-    "@docusaurus/plugin-google-analytics": "^2.0.0-alpha.73",
-    "@docusaurus/plugin-sitemap": "^2.0.0-alpha.73",
-    "@docusaurus/preset-classic": "2.0.0-alpha.73",
+    "@docusaurus/core": "2.0.0-beta.18",
+    "@docusaurus/plugin-google-analytics": "^2.0.0-beta.18",
+    "@docusaurus/plugin-sitemap": "^2.0.0-beta.18",
+    "@docusaurus/preset-classic": "2.0.0-beta.18",
     "@mdx-js/react": "^1.6.21",
     "@react-spring/core": "^9.0.0",
     "@react-spring/three": "^9.0.0",
     "@react-three/drei": "^4.3.2",
     "@react-three/fiber": "^6.0.16",
     "clsx": "^1.1.1",
-    "react": "^17.0.0",
+    "react": "^18.1.0",
     "react-cookie-consent": "^6.2.3",
-    "react-dom": "^17.0.0",
+    "react-dom": "^18.1.0",
     "three": "^0.126.1"
   },
   "browserslist": {

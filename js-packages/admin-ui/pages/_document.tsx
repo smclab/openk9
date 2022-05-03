@@ -15,17 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import Document, { DocumentContext } from "next/document";
+import Document, { DocumentContext, DocumentInitialProps } from "next/document";
 import { SheetsRegistry, JssProvider, createGenerateId } from "react-jss";
 
 export default class JssDocument extends Document {
-  static async getInitialProps(ctx: DocumentContext) {
+  static async getInitialProps(
+    ctx: DocumentContext,
+  ): Promise<DocumentInitialProps> {
     const registry = new SheetsRegistry();
     const generateId = createGenerateId();
     const originalRenderPage = ctx.renderPage;
     ctx.renderPage = () =>
       originalRenderPage({
-        enhanceApp: (App) => (props) =>
+        enhanceApp: (App: any) => (props) =>
           (
             <JssProvider registry={registry} generateId={generateId}>
               <App {...props} />
@@ -42,7 +44,7 @@ export default class JssDocument extends Document {
           {initialProps.styles}
           <style id="server-side-styles">{registry.toString()}</style>
         </>
-      ),
+      ) as any,
     };
   }
 }

@@ -16,7 +16,6 @@
  */
 
 import React, { Suspense, useState } from "react";
-import dynamic from "next/dynamic";
 import { createUseStyles } from "react-jss";
 import clsx from "clsx";
 import { useRouter } from "next/router";
@@ -30,13 +29,7 @@ import { JSONView } from "../../../components/JSONView";
 import { client } from "../../../components/client";
 import { ThemeType } from "../../../components/theme";
 import { firstOrString } from "../../../components/utils";
-
-const DefaultSettingsEditor = dynamic(
-  () => import("./../../../components/DefaultSettingsEditor"),
-  {
-    ssr: false,
-  },
-);
+import DefaultSettingsEditor from "../../../components/DefaultSettingsEditor";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {

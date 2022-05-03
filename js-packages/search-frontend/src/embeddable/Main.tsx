@@ -20,7 +20,6 @@ import {
   SearchToken,
 } from "@openk9/rest-api";
 import { isEqual } from "lodash";
-import "overlayscrollbars/css/OverlayScrollbars.css";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
 import { TabsMemo, useTabTokens } from "../components/Tabs";
 import { FiltersMemo } from "../components/Filters";
