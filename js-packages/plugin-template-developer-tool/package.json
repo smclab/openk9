@@ -1,0 +1,79 @@
+{
+  "name": "@openk9/plugin-template-developer-tool",
+  "version": "0.1.1",
+  "author": "SMC",
+  "description": "OpenK9 search UI plugin template developer tool",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "cli.js"
+  ],
+  "bin": {
+    "openk9-plugin-template-developer-tool": "./cli.js"
+  },
+  "keywords": [
+    "search",
+    "ui",
+    "widget",
+    "openk9",
+    "tempalte",
+    "plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smclab/openk9.git",
+    "directory": "js-packages/plugin-template-developer-tool"
+  },
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/smclab/openk9/issues"
+  },
+  "homepage": "https://openk9.io/",
+  "scripts": {
+    "build": "webpack && rollup -c && cp public/* dist/"
+  },
+  "dependencies": {
+    "@babel/core": "^7.15.8",
+    "@babel/plugin-transform-runtime": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
+    "@babel/preset-react": "^7.16.0",
+    "@babel/preset-typescript": "^7.16.0",
+    "@babel/runtime": "^7.16.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
+    "@types/react": "^18.0.3",
+    "@types/react-dom": "^18.0.3",
+    "@types/styled-components": "^5.1.14",
+    "@typescript-eslint/eslint-plugin": "^4.8.2",
+    "@typescript-eslint/parser": "^4.8.2",
+    "babel-loader": "^8.2.2",
+    "babel-plugin-macros": "^3.1.0",
+    "babel-plugin-styled-components": "^1.13.2",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.3.0",
+    "eslint": "^7.11.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-config-react-app": "^6.0.0",
+    "eslint-import-resolver-node": "^0.3.4",
+    "eslint-plugin-prettier": "^3.1.4",
+    "lint-staged": "^12.1.2",
+    "prettier": "^2.5.1",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-refresh": "^0.11.0",
+    "rollup": "^2.61.1",
+    "rollup-plugin-dts": "^4.2.1",
+    "style-loader": "^3.3.0",
+    "styled-components": "^5.3.5",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.6.4",
+    "webpack": "^5.57.0",
+    "webpack-dev-server": "^4.8.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "targets": {
+    "main": false
+  }
+}
