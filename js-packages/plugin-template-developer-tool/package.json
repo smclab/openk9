@@ -1,6 +1,6 @@
 {
   "name": "@openk9/plugin-template-developer-tool",
-  "version": "0.1.1",
+  "version": "0.0.0",
   "author": "SMC",
   "description": "OpenK9 search UI plugin template developer tool",
   "main": "dist/index.js",
