@@ -1,6 +1,6 @@
 {
   "name": "@openk9/applications-datasource",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "author": "SMC",
   "description": "OpenK9 Applications Data Source Frontend Module",

@@ -1,6 +1,6 @@
 {
   "name": "@openk9/web-sitemap-datasource",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "author": "SMC",
   "description": "OpenK9 Sitemap Generic Data Source Frontend Module",
