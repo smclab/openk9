@@ -18,7 +18,7 @@ type PdfDetailProps = {
   result: GenericResultItem<PdfResultItem>;
 };
 export function PdfDetail({ result }: PdfDetailProps) {
-  const client = useOpenK9Client()
+  const client = useOpenK9Client();
   return (
     <DetailContainer>
       <DetailIconContainer>

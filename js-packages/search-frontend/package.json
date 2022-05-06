@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "author": "SMC",
   "description": "OpenK9 search UI customizable widget",
-  "main": "dist/embeddable.js",
+  "main": "dist/importable.js",
   "typings": "dist/embeddable.d.ts",
   "files": [
     "dist"
@@ -25,9 +25,12 @@
   },
   "homepage": "https://openk9.io/",
   "scripts": {
-    "dev": "webpack serve",
-    "build": "webpack && rollup -c && cp public/* dist/",
-    "test-build": "yarn build && node build-test/server.js",
+    "dev": "webpack serve --config ./webpack/standalone.dev.js",
+    "build": "yarn build:standalone && yarn build:embeddable && yarn build:importable",
+    "build:standalone": "webpack --config ./webpack/standalone.prod.js && cp public/* dist/",
+    "build:embeddable": "webpack --config ./webpack/embeddable.prod.js",
+    "build:importable": "webpack --config ./webpack/importable.dev.js && rollup -c",
+    "build:embeddable:dev": "webpack --config ./webpack/embeddable.dev.js",
     "lint": "eslint --ext js,ts,tsx src",
     "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
     "precommit": "lint-staged",
@@ -35,6 +38,10 @@
   },
   "targets": {
     "main": false
+  },
+  "peerDepenedecnies": {
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.15.8",

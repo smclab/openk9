@@ -247,7 +247,7 @@ export function useInfiniteSuggestions(
         if (pages[pages.length - 1].result.length < pageSize) return undefined;
         return lastPage.afterKey;
       },
-      suspense: true
+      suspense: true,
     },
   );
 }

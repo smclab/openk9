@@ -1,5 +1,9 @@
+const fs = require("fs")
 const path = require("path");
 const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
+
+const appDirectory = fs.realpathSync(process.cwd());
+const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
 module.exports = ({ proxyTarget }) => ({
   mode: "development",
@@ -44,6 +48,7 @@ module.exports = ({ proxyTarget }) => ({
   plugins: [new ReactRefreshWebpackPlugin()],
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
+    modules: [resolveApp('node_modules'), "node_modules"]
   },
   devServer: {
     hot: true,

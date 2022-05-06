@@ -1,15 +1,13 @@
-const path = require("path");
-const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
+// builds a script without react inside for use with import "@openk9/search-frontend"
 
-const isProd = process.env.NODE_ENV === "production";
+const path = require("path");
 
 module.exports = {
-  mode: isProd ? "production" : "development",
+  mode: "development",
   entry: {
-    index: "./src/index.tsx",
-    embeddable: "./src/embeddable/entry.tsx",
+    importable: "./src/embeddable/entry.tsx",
   },
-  devtool: isProd ? "source-map" : "inline-source-map",
+  devtool: "source-map",
   module: {
     rules: [
       {
@@ -20,14 +18,13 @@ module.exports = {
           options: {
             plugins: [
               "macros",
-              isProd ? null : require("react-refresh/babel"),
               [
                 "@babel/plugin-transform-runtime",
                 {
                   regenerator: true,
                 },
               ],
-            ].filter(Boolean),
+            ],
             presets: ["@babel/preset-env", "@babel/react", "@babel/typescript"],
           },
         },
@@ -42,28 +39,26 @@ module.exports = {
       },
     ],
   },
-  plugins: isProd ? [] : [new ReactRefreshWebpackPlugin()],
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
   },
+  externals: {
+    react: {
+      commonjs: "react",
+      commonjs2: "react",
+      amd: "React",
+      root: "React",
+    },
+    "react-dom": {
+      commonjs: "react-dom",
+      commonjs2: "react-dom",
+      amd: "ReactDOM",
+      root: "ReactDOM",
+    },
+  },
   output: {
-    path: path.resolve(__dirname, "dist"),
+    path: path.resolve(__dirname, "../dist"),
     filename: "[name].js",
     libraryTarget: "umd",
-  },
-  devServer: {
-    hot: true,
-    historyApiFallback: true,
-    static: {
-      directory: path.join(__dirname, "public"),
-      watch: true,
-    },
-    proxy: {
-      "/api": {
-        target: "https://dev.openk9.io",
-        changeOrigin: true,
-        secure: false,
-      },
-    },
   },
 };

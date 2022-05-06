@@ -17,6 +17,6 @@
     "jsx": "react",
     "sourceMap": true
   },
-  "include": ["src", "cli.js"],
+  "include": ["src"],
   "exclude": ["**/*.test.ts"]
 }

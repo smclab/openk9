@@ -36,7 +36,7 @@ export function Search({
   selectionsState,
   selectionsDispatch,
   onDetail,
-  showSyntax
+  showSyntax,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;

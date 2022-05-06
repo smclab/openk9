@@ -52,10 +52,14 @@ export const FiltersMemo = React.memo(Filters);
 
 function useSuggestionCategories() {
   const client = useOpenK9Client();
-  return useQuery(["suggestion-categories"], async ({ queryKey }) => {
-    const result = await client.getSuggestionCategories();
-    return result;
-  }, {
-    suspense: true
-  });
+  return useQuery(
+    ["suggestion-categories"],
+    async ({ queryKey }) => {
+      const result = await client.getSuggestionCategories();
+      return result;
+    },
+    {
+      suspense: true,
+    },
+  );
 }
