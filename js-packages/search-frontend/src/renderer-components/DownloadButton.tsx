@@ -15,6 +15,7 @@ export function DownloadButton({
     <button
       onClick={() => window.open(location)}
       css={css`
+        width: 100%;
         color: inherit;
         :hover {
           color: var(--openk9-embeddable-search--primary-color);
