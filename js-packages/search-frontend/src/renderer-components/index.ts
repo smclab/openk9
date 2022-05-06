@@ -16,4 +16,5 @@ export * from "./ResultFavicon";
 export * from "./ResultLink";
 export * from "./ResultTextContent";
 export * from "./ResultTitle";
+export * from "./DownloadButton";
 export * from "./truncatedLineStyle";

@@ -22,5 +22,14 @@ switch (command) {
     console.log(
       "dev - start a webpack development server using ./src/template-examples.tsx as entry",
     );
+    console.log(
+      "    optionally an url where to proxy api calls can be provided",
+    );
+    console.log(
+      "    ex: openk9-plugin-template-developer-tool dev https://mysubdomain.openk9.io",
+    );
+    console.log(
+      "    by default all api calls are redirected to https://dev.openk9.io",
+    );
   }
 }
