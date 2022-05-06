@@ -31,7 +31,7 @@ import {
   UserInfo,
   doLoginRefresh,
   getUserInfo,
-  getTentantWithConfiguration,
+  getTenantWithConfiguration,
   SuggestionResult,
   ALL_SUGGESTION_CATEGORY_ID,
   GenericResultItem,
@@ -97,7 +97,7 @@ export const useStore = create<StateType>(
 
     async loadInitial() {
       const pluginInfos = await getPlugins(null);
-      const { config: tenantConfig } = await getTentantWithConfiguration(null);
+      const { config: tenantConfig } = await getTenantWithConfiguration(null);
       set((state) => ({
         ...state,
         pluginInfos,

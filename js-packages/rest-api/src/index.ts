@@ -641,7 +641,7 @@ export function OpenK9Client({
       return response;
     },
 
-    async getTentantWithConfiguration() {
+    async getTenantWithConfiguration() {
       const tenants = await this.getTenants();
       const tenant =
         tenants.find((tenant) => tenant.virtualHost === tenantDomain) ||

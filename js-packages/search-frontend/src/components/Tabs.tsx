@@ -73,7 +73,7 @@ export function useTabTokens(): Array<Tab> {
   const tenantConfiguration = useQuery(
     ["tenant-configuration"] as const,
     ({ queryKey }) => {
-      return client.getTentantWithConfiguration();
+      return client.getTenantWithConfiguration();
     },
   );
   const tabTokens = React.useMemo(() => {

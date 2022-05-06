@@ -1,5 +1,5 @@
 import {
-  getTentantWithConfiguration,
+  getTenantWithConfiguration,
   LoginInfo,
   SearchToken,
 } from "@openk9/rest-api";
@@ -11,7 +11,7 @@ export function useTabTokens(
   const tenantConfiguration = useQuery(
     ["tenant-configuration"] as const,
     ({ queryKey }) => {
-      return getTentantWithConfiguration(loginInfo);
+      return getTenantWithConfiguration(loginInfo);
     },
   );
   if (tenantConfiguration.data?.config.querySourceBarShortcuts) {

@@ -17,6 +17,8 @@ const element = document.getElementById("root") as HTMLElement;
 const root = ReactDOMClient.createRoot(element);
 root.render(<App />);
 
+// TODO import App from @openk9/search-frontend instead oh having duplicated copy here
+
 function App() {
   return (
     <div
