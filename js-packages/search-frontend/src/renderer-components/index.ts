@@ -17,4 +17,5 @@ export * from "./ResultLink";
 export * from "./ResultTextContent";
 export * from "./ResultTitle";
 export * from "./DownloadButton";
+export * from "./ImagesViewer";
 export * from "./truncatedLineStyle";
