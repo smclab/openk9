@@ -226,6 +226,8 @@ export function OpenK9Client({
       listeners[event].delete(listener as any);
     },
 
+    debugPluginsOverride: undefined as undefined | Array<Plugin<unknown>>,
+
     async doSearch<E>(searchRequest: SearchRequest): Promise<SearchResult<E>> {
       const response = await authFetch(`/api/searcher/v1/search`, {
         method: "POST",

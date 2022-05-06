@@ -20,32 +20,9 @@ export function useRenderers() {
           ),
         )
       ).filter((plugin) => plugin !== null) as Plugin<unknown>[];
-      const resultRendererPluginServices = plugins
-        ?.flatMap((p) => p.pluginServices)
-        .filter(
-          (ps) => ps.type === "RESULT_RENDERER",
-        ) as ResultRendererPlugin<unknown>[];
-      const resultTypes = [
-        ...new Set(resultRendererPluginServices.map((ps) => ps.resultType)),
-      ];
-      const byPriority = resultTypes.map((type) => {
-        return [
-          type,
-          resultRendererPluginServices
-            .filter((ps) => ps.resultType === type)
-            .sort((a, b) => (a.priority || -1) - (b.priority || -1))[0],
-        ] as const;
-      });
-      const resultRenderers = Object.fromEntries(
-        byPriority.map(([type, { resultRenderer }]) => [type, resultRenderer]),
-      );
-      const sidebarRenderers = Object.fromEntries(
-        byPriority.map(([type, { sidebarRenderer }]) => [
-          type,
-          sidebarRenderer,
-        ]),
-      );
-      return { resultRenderers, sidebarRenderers };
+      if (client.debugPluginsOverride)
+        return getRenderersFromPlugins(client.debugPluginsOverride);
+      return getRenderersFromPlugins(plugins);
     },
     { suspense: true },
   );
@@ -53,3 +30,29 @@ export function useRenderers() {
 }
 
 export type Renderers = ReturnType<typeof useRenderers>; // TODO explicit type
+
+function getRenderersFromPlugins(plugins: Plugin<unknown>[]) {
+  const resultRendererPluginServices = plugins
+    ?.flatMap((p) => p.pluginServices)
+    .filter(
+      (ps) => ps.type === "RESULT_RENDERER",
+    ) as ResultRendererPlugin<unknown>[];
+  const resultTypes = [
+    ...new Set(resultRendererPluginServices.map((ps) => ps.resultType)),
+  ];
+  const byPriority = resultTypes.map((type) => {
+    return [
+      type,
+      resultRendererPluginServices
+        .filter((ps) => ps.resultType === type)
+        .sort((a, b) => (a.priority || -1) - (b.priority || -1))[0],
+    ] as const;
+  });
+  const resultRenderers = Object.fromEntries(
+    byPriority.map(([type, { resultRenderer }]) => [type, resultRenderer]),
+  );
+  const sidebarRenderers = Object.fromEntries(
+    byPriority.map(([type, { sidebarRenderer }]) => [type, sidebarRenderer]),
+  );
+  return { resultRenderers, sidebarRenderers };
+}
