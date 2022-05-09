@@ -19,7 +19,6 @@ package io.openk9.search.client.writer.index;
 
 import io.openk9.search.client.api.DocWriteRequestFactory;
 import io.openk9.search.client.api.IndexBus;
-
 import io.openk9.search.client.writer.ElasticSearchIndexer;
 import org.elasticsearch.action.DocWriteRequest;
 import org.osgi.service.component.annotations.Component;

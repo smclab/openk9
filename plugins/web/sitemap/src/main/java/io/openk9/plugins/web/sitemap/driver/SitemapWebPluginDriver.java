@@ -17,10 +17,10 @@
 
 package io.openk9.plugins.web.sitemap.driver;
 
-import io.openk9.json.api.JsonFactory;
 import io.openk9.http.client.HttpClient;
 import io.openk9.http.client.HttpClientFactory;
 import io.openk9.http.web.HttpHandler;
+import io.openk9.json.api.JsonFactory;
 import io.openk9.plugin.driver.manager.api.BasePluginDriver;
 import io.openk9.plugin.driver.manager.api.PluginDriver;
 import org.osgi.service.component.annotations.Activate;

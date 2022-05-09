@@ -19,8 +19,8 @@ package io.openk9.plugin.internal;
 
 import io.openk9.osgi.util.AutoCloseables;
 import io.openk9.plugin.api.BundleInfo;
-import io.openk9.plugin.api.PluginInfo;
 import io.openk9.plugin.api.Constants;
+import io.openk9.plugin.api.PluginInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.ServiceRegistration;

@@ -17,10 +17,10 @@
 
 package io.openk9.ingestion.rabbitmq.factory;
 
-import io.openk9.ingestion.rabbitmq.wrapper.BasicPropertiesWrapper;
 import com.rabbitmq.client.AMQP;
 import io.openk9.ingestion.api.BasicProperties;
 import io.openk9.ingestion.api.BasicPropertiesFactory;
+import io.openk9.ingestion.rabbitmq.wrapper.BasicPropertiesWrapper;
 import org.osgi.service.component.annotations.Component;
 
 import java.util.Objects;
