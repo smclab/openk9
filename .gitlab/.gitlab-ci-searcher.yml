@@ -12,6 +12,7 @@ Build Latest Searcher Docker Images:
   only:
     refs:
       - main
+      - tags
     changes:
       - searcher/configs/*
       - osgi/common/reactory-netty-util/**/*

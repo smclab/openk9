@@ -1,5 +1,4 @@
 stages:
-  - debug
   - quality
   - build
   - test
@@ -46,24 +45,6 @@ sonarqube-check:
     - main
   except:
     - schedules
-
-print-all-env-vars-job:
-  stage: debug
-  only:
-    - release-ci-update
-  script:
-    - echo "GitLab CI/CD | Print all environment variables"
-    - env
-
-trigger_deploy:
-  image: curlimages/curl
-  stage: deploy
-  only:
-    - release-ci-update
-  before_script:
-    - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
-    - curl -X POST -F token=$STAGING_TOKEN -F "variables[TRIGGER_JOB]=deploy-demo" -F ref=master $STAGING_TRIGGER_URL
 
 
 push-github:

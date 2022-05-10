@@ -12,6 +12,7 @@ Build Latest Index Writer Docker Images:
   only:
     refs:
       - main
+      - tags
     changes:
       - index-writer/configs/*
       - osgi/index-writer/**/*

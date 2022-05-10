@@ -12,6 +12,7 @@ Build Latest Plugin Driver Manager Docker Images:
   only:
     refs:
       - main
+      - tags
     changes:
       - plugin-driver-manager/configs/*
       - osgi/auth/auth-api/**/*

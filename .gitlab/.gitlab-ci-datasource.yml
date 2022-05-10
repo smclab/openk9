@@ -12,6 +12,7 @@ Build Latest Datasource Docker Images:
   only:
     refs:
       - main
+      - tags
     changes:
       - quarkus/resources-common/**/*
       - quarkus/datasource/**/*
