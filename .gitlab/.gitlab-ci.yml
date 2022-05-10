@@ -50,7 +50,7 @@ sonarqube-check:
 print-all-env-vars-job:
   stage: debug
   only:
-    - tags
+    - release-ci-update
   script:
     - echo "GitLab CI/CD | Print all environment variables"
     - env
