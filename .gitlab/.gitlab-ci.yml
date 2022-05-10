@@ -1,4 +1,5 @@
 stages:
+  - debug
   - quality
   - build
   - test
@@ -45,6 +46,14 @@ sonarqube-check:
     - main
   except:
     - schedules
+
+print-all-env-vars-job:
+  stage: debug
+  only:
+    - tags
+  script:
+    - echo "GitLab CI/CD | Print all environment variables"
+    - env
 
 trigger_deploy:
   image: curlimages/curl
