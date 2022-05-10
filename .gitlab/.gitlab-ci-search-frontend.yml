@@ -37,7 +37,7 @@ Build Tagged Frontend Docker Image:
     DOCKER_TLS_CERTDIR: ""
   only:
     refs:
-      - main
+      - tags
     changes:
       - js-packages/rest-api/**/*
       - js-packages/search-ui-components/**/*
