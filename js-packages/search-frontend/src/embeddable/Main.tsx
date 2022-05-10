@@ -21,7 +21,7 @@ import {
 } from "@openk9/rest-api";
 import { isEqual } from "lodash";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
-import { TabsMemo, useTabTokens } from "../components/Tabs";
+import { Tab, TabsMemo, useTenantTabTokens } from "../components/Tabs";
 import { FiltersMemo } from "../components/Filters";
 import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 import { Search } from "../components/Search";
@@ -38,7 +38,9 @@ export function Main({
   onConfigurationChange,
   onQueryStateChange,
 }: MainProps) {
-  const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs();
+  const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
+    configuration.overrideTabs,
+  );
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
     configuration,
     onConfigurationChange,
@@ -202,12 +204,16 @@ function useSearch({
   };
 }
 
-function useTabs() {
+function useTabs(overrideTabs: (tabs: Array<Tab>) => Array<Tab>) {
   const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
-  const tabs = useTabTokens();
+  const tenantTabs = useTenantTabTokens();
+  const tabs = React.useMemo(
+    () => overrideTabs(tenantTabs),
+    [tenantTabs, overrideTabs],
+  );
   const tabTokens = React.useMemo(
-    () => tabs[selectedTabIndex]?.tokens ?? [],
-    [selectedTabIndex, tabs],
+    () => tenantTabs[selectedTabIndex]?.tokens ?? [],
+    [selectedTabIndex, tenantTabs],
   );
   return { tabTokens, tabs, selectedTabIndex, setSelectedTabIndex };
 }

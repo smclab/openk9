@@ -7,6 +7,7 @@ import * as RendererComponents from "../renderer-components";
 import { OpenK9ClientContext } from "../components/client";
 import { Main, QueryState } from "./Main";
 import { ResultsDisplayMode } from "../components/ResultList";
+import { Tab } from "../components/Tabs";
 
 export const rendererComponents = RendererComponents;
 
@@ -162,6 +163,7 @@ export type Configuration = {
   filterTokens: Array<SearchToken>;
   defaultTokens: Array<SearchToken>;
   resultsDisplayMode: ResultsDisplayMode;
+  overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
 };
 
 const defaultConfiguration: Configuration = {
@@ -178,6 +180,7 @@ const defaultConfiguration: Configuration = {
   filterTokens: [],
   defaultTokens: [],
   resultsDisplayMode: { type: "infinite" },
+  overrideTabs: (tabs) => tabs,
 };
 
 export type ConfigurationUpdateFunction = (

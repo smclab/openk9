@@ -66,9 +66,9 @@ function Tabs({
 }
 export const TabsMemo = React.memo(Tabs);
 
-type Tab = { label: string; tokens: Array<SearchToken> };
+export type Tab = { label: string; tokens: Array<SearchToken> };
 
-export function useTabTokens(): Array<Tab> {
+export function useTenantTabTokens(): Array<Tab> {
   const client = useOpenK9Client();
   const tenantConfiguration = useQuery(
     ["tenant-configuration"] as const,
