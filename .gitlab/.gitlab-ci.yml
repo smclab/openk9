@@ -59,7 +59,6 @@ trigger_deploy:
   image: curlimages/curl
   stage: deploy
   only:
-    - tags
     - $CURRENT_RELEASE_BRANCH
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
