@@ -56,7 +56,6 @@
 		<connection>${scm.connection}</connection>
 		<developerConnection>${scm.developerConnection}</developerConnection>
 		<url>${scm.url}</url>
-		<tag>v0.0.2</tag>
 	</scm>
 
 	<developers>
