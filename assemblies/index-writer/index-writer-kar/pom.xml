@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>io.openk9.assemblies.index-writer</groupId>
 		<artifactId>index-writer</artifactId>
-		<version>0.0.4-SNAPSHOT</version>
+		<version>1.0.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -584,6 +584,6 @@
 
 
   <scm>
-    <tag>v0.0.2</tag>
+    <tag>v1.0.0</tag>
   </scm>
 </project>
