@@ -56,8 +56,7 @@
 		<connection>${scm.connection}</connection>
 		<developerConnection>${scm.developerConnection}</developerConnection>
 		<url>${scm.url}</url>
-	  <tag>HEAD</tag>
-  </scm>
+	</scm>
 
 	<developers>
 		<developer>
@@ -245,24 +244,11 @@
 			</modules>
 		</profile>
 		<profile>
-			<id>releases-kar</id>
-			<modules>
-				<module>bom</module>
-				<module>osgi</module>
-				<module>quarkus</module>
-				<module>plugins</module>
-				<module>assemblies/index-writer/index-writer-kar</module>
-				<module>assemblies/searcher/searcher-kar</module>
-				<module>assemblies/plugin-driver-manager/plugin-driver-manager-kar</module>
-			</modules>
-		</profile>
-		<profile>
 			<id>releases</id>
 			<modules>
 				<module>bom</module>
 				<module>osgi</module>
 				<module>quarkus</module>
-				<module>plugins</module>
 				<module>assemblies</module>
 			</modules>
 		</profile>
