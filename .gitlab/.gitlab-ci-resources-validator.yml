@@ -44,4 +44,4 @@ trigger_deploy_resources_validator:
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
-    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-resources-validator" -F ref=master $DEV_TRIGGER_URL
+    - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-resources-validator" -F ref=master $DEPLOY_TRIGGER_URL
