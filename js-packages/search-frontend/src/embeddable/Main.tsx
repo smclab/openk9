@@ -212,8 +212,8 @@ function useTabs(overrideTabs: (tabs: Array<Tab>) => Array<Tab>) {
     [tenantTabs, overrideTabs],
   );
   const tabTokens = React.useMemo(
-    () => tenantTabs[selectedTabIndex]?.tokens ?? [],
-    [selectedTabIndex, tenantTabs],
+    () => tabs[selectedTabIndex]?.tokens ?? [],
+    [selectedTabIndex, tabs],
   );
   return { tabTokens, tabs, selectedTabIndex, setSelectedTabIndex };
 }
