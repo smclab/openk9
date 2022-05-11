@@ -249,7 +249,9 @@
 				<module>bom</module>
 				<module>osgi</module>
 				<module>quarkus</module>
-				<module>assemblies</module>
+				<module>assemblies/index-writer/index-writer-kar</module>
+				<module>assemblies/searcher/searcher-kar</module>
+				<module>assemblies/plugin-driver-manager/plugin-driver-manager-kar</module>
 			</modules>
 		</profile>
 		<profile>
