@@ -37,6 +37,15 @@
 	</modules>
 
 
+	<profiles>
+		<profile>
+			<id>releases</id>
+			<modules>
+				<module>searcher-kar</module>
+			</modules>
+		</profile>
+	</profiles>
+
   <scm>
     <tag>v0.0.2</tag>
   </scm>

@@ -36,8 +36,14 @@
 		<module>plugin-driver-manager-kar</module>
 	</modules>
 
-
-
+	<profiles>
+		<profile>
+			<id>releases</id>
+			<modules>
+				<module>plugin-driver-manager-kar</module>
+			</modules>
+		</profile>
+	</profiles>
 
   <scm>
     <tag>v0.0.2</tag>
