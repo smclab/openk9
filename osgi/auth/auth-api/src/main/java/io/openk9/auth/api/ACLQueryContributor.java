@@ -28,6 +28,10 @@ public interface ACLQueryContributor extends BiConsumer<UserInfo, BoolQueryBuild
 		return this.getClass().getName();
 	}
 
+	default String fieldName() {
+		return "rolesName.keyword";
+	}
+
 	default ACLQueryContributor andThen(ACLQueryContributor after) {
 		Objects.requireNonNull(after);
 
