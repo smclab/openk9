@@ -36,7 +36,7 @@ public abstract class BaseACLQueryContributor implements ACLQueryContributor {
 
 		if (!roles.isEmpty()) {
 
-			String fieldName = "acl." + getPluginName() + ".rolesName.keyword";
+			String fieldName = "acl." + getPluginName() + "." + fieldName();
 
 			boolQueryBuilder.should(QueryBuilders.termsQuery(fieldName, roles));
 
