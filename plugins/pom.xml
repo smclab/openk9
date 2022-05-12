@@ -52,13 +52,6 @@
 		</dependencies>
 	</dependencyManagement>
 
-	<modules>
-		<module>applications</module>
-		<module>email</module>
-		<module>js-enrich-plugin</module>
-		<module>web</module>
-	</modules>
-
 	<build>
 		<pluginManagement>
 			<plugins>
