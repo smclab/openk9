@@ -17,12 +17,20 @@
 
 package io.openk9.search.query.internal.query.parser.util;
 
+import io.openk9.common.api.constant.Strings;
 import io.openk9.search.api.query.parser.Tuple;
 
 public class Utils {
 
 	public static String[] split(String s) {
 		return s.split("\\s+");
+	}
+
+	public static String removeBlackSpaces(String s) {
+		if (s == null || s.isBlank()) {
+			return Strings.BLANK;
+		}
+		return s.replaceAll("\\s+", " ");
 	}
 
 	public static <T> Tuple<T> toTuple(T[] rhs) {
