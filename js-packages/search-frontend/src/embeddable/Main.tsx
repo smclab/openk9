@@ -380,6 +380,14 @@ function fixQueryAnalysisResult(data: AnalysisResponse) {
           .slice(0, index)
           .every((previous) => !isOverlapping(previous, entry)),
       )
-      .reverse(),
+      .reverse()
+      .filter(entry =>{
+        // togliere validazione quando fixato lato be
+        const isValidEntry = entry.start >= 0;
+        if (!isValidEntry) {
+          console.warn(`Invalid entry: `, entry);
+        }
+        return isValidEntry  
+      }), 
   };
 }
