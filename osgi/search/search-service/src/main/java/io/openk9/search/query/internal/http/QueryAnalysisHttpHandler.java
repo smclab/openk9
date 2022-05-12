@@ -195,7 +195,11 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 											)
 										);
 
-								for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry : collect.entrySet()) {
+								Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap =
+									Utils.toTokenIndexMap(searchText);
+
+								for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry :
+									collect.entrySet()) {
 
 									Integer startPos =
 										entry.getKey().getOrDefault(0, -1);
@@ -203,19 +207,40 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 									Integer endPos =
 										entry.getKey().getOrDefault(1, -1);
 
-									String text = Arrays
-										.stream(tokens, startPos, endPos)
-										.collect(Collectors.joining(" "));
+									String[] textTokens =
+										Arrays.stream(tokens, startPos, endPos)
+											.toArray(String[]::new);
 
-									int indexOf = searchText.indexOf(text, startPos);
+									Utils.TokenIndex startTokenIndex =
+										tokenIndexMap.get(startPos);
 
-									result.add(
-										QueryAnalysisTokens.of(
-											text,
-											indexOf,
-											indexOf + text.length(),
-											entry.getValue())
-									);
+									Utils.TokenIndex endTokenIndex =
+										tokenIndexMap.get(endPos);
+
+									if (textTokens.length == 1) {
+
+										result.add(
+											QueryAnalysisTokens.of(
+												searchText.substring(
+													startTokenIndex.getStartIndex(),
+													startTokenIndex.getEndIndex()),
+												startTokenIndex.getStartIndex(),
+												startTokenIndex.getEndIndex(),
+												entry.getValue())
+										);
+
+									}
+									else if (textTokens.length > 1) {
+										result.add(
+											QueryAnalysisTokens.of(
+												searchText.substring(
+													startTokenIndex.getStartIndex(),
+													endTokenIndex.getEndIndex()),
+												startTokenIndex.getStartIndex(),
+												endTokenIndex.getEndIndex(),
+												entry.getValue())
+										);
+									}
 								}
 
 								return QueryAnalysisResponse.of(
