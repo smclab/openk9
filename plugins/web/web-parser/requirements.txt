@@ -1,7 +1,0 @@
-fastapi==0.68.1
-uvicorn[standard]==0.15.0
-beautifulsoup4==4.10.0
-requests==2.26.0
-Scrapy==2.4.1
-scrapyd==1.2.1
-scrapyd-client==1.1.0

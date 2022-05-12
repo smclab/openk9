@@ -1,7 +1,0 @@
-Bundle-Name: [OpenK9 - Plugin] Sitemap Web
-Bundle-SymbolicName: io.openk9.plugins.web.sitemap
-
-
-
-OpenK9-Plugin: true
-OpenK9-Plugin-Web-Id: sitemap-web-datasource
