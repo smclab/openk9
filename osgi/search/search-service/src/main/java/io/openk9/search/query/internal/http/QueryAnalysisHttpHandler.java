@@ -114,7 +114,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 					QueryAnalysisRequest queryAnalysisRequest = t2.getT2();
 
-					String searchText = Utils.removeBlankSpaces(
+					String searchText = Utils.removeBlackSpaces(
 						queryAnalysisRequest.getSearchText());
 
 					String[] tokens = Utils.split(searchText);
