@@ -1,6 +1,6 @@
 import React from "react";
 import { HighlightedText } from "./HighlightedText";
-import { get } from "lodash";
+import get from "lodash/get";
 import { css } from "styled-components/macro";
 import { truncatedLineStyle } from "./truncatedLineStyle";
 import { HighlightableTextProps } from "./HighlightableText";

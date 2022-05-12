@@ -39,6 +39,8 @@ module.exports = {
       },
     ],
   },
+  // decomment this to analyze bundle size
+  // plugins: [new require("webpack-bundle-analyzer").BundleAnalyzerPlugin()],
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
   },

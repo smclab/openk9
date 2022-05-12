@@ -1,11 +1,9 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faLightbulb,
-  faSearch,
-  faSyncAlt,
-} from "@fortawesome/free-solid-svg-icons";
+import { faLightbulb } from "@fortawesome/free-solid-svg-icons/faLightbulb";
+import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
+import { faSyncAlt } from "@fortawesome/free-solid-svg-icons/faSyncAlt";
 import { TokenSelect } from "../components/TokenSelect";
 import { Tooltip } from "../components/Tooltip";
 import {

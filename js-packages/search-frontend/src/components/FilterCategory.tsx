@@ -1,13 +1,11 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faChevronDown,
-  faChevronUp,
-  faSearch,
-} from "@fortawesome/free-solid-svg-icons";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
+import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
+import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { SearchToken, SuggestionResult } from "@openk9/rest-api";
-import { isEqual } from "lodash";
+import isEqual from "lodash/isEqual";
 import { useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
 import { useOpenK9Client } from "./client";

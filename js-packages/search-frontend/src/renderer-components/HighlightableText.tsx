@@ -1,7 +1,7 @@
 import { GenericResultItem, GenericResultItemFields } from "@openk9/rest-api";
 import React from "react";
 import { HighlightedText } from "./HighlightedText";
-import { get } from "lodash";
+import get from "lodash/get";
 
 export type HighlightableTextProps<E> = {
   result: GenericResultItem<E>;

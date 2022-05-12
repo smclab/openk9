@@ -1,6 +1,6 @@
 import React from "react";
 import { PdfResultItem } from "./PdfItem";
-import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
+import { faFilePdf } from "@fortawesome/free-solid-svg-icons/faFilePdf";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   DetailAttribute,

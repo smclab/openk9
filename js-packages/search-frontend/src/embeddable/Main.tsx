@@ -19,7 +19,7 @@ import {
   GenericResultItem,
   SearchToken,
 } from "@openk9/rest-api";
-import { isEqual } from "lodash";
+import isEqual from "lodash/isEqual";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
 import { Tab, TabsMemo, useTenantTabTokens } from "../components/Tabs";
 import { FiltersMemo } from "../components/Filters";
