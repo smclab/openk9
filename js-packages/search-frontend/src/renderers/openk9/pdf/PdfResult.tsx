@@ -1,6 +1,6 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
+import { faFilePdf } from "@fortawesome/free-solid-svg-icons/faFilePdf";
 import { GenericResultItem } from "@openk9/rest-api";
 import { PdfResultItem } from "./PdfItem";
 import {

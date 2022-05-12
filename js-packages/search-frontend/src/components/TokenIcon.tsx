@@ -1,12 +1,10 @@
 import React from "react";
-import {
-  faFilePdf,
-  faGlobe,
-  faMapPin,
-  faSitemap,
-  faTag,
-  faUser,
-} from "@fortawesome/free-solid-svg-icons";
+import { faFilePdf } from "@fortawesome/free-solid-svg-icons/faFilePdf";
+import { faGlobe } from "@fortawesome/free-solid-svg-icons/faGlobe";
+import { faMapPin } from "@fortawesome/free-solid-svg-icons/faMapPin";
+import { faTag } from "@fortawesome/free-solid-svg-icons/faTag";
+import { faUser } from "@fortawesome/free-solid-svg-icons/faUser";
+import { faSitemap } from "@fortawesome/free-solid-svg-icons/faSitemap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { css } from "styled-components/macro";
 import { AnalysisToken } from "@openk9/rest-api";

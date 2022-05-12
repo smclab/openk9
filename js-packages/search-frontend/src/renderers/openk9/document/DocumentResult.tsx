@@ -2,7 +2,7 @@ import React from "react";
 import { GenericResultItem } from "@openk9/rest-api";
 import { DocumentResultItem } from "./DocumentItem";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileAlt } from "@fortawesome/free-solid-svg-icons";
+import { faFileAlt } from "@fortawesome/free-solid-svg-icons/faFileAlt";
 import {
   ResultTitle,
   ResultContainer,

@@ -27,35 +27,30 @@ export function App() {
         box-sizing: border-box;
         @media (min-width: 320px) and (max-width: 480px) {
           grid-template-columns: 1fr;
-          grid-template-rows: auto auto auto 1fr 0px 0px;
+          grid-template-rows: auto auto auto 1fr;
           grid-template-areas:
             "dockbar"
             "tabs"
             "search"
-            "result"
-            "filters"
-            "detail";
+            "result";
         }
         @media (min-width: 481px) and (max-width: 768px) {
           grid-template-columns: 1fr;
-          grid-template-rows: auto auto auto 1fr 0px 0px;
+          grid-template-rows: auto auto auto 1fr;
           grid-template-areas:
             "dockbar"
             "tabs"
             "search"
-            "result"
-            "filters"
-            "detail";
+            "result";
         }
         @media (min-width: 769px) and (max-width: 1024px) {
           grid-template-columns: 1fr 2fr;
-          grid-template-rows: auto auto auto 1fr 0px;
+          grid-template-rows: auto auto auto 1fr;
           grid-template-areas:
             "dockbar dockbar"
             "tabs tabs"
             "search search"
-            "filters result"
-            "detail detail";
+            "filters result";
         }
         grid-template-columns: 1fr 2fr 2fr;
         grid-template-rows: auto auto auto 1fr;
@@ -130,6 +125,12 @@ export function App() {
           );
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
+          @media (min-width: 320px) and (max-width: 480px) {
+            display: none;
+          }
+          @media (min-width: 481px) and (max-width: 768px) {
+            display: none;
+          }
         `}
       ></div>
       <div
@@ -154,6 +155,15 @@ export function App() {
           );
           border-radius: 4px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
+          @media (min-width: 320px) and (max-width: 480px) {
+            display: none;
+          }
+          @media (min-width: 481px) and (max-width: 768px) {
+            display: none;
+          }
+          @media (min-width: 769px) and (max-width: 1024px) {
+            display: none;
+          }
         `}
       ></div>
       <div

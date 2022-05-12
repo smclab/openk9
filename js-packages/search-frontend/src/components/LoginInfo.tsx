@@ -1,7 +1,8 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faKey, faUser } from "@fortawesome/free-solid-svg-icons";
+import { faKey } from "@fortawesome/free-solid-svg-icons/faKey";
+import { faUser } from "@fortawesome/free-solid-svg-icons/faUser";
 import { useClickAway } from "./useClickAway";
 import { LoginState } from "./useLogin";
 
