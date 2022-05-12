@@ -26,7 +26,7 @@ public class Utils {
 		return s.split("\\s+");
 	}
 
-	public static String removeBlackSpaces(String s) {
+	public static String removeBlankSpaces(String s) {
 		if (s == null || s.isBlank()) {
 			return Strings.BLANK;
 		}
