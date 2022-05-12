@@ -30,7 +30,7 @@ public class Utils {
 		if (s == null || s.isBlank()) {
 			return Strings.BLANK;
 		}
-		return s.replaceAll("\\s+", Strings.SPACE);
+		return s.replaceAll("\\s+", " ");
 	}
 
 	public static <T> Tuple<T> toTuple(T[] rhs) {
