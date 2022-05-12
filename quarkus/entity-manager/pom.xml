@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>quarkus</artifactId>
 		<groupId>io.openk9</groupId>
-		<version>1.0.2-SNAPSHOT</version>
+		<version>1.0.2</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -127,6 +127,6 @@
 
 
   <scm>
-    <tag>v0.0.2</tag>
+    <tag>v1.0.2</tag>
   </scm>
 </project>
