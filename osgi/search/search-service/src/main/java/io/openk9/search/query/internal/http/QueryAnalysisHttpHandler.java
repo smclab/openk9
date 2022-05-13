@@ -118,13 +118,11 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 					Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap =
 						Utils.toTokenIndexMap(searchText);
 
-					String[] tokens = Utils.split(searchText);
-
 					List<QueryAnalysisHttpHandler.QueryAnalysisToken> requestTokens =
 						queryAnalysisRequest.getTokens();
 
 					Map<Tuple<Integer>, Map<String, Object>> chart =
-						_getRequestTokensMap(searchText, requestTokens);
+						_getRequestTokensMap(requestTokens);
 
 					Grammar grammar = _grammarProvider.getGrammar();
 
@@ -229,7 +227,11 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 													endTokenIndex.getEndIndex()),
 												startTokenIndex.getStartIndex(),
 												endTokenIndex.getEndIndex(),
-												entry.getValue()
+												entry.getValue(),
+												new Integer[] {
+													startTokenIndex.getPos(),
+													endTokenIndex.getPos()
+												}
 											)
 										);
 
@@ -242,7 +244,10 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 													startTokenIndex.getEndIndex()),
 												startTokenIndex.getStartIndex(),
 												startTokenIndex.getEndIndex(),
-												entry.getValue()
+												entry.getValue(),
+												new Integer[] {
+													startTokenIndex.getPos()
+												}
 											)
 										);
 									}
@@ -267,36 +272,24 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 	}
 
 	private Map<Tuple<Integer>, Map<String, Object>> _getRequestTokensMap(
-		String searchText, List<QueryAnalysisToken> requestTokens) {
-
-		Map<Tuple<Integer>, Map<String, Object>> chart;
+		List<QueryAnalysisToken> requestTokens) {
 
 		if (!requestTokens.isEmpty()) {
 
-			chart = new HashMap<>();
+			Map<Tuple<Integer>, Map<String, Object>> chart = new HashMap<>();
 
 			for (QueryAnalysisToken token : requestTokens) {
 
-				String analyzed =
-					searchText
-						.substring(
-							token.getStart(), token.getEnd());
+				Integer[] arrayPos = token.getPos();
 
-				String prefix =
-					searchText.substring(0, token.getStart());
+				Tuple<Integer> pos;
 
-				long prefixCount =
-					prefix
-						.codePoints()
-						.filter(Character::isWhitespace)
-						.count();
-
-				String[] splitAnalyzed = Utils.split(analyzed);
-
-				Tuple<Integer> pos =
-					Tuple.of(
-						(int)prefixCount,
-						(int)(prefixCount + splitAnalyzed.length));
+				if (arrayPos.length == 1) {
+					pos = Tuple.of(arrayPos[0], arrayPos[0] + 1);
+				}
+				else {
+					pos = Tuple.of(arrayPos[0], arrayPos[1]);
+				}
 
 				Map<String, Object> copy = new HashMap<>(
 					token.getToken());
@@ -305,12 +298,12 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 				chart.put(pos, copy);
 
+				return chart;
+
 			}
 		}
-		else {
-			chart = Map.of();
-		}
-		return chart;
+
+		return Map.of();
 	}
 
 	private AnnotatorConfig _annotatorConfig;
@@ -348,6 +341,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		private Integer start;
 		private Integer end;
 		private Map<String, Object> token;
+		private Integer[] pos;
 	}
 
 	@Data
@@ -360,6 +354,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 		private Integer start;
 		private Integer end;
 		private Collection<Map<String, Object>> tokens;
+		private Integer[] pos;
 	}
 
 	@Data
