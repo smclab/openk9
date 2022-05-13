@@ -27,20 +27,25 @@ import java.util.Objects;
 
 public class Utils {
 
-	public static void main(String[] args) {
-		System.out.println(toTokenIndexMap(" agevolazioni    super ammortamento    "));
-	}
-
 	public static Map<Integer, ? extends TokenIndex> toTokenIndexMap(
 		String searchText) {
 
+		if (searchText == null || searchText.isBlank()) {
+			return Map.of();
+		}
+
 		Map<Integer, StringBuilderTokenIndex> map = new IdentityHashMap<>();
 
-		for (int i = 0, count = 0; i < searchText.length(); i++) {
+		final int length = searchText.length();
+		final int lastIndex = length - 1;
+
+		for (int i = 0, count = 0; i < length; i++) {
 
 			char c = searchText.charAt(i);
 
-			if (Character.isWhitespace(c) || i == searchText.length() - 1) {
+			boolean whitespace = Character.isWhitespace(c);
+
+			if (whitespace) {
 
 				StringBuilderTokenIndex stringBuilderTokenIndex =
 					map.get(count);
@@ -52,6 +57,8 @@ public class Utils {
 				stringBuilderTokenIndex.setEndIndex(i);
 
 				count++;
+
+
 			}
 			else {
 
@@ -62,6 +69,10 @@ public class Utils {
 						count, pos -> new StringBuilderTokenIndex(index, pos));
 
 				stringBuilderIndex.append(c);
+
+				if (lastIndex == i)  {
+					stringBuilderIndex.setEndIndex(i + 1);
+				}
 
 			}
 		}
