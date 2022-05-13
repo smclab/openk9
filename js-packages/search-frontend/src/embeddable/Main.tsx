@@ -127,8 +127,8 @@ function useSearch({
   const debounced = useDebounce(selectionsState, 600);
   const queryAnalysis = useQueryAnalysis({
     searchText: debounced.text,
-    tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
-      token ? [{ text, start, end, token }] : [],
+    tokens: debounced.selection.flatMap(({ text, start, end, token, pos }) =>
+      token ? [{ text, start, end, token, pos }] : [],
     ),
   });
   const spans = React.useMemo(
