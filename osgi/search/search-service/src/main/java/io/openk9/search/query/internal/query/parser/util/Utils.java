@@ -20,7 +20,8 @@ package io.openk9.search.query.internal.query.parser.util;
 import io.openk9.common.api.constant.Strings;
 import io.openk9.search.api.query.parser.Tuple;
 
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -29,23 +30,22 @@ public class Utils {
 	public static Map<Integer, ? extends TokenIndex> toTokenIndexMap(
 		String searchText) {
 
-		Map<Integer, StringBuilderTokenIndex> map = new HashMap<>();
+		Map<Integer, StringBuilderTokenIndex> map = new IdentityHashMap<>();
 
-		for (int i = 0, count = 0;  i < searchText.length(); i++) {
+		for (int i = 0, count = 0; i < searchText.length(); i++) {
 
 			char c = searchText.charAt(i);
 
 			if (Character.isWhitespace(c)) {
 
-				if (!map.containsKey(count)) {
+				StringBuilderTokenIndex stringBuilderTokenIndex =
+					map.get(count);
+
+				if (stringBuilderTokenIndex == null) {
 					continue;
 				}
 
-				StringBuilderTokenIndex stringBuilderIndex = map.get(count);
-
-				if (stringBuilderIndex != null) {
-					stringBuilderIndex.setEndIndex(i);
-				}
+				stringBuilderTokenIndex.setEndIndex(i);
 
 				count++;
 			}
@@ -55,14 +55,14 @@ public class Utils {
 
 				StringBuilderTokenIndex stringBuilderIndex =
 					map.computeIfAbsent(
-						count, integer -> new StringBuilderTokenIndex(index));
+						count, pos -> new StringBuilderTokenIndex(index, pos));
 
 				stringBuilderIndex.append(c);
 
 			}
 		}
 
-		return map;
+		return Collections.unmodifiableMap(map);
 
 	}
 	public static String[] split(String s) {
@@ -94,9 +94,11 @@ public class Utils {
 
 	private static class StringBuilderTokenIndex
 		implements TokenIndex, Appendable {
-		public StringBuilderTokenIndex(int startIndex) {
+
+		public StringBuilderTokenIndex(int startIndex, int pos) {
 			this.startIndex = startIndex;
 			this.sb = new StringBuilder();
+			this.pos = pos;
 		}
 		@Override
 		public int getStartIndex() {
@@ -114,18 +116,27 @@ public class Utils {
 		}
 
 		@Override
-		public Appendable append(CharSequence csq) {
-			return sb.append(csq);
+		public int getPos() {
+			return pos;
 		}
 
 		@Override
-		public Appendable append(CharSequence csq, int start, int end) {
-			return sb.append(csq, start, end);
+		public StringBuilderTokenIndex append(CharSequence csq) {
+			sb.append(csq);
+			return this;
 		}
 
 		@Override
-		public Appendable append(char c) {
-			return sb.append(c);
+		public StringBuilderTokenIndex append(
+			CharSequence csq, int start, int end) {
+			sb.append(csq, start, end);
+			return this;
+		}
+
+		@Override
+		public StringBuilderTokenIndex append(char c) {
+			sb.append(c);
+			return this;
 		}
 
 		public void setEndIndex(int endIndex) {
@@ -138,14 +149,15 @@ public class Utils {
 				   "startIndex=" + startIndex +
 				   ", endIndex=" + endIndex +
 				   ", token=" + getToken() +
+				   ", pos=" + pos +
 				   '}';
 		}
 
 		private final int startIndex;
 		private int endIndex;
 		private final StringBuilder sb;
-
 		private String result;
+		private final int pos;
 
 	}
 
@@ -153,6 +165,8 @@ public class Utils {
 		int getStartIndex();
 		int getEndIndex();
 		String getToken();
+		int getPos();
+
 	}
 
 }

@@ -56,7 +56,6 @@ import reactor.netty.http.server.HttpServerRoutes;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -115,6 +114,9 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 					QueryAnalysisRequest queryAnalysisRequest = t2.getT2();
 
 					String searchText = queryAnalysisRequest.getSearchText();
+
+					Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap =
+						Utils.toTokenIndexMap(searchText);
 
 					String[] tokens = Utils.split(searchText);
 
@@ -195,42 +197,31 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 											)
 										);
 
-								Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap =
-									Utils.toTokenIndexMap(searchText);
-
 								for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry :
 									collect.entrySet()) {
 
 									Integer startPos =
 										entry.getKey().getOrDefault(0, -1);
 
-									Integer endPos =
-										entry.getKey().getOrDefault(1, -1);
-
-									String[] textTokens =
-										Arrays.stream(tokens, startPos, endPos)
-											.toArray(String[]::new);
+									if (startPos < 0) {
+										continue;
+									}
 
 									Utils.TokenIndex startTokenIndex =
 										tokenIndexMap.get(startPos);
 
-									Utils.TokenIndex endTokenIndex =
-										tokenIndexMap.get(endPos);
-
-									if (textTokens.length == 1) {
-
-										result.add(
-											QueryAnalysisTokens.of(
-												searchText.substring(
-													startTokenIndex.getStartIndex(),
-													startTokenIndex.getEndIndex()),
-												startTokenIndex.getStartIndex(),
-												startTokenIndex.getEndIndex(),
-												entry.getValue())
-										);
-
+									if (startTokenIndex == null) {
+										continue;
 									}
-									else if (textTokens.length > 1) {
+
+									Integer endPos =
+										entry.getKey().getOrDefault(1, -1);
+
+									if (endPos >= 0 && (endPos - startPos) > 1) {
+
+										Utils.TokenIndex endTokenIndex =
+											tokenIndexMap.get(endPos - 1);
+
 										result.add(
 											QueryAnalysisTokens.of(
 												searchText.substring(
@@ -238,9 +229,24 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 													endTokenIndex.getEndIndex()),
 												startTokenIndex.getStartIndex(),
 												endTokenIndex.getEndIndex(),
-												entry.getValue())
+												entry.getValue()
+											)
+										);
+
+									}
+									else {
+										result.add(
+											QueryAnalysisTokens.of(
+												searchText.substring(
+													startTokenIndex.getStartIndex(),
+													startTokenIndex.getEndIndex()),
+												startTokenIndex.getStartIndex(),
+												startTokenIndex.getEndIndex(),
+												entry.getValue()
+											)
 										);
 									}
+
 								}
 
 								return QueryAnalysisResponse.of(
