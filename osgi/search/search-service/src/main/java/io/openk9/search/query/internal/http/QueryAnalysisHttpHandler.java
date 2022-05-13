@@ -278,17 +278,19 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 			Map<Tuple<Integer>, Map<String, Object>> chart = new HashMap<>();
 
+			int count = 0;
+
 			for (QueryAnalysisToken token : requestTokens) {
 
-				Integer[] arrayPos = token.getPos();
+				String[] split = Utils.split(token.getText());
 
 				Tuple<Integer> pos;
 
-				if (arrayPos.length == 1) {
-					pos = Tuple.of(arrayPos[0], arrayPos[0] + 1);
+				if (split.length == 1) {
+					pos = Tuple.of(count, ++count);
 				}
 				else {
-					pos = Tuple.of(arrayPos[0], arrayPos[1]);
+					pos = Tuple.of(count, (count = count + (split.length)));
 				}
 
 				Map<String, Object> copy = new HashMap<>(
