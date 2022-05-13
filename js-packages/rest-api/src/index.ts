@@ -955,7 +955,6 @@ export type AnalysisRequestEntry = {
   start: number;
   end: number;
   token: AnalysisToken;
-  pos: Array<number>
 };
 
 export type AnalysisResponse = {
