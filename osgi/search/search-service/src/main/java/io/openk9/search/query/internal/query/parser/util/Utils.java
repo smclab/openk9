@@ -27,6 +27,10 @@ import java.util.Objects;
 
 public class Utils {
 
+	public static void main(String[] args) {
+		System.out.println(toTokenIndexMap(" agevolazioni    super ammortamento    "));
+	}
+
 	public static Map<Integer, ? extends TokenIndex> toTokenIndexMap(
 		String searchText) {
 
@@ -36,7 +40,7 @@ public class Utils {
 
 			char c = searchText.charAt(i);
 
-			if (Character.isWhitespace(c)) {
+			if (Character.isWhitespace(c) || i == searchText.length() - 1) {
 
 				StringBuilderTokenIndex stringBuilderTokenIndex =
 					map.get(count);
