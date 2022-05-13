@@ -139,8 +139,8 @@ function useSearch({
     () =>
       deriveSearchQuery(
         spans,
-        selectionsState.selection.flatMap(({ text, start, end, token }) =>
-          token ? [{ text, start, end, token }] : [],
+        selectionsState.selection.flatMap(({ text, start, end, token, pos }) =>
+          token ? [{ text, start, end, token, pos }] : [],
         ),
       ),
     [spans, selectionsState.selection],
