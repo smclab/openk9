@@ -96,6 +96,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
         </a>
       </div>
       <div
+        id="ImagesViewerContainer"
         style={{
           width: "100%",
           height: "50vh",
