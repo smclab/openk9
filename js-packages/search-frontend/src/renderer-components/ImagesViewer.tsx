@@ -96,11 +96,9 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
         </a>
       </div>
       <div
-        id="ImagesViewerContainer"
         style={{
           width: "100%",
           height: "50vh",
-          backgroundColor: "white",
           borderRadius: "4px",
           border: "1px solid var(--openk9-embeddable-search--border-color)",
           display: "flex",
