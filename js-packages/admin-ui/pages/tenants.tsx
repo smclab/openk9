@@ -188,7 +188,9 @@ function TRow({ ten }: { ten: Tenant }) {
     <tr>
       <td>{ten.tenantId}</td>
       <td className="table-cell-expand ">
-        <p className="table-list-title">{ten.name}</p>
+        <Link href={`/tenants/${ten.tenantId}/dataSources/`} passHref>
+          <a className="table-list-title">{ten.name}</a>
+        </Link>
       </td>
       <td className="table-cell-expand">{ten.virtualHost}</td>
       <td>
