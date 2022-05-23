@@ -213,12 +213,14 @@ export function NavSidebar({ visible }: { visible: boolean }) {
           route="/settings"
           icon={<SettingsIcon />}
         /> */}
+        {/* 
+        Momentaneamente disabilitato finchè il back-end non lo rimplementa 
         <MenuEntry
           text="Logs"
           path="/logs"
           route="/logs"
           icon={<ClayIcon symbol="forms" />}
-        />
+        /> */}
       </div>
       {tenantId && <TenantSubMenu tenantId={parseInt(tenantId)} />}
     </div>
