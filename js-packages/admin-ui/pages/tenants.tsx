@@ -77,9 +77,9 @@ function AddModal({
 
   const [errorState, setErrorState] = useState<any>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const id = e.target.id;
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement| HTMLTextAreaElement>) => {
+    const value = event.target.value;
+    const id = event.target.id;
     setNewTenant((cs) => ({
       ...cs,
       [id]: value,
@@ -153,6 +153,24 @@ function AddModal({
                   <div className="form-feedback-item">Cannot be empty</div>
                 </div>
               )}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <div
+              className={clsx(
+                "form-group-item",
+                errorState && !newTenant.jsonConfig && "has-error",
+              )}
+            >
+              <label htmlFor="jsonConfig">Json configuration</label>
+              <textarea
+                id="jsonConfig"
+                name="jsonConfig"
+                value={newTenant.jsonConfig}
+                onChange={handleChange}
+                className="form-control"
+              ></textarea>
             </div>
           </div>
         </div>
