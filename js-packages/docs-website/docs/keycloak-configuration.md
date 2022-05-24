@@ -57,11 +57,8 @@ In our case it will be
 which is equivalent to
 
 ```sql
-INSERT INTO security_tenant (
-    "id", "active", "authserverurl", "clientid", "clientsecret", "name")
- VALUES(
-     1, true, "http://keycloak-headless.openk9:8080/auth/realms/demo.openk9.local",
-     "openk9", "EPOer0qJ91UWps1LkOA0CmZBxsDsqSn8", "demo.openk9.local")
+INSERT INTO "security_tenant" ("id", "active", "clientid", "clientsecret", "realmname", "virtualhost") VALUES
+(1,	'1',	'openk9',	'EPOer0qJ91UWps1LkOA0CmZBxsDsqSn8',	'demo.openk9.local',	'demo.openk9.local');
 ```
 
 where is it:
