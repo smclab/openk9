@@ -27,6 +27,13 @@ scenario using
 [00-requirements/00-elasticsearch/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/00-elasticsearch/local-runtime.yaml).
 Choose how to refine based on your needs.
 
+Add helm repository if not already done
+
+```bash
+helm repo add elastic https://helm.elastic.co
+```
+
+
 ```yaml
 # This scenario creates a single-instance standalone ElasticSearch
 # machine, with the most basic configuration and limited
@@ -358,25 +365,25 @@ The chart allows you to do this using *nginx-controller* as a backend while K3s 
 Create Ingress
 
 ```bash
-cat << _ EOF_ | kubectl apply -n openk9 -f -
+cat <<_EOF_ | kubectl apply -n openk9 -f -
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: rabbitmq
+  name: kubernetes-dashboard
   annotations:
     kubernetes.io/ingress.class: traefik
 spec:
   rules:
-    - host: "rabbitmq.demo.openk9.local"
+    - host: "dashboard.openk9.local"
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: rabbitmq-headless
+                name: kubernetes-dashboard
                 port:
-                  number: 15672
+                  number: 8
   tls:
     - hosts:
         - "rabbitmq.demo.openk9.local"
@@ -763,7 +770,7 @@ k3s-master.vm.local  10.85.0.6:8301  alive   client  1.11.2  2         dc1  defa
 
 Installation contains also a dashboard. Perform port-forward to connect locally to it.
 
-```
+```bash
 kubectl -n consul port-forward consul-server-0 8500:8500
 ```
 
@@ -856,7 +863,7 @@ spec:
 Apply yaml
 
 ```bash
-kubectl -n openk9 apply -f postgresql-keycloak.yaml
+kubectl -n openk9 apply -f 00-requirements/06-keycloak/extras/postgresql-keycloak.yaml
 ```
 
 For future needs create a Secret with the coordinates of the newly created user.
@@ -1021,3 +1028,46 @@ kubectl -n openk9 port-forward svc/adminer 18080:8080
 ```
 
 * access to url "[httpd://localhost:18080](httpd://localhost:18080)" and authenticate with PostgreSQL credentials.
+
+### Expose using ingress
+
+To expose Adminer outside Kubernetes it is necessary to configure an **Ingress**, preferably in https.
+The chart allows to do this using *nginx-controller* as a backend while K3s cluster has *traefik*.
+
+```bash
+cat <<_EOF_ | kubectl apply -n openk9 -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adminer
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+    - host: "adminer.demo.openk9.local"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name:  adminer
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - "adminer.demo.openk9.local"
+      secretName: selfsigned-ca-secret
+_EOF_
+```
+
+where:
+
+* expose Adminer as *adminer.demo.openk9.local*. In order to use this hostname register it in your hosts file
+
+* provide both http and https access (using the self-signed certificates produced by the cert-manager)
+
+* use the headless service to get the IPs of the pods and allow Traefik to apply its load-balanciong logic.
+
+At this point, after updating the hosts file, if you open a browser on
+[http://adminer.demo.openk9.local](http://adminer.demo.openk9.local) you should access the console

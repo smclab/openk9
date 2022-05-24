@@ -23,9 +23,9 @@ Install using the local chart, which is already set up to use the latest stable 
 and the configuration file that *adapts* it to the chosen scenario.
 
 ```bash
-helm install openk9-ner-rabbit 03-enrichers/openk9-ner-rabbit \
+helm install openk9-ner 03-enrichers/openk9-ner \
   -n openk9 \
-  -f 03-enrichers/openk9-ner-rabbit/scenarios/local-runtime.yaml
+  -f 03-enrichers/openk9-ner/scenarios/local-runtime.yaml
 ```
 
 ### Verify installation

@@ -25,7 +25,7 @@ there is the indication of the namespace to use: `-n openk9`.
 To get around this *inconvenience* it is possible to make "openk9" the default namespace
 
 ``bash
-kubectl config set-context --current --namespace = openk9
+kubectl config set-context --current --namespace=openk9
 ``
 
 ## Dns resolution
@@ -95,7 +95,7 @@ spec:
 and we apply it
 
 ``
-kubectl apply -n openk9 -f star-openk9-local-certs.yaml
+kubectl apply -n openk9 -f extras/star-openk9-local-certs.yaml
 ``
 
 and I verify it is created
