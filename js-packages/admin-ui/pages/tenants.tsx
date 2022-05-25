@@ -189,7 +189,7 @@ function AddModal({
   );
 }
 
-function TRow({ ten }: { ten: Tenant }) {
+function TRow({ tenant }: { tenant: Tenant }) {
   const classes = useStyles();
   const { pushToast } = useToast();
 
@@ -204,13 +204,13 @@ function TRow({ ten }: { ten: Tenant }) {
 
   return (
     <tr>
-      <td>{ten.tenantId}</td>
+      <td>{tenant.tenantId}</td>
       <td className="table-cell-expand ">
-        <Link href={`/tenants/${ten.tenantId}/dataSources/`} passHref>
-          <a className="table-list-title">{ten.name}</a>
+        <Link href={`/tenants/${tenant.tenantId}/dataSources/`} passHref>
+          <a className="table-list-title">{tenant.name}</a>
         </Link>
       </td>
-      <td className="table-cell-expand">{ten.virtualHost}</td>
+      <td className="table-cell-expand">{tenant.virtualHost}</td>
       <td>
         <div className={classes.actions}>
           {/* <ClayTooltipProvider>
@@ -229,7 +229,7 @@ function TRow({ ten }: { ten: Tenant }) {
       </ClayTooltipProvider> */}
           <ClayTooltipProvider>
             <div>
-              <Link href={`/tenants/${ten.tenantId}/dataSources/`} passHref>
+              <Link href={`/tenants/${tenant.tenantId}/dataSources/`} passHref>
                 <a
                   className="component-action quick-action-item"
                   role="button"
@@ -243,7 +243,7 @@ function TRow({ ten }: { ten: Tenant }) {
           </ClayTooltipProvider>
           <ClayTooltipProvider>
             <div>
-              <Link href={`/tenants/${ten.tenantId}/settings/`} passHref>
+              <Link href={`/tenants/${tenant.tenantId}/settings/`} passHref>
                 <a
                   className="component-action quick-action-item"
                   role="button"
@@ -276,7 +276,7 @@ function TRow({ ten }: { ten: Tenant }) {
                   abortText="Abort"
                   confirmText="Delete"
                   onCloseModal={() => setDeleting(false)}
-                  onConfirmModal={() => handleDelete(ten.tenantId)}
+                  onConfirmModal={() => handleDelete(tenant.tenantId)}
                 />
               )}
             </ClayDropDown.ItemList>
@@ -312,7 +312,7 @@ function TBody({ searchValue }: { searchValue: string }) {
   return (
     <tbody>
       {filteredData.map((ten) => (
-        <TRow key={ten.tenantId} ten={ten} />
+        <TRow key={ten.tenantId} tenant={ten} />
       ))}
     </tbody>
   );

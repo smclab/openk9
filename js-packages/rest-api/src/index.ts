@@ -321,9 +321,11 @@ export function OpenK9Client({
       return data;
     },
 
-    async getDataSources(): Promise<DataSourceInfo[]> {
+    async getDataSources(
+      { page, size }: { page: number; size: number } = { page: 0, size: 200 },
+    ): Promise<DataSourceInfo[]> {
       const response = await authFetch(
-        `/api/datasource/v2/datasource?page=0&size=50`,
+        `/api/datasource/v2/datasource?page=${page}&size=${size}`,
         {
           headers: {
             Accept: "application/json",
@@ -334,9 +336,11 @@ export function OpenK9Client({
       return data;
     },
 
-    async getEnrichItem(): Promise<EnrichItem[]> {
+    async getEnrichItem(
+      { page, size }: { page: number; size: number } = { page: 0, size: 200 },
+    ): Promise<EnrichItem[]> {
       const response = await authFetch(
-        `/api/datasource/v2/enrichItem?page=0&size=50`,
+        `/api/datasource/v2/enrichItem?page=${page}&size=${size}`,
         {
           headers: {
             Accept: "application/json",
@@ -395,9 +399,11 @@ export function OpenK9Client({
       return data;
     },
 
-    async getEnrichPipeline(): Promise<EnrichPipeline[]> {
+    async getEnrichPipeline(
+      { page, size }: { page: number; size: number } = { page: 0, size: 200 },
+    ): Promise<EnrichPipeline[]> {
       const response = await authFetch(
-        `/api/datasource/v2/enrichPipeline?page=0&size=50`,
+        `/api/datasource/v2/enrichPipeline?page=${page}&size=${size}`,
         {
           headers: {
             Accept: "application/json",
