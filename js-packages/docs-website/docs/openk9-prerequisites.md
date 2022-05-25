@@ -12,7 +12,7 @@ In this section is described how to install Openk9 prerequisites. To install com
 OpenK9 uses established products for some aspects/functionalities. These products must be present in Kubernetes
 before installing OpenK9. Currently installing through [Helm Charts](https://helm.sh/docs/topics/charts/) is the best choice.
 
-Inside the [openk9-kubernetes repository](https://github.com/smclab/openk9-kubernetes) there is the
+Inside the [openk9-helm-charts repository](https://github.com/smclab/openk9-helm-charts) there is the
 `kubernetes/00-requirements` folder where, for each product, there are configuration files for the different installation scenarios.
 
 So clone this repository before start to install.
@@ -24,7 +24,7 @@ So clone this repository before start to install.
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration
 file [values.yaml](https://github.com/elastic/helm-charts/blob/v7.15.0/elasticsearch/values.yaml) for local development
 scenario using
-[00-requirements/00-elasticsearch/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/00-elasticsearch/local-runtime.yaml).
+[00-requirements/00-elasticsearch/local-runtime.yaml](https://github.com/smclab/openk9-helm-charts/blob/master/00-requirements/00-elasticsearch/local-runtime.yaml).
 Choose how to refine based on your needs.
 
 Add helm repository if not already done
@@ -173,7 +173,7 @@ helm repo add elastic https://helm.elastic.co
 Before proceeding with the installation of the chart, it is necessary to refine some parameters present in the configuration
 file [values.yaml](https://github.com/elastic/helm-charts/blob/v7.15.0/kibana/values.yaml) for local development
 scenario using
-[00-requirements/01-kibana/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/01-kibana/local-runtime.yaml).
+[00-requirements/01-kibana/local-runtime.yaml](https://github.com/smclab/openk9-helm-charts/blob/master/00-requirements/01-kibana/local-runtime.yaml).
 Choose how to refine based on your needs.
 
 ```yaml
@@ -297,7 +297,7 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration file
 [values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/rabbitmq/values.yaml)
 for local development scenario using
-[00-requirements/02-rabbitmq/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/02-rabbitmq/local-runtime.yaml).
+[00-requirements/02-rabbitmq/local-runtime.yaml](https://github.com/smclab/openk9-helm-charts/blob/master/00-requirements/02-rabbitmq/local-runtime.yaml).
 Choose how to refine based on your needs.
 
 ```yaml
@@ -354,7 +354,7 @@ kubectl port-forward -n openk9 svc/rabbitmq 15672:15672
 * open a browser on [http://localhost:15672](http://localhost:15672)
 
 * log in with the user and password declared in
-[00-requirements/02-rabbitmq/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/02-rabbitmq/local-runtime.yaml).
+[00-requirements/02-rabbitmq/local-runtime.yaml](https://github.com/smclab/openk9-helm-charts/blob/master/00-requirements/02-rabbitmq/local-runtime.yaml).
 
 
 ### Expose using ingress
@@ -420,7 +420,7 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 Before chart installation is necessary to refine some parameters present in the configuration file
 [values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/postgresql/values.yaml)
 for local development scenario using
-[00-requirements/03-postgresql/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/03-postgresql/local-runtime.yaml).
+[00-requirements/03-postgresql/local-runtime.yaml](https://github.com/smclab/openk9-helm-charts/blob/master/00-requirements/03-postgresql/local-runtime.yaml).
 Choose how to refine based on your needs.
 
 
@@ -521,7 +521,7 @@ To install Neo4J use the [Helm Chart](https://github.com/neo4j-contrib/neo4j-hel
 
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration file
 [values.yaml](https://github.com/neo4j-contrib/neo4j-helm/blob/4.2.6-1/values.yaml) for local development scenario
-[00-requirements/04-neo4j/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/04-neo4j/local-runtime.yaml).
+[00-requirements/04-neo4j/local-runtime.yaml](https://github.com/smclab/openk9-helm-charts/blob/master/00-requirements/04-neo4j/local-runtime.yaml).
 Choose how to refine based on your needs.
 
 ```yaml
@@ -659,7 +659,7 @@ Then you can access to [http://localhost:7474/browser](http://localhost:7474/bro
  * as URL Connect uso "bolt://localhost:7687"
  * as username use "neo4j"
  * as password use password specified in
- [00-requirements/04-neo4j/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/04-neo4j/local-runtime.yaml)
+ [00-requirements/04-neo4j/local-runtime.yaml](https://github.com/smclab/openk9-helm-charts/blob/master/00-requirements/04-neo4j/local-runtime.yaml)
 
 Then you can perform queries using Cypher Query Language.
 
@@ -690,7 +690,7 @@ helm repo add hashicorp https://helm.releases.hashicorp.com
 Before chart installation is necessary to change some parameters in
 [values.yaml](https://github.com/hashicorp/consul-k8s/blob/v0.40.0/charts/consul/values.yaml)
 for local development
-[00-requirements/05-consul/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/tree/master/00-requirements/05-consul).
+[00-requirements/05-consul/local-runtime.yaml](https://github.com/smclab/openk9-helm-charts/tree/master/00-requirements/05-consul).
 
 ```yaml
 # This scenario creates a single-instance standalone Consul
@@ -829,7 +829,7 @@ As well as some aspects of the authorization logic.
 Keycloak needs relational database, preferably PostgreSQL.
 A `Job` to create database on postgres is provided as pre-requisite. Database is handled by specific user.
 
-Use [postgresql-keycloak.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/06-keycloak/extras/postgresql-keycloak.yaml).
+Use [postgresql-keycloak.yaml](https://github.com/smclab/openk9-helm-charts/blob/master/00-requirements/06-keycloak/extras/postgresql-keycloak.yaml).
 
 ```yaml
 apiVersion: batch/v1
@@ -887,7 +887,7 @@ helm repo add codecentric https://codecentric.github.io/helm-charts
 Before proceeding with the installation of the chart it is necessary to refine some parameters present in the configuration file
 [values.yaml](https://github.com/codecentric/helm-charts/blob/master/charts/keycloak/values.yaml)
 for a local development scenario
-[00-requirements/06-keycloak/local-runtime.yaml](https://github.com/smclab/openk9-kubernetes/blob/master/00-requirements/06-keycloak/local-runtime.yaml).
+[00-requirements/06-keycloak/local-runtime.yaml](https://github.com/smclab/openk9-helm-charts/blob/master/00-requirements/06-keycloak/local-runtime.yaml).
 Choose how to refine based on your needs.
 
 ```yaml
