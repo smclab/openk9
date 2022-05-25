@@ -87,6 +87,11 @@ public class Datasource extends PanacheEntityBase implements K9Entity {
     }
 
     @Override
+    public String getPrimaryKey() {
+        return datasourceId.toString();
+    }
+
+    @Override
     public Class<? extends K9Entity> getType() {
         return Datasource.class;
     }

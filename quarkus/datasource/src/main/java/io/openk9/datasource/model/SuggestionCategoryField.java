@@ -97,6 +97,11 @@ public class SuggestionCategoryField extends PanacheEntityBase implements K9Enti
 	}
 
 	@Override
+	public String getPrimaryKey() {
+		return suggestionCategoryFieldId.toString();
+	}
+
+	@Override
 	public Class<? extends K9Entity> getType() {
 		return SuggestionCategoryField.class;
 	}

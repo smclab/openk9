@@ -15,17 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.datasource.event.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@JsonIgnoreProperties(value = {"type" })
-public interface K9Entity {
-
-	String getPrimaryKey();
-
-	default Class<? extends K9Entity> getType() {
-		return this.getClass();
-	}
-
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class EventData {
+	private String type;
+	private String data;
+	private String groupKey;
+	private String className;
 }

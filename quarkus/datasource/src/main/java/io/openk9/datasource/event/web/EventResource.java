@@ -15,17 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.datasource.event.web;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.openk9.datasource.model.Event;
+import io.smallrye.mutiny.Uni;
 
-@JsonIgnoreProperties(value = {"type" })
-public interface K9Entity {
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import java.util.List;
 
-	String getPrimaryKey();
+@Path("/v2/event")
+public class EventResource {
 
-	default Class<? extends K9Entity> getType() {
-		return this.getClass();
+	@GET
+	public Uni<List<Event>> getEvents(){
+		return Event.getEvents();
 	}
 
 }

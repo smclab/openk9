@@ -18,6 +18,7 @@
 package io.openk9.datasource.processor;
 
 
+import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
@@ -118,7 +119,11 @@ public class DatasourceProcessor {
 
 					})
 				)
-				.onItem().invoke(ingestionDatasourceEmitter::send)
+				.onItem()
+				.invoke(ingestionDatasourceEmitter::send)
+				.invoke(data -> _eventSender.sendEventAsJson(
+					"INGESTION_DATASOURCE",
+					data.getIngestionPayload().getIngestionId(), data))
 				.replaceWithVoid()
 		);
 
@@ -140,10 +145,6 @@ public class DatasourceProcessor {
 
 	}
 
-	private static <T> T _await(Uni<T> uni) {
-		return uni.await().indefinitely();
-	}
-
 	@Inject
 	EventBus bus;
 
@@ -153,6 +154,9 @@ public class DatasourceProcessor {
 	@Inject
 	@Channel("ingestion-datasource")
 	Emitter<IngestionDatasourcePayload> ingestionDatasourceEmitter;
+
+	@Inject
+	EventSender _eventSender;
 
 	private static final String _EVENT_NAME = "handle_ingestion_event";
 

@@ -15,17 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.datasource.event.sender;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+public interface EventSender {
 
-@JsonIgnoreProperties(value = {"type" })
-public interface K9Entity {
+	void sendEventAsJson(String type, Object data);
 
-	String getPrimaryKey();
+	void sendEventAsJson(String type, String groupKey, Object data);
 
-	default Class<? extends K9Entity> getType() {
-		return this.getClass();
-	}
-
+	void sendEventAsJson(
+		String type, String groupKey, String className, Object data);
 }

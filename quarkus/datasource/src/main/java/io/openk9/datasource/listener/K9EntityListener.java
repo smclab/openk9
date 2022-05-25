@@ -18,8 +18,10 @@
 package io.openk9.datasource.listener;
 
 import io.openk9.datasource.emitter.datasource.K9EntityEmitter;
+import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.K9Entity;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.quartz.SchedulerException;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -38,6 +40,10 @@ public class K9EntityListener {
 			_createOrUpdateScheduler((Datasource)k9Entity);
 		}
 		_k9EntityEmitter.sendInsert(k9Entity);
+
+		_eventSender.sendEventAsJson(
+			"ADD", k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
+			k9Entity);
 	}
 
 	@PreUpdate
@@ -46,6 +52,10 @@ public class K9EntityListener {
 			_createOrUpdateScheduler((Datasource)k9Entity);
 		}
 		_k9EntityEmitter.sendUpdate(k9Entity);
+
+		_eventSender.sendEventAsJson(
+			"UPDATE", k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
+			k9Entity);
 	}
 
 	@PostRemove
@@ -55,6 +65,9 @@ public class K9EntityListener {
 		}
 		_k9EntityEmitter.sendDelete(k9Entity);
 
+		_eventSender.sendEventAsJson(
+			"DELETE", k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
+			k9Entity);
 	}
 
 	private void _createOrUpdateScheduler(Datasource datasource)
@@ -68,5 +81,11 @@ public class K9EntityListener {
 
 	@Inject
 	Instance<SchedulerInitializer> _schedulerInitializer;
+
+	@Inject
+	EventSender _eventSender;
+
+	@Inject
+	EventBus bus;
 
 }

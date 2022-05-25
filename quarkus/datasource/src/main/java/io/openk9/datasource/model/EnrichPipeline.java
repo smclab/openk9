@@ -82,6 +82,11 @@ public class EnrichPipeline extends PanacheEntityBase implements K9Entity {
     }
 
     @Override
+    public String getPrimaryKey() {
+        return enrichPipelineId.toString();
+    }
+
+    @Override
     public Class<? extends K9Entity> getType() {
         return EnrichPipeline.class;
     }

@@ -79,6 +79,11 @@ public class Tenant extends PanacheEntityBase implements K9Entity {
     }
 
     @Override
+    public String getPrimaryKey() {
+        return tenantId.toString();
+    }
+
+    @Override
     public Class<? extends K9Entity> getType() {
         return Tenant.class;
     }

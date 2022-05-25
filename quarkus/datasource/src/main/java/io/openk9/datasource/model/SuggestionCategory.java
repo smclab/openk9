@@ -88,6 +88,11 @@ public class SuggestionCategory extends PanacheEntityBase implements K9Entity {
 	}
 
 	@Override
+	public String getPrimaryKey() {
+		return suggestionCategoryId.toString();
+	}
+
+	@Override
 	public Class<? extends K9Entity> getType() {
 		return SuggestionCategory.class;
 	}

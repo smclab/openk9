@@ -94,6 +94,11 @@ public class EnrichItem extends PanacheEntityBase implements K9Entity {
     }
 
     @Override
+    public String getPrimaryKey() {
+        return enrichItemId.toString();
+    }
+
+    @Override
     public Class<? extends K9Entity> getType() {
         return EnrichItem.class;
     }
