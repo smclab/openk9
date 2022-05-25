@@ -22,3 +22,20 @@ Build Latest Site Docker Image:
     - docker tag docs-website:latest $CI_REGISTRY_NAME/openk9/docs-website:latest
     - docker push $CI_REGISTRY_NAME/openk9/docs-website:latest
   allow_failure: false
+
+
+trigger_deploy_site:
+  image: curlimages/curl
+  stage: deploy
+  needs: ['Build Latest Site Docker Image']
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/docs-website/**/*
+  except:
+    - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-site" -F ref=master $DEPLOY_TRIGGER_URL
