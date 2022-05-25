@@ -52,6 +52,9 @@ export function TokenSelect({
         css={css`
           white-space: pre;
           ${statusStyles[status]};
+          border-radius: 4px;
+          border-top: ${isOpen ? "2px solid var(--openk9-embeddable-search--active-color)" : ""};
+          margin-top: ${isOpen ? "-2px" : ""}
         `}
       >
         {span.text}
