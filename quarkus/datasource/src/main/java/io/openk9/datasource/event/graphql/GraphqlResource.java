@@ -17,7 +17,12 @@
 
 package io.openk9.datasource.event.graphql;
 
+import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.DataFetchingFieldSelectionSet;
+import graphql.schema.SelectedField;
+import io.openk9.datasource.event.repo.EventRepository;
 import io.openk9.datasource.model.Event;
+import io.smallrye.graphql.execution.context.SmallRyeContext;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -25,10 +30,15 @@ import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @GraphQLApi
-public class EventGraphqlResource {
+@RequestScoped
+public class GraphqlResource {
 
 	@Query("event")
 	@Description("Get Events")
@@ -38,13 +48,46 @@ public class EventGraphqlResource {
 		@Name("groupKey") String groupKey,
 		@Name("size") @DefaultValue("10000") int size) {
 
-		if (type != null) {
-			return Event.getEvents(type, groupKey, className, size);
+		DataFetchingEnvironment dfe =
+			context.unwrap(DataFetchingEnvironment.class);
+
+		DataFetchingFieldSelectionSet selectionSet = dfe.getSelectionSet();
+
+		List<String> fields =
+			selectionSet
+				.getFields()
+				.stream()
+				.map(SelectedField::getQualifiedName)
+				.collect(Collectors.toList());
+
+		if (fields.isEmpty()) {
+			return Uni.createFrom().item(List.of());
 		}
 
-		return Event.getEvents(size);
+		LinkedHashMap<String, Object> projections = new LinkedHashMap<>(3);
 
+		if (type != null) {
+			projections.put("type", type);
+		}
+
+		if (className != null) {
+			projections.put("className", className);
+		}
+
+		if (groupKey != null) {
+			projections.put("groupKey", groupKey);
+		}
+
+		return eventRepository.getEvents(fields, size, projections);
 
 	}
+	@Inject
+	SmallRyeContext context;
+
+	@Inject
+	io.vertx.mutiny.pgclient.PgPool client;
+
+	@Inject
+	EventRepository eventRepository;
 
 }

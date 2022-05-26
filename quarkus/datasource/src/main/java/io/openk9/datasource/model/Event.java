@@ -42,7 +42,7 @@ import javax.persistence.Index;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Version;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,7 +88,7 @@ public class Event extends PanacheEntityBase {
 	private Integer version;
 
 	@Column(name = "created", nullable = false)
-	private final Instant created = Instant.now();
+	private final LocalDateTime created = LocalDateTime.now();
 
 	@Column(name = "groupKey")
 	private String groupKey;
@@ -139,8 +139,8 @@ public class Event extends PanacheEntityBase {
 			find(
 				"created >= :gte AND created < :lte",
 				Map.of(
-					"gte", Instant.from(gte),
-					"lte", Instant.from(lte)
+					"gte", LocalDateTime.from(gte),
+					"lte", LocalDateTime.from(lte)
 				),
 				Sort.by("created"));
 
@@ -157,7 +157,7 @@ public class Event extends PanacheEntityBase {
 		PanacheQuery<PanacheEntityBase> query =
 			find(
 				"created <= :lte",
-				Parameters.with("lte", Instant.from(lte)),
+				Parameters.with("lte", LocalDateTime.from(lte)),
 				Sort.by("created"));
 
 		return _getEvents(maxResult, query);
@@ -173,7 +173,7 @@ public class Event extends PanacheEntityBase {
 		PanacheQuery<PanacheEntityBase> query =
 			find(
 				"created >= :gte",
-				Parameters.with("gte", Instant.from(gte)),
+				Parameters.with("gte", LocalDateTime.from(gte)),
 				Sort.by("created"));
 
 		return _getEvents(maxResult, query);
