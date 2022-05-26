@@ -83,7 +83,7 @@ public class Event extends PanacheEntityBase {
 	private String data;
 
 	@Column(name = "dataSize")
-	private int dataSize;
+	private Integer dataSize;
 
 	@Setter(AccessLevel.NONE)
 	@Version
