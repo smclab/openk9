@@ -130,7 +130,7 @@ public class DatasourceProcessor {
 						"INGESTION_DATASOURCE",
 						data.getIngestionPayload().getIngestionId(),
 						IngestionDatasourcePayload.class.getName(),
-						data.toString())
+						data)
 				)
 				.replaceWithVoid()
 		);
