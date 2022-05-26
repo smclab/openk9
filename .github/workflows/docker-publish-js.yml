@@ -104,61 +104,61 @@ jobs:
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
 
-  # Push image to Docker Hub.
-  push-js-to-docker:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Prepare
-        id: prep
-        run: |
-          VERSION=edge
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          else VERSION=latest
-          fi
-          echo ::set-output name=version::${VERSION}
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1 
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push Frontend image
-        id: docker_build_frontend
-        uses: docker/build-push-action@v2
-        with:
-          file: js-packages/search-frontend/Dockerfile
-          push: true
-          tags: smclab/openk9-search-frontend:${{ steps.prep.outputs.version }}
-      -
-        name: Build and push Admin UI image
-        id: docker_build_admin_ui
-        uses: docker/build-push-action@v2
-        with:
-          file: js-packages/admin-ui/Dockerfile
-          push: true
-          tags: smclab/openk9-admin-ui:${{ steps.prep.outputs.version }}
-      -
-        name: Build and push Admin Logs Service image
-        id: docker_build_admin_logs
-        uses: docker/build-push-action@v2
-        with:
-          file: js-packages/admin-logs-service/Dockerfile
-          push: true
-          tags: smclab/openk9-admin-logs-service:${{ steps.prep.outputs.version }}
-      -
-        name: Build and push JS Scripts Executor image
-        id: docker_build_js_scripts_executor
-        uses: docker/build-push-action@v2
-        with:
-          file: js-packages/js-scripts-executor/Dockerfile
-          push: true
-          tags: smclab/openk9-js-scripts-executor:${{ steps.prep.outputs.version }}
+#  # Push image to Docker Hub.
+#  push-js-to-docker:
+#    runs-on: ubuntu-latest
+#    steps:
+#      -
+#        name: Checkout
+#        uses: actions/checkout@v2
+#      -
+#        name: Prepare
+#        id: prep
+#        run: |
+#          VERSION=edge
+#          if [[ $GITHUB_REF == refs/tags/* ]]; then
+#            VERSION=${GITHUB_REF#refs/tags/}
+#          else VERSION=latest
+#          fi
+#          echo ::set-output name=version::${VERSION}
+#      -
+#        name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v1
+#      -
+#        name: Login to DockerHub
+#        uses: docker/login-action@v1
+#        with:
+#          username: ${{ secrets.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#      -
+#        name: Build and push Frontend image
+#        id: docker_build_frontend
+#        uses: docker/build-push-action@v2
+#        with:
+#          file: js-packages/search-frontend/Dockerfile
+#          push: true
+#          tags: smclab/openk9-search-frontend:${{ steps.prep.outputs.version }}
+#      -
+#        name: Build and push Admin UI image
+#        id: docker_build_admin_ui
+#        uses: docker/build-push-action@v2
+#        with:
+#          file: js-packages/admin-ui/Dockerfile
+#          push: true
+#          tags: smclab/openk9-admin-ui:${{ steps.prep.outputs.version }}
+#      -
+#        name: Build and push Admin Logs Service image
+#        id: docker_build_admin_logs
+#        uses: docker/build-push-action@v2
+#        with:
+#          file: js-packages/admin-logs-service/Dockerfile
+#          push: true
+#          tags: smclab/openk9-admin-logs-service:${{ steps.prep.outputs.version }}
+#      -
+#        name: Build and push JS Scripts Executor image
+#        id: docker_build_js_scripts_executor
+#        uses: docker/build-push-action@v2
+#        with:
+#          file: js-packages/js-scripts-executor/Dockerfile
+#          push: true
+#          tags: smclab/openk9-js-scripts-executor:${{ steps.prep.outputs.version }}
