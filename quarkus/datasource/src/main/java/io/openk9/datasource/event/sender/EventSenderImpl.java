@@ -64,6 +64,7 @@ public class EventSenderImpl implements EventSender {
 		return Event
 			.builder()
 			.data(data)
+			.dataSize(data == null ? 0 : data.length())
 			.groupKey(eventMessage.getGroupKey())
 			.type(eventMessage.getType())
 			.className(eventMessage.getClassName())
