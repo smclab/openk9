@@ -56,7 +56,7 @@ public class DatasourceProcessor {
 		_eventSender.sendLazyEventAsJson(
 			() -> EventSender.EventMessage.of(
 				"INGESTION", jsonObject.getString("ingestionId"),
-				null, jsonObject.toString()));
+				IngestionPayload.class.getName(), jsonObject.toString()));
 
 		long datasourceId = jsonObject.getLong("datasourceId");
 
@@ -131,7 +131,8 @@ public class DatasourceProcessor {
 						() -> EventSender.EventMessage.of(
 							"INGESTION_DATASOURCE",
 							data.getIngestionPayload().getIngestionId(),
-							null, data.toString()))
+							IngestionDatasourcePayload.class.getName(),
+							data.toString()))
 				)
 				.replaceWithVoid()
 		);
