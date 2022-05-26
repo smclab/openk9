@@ -99,6 +99,24 @@ public class Event extends PanacheEntityBase {
 	@Column(name = "className")
 	private String className;
 
+	public enum Sortable {
+		TYPE("type"),
+		DATA_SIZE("dataSize"),
+		CREATED("created"),
+		GROUP_KEY("groupKey"),
+		CLASS_NAME("className");
+
+		Sortable(String column) {
+			this.column = column;
+		}
+
+		public String getColumn() {
+			return column;
+		}
+
+		private final String column;
+	}
+
 	public static Uni<List<Event>> getEvents(
 		String type, String groupKey, String className, int size) {
 

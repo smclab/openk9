@@ -21,6 +21,7 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.SelectedField;
 import io.openk9.datasource.event.repo.EventRepository;
+import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.model.Event;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
 import io.smallrye.mutiny.Uni;
@@ -48,8 +49,8 @@ public class GraphqlResource {
 		@Name("type") String type,
 		@Name("className") String className,
 		@Name("groupKey") String groupKey,
-		@Name("sortBy") @DefaultValue("created") String sortBy,
-		@Name("sortType") @DefaultValue("asc") String sortType,
+		@Name("sortBy") @DefaultValue("CREATED") Event.Sortable sortBy,
+		@Name("sortType") @DefaultValue("ASC") SortType sortType,
 		@Name("gte") LocalDateTime gte,
 		@Name("lte") LocalDateTime lte,
 		@Name("size")@DefaultValue("10000") int size) {

@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.event.repo;
 
+import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.model.Event;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -39,8 +40,8 @@ public class EventRepositoryImpl implements EventRepository {
 	@Override
 	public Uni<List<Event>> getEvents(
 		List<String> fields, int size,
-		LinkedHashMap<String, Object> projections, String sortBy,
-		String sortType) {
+		LinkedHashMap<String, Object> projections, Event.Sortable sortBy,
+		SortType sortType) {
 
 		String select = String.join(",", fields);
 
@@ -57,7 +58,7 @@ public class EventRepositoryImpl implements EventRepository {
 
 	private static String _createQuery(
 		int size, String select, LinkedHashMap<String, Object> projections,
-		String sortBy, String sortType) {
+		Event.Sortable sortBy, SortType sortType) {
 
 		String query = "SELECT " + select + " FROM event ";
 
@@ -72,7 +73,7 @@ public class EventRepositoryImpl implements EventRepository {
 
 		}
 
-		query += " ORDER BY " + sortBy + " " + sortType;
+		query += " ORDER BY " + sortBy.getColumn() + " " + sortType.name();
 
 		if (size != -1) {
 			query += " LIMIT " + size;
