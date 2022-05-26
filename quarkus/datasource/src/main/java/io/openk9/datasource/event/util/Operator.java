@@ -15,19 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.repo;
+package io.openk9.datasource.event.util;
 
-import io.openk9.datasource.event.util.Operator;
-import io.openk9.datasource.event.util.SortType;
-import io.openk9.datasource.model.Event;
-import io.smallrye.mutiny.Uni;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-
-public interface EventRepository {
-	Uni<List<Event>> getEvents(
-		List<String> fields, int from, int size,
-		LinkedHashMap<String, Object> projections, Event.Sortable sortBy,
-		SortType sortType, Operator operator);
-}
+public enum Operator { AND, OR }

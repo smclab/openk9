@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.event.repo;
 
+import io.openk9.datasource.event.util.Operator;
 import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.model.Event;
 import io.smallrye.mutiny.Multi;
@@ -39,15 +40,16 @@ public class EventRepositoryImpl implements EventRepository {
 
 	@Override
 	public Uni<List<Event>> getEvents(
-		List<String> fields, int size,
+		List<String> fields, int from, int size,
 		LinkedHashMap<String, Object> projections, Event.Sortable sortBy,
-		SortType sortType) {
+		SortType sortType, Operator operator) {
 
 		String select = String.join(",", fields);
 
 		PreparedQuery<RowSet<Row>> preparedQuery =
 			client.preparedQuery(
-				_createQuery(size, select, projections, sortBy, sortType));
+				_createQuery(
+					from, size, select, projections, sortBy, sortType, operator));
 
 		return preparedQuery
 			.execute(Tuple.from(new ArrayList<>(projections.values())))
@@ -57,8 +59,8 @@ public class EventRepositoryImpl implements EventRepository {
 	}
 
 	private static String _createQuery(
-		int size, String select, LinkedHashMap<String, Object> projections,
-		Event.Sortable sortBy, SortType sortType) {
+		int from, int size, String select, LinkedHashMap<String, Object> projections,
+		Event.Sortable sortBy, SortType sortType, Operator operator) {
 
 		String query = "SELECT " + select + " FROM event ";
 
@@ -66,16 +68,22 @@ public class EventRepositoryImpl implements EventRepository {
 
 			List<String> keys = new ArrayList<>(projections.keySet());
 
+			String operatorS = " " + operator.name() + " ";
+
 			query += IntStream
 				.range(0, keys.size())
 				.mapToObj(i -> _createWhere(keys, i))
-				.collect(Collectors.joining(" AND ", "WHERE ", " "));
+				.collect(Collectors.joining(operatorS, "WHERE ", " "));
 
 		}
 
 		query += " ORDER BY " + sortBy.getColumn() + " " + sortType.name();
 
-		if (size != -1) {
+		if (from > 0) {
+			query += " OFFSET " + from;
+		}
+
+		if (size > 0) {
 			query += " LIMIT " + size;
 		}
 
@@ -95,6 +103,7 @@ public class EventRepositoryImpl implements EventRepository {
 		}
 
 		return key + " = $" + (i + 1);
+
 	}
 
 	private Event _toEvent(Row row) {

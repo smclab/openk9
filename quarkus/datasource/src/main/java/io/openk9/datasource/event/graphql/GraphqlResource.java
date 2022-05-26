@@ -21,6 +21,7 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.SelectedField;
 import io.openk9.datasource.event.repo.EventRepository;
+import io.openk9.datasource.event.util.Operator;
 import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.model.Event;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
@@ -53,7 +54,9 @@ public class GraphqlResource {
 		@Name("sortType") @DefaultValue("ASC") SortType sortType,
 		@Name("gte") LocalDateTime gte,
 		@Name("lte") LocalDateTime lte,
-		@Name("size")@DefaultValue("10000") int size) {
+		@Name("size") @DefaultValue("10000") int size,
+		@Name("from") @DefaultValue("0") int from,
+		@Name("operator") @DefaultValue("AND") Operator operator) {
 
 		DataFetchingEnvironment dfe =
 			context.unwrap(DataFetchingEnvironment.class);
@@ -98,7 +101,7 @@ public class GraphqlResource {
 		}
 
 		return eventRepository.getEvents(
-			fields, size, projections, sortBy, sortType);
+			fields, from, size, projections, sortBy, sortType, operator);
 
 	}
 	@Inject
