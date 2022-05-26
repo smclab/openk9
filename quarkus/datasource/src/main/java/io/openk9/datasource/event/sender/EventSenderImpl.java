@@ -44,21 +44,16 @@ public class EventSenderImpl implements EventSender {
 	public void sendEventAsJson(
 		String type, String groupKey, String className, Object data) {
 
-		sendLazyEventAsJson(
-			() -> EventSender.EventMessage.of(type, groupKey, className, data));
+		bus.requestAndForget(
+			REGISTER_EVENT,
+			EventMessage.of(type, groupKey, className, data)
+		);
 
-	}
-
-	@Override
-	public void sendLazyEventAsJson(LazyEventMessage lazyEventMessage) {
-		bus.requestAndForget(REGISTER_EVENT, lazyEventMessage);
 	}
 
 	@ConsumeEvent(value = REGISTER_EVENT)
 	@ReactiveTransactional
-	public Uni<Void> handleEvent(LazyEventMessage lazyEventMessage) {
-
-		EventMessage eventMessage = lazyEventMessage.get();
+	public Uni<Void> handleEvent(EventMessage eventMessage) {
 
 		Object objData = eventMessage.getData();
 
@@ -69,7 +64,6 @@ public class EventSenderImpl implements EventSender {
 		return Event
 			.builder()
 			.data(data)
-			.dataSize(data.length())
 			.groupKey(eventMessage.getGroupKey())
 			.type(eventMessage.getType())
 			.className(eventMessage.getClassName())

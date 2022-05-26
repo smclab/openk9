@@ -22,8 +22,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.function.Supplier;
-
 public interface EventSender {
 
 	void sendEventAsJson(String type, Object data);
@@ -32,11 +30,6 @@ public interface EventSender {
 
 	void sendEventAsJson(
 		String type, String groupKey, String className, Object data);
-
-	void sendLazyEventAsJson(LazyEventMessage lazyEventMessage);
-
-	interface LazyEventMessage extends Supplier<EventMessage> {
-	}
 
 	@Data
 	@NoArgsConstructor
