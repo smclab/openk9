@@ -18,6 +18,12 @@ OpenK9 is a new Cognitive Search Engine that allows you to build next generation
 
 You can use our docker-compose configuration to set up a search environment. For more information visit [our guide](https://www.openk9.io/docs/using-docker).
 
+## Front-end development
+
+This is a monorepo managed by [lerna](https://lerna.js.org/).
+
+To install depencies run `yarn` command in this directory.
+
 ## License
 
 Copyright (c) the respective contributors, as shown by the AUTHORS file.
