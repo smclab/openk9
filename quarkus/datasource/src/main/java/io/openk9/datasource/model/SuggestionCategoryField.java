@@ -37,14 +37,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import java.util.Objects;
 
 @Entity
-@Table(name = "SuggestionCategoryField", uniqueConstraints = {
-	@UniqueConstraint(name = "uc_suggestioncategoryfield", columnNames = {
-		"fieldName", "tenantId"})
-})
+@Table(name = "SuggestionCategoryField")
 @Getter
 @Setter
 @ToString
