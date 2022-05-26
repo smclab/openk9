@@ -37,23 +37,16 @@ import java.util.stream.IntStream;
 public class EventRepositoryImpl implements EventRepository {
 
 	@Override
-	public Uni<List<Event>> getEvents(List<String> fields) {
-		return getEvents(fields, 10000);
-	}
-
-	@Override
-	public Uni<List<Event>> getEvents(List<String> fields, int size) {
-		return null;
-	}
-
-	@Override
 	public Uni<List<Event>> getEvents(
-		List<String> fields, int size, LinkedHashMap<String, Object> projections) {
+		List<String> fields, int size,
+		LinkedHashMap<String, Object> projections, String sortBy,
+		String sortType) {
 
 		String select = String.join(",", fields);
 
 		PreparedQuery<RowSet<Row>> preparedQuery =
-			client.preparedQuery(_createQuery(size, select, projections));
+			client.preparedQuery(
+				_createQuery(size, select, projections, sortBy, sortType));
 
 		return preparedQuery
 			.execute(Tuple.from(new ArrayList<>(projections.values())))
@@ -63,7 +56,8 @@ public class EventRepositoryImpl implements EventRepository {
 	}
 
 	private static String _createQuery(
-		int size, String select, LinkedHashMap<String, Object> projections) {
+		int size, String select, LinkedHashMap<String, Object> projections,
+		String sortBy, String sortType) {
 
 		String query = "SELECT " + select + " FROM event ";
 
@@ -73,18 +67,33 @@ public class EventRepositoryImpl implements EventRepository {
 
 			query += IntStream
 				.range(0, keys.size())
-				.mapToObj(o -> keys.get(o) + " = $" + (o + 1))
+				.mapToObj(i -> _createWhere(keys, i))
 				.collect(Collectors.joining(" AND ", "WHERE ", " "));
 
 		}
 
-		query += " ORDER BY created";
+		query += " ORDER BY " + sortBy + " " + sortType;
 
 		if (size != -1) {
 			query += " LIMIT " + size;
 		}
 
 		return query;
+	}
+
+	private static String _createWhere(List<String> keys, int i) {
+
+		String key = keys.get(i);
+
+		if (key.equals("gte")) {
+			return "created >= $" + (i + 1);
+		}
+
+		if (key.equals("lte")) {
+			return "created <= $" + (i + 1);
+		}
+
+		return key + " = $" + (i + 1);
 	}
 
 	private Event _toEvent(Row row) {

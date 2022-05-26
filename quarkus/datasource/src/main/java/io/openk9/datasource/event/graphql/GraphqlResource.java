@@ -32,6 +32,7 @@ import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,10 +44,15 @@ public class GraphqlResource {
 	@Query("event")
 	@Description("Get Events")
 	public Uni<List<Event>> getEvents(
+		@Name("id") String id,
 		@Name("type") String type,
 		@Name("className") String className,
 		@Name("groupKey") String groupKey,
-		@Name("size") @DefaultValue("10000") int size) {
+		@Name("sortBy") @DefaultValue("created") String sortBy,
+		@Name("sortType") @DefaultValue("asc") String sortType,
+		@Name("gte") LocalDateTime gte,
+		@Name("lte") LocalDateTime lte,
+		@Name("size")@DefaultValue("10000") int size) {
 
 		DataFetchingEnvironment dfe =
 			context.unwrap(DataFetchingEnvironment.class);
@@ -64,7 +70,11 @@ public class GraphqlResource {
 			return Uni.createFrom().item(List.of());
 		}
 
-		LinkedHashMap<String, Object> projections = new LinkedHashMap<>(3);
+		LinkedHashMap<String, Object> projections = new LinkedHashMap<>(4);
+
+		if (id != null) {
+			projections.put("id", id);
+		}
 
 		if (type != null) {
 			projections.put("type", type);
@@ -78,7 +88,16 @@ public class GraphqlResource {
 			projections.put("groupKey", groupKey);
 		}
 
-		return eventRepository.getEvents(fields, size, projections);
+		if (gte != null) {
+			projections.put("gte", gte);
+		}
+
+		if (lte != null) {
+			projections.put("lte", lte);
+		}
+
+		return eventRepository.getEvents(
+			fields, size, projections, sortBy, sortType);
 
 	}
 	@Inject

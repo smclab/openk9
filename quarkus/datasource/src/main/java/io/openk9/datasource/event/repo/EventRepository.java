@@ -24,11 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public interface EventRepository {
-	Uni<List<Event>> getEvents(List<String> fields);
-
-	Uni<List<Event>> getEvents(List<String> fields, int size);
-
 	Uni<List<Event>> getEvents(
 		List<String> fields, int size,
-		LinkedHashMap<String, Object> projections);
+		LinkedHashMap<String, Object> projections, String sortBy,
+		String sortType);
 }
