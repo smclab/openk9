@@ -58,9 +58,16 @@ public class EventSenderImpl implements EventSender {
 	@ConsumeEvent(value = REGISTER_EVENT)
 	@ReactiveTransactional
 	public Uni<Void> handleEvent(EventMessage eventMessage) {
+
+		Object objData = eventMessage.getData();
+
+		String data = objData instanceof String
+			? (String)objData
+			: Json.encode(objData);
+
 		return Event
 			.builder()
-			.data(Json.encode(eventMessage.getData()))
+			.data(data)
 			.groupKey(eventMessage.getGroupKey())
 			.type(eventMessage.getType())
 			.className(eventMessage.getClassName())

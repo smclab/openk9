@@ -53,6 +53,10 @@ public class DatasourceProcessor {
 	@ActivateRequestContext
 	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
 
+		_eventSender.sendEventAsJson(
+			"INGESTION", jsonObject.getString("ingestionId"),
+			jsonObject.toString());
+
 		long datasourceId = jsonObject.getLong("datasourceId");
 
 		Uni<Datasource> datasourceUni = Datasource.findById(datasourceId);
