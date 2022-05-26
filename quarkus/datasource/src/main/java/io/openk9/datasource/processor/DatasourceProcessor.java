@@ -53,9 +53,10 @@ public class DatasourceProcessor {
 	@ActivateRequestContext
 	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
 
-		_eventSender.sendEventAsJson(
-			"INGESTION", jsonObject.getString("ingestionId"),
-			jsonObject.toString());
+		_eventSender.sendLazyEventAsJson(
+			() -> EventSender.EventMessage.of(
+				"INGESTION", jsonObject.getString("ingestionId"),
+				null, jsonObject.toString()));
 
 		long datasourceId = jsonObject.getLong("datasourceId");
 
@@ -125,9 +126,13 @@ public class DatasourceProcessor {
 				)
 				.onItem()
 				.invoke(ingestionDatasourceEmitter::send)
-				.invoke(data -> _eventSender.sendEventAsJson(
-					"INGESTION_DATASOURCE",
-					data.getIngestionPayload().getIngestionId(), data))
+				.invoke(data ->
+					_eventSender.sendLazyEventAsJson(
+						() -> EventSender.EventMessage.of(
+							"INGESTION_DATASOURCE",
+							data.getIngestionPayload().getIngestionId(),
+							null, data.toString()))
+				)
 				.replaceWithVoid()
 		);
 

@@ -23,10 +23,6 @@ import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -48,16 +44,21 @@ public class EventSenderImpl implements EventSender {
 	public void sendEventAsJson(
 		String type, String groupKey, String className, Object data) {
 
-		bus.requestAndForget(
-			REGISTER_EVENT,
-			EventMessage.of(type, groupKey, className, data)
-		);
+		sendLazyEventAsJson(
+			() -> EventSender.EventMessage.of(type, groupKey, className, data));
 
+	}
+
+	@Override
+	public void sendLazyEventAsJson(LazyEventMessage lazyEventMessage) {
+		bus.requestAndForget(REGISTER_EVENT, lazyEventMessage);
 	}
 
 	@ConsumeEvent(value = REGISTER_EVENT)
 	@ReactiveTransactional
-	public Uni<Void> handleEvent(EventMessage eventMessage) {
+	public Uni<Void> handleEvent(LazyEventMessage lazyEventMessage) {
+
+		EventMessage eventMessage = lazyEventMessage.get();
 
 		Object objData = eventMessage.getData();
 
@@ -68,23 +69,13 @@ public class EventSenderImpl implements EventSender {
 		return Event
 			.builder()
 			.data(data)
+			.dataSize(data.length())
 			.groupKey(eventMessage.getGroupKey())
 			.type(eventMessage.getType())
 			.className(eventMessage.getClassName())
 			.build()
 			.persist()
 			.replaceWithVoid();
-	}
-
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor(staticName = "of")
-	@Builder
-	public static class EventMessage {
-		private String type;
-		private String groupKey;
-		private String className;
-		private Object data;
 	}
 
 	@Inject
