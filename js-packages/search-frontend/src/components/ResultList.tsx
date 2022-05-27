@@ -84,9 +84,14 @@ export function FiniteResults<E>({
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery);
   return (
-    <div>
+    <div style={{ height: "100%", overflowY: "auto", position: "relative" }}>
       {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
-        <>
+        <div
+          css={css`
+            position: absolute;
+            width: 100%;
+          `}
+        >
           <ResultCount>{results.data?.pages[0].total}</ResultCount>
           {results.data?.pages[0].result.map((result, index) => {
             return (
@@ -98,7 +103,7 @@ export function FiniteResults<E>({
               />
             );
           })}
-        </>
+        </div>
       ) : (
         <NoResults />
       )}
@@ -117,10 +122,14 @@ export function InfiniteResults<E>({
     <OverlayScrollbarsComponentDockerFix
       style={{
         height: "100%",
+        overflowY: "auto",
+        position: "relative",
       }}
     >
       <div
         css={css`
+          position: absolute;
+          width: 100%;
           padding-bottom: 16px;
         `}
       >
@@ -225,7 +234,7 @@ export function VirtualResults<E>({
             return (
               <div
                 css={css`
-                  padding: 0 16px 16px 16px;
+                  padding: 16px;
                   display: flex;
                   justify-content: center;
                   align-items: center;
