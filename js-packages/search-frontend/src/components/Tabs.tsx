@@ -1,9 +1,11 @@
-import { SearchToken } from "@openk9/rest-api";
 import React from "react";
 import { useQuery } from "react-query";
 import { css } from "styled-components/macro";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import { SearchToken } from "@openk9/rest-api";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { useOpenK9Client } from "./client";
+const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 type TabsProps = {
   tabs: Array<Tab>;
@@ -18,12 +20,12 @@ function Tabs({
   onConfigurationChange,
 }: TabsProps) {
   return (
-    <div
-      css={css`
-        position: relative;
-        overflow-x: auto;
-        height: 35px;
-      `}
+    <OverlayScrollbarsComponentDockerFix
+      style={{
+        position: "relative",
+        overflowX: "auto",
+        height: "35px",
+      }}
     >
       <div
         css={css`
@@ -61,7 +63,7 @@ function Tabs({
           );
         })}
       </div>
-    </div>
+    </OverlayScrollbarsComponentDockerFix>
   );
 }
 export const TabsMemo = React.memo(Tabs);
