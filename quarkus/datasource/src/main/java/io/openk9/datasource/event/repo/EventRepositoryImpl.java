@@ -85,14 +85,24 @@ public class EventRepositoryImpl implements EventRepository {
 				.mapToObj(i -> _createWhere(whereFields, i))
 				.collect(Collectors.toList());
 
-		QueryParameters parameters = QueryParameters.of(
-			Event.TABLE_NAME, fields, whereConditions, sortBy, sortType, size,
-			from, distinct);
+		QueryParameters parameters;
+
+		if (distinct) {
+			parameters = QueryParameters.of(
+				Event.TABLE_NAME, fields, fields, whereConditions, sortBy,
+				sortType, size, from, false);
+		}
+		else {
+			parameters = QueryParameters.of(
+				Event.TABLE_NAME, fields, List.of(), whereConditions, sortBy,
+				sortType, size, from, false);
+		}
 
 		TemplateInstance templateInstance =
 			eventQuery.data("parameters", parameters);
 
 		return templateInstance.render();
+
 	}
 
 	private static String _createWhere(List<String> keys, int i) {

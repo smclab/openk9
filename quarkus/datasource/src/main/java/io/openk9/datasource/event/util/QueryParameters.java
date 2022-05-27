@@ -34,7 +34,8 @@ public class QueryParameters {
 	private String tableName;
 	private Collection<String> fields;
 	private Collection<String> projections;
-	private List<? extends Sortable> orderBy;
+	private Collection<String> groupBy;
+	private List<? extends Sortable> sortBy;
 	private SortType sortType;
 	private Integer limit;
 	private Integer offset;
