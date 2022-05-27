@@ -31,6 +31,7 @@ import java.util.List;
 @Builder
 public class QueryParameters {
 
+	private String tableName;
 	private Collection<String> fields;
 	private Collection<String> projections;
 	private List<? extends Sortable> orderBy;

@@ -22,6 +22,7 @@ import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.SelectedField;
 import io.openk9.datasource.event.dto.EventOption;
 import io.openk9.datasource.event.repo.EventRepository;
+import io.openk9.datasource.event.util.Constants;
 import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.model.Event;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
@@ -50,17 +51,8 @@ public class GraphqlResource {
 		@Name("sortable") @DefaultValue("true") boolean sortable,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType
 	) {
-		DataFetchingEnvironment dfe =
-			context.unwrap(DataFetchingEnvironment.class);
 
-		DataFetchingFieldSelectionSet selectionSet = dfe.getSelectionSet();
-
-		List<String> fields =
-			selectionSet
-				.getFields()
-				.stream()
-				.map(SelectedField::getQualifiedName)
-				.collect(Collectors.toList());
+		List<String> fields = _getFieldsFromContext();
 
 		if (fields.isEmpty()) {
 			return Uni.createFrom().item(List.of());
@@ -80,9 +72,24 @@ public class GraphqlResource {
 		}
 
 		return eventRepository.getEvents(
-			fields, 0, 0, new LinkedHashMap<>(),
+			fields, 0, 0, EMPTY_MAP,
 			eventOptionSortables, sortType, true,
 			EventOption::from);
+
+	}
+
+	private List<String> _getFieldsFromContext() {
+
+		DataFetchingEnvironment dfe =
+			context.unwrap(DataFetchingEnvironment.class);
+
+		DataFetchingFieldSelectionSet selectionSet = dfe.getSelectionSet();
+
+		return selectionSet
+			.getFields()
+			.stream()
+			.map(SelectedField::getQualifiedName)
+			.collect(Collectors.toList());
 
 	}
 
@@ -90,56 +97,46 @@ public class GraphqlResource {
 	@Description("Returns the list of events")
 	public Uni<List<Event>> getEvents(
 		@Description("Primary key of event") @Name("id") String id,
-		@Description("Type of event ") @Name("type") String type,
-		@Name("className") String className,
-		@Name("groupKey") String groupKey,
+		@Description("Type of event (INGESTION, INGESTION_DATASOURCE)") @Name(Event.TYPE) String type,
+		@Description("class name of event") @Name(Event.CLASS_NAME) String className,
+		@Description("event group key set") @Name(Event.GROUP_KEY) String groupKey,
 		@Name("sortBy") @DefaultValue("CREATED") Event.EventSortable sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType,
-		@Name("gte") LocalDateTime gte,
-		@Name("lte") LocalDateTime lte,
+		@Name(Constants.GTE) LocalDateTime gte,
+		@Name(Constants.LTE) LocalDateTime lte,
 		@Name("size") @DefaultValue("10000") int size,
 		@Name("from") @DefaultValue("0") int from) {
 
-		DataFetchingEnvironment dfe =
-			context.unwrap(DataFetchingEnvironment.class);
-
-		DataFetchingFieldSelectionSet selectionSet = dfe.getSelectionSet();
-
-		List<String> fields =
-			selectionSet
-				.getFields()
-				.stream()
-				.map(SelectedField::getQualifiedName)
-				.collect(Collectors.toList());
+		List<String> fields = _getFieldsFromContext();
 
 		if (fields.isEmpty()) {
 			return Uni.createFrom().item(List.of());
 		}
 
-		LinkedHashMap<String, Object> projections = new LinkedHashMap<>(4);
+		LinkedHashMap<String, Object> projections = new LinkedHashMap<>(6);
 
 		if (id != null) {
-			projections.put("id", id);
+			projections.put(Event.ID, id);
 		}
 
 		if (type != null) {
-			projections.put("type", type);
+			projections.put(Event.TYPE, type);
 		}
 
 		if (className != null) {
-			projections.put("className", className);
+			projections.put(Event.CLASS_NAME, className);
 		}
 
 		if (groupKey != null) {
-			projections.put("groupKey", groupKey);
+			projections.put(Event.GROUP_KEY, groupKey);
 		}
 
 		if (gte != null) {
-			projections.put("gte", gte);
+			projections.put(Constants.GTE, gte);
 		}
 
 		if (lte != null) {
-			projections.put("lte", lte);
+			projections.put(Constants.LTE, lte);
 		}
 
 		return eventRepository.getEvents(
@@ -155,5 +152,8 @@ public class GraphqlResource {
 
 	@Inject
 	EventRepository eventRepository;
+
+	private static final LinkedHashMap<String, Object> EMPTY_MAP =
+		new LinkedHashMap<>();
 
 }

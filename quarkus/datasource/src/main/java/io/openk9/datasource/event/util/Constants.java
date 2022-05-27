@@ -15,21 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.web;
+package io.openk9.datasource.event.util;
 
-import io.openk9.datasource.model.Event;
-import io.smallrye.mutiny.Uni;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import java.util.List;
-
-@Path("/v2/event")
-public class EventResource {
-
-	@GET
-	public Uni<List<Event>> getEvents(){
-		return Event.getEvents();
-	}
-
+public interface Constants {
+	String LTE = "lte";
+	String GTE = "gte";
 }

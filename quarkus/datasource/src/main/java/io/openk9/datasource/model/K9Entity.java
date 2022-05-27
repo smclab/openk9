@@ -19,7 +19,7 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties(value = {"type" })
+@JsonIgnoreProperties(value = {"type"})
 public interface K9Entity {
 
 	String getPrimaryKey();

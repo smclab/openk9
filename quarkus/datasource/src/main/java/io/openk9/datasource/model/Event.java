@@ -46,13 +46,10 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "event", indexes = {
@@ -74,120 +71,32 @@ import java.util.stream.Collectors;
 public class Event extends PanacheEntityBase {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(name = "id", nullable = false)
+	@Column(name = ID, nullable = false)
 	private UUID id;
 
-	@Column(name = "type")
+	@Column(name = TYPE)
 	private String type;
 
 	@Lob
-	@Column(name = "data")
+	@Column(name = DATA)
 	private String data;
 
-	@Column(name = "size")
+	@Column(name = SIZE)
 	private Integer size;
 
 	@Setter(AccessLevel.NONE)
 	@Version
-	@Column(name = "version")
+	@Column(name = VERSION)
 	private Integer version;
 
-	@Column(name = "created", nullable = false)
+	@Column(name = CREATED, nullable = false)
 	private LocalDateTime created = LocalDateTime.now();
 
-	@Column(name = "groupKey")
+	@Column(name = GROUP_KEY)
 	private String groupKey;
 
-	@Column(name = "className")
+	@Column(name = CLASS_NAME)
 	private String className;
-
-	public static Event from(Row row) {
-
-		EventBuilder builder = Event.builder();
-
-		for (int i = 0; i < row.size(); i++) {
-			String columnName = row.getColumnName(i);
-			if (columnName.equalsIgnoreCase("type")) {
-				builder.type(row.getString(i));
-			}
-			else if (columnName.equalsIgnoreCase("data")) {
-				builder.data(row.getString(i));
-			}
-			else if (columnName.equalsIgnoreCase("size")) {
-				builder.size(row.getInteger(i));
-			}
-			else if (columnName.equalsIgnoreCase("version")) {
-				builder.version(row.getInteger(i));
-			}
-			else if (columnName.equalsIgnoreCase("created")) {
-				builder.created(row.getLocalDateTime(i));
-			}
-			else if (columnName.equalsIgnoreCase("groupKey")) {
-				builder.groupKey(row.getString(i));
-			}
-			else if (columnName.equalsIgnoreCase("className")) {
-				builder.className(row.getString(i));
-			}
-		}
-
-		return builder.build();
-
-	}
-
-	public enum EventSortable implements Sortable {
-		TYPE("type"),
-		SIZE("size"),
-		CREATED("created"),
-		GROUP_KEY("groupKey"),
-		CLASS_NAME("className");
-
-		EventSortable(String column) {
-			this.column = column;
-		}
-
-		@Override
-		public String getColumn() {
-			return column;
-		}
-
-		private final String column;
-	}
-
-	public static Uni<List<Event>> getEvents(
-		String type, String groupKey, String className, int size) {
-
-		Map<String, Object> params = new HashMap<>();
-
-		List<String> strings = new ArrayList<>();
-
-		if (type != null) {
-			params.put("type", type);
-		}
-
-		if (groupKey != null) {
-			params.put("groupKey", groupKey);
-		}
-
-		if (className != null) {
-			params.put("className", className);
-		}
-
-		String query = params.keySet().stream().map(e -> e + " = :" + e).collect(
-			Collectors.joining(" AND "));
-
-		if (query.isBlank()) {
-			return getEvents();
-		}
-
-		return find(query, Sort.by("created"), params)
-			.page(0, size).list();
-	}
-
-	public static Uni<List<Event>> getEventsBetween(
-		Temporal gte, Temporal lte) {
-
-		return getEventsBetween(gte, lte, MAX_RESULT);
-	}
 
 	public static Uni<List<Event>> getEventsBetween(
 		Temporal gte, Temporal lte, int maxResult) {
@@ -199,7 +108,7 @@ public class Event extends PanacheEntityBase {
 					"gte", LocalDateTime.from(gte),
 					"lte", LocalDateTime.from(lte)
 				),
-				Sort.by("created"));
+				Sort.by(CREATED));
 
 		return _getEvents(maxResult, query);
 
@@ -215,7 +124,7 @@ public class Event extends PanacheEntityBase {
 			find(
 				"created <= :lte",
 				Parameters.with("lte", LocalDateTime.from(lte)),
-				Sort.by("created"));
+				Sort.by(CREATED));
 
 		return _getEvents(maxResult, query);
 
@@ -231,7 +140,7 @@ public class Event extends PanacheEntityBase {
 			find(
 				"created >= :gte",
 				Parameters.with("gte", LocalDateTime.from(gte)),
-				Sort.by("created"));
+				Sort.by(CREATED));
 
 		return _getEvents(maxResult, query);
 
@@ -244,7 +153,7 @@ public class Event extends PanacheEntityBase {
 	public static Uni<List<Event>> getEvents(String type, int maxResult) {
 
 		PanacheQuery<PanacheEntityBase> query =
-			find("type", type, Sort.by("created"));
+			find(TYPE, type, Sort.by(CREATED));
 
 		return _getEvents(maxResult, query);
 
@@ -257,9 +166,42 @@ public class Event extends PanacheEntityBase {
 	public static Uni<List<Event>> getEvents(int maxResult) {
 
 		PanacheQuery<PanacheEntityBase> query =
-			findAll(Sort.by("created"));
+			findAll(Sort.by(CREATED));
 
 		return _getEvents(maxResult, query);
+	}
+
+	public static Event from(Row row) {
+
+		EventBuilder builder = Event.builder();
+
+		for (int i = 0; i < row.size(); i++) {
+			String columnName = row.getColumnName(i);
+			if (columnName.equalsIgnoreCase(TYPE)) {
+				builder.type(row.getString(i));
+			}
+			else if (columnName.equalsIgnoreCase(DATA)) {
+				builder.data(row.getString(i));
+			}
+			else if (columnName.equalsIgnoreCase(SIZE)) {
+				builder.size(row.getInteger(i));
+			}
+			else if (columnName.equalsIgnoreCase(VERSION)) {
+				builder.version(row.getInteger(i));
+			}
+			else if (columnName.equalsIgnoreCase(CREATED)) {
+				builder.created(row.getLocalDateTime(i));
+			}
+			else if (columnName.equalsIgnoreCase(GROUP_KEY)) {
+				builder.groupKey(row.getString(i));
+			}
+			else if (columnName.equalsIgnoreCase(CLASS_NAME)) {
+				builder.className(row.getString(i));
+			}
+		}
+
+		return builder.build();
+
 	}
 
 	@Override
@@ -294,5 +236,34 @@ public class Event extends PanacheEntityBase {
 	}
 
 	public static final int MAX_RESULT = 10_000;
+
+	public static final String TABLE_NAME = "event";
+	public static final String ID = "id";
+	public static final String TYPE = "type";
+	public static final String DATA = "data";
+	public static final String SIZE = "size";
+	public static final String VERSION = "version";
+	public static final String CREATED = "created";
+	public static final String GROUP_KEY = "groupKey";
+	public static final String CLASS_NAME = "className";
+
+	public enum EventSortable implements Sortable {
+		TYPE(Event.TYPE),
+		SIZE(Event.SIZE),
+		CREATED(Event.CREATED),
+		GROUP_KEY(Event.GROUP_KEY),
+		CLASS_NAME(Event.CLASS_NAME);
+
+		EventSortable(String column) {
+			this.column = column;
+		}
+
+		@Override
+		public String getColumn() {
+			return column;
+		}
+
+		private final String column;
+	}
 
 }

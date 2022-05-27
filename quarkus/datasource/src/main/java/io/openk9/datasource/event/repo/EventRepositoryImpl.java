@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.event.repo;
 
+import io.openk9.datasource.event.util.Constants;
 import io.openk9.datasource.event.util.QueryParameters;
 import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.event.util.Sortable;
@@ -63,7 +64,8 @@ public class EventRepositoryImpl implements EventRepository {
 		PreparedQuery<RowSet<Row>> preparedQuery =
 			client.preparedQuery(
 				_createQuery(
-					from, size, fields, projections, sortBy, sortType, distinct));
+					from, size, fields, projections, sortBy, sortType,
+					distinct));
 
 		return preparedQuery
 			.execute(Tuple.from(new ArrayList<>(projections.values())))
@@ -84,7 +86,8 @@ public class EventRepositoryImpl implements EventRepository {
 				.collect(Collectors.toList());
 
 		QueryParameters parameters = QueryParameters.of(
-			fields, whereConditions, sortBy, sortType, size, from, distinct);
+			Event.TABLE_NAME, fields, whereConditions, sortBy, sortType, size,
+			from, distinct);
 
 		TemplateInstance templateInstance =
 			eventQuery.data("parameters", parameters);
@@ -96,12 +99,12 @@ public class EventRepositoryImpl implements EventRepository {
 
 		String key = keys.get(i);
 
-		if (key.equals("gte")) {
-			return "created >= $" + (i + 1);
+		if (key.equals(Constants.GTE)) {
+			return CREATED_GTE + (i + 1);
 		}
 
-		if (key.equals("lte")) {
-			return "created <= $" + (i + 1);
+		if (key.equals(Constants.LTE)) {
+			return CREATED_LTE + (i + 1);
 		}
 
 		return key + " = $" + (i + 1);
@@ -113,5 +116,8 @@ public class EventRepositoryImpl implements EventRepository {
 
 	@Inject
 	Template eventQuery;
+
+	public static final String CREATED_GTE = "created >= $";
+	public static final String CREATED_LTE = "created <= $";
 
 }
