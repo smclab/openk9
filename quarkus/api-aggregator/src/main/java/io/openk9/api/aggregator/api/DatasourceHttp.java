@@ -23,6 +23,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -106,8 +107,7 @@ public interface DatasourceHttp {
 	@Path("/graphql")
 	public Uni<Response> graphql(JsonObject jsonObject);
 
-	@RolesAllowed({"datasource-write", "admin"})
-	@SecurityRequirement(name = "SecurityScheme")
+	@PermitAll
 	@GET
 	@Path("/graphql/schema.graphql")
 	public Uni<Response> schemaGraphql();
