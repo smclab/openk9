@@ -17,12 +17,14 @@
 
 package io.openk9.datasource.model;
 
+import io.openk9.datasource.event.util.Sortable;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.sqlclient.Row;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -91,7 +93,7 @@ public class Event extends PanacheEntityBase {
 	private Integer version;
 
 	@Column(name = "created", nullable = false)
-	private final LocalDateTime created = LocalDateTime.now();
+	private LocalDateTime created = LocalDateTime.now();
 
 	@Column(name = "groupKey")
 	private String groupKey;
@@ -99,17 +101,51 @@ public class Event extends PanacheEntityBase {
 	@Column(name = "className")
 	private String className;
 
-	public enum Sortable {
+	public static Event from(Row row) {
+
+		EventBuilder builder = Event.builder();
+
+		for (int i = 0; i < row.size(); i++) {
+			String columnName = row.getColumnName(i);
+			if (columnName.equalsIgnoreCase("type")) {
+				builder.type(row.getString(i));
+			}
+			else if (columnName.equalsIgnoreCase("data")) {
+				builder.data(row.getString(i));
+			}
+			else if (columnName.equalsIgnoreCase("size")) {
+				builder.size(row.getInteger(i));
+			}
+			else if (columnName.equalsIgnoreCase("version")) {
+				builder.version(row.getInteger(i));
+			}
+			else if (columnName.equalsIgnoreCase("created")) {
+				builder.created(row.getLocalDateTime(i));
+			}
+			else if (columnName.equalsIgnoreCase("groupKey")) {
+				builder.groupKey(row.getString(i));
+			}
+			else if (columnName.equalsIgnoreCase("className")) {
+				builder.className(row.getString(i));
+			}
+		}
+
+		return builder.build();
+
+	}
+
+	public enum EventSortable implements Sortable {
 		TYPE("type"),
 		SIZE("size"),
 		CREATED("created"),
 		GROUP_KEY("groupKey"),
 		CLASS_NAME("className");
 
-		Sortable(String column) {
+		EventSortable(String column) {
 			this.column = column;
 		}
 
+		@Override
 		public String getColumn() {
 			return column;
 		}

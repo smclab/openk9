@@ -15,20 +15,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.dto;
+package io.openk9.datasource.event.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Collection;
+import java.util.List;
+
 @Data
-@AllArgsConstructor
+@AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 @Builder
-public class EventData {
-	private String type;
-	private String data;
-	private String groupKey;
-	private String className;
+public class QueryParameters {
+
+	private Collection<String> fields;
+	private Collection<String> projections;
+	private List<? extends Sortable> orderBy;
+	private SortType sortType;
+	private Integer limit;
+	private Integer offset;
+	private Boolean distinct;
+
+	public static final String FIELDS = "fields";
+	public static final String PROJECTIONS = "projections";
+	public static final String ORDER_BY = "orderBy";
+	public static final String LIMIT = "limit";
+	public static final String OFFSET = "offset";
+	public static final String DISTINCT = "distinct";
+	public static final String SORT_TYPE = "sortType";
+
 }

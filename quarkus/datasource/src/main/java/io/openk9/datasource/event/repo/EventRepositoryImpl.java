@@ -17,9 +17,12 @@
 
 package io.openk9.datasource.event.repo;
 
-import io.openk9.datasource.event.util.Operator;
+import io.openk9.datasource.event.util.QueryParameters;
 import io.openk9.datasource.event.util.SortType;
+import io.openk9.datasource.event.util.Sortable;
 import io.openk9.datasource.model.Event;
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.sqlclient.PreparedQuery;
@@ -32,6 +35,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -41,53 +45,51 @@ public class EventRepositoryImpl implements EventRepository {
 	@Override
 	public Uni<List<Event>> getEvents(
 		List<String> fields, int from, int size,
-		LinkedHashMap<String, Object> projections, Event.Sortable sortBy,
-		SortType sortType, Operator operator) {
+		LinkedHashMap<String, Object> projections, List<? extends Sortable> sortBy,
+		SortType sortType, boolean distinct) {
 
-		String select = String.join(",", fields);
+		return getEvents(
+			fields, from, size, projections, sortBy, sortType, distinct,
+			Event::from);
+
+	}
+
+	@Override
+	public <T> Uni<List<T>> getEvents(
+		List<String> fields, int from, int size,
+		LinkedHashMap<String, Object> projections, List<? extends Sortable> sortBy,
+		SortType sortType, boolean distinct, Function<Row, T> mapper) {
 
 		PreparedQuery<RowSet<Row>> preparedQuery =
 			client.preparedQuery(
 				_createQuery(
-					from, size, select, projections, sortBy, sortType, operator));
+					from, size, fields, projections, sortBy, sortType, distinct));
 
 		return preparedQuery
 			.execute(Tuple.from(new ArrayList<>(projections.values())))
 			.onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
-			.onItem().transform(this::_toEvent).collect().asList();
-
+			.onItem().transform(mapper).collect().asList();
 	}
 
-	private static String _createQuery(
-		int from, int size, String select, LinkedHashMap<String, Object> projections,
-		Event.Sortable sortBy, SortType sortType, Operator operator) {
+	private String _createQuery(
+		int from, int size, List<String> fields,
+		LinkedHashMap<String, Object> projections,
+		List<? extends Sortable> sortBy, SortType sortType, boolean distinct) {
 
-		String query = "SELECT " + select + " FROM event ";
+		List<String> whereFields = new ArrayList<>(projections.keySet());
 
-		if (!projections.isEmpty()) {
+		List<String> whereConditions =
+			IntStream.range(0, whereFields.size())
+				.mapToObj(i -> _createWhere(whereFields, i))
+				.collect(Collectors.toList());
 
-			List<String> keys = new ArrayList<>(projections.keySet());
+		QueryParameters parameters = QueryParameters.of(
+			fields, whereConditions, sortBy, sortType, size, from, distinct);
 
-			String operatorS = " " + operator.name() + " ";
+		TemplateInstance templateInstance =
+			eventQuery.data("parameters", parameters);
 
-			query += IntStream
-				.range(0, keys.size())
-				.mapToObj(i -> _createWhere(keys, i))
-				.collect(Collectors.joining(operatorS, "WHERE ", " "));
-
-		}
-
-		query += " ORDER BY " + sortBy.getColumn() + " " + sortType.name();
-
-		if (from > 0) {
-			query += " OFFSET " + from;
-		}
-
-		if (size > 0) {
-			query += " LIMIT " + size;
-		}
-
-		return query;
+		return templateInstance.render();
 	}
 
 	private static String _createWhere(List<String> keys, int i) {
@@ -106,11 +108,10 @@ public class EventRepositoryImpl implements EventRepository {
 
 	}
 
-	private Event _toEvent(Row row) {
-		return row.toJson().mapTo(Event.class);
-	}
-
 	@Inject
 	io.vertx.mutiny.pgclient.PgPool client;
+
+	@Inject
+	Template eventQuery;
 
 }

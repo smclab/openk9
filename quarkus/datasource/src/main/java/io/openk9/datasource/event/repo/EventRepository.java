@@ -17,17 +17,24 @@
 
 package io.openk9.datasource.event.repo;
 
-import io.openk9.datasource.event.util.Operator;
 import io.openk9.datasource.event.util.SortType;
+import io.openk9.datasource.event.util.Sortable;
 import io.openk9.datasource.model.Event;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.sqlclient.Row;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.function.Function;
 
 public interface EventRepository {
 	Uni<List<Event>> getEvents(
 		List<String> fields, int from, int size,
-		LinkedHashMap<String, Object> projections, Event.Sortable sortBy,
-		SortType sortType, Operator operator);
+		LinkedHashMap<String, Object> projections, List<? extends Sortable> sortBy,
+		SortType sortType, boolean distinct);
+
+	<T> Uni<List<T>> getEvents(
+		List<String> fields, int from, int size,
+		LinkedHashMap<String, Object> projections, List<? extends Sortable> sortBy,
+		SortType sortType, boolean distinct, Function<Row, T> mapper);
 }

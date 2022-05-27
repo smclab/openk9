@@ -20,8 +20,8 @@ package io.openk9.datasource.event.graphql;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.SelectedField;
+import io.openk9.datasource.event.dto.EventOption;
 import io.openk9.datasource.event.repo.EventRepository;
-import io.openk9.datasource.event.util.Operator;
 import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.model.Event;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
@@ -37,26 +37,68 @@ import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @GraphQLApi
 @RequestScoped
 public class GraphqlResource {
 
+	@Query("eventOptions")
+	@Description("Returns the list of available options for the event")
+	public Uni<List<EventOption>> eventOptions(
+		@Name("sortable") @DefaultValue("true") boolean sortable,
+		@Name("sortType") @DefaultValue("ASC") SortType sortType
+	) {
+		DataFetchingEnvironment dfe =
+			context.unwrap(DataFetchingEnvironment.class);
+
+		DataFetchingFieldSelectionSet selectionSet = dfe.getSelectionSet();
+
+		List<String> fields =
+			selectionSet
+				.getFields()
+				.stream()
+				.map(SelectedField::getQualifiedName)
+				.collect(Collectors.toList());
+
+		if (fields.isEmpty()) {
+			return Uni.createFrom().item(List.of());
+		}
+
+		List<EventOption.EventOptionSortable> eventOptionSortables;
+
+		if (sortable) {
+			eventOptionSortables =
+				fields
+					.stream()
+					.map(EventOption.EventOptionSortable::fromColumn)
+					.filter(Objects::nonNull)
+					.collect(Collectors.toList());
+		} else {
+			eventOptionSortables = List.of();
+		}
+
+		return eventRepository.getEvents(
+			fields, 0, 0, new LinkedHashMap<>(),
+			eventOptionSortables, sortType, true,
+			EventOption::from);
+
+	}
+
 	@Query("event")
-	@Description("Get Events")
+	@Description("Returns the list of events")
 	public Uni<List<Event>> getEvents(
-		@Name("id") String id,
-		@Name("type") String type,
+		@Description("Primary key of event") @Name("id") String id,
+		@Description("Type of event ") @Name("type") String type,
 		@Name("className") String className,
 		@Name("groupKey") String groupKey,
-		@Name("sortBy") @DefaultValue("CREATED") Event.Sortable sortBy,
+		@Name("sortBy") @DefaultValue("CREATED") List<Event.EventSortable> sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType,
 		@Name("gte") LocalDateTime gte,
 		@Name("lte") LocalDateTime lte,
 		@Name("size") @DefaultValue("10000") int size,
-		@Name("from") @DefaultValue("0") int from,
-		@Name("operator") @DefaultValue("AND") Operator operator) {
+		@Name("from") @DefaultValue("0") int from) {
 
 		DataFetchingEnvironment dfe =
 			context.unwrap(DataFetchingEnvironment.class);
@@ -101,7 +143,7 @@ public class GraphqlResource {
 		}
 
 		return eventRepository.getEvents(
-			fields, from, size, projections, sortBy, sortType, operator);
+			fields, from, size, projections, sortBy, sortType, false);
 
 	}
 	@Inject

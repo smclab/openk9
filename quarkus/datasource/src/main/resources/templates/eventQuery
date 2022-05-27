@@ -1,0 +1,20 @@
+{#let fields=parameters.fields projections=parameters.projections orderBy=parameters.orderBy limit=parameters.limit offset=parameters.offset distinct=parameters.distinct sortType=parameters.sortType}
+{#if fields}
+SELECT {#if distinct}DISTINCT {/if}{#for field in fields}{field}{#if field_hasNext},{/if}{#else}*{/for}
+{#else}
+SELECT *
+{/if}
+FROM event
+{#if projections}
+WHERE {#for projection in projections}({projection}){#if projection_hasNext} AND {/if}{/for}
+{/if}
+{#if orderBy}
+ORDER BY {#for order in orderBy}{order.column}{#if order_hasNext},{/if}{/for}{#if sortType} {sortType}{/if}
+{/if}
+{#if limit && limit > 0}
+LIMIT {limit}
+{/if}
+{#if offset && offset > 0}
+OFFSET {offset}
+{/if}
+{/let}
