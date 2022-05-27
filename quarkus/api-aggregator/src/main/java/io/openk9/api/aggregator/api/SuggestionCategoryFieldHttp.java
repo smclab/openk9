@@ -17,7 +17,7 @@
 
 package io.openk9.api.aggregator.api;
 
-import io.openk9.api.aggregator.client.dto.DatasourceDTO;
+import io.openk9.api.aggregator.client.dto.SuggestionCategoryFieldDTO;
 import io.openk9.api.aggregator.client.dto.SuggestionCategoryFieldRequestDTO;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
@@ -52,19 +52,19 @@ public interface SuggestionCategoryFieldHttp {
 	@SecurityRequirement(name = "SecurityScheme")
 	@GET
 	@Path("/v2/suggestion-category-field/{id}")
-	public Uni<DatasourceDTO> suggestionCategoryFieldFindById(@PathParam("id") long id);
+	public Uni<SuggestionCategoryFieldDTO> suggestionCategoryFieldFindById(@PathParam("id") long id);
 
 	@RolesAllowed({"datasource-read", "datasource-write", "admin"})
 	@SecurityRequirement(name = "SecurityScheme")
 	@POST
 	@Path("/v2/suggestion-category-field/filter")
-	public Uni<List<DatasourceDTO>> suggestionCategoryFieldFilter(SuggestionCategoryFieldRequestDTO dto);
+	public Uni<List<SuggestionCategoryFieldDTO>> suggestionCategoryFieldFilter(SuggestionCategoryFieldRequestDTO dto);
 
 	@RolesAllowed({"datasource-read", "datasource-write", "admin"})
 	@SecurityRequirement(name = "SecurityScheme")
 	@GET
 	@Path("/v2/suggestion-category-field")
-	public Uni<List<DatasourceDTO>> suggestionCategoryFieldFindAll(
+	public Uni<List<SuggestionCategoryFieldDTO>> suggestionCategoryFieldFindAll(
 		@QueryParam("sort") List<String> suggestionCategoryFieldSortQuery,
 		@QueryParam("page") @DefaultValue("0") int pageIndex,
 		@QueryParam("size") @DefaultValue("20") int pageSize
@@ -74,20 +74,20 @@ public interface SuggestionCategoryFieldHttp {
 	@SecurityRequirement(name = "SecurityScheme")
 	@POST
 	@Path("/v2/suggestion-category-field")
-	public Uni<DatasourceDTO> suggestionCategoryFieldCreate(SuggestionCategoryFieldRequestDTO dto);
+	public Uni<SuggestionCategoryFieldDTO> suggestionCategoryFieldCreate(SuggestionCategoryFieldRequestDTO dto);
 
 	@RolesAllowed({"datasource-write", "admin"})
 	@SecurityRequirement(name = "SecurityScheme")
 	@POST
 	@Path("/v2/suggestion-category-field/{id}")
-	public Uni<DatasourceDTO> suggestionCategoryFieldUpdate(
+	public Uni<SuggestionCategoryFieldDTO> suggestionCategoryFieldUpdate(
 		@PathParam("id") long id, SuggestionCategoryFieldRequestDTO dto);
 
 	@RolesAllowed({"datasource-write", "admin"})
 	@SecurityRequirement(name = "SecurityScheme")
 	@PATCH
 	@Path("/v2/suggestion-category-field/{id}")
-	public Uni<DatasourceDTO> suggestionCategoryFieldPatch(
+	public Uni<SuggestionCategoryFieldDTO> suggestionCategoryFieldPatch(
 		@PathParam("id") long id, SuggestionCategoryFieldRequestDTO dto);
 
 	@RolesAllowed({"datasource-write", "admin"})
