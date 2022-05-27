@@ -27,7 +27,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
@@ -65,7 +65,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
+@NoArgsConstructor
 @AllArgsConstructor
 @Cacheable
 @Builder
@@ -82,8 +82,8 @@ public class Event extends PanacheEntityBase {
 	@Column(name = "data")
 	private String data;
 
-	@Column(name = "dataSize")
-	private Integer dataSize;
+	@Column(name = "size")
+	private Integer size;
 
 	@Setter(AccessLevel.NONE)
 	@Version
@@ -101,7 +101,7 @@ public class Event extends PanacheEntityBase {
 
 	public enum Sortable {
 		TYPE("type"),
-		DATA_SIZE("dataSize"),
+		SIZE("size"),
 		CREATED("created"),
 		GROUP_KEY("groupKey"),
 		CLASS_NAME("className");
