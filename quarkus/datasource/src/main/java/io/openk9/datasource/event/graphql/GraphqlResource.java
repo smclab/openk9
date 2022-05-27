@@ -49,7 +49,9 @@ public class GraphqlResource {
 	@Description("Returns the list of available options for the event")
 	public Uni<List<EventOption>> eventOptions(
 		@Name("sortable") @DefaultValue("true") boolean sortable,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType
+		@Name("sortType") @DefaultValue("ASC") SortType sortType,
+		@Name("size") @DefaultValue("20") int size,
+		@Name("from") @DefaultValue("0") int from
 	) {
 
 		List<String> fields = _getFieldsFromContext();
@@ -72,7 +74,7 @@ public class GraphqlResource {
 		}
 
 		return eventRepository.getEvents(
-			fields, 0, 0, EMPTY_MAP,
+			fields, from, size, EMPTY_MAP,
 			eventOptionSortables, sortType, true,
 			EventOption::from);
 
