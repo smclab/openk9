@@ -27,6 +27,7 @@ import io.vertx.mutiny.core.eventbus.EventBus;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.LocalDateTime;
 
 @ApplicationScoped
 public class EventSenderImpl implements EventSender {
@@ -77,6 +78,7 @@ public class EventSenderImpl implements EventSender {
 			.groupKey(eventMessage.getGroupKey())
 			.type(eventMessage.getType())
 			.className(eventMessage.getClassName())
+			.created(LocalDateTime.now())
 			.build()
 			.persist()
 			.replaceWithVoid();
