@@ -93,7 +93,7 @@ public class GraphqlResource {
 		@Description("Type of event ") @Name("type") String type,
 		@Name("className") String className,
 		@Name("groupKey") String groupKey,
-		@Name("sortBy") @DefaultValue("CREATED") List<Event.EventSortable> sortBy,
+		@Name("sortBy") Event.EventSortable sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType,
 		@Name("gte") LocalDateTime gte,
 		@Name("lte") LocalDateTime lte,
@@ -143,7 +143,7 @@ public class GraphqlResource {
 		}
 
 		return eventRepository.getEvents(
-			fields, from, size, projections, sortBy, sortType, false);
+			fields, from, size, projections, List.of(sortBy), sortType, false);
 
 	}
 	@Inject
