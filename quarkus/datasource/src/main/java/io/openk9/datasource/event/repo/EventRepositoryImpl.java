@@ -89,12 +89,12 @@ public class EventRepositoryImpl implements EventRepository {
 
 		if (distinct) {
 			parameters = QueryParameters.of(
-				Event.TABLE_NAME, fields, fields, whereConditions, sortBy,
+				Event.TABLE_NAME, fields, whereConditions, fields, sortBy,
 				sortType, size, from, false);
 		}
 		else {
 			parameters = QueryParameters.of(
-				Event.TABLE_NAME, fields, List.of(), whereConditions, sortBy,
+				Event.TABLE_NAME, fields, whereConditions, List.of(), sortBy,
 				sortType, size, from, false);
 		}
 
