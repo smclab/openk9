@@ -54,8 +54,8 @@ public class DatasourceProcessor {
 	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
 
 		_eventSender.sendEventAsJson(
-			"INGESTION", jsonObject.getString("ingestionId"),
-			IngestionPayload.class.getName(),
+			"PIPELINE", jsonObject.getString("ingestionId"),
+			"INGESTION",
 			new JsonObject().put("ingestionPayload", jsonObject));
 
 		long datasourceId = jsonObject.getLong("datasourceId");
@@ -128,9 +128,9 @@ public class DatasourceProcessor {
 				.invoke(ingestionDatasourceEmitter::send)
 				.invoke(data ->
 					_eventSender.sendEventAsJson(
-						"INGESTION_DATASOURCE",
+						"PIPELINE",
 						data.getIngestionPayload().getIngestionId(),
-						IngestionDatasourcePayload.class.getName(),
+						"INGESTION_DATASOURCE",
 						new JsonObject()
 							.put(
 								"datasourceContext",
