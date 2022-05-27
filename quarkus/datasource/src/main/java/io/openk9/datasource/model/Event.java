@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import io.openk9.datasource.event.util.Constants;
 import io.openk9.datasource.event.util.Sortable;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
@@ -105,8 +106,8 @@ public class Event extends PanacheEntityBase {
 			find(
 				"created >= :gte AND created < :lte",
 				Map.of(
-					"gte", LocalDateTime.from(gte),
-					"lte", LocalDateTime.from(lte)
+					Constants.GTE, LocalDateTime.from(gte),
+					Constants.LTE, LocalDateTime.from(lte)
 				),
 				Sort.by(CREATED));
 
@@ -123,7 +124,7 @@ public class Event extends PanacheEntityBase {
 		PanacheQuery<PanacheEntityBase> query =
 			find(
 				"created <= :lte",
-				Parameters.with("lte", LocalDateTime.from(lte)),
+				Parameters.with(Constants.LTE, LocalDateTime.from(lte)),
 				Sort.by(CREATED));
 
 		return _getEvents(maxResult, query);
@@ -139,7 +140,7 @@ public class Event extends PanacheEntityBase {
 		PanacheQuery<PanacheEntityBase> query =
 			find(
 				"created >= :gte",
-				Parameters.with("gte", LocalDateTime.from(gte)),
+				Parameters.with(Constants.GTE, LocalDateTime.from(gte)),
 				Sort.by(CREATED));
 
 		return _getEvents(maxResult, query);
@@ -177,7 +178,10 @@ public class Event extends PanacheEntityBase {
 
 		for (int i = 0; i < row.size(); i++) {
 			String columnName = row.getColumnName(i);
-			if (columnName.equalsIgnoreCase(TYPE)) {
+			if (columnName.equalsIgnoreCase(ID)) {
+				builder.id(row.getUUID(i));
+			}
+			else if (columnName.equalsIgnoreCase(TYPE)) {
 				builder.type(row.getString(i));
 			}
 			else if (columnName.equalsIgnoreCase(DATA)) {
