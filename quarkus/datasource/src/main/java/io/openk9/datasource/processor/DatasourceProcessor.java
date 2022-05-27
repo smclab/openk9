@@ -55,7 +55,8 @@ public class DatasourceProcessor {
 
 		_eventSender.sendEventAsJson(
 			"INGESTION", jsonObject.getString("ingestionId"),
-			IngestionPayload.class.getName(), jsonObject.toString());
+			IngestionPayload.class.getName(),
+			new JsonObject().put("ingestionPayload", jsonObject));
 
 		long datasourceId = jsonObject.getLong("datasourceId");
 
@@ -130,7 +131,12 @@ public class DatasourceProcessor {
 						"INGESTION_DATASOURCE",
 						data.getIngestionPayload().getIngestionId(),
 						IngestionDatasourcePayload.class.getName(),
-						data)
+						new JsonObject()
+							.put(
+								"datasourceContext",
+								data.getDatasourceContext()
+							)
+					)
 				)
 				.replaceWithVoid()
 		);

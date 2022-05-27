@@ -22,6 +22,7 @@ import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactiona
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -57,9 +58,17 @@ public class EventSenderImpl implements EventSender {
 
 		Object objData = eventMessage.getData();
 
-		String data = objData instanceof String
-			? (String)objData
-			: Json.encode(objData);
+		String data;
+
+		if (objData instanceof String) {
+			data = (String) objData;
+		}
+		else if (objData instanceof JsonObject) {
+			data = objData.toString();
+		}
+		else {
+			data = Json.encode(objData);
+		}
 
 		return Event
 			.builder()

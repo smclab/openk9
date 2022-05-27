@@ -80,21 +80,6 @@ public class GraphqlResource {
 
 	}
 
-	private List<String> _getFieldsFromContext() {
-
-		DataFetchingEnvironment dfe =
-			context.unwrap(DataFetchingEnvironment.class);
-
-		DataFetchingFieldSelectionSet selectionSet = dfe.getSelectionSet();
-
-		return selectionSet
-			.getFields()
-			.stream()
-			.map(SelectedField::getQualifiedName)
-			.collect(Collectors.toList());
-
-	}
-
 	@Query("event")
 	@Description("Returns the list of events")
 	public Uni<List<Event>> getEvents(
@@ -146,6 +131,23 @@ public class GraphqlResource {
 			sortBy == null ? List.of() : List.of(sortBy), sortType, false);
 
 	}
+
+
+	private List<String> _getFieldsFromContext() {
+
+		DataFetchingEnvironment dfe =
+			context.unwrap(DataFetchingEnvironment.class);
+
+		DataFetchingFieldSelectionSet selectionSet = dfe.getSelectionSet();
+
+		return selectionSet
+			.getFields()
+			.stream()
+			.map(SelectedField::getQualifiedName)
+			.collect(Collectors.toList());
+
+	}
+
 	@Inject
 	SmallRyeContext context;
 
