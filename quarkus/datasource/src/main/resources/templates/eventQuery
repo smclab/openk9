@@ -1,4 +1,4 @@
-{#let groupBy=parameters.groupBy tableName=parameters.tableName fields=parameters.fields projections=parameters.projections orderBy=parameters.orderBy limit=parameters.limit offset=parameters.offset distinct=parameters.distinct sortType=parameters.sortType}
+{#let groupBy=parameters.groupBy tableName=parameters.tableName fields=parameters.fields projections=parameters.projections sortBy=parameters.sortBy limit=parameters.limit offset=parameters.offset distinct=parameters.distinct sortType=parameters.sortType}
 {#if fields}
 SELECT {#if distinct}DISTINCT {/if}{#for field in fields}{field}{#if field_hasNext},{/if}{#else}*{/for}
 {#else}
@@ -11,8 +11,8 @@ WHERE {#for projection in projections}({projection}){#if projection_hasNext} AND
 {#if groupBy}
 GROUP BY {#for group in groupBy}({group}){#if group_hasNext},{/if}{/for}
 {/if}
-{#if orderBy}
-ORDER BY {#for order in orderBy}{order.column}{#if order_hasNext},{/if}{/for}{#if sortType} {sortType}{/if}
+{#if sortBy}
+ORDER BY {#for order in sortBy}{order.column}{#if order_hasNext},{/if}{/for}{#if sortType} {sortType}{/if}
 {/if}
 {#if limit && limit > 0}
 LIMIT {limit}
