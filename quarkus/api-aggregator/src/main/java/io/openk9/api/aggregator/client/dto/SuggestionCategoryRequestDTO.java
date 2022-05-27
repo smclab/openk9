@@ -30,8 +30,7 @@ import lombok.NoArgsConstructor;
 @RegisterForReflection
 public class SuggestionCategoryRequestDTO {
 	private Long tenantId;
-	private Long categoryId;
-	private String fieldName;
+	private Long parentCategoryId;
 	private String name;
 	private boolean enabled;
 }

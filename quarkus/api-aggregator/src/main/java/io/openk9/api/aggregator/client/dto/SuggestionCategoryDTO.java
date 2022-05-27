@@ -31,8 +31,7 @@ import lombok.NoArgsConstructor;
 public class SuggestionCategoryDTO {
 	private Long suggestionCategoryId;
 	private Long tenantId;
-	private Long categoryId;
-	private String fieldName;
+	private Long parentCategoryId;
 	private String name;
 	private boolean enabled;
 }
