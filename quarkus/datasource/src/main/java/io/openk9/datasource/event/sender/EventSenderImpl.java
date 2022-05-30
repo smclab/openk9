@@ -17,7 +17,8 @@
 
 package io.openk9.datasource.event.sender;
 
-import io.openk9.datasource.model.Event;
+import io.openk9.datasource.event.dto.EventDto;
+import io.openk9.datasource.event.model.Event;
 import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
@@ -31,6 +32,13 @@ import java.time.LocalDateTime;
 
 @ApplicationScoped
 public class EventSenderImpl implements EventSender {
+
+	@Override
+	public void sendEvent(EventDto event) {
+		sendEventAsJson(
+			event.getType(), event.getGroupKey(), event.getClassName(),
+			event.getData());
+	}
 
 	@Override
 	public void sendEventAsJson(String type, Object data) {

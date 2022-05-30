@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.datasource.event.model;
 
 import io.openk9.datasource.event.util.Constants;
 import io.openk9.datasource.event.util.Sortable;
@@ -157,6 +157,19 @@ public class Event extends PanacheEntityBase {
 			find(TYPE, type, Sort.by(CREATED));
 
 		return _getEvents(maxResult, query);
+
+	}
+
+	public static Uni<List<Event>> getEvents(
+		String type, String groupKey, LocalDateTime lte) {
+
+		PanacheQuery<PanacheEntityBase> query =
+			find(
+				"type = :type AND groupKey = :groupKey AND created <= :lte",
+				Map.of(Constants.LTE, lte, TYPE, type, GROUP_KEY, groupKey),
+				Sort.by(CREATED));
+
+		return query.list();
 
 	}
 

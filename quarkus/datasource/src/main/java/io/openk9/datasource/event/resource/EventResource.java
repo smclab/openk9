@@ -15,32 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.sender;
+package io.openk9.datasource.event.resource;
 
 import io.openk9.datasource.event.dto.EventDto;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.openk9.datasource.event.sender.EventSender;
 
-public interface EventSender {
+import javax.inject.Inject;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 
-	void sendEvent(EventDto event);
-	void sendEventAsJson(String type, Object data);
+@Path("/v1/event")
+public class EventResource {
 
-	void sendEventAsJson(String type, String groupKey, Object data);
-
-	void sendEventAsJson(
-		String type, String groupKey, String className, Object data);
-
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor(staticName = "of")
-	@Builder
-	class EventMessage {
-		private String type;
-		private String groupKey;
-		private String className;
-		private Object data;
+	@POST
+	public Response insertEvent(EventDto eventDto) {
+		eventSender.sendEvent(eventDto);
+		return Response.status(200).build();
 	}
+
+	@Inject
+	EventSender eventSender;
+
 }

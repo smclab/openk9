@@ -17,8 +17,8 @@
 
 package io.openk9.datasource.event.dto;
 
+import io.openk9.datasource.event.model.Event;
 import io.openk9.datasource.event.util.Sortable;
-import io.openk9.datasource.model.Event;
 import io.vertx.mutiny.sqlclient.Row;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

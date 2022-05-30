@@ -15,32 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.sender;
+package io.openk9.datasource.event.dto;
 
-import io.openk9.datasource.event.dto.EventDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-public interface EventSender {
-
-	void sendEvent(EventDto event);
-	void sendEventAsJson(String type, Object data);
-
-	void sendEventAsJson(String type, String groupKey, Object data);
-
-	void sendEventAsJson(
-		String type, String groupKey, String className, Object data);
-
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor(staticName = "of")
-	@Builder
-	class EventMessage {
-		private String type;
-		private String groupKey;
-		private String className;
-		private Object data;
-	}
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class EventDto {
+	private String type;
+	private String data;
+	private String groupKey;
+	private String className;
 }

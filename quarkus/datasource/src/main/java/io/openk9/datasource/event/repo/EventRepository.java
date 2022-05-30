@@ -17,9 +17,9 @@
 
 package io.openk9.datasource.event.repo;
 
+import io.openk9.datasource.event.model.Event;
 import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.event.util.Sortable;
-import io.openk9.datasource.model.Event;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.sqlclient.Row;
 

@@ -17,11 +17,11 @@
 
 package io.openk9.datasource.event.repo;
 
+import io.openk9.datasource.event.model.Event;
 import io.openk9.datasource.event.util.Constants;
 import io.openk9.datasource.event.util.QueryParameters;
 import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.event.util.Sortable;
-import io.openk9.datasource.model.Event;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.smallrye.mutiny.Multi;
