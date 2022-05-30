@@ -168,6 +168,12 @@ function TenantSubMenu({ tenantId }: { tenantId: number }) {
         route={`/tenants/[tenantId]/dataSources`}
         icon={<DataSourceIcon />}
       />
+      <MenuEntry
+        text="Events"
+        path={`/tenants/${tenantId}/events/`}
+        route={`/tenants/[tenantId]/events`}
+        icon={<SettingsIcon />}
+      />
     </div>
   );
 }
