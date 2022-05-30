@@ -27,12 +27,13 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class EventProcessor {
 
 	@Incoming("events")
-	public void process(Message<?> message) {
+	public CompletionStage<Void> process(Message<?> message) {
 
 		Object obj = message.getPayload();
 
@@ -64,12 +65,11 @@ public class EventProcessor {
 				eventSender.sendEventAsJson(
 					"PIPELINE", ingestionId, envelope.getRoutingKey(), "{}");
 
-
-
 			}
 
 		}
 
+		return message.ack();
 
 	}
 
