@@ -52,7 +52,7 @@ public class EventProcessor {
 			ingestionPayload = jsonObject.getJsonObject("payload");
 		}
 
-		_logFirstLevel(ingestionPayload);
+		_logFirstLevel(jsonObject);
 
 		if (ingestionPayload != null) {
 
