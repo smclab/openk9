@@ -28,7 +28,7 @@ public class IngestionDatasourceBinding implements Binding {
 
 	@Override
 	public Exchange getExchange() {
-		return Exchange.of("io.openk9.ingestion.topic", Exchange.Type.topic);
+		return Exchange.of("amq.topic", Exchange.Type.topic);
 	}
 
 	@Override
