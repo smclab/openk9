@@ -45,14 +45,16 @@ public class EventProcessor {
 				? (JsonObject) obj
 				: new JsonObject(new String((byte[]) obj));
 
+		if (logger.isDebugEnabled()) {
+			_logFirstLevel(jsonObject);
+		}
+
 		JsonObject ingestionPayload =
 			jsonObject.getJsonObject("ingestionPayload");
 
-		if (ingestionPayload != null) {
+		if (ingestionPayload == null || ingestionPayload.isEmpty()) {
 			ingestionPayload = jsonObject.getJsonObject("payload");
 		}
-
-		_logFirstLevel(jsonObject);
 
 		if (ingestionPayload != null) {
 
@@ -125,7 +127,7 @@ public class EventProcessor {
 
 		stringBuilder.append("}");
 
-		logger.info(stringBuilder.toString());
+		logger.debug(stringBuilder.toString());
 
 	}
 
