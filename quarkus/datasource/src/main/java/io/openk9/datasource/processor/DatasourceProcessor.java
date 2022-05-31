@@ -51,7 +51,7 @@ public class DatasourceProcessor {
 
 	@ConsumeEvent(value = _EVENT_NAME)
 	@ActivateRequestContext
-	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
+	Uni<JsonObject> consumeIngestionMessage(JsonObject jsonObject) {
 
 		long datasourceId = jsonObject.getLong("datasourceId");
 
@@ -121,7 +121,16 @@ public class DatasourceProcessor {
 				)
 				.onItem()
 				.invoke(ingestionDatasourceEmitter::send)
-				.replaceWithVoid()
+				.onItemOrFailure()
+				.transform((data, t) -> {
+					if (t != null) {
+						return new JsonObject()
+							.put("error", t.getMessage())
+							.put("failed", true);
+					}
+
+					return new JsonObject().put("failed", false);
+				})
 		);
 
 	}
@@ -136,7 +145,14 @@ public class DatasourceProcessor {
 				? (JsonObject) obj
 				: new JsonObject(new String((byte[]) obj));
 
-		bus.requestAndForget(_EVENT_NAME, jsonObject);
+		io.vertx.mutiny.core.eventbus.Message<JsonObject> objectMessage =
+			bus.requestAndAwait(_EVENT_NAME, jsonObject);
+
+		JsonObject body = objectMessage.body();
+
+		if (body.getBoolean("failed", false)) {
+			return message.nack(new Exception(body.getString("message")));
+		}
 
 		return message.ack();
 
