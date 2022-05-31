@@ -28,8 +28,6 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
@@ -48,7 +46,9 @@ public class EventProcessor {
 		JsonObject ingestionPayload =
 			jsonObject.getJsonObject("ingestionPayload");
 
-		_logFirstLevel(jsonObject);
+		if (ingestionPayload != null) {
+			ingestionPayload = jsonObject.getJsonObject("payload");
+		}
 
 		if (ingestionPayload != null) {
 
@@ -68,42 +68,13 @@ public class EventProcessor {
 				 */
 
 				eventSender.sendEventAsJson(
-					"PIPELINE", ingestionId, envelope.getRoutingKey(), "{}");
+					"PIPELINE", ingestionId, envelope.getRoutingKey(), jsonObject);
 
 			}
 
 		}
 
 		return message.ack();
-
-	}
-
-	/*
-	 * this method log the first level of json object
-	 */
-	private void _logFirstLevel(JsonObject jsonObject) {
-
-		StringBuilder stringBuilder = new StringBuilder();
-
-		Iterator<Map.Entry<String, Object>> iterator = jsonObject.iterator();
-
-		stringBuilder.append("{");
-
-		while (iterator.hasNext()) {
-			Map.Entry<String, Object> kv = iterator.next();
-
-			String key = kv.getKey();
-
-			stringBuilder
-				.append('"')
-				.append(key)
-				.append("\": \"\"");
-
-		}
-
-		stringBuilder.append("}");
-
-		logger.info(stringBuilder.toString());
 
 	}
 
