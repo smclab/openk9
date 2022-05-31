@@ -28,6 +28,8 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
@@ -49,6 +51,8 @@ public class EventProcessor {
 		if (ingestionPayload != null) {
 			ingestionPayload = jsonObject.getJsonObject("payload");
 		}
+
+		_logFirstLevel(ingestionPayload);
 
 		if (ingestionPayload != null) {
 
@@ -75,6 +79,53 @@ public class EventProcessor {
 		}
 
 		return message.ack();
+
+	}
+
+	/*
+	 * this method log the first level of json object
+	 */
+	private void _logFirstLevel(JsonObject jsonObject) {
+
+		if (jsonObject == null) {
+			logger.info("jsonObject is null");
+			return;
+		}
+
+		StringBuilder stringBuilder = new StringBuilder();
+
+		Iterator<Map.Entry<String, Object>> iterator = jsonObject.iterator();
+
+		stringBuilder.append("{");
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, Object> kv = iterator.next();
+
+			String key = kv.getKey();
+
+			stringBuilder
+				.append('"')
+				.append(key)
+				.append("\":");
+
+			Object value = kv.getValue();
+
+			if (!(value instanceof JsonObject)) {
+				stringBuilder
+					.append('"')
+					.append(value)
+					.append('"');
+			}
+
+			if (iterator.hasNext()) {
+				stringBuilder.append(", ");
+			}
+
+		}
+
+		stringBuilder.append("}");
+
+		logger.info(stringBuilder.toString());
 
 	}
 
