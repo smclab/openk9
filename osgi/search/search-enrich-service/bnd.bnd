@@ -1,7 +1,7 @@
 Bundle-Name: [OpenK9] Search Enrich Service
 Bundle-SymbolicName: io.openk9.search.enrich.service
 
-Rabbit-Exchange: io.openk9.ingestion.topic
+Rabbit-Exchange: amq.topic
 Rabbit-Routing-Key: io.openk9.ingestion.datasource.plugin-driver-manager
 Rabbit-Queue: data-ingestion
 

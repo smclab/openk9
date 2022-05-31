@@ -35,14 +35,14 @@ import reactor.core.publisher.Mono;
 public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 
 	@interface Config {
-		String exchange() default "index-writer.topic";
-		String routingKeySuffix() default "data";
+		String exchange() default "amq.topic";
+		String routingKey() default "index-writer";
 	}
 
 	@Activate
 	void activate(Config config) {
 		_exchange = config.exchange();
-		_routingKeySuffix = config.routingKeySuffix();
+		_routingKey = config.routingKey();
 	}
 
 	@Modified
@@ -64,16 +64,16 @@ public class EndEnrichProcessorImpl implements EndEnrichProcessor {
 				_outboundMessageFactory.createOutboundMessage(
 					builder -> builder
 						.exchange(_exchange)
-						.routingKey("index-writer")
+						.routingKey(_routingKey)
 						.body(objectNode.toString().getBytes())
 				)
 			)
 		);
 
 	}
-
-	private String _routingKeySuffix;
 	private String _exchange;
+
+	private String _routingKey;
 
 	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private SenderReactor _senderReactor;
