@@ -30,6 +30,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
@@ -56,37 +57,42 @@ public class EventProcessor {
 			ingestionPayload = jsonObject.getJsonObject("payload");
 		}
 
-		if (ingestionPayload != null) {
+		String ingestionId =
+			Objects.requireNonNullElse(ingestionPayload, jsonObject)
+				.getString("ingestionId");
 
-			String ingestionId =
-				ingestionPayload.getString("ingestionId");
-
-			if (ingestionId != null){
-
-				IncomingRabbitMQMessage incomingRabbitMQMessage =
-					(IncomingRabbitMQMessage) message;
-
-				Envelope envelope =
-					incomingRabbitMQMessage.getRabbitMQMessage().envelope();
-
-				/*
-					TODO data is empty momentarily. find the previous event and use it to populate the data.
-				 */
-
-				eventSender.sendEventAsJson(
-					"PIPELINE", ingestionId, envelope.getRoutingKey(), jsonObject);
-
-			}
-
-		}
+		_sendEvent(
+			(IncomingRabbitMQMessage)message, jsonObject, ingestionId);
 
 		return message.ack();
 
 	}
 
-	/*
-	 * this method log the first level of json object
-	 */
+	private void _sendEvent(
+		IncomingRabbitMQMessage message, JsonObject jsonObject,
+		String ingestionId) {
+
+		if (ingestionId != null) {
+
+			IncomingRabbitMQMessage incomingRabbitMQMessage =
+				message;
+
+			Envelope envelope =
+				incomingRabbitMQMessage.getRabbitMQMessage().envelope();
+
+			eventSender.sendEventAsJson(
+				"PIPELINE", ingestionId, envelope.getRoutingKey(),
+				jsonObject);
+
+		}
+		else {
+			logger.warn(
+				"No ingestionId found in message: " +
+				jsonObject.getMap().keySet());
+		}
+
+	}
+
 	private void _logFirstLevel(JsonObject jsonObject) {
 
 		if (jsonObject == null) {
