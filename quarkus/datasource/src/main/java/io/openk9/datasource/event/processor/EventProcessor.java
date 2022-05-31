@@ -24,9 +24,12 @@ import io.smallrye.reactive.messaging.rabbitmq.IncomingRabbitMQMessage;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
@@ -44,6 +47,8 @@ public class EventProcessor {
 
 		JsonObject ingestionPayload =
 			jsonObject.getJsonObject("ingestionPayload");
+
+		_logFirstLevel(jsonObject);
 
 		if (ingestionPayload != null) {
 
@@ -73,10 +78,42 @@ public class EventProcessor {
 
 	}
 
+	/*
+	 * this method log the first level of json object
+	 */
+	private void _logFirstLevel(JsonObject jsonObject) {
+
+		StringBuilder stringBuilder = new StringBuilder();
+
+		Iterator<Map.Entry<String, Object>> iterator = jsonObject.iterator();
+
+		stringBuilder.append("{");
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, Object> kv = iterator.next();
+
+			String key = kv.getKey();
+
+			stringBuilder
+				.append('"')
+				.append(key)
+				.append("\": \"\"");
+
+		}
+
+		stringBuilder.append("}");
+
+		logger.info(stringBuilder.toString());
+
+	}
+
 	@Inject
 	EventSender eventSender;
 
 	@Inject
 	EventRepository eventRepository;
+
+	@Inject
+	Logger logger;
 
 }
