@@ -71,7 +71,7 @@ export function TokenSelect({
             );
             border: 1px solid var(--openk9-embeddable-search--border-color);
             border-radius: 4px;
-            z-index: 1;
+            z-index: 2; /* workaround for scrollbar overaly problem */
           `}
         >
           <div
