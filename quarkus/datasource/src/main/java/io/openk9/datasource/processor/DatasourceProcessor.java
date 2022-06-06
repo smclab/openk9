@@ -50,7 +50,7 @@ public class DatasourceProcessor {
 
 	@ConsumeEvent(value = _EVENT_NAME)
 	@ActivateRequestContext
-	Uni<JsonObject> consumeIngestionMessage(JsonObject jsonObject) {
+	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
 
 		long datasourceId = jsonObject.getLong("datasourceId");
 
@@ -108,22 +108,16 @@ public class DatasourceProcessor {
 						}))
 				.onItem()
 				.invoke(ingestionDatasourceEmitter::send)
-				.onItemOrFailure()
-				.transform((data, t) -> {
-					if (t != null) {
-						return new JsonObject()
-							.put("error", t.getMessage())
-							.put("failed", true);
-					}
-
-					return new JsonObject().put("failed", false);
-				})
+				.onFailure()
+				.invoke((t) -> logger.error(
+					"Error while processing ingestion message", t))
+				.replaceWithVoid()
 		);
 
 	}
 
 	@Incoming("ingestion")
-	public CompletionStage<Void> precess(Message<?> message) {
+	public CompletionStage<Void> process(Message<?> message) {
 
 		Object obj = message.getPayload();
 
@@ -132,14 +126,7 @@ public class DatasourceProcessor {
 				? (JsonObject) obj
 				: new JsonObject(new String((byte[]) obj));
 
-		io.vertx.mutiny.core.eventbus.Message<JsonObject> objectMessage =
-			bus.requestAndAwait(_EVENT_NAME, jsonObject);
-
-		JsonObject body = objectMessage.body();
-
-		if (body.getBoolean("failed", false)) {
-			return message.nack(new Exception(body.getString("message")));
-		}
+		bus.requestAndForget(_EVENT_NAME, jsonObject);
 
 		return message.ack();
 
