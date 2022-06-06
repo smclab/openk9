@@ -56,7 +56,8 @@
 	</modules>
 
 	<properties>
-		<base.docker.image.name>smclab/openk9-${artifactId}:${project.version}</base.docker.image.name>
+		<base.docker.image.group.name>smclab</base.docker.image.group.name>
+		<base.docker.image.name>${base.docker.image.group.name}/openk9-${artifactId}:${project.version}</base.docker.image.name>
 		<base.from.image>eclipse-temurin:17-jre-alpine</base.from.image>
 	</properties>
 
@@ -94,7 +95,7 @@
 							<image>${base.from.image}</image>
 						</from>
 						<to>
-							<image>${base.docker.image.name}:${project.version}</image>
+							<image>${base.docker.image.name}</image>
 						</to>
 						<container>
 							<entrypoint>
