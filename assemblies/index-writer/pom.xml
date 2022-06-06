@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>io.openk9.assemblies</groupId>
 		<artifactId>assemblies</artifactId>
-		<version>1.0.3</version>
+		<version>1.0.4-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -46,6 +46,6 @@
 	</profiles>
 
   <scm>
-    <tag>v1.0.3</tag>
+    <tag>v0.0.2</tag>
   </scm>
 </project>
