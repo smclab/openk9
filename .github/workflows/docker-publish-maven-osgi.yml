@@ -40,7 +40,7 @@ jobs:
       - name: Build and Push Plugin Driver Manager
         run: |
           ./mvnw install -Pbom --batch-mode
-          ./mvnw install -Passemblies,base-plugins -pl assemblies/plugin-driver-manager/plugin-driver-manager-kar -am --batch-mode
+          ./mvnw install -Passemblies -pl assemblies/plugin-driver-manager/plugin-driver-manager-kar -am --batch-mode
           ./mvnw -Passemblies,base-plugins --file assemblies/plugin-driver-manager/plugin-driver-manager-karaf package jib:build -Djib.to.image=smclab/openk9-plugin-driver-manager -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }} --batch-mode
 
 
