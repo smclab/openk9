@@ -18,8 +18,6 @@
 package io.openk9.datasource.event.sender;
 
 import io.openk9.datasource.event.dto.EventDto;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
@@ -42,8 +40,6 @@ public interface EventSender {
 		String type, String groupKey, String className, String classPk,
 		LocalDateTime parsingDate, Object data);
 
-	@NoArgsConstructor
-	@AllArgsConstructor(staticName = "of")
 	@SuperBuilder
 	class EventMessage extends EventDto { }
 }
