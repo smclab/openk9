@@ -46,7 +46,6 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Version;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.List;
@@ -279,8 +278,7 @@ public class Event extends PanacheEntityBase {
 
 	}
 
-	public static final LocalDateTime NULL_DATE = LocalDateTime.from(
-		Instant.EPOCH);
+	public static final LocalDateTime NULL_DATE = LocalDateTime.MIN;
 
 	public static final int MAX_RESULT = 10_000;
 	public static final String TABLE_NAME = "event";
