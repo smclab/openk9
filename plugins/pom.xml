@@ -23,13 +23,13 @@
 	<parent>
 		<groupId>io.openk9</groupId>
 		<artifactId>openk9</artifactId>
-		<version>1.0.4</version>
+		<version>1.0.5-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<groupId>io.openk9.plugins</groupId>
 	<artifactId>plugins</artifactId>
- 	<version>1.0.4</version>
+ 	<version>1.0.5-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>OpenK9 :: Plugins</name>
 
