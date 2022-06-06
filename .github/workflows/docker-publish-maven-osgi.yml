@@ -39,21 +39,21 @@ jobs:
 
       - name: Build and Push Plugin Driver Manager
         run: |
-          ./mvnw install -Ppublic,bom --batch-mode
-          ./mvnw install -Ppublic,assemblies,base-plugins -pl assemblies/plugin-driver-manager/plugin-driver-manager-kar -am --batch-mode
-          ./mvnw -Ppublic,assemblies,base-plugins --file assemblies/plugin-driver-manager/plugin-driver-manager-karaf package jib:build -Djib.to.image=smclab/openk9-plugin-driver-manager -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }} --batch-mode
+          ./mvnw install -Pbom --batch-mode
+          ./mvnw install -Passemblies,base-plugins -pl assemblies/plugin-driver-manager/plugin-driver-manager-kar -am --batch-mode
+          ./mvnw -Passemblies,base-plugins --file assemblies/plugin-driver-manager/plugin-driver-manager-karaf package jib:build -Djib.to.image=smclab/openk9-plugin-driver-manager -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }} --batch-mode
 
 
       - name: Build and Push Searcher
         run: |
-          ./mvnw install -Ppublic,bom --batch-mode
-          ./mvnw install -Ppublic,assemblies -pl assemblies/searcher/searcher-kar -am --batch-mode
-          ./mvnw -Ppublic,assemblies --file assemblies/searcher/searcher-karaf package jib:build -Djib.to.image=smclab/openk9-searcher -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }} --batch-mode
+          ./mvnw install -Pbom --batch-mode
+          ./mvnw install -Passemblies -pl assemblies/searcher/searcher-kar -am --batch-mode
+          ./mvnw -Passemblies --file assemblies/searcher/searcher-karaf package jib:build -Djib.to.image=smclab/openk9-searcher -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }} --batch-mode
 
 
       - name: Build and Push Index Writer
         run: |
-          ./mvnw install -Ppublic,bom --batch-mode
-          ./mvnw install -Ppublic,assemblies -pl assemblies/index-writer/index-writer-kar -am --batch-mode
-          ./mvnw -Ppublic,assemblies --file assemblies/index-writer/index-writer-karaf package jib:build -Djib.to.image=smclab/openk9-index-writer -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }} --batch-mode
+          ./mvnw install -Pbom --batch-mode
+          ./mvnw install -Passemblies -pl assemblies/index-writer/index-writer-kar -am --batch-mode
+          ./mvnw -Passemblies --file assemblies/index-writer/index-writer-karaf package jib:build -Djib.to.image=smclab/openk9-index-writer -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }} --batch-mode
 
