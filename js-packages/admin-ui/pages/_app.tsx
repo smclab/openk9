@@ -29,9 +29,10 @@ import "@clayui/css/lib/css/atlas.css";
 import "@clayui/css/lib/css/base.css";
 import "../styles.css";
 import { Toasts } from "../components/Toasts";
-import { isServer, useLoginRedirect } from "../state";
+import { isServer, useLoginRedirect, useStore } from "../state";
 import { defaultTheme } from "../components/theme";
 import useSWR from "swr";
+import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 
 const ThemeProvider = ThemeProviderReact18Fix as any;
 
@@ -90,13 +91,52 @@ export default function MyApp({ Component, pageProps }: any) {
   const { basePath } = useRouter();
 
   useLoginRedirect();
+  const loginInfo = useStore((state) => state.loginInfo);
+  const apolloClient = React.useMemo(() => {
+    return new ApolloClient({
+      uri: "/api/datasource/graphql",
+      cache: new InMemoryCache({
+        addTypename: false, //work around until __typename implemented on server
+        typePolicies: {
+          Query: {
+            fields: {
+              event: {
+                keyArgs: [
+                  "className",
+                  "groupKey",
+                  "gte",
+                  "id",
+                  "lte",
+                  "sortBy",
+                  "sortType",
+                  "type",
+                ],
+                merge(existing = [], incoming) {
+                  return [...existing, ...incoming];
+                },
+              },
+            },
+          },
+        },
+      }),
+
+      headers: loginInfo
+        ? {
+            authorization: `Bearer ${loginInfo.access_token}`,
+          }
+        : {},
+    });
+  }, []);
 
   return (
     <ToastContext.Provider value={toastContextValue}>
       <ThemeProvider theme={defaultTheme}>
         <ClayIconSpriteContext.Provider value={basePath + "/icons.svg"}>
-          <Component {...pageProps} />
-          {!isServer && <Toasts />}
+          <ApolloProvider client={apolloClient}>
+            <Component {...pageProps} />
+            {!isServer && <Toasts />}
+          </ApolloProvider>
+          ,
         </ClayIconSpriteContext.Provider>
       </ThemeProvider>
     </ToastContext.Provider>
