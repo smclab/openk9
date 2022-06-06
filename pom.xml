@@ -293,13 +293,6 @@
 				<module>quarkus</module>
 			</modules>
 		</profile>
-		<profile>
-			<id>base-plugins</id>
-			<modules>
-				<module>bom</module>
-				<module>plugins</module>
-			</modules>
-		</profile>
 	</profiles>
 
 </project>
