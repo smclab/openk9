@@ -312,7 +312,10 @@ public abstract class BaseSearchHTTPHandler
 	}
 
 	protected String[] excludeFields() {
-		return new String[] {"resources.binaries.data"};
+		return new String[] {
+			"resources.binaries.data",
+			"rawContent"
+		};
 	}
 
 	protected String[] includeFields() {
