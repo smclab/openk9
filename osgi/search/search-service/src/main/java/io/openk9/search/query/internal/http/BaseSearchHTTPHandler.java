@@ -49,8 +49,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -185,7 +183,19 @@ public abstract class BaseSearchHTTPHandler
 					.stream()
 					.collect(Collectors.groupingBy(SearchToken::getTokenType));
 
-			List<SearchToken> datasource = tokenTypeGroup.get("DATASOURCE");
+			String suggestKeyword = searchRequest.getSuggestKeyword();
+
+			if (suggestKeyword != null && !suggestKeyword.isBlank()) {
+
+				List<SearchToken> textTokens = tokenTypeGroup.computeIfAbsent(
+					SearchToken.TEXT, k -> new ArrayList<>(1));
+
+				textTokens.add(SearchToken.ofText(suggestKeyword));
+
+			}
+
+			List<SearchToken> datasource = tokenTypeGroup.get(
+				SearchToken.DATASOURCE);
 
 			Stream<PluginDriverDTO> documentTypeStream =
 				pluginDriverDTOList.stream();
@@ -421,8 +431,5 @@ public abstract class BaseSearchHTTPHandler
 	protected HttpResponseWriter _httpResponseWriter;
 
 	private static final String[] _EMPTY_ARRAY = {};
-
-	private static final Logger _log = LoggerFactory.getLogger(
-		BaseSearchHTTPHandler.class);
 
 }
