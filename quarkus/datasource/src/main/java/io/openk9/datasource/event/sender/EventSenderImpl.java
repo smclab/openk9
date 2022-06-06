@@ -54,9 +54,35 @@ public class EventSenderImpl implements EventSender {
 	public void sendEventAsJson(
 		String type, String groupKey, String className, Object data) {
 
+		sendEventAsJson(type, groupKey, className, null, null, data);
+
+	}
+
+	@Override
+	public void sendEventAsJson(
+		String type, String groupKey, String className, String classPk,
+		Object data) {
+
+		sendEventAsJson(type, groupKey, className, classPk, null, data);
+
+	}
+
+	@Override
+	public void sendEventAsJson(
+		String type, String groupKey, String className, String classPk,
+		LocalDateTime parsingDate, Object data) {
+
 		bus.requestAndForget(
 			REGISTER_EVENT,
-			EventMessage.of(type, groupKey, className, data)
+			EventMessage
+				.builder()
+				.type(type)
+				.groupKey(groupKey)
+				.className(className)
+				.classPK(classPk)
+				.parsingDate(parsingDate)
+				.data(data)
+				.build()
 		);
 
 	}

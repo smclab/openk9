@@ -74,11 +74,8 @@ public class EventProcessor {
 
 		if (ingestionId != null) {
 
-			IncomingRabbitMQMessage incomingRabbitMQMessage =
-				message;
-
 			Envelope envelope =
-				incomingRabbitMQMessage.getRabbitMQMessage().envelope();
+				message.getRabbitMQMessage().envelope();
 
 			eventSender.sendEventAsJson(
 				"PIPELINE", ingestionId, envelope.getRoutingKey(),

@@ -43,7 +43,7 @@ public class K9EntityListener {
 
 		_eventSender.sendEventAsJson(
 			"ADD", k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
-			k9Entity);
+			k9Entity.getPrimaryKey(), k9Entity);
 	}
 
 	@PreUpdate
@@ -55,7 +55,7 @@ public class K9EntityListener {
 
 		_eventSender.sendEventAsJson(
 			"UPDATE", k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
-			k9Entity);
+			k9Entity.getPrimaryKey(), k9Entity);
 	}
 
 	@PostRemove
@@ -67,7 +67,7 @@ public class K9EntityListener {
 
 		_eventSender.sendEventAsJson(
 			"DELETE", k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
-			k9Entity);
+			k9Entity.getPrimaryKey(), k9Entity);
 	}
 
 	private void _createOrUpdateScheduler(Datasource datasource)

@@ -45,6 +45,8 @@ import javax.persistence.Index;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Version;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.List;
@@ -57,6 +59,8 @@ import java.util.UUID;
 	@Index(name = "idx_event_type", columnList = "type"),
 	@Index(name = "idx_event_groupKey", columnList = "groupKey"),
 	@Index(name = "idx_event_className", columnList = "className"),
+	@Index(name = "idx_event_classPk", columnList = "classPk"),
+	@Index(name = "idx_event_classPk_groupKey", columnList = "classPk, groupKey"),
 	@Index(name = "idx_event_groupkey_classname", columnList = "groupKey, className"),
 	@Index(name = "idx_event_type_classname", columnList = "type, className"),
 	@Index(name = "idx_event_type_groupkey", columnList = "type, groupKey"),
@@ -93,11 +97,34 @@ public class Event extends PanacheEntityBase {
 	@Column(name = CREATED, nullable = false)
 	private LocalDateTime created = LocalDateTime.now();
 
+	@Column(name = PARSING_DATE)
+	private LocalDateTime parsingDate;
+
 	@Column(name = GROUP_KEY)
 	private String groupKey;
 
+	@Column(name = CLASS_PK)
+	private String classPk;
+
 	@Column(name = CLASS_NAME)
 	private String className;
+
+	public static Uni<LocalDateTime> getLastParsingDate(
+		String groupKey, String classPk) {
+
+		return Event.<Event>find(
+			"groupKey = :groupKey and classPk = :classPk",
+			Sort.descending(PARSING_DATE),
+			Parameters.with("groupKey", groupKey).and("classPk", classPk)
+		)
+			.firstResult()
+			.onItem()
+			.transform(Event::getParsingDate)
+			.ifNoItem()
+			.after(Duration.ofMillis(500))
+			.recoverWithItem(NULL_DATE);
+
+	}
 
 	public static Uni<List<Event>> getEventsBetween(
 		Temporal gte, Temporal lte, int maxResult) {
@@ -252,8 +279,10 @@ public class Event extends PanacheEntityBase {
 
 	}
 
-	public static final int MAX_RESULT = 10_000;
+	public static final LocalDateTime NULL_DATE = LocalDateTime.from(
+		Instant.EPOCH);
 
+	public static final int MAX_RESULT = 10_000;
 	public static final String TABLE_NAME = "event";
 	public static final String ID = "id";
 	public static final String TYPE = "type";
@@ -263,11 +292,14 @@ public class Event extends PanacheEntityBase {
 	public static final String CREATED = "created";
 	public static final String GROUP_KEY = "groupKey";
 	public static final String CLASS_NAME = "className";
+	private static final String PARSING_DATE = "parsingDate";
+	public static final String CLASS_PK = "classPK";
 
 	public enum EventSortable implements Sortable {
 		TYPE(Event.TYPE),
 		SIZE(Event.SIZE),
 		CREATED(Event.CREATED),
+		PARSING_DATE(Event.PARSING_DATE),
 		GROUP_KEY(Event.GROUP_KEY),
 		CLASS_NAME(Event.CLASS_NAME);
 

@@ -87,6 +87,7 @@ public class GraphqlResource {
 		@Description("Type of event (INGESTION, INGESTION_DATASOURCE)") @Name(Event.TYPE) String type,
 		@Description("class name of event") @Name(Event.CLASS_NAME) String className,
 		@Description("event group key set") @Name(Event.GROUP_KEY) String groupKey,
+		@Description("event group key set") @Name(Event.CLASS_PK) String classPk,
 		@Name("sortBy") @DefaultValue("CREATED") Event.EventSortable sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType,
 		@Name(Constants.GTE) LocalDateTime gte,
@@ -100,7 +101,7 @@ public class GraphqlResource {
 			return Uni.createFrom().item(List.of());
 		}
 
-		LinkedHashMap<String, Object> projections = new LinkedHashMap<>(6);
+		LinkedHashMap<String, Object> projections = new LinkedHashMap<>(7);
 
 		if (id != null) {
 			projections.put(Event.ID, id);
@@ -124,6 +125,10 @@ public class GraphqlResource {
 
 		if (lte != null) {
 			projections.put(Constants.LTE, lte);
+		}
+
+		if (classPk != null) {
+			projections.put(Event.CLASS_PK, classPk);
 		}
 
 		return eventRepository.getEvents(

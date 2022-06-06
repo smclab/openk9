@@ -22,13 +22,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class EventDto {
+	@Builder.Default
+	private final String __typename = EventDto.class.getName();
 	private String type;
-	private String data;
+	private Object data;
 	private String groupKey;
 	private String className;
+	private String classPK;
+	private LocalDateTime parsingDate;
 }

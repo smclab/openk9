@@ -31,6 +31,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class EventOption {
 
+	@Builder.Default
+	private final String __typename = EventOption.class.getName();
 	private String type;
 	private String groupKey;
 	private String className;

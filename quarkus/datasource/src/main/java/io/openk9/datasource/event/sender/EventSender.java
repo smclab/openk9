@@ -19,9 +19,10 @@ package io.openk9.datasource.event.sender;
 
 import io.openk9.datasource.event.dto.EventDto;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import java.time.LocalDateTime;
 
 public interface EventSender {
 
@@ -33,14 +34,16 @@ public interface EventSender {
 	void sendEventAsJson(
 		String type, String groupKey, String className, Object data);
 
-	@Data
+	void sendEventAsJson(
+		String type, String groupKey, String className, String classPk,
+		Object data);
+
+	void sendEventAsJson(
+		String type, String groupKey, String className, String classPk,
+		LocalDateTime parsingDate, Object data);
+
 	@NoArgsConstructor
 	@AllArgsConstructor(staticName = "of")
-	@Builder
-	class EventMessage {
-		private String type;
-		private String groupKey;
-		private String className;
-		private Object data;
-	}
+	@SuperBuilder
+	class EventMessage extends EventDto { }
 }

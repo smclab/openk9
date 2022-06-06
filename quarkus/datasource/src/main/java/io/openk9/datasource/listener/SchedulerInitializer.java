@@ -20,6 +20,7 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
+import io.openk9.datasource.event.model.Event;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
@@ -48,6 +49,8 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 @ApplicationScoped
@@ -157,16 +160,34 @@ public class SchedulerInitializer {
 			Uni<SchedulerEnabledDTO> schedulerEnabledDTOUni = _pluginDriverClient
 				.schedulerEnabled(driverServiceName);
 
-			return schedulerEnabledDTOUni.flatMap(schedulerEnabledDTO -> {
+			Uni<LocalDateTime> lastParsingDate =
+				Event.getLastParsingDate(
+					Datasource.class.getName(),
+					datasource.getPrimaryKey());
 
-				if (schedulerEnabledDTO.isSchedulerEnabled()) {
-					return _pluginDriverClient
-						.invokeDataParser(
-							InvokeDataParserDTO
-								.of(
-									driverServiceName, datasource,
-									Date.from(datasource.getLastIngestionDate()),
-									new Date()));
+			return Uni.combine()
+				.all()
+				.unis(lastParsingDate, schedulerEnabledDTOUni)
+				.asTuple()
+				.flatMap(t2 -> {
+
+					SchedulerEnabledDTO schedulerEnabledDTO = t2.getItem2();
+
+					if (schedulerEnabledDTO.isSchedulerEnabled()) {
+
+						LocalDateTime parsingDate = t2.getItem1();
+
+						return _pluginDriverClient
+							.invokeDataParser(
+								InvokeDataParserDTO
+									.of(
+										driverServiceName, datasource,
+										Date.from(
+											parsingDate
+												.atZone(ZoneId.systemDefault())
+												.toInstant()
+										),
+										new Date()));
 				}
 
 				logger.warn(

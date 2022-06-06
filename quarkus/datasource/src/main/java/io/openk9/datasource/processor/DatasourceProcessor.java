@@ -41,7 +41,6 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
-import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
@@ -107,18 +106,6 @@ public class DatasourceProcessor {
 								});
 
 						}))
-				.eventually(() -> Datasource
-					.<Datasource>findById(datasourceId)
-					.flatMap(datasource -> {
-
-						datasource.setLastIngestionDate(
-							Instant.ofEpochMilli(
-								jsonObject.getLong("parsingDate")));
-
-						return datasource.persist();
-
-					})
-				)
 				.onItem()
 				.invoke(ingestionDatasourceEmitter::send)
 				.onItemOrFailure()
