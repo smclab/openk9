@@ -24,7 +24,7 @@ function Tabs({
       style={{
         position: "relative",
         overflowX: "auto",
-        height: "35px",
+        height: "40px",
       }}
     >
       <div
@@ -42,16 +42,15 @@ function Tabs({
               css={css`
                 padding: 8px 16px;
                 color: ${isSelected
-                  ? "var(--openk9-embeddable-search--primary-color)"
-                  : ""};
+                  ? "var(--openk9-embeddable-search--active-color)"
+                  : "var(--openk9-embeddable-search--secondary-text-color)"};
                 border-bottom: 2px solid
                   ${isSelected
                     ? "var(--openk9-embeddable-search--active-color)"
                     : "transparent"};
                 cursor: pointer;
-                font-size: 0.8rem;
-                color: var(--openk9-embeddable-search--secondary-text-color);
                 user-select: none;
+                /* font-weight: ${isSelected ? "bold" : "normal"}; */
               `}
               onClick={() => {
                 onSelectedTabIndexChange(index);
