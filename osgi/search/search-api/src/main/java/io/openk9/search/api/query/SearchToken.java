@@ -27,6 +27,8 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SearchToken {
+
+	public static final String DATASOURCE = "DATASOURCE";
 	private String entityType;
 	private String entityName;
 	private String tokenType;
@@ -51,7 +53,9 @@ public class SearchToken {
 		String[] values, String keywordKey, boolean filter) {
 
 		return new SearchToken(
-			null, null, "TEXT", keywordKey, values, Map.of(), filter);
+			null, null, TEXT, keywordKey, values, Map.of(), filter);
 	}
+
+	public static final String TEXT = "TEXT";
 
 }
