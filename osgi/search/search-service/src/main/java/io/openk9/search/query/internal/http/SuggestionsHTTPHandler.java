@@ -30,6 +30,7 @@ import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.PluginDriverDTOList;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchRequest;
+import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
 import io.openk9.search.query.internal.config.SearchConfig;
@@ -450,6 +451,24 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		}
 
 		return SuggestionsResponse.of(suggestions, afterKey);
+	}
+
+	@Override
+	protected QueryParser.Context createQueryParserContext(
+		Tenant tenant, List<Datasource> datasources,
+		HttpServerRequest httpRequest,
+		Map<String, List<SearchToken>> tokenTypeGroup,
+		List<PluginDriverDTO> documentTypeList,
+		String aclQuery) {
+		return QueryParser.Context.of(
+			tenant,
+			datasources,
+			documentTypeList,
+			tokenTypeGroup,
+			httpRequest,
+			QueryParser.QueryCondition.MUST,
+			aclQuery
+		);
 	}
 
 	private void _datasource(
