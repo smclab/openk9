@@ -22,6 +22,7 @@ import io.openk9.datasource.event.model.Event;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -83,7 +84,9 @@ public class EventSenderImpl implements EventSender {
 				.classPK(classPk)
 				.parsingDate(parsingDate)
 				.data(data)
-				.build()
+				.build(),
+			new DeliveryOptions()
+				.setSendTimeout(DeliveryOptions.DEFAULT_TIMEOUT * 10)
 		);
 
 	}
