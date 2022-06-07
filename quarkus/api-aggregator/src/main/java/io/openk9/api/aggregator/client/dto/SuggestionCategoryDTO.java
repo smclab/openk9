@@ -35,4 +35,5 @@ public class SuggestionCategoryDTO {
 	private String fieldName;
 	private String name;
 	private boolean enabled;
+	private int priority;
 }

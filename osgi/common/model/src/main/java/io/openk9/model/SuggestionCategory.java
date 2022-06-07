@@ -32,4 +32,5 @@ public class SuggestionCategory {
 	private Long tenantId;
 	private Long parentCategoryId;
 	private String name;
+	private Integer priority;
 }
