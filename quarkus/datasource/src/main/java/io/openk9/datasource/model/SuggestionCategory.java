@@ -57,13 +57,17 @@ public class SuggestionCategory extends PanacheEntityBase implements K9Entity {
 	private String name;
 	@Column(columnDefinition = "boolean default true")
 	private boolean enabled;
+	@Column(columnDefinition = "integer default 0")
+	private Integer priority;
 
 	public static PanacheQuery<SuggestionCategory> findAll() {
-		return SuggestionCategory.find("enabled",true);
+		return SuggestionCategory
+			.find("enabled", Sort.descending("priority"), true);
 	}
 
 	public static PanacheQuery<SuggestionCategory> findAll(Sort sort) {
-		return SuggestionCategory.find("enabled", sort, true);
+		return SuggestionCategory.find(
+			"enabled", sort.and("priority", Sort.Direction.Descending), true);
 	}
 
 	@Override
