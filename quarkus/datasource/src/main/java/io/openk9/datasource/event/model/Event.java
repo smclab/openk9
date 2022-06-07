@@ -260,7 +260,8 @@ public class Event extends PanacheEntityBase {
 
 	}
 
-	public static final LocalDateTime NULL_DATE = LocalDateTime.MIN;
+	public static final LocalDateTime NULL_DATE = LocalDateTime.of(
+		1970, 1, 1, 0, 0, 0);
 
 	public static final int MAX_RESULT = 10_000;
 	public static final String TABLE_NAME = "event";
