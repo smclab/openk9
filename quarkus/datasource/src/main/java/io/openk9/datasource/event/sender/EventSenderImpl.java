@@ -19,7 +19,7 @@ package io.openk9.datasource.event.sender;
 
 import io.openk9.datasource.event.dto.EventDto;
 import io.openk9.datasource.event.model.Event;
-import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
@@ -27,6 +27,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
 
@@ -87,8 +88,8 @@ public class EventSenderImpl implements EventSender {
 
 	}
 
-	@ConsumeEvent(value = REGISTER_EVENT, blocking = true)
-	@ReactiveTransactional
+	@ConsumeEvent(value = REGISTER_EVENT)
+	@ActivateRequestContext
 	public Uni<Void> handleEvent(EventMessage eventMessage) {
 
 		Object objData = eventMessage.getData();
@@ -105,19 +106,21 @@ public class EventSenderImpl implements EventSender {
 			data = Json.encode(objData);
 		}
 
-		return Event
-			.builder()
-			.data(data)
-			.size(data == null ? 0 : data.length())
-			.groupKey(eventMessage.getGroupKey())
-			.type(eventMessage.getType())
-			.className(eventMessage.getClassName())
-			.created(LocalDateTime.now())
-			.parsingDate(eventMessage.getParsingDate())
-			.classPk(eventMessage.getClassPK())
-			.build()
-			.persist()
-			.replaceWithVoid();
+		return Panache.withTransaction(() ->
+			Event
+				.builder()
+				.data(data)
+				.size(data == null ? 0 : data.length())
+				.groupKey(eventMessage.getGroupKey())
+				.type(eventMessage.getType())
+				.className(eventMessage.getClassName())
+				.created(LocalDateTime.now())
+				.parsingDate(eventMessage.getParsingDate())
+				.classPk(eventMessage.getClassPK())
+				.build()
+				.persist()
+				.replaceWithVoid()
+		);
 	}
 
 	@Inject
