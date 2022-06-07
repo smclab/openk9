@@ -52,9 +52,12 @@ public class DefaultACLEnrichProcessor implements SyncEnrichProcessor {
 				.putObject("acl");
 
 			if (aclNode == null || aclNode.isEmpty()) {
-
 				aclIndexNode.put("public", true);
-
+			}
+			else if (aclNode.has("public")) {
+				aclIndexNode.put(
+					"public",
+					aclNode.get("public").asBoolean(true));
 			}
 			else {
 
