@@ -23,11 +23,15 @@ import io.openk9.datasource.event.util.Sortable;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.sqlclient.Row;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Function;
 
 public interface EventRepository {
+
+	Uni<LocalDateTime> getLastParsingDate(String groupKey, String classPk);
+
 	Uni<List<Event>> getEvents(
 		List<String> fields, int from, int size,
 		LinkedHashMap<String, Object> projections, List<? extends Sortable> sortBy,

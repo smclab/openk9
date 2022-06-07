@@ -45,7 +45,6 @@ import javax.persistence.Index;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Version;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.List;
@@ -107,23 +106,6 @@ public class Event extends PanacheEntityBase {
 
 	@Column(name = CLASS_NAME)
 	private String className;
-
-	public static Uni<LocalDateTime> getLastParsingDate(
-		String groupKey, String classPk) {
-
-		return Event.<Event>find(
-			"groupKey = :groupKey and classPk = :classPk",
-			Sort.descending(PARSING_DATE),
-			Parameters.with("groupKey", groupKey).and("classPk", classPk)
-		)
-			.firstResult()
-			.onItem()
-			.transform(Event::getParsingDate)
-			.ifNoItem()
-			.after(Duration.ofMillis(500))
-			.recoverWithItem(NULL_DATE);
-
-	}
 
 	public static Uni<List<Event>> getEventsBetween(
 		Temporal gte, Temporal lte, int maxResult) {
@@ -290,7 +272,7 @@ public class Event extends PanacheEntityBase {
 	public static final String CREATED = "created";
 	public static final String GROUP_KEY = "groupKey";
 	public static final String CLASS_NAME = "className";
-	private static final String PARSING_DATE = "parsingDate";
+	public static final String PARSING_DATE = "parsingDate";
 	public static final String CLASS_PK = "classPK";
 
 	public enum EventSortable implements Sortable {

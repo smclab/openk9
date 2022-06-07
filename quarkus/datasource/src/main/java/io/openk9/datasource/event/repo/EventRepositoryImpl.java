@@ -33,6 +33,7 @@ import io.vertx.mutiny.sqlclient.Tuple;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,6 +43,26 @@ import java.util.stream.IntStream;
 
 @ApplicationScoped
 public class EventRepositoryImpl implements EventRepository {
+
+	@Override
+	public Uni<LocalDateTime> getLastParsingDate(
+		String groupKey, String classPk) {
+
+		String query =
+			"SELECT " + Event.PARSING_DATE + " " +
+			"FROM " + Event.TABLE_NAME + " " +
+			"WHERE " + Event.GROUP_KEY + " = $1 AND " + Event.CLASS_PK + " = $2" +
+			"ORDER BY " + Event.CREATED + " DESC " +
+			"LIMIT 1";
+
+		return client.preparedQuery(query)
+			.execute(Tuple.of(groupKey, classPk))
+			.onItem()
+			.transform(rows -> rows.iterator().hasNext()
+				? rows.iterator().next().getLocalDateTime(0)
+				: Event.NULL_DATE);
+
+	}
 
 	@Override
 	public Uni<List<Event>> getEvents(

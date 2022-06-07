@@ -20,7 +20,7 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
-import io.openk9.datasource.event.model.Event;
+import io.openk9.datasource.event.repo.EventRepository;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
@@ -161,7 +161,7 @@ public class SchedulerInitializer {
 				.schedulerEnabled(driverServiceName);
 
 			Uni<LocalDateTime> lastParsingDate =
-				Event.getLastParsingDate(
+				eventRepository.getLastParsingDate(
 					Datasource.class.getName(),
 					datasource.getPrimaryKey());
 
@@ -232,5 +232,8 @@ public class SchedulerInitializer {
 
 	@Inject
 	Logger logger;
+
+	@Inject
+	EventRepository eventRepository;
 
 }

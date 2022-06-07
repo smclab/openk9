@@ -20,6 +20,7 @@ package io.openk9.datasource.event.processor;
 import com.rabbitmq.client.Envelope;
 import io.openk9.datasource.event.repo.EventRepository;
 import io.openk9.datasource.event.sender.EventSender;
+import io.openk9.datasource.event.util.EventType;
 import io.smallrye.reactive.messaging.rabbitmq.IncomingRabbitMQMessage;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -28,6 +29,9 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -57,12 +61,19 @@ public class EventProcessor {
 			ingestionPayload = jsonObject.getJsonObject("payload");
 		}
 
+		Long parsingDate = Objects.requireNonNullElse(ingestionPayload, jsonObject)
+			.getLong("parsingDate", 0L);
+
+		String contentId = Objects.requireNonNullElse(ingestionPayload, jsonObject)
+			.getString("contentId", "");
+
 		String ingestionId =
 			Objects.requireNonNullElse(ingestionPayload, jsonObject)
 				.getString("ingestionId");
 
 		_sendEvent(
-			(IncomingRabbitMQMessage)message, jsonObject, ingestionId);
+			(IncomingRabbitMQMessage)message, jsonObject, ingestionId,
+			contentId, parsingDate);
 
 		return message.ack();
 
@@ -70,7 +81,7 @@ public class EventProcessor {
 
 	private void _sendEvent(
 		IncomingRabbitMQMessage message, JsonObject jsonObject,
-		String ingestionId) {
+		String ingestionId, String classPk, Long parsingDate) {
 
 		if (ingestionId != null) {
 
@@ -78,8 +89,10 @@ public class EventProcessor {
 				message.getRabbitMQMessage().envelope();
 
 			eventSender.sendEventAsJson(
-				"PIPELINE", ingestionId, envelope.getRoutingKey(),
-				jsonObject);
+				EventType.PIPELINE, ingestionId, envelope.getRoutingKey(),
+				classPk, LocalDateTime.ofInstant(
+					Instant.ofEpochMilli(parsingDate),
+					ZoneId.systemDefault()), jsonObject);
 
 		}
 		else {

@@ -19,6 +19,7 @@ package io.openk9.datasource.listener;
 
 import io.openk9.datasource.emitter.datasource.K9EntityEmitter;
 import io.openk9.datasource.event.sender.EventSender;
+import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.K9Entity;
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -42,7 +43,7 @@ public class K9EntityListener {
 		_k9EntityEmitter.sendInsert(k9Entity);
 
 		_eventSender.sendEventAsJson(
-			"ADD", k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
+			EventType.CREATE, k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
 			k9Entity.getPrimaryKey(), k9Entity);
 	}
 
@@ -54,7 +55,7 @@ public class K9EntityListener {
 		_k9EntityEmitter.sendUpdate(k9Entity);
 
 		_eventSender.sendEventAsJson(
-			"UPDATE", k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
+			EventType.UPDATE, k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
 			k9Entity.getPrimaryKey(), k9Entity);
 	}
 
@@ -66,14 +67,13 @@ public class K9EntityListener {
 		_k9EntityEmitter.sendDelete(k9Entity);
 
 		_eventSender.sendEventAsJson(
-			"DELETE", k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
+			EventType.DELETE, k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
 			k9Entity.getPrimaryKey(), k9Entity);
 	}
 
 	private void _createOrUpdateScheduler(Datasource datasource)
 		throws SchedulerException {
 		_schedulerInitializer.get().createOrUpdateScheduler(datasource);
-
 	}
 
 	@Inject

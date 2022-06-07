@@ -17,9 +17,9 @@
 
 package io.openk9.datasource.event.util;
 
-public interface Constants {
-	String LTE = "lte";
-	String GTE = "gte";
-
-
+public interface EventType {
+	String CREATE = "CREATE";
+	String UPDATE = "UPDATE";
+	String DELETE = "DELETE";
+	String PIPELINE = "PIPELINE";
 }
