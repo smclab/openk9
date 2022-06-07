@@ -36,6 +36,7 @@ public class EventOption {
 	private String type;
 	private String groupKey;
 	private String className;
+	private String classPK;
 
 	public static EventOption from(Row row) {
 
@@ -52,6 +53,9 @@ public class EventOption {
 			else if (columnName.equalsIgnoreCase(Event.CLASS_NAME)) {
 				builder.className(row.getString(i));
 			}
+			else if (columnName.equalsIgnoreCase(Event.CLASS_PK)) {
+				builder.classPK(row.getString(i));
+			}
 		}
 
 		return builder.build();
@@ -61,7 +65,8 @@ public class EventOption {
 	public enum EventOptionSortable implements Sortable {
 		TYPE(Event.TYPE),
 		GROUP_KEY(Event.GROUP_KEY),
-		CLASS_NAME(Event.CLASS_NAME);
+		CLASS_NAME(Event.CLASS_NAME),
+		CLASS_PK(Event.CLASS_PK);
 
 		EventOptionSortable(String column) {
 			this.column = column;
