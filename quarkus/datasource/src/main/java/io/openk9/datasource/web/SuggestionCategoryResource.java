@@ -84,7 +84,11 @@ public class SuggestionCategoryResource {
 
 		Tuple2<String, Map<String, Object>> query = ResourceUtil.getFilterQuery(map);
 
-		return SuggestionCategory.list(query.getItem1(), query.getItem2());
+		return SuggestionCategory
+			.list(
+				query.getItem1(),
+				Sort.descending("priority"),
+				query.getItem2());
 	}
 
 	@GET
