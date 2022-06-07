@@ -163,6 +163,7 @@ public class SchedulerInitializer {
 			Uni<LocalDateTime> lastParsingDate =
 				eventRepository.getLastParsingDate(
 					Datasource.class.getName(),
+					datasource.getPrimaryKey(),
 					datasource.getPrimaryKey());
 
 			return Uni.combine()
