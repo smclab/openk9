@@ -113,6 +113,8 @@ public class EventSenderImpl implements EventSender {
 			.type(eventMessage.getType())
 			.className(eventMessage.getClassName())
 			.created(LocalDateTime.now())
+			.parsingDate(eventMessage.getParsingDate())
+			.classPk(eventMessage.getClassPK())
 			.build()
 			.persist()
 			.replaceWithVoid();
