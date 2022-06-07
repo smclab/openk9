@@ -27,7 +27,10 @@ import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
+import io.openk9.search.query.internal.config.SearchConfig;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -44,9 +47,16 @@ import java.util.Objects;
 
 @Component(
 	immediate = true,
-	service = RouterHandler.class
+	service = RouterHandler.class,
+	configurationPid = SearchConfig.PID
 )
 public class SearchByDatasourceHTTPHandler extends BaseSearchHTTPHandler {
+
+	@Activate
+	@Modified
+	public void activate(SearchConfig config) {
+		_searchConfig = config;
+	}
 
 	@Override
 	public HttpServerRoutes handle(HttpServerRoutes router) {
@@ -126,5 +136,12 @@ public class SearchByDatasourceHTTPHandler extends BaseSearchHTTPHandler {
 		HttpResponseWriter httpResponseWriter) {
 		super.setHttpResponseWriter(httpResponseWriter);
 	}
+
+	@Override
+	protected SearchConfig getSearchConfig() {
+		return _searchConfig;
+	}
+
+	private SearchConfig _searchConfig;
 
 }

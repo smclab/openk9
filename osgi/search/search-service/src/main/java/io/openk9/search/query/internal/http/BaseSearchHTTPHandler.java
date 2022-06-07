@@ -37,6 +37,7 @@ import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
 import io.openk9.search.client.api.util.SearchUtil;
+import io.openk9.search.query.internal.config.SearchConfig;
 import io.openk9.search.query.internal.response.Response;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchResponse;
@@ -379,6 +380,19 @@ public abstract class BaseSearchHTTPHandler
 
 		searchSourceBuilder.highlighter(highlightBuilder);
 
+		List<SearchToken> searchQuery = searchRequest.getSearchQuery();
+
+		if (searchQuery != null
+			&& !searchQuery.isEmpty()
+			&& searchQuery
+				.stream()
+				.anyMatch(st -> st.getFilter() == null || !st.getFilter())) {
+
+			searchSourceBuilder.minScore(getSearchConfig().minScore());
+
+		}
+
+
 	}
 
 	protected void addQueryParser(QueryParser queryParser) {
@@ -415,6 +429,8 @@ public abstract class BaseSearchHTTPHandler
 	protected void setHttpResponseWriter(HttpResponseWriter httpResponseWriter) {
 		_httpResponseWriter = httpResponseWriter;
 	}
+
+	protected abstract SearchConfig getSearchConfig();
 
 	private final List<QueryParser> _queryParsers = new ArrayList<>();
 
