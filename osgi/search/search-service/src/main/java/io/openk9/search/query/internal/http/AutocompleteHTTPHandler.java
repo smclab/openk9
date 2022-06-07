@@ -34,11 +34,14 @@ import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
+import io.openk9.search.query.internal.config.SearchConfig;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -61,9 +64,16 @@ import java.util.stream.Collectors;
 
 @Component(
 	immediate = true,
-	service = RouterHandler.class
+	service = RouterHandler.class,
+	configurationPid = SearchConfig.PID
 )
 public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
+
+	@Activate
+	@Modified
+	public void activate(SearchConfig config) {
+		_searchConfig = config;
+	}
 
 	@Override
 	public HttpServerRoutes handle(
@@ -311,5 +321,14 @@ public class AutocompleteHTTPHandler extends BaseSearchHTTPHandler {
 		HttpResponseWriter httpResponseWriter) {
 		super.setHttpResponseWriter(httpResponseWriter);
 	}
+
+	@Override
+	protected SearchConfig getSearchConfig() {
+		return _searchConfig;
+	}
+
+	private SearchConfig _searchConfig;
+
+	private float minScore;
 
 }

@@ -33,6 +33,7 @@ import io.openk9.search.api.query.SearchRequest;
 import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
+import io.openk9.search.query.internal.config.SearchConfig;
 import io.openk9.search.query.internal.response.SuggestionsResponse;
 import io.openk9.search.query.internal.response.suggestions.Suggestions;
 import org.elasticsearch.action.search.SearchResponse;
@@ -78,19 +79,16 @@ import java.util.stream.Collectors;
 	service = RouterHandler.class,
 	property = {
 		"base.path=/v1/suggestions"
-	}
+	},
+	configurationPid = SearchConfig.PID
 )
 public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
-	@interface Config {
-		String[] datasourceFieldAggregations() default {"topic", "category"};
-		boolean enableEntityAggregation() default false;
-	}
 	@Activate
 	@Modified
-	void activate(Config config) {
-		_datasourceFieldAggregations = config.datasourceFieldAggregations();
+	void activate(SearchConfig config) {
 		_enableEntityAggregation = config.enableEntityAggregation();
+		_searchConfig = config;
 	}
 
 	@Override
@@ -569,9 +567,14 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		super.setHttpResponseWriter(httpResponseWriter);
 	}
 
-	private String[] _datasourceFieldAggregations;
+	@Override
+	protected SearchConfig getSearchConfig() {
+		return _searchConfig;
+	}
 
 	private boolean _enableEntityAggregation;
+
+	private SearchConfig _searchConfig;
 
 	private static final Logger _log = LoggerFactory.getLogger(
 		SuggestionsHTTPHandler.class);

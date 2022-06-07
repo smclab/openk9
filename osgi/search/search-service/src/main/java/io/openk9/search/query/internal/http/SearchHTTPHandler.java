@@ -25,13 +25,10 @@ import io.openk9.json.api.JsonFactory;
 import io.openk9.model.Datasource;
 import io.openk9.model.Tenant;
 import io.openk9.plugin.driver.manager.client.api.PluginDriverManagerClient;
-import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.search.api.query.QueryParser;
-import io.openk9.search.api.query.SearchRequest;
-import io.openk9.search.api.query.SearchToken;
 import io.openk9.search.api.query.SearchTokenizer;
 import io.openk9.search.client.api.Search;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import io.openk9.search.query.internal.config.SearchConfig;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -39,8 +36,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
-import org.osgi.service.metatype.annotations.Designate;
-import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -54,20 +49,15 @@ import java.util.List;
 	service = RouterHandler.class,
 	property = {
 		"base.path=/v1/search"
-	}
+	},
+	configurationPid = SearchConfig.PID
 )
-@Designate(ocd = SearchHTTPHandler.Config.class)
 public class SearchHTTPHandler extends BaseSearchHTTPHandler {
-
-	@ObjectClassDefinition
-	@interface Config {
-		float minScore() default 0.5f;
-	}
 
 	@Activate
 	@Modified
-	public void activate(Config config) {
-		_minScore = config.minScore();
+	public void activate(SearchConfig config) {
+		_searchConfig = config;
 	}
 
 	@Override
@@ -91,31 +81,6 @@ public class SearchHTTPHandler extends BaseSearchHTTPHandler {
 			.zipWhen(tenant -> _datasourceClient
 				.findDatasourceByTenantIdAndIsActive(tenant.getTenantId())
 				.collectList());
-	}
-
-	@Override
-	protected void customizeSearchSourceBuilder(
-		Tenant tenant, List<Datasource> datasources,
-		SearchRequest searchRequest, List<PluginDriverDTO> documentTypeList,
-		SearchSourceBuilder searchSourceBuilder,
-		org.elasticsearch.action.search.SearchRequest elasticSearchQuery) {
-
-		super.customizeSearchSourceBuilder(
-			tenant, datasources, searchRequest, documentTypeList,
-			searchSourceBuilder, elasticSearchQuery);
-
-		List<SearchToken> searchQuery = searchRequest.getSearchQuery();
-
-		if (searchQuery != null
-			&& !searchQuery.isEmpty()
-			&& searchQuery
-				.stream()
-				.anyMatch(st -> st.getFilter() == null || !st.getFilter())) {
-
-			searchSourceBuilder.minScore(_minScore);
-
-		}
-
 	}
 
 	@Reference(
@@ -176,6 +141,11 @@ public class SearchHTTPHandler extends BaseSearchHTTPHandler {
 		super.setHttpResponseWriter(httpResponseWriter);
 	}
 
-	private float _minScore;
+	@Override
+	protected SearchConfig getSearchConfig() {
+		return _searchConfig;
+	}
+
+	private SearchConfig _searchConfig;
 
 }
