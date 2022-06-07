@@ -126,7 +126,7 @@ export default function MyApp({ Component, pageProps }: any) {
           }
         : {},
     });
-  }, []);
+  }, [loginInfo]);
 
   return (
     <ToastContext.Provider value={toastContextValue}>

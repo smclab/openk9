@@ -49,6 +49,14 @@ export default function IngestionEvents() {
     }
   `);
 
+  const { data: autocompleteOptionsClassPK } = useQuery(gql`
+    query IngestionEventsAutocompleteOptionsClassPK {
+      eventOptions {
+        classPK
+      }
+    }
+  `);
+
   const { data: autocompleteOptionsType } = useQuery(gql`
     query IngestionEventsAutocompleteOptionsType {
       eventOptions {
@@ -59,6 +67,7 @@ export default function IngestionEvents() {
   const [classNameValue, setClassNameValue] = React.useState("");
   const [groupKeyValue, setGroupKeyValue] = React.useState("");
   const [typeValue, setTypeValue] = React.useState("");
+  const [classPKValue, setClassPKValue] = React.useState("");
 
   const { data: eventlist, fetchMore: fetchMoreEvents } = useQuery(
     gql`
@@ -100,10 +109,17 @@ export default function IngestionEvents() {
     padding: "8px",
   };
 
-  const cellStyleSizeCreate: React.CSSProperties = {
+  const cellStyleDate: React.CSSProperties = {
     wordBreak: "break-word",
     whiteSpace: "nowrap",
     padding: "8px",
+  };
+
+  const cellStyleNumber: React.CSSProperties = {
+    wordBreak: "break-word",
+    whiteSpace: "nowrap",
+    padding: "8px",
+    textAlign: "right",
   };
 
   const coloumnStyle: React.CSSProperties = {
@@ -141,67 +157,57 @@ export default function IngestionEvents() {
                 <th style={coloumnStyle}>id</th>
                 <th style={coloumnStyle}>
                   type
-                  <select
+                  <SelectOption
                     value={typeValue}
-                    onChange={(event) => {
-                      setTypeValue(event.currentTarget.value);
-                    }}
-                  >
-                    <option value=""></option>
-                    {autocompleteOptionsType.eventOptions.map((option: any) => {
-                      return (
-                        <option key={option.type} value={option.type}>
-                          {option.type}
-                        </option>
-                      );
-                    })}
-                  </select>
+                    onChange={setTypeValue}
+                    options={
+                      autocompleteOptionsType?.eventOptions.map(
+                        (option: any) => option.type,
+                      ) ?? []
+                    }
+                  />
                 </th>
                 <th style={coloumnStyle}>
-                  className{" "}
-                  <select
+                  className
+                  <SelectOption
                     value={classNameValue}
-                    onChange={(event) => {
-                      setClassNameValue(event.currentTarget.value);
-                    }}
-                  >
-                    <option value=""></option>
-                    {autocompleteOptionsClassName.eventOptions.map(
-                      (option: any) => {
-                        return (
-                          <option
-                            key={option.className}
-                            value={option.className}
-                          >
-                            {option.className}
-                          </option>
-                        );
-                      },
-                    )}
-                  </select>
+                    onChange={setClassNameValue}
+                    options={
+                      autocompleteOptionsClassName?.eventOptions.map(
+                        (option: any) => option.className,
+                      ) ?? []
+                    }
+                  />
                 </th>
                 <th style={coloumnStyle}>
                   groupKey
-                  <select
+                  <SelectOption
                     value={groupKeyValue}
-                    onChange={(event) => {
-                      setGroupKeyValue(event.currentTarget.value);
-                    }}
-                  >
-                    <option value=""></option>
-                    {autocompleteOptionsGroupKey.eventOptions.map(
-                      (option: any) => {
-                        return (
-                          <option key={option.groupKey} value={option.groupKey}>
-                            {option.groupKey}
-                          </option>
-                        );
-                      },
-                    )}
-                  </select>
+                    onChange={setGroupKeyValue}
+                    options={
+                      autocompleteOptionsGroupKey?.eventOptions.map(
+                        (option: any) => option.groupKey,
+                      ) ?? []
+                    }
+                  />
                 </th>
+
+                <th style={coloumnStyle}>
+                  classPK
+                  <SelectOption
+                    value={classPKValue}
+                    onChange={setClassPKValue}
+                    options={
+                      autocompleteOptionsClassPK?.eventOptions.map(
+                        (option: any) => option.classPK,
+                      ) ?? []
+                    }
+                  />
+                </th>
+
                 <th style={coloumnStyle}>version</th>
                 <th style={coloumnStyle}>size</th>
+                <th style={coloumnStyle}>parsingDate</th>
                 <th style={coloumnStyle}>created</th>
               </tr>
             )}
@@ -211,9 +217,9 @@ export default function IngestionEvents() {
                 <td style={cellStyle}>{event.type}</td>
                 <td style={cellStyle}>{event.className}</td>
                 <td style={cellStyle}>{event.groupKey}</td>
-                <td style={cellStyle}>{event.version}</td>
-                <td style={cellStyleSizeCreate}>{event.size}</td>
-                <td style={cellStyleSizeCreate}>
+                <td style={cellStyleNumber}>{event.version}</td>
+                <td style={cellStyleNumber}>{event.size}</td>
+                <td style={cellStyleDate}>
                   {dateTimeFormatter.format(new Date(event.created))}
                 </td>
               </React.Fragment>
@@ -229,5 +235,29 @@ export default function IngestionEvents() {
         )}
       </Layout>
     </>
+  );
+}
+type SelectOptionProps = {
+  value: string;
+  onChange(value: string): void;
+  options: Array<string>;
+};
+function SelectOption({ value, onChange, options }: SelectOptionProps) {
+  return (
+    <select
+      value={value}
+      onBlur={(event) => {
+        onChange(event.currentTarget.value);
+      }}
+    >
+      <option value=""></option>
+      {options.map((option: any) => {
+        return (
+          <option key={option.groupKey} value={option.groupKey}>
+            {option.groupKey}
+          </option>
+        );
+      })}
+    </select>
   );
 }
