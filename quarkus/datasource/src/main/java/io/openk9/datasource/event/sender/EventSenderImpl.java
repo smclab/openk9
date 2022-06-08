@@ -133,7 +133,7 @@ public class EventSenderImpl implements EventSender {
 
 		String data = _getData(objData);
 
-		return Tuple.of(
+		return Tuple.from(
 			List.of(
 				eventMessage.getType(),
 				eventMessage.getGroupKey(),
