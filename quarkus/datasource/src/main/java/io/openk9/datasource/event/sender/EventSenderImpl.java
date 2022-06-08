@@ -22,6 +22,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.pgclient.PgPool;
 import io.vertx.mutiny.sqlclient.Tuple;
+import org.jboss.logging.Logger;
 import org.reactivestreams.Publisher;
 import reactor.core.Disposable;
 import reactor.core.publisher.Sinks;
@@ -39,19 +40,25 @@ public class EventSenderImpl implements EventSender {
 
 	@PostConstruct
 	void init() {
+
+		logger.info("Initializing EventSender");
+
 		_many = Sinks.unsafe().many().unicast().onBackpressureBuffer();
 
 		_disposable = _many
 			.asFlux()
 			.map(this::_toTuple)
 			.bufferTimeout(100, Duration.ofSeconds(2))
+			.log()
 			.flatMap(this::_insertEvents)
+			.log()
 			.subscribe();
 
 	}
 
 	@PreDestroy
 	void destroy() {
+		logger.info("Destroying EventSender");
 		_disposable.dispose();
 		_many.tryEmitComplete();
 	}
@@ -111,6 +118,8 @@ public class EventSenderImpl implements EventSender {
 
 	private Publisher<Void> _insertEvents(List<Tuple> tupleList) {
 
+		logger.info("Inserting events size: " + tupleList.size());
+
 		return client.preparedQuery(INSERT_QUERY)
 			.executeBatch(tupleList)
 			.replaceWithVoid()
@@ -158,6 +167,9 @@ public class EventSenderImpl implements EventSender {
 
 	@Inject
 	PgPool client;
+
+	@Inject
+	Logger logger;
 
 	private Sinks.Many<EventMessage> _many;
 
