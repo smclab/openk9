@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @ApplicationScoped
 public class EventSenderImpl implements EventSender {
@@ -135,6 +136,7 @@ public class EventSenderImpl implements EventSender {
 
 		return Tuple.from(
 			List.of(
+				UUID.randomUUID(),
 				eventMessage.getType(),
 				eventMessage.getGroupKey(),
 				eventMessage.getClassName(),
@@ -176,6 +178,6 @@ public class EventSenderImpl implements EventSender {
 	private Disposable _disposable;
 
 	public static final String INSERT_QUERY =
-		"INSERT INTO event (type,groupKey,className,classPK,parsingDate,data,created,size) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id";
+		"INSERT INTO event (id,type,groupKey,className,classPK,parsingDate,data,created,size) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id";
 
 }
