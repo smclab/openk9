@@ -176,6 +176,6 @@ public class EventSenderImpl implements EventSender {
 	private Disposable _disposable;
 
 	public static final String INSERT_QUERY =
-		"INSERT INTO event (type, groupKey, className, classPK, parsingDate, data, created, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+		"INSERT INTO event (type,groupKey,className,classPK,parsingDate,data,created,size) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id";
 
 }
