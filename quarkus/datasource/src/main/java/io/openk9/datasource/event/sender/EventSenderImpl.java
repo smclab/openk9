@@ -140,7 +140,7 @@ public class EventSenderImpl implements EventSender {
 				eventMessage.getClassName(),
 				eventMessage.getClassPK(),
 				eventMessage.getParsingDate(),
-				data,
+				"{}"/*data*/,
 				LocalDateTime.now(),
 				data.length()
 			)
