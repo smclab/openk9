@@ -128,6 +128,11 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-qute</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-core</artifactId>
+      <version>3.4.18</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

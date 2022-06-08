@@ -18,22 +18,43 @@
 package io.openk9.datasource.event.sender;
 
 import io.openk9.datasource.event.dto.EventDto;
-import io.openk9.datasource.event.model.Event;
-import io.quarkus.hibernate.reactive.panache.Panache;
-import io.quarkus.vertx.ConsumeEvent;
-import io.smallrye.mutiny.Uni;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.mutiny.core.eventbus.EventBus;
+import io.vertx.mutiny.pgclient.PgPool;
+import io.vertx.mutiny.sqlclient.Tuple;
+import org.reactivestreams.Publisher;
+import reactor.core.Disposable;
+import reactor.core.publisher.Sinks;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @ApplicationScoped
 public class EventSenderImpl implements EventSender {
+
+	@PostConstruct
+	void init() {
+		_many = Sinks.unsafe().many().unicast().onBackpressureBuffer();
+
+		_disposable = _many
+			.asFlux()
+			.map(this::_toTuple)
+			.bufferTimeout(100, Duration.ofSeconds(2))
+			.flatMap(this::_insertEvents)
+			.subscribe();
+
+	}
+
+	@PreDestroy
+	void destroy() {
+		_disposable.dispose();
+		_many.tryEmitComplete();
+	}
 
 	@Override
 	public void sendEvent(EventDto event) {
@@ -74,8 +95,7 @@ public class EventSenderImpl implements EventSender {
 		String type, String groupKey, String className, String classPk,
 		LocalDateTime parsingDate, Object data) {
 
-		bus.requestAndForget(
-			REGISTER_EVENT,
+		_many.tryEmitNext(
 			EventMessage
 				.builder()
 				.type(type)
@@ -84,22 +104,47 @@ public class EventSenderImpl implements EventSender {
 				.classPK(classPk)
 				.parsingDate(parsingDate)
 				.data(data)
-				.build(),
-			new DeliveryOptions()
-				.setSendTimeout(DeliveryOptions.DEFAULT_TIMEOUT * 10)
+				.build()
 		);
 
 	}
 
-	@ConsumeEvent(value = REGISTER_EVENT)
-	@ActivateRequestContext
-	public Uni<Void> handleEvent(EventMessage eventMessage) {
+	private Publisher<Void> _insertEvents(List<Tuple> tupleList) {
+
+		return client.preparedQuery(INSERT_QUERY)
+			.executeBatch(tupleList)
+			.replaceWithVoid()
+			.toMulti();
+
+	}
+
+	private Tuple _toTuple(EventMessage eventMessage) {
 
 		Object objData = eventMessage.getData();
 
-		String data;
+		String data = _getData(objData);
 
-		if (objData instanceof String) {
+		return Tuple.of(
+			List.of(
+				eventMessage.getType(),
+				eventMessage.getGroupKey(),
+				eventMessage.getClassName(),
+				eventMessage.getClassPK(),
+				eventMessage.getParsingDate(),
+				data,
+				LocalDateTime.now(),
+				data.length()
+			)
+		);
+
+	}
+
+	private String _getData(Object objData) {
+		String data;
+		if (objData == null) {
+			data = "";
+		}
+		else if (objData instanceof String) {
 			data = (String) objData;
 		}
 		else if (objData instanceof JsonObject) {
@@ -108,27 +153,17 @@ public class EventSenderImpl implements EventSender {
 		else {
 			data = Json.encode(objData);
 		}
-
-		return Panache.withTransaction(() ->
-			Event
-				.builder()
-				.data(data)
-				.size(data == null ? 0 : data.length())
-				.groupKey(eventMessage.getGroupKey())
-				.type(eventMessage.getType())
-				.className(eventMessage.getClassName())
-				.created(LocalDateTime.now())
-				.parsingDate(eventMessage.getParsingDate())
-				.classPk(eventMessage.getClassPK())
-				.build()
-				.persist()
-				.replaceWithVoid()
-		);
+		return data;
 	}
 
 	@Inject
-	EventBus bus;
+	PgPool client;
 
-	public static final String REGISTER_EVENT = "register.event";
+	private Sinks.Many<EventMessage> _many;
+
+	private Disposable _disposable;
+
+	public static final String INSERT_QUERY =
+		"INSERT INTO event (type, groupKey, className, classPK, parsingDate, data, created, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
 }
