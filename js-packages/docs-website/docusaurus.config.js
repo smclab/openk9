@@ -67,7 +67,7 @@ module.exports = {
           position: "left",
         },
         {
-          to: "Plugins",
+          to: "comingsoon/"",
           activeBasePath: "plugins",
           label: "Plugins",
           position: "left",
