@@ -209,8 +209,7 @@ export function useInfiniteSuggestions(
   activeSuggestionCategory: number,
   suggestKeyword: string,
 ) {
-  const ENABLED = true;
-  const pageSize = 50;
+  const pageSize = 10;
   const client = useOpenK9Client();
   return useInfiniteQuery(
     [
@@ -240,7 +239,6 @@ export function useInfiniteSuggestions(
       enabled: searchQuery !== null,
       keepPreviousData: true,
       getNextPageParam(lastPage, pages) {
-        if (!ENABLED) return undefined;
         if (!lastPage.afterKey) return undefined;
         if (pages[pages.length - 1].result.length < pageSize) return undefined;
         return lastPage.afterKey;
