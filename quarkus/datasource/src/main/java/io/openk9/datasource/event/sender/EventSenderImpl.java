@@ -49,7 +49,7 @@ public class EventSenderImpl implements EventSender {
 		_disposable = _many
 			.asFlux()
 			.map(this::_toTuple)
-			.bufferTimeout(250, Duration.ofSeconds(15))
+			.bufferTimeout(100, Duration.ofSeconds(5))
 			.flatMap(this::_insertEvents)
 			.subscribe();
 
