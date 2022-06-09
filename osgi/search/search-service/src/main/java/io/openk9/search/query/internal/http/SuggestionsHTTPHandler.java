@@ -146,6 +146,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						nameField ->
 							new TermsValuesSourceBuilder(nameField)
 								.field(nameField)
+								.order(searchRequest.getOrder())
 								.missingBucket(true);
 
 					CompositeAggregationBuilder compositeAggregation =
