@@ -81,7 +81,7 @@ public class EventProcessor {
 
 	private void _sendEvent(
 		IncomingRabbitMQMessage message, JsonObject jsonObject,
-		String ingestionId, String classPk, Long parsingDate) {
+		String ingestionId, String classPK, Long parsingDate) {
 
 		if (ingestionId != null) {
 
@@ -90,7 +90,7 @@ public class EventProcessor {
 
 			eventSender.sendEventAsJson(
 				EventType.PIPELINE, ingestionId, envelope.getRoutingKey(),
-				classPk, LocalDateTime.ofInstant(
+				classPK, LocalDateTime.ofInstant(
 					Instant.ofEpochMilli(parsingDate),
 					ZoneId.systemDefault()), jsonObject);
 

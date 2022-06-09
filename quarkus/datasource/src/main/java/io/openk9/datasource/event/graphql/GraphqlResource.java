@@ -87,7 +87,7 @@ public class GraphqlResource {
 		@Description("Type of event (INGESTION, INGESTION_DATASOURCE)") @Name(Event.TYPE) String type,
 		@Description("class name of event") @Name(Event.CLASS_NAME) String className,
 		@Description("event group key set") @Name(Event.GROUP_KEY) String groupKey,
-		@Description("event group key set") @Name(Event.CLASS_PK) String classPk,
+		@Description("primary key of the event") @Name(Event.CLASS_PK) String classPK,
 		@Name("sortBy") @DefaultValue("CREATED") Event.EventSortable sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType,
 		@Name(Constants.GTE) LocalDateTime gte,
@@ -127,8 +127,8 @@ public class GraphqlResource {
 			projections.put(Constants.LTE, lte);
 		}
 
-		if (classPk != null) {
-			projections.put(Event.CLASS_PK, classPk);
+		if (classPK != null) {
+			projections.put(Event.CLASS_PK, classPK);
 		}
 
 		return eventRepository.getEvents(

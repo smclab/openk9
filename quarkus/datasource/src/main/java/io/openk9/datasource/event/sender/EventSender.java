@@ -33,11 +33,11 @@ public interface EventSender {
 		String type, String groupKey, String className, Object data);
 
 	void sendEventAsJson(
-		String type, String groupKey, String className, String classPk,
+		String type, String groupKey, String className, String classPK,
 		Object data);
 
 	void sendEventAsJson(
-		String type, String groupKey, String className, String classPk,
+		String type, String groupKey, String className, String classPK,
 		LocalDateTime parsingDate, Object data);
 
 	@SuperBuilder

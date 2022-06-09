@@ -31,7 +31,7 @@ import java.util.function.Function;
 public interface EventRepository {
 
 	Uni<LocalDateTime> getLastParsingDate(
-		String className, String groupKey, String classPk);
+		String className, String groupKey, String classPK);
 
 	Uni<List<Event>> getEvents(
 		List<String> fields, int from, int size,

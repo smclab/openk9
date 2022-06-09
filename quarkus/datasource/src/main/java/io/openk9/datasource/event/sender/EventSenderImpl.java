@@ -89,16 +89,16 @@ public class EventSenderImpl implements EventSender {
 
 	@Override
 	public void sendEventAsJson(
-		String type, String groupKey, String className, String classPk,
+		String type, String groupKey, String className, String classPK,
 		Object data) {
 
-		sendEventAsJson(type, groupKey, className, classPk, null, data);
+		sendEventAsJson(type, groupKey, className, classPK, null, data);
 
 	}
 
 	@Override
 	public void sendEventAsJson(
-		String type, String groupKey, String className, String classPk,
+		String type, String groupKey, String className, String classPK,
 		LocalDateTime parsingDate, Object data) {
 
 		_many.tryEmitNext(
@@ -107,7 +107,7 @@ public class EventSenderImpl implements EventSender {
 				.type(type)
 				.groupKey(groupKey)
 				.className(className)
-				.classPK(classPk)
+				.classPK(classPK)
 				.parsingDate(parsingDate)
 				.data(data)
 				.build()

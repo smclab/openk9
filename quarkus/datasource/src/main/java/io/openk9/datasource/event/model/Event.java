@@ -57,8 +57,8 @@ import java.util.UUID;
 	@Index(name = "idx_event_type", columnList = "type"),
 	@Index(name = "idx_event_groupKey", columnList = "groupKey"),
 	@Index(name = "idx_event_className", columnList = "className"),
-	@Index(name = "idx_event_classPk", columnList = "classPk"),
-	@Index(name = "idx_event_classPk_groupKey", columnList = "classPk, groupKey"),
+	@Index(name = "idx_event_classPK", columnList = "classPK"),
+	@Index(name = "idx_event_classPK_groupKey", columnList = "classPK, groupKey"),
 	@Index(name = "idx_event_groupkey_classname", columnList = "groupKey, className"),
 	@Index(name = "idx_event_type_classname", columnList = "type, className"),
 	@Index(name = "idx_event_type_groupkey", columnList = "type, groupKey"),
@@ -102,7 +102,7 @@ public class Event extends PanacheEntityBase {
 	private String groupKey;
 
 	@Column(name = CLASS_PK)
-	private String classPk;
+	private String classPK;
 
 	@Column(name = CLASS_NAME)
 	private String className;

@@ -46,7 +46,7 @@ public class EventRepositoryImpl implements EventRepository {
 
 	@Override
 	public Uni<LocalDateTime> getLastParsingDate(
-		String className, String groupKey, String classPk) {
+		String className, String groupKey, String classPK) {
 
 		String query =
 			"SELECT " + Event.PARSING_DATE + " " +
@@ -56,7 +56,7 @@ public class EventRepositoryImpl implements EventRepository {
 			"LIMIT 1";
 
 		return client.preparedQuery(query)
-			.execute(Tuple.of(groupKey, classPk, className))
+			.execute(Tuple.of(groupKey, classPK, className))
 			.onItem()
 			.transform(rows -> rows.iterator().hasNext()
 				? rows.iterator().next().getLocalDateTime(0)
