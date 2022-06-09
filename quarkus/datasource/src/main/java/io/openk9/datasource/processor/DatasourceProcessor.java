@@ -52,7 +52,10 @@ public class DatasourceProcessor {
 	@ActivateRequestContext
 	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
 
-		long datasourceId = jsonObject.getLong("datasourceId");
+		JsonObject ingestionPayloadJson =
+			jsonObject.getJsonObject("ingestionPayload");
+
+		long datasourceId = ingestionPayloadJson.getLong("datasourceId");
 
 		Uni<Datasource> datasourceUni = Datasource.findById(datasourceId);
 
@@ -93,7 +96,8 @@ public class DatasourceProcessor {
 									Tenant tenant = (Tenant)tenantObj;
 
 									IngestionPayload ingestionPayload =
-										jsonObject.mapTo(IngestionPayload.class);
+										ingestionPayloadJson.mapTo(
+											IngestionPayload.class);
 
 									ingestionPayload.setTenantId(tenant.getTenantId());
 
