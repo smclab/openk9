@@ -41,7 +41,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Index;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Version;
@@ -53,17 +52,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "event", indexes = {
-	@Index(name = "idx_event_type", columnList = "type"),
-	@Index(name = "idx_event_groupKey", columnList = "groupKey"),
-	@Index(name = "idx_event_className", columnList = "className"),
-	@Index(name = "idx_event_classPK", columnList = "classPK"),
-	@Index(name = "idx_event_classPK_groupKey", columnList = "classPK, groupKey"),
-	@Index(name = "idx_event_groupkey_classname", columnList = "groupKey, className"),
-	@Index(name = "idx_event_type_classname", columnList = "type, className"),
-	@Index(name = "idx_event_type_groupkey", columnList = "type, groupKey"),
-	@Index(name = "idx_event_type_groupKey_className", columnList = "type, groupKey, className")
-})
+@Table(name = "event")
 @Getter
 @Setter
 @ToString
