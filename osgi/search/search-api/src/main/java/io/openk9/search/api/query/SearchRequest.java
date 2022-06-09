@@ -28,4 +28,5 @@ public class SearchRequest {
 	private String afterKey;
 	private String suggestKeyword;
 	private Long suggestionCategoryId;
+	private String order = "asc";
 }
