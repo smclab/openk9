@@ -622,12 +622,14 @@ export function OpenK9Client({
       range,
       afterKey,
       suggestKeyword,
+      order
     }: {
       searchQuery: SearchToken[];
       suggestionCategoryId?: number;
       range?: [number, number]; // for pagination
       afterKey?: string; // for pagination
       suggestKeyword?: string; // to source by text in suggestions
+      order: "desc" | "asc"
     }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
       const request = await authFetch(`/api/searcher/v1/suggestions`, {
         method: "POST",
@@ -637,6 +639,7 @@ export function OpenK9Client({
           afterKey,
           suggestionCategoryId,
           suggestKeyword,
+          order
         }),
         headers: {
           Accept: "application/json",
