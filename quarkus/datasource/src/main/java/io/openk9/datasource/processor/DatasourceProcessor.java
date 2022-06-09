@@ -50,7 +50,6 @@ import java.util.List;
 public class DatasourceProcessor {
 
 	@PostConstruct
-	@ActivateRequestContext
 	void init() {
 		_disposable = Flux
 			.from(ingestionChannel)
@@ -62,7 +61,9 @@ public class DatasourceProcessor {
 	void destroy() {
 		_disposable.dispose();
 	}
-	private Publisher<Void> process(Message<?> message) {
+
+	@ActivateRequestContext
+	public Publisher<Void> process(Message<?> message) {
 
 		return Uni.createFrom().item(message)
 			.onItem().call(m -> _consumeIngestionMessage(_messagePayloadToJson(m)))
