@@ -22,6 +22,7 @@ import io.openk9.api.aggregator.client.dto.QueryAnalysisResponseDTO;
 import io.openk9.api.aggregator.client.dto.SearchRequestDTO;
 import io.openk9.api.aggregator.client.dto.SearcherResponseDTO;
 import io.openk9.api.aggregator.client.dto.SearcherSuggestionCategoryDTO;
+import io.openk9.api.aggregator.client.dto.SuggestionsResponseDTO;
 import io.openk9.api.aggregator.client.dto.SupportedDatasourcesResponseDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
@@ -60,7 +61,7 @@ public interface SearcherHttp {
 	@PermitAll
 	@POST
 	@Path("/v1/suggestions")
-	Uni<SearcherResponseDTO> suggestions(SearchRequestDTO searchToken);
+	Uni<SuggestionsResponseDTO> suggestions(SearchRequestDTO searchToken);
 
 	@PermitAll
 	@POST
