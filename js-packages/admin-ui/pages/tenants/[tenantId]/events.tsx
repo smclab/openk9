@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { Suspense, useState } from "react";
+import React from "react";
 
 import { useRouter } from "next/router";
 
@@ -23,7 +23,10 @@ import { Layout } from "../../../components/Layout";
 
 import { firstOrString } from "../../../components/utils";
 import { gql, useQuery } from "@apollo/client";
-import { Virtuoso, TableVirtuoso } from "react-virtuoso";
+import { TableVirtuoso } from "react-virtuoso";
+import Checkbox from "@clayui/form/lib/Checkbox";
+import ClayButton from "@clayui/button";
+import ClayPopover from "@clayui/popover";
 
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
@@ -69,6 +72,8 @@ export default function IngestionEvents() {
   const [typeValue, setTypeValue] = React.useState("");
   const [classPKValue, setClassPKValue] = React.useState("");
 
+  const [checked, setChecked] = React.useState<string[]>([]);
+
   const { data: eventlist, fetchMore: fetchMoreEvents } = useQuery(
     gql`
       query IngestionEventList(
@@ -83,12 +88,15 @@ export default function IngestionEvents() {
           className: $className
           groupKey: $groupKey
           type: $type
+          sortBy: GROUP_KEY
         ) {
           className
           created
           groupKey
           id
           size
+          # classPk
+          parsingDate
           type
           version
         }
@@ -106,6 +114,10 @@ export default function IngestionEvents() {
   if (!tenantId) return null;
   const cellStyle: React.CSSProperties = {
     wordBreak: "break-all",
+    padding: "8px",
+  };
+
+  const cellStyleButton: React.CSSProperties = {
     padding: "8px",
   };
 
@@ -135,6 +147,14 @@ export default function IngestionEvents() {
           { label: "Events", path: `/tenants/${tenantId}/events` },
         ]}
       >
+        <ClayButton
+          onClick={() => {
+            console.log(checked);
+          }}
+        >
+          rieseguire righe selezionate({checked.length})
+        </ClayButton>
+
         {eventlist && (
           <TableVirtuoso
             style={{ height: "100%", width: "100%" }}
@@ -206,6 +226,7 @@ export default function IngestionEvents() {
                 </th>
 
                 <th style={coloumnStyle}>version</th>
+                <th style={coloumnStyle}>data</th>
                 <th style={coloumnStyle}>size</th>
                 <th style={coloumnStyle}>parsingDate</th>
                 <th style={coloumnStyle}>created</th>
@@ -214,11 +235,43 @@ export default function IngestionEvents() {
             itemContent={(index, event) => (
               <React.Fragment>
                 <td style={cellStyle}>{event.id}</td>
-                <td style={cellStyle}>{event.type}</td>
-                <td style={cellStyle}>{event.className}</td>
+                <td style={cellStyle}>
+                  {event.type}
+
+                  <Checkbox
+                    value={event.id}
+                    //controlla se presente all'interno dell array checked se risulta vuol dire che è presente e selezionata
+                    checked={checked.some((item) => item == event.id)}
+                    name={event.id}
+                    onChange={() => {
+                      const isChecked = checked.some(
+                        (item) => item == event.id,
+                      );
+
+                      if (isChecked) {
+                        setChecked((checked) =>
+                          checked.filter((item) => item == event.id),
+                        );
+                      } else {
+                        setChecked((checked) => [...checked, event.id]);
+                      }
+                    }}
+                  ></Checkbox>
+                </td>
+                <td style={cellStyle}>{event.className} </td>
                 <td style={cellStyle}>{event.groupKey}</td>
+                <td style={cellStyleNumber}>{}</td>
                 <td style={cellStyleNumber}>{event.version}</td>
+
+                <td style={cellStyleButton}>
+                  <DataPopUp id={event.id} />
+                </td>
                 <td style={cellStyleNumber}>{event.size}</td>
+                <td style={cellStyleDate}>
+                  {event.parsingDate &&
+                    dateTimeFormatter.format(new Date(event.parsingDate))}
+                </td>
+
                 <td style={cellStyleDate}>
                   {dateTimeFormatter.format(new Date(event.created))}
                 </td>
@@ -245,19 +298,63 @@ type SelectOptionProps = {
 function SelectOption({ value, onChange, options }: SelectOptionProps) {
   return (
     <select
-      value={value}
+      style={{ maxWidth: "150px" }}
+      defaultValue={value}
       onBlur={(event) => {
         onChange(event.currentTarget.value);
       }}
     >
       <option value=""></option>
-      {options.map((option: any) => {
+      {options.map((option) => {
         return (
-          <option key={option.groupKey} value={option.groupKey}>
-            {option.groupKey}
+          <option key={option} value={option}>
+            {option}
           </option>
         );
       })}
     </select>
+  );
+}
+
+type DataPopUpProps = {
+  id: string;
+};
+
+function DataPopUp({ id }: DataPopUpProps) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const { data } = useQuery(
+    gql`
+      query IngestionEventData($id: String) {
+        event(id: $id) {
+          data
+        }
+      }
+    `,
+    {
+      variables: {
+        id,
+      },
+      skip: !isOpen,
+    },
+  );
+  return (
+    <div style={{ position: "relative" }}>
+      <ClayButton
+        displayType="primary"
+        onClick={() => {
+          setIsOpen(!isOpen);
+        }}
+      >
+        data
+      </ClayButton>
+
+      {isOpen && (
+        <ClayPopover alignPosition="left" disableScroll={false}>
+          <pre>
+            {JSON.stringify(JSON.parse(data?.event[0].data ?? "{}"), null, 2)}
+          </pre>
+        </ClayPopover>
+      )}
+    </div>
   );
 }
