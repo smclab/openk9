@@ -173,8 +173,8 @@ function FilterCategory({
           {suggestions.hasNextPage && (
             <button
               css={css`
-                margin-left: 22px;
-                ${buttonAsLinkStyle}
+                width: 100%;
+                ${buttonStyle}
               `}
               disabled={suggestions.isFetching}
               onClick={() => {
@@ -191,20 +191,24 @@ function FilterCategory({
 }
 export const FilterCategoryMemo = React.memo(FilterCategory);
 
-const buttonAsLinkStyle = css`
-  color: -webkit-link;
-  cursor: pointer;
-  text-decoration: underline;
+const buttonStyle = css`
+  color: inherit;
   background: none;
   appearance: none;
-  border: none;
   font-family: inherit;
-  padding: 0;
   font-size: inherit;
-  text-align: left;
+  border: 1px solid var(--openk9-embeddable-search--primary-color);
+  border-radius: 4px;
+  :hover {
+    color: var(--openk9-embeddable-search--primary-color);
+  }
+  :disabled {
+    border: 1px solid var(--openk9-embeddable-search--border-color);
+    color: var(--openk9-embeddable-search--secondary-text-color);
+  }
 `;
 
-export function useInfiniteSuggestions(
+function useInfiniteSuggestions(
   searchQuery: SearchToken[] | null,
   activeSuggestionCategory: number,
   suggestKeyword: string,
