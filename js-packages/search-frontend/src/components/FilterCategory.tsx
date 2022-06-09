@@ -233,6 +233,7 @@ function useInfiniteSuggestions(
         afterKey: pageParam,
         suggestionCategoryId: activeSuggestionCategory,
         suggestKeyword,
+        order: suggestKeyword ? "desc" : "asc"
       });
       return {
         result: result.result,
