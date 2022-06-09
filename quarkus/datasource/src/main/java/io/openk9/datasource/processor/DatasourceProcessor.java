@@ -26,6 +26,7 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
+import io.quarkus.cache.CacheResult;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
@@ -53,6 +54,52 @@ public class DatasourceProcessor {
 
 	}
 
+	@CacheResult(cacheName = "datasource-context")
+	public Uni<DatasourceContext> getDatasourceContext(long datasourceId) {
+
+		Uni<Datasource> datasourceUni =
+			Datasource.findById(datasourceId);
+
+		return datasourceUni.flatMap(datasource ->
+			EnrichPipeline
+				.findByDatasourceId(datasource.getDatasourceId())
+				.onItem()
+				.ifNull()
+				.continueWith(EnrichPipeline::new)
+				.flatMap(enrichPipeline -> {
+					Uni<List<EnrichItem>> enrichItemUni;
+
+					if (enrichPipeline.getEnrichPipelineId() != null) {
+
+						enrichItemUni = EnrichItem
+							.findByEnrichPipelineId(
+								enrichPipeline.getEnrichPipelineId())
+							.onItem()
+							.ifNull()
+							.continueWith(List::of);
+
+					}
+					else {
+						enrichItemUni = Uni.createFrom().item(List.of());
+					}
+
+					return Uni
+						.combine()
+						.all()
+						.unis(
+							Tenant.findById(datasource.getTenantId()),
+							enrichItemUni)
+						.combinedWith((tenantObj, enrichItemList) ->
+							DatasourceContext.of(
+								datasource, (Tenant)tenantObj,
+								enrichPipeline, enrichItemList
+						));
+
+				})
+		);
+
+	}
+
 	private Uni<Void> _consumeIngestionMessage(JsonObject jsonObject) {
 
 		return Uni.createFrom().deferred(() -> {
@@ -62,58 +109,19 @@ public class DatasourceProcessor {
 
 			long datasourceId = ingestionPayloadJson.getLong("datasourceId");
 
-			Uni<Datasource> datasourceUni = Datasource.findById(datasourceId);
+			Uni<DatasourceContext> datasourceContextUni =
+				getDatasourceContext(datasourceId);
 
-			return datasourceUni
-				.flatMap(datasource ->
-					EnrichPipeline
-						.findByDatasourceId(datasource.getDatasourceId())
-						.onItem()
-						.ifNull()
-						.continueWith(EnrichPipeline::new)
-						.flatMap(enrichPipeline -> {
+			return datasourceContextUni.map(dc -> {
 
-							Uni<List<EnrichItem>> enrichItemUni;
+				IngestionPayload ingestionPayload =
+					ingestionPayloadJson.mapTo(
+						IngestionPayload.class);
 
-							if (enrichPipeline.getEnrichPipelineId() != null) {
+				return IngestionDatasourcePayload.of(
+					ingestionPayload, dc);
 
-								enrichItemUni = EnrichItem
-									.findByEnrichPipelineId(
-										enrichPipeline.getEnrichPipelineId())
-									.onItem()
-									.ifNull()
-									.continueWith(List::of);
-
-							}
-							else {
-								enrichItemUni = Uni.createFrom().item(List.of());
-							}
-
-							return Uni
-								.combine()
-								.all()
-								.unis(
-									Tenant.findById(datasource.getTenantId()),
-									enrichItemUni)
-								.combinedWith((tenantObj, enrichItemList) -> {
-
-									Tenant tenant = (Tenant)tenantObj;
-
-									IngestionPayload ingestionPayload =
-										ingestionPayloadJson.mapTo(
-											IngestionPayload.class);
-
-									ingestionPayload.setTenantId(tenant.getTenantId());
-
-									DatasourceContext datasourceContext = DatasourceContext.of(
-										datasource, tenant, enrichPipeline, enrichItemList
-									);
-
-									return IngestionDatasourcePayload.of(
-										ingestionPayload, datasourceContext);
-								});
-
-						}))
+			})
 				.onItem()
 				.invoke(ingestionDatasourceEmitter::send)
 				.onFailure()
