@@ -26,9 +26,7 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.Startup;
-import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -39,28 +37,34 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import java.util.List;
-import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 @Startup
 public class DatasourceProcessor {
 
-	@ConsumeEvent(value = _EVENT_NAME)
-	@ActivateRequestContext
-	Uni<Void> consumeIngestionMessage(JsonObject jsonObject) {
+	@Incoming("ingestion")
+	public Uni<Void> process(Message<?> message) {
 
-		JsonObject ingestionPayloadJson =
-			jsonObject.getJsonObject("ingestionPayload");
+		return Uni.createFrom().item(message)
+			.onItem().call(m -> _consumeIngestionMessage(_messagePayloadToJson(m)))
+			.onItem().transformToUni(x -> Uni.createFrom().completionStage(message.ack()));
 
-		long datasourceId = ingestionPayloadJson.getLong("datasourceId");
+	}
 
-		Uni<Datasource> datasourceUni = Datasource.findById(datasourceId);
+	private Uni<Void> _consumeIngestionMessage(JsonObject jsonObject) {
 
-		return Panache.withTransaction(() ->
-			datasourceUni
+		return Uni.createFrom().deferred(() -> {
+
+			JsonObject ingestionPayloadJson =
+				jsonObject.getJsonObject("ingestionPayload");
+
+			long datasourceId = ingestionPayloadJson.getLong("datasourceId");
+
+			Uni<Datasource> datasourceUni = Datasource.findById(datasourceId);
+
+			return datasourceUni
 				.flatMap(datasource ->
 					EnrichPipeline
 						.findByDatasourceId(datasource.getDatasourceId())
@@ -114,25 +118,18 @@ public class DatasourceProcessor {
 				.invoke(ingestionDatasourceEmitter::send)
 				.onFailure()
 				.invoke((t) -> logger.error(
-					"Error while processing ingestion message", t))
-				.replaceWithVoid()
-		);
+				"Error while processing ingestion message", t))
+				.replaceWithVoid();
+		});
 
 	}
 
-	@Incoming("ingestion")
-	public CompletionStage<Void> process(Message<?> message) {
-
+	private JsonObject _messagePayloadToJson(Message<?> message) {
 		Object obj = message.getPayload();
 
-		JsonObject jsonObject =
-			obj instanceof JsonObject
-				? (JsonObject) obj
-				: new JsonObject(new String((byte[]) obj));
-
-		bus.requestAndForget(_EVENT_NAME, jsonObject);
-
-		return message.ack();
+		return obj instanceof JsonObject
+			? (JsonObject) obj
+			: new JsonObject(new String((byte[]) obj));
 
 	}
 
