@@ -26,17 +26,20 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.quarkus.cache.CacheResult;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
+import org.reactivestreams.Publisher;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.List;
@@ -45,16 +48,27 @@ import java.util.List;
 @Startup
 public class DatasourceProcessor {
 
-	@Incoming("ingestion")
-	public Uni<Void> process(Message<?> message) {
+	@PostConstruct
+	void init() {
+		_disposable = Flux
+			.from(ingestionChannel)
+			.concatMap(this::process)
+			.subscribe();
+	}
+
+	@PreDestroy
+	void destroy() {
+		_disposable.dispose();
+	}
+	private Publisher<Void> process(Message<?> message) {
 
 		return Uni.createFrom().item(message)
 			.onItem().call(m -> _consumeIngestionMessage(_messagePayloadToJson(m)))
-			.onItem().transformToUni(x -> Uni.createFrom().completionStage(message.ack()));
+			.onItem().transformToUni(x -> Uni.createFrom().completionStage(message.ack()))
+			.toMulti();
 
 	}
 
-	@CacheResult(cacheName = "datasource-context")
 	public Uni<DatasourceContext> getDatasourceContext(long datasourceId) {
 
 		Uni<Datasource> datasourceUni =
@@ -141,6 +155,11 @@ public class DatasourceProcessor {
 
 	}
 
+
+	@Inject
+	@Channel("ingestion")
+	Publisher<Message<?>> ingestionChannel;
+
 	@Inject
 	EventBus bus;
 
@@ -154,6 +173,6 @@ public class DatasourceProcessor {
 	@Inject
 	EventSender _eventSender;
 
-	private static final String _EVENT_NAME = "handle_ingestion_event";
+	private Disposable _disposable;
 
 }
