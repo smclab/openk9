@@ -209,7 +209,7 @@ export function useInfiniteSuggestions(
   activeSuggestionCategory: number,
   suggestKeyword: string,
 ) {
-  const pageSize = 15;
+  const pageSize = 10;
   const client = useOpenK9Client();
   return useInfiniteQuery(
     [
