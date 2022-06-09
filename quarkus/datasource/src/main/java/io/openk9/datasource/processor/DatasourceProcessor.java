@@ -41,6 +41,7 @@ import reactor.core.publisher.Flux;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import java.util.List;
 
@@ -49,6 +50,7 @@ import java.util.List;
 public class DatasourceProcessor {
 
 	@PostConstruct
+	@ActivateRequestContext
 	void init() {
 		_disposable = Flux
 			.from(ingestionChannel)
