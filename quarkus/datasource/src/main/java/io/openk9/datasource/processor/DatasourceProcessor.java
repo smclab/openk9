@@ -27,12 +27,9 @@ import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.quarkus.runtime.Startup;
-import io.smallrye.context.api.ManagedExecutorConfig;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import org.eclipse.microprofile.context.ManagedExecutor;
-import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -40,7 +37,6 @@ import org.jboss.logging.Logger;
 import org.reactivestreams.Publisher;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -53,23 +49,11 @@ import java.util.List;
 @Startup
 public class DatasourceProcessor {
 
-	@Inject
-	@ManagedExecutorConfig(
-		cleared = ThreadContext.ALL_REMAINING
-	)
-	ManagedExecutor configuredCustomExecutor;
-
 	@PostConstruct
 	void init() {
 		_disposable = Flux
 			.from(ingestionChannel)
 			.concatMap(this::process)
-			.subscribeOn(
-				Schedulers.fromExecutor(
-					configuredCustomExecutor
-						.getThreadContext()
-						.currentContextExecutor())
-			)
 			.subscribe();
 	}
 
