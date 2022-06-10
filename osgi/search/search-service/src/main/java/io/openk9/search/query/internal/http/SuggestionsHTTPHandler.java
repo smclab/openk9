@@ -38,6 +38,7 @@ import io.openk9.search.query.internal.response.SuggestionsResponse;
 import io.openk9.search.query.internal.response.suggestions.Suggestions;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -47,6 +48,8 @@ import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregati
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.TermsValuesSourceBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregator;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -181,7 +184,33 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						compositeAggregation.size(size);
 					}
 
-					searchSourceBuilder.aggregation(compositeAggregation);
+					String suggestKeyword = searchRequest.getSuggestKeyword();
+
+					if (
+						searchRequest.getSuggestionCategoryId() != null &&
+						suggestKeyword != null &&
+						!suggestKeyword.isEmpty()
+					) {
+
+						QueryBuilder[] queryBuilders = fields
+							.stream()
+							.map(
+								scf -> QueryBuilders.matchQuery(
+									scf.getSearchableFieldName(),
+									suggestKeyword)
+							)
+							.toArray(QueryBuilder[]::new);
+
+						FiltersAggregationBuilder suggestions =
+							AggregationBuilders
+								.filters("suggestions", queryBuilders)
+								.subAggregation(compositeAggregation);
+
+						searchSourceBuilder.aggregation(suggestions);
+					}
+					else {
+						searchSourceBuilder.aggregation(compositeAggregation);
+					}
 
 				}
 
@@ -228,8 +257,20 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 					Aggregations aggregations = searchResponse.getAggregations();
 
-					CompositeAggregation compositeAggregation =
-						aggregations.get("composite");
+					FiltersAggregator suggestions = aggregations.get("suggestions");
+
+					String composite = "composite";
+
+					CompositeAggregation compositeAggregation;
+
+					if (suggestions != null) {
+						compositeAggregation =
+							(CompositeAggregation)
+								suggestions.subAggregator(composite);
+					}
+					else {
+						compositeAggregation = aggregations.get(composite);
+					}
 
 					List<? extends CompositeAggregation.Bucket> buckets =
 						compositeAggregation.getBuckets();

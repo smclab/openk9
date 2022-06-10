@@ -32,6 +32,7 @@ public class SuggestionCategoryFieldRequestDTO {
 	private Long tenantId;
 	private Long categoryId;
 	private String fieldName;
+	private String searchableFieldName;
 	private String name;
 	private boolean enabled;
 }
