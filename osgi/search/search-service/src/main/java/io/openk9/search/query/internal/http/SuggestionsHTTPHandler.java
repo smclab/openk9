@@ -38,7 +38,7 @@ import io.openk9.search.query.internal.response.SuggestionsResponse;
 import io.openk9.search.query.internal.response.suggestions.Suggestions;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -48,7 +48,7 @@ import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregati
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.TermsValuesSourceBuilder;
-import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregator;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Activate;
@@ -192,18 +192,16 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						!suggestKeyword.isEmpty()
 					) {
 
-						QueryBuilder[] queryBuilders = fields
-							.stream()
-							.map(
-								scf -> QueryBuilders.matchQuery(
-									scf.getSearchableFieldName(),
-									suggestKeyword)
-							)
-							.toArray(QueryBuilder[]::new);
+						SuggestionCategoryField scf = fields.get(0);
 
-						FiltersAggregationBuilder suggestions =
+						MatchQueryBuilder matchQueryBuilder =
+							QueryBuilders.matchQuery(
+								scf.getSearchableFieldName(),
+								suggestKeyword);
+
+						FilterAggregationBuilder suggestions =
 							AggregationBuilders
-								.filters("suggestions", queryBuilders)
+								.filter("suggestions", matchQueryBuilder)
 								.subAggregation(compositeAggregation);
 
 						searchSourceBuilder.aggregation(suggestions);
