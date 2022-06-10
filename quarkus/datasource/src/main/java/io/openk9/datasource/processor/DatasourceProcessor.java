@@ -32,6 +32,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -53,7 +54,9 @@ import java.util.List;
 public class DatasourceProcessor {
 
 	@Inject
-	@ManagedExecutorConfig
+	@ManagedExecutorConfig(
+		cleared = ThreadContext.ALL_REMAINING
+	)
 	ManagedExecutor configuredCustomExecutor;
 
 	@PostConstruct
