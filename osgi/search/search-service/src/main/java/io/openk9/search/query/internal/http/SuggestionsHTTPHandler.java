@@ -320,7 +320,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		ParsedFilter suggestions = aggregations.get("suggestions");
 
 		if (suggestions != null) {
-			return (CompositeAggregation)suggestions.getAggregations();
+			return suggestions.getAggregations().get("composite");
 		}
 		else {
 			return aggregations.get("composite");
