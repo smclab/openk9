@@ -59,6 +59,8 @@ public class SuggestionCategoryField extends PanacheEntityBase implements K9Enti
 	private Long categoryId;
 	@Column(unique = true)
 	private String fieldName;
+	@Column
+	private String searchableFieldName;
 	private String name;
 	@Column(columnDefinition = "boolean default true")
 	private boolean enabled;
