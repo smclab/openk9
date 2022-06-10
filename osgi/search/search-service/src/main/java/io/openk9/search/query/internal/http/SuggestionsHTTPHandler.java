@@ -196,7 +196,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						QueryBuilder matchQueryBuilder =
 							QueryBuilders.termsQuery(
 								scf.getSearchableFieldName(),
-								suggestKeyword);
+								suggestKeyword.toLowerCase());
 
 						FilterAggregationBuilder suggestions =
 							AggregationBuilders
