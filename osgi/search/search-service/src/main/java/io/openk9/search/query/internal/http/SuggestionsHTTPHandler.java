@@ -41,7 +41,6 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregation;
@@ -253,22 +252,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 						searchRequestEntity =
 						factory.createSearchRequestEntity(tenant.getTenantId());
 
-					Aggregations aggregations = searchResponse.getAggregations();
-
-					FiltersAggregator suggestions = aggregations.get("suggestions");
-
-					String composite = "composite";
-
-					CompositeAggregation compositeAggregation;
-
-					if (suggestions != null) {
-						compositeAggregation =
-							(CompositeAggregation)
-								suggestions.subAggregator(composite);
-					}
-					else {
-						compositeAggregation = aggregations.get(composite);
-					}
+					CompositeAggregation compositeAggregation =
+						_getCompositeAggregation(searchResponse);
 
 					List<? extends CompositeAggregation.Bucket> buckets =
 						compositeAggregation.getBuckets();
@@ -328,6 +313,27 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 	}
 
+	private CompositeAggregation _getCompositeAggregation(
+		SearchResponse searchResponse) {
+		Aggregations aggregations = searchResponse.getAggregations();
+
+		FiltersAggregator suggestions = aggregations.get("suggestions");
+
+		String composite = "composite";
+
+		CompositeAggregation compositeAggregation;
+
+		if (suggestions != null) {
+			compositeAggregation =
+				(CompositeAggregation)
+					suggestions.subAggregator(composite);
+		}
+		else {
+			compositeAggregation = aggregations.get(composite);
+		}
+		return compositeAggregation;
+	}
+
 	private SuggestionsResponse _getSuggestionsResponse(
 		List<Datasource> datasourceList,
 		PluginDriverDTOList pluginDriverDTOList, SearchRequest searchRequest,
@@ -340,14 +346,12 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 			return SuggestionsResponse.of(List.of(), null);
 		}
 
-		Map<String, Aggregation> aggregationMap = aggregations.asMap();
+		CompositeAggregation compositeAggregation =
+			_getCompositeAggregation(searchResponse);
 
-		if (!aggregationMap.containsKey("composite")) {
+		if (compositeAggregation == null) {
 			return SuggestionsResponse.of(List.of(), null);
 		}
-
-		CompositeAggregation compositeAggregation =
-			(CompositeAggregation)aggregationMap.get("composite");
 
 		Map<String, Long> fieldNameCategoryIdMap =
 			fields
@@ -481,8 +485,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 		Map<String, Object> map = compositeAggregation.afterKey();
 		String afterKey = null;
-
-		int[] range = searchRequest.getRange();
 
 		if (map != null) {
 			afterKey = _jsonFactory.toJson(map);
