@@ -48,7 +48,7 @@ import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregati
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.bucket.composite.TermsValuesSourceBuilder;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.filter.FiltersAggregator;
+import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregator;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -317,7 +317,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		SearchResponse searchResponse) {
 		Aggregations aggregations = searchResponse.getAggregations();
 
-		FiltersAggregator suggestions = aggregations.get("suggestions");
+		FilterAggregator suggestions = aggregations.get("suggestions");
 
 		String composite = "composite";
 
