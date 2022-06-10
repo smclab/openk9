@@ -38,7 +38,7 @@ import io.openk9.search.query.internal.response.SuggestionsResponse;
 import io.openk9.search.query.internal.response.suggestions.Suggestions;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -194,8 +194,8 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 						SuggestionCategoryField scf = fields.get(0);
 
-						MatchQueryBuilder matchQueryBuilder =
-							QueryBuilders.matchQuery(
+						QueryBuilder matchQueryBuilder =
+							QueryBuilders.termsQuery(
 								scf.getSearchableFieldName(),
 								suggestKeyword);
 
