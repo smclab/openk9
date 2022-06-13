@@ -126,7 +126,9 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 					DocumentTypeDTO.of(
 						documentType.getName(),
 						documentType.getIcon(),
-						_wrapSearchKeywords(documentType)
+						_wrapSearchKeywords(documentType),
+						documentType.getIncludeFields(),
+						documentType.getExcludeFields()
 					)
 				)
 				.collect(Collectors.toList());
@@ -142,7 +144,9 @@ public class PluginDriverDTOServiceImpl implements PluginDriverDTOService {
 					: DocumentTypeDTO.of(
 						defaultDocumentType.getName(),
 						defaultDocumentType.getIcon(),
-						_wrapSearchKeywords(defaultDocumentType)
+						_wrapSearchKeywords(defaultDocumentType),
+						defaultDocumentType.getIncludeFields(),
+						defaultDocumentType.getExcludeFields()
 					)
 			);
 
