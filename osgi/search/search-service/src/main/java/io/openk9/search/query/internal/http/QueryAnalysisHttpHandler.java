@@ -122,7 +122,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 						queryAnalysisRequest.getTokens();
 
 					Map<Tuple<Integer>, Map<String, Object>> chart =
-						_getRequestTokensMap(requestTokens);
+						_getRequestTokensMap(tokenIndexMap, requestTokens);
 
 					Grammar grammar = _grammarProvider.getGrammar();
 
@@ -272,40 +272,27 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 	}
 
 	private Map<Tuple<Integer>, Map<String, Object>> _getRequestTokensMap(
+		Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap,
 		List<QueryAnalysisToken> requestTokens) {
 
-		if (!requestTokens.isEmpty()) {
+		Map<Tuple<Integer>, Map<String, Object>> result = new HashMap<>();
 
-			Map<Tuple<Integer>, Map<String, Object>> chart = new HashMap<>();
-
-			int count = 0;
-
-			for (QueryAnalysisToken token : requestTokens) {
-
-				String[] split = Utils.split(token.getText());
-
-				Tuple<Integer> pos;
-
-				if (split.length == 1) {
-					pos = Tuple.of(count, ++count);
+		for (Map.Entry<Integer, ? extends Utils.TokenIndex> e :
+			tokenIndexMap.entrySet()) {
+			Integer pos = e.getKey();
+			Utils.TokenIndex tokenIndex = e.getValue();
+			for (QueryAnalysisToken requestToken : requestTokens) {
+				if (requestToken.getStart() == tokenIndex.getStartIndex()
+					&& requestToken.getEnd() == tokenIndex.getEndIndex()) {
+					result.put(
+						Tuple.of(pos, pos + 1),
+						requestToken.getToken()
+					);
 				}
-				else {
-					pos = Tuple.of(count, (count = count + (split.length)));
-				}
-
-				Map<String, Object> copy = new HashMap<>(
-					token.getToken());
-
-				copy.put("score", 100.0f);
-
-				chart.put(pos, copy);
-
-				return chart;
-
 			}
 		}
 
-		return Map.of();
+		return result;
 	}
 
 	private AnnotatorConfig _annotatorConfig;
