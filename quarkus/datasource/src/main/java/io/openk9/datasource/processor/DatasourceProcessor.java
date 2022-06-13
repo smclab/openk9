@@ -19,101 +19,36 @@ package io.openk9.datasource.processor;
 
 
 import io.openk9.datasource.event.sender.EventSender;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
+import io.openk9.datasource.service.DatasourceService;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 import org.reactivestreams.Publisher;
-import reactor.core.Disposable;
-import reactor.core.publisher.Flux;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
-import java.util.List;
 
 @ApplicationScoped
 @Startup
 public class DatasourceProcessor {
 
-	@PostConstruct
-	void init() {
-		_disposable = Flux
-			.from(ingestionChannel)
-			.concatMap(this::process)
-			.subscribe();
-	}
-
-	@PreDestroy
-	void destroy() {
-		_disposable.dispose();
-	}
 
 	@ActivateRequestContext
+	@Channel("ingestion")
 	public Publisher<Void> process(Message<?> message) {
 
 		return Uni.createFrom().item(message)
 			.onItem().call(m -> _consumeIngestionMessage(_messagePayloadToJson(m)))
 			.onItem().transformToUni(x -> Uni.createFrom().completionStage(message.ack()))
 			.toMulti();
-
-	}
-
-	public Uni<DatasourceContext> getDatasourceContext(long datasourceId) {
-
-		Uni<Datasource> datasourceUni =
-			Datasource.findById(datasourceId);
-
-		return datasourceUni.flatMap(datasource ->
-			EnrichPipeline
-				.findByDatasourceId(datasource.getDatasourceId())
-				.onItem()
-				.ifNull()
-				.continueWith(EnrichPipeline::new)
-				.flatMap(enrichPipeline -> {
-					Uni<List<EnrichItem>> enrichItemUni;
-
-					if (enrichPipeline.getEnrichPipelineId() != null) {
-
-						enrichItemUni = EnrichItem
-							.findByEnrichPipelineId(
-								enrichPipeline.getEnrichPipelineId())
-							.onItem()
-							.ifNull()
-							.continueWith(List::of);
-
-					}
-					else {
-						enrichItemUni = Uni.createFrom().item(List.of());
-					}
-
-					return Uni
-						.combine()
-						.all()
-						.unis(
-							Tenant.findById(datasource.getTenantId()),
-							enrichItemUni)
-						.combinedWith((tenantObj, enrichItemList) ->
-							DatasourceContext.of(
-								datasource, (Tenant)tenantObj,
-								enrichPipeline, enrichItemList
-						));
-
-				})
-		);
 
 	}
 
@@ -127,7 +62,7 @@ public class DatasourceProcessor {
 			long datasourceId = ingestionPayloadJson.getLong("datasourceId");
 
 			Uni<DatasourceContext> datasourceContextUni =
-				getDatasourceContext(datasourceId);
+				datasourceService.getDatasourceContext(datasourceId);
 
 			return datasourceContextUni.map(dc -> {
 
@@ -160,11 +95,7 @@ public class DatasourceProcessor {
 
 
 	@Inject
-	@Channel("ingestion")
-	Publisher<Message<?>> ingestionChannel;
-
-	@Inject
-	EventBus bus;
+	DatasourceService datasourceService;
 
 	@Inject
 	Logger logger;
@@ -175,7 +106,5 @@ public class DatasourceProcessor {
 
 	@Inject
 	EventSender _eventSender;
-
-	private Disposable _disposable;
 
 }

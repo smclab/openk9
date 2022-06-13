@@ -29,7 +29,6 @@ public class ReactorContextPropagator implements ContextManagerExtension {
 		ThreadContext threadContext = manager.newThreadContextBuilder().build();
 		Hooks.onEachOperator(ThreadContextSubscriber.asOperator(threadContext));
 		Hooks.onLastOperator(ThreadContextSubscriber.asOperator(threadContext));
-
 	}
 
 }
