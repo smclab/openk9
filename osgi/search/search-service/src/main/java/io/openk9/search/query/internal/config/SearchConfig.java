@@ -32,4 +32,6 @@ public @interface SearchConfig {
 
 	boolean enableEntityAggregation() default false;
 
+	int maxStringLength() default -1;
+
 }
