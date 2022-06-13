@@ -115,12 +115,12 @@ public class TextQueryParser implements QueryParser {
 			keywordKeyPredicate = ignore -> true;
 		}
 
-		queryCondition =
-			tokenText.getFilter() != null && tokenText.getFilter()
-				? queryCondition == QueryCondition.DEFAULT
+		if (queryCondition == QueryCondition.DEFAULT) {
+			queryCondition =
+				tokenText.getFilter() != null && tokenText.getFilter()
 					? QueryCondition.FILTER
-					: queryCondition
-				: QueryCondition.SHOULD;
+					: QueryCondition.SHOULD;
+		}
 
 		Map<String, Float> keywordBoostMap =
 			entityMapperList
