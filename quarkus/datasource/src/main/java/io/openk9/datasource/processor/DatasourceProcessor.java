@@ -30,7 +30,6 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
-import org.reactivestreams.Publisher;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
@@ -40,15 +39,13 @@ import javax.inject.Inject;
 @Startup
 public class DatasourceProcessor {
 
-
 	@ActivateRequestContext
 	@Channel("ingestion")
-	public Publisher<Void> process(Message<?> message) {
+	public Uni<Void> process(Message<?> message) {
 
 		return Uni.createFrom().item(message)
 			.onItem().call(m -> _consumeIngestionMessage(_messagePayloadToJson(m)))
-			.onItem().transformToUni(x -> Uni.createFrom().completionStage(message.ack()))
-			.toMulti();
+			.onItem().transformToUni(x -> Uni.createFrom().completionStage(message.ack()));
 
 	}
 
