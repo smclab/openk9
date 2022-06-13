@@ -18,7 +18,6 @@
 package io.openk9.datasource.processor;
 
 
-import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
@@ -99,8 +98,5 @@ public class DatasourceProcessor {
 	@Inject
 	@Channel("ingestion-datasource")
 	Emitter<IngestionDatasourcePayload> ingestionDatasourceEmitter;
-
-	@Inject
-	EventSender _eventSender;
 
 }
