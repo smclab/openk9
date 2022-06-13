@@ -61,8 +61,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -272,9 +274,6 @@ public abstract class BaseSearchHTTPHandler
 					SearchSourceBuilder searchSourceBuilder =
 						new SearchSourceBuilder();
 
-					searchSourceBuilder.fetchSource(
-						includeFields(), excludeFields());
-
 					searchSourceBuilder.query(boolQuery);
 
 					searchSourceBuilder.trackTotalHits(true);
@@ -286,6 +285,39 @@ public abstract class BaseSearchHTTPHandler
 				}));
 
 		});
+
+	}
+
+	private void _includeExcludeFields(
+		SearchSourceBuilder searchSourceBuilder,
+		List<DocumentTypeDTO> documentTypeList) {
+
+		String[] defaultIncludeFields = includeFields();
+		String[] defaultExcludeFields = excludeFields();
+
+		Set<String> includes = new HashSet<>(Arrays.asList(defaultIncludeFields));
+		Set<String> excludes = new HashSet<>(Arrays.asList(defaultExcludeFields));
+
+		for (DocumentTypeDTO documentTypeDTO : documentTypeList) {
+
+			List<String> includeFields = documentTypeDTO.getIncludeFields();
+
+			if (includeFields != null) {
+				includes.addAll(includeFields);
+			}
+
+			List<String> excludeFields = documentTypeDTO.getExcludeFields();
+
+			if (excludeFields != null) {
+				excludes.addAll(excludeFields);
+			}
+
+		}
+
+		searchSourceBuilder.fetchSource(
+			includes.toArray(String[]::new),
+			excludes.toArray(String[]::new)
+		);
 
 	}
 
@@ -370,10 +402,14 @@ public abstract class BaseSearchHTTPHandler
 
 		HighlightBuilder highlightBuilder = new HighlightBuilder();
 
-		documentTypeList
+		List<DocumentTypeDTO> documentTypes = documentTypeList
 			.stream()
 			.map(PluginDriverDTO::getDocumentTypes)
 			.flatMap(Collection::stream)
+			.collect(Collectors.toList());
+
+		documentTypes
+			.stream()
 			.map(DocumentTypeDTO::getSearchKeywords)
 			.flatMap(Collection::stream)
 			.filter(SearchKeywordDTO::isText)
@@ -399,6 +435,8 @@ public abstract class BaseSearchHTTPHandler
 
 		}
 
+		_includeExcludeFields(
+			searchSourceBuilder, documentTypes);
 
 	}
 
