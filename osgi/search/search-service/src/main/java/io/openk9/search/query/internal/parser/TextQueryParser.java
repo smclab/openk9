@@ -152,7 +152,7 @@ public class TextQueryParser implements QueryParser {
 
 			multiMatchQueryBuilder.fields(keywordBoostMap);
 
-			boolQueryBuilder.should(multiMatchQueryBuilder);
+			queryCondition.accept(boolQueryBuilder, multiMatchQueryBuilder);
 
 			if (value.split("\\s+").length > 1) {
 
@@ -168,7 +168,7 @@ public class TextQueryParser implements QueryParser {
 
 				multiMatchQueryBuilder.boost(2.0f);
 
-				boolQueryBuilder.should(multiMatchQueryBuilder);
+				queryCondition.accept(boolQueryBuilder, multiMatchQueryBuilder);
 
 			}
 
