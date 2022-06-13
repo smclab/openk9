@@ -39,6 +39,7 @@ import io.openk9.search.client.api.Search;
 import io.openk9.search.client.api.util.SearchUtil;
 import io.openk9.search.query.internal.config.SearchConfig;
 import io.openk9.search.query.internal.response.Response;
+import io.openk9.search.query.internal.util.MapUtil;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.text.Text;
@@ -155,6 +156,12 @@ public abstract class BaseSearchHTTPHandler
 			}
 
 			Map<String, Object> hitMap = new HashMap<>(2, 1);
+
+			int maxStringLength = getSearchConfig().maxStringLength();
+
+			if (maxStringLength != -1) {
+				MapUtil.deepAbbreviateString(sourceMap, maxStringLength);
+			}
 
 			hitMap.put("source", sourceMap);
 			hitMap.put("highlight", highlightMap);
