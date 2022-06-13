@@ -28,19 +28,18 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 
 @ApplicationScoped
 @Startup
 public class DatasourceProcessor {
 
-	@ActivateRequestContext
-	@Channel("ingestion")
+	@Incoming("ingestion")
 	public Uni<Void> process(Message<?> message) {
 
 		return Uni.createFrom().item(message)
