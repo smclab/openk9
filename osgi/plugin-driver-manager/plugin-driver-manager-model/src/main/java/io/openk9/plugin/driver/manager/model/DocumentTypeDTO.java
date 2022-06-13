@@ -32,4 +32,6 @@ public class DocumentTypeDTO {
 	private String name;
 	private String icon;
 	private List<SearchKeywordDTO> searchKeywords;
+	private List<String> includeFields;
+	private List<String> excludeFields;
 }

@@ -36,5 +36,7 @@ public class DocumentType {
 	private String name;
 	private String icon;
 	private List<SearchKeyword> searchKeywords;
+	private List<String> includeFields;
+	private List<String> excludeFields;
 	private List<Field> sourceFields;
 }
