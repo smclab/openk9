@@ -381,13 +381,13 @@ function fixQueryAnalysisResult(data: AnalysisResponse) {
           .every((previous) => !isOverlapping(previous, entry)),
       )
       .reverse()
-      .filter(entry =>{
+      .filter((entry) => {
         // togliere validazione quando fixato lato be
         const isValidEntry = entry.start >= 0;
         if (!isValidEntry) {
           console.warn(`Invalid entry: `, entry);
         }
-        return isValidEntry  
-      }), 
+        return isValidEntry;
+      }),
   };
 }
