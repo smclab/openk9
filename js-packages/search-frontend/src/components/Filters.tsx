@@ -5,6 +5,7 @@ import { FilterCategoryMemo } from "./FilterCategory";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";
 import { useQuery } from "react-query";
+import { useInfiniteResults } from "./ResultList";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -17,6 +18,14 @@ function Filters({
   onRemoveFilterToken,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
+  const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
+    React.useState(searchQuery);
+  const { data, isPreviousData } = useInfiniteResults(searchQuery);
+  React.useEffect(() => {
+    if (!isPreviousData && data?.pages[0].result.length) {
+      setLastSearchQueryWithResults(searchQuery);
+    }
+  }, [data?.pages, isPreviousData, searchQuery]);
   return (
     <OverlayScrollbarsComponent
       style={{
@@ -38,7 +47,7 @@ function Filters({
               key={suggestionCategory.suggestionCategoryId}
               suggestionCategoryName={suggestionCategory.name}
               suggestionCategoryId={suggestionCategory.suggestionCategoryId}
-              tokens={searchQuery}
+              tokens={lastSearchQueryWithResults}
               onAdd={onAddFilterToken}
               onRemove={onRemoveFilterToken}
             />

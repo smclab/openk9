@@ -126,60 +126,58 @@ export function InfiniteResults<E>({
         position: "relative",
       }}
     >
-      <div
-        css={css`
-          position: absolute;
-          width: 100%;
-          padding-bottom: 16px;
-        `}
-      >
-        {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
-          <>
-            <ResultCount>{results.data?.pages[0].total}</ResultCount>
-            {results.data?.pages.map((page, pageIndex) => {
-              return (
-                <React.Fragment key={pageIndex}>
-                  {page.result.map((result, resultIndex) => {
-                    return (
-                      <ResultMemo<E>
-                        renderers={renderers}
-                        key={resultIndex}
-                        result={result}
-                        onDetail={onDetail}
-                      />
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
-            {results.hasNextPage && (
-              <button
-                onClick={() => {
-                  if (!results.isFetching) {
-                    results.fetchNextPage();
-                  }
-                }}
-                className="openk9-embeddable-search--result-container"
-                css={css`
-                  background-color: inherit;
-                  color: inherit;
-                  font-family: inherit;
-                  font-size: inherit;
-                  padding: 8px 16px;
-                  width: calc(100% - 32px);
-                  display: block;
-                `}
-              >
-                {results.isFetching
-                  ? "Loading more results..."
-                  : "Load more results"}
-              </button>
-            )}
-          </>
-        ) : (
-          <NoResults />
-        )}
-      </div>
+      {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
+        <div
+          css={css`
+            position: absolute;
+            width: 100%;
+            padding-bottom: 16px;
+          `}
+        >
+          <ResultCount>{results.data?.pages[0].total}</ResultCount>
+          {results.data?.pages.map((page, pageIndex) => {
+            return (
+              <React.Fragment key={pageIndex}>
+                {page.result.map((result, resultIndex) => {
+                  return (
+                    <ResultMemo<E>
+                      renderers={renderers}
+                      key={resultIndex}
+                      result={result}
+                      onDetail={onDetail}
+                    />
+                  );
+                })}
+              </React.Fragment>
+            );
+          })}
+          {results.hasNextPage && (
+            <button
+              onClick={() => {
+                if (!results.isFetching) {
+                  results.fetchNextPage();
+                }
+              }}
+              className="openk9-embeddable-search--result-container"
+              css={css`
+                background-color: inherit;
+                color: inherit;
+                font-family: inherit;
+                font-size: inherit;
+                padding: 8px 16px;
+                width: calc(100% - 32px);
+                display: block;
+              `}
+            >
+              {results.isFetching
+                ? "Loading more results..."
+                : "Load more results"}
+            </button>
+          )}
+        </div>
+      ) : (
+        <NoResults />
+      )}
     </OverlayScrollbarsComponentDockerFix>
   );
 }
@@ -272,7 +270,7 @@ function NoResults() {
   );
 }
 
-function useInfiniteResults<E>(searchQuery: Array<SearchToken>) {
+export function useInfiniteResults<E>(searchQuery: Array<SearchToken>) {
   const pageSize = 25;
   const client = useOpenK9Client();
   return useInfiniteQuery(
