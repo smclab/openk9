@@ -3663,10 +3663,10 @@
   resolved "https://registry.yarnpkg.com/@clayui/css/-/css-3.25.3.tgz#5c68e4f98ddf40664d06e8517fbdcf65493ca3d0"
   integrity sha512-BWMkPn0nMpqhog3iCc9ktazoKKG3oChoNr2zzAzF9LusDGZVVo2pamQjdlAZfkfD/daAC5Bo5rlOLazHc45oKg==
 
-"@clayui/css@^3.40.0":
-  version "3.55.0"
-  resolved "https://registry.yarnpkg.com/@clayui/css/-/css-3.55.0.tgz#62fc9ab7068b3b1470c3d3412295950423e2c349"
-  integrity sha512-d3LzQVQnv0GVClD8+KHee+uXsdlvrUDgbKcRrE3DrLaRHu+toJ2pysUSUYaskbMBb5jJBvkMWyZkrQcBTqh/JQ==
+"@clayui/css@^3.60.2":
+  version "3.60.2"
+  resolved "https://registry.yarnpkg.com/@clayui/css/-/css-3.60.2.tgz#de1671569d86b11902aa224ce60e1dfd372d73a9"
+  integrity sha512-0RYVB5tDjXge+OwaYIVCLU/hBKnJN+leXAVtillDDOnLVzhdFH0iC2fWd/Hg6mRt+V4z7RcuGEU9sPTsY6OtBA==
 
 "@clayui/drop-down@^3.40.0", "@clayui/drop-down@^3.55.0":
   version "3.55.0"
@@ -3858,6 +3858,13 @@
     classnames "^2.2.6"
     dom-align "^1.12.2"
     warning "^4.0.3"
+
+"@clayui/table@^3.56.0":
+  version "3.56.0"
+  resolved "https://registry.yarnpkg.com/@clayui/table/-/table-3.56.0.tgz#aba9f02b0ca87551aca834a4e5fbe06723b60806"
+  integrity sha512-puRgIDVRtUCpo/72OrLVsEASMM/Xf/H2MKnaD2OP3pz7L64rUsFofxao0HirdlTLi5aBkysunrTh75ZkuHfV2A==
+  dependencies:
+    classnames "^2.2.6"
 
 "@clayui/tooltip@^3.40.0":
   version "3.55.0"

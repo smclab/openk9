@@ -174,6 +174,12 @@ function TenantSubMenu({ tenantId }: { tenantId: number }) {
         route={`/tenants/[tenantId]/events`}
         icon={<SettingsIcon />}
       />
+      <MenuEntry
+        text="Filters"
+        path={`/tenants/${tenantId}/filters/`}
+        route={`/tenants/[tenantId]/filters`}
+        icon={<SettingsIcon />}
+      />
     </div>
   );
 }

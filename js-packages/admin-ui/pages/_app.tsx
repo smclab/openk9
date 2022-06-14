@@ -33,6 +33,7 @@ import { isServer, useLoginRedirect, useStore } from "../state";
 import { defaultTheme } from "../components/theme";
 import useSWR from "swr";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
+import { QueryClient, QueryClientProvider } from "react-query";
 
 const ThemeProvider = ThemeProviderReact18Fix as any;
 
@@ -133,8 +134,10 @@ export default function MyApp({ Component, pageProps }: any) {
       <ThemeProvider theme={defaultTheme}>
         <ClayIconSpriteContext.Provider value={basePath + "/icons.svg"}>
           <ApolloProvider client={apolloClient}>
-            <Component {...pageProps} />
-            {!isServer && <Toasts />}
+            <QueryClientProvider client={reactQueryClient}>
+              <Component {...pageProps} />
+              {!isServer && <Toasts />}
+            </QueryClientProvider>
           </ApolloProvider>
           ,
         </ClayIconSpriteContext.Provider>
@@ -142,3 +145,5 @@ export default function MyApp({ Component, pageProps }: any) {
     </ToastContext.Provider>
   );
 }
+
+const reactQueryClient = new QueryClient();
