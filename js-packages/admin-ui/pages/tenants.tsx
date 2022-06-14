@@ -77,7 +77,9 @@ function AddModal({
 
   const [errorState, setErrorState] = useState<any>(null);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement| HTMLTextAreaElement>) => {
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const value = event.target.value;
     const id = event.target.id;
     setNewTenant((cs) => ({
