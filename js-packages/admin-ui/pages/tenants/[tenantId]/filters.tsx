@@ -24,6 +24,8 @@ import { Layout } from "../../../components/Layout";
 import { firstOrString } from "../../../components/utils";
 import { useQuery, useQueryClient, useMutation } from "react-query";
 import { client } from "../../../components/client";
+import ClayButton from "@clayui/button";
+import { ClayInput } from "@clayui/form";
 import {
   DatasourceSuggestionCategory,
   DatasourceSuggestionCategoryField,
@@ -54,7 +56,12 @@ export default function Filter() {
         ]}
       >
         <div>
-          <button onClick={() => suggestionCategories.add()}>add</button>
+          <ClayButton
+            displayType="primary"
+            onClick={() => suggestionCategories.add()}
+          >
+            add
+          </ClayButton>
           {suggestionCategories.list
             ?.sort((a, b) => a.priority - b.priority)
             .map((suggestionCategory) => {
@@ -92,44 +99,46 @@ function SuggestionCategoryFieldRow({
     suggestionCategoryField.searchableFieldName,
   );
   return (
-    <div style={{ display: "flex", paddingLeft: "32px" }}>
+    <div style={{ display: "flex", paddingLeft: "30px" }}>
       <div>
         <input
           type="checkbox"
+          className="custom-control-input"
           checked={enabled}
           onChange={(event) => setEnabled(event.currentTarget.checked)}
         />
       </div>
       <div>
         name:
-        <input
+        <ClayInput
           value={name}
           onChange={(event) => setName(event.currentTarget.value)}
         />
       </div>
       <div>
         fieldName:
-        <input
+        <ClayInput
           value={fieldName}
           onChange={(event) => setFieldName(event.currentTarget.value)}
         />
       </div>
       <div>
         searchableFieldName:
-        <input
+        <ClayInput
           value={searchableFieldName}
           onChange={(event) =>
             setSearchableFieldName(event.currentTarget.value)
           }
         />
       </div>
-      <button
+      <ClayButton
+        displayType="primary"
         onClick={() =>
           onRemove(suggestionCategoryField.suggestionCategoryFieldId)
         }
       >
         delete
-      </button>
+      </ClayButton>
     </div>
   );
 }
@@ -165,14 +174,14 @@ function SuggestionCategoryRow({
         </div>
         <div>
           name:
-          <input
+          <ClayInput
             value={name}
             onChange={(event) => setName(event.currentTarget.value)}
           />
         </div>
         <div>
           priority:
-          <input
+          <ClayInput
             type="number"
             step="1"
             value={priority}
@@ -180,16 +189,18 @@ function SuggestionCategoryRow({
           />
         </div>
         <div>
-          <button
+          <ClayButton
+            displayType="primary"
             onClick={() => onRemove(suggestionCategory.suggestionCategoryId)}
           >
             delete
-          </button>
-          <button
+          </ClayButton>
+          <ClayButton
+            displayType="primary"
             onClick={() => onAddField(suggestionCategory.suggestionCategoryId)}
           >
             add field
-          </button>
+          </ClayButton>
         </div>
       </div>
       <div>
@@ -241,6 +252,26 @@ function useSuggestionCategories(tenantId: number) {
       },
     },
   );
+  // const { mutate: change } = useMutation(
+  //   async (suggestionCategoryId: number) => {
+  //     if (USE_MOCK) {
+  //       mockSuggestionCategories.filter(
+  //        (suggestionCategory) =>{
+  //           if(suggestionCategory.suggestionCategoryId === newSuggestionCategory.id){
+  //             suggestionCategory=newSuggestionCategory
+  //           }
+  //         }
+  //       );
+  //      return;
+  //     }
+  //     await client.changeDatasourceSuggestionCategory(suggestionCategoryId);
+  //   },
+  //   {
+  //     onSuccess() {
+  //       queryClient.invalidateQueries("/api/datasource/v2/suggestion-category");
+  //     },
+  //   },
+  // );
   const { mutate: add } = useMutation(
     async () => {
       if (USE_MOCK) {
@@ -275,6 +306,7 @@ function useSuggestionCategories(tenantId: number) {
     list,
     remove,
     add,
+    //change,g
   };
 }
 
@@ -306,6 +338,7 @@ function useSuggestionCategoryFields(tenantId: number) {
       return await client.getDatasourceSuggestionCategoryFields();
     },
   );
+
   const { mutate: remove } = useMutation(
     async (suggestionCategoryFieldId: number) => {
       if (USE_MOCK) {
