@@ -20,7 +20,7 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
-import io.openk9.datasource.event.repo.EventRepository;
+import io.openk9.datasource.event.storage.EventStorageRepository;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
@@ -160,23 +160,16 @@ public class SchedulerInitializer {
 			Uni<SchedulerEnabledDTO> schedulerEnabledDTOUni = _pluginDriverClient
 				.schedulerEnabled(driverServiceName);
 
-			Uni<LocalDateTime> lastParsingDate =
-				eventRepository.getLastParsingDate(
-					Datasource.class.getName(),
-					datasource.getPrimaryKey(),
-					datasource.getPrimaryKey());
-
-			return Uni.combine()
-				.all()
-				.unis(lastParsingDate, schedulerEnabledDTOUni)
-				.asTuple()
-				.flatMap(t2 -> {
-
-					SchedulerEnabledDTO schedulerEnabledDTO = t2.getItem2();
+			return schedulerEnabledDTOUni
+				.flatMap(schedulerEnabledDTO -> {
 
 					if (schedulerEnabledDTO.isSchedulerEnabled()) {
 
-						LocalDateTime parsingDate = t2.getItem1();
+						LocalDateTime parsingDate =
+							eventStorageRepository.getLastParsingDate(
+								Datasource.class.getName(),
+								datasource.getPrimaryKey(),
+								datasource.getPrimaryKey());
 
 						return _pluginDriverClient
 							.invokeDataParser(
@@ -235,6 +228,6 @@ public class SchedulerInitializer {
 	Logger logger;
 
 	@Inject
-	EventRepository eventRepository;
+	EventStorageRepository eventStorageRepository;
 
 }

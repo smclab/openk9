@@ -27,6 +27,8 @@
   <artifactId>datasource</artifactId>
   <properties>
     <cron-utils.version>9.1.6</cron-utils.version>
+    <microstream.version>07.00.00-MS-GA</microstream.version>
+    <zstd-jni.version>1.5.2-3</zstd-jni.version>
   </properties>
   <dependencies>
     <dependency>
@@ -129,9 +131,14 @@
       <artifactId>quarkus-qute</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.projectreactor</groupId>
-      <artifactId>reactor-core</artifactId>
-      <version>3.4.18</version>
+      <groupId>com.github.luben</groupId>
+      <artifactId>zstd-jni</artifactId>
+      <version>${zstd-jni.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>one.microstream</groupId>
+      <artifactId>microstream-storage-embedded</artifactId>
+      <version>${microstream.version}</version>
     </dependency>
   </dependencies>
   <build>

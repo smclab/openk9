@@ -17,9 +17,8 @@
 
 package io.openk9.datasource.event.dto;
 
-import io.openk9.datasource.event.model.Event;
+import io.openk9.datasource.event.storage.Event;
 import io.openk9.datasource.event.util.Sortable;
-import io.vertx.mutiny.sqlclient.Row;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,30 +36,6 @@ public class EventOption {
 	private String groupKey;
 	private String className;
 	private String classPK;
-
-	public static EventOption from(Row row) {
-
-		EventOptionBuilder builder = EventOption.builder();
-
-		for (int i = 0; i < row.size(); i++) {
-			String columnName = row.getColumnName(i);
-			if (columnName.equalsIgnoreCase(Event.TYPE)) {
-				builder.type(row.getString(i));
-			}
-			else if (columnName.equalsIgnoreCase(Event.GROUP_KEY)) {
-				builder.groupKey(row.getString(i));
-			}
-			else if (columnName.equalsIgnoreCase(Event.CLASS_NAME)) {
-				builder.className(row.getString(i));
-			}
-			else if (columnName.equalsIgnoreCase(Event.CLASS_PK)) {
-				builder.classPK(row.getString(i));
-			}
-		}
-
-		return builder.build();
-
-	}
 
 	public enum EventOptionSortable implements Sortable {
 		TYPE(Event.TYPE),

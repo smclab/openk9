@@ -15,26 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.resource;
+package io.openk9.datasource.event.storage;
 
-import io.openk9.datasource.event.dto.EventDto;
-import io.openk9.datasource.event.sender.EventSender;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 
-import javax.inject.Inject;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
-
-@Path("/v1/event")
-public class EventResource {
-
-	@POST
-	public Response insertEvent(EventDto eventDto) {
-		eventSender.sendEvent(eventDto);
-		return Response.status(200).build();
-	}
-
-	@Inject
-	EventSender eventSender;
-
+@Mapper(
+	componentModel = "cdi"
+)
+public interface EventMapper {
+	void updateEvent(Event event, @MappingTarget Event eventToUpdate);
 }
