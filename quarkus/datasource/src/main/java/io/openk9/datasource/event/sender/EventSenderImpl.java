@@ -17,50 +17,31 @@
 
 package io.openk9.datasource.event.sender;
 
+import com.github.luben.zstd.Zstd;
 import io.openk9.datasource.event.dto.EventDto;
+import io.openk9.datasource.event.storage.Event;
+import io.openk9.datasource.event.storage.EventStorageRepository;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.mutiny.pgclient.PgPool;
-import io.vertx.mutiny.sqlclient.Tuple;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import org.reactivestreams.Publisher;
-import reactor.core.Disposable;
-import reactor.core.publisher.Sinks;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.time.Duration;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @ApplicationScoped
 public class EventSenderImpl implements EventSender {
 
-	@PostConstruct
-	void init() {
-
-		logger.info("Initializing EventSender");
-
-		_many = Sinks.unsafe().many().unicast().onBackpressureBuffer();
-
-		_disposable = _many
-			.asFlux()
-			.map(this::_toTuple)
-			.bufferTimeout(100, Duration.ofSeconds(5))
-			.flatMap(this::_insertEvents)
-			.subscribe();
-
-	}
-
-	@PreDestroy
-	void destroy() {
-		logger.info("Destroying EventSender");
-		_disposable.dispose();
-		_many.tryEmitComplete();
-	}
+	@ConfigProperty(
+		name = "openk9.events.data.dir.path",
+		defaultValue = "./events/data"
+	)
+	String storageDir;
 
 	@Override
 	public void sendEvent(EventDto event) {
@@ -101,81 +82,74 @@ public class EventSenderImpl implements EventSender {
 		String type, String groupKey, String className, String classPK,
 		LocalDateTime parsingDate, Object data) {
 
-		_many.tryEmitNext(
-			EventMessage
-				.builder()
-				.type(type)
-				.groupKey(groupKey)
-				.className(className)
-				.classPK(classPK)
-				.parsingDate(parsingDate)
-				.data(data)
-				.build()
-		);
+		try {
 
-	}
+			Path path = Paths.get(storageDir);
 
-	private Publisher<Void> _insertEvents(List<Tuple> tupleList) {
+			if (!Files.exists(path)) {
+				Files.createDirectories(path);
+			}
 
-		logger.info("Inserting events size: " + tupleList.size());
+			UUID eventId = UUID.randomUUID();
 
-		return client.preparedQuery(INSERT_QUERY)
-			.executeBatch(tupleList)
-			.replaceWithVoid()
-			.toMulti();
+			byte[] bytes = _compressData(data);
 
-	}
+			Path write = Files.write(
+				path.resolve(eventId.toString()), bytes);
 
-	private Tuple _toTuple(EventMessage eventMessage) {
+			eventRepository.storeEvent(
+				Event.builder()
+					.id(eventId)
+					.type(type)
+					.groupKey(groupKey)
+					.className(className)
+					.classPK(classPK)
+					.parsingDate(parsingDate)
+					.size(bytes.length)
+					.dataPath(write.toString())
+					.created(LocalDateTime.now())
+					.build()
+			);
 
-		Object objData = eventMessage.getData();
-
-		String data = _getData(objData);
-
-		return Tuple.from(
-			List.of(
-				UUID.randomUUID(),
-				eventMessage.getType(),
-				eventMessage.getGroupKey(),
-				eventMessage.getClassName(),
-				eventMessage.getClassPK(),
-				eventMessage.getParsingDate(),
-				"{}"/*data*/,
-				LocalDateTime.now(),
-				data.length()
-			)
-		);
-
-	}
-
-	private String _getData(Object objData) {
-		String data;
-		if (objData == null) {
-			data = "";
 		}
-		else if (objData instanceof String) {
-			data = (String) objData;
+		catch (Exception e) {
+			throw new RuntimeException(e);
 		}
-		else if (objData instanceof JsonObject) {
-			data = objData.toString();
+
+
+	}
+
+	private byte[] _compressData(Object data) {
+
+		if (data == null) {
+			return new byte[0];
+		}
+
+		byte[] bytes;
+
+		if (data instanceof String) {
+			bytes =((String)data).getBytes();
+		}
+		else if (data instanceof byte[]) {
+			bytes = (byte[])data;
+		}
+		else if (data instanceof JsonObject) {
+			bytes = data.toString().getBytes();
 		}
 		else {
-			data = Json.encode(objData);
+			bytes = Json.encode(data).getBytes();
 		}
-		return data;
-	}
 
-	@Inject
-	PgPool client;
+		return Zstd.compress(bytes);
+
+	}
 
 	@Inject
 	Logger logger;
 
-	private Sinks.Many<EventMessage> _many;
+	@Inject
+	EventStorageRepository eventRepository;
 
-	private Disposable _disposable;
 
-	public static final String INSERT_QUERY =
-		"INSERT INTO event (id,type,groupKey,className,classPK,parsingDate,data,created,size) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id";
 
 }

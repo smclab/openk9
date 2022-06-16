@@ -15,20 +15,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.reactor.context.propagator;
+package io.openk9.datasource.event.storage;
 
-import org.eclipse.microprofile.context.ThreadContext;
-import org.eclipse.microprofile.context.spi.ContextManager;
-import org.eclipse.microprofile.context.spi.ContextManagerExtension;
-import reactor.core.publisher.Hooks;
 
-public class ReactorContextPropagator implements ContextManagerExtension {
+import java.util.ArrayList;
+import java.util.List;
 
-	@Override
-	public void setup(ContextManager manager) {
-		ThreadContext threadContext = manager.newThreadContextBuilder().build();
-		Hooks.onEachOperator(ThreadContextSubscriber.asOperator(threadContext));
-		Hooks.onLastOperator(ThreadContextSubscriber.asOperator(threadContext));
+public class DataRoot {
+
+	private List<Event> events = new ArrayList<>();
+
+	public DataRoot() {
+	}
+
+	public void addEvent(Event p) {
+		this.getEvents().add(p);
+	}
+
+	public List<Event> getEvents() {
+		if (events == null) {
+			events = new ArrayList<>();
+		}
+		// must return the reference
+		// in order to make it work with MicroStream
+		return events;
+	}
+
+	public Event getEventAt(int index) {
+		return getEvents().get(index);
 	}
 
 }

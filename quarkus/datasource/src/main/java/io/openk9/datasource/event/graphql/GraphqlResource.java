@@ -17,12 +17,13 @@
 
 package io.openk9.datasource.event.graphql;
 
+import com.github.luben.zstd.Zstd;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.SelectedField;
 import io.openk9.datasource.event.dto.EventOption;
-import io.openk9.datasource.event.model.Event;
-import io.openk9.datasource.event.repo.EventRepository;
+import io.openk9.datasource.event.storage.Event;
+import io.openk9.datasource.event.storage.EventStorageRepository;
 import io.openk9.datasource.event.util.Constants;
 import io.openk9.datasource.event.util.SortType;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
@@ -35,15 +36,53 @@ import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @GraphQLApi
 @RequestScoped
 public class GraphqlResource {
+
+	@Query("eventData")
+	@Description("Get event data")
+	public Uni<String> getEventData(
+			@Description("Primary key of event") @Name("id") String id)
+		throws Exception {
+
+		if (id == null || id.isBlank()) {
+			return Uni.createFrom().nothing();
+		}
+
+		return Uni.createFrom().item(() -> {
+
+			Optional<Event> eventById =
+				eventStorageRepository.getEventById(UUID.fromString(id));
+
+			if (eventById.isPresent()) {
+				Event event = eventById.get();
+				String dataPath = event.getDataPath();
+				int dataSize = event.getSize();
+				byte[] bytes;
+				try {
+					bytes = Files.readAllBytes(Paths.get(dataPath));
+				}
+				catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				return new String(Zstd.decompress(bytes, dataSize));
+			}
+
+			return "";
+
+		});
+
+	}
 
 	@Query("eventOptions")
 	@Description("Returns the list of available options for the event")
@@ -54,29 +93,7 @@ public class GraphqlResource {
 		@Name("from") @DefaultValue("0") int from
 	) {
 
-		List<String> fields = _getFieldsFromContext();
-
-		if (fields.isEmpty()) {
-			return Uni.createFrom().item(List.of());
-		}
-
-		List<EventOption.EventOptionSortable> eventOptionSortables;
-
-		if (sortable) {
-			eventOptionSortables =
-				fields
-					.stream()
-					.map(EventOption.EventOptionSortable::fromColumn)
-					.filter(Objects::nonNull)
-					.collect(Collectors.toList());
-		} else {
-			eventOptionSortables = List.of();
-		}
-
-		return eventRepository.getEvents(
-			fields, from, size, EMPTY_MAP,
-			eventOptionSortables, sortType, true,
-			EventOption::from);
+		return Uni.createFrom().item(List.of());
 
 	}
 
@@ -101,42 +118,11 @@ public class GraphqlResource {
 			return Uni.createFrom().item(List.of());
 		}
 
-		LinkedHashMap<String, Object> projections = new LinkedHashMap<>(7);
-
-		if (id != null) {
-			projections.put(Event.ID, id);
-		}
-
-		if (type != null) {
-			projections.put(Event.TYPE, type);
-		}
-
-		if (className != null) {
-			projections.put(Event.CLASS_NAME, className);
-		}
-
-		if (groupKey != null) {
-			projections.put(Event.GROUP_KEY, groupKey);
-		}
-
-		if (gte != null) {
-			projections.put(Constants.GTE, gte);
-		}
-
-		if (lte != null) {
-			projections.put(Constants.LTE, lte);
-		}
-
-		if (classPK != null) {
-			projections.put(Event.CLASS_PK, classPK);
-		}
-
-		return eventRepository.getEvents(
-			fields, from, size, projections,
-			sortBy == null ? List.of() : List.of(sortBy), sortType, false);
+		return Uni
+			.createFrom()
+			.item(() -> eventStorageRepository.getEvents(from, size));
 
 	}
-
 
 	private List<String> _getFieldsFromContext() {
 
@@ -157,12 +143,6 @@ public class GraphqlResource {
 	SmallRyeContext context;
 
 	@Inject
-	io.vertx.mutiny.pgclient.PgPool client;
-
-	@Inject
-	EventRepository eventRepository;
-
-	private static final LinkedHashMap<String, Object> EMPTY_MAP =
-		new LinkedHashMap<>();
+	EventStorageRepository eventStorageRepository;
 
 }

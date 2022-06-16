@@ -18,7 +18,6 @@
 package io.openk9.datasource.event.processor;
 
 import com.rabbitmq.client.Envelope;
-import io.openk9.datasource.event.repo.EventRepository;
 import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.event.util.EventType;
 import io.smallrye.reactive.messaging.rabbitmq.IncomingRabbitMQMessage;
@@ -149,9 +148,6 @@ public class EventProcessor {
 
 	@Inject
 	EventSender eventSender;
-
-	@Inject
-	EventRepository eventRepository;
 
 	@Inject
 	Logger logger;
