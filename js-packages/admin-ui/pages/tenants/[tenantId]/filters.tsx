@@ -16,7 +16,9 @@
  */
 
 import React from "react";
+import { createUseStyles } from "react-jss";
 import { useRouter } from "next/router";
+import { ThemeType } from "../../../components/theme";
 import { Layout } from "../../../components/Layout";
 import { firstOrString } from "../../../components/utils";
 import { useQuery, useQueryClient, useMutation } from "react-query";
@@ -27,8 +29,23 @@ import {
   DatasourceSuggestionCategoryField,
 } from "@openk9/rest-api";
 import { ClayInput } from "@clayui/form";
+import { ClayTooltipProvider } from "@clayui/tooltip";
+
+const useStyles = createUseStyles((theme: ThemeType) => ({
+  root: {
+    margin: [theme.spacingUnit * 2, "auto"],
+    backgroundColor: "white",
+    boxShadow: theme.baseBoxShadow,
+    width: "100%",
+    maxWidth: 1000,
+    borderRadius: theme.borderRadius,
+    overflow: "auto",
+    padding: theme.spacingUnit * 2,
+  },
+}));
 
 export default function Filter() {
+  const classes = useStyles();
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
 
@@ -47,29 +64,37 @@ export default function Filter() {
         { label: tenantId },
         { label: "Filters", path: `/tenants/${tenantId}/filters` },
       ]}
-    >
-      <div style={{ display: "flex", justifyContent: "end", padding: "8px" }}>
-        <ClayButtonWithIcon
-          symbol="plus"
-          onClick={() => suggestionCategories.add()}
-        />
-      </div>
-      {suggestionCategories.list
-        ?.sort((a, b) => a.priority - b.priority)
-        .map((suggestionCategory) => {
-          return (
-            <SuggestionCategoryRow
-              key={suggestionCategory.suggestionCategoryId}
-              suggestionCategory={suggestionCategory}
-              onRemove={suggestionCategories.remove}
-              onUpdate={suggestionCategories.update}
-              onAddField={suggestionCategoryFields.add}
-              onRemoveField={suggestionCategoryFields.remove}
-              onUpdateField={suggestionCategoryFields.update}
-              suggestionCategoryFields={suggestionCategoryFields.list}
+      breadcrumbsControls={
+        <div className="navbar-nav" style={{ marginRight: 16 }}>
+          <ClayTooltipProvider>
+            <ClayButtonWithIcon
+              data-tooltip-align="bottom"
+              title="Add Filter"
+              symbol="plus"
+              onClick={() => suggestionCategories.add()}
             />
-          );
-        })}
+          </ClayTooltipProvider>
+        </div>
+      }
+    >
+      <div className={classes.root}>
+        {suggestionCategories.list
+          ?.sort((a, b) => a.priority - b.priority)
+          .map((suggestionCategory) => {
+            return (
+              <SuggestionCategoryRow
+                key={suggestionCategory.suggestionCategoryId}
+                suggestionCategory={suggestionCategory}
+                onRemove={suggestionCategories.remove}
+                onUpdate={suggestionCategories.update}
+                onAddField={suggestionCategoryFields.add}
+                onRemoveField={suggestionCategoryFields.remove}
+                onUpdateField={suggestionCategoryFields.update}
+                suggestionCategoryFields={suggestionCategoryFields.list}
+              />
+            );
+          })}
+      </div>
     </Layout>
   );
 }
