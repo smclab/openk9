@@ -21,6 +21,7 @@ import com.github.luben.zstd.Zstd;
 import io.openk9.datasource.event.dto.EventDto;
 import io.openk9.datasource.event.storage.Event;
 import io.openk9.datasource.event.storage.EventStorageRepository;
+import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -92,10 +93,10 @@ public class EventSenderImpl implements EventSender {
 
 			UUID eventId = UUID.randomUUID();
 
-			byte[] bytes = _compressData(data);
+			Tuple2<byte[], Integer> t2 = _compressData(data);
 
 			Path write = Files.write(
-				path.resolve(eventId.toString()), bytes);
+				path.resolve(eventId.toString()), t2.getItem1());
 
 			eventRepository.storeEvent(
 				Event.builder()
@@ -105,7 +106,7 @@ public class EventSenderImpl implements EventSender {
 					.className(className)
 					.classPK(classPK)
 					.parsingDate(parsingDate)
-					.size(bytes.length)
+					.size(t2.getItem2())
 					.dataPath(write.toString())
 					.created(LocalDateTime.now())
 					.build()
@@ -119,10 +120,10 @@ public class EventSenderImpl implements EventSender {
 
 	}
 
-	private byte[] _compressData(Object data) {
+	private Tuple2<byte[], Integer> _compressData(Object data) {
 
 		if (data == null) {
-			return new byte[0];
+			return Tuple2.of(new byte[0], 0);
 		}
 
 		byte[] bytes;
@@ -140,7 +141,7 @@ public class EventSenderImpl implements EventSender {
 			bytes = Json.encode(data).getBytes();
 		}
 
-		return Zstd.compress(bytes);
+		return Tuple2.of(Zstd.compress(bytes), bytes.length);
 
 	}
 
