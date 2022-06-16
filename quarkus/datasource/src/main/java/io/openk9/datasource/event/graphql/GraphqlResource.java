@@ -67,7 +67,7 @@ public class GraphqlResource {
 			if (eventById.isPresent()) {
 				Event event = eventById.get();
 				String dataPath = event.getDataPath();
-				int dataSize = event.getDataSize();
+				int dataSize = event.getSize();
 				byte[] bytes;
 				try {
 					bytes = Files.readAllBytes(Paths.get(dataPath));

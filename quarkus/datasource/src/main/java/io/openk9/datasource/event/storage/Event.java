@@ -39,8 +39,9 @@ public class Event {
 	private String className;
 	private String classPK;
 	private LocalDateTime parsingDate;
-	private int dataSize;
+	private int size;
 	private String dataPath;
+	private Integer version;
 
 	public static final String CLASS_NAME = "className";
 	public static final String CLASS_PK = "classPK";

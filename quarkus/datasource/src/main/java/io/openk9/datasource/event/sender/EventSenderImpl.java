@@ -105,7 +105,7 @@ public class EventSenderImpl implements EventSender {
 					.className(className)
 					.classPK(classPK)
 					.parsingDate(parsingDate)
-					.dataSize(bytes.length)
+					.size(bytes.length)
 					.dataPath(write.toString())
 					.created(LocalDateTime.now())
 					.build()
