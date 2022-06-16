@@ -328,9 +328,11 @@ function useSuggestionCategories(tenantId: number) {
   const queryClient = useQueryClient();
   const { data: list } = useQuery(
     ["/api/datasource/v2/suggestion-category", {}],
-    async ({ queryKey: [path, paramiters] }) => {
+    async ({ queryKey: [path, parameters] }) => {
       if (USE_MOCK) return mockSuggestionCategories;
-      return await client.getDatasourceSuggestionCategories();
+      return (await client.getDatasourceSuggestionCategories()).filter(
+        (suggestionCategory) => suggestionCategory.tenantId === tenantId,
+      );
     },
   );
 
@@ -442,9 +444,14 @@ function useSuggestionCategoryFields(tenantId: number) {
   const queryClient = useQueryClient();
   const { data: list } = useQuery(
     ["/api/datasource/v2/suggestion-category-field", {}],
-    async ({ queryKey: [path, paramiters] }) => {
+    async ({ queryKey: [path, parameters] }) => {
       if (USE_MOCK) return mockSuggestionCategoryFields;
-      return await client.getDatasourceSuggestionCategoryFields();
+      return await (
+        await client.getDatasourceSuggestionCategoryFields()
+      ).filter(
+        (suggestionCategoryField) =>
+          suggestionCategoryField.tenantId === tenantId,
+      );
     },
   );
 
