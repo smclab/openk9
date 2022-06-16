@@ -622,14 +622,14 @@ export function OpenK9Client({
       range,
       afterKey,
       suggestKeyword,
-      order
+      order,
     }: {
       searchQuery: SearchToken[];
       suggestionCategoryId?: number;
       range?: [number, number]; // for pagination
       afterKey?: string; // for pagination
       suggestKeyword?: string; // to source by text in suggestions
-      order: "desc" | "asc"
+      order: "desc" | "asc";
     }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
       const request = await authFetch(`/api/searcher/v1/suggestions`, {
         method: "POST",
@@ -639,7 +639,7 @@ export function OpenK9Client({
           afterKey,
           suggestionCategoryId,
           suggestKeyword,
-          order
+          order,
         }),
         headers: {
           Accept: "application/json",
@@ -670,6 +670,161 @@ export function OpenK9Client({
       });
       const data = await response.json();
       return data;
+    },
+
+    async getDatasourceSuggestionCategories(): Promise<
+      Array<DatasourceSuggestionCategory>
+    > {
+      const response = await authFetch(
+        "/api/datasource/v2/suggestion-category",
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+      if (!response.ok) {
+        throw new Error();
+      }
+      const data = await response.json();
+      return data;
+    },
+
+    async createDatasourceSuggestionCategory(params: {
+      tenantId: number;
+      parentCategoryId: number;
+      name: string;
+      enabled: true;
+      priority: number;
+    }): Promise<Array<DatasourceSuggestionCategory>> {
+      const response = await authFetch(
+        "/api/datasource/v2/suggestion-category",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(params),
+        },
+      );
+      if (!response.ok) {
+        throw new Error();
+      }
+      const data = await response.json();
+      return data;
+    },
+    async deleteDatasourceSuggestionCategory(
+      suggestionCategoryId: number,
+    ): Promise<void> {
+      const response = await authFetch(
+        `/api/datasource/v2/suggestion-category/${suggestionCategoryId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error();
+      }
+    },
+
+    async updateDatasourceSuggestionCategory(
+      suggestionCategoryId: number,
+      suggestionCategory: Partial<DatasourceSuggestionCategory>,
+    ): Promise<DatasourceSuggestionCategory> {
+      const response = await authFetch(
+        `/api/datasource/v2/suggestion-category/${suggestionCategoryId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(suggestionCategory),
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
+    async getDatasourceSuggestionCategoryFields(): Promise<
+      Array<DatasourceSuggestionCategoryField>
+    > {
+      const response = await authFetch(
+        "/api/datasource/v2/suggestion-category-field",
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+      if (!response.ok) {
+        throw new Error();
+      }
+      const data = await response.json();
+      return data;
+    },
+
+    async createDatasourceSuggestionCategoryField(params: {
+      tenantId: number;
+      categoryId: number;
+      fieldName: string;
+      searchableFieldName: string;
+      name: string;
+      enabled: boolean;
+    }): Promise<Array<DatasourceSuggestionCategory>> {
+      const response = await authFetch(
+        "/api/datasource/v2/suggestion-category-field",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(params),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    async updateDatasourceSuggestionCategoryField(
+      suggestionCategoryFieldId: number,
+      suggestionCategoryField: Partial<DatasourceSuggestionCategoryField>,
+    ): Promise<DatasourceSuggestionCategoryField> {
+      const response = await authFetch(
+        `/api/datasource/v2/suggestion-category-field/${suggestionCategoryFieldId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(suggestionCategoryField),
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
+    async deleteDatasourceSuggestionCategoryField(
+      suggestionCategoryFieldId: number,
+    ): Promise<void> {
+      const response = await authFetch(
+        `/api/datasource/v2/suggestion-category-field/${suggestionCategoryFieldId}`,
+        {
+          method: "DELETE",
+        },
+      );
+      if (!response.ok) {
+        throw new Error();
+      }
     },
   };
 }
@@ -1031,6 +1186,25 @@ type SuggestionsCategoriesResult = Array<{
   suggestionCategoryId: number;
   tenantId: number;
 }>;
+
+export type DatasourceSuggestionCategory = {
+  suggestionCategoryId: number;
+  tenantId: number;
+  parentCategoryId: number;
+  name: string;
+  enabled: boolean;
+  priority: number;
+};
+
+export type DatasourceSuggestionCategoryField = {
+  suggestionCategoryFieldId: number;
+  tenantId: number;
+  categoryId: number;
+  fieldName: string;
+  searchableFieldName: string;
+  name: string;
+  enabled: boolean;
+};
 
 function getDefaultTenantDomain(tenant: string) {
   if (!tenant && typeof window !== "undefined") {
