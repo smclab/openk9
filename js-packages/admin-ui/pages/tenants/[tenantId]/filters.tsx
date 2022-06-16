@@ -16,28 +16,24 @@
  */
 
 import React from "react";
-
 import { useRouter } from "next/router";
-
 import { Layout } from "../../../components/Layout";
-
 import { firstOrString } from "../../../components/utils";
 import { useQuery, useQueryClient, useMutation } from "react-query";
 import { client } from "../../../components/client";
+import { ClayButtonWithIcon } from "@clayui/button";
 import {
   DatasourceSuggestionCategory,
   DatasourceSuggestionCategoryField,
 } from "@openk9/rest-api";
-
-// TODO look & feel
-// TODO update suggestion category
-// TODO update suggestion category field
+import { ClayInput } from "@clayui/form";
 
 export default function Filter() {
   const { query } = useRouter();
   const tenantId = query.tenantId && firstOrString(query.tenantId);
 
   const suggestionCategories = useSuggestionCategories(Number(tenantId));
+
   const suggestionCategoryFields = useSuggestionCategoryFields(
     Number(tenantId),
   );
@@ -45,43 +41,54 @@ export default function Filter() {
   if (!tenantId) return null;
 
   return (
-    <>
-      <Layout
-        breadcrumbsPath={[
-          { label: "Tenants", path: "/tenants" },
-          { label: tenantId },
-          { label: "Filters", path: `/tenants/${tenantId}/filters` },
-        ]}
-      >
-        <div>
-          <button onClick={() => suggestionCategories.add()}>add</button>
-          {suggestionCategories.list
-            ?.sort((a, b) => a.priority - b.priority)
-            .map((suggestionCategory) => {
-              return (
-                <SuggestionCategoryRow
-                  key={suggestionCategory.suggestionCategoryId}
-                  suggestionCategory={suggestionCategory}
-                  onRemove={suggestionCategories.remove}
-                  onAddField={suggestionCategoryFields.add}
-                  onRemoveField={suggestionCategoryFields.remove}
-                  suggestionCategoryFields={suggestionCategoryFields.list}
-                />
-              );
-            })}
-        </div>
-      </Layout>
-    </>
+    <Layout
+      breadcrumbsPath={[
+        { label: "Tenants", path: "/tenants" },
+        { label: tenantId },
+        { label: "Filters", path: `/tenants/${tenantId}/filters` },
+      ]}
+    >
+      <div style={{ display: "flex", justifyContent: "end", padding: "8px" }}>
+        <ClayButtonWithIcon
+          symbol="plus"
+          onClick={() => suggestionCategories.add()}
+        />
+      </div>
+      {suggestionCategories.list
+        ?.sort((a, b) => a.priority - b.priority)
+        .map((suggestionCategory) => {
+          return (
+            <SuggestionCategoryRow
+              key={suggestionCategory.suggestionCategoryId}
+              suggestionCategory={suggestionCategory}
+              onRemove={suggestionCategories.remove}
+              onUpdate={suggestionCategories.update}
+              onAddField={suggestionCategoryFields.add}
+              onRemoveField={suggestionCategoryFields.remove}
+              onUpdateField={suggestionCategoryFields.update}
+              suggestionCategoryFields={suggestionCategoryFields.list}
+            />
+          );
+        })}
+    </Layout>
   );
 }
 
 type SuggestionCategoryFieldRowProps = {
   suggestionCategoryField: DatasourceSuggestionCategoryField;
   onRemove(suggestionCategoryFieldId: number): void;
+  onUpdate(params: {
+    suggestionCategoryFieldId: number;
+    enabled?: boolean;
+    fieldName?: string;
+    name?: string;
+    searchableFieldName?: string;
+  }): void;
 };
 function SuggestionCategoryFieldRow({
   suggestionCategoryField,
   onRemove,
+  onUpdate,
 }: SuggestionCategoryFieldRowProps) {
   const [enabled, setEnabled] = React.useState(suggestionCategoryField.enabled);
   const [name, setName] = React.useState(suggestionCategoryField.name);
@@ -91,45 +98,94 @@ function SuggestionCategoryFieldRow({
   const [searchableFieldName, setSearchableFieldName] = React.useState(
     suggestionCategoryField.searchableFieldName,
   );
+  const isDirty =
+    enabled !== suggestionCategoryField.enabled ||
+    name !== suggestionCategoryField.name ||
+    fieldName !== suggestionCategoryField.fieldName ||
+    searchableFieldName !== suggestionCategoryField.searchableFieldName;
   return (
-    <div style={{ display: "flex", paddingLeft: "32px" }}>
-      <div>
+    <div
+      style={{
+        display: "flex",
+        paddingLeft: "32px",
+        marginBottom: "8px",
+        alignItems: "center",
+      }}
+    >
+      <div style={{ marginRight: "8px", marginLeft: "8px" }}>
         <input
           type="checkbox"
+          className="custom-control-input"
           checked={enabled}
           onChange={(event) => setEnabled(event.currentTarget.checked)}
         />
       </div>
-      <div>
-        name:
-        <input
+      <div
+        style={{
+          flexGrow: 1,
+          display: "flex",
+          marginRight: "8px",
+          alignItems: "center",
+        }}
+      >
+        <Label>Name</Label>
+        <ClayInput
           value={name}
           onChange={(event) => setName(event.currentTarget.value)}
         />
       </div>
-      <div>
-        fieldName:
-        <input
+      <div
+        style={{
+          flexGrow: 1,
+          display: "flex",
+          marginRight: "8px",
+          alignItems: "center",
+        }}
+      >
+        <Label>Field name</Label>
+        <ClayInput
           value={fieldName}
           onChange={(event) => setFieldName(event.currentTarget.value)}
         />
       </div>
-      <div>
-        searchableFieldName:
-        <input
+      <div
+        style={{
+          flexGrow: 1,
+          display: "flex",
+          marginRight: "8px",
+          alignItems: "center",
+        }}
+      >
+        <Label>Searchable field name</Label>
+        <ClayInput
           value={searchableFieldName}
           onChange={(event) =>
             setSearchableFieldName(event.currentTarget.value)
           }
         />
       </div>
-      <button
+      <ClayButtonWithIcon
+        symbol="trash"
         onClick={() =>
           onRemove(suggestionCategoryField.suggestionCategoryFieldId)
         }
-      >
-        delete
-      </button>
+        style={{ marginRight: "8px" }}
+      />
+      <ClayButtonWithIcon
+        symbol="disk"
+        disabled={!isDirty}
+        onClick={() =>
+          onUpdate({
+            suggestionCategoryFieldId:
+              suggestionCategoryField.suggestionCategoryFieldId,
+            enabled,
+            name,
+            fieldName,
+            searchableFieldName,
+          })
+        }
+        style={{ marginRight: "8px" }}
+      ></ClayButtonWithIcon>
     </div>
   );
 }
@@ -137,8 +193,21 @@ function SuggestionCategoryFieldRow({
 type SuggestionCategoryRowProps = {
   suggestionCategory: DatasourceSuggestionCategory;
   onRemove(suggestionCategoryId: number): void;
+  onUpdate(params: {
+    suggestionCategoryId: number;
+    enabled: boolean;
+    name: string;
+    priority: number;
+  }): void;
   onAddField(suggestionCategoryId: number): void;
   onRemoveField(suggestionCategoryFieldId: number): void;
+  onUpdateField(params: {
+    suggestionCategoryFieldId: number;
+    enabled: boolean;
+    fieldName: string;
+    name: string;
+    searchableFieldName: string;
+  }): void;
   suggestionCategoryFields:
     | Array<DatasourceSuggestionCategoryField>
     | undefined;
@@ -146,69 +215,109 @@ type SuggestionCategoryRowProps = {
 function SuggestionCategoryRow({
   suggestionCategory,
   onRemove,
+  onUpdate,
   onAddField,
   suggestionCategoryFields,
   onRemoveField,
+  onUpdateField,
 }: SuggestionCategoryRowProps) {
   const [enabled, setEnabled] = React.useState(suggestionCategory.enabled);
   const [name, setName] = React.useState(suggestionCategory.name);
   const [priority, setPriority] = React.useState(suggestionCategory.priority);
+  const isDirty =
+    enabled !== suggestionCategory.enabled ||
+    name !== suggestionCategory.name ||
+    priority !== suggestionCategory.priority;
   return (
-    <div>
-      <div style={{ display: "flex" }}>
-        <div>
+    <React.Fragment>
+      <div
+        style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}
+      >
+        <div style={{ marginRight: "8px", marginLeft: "8px" }}>
           <input
             type="checkbox"
             checked={enabled}
             onChange={(event) => setEnabled(event.currentTarget.checked)}
           />
         </div>
-        <div>
-          name:
-          <input
+        <div
+          style={{
+            flexGrow: 1,
+            display: "flex",
+            marginRight: "8px",
+            alignItems: "center",
+          }}
+        >
+          <Label>Name</Label>
+          <ClayInput
             value={name}
             onChange={(event) => setName(event.currentTarget.value)}
           />
         </div>
-        <div>
-          priority:
-          <input
+        <div
+          style={{ display: "flex", marginRight: "8px", alignItems: "center" }}
+        >
+          <Label>Priority</Label>
+          <ClayInput
             type="number"
             step="1"
             value={priority}
             onChange={(event) => setPriority(event.currentTarget.valueAsNumber)}
           />
         </div>
-        <div>
-          <button
-            onClick={() => onRemove(suggestionCategory.suggestionCategoryId)}
-          >
-            delete
-          </button>
-          <button
-            onClick={() => onAddField(suggestionCategory.suggestionCategoryId)}
-          >
-            add field
-          </button>
-        </div>
+        <ClayButtonWithIcon
+          symbol="trash"
+          onClick={() => onRemove(suggestionCategory.suggestionCategoryId)}
+          style={{ marginRight: "8px" }}
+        />
+        <ClayButtonWithIcon
+          symbol="disk"
+          disabled={!isDirty}
+          onClick={() =>
+            onUpdate({
+              suggestionCategoryId: suggestionCategory.suggestionCategoryId,
+              enabled,
+              name,
+              priority,
+            })
+          }
+          style={{ marginRight: "8px" }}
+        >
+          save
+        </ClayButtonWithIcon>
+        <ClayButtonWithIcon
+          symbol="plus"
+          onClick={() => onAddField(suggestionCategory.suggestionCategoryId)}
+          style={{ marginRight: "8px" }}
+        />
       </div>
-      <div>
-        {suggestionCategoryFields
-          ?.filter(
-            (suggestionCategoryField) =>
-              suggestionCategoryField.categoryId ===
-              suggestionCategory.suggestionCategoryId,
-          )
-          .map((suggestionCategoryField) => {
-            return (
-              <SuggestionCategoryFieldRow
-                key={suggestionCategoryField.suggestionCategoryFieldId}
-                suggestionCategoryField={suggestionCategoryField}
-                onRemove={onRemoveField}
-              />
-            );
-          })}
-      </div>
+      {suggestionCategoryFields
+        ?.filter(
+          (suggestionCategoryField) =>
+            suggestionCategoryField.categoryId ===
+            suggestionCategory.suggestionCategoryId,
+        )
+        .map((suggestionCategoryField) => {
+          return (
+            <SuggestionCategoryFieldRow
+              key={suggestionCategoryField.suggestionCategoryFieldId}
+              suggestionCategoryField={suggestionCategoryField}
+              onRemove={onRemoveField}
+              onUpdate={onUpdateField}
+            />
+          );
+        })}
+      <div style={{ width: "100%", height: "32px" }}></div>
+    </React.Fragment>
+  );
+}
+
+function Label(props: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{ whiteSpace: "nowrap", marginRight: "4px", fontWeight: "bold" }}
+    >
+      {props.children}:{" "}
     </div>
   );
 }
@@ -224,6 +333,7 @@ function useSuggestionCategories(tenantId: number) {
       return await client.getDatasourceSuggestionCategories();
     },
   );
+
   const { mutate: remove } = useMutation(
     async (suggestionCategoryId: number) => {
       if (USE_MOCK) {
@@ -233,7 +343,37 @@ function useSuggestionCategories(tenantId: number) {
         );
         return;
       }
+
       await client.deleteDatasourceSuggestionCategory(suggestionCategoryId);
+    },
+    {
+      onSuccess() {
+        queryClient.invalidateQueries("/api/datasource/v2/suggestion-category");
+      },
+    },
+  );
+  const { mutate: update } = useMutation(
+    async ({
+      suggestionCategoryId,
+      ...params
+    }: {
+      suggestionCategoryId: number;
+      enabled?: boolean;
+      name?: string;
+      priority?: number;
+    }) => {
+      if (USE_MOCK) {
+        mockSuggestionCategories.map((suggestionCategory) => {
+          if (suggestionCategory.suggestionCategoryId !== suggestionCategoryId)
+            return suggestionCategory;
+          return { ...suggestionCategory, ...params };
+        });
+        return;
+      }
+      await client.updateDatasourceSuggestionCategory(
+        suggestionCategoryId,
+        params,
+      );
     },
     {
       onSuccess() {
@@ -247,7 +387,7 @@ function useSuggestionCategories(tenantId: number) {
         mockSuggestionCategories = [
           ...mockSuggestionCategories,
           {
-            enabled: false,
+            enabled: true,
             name: "category",
             parentCategoryId: -1,
             priority: 0,
@@ -261,7 +401,7 @@ function useSuggestionCategories(tenantId: number) {
         tenantId,
         parentCategoryId: -1,
         name: "Suggestion Category Name",
-        enabled: false,
+        enabled: true,
         priority: 0,
       });
     },
@@ -275,6 +415,7 @@ function useSuggestionCategories(tenantId: number) {
     list,
     remove,
     add,
+    update,
   };
 }
 
@@ -306,6 +447,7 @@ function useSuggestionCategoryFields(tenantId: number) {
       return await client.getDatasourceSuggestionCategoryFields();
     },
   );
+
   const { mutate: remove } = useMutation(
     async (suggestionCategoryFieldId: number) => {
       if (USE_MOCK) {
@@ -328,13 +470,52 @@ function useSuggestionCategoryFields(tenantId: number) {
       },
     },
   );
+
+  const { mutate: update } = useMutation(
+    async ({
+      suggestionCategoryFieldId,
+      ...params
+    }: {
+      suggestionCategoryFieldId: number;
+      enabled?: boolean;
+      fieldName?: string;
+      name?: string;
+      searchableFieldName?: string;
+    }) => {
+      if (USE_MOCK) {
+        mockSuggestionCategoryFields = mockSuggestionCategoryFields.map(
+          (suggestionCategoryField) => {
+            if (
+              suggestionCategoryField.suggestionCategoryFieldId !==
+              suggestionCategoryFieldId
+            )
+              return suggestionCategoryField;
+            return { ...suggestionCategoryField, ...params };
+          },
+        );
+        return;
+      }
+      await client.updateDatasourceSuggestionCategoryField(
+        suggestionCategoryFieldId,
+        params,
+      );
+    },
+    {
+      onSuccess() {
+        queryClient.invalidateQueries(
+          "/api/datasource/v2/suggestion-category-field",
+        );
+      },
+    },
+  );
+
   const { mutate: add } = useMutation(
     async (categoryId: number) => {
       if (USE_MOCK) {
         mockSuggestionCategoryFields = [
           ...mockSuggestionCategoryFields,
           {
-            enabled: false,
+            enabled: true,
             name: "category",
             fieldName: "",
             searchableFieldName: "",
@@ -351,7 +532,7 @@ function useSuggestionCategoryFields(tenantId: number) {
         fieldName: "",
         searchableFieldName: "",
         name: "Suggestion Category Name",
-        enabled: false,
+        enabled: true,
       });
     },
     {
@@ -362,7 +543,7 @@ function useSuggestionCategoryFields(tenantId: number) {
       },
     },
   );
-  return { list, add, remove };
+  return { list, add, remove, update };
 }
 
 let mockSuggestionCategoryFields: Array<DatasourceSuggestionCategoryField> = [

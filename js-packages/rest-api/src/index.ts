@@ -622,14 +622,14 @@ export function OpenK9Client({
       range,
       afterKey,
       suggestKeyword,
-      order
+      order,
     }: {
       searchQuery: SearchToken[];
       suggestionCategoryId?: number;
       range?: [number, number]; // for pagination
       afterKey?: string; // for pagination
       suggestKeyword?: string; // to source by text in suggestions
-      order: "desc" | "asc"
+      order: "desc" | "asc";
     }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
       const request = await authFetch(`/api/searcher/v1/suggestions`, {
         method: "POST",
@@ -639,7 +639,7 @@ export function OpenK9Client({
           afterKey,
           suggestionCategoryId,
           suggestKeyword,
-          order
+          order,
         }),
         headers: {
           Accept: "application/json",
@@ -723,9 +723,27 @@ export function OpenK9Client({
           method: "DELETE",
         },
       );
+
       if (!response.ok) {
         throw new Error();
       }
+    },
+
+    async updateDatasourceSuggestionCategory(
+      suggestionCategoryId: number,
+      suggestionCategory: Partial<DatasourceSuggestionCategory>,
+    ): Promise<DatasourceSuggestionCategory> {
+      const response = await authFetch(
+        `/api/datasource/v2/suggestion-category/${suggestionCategoryId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(suggestionCategory),
+        },
+      );
       const data = await response.json();
       return data;
     },
@@ -767,12 +785,34 @@ export function OpenK9Client({
           body: JSON.stringify(params),
         },
       );
+
       if (!response.ok) {
         throw new Error();
       }
+
       const data = await response.json();
       return data;
     },
+
+    async updateDatasourceSuggestionCategoryField(
+      suggestionCategoryFieldId: number,
+      suggestionCategoryField: Partial<DatasourceSuggestionCategoryField>,
+    ): Promise<DatasourceSuggestionCategoryField> {
+      const response = await authFetch(
+        `/api/datasource/v2/suggestion-category-field/${suggestionCategoryFieldId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(suggestionCategoryField),
+        },
+      );
+      const data = await response.json();
+      return data;
+    },
+
     async deleteDatasourceSuggestionCategoryField(
       suggestionCategoryFieldId: number,
     ): Promise<void> {
@@ -785,8 +825,6 @@ export function OpenK9Client({
       if (!response.ok) {
         throw new Error();
       }
-      const data = await response.json();
-      return data;
     },
   };
 }
