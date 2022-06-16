@@ -79,7 +79,7 @@ public class EventStorageRepository {
             .filter(p -> p.getType().equals(type) && p.getClassPK().equals(classPk) && p.getClassName().equals(className))
             .map(Event::getParsingDate)
             .max(LocalDateTime::compareTo)
-            .orElse(null);
+            .orElse(ZERO);
     }
 
     public Optional<Event> updateEvent(Event event) {
@@ -116,5 +116,8 @@ public class EventStorageRepository {
 
     @Inject
     EventMapper eventMapper;
+
+    public static final LocalDateTime ZERO = LocalDateTime.of(
+        1970, 1, 1, 0, 0, 0);
 
 }
