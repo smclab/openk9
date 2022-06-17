@@ -770,7 +770,6 @@ export function OpenK9Client({
       tenantId: number;
       categoryId: number;
       fieldName: string;
-      searchableFieldName: string;
       name: string;
       enabled: boolean;
     }): Promise<Array<DatasourceSuggestionCategory>> {
@@ -1201,7 +1200,6 @@ export type DatasourceSuggestionCategoryField = {
   tenantId: number;
   categoryId: number;
   fieldName: string;
-  searchableFieldName: string;
   name: string;
   enabled: boolean;
 };
