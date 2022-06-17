@@ -107,7 +107,6 @@ type SuggestionCategoryFieldRowProps = {
     enabled?: boolean;
     fieldName?: string;
     name?: string;
-    searchableFieldName?: string;
   }): void;
 };
 function SuggestionCategoryFieldRow({
@@ -120,14 +119,10 @@ function SuggestionCategoryFieldRow({
   const [fieldName, setFieldName] = React.useState(
     suggestionCategoryField.fieldName,
   );
-  const [searchableFieldName, setSearchableFieldName] = React.useState(
-    suggestionCategoryField.searchableFieldName,
-  );
   const isDirty =
     enabled !== suggestionCategoryField.enabled ||
     name !== suggestionCategoryField.name ||
-    fieldName !== suggestionCategoryField.fieldName ||
-    searchableFieldName !== suggestionCategoryField.searchableFieldName;
+    fieldName !== suggestionCategoryField.fieldName 
   return (
     <div
       style={{
@@ -173,22 +168,6 @@ function SuggestionCategoryFieldRow({
           onChange={(event) => setFieldName(event.currentTarget.value)}
         />
       </div>
-      <div
-        style={{
-          flexGrow: 1,
-          display: "flex",
-          marginRight: "8px",
-          alignItems: "center",
-        }}
-      >
-        <Label>Searchable field name</Label>
-        <ClayInput
-          value={searchableFieldName}
-          onChange={(event) =>
-            setSearchableFieldName(event.currentTarget.value)
-          }
-        />
-      </div>
       <ClayButtonWithIcon
         symbol="trash"
         onClick={() =>
@@ -206,7 +185,6 @@ function SuggestionCategoryFieldRow({
             enabled,
             name,
             fieldName,
-            searchableFieldName,
           })
         }
         style={{ marginRight: "8px" }}
@@ -231,7 +209,6 @@ type SuggestionCategoryRowProps = {
     enabled: boolean;
     fieldName: string;
     name: string;
-    searchableFieldName: string;
   }): void;
   suggestionCategoryFields:
     | Array<DatasourceSuggestionCategoryField>
@@ -512,7 +489,6 @@ function useSuggestionCategoryFields(tenantId: number) {
       enabled?: boolean;
       fieldName?: string;
       name?: string;
-      searchableFieldName?: string;
     }) => {
       if (USE_MOCK) {
         mockSuggestionCategoryFields = mockSuggestionCategoryFields.map(
@@ -550,7 +526,6 @@ function useSuggestionCategoryFields(tenantId: number) {
             enabled: true,
             name: "category",
             fieldName: "",
-            searchableFieldName: "",
             suggestionCategoryFieldId: Math.trunc(Math.random() * 100),
             categoryId,
             tenantId: 0,
@@ -562,7 +537,6 @@ function useSuggestionCategoryFields(tenantId: number) {
         tenantId,
         categoryId,
         fieldName: "",
-        searchableFieldName: "",
         name: "Suggestion Category Name",
         enabled: true,
       });
@@ -584,7 +558,6 @@ let mockSuggestionCategoryFields: Array<DatasourceSuggestionCategoryField> = [
     suggestionCategoryFieldId: 1,
     tenantId: 0,
     fieldName: "fieldname1",
-    searchableFieldName: "name1",
     name: "field1",
     enabled: true,
   },
@@ -593,7 +566,6 @@ let mockSuggestionCategoryFields: Array<DatasourceSuggestionCategoryField> = [
     suggestionCategoryFieldId: 2,
     tenantId: 0,
     fieldName: "fieldname2",
-    searchableFieldName: "name2",
     name: "field2",
     enabled: false,
   },
@@ -603,7 +575,6 @@ let mockSuggestionCategoryFields: Array<DatasourceSuggestionCategoryField> = [
     suggestionCategoryFieldId: 2,
     tenantId: 0,
     fieldName: "fieldname3",
-    searchableFieldName: "name3",
     name: "field3",
     enabled: true,
   },
