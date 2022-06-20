@@ -18,6 +18,7 @@
 package io.openk9.datasource.event.graphql;
 
 import com.github.luben.zstd.Zstd;
+import com.hazelcast.aggregation.Aggregators;
 import com.hazelcast.map.IMap;
 import com.hazelcast.projection.Projection;
 import com.hazelcast.projection.Projections;
@@ -35,6 +36,7 @@ import io.openk9.datasource.event.dto.EventOption;
 import io.openk9.datasource.event.sender.StorageConfig;
 import io.openk9.datasource.event.util.Constants;
 import io.openk9.datasource.event.util.SortType;
+import io.openk9.datasource.mapper.EventMapper;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.graphql.DefaultValue;
@@ -52,6 +54,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -98,14 +101,60 @@ public class GraphqlResource {
 
 	@Query("eventOptions")
 	@Description("Returns the list of available options for the event")
-	public Uni<List<EventOption>> eventOptions(
+	public Uni<Collection<EventOption>> eventOptions(
 		@Name("sortable") @DefaultValue("true") boolean sortable,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType,
 		@Name("size") @DefaultValue("20") int size,
 		@Name("from") @DefaultValue("0") int from
 	) {
 
-		return Uni.createFrom().item(List.of());
+		List<String> fields = _getFieldsFromContext();
+
+		if (fields.isEmpty()) {
+			return Uni.createFrom().item(List.of());
+		}
+
+		return Uni.createFrom().item(() -> {
+
+			Set<EventOption> eventOptions = new HashSet<>();
+
+			for (String field : fields) {
+				Set<String> aggregate =
+					eventMap.aggregate(Aggregators.distinct(field));
+				eventOptions.addAll(_toEventOption(field, aggregate));
+			}
+
+			return eventOptions;
+
+		});
+
+	}
+
+	private Collection<? extends EventOption> _toEventOption(
+		String field, Set<String> aggregate) {
+
+		List<EventOption> eventOptions = new ArrayList<>(aggregate.size());
+
+		for (String value : aggregate) {
+			EventOption.EventOptionBuilder builder = EventOption.builder();
+			switch (field) {
+				case Event.TYPE:
+					builder.type(value);
+					break;
+				case Event.CLASS_NAME:
+					builder.className(value);
+					break;
+				case Event.GROUP_KEY:
+					builder.groupKey(value);
+					break;
+				case Event.CLASS_PK:
+					builder.classPK(value);
+					break;
+			}
+			eventOptions.add(builder.build());
+		}
+
+		return eventOptions;
 
 	}
 
@@ -134,8 +183,7 @@ public class GraphqlResource {
 			.item(() -> {
 
 				Predicate predicate = _createPredicates(
-					id, type, className, groupKey, classPK, gte, lte,
-					size, from, sortBy, sortType);
+					id, type, className, groupKey, classPK, gte, lte);
 
 				Set<UUID> keys;
 
@@ -151,10 +199,18 @@ public class GraphqlResource {
 				Projection<Object, Object[]> projection = Projections
 					.multiAttribute(fields.toArray(String[]::new));
 
-				return _objectsToEvents(
+				eventMap.project(
+					projection, Predicates.in(
+						QueryConstants.KEY_ATTRIBUTE_NAME.value(), uuids));
+
+				List<EventDTO> eventDTOS = _objectsToEvents(
 					fields, eventMap.project(
 						projection, Predicates.in(
 							QueryConstants.KEY_ATTRIBUTE_NAME.value(), uuids)));
+
+				// eventDTOS.sort(sortBy.getComparator(sortType));
+
+				return eventDTOS;
 
 			});
 
@@ -214,8 +270,7 @@ public class GraphqlResource {
 
 	private Predicate _createPredicates(
 		String id, String type, String className, String groupKey,
-		String classPK, LocalDateTime gte, LocalDateTime lte,
-		int size, int from, Event.EventSortable sortBy, SortType sortType) {
+		String classPK, LocalDateTime gte, LocalDateTime lte) {
 
 		List<Predicate> predicates = new ArrayList<>();
 
@@ -283,5 +338,8 @@ public class GraphqlResource {
 
 	@Inject
 	StorageConfig storageConfig;
+
+	@Inject
+	EventMapper mapper;
 
 }

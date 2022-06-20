@@ -15,13 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.cache.mapper;
+package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.cache.dto.EventDTO;
 import io.openk9.datasource.cache.model.Event;
+import io.openk9.datasource.event.dto.EventOption;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "cdi")
 public interface EventMapper {
 	EventDTO toDTO(Event event);
+	EventOption toEventOption(Event event);
 }

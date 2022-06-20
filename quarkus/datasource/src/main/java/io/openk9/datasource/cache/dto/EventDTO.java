@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.cache.dto;
 
+import io.openk9.datasource.event.util.SortType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,6 +25,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.UUID;
 
 @Data
@@ -41,4 +43,66 @@ public class EventDTO {
 	private String groupKey;
 	private String classPK;
 	private String className;
+
+	public enum EventSortable {
+		TYPE {
+			@Override
+			public Comparator<EventDTO> getComparator() {
+				return Comparator.comparing(EventDTO::getType);
+			}
+
+		},
+		SIZE {
+			@Override
+			public Comparator<EventDTO> getComparator() {
+				return Comparator.comparing(EventDTO::getSize);
+			}
+		},
+		VERSION {
+			@Override
+			public Comparator<EventDTO> getComparator() {
+				return Comparator.comparing(EventDTO::getVersion);
+			}
+		},
+		CREATED {
+			@Override
+			public Comparator<EventDTO> getComparator() {
+				return Comparator.comparing(EventDTO::getCreated);
+			}
+		},
+		GROUP_KEY {
+			@Override
+			public Comparator<EventDTO> getComparator() {
+				return Comparator.comparing(EventDTO::getGroupKey);
+			}
+		},
+		CLASS_NAME {
+			@Override
+			public Comparator<EventDTO> getComparator() {
+				return Comparator.comparing(EventDTO::getClassName);
+			}
+		},
+		PARSING_DATE {
+			@Override
+			public Comparator<EventDTO> getComparator() {
+				return Comparator.comparing(EventDTO::getParsingDate);
+			}
+		},
+		CLASS_PK {
+			@Override
+			public Comparator<EventDTO> getComparator() {
+				return Comparator.comparing(EventDTO::getClassPK);
+			}
+		};
+
+		public abstract Comparator<EventDTO> getComparator();
+
+		public Comparator<EventDTO> getComparator(SortType sortType) {
+			return sortType == SortType.ASC
+				? getComparator()
+				: getComparator().reversed();
+		}
+
+	}
+
 }
