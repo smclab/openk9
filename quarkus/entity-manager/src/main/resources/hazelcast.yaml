@@ -311,12 +311,9 @@ hazelcast:
             per-entry-stats-enabled: false
 
             indexes:
-                - type: HASH
+                - type: SORTED
                   attributes:
-                      - "id"
-                      - "graphId"
-                      - "associated"
-                      - "indexable"
+                      - "created"
         default:
             # Data type that will be used for storing recordMap.
             # Possible values:
