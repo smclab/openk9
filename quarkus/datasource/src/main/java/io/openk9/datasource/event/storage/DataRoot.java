@@ -18,12 +18,14 @@
 package io.openk9.datasource.event.storage;
 
 
+import one.microstream.reference.Lazy;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataRoot {
 
-	private List<Event> events = new ArrayList<>();
+	private Lazy<List<Event>> events;
 
 	public DataRoot() {
 	}
@@ -33,12 +35,14 @@ public class DataRoot {
 	}
 
 	public List<Event> getEvents() {
-		if (events == null) {
-			events = new ArrayList<>();
+
+		List<Event> eventList = Lazy.get(this.events);
+
+		if (eventList == null) {
+			this.events = Lazy.Reference(eventList = new ArrayList<>());
 		}
-		// must return the reference
-		// in order to make it work with MicroStream
-		return events;
+
+		return eventList;
 	}
 
 	public Event getEventAt(int index) {

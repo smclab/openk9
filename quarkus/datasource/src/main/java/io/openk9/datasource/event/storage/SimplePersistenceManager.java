@@ -18,6 +18,8 @@
 package io.openk9.datasource.event.storage;
 
 import io.quarkus.arc.Lock;
+import one.microstream.reference.Lazy;
+import one.microstream.reference.LazyReferenceManager;
 import one.microstream.storage.embedded.types.EmbeddedStorage;
 import one.microstream.storage.embedded.types.EmbeddedStorageManager;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -26,6 +28,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import java.nio.file.Paths;
+import java.time.Duration;
 
 @Lock
 @ApplicationScoped
@@ -37,6 +40,12 @@ public class SimplePersistenceManager {
     )
     String storageDir;
 
+    @ConfigProperty(
+        name = "openk9.microstream.storage.lazyReferenceTimeout",
+        defaultValue = "5M"
+    )
+    Duration lazyReferenceTimeout;
+
     private EmbeddedStorageManager storageManager;
 
     private SimplePersistenceManager() {
@@ -44,6 +53,13 @@ public class SimplePersistenceManager {
 
     @PostConstruct
     void init() {
+
+        LazyReferenceManager.set(
+            LazyReferenceManager.New(
+                Lazy.Checker(lazyReferenceTimeout.toMillis())
+            )
+        );
+
         this.storageManager = EmbeddedStorage.start(
             new DataRoot(), Paths.get(storageDir));
     }
