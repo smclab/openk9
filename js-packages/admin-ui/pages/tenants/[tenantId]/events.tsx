@@ -27,11 +27,30 @@ import { TableVirtuoso } from "react-virtuoso";
 import Checkbox from "@clayui/form/lib/Checkbox";
 import ClayButton from "@clayui/button";
 import ClayPopover from "@clayui/popover";
+import { createUseStyles } from "react-jss";
+import { ThemeType } from "../../../components/theme";
+import { ClayTooltipProvider } from "@clayui/tooltip";
 
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
+});
+
+const timeFormatter = new Intl.DateTimeFormat(undefined, {
   timeStyle: "medium",
 });
+
+const useStyles = createUseStyles((theme: ThemeType) => ({
+  root: {
+    margin: [theme.spacingUnit * 2, "auto"],
+    backgroundColor: "white",
+    boxShadow: theme.baseBoxShadow,
+    width: "100%",
+    maxWidth: 1000,
+    borderRadius: theme.borderRadius,
+    overflow: "auto",
+    height: "calc(100% - 32px)",
+  },
+}));
 
 export default function IngestionEvents() {
   const { query } = useRouter();
@@ -111,8 +130,12 @@ export default function IngestionEvents() {
     },
   );
 
+  const classes = useStyles();
+
   if (!tenantId) return null;
+
   const cellStyle: React.CSSProperties = {
+    minWidth: "100px",
     wordBreak: "break-all",
     padding: "8px",
   };
@@ -125,6 +148,7 @@ export default function IngestionEvents() {
     wordBreak: "break-word",
     whiteSpace: "nowrap",
     padding: "8px",
+    textAlign: "right",
   };
 
   const cellStyleNumber: React.CSSProperties = {
@@ -135,6 +159,8 @@ export default function IngestionEvents() {
   };
 
   const coloumnStyle: React.CSSProperties = {
+    textAlign: "center",
+    verticalAlign: "top",
     padding: "8px",
   };
 
@@ -146,146 +172,157 @@ export default function IngestionEvents() {
           { label: tenantId },
           { label: "Events", path: `/tenants/${tenantId}/events` },
         ]}
-      >
-        <ClayButton
-          onClick={() => {
-            console.log(checked);
-          }}
-        >
-          rieseguire righe selezionate({checked.length})
-        </ClayButton>
-
-        {eventlist && (
-          <TableVirtuoso
-            style={{ height: "100%", width: "100%" }}
-            data={eventlist.event}
-            components={{
-              Table: (props) => {
-                return (
-                  <table style={{ ...props.style, width: "100%" }}>
-                    {props.children}
-                  </table>
-                );
-              },
-            }}
-            fixedHeaderContent={() => (
-              <tr
-                style={{
-                  backgroundColor: "white",
+        breadcrumbsControls={
+          <div className="navbar-nav" style={{ marginRight: 16 }}>
+            <ClayTooltipProvider>
+              <ClayButton
+                onClick={() => {
+                  console.log(checked);
                 }}
               >
-                <th style={coloumnStyle}>id</th>
-                <th style={coloumnStyle}>
-                  type
-                  <SelectOption
-                    value={typeValue}
-                    onChange={setTypeValue}
-                    options={
-                      autocompleteOptionsType?.eventOptions.map(
-                        (option: any) => option.type,
-                      ) ?? []
-                    }
-                  />
-                </th>
-                <th style={coloumnStyle}>
-                  className
-                  <SelectOption
-                    value={classNameValue}
-                    onChange={setClassNameValue}
-                    options={
-                      autocompleteOptionsClassName?.eventOptions.map(
-                        (option: any) => option.className,
-                      ) ?? []
-                    }
-                  />
-                </th>
-                <th style={coloumnStyle}>
-                  groupKey
-                  <SelectOption
-                    value={groupKeyValue}
-                    onChange={setGroupKeyValue}
-                    options={
-                      autocompleteOptionsGroupKey?.eventOptions.map(
-                        (option: any) => option.groupKey,
-                      ) ?? []
-                    }
-                  />
-                </th>
-
-                <th style={coloumnStyle}>
-                  classPK
-                  <SelectOption
-                    value={classPKValue}
-                    onChange={setClassPKValue}
-                    options={
-                      autocompleteOptionsClassPK?.eventOptions.map(
-                        (option: any) => option.classPK,
-                      ) ?? []
-                    }
-                  />
-                </th>
-
-                <th style={coloumnStyle}>version</th>
-                <th style={coloumnStyle}>data</th>
-                <th style={coloumnStyle}>size</th>
-                <th style={coloumnStyle}>parsingDate</th>
-                <th style={coloumnStyle}>created</th>
-              </tr>
-            )}
-            itemContent={(index, event) => (
-              <React.Fragment>
-                <td style={cellStyle}>{event.id}</td>
-                <td style={cellStyle}>
-                  {event.type}
-
-                  <Checkbox
-                    value={event.id}
-                    //controlla se presente all'interno dell array checked se risulta vuol dire che è presente e selezionata
-                    checked={checked.some((item) => item == event.id)}
-                    name={event.id}
-                    onChange={() => {
-                      const isChecked = checked.some(
-                        (item) => item == event.id,
-                      );
-
-                      if (isChecked) {
-                        setChecked((checked) =>
-                          checked.filter((item) => item == event.id),
-                        );
-                      } else {
-                        setChecked((checked) => [...checked, event.id]);
-                      }
-                    }}
-                  ></Checkbox>
-                </td>
-                <td style={cellStyle}>{event.className} </td>
-                <td style={cellStyle}>{event.groupKey}</td>
-                <td style={cellStyleNumber}>{}</td>
-                <td style={cellStyleNumber}>{event.version}</td>
-
-                <td style={cellStyleButton}>
-                  <DataPopUp id={event.id} />
-                </td>
-                <td style={cellStyleNumber}>{event.size}</td>
-                <td style={cellStyleDate}>
-                  {event.parsingDate &&
-                    dateTimeFormatter.format(new Date(event.parsingDate))}
-                </td>
-
-                <td style={cellStyleDate}>
-                  {dateTimeFormatter.format(new Date(event.created))}
-                </td>
-              </React.Fragment>
-            )}
-            endReached={() => {
-              fetchMoreEvents({
-                variables: {
-                  from: eventlist.event.length,
+                rieseguire righe selezionate({checked.length})
+              </ClayButton>
+            </ClayTooltipProvider>
+          </div>
+        }
+      >
+        <div className={classes.root}>
+          {eventlist && (
+            <TableVirtuoso
+              style={{ height: "100%", width: "100%" }}
+              data={eventlist.event}
+              components={{
+                Table: (props) => {
+                  return (
+                    <table style={{ ...props.style, width: "100%" }}>
+                      {props.children}
+                    </table>
+                  );
                 },
-              });
-            }}
-          />
-        )}
+              }}
+              fixedHeaderContent={() => (
+                <tr
+                  style={{
+                    backgroundColor: "white",
+                  }}
+                >
+                  <th></th>
+                  <th style={coloumnStyle}>id</th>
+                  <th style={coloumnStyle}>
+                    type<br/>
+                    <SelectOption
+                      value={typeValue}
+                      onChange={setTypeValue}
+                      options={
+                        autocompleteOptionsType?.eventOptions.map(
+                          (option: any) => option.type,
+                        ) ?? []
+                      }
+                    />
+                  </th>
+                  <th style={coloumnStyle}>
+                    className<br/>
+                    <SelectOption
+                      value={classNameValue}
+                      onChange={setClassNameValue}
+                      options={
+                        autocompleteOptionsClassName?.eventOptions.map(
+                          (option: any) => option.className,
+                        ) ?? []
+                      }
+                    />
+                  </th>
+                  <th style={coloumnStyle}>
+                    groupKey<br/>
+                    <SelectOption
+                      value={groupKeyValue}
+                      onChange={setGroupKeyValue}
+                      options={
+                        autocompleteOptionsGroupKey?.eventOptions.map(
+                          (option: any) => option.groupKey,
+                        ) ?? []
+                      }
+                    />
+                  </th>
+                  <th style={coloumnStyle}>
+                    classPK<br/>
+                    <SelectOption
+                      value={classPKValue}
+                      onChange={setClassPKValue}
+                      options={
+                        autocompleteOptionsClassPK?.eventOptions.map(
+                          (option: any) => option.classPK,
+                        ) ?? []
+                      }
+                    />
+                  </th>
+                  <th style={coloumnStyle}>version</th>
+                  <th style={coloumnStyle}>data</th>
+                  <th style={coloumnStyle}>size</th>
+                  <th style={coloumnStyle}>parsingDate</th>
+                  <th style={coloumnStyle}>created</th>
+                </tr>
+              )}
+              itemContent={(index, event) => (
+                <React.Fragment>
+                  <td style={{padding: "8px 8px 8px 16px"}}>
+                    <Checkbox
+                      value={event.id}
+                      //controlla se presente all'interno dell array checked se risulta vuol dire che è presente e selezionata
+                      checked={checked.some((item) => item == event.id)}
+                      name={event.id}
+                      onChange={() => {
+                        const isChecked = checked.some(
+                          (item) => item == event.id,
+                        );
+
+                        if (isChecked) {
+                          setChecked((checked) =>
+                            checked.filter((item) => item == event.id),
+                          );
+                        } else {
+                          setChecked((checked) => [...checked, event.id]);
+                        }
+                      }}
+                    ></Checkbox>
+                  </td>
+                  <td style={cellStyle}>{event.id}</td>
+                  <td style={cellStyle}>{event.type}</td>
+                  <td style={cellStyle}>{event.className} </td>
+                  <td style={cellStyle}>{event.groupKey}</td>
+                  <td style={cellStyleNumber}>{event.classPk}</td>
+                  <td style={cellStyleNumber}>{event.version}</td>
+
+                  <td style={cellStyleButton}>
+                    <DataPopUp id={event.id} />
+                  </td>
+                  <td style={cellStyleNumber}>{event.size}</td>
+                  <td style={cellStyleDate}>
+                    {event.parsingDate && (
+                      <React.Fragment>
+                        {timeFormatter.format(new Date(event.parsingDate))}
+                        <br />
+                        {dateFormatter.format(new Date(event.parsingDate))}
+                      </React.Fragment>
+                    )}
+                  </td>
+                  <td style={cellStyleDate}>
+                    {timeFormatter.format(new Date(event.created))}
+                    <br />
+                    {dateFormatter.format(new Date(event.created))}
+                  </td>
+                </React.Fragment>
+              )}
+              endReached={() => {
+                fetchMoreEvents({
+                  variables: {
+                    from: eventlist.event.length,
+                  },
+                });
+              }}
+            />
+          )}
+        </div>
       </Layout>
     </>
   );
