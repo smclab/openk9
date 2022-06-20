@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>io.openk9.osgi.common</groupId>
 		<artifactId>common</artifactId>
-		<version>1.0.6</version>
+		<version>1.0.7-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -40,6 +40,6 @@
 
 
   <scm>
-    <tag>v1.0.6</tag>
+    <tag>v0.0.2</tag>
   </scm>
 </project>

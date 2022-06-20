@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.openk9</groupId>
     <artifactId>quarkus</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7-SNAPSHOT</version>
   </parent>
   <name>OpenK9 :: Quarkus :: Datasource</name>
   <artifactId>datasource</artifactId>
@@ -133,6 +133,6 @@
   </build>
 
   <scm>
-    <tag>v1.0.6</tag>
+    <tag>v0.0.2</tag>
   </scm>
 </project>

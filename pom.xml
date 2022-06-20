@@ -39,7 +39,7 @@
 
 	<groupId>io.openk9</groupId>
 	<artifactId>openk9</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.7-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>OpenK9</name>
@@ -56,7 +56,7 @@
 		<connection>${scm.connection}</connection>
 		<developerConnection>${scm.developerConnection}</developerConnection>
 		<url>${scm.url}</url>
-	  <tag>v1.0.6</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 	<developers>
@@ -76,7 +76,7 @@
 		<product.name>OpenK9 Powered by SMC Treviso SRL</product.name>
 		<maven.compiler.release>11</maven.compiler.release>
 		<maven.compiler.target>11</maven.compiler.target>
-		<project.build.outputTimestamp>1655720746</project.build.outputTimestamp>
+		<project.build.outputTimestamp>1655720750</project.build.outputTimestamp>
 
 		<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
 		<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
