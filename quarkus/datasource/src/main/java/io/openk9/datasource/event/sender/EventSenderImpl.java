@@ -104,7 +104,7 @@ public class EventSenderImpl implements EventSender, StorageConfig {
 			Files.write(
 				path.resolve(eventId.toString()), t2.getItem1());
 
-			eventMap.set(
+			eventMap.setAsync(
 				eventId,
 				Event.builder()
 					.id(eventId)
