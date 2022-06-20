@@ -15,34 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.storage;
+package io.openk9.datasource.cache.mapper;
 
+import io.openk9.datasource.cache.dto.EventDTO;
+import io.openk9.datasource.cache.model.Event;
+import org.mapstruct.Mapper;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class DataRoot {
-
-	private List<Event> events = new ArrayList<>();
-
-	public DataRoot() {
-	}
-
-	public void addEvent(Event p) {
-		this.getEvents().add(p);
-	}
-
-	public List<Event> getEvents() {
-		if (events == null) {
-			events = new ArrayList<>();
-		}
-		// must return the reference
-		// in order to make it work with MicroStream
-		return events;
-	}
-
-	public Event getEventAt(int index) {
-		return getEvents().get(index);
-	}
-
+@Mapper(componentModel = "cdi")
+public interface EventMapper {
+	EventDTO toDTO(Event event);
 }

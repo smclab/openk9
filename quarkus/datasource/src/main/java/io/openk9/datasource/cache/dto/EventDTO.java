@@ -15,53 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.dto;
+package io.openk9.datasource.cache.dto;
 
-import io.openk9.datasource.cache.model.Event;
-import io.openk9.datasource.event.util.Sortable;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class EventOption {
-
-	@Builder.Default
-	private final String __typename = EventOption.class.getName();
+@RegisterForReflection
+public class EventDTO {
+	private UUID id;
 	private String type;
+	private Integer size;
+	private Integer version;
+	private LocalDateTime created;
+	private LocalDateTime parsingDate;
 	private String groupKey;
-	private String className;
 	private String classPK;
-
-	public enum EventOptionSortable implements Sortable {
-		TYPE(Event.TYPE),
-		GROUP_KEY(Event.GROUP_KEY),
-		CLASS_NAME(Event.CLASS_NAME),
-		CLASS_PK(Event.CLASS_PK);
-
-		EventOptionSortable(String column) {
-			this.column = column;
-		}
-
-		@Override
-		public String getColumn() {
-			return column;
-		}
-
-		public static EventOptionSortable fromColumn(String column) {
-			for (EventOptionSortable sortable : values()) {
-				if (sortable.getColumn().equals(column)) {
-					return sortable;
-				}
-			}
-			return null;
-		}
-
-		private final String column;
-	}
-
+	private String className;
 }

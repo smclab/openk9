@@ -15,14 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.storage;
+package io.openk9.datasource.cache.config;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
+import com.hazelcast.nio.serialization.DataSerializableFactory;
+import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+import io.openk9.datasource.cache.model.Event;
 
-@Mapper(
-	componentModel = "cdi"
-)
-public interface EventMapper {
-	void updateEvent(Event event, @MappingTarget Event eventToUpdate);
+public class EventDataSerializableFactory
+	implements DataSerializableFactory {
+
+	public static final int FACTORY_ID = 1;
+
+	public static final int EVENT_TYPE = 1;
+
+	@Override
+	public IdentifiedDataSerializable create(int typeId) {
+		switch (typeId) {
+			case EVENT_TYPE:
+				return new Event();
+			default:
+				return null;
+		}
+	}
 }

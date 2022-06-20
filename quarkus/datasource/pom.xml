@@ -136,9 +136,9 @@
       <version>${zstd-jni.version}</version>
     </dependency>
     <dependency>
-      <groupId>one.microstream</groupId>
-      <artifactId>microstream-storage-embedded</artifactId>
-      <version>${microstream.version}</version>
+      <groupId>com.hazelcast</groupId>
+      <artifactId>hazelcast</artifactId>
+      <version>5.1.2</version>
     </dependency>
   </dependencies>
   <build>

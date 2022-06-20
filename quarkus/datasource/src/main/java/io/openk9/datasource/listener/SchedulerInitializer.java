@@ -17,10 +17,14 @@
 
 package io.openk9.datasource.listener;
 
+import com.hazelcast.aggregation.Aggregators;
+import com.hazelcast.map.IMap;
+import com.hazelcast.query.Predicates;
+import io.openk9.datasource.cache.annotation.MapName;
+import io.openk9.datasource.cache.model.Event;
 import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
-import io.openk9.datasource.event.storage.EventStorageRepository;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
@@ -52,6 +56,8 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 
 @ApplicationScoped
 public class SchedulerInitializer {
@@ -165,11 +171,26 @@ public class SchedulerInitializer {
 
 					if (schedulerEnabledDTO.isSchedulerEnabled()) {
 
-						LocalDateTime parsingDate =
-							eventStorageRepository.getLastParsingDate(
-								Datasource.class.getName(),
-								datasource.getPrimaryKey(),
-								datasource.getPrimaryKey());
+						Map.Entry<UUID, Event> aggregate = eventMap.aggregate(
+							Aggregators.maxBy(Event.CREATED),
+							Predicates.and(
+								Predicates.equal(
+									Event.CLASS_NAME,
+									Datasource.class.getName()),
+								Predicates.equal(
+									Event.CLASS_PK,
+									datasource.getDatasourceId().toString()))
+						);
+
+						LocalDateTime parsingDate;
+
+						if (aggregate == null) {
+							parsingDate = LocalDateTime.of(
+								1970, 1, 1, 0, 0);
+						}
+						else {
+							parsingDate = aggregate.getValue().getParsingDate();
+						}
 
 						return _pluginDriverClient
 							.invokeDataParser(
@@ -228,6 +249,7 @@ public class SchedulerInitializer {
 	Logger logger;
 
 	@Inject
-	EventStorageRepository eventStorageRepository;
+	@MapName("eventMap")
+	IMap<UUID, Event> eventMap;
 
 }

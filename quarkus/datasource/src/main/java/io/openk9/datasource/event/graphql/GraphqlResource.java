@@ -18,12 +18,18 @@
 package io.openk9.datasource.event.graphql;
 
 import com.github.luben.zstd.Zstd;
+import com.hazelcast.map.IMap;
+import com.hazelcast.projection.Projections;
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.Predicates;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.SelectedField;
+import io.openk9.datasource.cache.annotation.MapName;
+import io.openk9.datasource.cache.dto.EventDTO;
+import io.openk9.datasource.cache.model.Event;
 import io.openk9.datasource.event.dto.EventOption;
-import io.openk9.datasource.event.storage.Event;
-import io.openk9.datasource.event.storage.EventStorageRepository;
+import io.openk9.datasource.event.sender.StorageConfig;
 import io.openk9.datasource.event.util.Constants;
 import io.openk9.datasource.event.util.SortType;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
@@ -38,10 +44,12 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -61,24 +69,24 @@ public class GraphqlResource {
 
 		return Uni.createFrom().item(() -> {
 
-			Optional<Event> eventById =
-				eventStorageRepository.getEventById(UUID.fromString(id));
+			Event eventById =
+				eventMap.get(UUID.fromString(id));
 
-			if (eventById.isPresent()) {
-				Event event = eventById.get();
-				String dataPath = event.getDataPath();
-				int dataSize = event.getSize();
-				byte[] bytes;
-				try {
-					bytes = Files.readAllBytes(Paths.get(dataPath));
-				}
-				catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-				return new String(Zstd.decompress(bytes, dataSize));
+			if (eventById == null) {
+				return "";
 			}
 
-			return "";
+			Path path = Paths.get(
+				storageConfig.getStorageDir(), eventById.getId().toString());
+
+			int dataSize = eventById.getSize();
+
+			try {
+				return new String(Zstd.decompress(Files.readAllBytes(path), dataSize));
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 
 		});
 
@@ -99,14 +107,12 @@ public class GraphqlResource {
 
 	@Query("event")
 	@Description("Returns the list of events")
-	public Uni<List<Event>> getEvents(
-		@Description("Primary key of event") @Name("id") String id,
+	public Uni<List<EventDTO>> getEvents(
+		@Description("Primary key of event") @Name(Event.ID) String id,
 		@Description("Type of event (INGESTION, INGESTION_DATASOURCE)") @Name(Event.TYPE) String type,
 		@Description("class name of event") @Name(Event.CLASS_NAME) String className,
 		@Description("event group key set") @Name(Event.GROUP_KEY) String groupKey,
 		@Description("primary key of the event") @Name(Event.CLASS_PK) String classPK,
-		@Name("sortBy") @DefaultValue("CREATED") Event.EventSortable sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType,
 		@Name(Constants.GTE) LocalDateTime gte,
 		@Name(Constants.LTE) LocalDateTime lte,
 		@Name("size") @DefaultValue("10000") int size,
@@ -117,10 +123,115 @@ public class GraphqlResource {
 		if (fields.isEmpty()) {
 			return Uni.createFrom().item(List.of());
 		}
-
 		return Uni
 			.createFrom()
-			.item(() -> eventStorageRepository.getEvents(from, size));
+			.item(() -> {
+
+				Collection<Object[]> response =
+					eventMap
+						.project(
+							Projections
+								.multiAttribute(fields.toArray(String[]::new)),
+							_createPredicates(
+								id, type, className, groupKey, classPK, gte, lte,
+								size, from)
+						);
+
+				return _objectsToEvents(fields, response);
+
+			});
+
+	}
+
+	private List<EventDTO> _objectsToEvents(
+		List<String> fields, Collection<Object[]> response) {
+
+		List<EventDTO> events = new ArrayList<>(response.size());
+
+		for (Object[] objects : response) {
+			EventDTO.EventDTOBuilder builder = EventDTO.builder();
+			for (int i = 0; i < fields.size(); i++) {
+				String field = fields.get(i);
+				switch (field) {
+					case Event.ID:
+						builder.id((UUID) objects[i]);
+						break;
+					case Event.CLASS_NAME:
+						builder.className((String) objects[i]);
+						break;
+					case Event.TYPE:
+						builder.type((String) objects[i]);
+						break;
+					case Event.GROUP_KEY:
+						builder.groupKey((String) objects[i]);
+						break;
+					case Event.CLASS_PK:
+						builder.classPK((String) objects[i]);
+						break;
+					case Event.SIZE:
+						builder.size((Integer) objects[i]);
+						break;
+					case Event.CREATED:
+						builder.created((LocalDateTime) objects[i]);
+						break;
+					case Event.PARSING_DATE:
+						builder.parsingDate((LocalDateTime) objects[i]);
+						break;
+					case Event.VERSION:
+						builder.version((Integer) objects[i]);
+						break;
+				}
+			}
+			events.add(builder.build());
+		}
+
+		return events;
+	}
+
+	private Predicate _createPredicates(
+		String id, String type, String className, String groupKey,
+		String classPK, LocalDateTime gte, LocalDateTime lte,
+		int size, int from) {
+
+		List<Predicate> predicates = new ArrayList<>();
+
+		if (id != null && !id.isBlank()) {
+			predicates.add(Predicates.equal(Event.ID, UUID.fromString(id)));
+		}
+
+		if (type != null && !type.isBlank()) {
+			predicates.add(Predicates.equal(Event.TYPE, type));
+		}
+
+		if (className != null && !className.isBlank()) {
+			predicates.add(Predicates.equal(Event.CLASS_NAME, className));
+		}
+
+		if (groupKey != null && !groupKey.isBlank()) {
+			predicates.add(Predicates.equal(Event.GROUP_KEY, groupKey));
+		}
+
+		if (classPK != null && !classPK.isBlank()) {
+			predicates.add(Predicates.equal(Event.CLASS_PK, classPK));
+		}
+
+		if (gte != null && lte != null) {
+			predicates.add(Predicates.between(Event.CREATED, gte, lte));
+		}
+		else {
+			if (gte != null) {
+				predicates.add(Predicates.greaterEqual(Event.CREATED, gte));
+			}
+			if (lte != null) {
+				predicates.add(Predicates.lessEqual(Event.CREATED, lte));
+			}
+		}
+
+		if (predicates.isEmpty()) {
+			return Predicates.alwaysTrue();
+		}
+
+		return Predicates.and(predicates.toArray(Predicate[]::new));
 
 	}
 
@@ -142,7 +253,11 @@ public class GraphqlResource {
 	@Inject
 	SmallRyeContext context;
 
+	@MapName("eventMap")
 	@Inject
-	EventStorageRepository eventStorageRepository;
+	IMap<UUID, Event> eventMap;
+
+	@Inject
+	StorageConfig storageConfig;
 
 }
