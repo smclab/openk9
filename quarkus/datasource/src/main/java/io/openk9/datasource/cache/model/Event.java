@@ -196,7 +196,6 @@ public class Event
 	public static final String SELECT_ID = "SELECT id FROM " + TABLE_NAME;
 
 	public enum EventSortable {
-		ID,
 		TYPE,
 		SIZE,
 		VERSION,

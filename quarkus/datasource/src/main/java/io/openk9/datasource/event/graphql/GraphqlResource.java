@@ -113,6 +113,8 @@ public class GraphqlResource {
 		@Description("class name of event") @Name(Event.CLASS_NAME) String className,
 		@Description("event group key set") @Name(Event.GROUP_KEY) String groupKey,
 		@Description("primary key of the event") @Name(Event.CLASS_PK) String classPK,
+		@Name("sortBy") @DefaultValue("CREATED") Event.EventSortable sortBy,
+		@Name("sortType") @DefaultValue("ASC") SortType sortType,
 		@Name(Constants.GTE) LocalDateTime gte,
 		@Name(Constants.LTE) LocalDateTime lte,
 		@Name("size") @DefaultValue("10000") int size,

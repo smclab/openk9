@@ -244,7 +244,7 @@ hazelcast:
             # Number of backups. If 1 is set as the backup-count for example,
             # then all entries of the map will be copied to another JVM for
             # fail-safety. 0 means no backup.
-            backup-count: 1
+            backup-count: 0
 
             # Number of async backups. 0 means no backup.
             async-backup-count: 0
@@ -311,13 +311,15 @@ hazelcast:
             per-entry-stats-enabled: false
 
             indexes:
+                - type: SORTED
+                  attributes:
+                      - "created"
                 - type: HASH
                   attributes:
                       - "type"
                       - "className"
                       - "classPK"
                       - "groupKey"
-                      - "created"
         default:
             # Data type that will be used for storing recordMap.
             # Possible values:
