@@ -78,7 +78,7 @@ public class SuggestionCategoryResource {
 	@POST
 	@Path("/filter")
 	@Produces()
-	public Uni<List<SuggestionCategory>> filter(SuggestionCategoryDto dto){
+	public Uni<List<SuggestionCategory>> filter(SuggestionCategoryDto dto) {
 
 		Map<String, Object> map = JsonObject.mapFrom(dto).getMap();
 
@@ -94,18 +94,26 @@ public class SuggestionCategoryResource {
 	@GET
 	@Produces()
 	public Uni<List<SuggestionCategory>> findAll(
-		@QueryParam("sort") List<String> sortQuery,
+		@QueryParam("sort") @DefaultValue("priority")List<String> sortQuery,
+		@QueryParam("direction") @DefaultValue("Descending") Sort.Direction direction,
 		@QueryParam("page") @DefaultValue("0") int pageIndex,
 		@QueryParam("size") @DefaultValue("20") int pageSize
 	){
 		Page page = Page.of(pageIndex, pageSize);
 
 		if (sortQuery.isEmpty()) {
-			return SuggestionCategory.findAll().page(page).list();
+			return SuggestionCategory
+				.findAll(Sort.by("priority", direction))
+				.page(page)
+				.list();
 		}
 		else {
 			return SuggestionCategory
-				.findAll(Sort.by(sortQuery.toArray(String[]::new)))
+				.findAll(
+					Sort
+						.by(sortQuery.toArray(String[]::new))
+						.direction(direction)
+				)
 				.page(page)
 				.list();
 		}
