@@ -28,8 +28,9 @@ import {
   DatasourceSuggestionCategory,
   DatasourceSuggestionCategoryField,
 } from "@openk9/rest-api";
-import { ClayInput } from "@clayui/form";
+import ClayForm, { ClayCheckbox, ClayInput } from "@clayui/form";
 import { ClayTooltipProvider } from "@clayui/tooltip";
+import ClayIcon from "@clayui/icon";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -40,7 +41,6 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     maxWidth: 1000,
     borderRadius: theme.borderRadius,
     overflow: "auto",
-    padding: theme.spacingUnit * 2,
   },
 }));
 
@@ -78,22 +78,24 @@ export default function Filter() {
       }
     >
       <div className={classes.root}>
-        {suggestionCategories.list
-          ?.sort((a, b) => a.priority - b.priority)
-          .map((suggestionCategory) => {
-            return (
-              <SuggestionCategoryRow
-                key={suggestionCategory.suggestionCategoryId}
-                suggestionCategory={suggestionCategory}
-                onRemove={suggestionCategories.remove}
-                onUpdate={suggestionCategories.update}
-                onAddField={suggestionCategoryFields.add}
-                onRemoveField={suggestionCategoryFields.remove}
-                onUpdateField={suggestionCategoryFields.update}
-                suggestionCategoryFields={suggestionCategoryFields.list}
-              />
-            );
-          })}
+        <ul className="list-group" style={{ margin: 0 }}>
+          {suggestionCategories.list
+            ?.sort((a, b) => a.priority - b.priority)
+            .map((suggestionCategory) => {
+              return (
+                <SuggestionCategoryRow
+                  key={suggestionCategory.suggestionCategoryId}
+                  suggestionCategory={suggestionCategory}
+                  onRemove={suggestionCategories.remove}
+                  onUpdate={suggestionCategories.update}
+                  onAddField={suggestionCategoryFields.add}
+                  onRemoveField={suggestionCategoryFields.remove}
+                  onUpdateField={suggestionCategoryFields.update}
+                  suggestionCategoryFields={suggestionCategoryFields.list}
+                />
+              );
+            })}
+        </ul>
       </div>
     </Layout>
   );
@@ -119,77 +121,126 @@ function SuggestionCategoryFieldRow({
   const [fieldName, setFieldName] = React.useState(
     suggestionCategoryField.fieldName,
   );
-  const isDirty =
-    enabled !== suggestionCategoryField.enabled ||
-    name !== suggestionCategoryField.name ||
-    fieldName !== suggestionCategoryField.fieldName 
+  const [isEditing, setIsEditing] = React.useState(false);
   return (
-    <div
-      style={{
-        display: "flex",
-        paddingLeft: "32px",
-        marginBottom: "8px",
-        alignItems: "center",
-      }}
+    <li
+      className="list-group-item list-group-item-flex"
+      style={{ marginLeft: "64px" }}
     >
-      <div style={{ marginRight: "8px", marginLeft: "8px" }}>
-        <input
-          type="checkbox"
-          className="custom-control-input"
-          checked={enabled}
-          onChange={(event) => setEnabled(event.currentTarget.checked)}
-        />
+      {/* <div className="autofit-col">
+        <div className="custom-control custom-checkbox">
+          <label>
+            <input
+              className="custom-control-input"
+              type="checkbox"
+            />
+            <span className="custom-control-label"></span>
+          </label>
+        </div>
+      </div> */}
+      <div className="autofit-col autofit-col-expand">
+        {!isEditing && <p className="list-group-title text-truncate">{name}</p>}
+        {isEditing && (
+          <ClayForm.Group>
+            <label htmlFor="#">Name</label>
+            <ClayInput
+              value={name}
+              onChange={(event) => setName(event.currentTarget.value)}
+            />
+          </ClayForm.Group>
+        )}
+        {!isEditing && (
+          <p className="list-group-subtitle text-truncate">{fieldName}</p>
+        )}
+        {isEditing && (
+          <ClayForm.Group>
+            <label htmlFor="#">Field Name</label>
+            <ClayInput
+              value={fieldName}
+              onChange={(event) => setFieldName(event.currentTarget.value)}
+            />
+          </ClayForm.Group>
+        )}
+        {!isEditing && (
+          <div className="list-group-detail">
+            {enabled ? (
+              <span className="label label-success">
+                <span className="label-item label-item-expand">ENABLED</span>
+              </span>
+            ) : (
+              <span className="label label-warning">
+                <span className="label-item label-item-expand">DISABLED</span>
+              </span>
+            )}
+          </div>
+        )}
+        {isEditing && (
+          <ClayCheckbox
+            checked={enabled}
+            onChange={() => setEnabled(!enabled)}
+            label="Enabled"
+          />
+        )}
       </div>
-      <div
-        style={{
-          flexGrow: 1,
-          display: "flex",
-          marginRight: "8px",
-          alignItems: "center",
-        }}
-      >
-        <Label>Name</Label>
-        <ClayInput
-          value={name}
-          onChange={(event) => setName(event.currentTarget.value)}
-        />
+      <div className="autofit-col">
+        <div style={{ display: "flex", justifyContent: "end" }}>
+          {isEditing ? (
+            <ClayTooltipProvider>
+              <div>
+                <button
+                  className="component-action quick-action-item"
+                  onClick={() => {
+                    onUpdate({
+                      suggestionCategoryFieldId:
+                        suggestionCategoryField.suggestionCategoryFieldId,
+                      enabled,
+                      name,
+                      fieldName,
+                    });
+                    setIsEditing(false);
+                  }}
+                  data-tooltip-align="top"
+                  title="Save changes to Category Field"
+                >
+                  <ClayIcon symbol="disk" />
+                </button>
+              </div>
+            </ClayTooltipProvider>
+          ) : (
+            <ClayTooltipProvider>
+              <div>
+                <button
+                  className="component-action quick-action-item"
+                  onClick={() => {
+                    setIsEditing(true);
+                  }}
+                  data-tooltip-align="top"
+                  title="Edit Category Field"
+                >
+                  <ClayIcon symbol="pencil" />
+                </button>
+              </div>
+            </ClayTooltipProvider>
+          )}
+          {isEditing && (
+            <ClayTooltipProvider>
+              <div>
+                <button
+                  className="component-action quick-action-item"
+                  onClick={() =>
+                    onRemove(suggestionCategoryField.suggestionCategoryFieldId)
+                  }
+                  data-tooltip-align="top"
+                  title="Delete Category Field"
+                >
+                  <ClayIcon symbol="trash" />
+                </button>
+              </div>
+            </ClayTooltipProvider>
+          )}
+        </div>
       </div>
-      <div
-        style={{
-          flexGrow: 1,
-          display: "flex",
-          marginRight: "8px",
-          alignItems: "center",
-        }}
-      >
-        <Label>Field name</Label>
-        <ClayInput
-          value={fieldName}
-          onChange={(event) => setFieldName(event.currentTarget.value)}
-        />
-      </div>
-      <ClayButtonWithIcon
-        symbol="trash"
-        onClick={() =>
-          onRemove(suggestionCategoryField.suggestionCategoryFieldId)
-        }
-        style={{ marginRight: "8px" }}
-      />
-      <ClayButtonWithIcon
-        symbol="disk"
-        disabled={!isDirty}
-        onClick={() =>
-          onUpdate({
-            suggestionCategoryFieldId:
-              suggestionCategoryField.suggestionCategoryFieldId,
-            enabled,
-            name,
-            fieldName,
-          })
-        }
-        style={{ marginRight: "8px" }}
-      ></ClayButtonWithIcon>
-    </div>
+    </li>
   );
 }
 
@@ -226,90 +277,187 @@ function SuggestionCategoryRow({
   const [enabled, setEnabled] = React.useState(suggestionCategory.enabled);
   const [name, setName] = React.useState(suggestionCategory.name);
   const [priority, setPriority] = React.useState(suggestionCategory.priority);
-  const isDirty =
-    enabled !== suggestionCategory.enabled ||
-    name !== suggestionCategory.name ||
-    priority !== suggestionCategory.priority;
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(false);
   return (
     <React.Fragment>
-      <div
-        style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}
-      >
-        <div style={{ marginRight: "8px", marginLeft: "8px" }}>
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(event) => setEnabled(event.currentTarget.checked)}
-          />
-        </div>
-        <div
-          style={{
-            flexGrow: 1,
-            display: "flex",
-            marginRight: "8px",
-            alignItems: "center",
-          }}
-        >
-          <Label>Name</Label>
-          <ClayInput
-            value={name}
-            onChange={(event) => setName(event.currentTarget.value)}
-          />
-        </div>
-        <div
-          style={{ display: "flex", marginRight: "8px", alignItems: "center" }}
-        >
-          <Label>Priority</Label>
-          <ClayInput
-            type="number"
-            step="1"
-            value={priority}
-            onChange={(event) => setPriority(event.currentTarget.valueAsNumber)}
-          />
-        </div>
-        <ClayButtonWithIcon
-          symbol="trash"
-          onClick={() => onRemove(suggestionCategory.suggestionCategoryId)}
-          style={{ marginRight: "8px" }}
-        />
-        <ClayButtonWithIcon
-          symbol="disk"
-          disabled={!isDirty}
-          onClick={() =>
-            onUpdate({
-              suggestionCategoryId: suggestionCategory.suggestionCategoryId,
-              enabled,
-              name,
-              priority,
-            })
-          }
-          style={{ marginRight: "8px" }}
-        >
-          save
-        </ClayButtonWithIcon>
-        <ClayButtonWithIcon
-          symbol="plus"
-          onClick={() => onAddField(suggestionCategory.suggestionCategoryId)}
-          style={{ marginRight: "8px" }}
-        />
-      </div>
-      {suggestionCategoryFields
-        ?.filter(
-          (suggestionCategoryField) =>
-            suggestionCategoryField.categoryId ===
-            suggestionCategory.suggestionCategoryId,
-        )
-        .map((suggestionCategoryField) => {
-          return (
-            <SuggestionCategoryFieldRow
-              key={suggestionCategoryField.suggestionCategoryFieldId}
-              suggestionCategoryField={suggestionCategoryField}
-              onRemove={onRemoveField}
-              onUpdate={onUpdateField}
+      <li className="list-group-item list-group-item-flex">
+        {/* <div className="autofit-col">
+          <div className="custom-control custom-checkbox">
+            <label>
+              <input
+                className="custom-control-input"
+                type="checkbox"
+              />
+              <span className="custom-control-label"></span>
+            </label>
+          </div>
+        </div> */}
+        <div className="autofit-col autofit-col-expand">
+          {!isEditing && (
+            <p className="list-group-title text-truncate">{name}</p>
+          )}
+          {isEditing && (
+            <ClayForm.Group>
+              <label htmlFor="#">Name</label>
+              <ClayInput
+                value={name}
+                onChange={(event) => setName(event.currentTarget.value)}
+              />
+            </ClayForm.Group>
+          )}
+          {!isEditing && (
+            <p className="list-group-subtitle text-truncate">
+              Priority: {priority}
+            </p>
+          )}
+          {isEditing && (
+            <ClayForm.Group>
+              <label htmlFor="#">Priority</label>
+              <ClayInput
+                type="number"
+                step="1"
+                value={priority}
+                onChange={(event) =>
+                  setPriority(event.currentTarget.valueAsNumber)
+                }
+              />
+            </ClayForm.Group>
+          )}
+          {!isEditing && (
+            <div className="list-group-detail">
+              {enabled ? (
+                <span className="label label-success">
+                  <span className="label-item label-item-expand">ENABLED</span>
+                </span>
+              ) : (
+                <span className="label label-warning">
+                  <span className="label-item label-item-expand">DISABLED</span>
+                </span>
+              )}
+            </div>
+          )}
+          {isEditing && (
+            <ClayCheckbox
+              checked={enabled}
+              onChange={() => setEnabled(!enabled)}
+              label="Enabled"
             />
-          );
-        })}
-      <div style={{ width: "100%", height: "32px" }}></div>
+          )}
+        </div>
+        <div className="autofit-col">
+          <div style={{ display: "flex", justifyContent: "end" }}>
+            {!isExpanded &&
+              (isEditing ? (
+                <ClayTooltipProvider>
+                  <div>
+                    <button
+                      className="component-action quick-action-item"
+                      onClick={() => {
+                        onUpdate({
+                          suggestionCategoryId:
+                            suggestionCategory.suggestionCategoryId,
+                          enabled,
+                          name,
+                          priority,
+                        });
+                        setIsEditing(false);
+                      }}
+                      data-tooltip-align="top"
+                      title="Save changes to Category"
+                    >
+                      <ClayIcon symbol="disk" />
+                    </button>
+                  </div>
+                </ClayTooltipProvider>
+              ) : (
+                <ClayTooltipProvider>
+                  <div>
+                    <button
+                      className="component-action quick-action-item"
+                      onClick={() => {
+                        setIsEditing(true);
+                      }}
+                      data-tooltip-align="top"
+                      title="Edit Category"
+                    >
+                      <ClayIcon symbol="pencil" />
+                    </button>
+                  </div>
+                </ClayTooltipProvider>
+              ))}
+            {!isExpanded && isEditing && (
+              <ClayTooltipProvider>
+                <div>
+                  <button
+                    className="component-action quick-action-item"
+                    onClick={() =>
+                      onRemove(suggestionCategory.suggestionCategoryId)
+                    }
+                    data-tooltip-align="top"
+                    title="Delete Category"
+                  >
+                    <ClayIcon symbol="trash" />
+                  </button>
+                </div>
+              </ClayTooltipProvider>
+            )}
+            {isExpanded && (
+              <ClayTooltipProvider>
+                <div>
+                  <button
+                    className="component-action quick-action-item"
+                    onClick={() =>
+                      onAddField(suggestionCategory.suggestionCategoryId)
+                    }
+                    data-tooltip-align="top"
+                    title="Add Category Field under this Category"
+                  >
+                    <ClayIcon symbol="plus" />
+                  </button>
+                </div>
+              </ClayTooltipProvider>
+            )}
+            {!isEditing && (
+              <ClayTooltipProvider>
+                <div>
+                  <button
+                    className="component-action quick-action-item"
+                    onClick={() => {
+                      setIsExpanded(!isExpanded);
+                    }}
+                    data-tooltip-align="top"
+                    title="Show Category Fields"
+                  >
+                    <ClayIcon
+                      symbol={
+                        isExpanded ? "angle-up-small" : "angle-down-small"
+                      }
+                    />
+                  </button>
+                </div>
+              </ClayTooltipProvider>
+            )}
+          </div>
+        </div>
+      </li>
+      {isExpanded &&
+        suggestionCategoryFields
+          ?.filter(
+            (suggestionCategoryField) =>
+              suggestionCategoryField.categoryId ===
+              suggestionCategory.suggestionCategoryId,
+          )
+          .map((suggestionCategoryField) => {
+            return (
+              <SuggestionCategoryFieldRow
+                key={suggestionCategoryField.suggestionCategoryFieldId}
+                suggestionCategoryField={suggestionCategoryField}
+                onRemove={onRemoveField}
+                onUpdate={onUpdateField}
+              />
+            );
+          })}
     </React.Fragment>
   );
 }
@@ -329,7 +477,7 @@ const USE_MOCK = false;
 function useSuggestionCategories(tenantId: number) {
   const queryClient = useQueryClient();
   const { data: list } = useQuery(
-    ["/api/datasource/v2/suggestion-category", {}],
+    ["/api/datasource/v2/suggestion-category", { tenantId }],
     async ({ queryKey: [path, parameters] }) => {
       if (USE_MOCK) return mockSuggestionCategories;
       return (await client.getDatasourceSuggestionCategories()).filter(
@@ -445,7 +593,7 @@ let mockSuggestionCategories: Array<DatasourceSuggestionCategory> = [
 function useSuggestionCategoryFields(tenantId: number) {
   const queryClient = useQueryClient();
   const { data: list } = useQuery(
-    ["/api/datasource/v2/suggestion-category-field", {}],
+    ["/api/datasource/v2/suggestion-category-field", { tenantId }],
     async ({ queryKey: [path, parameters] }) => {
       if (USE_MOCK) return mockSuggestionCategoryFields;
       return await (
