@@ -19,8 +19,6 @@ package io.openk9.datasource.model;
 
 import io.openk9.datasource.listener.K9EntityListener;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.panache.common.Sort;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -59,16 +57,6 @@ public class SuggestionCategory extends PanacheEntityBase implements K9Entity {
 	private boolean enabled;
 	@Column(columnDefinition = "integer default 0")
 	private Integer priority;
-
-	public static PanacheQuery<SuggestionCategory> findAll() {
-		return SuggestionCategory
-			.find("enabled", Sort.descending("priority"), true);
-	}
-
-	public static PanacheQuery<SuggestionCategory> findAll(Sort sort) {
-		return SuggestionCategory.find(
-			"enabled", sort.and("priority", Sort.Direction.Descending), true);
-	}
 
 	@Override
 	public boolean equals(Object o) {
