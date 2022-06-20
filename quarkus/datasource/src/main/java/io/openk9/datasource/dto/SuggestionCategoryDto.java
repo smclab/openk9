@@ -32,4 +32,5 @@ public class SuggestionCategoryDto{
 	private Long parentCategoryId;
 	private String name;
 	private boolean enabled;
+	private Integer priority;
 }
