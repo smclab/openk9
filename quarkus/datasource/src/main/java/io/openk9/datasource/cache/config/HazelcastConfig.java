@@ -18,7 +18,6 @@
 package io.openk9.datasource.cache.config;
 
 import com.hazelcast.config.Config;
-import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
@@ -43,11 +42,9 @@ public class HazelcastConfig {
 		Config config = Config.load();
 
 		config.getMapConfig("eventMap")
-			.setMapStoreConfig(
-				new MapStoreConfig()
-					.setEnabled(true)
-					.setImplementation(eventMapStore)
-			);
+			.getMapStoreConfig()
+			.setEnabled(true)
+			.setImplementation(eventMapStore);
 
 		instance = Hazelcast.newHazelcastInstance(config);
 
