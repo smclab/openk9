@@ -19,9 +19,12 @@ package io.openk9.datasource.event.graphql;
 
 import com.github.luben.zstd.Zstd;
 import com.hazelcast.map.IMap;
+import com.hazelcast.projection.Projection;
 import com.hazelcast.projection.Projections;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
+import com.hazelcast.query.QueryConstants;
+import com.hazelcast.query.impl.predicates.TruePredicate;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.SelectedField;
@@ -50,6 +53,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -129,20 +133,38 @@ public class GraphqlResource {
 			.createFrom()
 			.item(() -> {
 
-				Collection<Object[]> response =
-					eventMap
-						.project(
-							Projections
-								.multiAttribute(fields.toArray(String[]::new)),
-							_createPredicates(
-								id, type, className, groupKey, classPK, gte, lte,
-								size, from)
-						);
+				Predicate predicate = _createPredicates(
+					id, type, className, groupKey, classPK, gte, lte,
+					size, from, sortBy, sortType);
 
-				return _objectsToEvents(fields, response);
+				Set<UUID> keys;
+
+				if (predicate == TruePredicate.INSTANCE) {
+					keys =  eventMap.localKeySet();
+				}
+				else {
+					keys = eventMap.localKeySet(predicate);
+				}
+
+				UUID[] uuids = _subList(keys, size, from);
+
+				Projection<Object, Object[]> projection = Projections
+					.multiAttribute(fields.toArray(String[]::new));
+
+				return _objectsToEvents(
+					fields, eventMap.project(
+						projection, Predicates.in(
+							QueryConstants.KEY_ATTRIBUTE_NAME.value(), uuids)));
 
 			});
 
+	}
+
+	private UUID[] _subList(Set<UUID> keys, int size, int from) {
+		return keys.stream()
+			.skip(from)
+			.limit(size)
+			.toArray(UUID[]::new);
 	}
 
 	private List<EventDTO> _objectsToEvents(
@@ -193,7 +215,7 @@ public class GraphqlResource {
 	private Predicate _createPredicates(
 		String id, String type, String className, String groupKey,
 		String classPK, LocalDateTime gte, LocalDateTime lte,
-		int size, int from) {
+		int size, int from, Event.EventSortable sortBy, SortType sortType) {
 
 		List<Predicate> predicates = new ArrayList<>();
 
@@ -230,7 +252,7 @@ public class GraphqlResource {
 		}
 
 		if (predicates.isEmpty()) {
-			return Predicates.alwaysTrue();
+			return TruePredicate.INSTANCE;
 		}
 
 		return Predicates.and(predicates.toArray(Predicate[]::new));

@@ -43,6 +43,7 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.UUID;
 
 @Entity
@@ -196,13 +197,56 @@ public class Event
 	public static final String SELECT_ID = "SELECT id FROM " + TABLE_NAME;
 
 	public enum EventSortable {
-		TYPE,
-		SIZE,
-		VERSION,
-		CREATED,
-		GROUP_KEY,
-		CLASS_NAME,
-		PARSING_DATE,
-		CLASS_PK
+		TYPE {
+			@Override
+			public Comparator<Event> getComparator() {
+				return Comparator.comparing(Event::getType);
+			}
+		},
+		SIZE {
+			@Override
+			public Comparator<Event> getComparator() {
+				return Comparator.comparing(Event::getSize);
+			}
+		},
+		VERSION {
+			@Override
+			public Comparator<Event> getComparator() {
+				return Comparator.comparing(Event::getVersion);
+			}
+		},
+		CREATED {
+			@Override
+			public Comparator<Event> getComparator() {
+				return Comparator.comparing(Event::getCreated);
+			}
+		},
+		GROUP_KEY {
+			@Override
+			public Comparator<Event> getComparator() {
+				return Comparator.comparing(Event::getGroupKey);
+			}
+		},
+		CLASS_NAME {
+			@Override
+			public Comparator<Event> getComparator() {
+				return Comparator.comparing(Event::getClassName);
+			}
+		},
+		PARSING_DATE {
+			@Override
+			public Comparator<Event> getComparator() {
+				return Comparator.comparing(Event::getParsingDate);
+			}
+		},
+		CLASS_PK {
+			@Override
+			public Comparator<Event> getComparator() {
+				return Comparator.comparing(Event::getClassPK);
+			}
+		};
+
+		public abstract Comparator<Event> getComparator();
+
 	}
 }
