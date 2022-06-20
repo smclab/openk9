@@ -53,7 +53,7 @@ hazelcast:
         # mechanism, so make sure to enable only one.
         join:
             auto-detection:
-                enabled: true
+                enabled: false
             # Enables discovering nodes by using IP multicast. This is the
             # simplest technique, but in a cloud setting the network usually doesn't
             # allow multicast.
