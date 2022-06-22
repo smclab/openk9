@@ -90,7 +90,7 @@ public class EventSenderImpl implements EventSender {
 					.parsingDate(parsingDate)
 					.size(t2.getItem2())
 					.created(LocalDateTime.now())
-					.data(Base64.getEncoder().encode(t2.getItem1()))
+					.data(Base64.getEncoder().encodeToString(t2.getItem1()))
 					.build();
 
 			eventRepository.syncSave(event);
