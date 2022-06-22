@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.event.repo;
 
+import com.github.luben.zstd.Zstd;
 import io.openk9.datasource.event.config.EventConfig;
 import io.openk9.datasource.event.model.Event;
 import io.smallrye.mutiny.Uni;
@@ -53,6 +54,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @ApplicationScoped
@@ -269,6 +271,15 @@ public class EventRepositoryImpl implements EventRepository {
 						Event event = Json.decodeValue(
 							searchHit.getSourceAsString(),
 							Event.class);
+
+						if (event.getData() != null) {
+							event.setData(
+								new String(
+									Zstd.decompress(
+										Base64.getDecoder().decode(event.getData()),
+										event.getSize())));
+						}
+
 						events.add(event);
 					}
 
