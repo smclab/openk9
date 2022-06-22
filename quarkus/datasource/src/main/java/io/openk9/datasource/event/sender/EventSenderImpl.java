@@ -29,6 +29,7 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -89,7 +90,7 @@ public class EventSenderImpl implements EventSender {
 					.parsingDate(parsingDate)
 					.size(t2.getItem2())
 					.created(LocalDateTime.now())
-					.data(t2.getItem1())
+					.data(Base64.getEncoder().encode(t2.getItem1()))
 					.build();
 
 			eventRepository.syncSave(event);

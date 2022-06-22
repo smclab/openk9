@@ -44,6 +44,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -64,7 +65,10 @@ public class GraphqlResource {
 
 		return eventRepository
 			.findById(id, new String[]{"data", "size"})
-			.map(event -> new String(Zstd.decompress(event.getData(), event.getSize())));
+			.map(event -> new String(
+				Zstd.decompress(
+					Base64.getDecoder().decode(event.getData()),
+					event.getSize())));
 
 	}
 
