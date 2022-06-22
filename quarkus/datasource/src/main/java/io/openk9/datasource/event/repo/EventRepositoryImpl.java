@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.event.repo;
 
+import io.openk9.datasource.event.config.EventConfig;
 import io.openk9.datasource.event.model.Event;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
@@ -24,7 +25,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -57,9 +57,6 @@ import java.util.List;
 
 @ApplicationScoped
 public class EventRepositoryImpl implements EventRepository {
-
-	@ConfigProperty(name = "openk9.events.index.name", defaultValue = "openk9-events")
-	String indexName;
 
 	@PostConstruct
 	public void init() {
@@ -154,7 +151,7 @@ public class EventRepositoryImpl implements EventRepository {
 		boolQueryBuilder.must(
 			QueryBuilders.matchQuery("classPK.keyword", classPK));
 
-		SearchRequest searchRequest = new SearchRequest(indexName);
+		SearchRequest searchRequest = new SearchRequest(config.getIndexName());
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -208,7 +205,7 @@ public class EventRepositoryImpl implements EventRepository {
 	@Override
 	public Uni<Event> findById(String id, String[] includeFields) {
 
-		SearchRequest searchRequest = new SearchRequest(indexName);
+		SearchRequest searchRequest = new SearchRequest(config.getIndexName());
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -255,7 +252,7 @@ public class EventRepositoryImpl implements EventRepository {
 	@Override
 	public Uni<List<Event>> search(SearchSourceBuilder searchSourceBuilder) {
 
-		SearchRequest searchRequest = new SearchRequest(indexName);
+		SearchRequest searchRequest = new SearchRequest(config.getIndexName());
 
 		searchRequest.source(searchSourceBuilder);
 
@@ -288,12 +285,15 @@ public class EventRepositoryImpl implements EventRepository {
 	}
 
 	private IndexRequest _getIndexRequest(Event event) {
-		IndexRequest indexRequest = new IndexRequest(indexName);
+		IndexRequest indexRequest = new IndexRequest(config.getIndexName());
 		return indexRequest.source(Json.encode(event), XContentType.JSON);
 	}
 
 	@Inject
 	RestHighLevelClient client;
+
+	@Inject
+	EventConfig config;
 
 	private Sinks.Many<IndexRequest> many;
 
