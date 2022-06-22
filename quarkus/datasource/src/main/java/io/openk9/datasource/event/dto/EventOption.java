@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.event.dto;
 
-import io.openk9.datasource.cache.model.Event;
+import io.openk9.datasource.event.model.Event;
 import io.openk9.datasource.event.util.Sortable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

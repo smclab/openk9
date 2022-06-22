@@ -18,10 +18,9 @@
 package io.openk9.datasource.event.sender;
 
 import com.github.luben.zstd.Zstd;
-import com.hazelcast.map.IMap;
-import io.openk9.datasource.cache.annotation.MapName;
-import io.openk9.datasource.cache.model.Event;
-import io.openk9.datasource.event.dto.EventDto;
+import io.openk9.datasource.event.dto.EventDTO;
+import io.openk9.datasource.event.model.Event;
+import io.openk9.datasource.event.repo.EventRepository;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -51,10 +50,10 @@ public class EventSenderImpl implements EventSender, StorageConfig {
 	}
 
 	@Override
-	public void sendEvent(EventDto event) {
+	public void sendEvent(EventDTO event) {
 		sendEventAsJson(
 			event.getType(), event.getGroupKey(), event.getClassName(),
-			event.getData());
+			null);
 	}
 
 	@Override
@@ -97,17 +96,13 @@ public class EventSenderImpl implements EventSender, StorageConfig {
 				Files.createDirectories(path);
 			}
 
-			UUID eventId = UUID.randomUUID();
+			UUID id = UUID.randomUUID();
 
 			Tuple2<byte[], Integer> t2 = _compressData(data);
 
-			Files.write(
-				path.resolve(eventId.toString()), t2.getItem1());
-
-			eventMap.set(
-				eventId,
+			Event event =
 				Event.builder()
-					.id(eventId)
+					.id(id)
 					.type(type)
 					.groupKey(groupKey)
 					.className(className)
@@ -115,8 +110,12 @@ public class EventSenderImpl implements EventSender, StorageConfig {
 					.parsingDate(parsingDate)
 					.size(t2.getItem2())
 					.created(LocalDateTime.now())
-					.build()
-			);
+					.build();
+
+			Files.write(
+				path.resolve(id.toString()), t2.getItem1());
+
+			eventRepository.syncSave(event);
 
 		}
 		catch (Exception e) {
@@ -153,7 +152,7 @@ public class EventSenderImpl implements EventSender, StorageConfig {
 	@Inject
 	Logger logger;
 
-	@MapName("eventMap")
-	IMap<UUID, Event> eventMap;
+	@Inject
+	EventRepository eventRepository;
 
 }

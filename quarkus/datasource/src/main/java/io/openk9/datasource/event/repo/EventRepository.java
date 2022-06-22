@@ -15,27 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.dto;
+package io.openk9.datasource.event.repo;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+import io.openk9.datasource.event.model.Event;
+import io.smallrye.mutiny.Uni;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@SuperBuilder
-public class EventDto {
-	@Builder.Default
-	private final String __typename = EventDto.class.getName();
-	private String type;
-	private Object data;
-	private String groupKey;
-	private String className;
-	private String classPK;
-	private LocalDateTime parsingDate;
+public interface EventRepository {
+
+	void batchSave(Event event);
+
+	void syncSave(Event event) throws IOException;
+
+	Uni<Void> asyncSave(Event event);
+
+	Uni<LocalDateTime> findLastIngestionDate(
+		String className, String classPK);
+
+	Uni<Event> findById(String id);
+
+	Uni<Event> findById(String id, String[] includeFields);
+
+	Uni<List<Event>> search(SearchSourceBuilder searchSourceBuilder);
+
 }

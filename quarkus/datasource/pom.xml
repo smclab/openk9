@@ -136,10 +136,17 @@
       <version>${zstd-jni.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.hazelcast</groupId>
-      <artifactId>hazelcast</artifactId>
-      <version>5.1.2</version>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-elasticsearch-rest-high-level-client</artifactId>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/io.projectreactor/reactor-core -->
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-core</artifactId>
+      <version>3.4.19</version>
+    </dependency>
+
+
   </dependencies>
   <build>
     <plugins>

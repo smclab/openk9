@@ -17,4 +17,20 @@
 
 package io.openk9.datasource.event.util;
 
-public enum SortType {ASC, DESC}
+import org.elasticsearch.search.sort.SortOrder;
+
+public enum SortType {
+	ASC(SortOrder.ASC),
+	DESC(SortOrder.DESC);
+
+	SortType(SortOrder sort) {
+		this.sort = sort;
+	}
+
+	public SortOrder getSort() {
+		return sort;
+	}
+
+	private SortOrder sort;
+
+}

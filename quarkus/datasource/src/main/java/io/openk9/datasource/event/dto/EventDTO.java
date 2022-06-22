@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.cache.dto;
+package io.openk9.datasource.event.dto;
 
 import io.openk9.datasource.event.util.SortType;
 import io.quarkus.runtime.annotations.RegisterForReflection;

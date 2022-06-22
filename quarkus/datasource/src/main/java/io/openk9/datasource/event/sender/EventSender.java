@@ -17,14 +17,13 @@
 
 package io.openk9.datasource.event.sender;
 
-import io.openk9.datasource.event.dto.EventDto;
-import lombok.experimental.SuperBuilder;
+import io.openk9.datasource.event.dto.EventDTO;
 
 import java.time.LocalDateTime;
 
 public interface EventSender {
 
-	void sendEvent(EventDto event);
+	void sendEvent(EventDTO event);
 	void sendEventAsJson(String type, Object data);
 
 	void sendEventAsJson(String type, String groupKey, Object data);
@@ -40,6 +39,4 @@ public interface EventSender {
 		String type, String groupKey, String className, String classPK,
 		LocalDateTime parsingDate, Object data);
 
-	@SuperBuilder
-	class EventMessage extends EventDto { }
 }

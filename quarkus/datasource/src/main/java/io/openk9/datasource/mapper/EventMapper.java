@@ -17,9 +17,9 @@
 
 package io.openk9.datasource.mapper;
 
-import io.openk9.datasource.cache.dto.EventDTO;
-import io.openk9.datasource.cache.model.Event;
+import io.openk9.datasource.event.dto.EventDTO;
 import io.openk9.datasource.event.dto.EventOption;
+import io.openk9.datasource.event.model.Event;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "cdi")
