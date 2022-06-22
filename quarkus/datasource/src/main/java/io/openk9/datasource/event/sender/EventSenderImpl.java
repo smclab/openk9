@@ -24,30 +24,15 @@ import io.openk9.datasource.event.repo.EventRepository;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @ApplicationScoped
-public class EventSenderImpl implements EventSender, StorageConfig {
-
-	@ConfigProperty(
-		name = "openk9.events.data.dir.path",
-		defaultValue = "./events/data"
-	)
-	String storageDir;
-
-	@Override
-	public String getStorageDir() {
-		return storageDir;
-	}
+public class EventSenderImpl implements EventSender {
 
 	@Override
 	public void sendEvent(EventDTO event) {
@@ -90,12 +75,6 @@ public class EventSenderImpl implements EventSender, StorageConfig {
 
 		try {
 
-			Path path = Paths.get(storageDir);
-
-			if (!Files.exists(path)) {
-				Files.createDirectories(path);
-			}
-
 			UUID id = UUID.randomUUID();
 
 			Tuple2<byte[], Integer> t2 = _compressData(data);
@@ -110,10 +89,8 @@ public class EventSenderImpl implements EventSender, StorageConfig {
 					.parsingDate(parsingDate)
 					.size(t2.getItem2())
 					.created(LocalDateTime.now())
+					.data(t2.getItem1())
 					.build();
-
-			Files.write(
-				path.resolve(id.toString()), t2.getItem1());
 
 			eventRepository.syncSave(event);
 

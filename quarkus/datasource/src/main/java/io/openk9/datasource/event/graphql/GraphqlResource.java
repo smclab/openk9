@@ -24,7 +24,6 @@ import graphql.schema.SelectedField;
 import io.openk9.datasource.event.dto.EventOption;
 import io.openk9.datasource.event.model.Event;
 import io.openk9.datasource.event.repo.EventRepository;
-import io.openk9.datasource.event.sender.StorageConfig;
 import io.openk9.datasource.event.util.Constants;
 import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.mapper.EventMapper;
@@ -43,10 +42,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,21 +63,8 @@ public class GraphqlResource {
 		}
 
 		return eventRepository
-			.findById(id, new String[]{"id", "size"}).map(event -> {
-
-				Path path = Paths.get(
-					storageConfig.getStorageDir(), id);
-
-				int dataSize = event.getSize();
-
-				try {
-					return new String(Zstd.decompress(Files.readAllBytes(path), dataSize));
-				}
-				catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-
-		});
+			.findById(id, new String[]{"data", "size"})
+			.map(event -> new String(Zstd.decompress(event.getData(), event.getSize())));
 
 	}
 
@@ -242,9 +224,6 @@ public class GraphqlResource {
 
 	@Inject
 	EventRepository eventRepository;
-
-	@Inject
-	StorageConfig storageConfig;
 
 	@Inject
 	EventMapper mapper;

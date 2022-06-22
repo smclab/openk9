@@ -47,6 +47,7 @@ public class Event {
 	private String groupKey;
 	private String classPK;
 	private String className;
+	private byte[] data;
 
 	public static final String ID = "id";
 	public static final String TYPE = "type";

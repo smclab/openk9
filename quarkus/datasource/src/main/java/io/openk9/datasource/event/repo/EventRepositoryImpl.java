@@ -164,7 +164,9 @@ public class EventRepositoryImpl implements EventRepository {
 
 		searchRequest.source(searchSourceBuilder);
 
-		return Uni.createFrom().emitter(emitter -> client.searchAsync(
+		return Uni
+			.createFrom()
+			.<LocalDateTime>emitter(emitter -> client.searchAsync(
 			searchRequest, RequestOptions.DEFAULT,
 			new ActionListener<>() {
 				@Override
@@ -183,10 +185,7 @@ public class EventRepositoryImpl implements EventRepository {
 
 					}
 					else {
-
-						emitter.complete(
-							LocalDateTime.of(1970, 1, 1, 0, 0, 0));
-
+						emitter.complete(null);
 					}
 
 				}
@@ -196,7 +195,8 @@ public class EventRepositoryImpl implements EventRepository {
 					emitter.fail(e);
 				}
 			}
-		));
+		))
+			.replaceIfNullWith(() -> LocalDateTime.of(1970, 1, 1, 0, 0, 0));
 
 	}
 
