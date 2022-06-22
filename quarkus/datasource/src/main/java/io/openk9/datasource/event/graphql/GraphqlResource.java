@@ -39,6 +39,7 @@ import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.mapper.EventMapper;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
@@ -62,6 +63,7 @@ import java.util.stream.Collectors;
 
 @GraphQLApi
 @RequestScoped
+@CircuitBreaker
 public class GraphqlResource {
 
 	@Query("eventData")

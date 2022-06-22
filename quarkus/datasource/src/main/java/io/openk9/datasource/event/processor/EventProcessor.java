@@ -20,6 +20,7 @@ package io.openk9.datasource.event.processor;
 import com.rabbitmq.client.Envelope;
 import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.event.util.EventType;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.smallrye.reactive.messaging.rabbitmq.IncomingRabbitMQMessage;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -40,6 +41,7 @@ import java.util.concurrent.CompletionStage;
 public class EventProcessor {
 
 	@Incoming("events")
+	@Blocking
 	public CompletionStage<Void> process(Message<?> message) {
 
 		Object obj = message.getPayload();

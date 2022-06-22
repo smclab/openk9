@@ -23,6 +23,7 @@ import io.smallrye.mutiny.Uni;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Instance;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+@CircuitBreaker
 @Path("/v1/trigger")
 @ApplicationScoped
 public class TriggerResource {
