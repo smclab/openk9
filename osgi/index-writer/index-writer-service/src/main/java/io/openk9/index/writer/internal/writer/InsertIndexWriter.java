@@ -28,7 +28,6 @@ import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -153,8 +152,8 @@ public class InsertIndexWriter {
 				.filter(e -> e.getHits().getHits().length > 0)
 				.flatMapIterable(SearchResponse::getHits)
 				.next()
-				.map(e -> new UpdateRequest(indexName, e.getId())
-					.doc(objectNode.toString(), XContentType.JSON)
+				.map(e -> new IndexRequest(indexName).id(e.getId())
+					.source(objectNode.toString(), XContentType.JSON)
 				)
 				.cast(DocWriteRequest.class)
 				.switchIfEmpty(
