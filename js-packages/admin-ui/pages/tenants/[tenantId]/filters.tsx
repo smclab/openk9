@@ -163,13 +163,46 @@ function SuggestionCategoryFieldRow({
         )}
         {!isEditing && (
           <div className="list-group-detail">
-            {enabled ? (
+            {suggestionCategoryField.enabled ? (
               <span className="label label-success">
-                <span className="label-item label-item-expand">ENABLED</span>
+                <button
+                  style={{
+                    color: "green",
+                    backgroundColor: "white",
+                    border: "none",
+                    fontSize: "10px",
+                    fontFamily: "Arial",
+                  }}
+                  onClick={() => {
+                    onUpdate({
+                      ...suggestionCategoryField,
+                      enabled: false,
+                    });
+                  }}
+                >
+                  ENABLED
+                </button>
               </span>
             ) : (
               <span className="label label-warning">
-                <span className="label-item label-item-expand">DISABLED</span>
+                <button
+                  style={{
+                    color: "#FFD700",
+                    backgroundColor: "white",
+                    border: "none",
+                    fontSize: "10px",
+                    fontFamily: "arial",
+                  }}
+                  onClick={() => {
+                    onUpdate({
+                      ...suggestionCategoryField,
+                      enabled: true,
+                    });
+                  }}
+                  className="label-item label-item-expand"
+                >
+                  DISABLED
+                </button>
               </span>
             )}
           </div>
@@ -326,13 +359,46 @@ function SuggestionCategoryRow({
           )}
           {!isEditing && (
             <div className="list-group-detail">
-              {enabled ? (
+              {suggestionCategory.enabled ? (
                 <span className="label label-success">
-                  <span className="label-item label-item-expand">ENABLED</span>
+                  <button
+                    style={{
+                      color: "green",
+                      backgroundColor: "white",
+                      border: "none",
+                      fontSize: "10px",
+                      fontFamily: "Arial",
+                    }}
+                    onClick={() => {
+                      onUpdate({
+                        ...suggestionCategory,
+                        enabled: false,
+                      });
+                    }}
+                  >
+                    ENABLED
+                  </button>
                 </span>
               ) : (
                 <span className="label label-warning">
-                  <span className="label-item label-item-expand">DISABLED</span>
+                  <button
+                    style={{
+                      color: "#FFD700",
+                      backgroundColor: "white",
+                      border: "none",
+                      fontSize: "10px",
+                      fontFamily: "arial",
+                    }}
+                    onClick={() => {
+                      onUpdate({
+                        ...suggestionCategory,
+                        enabled: true,
+                      });
+                    }}
+                    className="label-item label-item-expand"
+                  >
+                    DISABLED
+                  </button>
                 </span>
               )}
             </div>
