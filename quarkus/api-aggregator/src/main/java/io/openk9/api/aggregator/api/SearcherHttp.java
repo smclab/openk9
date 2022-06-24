@@ -56,7 +56,7 @@ public interface SearcherHttp {
 	@PermitAll
 	@POST
 	@Path("/v1/autocomplete")
-	Uni<SearcherResponseDTO> autocomplete(SearchRequestDTO searchToken);
+	Uni<JsonObject> autocomplete(SearchRequestDTO searchToken);
 
 	@PermitAll
 	@POST
