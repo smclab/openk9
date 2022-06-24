@@ -36,4 +36,8 @@ public interface Annotator extends Comparable<Annotator> {
 
 	int weight();
 
+	default int getLastTokenCount() {
+		return -1;
+	}
+
 }

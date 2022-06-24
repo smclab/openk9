@@ -240,11 +240,28 @@ public class Grammar {
 		Map<Tuple, List<Parse>> chart, String[] tokens, int i, int j,
 		long tenantId, Set<String> context) {
 
+		int originalLength = tokens.length;
+
 		tokens = Arrays.stream(tokens, i, j).toArray(String[]::new);
 
 		Tuple<Integer> chartKey = Tuple.of(i, j);
 
 		for (Annotator annotator : annotators) {
+
+			int lastTokenCount = annotator.getLastTokenCount();
+
+			if (lastTokenCount != -1) {
+
+				if (j != originalLength) {
+					continue;
+				}
+
+				if (j - i > lastTokenCount) {
+					continue;
+				}
+
+			}
+
 			for (CategorySemantics categorySemantics : annotator.annotate(tenantId, context, tokens)) {
 
 				String category = categorySemantics.getCategory();

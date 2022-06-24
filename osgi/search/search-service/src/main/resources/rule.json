@@ -66,5 +66,9 @@
 	{
 		"lhs": "$Entity",
 		"rhs": "$bank"
+	},
+	{
+		"lhs": "$Content",
+		"rhs": "$AUTOCOMPLETE"
 	}
 ]

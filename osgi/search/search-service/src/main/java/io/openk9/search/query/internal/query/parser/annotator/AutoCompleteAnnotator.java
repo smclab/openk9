@@ -15,22 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.event.util;
+package io.openk9.search.query.internal.query.parser.annotator;
 
-import org.elasticsearch.search.sort.SortOrder;
+import io.openk9.search.client.api.RestHighLevelClientProvider;
 
-public enum SortType {
-	ASC(SortOrder.ASC),
-	DESC(SortOrder.DESC);
+public class AutoCompleteAnnotator extends BaseAutoCompleteAnnotator {
 
-	SortType(SortOrder sort) {
-		this.sort = sort;
+	public AutoCompleteAnnotator(
+		String keyword,
+		AnnotatorConfig annotatorConfig,
+		RestHighLevelClientProvider restHighLevelClientProvider) {
+		super(keyword);
+		super.setAnnotatorConfig(annotatorConfig);
+		super.setRestHighLevelClientProvider(restHighLevelClientProvider);
 	}
 
-	public SortOrder getSort() {
-		return sort;
+	@Override
+	public int getLastTokenCount() {
+		return _annotatorConfig.autoCompleteTokenCount();
 	}
-
-	private SortOrder sort;
-
 }

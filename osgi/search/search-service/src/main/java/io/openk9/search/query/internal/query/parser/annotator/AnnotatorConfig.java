@@ -37,7 +37,11 @@ public @interface AnnotatorConfig {
 
 	int restSize() default 10;
 
+	int autocompleteSize() default 10;
+
 	long timeoutMs() default 10_000;
+
+	String[] autocompleteAnnotator() default {};
 
 	String[] aggregatorAnnotator() default {};
 
@@ -80,6 +84,8 @@ public @interface AnnotatorConfig {
 	};
 
 	String ruleJsonPath() default "";
+
+	int autoCompleteTokenCount() default 2;
 
 	enum InternalFuzziness {
 		ZERO(Fuzziness.ZERO), ONE(Fuzziness.ONE), TWO(Fuzziness.TWO), AUTO(Fuzziness.AUTO);

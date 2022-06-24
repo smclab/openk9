@@ -24,6 +24,7 @@ import io.openk9.search.api.query.parser.Annotator;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
 import io.openk9.search.query.internal.query.parser.annotator.AggregatorAnnotator;
 import io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig;
+import io.openk9.search.query.internal.query.parser.annotator.AutoCompleteAnnotator;
 import io.openk9.search.query.internal.query.parser.annotator.NerAnnotator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -105,9 +106,19 @@ public class GrammarProvider {
 				.map(keyword -> new AggregatorAnnotator(keyword, _config,
 					_restHighLevelClientProvider));
 
+		String[] autocompleteAnnotator = _config.autocompleteAnnotator();
+
+		Stream<Annotator> autocompleteAnnotatorStream =
+			Arrays
+				.stream(autocompleteAnnotator)
+				.map(keyword -> new AutoCompleteAnnotator(keyword, _config,
+					_restHighLevelClientProvider));
+
 		List<Annotator> newAnnotators =
 			Stream.of(
-				_annotatorList.stream(), nerAnnotatorStream, aggregatorAnnotatorStream)
+				_annotatorList.stream(), nerAnnotatorStream,
+				aggregatorAnnotatorStream, autocompleteAnnotatorStream
+			)
 				.flatMap(Function.identity())
 				.collect(Collectors.toList());
 

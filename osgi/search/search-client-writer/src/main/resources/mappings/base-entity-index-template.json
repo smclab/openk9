@@ -40,6 +40,9 @@
                   "keyword":{
                      "type":"keyword",
                      "ignore_above":256
+                  },
+                  "searchasyou":{
+                     "type":"search_as_you_type"
                   }
                }
             },
