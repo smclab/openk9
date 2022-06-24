@@ -672,11 +672,12 @@ export function OpenK9Client({
       return data;
     },
 
-    async getDatasourceSuggestionCategories(): Promise<
-      Array<DatasourceSuggestionCategory>
-    > {
+    async getDatasourceSuggestionCategories(params: {
+      page?: number;
+      size?: number;
+    }): Promise<Array<DatasourceSuggestionCategory>> {
       const response = await authFetch(
-        "/api/datasource/v2/suggestion-category",
+        `/api/datasource/v2/suggestion-category?${searchParams(params)}`,
         {
           headers: {
             Accept: "application/json",
@@ -748,11 +749,12 @@ export function OpenK9Client({
       return data;
     },
 
-    async getDatasourceSuggestionCategoryFields(): Promise<
-      Array<DatasourceSuggestionCategoryField>
-    > {
+    async getDatasourceSuggestionCategoryFields(params: {
+      page?: number;
+      size?: number;
+    }): Promise<Array<DatasourceSuggestionCategoryField>> {
       const response = await authFetch(
-        "/api/datasource/v2/suggestion-category-field",
+        `/api/datasource/v2/suggestion-category-field?${searchParams(params)}`,
         {
           headers: {
             Accept: "application/json",
@@ -1213,4 +1215,14 @@ function getDefaultTenantDomain(tenant: string) {
   } catch (error) {
     return "";
   }
+}
+
+function searchParams(params: Record<string, string | number | undefined>) {
+  return new URLSearchParams(
+    Object.fromEntries(
+      Object.entries(params).flatMap(([key, value]) =>
+        value !== undefined ? ([[key, String(value)]] as const) : [],
+      ),
+    ),
+  );
 }

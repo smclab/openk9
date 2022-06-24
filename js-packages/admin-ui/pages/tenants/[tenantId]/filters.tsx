@@ -21,7 +21,12 @@ import { useRouter } from "next/router";
 import { ThemeType } from "../../../components/theme";
 import { Layout } from "../../../components/Layout";
 import { firstOrString } from "../../../components/utils";
-import { useQuery, useQueryClient, useMutation } from "react-query";
+import {
+  useQueryClient,
+  useQuery,
+  useMutation,
+  useInfiniteQuery,
+} from "react-query";
 import { client } from "../../../components/client";
 import { ClayButtonWithIcon } from "@clayui/button";
 import {
@@ -31,6 +36,7 @@ import {
 import ClayForm, { ClayCheckbox, ClayInput } from "@clayui/form";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 import ClayIcon from "@clayui/icon";
+import { Virtuoso } from "react-virtuoso";
 
 const useStyles = createUseStyles((theme: ThemeType) => ({
   root: {
@@ -40,7 +46,7 @@ const useStyles = createUseStyles((theme: ThemeType) => ({
     width: "100%",
     maxWidth: 1000,
     borderRadius: theme.borderRadius,
-    overflow: "auto",
+    height: "100%",
   },
 }));
 
@@ -50,10 +56,8 @@ export default function Filter() {
   const tenantId = query.tenantId && firstOrString(query.tenantId);
 
   const suggestionCategories = useSuggestionCategories(Number(tenantId));
-
-  const suggestionCategoryFields = useSuggestionCategoryFields(
-    Number(tenantId),
-  );
+  const suggestionCategoriesFlat =
+    suggestionCategories.list.data?.pages.flat(1) ?? [];
 
   if (!tenantId) return null;
 
@@ -71,30 +75,30 @@ export default function Filter() {
               data-tooltip-align="bottom"
               title="Add Filter"
               symbol="plus"
-              onClick={() => suggestionCategories.add()}
+              onClick={() => suggestionCategories.add.mutate()}
             />
           </ClayTooltipProvider>
         </div>
       }
     >
       <div className={classes.root}>
-        <ul className="list-group" style={{ margin: 0 }}>
-          {suggestionCategories.list
-            ?.sort((a, b) => a.priority - b.priority)
-            .map((suggestionCategory) => {
+        <ul className="list-group" style={{ margin: 0, height: "100%" }}>
+          <Virtuoso
+            style={{ height: "100%" }}
+            totalCount={suggestionCategoriesFlat.length}
+            itemContent={(index) => {
+              const suggestionCategory = suggestionCategoriesFlat[index];
               return (
                 <SuggestionCategoryRow
                   key={suggestionCategory.suggestionCategoryId}
                   suggestionCategory={suggestionCategory}
-                  onRemove={suggestionCategories.remove}
-                  onUpdate={suggestionCategories.update}
-                  onAddField={suggestionCategoryFields.add}
-                  onRemoveField={suggestionCategoryFields.remove}
-                  onUpdateField={suggestionCategoryFields.update}
-                  suggestionCategoryFields={suggestionCategoryFields.list}
+                  onRemove={suggestionCategories.remove.mutate}
+                  onUpdate={suggestionCategories.update.mutate}
                 />
               );
-            })}
+            }}
+            endReached={() => suggestionCategories.list.fetchNextPage()}
+          />
         </ul>
       </div>
     </Layout>
@@ -286,32 +290,20 @@ type SuggestionCategoryRowProps = {
     name: string;
     priority: number;
   }): void;
-  onAddField(suggestionCategoryId: number): void;
-  onRemoveField(suggestionCategoryFieldId: number): void;
-  onUpdateField(params: {
-    suggestionCategoryFieldId: number;
-    enabled: boolean;
-    fieldName: string;
-    name: string;
-  }): void;
-  suggestionCategoryFields:
-    | Array<DatasourceSuggestionCategoryField>
-    | undefined;
 };
 function SuggestionCategoryRow({
   suggestionCategory,
   onRemove,
   onUpdate,
-  onAddField,
-  suggestionCategoryFields,
-  onRemoveField,
-  onUpdateField,
 }: SuggestionCategoryRowProps) {
   const [enabled, setEnabled] = React.useState(suggestionCategory.enabled);
   const [name, setName] = React.useState(suggestionCategory.name);
   const [priority, setPriority] = React.useState(suggestionCategory.priority);
   const [isEditing, setIsEditing] = React.useState(false);
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const suggestionCategoryFields = useSuggestionCategoryFields(
+    Number(suggestionCategory.tenantId),
+  );
   return (
     <React.Fragment>
       <li className="list-group-item list-group-item-flex">
@@ -474,7 +466,9 @@ function SuggestionCategoryRow({
                   <button
                     className="component-action quick-action-item"
                     onClick={() =>
-                      onAddField(suggestionCategory.suggestionCategoryId)
+                      suggestionCategoryFields.add.mutate(
+                        suggestionCategory.suggestionCategoryId,
+                      )
                     }
                     data-tooltip-align="top"
                     title="Add Category Field under this Category"
@@ -508,7 +502,7 @@ function SuggestionCategoryRow({
         </div>
       </li>
       {isExpanded &&
-        suggestionCategoryFields
+        suggestionCategoryFields.list.data
           ?.filter(
             (suggestionCategoryField) =>
               suggestionCategoryField.categoryId ===
@@ -519,8 +513,8 @@ function SuggestionCategoryRow({
               <SuggestionCategoryFieldRow
                 key={suggestionCategoryField.suggestionCategoryFieldId}
                 suggestionCategoryField={suggestionCategoryField}
-                onRemove={onRemoveField}
-                onUpdate={onUpdateField}
+                onRemove={suggestionCategoryFields.remove.mutate}
+                onUpdate={suggestionCategoryFields.update.mutate}
               />
             );
           })}
@@ -528,31 +522,27 @@ function SuggestionCategoryRow({
   );
 }
 
-function Label(props: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{ whiteSpace: "nowrap", marginRight: "4px", fontWeight: "bold" }}
-    >
-      {props.children}:{" "}
-    </div>
-  );
-}
-
 const USE_MOCK = false;
 
 function useSuggestionCategories(tenantId: number) {
   const queryClient = useQueryClient();
-  const { data: list } = useQuery(
-    ["/api/datasource/v2/suggestion-category", { tenantId }],
-    async ({ queryKey: [path, parameters] }) => {
+  const list = useInfiniteQuery(
+    ["datasource-suggestion-categories", { tenantId }],
+    async ({ pageParam }) => {
       if (USE_MOCK) return mockSuggestionCategories;
-      return (await client.getDatasourceSuggestionCategories()).filter(
+      return (
+        await client.getDatasourceSuggestionCategories({
+          page: pageParam,
+          size: 8,
+        })
+      ).filter(
         (suggestionCategory) => suggestionCategory.tenantId === tenantId,
       );
     },
+    { getNextPageParam: (lastPage, pages) => pages.length },
   );
 
-  const { mutate: remove } = useMutation(
+  const remove = useMutation(
     async (suggestionCategoryId: number) => {
       if (USE_MOCK) {
         mockSuggestionCategories = mockSuggestionCategories.filter(
@@ -566,11 +556,11 @@ function useSuggestionCategories(tenantId: number) {
     },
     {
       onSuccess() {
-        queryClient.invalidateQueries("/api/datasource/v2/suggestion-category");
+        queryClient.invalidateQueries("datasource-suggestion-categories");
       },
     },
   );
-  const { mutate: update } = useMutation(
+  const update = useMutation(
     async ({
       suggestionCategoryId,
       ...params
@@ -595,11 +585,11 @@ function useSuggestionCategories(tenantId: number) {
     },
     {
       onSuccess() {
-        queryClient.invalidateQueries("/api/datasource/v2/suggestion-category");
+        queryClient.invalidateQueries("datasource-suggestion-categories");
       },
     },
   );
-  const { mutate: add } = useMutation(
+  const add = useMutation(
     async () => {
       if (USE_MOCK) {
         mockSuggestionCategories = [
@@ -625,7 +615,7 @@ function useSuggestionCategories(tenantId: number) {
     },
     {
       onSuccess() {
-        queryClient.invalidateQueries("/api/datasource/v2/suggestion-category");
+        queryClient.invalidateQueries("datasource-suggestion-categories");
       },
     },
   );
@@ -658,20 +648,24 @@ let mockSuggestionCategories: Array<DatasourceSuggestionCategory> = [
 
 function useSuggestionCategoryFields(tenantId: number) {
   const queryClient = useQueryClient();
-  const { data: list } = useQuery(
-    ["/api/datasource/v2/suggestion-category-field", { tenantId }],
-    async ({ queryKey: [path, parameters] }) => {
+  const list = useQuery(
+    ["datasource-suggestion-category-fields", { tenantId }],
+    async () => {
       if (USE_MOCK) return mockSuggestionCategoryFields;
       return await (
-        await client.getDatasourceSuggestionCategoryFields()
+        await client.getDatasourceSuggestionCategoryFields({
+          page: 0,
+          size: 10000,
+        })
       ).filter(
         (suggestionCategoryField) =>
           suggestionCategoryField.tenantId === tenantId,
       );
     },
+    { getNextPageParam: (lastPage, pages) => pages.length },
   );
 
-  const { mutate: remove } = useMutation(
+  const remove = useMutation(
     async (suggestionCategoryFieldId: number) => {
       if (USE_MOCK) {
         mockSuggestionCategoryFields = mockSuggestionCategoryFields.filter(
@@ -687,14 +681,12 @@ function useSuggestionCategoryFields(tenantId: number) {
     },
     {
       onSuccess() {
-        queryClient.invalidateQueries(
-          "/api/datasource/v2/suggestion-category-field",
-        );
+        queryClient.invalidateQueries("datasource-suggestion-category-fields");
       },
     },
   );
 
-  const { mutate: update } = useMutation(
+  const update = useMutation(
     async ({
       suggestionCategoryFieldId,
       ...params
@@ -724,14 +716,12 @@ function useSuggestionCategoryFields(tenantId: number) {
     },
     {
       onSuccess() {
-        queryClient.invalidateQueries(
-          "/api/datasource/v2/suggestion-category-field",
-        );
+        queryClient.invalidateQueries("datasource-suggestion-category-fields");
       },
     },
   );
 
-  const { mutate: add } = useMutation(
+  const add = useMutation(
     async (categoryId: number) => {
       if (USE_MOCK) {
         mockSuggestionCategoryFields = [
@@ -757,9 +747,7 @@ function useSuggestionCategoryFields(tenantId: number) {
     },
     {
       onSuccess() {
-        queryClient.invalidateQueries(
-          "/api/datasource/v2/suggestion-category-field",
-        );
+        queryClient.invalidateQueries("datasource-suggestion-category-fields");
       },
     },
   );
