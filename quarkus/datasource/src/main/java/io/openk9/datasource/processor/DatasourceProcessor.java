@@ -71,8 +71,17 @@ public class DatasourceProcessor {
 
 				long parsingDate = ingestionPayload.getParsingDate();
 
-				datasource.setLastIngestionDate(
-					Instant.ofEpochMilli(parsingDate));
+				Instant lastIngestionDate = datasource.getLastIngestionDate();
+
+				Instant instantParsingDate = Instant.ofEpochMilli(parsingDate);
+
+				if (lastIngestionDate != null && lastIngestionDate.equals(instantParsingDate)) {
+					return Uni
+						.createFrom()
+						.item(IngestionDatasourcePayload.of(ingestionPayload, dc));
+				}
+
+				datasource.setLastIngestionDate(instantParsingDate);
 
 				return datasource.persist()
 					.replaceWith(
