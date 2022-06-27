@@ -25,7 +25,6 @@ import io.openk9.datasource.event.dto.EventOption;
 import io.openk9.datasource.event.model.Event;
 import io.openk9.datasource.event.repo.EventRepository;
 import io.openk9.datasource.event.util.Constants;
-import io.openk9.datasource.event.util.SortType;
 import io.openk9.datasource.mapper.EventMapper;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
 import io.smallrye.mutiny.Uni;
@@ -39,6 +38,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -76,7 +76,7 @@ public class GraphqlResource {
 	@Description("Returns the list of available options for the event")
 	public Uni<Collection<EventOption>> eventOptions(
 		@Name("sortable") @DefaultValue("true") boolean sortable,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType,
+		@Name("sortType") @DefaultValue("ASC") SortOrder sortOrder,
 		@Name("size") @DefaultValue("20") int size,
 		@Name("from") @DefaultValue("0") int from
 	) {
@@ -128,7 +128,7 @@ public class GraphqlResource {
 		@Description("event group key set") @Name(Event.GROUP_KEY) String groupKey,
 		@Description("primary key of the event") @Name(Event.CLASS_PK) String classPK,
 		@Name("sortBy") @DefaultValue("CREATED") Event.EventSortable sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType,
+		@Name("sortType") @DefaultValue("ASC") SortOrder sortType,
 		@Name(Constants.GTE) LocalDateTime gte,
 		@Name(Constants.LTE) LocalDateTime lte,
 		@Name("size") @DefaultValue("10000") int size,
@@ -151,7 +151,7 @@ public class GraphqlResource {
 				searchSourceBuilder.query(boolQueryBuilder);
 				searchSourceBuilder.size(size);
 				searchSourceBuilder.from(from);
-				searchSourceBuilder.sort(sortBy.getColumn(), sortType.getSort());
+				searchSourceBuilder.sort(sortBy.getColumn(), sortType);
 				searchSourceBuilder.fetchSource(fields, null);
 
 				return eventRepository
