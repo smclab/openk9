@@ -20,11 +20,13 @@ package io.openk9.index.writer.internal.writer;
 import io.openk9.ingestion.api.Binding;
 import io.openk9.ingestion.api.ReceiverReactor;
 import io.openk9.json.api.JsonFactory;
+import io.openk9.json.api.JsonNode;
 import io.openk9.json.api.ObjectNode;
 import io.openk9.search.client.api.IndexBus;
 import io.openk9.search.client.api.Search;
 import io.openk9.search.client.api.util.SearchUtil;
 import org.elasticsearch.action.DocWriteRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -152,8 +154,21 @@ public class InsertIndexWriter {
 				.filter(e -> e.getHits().getHits().length > 0)
 				.flatMapIterable(SearchResponse::getHits)
 				.next()
-				.map(e -> new IndexRequest(indexName).id(e.getId())
-					.source(objectNode.toString(), XContentType.JSON)
+				.map(e -> {
+
+					JsonNode datasourcePayload =
+						objectNode.get("datasourcePayload");
+
+					String documentId = e.getId();
+
+					if (datasourcePayload == null || datasourcePayload.isEmpty()) {
+						return new DeleteRequest(indexName, documentId);
+					}
+
+					return new IndexRequest(indexName).id(documentId)
+						.source(objectNode.toString(), XContentType.JSON);
+
+					}
 				)
 				.cast(DocWriteRequest.class)
 				.switchIfEmpty(
