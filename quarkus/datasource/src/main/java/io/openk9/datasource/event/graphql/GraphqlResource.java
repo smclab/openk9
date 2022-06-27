@@ -76,7 +76,7 @@ public class GraphqlResource {
 	@Description("Returns the list of available options for the event")
 	public Uni<Collection<EventOption>> eventOptions(
 		@Name("sortable") @DefaultValue("true") boolean sortable,
-		@Name("sortType") @DefaultValue("ASC") SortOrder sortOrder,
+		@Name("sortType") @DefaultValue("ASC") String sortOrder,
 		@Name("size") @DefaultValue("20") int size,
 		@Name("from") @DefaultValue("0") int from
 	) {
@@ -128,7 +128,7 @@ public class GraphqlResource {
 		@Description("event group key set") @Name(Event.GROUP_KEY) String groupKey,
 		@Description("primary key of the event") @Name(Event.CLASS_PK) String classPK,
 		@Name("sortBy") @DefaultValue("CREATED") Event.EventSortable sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortOrder sortType,
+		@Name("sortType") @DefaultValue("ASC") String sortType,
 		@Name(Constants.GTE) LocalDateTime gte,
 		@Name(Constants.LTE) LocalDateTime lte,
 		@Name("size") @DefaultValue("10000") int size,
@@ -151,7 +151,8 @@ public class GraphqlResource {
 				searchSourceBuilder.query(boolQueryBuilder);
 				searchSourceBuilder.size(size);
 				searchSourceBuilder.from(from);
-				searchSourceBuilder.sort(sortBy.getColumn(), sortType);
+				searchSourceBuilder.sort(
+					sortBy.getColumn(), SortOrder.fromString(sortType));
 				searchSourceBuilder.fetchSource(fields, null);
 
 				return eventRepository
