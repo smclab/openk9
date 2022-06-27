@@ -29,6 +29,7 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -41,9 +42,11 @@ public class DatasourceProcessor {
 	@Incoming("ingestion")
 	public Uni<Void> process(Message<?> message) {
 
-		return Uni.createFrom().item(message)
+		return session
+			.withTransaction(t -> Uni.createFrom().item(message)
 			.onItem().call(m -> _consumeIngestionMessage(_messagePayloadToJson(m)))
-			.onItem().transformToUni(x -> Uni.createFrom().completionStage(message.ack()));
+			.onItem().transformToUni(x -> Uni.createFrom().completionStage(message.ack())))
+			.onTermination().call(() -> session.close());
 
 	}
 
@@ -94,6 +97,9 @@ public class DatasourceProcessor {
 
 	@Inject
 	Logger logger;
+
+	@Inject
+	Mutiny.Session session;
 
 	@Inject
 	@Channel("ingestion-datasource")
