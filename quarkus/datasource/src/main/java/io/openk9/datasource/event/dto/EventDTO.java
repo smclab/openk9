@@ -17,12 +17,12 @@
 
 package io.openk9.datasource.event.dto;
 
-import io.openk9.datasource.event.util.SortType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.elasticsearch.search.sort.SortOrder;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -97,8 +97,8 @@ public class EventDTO {
 
 		public abstract Comparator<EventDTO> getComparator();
 
-		public Comparator<EventDTO> getComparator(SortType sortType) {
-			return sortType == SortType.ASC
+		public Comparator<EventDTO> getComparator(SortOrder sortOrder) {
+			return sortOrder == SortOrder.ASC
 				? getComparator()
 				: getComparator().reversed();
 		}
