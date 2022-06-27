@@ -20,7 +20,6 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
-import io.openk9.datasource.event.repo.EventRepository;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
@@ -49,8 +48,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.Instant;
 import java.util.Date;
 
 @ApplicationScoped
@@ -165,25 +163,20 @@ public class SchedulerInitializer {
 
 					if (schedulerEnabledDTO.isSchedulerEnabled()) {
 
-						Uni<LocalDateTime> lastIngestionDate =
-							eventRepository.findLastIngestionDate(
-								Datasource.class.getName(),
-								datasourceId.toString());
+						Instant lastIngestionDate =
+							datasource.getLastIngestionDate();
 
-						return lastIngestionDate
-							.flatMap(parsingDate -> _pluginDriverClient
-								.invokeDataParser(
-									InvokeDataParserDTO
-										.of(
-											driverServiceName, datasource,
-											Date.from(
-												parsingDate
-													.atZone(ZoneId.systemDefault())
-													.toInstant()
-											),
-											new Date())
-								)
-							);
+						if (lastIngestionDate == null) {
+							lastIngestionDate = Instant.ofEpochMilli(0);
+						}
+
+						return _pluginDriverClient.invokeDataParser(
+							InvokeDataParserDTO.of(
+								driverServiceName, datasource,
+								Date.from(lastIngestionDate),
+								new Date()
+							)
+						);
 				}
 
 				logger.warn(
@@ -228,8 +221,5 @@ public class SchedulerInitializer {
 
 	@Inject
 	Logger logger;
-
-	@Inject
-	EventRepository eventRepository;
 
 }

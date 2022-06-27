@@ -22,9 +22,6 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.processor.payload.DatasourceContext;
-import io.quarkus.cache.CacheInvalidateAll;
-import io.quarkus.cache.CacheResult;
-import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -33,7 +30,6 @@ import java.util.List;
 @ApplicationScoped
 public class DatasourceService {
 
-	@CacheResult(cacheName = "datasource-context-cache")
 	public Uni<DatasourceContext> getDatasourceContext(long datasourceId) {
 
 		Uni<Datasource> datasourceUni = getDatasource(datasourceId);
@@ -70,12 +66,11 @@ public class DatasourceService {
 		);
 
 	}
-	@CacheResult(cacheName = "datasource-cache")
+
 	public Uni<Datasource> getDatasource(Long id) {
 		return Datasource.findById(id);
 	}
 
-	@CacheResult(cacheName = "enrich-pipeline-cache")
 	public Uni<EnrichPipeline> getEnrichPipelineByDatasourceId(
 		Long datasourceId) {
 		return EnrichPipeline
@@ -85,7 +80,6 @@ public class DatasourceService {
 			.continueWith(EnrichPipeline::new);
 	}
 
-	@CacheResult(cacheName = "enrich-item-cache")
 	public Uni<List<EnrichItem>> getEnrichItemByEnrichPipelineId(
 		Long enrichPipelineId) {
 		return EnrichItem
@@ -95,22 +89,8 @@ public class DatasourceService {
 			.continueWith(List::of);
 	}
 
-	@CacheResult(cacheName = "tenant-cache")
 	public Uni<Tenant> getTenant(Long tenantId) {
 		return Tenant.findById(tenantId);
-	}
-
-	@CacheInvalidateAll.List(
-		value = {
-			@CacheInvalidateAll(cacheName = "datasource-context-cache"),
-			@CacheInvalidateAll(cacheName = "datasource-cache"),
-			@CacheInvalidateAll(cacheName = "enrich-pipeline-cache"),
-			@CacheInvalidateAll(cacheName = "enrich-item-cache"),
-			@CacheInvalidateAll(cacheName = "tenant-cache")
-		}
-	)
-	@Scheduled(every="120s")
-	public void invalidateCache() {
 	}
 
 }

@@ -18,11 +18,11 @@
 package io.openk9.datasource.processor;
 
 
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.service.DatasourceService;
-import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -34,9 +34,9 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.Instant;
 
 @ApplicationScoped
-@Startup
 public class DatasourceProcessor {
 
 	@Incoming("ingestion")
@@ -62,14 +62,21 @@ public class DatasourceProcessor {
 			Uni<DatasourceContext> datasourceContextUni =
 				datasourceService.getDatasourceContext(datasourceId);
 
-			return datasourceContextUni.map(dc -> {
+			return datasourceContextUni.flatMap(dc -> {
+
+				Datasource datasource = dc.getDatasource();
 
 				IngestionPayload ingestionPayload =
-					ingestionPayloadJson.mapTo(
-						IngestionPayload.class);
+					ingestionPayloadJson.mapTo(IngestionPayload.class);
 
-				return IngestionDatasourcePayload.of(
-					ingestionPayload, dc);
+				long parsingDate = ingestionPayload.getParsingDate();
+
+				datasource.setLastIngestionDate(
+					Instant.ofEpochMilli(parsingDate));
+
+				return datasource.persist()
+					.replaceWith(
+						IngestionDatasourcePayload.of(ingestionPayload, dc));
 
 			})
 				.onItem()
