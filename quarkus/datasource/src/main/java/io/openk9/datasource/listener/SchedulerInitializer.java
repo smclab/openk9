@@ -19,7 +19,6 @@ package io.openk9.datasource.listener;
 
 import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
-import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
@@ -155,38 +154,25 @@ public class SchedulerInitializer {
 		return datasourceUni.flatMap(datasource -> {
 			String driverServiceName = datasource.getDriverServiceName();
 
-			Uni<SchedulerEnabledDTO> schedulerEnabledDTOUni = _pluginDriverClient
-				.schedulerEnabled(driverServiceName);
+			Instant lastIngestionDate =
+				datasource.getLastIngestionDate();
 
-			return schedulerEnabledDTOUni
-				.flatMap(schedulerEnabledDTO -> {
+			if (lastIngestionDate == null) {
+				lastIngestionDate = Instant.ofEpochMilli(0);
+			}
 
-					if (schedulerEnabledDTO.isSchedulerEnabled()) {
-
-						Instant lastIngestionDate =
-							datasource.getLastIngestionDate();
-
-						if (lastIngestionDate == null) {
-							lastIngestionDate = Instant.ofEpochMilli(0);
-						}
-
-						return _pluginDriverClient.invokeDataParser(
-							InvokeDataParserDTO.of(
-								driverServiceName, datasource,
-								Date.from(lastIngestionDate),
-								new Date()
-							)
-						);
-				}
-
-				logger.warn(
-					"[SCHEDULER] datasourceId: " + datasourceId +
-					" service: " + driverServiceName + " not found"
-				);
-
-				return Uni.createFrom().nothing();
-
-			});
+			return _pluginDriverClient.invokeDataParser(
+				InvokeDataParserDTO.of(
+					driverServiceName, datasource,
+					Date.from(lastIngestionDate),
+					new Date()
+				)
+			)
+				.invoke(ignore -> logger.info(
+					"invoke data parser for datasource: " + datasourceId +
+					" driverServiceName: " + driverServiceName))
+				.onFailure().invoke((t) -> logger.warn(t.getMessage()))
+				.onFailure().recoverWithNull();
 
 		});
 

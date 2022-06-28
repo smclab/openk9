@@ -21,6 +21,10 @@ import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.client.plugindriver.dto.PluginDriverDTO;
 import io.openk9.datasource.client.plugindriver.dto.PluginDriverDTOList;
 import io.openk9.datasource.client.plugindriver.dto.SchedulerEnabledDTO;
+import io.openk9.datasource.client.plugindriver.exception.DisabledPluginDriverException;
+import io.openk9.datasource.client.plugindriver.exception.NotFoundPluginDriverException;
+import io.openk9.datasource.client.plugindriver.exception.PluginDriverException;
+import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
@@ -28,6 +32,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Response;
 import java.util.Collection;
 
 @Path("/v1/plugin-driver")
@@ -54,5 +59,20 @@ public interface PluginDriverClient {
 	@GET
 	@Path("/")
 	Uni<PluginDriverDTOList> getPluginDriverList();
+
+	@ClientExceptionMapper
+	static PluginDriverException toException(Response response) {
+
+		if (response.getStatus() == 412) {
+			return new DisabledPluginDriverException(
+				response.hasEntity() ? response.readEntity(String.class) : "plugin driver is disabled");
+		}
+		if (response.getStatus() == 404) {
+			return new NotFoundPluginDriverException(
+				response.hasEntity() ? response.readEntity(String.class) : "plugin driver not found");
+		}
+
+		return null;
+	}
 	
 }
