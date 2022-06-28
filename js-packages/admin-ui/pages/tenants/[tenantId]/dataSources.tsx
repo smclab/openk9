@@ -258,7 +258,9 @@ function Inside({
     client.getPlugins(),
   );
 
-  const { data } = useSWR(`/api/v2/datasource`, () => client.getDataSources());
+  const { data } = useSWR(`/api/v2/datasource`, () =>
+    client.getDataSources({ page: 0, size: 10000 }),
+  );
 
   const tenantDSs = useMemo(
     () => data && data.filter((d) => String(d.tenantId) === tenantId),
