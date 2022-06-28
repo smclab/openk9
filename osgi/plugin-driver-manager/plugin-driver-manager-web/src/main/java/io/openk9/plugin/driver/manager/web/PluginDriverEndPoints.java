@@ -103,9 +103,15 @@ public class PluginDriverEndPoints implements RouterHandler {
 								pluginDriver.invokeDataParser(
 									invokeDataParserDTO.getDatasource(),
 									invokeDataParserDTO.getFromDate(),
-									invokeDataParserDTO.getToDate()
+									invokeDataParserDTO.getToDate(),
+									invokeDataParserDTO.getScheduleId()
 								)
-							);
+							)
+								.then(
+									Mono.from(
+										_httpResponseWriter.write(
+											httpResponse, "{}"))
+								);
 						}
 						else {
 							throw new HttpException(

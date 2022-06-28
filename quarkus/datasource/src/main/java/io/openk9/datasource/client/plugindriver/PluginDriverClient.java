@@ -41,7 +41,7 @@ public interface PluginDriverClient {
 
 	@POST
 	@Path("/invoke-data-parser/")
-	Uni<Void> invokeDataParser(InvokeDataParserDTO invokeDataParserDTO);
+	Uni<String> invokeDataParser(InvokeDataParserDTO invokeDataParserDTO);
 
 	@GET
 	@Path("/scheduler-enabled/{serviceDriverName}")

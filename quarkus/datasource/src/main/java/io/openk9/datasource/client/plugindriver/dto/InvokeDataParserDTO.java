@@ -36,4 +36,5 @@ public class InvokeDataParserDTO {
 	private Datasource datasource;
 	private Date fromDate;
 	private Date toDate;
+	private String scheduleId;
 }

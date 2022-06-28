@@ -27,7 +27,7 @@ public interface PluginDriver {
 	String getName();
 
 	Publisher<Void> invokeDataParser(
-		Datasource datasource, Date fromDate, Date toDate);
+		Datasource datasource, Date fromDate, Date toDate, String scheduleId);
 
 	boolean schedulerEnabled();
 

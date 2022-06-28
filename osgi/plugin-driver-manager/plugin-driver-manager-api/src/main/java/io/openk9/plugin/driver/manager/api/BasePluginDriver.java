@@ -34,7 +34,7 @@ public abstract class BasePluginDriver implements PluginDriver {
 
 	@Override
 	public Mono<Void> invokeDataParser(
-		Datasource datasource, Date fromDate, Date toDate) {
+		Datasource datasource, Date fromDate, Date toDate, String scheduleId) {
 		String jsonConfig = datasource.getJsonConfig();
 
 		JsonNode jsonNode = getJsonFactory().fromJsonToJsonNode(jsonConfig);
@@ -51,6 +51,8 @@ public abstract class BasePluginDriver implements PluginDriver {
 		requestJson.put("timestamp", fromDate.getTime());
 
 		requestJson.put("datasourceId", datasource.getDatasourceId());
+
+		requestJson.put("scheduleId", scheduleId);
 
 		Map<String, Object> headers = headersObject();
 

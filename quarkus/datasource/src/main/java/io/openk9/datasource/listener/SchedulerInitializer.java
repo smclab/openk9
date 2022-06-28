@@ -20,6 +20,7 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Schedule;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
@@ -49,6 +50,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 @ApplicationScoped
 public class SchedulerInitializer {
@@ -161,18 +163,30 @@ public class SchedulerInitializer {
 				lastIngestionDate = Instant.ofEpochMilli(0);
 			}
 
+			UUID uuid = UUID.randomUUID();
+
+			String scheduleId = uuid.toString();
+
 			return _pluginDriverClient.invokeDataParser(
 				InvokeDataParserDTO.of(
 					driverServiceName, datasource,
 					Date.from(lastIngestionDate),
-					new Date()
+					new Date(),
+					scheduleId
 				)
 			)
-				.invoke(ignore -> logger.info(
-					"invoke data parser for datasource: " + datasourceId +
-					" driverServiceName: " + driverServiceName))
-				.onFailure().invoke((t) -> logger.warn(t.getMessage()))
-				.onFailure().recoverWithNull();
+			.call(() -> {
+				Schedule schedule = new Schedule();
+				schedule.setId(uuid);
+				schedule.setDatasource(datasource);
+				schedule.setStatus(Schedule.Status.RUNNING);
+				return schedule.persist();
+			})
+			.invoke(ignore -> logger.info(
+				"invoke data parser for datasource: " + datasourceId +
+				" driverServiceName: " + driverServiceName))
+			.onFailure().invoke((t) -> logger.warn(t.getMessage()))
+			.onFailure().recoverWithNull().replaceWithVoid();
 
 		});
 

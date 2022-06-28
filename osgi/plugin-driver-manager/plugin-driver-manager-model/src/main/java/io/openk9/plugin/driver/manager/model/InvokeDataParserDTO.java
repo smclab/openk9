@@ -30,6 +30,7 @@ import java.util.Date;
 @AllArgsConstructor(staticName = "of")
 @Builder
 public class InvokeDataParserDTO {
+	private String scheduleId;
 	private String serviceDriverName;
 	private Datasource datasource;
 	private Date fromDate;
