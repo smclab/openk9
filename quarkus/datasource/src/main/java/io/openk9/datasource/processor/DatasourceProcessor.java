@@ -71,6 +71,8 @@ public class DatasourceProcessor {
 
 				long parsingDate = ingestionPayload.getParsingDate();
 
+				ingestionPayload.setTenantId(datasource.getTenantId());
+
 				Instant lastIngestionDate = datasource.getLastIngestionDate();
 
 				Instant instantParsingDate = Instant.ofEpochMilli(parsingDate);
