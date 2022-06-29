@@ -17,7 +17,6 @@ export function MaintenancePage() {
     >
       <Logo size={128} />
       <h1>The service is undergoing maintenance</h1>
-      <p>Contact Daniele Caldarini at +393209443088</p>
     </div>
   );
 }
