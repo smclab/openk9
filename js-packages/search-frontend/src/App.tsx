@@ -4,6 +4,7 @@ import { css } from "styled-components/macro";
 import { Logo } from "./components/Logo";
 import "./index.css";
 import "./app.css";
+import { MaintenancePage } from "./components/MaintenancePage";
 
 const openk9 = new OpenK9({
   enabled: true,
@@ -11,6 +12,10 @@ const openk9 = new OpenK9({
 });
 
 export function App() {
+  const serviceStatus = useServiceStatus();
+  if (serviceStatus === "down") {
+    return <MaintenancePage />;
+  }
   return (
     <div
       css={css`
@@ -175,4 +180,12 @@ export function App() {
       ></div>
     </div>
   );
+}
+
+function useServiceStatus() {
+  const [serviceStatus, setServiceStatus] = React.useState<"up" | "down">("up");
+  React.useEffect(() => {
+    openk9.client.getServiceStatus().then(setServiceStatus);
+  }, []);
+  return serviceStatus;
 }

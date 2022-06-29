@@ -228,6 +228,12 @@ export function OpenK9Client({
 
     debugPluginsOverride: undefined as undefined | Array<Plugin<unknown>>,
 
+    async getServiceStatus(): Promise<"up" | "down"> {
+      const response = await fetch(`${tenant}/api/status`);
+      if (response.ok) return "up";
+      else return "down";
+    },
+
     async doSearch<E>(searchRequest: SearchRequest): Promise<SearchResult<E>> {
       const response = await authFetch(`/api/searcher/v1/search`, {
         method: "POST",
