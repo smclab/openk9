@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLightbulb } from "@fortawesome/free-solid-svg-icons/faLightbulb";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { faSyncAlt } from "@fortawesome/free-solid-svg-icons/faSyncAlt";
+import { faCalendar } from "@fortawesome/free-solid-svg-icons/faCalendar";
 import { TokenSelect } from "../components/TokenSelect";
 import { Tooltip } from "../components/Tooltip";
 import {
@@ -17,6 +18,8 @@ import {
   GenericResultItem,
 } from "@openk9/rest-api";
 import { SelectionsAction, SelectionsState } from "./useSelections";
+import { DateRangePicker } from "./DateRangePicker";
+import { SearchDateRange } from "../embeddable/Main";
 
 type SearchProps = {
   configuration: Configuration;
@@ -26,6 +29,8 @@ type SearchProps = {
   selectionsState: SelectionsState;
   selectionsDispatch(action: SelectionsAction): void;
   showSyntax: boolean;
+  dateRange: SearchDateRange;
+  onDateRangeChange(dateRange: SearchDateRange): void;
 };
 export function Search({
   configuration,
@@ -35,6 +40,8 @@ export function Search({
   selectionsDispatch,
   onDetail,
   showSyntax,
+  dateRange,
+  onDateRangeChange,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -58,6 +65,8 @@ export function Search({
       inputRef.current.selectionEnd = adjustedSelection.selectionEnd;
     }
   }, [adjustedSelection]);
+
+  const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
 
   return (
     <div
@@ -244,6 +253,42 @@ export function Search({
             }
           }}
         ></input>
+      </div>
+      <div
+        css={css`
+          position: relative;
+        `}
+      >
+        <Tooltip description="Filtro per data">
+          <FontAwesomeIcon
+            icon={faCalendar}
+            style={{
+              paddingRight: "16px",
+              color:
+                dateRange.startDate || dateRange.endDate
+                  ? "var(--openk9-embeddable-search--primary-color)"
+                  : "var(--openk9-embeddable-search--secondary-text-color)",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              setIsDatePickerOpen(!isDatePickerOpen);
+            }}
+          />
+        </Tooltip>
+        {isDatePickerOpen && (
+          <div
+            css={css`
+              position: absolute;
+              right: 50%;
+              border: 1px solid var(--openk9-embeddable-search--border-color);
+              border-radius: 4px;
+              box-shadow: 0px 10px 10px 0px rgba(0, 0, 0, 0.75);
+              z-index: 1;
+            `}
+          >
+            <DateRangePicker value={dateRange} onChange={onDateRangeChange} />
+          </div>
+        )}
       </div>
       <Tooltip description="Sostituzione del testo quando si seleziona un suggerimento">
         <FontAwesomeIcon

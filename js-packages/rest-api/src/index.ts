@@ -932,6 +932,14 @@ export type SearchToken =
       entityName: string;
       values: string[];
       filter: boolean;
+    }
+  | {
+      tokenType: "DATE";
+      keywordKey?: string;
+      extra: {
+        gte: number;
+        lte: number;
+      };
     };
 
 export type GenericResultItem<E = {}> = {

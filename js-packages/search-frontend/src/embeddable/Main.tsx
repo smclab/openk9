@@ -45,6 +45,7 @@ export function Main({
     configuration,
     onConfigurationChange,
   });
+  const { dateRange, setDateRange, dateTokens } = useDateTokens();
   const {
     searchQuery,
     spans,
@@ -55,6 +56,7 @@ export function Main({
     configuration,
     tabTokens,
     filterTokens,
+    dateTokens,
     onQueryStateChange,
   });
   const { detail, setDetail } = useDetails(searchQuery);
@@ -70,6 +72,8 @@ export function Main({
           selectionsDispatch={selectionsDispatch}
           showSyntax={isQueryAnalysisComplete}
           onDetail={setDetail}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
         />,
         configuration.search,
       )}
@@ -115,11 +119,13 @@ function useSearch({
   configuration,
   tabTokens,
   filterTokens,
+  dateTokens,
   onQueryStateChange,
 }: {
   configuration: Configuration;
   tabTokens: SearchToken[];
   filterTokens: SearchToken[];
+  dateTokens: SearchToken[];
   onQueryStateChange(queryState: QueryState): void;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens } = configuration;
@@ -146,8 +152,14 @@ function useSearch({
     [spans, selectionsState.selection],
   );
   const searchQueryMemo = React.useMemo(
-    () => [...defaultTokens, ...tabTokens, ...filterTokens, ...searchTokens],
-    [defaultTokens, tabTokens, filterTokens, searchTokens],
+    () => [
+      ...defaultTokens,
+      ...tabTokens,
+      ...filterTokens,
+      ...searchTokens,
+      ...dateTokens,
+    ],
+    [defaultTokens, tabTokens, filterTokens, searchTokens, dateTokens],
   );
   const searchQuery = useDebounce(searchQueryMemo, 600);
   const isQueryAnalysisComplete =
@@ -246,6 +258,40 @@ function useFilters({
   );
   const defaultTokens = configuration.defaultTokens;
   return { defaultTokens, filterTokens, addFilterToken, removeFilterToken };
+}
+
+export type SearchDateRange = {
+  startDate: Date | undefined;
+  endDate: Date | undefined;
+  keywordKey: string | undefined;
+};
+
+function useDateTokens() {
+  const [dateRange, setDateRange] = React.useState<SearchDateRange>({
+    startDate: undefined,
+    endDate: undefined,
+    keywordKey: undefined,
+  });
+  const dateTokens = React.useMemo(() => {
+    if (
+      dateRange.keywordKey === undefined &&
+      dateRange.startDate === undefined &&
+      dateRange.endDate === undefined
+    ) {
+      return [];
+    }
+    return [
+      {
+        tokenType: "DATE",
+        keywordKey: dateRange.keywordKey,
+        extra: {
+          gte: dateRange.startDate?.getTime(),
+          lte: dateRange.endDate?.getTime(),
+        },
+      } as SearchToken,
+    ];
+  }, [dateRange.endDate, dateRange.keywordKey, dateRange.startDate]);
+  return { dateRange, setDateRange, dateTokens };
 }
 
 function useDetails(searchQuery: Array<SearchToken>) {
