@@ -321,12 +321,11 @@ export function OpenK9Client({
       return data;
     },
 
-    async getDataSources(params: {
-      page: number;
-      size: number;
-    }): Promise<DataSourceInfo[]> {
+    async getDataSources(
+      { page, size }: { page: number; size: number } = { page: 0, size: 200 },
+    ): Promise<DataSourceInfo[]> {
       const response = await authFetch(
-        `/api/datasource/v2/datasource?${searchParams(params)}`,
+        `/api/datasource/v2/datasource?page=${page}&size=${size}`,
         {
           headers: {
             Accept: "application/json",
@@ -337,12 +336,11 @@ export function OpenK9Client({
       return data;
     },
 
-    async getEnrichItem(params: {
-      page: number;
-      size: number;
-    }): Promise<EnrichItem[]> {
+    async getEnrichItem(
+      { page, size }: { page: number; size: number } = { page: 0, size: 200 },
+    ): Promise<EnrichItem[]> {
       const response = await authFetch(
-        `/api/datasource/v2/enrichItem?${searchParams(params)}`,
+        `/api/datasource/v2/enrichItem?page=${page}&size=${size}`,
         {
           headers: {
             Accept: "application/json",
@@ -505,18 +503,12 @@ export function OpenK9Client({
       return data;
     },
 
-    async getTenants(params: {
-      page: number;
-      size: number;
-    }): Promise<Tenant[]> {
-      const response = await authFetch(
-        `/api/datasource/v2/tenant?${searchParams(params)}`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
+    async getTenants(): Promise<Tenant[]> {
+      const response = await authFetch(`/api/datasource/v2/tenant`, {
+        headers: {
+          Accept: "application/json",
         },
-      );
+      });
       const data: Tenant[] = await response.json();
       return data;
     },
@@ -659,7 +651,7 @@ export function OpenK9Client({
     },
 
     async getTenantWithConfiguration() {
-      const tenants = await this.getTenants({ page: 0, size: 10000 });
+      const tenants = await this.getTenants();
       const tenant =
         tenants.find((tenant) => tenant.virtualHost === tenantDomain) ||
         tenants[0];

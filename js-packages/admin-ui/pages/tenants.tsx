@@ -290,9 +290,7 @@ function TRow({ tenant }: { tenant: Tenant }) {
 }
 
 function TBody({ searchValue }: { searchValue: string }) {
-  const { data } = useSWR(`/api/v2/tenant`, () =>
-    client.getTenants({ page: 0, size: 10000 }),
-  );
+  const { data } = useSWR(`/api/v2/tenant`, () => client.getTenants());
 
   if (!data) {
     return (
