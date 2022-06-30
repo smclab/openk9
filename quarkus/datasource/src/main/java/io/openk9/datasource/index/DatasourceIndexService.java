@@ -21,6 +21,7 @@ import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.client.plugindriver.dto.PluginDriverDTO;
 import io.openk9.datasource.model.Datasource;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -101,6 +102,7 @@ public class DatasourceIndexService {
 	RestHighLevelClient client;
 
 	@Inject
+	@RestClient
 	PluginDriverClient pluginDriverClient;
 
 	@Inject
