@@ -23,15 +23,9 @@ import io.openk9.datasource.index.DatasourceIndexService;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.logging.Logger;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.enterprise.inject.Instance;
@@ -48,77 +42,38 @@ import java.util.List;
 @ActivateRequestContext
 public class ReindexResource {
 
-	private Scheduler _scheduler;
-
-	@PostConstruct
-	public void init() {
-		_scheduler = Schedulers.fromExecutor(Infrastructure.getDefaultExecutor());
-	}
-
-	@PreDestroy
-	public void destroy() {
-		_scheduler.dispose();
-	}
-
 	@POST
 	@Path("/reindex")
 	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
 
-		return Uni.createFrom().publisher(
-				Mono.from(
-					Datasource
-						.<Datasource>list(
-							"active = ?1 and datasourceId in ?2",
-							true, dto.getDatasourceIds()).convert().toPublisher())
-					.flatMap(datasourceList -> {
+		return Datasource
+				.<Datasource>list(
+					"active = ?1 and datasourceId in ?2",
+					true, dto.getDatasourceIds())
+			.flatMap(datasourceList -> {
 
-						List<Mono<ReindexResponseDto>> monos = new ArrayList<>();
+				List<Uni<ReindexResponseDto>> unis = new ArrayList<>();
 
-						for (Datasource datasource : datasourceList) {
+				for (Datasource datasource : datasourceList) {
 
-							datasource.setLastIngestionDate(Instant.EPOCH);
+					datasource.setLastIngestionDate(Instant.EPOCH);
 
-							monos.add(
-								Mono.from(datasource.persist().convert().toPublisher())
-									.then(datasourceIndexService.reindex(datasource))
-									.then(
-										Mono.from(schedulerInitializer.get().triggerJob(
-											datasource.getDatasourceId(),
-											datasource.getName()).convert().toPublisher()))
-									.map(ignore -> ReindexResponseDto.of(
-										datasource.getDatasourceId(),
-										true))
-									.transform(mono -> {
+					unis.add(
+						datasource.persist()
+							.call(() -> Uni.createFrom().publisher(datasourceIndexService.reindex(datasource)))
+							.call(() ->
+								schedulerInitializer.get().triggerJob(
+									datasource.getDatasourceId(),
+									datasource.getName()))
+							.map(ignore -> ReindexResponseDto.of(
+								datasource.getDatasourceId(),
+								true))
+					);
 
-										ReindexResponseDto fallback =
-											ReindexResponseDto.of(
-												datasource.getDatasourceId(),
-												false);
+				}
 
-										return mono
-											.doOnError(t -> logger.error("error reindexing datasource " + datasource.getDatasourceId(), t))
-											.onErrorReturn(fallback)
-											.switchIfEmpty(
-												Mono
-													.fromRunnable(
-														() -> logger.info(
-															"empty case for " + datasource.getDatasourceId()))
-													.thenReturn(fallback));
-
-									})
-							);
-
-						}
-
-						return Mono.zip(monos, objs -> {
-							List<ReindexResponseDto> response = new ArrayList<>();
-							for (Object obj : objs) {
-								response.add((ReindexResponseDto) obj);
-							}
-							return response;
-						});
-					}).subscribeOn(_scheduler)
-			);
+				return Uni.join().all(unis).andFailFast();
+			});
 
 	}
 
