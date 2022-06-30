@@ -19,6 +19,7 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.dto.ReindexRequestDto;
 import io.openk9.datasource.dto.ReindexResponseDto;
+import io.openk9.datasource.index.DatasourceIndexService;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
@@ -60,6 +61,8 @@ public class ReindexResource {
 
 						unis.add(datasource.persist());
 
+						unis.add(datasourceIndexService.reindex(datasource));
+
 						unis.add(
 							_schedulerInitializer.get().triggerJob(
 								datasource.getDatasourceId(), datasource.getName())
@@ -93,5 +96,8 @@ public class ReindexResource {
 
 	@Inject
 	Logger _logger;
+
+	@Inject
+	DatasourceIndexService datasourceIndexService;
 
 }

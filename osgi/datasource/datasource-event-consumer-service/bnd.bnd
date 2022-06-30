@@ -1,3 +1,0 @@
-Bundle-Name: [OpenK9] Datasource Event Consumer Service
-Bundle-SymbolicName: io.openk9.datasource.event.consumer.service
-Include-Resource: @datasource-event-configuration-*.jar

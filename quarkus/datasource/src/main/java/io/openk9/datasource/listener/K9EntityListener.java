@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.listener;
 
-import io.openk9.datasource.emitter.datasource.K9EntityEmitter;
 import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
@@ -40,7 +39,6 @@ public class K9EntityListener {
 		if (k9Entity instanceof Datasource) {
 			_createOrUpdateScheduler((Datasource)k9Entity);
 		}
-		_k9EntityEmitter.sendInsert(k9Entity);
 
 		_eventSender.sendEventAsJson(
 			EventType.CREATE, k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
@@ -52,7 +50,6 @@ public class K9EntityListener {
 		if (k9Entity instanceof Datasource) {
 			_createOrUpdateScheduler((Datasource)k9Entity);
 		}
-		_k9EntityEmitter.sendUpdate(k9Entity);
 
 		_eventSender.sendEventAsJson(
 			EventType.UPDATE, k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
@@ -64,7 +61,6 @@ public class K9EntityListener {
 		if (k9Entity instanceof Datasource) {
 			_schedulerInitializer.get().deleteScheduler((Datasource)k9Entity);
 		}
-		_k9EntityEmitter.sendDelete(k9Entity);
 
 		_eventSender.sendEventAsJson(
 			EventType.DELETE, k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
@@ -75,9 +71,6 @@ public class K9EntityListener {
 		throws SchedulerException {
 		_schedulerInitializer.get().createOrUpdateScheduler(datasource);
 	}
-
-	@Inject
-	K9EntityEmitter _k9EntityEmitter;
 
 	@Inject
 	Instance<SchedulerInitializer> _schedulerInitializer;
