@@ -35,7 +35,6 @@ import javax.ws.rs.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @CircuitBreaker
 @Path("/v1/index")
@@ -53,39 +52,32 @@ public class ReindexResource {
 					true, dto.getDatasourceIds())
 				.flatMap(datasourceList -> {
 
-					List<Uni<?>> unis = new ArrayList<>();
+					List<Uni<ReindexResponseDto>> unis = new ArrayList<>();
 
 					for (Datasource datasource : datasourceList) {
 
 						datasource.setLastIngestionDate(Instant.EPOCH);
 
-						unis.add(datasource.persist());
-
-						unis.add(datasourceIndexService.reindex(datasource));
-
 						unis.add(
-							_schedulerInitializer.get().triggerJob(
-								datasource.getDatasourceId(), datasource.getName())
-								.map(unused ->
-									ReindexResponseDto.of(
-										datasource.getDatasourceId(),
-										true)
-								)
-						);
+							datasource
+								.persist()
+								.call(() -> datasourceIndexService.reindex(datasource))
+								.flatMap((ignore) ->
+									_schedulerInitializer.get().triggerJob(
+											datasource.getDatasourceId(), datasource.getName())
+										.map(unused ->
+											ReindexResponseDto.of(
+												datasource.getDatasourceId(),
+												true)
+										))
+							);
 
 					}
 
 					return Uni
-						.combine()
-						.all()
-						.unis(unis)
-						.combinedWith(list ->
-							list
-								.stream()
-								.filter(o -> o instanceof ReindexResponseDto)
-								.map(o -> (ReindexResponseDto)o)
-								.collect(Collectors.toList())
-						);
+						.join()
+						.all(unis)
+						.andFailFast();
 				})
 		);
 
