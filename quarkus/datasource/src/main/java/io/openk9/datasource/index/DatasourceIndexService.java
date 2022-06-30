@@ -23,8 +23,8 @@ import io.openk9.datasource.model.Datasource;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -32,107 +32,88 @@ import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.ResizeRequest;
 import org.elasticsearch.client.indices.ResizeResponse;
 import org.jboss.logging.Logger;
+import reactor.core.publisher.Mono;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.time.Duration;
 
 @ApplicationScoped
 public class DatasourceIndexService {
 
-	public Uni<Void> reindex(Datasource datasource) {
+	public Mono<Void> reindex(Datasource datasource) {
+
+		return Mono.defer(() -> {
 
 		Uni<PluginDriverDTO> pluginDriver =
 			pluginDriverClient.getPluginDriver(
 				datasource.getDriverServiceName());
 
-		return pluginDriver
+		Mono<PluginDriverDTO> pluginDriverDTOMono =
+			Mono.from(pluginDriver.convert().toPublisher());
+
+		return pluginDriverDTOMono
 			.map(response -> datasource.getTenantId() + "-" + response.getName() + "-data")
-			.call(indexName -> {
-
-				IndicesClient indices = client.indices();
-
-				Uni<Boolean> isIndexExists = _indexExists(indexName, indices);
-
-				return isIndexExists.flatMap(exist -> {
-
-					if (exist) {
-						return _cloneIndex(indexName, indices);
-					}
-					else {
-						return Uni.createFrom().nothing();
-					}
-
-				});
-			})
+			.filterWhen(indexName -> _indexExists(indexName,  client.indices()))
+			.flatMap(indexName -> _cloneIndex(indexName, client.indices()).thenReturn(indexName))
 			.flatMap(targetIndex ->
-
-				Uni.createFrom().emitter(emitter -> client.deleteAsync(
-					new DeleteRequest(targetIndex), RequestOptions.DEFAULT,
+				Mono.create(emitter -> client.indices().deleteAsync(
+					new DeleteIndexRequest(targetIndex), RequestOptions.DEFAULT,
 					new ActionListener<>() {
 						@Override
-						public void onResponse(DeleteResponse deleteResponse) {
-							emitter.complete(deleteResponse);
+						public void onResponse(AcknowledgedResponse deleteResponse) {
+							emitter.success(deleteResponse);
 						}
 
 						@Override
 						public void onFailure(Exception e) {
-							emitter.fail(e);
+							emitter.error(e);
 						}
 					}))
 			)
-			.onItemOrFailure().invoke((o, t) -> {
-				if (o != null) {
-					logger.info("datasource " + datasource.getDatasourceId() + " " + o);
-				}
-				if (t != null) {
-					logger.error("error reindexing datasource " + datasource.getDatasourceId(), t);
-				}
-			})
-			.ifNoItem().after(Duration.ofSeconds(3)).recoverWithItem((Object)null)
-			.replaceWithVoid();
+			.doOnError(t -> logger.error("error reindexing datasource " + datasource.getDatasourceId(), t))
+			.doOnNext(o -> logger.info("datasource " + datasource.getDatasourceId() + " " + o))
+			.then();
 
+		});
 
 	}
 
-	private Uni<ResizeResponse> _cloneIndex(String indexName, IndicesClient indices) {
+	private Mono<ResizeResponse> _cloneIndex(String indexName, IndicesClient indices) {
 
 		ResizeRequest resizeRequest = new ResizeRequest(
 			indexName.replace("-data", "-clone"), indexName);
 
-		return Uni.createFrom().emitter(emitter ->
+		return Mono.create(emitter ->
 			indices.cloneAsync(
 				resizeRequest, RequestOptions.DEFAULT,
 				new ActionListener<>() {
 					@Override
 					public void onResponse(ResizeResponse resizeResponse) {
-						emitter.complete(resizeResponse);
+						emitter.success(resizeResponse);
 					}
 
 					@Override
 					public void onFailure(Exception e) {
-						emitter.fail(e);
+						emitter.error(e);
 					}
 				})
 		);
 	}
 
-	private Uni<Boolean> _indexExists(String indexName, IndicesClient indices) {
-		return Uni.createFrom().emitter(emitter -> {
-			indices.existsAsync(
-				new GetIndexRequest(indexName), RequestOptions.DEFAULT,
-				new ActionListener<Boolean>() {
-					@Override
-					public void onResponse(Boolean exists) {
-						emitter.complete(exists);
-					}
+	private Mono<Boolean> _indexExists(String indexName, IndicesClient indices) {
+		return Mono.create(emitter -> indices.existsAsync(
+			new GetIndexRequest(indexName), RequestOptions.DEFAULT,
+			new ActionListener<>() {
+				@Override
+				public void onResponse(Boolean exists) {
+					emitter.success(exists);
+				}
 
-					@Override
-					public void onFailure(Exception e) {
-						emitter.fail(e);
-					}
-				});
-		});
+				@Override
+				public void onFailure(Exception e) {
+					emitter.error(e);
+				}
+			}));
 	}
 
 	@Inject
