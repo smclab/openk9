@@ -82,7 +82,8 @@ public class IngestionEmitter {
 					.keySet()
 					.toArray(new String[0]),
 				_dtoToPayload(dto.getResources()),
-				mappingAcl
+				mappingAcl,
+				dto.getScheduleId()
 			)
 		);
 	}
@@ -101,7 +102,8 @@ public class IngestionEmitter {
 					.keySet()
 					.toArray(new String[0]),
 				_dtoToPayload(dto.getResources()),
-				dto.getAcl()
+				dto.getAcl(),
+				dto.getScheduleId()
 			)
 		);
 	}

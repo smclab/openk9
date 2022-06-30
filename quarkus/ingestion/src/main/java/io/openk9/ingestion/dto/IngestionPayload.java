@@ -42,4 +42,5 @@ public  class IngestionPayload {
 	private String[] documentTypes;
 	private ResourcesPayload resources;
 	private Map<String, List<String>> acl;
+	private String scheduleId;
 }

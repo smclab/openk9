@@ -39,4 +39,5 @@ public class IngestionDTO {
 	private Map<String, Object> datasourcePayload;
 	private ResourcesDTO resources;
 	private Map<String, List<String>> acl;
+	private String scheduleId;
 }
