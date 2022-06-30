@@ -23,6 +23,7 @@ import io.openk9.datasource.index.DatasourceIndexService;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.logging.Logger;
 import reactor.core.publisher.Mono;
@@ -51,7 +52,7 @@ public class ReindexResource {
 
 	@PostConstruct
 	public void init() {
-		_scheduler = Schedulers.newBoundedElastic(10, Integer.MAX_VALUE, "reindex-scheduler");
+		_scheduler = Schedulers.fromExecutor(Infrastructure.getDefaultExecutor());
 	}
 
 	@PreDestroy
