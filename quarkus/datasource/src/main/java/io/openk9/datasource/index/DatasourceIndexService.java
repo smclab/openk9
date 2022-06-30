@@ -56,10 +56,10 @@ public class DatasourceIndexService {
 				return isIndexExists.flatMap(exist -> {
 
 					if (exist) {
-						return Uni.createFrom().nothing();
+						return _cloneIndex(indexName, indices);
 					}
 					else {
-						return _cloneIndex(indexName, indices);
+						return Uni.createFrom().nothing();
 					}
 
 				});
