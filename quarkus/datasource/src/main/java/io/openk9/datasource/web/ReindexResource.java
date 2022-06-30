@@ -22,7 +22,6 @@ import io.openk9.datasource.dto.ReindexResponseDto;
 import io.openk9.datasource.index.DatasourceIndexService;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.logging.Logger;
@@ -41,73 +40,68 @@ import java.util.List;
 @CircuitBreaker
 @Path("/v1/index")
 @ApplicationScoped
+@ActivateRequestContext
 public class ReindexResource {
 
 	@POST
 	@Path("/reindex")
-	@ActivateRequestContext
 	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
 
-		Uni<List<Datasource>> listDatasource = Datasource
-			.list(
-				"active = ?1 and datasourceId in ?2",
-				true, dto.getDatasourceIds());
+		return Uni.createFrom().publisher(
+				Mono.from(
+					Datasource
+						.<Datasource>list(
+							"active = ?1 and datasourceId in ?2",
+							true, dto.getDatasourceIds()).convert().toPublisher())
+					.flatMap(datasourceList -> {
 
-		Mono<List<Datasource>> listDatasourceMono =
-			Mono.from(listDatasource.convert().toPublisher());
+						List<Mono<ReindexResponseDto>> monos = new ArrayList<>();
 
-		Mono<List<ReindexResponseDto>> responseMono = listDatasourceMono
-			.flatMap(datasourceList -> {
+						for (Datasource datasource : datasourceList) {
 
-				List<Mono<ReindexResponseDto>> monos = new ArrayList<>();
+							datasource.setLastIngestionDate(Instant.EPOCH);
 
-				for (Datasource datasource : datasourceList) {
-
-					datasource.setLastIngestionDate(Instant.EPOCH);
-
-					monos.add(
-						Mono.from(datasource.persist().convert().toPublisher())
-							.then(datasourceIndexService.reindex(datasource))
-							.then(
-								Mono.from(schedulerInitializer.get().triggerJob(
-									datasource.getDatasourceId(),
-									datasource.getName()).convert().toPublisher()))
-							.map(ignore -> ReindexResponseDto.of(
-								datasource.getDatasourceId(),
-								true))
-							.transform(mono -> {
-
-								ReindexResponseDto fallback =
-									ReindexResponseDto.of(
+							monos.add(
+								Mono.from(datasource.persist().convert().toPublisher())
+									.then(datasourceIndexService.reindex(datasource))
+									.then(
+										Mono.from(schedulerInitializer.get().triggerJob(
+											datasource.getDatasourceId(),
+											datasource.getName()).convert().toPublisher()))
+									.map(ignore -> ReindexResponseDto.of(
 										datasource.getDatasourceId(),
-										false);
+										true))
+									.transform(mono -> {
 
-								return mono
-									.doOnError(t -> logger.error("error reindexing datasource " + datasource.getDatasourceId(), t))
-									.onErrorReturn(fallback)
-									.switchIfEmpty(
-										Mono
-											.fromRunnable(
-												() -> logger.info(
-													"empty case for " + datasource.getDatasourceId()))
-											.thenReturn(fallback));
+										ReindexResponseDto fallback =
+											ReindexResponseDto.of(
+												datasource.getDatasourceId(),
+												false);
 
-							})
-					);
+										return mono
+											.doOnError(t -> logger.error("error reindexing datasource " + datasource.getDatasourceId(), t))
+											.onErrorReturn(fallback)
+											.switchIfEmpty(
+												Mono
+													.fromRunnable(
+														() -> logger.info(
+															"empty case for " + datasource.getDatasourceId()))
+													.thenReturn(fallback));
 
-				}
+									})
+							);
 
-				return Mono.zip(monos, objs -> {
-					List<ReindexResponseDto> response = new ArrayList<>();
-					for (Object obj : objs) {
-						response.add((ReindexResponseDto) obj);
-					}
-					return response;
-				});
-			});
+						}
 
-		return Panache.withTransaction(
-			() -> Uni.createFrom().publisher(responseMono));
+						return Mono.zip(monos, objs -> {
+							List<ReindexResponseDto> response = new ArrayList<>();
+							for (Object obj : objs) {
+								response.add((ReindexResponseDto) obj);
+							}
+							return response;
+						});
+					})
+			);
 
 	}
 
