@@ -35,6 +35,7 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.Duration;
 
 @ApplicationScoped
 public class DatasourceIndexService {
@@ -59,7 +60,7 @@ public class DatasourceIndexService {
 						return _cloneIndex(indexName, indices);
 					}
 					else {
-						return Uni.createFrom().nullItem();
+						return Uni.createFrom().nothing();
 					}
 
 				});
@@ -88,6 +89,7 @@ public class DatasourceIndexService {
 					logger.error("error reindexing datasource " + datasource.getDatasourceId(), t);
 				}
 			})
+			.ifNoItem().after(Duration.ofSeconds(3)).recoverWithItem((Object)null)
 			.replaceWithVoid();
 
 
