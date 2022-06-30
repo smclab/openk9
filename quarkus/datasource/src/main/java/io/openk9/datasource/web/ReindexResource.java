@@ -22,6 +22,7 @@ import io.openk9.datasource.dto.ReindexResponseDto;
 import io.openk9.datasource.index.DatasourceIndexService;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.logging.Logger;
@@ -103,7 +104,8 @@ public class ReindexResource {
 				});
 			});
 
-		return Uni.createFrom().publisher(responseMono);
+		return Panache.withTransaction(
+			() -> Uni.createFrom().publisher(responseMono));
 
 	}
 
