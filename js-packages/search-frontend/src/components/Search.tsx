@@ -280,9 +280,12 @@ export function Search({
             css={css`
               position: absolute;
               right: 50%;
-              border: 1px solid var(--openk9-embeddable-search--border-color);
               border-radius: 4px;
-              box-shadow: 0px 10px 10px 0px rgba(0, 0, 0, 0.75);
+              background-color: var(
+                --openk9-embeddable-search--secondary-background-color
+              );
+              padding: 16px;
+              border: 1px solid var(--openk9-embeddable-search--border-color);
               z-index: 1;
             `}
           >

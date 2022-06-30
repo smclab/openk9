@@ -6,6 +6,8 @@ import { css } from "styled-components/macro";
 import { DateTime } from "luxon";
 import { it } from "date-fns/locale";
 import { SearchDateRange } from "../embeddable/Main";
+import { useQuery } from "react-query";
+import Select from "react-select";
 
 const DateRangeFix = DateRange as any;
 const DefinedRangeFix = DefinedRange as any;
@@ -29,33 +31,41 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
       endDate: item.selection.endDate,
     });
   };
+  const [selectedOption, setSelectedOption] = React.useState<{
+    value: string;
+    label: string;
+  } | null>(null);
+  const options = useQuery(["date-range-keywordkey-options", {}], async () => {
+    return ["file.lastModifiedDate", "email.date"];
+  });
   return (
     <div>
-      <div
-        css={css`
-          background-color: white;
-          padding: 8px;
-          display: flex;
-        `}
-      >
-        <strong>keywordKey: </strong>
-        <input
-          value={value.keywordKey}
-          onChange={(event) =>
-            onChange({
-              ...value,
-              keywordKey: event.currentTarget.value || undefined,
-            })
-          }
-          css={css`
-            margin-left: 8px;
-            flex: 1;
-          `}
-        />
-      </div>
+      <Select
+        value={selectedOption}
+        onChange={(option) => {
+          setSelectedOption(option);
+          onChange({ ...value, keywordKey: option?.value });
+        }}
+        isLoading={options.isFetching}
+        isSearchable={true}
+        options={options.data?.map((value) => ({ value, label: value })) ?? []}
+        theme={(theme) => ({
+          ...theme,
+          colors: {
+            ...theme.colors,
+            primary: "var(--openk9-embeddable-search--primary-color)",
+            primary25:
+              "var(--openk9-embeddable-search--secondary-background-color)",
+          },
+        })}
+      />
       <div
         css={css`
           display: flex;
+          border: 1px solid var(--openk9-embeddable-search--border-color);
+          border-radius: 4px;
+          overflow: hidden;
+          margin-top: 16px;
         `}
       >
         <DefinedRangeFix
@@ -70,6 +80,7 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
           ranges={adaptedValue}
           startDatePlaceholder=""
           endDatePlaceholder=""
+          rangeColors={["var(--openk9-embeddable-search--primary-color)"]}
         />
       </div>
     </div>
