@@ -27,11 +27,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.logging.Logger;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -45,17 +41,6 @@ import java.util.List;
 @Path("/v1/index")
 @ApplicationScoped
 public class ReindexResource {
-
-	@PostConstruct
-	public void init() {
-		_scheduler = Schedulers.newBoundedElastic(
-			10, Integer.MAX_VALUE, "reindex-scheduler");
-	}
-
-	@PreDestroy
-	public void destroy() {
-		_scheduler.dispose();
-	}
 
 	@POST
 	@Path("/reindex")
@@ -99,10 +84,9 @@ public class ReindexResource {
 					return Uni
 						.join()
 						.all(unis)
-						.andFailFast()
-						.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-				})
-		);
+						.andFailFast();
+				}))
+			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 
 	}
 
@@ -114,7 +98,5 @@ public class ReindexResource {
 
 	@Inject
 	DatasourceIndexService datasourceIndexService;
-
-	private Scheduler _scheduler;
 
 }
