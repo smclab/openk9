@@ -40,7 +40,7 @@ import javax.inject.Inject;
 @ApplicationScoped
 public class DatasourceIndexService {
 
-	public Mono<Void> reindex(Datasource datasource) {
+	public Mono<Object> reindex(Datasource datasource) {
 
 		return Mono.defer(() -> {
 
@@ -72,7 +72,8 @@ public class DatasourceIndexService {
 			)
 			.doOnError(t -> logger.error("error reindexing datasource " + datasource.getDatasourceId(), t))
 			.doOnNext(o -> logger.info("datasource " + datasource.getDatasourceId() + " " + o))
-			.then();
+			.defaultIfEmpty(
+				Mono.fromRunnable(() -> logger.info("default case for datasource " + datasource.getDatasourceId())));
 
 		});
 

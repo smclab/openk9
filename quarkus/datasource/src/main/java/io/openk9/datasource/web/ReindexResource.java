@@ -81,7 +81,12 @@ public class ReindexResource {
 
 								return mono
 									.onErrorReturn(fallback)
-									.defaultIfEmpty(fallback);
+									.switchIfEmpty(
+										Mono
+											.fromRunnable(
+												() -> logger.info(
+													"empty case for " + datasource.getDatasourceId()))
+											.thenReturn(fallback));
 
 							})
 					);
