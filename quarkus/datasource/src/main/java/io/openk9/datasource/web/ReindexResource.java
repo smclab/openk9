@@ -29,6 +29,7 @@ import org.jboss.logging.Logger;
 import reactor.core.publisher.Mono;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
@@ -44,6 +45,7 @@ public class ReindexResource {
 
 	@POST
 	@Path("/reindex")
+	@ActivateRequestContext
 	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
 
 		Uni<List<Datasource>> listDatasource = Datasource
