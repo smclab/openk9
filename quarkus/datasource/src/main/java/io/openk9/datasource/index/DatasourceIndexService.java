@@ -59,7 +59,7 @@ public class DatasourceIndexService {
 						return _cloneIndex(indexName, indices);
 					}
 					else {
-						return Uni.createFrom().nothing();
+						return Uni.createFrom().nullItem();
 					}
 
 				});
