@@ -28,6 +28,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.ResizeRequest;
 import org.elasticsearch.client.indices.ResizeResponse;
 import org.jboss.logging.Logger;
@@ -50,24 +51,18 @@ public class DatasourceIndexService {
 
 				IndicesClient indices = client.indices();
 
-				ResizeRequest resizeRequest = new ResizeRequest(
-					indexName, indexName.replace("-data", "-clone"));
+				Uni<Boolean> isIndexExists = _indexExists(indexName, indices);
 
-				return Uni.createFrom().emitter(emitter ->
-					indices.cloneAsync(
-						resizeRequest, RequestOptions.DEFAULT,
-						new ActionListener<>() {
-							@Override
-							public void onResponse(ResizeResponse resizeResponse) {
-								emitter.complete(resizeResponse);
-							}
+				return isIndexExists.flatMap(exist -> {
 
-							@Override
-							public void onFailure(Exception e) {
-								emitter.fail(e);
-							}
-						})
-				);
+					if (exist) {
+						return Uni.createFrom().nothing();
+					}
+					else {
+						return _cloneIndex(indexName, indices);
+					}
+
+				});
 			})
 			.flatMap(targetIndex ->
 
@@ -96,6 +91,46 @@ public class DatasourceIndexService {
 			.replaceWithVoid();
 
 
+	}
+
+	private Uni<ResizeResponse> _cloneIndex(String indexName, IndicesClient indices) {
+
+		ResizeRequest resizeRequest = new ResizeRequest(
+			indexName.replace("-data", "-clone"), indexName);
+
+		return Uni.createFrom().emitter(emitter ->
+			indices.cloneAsync(
+				resizeRequest, RequestOptions.DEFAULT,
+				new ActionListener<>() {
+					@Override
+					public void onResponse(ResizeResponse resizeResponse) {
+						emitter.complete(resizeResponse);
+					}
+
+					@Override
+					public void onFailure(Exception e) {
+						emitter.fail(e);
+					}
+				})
+		);
+	}
+
+	private Uni<Boolean> _indexExists(String indexName, IndicesClient indices) {
+		return Uni.createFrom().emitter(emitter -> {
+			indices.existsAsync(
+				new GetIndexRequest(indexName), RequestOptions.DEFAULT,
+				new ActionListener<Boolean>() {
+					@Override
+					public void onResponse(Boolean exists) {
+						emitter.complete(exists);
+					}
+
+					@Override
+					public void onFailure(Exception e) {
+						emitter.fail(e);
+					}
+				});
+		});
 	}
 
 	@Inject
