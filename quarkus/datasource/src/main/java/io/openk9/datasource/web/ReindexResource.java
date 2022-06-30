@@ -26,7 +26,11 @@ import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.logging.Logger;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.enterprise.inject.Instance;
@@ -42,6 +46,18 @@ import java.util.List;
 @ApplicationScoped
 @ActivateRequestContext
 public class ReindexResource {
+
+	private Scheduler _scheduler;
+
+	@PostConstruct
+	public void init() {
+		_scheduler = Schedulers.newBoundedElastic(10, Integer.MAX_VALUE, "reindex-scheduler");
+	}
+
+	@PreDestroy
+	public void destroy() {
+		_scheduler.dispose();
+	}
 
 	@POST
 	@Path("/reindex")
@@ -100,7 +116,7 @@ public class ReindexResource {
 							}
 							return response;
 						});
-					})
+					}).subscribeOn(_scheduler)
 			);
 
 	}
