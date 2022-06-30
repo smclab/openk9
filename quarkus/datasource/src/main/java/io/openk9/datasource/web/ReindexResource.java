@@ -24,9 +24,14 @@ import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.logging.Logger;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -40,6 +45,17 @@ import java.util.List;
 @Path("/v1/index")
 @ApplicationScoped
 public class ReindexResource {
+
+	@PostConstruct
+	public void init() {
+		_scheduler = Schedulers.newBoundedElastic(
+			10, Integer.MAX_VALUE, "reindex-scheduler");
+	}
+
+	@PreDestroy
+	public void destroy() {
+		_scheduler.dispose();
+	}
 
 	@POST
 	@Path("/reindex")
@@ -59,17 +75,23 @@ public class ReindexResource {
 						datasource.setLastIngestionDate(Instant.EPOCH);
 
 						unis.add(
-							datasource
-								.persist()
+							datasource.persist()
 								.call(() -> datasourceIndexService.reindex(datasource))
+								.replaceWithNull()
 								.flatMap((ignore) ->
 									_schedulerInitializer.get().triggerJob(
 											datasource.getDatasourceId(), datasource.getName())
 										.map(unused ->
 											ReindexResponseDto.of(
+
 												datasource.getDatasourceId(),
 												true)
-										))
+										)
+								)
+								.replaceIfNullWith(
+									() -> ReindexResponseDto.of(
+										datasource.getDatasourceId(),
+										false))
 							);
 
 					}
@@ -77,7 +99,8 @@ public class ReindexResource {
 					return Uni
 						.join()
 						.all(unis)
-						.andFailFast();
+						.andFailFast()
+						.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 				})
 		);
 
@@ -91,5 +114,7 @@ public class ReindexResource {
 
 	@Inject
 	DatasourceIndexService datasourceIndexService;
+
+	private Scheduler _scheduler;
 
 }
