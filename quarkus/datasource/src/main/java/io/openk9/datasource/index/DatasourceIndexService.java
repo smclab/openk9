@@ -70,11 +70,9 @@ public class DatasourceIndexService {
 						}
 					}))
 			)
-			.doOnError(t -> logger.error("error reindexing datasource " + datasource.getDatasourceId(), t))
 			.doOnNext(o -> logger.info("datasource " + datasource.getDatasourceId() + " " + o))
 			.defaultIfEmpty(
 				Mono.fromRunnable(() -> logger.info("default case for datasource " + datasource.getDatasourceId())));
-
 		});
 
 	}

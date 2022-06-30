@@ -80,6 +80,7 @@ public class ReindexResource {
 										false);
 
 								return mono
+									.doOnError(t -> logger.error("error reindexing datasource " + datasource.getDatasourceId(), t))
 									.onErrorReturn(fallback)
 									.switchIfEmpty(
 										Mono
