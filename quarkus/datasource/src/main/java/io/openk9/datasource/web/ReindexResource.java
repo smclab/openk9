@@ -25,7 +25,6 @@ import io.openk9.datasource.model.Datasource;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.logging.Logger;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -44,17 +43,17 @@ public class ReindexResource {
 
 	@POST
 	@Path("/reindex")
-	public Publisher<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
+	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
 
 		Uni<List<Datasource>> listDatasource = Datasource
-			.<Datasource>list(
+			.list(
 				"active = ?1 and datasourceId in ?2",
 				true, dto.getDatasourceIds());
 
 		Mono<List<Datasource>> listDatasourceMono =
 			Mono.from(listDatasource.convert().toPublisher());
 
-		return listDatasourceMono
+		Mono<List<ReindexResponseDto>> responseMono = listDatasourceMono
 			.flatMap(datasourceList -> {
 
 				List<Mono<ReindexResponseDto>> monos = new ArrayList<>();
@@ -66,8 +65,10 @@ public class ReindexResource {
 					monos.add(
 						Mono.from(datasource.persist().convert().toPublisher())
 							.then(datasourceIndexService.reindex(datasource))
-							.then(Mono.from(schedulerInitializer.get().triggerJob(
-								datasource.getDatasourceId(), datasource.getName()).convert().toPublisher()))
+							.then(
+								Mono.from(schedulerInitializer.get().triggerJob(
+									datasource.getDatasourceId(),
+									datasource.getName()).convert().toPublisher()))
 							.map(ignore -> ReindexResponseDto.of(
 								datasource.getDatasourceId(),
 								true))
@@ -95,6 +96,8 @@ public class ReindexResource {
 					return response;
 				});
 			});
+
+		return Uni.createFrom().publisher(responseMono);
 
 	}
 
