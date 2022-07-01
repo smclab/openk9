@@ -50,11 +50,11 @@ public class ReindexResource {
 				.<Datasource>stream(
 					"active = ?1 and datasourceId in ?2",
 					true, dto.getDatasourceIds())
-				.call(datasource -> {
+				.flatMap(datasource -> {
 
 					datasource.setLastIngestionDate(Instant.EPOCH);
 
-					return datasource.persist();
+					return datasource.<Datasource>persistAndFlush().toMulti();
 
 				})
 				.call(datasource -> eventBus.request(
