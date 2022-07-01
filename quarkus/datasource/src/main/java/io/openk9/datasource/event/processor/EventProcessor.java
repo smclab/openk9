@@ -27,8 +27,6 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -37,8 +35,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
-@ApplicationScoped
 public class EventProcessor {
+
+	public EventProcessor(EventSender eventSender, Logger logger) {
+		this.eventSender = eventSender;
+		this.logger = logger;
+	}
 
 	@Incoming("events")
 	@Blocking
@@ -148,10 +150,8 @@ public class EventProcessor {
 
 	}
 
-	@Inject
-	EventSender eventSender;
+	private final EventSender eventSender;
 
-	@Inject
-	Logger logger;
+	private final Logger logger;
 
 }

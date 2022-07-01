@@ -17,6 +17,9 @@
 
 package io.openk9.datasource.event.config;
 
+import io.openk9.datasource.event.processor.EventProcessor;
+import io.openk9.datasource.event.sender.EventSender;
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.runtime.Startup;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
@@ -30,13 +33,15 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 
-@ApplicationScoped
+@Dependent
 @Startup
+@IfBuildProperty(name = "openk9.events.enabled", stringValue = "true")
 public class EventIndexInitializer {
 
 	@PostConstruct
@@ -69,6 +74,13 @@ public class EventIndexInitializer {
 
 		logger.info("Created index template " + indexName);
 
+	}
+
+	@Produces
+	public EventProcessor getEventProcessor(
+		EventSender eventSender) {
+		return new EventProcessor(
+			eventSender, Logger.getLogger(EventProcessor.class));
 	}
 
 	@Inject
