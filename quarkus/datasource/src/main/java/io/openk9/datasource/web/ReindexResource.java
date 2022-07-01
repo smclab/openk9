@@ -17,19 +17,18 @@
 
 package io.openk9.datasource.web;
 
+import io.openk9.datasource.bus.reindex.ReindexEvents;
+import io.openk9.datasource.bus.reindex.ReindexMessage;
 import io.openk9.datasource.dto.ReindexRequestDto;
 import io.openk9.datasource.dto.ReindexResponseDto;
-import io.openk9.datasource.index.DatasourceIndexService;
-import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -58,10 +57,10 @@ public class ReindexResource {
 					return datasource.persist();
 
 				})
-				.call(datasource ->  Uni.createFrom().publisher(datasourceIndexService.reindex(datasource)))
-				.call(datasource -> schedulerInitializer.get().triggerJob(
-					datasource.getDatasourceId(),
-					datasource.getName()))
+				.call(datasource -> eventBus.request(
+						ReindexEvents.REINDEX_STEP_1,
+						ReindexMessage.of(
+							datasource, ReindexEvents.REINDEX_STEP_2)))
 				.map(datasource -> ReindexResponseDto.of(
 					datasource.getDatasourceId(),
 					true))
@@ -74,12 +73,6 @@ public class ReindexResource {
 	Mutiny.SessionFactory sf;
 
 	@Inject
-	Instance<SchedulerInitializer> schedulerInitializer;
-
-	@Inject
-	Logger logger;
-
-	@Inject
-	DatasourceIndexService datasourceIndexService;
+	EventBus eventBus;
 
 }

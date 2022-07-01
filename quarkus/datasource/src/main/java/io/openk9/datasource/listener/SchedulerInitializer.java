@@ -90,9 +90,14 @@ public class SchedulerInitializer {
 
 	}
 
+	
 	public Uni<Void> triggerJob(long datasourceId, String name) {
-		logger.info("datasourceId: " + datasourceId + "trigger: " + name);
-		return performTask(datasourceId);
+
+		return Uni.createFrom().deferred(() -> {
+			logger.info("datasourceId: " + datasourceId + "trigger: " + name);
+			return performTask(datasourceId);
+		});
+
 	}
 
 	public void createOrUpdateScheduler(
