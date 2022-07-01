@@ -33,7 +33,6 @@ import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 @CircuitBreaker
@@ -47,33 +46,25 @@ public class ReindexResource {
 	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
 
 		return Datasource
-				.<Datasource>list(
+				.<Datasource>stream(
 					"active = ?1 and datasourceId in ?2",
 					true, dto.getDatasourceIds())
-			.flatMap(datasourceList -> {
+			.call(datasource -> {
 
-				List<Uni<ReindexResponseDto>> unis = new ArrayList<>();
+				datasource.setLastIngestionDate(Instant.EPOCH);
 
-				for (Datasource datasource : datasourceList) {
+				return datasource.persist();
 
-					datasource.setLastIngestionDate(Instant.EPOCH);
-
-					unis.add(
-						datasource.persist()
-							.call(() -> Uni.createFrom().publisher(datasourceIndexService.reindex(datasource)))
-							.call(() ->
-								schedulerInitializer.get().triggerJob(
-									datasource.getDatasourceId(),
-									datasource.getName()))
-							.map(ignore -> ReindexResponseDto.of(
-								datasource.getDatasourceId(),
-								true))
-					);
-
-				}
-
-				return Uni.join().all(unis).andFailFast();
-			});
+			})
+			.call(datasource ->  Uni.createFrom().publisher(datasourceIndexService.reindex(datasource)))
+			.call(datasource -> schedulerInitializer.get().triggerJob(
+				datasource.getDatasourceId(),
+				datasource.getName()))
+			.map(datasource -> ReindexResponseDto.of(
+				datasource.getDatasourceId(),
+				true))
+			.collect()
+			.asList();
 
 	}
 
