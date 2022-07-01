@@ -24,6 +24,7 @@ import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
@@ -31,6 +32,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.ResizeRequest;
 import org.elasticsearch.client.indices.ResizeResponse;
+import org.elasticsearch.common.settings.Settings;
 import org.jboss.logging.Logger;
 import reactor.core.publisher.Mono;
 
@@ -54,6 +56,7 @@ public class DatasourceIndexService {
 		return pluginDriverDTOMono
 			.map(response -> datasource.getTenantId() + "-" + response.getName() + "-data")
 			.filterWhen(indexName -> _indexExists(indexName,  client.indices()))
+			.flatMap(indexName -> _modifiedSettings(indexName, client.indices()).thenReturn(indexName))
 			.flatMap(indexName -> _cloneIndex(indexName, client.indices()).thenReturn(indexName))
 			.flatMap(targetIndex ->
 				Mono.create(emitter -> client.indices().deleteAsync(
@@ -74,6 +77,32 @@ public class DatasourceIndexService {
 			.defaultIfEmpty(
 				Mono.fromRunnable(() -> logger.info("default case for datasource " + datasource.getDatasourceId())));
 		});
+
+	}
+
+	private Mono<?> _modifiedSettings(String indexName, IndicesClient indices) {
+
+		UpdateSettingsRequest updateSettingsRequest =
+			new UpdateSettingsRequest(indexName);
+
+		updateSettingsRequest.settings(
+			Settings.builder()
+				.put("index.blocks.write", true)
+				.build());
+
+		return Mono.create(sink -> indices.putSettingsAsync(
+			updateSettingsRequest, RequestOptions.DEFAULT,
+			new ActionListener<AcknowledgedResponse>() {
+				@Override
+				public void onResponse(AcknowledgedResponse resizeResponse) {
+					sink.success(resizeResponse);
+				}
+
+				@Override
+				public void onFailure(Exception e) {
+					sink.error(e);
+				}
+			}));
 
 	}
 
