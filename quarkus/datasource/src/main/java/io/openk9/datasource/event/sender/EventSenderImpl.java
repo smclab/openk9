@@ -93,7 +93,7 @@ public class EventSenderImpl implements EventSender {
 					.data(Base64.getEncoder().encodeToString(t2.getItem1()))
 					.build();
 
-			eventRepository.syncSave(event);
+			eventRepository.batchSave(event);
 
 		}
 		catch (Exception e) {
