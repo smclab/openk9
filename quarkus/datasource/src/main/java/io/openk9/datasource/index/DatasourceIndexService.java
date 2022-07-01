@@ -92,7 +92,7 @@ public class DatasourceIndexService {
 
 		return Mono.create(sink -> indices.putSettingsAsync(
 			updateSettingsRequest, RequestOptions.DEFAULT,
-			new ActionListener<AcknowledgedResponse>() {
+			new ActionListener<>() {
 				@Override
 				public void onResponse(AcknowledgedResponse resizeResponse) {
 					sink.success(resizeResponse);
@@ -109,7 +109,7 @@ public class DatasourceIndexService {
 	private Mono<ResizeResponse> _cloneIndex(String indexName, IndicesClient indices) {
 
 		ResizeRequest resizeRequest = new ResizeRequest(
-			indexName.replace("-data", "-clone"), indexName);
+			indexName + "-clone-" + System.currentTimeMillis(), indexName);
 
 		return Mono.create(emitter ->
 			indices.cloneAsync(
