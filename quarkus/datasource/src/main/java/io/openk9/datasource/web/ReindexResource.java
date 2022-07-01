@@ -24,6 +24,7 @@ import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -45,28 +46,32 @@ public class ReindexResource {
 	@Path("/reindex")
 	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
 
-		return Datasource
+		return sf.withTransaction(
+			t -> Datasource
 				.<Datasource>stream(
 					"active = ?1 and datasourceId in ?2",
 					true, dto.getDatasourceIds())
-			.call(datasource -> {
+				.call(datasource -> {
 
-				datasource.setLastIngestionDate(Instant.EPOCH);
+					datasource.setLastIngestionDate(Instant.EPOCH);
 
-				return datasource.persist();
+					return datasource.persist();
 
-			})
-			.call(datasource ->  Uni.createFrom().publisher(datasourceIndexService.reindex(datasource)))
-			.call(datasource -> schedulerInitializer.get().triggerJob(
-				datasource.getDatasourceId(),
-				datasource.getName()))
-			.map(datasource -> ReindexResponseDto.of(
-				datasource.getDatasourceId(),
-				true))
-			.collect()
-			.asList();
+				})
+				.call(datasource ->  Uni.createFrom().publisher(datasourceIndexService.reindex(datasource)))
+				.call(datasource -> schedulerInitializer.get().triggerJob(
+					datasource.getDatasourceId(),
+					datasource.getName()))
+				.map(datasource -> ReindexResponseDto.of(
+					datasource.getDatasourceId(),
+					true))
+				.collect()
+				.asList());
 
 	}
+
+	@Inject
+	Mutiny.SessionFactory sf;
 
 	@Inject
 	Instance<SchedulerInitializer> schedulerInitializer;
