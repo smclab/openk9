@@ -4,4 +4,3 @@ Bundle-SymbolicName: io.openk9.search.enrich.service
 Rabbit-Exchange: amq.topic
 Rabbit-Routing-Key: io.openk9.ingestion.datasource.plugin-driver-manager
 Rabbit-Queue: data-ingestion
-
