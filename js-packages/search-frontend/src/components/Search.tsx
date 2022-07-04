@@ -275,23 +275,25 @@ export function Search({
             }}
           />
         </Tooltip>
-        {isDatePickerOpen && (
-          <div
-            css={css`
-              position: absolute;
-              right: 50%;
-              border-radius: 4px;
-              background-color: var(
-                --openk9-embeddable-search--secondary-background-color
-              );
-              padding: 16px;
-              border: 1px solid var(--openk9-embeddable-search--border-color);
-              z-index: 1;
-            `}
-          >
-            <DateRangePicker value={dateRange} onChange={onDateRangeChange} />
-          </div>
-        )}
+        <div
+          hidden={!isDatePickerOpen}
+          css={css`
+            position: absolute;
+            right: 50%;
+            border-radius: 4px;
+            background-color: var(
+              --openk9-embeddable-search--secondary-background-color
+            );
+            padding: 16px;
+            border: 1px solid var(--openk9-embeddable-search--border-color);
+            z-index: 1;
+          `}
+        >
+          <DateRangePicker
+            onChange={onDateRangeChange}
+            onClose={() => setIsDatePickerOpen(false)}
+          />
+        </div>
       </div>
       <Tooltip description="Sostituzione del testo quando si seleziona un suggerimento">
         <FontAwesomeIcon

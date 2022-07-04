@@ -13,10 +13,15 @@ const DateRangeFix = DateRange as any;
 const DefinedRangeFix = DefinedRange as any;
 
 type DateRangePickerProps = {
-  value: SearchDateRange;
+  onClose(): void;
   onChange(value: SearchDateRange): void;
 };
-export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
+export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
+  const [value, setValue] = React.useState<SearchDateRange>({
+    keywordKey: undefined,
+    startDate: undefined,
+    endDate: undefined,
+  });
   const adaptedValue = [
     {
       key: "selection",
@@ -25,7 +30,7 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
     },
   ];
   const adaptedOnChange = (item: any) => {
-    onChange({
+    setValue({
       keywordKey: value.keywordKey,
       startDate: item.selection.startDate,
       endDate: item.selection.endDate,
@@ -44,7 +49,7 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
         value={selectedOption}
         onChange={(option) => {
           setSelectedOption(option);
-          onChange({ ...value, keywordKey: option?.value });
+          setValue({ ...value, keywordKey: option?.value });
         }}
         isLoading={options.isFetching}
         isSearchable={true}
@@ -83,21 +88,56 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
           rangeColors={["var(--openk9-embeddable-search--primary-color)"]}
         />
       </div>
+      <div
+        css={css`
+          display: flex;
+          justify-content: flex-end;
+          & > button {
+            background-color: white;
+            &:hover {
+              background-color: var(--openk9-embeddable-search--active-color);
+              color: white;
+            }
+            outline-color: var(--openk9-embeddable-search--active-color);
+            border: 1px solid var(--openk9-embeddable-search--border-color);
+            border-radius: 4px;
+            padding: 8px 16px;
+            margin-top: 8px;
+            margin-left: 8px;
+            font-family: inherit;
+            font-size: inherit;
+          }
+        `}
+      >
+        <button
+          onClick={() => {
+            onChange({
+              keywordKey: undefined,
+              startDate: undefined,
+              endDate: undefined,
+            });
+            onClose();
+          }}
+        >
+          Non filtrare per data
+        </button>
+        <button
+          disabled={
+            !Boolean((value.startDate || value.endDate) && value.keywordKey)
+          }
+          onClick={() => {
+            onChange(value);
+            onClose();
+          }}
+        >
+          Filtra
+        </button>
+      </div>
     </div>
   );
 }
 
 const staticRanges = [
-  {
-    label: "Non filtrare per data",
-    range: () => ({
-      startDate: undefined,
-      endDate: undefined,
-    }),
-    isSelected({ startDate, endDate }: any) {
-      return startDate === undefined && endDate === undefined;
-    },
-  },
   {
     label: "Oggi",
     range: () => ({
