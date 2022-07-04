@@ -156,12 +156,12 @@ public class InsertIndexWriter {
 				.next()
 				.map(e -> {
 
-					JsonNode datasourcePayload =
-						objectNode.get("datasourcePayload");
+					JsonNode documentTypes =
+						objectNode.get("documentTypes");
 
 					String documentId = e.getId();
 
-					if (datasourcePayload == null || datasourcePayload.isEmpty()) {
+					if (documentTypes == null || documentTypes.isEmpty()) {
 						return new DeleteRequest(indexName, documentId);
 					}
 
