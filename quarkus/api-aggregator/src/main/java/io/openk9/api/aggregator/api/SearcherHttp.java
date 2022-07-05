@@ -17,6 +17,7 @@
 
 package io.openk9.api.aggregator.api;
 
+import io.openk9.api.aggregator.client.dto.KeywordType;
 import io.openk9.api.aggregator.client.dto.QueryAnalysisRequestDTO;
 import io.openk9.api.aggregator.client.dto.QueryAnalysisResponseDTO;
 import io.openk9.api.aggregator.client.dto.SearchRequestDTO;
@@ -73,6 +74,17 @@ public interface SearcherHttp {
 	@GET
 	@Path("/v1/document-types")
 	Uni<Map<String, Collection<String>>> documentTypes();
+
+	@PermitAll
+	@GET
+	@Path("/v2/document-types")
+	Uni<Map<String, Map<String, Collection<String>>>> v2DocumentTypes();
+
+	@PermitAll
+	@GET
+	@Path("/v2/document-types/{keywordType}")
+	Uni<Map<String, Map<String, Collection<String>>>> v2DocumentTypes(
+		@PathParam("keywordType")KeywordType keywordType);
 
 	@PermitAll
 	@GET
