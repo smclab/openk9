@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.openk9</groupId>
     <artifactId>quarkus</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.0</version>
   </parent>
   <name>OpenK9 :: Quarkus :: Resources Validator</name>
   <artifactId>resources-validator</artifactId>
@@ -59,6 +59,6 @@
   </build>
 
   <scm>
-    <tag>v0.0.2</tag>
+    <tag>v1.1.0</tag>
   </scm>
 </project>
