@@ -116,12 +116,12 @@ public class DocumentTypesEndpoint
 				List<SearchKeywordDTO> searchKeywords =
 					documentType.getSearchKeywords();
 
-				Map<String, Collection<String>> typeKeywords =
-					response.computeIfAbsent(name, k -> new HashMap<>());
-
 				for (SearchKeywordDTO searchKeyword : searchKeywords) {
 
 					if (keywordType.typeEquals(searchKeyword.getType())) {
+
+						Map<String, Collection<String>> typeKeywords =
+							response.computeIfAbsent(name, k -> new HashMap<>());
 
 						Collection<String> keywords =
 							typeKeywords.computeIfAbsent(
