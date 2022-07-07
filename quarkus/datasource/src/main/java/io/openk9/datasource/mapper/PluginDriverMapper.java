@@ -15,17 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.service;
+package io.openk9.datasource.mapper;
 
-import io.openk9.datasource.mapper.DatasourceMapper;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.model.PluginDriver;
+import org.mapstruct.Mapper;
 
-import javax.enterprise.context.ApplicationScoped;
-
-@ApplicationScoped
-public class DatasourceService extends BaseK9EntityService<Datasource> {
-	 DatasourceService(DatasourceMapper mapper) {
-		patchMapper = mapper;
-	}
+@Mapper(
+	config = PatchMapper.class
+)
+public interface PluginDriverMapper extends PatchMapper<PluginDriver> {
 }

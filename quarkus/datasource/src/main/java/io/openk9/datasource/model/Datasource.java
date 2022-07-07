@@ -17,83 +17,65 @@
 
 package io.openk9.datasource.model;
 
-import io.openk9.datasource.listener.K9EntityListener;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import lombok.AllArgsConstructor;
+import com.cronutils.model.CronType;
+import com.cronutils.validation.Cron;
+import io.openk9.datasource.model.mapper.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import java.time.Instant;
-import java.util.Objects;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
+@Table(name = "datasource")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-@AllArgsConstructor(staticName = "of")
-@EntityListeners(K9EntityListener.class)
-@Cacheable
-public class Datasource extends PanacheEntityBase implements K9Entity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long datasourceId;
-    @Column(nullable = false)
-    private Boolean active = false;
-    @Column(length = 1024)
-    private String description;
-    @Lob
-    @Type(type="org.hibernate.type.TextType")
-    private String jsonConfig;
-    private Instant lastIngestionDate;
-    @Column(nullable = false, unique = true)
-    private String name;
-    @Column(nullable = false)
-    private Long tenantId;
-    @Column(nullable = false)
-    private String scheduling;
-    @Column(nullable = false)
-    private String driverServiceName;
+public class Datasource extends K9Entity {
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || Hibernate.getClass(this) !=
-                         Hibernate.getClass(o)) {
-            return false;
-        }
-        Datasource that = (Datasource) o;
-        return datasourceId != null &&
-               Objects.equals(datasourceId, that.datasourceId);
-    }
+	@OneToOne
+	@JoinColumn(name = "data_index_id")
+	private DataIndex dataIndex;
 
-    @Override
-    public int hashCode() {
-        return 0;
-    }
+	@OneToOne
+	@JoinColumn(name = "entity_index_id")
+	private EntityIndex entityIndex;
 
-    @Override
-    public String getPrimaryKey() {
-        return datasourceId.toString();
-    }
+	@ManyToOne
+	@JoinColumn(name = "enrich_pipeline_id")
+	private EnrichPipeline enrichPipeline;
 
-    @Override
-    public Class<? extends K9Entity> getType() {
-        return Datasource.class;
-    }
+	@ManyToMany
+	@JoinTable(name = "datasource_tenants",
+		joinColumns = @JoinColumn(name = "datasource_id"),
+		inverseJoinColumns = @JoinColumn(name = "tenants_id"))
+	@ToString.Exclude
+	private Set<Tenant> tenants = new LinkedHashSet<>();
+
+	@Column(name = "scheduling", nullable = false)
+	@Cron(type = CronType.QUARTZ)
+	private String scheduling;
+
+	@Column(name = "last_ingestion_date")
+	private OffsetDateTime lastIngestionDate;
+
+	@Column(name = "schedulable")
+	private Boolean schedulable = false;
+
+	@ManyToOne
+	@JoinColumn(name = "plugin_driver_id")
+	private PluginDriver pluginDriver;
 
 }

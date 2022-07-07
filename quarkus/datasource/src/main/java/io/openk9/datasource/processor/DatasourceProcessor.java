@@ -19,7 +19,6 @@ package io.openk9.datasource.processor;
 
 
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.processor.payload.DatasourceContext;
 import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.service.DatasourceService;
@@ -35,6 +34,8 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @ApplicationScoped
 public class DatasourceProcessor {
@@ -59,35 +60,39 @@ public class DatasourceProcessor {
 
 			long datasourceId = ingestionPayloadJson.getLong("datasourceId");
 
-			Uni<DatasourceContext> datasourceContextUni =
-				datasourceService.getDatasourceContext(datasourceId);
+			Uni<Datasource> datasourceContextUni =
+				datasourceService.findById(datasourceId);
 
-			return datasourceContextUni.flatMap(dc -> {
-
-				Datasource datasource = dc.getDatasource();
+			return datasourceContextUni.flatMap(datasource -> {
 
 				IngestionPayload ingestionPayload =
 					ingestionPayloadJson.mapTo(IngestionPayload.class);
 
 				long parsingDate = ingestionPayload.getParsingDate();
 
-				ingestionPayload.setTenantId(datasource.getTenantId());
+				OffsetDateTime lastIngestionDate = datasource.getLastIngestionDate();
 
-				Instant lastIngestionDate = datasource.getLastIngestionDate();
+				OffsetDateTime instantParsingDate = OffsetDateTime.ofInstant(
+					Instant.ofEpochMilli(parsingDate), ZoneOffset.UTC);
 
-				Instant instantParsingDate = Instant.ofEpochMilli(parsingDate);
+				if (lastIngestionDate != null) {
 
-				if (lastIngestionDate != null && lastIngestionDate.equals(instantParsingDate)) {
-					return Uni
-						.createFrom()
-						.item(IngestionDatasourcePayload.of(ingestionPayload, dc));
+					if (lastIngestionDate.equals(instantParsingDate)) {
+						return Uni
+							.createFrom()
+							.item(
+								IngestionDatasourcePayload.of(
+									ingestionPayload, datasource));
+					}
+
 				}
 
 				datasource.setLastIngestionDate(instantParsingDate);
 
 				return datasource.persist()
 					.replaceWith(
-						IngestionDatasourcePayload.of(ingestionPayload, dc));
+						IngestionDatasourcePayload.of(
+							ingestionPayload, datasource));
 
 			})
 				.onItem()

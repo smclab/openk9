@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.processor.payload;
 
+import io.openk9.datasource.model.Datasource;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,5 +31,5 @@ import lombok.NoArgsConstructor;
 @RegisterForReflection
 public class IngestionDatasourcePayload {
 	private IngestionPayload ingestionPayload;
-	private DatasourceContext datasourceContext;
+	private Datasource datasourceContext;
 }

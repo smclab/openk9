@@ -88,10 +88,6 @@
       <artifactId>quarkus-panache-common</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.smallrye.reactive</groupId>
-      <artifactId>smallrye-mutiny-vertx-consul-client</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.cronutils</groupId>
       <artifactId>cron-utils</artifactId>
       <version>${cron-utils.version}</version>

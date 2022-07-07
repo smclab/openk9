@@ -25,7 +25,6 @@ import io.openk9.datasource.event.dto.EventOption;
 import io.openk9.datasource.event.model.Event;
 import io.openk9.datasource.event.repo.EventRepository;
 import io.openk9.datasource.event.util.Constants;
-import io.openk9.datasource.mapper.EventMapper;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
@@ -229,8 +228,5 @@ public class GraphqlResource {
 
 	@Inject
 	EventRepository eventRepository;
-
-	@Inject
-	EventMapper mapper;
 
 }

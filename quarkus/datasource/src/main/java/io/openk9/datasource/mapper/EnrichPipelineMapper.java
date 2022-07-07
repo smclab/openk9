@@ -17,12 +17,11 @@
 
 package io.openk9.datasource.mapper;
 
-import io.openk9.datasource.dto.EnrichPipelineDto;
 import io.openk9.datasource.model.EnrichPipeline;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.Mapper;
 
-public interface EnrichPipelineMapper {
-	EnrichPipeline toEnrichPipeline(EnrichPipelineDto dto);
-	EnrichPipelineDto toDto(EnrichPipeline enrichPipeline);
-	EnrichPipeline update(@MappingTarget EnrichPipeline enrichPipeline, EnrichPipelineDto dto);
+@Mapper(
+	config = PatchMapper.class
+)
+public interface EnrichPipelineMapper extends PatchMapper<EnrichPipeline> {
 }

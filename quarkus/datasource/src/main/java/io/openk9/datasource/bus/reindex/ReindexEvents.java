@@ -62,7 +62,7 @@ public class ReindexEvents {
 
 		Uni<Void> response = schedulerInitializer
 			.get().triggerJob(
-				datasource.getDatasourceId(), datasource.getName());
+				datasource.getId(), datasource.getName());
 
 		if (replayTo != null) {
 			return response

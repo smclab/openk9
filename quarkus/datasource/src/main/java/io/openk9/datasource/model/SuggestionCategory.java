@@ -17,76 +17,37 @@
 
 package io.openk9.datasource.model;
 
-import io.openk9.datasource.listener.K9EntityListener;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import io.openk9.datasource.model.mapper.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.Hibernate;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import java.util.Objects;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
+@Table(name = "suggestion_category")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Builder
-@AllArgsConstructor(staticName = "of")
-@EntityListeners(K9EntityListener.class)
-@Cacheable
-public class SuggestionCategory extends PanacheEntityBase implements K9Entity {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long suggestionCategoryId;
-	@Column(nullable = false)
-	private Long tenantId;
-	private Long parentCategoryId;
-	private String name;
-	@Column(columnDefinition = "boolean default true")
-	private boolean enabled;
-	@Column(columnDefinition = "integer default 0")
-	private Integer priority;
+public class SuggestionCategory extends K9Entity {
+	@ManyToMany
+	@JoinTable(name = "suggestion_category_doc_type_fields",
+		joinColumns = @JoinColumn(name = "suggestion_category_id"),
+		inverseJoinColumns = @JoinColumn(name = "doc_type_fields_id"))
+	@ToString.Exclude
+	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || Hibernate.getClass(this) !=
-						 Hibernate.getClass(o)) {
-			return false;
-		}
-		SuggestionCategory that = (SuggestionCategory) o;
-		return suggestionCategoryId != null &&
-			   Objects.equals(
-				   suggestionCategoryId,
-				   that.suggestionCategoryId);
-	}
-
-	@Override
-	public int hashCode() {
-		return 0;
-	}
-
-	@Override
-	public String getPrimaryKey() {
-		return suggestionCategoryId.toString();
-	}
-
-	@Override
-	public Class<? extends K9Entity> getType() {
-		return SuggestionCategory.class;
-	}
+	@ManyToOne
+	@JoinColumn(name = "tenant_id")
+	private Tenant tenant;
 
 }

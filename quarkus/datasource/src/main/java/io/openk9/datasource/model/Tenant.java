@@ -17,75 +17,51 @@
 
 package io.openk9.datasource.model;
 
-import io.openk9.datasource.listener.K9EntityListener;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import io.openk9.datasource.model.mapper.K9Entity;
+import io.quarkus.resteasy.reactive.jackson.SecureField;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import java.util.Objects;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
+@Table(name = "tenant")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Builder
-@AllArgsConstructor(staticName = "of")
-@EntityListeners(K9EntityListener.class)
-@Cacheable
-public class Tenant extends PanacheEntityBase implements K9Entity {
+public class Tenant extends K9Entity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long tenantId;
-    private String name;
-    @Column(nullable = false)
-    private String virtualHost;
-    @Lob
-    @Type(type="org.hibernate.type.TextType")
-    private String jsonConfig;
+	@ManyToMany(mappedBy = "tenants")
+	@ToString.Exclude
+	private Set<Datasource> datasources = new LinkedHashSet<>();
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || Hibernate.getClass(this) !=
-                         Hibernate.getClass(o)) {
-            return false;
-        }
-        Tenant tenant = (Tenant) o;
-        return tenantId != null &&
-               Objects.equals(tenantId, tenant.tenantId);
-    }
+	@Column(name = "virtual_host", nullable = false, unique = true)
+	private String virtualHost;
 
-    @Override
-    public int hashCode() {
-        return 0;
-    }
+	@Column(name = "client_id")
+	@SecureField(rolesAllowed = "admin")
+	private String clientId;
 
-    @Override
-    public String getPrimaryKey() {
-        return tenantId.toString();
-    }
+	@Column(name = "client_secret")
+	@SecureField(rolesAllowed = "admin")
+	private String clientSecret;
 
-    @Override
-    public Class<? extends K9Entity> getType() {
-        return Tenant.class;
-    }
+	@Column(name = "realm_name")
+	@SecureField(rolesAllowed = "admin")
+	private String realmName;
+
+	@OneToMany(mappedBy = "tenant")
+	@ToString.Exclude
+	private Set<SuggestionCategory> suggestionCategories =
+		new LinkedHashSet<>();
 
 }

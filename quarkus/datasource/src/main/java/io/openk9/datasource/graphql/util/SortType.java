@@ -15,17 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.service;
+package io.openk9.datasource.graphql.util;
 
-import io.openk9.datasource.mapper.DatasourceMapper;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.quarkus.panache.common.Sort;
 
-import javax.enterprise.context.ApplicationScoped;
+public enum SortType {
 
-@ApplicationScoped
-public class DatasourceService extends BaseK9EntityService<Datasource> {
-	 DatasourceService(DatasourceMapper mapper) {
-		patchMapper = mapper;
+	ASC(Sort.Direction.Ascending),
+	DESC(Sort.Direction.Descending);
+
+	SortType(Sort.Direction direction) {
+		this.direction = direction;
 	}
+
+	public Sort.Direction getDirection() {
+		return direction;
+	}
+
+	private final Sort.Direction direction;
+
 }

@@ -32,17 +32,16 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "enrich_pipeline")
+@Table(name = "data_index")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-public class EnrichPipeline extends K9Entity {
+public class DataIndex extends K9Entity {
 	@ManyToMany
-	@JoinTable(name = "enrich_pipeline_enrich_items",
-		joinColumns = @JoinColumn(name = "enrich_pipeline_id"),
-		inverseJoinColumns = @JoinColumn(name = "enrich_items_id"))
+	@JoinTable(name = "data_index_doc_types",
+		joinColumns = @JoinColumn(name = "data_index_id"),
+		inverseJoinColumns = @JoinColumn(name = "doc_types_id"))
 	@ToString.Exclude
-	private Set<EnrichItem> enrichItems = new LinkedHashSet<>();
-
+	private Set<DocType> docTypes = new LinkedHashSet<>();
 }

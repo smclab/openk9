@@ -18,9 +18,7 @@
 package io.openk9.datasource.listener;
 
 import io.openk9.datasource.client.plugindriver.PluginDriverClient;
-import io.openk9.datasource.client.plugindriver.dto.InvokeDataParserDTO;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Schedule;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
@@ -48,9 +46,6 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import java.time.Instant;
-import java.util.Date;
-import java.util.UUID;
 
 @ApplicationScoped
 public class SchedulerInitializer {
@@ -103,7 +98,7 @@ public class SchedulerInitializer {
 	public void createOrUpdateScheduler(
 		Datasource datasource) throws SchedulerException {
 
-		if (!datasource.getActive()) {
+		if (!datasource.getSchedulable()) {
 			deleteScheduler(datasource);
 			return;
 		}
@@ -131,7 +126,7 @@ public class SchedulerInitializer {
 
 			JobDetail job = JobBuilder.newJob(DatasourceJob.class)
 				.withIdentity(name)
-				.usingJobData("datasourceId", datasource.getDatasourceId())
+				.usingJobData("datasourceId", datasource.getId())
 				.build();
 
 			Trigger trigger = TriggerBuilder.newTrigger()
@@ -158,7 +153,7 @@ public class SchedulerInitializer {
 		Uni<Datasource> datasourceUni =
 			Datasource.findById(datasourceId);
 
-		return datasourceUni.flatMap(datasource -> {
+		/*return datasourceUni.flatMap(datasource -> {
 			String driverServiceName = datasource.getDriverServiceName();
 
 			Instant lastIngestionDate =
@@ -194,6 +189,9 @@ public class SchedulerInitializer {
 			.onFailure().recoverWithNull().replaceWithVoid();
 
 		});
+*/
+
+		return Uni.createFrom().nothing();
 
 	}
 

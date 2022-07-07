@@ -20,8 +20,9 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.K9Entity;
+import io.openk9.datasource.model.mapper.K9Entity;
 import io.vertx.mutiny.core.eventbus.EventBus;
+import org.hibernate.Hibernate;
 import org.quartz.SchedulerException;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -36,40 +37,41 @@ public class K9EntityListener {
 
 	@PostPersist
 	public void beforeAdd(K9Entity k9Entity) throws SchedulerException {
-		if (k9Entity instanceof Datasource) {
-			_createOrUpdateScheduler((Datasource)k9Entity);
-		}
-
-		_eventSender.sendEventAsJson(
-			EventType.CREATE, k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
-			k9Entity.getPrimaryKey(), k9Entity);
+		_handle(k9Entity, EventType.CREATE);
 	}
 
 	@PreUpdate
 	public void beforeUpdate(K9Entity k9Entity) throws SchedulerException {
-		if (k9Entity instanceof Datasource) {
-			_createOrUpdateScheduler((Datasource)k9Entity);
-		}
-
-		_eventSender.sendEventAsJson(
-			EventType.UPDATE, k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
-			k9Entity.getPrimaryKey(), k9Entity);
+		_handle(k9Entity, EventType.UPDATE);
 	}
 
 	@PostRemove
 	public void postRemove(K9Entity k9Entity) throws SchedulerException {
-		if (k9Entity instanceof Datasource) {
-			_schedulerInitializer.get().deleteScheduler((Datasource)k9Entity);
+		_handle(k9Entity, EventType.UPDATE);
+	}
+
+	private void _handle(K9Entity k9Entity, String create)
+
+		throws SchedulerException {
+		if (_isDatasource(k9Entity)) {
+			_createOrUpdateScheduler((Datasource) k9Entity);
 		}
 
+		String pk = Long.toString(k9Entity.getId());
+
 		_eventSender.sendEventAsJson(
-			EventType.DELETE, k9Entity.getPrimaryKey(), k9Entity.getType().getName(),
-			k9Entity.getPrimaryKey(), k9Entity);
+			create, pk, Hibernate.getClass(k9Entity).getName(),
+			pk, k9Entity);
 	}
 
 	private void _createOrUpdateScheduler(Datasource datasource)
 		throws SchedulerException {
 		_schedulerInitializer.get().createOrUpdateScheduler(datasource);
+	}
+
+	private boolean _isDatasource(K9Entity k9Entity) {
+		return k9Entity instanceof Datasource ||
+			   Hibernate.getClass(k9Entity).isAssignableFrom(Datasource.class);
 	}
 
 	@Inject

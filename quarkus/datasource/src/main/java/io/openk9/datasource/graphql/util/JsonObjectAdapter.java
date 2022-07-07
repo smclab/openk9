@@ -15,17 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.service;
+package io.openk9.datasource.graphql.util;
 
-import io.openk9.datasource.mapper.DatasourceMapper;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.smallrye.graphql.api.Adapter;
+import io.vertx.core.json.JsonObject;
 
-import javax.enterprise.context.ApplicationScoped;
+public final class JsonObjectAdapter implements Adapter<JsonObject, String> {
+	@Override
+	public String to(JsonObject jsonObject) throws Exception {
+		return jsonObject.toString();
+	}
 
-@ApplicationScoped
-public class DatasourceService extends BaseK9EntityService<Datasource> {
-	 DatasourceService(DatasourceMapper mapper) {
-		patchMapper = mapper;
+	@Override
+	public JsonObject from(String json) throws Exception {
+		return new JsonObject(json);
 	}
 }

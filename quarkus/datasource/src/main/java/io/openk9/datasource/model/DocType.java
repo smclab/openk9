@@ -24,25 +24,19 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "enrich_pipeline")
+@Table(name = "doc_type")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-public class EnrichPipeline extends K9Entity {
-	@ManyToMany
-	@JoinTable(name = "enrich_pipeline_enrich_items",
-		joinColumns = @JoinColumn(name = "enrich_pipeline_id"),
-		inverseJoinColumns = @JoinColumn(name = "enrich_items_id"))
+public class DocType extends K9Entity {
+	@OneToMany(mappedBy = "docType", orphanRemoval = true)
 	@ToString.Exclude
-	private Set<EnrichItem> enrichItems = new LinkedHashSet<>();
-
+	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 }

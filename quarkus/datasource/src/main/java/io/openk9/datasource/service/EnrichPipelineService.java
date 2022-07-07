@@ -17,15 +17,15 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.mapper.DatasourceMapper;
-import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.mapper.EnrichPipelineMapper;
+import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
 import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class DatasourceService extends BaseK9EntityService<Datasource> {
-	 DatasourceService(DatasourceMapper mapper) {
+public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline> {
+	 EnrichPipelineService(EnrichPipelineMapper mapper) {
 		patchMapper = mapper;
 	}
 }

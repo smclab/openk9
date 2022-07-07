@@ -15,34 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.mapper.K9Entity;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import org.mapstruct.MapperConfig;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
-@Entity
-@Table(name = "enrich_pipeline")
-@Getter
-@Setter
-@ToString
-@RequiredArgsConstructor
-public class EnrichPipeline extends K9Entity {
-	@ManyToMany
-	@JoinTable(name = "enrich_pipeline_enrich_items",
-		joinColumns = @JoinColumn(name = "enrich_pipeline_id"),
-		inverseJoinColumns = @JoinColumn(name = "enrich_items_id"))
-	@ToString.Exclude
-	private Set<EnrichItem> enrichItems = new LinkedHashSet<>();
+@MapperConfig(
+	componentModel = "cdi",
+	nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
+public interface PatchMapper<E extends K9Entity> {
 
+	@Mapping(target = "id", ignore = true)
+	E patch(@MappingTarget E entity, E dto);
 }

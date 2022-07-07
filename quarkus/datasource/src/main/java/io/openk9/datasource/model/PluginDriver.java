@@ -17,32 +17,39 @@
 
 package io.openk9.datasource.model;
 
+import io.openk9.datasource.graphql.util.JsonObjectAdapter;
 import io.openk9.datasource.model.mapper.K9Entity;
+import io.smallrye.graphql.api.AdaptWith;
+import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Table;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Entity
-@Table(name = "enrich_pipeline")
+@Table(name = "plugin_driver")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-public class EnrichPipeline extends K9Entity {
-	@ManyToMany
-	@JoinTable(name = "enrich_pipeline_enrich_items",
-		joinColumns = @JoinColumn(name = "enrich_pipeline_id"),
-		inverseJoinColumns = @JoinColumn(name = "enrich_items_id"))
-	@ToString.Exclude
-	private Set<EnrichItem> enrichItems = new LinkedHashSet<>();
+public class PluginDriver extends K9Entity {
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "type", nullable = false)
+	private PluginDriverType type;
+
+	@Column(name = "json_config")
+	@AdaptWith(JsonObjectAdapter.class)
+	private JsonObject jsonConfig;
+
+	enum PluginDriverType {
+		HTTP
+	}
 
 }

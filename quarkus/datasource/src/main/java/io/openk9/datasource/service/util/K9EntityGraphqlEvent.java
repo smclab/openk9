@@ -15,17 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.service;
+package io.openk9.datasource.service.util;
 
-import io.openk9.datasource.mapper.DatasourceMapper;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.service.util.BaseK9EntityService;
+public interface K9EntityGraphqlEvent {
 
-import javax.enterprise.context.ApplicationScoped;
+	K9EntityEvent.EventType getEventType();
 
-@ApplicationScoped
-public class DatasourceService extends BaseK9EntityService<Datasource> {
-	 DatasourceService(DatasourceMapper mapper) {
-		patchMapper = mapper;
-	}
+	String getEntityJson();
+
+	String getPreviousEntityJson();
+
 }

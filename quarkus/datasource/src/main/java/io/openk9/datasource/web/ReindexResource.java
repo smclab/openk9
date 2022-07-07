@@ -33,6 +33,8 @@ import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @CircuitBreaker
@@ -48,11 +50,11 @@ public class ReindexResource {
 		return sf.withTransaction(
 			t -> Datasource
 				.<Datasource>stream(
-					"active = ?1 and datasourceId in ?2",
-					true, dto.getDatasourceIds())
+					"datasourceId in ?2", dto.getDatasourceIds())
 				.flatMap(datasource -> {
 
-					datasource.setLastIngestionDate(Instant.EPOCH);
+					datasource.setLastIngestionDate(
+						OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC));
 
 					return datasource.<Datasource>persistAndFlush().toMulti();
 
@@ -62,7 +64,7 @@ public class ReindexResource {
 						ReindexMessage.of(
 							datasource, ReindexEvents.REINDEX_STEP_2)))
 				.map(datasource -> ReindexResponseDto.of(
-					datasource.getDatasourceId(),
+					datasource.getId(),
 					true))
 				.collect()
 				.asList());

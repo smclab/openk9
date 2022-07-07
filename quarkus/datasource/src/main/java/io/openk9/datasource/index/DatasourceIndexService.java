@@ -18,12 +18,9 @@
 package io.openk9.datasource.index;
 
 import io.openk9.datasource.client.plugindriver.PluginDriverClient;
-import io.openk9.datasource.client.plugindriver.dto.PluginDriverDTO;
 import io.openk9.datasource.model.Datasource;
-import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.IndicesClient;
@@ -44,39 +41,38 @@ public class DatasourceIndexService {
 
 	public Mono<Object> reindex(Datasource datasource) {
 
-		return Mono.defer(() -> {
+		/*return Mono.defer(() -> {
 
-		Uni<PluginDriverDTO> pluginDriver =
-			pluginDriverClient.getPluginDriver(
-				datasource.getDriverServiceName());
+			PluginDriver pluginDriver = datasource.getPluginDriver();
 
-		Mono<PluginDriverDTO> pluginDriverDTOMono =
-			Mono.from(pluginDriver.convert().toPublisher());
+			DataIndex dataIndex = datasource.getDataIndex();
 
-		return pluginDriverDTOMono
-			.map(response -> datasource.getTenantId() + "-" + response.getName() + "-data")
-			.filterWhen(indexName -> _indexExists(indexName,  client.indices()))
-			.flatMap(indexName -> _modifiedSettings(indexName, client.indices()).thenReturn(indexName))
-			.flatMap(indexName -> _cloneIndex(indexName, client.indices()).thenReturn(indexName))
-			.flatMap(targetIndex ->
-				Mono.create(emitter -> client.indices().deleteAsync(
-					new DeleteIndexRequest(targetIndex), RequestOptions.DEFAULT,
-					new ActionListener<>() {
-						@Override
-						public void onResponse(AcknowledgedResponse deleteResponse) {
-							emitter.success(deleteResponse);
-						}
+			return pluginDriverDTOMono
+				.map(response -> datasource.getTenantId() + "-" + response.getName() + "-data")
+				.filterWhen(indexName -> _indexExists(indexName,  client.indices()))
+				.flatMap(indexName -> _modifiedSettings(indexName, client.indices()).thenReturn(indexName))
+				.flatMap(indexName -> _cloneIndex(indexName, client.indices()).thenReturn(indexName))
+				.flatMap(targetIndex ->
+					Mono.create(emitter -> client.indices().deleteAsync(
+						new DeleteIndexRequest(targetIndex), RequestOptions.DEFAULT,
+						new ActionListener<>() {
+							@Override
+							public void onResponse(AcknowledgedResponse deleteResponse) {
+								emitter.success(deleteResponse);
+							}
 
-						@Override
-						public void onFailure(Exception e) {
-							emitter.error(e);
-						}
-					}))
-			)
-			.doOnNext(o -> logger.info("datasource " + datasource.getDatasourceId() + " " + o))
-			.defaultIfEmpty(
-				Mono.fromRunnable(() -> logger.info("default case for datasource " + datasource.getDatasourceId())));
-		});
+							@Override
+							public void onFailure(Exception e) {
+								emitter.error(e);
+							}
+						}))
+				)
+				.doOnNext(o -> logger.info("datasource " + datasource.getDatasourceId() + " " + o))
+				.defaultIfEmpty(
+					Mono.fromRunnable(() -> logger.info("default case for datasource " + datasource.getDatasourceId())));
+			});*/
+
+		return Mono.empty();
 
 	}
 

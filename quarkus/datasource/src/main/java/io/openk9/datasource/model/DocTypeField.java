@@ -23,26 +23,33 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Entity
-@Table(name = "enrich_pipeline")
+@Table(name = "doc_type_field")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-public class EnrichPipeline extends K9Entity {
-	@ManyToMany
-	@JoinTable(name = "enrich_pipeline_enrich_items",
-		joinColumns = @JoinColumn(name = "enrich_pipeline_id"),
-		inverseJoinColumns = @JoinColumn(name = "enrich_items_id"))
-	@ToString.Exclude
-	private Set<EnrichItem> enrichItems = new LinkedHashSet<>();
+public class DocTypeField extends K9Entity {
+	@ManyToOne
+	@JoinColumn(name = "doc_type_id")
+	private DocType docType;
+
+	@Column(name = "searchable")
+	private Boolean searchable = false;
+
+	@Column(name = "boost")
+	private Double boost;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "field_type", nullable = false)
+	private FieldType fieldType;
 
 }
