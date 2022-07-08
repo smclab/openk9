@@ -286,7 +286,7 @@ export function Search({
             );
             padding: 16px;
             border: 1px solid var(--openk9-embeddable-search--border-color);
-            z-index: 1;
+            z-index: 2;
           `}
         >
           <DateRangePicker
