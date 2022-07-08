@@ -41,7 +41,24 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
     label: string;
   } | null>(null);
   const options = useQuery(["date-range-keywordkey-options", {}], async () => {
-    return ["file.lastModifiedDate", "email.date"];
+    return [
+      {
+        fieldName: "entityInfo.modifiedDate",
+        label: "Data di modifica",
+      },
+      {
+        fieldName: "calendar.date",
+        label: "Data Evento",
+      },
+      {
+        fieldName: "calendar.startTime",
+        label: "Data di inizio evento",
+      },
+      {
+        fieldName: "calendar.endTime",
+        label: "Data di fine evento",
+      },
+    ];
   });
   return (
     <div>
@@ -53,7 +70,12 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
         }}
         isLoading={options.isFetching}
         isSearchable={true}
-        options={options.data?.map((value) => ({ value, label: value })) ?? []}
+        options={
+          options.data?.map(({ fieldName, label }) => ({
+            value: fieldName,
+            label,
+          })) ?? []
+        }
         theme={(theme) => ({
           ...theme,
           colors: {
