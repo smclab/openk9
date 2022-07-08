@@ -219,6 +219,10 @@ public class TikaProcessor {
 
                             document.put("content", text);
 
+                            String summary = text.substring(0, 5000);
+
+                            document.put("summary", summary);
+
                             if (text.length() > maxLength) {
 
                                 responsePayload.put(
@@ -229,13 +233,16 @@ public class TikaProcessor {
                                 responsePayload.put("rawContent", text);
                             }
 
+                            Boolean retainBinaries =
+                                    enrichItemConfig.getBoolean("retain_binaries", true);
+
                             JsonObject resources =
-                                responsePayload.getJsonObject("resources");
+                                    responsePayload.getJsonObject("resources");
 
                             JsonArray binariesArray =
-                                resources.getJsonArray("binaries");
+                                    resources.getJsonArray("binaries");
 
-                            if (binariesArray == null) {
+                            if (!retainBinaries || binariesArray == null) {
                                 binariesArray = new JsonArray();
                                 resources.put("binaries", binariesArray);
                             }
