@@ -11,7 +11,7 @@ Build Latest Datasource Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - main
+      - 206-datasource-er-improvements
       - tags
     changes:
       - quarkus/resources-common/**/*
@@ -21,7 +21,7 @@ Build Latest Datasource Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
   cache:
     key: datasource
     paths:
