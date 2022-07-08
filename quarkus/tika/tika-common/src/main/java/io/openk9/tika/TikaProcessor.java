@@ -246,17 +246,17 @@ public class TikaProcessor {
                             JsonObject resources =
                                     responsePayload.getJsonObject("resources");
 
-                            JsonArray binariesArray =
-                                    resources.getJsonArray("binaries");
-
-                            if (!retainBinaries || binariesArray == null) {
-                                binariesArray = new JsonArray();
+                            if (!retainBinaries) {
+                                JsonArray binariesArray = new JsonArray();
                                 resources.put("binaries", binariesArray);
                             }
-
-                            binariesArray
-                                .getJsonObject(internalIndex)
-                                .put("contentType", contentType);
+                            else {
+                                JsonArray binariesArray =
+                                        resources.getJsonArray("binaries");
+                                binariesArray
+                                        .getJsonObject(internalIndex)
+                                        .put("contentType", contentType);
+                            }
 
                             processor.publish(
                                 OutgoingMessage.of(
