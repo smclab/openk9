@@ -92,6 +92,9 @@ public class TikaProcessor {
                     Integer maxLength =
                         enrichItemConfig.getInteger("max_length", -1);
 
+                    Integer summaryLength =
+                            enrichItemConfig.getInteger("summary_length", -1);
+
                     JsonObject typeMapping =
                         enrichItemConfig.getJsonObject("type_mapping");
 
@@ -219,9 +222,13 @@ public class TikaProcessor {
 
                             document.put("content", text);
 
-                            String summary = text.substring(0, 5000);
+                            if (text.length() > summaryLength) {
 
-                            document.put("summary", summary);
+                                document.put("summary", text.substring(0, 5000));
+                            }
+                            else {
+                                document.put("summary", text);
+                            }
 
                             if (text.length() > maxLength) {
 
