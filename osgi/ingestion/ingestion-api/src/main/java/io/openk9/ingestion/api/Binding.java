@@ -47,10 +47,7 @@ public interface Binding {
 	}
 
 	default Map<String, Object> getArguments() {
-		return Map.of(
-			"x-dead-letter-exchange", "DLX",
-			"x-dead-letter-routing-key", getQueue()
-		);
+		return Map.of();
 	}
 
 	static Binding of(
