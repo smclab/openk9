@@ -161,11 +161,7 @@ public class IncomingProcessorImpl {
 			channel = connection.createChannel();
 			channel.queueDeclare(
 				tikaConfiguration.getCurrentQueueName(), true, false, false,
-				Map.of(
-					"x-dead-letter-exchange", "DLX",
-					"x-dead-letter-routing-key",
-					tikaConfiguration.getCurrentRoutingKey()
-				)
+				Map.of()
 			);
 			channel.queueBind(
 				tikaConfiguration.getCurrentQueueName(),
