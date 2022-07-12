@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.mapper.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -43,5 +44,15 @@ public class DataIndex extends K9Entity {
 		joinColumns = @JoinColumn(name = "data_index_id"),
 		inverseJoinColumns = @JoinColumn(name = "doc_types_id"))
 	@ToString.Exclude
+	@JsonIgnore
 	private Set<DocType> docTypes = new LinkedHashSet<>();
+
+	public void addDocType(DocType docType) {
+		docTypes.add(docType);
+	}
+
+	public void removeDocType(DocType docType) {
+		docTypes.remove(docType);
+	}
+
 }

@@ -70,7 +70,7 @@ public class TenantGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tenant> deleteTenant(int tenantId) {
+	public Uni<Tenant> deleteTenant(long tenantId) {
 		return tenantService.deleteById(tenantId);
 	}
 

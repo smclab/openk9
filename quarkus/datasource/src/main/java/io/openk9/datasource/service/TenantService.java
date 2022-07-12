@@ -18,14 +18,141 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.TenantMapper;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.Collection;
 
 @ApplicationScoped
 public class TenantService extends BaseK9EntityService<Tenant> {
 	 TenantService(TenantMapper mapper) {
 		patchMapper = mapper;
 	}
+
+	public Uni<Collection<Datasource>> getDatasources(long tenantId) {
+		return findById(tenantId)
+			.flatMap(t -> Mutiny.fetch(t.getDatasources()));
+	}
+
+	public Uni<Collection<SuggestionCategory>> getSuggestionCategories(
+		long tenantId) {
+		return findById(tenantId)
+			.flatMap(t -> Mutiny.fetch(t.getSuggestionCategories()));
+	}
+
+	public Uni<Void> removeDatasource(long tenantId, long datasourceId) {
+		return _findTenantAndDatasource(tenantId, datasourceId)
+			.flatMap(tuple -> {
+				Tenant tenant = tuple.getItem1();
+				Datasource datasource = tuple.getItem2();
+				tenant.removeDatasource(datasource);
+				return persist(tenant);
+			})
+			.replaceWithVoid();
+	}
+
+	public Uni<Void> addDatasource(long tenantId, long datasourceId) {
+
+		Uni<Tuple2<Tenant, Datasource>> tuple2Uni =
+			_findTenantAndDatasource(tenantId, datasourceId);
+
+		return tuple2Uni
+			.flatMap(t -> {
+
+				t.getItem1().addDatasource(t.getItem2());
+
+				return persist(t.getItem1());
+
+			})
+			.replaceWithVoid();
+
+	}
+
+	public Uni<Void> addSuggestionCategory(long tenantId, long suggestionCategoryId) {
+		return _findTenantAndSuggestionCategory(tenantId, suggestionCategoryId)
+			.flatMap(t -> {
+				Tenant tenant = t.getItem1();
+				tenant.addSuggestionCategory(t.getItem2());
+				return persist(tenant);
+			})
+			.replaceWithVoid();
+	}
+
+	public Uni<Void> removeSuggestionCategory(long tenantId, long suggestionCategoryId) {
+		return _findTenantAndSuggestionCategory(tenantId, suggestionCategoryId)
+			.flatMap(t -> {
+				Tenant tenant = t.getItem1();
+				tenant.removeSuggestionCategory(t.getItem2());
+				return persist(tenant);
+			})
+			.replaceWithVoid();
+	}
+
+	private Uni<Tuple2<Tenant, SuggestionCategory>> _findTenantAndSuggestionCategory(
+		long tenantId, long suggestionCategoryId) {
+
+		Uni<Tenant> tenantUni = findById(tenantId);
+		Uni<SuggestionCategory> suggestionCategoryServiceById =
+			suggestionCategoryService.findById(suggestionCategoryId);
+
+		return Uni
+			.combine()
+			.all()
+			.unis(tenantUni, suggestionCategoryServiceById)
+			.asTuple()
+			.call(t -> {
+
+				if (t.getItem1() == null) {
+					return Uni.createFrom().failure(() -> new IllegalStateException("Tenant not found for id " + tenantId));
+				}
+
+				if (t.getItem2() == null) {
+					return Uni.createFrom().failure(() -> new IllegalStateException("SuggestionCategory not found for id " + suggestionCategoryId));
+				}
+
+				return Uni.createFrom().item(t);
+
+			});
+
+	}
+
+	private Uni<Tuple2<Tenant, Datasource>> _findTenantAndDatasource(
+		long tenantId, long datasourceId) {
+
+		Uni<Tenant> tenantUni = findById(tenantId);
+		Uni<Datasource> datasourceUni = datasourceService.findById(datasourceId);
+
+		return Uni
+			.combine()
+			.all()
+			.unis(tenantUni, datasourceUni)
+			.asTuple()
+			.call(t -> {
+
+				if (t.getItem1() == null) {
+					return Uni.createFrom().failure(() -> new IllegalStateException("Tenant not found for id " + tenantId));
+				}
+
+				if (t.getItem2() == null) {
+					return Uni.createFrom().failure(() -> new IllegalStateException("Datasource not found for id " + datasourceId));
+				}
+
+				return Uni.createFrom().item(t);
+
+			});
+	}
+
+	@Inject
+	DatasourceService datasourceService;
+
+	@Inject
+	SuggestionCategoryService suggestionCategoryService;
+
 }

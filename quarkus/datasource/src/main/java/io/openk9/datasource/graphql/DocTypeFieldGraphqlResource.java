@@ -70,7 +70,7 @@ public class DocTypeFieldGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<DocTypeField> deleteDocTypeField(int docTypeFieldId) {
+	public Uni<DocTypeField> deleteDocTypeField(long docTypeFieldId) {
 		return docTypeFieldService.deleteById(docTypeFieldId);
 	}
 

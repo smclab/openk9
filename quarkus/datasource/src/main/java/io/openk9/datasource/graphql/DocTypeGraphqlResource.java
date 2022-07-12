@@ -70,7 +70,7 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<DocType> deleteDocType(int docTypeId) {
+	public Uni<DocType> deleteDocType(long docTypeId) {
 		return docTypeService.deleteById(docTypeId);
 	}
 

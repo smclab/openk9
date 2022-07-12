@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.mapper.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +39,9 @@ import javax.persistence.Table;
 @ToString
 @RequiredArgsConstructor
 public class DocTypeField extends K9Entity {
-	@ManyToOne
+	@ManyToOne(optional = false)
 	@JoinColumn(name = "doc_type_id")
+	@JsonIgnore
 	private DocType docType;
 
 	@Column(name = "searchable")

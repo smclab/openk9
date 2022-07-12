@@ -17,96 +17,47 @@
 
 package io.openk9.datasource.model;
 
-import io.openk9.datasource.listener.K9EntityListener;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import io.quarkus.panache.common.Sort;
-import io.smallrye.mutiny.Uni;
-import lombok.AllArgsConstructor;
+import io.openk9.datasource.graphql.util.JsonObjectAdapter;
+import io.openk9.datasource.model.mapper.K9Entity;
+import io.smallrye.graphql.api.AdaptWith;
+import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Index;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Lob;
 import javax.persistence.Table;
-import java.util.List;
-import java.util.Objects;
 
 @Entity
-@Table(
-    name = "EnrichItem",
-    indexes = @Index(name = "idx_enrichItem_enrichPipelineId", columnList = "enrichPipelineId")
-)
+@Table(name = "enrich_item")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-@AllArgsConstructor(staticName = "of")
-@EntityListeners(K9EntityListener.class)
-@Cacheable
-public class EnrichItem extends PanacheEntityBase implements K9Entity {
+public class EnrichItem extends K9Entity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long enrichItemId;
-    @Column(nullable = false)
-    private Integer _position;
-    @Column(nullable = false)
-    private Boolean active = false;
-    @Lob
-    @Type(type="org.hibernate.type.TextType")
-    private String jsonConfig;
-    @Column(nullable = false)
-    private Long enrichPipelineId;
-    @Column(nullable = false)
-    private String name;
-    @Column(nullable = false)
-    private String serviceName;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "type", nullable = false)
+	private EnrichItemType type;
 
-    public static Uni<List<EnrichItem>> findByEnrichPipelineId(
-        Long enrichPipelineId) {
+	@Column(name = "service_name", nullable = false)
+	private String serviceName;
 
-        return EnrichItem.list(
-            "enrichPipelineId", Sort.by("_position"), enrichPipelineId);
-    }
+	@Lob
+	@Column(name = "validation_script")
+	private String validationScript;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || Hibernate.getClass(this) !=
-                         Hibernate.getClass(o)) {
-            return false;
-        }
-        EnrichItem that = (EnrichItem) o;
-        return enrichItemId != null &&
-               Objects.equals(enrichItemId, that.enrichItemId);
-    }
+	@Column(name = "json_config")
+	@AdaptWith(JsonObjectAdapter.class)
+	private JsonObject jsonConfig;
 
-    @Override
-    public int hashCode() {
-        return 0;
-    }
-
-    @Override
-    public String getPrimaryKey() {
-        return enrichItemId.toString();
-    }
-
-    @Override
-    public Class<? extends K9Entity> getType() {
-        return EnrichItem.class;
-    }
+	enum EnrichItemType {
+		ASYNC, SYNC
+	}
 
 }

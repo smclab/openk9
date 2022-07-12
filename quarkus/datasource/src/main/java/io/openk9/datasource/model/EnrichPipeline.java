@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.mapper.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,15 @@ public class EnrichPipeline extends K9Entity {
 		joinColumns = @JoinColumn(name = "enrich_pipeline_id"),
 		inverseJoinColumns = @JoinColumn(name = "enrich_items_id"))
 	@ToString.Exclude
+	@JsonIgnore
 	private Set<EnrichItem> enrichItems = new LinkedHashSet<>();
+
+	public void addEnrichItem(EnrichItem enrichItem) {
+		enrichItems.add(enrichItem);
+	}
+
+	public void removeEnrichItem(EnrichItem enrichItem) {
+		enrichItems.remove(enrichItem);
+	}
 
 }

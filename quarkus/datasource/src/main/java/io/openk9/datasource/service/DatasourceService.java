@@ -18,14 +18,118 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.DatasourceMapper;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.EntityIndex;
+import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class DatasourceService extends BaseK9EntityService<Datasource> {
 	 DatasourceService(DatasourceMapper mapper) {
 		patchMapper = mapper;
 	}
+
+	public Uni<EntityIndex> getEntityIndex(long datasourceId) {
+		return findById(datasourceId).map(Datasource::getEntityIndex);
+	}
+
+	public Uni<DataIndex> getDataIndex(long datasourceId) {
+		return findById(datasourceId).map(Datasource::getDataIndex);
+	}
+
+	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
+		return findById(datasourceId).map(Datasource::getEnrichPipeline);
+	}
+
+	public Uni<Datasource> setEntityIndex(long datasourceId, long entityIndexId) {
+		return findById(datasourceId)
+			.flatMap(datasource -> entityIndexService.findById(entityIndexId)
+				.flatMap(entityIndex -> {
+					datasource.setEntityIndex(entityIndex);
+					return persist(datasource);
+				}));
+	}
+
+	public Uni<Datasource> unsetEntityIndex(long datasourceId) {
+		return findById(datasourceId)
+			.flatMap(datasource -> {
+				datasource.setEntityIndex(null);
+				return persist(datasource);
+			});
+	}
+
+	public Uni<Datasource> setDataIndex(long datasourceId, long dataIndexId) {
+		return findById(datasourceId)
+			.flatMap(datasource -> dataIndexService.findById(dataIndexId)
+				.flatMap(dataIndex -> {
+					datasource.setDataIndex(dataIndex);
+					return persist(datasource);
+				}));
+	}
+
+	public Uni<Datasource> unsetDataIndex(long datasourceId) {
+		return findById(datasourceId)
+			.flatMap(datasource -> {
+				datasource.setDataIndex(null);
+				return persist(datasource);
+			});
+	}
+
+	public Uni<Datasource> setEnrichPipeline(long datasourceId, long enrichPipelineId) {
+		return findById(datasourceId)
+			.flatMap(datasource -> enrichPipelineService.findById(enrichPipelineId)
+				.flatMap(enrichPipeline -> {
+					datasource.setEnrichPipeline(enrichPipeline);
+					return persist(datasource);
+				}));
+	}
+
+	public Uni<Datasource> unsetEnrichPipeline(long datasourceId) {
+		return findById(datasourceId)
+			.flatMap(datasource -> {
+				datasource.setEnrichPipeline(null);
+				return persist(datasource);
+			});
+	}
+
+	public Uni<PluginDriver> getPluginDriver(long datasourceId) {
+		return findById(datasourceId).map(Datasource::getPluginDriver);
+	}
+
+	public Uni<Datasource> setPluginDriver(long datasourceId, long pluginDriverId) {
+		return findById(datasourceId)
+			.flatMap(datasource -> pluginDriverService.findById(pluginDriverId)
+				.flatMap(pluginDriver -> {
+					datasource.setPluginDriver(pluginDriver);
+					return persist(datasource);
+				}));
+	}
+
+	public Uni<Datasource> unsetPluginDriver(long datasourceId) {
+		return findById(datasourceId)
+			.flatMap(datasource -> {
+				datasource.setPluginDriver(null);
+				return persist(datasource);
+			});
+	}
+
+	@Inject
+	EntityIndexService entityIndexService;
+
+	@Inject
+	DataIndexService dataIndexService;
+
+	@Inject
+	EnrichPipelineService enrichPipelineService;
+
+	@Inject
+	PluginDriverService pluginDriverService;
+
+
 }

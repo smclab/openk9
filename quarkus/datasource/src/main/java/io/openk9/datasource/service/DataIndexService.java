@@ -19,13 +19,51 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.Collection;
 
 @ApplicationScoped
 public class DataIndexService extends BaseK9EntityService<DataIndex> {
 	 DataIndexService(DataIndexMapper mapper) {
 		patchMapper = mapper;
 	}
+
+	public Uni<Collection<DocType>> getDocTypes(long dataIndexId) {
+		 return findById(dataIndexId)
+				 .flatMap(dataIndex -> Mutiny.fetch(dataIndex.getDocTypes()));
+	}
+
+	public Uni<Void> addDocType(long dataIndexId, long docTypeId) {
+		 return findById(dataIndexId)
+			 .flatMap(dataIndex ->
+				 docTypeService.findById(docTypeId)
+					 .flatMap(docType -> {
+						 dataIndex.addDocType(docType);
+						 return persist(dataIndex);
+					 })
+			 )
+			 .replaceWithVoid();
+	}
+
+	public Uni<Void> removeDocType(long dataIndexId, long docTypeId) {
+		 return findById(dataIndexId)
+			 .flatMap(dataIndex ->
+				 docTypeService.findById(docTypeId)
+					 .flatMap(docType -> {
+						 dataIndex.removeDocType(docType);
+						 return persist(dataIndex);
+					 })
+			 )
+			 .replaceWithVoid();
+	}
+
+	@Inject
+	DocTypeService docTypeService;
+
 }

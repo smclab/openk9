@@ -18,10 +18,16 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.Collection;
+import java.util.function.Function;
 
 @ApplicationScoped
 public class SuggestionCategoryService extends
@@ -29,4 +35,40 @@ public class SuggestionCategoryService extends
 	 SuggestionCategoryService(SuggestionCategoryMapper mapper) {
 		patchMapper = mapper;
 	}
+
+	public Uni<Collection<SuggestionCategory>> findByTenantId(long tenantId) {
+		return SuggestionCategory.<SuggestionCategory>list("tenant_id", tenantId)
+			.map(Function.identity());
+	}
+
+	public Uni<Collection<DocTypeField>> getDocTypeFields(long suggestionCategoryId) {
+		return findById(suggestionCategoryId)
+			.flatMap(suggestionCategory -> Mutiny.fetch(suggestionCategory.getDocTypeFields()));
+	}
+
+	public Uni<Void> addDocTypeField(
+		long suggestionCategoryId, long docTypeFieldId) {
+		return findById(suggestionCategoryId)
+			.flatMap(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
+				.flatMap(docTypeField -> {
+					suggestionCategory.addDocTypeField(docTypeField);
+					return persist(suggestionCategory);
+				}))
+				.replaceWithVoid();
+	}
+
+	public Uni<Void> removeDocTypeField(
+		long suggestionCategoryId, long docTypeFieldId) {
+		return findById(suggestionCategoryId)
+			.flatMap(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
+				.flatMap(docTypeField -> {
+					suggestionCategory.removeDocTypeField(docTypeField);
+					return persist(suggestionCategory);
+				}))
+				.replaceWithVoid();
+	}
+
+	@Inject
+	DocTypeFieldService docTypeFieldService;
+
 }

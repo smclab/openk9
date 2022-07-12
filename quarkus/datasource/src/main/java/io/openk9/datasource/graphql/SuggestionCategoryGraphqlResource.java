@@ -33,6 +33,7 @@ import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Collection;
 import java.util.List;
 
 @GraphQLApi
@@ -47,6 +48,11 @@ public class SuggestionCategoryGraphqlResource {
 		@Name("sortBy") @DefaultValue("createDate") String sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
 		return suggestionCategoryService.findAll(limit, offset, sortBy, sortType);
+	}
+
+	@Query
+	public Uni<Collection<SuggestionCategory>> getSuggestionCategoryByTenantId(long tenantId) {
+		return suggestionCategoryService.findByTenantId(tenantId);
 	}
 
 	@Query
@@ -70,7 +76,7 @@ public class SuggestionCategoryGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<SuggestionCategory> deleteSuggestionCategory(int suggestionCategoryId) {
+	public Uni<SuggestionCategory> deleteSuggestionCategory(long suggestionCategoryId) {
 		return suggestionCategoryService.deleteById(suggestionCategoryId);
 	}
 

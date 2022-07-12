@@ -70,7 +70,7 @@ public class PluginDriverGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<PluginDriver> deletePluginDriver(int pluginDriverId) {
+	public Uni<PluginDriver> deletePluginDriver(long pluginDriverId) {
 		return pluginDriverService.deleteById(pluginDriverId);
 	}
 

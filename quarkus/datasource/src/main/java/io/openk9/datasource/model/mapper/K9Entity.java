@@ -18,6 +18,7 @@
 package io.openk9.datasource.model.mapper;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -38,10 +39,12 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public abstract class K9Entity extends PanacheEntity {
 
+	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")
 	@CreationTimestamp
 	private OffsetDateTime createDate;
 
+	@Setter(AccessLevel.NONE)
 	@Column(name = "modified_date")
 	@UpdateTimestamp
 	private OffsetDateTime modifiedDate;

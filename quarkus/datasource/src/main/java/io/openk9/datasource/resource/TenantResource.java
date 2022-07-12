@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package io.openk9.datasource.resource;
+
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.resource.util.BaseK9EntityResource;
+import io.openk9.datasource.service.TenantService;
+import io.smallrye.mutiny.Uni;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import java.util.Collection;
+
+@Path("/tenants")
+public class TenantResource extends
+	BaseK9EntityResource<TenantService, Tenant> {
+
+	protected TenantResource(TenantService service) {
+		super(service);
+	}
+
+	@GET
+	@Path("/{id}/datasources")
+	public Uni<Collection<Datasource>> getDatasources(long tenantId) {
+		return service.getDatasources(tenantId);
+	}
+
+	@PUT
+	@Path("/{id}/datasources/{datasourceId}")
+	public Uni<Void> addDatasource(long tenantId, long datasourceId) {
+		return service.addDatasource(tenantId, datasourceId);
+	}
+
+	@DELETE
+	@Path("/{id}/datasources/{datasourceId}")
+	public Uni<Void> removeDatasource(long tenantId, long datasourceId) {
+		return service.removeDatasource(tenantId, datasourceId);
+	}
+
+	@GET
+	@Path("/{id}/suggestion-categories")
+	public Uni<Collection<SuggestionCategory>> getSuggestionCategories(long tenantId) {
+		return service.getSuggestionCategories(tenantId);
+	}
+
+	@PUT
+	@Path("/{id}/suggestion-categories/{suggestionCategoryId}")
+	public Uni<Void> addSuggestionCategory(long tenantId, long suggestionCategoryId) {
+		return service.addSuggestionCategory(tenantId, suggestionCategoryId);
+	}
+
+	@DELETE
+	@Path("/{id}/suggestion-categories/{suggestionCategoryId}")
+	public Uni<Void> removeSuggestionCategory(long tenantId, long suggestionCategoryId) {
+		return service.removeSuggestionCategory(tenantId, suggestionCategoryId);
+	}
+
+}

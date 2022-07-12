@@ -70,7 +70,7 @@ public class EntityIndexGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<EntityIndex> deleteEntityIndex(int entityIndexId) {
+	public Uni<EntityIndex> deleteEntityIndex(long entityIndexId) {
 		return entityIndexService.deleteById(entityIndexId);
 	}
 

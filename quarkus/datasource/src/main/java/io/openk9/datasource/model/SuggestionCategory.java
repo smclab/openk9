@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.mapper.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -44,10 +45,19 @@ public class SuggestionCategory extends K9Entity {
 		joinColumns = @JoinColumn(name = "suggestion_category_id"),
 		inverseJoinColumns = @JoinColumn(name = "doc_type_fields_id"))
 	@ToString.Exclude
+	@JsonIgnore
 	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 
 	@ManyToOne
 	@JoinColumn(name = "tenant_id")
 	private Tenant tenant;
+
+	public void addDocTypeField(DocTypeField docTypeField) {
+		docTypeFields.add(docTypeField);
+	}
+
+	public void removeDocTypeField(DocTypeField docTypeField) {
+		docTypeFields.remove(docTypeField);
+	}
 
 }

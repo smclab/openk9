@@ -70,7 +70,7 @@ public class EnrichItemGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<EnrichItem> deleteEnrichItem(int enrichItemId) {
+	public Uni<EnrichItem> deleteEnrichItem(long enrichItemId) {
 		return enrichItemService.deleteById(enrichItemId);
 	}
 

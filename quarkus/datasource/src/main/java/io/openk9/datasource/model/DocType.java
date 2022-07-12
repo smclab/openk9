@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.mapper.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import lombok.ToString;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -36,7 +38,35 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 public class DocType extends K9Entity {
-	@OneToMany(mappedBy = "docType", orphanRemoval = true)
+	@OneToMany(mappedBy = "docType", cascade = javax.persistence.CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude
+	@JsonIgnore
 	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
+
+	public void addDocTypeField(DocTypeField docTypeField) {
+		docTypeFields.add(docTypeField);
+		docTypeField.setDocType(this);
+	}
+
+	public void removeDocTypeField(DocTypeField docTypeField) {
+		docTypeFields.remove(docTypeField);
+		docTypeField.setDocType(null);
+	}
+
+	public boolean removeDocTypeField(long docTypeFieldId) {
+
+		Iterator<DocTypeField> iterator = docTypeFields.iterator();
+
+		while (iterator.hasNext()) {
+			DocTypeField docTypeField = iterator.next();
+			if (docTypeField.getId() == docTypeFieldId) {
+				iterator.remove();
+				docTypeField.setDocType(null);
+				return true;
+			}
+		}
+		return false;
+
+	}
+
 }

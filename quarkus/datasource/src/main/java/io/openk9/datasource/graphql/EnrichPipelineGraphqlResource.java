@@ -70,7 +70,7 @@ public class EnrichPipelineGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<EnrichPipeline> deleteEnrichPipeline(int enrichPipelineId) {
+	public Uni<EnrichPipeline> deleteEnrichPipeline(long enrichPipelineId) {
 		return enrichPipelineService.deleteById(enrichPipelineId);
 	}
 

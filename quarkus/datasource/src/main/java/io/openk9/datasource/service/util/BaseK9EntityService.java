@@ -44,7 +44,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity> {
 	}
 
 	public Uni<ENTITY> findById(long id) {
-		return ENTITY.findById(id);
+		return ENTITY.<ENTITY>findById(id).invoke(e -> {
+			if (e == null) {
+				throw new IllegalArgumentException("Entity not found with id: " + id + "class: " + this.getClass());
+			}
+		});
 	}
 
 	public Uni<ENTITY> patch(ENTITY entity) {
@@ -75,7 +79,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity> {
 				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
 	}
 
-	public Uni<ENTITY> deleteById(int entityId) {
+	public Uni<ENTITY> deleteById(long entityId) {
 		return findById(entityId)
 			.onItem().ifNotNull()
 			.call(() -> ENTITY.deleteById(entityId))

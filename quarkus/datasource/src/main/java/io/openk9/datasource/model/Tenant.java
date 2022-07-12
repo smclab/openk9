@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.mapper.K9Entity;
 import io.quarkus.resteasy.reactive.jackson.SecureField;
 import lombok.Getter;
@@ -42,6 +43,7 @@ public class Tenant extends K9Entity {
 
 	@ManyToMany(mappedBy = "tenants")
 	@ToString.Exclude
+	@JsonIgnore
 	private Set<Datasource> datasources = new LinkedHashSet<>();
 
 	@Column(name = "virtual_host", nullable = false, unique = true)
@@ -61,7 +63,28 @@ public class Tenant extends K9Entity {
 
 	@OneToMany(mappedBy = "tenant")
 	@ToString.Exclude
+	@JsonIgnore
 	private Set<SuggestionCategory> suggestionCategories =
 		new LinkedHashSet<>();
+
+	public void addDatasource(Datasource datasource) {
+		this.datasources.add(datasource);
+		datasource.getTenants().add(this);
+	}
+
+	public void removeDatasource(Datasource datasource) {
+		this.datasources.remove(datasource);
+		datasource.getTenants().remove(this);
+	}
+
+	public void addSuggestionCategory(SuggestionCategory suggestionCategory) {
+		this.suggestionCategories.add(suggestionCategory);
+		suggestionCategory.setTenant(this);
+	}
+
+	public void removeSuggestionCategory(SuggestionCategory suggestionCategory) {
+		this.suggestionCategories.remove(suggestionCategory);
+		suggestionCategory.setTenant(null);
+	}
 
 }

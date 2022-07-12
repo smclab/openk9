@@ -19,13 +19,50 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.Collection;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType> {
 	 DocTypeService(DocTypeMapper mapper) {
 		patchMapper = mapper;
 	}
+
+	public Uni<Collection<DocTypeField>> getDocTypeFields(long docTypeId) {
+		 return findById(docTypeId)
+			 .flatMap(docType -> Mutiny.fetch(docType.getDocTypeFields()));
+	}
+
+	public Uni<DocTypeField> addDocTypeField(long id, DocTypeField docTypeField) {
+
+		docTypeField.id = null;
+
+		return findById(id)
+			.flatMap(docType -> {
+				docType.addDocTypeField(docTypeField);
+				return persist(docType).replaceWith(() -> docTypeField);
+			});
+	}
+
+	public Uni<Void> removeDocTypeField(long id, long docTypeFieldId) {
+		return findById(id)
+			.flatMap(docType -> {
+				if (!docType.removeDocTypeField(docTypeFieldId)) {
+					return Uni.createFrom().failure(() -> new IllegalArgumentException(
+						"DocTypeField not found with id " + docTypeFieldId));
+				}
+				return persist(docType);
+			})
+			.replaceWithVoid();
+	}
+
+	@Inject
+	DocTypeFieldService docTypeFieldService;
+
 }

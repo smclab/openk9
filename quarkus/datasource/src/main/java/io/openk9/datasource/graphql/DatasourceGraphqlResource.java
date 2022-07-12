@@ -70,7 +70,7 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Datasource> deleteDatasource(int datasourceId) {
+	public Uni<Datasource> deleteDatasource(long datasourceId) {
 		return datasourceService.deleteById(datasourceId);
 	}
 

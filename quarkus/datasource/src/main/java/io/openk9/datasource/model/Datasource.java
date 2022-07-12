@@ -19,6 +19,7 @@ package io.openk9.datasource.model;
 
 import com.cronutils.model.CronType;
 import com.cronutils.validation.Cron;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.mapper.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -45,25 +46,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class Datasource extends K9Entity {
 
-	@OneToOne
-	@JoinColumn(name = "data_index_id")
-	private DataIndex dataIndex;
-
-	@OneToOne
-	@JoinColumn(name = "entity_index_id")
-	private EntityIndex entityIndex;
-
-	@ManyToOne
-	@JoinColumn(name = "enrich_pipeline_id")
-	private EnrichPipeline enrichPipeline;
-
-	@ManyToMany
-	@JoinTable(name = "datasource_tenants",
-		joinColumns = @JoinColumn(name = "datasource_id"),
-		inverseJoinColumns = @JoinColumn(name = "tenants_id"))
-	@ToString.Exclude
-	private Set<Tenant> tenants = new LinkedHashSet<>();
-
 	@Column(name = "scheduling", nullable = false)
 	@Cron(type = CronType.QUARTZ)
 	private String scheduling;
@@ -74,8 +56,42 @@ public class Datasource extends K9Entity {
 	@Column(name = "schedulable")
 	private Boolean schedulable = false;
 
+	@OneToOne
+	@JoinColumn(name = "data_index_id")
+	@JsonIgnore
+	private DataIndex dataIndex;
+
+	@OneToOne
+	@JoinColumn(name = "entity_index_id")
+	@JsonIgnore
+	private EntityIndex entityIndex;
+
+	@ManyToOne
+	@JoinColumn(name = "enrich_pipeline_id")
+	@JsonIgnore
+	private EnrichPipeline enrichPipeline;
+
 	@ManyToOne
 	@JoinColumn(name = "plugin_driver_id")
+	@JsonIgnore
 	private PluginDriver pluginDriver;
+
+	@ManyToMany
+	@JoinTable(name = "datasource_tenants",
+		joinColumns = @JoinColumn(name = "datasource_id"),
+		inverseJoinColumns = @JoinColumn(name = "tenants_id"))
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<Tenant> tenants = new LinkedHashSet<>();
+
+	public void addTenant(Tenant tenant) {
+		this.tenants.add(tenant);
+		tenant.getDatasources().add(this);
+	}
+
+	public void removeTenant(Tenant tenant) {
+		this.tenants.remove(tenant);
+		tenant.getDatasources().remove(this);
+	}
 
 }
