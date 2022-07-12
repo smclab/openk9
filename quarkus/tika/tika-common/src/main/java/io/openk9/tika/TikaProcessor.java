@@ -222,15 +222,15 @@ public class TikaProcessor {
 
                             document.put("content", text);
 
-                            if (text.length() > summaryLength) {
+                            if (text.length() > summaryLength && summaryLength > 0) {
 
-                                document.put("summary", text.substring(0, 5000));
+                                document.put("summary", text.substring(0, summaryLength));
                             }
                             else {
                                 document.put("summary", text);
                             }
 
-                            if (text.length() > maxLength) {
+                            if (text.length() > maxLength && maxLength > 0) {
 
                                 responsePayload.put(
                                     "rawContent", text.substring(0, maxLength));
