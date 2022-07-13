@@ -39,8 +39,12 @@ import javax.persistence.Table;
 @ToString
 @RequiredArgsConstructor
 public class DocTypeField extends K9Entity {
-	@ManyToOne(optional = false)
-	@JoinColumn(name = "doc_type_id")
+	@ManyToOne(cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH}, optional = false)
+	@JoinColumn(name = "doc_type_id", nullable = false)
 	@JsonIgnore
 	private DocType docType;
 

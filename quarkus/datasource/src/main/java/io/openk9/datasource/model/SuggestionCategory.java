@@ -40,10 +40,14 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 public class SuggestionCategory extends K9Entity {
-	@ManyToMany
+	@ManyToMany(cascade = {
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.DETACH})
 	@JoinTable(name = "suggestion_category_doc_type_fields",
-		joinColumns = @JoinColumn(name = "suggestion_category_id"),
-		inverseJoinColumns = @JoinColumn(name = "doc_type_fields_id"))
+		joinColumns = @JoinColumn(name = "suggestion_category_id", referencedColumnName = "id"),
+		inverseJoinColumns = @JoinColumn(name = "doc_type_fields_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();

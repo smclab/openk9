@@ -56,17 +56,29 @@ public class Datasource extends K9Entity {
 	@Column(name = "schedulable")
 	private Boolean schedulable = false;
 
-	@OneToOne
+	@OneToOne(cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
 	@JoinColumn(name = "data_index_id")
 	@JsonIgnore
 	private DataIndex dataIndex;
 
-	@OneToOne
+	@OneToOne(cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
 	@JoinColumn(name = "entity_index_id")
 	@JsonIgnore
 	private EntityIndex entityIndex;
 
-	@ManyToOne
+	@ManyToOne(cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
 	@JoinColumn(name = "enrich_pipeline_id")
 	@JsonIgnore
 	private EnrichPipeline enrichPipeline;
@@ -76,10 +88,14 @@ public class Datasource extends K9Entity {
 	@JsonIgnore
 	private PluginDriver pluginDriver;
 
-	@ManyToMany
+	@ManyToMany(cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.DETACH,
+		javax.persistence.CascadeType.REFRESH})
 	@JoinTable(name = "datasource_tenants",
-		joinColumns = @JoinColumn(name = "datasource_id"),
-		inverseJoinColumns = @JoinColumn(name = "tenants_id"))
+		joinColumns = @JoinColumn(name = "datasource_id", referencedColumnName = "id"),
+		inverseJoinColumns = @JoinColumn(name = "tenants_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<Tenant> tenants = new LinkedHashSet<>();

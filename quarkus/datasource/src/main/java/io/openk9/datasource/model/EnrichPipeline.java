@@ -39,10 +39,14 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 public class EnrichPipeline extends K9Entity {
-	@ManyToMany
+	@ManyToMany(cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
 	@JoinTable(name = "enrich_pipeline_enrich_items",
-		joinColumns = @JoinColumn(name = "enrich_pipeline_id"),
-		inverseJoinColumns = @JoinColumn(name = "enrich_items_id"))
+		joinColumns = @JoinColumn(name = "enrich_pipeline_id", referencedColumnName = "id"),
+		inverseJoinColumns = @JoinColumn(name = "enrich_items_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<EnrichItem> enrichItems = new LinkedHashSet<>();

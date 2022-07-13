@@ -39,10 +39,14 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 public class DataIndex extends K9Entity {
-	@ManyToMany
+	@ManyToMany(cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.DETACH,
+		javax.persistence.CascadeType.REFRESH})
 	@JoinTable(name = "data_index_doc_types",
-		joinColumns = @JoinColumn(name = "data_index_id"),
-		inverseJoinColumns = @JoinColumn(name = "doc_types_id"))
+		joinColumns = @JoinColumn(name = "data_index_id", referencedColumnName = "id"),
+		inverseJoinColumns = @JoinColumn(name = "doc_types_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<DocType> docTypes = new LinkedHashSet<>();

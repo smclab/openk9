@@ -41,7 +41,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class Tenant extends K9Entity {
 
-	@ManyToMany(mappedBy = "tenants")
+	@ManyToMany(mappedBy = "tenants", cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<Datasource> datasources = new LinkedHashSet<>();
@@ -61,11 +65,14 @@ public class Tenant extends K9Entity {
 	@SecureField(rolesAllowed = "admin")
 	private String realmName;
 
-	@OneToMany(mappedBy = "tenant")
+	@OneToMany(mappedBy = "tenant", cascade = {
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.REFRESH})
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<SuggestionCategory> suggestionCategories =
-		new LinkedHashSet<>();
+	private Set<SuggestionCategory> suggestionCategories
+		= new LinkedHashSet<>();
 
 	public void addDatasource(Datasource datasource) {
 		this.datasources.add(datasource);
