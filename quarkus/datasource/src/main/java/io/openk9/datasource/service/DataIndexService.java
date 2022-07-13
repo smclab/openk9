@@ -25,7 +25,6 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -38,18 +37,23 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 	}
 
 	public Uni<Page<DocType>> getDocTypes(
-		long dataIndexId, Pageable pageable) {
+		long dataIndexId, Pageable<?> pageable) {
 
 		PanacheQuery<DocType> docTypePanacheQuery =
 			DataIndex
-				.find(
-					"#DataIndex.getDocTypes",
-					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+				.find("select dt " +
+					  "from DataIndex dataIndex " +
+					  "join dataIndex.docTypes dt" +
+					  "where dataIndex.id = ?1 " +
+					  "order by dt." + pageable.getSortBy().name() + " " + pageable.getSortType(),
 					dataIndexId)
 				.page(pageable.getLimit(), pageable.getOffset());
 
+		Uni<Long> countQuery =
+			DocType.count("from DataIndex dataIndex join dataIndex.docTypes where dataIndex.id = ?1", dataIndexId);
+
 		return createPage(
-			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery);
+			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery, countQuery);
 	}
 
 	public Uni<Void> addDocType(long dataIndexId, long docTypeId) {

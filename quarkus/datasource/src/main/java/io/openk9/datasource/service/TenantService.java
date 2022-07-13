@@ -18,7 +18,6 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.TenantMapper;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
@@ -27,9 +26,9 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -42,31 +41,47 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
 
-		 PanacheQuery<Datasource> docTypePanacheQuery =
-			DataIndex
+		PanacheQuery<Datasource> panacheQuery =
+			Tenant
 				.find(
-					"#Tenant.getDatasources",
-					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+					"select d " +
+					"from Tenant tenant " +
+					"join tenant.datasources d " +
+					"where tenant.id = ?1 " +
+					"order by d." + pageable.getSortBy() + " " + pageable.getSortType().name(),
 					tenantId)
-				.page(pageable.getLimit(), pageable.getOffset());
+				.page(pageable.getOffset(), pageable.getLimit());
+
+		Uni<Long> countQuery =
+			Tenant.count(
+				"from Tenant tenant join tenant.datasources datasource where tenant.id = ?1",
+				tenantId);
 
 		return createPage(
-			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery);
+			pageable.getLimit(), pageable.getOffset(), panacheQuery, countQuery);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
 		long tenantId, Pageable pageable) {
 
 		 PanacheQuery<SuggestionCategory> docTypePanacheQuery =
-			DataIndex
+			 Tenant
 				.find(
-					"#Tenant.getSuggestionCategories",
-					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+					"select sc " +
+					"from Tenant tenant " +
+					"join tenant.suggestionCategories sc " +
+					"where tenant.id = ?1 " +
+					"order by sc." + pageable.getSortBy() + " " + pageable.getSortType().name(),
 					tenantId)
-				.page(pageable.getLimit(), pageable.getOffset());
+				.page(pageable.getOffset(), pageable.getLimit());
+
+		Uni<Long> countQuery =
+			Tenant.count(
+				"from Tenant tenant join tenant.suggestionCategories datasource where tenant.id = ?1",
+				tenantId);
 
 		return createPage(
-			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery);
+			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery, countQuery);
 	}
 
 	public Uni<Void> removeDatasource(long tenantId, long datasourceId) {
@@ -176,5 +191,8 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
+
+	@Inject
+	Mutiny.Session session;
 
 }

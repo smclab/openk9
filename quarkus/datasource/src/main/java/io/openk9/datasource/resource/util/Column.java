@@ -17,18 +17,8 @@
 
 package io.openk9.datasource.resource.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+public interface Column {
 
-import java.util.List;
+	String name();
 
-@AllArgsConstructor(staticName = "of")
-@Getter
-public class Page<ENTITY> {
-	private final int limit;
-	private final int offset;
-	private final int pageCount;
-	private final long count;
-	private final boolean hasNextPage;
-	private final List<ENTITY> content;
 }

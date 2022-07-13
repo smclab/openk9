@@ -49,7 +49,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<Page<ENTITY>> findAllPaginated(Pageable pageable) {
 
 		return findAllPaginated(
-			pageable.getLimit(), pageable.getOffset(), pageable.getSortBy(),
+			pageable.getLimit(), pageable.getOffset(), pageable.getSortBy().name(),
 			pageable.getSortType());
 
 	}
@@ -62,7 +62,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 				.findAll(Sort.by(sortBy, sortType.getDirection()))
 				.page(offset, limit);
 
-		return createPage(limit, offset, panacheQuery);
+		return createPage(limit, offset, panacheQuery, panacheQuery.count());
 
 	}
 
@@ -125,15 +125,29 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return (BroadcastProcessor<K9EntityEvent<ENTITY>>)processor;
 	}
 
-	public static <T extends K9Entity> Uni<Page<T>> createPage(
-		int limit, int offset, PanacheQuery<T> panacheQuery) {
+	public static <T> Uni<Page<T>> createPage(
+		int limit, int offset, PanacheQuery<T> panacheQuery,
+		Uni<Long> countQuery) {
+
+		countQuery = countQuery.memoize().indefinitely();
+
+		Uni<Integer> pageCountUni = countQuery.map(count -> {
+			if (count == 0)
+				return 1; // a single page of zero results
+			return (int) Math.ceil(
+				(double) count / (double) limit);
+		}).memoize().indefinitely();
+
+		Uni<Boolean> hasNextPageUni =
+			pageCountUni.map(pageCount -> offset < (pageCount - 1));
 
 		return Uni
 			.combine()
 			.all()
 			.unis(
-				panacheQuery.pageCount(), panacheQuery.count(),
-				panacheQuery.hasNextPage(), panacheQuery.<T>list())
+				pageCountUni, countQuery,
+				hasNextPageUni,
+				panacheQuery.list())
 			.combinedWith((pageCount, count, hasNextPage, content) ->
 				Page.of(limit, offset, pageCount, count, hasNextPage, content));
 	}
@@ -142,5 +156,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		BroadcastProcessor.create();
 
 	protected K9EntityMapper<ENTITY, DTO> mapper;
+
 
 }

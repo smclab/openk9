@@ -18,7 +18,6 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
@@ -26,7 +25,6 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -41,15 +39,21 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Uni<Page<EnrichItem>> getEnrichItems(long enrichPipelineId, Pageable pageable) {
 
 		 PanacheQuery<EnrichItem> docTypePanacheQuery =
-			DataIndex
-				.find(
-					"#EnrichPipeline.getEnrichItems",
-					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+			 EnrichPipeline
+				.find("select ei " +
+					  "from EnrichPipeline enrichPipeline " +
+					  "join enrichPipeline.enrichItems ei " +
+					  "where enrichPipeline.id = ?1 " +
+					  "order by ei." + pageable.getSortBy() + " " + pageable.getSortType().name(),
 					enrichPipelineId)
 				.page(pageable.getLimit(), pageable.getOffset());
 
+		 Uni<Long> countQuery =
+			 EnrichPipeline
+				.count("from EnrichPipeline ep join ep.enrichItems where ep.id = ?1", enrichPipelineId);
+
 		return createPage(
-			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery);
+			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery, countQuery);
 	}
 
 	public Uni<Void> addEnrichItem(long enrichPipelineId, long enrichItemId) {

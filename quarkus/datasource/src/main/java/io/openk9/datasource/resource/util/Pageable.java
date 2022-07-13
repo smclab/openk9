@@ -28,13 +28,13 @@ import javax.ws.rs.QueryParam;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Pageable {
+public class Pageable<COLUMN extends K9Column> {
 	@QueryParam("limit") @DefaultValue("20")
 	private int limit;
 	@QueryParam("offset") @DefaultValue("0")
 	private int offset;
 	@QueryParam("sortBy") @DefaultValue("createDate")
-	private String sortBy;
+	private K9Column sortBy;
 	@QueryParam("sortType") @DefaultValue("ASC")
 	private SortType sortType;
 }

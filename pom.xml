@@ -120,7 +120,7 @@
 		<dependency.version.lombok>1.18.22</dependency.version.lombok>
 		<dependency.version.mapstruct>1.4.2.Final</dependency.version.mapstruct>
 		<biz.aQute.bnd.version>6.2.0</biz.aQute.bnd.version>
-
+		<maven.compiler.parameters>true</maven.compiler.parameters>
 	</properties>
 
 	<build>

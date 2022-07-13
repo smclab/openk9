@@ -18,7 +18,6 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
@@ -26,7 +25,6 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -50,15 +48,21 @@ public class SuggestionCategoryService extends
 		long suggestionCategoryId, Pageable pageable) {
 
 		 PanacheQuery<DocTypeField> docTypeFieldPanacheQuery =
-			DataIndex
+			 SuggestionCategory
 				.find(
-					"#SuggestionCategory.getDocTypeFields",
-					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+					"select dtf " +
+					"from SuggestionCategory sc " +
+					"join sc.docTypeFields dtf " +
+					"where sc.id = ?1 " +
+					"order by dtf." + pageable.getSortBy() + " " + pageable.getSortType().name(),
 					suggestionCategoryId)
 				.page(pageable.getLimit(), pageable.getOffset());
 
+		 Uni<Long> countQuery = SuggestionCategory
+			 .count("from SuggestionCategory sc join sc.docTypeFields where sc.id = ?1", suggestionCategoryId);
+
 		return createPage(
-			pageable.getLimit(), pageable.getOffset(), docTypeFieldPanacheQuery);
+			pageable.getLimit(), pageable.getOffset(), docTypeFieldPanacheQuery, countQuery);
 	}
 
 	public Uni<Void> addDocTypeField(

@@ -50,7 +50,7 @@ public abstract class BaseK9EntityResource<
 	}
 
 	@GET
-	public Uni<Page<ENTITY>> findAll(@BeanParam Pageable pageable) {
+	public Uni<Page<ENTITY>> findAll(@BeanParam Pageable<K9Column> pageable) {
 		return this.service.findAllPaginated(pageable);
 	}
 
