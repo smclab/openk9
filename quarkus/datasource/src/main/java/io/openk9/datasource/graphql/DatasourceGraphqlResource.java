@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.dto.DatasourceDTO;
+import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -34,7 +35,6 @@ import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.List;
 
 @GraphQLApi
 @ApplicationScoped
@@ -42,12 +42,12 @@ import java.util.List;
 public class DatasourceGraphqlResource {
 
 	@Query
-	public Uni<List<Datasource>> getDatasources(
+	public Uni<Page<Datasource>> getDatasources(
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
 		@Name("sortBy") @DefaultValue("createDate") String sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return datasourceService.findAll(limit, offset, sortBy, sortType);
+		return datasourceService.findAllPaginated(limit, offset, sortBy, sortType);
 	}
 
 	@Query

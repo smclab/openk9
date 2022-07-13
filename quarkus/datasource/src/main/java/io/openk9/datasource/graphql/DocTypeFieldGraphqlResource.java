@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -34,7 +35,6 @@ import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.List;
 
 @GraphQLApi
 @ApplicationScoped
@@ -42,12 +42,12 @@ import java.util.List;
 public class DocTypeFieldGraphqlResource {
 
 	@Query
-	public Uni<List<DocTypeField>> getDocTypeFields(
+	public Uni<Page<DocTypeField>> getDocTypeFields(
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
 		@Name("sortBy") @DefaultValue("createDate") String sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return docTypeFieldService.findAll(limit, offset, sortBy, sortType);
+		return docTypeFieldService.findAllPaginated(limit, offset, sortBy, sortType);
 	}
 
 	@Query

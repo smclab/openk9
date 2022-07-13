@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -35,7 +36,6 @@ import org.eclipse.microprofile.graphql.Query;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Collection;
-import java.util.List;
 
 @GraphQLApi
 @ApplicationScoped
@@ -43,12 +43,12 @@ import java.util.List;
 public class SuggestionCategoryGraphqlResource {
 
 	@Query
-	public Uni<List<SuggestionCategory>> getSuggestionCategories(
+	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
 		@Name("sortBy") @DefaultValue("createDate") String sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return suggestionCategoryService.findAll(limit, offset, sortBy, sortType);
+		return suggestionCategoryService.findAllPaginated(limit, offset, sortBy, sortType);
 	}
 
 	@Query

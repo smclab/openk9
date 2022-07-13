@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.eclipse.microprofile.graphql.Id;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -55,6 +56,7 @@ public abstract class K9Entity extends PanacheEntity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
+	@Id
 	public Long getId() {
 		return id;
 	}
