@@ -17,10 +17,15 @@
 
 package io.openk9.datasource.graphql;
 
+import io.openk9.datasource.graphql.util.Response;
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -45,9 +50,21 @@ public class DocTypeGraphqlResource {
 	public Uni<Page<DocType>> getDocTypes(
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") String sortBy,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return docTypeService.findAllPaginated(limit, offset, sortBy, sortType);
+		return docTypeService.findAllPaginated(
+			limit, offset, sortBy.name(), sortType);
+	}
+
+	@Query
+	public Uni<Page<DocTypeField>> getDocTypeFieldFromDocType(
+		@Name("docTypeId") long docTypeId,
+		@Name("limit") @DefaultValue("20") int limit,
+		@Name("offset") @DefaultValue("0") int offset,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
+		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		return docTypeService.getDocTypeFields(
+			docTypeId, Pageable.of(limit, offset, sortBy, sortType));
 	}
 
 	@Query
@@ -73,6 +90,19 @@ public class DocTypeGraphqlResource {
 	@Mutation
 	public Uni<DocType> deleteDocType(long docTypeId) {
 		return docTypeService.deleteById(docTypeId);
+	}
+
+	@Mutation
+	public Uni<DocTypeField> createDocTypeField(
+		long docTypeId, DocTypeFieldDTO docTypeFieldDTO) {
+		return docTypeService.addDocTypeField(docTypeId, docTypeFieldDTO);
+	}
+
+	@Mutation
+	public Uni<Response> removeDocTypeField(
+		long docTypeId, long docTypeFieldId) {
+		return docTypeService.removeDocTypeField(docTypeId, docTypeFieldId)
+			.replaceWith(() -> Response.of("docTypeField removed from docType"));
 	}
 
 	@Subscription

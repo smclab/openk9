@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
+import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -45,9 +46,10 @@ public class EnrichItemGraphqlResource {
 	public Uni<Page<EnrichItem>> getEnrichItems(
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") String sortBy,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return enrichItemService.findAllPaginated(limit, offset, sortBy, sortType);
+		return enrichItemService.findAllPaginated(
+			limit, offset, sortBy.name(), sortType);
 	}
 
 	@Query

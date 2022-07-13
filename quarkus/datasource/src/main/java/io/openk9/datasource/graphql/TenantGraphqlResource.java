@@ -17,10 +17,15 @@
 
 package io.openk9.datasource.graphql;
 
+import io.openk9.datasource.graphql.util.Response;
 import io.openk9.datasource.graphql.util.SortType;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
+import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.TenantService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -45,9 +50,32 @@ public class TenantGraphqlResource {
 	public Uni<Page<Tenant>> getTenants(
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") String sortBy,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return tenantService.findAllPaginated(limit, offset, sortBy, sortType);
+		return tenantService.findAllPaginated(
+			limit, offset, sortBy.name(), sortType);
+	}
+
+	@Query
+	public Uni<Page<Datasource>> getDatasourcesByTenantId(
+		@Name("tenantId") long tenantId,
+		@Name("limit") @DefaultValue("20") int limit,
+		@Name("offset") @DefaultValue("0") int offset,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
+		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		return tenantService.getDatasources(
+			tenantId, Pageable.of(limit, offset, sortBy, sortType));
+	}
+
+	@Query
+	public Uni<Page<SuggestionCategory>> getSuggestionCategoriesByTenantId(
+		@Name("tenantId") long tenantId,
+		@Name("limit") @DefaultValue("20") int limit,
+		@Name("offset") @DefaultValue("0") int offset,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
+		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		return tenantService.getSuggestionCategories(
+			tenantId, Pageable.of(limit, offset, sortBy, sortType));
 	}
 
 	@Query
@@ -73,6 +101,30 @@ public class TenantGraphqlResource {
 	@Mutation
 	public Uni<Tenant> deleteTenant(long tenantId) {
 		return tenantService.deleteById(tenantId);
+	}
+
+	@Mutation
+	public Uni<Response> addDatasourceToTenant(long tenantId, long datasourceId) {
+		return tenantService.addDatasource(tenantId, datasourceId).replaceWith(
+			() -> Response.of("Datasource added to tenant"));
+	}
+
+	@Mutation
+	public Uni<Response> removeDatasourceFromTenant(long tenantId, long datasourceId) {
+		return tenantService.removeDatasource(tenantId, datasourceId).replaceWith(
+			() -> Response.of("Datasource removed from tenant"));
+	}
+
+	@Mutation
+	public Uni<Response> addSuggestionCategoryToTenant(long tenantId, long suggestionCategoryId) {
+		return tenantService.addSuggestionCategory(tenantId, suggestionCategoryId).replaceWith(
+			() -> Response.of("Suggestion category added to tenant"));
+	}
+
+	@Mutation
+	public Uni<Response> removeSuggestionCategoryFromTenant(long tenantId, long suggestionCategoryId) {
+		return tenantService.removeSuggestionCategory(tenantId, suggestionCategoryId).replaceWith(
+			() -> Response.of("Suggestion category removed from tenant"));
 	}
 
 	@Subscription

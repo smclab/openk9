@@ -15,26 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource.util;
+package io.openk9.datasource.graphql.util;
 
-import io.openk9.datasource.graphql.util.SortType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.QueryParam;
-
 @Data
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
-public class Pageable {
-	@QueryParam("limit") @DefaultValue("20")
-	private int limit;
-	@QueryParam("offset") @DefaultValue("0")
-	private int offset;
-	@QueryParam("sortBy") @DefaultValue("createDate")
-	private K9Column sortBy;
-	@QueryParam("sortType") @DefaultValue("ASC")
-	private SortType sortType;
+public class Response {
+
+	private String message;
+	public static final Response INSTANCE = new Response("nothing");
+
 }

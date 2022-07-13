@@ -18,8 +18,13 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.EntityIndex;
+import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
+import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -45,9 +50,34 @@ public class DatasourceGraphqlResource {
 	public Uni<Page<Datasource>> getDatasources(
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") String sortBy,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return datasourceService.findAllPaginated(limit, offset, sortBy, sortType);
+		return datasourceService.findAllPaginated(
+			limit, offset, sortBy.name(), sortType);
+	}
+
+	@Query
+	public Uni<EnrichPipeline> getEnrichPipelineFromDatasource(
+		@Name("datasourceId") long datasourceId) {
+		return datasourceService.getEnrichPipeline(datasourceId);
+	}
+
+	@Query
+	public Uni<DataIndex> getDataIndexFromDatasource(
+		@Name("datasourceId") long datasourceId) {
+		return datasourceService.getDataIndex(datasourceId);
+	}
+
+	@Query
+	public Uni<EntityIndex> getEntityIndexFromDatasource(
+		@Name("datasourceId") long datasourceId) {
+		return datasourceService.getEntityIndex(datasourceId);
+	}
+
+	@Query
+	public Uni<PluginDriver> getPluginDriverFromDatasource(
+		@Name("datasourceId") long datasourceId) {
+		return datasourceService.getPluginDriver(datasourceId);
 	}
 
 	@Query
@@ -73,6 +103,58 @@ public class DatasourceGraphqlResource {
 	@Mutation
 	public Uni<Datasource> deleteDatasource(long datasourceId) {
 		return datasourceService.deleteById(datasourceId);
+	}
+
+	@Mutation
+	public Uni<Datasource> setEntityIndexToDatasource(
+		@Name("datasourceId") long datasourceId,
+		@Name("entityIndexId") long entityIndexId) {
+		return datasourceService.setEntityIndex(datasourceId, entityIndexId);
+	}
+
+	@Mutation
+	public Uni<Datasource> unsetEntityIndexToDatasource(
+		@Name("datasourceId") long datasourceId) {
+		return datasourceService.unsetEntityIndex(datasourceId);
+	}
+
+	@Mutation
+	public Uni<Datasource> setDataIndexToDatasource(
+		@Name("datasourceId") long datasourceId,
+		@Name("dataIndexId") long dataIndexId) {
+		return datasourceService.setDataIndex(datasourceId, dataIndexId);
+	}
+
+	@Mutation
+	public Uni<Datasource> unsetDataIndexFromDatasource(
+		@Name("datasourceId") long datasourceId) {
+		return datasourceService.unsetDataIndex(datasourceId);
+	}
+
+	@Mutation
+	public Uni<Datasource> setEnrichPipelineToDatasource(
+		@Name("datasourceId") long datasourceId,
+		@Name("enrichPipelineId") long enrichPipelineId) {
+		return datasourceService.setEnrichPipeline(datasourceId, enrichPipelineId);
+	}
+
+	@Mutation
+	public Uni<Datasource> unsetEnrichPipelineToDatasource(
+		@Name("datasourceId") long datasourceId) {
+		return datasourceService.unsetEnrichPipeline(datasourceId);
+	}
+
+	@Mutation
+	public Uni<Datasource> setPluginDriverToDatasource(
+		@Name("datasourceId") long datasourceId,
+		@Name("pluginDriverId") long pluginDriverId) {
+		return datasourceService.setPluginDriver(datasourceId, pluginDriverId);
+	}
+
+	@Mutation
+	public Uni<Datasource> unsetPluginDriverToDatasource(
+		@Name("datasourceId") long datasourceId) {
+		return datasourceService.unsetPluginDriver(datasourceId);
 	}
 
 	@Subscription

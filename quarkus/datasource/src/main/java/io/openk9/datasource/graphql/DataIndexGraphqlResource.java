@@ -17,10 +17,14 @@
 
 package io.openk9.datasource.graphql;
 
+import io.openk9.datasource.graphql.util.Response;
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -45,9 +49,21 @@ public class DataIndexGraphqlResource {
 	public Uni<Page<DataIndex>> getDataIndices(
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") String sortBy,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return dataIndexService.findAllPaginated(limit, offset, sortBy, sortType);
+		return dataIndexService.findAllPaginated(
+			limit, offset, sortBy.name(), sortType);
+	}
+
+	@Query
+	public Uni<Page<DocType>> getDocTypesFromDataIndex(
+		@Name("dataIndexId") long dataIndexId,
+		@Name("limit") @DefaultValue("20") int limit,
+		@Name("offset") @DefaultValue("0") int offset,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
+		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		return dataIndexService.getDocTypes(
+			dataIndexId, Pageable.of(limit, offset, sortBy, sortType));
 	}
 
 	@Query
@@ -73,6 +89,18 @@ public class DataIndexGraphqlResource {
 	@Mutation
 	public Uni<DataIndex> deleteDataIndex(long dataIndexId) {
 		return dataIndexService.deleteById(dataIndexId);
+	}
+
+	@Mutation
+	public Uni<Response> addDocTypeToDataIndex(long dataIndexId, long docTypeId) {
+		return dataIndexService.addDocType(dataIndexId, docTypeId)
+			.replaceWith(() -> Response.of("added docType to dataIndex"));
+	}
+
+	@Mutation
+	public Uni<Response> removeDocTypeFromDataIndex(long dataIndexId, long docTypeId) {
+		return dataIndexService.removeDocType(dataIndexId, docTypeId)
+			.replaceWith(() -> Response.of("removed docType from dataIndex"));
 	}
 
 	@Subscription

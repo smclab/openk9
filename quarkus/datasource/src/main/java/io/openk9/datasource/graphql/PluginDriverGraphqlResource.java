@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -45,9 +46,10 @@ public class PluginDriverGraphqlResource {
 	public Uni<Page<PluginDriver>> getPluginDrivers(
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") String sortBy,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return pluginDriverService.findAllPaginated(limit, offset, sortBy, sortType);
+		return pluginDriverService.findAllPaginated(
+			limit, offset, sortBy.name(), sortType);
 	}
 
 	@Query
