@@ -21,15 +21,17 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.smallrye.mutiny.Uni;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import java.util.Collection;
 
 @Path("/suggestion-categories")
 public class SuggestionCategoryResource extends
@@ -41,9 +43,9 @@ public class SuggestionCategoryResource extends
 
 	@GET
 	@Path("/{id}/doc-type-fields")
-	public Uni<Collection<DocTypeField>> getDocTypeFields(
-		@PathParam("id") long suggestionCategoryId) {
-		return service.getDocTypeFields(suggestionCategoryId);
+	public Uni<Page<DocTypeField>> getDocTypeFields(
+		@PathParam("id") long suggestionCategoryId, @BeanParam Pageable pageable) {
+		return service.getDocTypeFields(suggestionCategoryId, pageable);
 	}
 
 	@PUT

@@ -21,15 +21,17 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DataIndexService;
 import io.smallrye.mutiny.Uni;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import java.util.Collection;
 
 @Path("/data-indexes")
 public class DataIndexResource extends
@@ -41,8 +43,9 @@ public class DataIndexResource extends
 
 	@GET
 	@Path("/{id}/doc-types")
-	public Uni<Collection<DocType>> getDocTypes(@PathParam("id") long id) {
-		return service.getDocTypes(id);
+	public Uni<Page<DocType>> getDocTypes(
+		@PathParam("id") long id, @BeanParam Pageable pageable) {
+		return service.getDocTypes(id, pageable);
 	}
 
 	@PUT

@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.resource.util;
 
-import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.util.BaseK9EntityService;
@@ -28,8 +27,8 @@ import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
@@ -37,7 +36,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 @CircuitBreaker
@@ -52,12 +50,8 @@ public abstract class BaseK9EntityResource<
 	}
 
 	@GET
-	public Uni<Page<ENTITY>> findAll(
-		@QueryParam("limit") @DefaultValue("20") int limit,
-		@QueryParam("offset") @DefaultValue("0") int offset,
-		@QueryParam("sortBy") @DefaultValue("createDate") String sortBy,
-		@QueryParam("sortType") @DefaultValue("ASC") SortType sortType) {
-		return this.service.findAllPaginated(limit, offset, sortBy, sortType);
+	public Uni<Page<ENTITY>> findAll(@BeanParam Pageable pageable) {
+		return this.service.findAllPaginated(pageable);
 	}
 
 	@GET

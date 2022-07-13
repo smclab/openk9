@@ -22,14 +22,17 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.TenantService;
 import io.smallrye.mutiny.Uni;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import java.util.Collection;
+import javax.ws.rs.PathParam;
 
 @Path("/tenants")
 public class TenantResource extends
@@ -41,26 +44,26 @@ public class TenantResource extends
 
 	@GET
 	@Path("/{id}/datasources")
-	public Uni<Collection<Datasource>> getDatasources(long tenantId) {
-		return service.getDatasources(tenantId);
+	public Uni<Page<Datasource>> getDatasources(@PathParam("id")long tenantId, @BeanParam Pageable pageable) {
+		return service.getDatasources(tenantId, pageable);
 	}
 
 	@PUT
 	@Path("/{id}/datasources/{datasourceId}")
-	public Uni<Void> addDatasource(long tenantId, long datasourceId) {
+	public Uni<Void> addDatasource(@PathParam("id")long tenantId, @PathParam("datasourceId")long datasourceId) {
 		return service.addDatasource(tenantId, datasourceId);
 	}
 
 	@DELETE
 	@Path("/{id}/datasources/{datasourceId}")
-	public Uni<Void> removeDatasource(long tenantId, long datasourceId) {
+	public Uni<Void> removeDatasource(@PathParam("id")long tenantId, @PathParam("datasourceId")long datasourceId) {
 		return service.removeDatasource(tenantId, datasourceId);
 	}
 
 	@GET
 	@Path("/{id}/suggestion-categories")
-	public Uni<Collection<SuggestionCategory>> getSuggestionCategories(long tenantId) {
-		return service.getSuggestionCategories(tenantId);
+	public Uni<Page<SuggestionCategory>> getSuggestionCategories(@PathParam("id") long tenantId, @BeanParam Pageable pageable) {
+		return service.getSuggestionCategories(tenantId, pageable);
 	}
 
 	@PUT

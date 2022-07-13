@@ -18,16 +18,19 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.quarkus.hibernate.reactive.panache.PanacheQuery;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Collection;
 
 @ApplicationScoped
 public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, EnrichPipelineDTO> {
@@ -35,9 +38,18 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		 this.mapper = mapper;
 	}
 
-	public Uni<Collection<EnrichItem>> getEnrichItems(long enrichPipelineId) {
-		return findById(enrichPipelineId)
-			.flatMap(pipeline -> Mutiny.fetch(pipeline.getEnrichItems()));
+	public Uni<Page<EnrichItem>> getEnrichItems(long enrichPipelineId, Pageable pageable) {
+
+		 PanacheQuery<EnrichItem> docTypePanacheQuery =
+			DataIndex
+				.find(
+					"#EnrichPipeline.getEnrichItems",
+					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+					enrichPipelineId)
+				.page(pageable.getLimit(), pageable.getOffset());
+
+		return createPage(
+			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery);
 	}
 
 	public Uni<Void> addEnrichItem(long enrichPipelineId, long enrichItemId) {

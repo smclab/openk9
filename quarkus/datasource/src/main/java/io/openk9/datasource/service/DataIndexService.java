@@ -21,13 +21,15 @@ import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.quarkus.hibernate.reactive.panache.PanacheQuery;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Collection;
 
 @ApplicationScoped
 public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDTO> {
@@ -35,9 +37,19 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 		 this.mapper = mapper;
 	}
 
-	public Uni<Collection<DocType>> getDocTypes(long dataIndexId) {
-		 return findById(dataIndexId)
-				 .flatMap(dataIndex -> Mutiny.fetch(dataIndex.getDocTypes()));
+	public Uni<Page<DocType>> getDocTypes(
+		long dataIndexId, Pageable pageable) {
+
+		PanacheQuery<DocType> docTypePanacheQuery =
+			DataIndex
+				.find(
+					"#DataIndex.getDocTypes",
+					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+					dataIndexId)
+				.page(pageable.getLimit(), pageable.getOffset());
+
+		return createPage(
+			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery);
 	}
 
 	public Uni<Void> addDocType(long dataIndexId, long docTypeId) {

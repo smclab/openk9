@@ -19,17 +19,20 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.quarkus.hibernate.reactive.panache.PanacheQuery;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Collection;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
@@ -37,9 +40,19 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		 this.mapper = mapper;
 	}
 
-	public Uni<Collection<DocTypeField>> getDocTypeFields(long docTypeId) {
-		 return findById(docTypeId)
-			 .flatMap(docType -> Mutiny.fetch(docType.getDocTypeFields()));
+	public Uni<Page<DocTypeField>> getDocTypeFields(
+		long docTypeId, Pageable pageable) {
+
+		 PanacheQuery<DocTypeField> docTypePanacheQuery =
+			DataIndex
+				.find(
+					"#DocType.getDocTypeFields",
+					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+					docTypeId)
+				.page(pageable.getLimit(), pageable.getOffset());
+
+		return createPage(
+			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery);
 	}
 
 	public Uni<DocTypeField> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {

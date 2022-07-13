@@ -18,18 +18,21 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.TenantMapper;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.quarkus.hibernate.reactive.panache.PanacheQuery;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Collection;
 
 @ApplicationScoped
 public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
@@ -37,15 +40,33 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		 this.mapper = mapper;
 	}
 
-	public Uni<Collection<Datasource>> getDatasources(long tenantId) {
-		return findById(tenantId)
-			.flatMap(t -> Mutiny.fetch(t.getDatasources()));
+	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
+
+		 PanacheQuery<Datasource> docTypePanacheQuery =
+			DataIndex
+				.find(
+					"#Tenant.getDatasources",
+					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+					tenantId)
+				.page(pageable.getLimit(), pageable.getOffset());
+
+		return createPage(
+			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery);
 	}
 
-	public Uni<Collection<SuggestionCategory>> getSuggestionCategories(
-		long tenantId) {
-		return findById(tenantId)
-			.flatMap(t -> Mutiny.fetch(t.getSuggestionCategories()));
+	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
+		long tenantId, Pageable pageable) {
+
+		 PanacheQuery<SuggestionCategory> docTypePanacheQuery =
+			DataIndex
+				.find(
+					"#Tenant.getSuggestionCategories",
+					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+					tenantId)
+				.page(pageable.getLimit(), pageable.getOffset());
+
+		return createPage(
+			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery);
 	}
 
 	public Uni<Void> removeDatasource(long tenantId, long datasourceId) {

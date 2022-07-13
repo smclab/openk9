@@ -18,12 +18,16 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.quarkus.hibernate.reactive.panache.PanacheQuery;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -42,9 +46,19 @@ public class SuggestionCategoryService extends
 			.map(Function.identity());
 	}
 
-	public Uni<Collection<DocTypeField>> getDocTypeFields(long suggestionCategoryId) {
-		return findById(suggestionCategoryId)
-			.flatMap(suggestionCategory -> Mutiny.fetch(suggestionCategory.getDocTypeFields()));
+	public Uni<Page<DocTypeField>> getDocTypeFields(
+		long suggestionCategoryId, Pageable pageable) {
+
+		 PanacheQuery<DocTypeField> docTypeFieldPanacheQuery =
+			DataIndex
+				.find(
+					"#SuggestionCategory.getDocTypeFields",
+					Sort.by(pageable.getSortBy(), pageable.getSortType().getDirection()),
+					suggestionCategoryId)
+				.page(pageable.getLimit(), pageable.getOffset());
+
+		return createPage(
+			pageable.getLimit(), pageable.getOffset(), docTypeFieldPanacheQuery);
 	}
 
 	public Uni<Void> addDocTypeField(

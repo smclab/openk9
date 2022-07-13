@@ -23,6 +23,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.NamedQueries;
+import org.hibernate.annotations.NamedQuery;
 
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
@@ -37,6 +39,15 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@NamedQueries({
+	@NamedQuery(
+		name = "DocType.getDocTypeFields",
+		query =
+			"select docType.docTypeFields " +
+			"from DocType docType " +
+			"where docType.id = ?1"
+	)
+})
 public class DocType extends K9Entity {
 	@OneToMany(mappedBy = "docType", cascade = javax.persistence.CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude

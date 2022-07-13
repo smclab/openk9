@@ -22,7 +22,7 @@ import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.resource.util.Page;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import io.openk9.datasource.resource.util.Pageable;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
@@ -46,21 +46,23 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.list();
 	}
 
+	public Uni<Page<ENTITY>> findAllPaginated(Pageable pageable) {
+
+		return findAllPaginated(
+			pageable.getLimit(), pageable.getOffset(), pageable.getSortBy(),
+			pageable.getSortType());
+
+	}
+
 	public Uni<Page<ENTITY>> findAllPaginated(
 		int limit, int offset, String sortBy, SortType sortType) {
 
-		PanacheQuery<PanacheEntityBase> panacheQuery =
+		PanacheQuery<ENTITY> panacheQuery =
 			ENTITY
 				.findAll(Sort.by(sortBy, sortType.getDirection()))
 				.page(offset, limit);
 
-		return Uni
-			.combine()
-			.all()
-			.unis(panacheQuery.pageCount(), panacheQuery.count(), panacheQuery.hasNextPage(), panacheQuery.<ENTITY>list())
-			.combinedWith((pageCount, count, hasNextPage, content) ->
-				Page.of(limit, offset, pageCount, count, hasNextPage, content));
-
+		return createPage(limit, offset, panacheQuery);
 
 	}
 
@@ -121,6 +123,19 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	public BroadcastProcessor<K9EntityEvent<ENTITY>> getProcessor() {
 		return (BroadcastProcessor<K9EntityEvent<ENTITY>>)processor;
+	}
+
+	public static <T extends K9Entity> Uni<Page<T>> createPage(
+		int limit, int offset, PanacheQuery<T> panacheQuery) {
+
+		return Uni
+			.combine()
+			.all()
+			.unis(
+				panacheQuery.pageCount(), panacheQuery.count(),
+				panacheQuery.hasNextPage(), panacheQuery.<T>list())
+			.combinedWith((pageCount, count, hasNextPage, content) ->
+				Page.of(limit, offset, pageCount, count, hasNextPage, content));
 	}
 
 	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>> processor =

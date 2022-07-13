@@ -22,15 +22,17 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DocTypeService;
 import io.smallrye.mutiny.Uni;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import java.util.Collection;
 
 @Path("/doc-types")
 public class DocTypeResource extends
@@ -42,9 +44,9 @@ public class DocTypeResource extends
 
 	@GET
 	@Path("/{id}/doc-type-fields")
-	public Uni<Collection<DocTypeField>> getDocTypeFields(
-		@PathParam("id") long id) {
-		return service.getDocTypeFields(id);
+	public Uni<Page<DocTypeField>> getDocTypeFields(
+		@PathParam("id") long id, @BeanParam Pageable pageable) {
+		return service.getDocTypeFields(id, pageable);
 	}
 
 	@PUT
