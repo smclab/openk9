@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -55,18 +56,18 @@ public class EnrichItemGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<EnrichItem> patchEnrichItem(EnrichItem enrichItem) {
-		return enrichItemService.patch(enrichItem);
+	public Uni<EnrichItem> patchEnrichItem(long id, EnrichItemDTO enrichItemDTO) {
+		return enrichItemService.patch(id, enrichItemDTO);
 	}
 
 	@Mutation
-	public Uni<EnrichItem> updateEnrichItem(EnrichItem enrichItem) {
-		return enrichItemService.update(enrichItem);
+	public Uni<EnrichItem> updateEnrichItem(long id, EnrichItemDTO enrichItemDTO) {
+		return enrichItemService.update(id, enrichItemDTO);
 	}
 
 	@Mutation
-	public Uni<EnrichItem> createEnrichItem(EnrichItem enrichItem) {
-		return enrichItemService.persist(enrichItem);
+	public Uni<EnrichItem> createEnrichItem(EnrichItemDTO enrichItemDTO) {
+		return enrichItemService.persist(enrichItemDTO);
 	}
 
 	@Mutation

@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -55,18 +56,18 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Datasource> patchDatasource(Datasource datasource) {
-		return datasourceService.patch(datasource);
+	public Uni<Datasource> patchDatasource(long id, DatasourceDTO datasourceDTO) {
+		return datasourceService.patch(id, datasourceDTO);
 	}
 
 	@Mutation
-	public Uni<Datasource> updateDatasource(Datasource datasource) {
-		return datasourceService.update(datasource);
+	public Uni<Datasource> updateDatasource(long id, DatasourceDTO datasourceDTO) {
+		return datasourceService.update(id, datasourceDTO);
 	}
 
 	@Mutation
-	public Uni<Datasource> createDatasource(Datasource datasource) {
-		return datasourceService.persist(datasource);
+	public Uni<Datasource> createDatasource(DatasourceDTO datasourceDTO) {
+		return datasourceService.persist(datasourceDTO);
 	}
 
 	@Mutation

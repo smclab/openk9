@@ -15,19 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource;
+package io.openk9.datasource.model.dto.util;
 
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.DocTypeFieldService;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.validator.constraints.Length;
 
-//@Path("/doc-type-fields")
-public class DocTypeFieldResource extends
-	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
+@Data
+@NoArgsConstructor
+@SuperBuilder
+public class K9EntityDTO {
 
-	protected DocTypeFieldResource(DocTypeFieldService service) {
-		super(service);
-	}
+	@Length(max = 255)
+	private String name;
+
+	@Length(max = 4096)
+	private String description;
 
 }

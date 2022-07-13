@@ -18,10 +18,12 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.dto.DataIndexDTO;
 import org.mapstruct.Mapper;
 
 @Mapper(
-	config = PatchMapper.class
+	config = K9EntityMapper.class
 )
-public interface DataIndexMapper extends PatchMapper<DataIndex> {
+public interface DataIndexMapper extends
+	K9EntityMapper<DataIndex, DataIndexDTO> {
 }

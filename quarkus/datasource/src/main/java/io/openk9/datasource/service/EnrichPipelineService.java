@@ -20,6 +20,7 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.dto.EnrichPipelineDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -29,9 +30,9 @@ import javax.inject.Inject;
 import java.util.Collection;
 
 @ApplicationScoped
-public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline> {
+public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, EnrichPipelineDTO> {
 	 EnrichPipelineService(EnrichPipelineMapper mapper) {
-		patchMapper = mapper;
+		 this.mapper = mapper;
 	}
 
 	public Uni<Collection<EnrichItem>> getEnrichItems(long enrichPipelineId) {

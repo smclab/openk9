@@ -18,10 +18,12 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import org.mapstruct.Mapper;
 
 @Mapper(
-	config = PatchMapper.class
+	config = K9EntityMapper.class
 )
-public interface SuggestionCategoryMapper extends PatchMapper<SuggestionCategory> {
+public interface SuggestionCategoryMapper extends
+	K9EntityMapper<SuggestionCategory, SuggestionCategoryDTO> {
 }

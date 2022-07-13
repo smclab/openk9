@@ -20,6 +20,7 @@ package io.openk9.datasource.resource;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.dto.TenantDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.TenantService;
 import io.smallrye.mutiny.Uni;
@@ -32,7 +33,7 @@ import java.util.Collection;
 
 @Path("/tenants")
 public class TenantResource extends
-	BaseK9EntityResource<TenantService, Tenant> {
+	BaseK9EntityResource<TenantService, Tenant, TenantDTO> {
 
 	protected TenantResource(TenantService service) {
 		super(service);

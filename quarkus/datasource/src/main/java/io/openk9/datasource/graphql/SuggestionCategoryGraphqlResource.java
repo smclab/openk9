@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -61,18 +62,18 @@ public class SuggestionCategoryGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<SuggestionCategory> patchSuggestionCategory(SuggestionCategory suggestionCategory) {
-		return suggestionCategoryService.patch(suggestionCategory);
+	public Uni<SuggestionCategory> patchSuggestionCategory(long id, SuggestionCategoryDTO suggestionCategoryDTO) {
+		return suggestionCategoryService.patch(id, suggestionCategoryDTO);
 	}
 
 	@Mutation
-	public Uni<SuggestionCategory> updateSuggestionCategory(SuggestionCategory suggestionCategory) {
-		return suggestionCategoryService.update(suggestionCategory);
+	public Uni<SuggestionCategory> updateSuggestionCategory(long id, SuggestionCategoryDTO suggestionCategoryDTO) {
+		return suggestionCategoryService.update(id, suggestionCategoryDTO);
 	}
 
 	@Mutation
-	public Uni<SuggestionCategory> createSuggestionCategory(SuggestionCategory suggestionCategory) {
-		return suggestionCategoryService.persist(suggestionCategory);
+	public Uni<SuggestionCategory> createSuggestionCategory(SuggestionCategoryDTO suggestionCategoryDTO) {
+		return suggestionCategoryService.persist(suggestionCategoryDTO);
 	}
 
 	@Mutation

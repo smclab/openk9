@@ -19,13 +19,14 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.EntityIndexMapper;
 import io.openk9.datasource.model.EntityIndex;
+import io.openk9.datasource.model.dto.EntityIndexDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
 import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class EntityIndexService extends BaseK9EntityService<EntityIndex> {
+public class EntityIndexService extends BaseK9EntityService<EntityIndex, EntityIndexDTO> {
 	 EntityIndexService(EntityIndexMapper mapper) {
-		patchMapper = mapper;
+		 this.mapper = mapper;
 	}
 }

@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -55,18 +56,18 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<DocType> patchDocType(DocType docType) {
-		return docTypeService.patch(docType);
+	public Uni<DocType> patchDocType(long id, DocTypeDTO docTypeDTO) {
+		return docTypeService.patch(id, docTypeDTO);
 	}
 
 	@Mutation
-	public Uni<DocType> updateDocType(DocType docType) {
-		return docTypeService.update(docType);
+	public Uni<DocType> updateDocType(long id, DocTypeDTO docTypeDTO) {
+		return docTypeService.update(id, docTypeDTO);
 	}
 
 	@Mutation
-	public Uni<DocType> createDocType(DocType docType) {
-		return docTypeService.persist(docType);
+	public Uni<DocType> createDocType(DocTypeDTO docTypeDTO) {
+		return docTypeService.persist(docTypeDTO);
 	}
 
 	@Mutation

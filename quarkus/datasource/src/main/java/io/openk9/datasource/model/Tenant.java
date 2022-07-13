@@ -18,7 +18,7 @@
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.mapper.K9Entity;
+import io.openk9.datasource.model.util.K9Entity;
 import io.quarkus.resteasy.reactive.jackson.SecureField;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

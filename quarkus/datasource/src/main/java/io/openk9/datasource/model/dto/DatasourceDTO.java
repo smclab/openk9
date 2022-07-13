@@ -15,19 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource;
+package io.openk9.datasource.model.dto;
 
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.DocTypeFieldService;
+import com.cronutils.model.CronType;
+import com.cronutils.validation.Cron;
+import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-//@Path("/doc-type-fields")
-public class DocTypeFieldResource extends
-	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
+import javax.validation.constraints.NotNull;
+import java.time.OffsetDateTime;
 
-	protected DocTypeFieldResource(DocTypeFieldService service) {
-		super(service);
-	}
+@NoArgsConstructor
+@SuperBuilder
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
+public class DatasourceDTO extends K9EntityDTO {
+
+	@NotNull
+	@Cron(type = CronType.QUARTZ)
+	private String scheduling;
+
+	private OffsetDateTime lastIngestionDate;
+
+	private Boolean schedulable = false;
 
 }

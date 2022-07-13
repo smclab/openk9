@@ -23,6 +23,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 
@@ -30,9 +31,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 @ApplicationScoped
-public class DatasourceService extends BaseK9EntityService<Datasource> {
+public class DatasourceService extends BaseK9EntityService<Datasource, DatasourceDTO> {
 	 DatasourceService(DatasourceMapper mapper) {
-		patchMapper = mapper;
+		 this.mapper = mapper;
 	}
 
 	public Uni<EntityIndex> getEntityIndex(long datasourceId) {

@@ -15,19 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource;
+package io.openk9.datasource.resource.util;
 
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.model.util.K9Entity;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-//@Path("/doc-type-fields")
-public class DocTypeFieldResource extends
-	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
+import java.util.List;
 
-	protected DocTypeFieldResource(DocTypeFieldService service) {
-		super(service);
-	}
-
+@AllArgsConstructor(staticName = "of")
+@Getter
+public class Page<ENTITY extends K9Entity> {
+	private final int limit;
+	private final int offset;
+	private final int pageCount;
+	private final long count;
+	private final boolean hasNextPage;
+	private final List<ENTITY> content;
 }

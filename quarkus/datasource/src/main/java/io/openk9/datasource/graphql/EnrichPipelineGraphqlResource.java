@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.dto.EnrichPipelineDTO;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -55,18 +56,18 @@ public class EnrichPipelineGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<EnrichPipeline> patchEnrichPipeline(EnrichPipeline enrichPipeline) {
-		return enrichPipelineService.patch(enrichPipeline);
+	public Uni<EnrichPipeline> patchEnrichPipeline(long id, EnrichPipelineDTO enrichPipelineDTO) {
+		return enrichPipelineService.patch(id, enrichPipelineDTO);
 	}
 
 	@Mutation
-	public Uni<EnrichPipeline> updateEnrichPipeline(EnrichPipeline enrichPipeline) {
-		return enrichPipelineService.update(enrichPipeline);
+	public Uni<EnrichPipeline> updateEnrichPipeline(long id, EnrichPipelineDTO enrichPipelineDTO) {
+		return enrichPipelineService.update(id, enrichPipelineDTO);
 	}
 
 	@Mutation
-	public Uni<EnrichPipeline> createEnrichPipeline(EnrichPipeline enrichPipeline) {
-		return enrichPipelineService.persist(enrichPipeline);
+	public Uni<EnrichPipeline> createEnrichPipeline(EnrichPipelineDTO enrichPipelineDTO) {
+		return enrichPipelineService.persist(enrichPipelineDTO);
 	}
 
 	@Mutation

@@ -15,8 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.mapper;
+package io.openk9.datasource.model.util;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,11 +43,13 @@ public abstract class K9Entity extends PanacheEntity {
 	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")
 	@CreationTimestamp
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private OffsetDateTime createDate;
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "modified_date")
 	@UpdateTimestamp
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private OffsetDateTime modifiedDate;
 
 	@Column(name = "name", nullable = false, unique = true)
@@ -55,6 +58,7 @@ public abstract class K9Entity extends PanacheEntity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	public Long getId() {
 		return id;
 	}

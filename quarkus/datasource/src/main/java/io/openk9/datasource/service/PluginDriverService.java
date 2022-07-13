@@ -19,13 +19,14 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.PluginDriverMapper;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
 import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class PluginDriverService extends BaseK9EntityService<PluginDriver> {
+public class PluginDriverService extends BaseK9EntityService<PluginDriver, PluginDriverDTO> {
 	 PluginDriverService(PluginDriverMapper mapper) {
-		patchMapper = mapper;
+		 this.mapper = mapper;
 	}
 }

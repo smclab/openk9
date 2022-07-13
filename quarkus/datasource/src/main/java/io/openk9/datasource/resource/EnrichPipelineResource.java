@@ -19,6 +19,7 @@ package io.openk9.datasource.resource;
 
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.dto.EnrichPipelineDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.smallrye.mutiny.Uni;
@@ -32,7 +33,7 @@ import java.util.Collection;
 
 @Path("/enrich-pipelines")
 public class EnrichPipelineResource extends
-	BaseK9EntityResource<EnrichPipelineService, EnrichPipeline> {
+	BaseK9EntityResource<EnrichPipelineService, EnrichPipeline, EnrichPipelineDTO> {
 
 	protected EnrichPipelineResource(EnrichPipelineService service) {
 		super(service);

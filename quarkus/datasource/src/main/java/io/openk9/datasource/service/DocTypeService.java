@@ -17,9 +17,12 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.dto.DocTypeDTO;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -29,9 +32,9 @@ import javax.inject.Inject;
 import java.util.Collection;
 
 @ApplicationScoped
-public class DocTypeService extends BaseK9EntityService<DocType> {
+public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	 DocTypeService(DocTypeMapper mapper) {
-		patchMapper = mapper;
+		 this.mapper = mapper;
 	}
 
 	public Uni<Collection<DocTypeField>> getDocTypeFields(long docTypeId) {
@@ -39,9 +42,10 @@ public class DocTypeService extends BaseK9EntityService<DocType> {
 			 .flatMap(docType -> Mutiny.fetch(docType.getDocTypeFields()));
 	}
 
-	public Uni<DocTypeField> addDocTypeField(long id, DocTypeField docTypeField) {
+	public Uni<DocTypeField> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
 
-		docTypeField.id = null;
+		DocTypeField docTypeField =
+			docTypeFieldMapper.create(docTypeFieldDTO);
 
 		return findById(id)
 			.flatMap(docType -> {
@@ -64,5 +68,8 @@ public class DocTypeService extends BaseK9EntityService<DocType> {
 
 	@Inject
 	DocTypeFieldService docTypeFieldService;
+
+	@Inject
+	DocTypeFieldMapper docTypeFieldMapper;
 
 }

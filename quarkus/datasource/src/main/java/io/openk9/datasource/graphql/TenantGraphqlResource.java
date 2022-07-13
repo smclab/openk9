@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.dto.TenantDTO;
 import io.openk9.datasource.service.TenantService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -55,18 +56,18 @@ public class TenantGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tenant> patchTenant(Tenant tenant) {
-		return tenantService.patch(tenant);
+	public Uni<Tenant> patchTenant(long id, TenantDTO tenantDTO) {
+		return tenantService.patch(id, tenantDTO);
 	}
 
 	@Mutation
-	public Uni<Tenant> updateTenant(Tenant tenant) {
-		return tenantService.update(tenant);
+	public Uni<Tenant> updateTenant(long id, TenantDTO tenantDTO) {
+		return tenantService.update(id, tenantDTO);
 	}
 
 	@Mutation
-	public Uni<Tenant> createTenant(Tenant tenant) {
-		return tenantService.persist(tenant);
+	public Uni<Tenant> createTenant(TenantDTO tenantDTO) {
+		return tenantService.persist(tenantDTO);
 	}
 
 	@Mutation

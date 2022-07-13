@@ -20,6 +20,7 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -31,9 +32,9 @@ import java.util.function.Function;
 
 @ApplicationScoped
 public class SuggestionCategoryService extends
-	BaseK9EntityService<SuggestionCategory> {
+	BaseK9EntityService<SuggestionCategory, SuggestionCategoryDTO> {
 	 SuggestionCategoryService(SuggestionCategoryMapper mapper) {
-		patchMapper = mapper;
+		 this.mapper = mapper;
 	}
 
 	public Uni<Collection<SuggestionCategory>> findByTenantId(long tenantId) {

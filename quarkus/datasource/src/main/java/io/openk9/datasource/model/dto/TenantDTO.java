@@ -15,19 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource;
+package io.openk9.datasource.model.dto;
 
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-//@Path("/doc-type-fields")
-public class DocTypeFieldResource extends
-	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
-	protected DocTypeFieldResource(DocTypeFieldService service) {
-		super(service);
-	}
-
+@NoArgsConstructor
+@SuperBuilder
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
+public class TenantDTO extends K9EntityDTO {
+	@NotNull
+	@NotEmpty
+	private String virtualHost;
+	private String clientId;
+	private String clientSecret;
+	private String realmName;
 }

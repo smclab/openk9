@@ -18,10 +18,11 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.dto.DocTypeDTO;
 import org.mapstruct.Mapper;
 
 @Mapper(
-	config = PatchMapper.class
+	config = K9EntityMapper.class
 )
-public interface DocTypeMapper extends PatchMapper<DocType> {
+public interface DocTypeMapper extends K9EntityMapper<DocType, DocTypeDTO> {
 }

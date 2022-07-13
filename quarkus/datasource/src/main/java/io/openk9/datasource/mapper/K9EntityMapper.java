@@ -15,19 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource;
+package io.openk9.datasource.mapper;
 
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.model.util.K9Entity;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.MapperConfig;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-//@Path("/doc-type-fields")
-public class DocTypeFieldResource extends
-	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
 
-	protected DocTypeFieldResource(DocTypeFieldService service) {
-		super(service);
-	}
+@MapperConfig(
+	componentModel = "cdi"
+)
+public interface K9EntityMapper<E extends K9Entity, DTO extends K9EntityDTO> {
+
+	@BeanMapping(
+		nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+	)
+	E patch(@MappingTarget E entity, DTO dto);
+
+	E create(DTO dto);
+
+	E update(@MappingTarget E entity, DTO dto);
 
 }

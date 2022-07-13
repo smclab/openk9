@@ -20,6 +20,7 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -29,9 +30,9 @@ import javax.inject.Inject;
 import java.util.Collection;
 
 @ApplicationScoped
-public class DataIndexService extends BaseK9EntityService<DataIndex> {
+public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDTO> {
 	 DataIndexService(DataIndexMapper mapper) {
-		patchMapper = mapper;
+		 this.mapper = mapper;
 	}
 
 	public Uni<Collection<DocType>> getDocTypes(long dataIndexId) {

@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -55,18 +56,18 @@ public class DocTypeFieldGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<DocTypeField> patchDocTypeField(DocTypeField docTypeField) {
-		return docTypeFieldService.patch(docTypeField);
+	public Uni<DocTypeField> patchDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
+		return docTypeFieldService.patch(id, docTypeFieldDTO);
 	}
 
 	@Mutation
-	public Uni<DocTypeField> updateDocTypeField(DocTypeField docTypeField) {
-		return docTypeFieldService.update(docTypeField);
+	public Uni<DocTypeField> updateDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
+		return docTypeFieldService.update(id, docTypeFieldDTO);
 	}
 
 	@Mutation
-	public Uni<DocTypeField> createDocTypeField(DocTypeField docTypeField) {
-		return docTypeFieldService.persist(docTypeField);
+	public Uni<DocTypeField> createDocTypeField(DocTypeFieldDTO docTypeFieldDTO) {
+		return docTypeFieldService.persist(docTypeFieldDTO);
 	}
 
 	@Mutation

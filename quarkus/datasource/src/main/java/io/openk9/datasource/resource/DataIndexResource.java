@@ -19,6 +19,7 @@ package io.openk9.datasource.resource;
 
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.DataIndexService;
 import io.smallrye.mutiny.Uni;
@@ -32,7 +33,7 @@ import java.util.Collection;
 
 @Path("/data-indexes")
 public class DataIndexResource extends
-	BaseK9EntityResource<DataIndexService, DataIndex> {
+	BaseK9EntityResource<DataIndexService, DataIndex, DataIndexDTO> {
 
 	protected DataIndexResource(DataIndexService service) {
 		super(service);

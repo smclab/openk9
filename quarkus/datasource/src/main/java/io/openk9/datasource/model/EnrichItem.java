@@ -18,7 +18,7 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.graphql.util.JsonObjectAdapter;
-import io.openk9.datasource.model.mapper.K9Entity;
+import io.openk9.datasource.model.util.K9Entity;
 import io.smallrye.graphql.api.AdaptWith;
 import io.vertx.core.json.JsonObject;
 import lombok.Getter;
@@ -56,7 +56,7 @@ public class EnrichItem extends K9Entity {
 	@AdaptWith(JsonObjectAdapter.class)
 	private JsonObject jsonConfig;
 
-	enum EnrichItemType {
+	public enum EnrichItemType {
 		ASYNC, SYNC
 	}
 

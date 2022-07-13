@@ -19,6 +19,7 @@ package io.openk9.datasource.resource;
 
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.smallrye.mutiny.Uni;
@@ -32,7 +33,7 @@ import java.util.Collection;
 
 @Path("/suggestion-categories")
 public class SuggestionCategoryResource extends
-	BaseK9EntityResource<SuggestionCategoryService, SuggestionCategory> {
+	BaseK9EntityResource<SuggestionCategoryService, SuggestionCategory, SuggestionCategoryDTO> {
 
 	protected SuggestionCategoryResource(SuggestionCategoryService service) {
 		super(service);

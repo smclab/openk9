@@ -15,21 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.mapper;
+package io.openk9.datasource.model.dto;
 
-import io.openk9.datasource.model.mapper.K9Entity;
-import org.mapstruct.MapperConfig;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-
-@MapperConfig(
-	componentModel = "cdi",
-	nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
-)
-public interface PatchMapper<E extends K9Entity> {
-
-	@Mapping(target = "id", ignore = true)
-	E patch(@MappingTarget E entity, E dto);
+@NoArgsConstructor
+@SuperBuilder
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
+public class DocTypeDTO extends K9EntityDTO {
 }

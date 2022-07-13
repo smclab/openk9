@@ -19,6 +19,8 @@ package io.openk9.datasource.resource;
 
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.dto.DocTypeDTO;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.DocTypeService;
 import io.smallrye.mutiny.Uni;
@@ -32,7 +34,7 @@ import java.util.Collection;
 
 @Path("/doc-types")
 public class DocTypeResource extends
-	BaseK9EntityResource<DocTypeService, DocType> {
+	BaseK9EntityResource<DocTypeService, DocType, DocTypeDTO> {
 
 	protected DocTypeResource(DocTypeService service) {
 		super(service);
@@ -48,8 +50,8 @@ public class DocTypeResource extends
 	@PUT
 	@Path("/{id}/doc-type-fields")
 	public Uni<DocTypeField> addDocTypeField(
-		@PathParam("id")long id, DocTypeField docTypeField) {
-		return service.addDocTypeField(id, docTypeField);
+		@PathParam("id")long id, DocTypeFieldDTO docTypeFieldDTO) {
+		return service.addDocTypeField(id, docTypeFieldDTO);
 	}
 
 	@DELETE

@@ -15,19 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource;
+package io.openk9.datasource.model.dto;
 
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.graphql.util.JsonObjectAdapter;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.smallrye.graphql.api.AdaptWith;
+import io.vertx.core.json.JsonObject;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-//@Path("/doc-type-fields")
-public class DocTypeFieldResource extends
-	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
+import javax.validation.constraints.NotNull;
 
-	protected DocTypeFieldResource(DocTypeFieldService service) {
-		super(service);
-	}
-
+@NoArgsConstructor
+@SuperBuilder
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
+public class PluginDriverDTO extends K9EntityDTO {
+	@NotNull
+	private PluginDriver.PluginDriverType type;
+	@AdaptWith(JsonObjectAdapter.class)
+	private JsonObject jsonConfig;
 }

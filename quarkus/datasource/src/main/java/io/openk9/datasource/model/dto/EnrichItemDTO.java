@@ -15,41 +15,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.datasource.model.dto;
 
 import io.openk9.datasource.graphql.util.JsonObjectAdapter;
-import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.smallrye.graphql.api.AdaptWith;
 import io.vertx.core.json.JsonObject;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
-@Entity
-@Table(name = "plugin_driver")
+@NoArgsConstructor
+@SuperBuilder
 @Getter
 @Setter
-@ToString
-@RequiredArgsConstructor
-public class PluginDriver extends K9Entity {
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "type", nullable = false)
-	private PluginDriverType type;
-
-	@Column(name = "json_config")
+@EqualsAndHashCode(callSuper = true)
+public class EnrichItemDTO extends K9EntityDTO {
+	@NotNull
+	private EnrichItem.EnrichItemType type;
+	@NotNull
+	private String serviceName;
+	private String validationScript;
 	@AdaptWith(JsonObjectAdapter.class)
 	private JsonObject jsonConfig;
-
-	public enum PluginDriverType {
-		HTTP
-	}
-
 }

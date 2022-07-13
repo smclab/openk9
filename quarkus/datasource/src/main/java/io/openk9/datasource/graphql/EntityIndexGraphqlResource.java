@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.EntityIndex;
+import io.openk9.datasource.model.dto.EntityIndexDTO;
 import io.openk9.datasource.service.EntityIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -55,18 +56,18 @@ public class EntityIndexGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<EntityIndex> patchEntityIndex(EntityIndex entityIndex) {
-		return entityIndexService.patch(entityIndex);
+	public Uni<EntityIndex> patchEntityIndex(long id, EntityIndexDTO entityIndexDTO) {
+		return entityIndexService.patch(id, entityIndexDTO);
 	}
 
 	@Mutation
-	public Uni<EntityIndex> updateEntityIndex(EntityIndex entityIndex) {
-		return entityIndexService.update(entityIndex);
+	public Uni<EntityIndex> updateEntityIndex(long id, EntityIndexDTO entityIndexDTO) {
+		return entityIndexService.update(id, entityIndexDTO);
 	}
 
 	@Mutation
-	public Uni<EntityIndex> createEntityIndex(EntityIndex entityIndex) {
-		return entityIndexService.persist(entityIndex);
+	public Uni<EntityIndex> createEntityIndex(EntityIndexDTO entityIndexDTO) {
+		return entityIndexService.persist(entityIndexDTO);
 	}
 
 	@Mutation

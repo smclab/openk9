@@ -18,10 +18,12 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.dto.PluginDriverDTO;
 import org.mapstruct.Mapper;
 
 @Mapper(
-	config = PatchMapper.class
+	config = K9EntityMapper.class
 )
-public interface PluginDriverMapper extends PatchMapper<PluginDriver> {
+public interface PluginDriverMapper extends
+	K9EntityMapper<PluginDriver, PluginDriverDTO> {
 }

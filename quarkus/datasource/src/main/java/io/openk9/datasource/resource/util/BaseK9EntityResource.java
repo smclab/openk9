@@ -18,9 +18,11 @@
 package io.openk9.datasource.resource.util;
 
 import io.openk9.datasource.graphql.util.SortType;
-import io.openk9.datasource.model.mapper.K9Entity;
+import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
@@ -37,24 +39,31 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
 
 @CircuitBreaker
+@ReactiveTransactional
 public abstract class BaseK9EntityResource<
-	SERVICE extends BaseK9EntityService<ENTITY>,
-	ENTITY extends K9Entity> {
+	SERVICE extends BaseK9EntityService<ENTITY, DTO>,
+	ENTITY extends K9Entity,
+	DTO extends K9EntityDTO> {
 
 	protected BaseK9EntityResource(SERVICE service) {
 		this.service = service;
 	}
 
 	@GET
-	public Uni<List<ENTITY>> findAll(
+	public Uni<Page<ENTITY>> findAll(
 		@QueryParam("limit") @DefaultValue("20") int limit,
 		@QueryParam("offset") @DefaultValue("0") int offset,
 		@QueryParam("sortBy") @DefaultValue("createDate") String sortBy,
 		@QueryParam("sortType") @DefaultValue("ASC") SortType sortType) {
-		return this.service.findAll(limit, offset, sortBy, sortType);
+		return this.service.findAllPaginated(limit, offset, sortBy, sortType);
+	}
+
+	@GET
+	@Path("/count")
+	public Uni<Long> count() {
+		return this.service.count();
 	}
 
 	@GET
@@ -65,18 +74,18 @@ public abstract class BaseK9EntityResource<
 
 	@PATCH
 	@Path("/{id}")
-	public Uni<ENTITY> patch(ENTITY entity) {
-		return this.service.patch(entity);
+	public Uni<ENTITY> patch(@PathParam("id") long id, DTO dto) {
+		return this.service.patch(id, dto);
 	}
 
 	@PUT
 	@Path("/{id}")
-	public Uni<ENTITY> update(ENTITY entity) {
-		return this.service.update(entity);
+	public Uni<ENTITY> update(@PathParam("id") long id, DTO dto) {
+		return this.service.update(id, dto);
 	}
 
 	@POST
-	public Uni<ENTITY> persist(ENTITY entity) {
+	public Uni<ENTITY> persist(DTO entity) {
 		return this.service.persist(entity);
 	}
 

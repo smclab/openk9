@@ -21,6 +21,7 @@ import io.openk9.datasource.mapper.TenantMapper;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.dto.TenantDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -31,9 +32,9 @@ import javax.inject.Inject;
 import java.util.Collection;
 
 @ApplicationScoped
-public class TenantService extends BaseK9EntityService<Tenant> {
+public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	 TenantService(TenantMapper mapper) {
-		patchMapper = mapper;
+		 this.mapper = mapper;
 	}
 
 	public Uni<Collection<Datasource>> getDatasources(long tenantId) {

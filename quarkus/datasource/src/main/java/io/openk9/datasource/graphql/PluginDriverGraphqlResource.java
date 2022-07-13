@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
@@ -55,18 +56,18 @@ public class PluginDriverGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<PluginDriver> patchPluginDriver(PluginDriver pluginDriver) {
-		return pluginDriverService.patch(pluginDriver);
+	public Uni<PluginDriver> patchPluginDriver(long id, PluginDriverDTO pluginDriverDTO) {
+		return pluginDriverService.patch(id, pluginDriverDTO);
 	}
 
 	@Mutation
-	public Uni<PluginDriver> updatePluginDriver(PluginDriver pluginDriver) {
-		return pluginDriverService.update(pluginDriver);
+	public Uni<PluginDriver> updatePluginDriver(long id, PluginDriverDTO pluginDriverDTO) {
+		return pluginDriverService.update(id, pluginDriverDTO);
 	}
 
 	@Mutation
-	public Uni<PluginDriver> createPluginDriver(PluginDriver pluginDriver) {
-		return pluginDriverService.persist(pluginDriver);
+	public Uni<PluginDriver> createPluginDriver(PluginDriverDTO pluginDriverDTO) {
+		return pluginDriverService.persist(pluginDriverDTO);
 	}
 
 	@Mutation
