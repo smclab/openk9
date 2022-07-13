@@ -41,6 +41,8 @@ public @interface AnnotatorConfig {
 
 	long timeoutMs() default 10_000;
 
+	String[] autocompleteEntityFields() default {"name", "type", "id", "tenantId"};
+
 	String[] autocompleteAnnotator() default {};
 
 	String[] aggregatorAnnotator() default {};

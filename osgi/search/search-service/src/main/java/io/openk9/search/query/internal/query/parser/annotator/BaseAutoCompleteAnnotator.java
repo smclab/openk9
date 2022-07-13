@@ -33,9 +33,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
@@ -103,8 +106,17 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 		searchSourceBuilder.query(builder);
 
-		searchSourceBuilder.fetchSource(
-			normalizedKeywords.toArray(String[]::new), null);
+		String[] autocompleteEntityFields =
+			_annotatorConfig.autocompleteEntityFields();
+
+		String[] includes =
+			Stream.concat(
+					normalizedKeywords.stream(),
+					Arrays.stream(autocompleteEntityFields))
+				.distinct()
+				.toArray(String[]::new);
+
+		searchSourceBuilder.fetchSource(includes, null);
 
 		searchRequest.source(searchSourceBuilder);
 
@@ -122,7 +134,56 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 			for (SearchHit hit : search.getHits()) {
 				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
-				for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
+
+				Map<Boolean, List<Map.Entry<String, Object>>> collect =
+					sourceAsMap
+						.entrySet()
+						.stream()
+						.collect(
+							Collectors.partitioningBy(
+								entry -> _arrayContains(
+									autocompleteEntityFields, entry.getKey())
+							)
+						);
+
+				List<Map.Entry<String, Object>> entityEntries = collect.get(true);
+
+				if (!entityEntries.isEmpty()) {
+
+					Map<String, Object> entitySemantics = new HashMap<>();
+
+					entitySemantics.put("tokenType", "ENTITY");
+
+					entitySemantics.put("score", hit.getScore());
+
+					for (Map.Entry<String, Object> entitySourceField : entityEntries) {
+						String key = entitySourceField.getKey();
+						Object value = entitySourceField.getValue();
+
+						switch (key) {
+							case "id":
+								entitySemantics.put("value", value);
+								break;
+							case "name":
+								entitySemantics.put("entityName", value);
+								break;
+							case "type":
+								entitySemantics.put("entityType", value);
+								break;
+							case "tenantId":
+								entitySemantics.put("tenantId", value);
+								break;
+						}
+
+					}
+
+					categorySemantics.add(
+						CategorySemantics.of("$" + entitySemantics.get("entityType"), entitySemantics)
+					);
+
+				}
+
+				for (Map.Entry<String, Object> entry : collect.get(false)) {
 					String keyword = entry.getKey();
 					Object value = entry.getValue();
 
@@ -156,6 +217,7 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 							);
 						}
 					}
+
 				}
 			}
 
@@ -174,6 +236,25 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 		}
 
 		return List.of();
+
+	}
+
+	private boolean _arrayContains(
+		List<String> autocompleteEntityFields, String keyword) {
+		return autocompleteEntityFields.contains(keyword);
+
+	}
+
+	private boolean _arrayContains(
+		String[] autocompleteEntityFields, String keyword) {
+
+		for (String autocompleteEntityField : autocompleteEntityFields) {
+			if (keyword.equals(autocompleteEntityField)) {
+				return true;
+			}
+		}
+
+		return false;
 
 	}
 
@@ -197,7 +278,7 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 			List<String> value = tenantKeywordsMap.computeIfAbsent(
 				tenantId, (k) -> new ArrayList<>());
 
-			if (!value.contains(keyword)) {
+			if (!_arrayContains(value, keyword)) {
 				value.add(keyword);
 			}
 
@@ -212,7 +293,7 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 				}
 				List<String> value = e.getValue();
 				for (String allTenantKeyword : allTenantKeywords) {
-					if (!value.contains(allTenantKeyword)) {
+					if (!_arrayContains(value, allTenantKeyword)) {
 						value.add(allTenantKeyword);
 					}
 				}
