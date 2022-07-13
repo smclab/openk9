@@ -28,7 +28,7 @@ import javax.ws.rs.QueryParam;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Pageable<COLUMN extends K9Column> {
+public class Pageable {
 	@QueryParam("limit") @DefaultValue("20")
 	private int limit;
 	@QueryParam("offset") @DefaultValue("0")

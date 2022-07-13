@@ -37,7 +37,7 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 	}
 
 	public Uni<Page<DocType>> getDocTypes(
-		long dataIndexId, Pageable<?> pageable) {
+		long dataIndexId, Pageable pageable) {
 
 		PanacheQuery<DocType> docTypePanacheQuery =
 			DataIndex
