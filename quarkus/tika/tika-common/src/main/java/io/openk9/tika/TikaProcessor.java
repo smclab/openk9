@@ -201,7 +201,10 @@ public class TikaProcessor {
                                 responsePayload.put("document", document);
                             }
 
-                            if (contentType != null) {
+                            Boolean includeContentType =
+                                    enrichItemConfig.getBoolean("include_content_type", true);
+
+                            if (contentType != null && includeContentType) {
                                 document.put("contentType", contentType);
                             }
 
