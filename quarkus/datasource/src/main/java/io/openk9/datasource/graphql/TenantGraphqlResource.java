@@ -37,6 +37,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 
 @GraphQLApi
 @ApplicationScoped
@@ -51,9 +52,16 @@ public class TenantGraphqlResource {
 	}
 
 	public Uni<Page<Datasource>> datasources(
+		@Source List<Tenant> tenants, Pageable pageable) {
+		return tenantService.getDatasources(
+			tenants,
+			pageable == null ? Pageable.DEFAULT : pageable);
+	}
+
+	public Uni<Page<Datasource>> datasources(
 		@Source Tenant tenant, Pageable pageable) {
 		return tenantService.getDatasources(
-			tenant.getId(),
+			tenant,
 			pageable == null ? Pageable.DEFAULT : pageable);
 	}
 

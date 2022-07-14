@@ -22,6 +22,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
@@ -34,6 +35,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
@@ -42,21 +44,30 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		 this.mapper = mapper;
 	}
 
-	public Uni<Page<Datasource>> getDatasources(Tenant tenant, Pageable pageable) {
-		 return getDatasources(tenant.getId(), pageable);
+	public Uni<Page<Datasource>> getDatasources(List<Tenant> tenants, Pageable pageable) {
+		return getDatasources(
+			tenants.stream().mapToLong(K9Entity::getId).toArray(),
+			pageable);
 	}
 
-	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
+	public Uni<Page<Datasource>> getDatasources(Tenant tenant, Pageable pageable) {
+		 return getDatasources(
+			 new long[] {tenant.getId()}, pageable);
+	}
+
+	public Uni<Page<Datasource>> getDatasources(long[] tenantId, Pageable pageable) {
 
 		Map<String, Object> params = new HashMap<>();
 
-		params.put("tenantId", tenantId);
+		boolean isOne = tenantId.length == 1;
+
+		params.put("tenantId", isOne ? tenantId[0] : tenantId);
 
 		String query =
 			"select d " +
 			"from Tenant tenant " +
 			"join tenant.datasources d " +
-			"where tenant.id = :tenantId ";
+			(isOne ? "where tenant.id = :tenantId " : "where tenant.id in (:tenantId) ");
 
 		query = createPageableQuery(pageable, params, query, "d");
 
