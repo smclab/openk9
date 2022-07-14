@@ -136,6 +136,7 @@ public class ResourcesValidatorProcessor {
 					Metadata.of(
 						new OutgoingRabbitMQMetadata.Builder()
 							.withRoutingKey(replyTo)
+							.withDeliveryMode(2)
 							.withContentType("application/json")
 							.build()
 					)
