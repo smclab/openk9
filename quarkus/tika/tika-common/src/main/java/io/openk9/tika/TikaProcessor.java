@@ -165,7 +165,10 @@ public class TikaProcessor {
 
                             documentTypes.add(typeMappingValue);
 
-                            if (lastModified != null) {
+                            Boolean includeLastModified =
+                                    enrichItemConfig.getBoolean("include_last_modified_date", true);
+
+                            if (lastModified != null && includeLastModified) {
 
                                 JsonObject file =
                                     responsePayload.getJsonObject("file");
