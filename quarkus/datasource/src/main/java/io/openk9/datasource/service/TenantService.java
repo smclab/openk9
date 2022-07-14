@@ -50,6 +50,11 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 			pageable);
 	}
 
+	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
+		return getDatasources(
+			new long[] {tenantId}, pageable);
+	}
+
 	public Uni<Page<Datasource>> getDatasources(Tenant tenant, Pageable pageable) {
 		 return getDatasources(
 			 new long[] {tenant.getId()}, pageable);
