@@ -18,11 +18,9 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.Response;
-import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
-import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.EnrichPipelineService;
@@ -31,10 +29,8 @@ import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
-import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
@@ -48,22 +44,18 @@ public class EnrichPipelineGraphqlResource {
 
 	@Query
 	public Uni<Page<EnrichPipeline>> getEnrichPipelines(
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		Pageable pageable) {
 		return enrichPipelineService.findAllPaginated(
-			limit, offset, sortBy.name(), sortType);
+			pageable == null ? Pageable.DEFAULT : pageable
+		);
 	}
 
 	public Uni<Page<EnrichItem>> enrichItems(
 		@Source EnrichPipeline enrichPipeline,
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		Pageable pageable) {
 		return enrichPipelineService.getEnrichItems(
-			enrichPipeline.getId(), Pageable.of(limit, offset, sortBy, sortType));
+			enrichPipeline.getId(),
+			pageable == null ? Pageable.DEFAULT : pageable);
 	}
 
 	@Query

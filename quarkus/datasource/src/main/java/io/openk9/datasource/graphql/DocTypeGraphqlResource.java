@@ -18,12 +18,10 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.Response;
-import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DocTypeService;
@@ -32,10 +30,8 @@ import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
-import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
@@ -49,23 +45,19 @@ public class DocTypeGraphqlResource {
 
 	@Query
 	public Uni<Page<DocType>> getDocTypes(
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		Pageable pageable) {
 		return docTypeService.findAllPaginated(
-			limit, offset, sortBy.name(), sortType);
+			pageable == null ? Pageable.DEFAULT : pageable
+		);
 	}
 
 	@Query
 	public Uni<Page<DocTypeField>> docTypeFields(
 		@Source DocType docType,
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		Pageable pageable) {
 		return docTypeService.getDocTypeFields(
-			docType.getId(), Pageable.of(limit, offset, sortBy, sortType));
+			docType.getId(),
+			pageable == null ? Pageable.DEFAULT : pageable);
 	}
 
 	@Query

@@ -19,23 +19,24 @@ package io.openk9.datasource.resource.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 @AllArgsConstructor(staticName = "of")
+@RequiredArgsConstructor(staticName = "of")
 @Getter
 public class Page<ENTITY> {
 	private final int limit;
-	private final int offset;
-	private final int pageCount;
 	private final long count;
-	private final boolean hasNextPage;
+	private long afterId = 0;
+	private long beforeId = 0;
 	private final List<ENTITY> content;
 
 	public static <T> Page<T> emptyPage() {
 		return (Page<T>)EMPTY;
 	}
 
-	public static final Page<?> EMPTY = Page.of(0, 0, 0, 0, false, List.of());
+	public static final Page<?> EMPTY = Page.of(0, 0, 0, 0, List.of());
 
 }

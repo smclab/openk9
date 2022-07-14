@@ -22,57 +22,24 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
-import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 @ApplicationScoped
 public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	 TenantService(TenantMapper mapper) {
 		 this.mapper = mapper;
-	}
-
-	public Uni<Page<Datasource>> getDatasources(
-		Collection<Tenant> collection, Pageable pageable) {
-		return getDatasources(
-			collection.stream().mapToLong(K9Entity::getId).toArray(), pageable);
-	}
-
-	public Uni<Page<Datasource>> getDatasources(
-		long[] tenantIds, Pageable pageable) {
-
-		if (tenantIds == null || tenantIds.length == 0) {
-			return Uni.createFrom().item(Page.emptyPage());
-		}
-
-		PanacheQuery<Datasource> panacheQuery =
-			Tenant
-				.find(
-					"select d " +
-					"from Tenant tenant " +
-					"join tenant.datasources d " +
-					"where tenant.id IN ?1 " +
-					"order by d." + pageable.getSortBy() + " " + pageable.getSortType().name(),
-					tenantIds)
-				.page(pageable.getOffset(), pageable.getLimit());
-
-		Uni<Long> countQuery =
-			Tenant.count(
-				"from Tenant tenant join tenant.datasources datasource where tenant.id IN ?1",
-				tenantIds);
-
-		return createPage(
-			pageable.getLimit(), pageable.getOffset(), panacheQuery, countQuery);
-
 	}
 
 	public Uni<Page<Datasource>> getDatasources(Tenant tenant, Pageable pageable) {
@@ -81,16 +48,24 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
 
+		Map<String, Object> params = new HashMap<>();
+
+		params.put("tenantId", tenantId);
+
+		String query =
+			"select d " +
+			"from Tenant tenant " +
+			"join tenant.datasources d " +
+			"where tenant.id = :tenantId ";
+
+		query = createPageableQuery(pageable, params, query, "d");
+
+		Sort sort = createSort("d", pageable.getSortBy().name());
+
 		PanacheQuery<Datasource> panacheQuery =
 			Tenant
-				.find(
-					"select d " +
-					"from Tenant tenant " +
-					"join tenant.datasources d " +
-					"where tenant.id = ?1 " +
-					"order by d." + pageable.getSortBy() + " " + pageable.getSortType().name(),
-					tenantId)
-				.page(pageable.getOffset(), pageable.getLimit());
+				.find(query, sort, params)
+				.page(0, pageable.getLimit());
 
 		Uni<Long> countQuery =
 			Tenant.count(
@@ -98,7 +73,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 				tenantId);
 
 		return createPage(
-			pageable.getLimit(), pageable.getOffset(), panacheQuery, countQuery);
+			pageable.getLimit(), panacheQuery, countQuery);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
@@ -109,16 +84,24 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
 		long tenantId, Pageable pageable) {
 
-		 PanacheQuery<SuggestionCategory> docTypePanacheQuery =
-			 Tenant
-				.find(
-					"select sc " +
-					"from Tenant tenant " +
-					"join tenant.suggestionCategories sc " +
-					"where tenant.id = ?1 " +
-					"order by sc." + pageable.getSortBy() + " " + pageable.getSortType().name(),
-					tenantId)
-				.page(pageable.getOffset(), pageable.getLimit());
+		Map<String, Object> params = new HashMap<>();
+
+		params.put("tenantId", tenantId);
+
+		String query =
+			"select sc " +
+			"from Tenant tenant " +
+			"join tenant.suggestionCategories sc " +
+			"where tenant.id = :tenantId ";
+
+		query = createPageableQuery(pageable, params, query, "sc");
+
+		Sort sort = createSort("sc", pageable.getSortBy().name());
+
+		PanacheQuery<SuggestionCategory> panacheQuery =
+			Tenant
+				.find(query, sort, params)
+				.page(0, pageable.getLimit());
 
 		Uni<Long> countQuery =
 			Tenant.count(
@@ -126,7 +109,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 				tenantId);
 
 		return createPage(
-			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery, countQuery);
+			pageable.getLimit(), panacheQuery, countQuery);
 	}
 
 	public Uni<Void> removeDatasource(long tenantId, long datasourceId) {

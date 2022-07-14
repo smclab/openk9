@@ -27,10 +27,13 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
@@ -41,21 +44,30 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long docTypeId, Pageable pageable) {
 
-		 PanacheQuery<DocTypeField> docTypePanacheQuery =
-			 DocType
-				.find("select dtf " +
-					  "from DocType docType " +
-					  "join docType.docTypeFields dtf " +
-					  "where docType.id = ?1 " +
-					  "order by dtf." + pageable.getSortBy() + " " + pageable.getSortType().name(),
-					docTypeId)
-				.page(pageable.getLimit(), pageable.getOffset());
+		Map<String, Object> params = new HashMap<>();
 
-		 Uni<Long> countQuery = DocType.count(
-			 "from DocType docType join docType.docTypeFields where docType.id = ?1", docTypeId);
+		params.put("docTypeId", docTypeId);
+
+		String query =
+			"select dtf " +
+			"from DocType docType " +
+			"join docType.docTypeFields dtf " +
+			"where docType.id = :docTypeId ";
+
+		query = createPageableQuery(pageable, params, query, "dtf");
+
+		Sort sort = createSort("dtf", pageable.getSortBy().name());
+
+		PanacheQuery<DocTypeField> docTypePanacheQuery =
+			DocType
+				.find(query, sort, params)
+				.page(0, pageable.getLimit());
+
+		Uni<Long> countQuery = DocType.count(
+			"from DocType docType join docType.docTypeFields where docType.id = ?1", docTypeId);
 
 		return createPage(
-			pageable.getLimit(), pageable.getOffset(), docTypePanacheQuery, countQuery);
+			pageable.getLimit(), docTypePanacheQuery, countQuery);
 	}
 
 	public Uni<DocTypeField> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {

@@ -17,21 +17,18 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.dto.EntityIndexDTO;
-import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.EntityIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
-import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -44,12 +41,10 @@ public class EntityIndexGraphqlResource {
 
 	@Query
 	public Uni<Page<EntityIndex>> getEntityIndices(
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		Pageable pageable) {
 		return entityIndexService.findAllPaginated(
-			limit, offset, sortBy.name(), sortType);
+			pageable == null ? Pageable.DEFAULT : pageable
+		);
 	}
 
 	@Query

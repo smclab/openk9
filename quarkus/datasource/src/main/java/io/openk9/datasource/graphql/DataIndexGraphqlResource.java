@@ -18,11 +18,9 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.Response;
-import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
-import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DataIndexService;
@@ -31,10 +29,8 @@ import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
-import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
@@ -47,23 +43,15 @@ import javax.inject.Inject;
 public class DataIndexGraphqlResource {
 
 	@Query
-	public Uni<Page<DataIndex>> getDataIndices(
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+	public Uni<Page<DataIndex>> getDataIndices(Pageable pageable) {
 		return dataIndexService.findAllPaginated(
-			limit, offset, sortBy.name(), sortType);
+			pageable == null ? Pageable.DEFAULT : pageable);
 	}
 
 	public Uni<Page<DocType>> docTypes(
-		@Source DataIndex dataIndex,
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		@Source DataIndex dataIndex, Pageable pageable) {
 		return dataIndexService.getDocTypes(
-			dataIndex.getId(), Pageable.of(limit, offset, sortBy, sortType));
+			dataIndex.getId(), pageable == null ? Pageable.DEFAULT : pageable);
 	}
 
 	@Query

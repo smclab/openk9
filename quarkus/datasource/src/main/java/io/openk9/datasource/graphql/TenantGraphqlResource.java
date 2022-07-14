@@ -18,12 +18,10 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.Response;
-import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
-import io.openk9.datasource.resource.util.K9Column;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.TenantService;
@@ -32,16 +30,13 @@ import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
-import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.List;
 
 @GraphQLApi
 @ApplicationScoped
@@ -49,43 +44,25 @@ import java.util.List;
 public class TenantGraphqlResource {
 
 	@Query
-	public Uni<Page<Tenant>> getTenants(
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+	public Uni<Page<Tenant>> getTenants(Pageable pageable) {
 		return tenantService.findAllPaginated(
-			limit, offset, sortBy.name(), sortType);
+			pageable == null ? Pageable.DEFAULT : pageable
+		);
 	}
 
 	public Uni<Page<Datasource>> datasources(
-		@Source Tenant tenant,
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		@Source Tenant tenant, Pageable pageable) {
 		return tenantService.getDatasources(
-			tenant.getId(), Pageable.of(limit, offset, sortBy, sortType));
-	}
-
-	public Uni<Page<Datasource>> datasources(
-		@Source List<Tenant> tenants,
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
-		return tenantService.getDatasources(
-			tenants, Pageable.of(limit, offset, sortBy, sortType));
+			tenant.getId(),
+			pageable == null ? Pageable.DEFAULT : pageable);
 	}
 
 	public Uni<Page<SuggestionCategory>> suggestionCategories(
 		@Source Tenant tenant,
-		@Name("limit") @DefaultValue("20") int limit,
-		@Name("offset") @DefaultValue("0") int offset,
-		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
-		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		Pageable pageable) {
 		return tenantService.getSuggestionCategories(
-			tenant.getId(), Pageable.of(limit, offset, sortBy, sortType));
+			tenant.getId(),
+			pageable == null ? Pageable.DEFAULT : pageable);
 	}
 
 	@Query

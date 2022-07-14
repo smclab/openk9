@@ -29,7 +29,9 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import org.reactivestreams.Processor;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO> {
 
@@ -51,20 +53,64 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<Page<ENTITY>> findAllPaginated(Pageable pageable) {
 
 		return findAllPaginated(
-			pageable.getLimit(), pageable.getOffset(), pageable.getSortBy().name(),
-			pageable.getSortType());
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId());
 
 	}
 
 	public Uni<Page<ENTITY>> findAllPaginated(
-		int limit, int offset, String sortBy, SortType sortType) {
+		int limit, String sortBy, long afterId, long beforeId) {
+
+		Map<String, Object> params = new HashMap<>();
+
+		String query = "from " + getEntityClass().getSimpleName() + " e ";
+
+		if (afterId > 0 && beforeId > 0) {
+			query += "where id > :afterId and id < :beforeId";
+			params.put("afterId", afterId);
+			params.put("beforeId", beforeId);
+		} else if (afterId > 0) {
+			query += "where id > :afterId";
+			params.put("afterId", afterId);
+		} else if (beforeId > 0) {
+			query += "where id < :beforeId";
+			params.put("beforeId", beforeId);
+		}
+
+		Sort sort = createSort(sortBy);
 
 		PanacheQuery<ENTITY> panacheQuery =
-			ENTITY
-				.findAll(Sort.by(sortBy, sortType.getDirection()))
-				.page(offset, limit);
+			createPanacheQuery(params, query, sort);
 
-		return createPage(limit, offset, panacheQuery, panacheQuery.count());
+		return createPage(
+			limit, panacheQuery.page(0, limit),
+			panacheQuery.count());
+
+	}
+
+	private PanacheQuery<ENTITY> createPanacheQuery(
+		Map<String, Object> params, String query, Sort sort) {
+
+		return params.isEmpty()
+			? ENTITY.find(query, sort)
+			: ENTITY.find(query, sort, params);
+
+	}
+
+	public static Sort createSort(String sortBy) {
+		return createSort("", sortBy);
+	}
+
+	public static Sort createSort(String prefix, String sortBy) {
+
+		prefix = (prefix == null || prefix.isEmpty()) ? "" : prefix + ".";
+
+		if (sortBy != null && !sortBy.isBlank()) {
+			return Sort.by(prefix + "id");
+		}
+		else {
+			return Sort.by(prefix + sortBy).and(prefix + "id");
+		}
 
 	}
 
@@ -124,30 +170,31 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	public static <T> Uni<Page<T>> createPage(
-		int limit, int offset, PanacheQuery<T> panacheQuery,
+		int limit, PanacheQuery<T> panacheQuery,
 		Uni<Long> countQuery) {
-
-		countQuery = countQuery.memoize().indefinitely();
-
-		Uni<Integer> pageCountUni = countQuery.map(count -> {
-			if (count == 0)
-				return 1; // a single page of zero results
-			return (int) Math.ceil(
-				(double) count / (double) limit);
-		}).memoize().indefinitely();
-
-		Uni<Boolean> hasNextPageUni =
-			pageCountUni.map(pageCount -> offset < (pageCount - 1));
 
 		return Uni
 			.combine()
 			.all()
-			.unis(
-				pageCountUni, countQuery,
-				hasNextPageUni,
-				panacheQuery.list())
-			.combinedWith((pageCount, count, hasNextPage, content) ->
-				Page.of(limit, offset, pageCount, count, hasNextPage, content));
+			.unis(countQuery.memoize().indefinitely(), panacheQuery.list())
+			.combinedWith((count, content) -> Page.of(limit, count, content));
+	}
+
+	public static String createPageableQuery(
+		Pageable pageable, Map<String, Object> params, String query,
+		String prefix) {
+		if (pageable.getAfterId() > 0 && pageable.getBeforeId() > 0) {
+			query += "and " + prefix + ".id between :afterId and :beforeId ";
+			params.put("afterId", pageable.getAfterId());
+			params.put("beforeId", pageable.getBeforeId());
+		} else if (pageable.getAfterId() > 0) {
+			query += "and " + prefix + ".id > :afterId ";
+			params.put("afterId", pageable.getAfterId());
+		} else if (pageable.getBeforeId() > 0) {
+			query += "and " + prefix + ".id < :beforeId ";
+			params.put("beforeId", pageable.getBeforeId());
+		}
+		return query;
 	}
 
 	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>> processor =

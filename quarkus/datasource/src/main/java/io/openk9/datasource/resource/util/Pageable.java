@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.resource.util;
 
-import io.openk9.datasource.graphql.util.SortType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,12 +28,15 @@ import javax.ws.rs.QueryParam;
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 public class Pageable {
-	@QueryParam("limit") @DefaultValue("20")
+	@QueryParam("limit") @DefaultValue("20") @org.eclipse.microprofile.graphql.DefaultValue("20")
 	private int limit;
-	@QueryParam("offset") @DefaultValue("0")
-	private int offset;
-	@QueryParam("sortBy") @DefaultValue("createDate")
+	@QueryParam("sortBy") @DefaultValue("createDate") @org.eclipse.microprofile.graphql.DefaultValue("createDate")
 	private K9Column sortBy;
-	@QueryParam("sortType") @DefaultValue("ASC")
-	private SortType sortType;
+	@QueryParam("after_id") @DefaultValue("-1") @org.eclipse.microprofile.graphql.DefaultValue("-1")
+	private long afterId;
+	@QueryParam("before_id") @DefaultValue("-1") @org.eclipse.microprofile.graphql.DefaultValue("-1")
+	private long beforeId;
+
+	public static final Pageable DEFAULT = Pageable.of(20, K9Column.createDate, -1, -1);
+
 }
