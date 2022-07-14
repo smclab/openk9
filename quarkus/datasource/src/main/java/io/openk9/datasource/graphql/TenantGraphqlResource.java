@@ -37,6 +37,7 @@ import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -56,26 +57,24 @@ public class TenantGraphqlResource {
 			limit, offset, sortBy.name(), sortType);
 	}
 
-	@Query
-	public Uni<Page<Datasource>> getDatasourcesByTenantId(
-		@Name("tenantId") long tenantId,
+	public Uni<Page<Datasource>> datasources(
+		@Source Tenant tenant,
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
 		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
 		return tenantService.getDatasources(
-			tenantId, Pageable.of(limit, offset, sortBy, sortType));
+			tenant.getId(), Pageable.of(limit, offset, sortBy, sortType));
 	}
 
-	@Query
-	public Uni<Page<SuggestionCategory>> getSuggestionCategoriesByTenantId(
-		@Name("tenantId") long tenantId,
+	public Uni<Page<SuggestionCategory>> suggestionCategories(
+		@Source Tenant tenant,
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
 		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
 		return tenantService.getSuggestionCategories(
-			tenantId, Pageable.of(limit, offset, sortBy, sortType));
+			tenant.getId(), Pageable.of(limit, offset, sortBy, sortType));
 	}
 
 	@Query

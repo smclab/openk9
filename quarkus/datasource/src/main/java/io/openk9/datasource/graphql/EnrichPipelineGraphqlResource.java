@@ -36,6 +36,7 @@ import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -55,15 +56,14 @@ public class EnrichPipelineGraphqlResource {
 			limit, offset, sortBy.name(), sortType);
 	}
 
-	@Query
-	public Uni<Page<EnrichItem>> getEnrichItemsFromEnrichPipelineId(
-		@Name("enrichPipelineId") long enrichPipelineId,
+	public Uni<Page<EnrichItem>> enrichItems(
+		@Source EnrichPipeline enrichPipeline,
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
 		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
 		return enrichPipelineService.getEnrichItems(
-			enrichPipelineId, Pageable.of(limit, offset, sortBy, sortType));
+			enrichPipeline.getId(), Pageable.of(limit, offset, sortBy, sortType));
 	}
 
 	@Query

@@ -37,6 +37,7 @@ import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -57,14 +58,14 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Query
-	public Uni<Page<DocTypeField>> getDocTypeFieldFromDocType(
-		@Name("docTypeId") long docTypeId,
+	public Uni<Page<DocTypeField>> docTypeFields(
+		@Source DocType docType,
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
 		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
 		return docTypeService.getDocTypeFields(
-			docTypeId, Pageable.of(limit, offset, sortBy, sortType));
+			docType.getId(), Pageable.of(limit, offset, sortBy, sortType));
 	}
 
 	@Query

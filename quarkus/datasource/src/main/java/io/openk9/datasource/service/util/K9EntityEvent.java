@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service.util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,14 +32,17 @@ public class K9EntityEvent<ENTITY extends K9Entity> {
 	private final ENTITY entity;
 	private ENTITY previousEntity;
 
+	@JsonIgnore
 	public boolean isCreate() {
 		return type == EventType.CREATE;
 	}
 
+	@JsonIgnore
 	public boolean isUpdate() {
 		return type == EventType.UPDATE;
 	}
 
+	@JsonIgnore
 	public boolean isDelete() {
 		return type == EventType.DELETE;
 	}

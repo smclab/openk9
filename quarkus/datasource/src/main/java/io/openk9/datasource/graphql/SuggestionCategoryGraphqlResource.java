@@ -36,10 +36,10 @@ import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Collection;
 
 @GraphQLApi
 @ApplicationScoped
@@ -56,20 +56,14 @@ public class SuggestionCategoryGraphqlResource {
 			limit, offset, sortBy.name(), sortType);
 	}
 
-	@Query
-	public Uni<Collection<SuggestionCategory>> getSuggestionCategoryByTenantId(long tenantId) {
-		return suggestionCategoryService.findByTenantId(tenantId);
-	}
-
-	@Query
-	public Uni<Page<DocTypeField>> getDocTypeFieldsBySuggestionCategoryId(
-		@Name("suggestionCategoryId") long suggestionCategoryId,
+	public Uni<Page<DocTypeField>> docTypeFields(
+		@Source SuggestionCategory suggestionCategory,
 		@Name("limit") @DefaultValue("20") int limit,
 		@Name("offset") @DefaultValue("0") int offset,
 		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
 		return suggestionCategoryService.getDocTypeFields(
-			suggestionCategoryId, Pageable.of(limit, offset, sortBy, sortType));
+			suggestionCategory.getId(), Pageable.of(limit, offset, sortBy, sortType));
 	}
 
 	@Query

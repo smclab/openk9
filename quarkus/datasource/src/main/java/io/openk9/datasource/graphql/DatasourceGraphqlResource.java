@@ -37,6 +37,7 @@ import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -56,28 +57,21 @@ public class DatasourceGraphqlResource {
 			limit, offset, sortBy.name(), sortType);
 	}
 
-	@Query
-	public Uni<EnrichPipeline> getEnrichPipelineFromDatasource(
-		@Name("datasourceId") long datasourceId) {
-		return datasourceService.getEnrichPipeline(datasourceId);
+	public Uni<EnrichPipeline> enrichProcessor(
+		@Source Datasource datasource) {
+		return datasourceService.getEnrichPipeline(datasource.getId());
 	}
 
-	@Query
-	public Uni<DataIndex> getDataIndexFromDatasource(
-		@Name("datasourceId") long datasourceId) {
-		return datasourceService.getDataIndex(datasourceId);
+	public Uni<DataIndex> dataIndex(@Source Datasource datasource) {
+		return datasourceService.getDataIndex(datasource.getId());
 	}
 
-	@Query
-	public Uni<EntityIndex> getEntityIndexFromDatasource(
-		@Name("datasourceId") long datasourceId) {
-		return datasourceService.getEntityIndex(datasourceId);
+	public Uni<EntityIndex> entityIndex(@Source Datasource datasource) {
+		return datasourceService.getEntityIndex(datasource.getId());
 	}
 
-	@Query
-	public Uni<PluginDriver> getPluginDriverFromDatasource(
-		@Name("datasourceId") long datasourceId) {
-		return datasourceService.getPluginDriver(datasourceId);
+	public Uni<PluginDriver> pluginDriver(@Source Datasource datasource) {
+		return datasourceService.getPluginDriver(datasource.getId());
 	}
 
 	@Query
