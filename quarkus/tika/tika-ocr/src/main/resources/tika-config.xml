@@ -59,6 +59,16 @@
 		<parser class="org.apache.tika.parser.odf.OpenDocumentParser"/>
 		<parser class="org.apache.tika.parser.epub.EpubParser"/>
 		<parser class="org.apache.tika.parser.microsoft.ooxml.OOXMLParser"/>
+		<parser class="org.apache.tika.parser.microsoft.OldExcelParser"/>
+		<parser class="org.apache.tika.parser.code.SourceCodeParser"/>
+		<parser class="org.apache.tika.parser.feed.FeedParser"/>
+		<parser class="org.apache.tika.parser.html.HtmlParser"/>
+		<parser class="org.apache.tika.parser.iwork.IWorkPackageParser"/>
+		<parser class="org.apache.tika.parser.mail.RFC822Parser"/>
+		<parser class="org.apache.tika.parser.mbox.MboxParser"/>
+		<parser class="org.apache.tika.parser.pkg.CompressorParser"/>
+		<parser class="org.apache.tika.parser.pkg.PackageParser"/>
+		<parser class="org.apache.tika.parser.txt.TXTParser"/>
 
 	</parsers>
 </properties>
