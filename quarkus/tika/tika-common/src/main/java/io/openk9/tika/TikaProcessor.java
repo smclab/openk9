@@ -233,6 +233,9 @@ public class TikaProcessor {
                                 document.put("summary", text);
                             }
 
+                            text = text.replaceAll("\\n", " ");
+                            text = text.replaceAll("\\t", " ");
+
                             if (text.length() > maxLength && maxLength > 0) {
 
                                 responsePayload.put(
