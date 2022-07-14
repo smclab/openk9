@@ -118,6 +118,8 @@ public class TikaProcessor {
 
                         String metaTypeString = mediaType.toString();
 
+                        logger.info("Detected type : " + metaTypeString + " for file: " + name);
+
                         if (typeMapping != null &&
                             typeMapping.containsKey(metaTypeString)) {
 
