@@ -23,8 +23,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.NamedQueries;
-import org.hibernate.annotations.NamedQuery;
 
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -40,15 +38,6 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@NamedQueries({
-	@NamedQuery(
-		name = "DataIndex.getDocTypes",
-		query =
-			"select dataIndex.docTypes " +
-			"from DataIndex dataIndex " +
-			"where dataIndex.id = ?1"
-	)
-})
 public class DataIndex extends K9Entity {
 	@ManyToMany(cascade = {
 		javax.persistence.CascadeType.MERGE,

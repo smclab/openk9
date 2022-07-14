@@ -29,4 +29,9 @@ public class EntityIndexService extends BaseK9EntityService<EntityIndex, EntityI
 	 EntityIndexService(EntityIndexMapper mapper) {
 		 this.mapper = mapper;
 	}
+
+	@Override
+	public Class<EntityIndex> getEntityClass() {
+		return EntityIndex.class;
+	}
 }

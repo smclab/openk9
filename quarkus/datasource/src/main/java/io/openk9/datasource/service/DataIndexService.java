@@ -83,4 +83,8 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 	@Inject
 	DocTypeService docTypeService;
 
+	@Override
+	public Class<DataIndex> getEntityClass() {
+		return DataIndex.class;
+	}
 }

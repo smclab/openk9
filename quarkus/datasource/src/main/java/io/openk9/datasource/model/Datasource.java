@@ -56,7 +56,8 @@ public class Datasource extends K9Entity {
 	@Column(name = "schedulable")
 	private Boolean schedulable = false;
 
-	@OneToOne(cascade = {
+	@ToString.Exclude
+	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.REFRESH,
@@ -65,7 +66,8 @@ public class Datasource extends K9Entity {
 	@JsonIgnore
 	private DataIndex dataIndex;
 
-	@OneToOne(cascade = {
+	@ToString.Exclude
+	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.REFRESH,
@@ -74,7 +76,8 @@ public class Datasource extends K9Entity {
 	@JsonIgnore
 	private EntityIndex entityIndex;
 
-	@ManyToOne(cascade = {
+	@ToString.Exclude
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.REFRESH,
@@ -83,7 +86,8 @@ public class Datasource extends K9Entity {
 	@JsonIgnore
 	private EnrichPipeline enrichPipeline;
 
-	@ManyToOne
+	@ToString.Exclude
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY)
 	@JoinColumn(name = "plugin_driver_id")
 	@JsonIgnore
 	private PluginDriver pluginDriver;

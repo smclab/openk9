@@ -88,4 +88,8 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	@Inject
 	DocTypeFieldMapper docTypeFieldMapper;
 
+	@Override
+	public Class<DocType> getEntityClass() {
+		return DocType.class;
+	}
 }

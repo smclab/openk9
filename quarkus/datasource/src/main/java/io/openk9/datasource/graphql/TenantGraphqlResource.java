@@ -41,6 +41,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 
 @GraphQLApi
 @ApplicationScoped
@@ -65,6 +66,16 @@ public class TenantGraphqlResource {
 		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
 		return tenantService.getDatasources(
 			tenant.getId(), Pageable.of(limit, offset, sortBy, sortType));
+	}
+
+	public Uni<Page<Datasource>> datasources(
+		@Source List<Tenant> tenants,
+		@Name("limit") @DefaultValue("20") int limit,
+		@Name("offset") @DefaultValue("0") int offset,
+		@Name("sortBy") @DefaultValue("createDate") K9Column sortBy,
+		@Name("sortType") @DefaultValue("ASC") SortType sortType) {
+		return tenantService.getDatasources(
+			tenants, Pageable.of(limit, offset, sortBy, sortType));
 	}
 
 	public Uni<Page<SuggestionCategory>> suggestionCategories(

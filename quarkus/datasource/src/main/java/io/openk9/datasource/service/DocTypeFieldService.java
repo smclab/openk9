@@ -29,4 +29,9 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	 DocTypeFieldService(DocTypeFieldMapper mapper) {
 		 this.mapper = mapper;
 	}
+
+	@Override
+	public Class<DocTypeField> getEntityClass() {
+		return DocTypeField.class;
+	}
 }

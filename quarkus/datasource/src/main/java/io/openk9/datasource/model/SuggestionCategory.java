@@ -23,8 +23,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.NamedQueries;
-import org.hibernate.annotations.NamedQuery;
 
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -41,15 +39,6 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@NamedQueries({
-	@NamedQuery(
-		name = "SuggestionCategory.getDocTypeFields",
-		query =
-			"select suggestionCategory.docTypeFields " +
-			"from SuggestionCategory suggestionCategory " +
-			"where suggestionCategory.id = ?1"
-	)
-})
 public class SuggestionCategory extends K9Entity {
 	@ManyToMany(cascade = {
 		javax.persistence.CascadeType.REFRESH,
@@ -63,7 +52,8 @@ public class SuggestionCategory extends K9Entity {
 	@JsonIgnore
 	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 
-	@ManyToOne
+	@ToString.Exclude
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY)
 	@JoinColumn(name = "tenant_id")
 	private Tenant tenant;
 

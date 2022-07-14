@@ -90,4 +90,8 @@ public class SuggestionCategoryService extends
 	@Inject
 	DocTypeFieldService docTypeFieldService;
 
+	@Override
+	public Class<SuggestionCategory> getEntityClass() {
+		return SuggestionCategory.class;
+	}
 }

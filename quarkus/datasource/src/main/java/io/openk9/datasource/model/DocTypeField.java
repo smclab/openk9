@@ -39,7 +39,8 @@ import javax.persistence.Table;
 @ToString
 @RequiredArgsConstructor
 public class DocTypeField extends K9Entity {
-	@ManyToOne(cascade = {
+	@ToString.Exclude
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.REFRESH,

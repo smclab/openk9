@@ -22,6 +22,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
@@ -32,11 +33,50 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Collection;
 
 @ApplicationScoped
 public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	 TenantService(TenantMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	public Uni<Page<Datasource>> getDatasources(
+		Collection<Tenant> collection, Pageable pageable) {
+		return getDatasources(
+			collection.stream().mapToLong(K9Entity::getId).toArray(), pageable);
+	}
+
+	public Uni<Page<Datasource>> getDatasources(
+		long[] tenantIds, Pageable pageable) {
+
+		if (tenantIds == null || tenantIds.length == 0) {
+			return Uni.createFrom().item(Page.emptyPage());
+		}
+
+		PanacheQuery<Datasource> panacheQuery =
+			Tenant
+				.find(
+					"select d " +
+					"from Tenant tenant " +
+					"join tenant.datasources d " +
+					"where tenant.id IN ?1 " +
+					"order by d." + pageable.getSortBy() + " " + pageable.getSortType().name(),
+					tenantIds)
+				.page(pageable.getOffset(), pageable.getLimit());
+
+		Uni<Long> countQuery =
+			Tenant.count(
+				"from Tenant tenant join tenant.datasources datasource where tenant.id IN ?1",
+				tenantIds);
+
+		return createPage(
+			pageable.getLimit(), pageable.getOffset(), panacheQuery, countQuery);
+
+	}
+
+	public Uni<Page<Datasource>> getDatasources(Tenant tenant, Pageable pageable) {
+		 return getDatasources(tenant.getId(), pageable);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
@@ -59,6 +99,11 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 		return createPage(
 			pageable.getLimit(), pageable.getOffset(), panacheQuery, countQuery);
+	}
+
+	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
+		Tenant tenant, Pageable pageable) {
+		return getSuggestionCategories(tenant.getId(), pageable);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
@@ -195,4 +240,8 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	@Inject
 	Mutiny.Session session;
 
+	@Override
+	public Class<Tenant> getEntityClass() {
+		return Tenant.class;
+	}
 }

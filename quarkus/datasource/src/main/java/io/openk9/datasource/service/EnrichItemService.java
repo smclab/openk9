@@ -29,4 +29,9 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 	 EnrichItemService(EnrichItemMapper mapper) {
 		 this.mapper = mapper;
 	}
+
+	@Override
+	public Class<EnrichItem> getEntityClass() {
+		return EnrichItem.class;
+	}
 }

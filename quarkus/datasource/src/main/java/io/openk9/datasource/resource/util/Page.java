@@ -31,4 +31,11 @@ public class Page<ENTITY> {
 	private final long count;
 	private final boolean hasNextPage;
 	private final List<ENTITY> content;
+
+	public static <T> Page<T> emptyPage() {
+		return (Page<T>)EMPTY;
+	}
+
+	public static final Page<?> EMPTY = Page.of(0, 0, 0, 0, false, List.of());
+
 }

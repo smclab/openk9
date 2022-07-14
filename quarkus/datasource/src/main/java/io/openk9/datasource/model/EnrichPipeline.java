@@ -23,8 +23,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.NamedQueries;
-import org.hibernate.annotations.NamedQuery;
 
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -40,15 +38,6 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@NamedQueries({
-	@NamedQuery(
-		name = "EnrichPipeline.getEnrichItems",
-		query =
-			"select enrichPipeline.enrichItems " +
-			"from EnrichPipeline enrichPipeline " +
-			"where enrichPipeline.id = ?1"
-	)
-})
 public class EnrichPipeline extends K9Entity {
 	@ManyToMany(cascade = {
 		javax.persistence.CascadeType.PERSIST,

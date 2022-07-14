@@ -33,6 +33,8 @@ import java.util.List;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO> {
 
+	public abstract Class<ENTITY> getEntityClass();
+
 	public Uni<List<ENTITY>> findAll() {
 		return ENTITY.listAll();
 	}
@@ -67,11 +69,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	public Uni<ENTITY> findById(long id) {
-		return ENTITY.<ENTITY>findById(id).invoke(e -> {
-			if (e == null) {
-				throw new IllegalArgumentException("Entity not found with id: " + id + "class: " + this.getClass());
-			}
-		});
+		return ENTITY.getSession().flatMap(s -> s.find(getEntityClass(), id));
 	}
 
 	public Uni<ENTITY> patch(long id, DTO dto) {

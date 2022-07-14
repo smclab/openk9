@@ -26,6 +26,7 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -37,15 +38,15 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<EntityIndex> getEntityIndex(long datasourceId) {
-		return findById(datasourceId).map(Datasource::getEntityIndex);
+		return findById(datasourceId).flatMap(d -> Mutiny.fetch(d.getEntityIndex()));
 	}
 
 	public Uni<DataIndex> getDataIndex(long datasourceId) {
-		return findById(datasourceId).map(Datasource::getDataIndex);
+		return findById(datasourceId).flatMap(d -> Mutiny.fetch(d.getDataIndex()));
 	}
 
 	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
-		return findById(datasourceId).map(Datasource::getEnrichPipeline);
+		return findById(datasourceId).flatMap(d -> Mutiny.fetch(d.getEnrichPipeline()));
 	}
 
 	public Uni<Datasource> setEntityIndex(long datasourceId, long entityIndexId) {
@@ -133,4 +134,8 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	PluginDriverService pluginDriverService;
 
 
+	@Override
+	public Class<Datasource> getEntityClass() {
+		return Datasource.class;
+	}
 }

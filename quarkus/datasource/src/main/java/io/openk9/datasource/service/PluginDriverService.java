@@ -29,4 +29,9 @@ public class PluginDriverService extends BaseK9EntityService<PluginDriver, Plugi
 	 PluginDriverService(PluginDriverMapper mapper) {
 		 this.mapper = mapper;
 	}
+
+	@Override
+	public Class<PluginDriver> getEntityClass() {
+		return PluginDriver.class;
+	}
 }

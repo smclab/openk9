@@ -24,8 +24,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.NamedQueries;
-import org.hibernate.annotations.NamedQuery;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -41,22 +39,6 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@NamedQueries({
-	@NamedQuery(
-		name = "Tenant.getDatasources",
-		query =
-			"select tenant.datasources " +
-			"from Tenant tenant " +
-			"where tenant.id = ?1"
-	),
-	@NamedQuery(
-		name = "Tenant.getSuggestionCategories",
-		query =
-			"select tenant.suggestionCategories " +
-			"from Tenant tenant " +
-			"where tenant.id = ?1"
-	)
-})
 public class Tenant extends K9Entity {
 
 	@ManyToMany(mappedBy = "tenants", cascade = {

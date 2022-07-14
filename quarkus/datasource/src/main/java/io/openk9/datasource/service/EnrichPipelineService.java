@@ -81,4 +81,8 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	@Inject
 	EnrichItemService enrichItemService;
 
+	@Override
+	public Class<EnrichPipeline> getEntityClass() {
+		return EnrichPipeline.class;
+	}
 }
