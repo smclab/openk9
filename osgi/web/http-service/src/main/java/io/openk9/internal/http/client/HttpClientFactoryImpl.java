@@ -19,7 +19,9 @@ package io.openk9.internal.http.client;
 
 import io.openk9.http.client.HttpClient;
 import io.openk9.http.client.HttpClientFactory;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 
 import java.util.function.Function;
 
@@ -29,14 +31,31 @@ import java.util.function.Function;
 )
 public class HttpClientFactoryImpl implements HttpClientFactory {
 
+	@interface Config {
+		int maxHeaderSize() default 102400;
+		int maxChunkSize() default 8192;
+	}
+
+	@Activate
+	@Modified
+	public void activate(Config config) {
+		this.config = config;
+	}
+
 	@Override
 	public HttpClient getHttpClient(String baseUrl) {
 		return new HttpClientImpl(
 			reactor.netty.http.client.HttpClient
 				.create()
 				.baseUrl(baseUrl)
+				.httpResponseDecoder(spec -> spec
+					.maxChunkSize(config.maxChunkSize())
+					.maxHeaderSize(config.maxHeaderSize())
+				)
 				.metrics(true, Function.identity())
 		);
 	}
+
+	private Config config;
 
 }
