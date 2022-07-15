@@ -67,8 +67,11 @@ public class BaseNerAnnotator extends BaseAnnotator {
 				"type.keyword", category));
 
 		for (String token : tokens) {
-			if (!stopWords.contains(token)) {
-				builder.must(query("name", token));
+			String[] words = token.split("\\W+");
+			for (String word : words) {
+				if (!stopWords.contains(word)) {
+					builder.must(query("name", token));
+				}
 			}
 		}
 
