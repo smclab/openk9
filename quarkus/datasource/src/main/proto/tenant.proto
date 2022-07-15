@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+import "datasource.proto";
+import "suggestion_category.proto";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.datasource.grpc";
+option java_outer_classname = "TenantProto";
+
+package tenant;
+
+service TenantService {
+  rpc addTenant(TenantRequest) returns (Tenant) {}
+  rpc getTenant(common.Id) returns (Tenant) {}
+  rpc deleteTenant(common.Id) returns (Tenant) {}
+  rpc patchTenant(TenantRequestId) returns (Tenant) {}
+  rpc updateTenant(TenantRequestId) returns (Tenant) {}
+  rpc getTenants(common.Pageable) returns (TenantList) {}
+  rpc getDatasourcesByTenant(common.Id) returns (datasource.DatasourceList) {}
+  rpc addDatasourceToTenant(TenantDatasourceId) returns (google.protobuf.Empty) {}
+  rpc removeDatasourceToTenant(TenantDatasourceId) returns (google.protobuf.Empty) {}
+  rpc getSuggestionCategoriesByTenant(common.Id) returns (suggestionCategory.SuggestionCategoryList) {}
+  rpc addSuggestionCategoryToTenant(TenantSuggestionCategoryId) returns (google.protobuf.Empty) {}
+  rpc removeSuggestionCategoryToTenant(TenantSuggestionCategoryId) returns (google.protobuf.Empty) {}
+}
+
+message TenantDatasourceId {
+  int64 tenantId = 1;
+  int64 datasourceId = 2;
+}
+
+message TenantSuggestionCategoryId {
+  int64 tenantId = 1;
+  int64 suggestionCategoryId = 2;
+}
+
+message TenantRequestId {
+  int64 id = 1;
+  TenantRequest request = 2;
+}
+
+message TenantRequest {
+  string name = 1;
+  string description = 2;
+  string virtualHost = 3;
+  string clientId = 4;
+  string clientSecret = 5;
+  string realmName = 6;
+}
+
+message TenantList {
+  repeated Tenant response = 1;
+}
+
+message Tenant {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  google.protobuf.Timestamp createDate = 4;
+  google.protobuf.Timestamp modifiedDate = 5;
+  string virtualHost = 6;
+  string clientId = 7;
+  string clientSecret = 8;
+  string realmName = 9;
+}

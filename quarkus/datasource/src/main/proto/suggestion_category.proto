@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+import "doc_type_field.proto";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.datasource.grpc";
+option java_outer_classname = "SuggestionCategoryProto";
+
+package suggestionCategory;
+
+service SuggestionCategoryService {
+  rpc addSuggestionCategory(SuggestionCategoryRequest) returns (SuggestionCategory) {}
+  rpc getSuggestionCategory(common.Id) returns (SuggestionCategory) {}
+  rpc deleteSuggestionCategory(common.Id) returns (SuggestionCategory) {}
+  rpc patchSuggestionCategory(SuggestionCategoryRequestId) returns (SuggestionCategory) {}
+  rpc updateSuggestionCategory(SuggestionCategoryRequestId) returns (SuggestionCategory) {}
+  rpc getSuggestionCategories(common.Pageable) returns (SuggestionCategoryList) {}
+  rpc getDocTypeFieldsBySuggestionCategory(common.Id) returns (docTypeField.DocTypeFieldList) {}
+  rpc addDocTypeFieldToSuggestionCategory(SuggestionCategoryDocTypeFieldId) returns (google.protobuf.Empty) {}
+  rpc removeDocTypeFieldToSuggestionCategory(SuggestionCategoryDocTypeFieldId) returns (google.protobuf.Empty) {}
+
+}
+
+message SuggestionCategoryDocTypeFieldId {
+  int64 suggestionCategoryId = 1;
+  int64 docTypeFieldId = 2;
+}
+
+message SuggestionCategoryRequestId {
+  int64 id = 1;
+  SuggestionCategoryRequest request = 2;
+}
+
+message SuggestionCategoryRequest {
+  string name = 1;
+  string description = 2;
+}
+
+message SuggestionCategoryList {
+  repeated SuggestionCategory response = 1;
+}
+
+message SuggestionCategory {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  google.protobuf.Timestamp createDate = 4;
+  google.protobuf.Timestamp modifiedDate = 5;
+}

@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.datasource.grpc";
+option java_outer_classname = "CommonProto";
+
+package common;
+
+message Id2 {
+  int64 id1 = 1;
+  int64 id2 = 2;
+}
+
+message Id {
+  int64 id = 1;
+}
+
+message K9Column {
+  enum Column {
+      id = 0;
+      name = 1;
+      description = 2;
+      createDate = 3;
+      modifiedDate = 4;
+  }
+}
+
+message Pageable {
+    int32 limit = 1;
+    int64 afterId = 2;
+    int64 beforeId = 3;
+    K9Column sortBy = 4;
+}
+
+message PageableId {
+  int64 id = 1;
+  int32 limit = 2;
+  int64 afterId = 3;
+  int64 beforeId = 4;
+  K9Column sortBy = 5;
+}
