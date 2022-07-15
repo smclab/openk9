@@ -70,7 +70,7 @@ public class BaseNerAnnotator extends BaseAnnotator {
 			String[] words = token.split("\\W+");
 			for (String word : words) {
 				if (!stopWords.contains(word)) {
-					builder.must(query("name", token));
+					builder.must(query("name", word));
 				}
 			}
 		}
