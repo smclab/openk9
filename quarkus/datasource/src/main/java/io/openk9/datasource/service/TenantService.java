@@ -34,6 +34,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,33 +47,34 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 	public Uni<Page<Datasource>> getDatasources(List<Tenant> tenants, Pageable pageable) {
 		return getDatasources(
-			tenants.stream().mapToLong(K9Entity::getId).toArray(),
+			tenants.stream().map(K9Entity::getId).toArray(Long[]::new),
 			pageable);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
-		return getDatasources(
-			new long[] {tenantId}, pageable);
+		return getDatasources(new Long[] {tenantId}, pageable);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(Tenant tenant, Pageable pageable) {
 		 return getDatasources(
-			 new long[] {tenant.getId()}, pageable);
+			 new Long[] {tenant.getId()}, pageable);
 	}
 
-	public Uni<Page<Datasource>> getDatasources(long[] tenantId, Pageable pageable) {
+	public Uni<Page<Datasource>> getDatasources(Long[] tenantId, Pageable pageable) {
 
 		Map<String, Object> params = new HashMap<>();
 
 		boolean isOne = tenantId.length == 1;
 
-		params.put("tenantId", isOne ? tenantId[0] : tenantId);
+		params.put("tenantId", isOne ? tenantId[0] : Arrays.asList(tenantId));
+
+		String where = (isOne ? "where tenant.id = :tenantId " : "where tenant.id in (:tenantId) ");
 
 		String query =
 			"select d " +
 			"from Tenant tenant " +
 			"join tenant.datasources d " +
-			(isOne ? "where tenant.id = :tenantId " : "where tenant.id in (:tenantId) ");
+			where;
 
 		query = createPageableQuery(pageable, params, query, "d");
 
@@ -85,8 +87,9 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 		Uni<Long> countQuery =
 			Tenant.count(
-				"from Tenant tenant join tenant.datasources datasource where tenant.id = ?1",
-				tenantId);
+				"from Tenant tenant join tenant.datasources datasource " +
+				where,
+				params);
 
 		return createPage(
 			pageable.getLimit(), panacheQuery, countQuery);

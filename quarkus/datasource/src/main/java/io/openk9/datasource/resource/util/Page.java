@@ -21,12 +21,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Iterator;
 import java.util.List;
 
 @AllArgsConstructor(staticName = "of")
 @RequiredArgsConstructor(staticName = "of")
 @Getter
-public class Page<ENTITY> {
+public class Page<ENTITY> implements Iterable<ENTITY> {
 	private final int limit;
 	private final long count;
 	private long afterId = 0;
@@ -39,4 +40,8 @@ public class Page<ENTITY> {
 
 	public static final Page<?> EMPTY = Page.of(0, 0, 0, 0, List.of());
 
+	@Override
+	public Iterator<ENTITY> iterator() {
+		return content.iterator();
+	}
 }
