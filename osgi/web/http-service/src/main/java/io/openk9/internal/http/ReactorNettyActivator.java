@@ -83,6 +83,11 @@ public class ReactorNettyActivator {
 		boolean forwarded() default true;
 		HttpProtocol httpProtocol() default HttpProtocol.HTTP11;
 		AdvancedByteBufFormat wiretapFormat() default AdvancedByteBufFormat.HEX_DUMP;
+
+		int maxHeaderSize() default 102400;
+
+		int maxChunkSize() default 8192;
+
 	}
 
 	public class RouterHandlerProxy implements InvocationHandler {
@@ -175,6 +180,10 @@ public class ReactorNettyActivator {
 					.handle(proxy)
 					.mapHandle(this::_mapHandle)
 					.port(config.port())
+					.httpRequestDecoder(spec -> spec
+						.maxHeaderSize(config.maxHeaderSize())
+						.maxChunkSize(config.maxChunkSize())
+					)
 					.protocol(config.httpProtocol());
 
 			if (config.accessLog()) {
