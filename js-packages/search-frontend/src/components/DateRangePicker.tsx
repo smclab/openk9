@@ -148,7 +148,13 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
             !Boolean((value.startDate || value.endDate) && value.keywordKey)
           }
           onClick={() => {
-            onChange(value);
+            onChange({
+              keywordKey: value.keywordKey,
+              startDate: value.startDate,
+              endDate: value.endDate
+                ? DateTime.fromJSDate(value.endDate).endOf("day").toJSDate()
+                : undefined,
+            });
             onClose();
           }}
         >
