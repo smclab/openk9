@@ -35,9 +35,13 @@ import java.util.function.Function;
 @SuperBuilder
 @NoArgsConstructor
 public class FilterField {
+
+   @org.eclipse.microprofile.graphql.DefaultValue("equals")
    protected Operator operator;
+   @org.eclipse.microprofile.graphql.DefaultValue("name")
    protected String fieldName;
    protected String value;
+   @org.eclipse.microprofile.graphql.DefaultValue("false")
    protected boolean not = false;
 
    public Predicate generateCriteria(CriteriaBuilder builder, Path field) {
@@ -56,7 +60,7 @@ public class FilterField {
             case lessThenOrEqualTo: return _orNot(builder.le(field, v));
             case greaterThan: return _orNot(builder.gt(field, v));
             case greaterThanOrEqualTo: return _orNot(builder.ge(field, v));
-            case equal: return _orNot(builder.equal(field, v));
+            case equals: return _orNot(builder.equal(field, v));
          }
       } catch (NumberFormatException ignore) {
          try {
@@ -66,7 +70,7 @@ public class FilterField {
                case lessThenOrEqualTo: return _orNot(builder.lessThanOrEqualTo(field, dateTime));
                case greaterThan: return _orNot(builder.greaterThan(field, dateTime));
                case greaterThanOrEqualTo: return _orNot(builder.greaterThanOrEqualTo(field, dateTime));
-               case equal: return _orNot(builder.equal(field, dateTime));
+               case equals: return _orNot(builder.equal(field, dateTime));
             }
          }
          catch (DateTimeParseException dtpe) {
@@ -77,7 +81,7 @@ public class FilterField {
                   return _orNot(builder.like(field, value + "%"));
                case contains:
                   return _orNot(builder.like(field, "%" + value + "%"));
-               case equal:
+               case equals:
                   return _orNot(builder.equal(field, value));
             }
          }
@@ -91,7 +95,7 @@ public class FilterField {
    }
 
    public enum Operator {
-      lessThan, lessThenOrEqualTo, greaterThan, greaterThanOrEqualTo, equal,
+      lessThan, lessThenOrEqualTo, greaterThan, greaterThanOrEqualTo, equals,
       endsWith, startsWith, contains;
    }
 

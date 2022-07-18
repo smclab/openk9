@@ -28,6 +28,7 @@ import java.util.List;
 @NoArgsConstructor
 public class Filter {
 
+	@org.eclipse.microprofile.graphql.DefaultValue("true")
 	private boolean andOperator = true;
 	private List<FilterField> filterFields;
 
