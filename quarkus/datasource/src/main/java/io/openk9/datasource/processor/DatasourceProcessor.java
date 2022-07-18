@@ -24,13 +24,11 @@ import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.service.DatasourceService;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
-import org.eclipse.microprofile.reactive.messaging.Metadata;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -93,29 +91,13 @@ public class DatasourceProcessor {
 
 			})
 				.onItem()
-				.invoke(this::_emitIngestionDatasourcePayload)
+				.invoke(ingestionDatasourceEmitter::send)
 				.onFailure()
 				.invoke((t) -> logger.error(
 				"Error while processing ingestion message", t))
 				.replaceWithVoid();
 		});
 
-	}
-
-	private void _emitIngestionDatasourcePayload(
-		IngestionDatasourcePayload ingestionDatasourcePayload) {
-
-		ingestionDatasourceEmitter.send(
-			Message.of(
-				ingestionDatasourcePayload,
-				Metadata.of(
-					OutgoingRabbitMQMetadata
-						.builder()
-						.withDeliveryMode(2)
-						.build()
-				)
-			)
-		);
 	}
 
 	private JsonObject _messagePayloadToJson(Message<?> message) {
