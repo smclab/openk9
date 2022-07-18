@@ -58,12 +58,10 @@ public class BundleSenderImpl implements BundleSender {
 
 	private OutboundMessage _createOutboundMessage(byte[] bytes) {
 		return new OutboundMessage(_exchange, _routingKey,
-			new AMQP.BasicProperties()
-				.builder()
-				.contentType("application/json")
-				.deliveryMode(2)
-				.build(),
-			bytes);
+				new AMQP.BasicProperties()
+						.builder()
+						.contentType("application/json").build(),
+				bytes);
 	}
 
 }
