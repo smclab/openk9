@@ -64,8 +64,7 @@ public class IncomingProcessorImpl {
 					try {
 						channel.basicPublish(
 							outgoingMessage.getExchange(),
-							outgoingMessage.getRoutingKey(),
-							new AMQP.BasicProperties().builder().deliveryMode(2).build(),
+							outgoingMessage.getRoutingKey(), null,
 							outgoingMessage.getBody());
 						emitter.complete(null);
 					}
