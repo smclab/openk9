@@ -96,38 +96,41 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		Long[] entityIds, String joinField, Class<T> joinType, int limit, String sortBy,
 		long afterId, long beforeId, Filter filter) {
 
-		CriteriaBuilder builder = em.getCriteriaBuilder();
+		return Uni.createFrom().deferred(() -> {
 
-		CriteriaQuery<T> joinEntityQuery =
-			builder.createQuery(joinType);
+			CriteriaBuilder builder = em.getCriteriaBuilder();
 
-		Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
+			CriteriaQuery<T> joinEntityQuery =
+				builder.createQuery(joinType);
 
-		Root<T> root = joinEntityQuery.from(joinType);
+			Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
 
-		Join<ENTITY, T> join = entityRoot.joinSet(joinField);
+			Root<T> root = joinEntityQuery.from(joinType);
 
-		CriteriaQuery<T> criteriaQuery = joinEntityQuery.select(join);
+			Join<ENTITY, T> join = entityRoot.joinSet(joinField);
 
-		criteriaQuery.where(entityRoot.get(getEntityIdField()).in(Arrays.asList(entityIds)));
+			CriteriaQuery<T> criteriaQuery = joinEntityQuery.select(join);
 
-		CriteriaQuery countJoinEntityQuery =
-			builder.createQuery();
+			criteriaQuery.where(entityRoot.get(getEntityIdField()).in(Arrays.asList(entityIds)));
 
-		Root<ENTITY> countEntityRoot = countJoinEntityQuery.from(getEntityClass());
+			CriteriaQuery countJoinEntityQuery =
+				builder.createQuery();
 
-		Root<T> countRoot = countJoinEntityQuery.from(joinType);
+			Root<ENTITY> countEntityRoot = countJoinEntityQuery.from(getEntityClass());
 
-		countEntityRoot.joinSet(joinField);
+			Root<T> countRoot = countJoinEntityQuery.from(joinType);
 
-		CriteriaQuery countQuery = countJoinEntityQuery.select(builder.count(countRoot));
+			countEntityRoot.joinSet(joinField);
 
-		countQuery.where(entityRoot.get(getEntityIdField()).in(Arrays.asList(entityIds)));
+			CriteriaQuery countQuery = countJoinEntityQuery.select(builder.count(countRoot));
 
-		return _pageCriteriaQuery(
-			limit, sortBy, afterId, beforeId, filter, builder, root,
-			criteriaQuery,
-			countQuery);
+			countQuery.where(entityRoot.get(getEntityIdField()).in(Arrays.asList(entityIds)));
+
+			return _pageCriteriaQuery(
+				limit, sortBy, afterId, beforeId, filter, builder, root,
+				criteriaQuery, countQuery);
+
+		});
 
 
 	}
@@ -135,20 +138,23 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<Page<ENTITY>> findAllPaginated(
 		int limit, String sortBy, long afterId, long beforeId, Filter filter) {
 
-		filter = filter == null ? Filter.DEFAULT : filter;
+		return Uni.createFrom().deferred(() -> {
 
-		boolean andOperator = filter.isAndOperator();
-		CriteriaBuilder builder = em.getCriteriaBuilder();
-		CriteriaQuery<ENTITY> criteriaQuery = builder.createQuery(getEntityClass());
-		Root<ENTITY> root = criteriaQuery.from(getEntityClass());
+			CriteriaBuilder builder = em.getCriteriaBuilder();
 
-		CriteriaQuery<Long> countQuery = builder.createQuery(Long.class);
+			CriteriaQuery<ENTITY> criteriaQuery =
+				builder.createQuery(getEntityClass());
+			Root<ENTITY> root = criteriaQuery.from(getEntityClass());
 
-		countQuery.select(builder.count(countQuery.from(getEntityClass())));
+			CriteriaQuery<Long> countQuery = builder.createQuery(Long.class);
 
-		return _pageCriteriaQuery(
-			limit, sortBy, afterId, beforeId, filter, builder, root,
-			criteriaQuery, countQuery);
+			countQuery.select(builder.count(countQuery.from(getEntityClass())));
+
+			return _pageCriteriaQuery(
+				limit, sortBy, afterId, beforeId,
+				filter == null ? Filter.DEFAULT : filter, builder, root,
+				criteriaQuery, countQuery);
+		});
 
 	}
 
@@ -160,6 +166,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		int limit, String sortBy, long afterId, long beforeId, Filter filter,
 		CriteriaBuilder builder, Root<T> root, CriteriaQuery<T> criteriaQuery,
 		CriteriaQuery countQuery) {
+
 		filter = filter == null ? Filter.DEFAULT : filter;
 
 		boolean andOperator = filter.isAndOperator();
