@@ -21,6 +21,8 @@ import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.resource.util.Filter;
+import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.quarkus.hibernate.reactive.panache.PanacheQuery;
@@ -29,12 +31,21 @@ import io.quarkus.hibernate.reactive.panache.runtime.PanacheQueryImpl;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 import org.reactivestreams.Processor;
 
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO> {
 
@@ -64,23 +75,143 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	public Uni<Page<ENTITY>> findAllPaginated(Pageable pageable) {
+	public Uni<Page<ENTITY>> findAllPaginated(
+		Pageable pageable, Filter filter) {
 
 		return findAllPaginated(
 			pageable.getLimit(), pageable.getSortBy().name(),
-			pageable.getAfterId(), pageable.getBeforeId());
+			pageable.getAfterId(), pageable.getBeforeId(), filter);
+
+	}
+
+	public Uni<Page<ENTITY>> findAllPaginated(Pageable pageable) {
+
+		return findAllPaginated(pageable, Filter.DEFAULT);
 
 	}
 
 	public Uni<Page<ENTITY>> findAllPaginated(
-		int limit, String sortBy, long afterId, long beforeId) {
+		int limit, String sortBy, long afterId, long beforeId, Filter filter) {
 
-		PanacheQuery<ENTITY> panacheQuery =
-			createPanacheQuery(sortBy, afterId, beforeId);
+		filter = filter == null ? Filter.DEFAULT : filter;
 
-		return createPage(
-			limit, panacheQuery.page(0, limit),
-			panacheQuery.count());
+		boolean andOperator = filter.isAndOperator();
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery<ENTITY> criteriaQuery = builder.createQuery(getEntityClass());
+		Root<ENTITY> root = criteriaQuery.from(getEntityClass());
+
+		List<FilterField> filterFields = filter.getFilterFields();
+
+		if (filterFields == null) {
+			filterFields = new ArrayList<>();
+		}
+		else {
+			filterFields = new ArrayList<>(filterFields);
+		}
+
+		if (afterId > 0 && beforeId > 0) {
+
+			filterFields.add(
+				FilterField
+					.builder()
+					.fieldName("id")
+					.value(Long.toString(afterId))
+					.operator(FilterField.Operator.greaterThan)
+					.build()
+			);
+
+			filterFields.add(
+				FilterField
+					.builder()
+					.fieldName("id")
+					.value(Long.toString(beforeId))
+					.operator(FilterField.Operator.lessThan)
+					.build()
+			);
+
+		}
+		else if (afterId > 0) {
+			filterFields.add(
+				FilterField
+					.builder()
+					.fieldName("id")
+					.value(Long.toString(afterId))
+					.operator(FilterField.Operator.greaterThan)
+					.build()
+			);
+		}
+		else if (beforeId > 0) {
+			filterFields.add(
+				FilterField
+					.builder()
+					.fieldName("id")
+					.value(Long.toString(beforeId))
+					.operator(FilterField.Operator.lessThan)
+					.build()
+			);
+		}
+
+		Optional<Predicate> reducePredicate =
+			filterFields
+				.stream()
+				.flatMap(ff -> {
+
+					Predicate predicate =
+						ff.generateCriteria(builder, root::get);
+
+					if (predicate != null) {
+						return Stream.of(predicate);
+					}
+
+					logger.warn(
+						"FilterField generated null predicate for fieldName: " + ff.getFieldName());
+
+					return Stream.empty();
+
+
+				})
+				.reduce((p1, p2) -> andOperator
+					? builder.and(p1, p2)
+					: builder.or(p1, p2)
+				);
+
+
+		if (sortBy != null && !sortBy.isBlank()) {
+			criteriaQuery
+				.orderBy(
+					builder.asc(root.get(sortBy)),
+					builder.asc(root.get("id"))
+				);
+		}
+		else {
+			criteriaQuery.orderBy(builder.asc(root.get("id")));
+		}
+
+		CriteriaQuery<Long> countQuery = builder.createQuery(Long.class);
+
+		countQuery.select(builder.count(countQuery.from(getEntityClass())));
+
+		reducePredicate.ifPresent(p -> {
+			criteriaQuery.where(p);
+			countQuery.where(p);
+		});
+
+		return em.withSession(s -> {
+
+			Uni<List<ENTITY>> resultList = (limit > 0
+				? s.createQuery(criteriaQuery).setMaxResults(limit)
+				: s.createQuery(criteriaQuery)).getResultList();
+
+			Uni<Long> count = s.createQuery(countQuery).getSingleResult();
+
+			return Uni
+				.combine()
+				.all()
+				.unis(count, resultList)
+				.asTuple();
+
+		})
+		.map(t -> Page.of(limit, t.getItem1(), t.getItem2()));
 
 	}
 
@@ -235,5 +366,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	@Inject
 	protected AbstractJpaOperations<PanacheQueryImpl<ENTITY>> jpaOperations;
+
+	@Inject
+	protected Mutiny.SessionFactory em;
+
+	@Inject
+	Logger logger;
 
 }

@@ -21,6 +21,7 @@ import io.openk9.datasource.graphql.util.Response;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.SuggestionCategoryService;
@@ -44,9 +45,9 @@ public class SuggestionCategoryGraphqlResource {
 
 	@Query
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
-		Pageable pageable) {
+		Filter filter, Pageable pageable) {
 		return suggestionCategoryService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable
+			pageable == null ? Pageable.DEFAULT : pageable, filter
 		);
 	}
 

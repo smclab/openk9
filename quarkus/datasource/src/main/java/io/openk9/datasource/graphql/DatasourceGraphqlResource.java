@@ -23,6 +23,7 @@ import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
+import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DatasourceService;
@@ -47,9 +48,9 @@ public class DatasourceGraphqlResource {
 
 	@Query
 	public Uni<Page<Datasource>> getDatasources(
-		Pageable pageable) {
+		Filter filter, Pageable pageable) {
 		return datasourceService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable
+			pageable == null ? Pageable.DEFAULT : pageable, filter
 		);
 	}
 

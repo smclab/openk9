@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
+import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.EnrichItemService;
@@ -41,9 +42,9 @@ public class EnrichItemGraphqlResource {
 
 	@Query
 	public Uni<Page<EnrichItem>> getEnrichItems(
-		Pageable pageable) {
+		Filter filter, Pageable pageable) {
 		return enrichItemService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable
+			pageable == null ? Pageable.DEFAULT : pageable, filter
 		);
 	}
 
