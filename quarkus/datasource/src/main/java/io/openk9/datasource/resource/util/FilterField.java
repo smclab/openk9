@@ -36,7 +36,7 @@ import java.util.function.Function;
 @NoArgsConstructor
 public class FilterField {
 
-   @org.eclipse.microprofile.graphql.DefaultValue("equals")
+   @org.eclipse.microprofile.graphql.DefaultValue("contains")
    protected Operator operator;
    @org.eclipse.microprofile.graphql.DefaultValue("name")
    protected String fieldName;
