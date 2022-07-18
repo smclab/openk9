@@ -24,6 +24,7 @@ import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.SuggestionCategoryService;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.ws.rs.BeanParam;
@@ -50,7 +51,7 @@ public class SuggestionCategoryResource extends
 
 	@PUT
 	@Path("/{id}/doc-type-fields/{docTypeFieldId}")
-	public Uni<Void> addDocTypeField(
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeField(
 		@PathParam("id")long suggestionCategoryId,
 		@PathParam("docTypeFieldId")long docTypeFieldId) {
 		return service.addDocTypeField(suggestionCategoryId, docTypeFieldId);
@@ -58,7 +59,7 @@ public class SuggestionCategoryResource extends
 
 	@DELETE
 	@Path("/{id}/doc-type-fields/{docTypeFieldId}")
-	public Uni<Void> removeDocTypeField(
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeField(
 		@PathParam("id")long suggestionCategoryId,
 		@PathParam("docTypeFieldId")long docTypeFieldId) {
 		return service.removeDocTypeField(suggestionCategoryId, docTypeFieldId);

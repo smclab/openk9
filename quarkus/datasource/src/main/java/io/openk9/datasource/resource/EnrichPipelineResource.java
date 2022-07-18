@@ -24,6 +24,7 @@ import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.EnrichPipelineService;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.ws.rs.BeanParam;
@@ -50,7 +51,7 @@ public class EnrichPipelineResource extends
 
 	@PUT
 	@Path("/{id}/enrich-items/{enrichItemId}")
-	public Uni<Void> addEnrichItem(
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(
 		@PathParam("id") long enrichPipelineId,
 		@PathParam("enrichItemId") long enrichItemId) {
 		return service.addEnrichItem(enrichPipelineId, enrichItemId);
@@ -58,7 +59,7 @@ public class EnrichPipelineResource extends
 
 	@DELETE
 	@Path("/{id}/enrich-items/{enrichItemId}")
-	public Uni<Void> removeEnrichItem(
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItem(
 		@PathParam("id") long enrichPipelineId,
 		@PathParam("enrichItemId") long enrichItemId) {
 		return service.removeEnrichItem(enrichPipelineId, enrichItemId);

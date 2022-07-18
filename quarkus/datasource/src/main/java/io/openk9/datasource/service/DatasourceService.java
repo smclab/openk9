@@ -25,6 +25,7 @@ import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
@@ -49,52 +50,73 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		return findById(datasourceId).flatMap(d -> Mutiny.fetch(d.getEnrichPipeline()));
 	}
 
-	public Uni<Datasource> setEntityIndex(long datasourceId, long entityIndexId) {
+	public Uni<Tuple2<Datasource, EntityIndex>> setEntityIndex(long datasourceId, long entityIndexId) {
 		return findById(datasourceId)
-			.flatMap(datasource -> entityIndexService.findById(entityIndexId)
-				.flatMap(entityIndex -> {
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> entityIndexService.findById(entityIndexId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(entityIndex -> {
 					datasource.setEntityIndex(entityIndex);
-					return persist(datasource);
+					return persist(datasource)
+						.map(d -> Tuple2.of(d, entityIndex));
 				}));
 	}
 
 	public Uni<Datasource> unsetEntityIndex(long datasourceId) {
 		return findById(datasourceId)
-			.flatMap(datasource -> {
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> {
 				datasource.setEntityIndex(null);
 				return persist(datasource);
 			});
 	}
 
-	public Uni<Datasource> setDataIndex(long datasourceId, long dataIndexId) {
+	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(long datasourceId, long dataIndexId) {
 		return findById(datasourceId)
-			.flatMap(datasource -> dataIndexService.findById(dataIndexId)
-				.flatMap(dataIndex -> {
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> dataIndexService.findById(dataIndexId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(dataIndex -> {
 					datasource.setDataIndex(dataIndex);
-					return persist(datasource);
+					return persist(datasource)
+						.map(d -> Tuple2.of(d, dataIndex));
 				}));
 	}
 
 	public Uni<Datasource> unsetDataIndex(long datasourceId) {
 		return findById(datasourceId)
-			.flatMap(datasource -> {
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> {
 				datasource.setDataIndex(null);
 				return persist(datasource);
 			});
 	}
 
-	public Uni<Datasource> setEnrichPipeline(long datasourceId, long enrichPipelineId) {
+	public Uni<Tuple2<Datasource, EnrichPipeline>> setEnrichPipeline(long datasourceId, long enrichPipelineId) {
 		return findById(datasourceId)
-			.flatMap(datasource -> enrichPipelineService.findById(enrichPipelineId)
-				.flatMap(enrichPipeline -> {
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> enrichPipelineService.findById(enrichPipelineId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(enrichPipeline -> {
 					datasource.setEnrichPipeline(enrichPipeline);
-					return persist(datasource);
+					return persist(datasource)
+						.map(d -> Tuple2.of(d, enrichPipeline));
 				}));
 	}
 
 	public Uni<Datasource> unsetEnrichPipeline(long datasourceId) {
 		return findById(datasourceId)
-			.flatMap(datasource -> {
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> {
 				datasource.setEnrichPipeline(null);
 				return persist(datasource);
 			});
@@ -104,18 +126,23 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		return findById(datasourceId).map(Datasource::getPluginDriver);
 	}
 
-	public Uni<Datasource> setPluginDriver(long datasourceId, long pluginDriverId) {
+	public Uni<Tuple2<Datasource, PluginDriver>> setPluginDriver(long datasourceId, long pluginDriverId) {
 		return findById(datasourceId)
-			.flatMap(datasource -> pluginDriverService.findById(pluginDriverId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> pluginDriverService.findById(pluginDriverId)
 				.flatMap(pluginDriver -> {
 					datasource.setPluginDriver(pluginDriver);
-					return persist(datasource);
+					return persist(datasource)
+						.map(d -> Tuple2.of(d, pluginDriver));
 				}));
 	}
 
 	public Uni<Datasource> unsetPluginDriver(long datasourceId) {
 		return findById(datasourceId)
-			.flatMap(datasource -> {
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> {
 				datasource.setPluginDriver(null);
 				return persist(datasource);
 			});

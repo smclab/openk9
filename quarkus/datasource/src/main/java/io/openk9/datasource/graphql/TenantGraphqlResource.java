@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.util.Response;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
@@ -27,6 +26,7 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.TenantService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -52,18 +52,17 @@ public class TenantGraphqlResource {
 	}
 
 	public Uni<Page<Datasource>> datasources(
-		@Source Tenant tenant, Pageable pageable) {
+		@Source Tenant tenant, Pageable pageable, Filter filter) {
 		return tenantService.getDatasources(
-			tenant,
-			pageable == null ? Pageable.DEFAULT : pageable);
+			tenant.getId(),
+			pageable == null ? Pageable.DEFAULT : pageable, filter);
 	}
 
 	public Uni<Page<SuggestionCategory>> suggestionCategories(
-		@Source Tenant tenant,
-		Pageable pageable) {
+		@Source Tenant tenant, Pageable pageable, Filter filter) {
 		return tenantService.getSuggestionCategories(
 			tenant.getId(),
-			pageable == null ? Pageable.DEFAULT : pageable);
+			pageable == null ? Pageable.DEFAULT : pageable, filter);
 	}
 
 	@Query
@@ -92,27 +91,23 @@ public class TenantGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Response> addDatasourceToTenant(long tenantId, long datasourceId) {
-		return tenantService.addDatasource(tenantId, datasourceId).replaceWith(
-			() -> Response.of("Datasource added to tenant"));
+	public Uni<Tuple2<Tenant, Datasource>> addDatasourceToTenant(long tenantId, long datasourceId) {
+		return tenantService.addDatasource(tenantId, datasourceId);
 	}
 
 	@Mutation
-	public Uni<Response> removeDatasourceFromTenant(long tenantId, long datasourceId) {
-		return tenantService.removeDatasource(tenantId, datasourceId).replaceWith(
-			() -> Response.of("Datasource removed from tenant"));
+	public Uni<Tuple2<Tenant, Datasource>> removeDatasourceFromTenant(long tenantId, long datasourceId) {
+		return tenantService.removeDatasource(tenantId, datasourceId);
 	}
 
 	@Mutation
-	public Uni<Response> addSuggestionCategoryToTenant(long tenantId, long suggestionCategoryId) {
-		return tenantService.addSuggestionCategory(tenantId, suggestionCategoryId).replaceWith(
-			() -> Response.of("Suggestion category added to tenant"));
+	public Uni<Tuple2<Tenant, SuggestionCategory>> addSuggestionCategoryToTenant(long tenantId, long suggestionCategoryId) {
+		return tenantService.addSuggestionCategory(tenantId, suggestionCategoryId);
 	}
 
 	@Mutation
-	public Uni<Response> removeSuggestionCategoryFromTenant(long tenantId, long suggestionCategoryId) {
-		return tenantService.removeSuggestionCategory(tenantId, suggestionCategoryId).replaceWith(
-			() -> Response.of("Suggestion category removed from tenant"));
+	public Uni<Tuple2<Tenant, SuggestionCategory>> removeSuggestionCategoryFromTenant(long tenantId, long suggestionCategoryId) {
+		return tenantService.removeSuggestionCategory(tenantId, suggestionCategoryId);
 	}
 
 	@Subscription

@@ -23,17 +23,16 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.panache.common.Sort;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.Map;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
@@ -43,55 +42,51 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long docTypeId, Pageable pageable) {
-
-		Map<String, Object> params = new HashMap<>();
-
-		params.put("docTypeId", docTypeId);
-
-		String query =
-			"select dtf " +
-			"from DocType docType " +
-			"join docType.docTypeFields dtf " +
-			"where docType.id = :docTypeId ";
-
-		query = createPageableQuery(pageable, params, query, "dtf");
-
-		Sort sort = createSort("dtf", pageable.getSortBy().name());
-
-		PanacheQuery<DocTypeField> docTypePanacheQuery =
-			DocType
-				.find(query, sort, params)
-				.page(0, pageable.getLimit());
-
-		Uni<Long> countQuery = DocType.count(
-			"from DocType docType join docType.docTypeFields where docType.id = ?1", docTypeId);
-
-		return createPage(
-			pageable.getLimit(), docTypePanacheQuery, countQuery);
+		 return getDocTypeFields(docTypeId, pageable, Filter.DEFAULT);
 	}
 
-	public Uni<DocTypeField> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
+	public Uni<Page<DocTypeField>> getDocTypeFields(
+		long docTypeId, Pageable pageable, Filter filter) {
+
+		return findAllPaginatedJoin(
+			new Long[] { docTypeId },
+			"docTypeFields", DocTypeField.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(),
+			filter);
+	}
+
+	public Uni<Tuple2<DocType, DocTypeField>> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
 
 		DocTypeField docTypeField =
 			docTypeFieldMapper.create(docTypeFieldDTO);
 
 		return findById(id)
-			.flatMap(docType -> {
-				docType.addDocTypeField(docTypeField);
-				return persist(docType).replaceWith(() -> docTypeField);
-			});
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docType -> Mutiny.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
+				if (docTypeFields.add(docTypeField)) {
+					docType.setDocTypeFields(docTypeFields);
+					return persist(docType)
+						.map(dt -> Tuple2.of(dt, docTypeField));
+				}
+				return Uni.createFrom().nullItem();
+			}));
 	}
 
-	public Uni<Void> removeDocTypeField(long id, long docTypeFieldId) {
+	public Uni<Tuple2<DocType, Long>> removeDocTypeField(long id, long docTypeFieldId) {
 		return findById(id)
-			.flatMap(docType -> {
-				if (!docType.removeDocTypeField(docTypeFieldId)) {
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docType -> Mutiny.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
+				if (!docTypeFields.removeIf(docTypeField -> docTypeField.getId() == docTypeFieldId)) {
 					return Uni.createFrom().failure(() -> new IllegalArgumentException(
 						"DocTypeField not found with id " + docTypeFieldId));
 				}
-				return persist(docType);
-			})
-			.replaceWithVoid();
+				docType.setDocTypeFields(docTypeFields);
+				return persist(docType)
+					.map(dt -> Tuple2.of(dt, docTypeFieldId));
+			}));
 	}
 
 	@Inject

@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.util.Response;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
@@ -26,6 +25,7 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -53,10 +53,10 @@ public class SuggestionCategoryGraphqlResource {
 
 	public Uni<Page<DocTypeField>> docTypeFields(
 		@Source SuggestionCategory suggestionCategory,
-		Pageable pageable) {
+		Pageable pageable, Filter filter) {
 		return suggestionCategoryService.getDocTypeFields(
 			suggestionCategory.getId(),
-			pageable == null ? Pageable.DEFAULT : pageable);
+			pageable == null ? Pageable.DEFAULT : pageable, filter);
 	}
 
 	@Query
@@ -85,15 +85,13 @@ public class SuggestionCategoryGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Response> addDocTypeFieldToSuggestionCategory(long suggestionCategoryId, long docTypeFieldId) {
-		return suggestionCategoryService.addDocTypeField(suggestionCategoryId, docTypeFieldId)
-			.replaceWith(() -> Response.of("DocTypeField added to SuggestionCategory"));
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeFieldToSuggestionCategory(long suggestionCategoryId, long docTypeFieldId) {
+		return suggestionCategoryService.addDocTypeField(suggestionCategoryId, docTypeFieldId);
 	}
 
 	@Mutation
-	public Uni<Response> removeDocTypeFieldToSuggestionCategory(long suggestionCategoryId, long docTypeFieldId) {
-		return suggestionCategoryService.removeDocTypeField(suggestionCategoryId, docTypeFieldId)
-			.replaceWith(() -> Response.of("DocTypeField removed from SuggestionCategory"));
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeFieldToSuggestionCategory(long suggestionCategoryId, long docTypeFieldId) {
+		return suggestionCategoryService.removeDocTypeField(suggestionCategoryId, docTypeFieldId);
 	}
 
 	@Subscription

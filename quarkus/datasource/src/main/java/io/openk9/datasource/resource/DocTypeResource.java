@@ -25,6 +25,7 @@ import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.ws.rs.BeanParam;
@@ -51,14 +52,14 @@ public class DocTypeResource extends
 
 	@PUT
 	@Path("/{id}/doc-type-fields")
-	public Uni<DocTypeField> addDocTypeField(
+	public Uni<Tuple2<DocType, DocTypeField>> addDocTypeField(
 		@PathParam("id")long id, DocTypeFieldDTO docTypeFieldDTO) {
 		return service.addDocTypeField(id, docTypeFieldDTO);
 	}
 
 	@DELETE
 	@Path("/{id}/doc-type-fields/{docTypeFieldId}")
-	public Uni<Void> removeDocTypeField(
+	public Uni<Tuple2<DocType, Long>> removeDocTypeField(
 		@PathParam("id")long id, @PathParam("docTypeFieldId")long docTypeFieldId) {
 		return service.removeDocTypeField(id, docTypeFieldId);
 	}

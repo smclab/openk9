@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.util.Response;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
@@ -26,6 +25,7 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -53,10 +53,10 @@ public class EnrichPipelineGraphqlResource {
 
 	public Uni<Page<EnrichItem>> enrichItems(
 		@Source EnrichPipeline enrichPipeline,
-		Pageable pageable) {
+		Pageable pageable, Filter filter) {
 		return enrichPipelineService.getEnrichItems(
 			enrichPipeline.getId(),
-			pageable == null ? Pageable.DEFAULT : pageable);
+			pageable == null ? Pageable.DEFAULT : pageable, filter);
 	}
 
 	@Query
@@ -85,18 +85,14 @@ public class EnrichPipelineGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Response> addEnrichItemToEnrichPipeline(long enrichPipelineId, long enrichItemId) {
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItemToEnrichPipeline(long enrichPipelineId, long enrichItemId) {
 		return enrichPipelineService.addEnrichItem(
-				enrichPipelineId, enrichItemId)
-			.replaceWith(
-				() -> Response.of("Enrich item added to enrich pipeline"));
+				enrichPipelineId, enrichItemId);
 	}
 
 	@Mutation
-	public Uni<Response> removeEnrichItemToEnrichPipeline(long enrichPipelineId, long enrichItemId) {
-		return enrichPipelineService.removeEnrichItem(enrichPipelineId, enrichItemId)
-			.replaceWith(
-				() -> Response.of("Enrich item removed from enrich pipeline"));
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItemToEnrichPipeline(long enrichPipelineId, long enrichItemId) {
+		return enrichPipelineService.removeEnrichItem(enrichPipelineId, enrichItemId);
 	}
 
 	@Subscription

@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.util.Response;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
@@ -26,6 +25,7 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -51,9 +51,9 @@ public class DataIndexGraphqlResource {
 	}
 
 	public Uni<Page<DocType>> docTypes(
-		@Source DataIndex dataIndex, Pageable pageable) {
+		@Source DataIndex dataIndex, Pageable pageable, Filter filter) {
 		return dataIndexService.getDocTypes(
-			dataIndex.getId(), pageable == null ? Pageable.DEFAULT : pageable);
+			dataIndex.getId(), pageable == null ? Pageable.DEFAULT : pageable, filter);
 	}
 
 	@Query
@@ -82,15 +82,13 @@ public class DataIndexGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Response> addDocTypeToDataIndex(long dataIndexId, long docTypeId) {
-		return dataIndexService.addDocType(dataIndexId, docTypeId)
-			.replaceWith(() -> Response.of("added docType to dataIndex"));
+	public Uni<Tuple2<DataIndex, DocType>> addDocTypeToDataIndex(long dataIndexId, long docTypeId) {
+		return dataIndexService.addDocType(dataIndexId, docTypeId);
 	}
 
 	@Mutation
-	public Uni<Response> removeDocTypeFromDataIndex(long dataIndexId, long docTypeId) {
-		return dataIndexService.removeDocType(dataIndexId, docTypeId)
-			.replaceWith(() -> Response.of("removed docType from dataIndex"));
+	public Uni<Tuple2<DataIndex, DocType>> removeDocTypeFromDataIndex(long dataIndexId, long docTypeId) {
+		return dataIndexService.removeDocType(dataIndexId, docTypeId);
 	}
 
 	@Subscription

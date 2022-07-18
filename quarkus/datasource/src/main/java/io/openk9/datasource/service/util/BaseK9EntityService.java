@@ -38,9 +38,11 @@ import org.reactivestreams.Processor;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +92,46 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
+	public <T extends K9Entity> Uni<Page<T>> findAllPaginatedJoin(
+		Long[] entityIds, String joinField, Class<T> joinType, int limit, String sortBy,
+		long afterId, long beforeId, Filter filter) {
+
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+
+		CriteriaQuery<T> joinEntityQuery =
+			builder.createQuery(joinType);
+
+		Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
+
+		Root<T> root = joinEntityQuery.from(joinType);
+
+		Join<ENTITY, T> join = entityRoot.joinSet(joinField);
+
+		CriteriaQuery<T> criteriaQuery = joinEntityQuery.select(join);
+
+		criteriaQuery.where(entityRoot.get(getEntityIdField()).in(Arrays.asList(entityIds)));
+
+		CriteriaQuery countJoinEntityQuery =
+			builder.createQuery();
+
+		Root<ENTITY> countEntityRoot = countJoinEntityQuery.from(getEntityClass());
+
+		Root<T> countRoot = countJoinEntityQuery.from(joinType);
+
+		countEntityRoot.joinSet(joinField);
+
+		CriteriaQuery countQuery = countJoinEntityQuery.select(builder.count(countRoot));
+
+		countQuery.where(entityRoot.get(getEntityIdField()).in(Arrays.asList(entityIds)));
+
+		return _pageCriteriaQuery(
+			limit, sortBy, afterId, beforeId, filter, builder, root,
+			criteriaQuery,
+			countQuery);
+
+
+	}
+
 	public Uni<Page<ENTITY>> findAllPaginated(
 		int limit, String sortBy, long afterId, long beforeId, Filter filter) {
 
@@ -99,6 +141,28 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		CriteriaBuilder builder = em.getCriteriaBuilder();
 		CriteriaQuery<ENTITY> criteriaQuery = builder.createQuery(getEntityClass());
 		Root<ENTITY> root = criteriaQuery.from(getEntityClass());
+
+		CriteriaQuery<Long> countQuery = builder.createQuery(Long.class);
+
+		countQuery.select(builder.count(countQuery.from(getEntityClass())));
+
+		return _pageCriteriaQuery(
+			limit, sortBy, afterId, beforeId, filter, builder, root,
+			criteriaQuery, countQuery);
+
+	}
+
+	protected String getEntityIdField() {
+		return "id";
+	}
+
+	private <T extends K9Entity> Uni<Page<T>> _pageCriteriaQuery(
+		int limit, String sortBy, long afterId, long beforeId, Filter filter,
+		CriteriaBuilder builder, Root<T> root, CriteriaQuery<T> criteriaQuery,
+		CriteriaQuery countQuery) {
+		filter = filter == null ? Filter.DEFAULT : filter;
+
+		boolean andOperator = filter.isAndOperator();
 
 		List<FilterField> filterFields = filter.getFilterFields();
 
@@ -114,7 +178,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			filterFields.add(
 				FilterField
 					.builder()
-					.fieldName("id")
+					.fieldName(getEntityIdField())
 					.value(Long.toString(afterId))
 					.operator(FilterField.Operator.greaterThan)
 					.build()
@@ -123,7 +187,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			filterFields.add(
 				FilterField
 					.builder()
-					.fieldName("id")
+					.fieldName(getEntityIdField())
 					.value(Long.toString(beforeId))
 					.operator(FilterField.Operator.lessThan)
 					.build()
@@ -134,7 +198,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			filterFields.add(
 				FilterField
 					.builder()
-					.fieldName("id")
+					.fieldName(getEntityIdField())
 					.value(Long.toString(afterId))
 					.operator(FilterField.Operator.greaterThan)
 					.build()
@@ -144,7 +208,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			filterFields.add(
 				FilterField
 					.builder()
-					.fieldName("id")
+					.fieldName(getEntityIdField())
 					.value(Long.toString(beforeId))
 					.operator(FilterField.Operator.lessThan)
 					.build()
@@ -180,16 +244,12 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			criteriaQuery
 				.orderBy(
 					builder.asc(root.get(sortBy)),
-					builder.asc(root.get("id"))
+					builder.asc(root.get(getEntityIdField()))
 				);
 		}
 		else {
-			criteriaQuery.orderBy(builder.asc(root.get("id")));
+			criteriaQuery.orderBy(builder.asc(root.get(getEntityIdField())));
 		}
-
-		CriteriaQuery<Long> countQuery = builder.createQuery(Long.class);
-
-		countQuery.select(builder.count(countQuery.from(getEntityClass())));
 
 		reducePredicate.ifPresent(p -> {
 			criteriaQuery.where(p);
@@ -198,21 +258,20 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return em.withSession(s -> {
 
-			Uni<List<ENTITY>> resultList = (limit > 0
-				? s.createQuery(criteriaQuery).setMaxResults(limit)
-				: s.createQuery(criteriaQuery)).getResultList();
+				Uni<List<T>> resultList = (limit > 0
+					? s.createQuery(criteriaQuery).setMaxResults(limit)
+					: s.createQuery(criteriaQuery)).getResultList();
 
-			Uni<Long> count = s.createQuery(countQuery).getSingleResult();
+				Uni<Long> count = s.createQuery(countQuery).getSingleResult();
 
-			return Uni
-				.combine()
-				.all()
-				.unis(count, resultList)
-				.asTuple();
+				return Uni
+					.combine()
+					.all()
+					.unis(count, resultList)
+					.asTuple();
 
-		})
-		.map(t -> Page.of(limit, t.getItem1(), t.getItem2()));
-
+			})
+			.map(t -> Page.of(limit, t.getItem1(), t.getItem2()));
 	}
 
 	private PanacheQuery<ENTITY> createPanacheQuery(

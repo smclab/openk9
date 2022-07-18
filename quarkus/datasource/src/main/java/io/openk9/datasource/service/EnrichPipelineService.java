@@ -21,17 +21,16 @@ import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
+import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.panache.common.Sort;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.Map;
 
 @ApplicationScoped
 public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, EnrichPipelineDTO> {
@@ -39,55 +38,56 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		 this.mapper = mapper;
 	}
 
-	public Uni<Page<EnrichItem>> getEnrichItems(long enrichPipelineId, Pageable pageable) {
-
-		Map<String, Object> params = new HashMap<>();
-
-		params.put("enrichPipelineId", enrichPipelineId);
-
-		String query =
-			"select ei " +
-			"from EnrichPipeline enrichPipeline " +
-			"join enrichPipeline.enrichItems ei " +
-			"where enrichPipeline.id = :enrichPipelineId ";
-
-		query = createPageableQuery(pageable, params, query, "ei");
-
-		Sort sort = createSort("ei", pageable.getSortBy().name());
-
-		 PanacheQuery<EnrichItem> docTypePanacheQuery =
-			 EnrichPipeline
-				.find(query, sort, params)
-				.page(0, pageable.getLimit());
-
-		 Uni<Long> countQuery =
-			 EnrichPipeline
-				.count("from EnrichPipeline ep join ep.enrichItems where ep.id = ?1", enrichPipelineId);
-
-		return createPage(
-			pageable.getLimit(), docTypePanacheQuery, countQuery);
+	public Uni<Page<EnrichItem>> getEnrichItems(
+		long enrichPipelineId, Pageable pageable) {
+		 return getEnrichItems(enrichPipelineId, pageable, Filter.DEFAULT);
 	}
 
-	public Uni<Void> addEnrichItem(long enrichPipelineId, long enrichItemId) {
-		return findById(enrichPipelineId)
-			.flatMap(enrichPipeline ->
-				enrichItemService.findById(enrichItemId)
-					.flatMap(enrichItem -> {
-						enrichPipeline.addEnrichItem(enrichItem);
-						return persist(enrichPipeline);
-					}))
-			.replaceWithVoid();
+	public Uni<Page<EnrichItem>> getEnrichItems(
+		long enrichPipelineId, Pageable pageable,
+		Filter filter) {
+
+		return findAllPaginatedJoin(
+			new Long[] { enrichPipelineId },
+			"enrichItems", EnrichItem.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(),
+			filter);
 	}
 
-	public Uni<Void> removeEnrichItem(long enrichPipelineId, long enrichItemId) {
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(long enrichPipelineId, long enrichItemId) {
 		return findById(enrichPipelineId)
-			.flatMap(enrichPipeline ->
+			.onItem()
+			.ifNotNull()
+			.transformToUni(enrichPipeline ->
 				enrichItemService.findById(enrichItemId)
-					.flatMap(enrichItem -> {
-						enrichPipeline.removeEnrichItem(enrichItem);
-						return persist(enrichPipeline);
-					}))
-			.replaceWithVoid();
+					.onItem()
+					.ifNotNull()
+					.transformToUni(enrichItem -> Mutiny.fetch(enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
+						if (enrichItems.add(enrichItem)) {
+							enrichPipeline.setEnrichItems(enrichItems);
+							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
+						} else {
+							return Uni.createFrom().nullItem();
+						}
+					})));
+	}
+
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItem(long enrichPipelineId, long enrichItemId) {
+		return findById(enrichPipelineId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(enrichPipeline ->
+				enrichItemService.findById(enrichItemId)
+					.onItem()
+					.ifNotNull()
+					.transformToUni(enrichItem -> Mutiny.fetch(enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
+						if (enrichItems.remove(enrichItem)) {
+							enrichPipeline.setEnrichItems(enrichItems);
+							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
+						}
+						return Uni.createFrom().nullItem();
+					})));
 	}
 
 	@Inject

@@ -24,6 +24,7 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.ws.rs.DELETE;
@@ -48,7 +49,7 @@ public class DatasourceResource extends
 
 	@PUT
 	@Path("/{id}/enrich-pipeline/{enrichPipelineId}")
-	public Uni<Datasource> setEnrichPipeline(
+	public Uni<Tuple2<Datasource, EnrichPipeline>> setEnrichPipeline(
 		@PathParam("id")long datasourceId,
 		@PathParam("enrichPipelineId")long enrichPipelineId) {
 
@@ -74,7 +75,7 @@ public class DatasourceResource extends
 
 	@PUT
 	@Path("/{id}/data-index/{dataIndexId}")
-	public Uni<Datasource> setDataIndex(
+	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(
 		@PathParam("id")long datasourceId,
 		@PathParam("dataIndexId")long dataIndexId) {
 		return service.setDataIndex(datasourceId, dataIndexId);
@@ -95,7 +96,7 @@ public class DatasourceResource extends
 
 	@PUT
 	@Path("/{id}/plugin-driver/{pluginDriverId}")
-	public Uni<Datasource> setPluginDriver(
+	public Uni<Tuple2<Datasource, PluginDriver>> setPluginDriver(
 		@PathParam("id")long datasourceId,
 		@PathParam("pluginDriverId")long pluginDriverId) {
 		return service.setPluginDriver(datasourceId, pluginDriverId);

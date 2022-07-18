@@ -21,18 +21,17 @@ import io.openk9.datasource.mapper.SuggestionCategoryMapper;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.panache.common.Sort;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 @ApplicationScoped
@@ -49,53 +48,55 @@ public class SuggestionCategoryService extends
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long suggestionCategoryId, Pageable pageable) {
-
-		Map<String, Object> params = new HashMap<>();
-
-		params.put("suggestionCategoryId", suggestionCategoryId);
-
-		String query =
-			"select dtf " +
-			"from SuggestionCategory sc " +
-			"join sc.docTypeFields dtf " +
-			"where sc.id = :suggestionCategoryId ";
-
-		query = createPageableQuery(pageable, params, query, "dtf");
-
-		Sort sort = createSort("dtf", pageable.getSortBy().name());
-
-		PanacheQuery<DocTypeField> docTypeFieldPanacheQuery =
-			SuggestionCategory
-				.find(query, sort, params)
-				.page(0, pageable.getLimit());
-
-		 Uni<Long> countQuery = SuggestionCategory
-			 .count("from SuggestionCategory sc join sc.docTypeFields where sc.id = ?1", suggestionCategoryId);
-
-		return createPage(
-			pageable.getLimit(), docTypeFieldPanacheQuery, countQuery);
+		 return getDocTypeFields(
+			suggestionCategoryId, pageable, Filter.DEFAULT);
 	}
 
-	public Uni<Void> addDocTypeField(
-		long suggestionCategoryId, long docTypeFieldId) {
-		return findById(suggestionCategoryId)
-			.flatMap(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
-				.flatMap(docTypeField -> {
-					suggestionCategory.addDocTypeField(docTypeField);
-					return persist(suggestionCategory);
-				}))
-				.replaceWithVoid();
+	public Uni<Page<DocTypeField>> getDocTypeFields(
+		long suggestionCategoryId, Pageable pageable, Filter filter) {
+
+		return findAllPaginatedJoin(
+			new Long[] { suggestionCategoryId },
+			"docTypeFields", DocTypeField.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(), filter
+		);
 	}
 
-	public Uni<Void> removeDocTypeField(
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeField(
 		long suggestionCategoryId, long docTypeFieldId) {
 		return findById(suggestionCategoryId)
-			.flatMap(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
-				.flatMap(docTypeField -> {
-					suggestionCategory.removeDocTypeField(docTypeField);
-					return persist(suggestionCategory);
-				}))
-				.replaceWithVoid();
+			.onItem()
+			.ifNotNull()
+			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(docTypeField -> Mutiny.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
+					if (docTypeFields.add(docTypeField)) {
+						suggestionCategory.setDocTypeFields(docTypeFields);
+						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
+					}
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeField(
+		long suggestionCategoryId, long docTypeFieldId) {
+		return findById(suggestionCategoryId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(docTypeField -> Mutiny.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
+					if (docTypeFields.remove(docTypeField)) {
+						suggestionCategory.setDocTypeFields(docTypeFields);
+						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
+					}
+					return Uni.createFrom().nullItem();
+
+				})));
 	}
 
 	@Inject

@@ -23,21 +23,17 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
-import io.quarkus.panache.common.Sort;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.tuples.Tuple2;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @ApplicationScoped
 public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
@@ -48,189 +44,109 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	public Uni<Page<Datasource>> getDatasources(List<Tenant> tenants, Pageable pageable) {
 		return getDatasources(
 			tenants.stream().map(K9Entity::getId).toArray(Long[]::new),
-			pageable);
+			pageable, Filter.DEFAULT);
+	}
+
+	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable, Filter filter) {
+		return getDatasources(new Long[] {tenantId}, pageable, filter);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
-		return getDatasources(new Long[] {tenantId}, pageable);
+		return getDatasources(new Long[] {tenantId}, pageable, Filter.DEFAULT);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(Tenant tenant, Pageable pageable) {
 		 return getDatasources(
-			 new Long[] {tenant.getId()}, pageable);
+			 new Long[] {tenant.getId()}, pageable, Filter.DEFAULT);
 	}
 
-	public Uni<Page<Datasource>> getDatasources(Long[] tenantId, Pageable pageable) {
+	public Uni<Page<Datasource>> getDatasources(
+		Long[] tenantIds, Pageable pageable, Filter filter) {
 
-		Map<String, Object> params = new HashMap<>();
-
-		boolean isOne = tenantId.length == 1;
-
-		params.put("tenantId", isOne ? tenantId[0] : Arrays.asList(tenantId));
-
-		String where = (isOne ? "where tenant.id = :tenantId " : "where tenant.id in (:tenantId) ");
-
-		String query =
-			"select d " +
-			"from Tenant tenant " +
-			"join tenant.datasources d " +
-			where;
-
-		query = createPageableQuery(pageable, params, query, "d");
-
-		Sort sort = createSort("d", pageable.getSortBy().name());
-
-		PanacheQuery<Datasource> panacheQuery =
-			Tenant
-				.find(query, sort, params)
-				.page(0, pageable.getLimit());
-
-		Uni<Long> countQuery =
-			Tenant.count(
-				"from Tenant tenant join tenant.datasources datasource " +
-				where,
-				params);
-
-		return createPage(
-			pageable.getLimit(), panacheQuery, countQuery);
-	}
-
-	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
-		Tenant tenant, Pageable pageable) {
-		return getSuggestionCategories(tenant.getId(), pageable);
+		 return findAllPaginatedJoin(
+			 tenantIds, "datasources", Datasource.class,
+			 pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			 pageable.getBeforeId(), filter);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
 		long tenantId, Pageable pageable) {
-
-		Map<String, Object> params = new HashMap<>();
-
-		params.put("tenantId", tenantId);
-
-		String query =
-			"select sc " +
-			"from Tenant tenant " +
-			"join tenant.suggestionCategories sc " +
-			"where tenant.id = :tenantId ";
-
-		query = createPageableQuery(pageable, params, query, "sc");
-
-		Sort sort = createSort("sc", pageable.getSortBy().name());
-
-		PanacheQuery<SuggestionCategory> panacheQuery =
-			Tenant
-				.find(query, sort, params)
-				.page(0, pageable.getLimit());
-
-		Uni<Long> countQuery =
-			Tenant.count(
-				"from Tenant tenant join tenant.suggestionCategories datasource where tenant.id = ?1",
-				tenantId);
-
-		return createPage(
-			pageable.getLimit(), panacheQuery, countQuery);
+		return getSuggestionCategories(tenantId, pageable, Filter.DEFAULT);
 	}
 
-	public Uni<Void> removeDatasource(long tenantId, long datasourceId) {
-		return _findTenantAndDatasource(tenantId, datasourceId)
-			.flatMap(tuple -> {
-				Tenant tenant = tuple.getItem1();
-				Datasource datasource = tuple.getItem2();
-				tenant.removeDatasource(datasource);
-				return persist(tenant);
-			})
-			.replaceWithVoid();
+	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
+		long tenantId, Pageable pageable, Filter filter) {
+
+		return findAllPaginatedJoin(
+			new Long[]{tenantId}, "suggestionCategories", SuggestionCategory.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), filter);
 	}
 
-	public Uni<Void> addDatasource(long tenantId, long datasourceId) {
+	public Uni<Tuple2<Tenant, Datasource>> removeDatasource(long tenantId, long datasourceId) {
+		return findById(tenantId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> datasourceService.findById(datasourceId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(datasource -> Mutiny.fetch(tenant.getDatasources()).flatMap(datasources -> {
+					if (datasources.remove(datasource)) {
+						tenant.setDatasources(datasources);
+						return persist(tenant).map(t -> Tuple2.of(t, datasource));
+					}
+					return Uni.createFrom().nullItem();
+				})));
+	}
 
-		Uni<Tuple2<Tenant, Datasource>> tuple2Uni =
-			_findTenantAndDatasource(tenantId, datasourceId);
+	public Uni<Tuple2<Tenant, Datasource>> addDatasource(long tenantId, long datasourceId) {
 
-		return tuple2Uni
-			.flatMap(t -> {
-
-				t.getItem1().addDatasource(t.getItem2());
-
-				return persist(t.getItem1());
-
-			})
-			.replaceWithVoid();
+		return findById(tenantId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> datasourceService.findById(datasourceId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(datasource -> Mutiny.fetch(tenant.getDatasources()).flatMap(datasources -> {
+					if (datasources.add(datasource)) {
+						tenant.setDatasources(datasources);
+						return persist(tenant).map(t -> Tuple2.of(t, datasource));
+					}
+					return Uni.createFrom().nullItem();
+				})));
 
 	}
 
-	public Uni<Void> addSuggestionCategory(long tenantId, long suggestionCategoryId) {
-		return _findTenantAndSuggestionCategory(tenantId, suggestionCategoryId)
-			.flatMap(t -> {
-				Tenant tenant = t.getItem1();
-				tenant.addSuggestionCategory(t.getItem2());
-				return persist(tenant);
-			})
-			.replaceWithVoid();
+	public Uni<Tuple2<Tenant, SuggestionCategory>> addSuggestionCategory(long tenantId, long suggestionCategoryId) {
+		return findById(tenantId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> suggestionCategoryService.findById(suggestionCategoryId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(suggestionCategory -> Mutiny.fetch(tenant.getSuggestionCategories()).flatMap(categories -> {
+					if (categories.add(suggestionCategory)) {
+						tenant.setSuggestionCategories(categories);
+						return persist(tenant).map(t -> Tuple2.of(tenant, suggestionCategory));
+					}
+					return Uni.createFrom().nullItem();
+				})));
 	}
 
-	public Uni<Void> removeSuggestionCategory(long tenantId, long suggestionCategoryId) {
-		return _findTenantAndSuggestionCategory(tenantId, suggestionCategoryId)
-			.flatMap(t -> {
-				Tenant tenant = t.getItem1();
-				tenant.removeSuggestionCategory(t.getItem2());
-				return persist(tenant);
-			})
-			.replaceWithVoid();
-	}
-
-	private Uni<Tuple2<Tenant, SuggestionCategory>> _findTenantAndSuggestionCategory(
-		long tenantId, long suggestionCategoryId) {
-
-		Uni<Tenant> tenantUni = findById(tenantId);
-		Uni<SuggestionCategory> suggestionCategoryServiceById =
-			suggestionCategoryService.findById(suggestionCategoryId);
-
-		return Uni
-			.combine()
-			.all()
-			.unis(tenantUni, suggestionCategoryServiceById)
-			.asTuple()
-			.call(t -> {
-
-				if (t.getItem1() == null) {
-					return Uni.createFrom().failure(() -> new IllegalStateException("Tenant not found for id " + tenantId));
-				}
-
-				if (t.getItem2() == null) {
-					return Uni.createFrom().failure(() -> new IllegalStateException("SuggestionCategory not found for id " + suggestionCategoryId));
-				}
-
-				return Uni.createFrom().item(t);
-
-			});
-
-	}
-
-	private Uni<Tuple2<Tenant, Datasource>> _findTenantAndDatasource(
-		long tenantId, long datasourceId) {
-
-		Uni<Tenant> tenantUni = findById(tenantId);
-		Uni<Datasource> datasourceUni = datasourceService.findById(datasourceId);
-
-		return Uni
-			.combine()
-			.all()
-			.unis(tenantUni, datasourceUni)
-			.asTuple()
-			.call(t -> {
-
-				if (t.getItem1() == null) {
-					return Uni.createFrom().failure(() -> new IllegalStateException("Tenant not found for id " + tenantId));
-				}
-
-				if (t.getItem2() == null) {
-					return Uni.createFrom().failure(() -> new IllegalStateException("Datasource not found for id " + datasourceId));
-				}
-
-				return Uni.createFrom().item(t);
-
-			});
+	public Uni<Tuple2<Tenant, SuggestionCategory>> removeSuggestionCategory(long tenantId, long suggestionCategoryId) {
+		return findById(tenantId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> suggestionCategoryService.findById(suggestionCategoryId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(suggestionCategory -> Mutiny.fetch(tenant.getSuggestionCategories()).flatMap(categories -> {
+					if (categories.remove(suggestionCategory)) {
+						tenant.setSuggestionCategories(categories);
+						return persist(tenant).map(t -> Tuple2.of(tenant, suggestionCategory));
+					}
+					return Uni.createFrom().nullItem();
+				})));
 	}
 
 	@Inject

@@ -24,6 +24,7 @@ import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DataIndexService;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.ws.rs.BeanParam;
@@ -50,7 +51,7 @@ public class DataIndexResource extends
 
 	@PUT
 	@Path("/{id}/doc-types/{docTypeId}")
-	public Uni<Void> addDocType(
+	public Uni<Tuple2<DataIndex, DocType>> addDocType(
 		@PathParam("id")long dataIndexId,
 		@PathParam("docTypeId")long docTypeId) {
 		return service.addDocType(dataIndexId, docTypeId);
@@ -58,7 +59,7 @@ public class DataIndexResource extends
 
 	@DELETE
 	@Path("/{id}/doc-types/{docTypeId}")
-	public Uni<Void> removeDocType(
+	public Uni<Tuple2<DataIndex, DocType>> removeDocType(
 		@PathParam("id")long dataIndexId,
 		@PathParam("docTypeId")long docTypeId) {
 		return service.removeDocType(dataIndexId, docTypeId);

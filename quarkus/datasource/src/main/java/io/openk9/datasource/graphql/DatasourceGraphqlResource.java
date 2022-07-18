@@ -28,6 +28,7 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -97,7 +98,7 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Datasource> setEntityIndexToDatasource(
+	public Uni<Tuple2<Datasource, EntityIndex>> setEntityIndexToDatasource(
 		@Name("datasourceId") long datasourceId,
 		@Name("entityIndexId") long entityIndexId) {
 		return datasourceService.setEntityIndex(datasourceId, entityIndexId);
@@ -110,7 +111,7 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Datasource> setDataIndexToDatasource(
+	public Uni<Tuple2<Datasource, DataIndex>> setDataIndexToDatasource(
 		@Name("datasourceId") long datasourceId,
 		@Name("dataIndexId") long dataIndexId) {
 		return datasourceService.setDataIndex(datasourceId, dataIndexId);
@@ -123,7 +124,7 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Datasource> setEnrichPipelineToDatasource(
+	public Uni<Tuple2<Datasource, EnrichPipeline>> setEnrichPipelineToDatasource(
 		@Name("datasourceId") long datasourceId,
 		@Name("enrichPipelineId") long enrichPipelineId) {
 		return datasourceService.setEnrichPipeline(datasourceId, enrichPipelineId);
@@ -136,7 +137,7 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Datasource> setPluginDriverToDatasource(
+	public Uni<Tuple2<Datasource, PluginDriver>> setPluginDriverToDatasource(
 		@Name("datasourceId") long datasourceId,
 		@Name("pluginDriverId") long pluginDriverId) {
 		return datasourceService.setPluginDriver(datasourceId, pluginDriverId);

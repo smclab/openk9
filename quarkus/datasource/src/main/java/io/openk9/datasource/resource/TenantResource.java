@@ -25,6 +25,7 @@ import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.TenantService;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.ws.rs.BeanParam;
@@ -50,13 +51,13 @@ public class TenantResource extends
 
 	@PUT
 	@Path("/{id}/datasources/{datasourceId}")
-	public Uni<Void> addDatasource(@PathParam("id")long tenantId, @PathParam("datasourceId")long datasourceId) {
+	public Uni<Tuple2<Tenant, Datasource>> addDatasource(@PathParam("id")long tenantId, @PathParam("datasourceId")long datasourceId) {
 		return service.addDatasource(tenantId, datasourceId);
 	}
 
 	@DELETE
 	@Path("/{id}/datasources/{datasourceId}")
-	public Uni<Void> removeDatasource(@PathParam("id")long tenantId, @PathParam("datasourceId")long datasourceId) {
+	public Uni<Tuple2<Tenant, Datasource>> removeDatasource(@PathParam("id")long tenantId, @PathParam("datasourceId")long datasourceId) {
 		return service.removeDatasource(tenantId, datasourceId);
 	}
 
@@ -68,13 +69,13 @@ public class TenantResource extends
 
 	@PUT
 	@Path("/{id}/suggestion-categories/{suggestionCategoryId}")
-	public Uni<Void> addSuggestionCategory(long tenantId, long suggestionCategoryId) {
+	public Uni<Tuple2<Tenant, SuggestionCategory>> addSuggestionCategory(long tenantId, long suggestionCategoryId) {
 		return service.addSuggestionCategory(tenantId, suggestionCategoryId);
 	}
 
 	@DELETE
 	@Path("/{id}/suggestion-categories/{suggestionCategoryId}")
-	public Uni<Void> removeSuggestionCategory(long tenantId, long suggestionCategoryId) {
+	public Uni<Tuple2<Tenant, SuggestionCategory>> removeSuggestionCategory(long tenantId, long suggestionCategoryId) {
 		return service.removeSuggestionCategory(tenantId, suggestionCategoryId);
 	}
 
