@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.graphql;
 
+import graphql.relay.Connection;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
@@ -42,6 +43,12 @@ import javax.inject.Inject;
 @ApplicationScoped
 @CircuitBreaker
 public class TenantGraphqlResource {
+
+	@Query
+	public Uni<Connection<Tenant>> getTenantConnections(
+		String after, String before, Integer first, Integer last) {
+		return tenantService.findConnection(after, before, first, last);
+	}
 
 	@Query
 	public Uni<Page<Tenant>> getTenants(String searchText, Pageable pageable) {

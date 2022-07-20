@@ -17,6 +17,13 @@
 
 package io.openk9.datasource.service.util;
 
+import graphql.relay.Connection;
+import graphql.relay.ConnectionCursor;
+import graphql.relay.DefaultConnection;
+import graphql.relay.DefaultPageInfo;
+import graphql.relay.Edge;
+import graphql.relay.PageInfo;
+import io.openk9.datasource.graphql.util.RelayUtil;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
@@ -53,7 +60,119 @@ import java.util.stream.Stream;
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
 	implements K9EntityService<ENTITY, DTO> {
 
+	public static final DefaultPageInfo DEFAULT_PAGE_INFO =
+		new DefaultPageInfo(null, null, false, false);
+
 	public abstract Class<ENTITY> getEntityClass();
+
+	/**
+	 * Thus when I get the request I process it in the following way:
+	 *
+	 * Start from the greedy query: SELECT * FROM table
+	 * If the after argument is provided, add id > parsed_cursor to the WHERE clause
+	 * If the before argument is provided, add id < parsed_cursor to the WHERE clause
+	 * If the first argument is provided, add ORDER BY id DESC LIMIT first+1 to the query
+	 * If the last argument is provided, add ORDER BY id ASC LIMIT last+1 to the query
+	 * If the last argument is provided, I reverse the order of the results
+	 * If the first argument is provided then I set hasPreviousPage: false (see spec for a description of this behavior).
+	 * If no less than first+1 results are returned, I set hasNextPage: true, otherwise I set it to false.
+	 * If the last argument is provided then I set hasNextPage: false (see spec for a description of this behavior).
+	 * If no less last+1 results are returned, I set hasPreviousPage: true, otherwise I set it to false.
+	 * Using this "algorithm", only the needed data is fetched. While after and before can be both set, I make sure first and last args are treated as mutually exclusive to avoid making a mess. The spec itself discourage making requests with both the arguments set.
+	 *
+	 * Notably, I return an object with the shape described above (and in the linked spec) and I don't use the connectionFromArray helper, which expects a raw collection to slice accordingly to the args.
+	 *
+	 * EDIT: The above algorithm produces array with different orders depending on which of first or last is used to paginate. This is against the specification, so there should be one more step:
+	 *
+	 * Re-order results in a consistent manner (e.g. by creation date)
+	 * Thanks to @Sytten for bringing this problem to my attention.
+	 *
+	 * EDIT2: The above ordering reflects pagination, not chronological order. Hence first is interpreted as 'first to be displayed', not 'first chronologically'. Therefore, you might want to swap ASC and DESC in step (4) and (5). Thanks to @Sytten for bringing this problem to my attention.
+	 *
+	 * @see https://github.com/graphql/graphql-relay-js/issues/94#issuecomment-232410564
+	 */
+	public Uni<Connection<ENTITY>> findConnection(
+		String after, String before, Integer first, Integer last) {
+
+		return withTransaction((s, t) -> {
+
+			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+
+			CriteriaQuery<ENTITY> criteriaBuilderQuery =
+				criteriaBuilder.createQuery(getEntityClass());
+
+			Root<ENTITY> root = criteriaBuilderQuery.from(getEntityClass());
+
+			Predicate where = criteriaBuilder.conjunction();
+
+			if (after != null) {
+				RelayUtil.Cursor cursor = RelayUtil.decodeCursor(after);
+				where = criteriaBuilder.greaterThan(root.get("id"), cursor.getId());
+			}
+
+			if (before != null) {
+				RelayUtil.Cursor cursor = RelayUtil.decodeCursor(before);
+				where = criteriaBuilder.lessThan(root.get("id"), cursor.getId());
+			}
+
+			criteriaBuilderQuery.where(where);
+
+			if (first != null) {
+				criteriaBuilderQuery.orderBy(criteriaBuilder.desc(root.get("id")));
+			}
+
+			if (last != null) {
+				criteriaBuilderQuery.orderBy(criteriaBuilder.asc(root.get("id")));
+			}
+
+			Mutiny.Query<ENTITY> query = s.createQuery(criteriaBuilderQuery);
+
+			if (first != null) {
+				query.setMaxResults(first + 1);
+			}
+
+			if (last != null) {
+				query.setMaxResults(last + 1);
+			}
+
+			Uni<List<ENTITY>> entities = query.getResultList();
+
+			return entities.map(entitiesList -> {
+
+				List<Edge<ENTITY>> edges = RelayUtil.toEdgeList(entitiesList);
+
+				int size = edges.size();
+
+				ConnectionCursor startCursor =
+					edges.isEmpty()
+						? null
+						: edges.get(0).getCursor();
+
+				ConnectionCursor endCursor =
+					edges.isEmpty()
+						? null
+						: edges.get(size - 1).getCursor();
+
+
+				PageInfo pageInfo = DEFAULT_PAGE_INFO;
+
+				if (first != null) {
+					pageInfo = new DefaultPageInfo(
+						startCursor, endCursor, false, size > first + 1);
+				}
+
+				if (last != null) {
+					pageInfo = new DefaultPageInfo(
+						startCursor, endCursor, size > last + 1, false);
+				}
+
+				return new DefaultConnection<>(edges, pageInfo);
+
+			});
+
+		});
+
+	}
 
 	@Override
 	public Uni<Page<ENTITY>> findAllPaginated(
@@ -138,7 +257,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 				criteriaQuery, countQuery);
 
 		});
-
 
 	}
 
