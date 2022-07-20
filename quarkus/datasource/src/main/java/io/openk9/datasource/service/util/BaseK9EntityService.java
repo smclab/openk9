@@ -312,7 +312,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			countQuery.where(p);
 		});
 
-		return em.openSession().flatMap(s -> {
+		return em.withSession(s -> {
 
 				Uni<List<T>> resultList = (limit > 0
 					? s.createQuery(criteriaQuery).setMaxResults(limit)
