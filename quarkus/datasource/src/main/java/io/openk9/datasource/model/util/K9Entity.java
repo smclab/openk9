@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.model.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.vladmihalcea.hibernate.type.json.JsonType;
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -26,6 +28,7 @@ import lombok.ToString;
 import org.eclipse.microprofile.graphql.Id;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.Column;
@@ -38,6 +41,10 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@TypeDef(
+	typeClass = JsonType.class,
+	defaultForType = JsonNode.class
+)
 public abstract class K9Entity extends PanacheEntity {
 
 	@Setter(AccessLevel.NONE)
