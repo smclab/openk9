@@ -25,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
@@ -35,7 +34,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Cacheable
 @Table(name = "tenant")
 @Getter
 @Setter

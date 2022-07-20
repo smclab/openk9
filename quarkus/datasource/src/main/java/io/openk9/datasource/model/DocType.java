@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -33,7 +32,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Cacheable
 @Table(name = "doc_type")
 @Getter
 @Setter

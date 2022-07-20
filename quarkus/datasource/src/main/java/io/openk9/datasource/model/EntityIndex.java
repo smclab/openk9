@@ -23,12 +23,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
 @Entity
-@Cacheable
 @Table(name = "entity_index")
 @Getter
 @Setter
