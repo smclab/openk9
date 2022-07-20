@@ -24,6 +24,7 @@ import lombok.experimental.SuperBuilder;
 import org.jboss.logging.Logger;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import java.time.OffsetDateTime;
@@ -74,15 +75,20 @@ public class FilterField {
             }
          }
          catch (DateTimeParseException dtpe) {
+
+            Expression lowerField = builder.lower(field);
+
+            String lowerValue = value != null ? value.toLowerCase() : null;
+
             switch (operator) {
                case endsWith:
-                  return _orNot(builder.like(field, "%" + value));
+                  return _orNot(builder.like(lowerField, "%" + lowerValue));
                case startsWith:
-                  return _orNot(builder.like(field, value + "%"));
+                  return _orNot(builder.like(lowerField, lowerValue + "%"));
                case contains:
-                  return _orNot(builder.like(field, "%" + value + "%"));
+                  return _orNot(builder.like(lowerField, "%" + lowerValue + "%"));
                case equals:
-                  return _orNot(builder.equal(field, value));
+                  return _orNot(builder.equal(lowerField, lowerValue));
             }
          }
       }
