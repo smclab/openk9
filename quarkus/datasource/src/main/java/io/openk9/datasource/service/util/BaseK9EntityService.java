@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.service.util;
 
-import io.openk9.datasource.graphql.util.SortType;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
@@ -25,10 +24,10 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
-import io.quarkus.hibernate.reactive.panache.PanacheQuery;
 import io.quarkus.hibernate.reactive.panache.common.runtime.AbstractJpaOperations;
 import io.quarkus.hibernate.reactive.panache.runtime.PanacheQueryImpl;
 import io.quarkus.panache.common.Sort;
+import io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -43,41 +42,20 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO> {
+public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
+	implements K9EntityService<ENTITY, DTO> {
 
 	public abstract Class<ENTITY> getEntityClass();
 
-	public Uni<List<ENTITY>> findAll() {
-		return jpaOperations.findAll(getEntityClass()).list();
-	}
-
-	public Uni<List<ENTITY>> findAll(
-		int limit, int offset, String sortBy, SortType sortType) {
-
-		return jpaOperations
-			.findAll(getEntityClass(), Sort.by(sortBy, sortType.getDirection()))
-			.page(offset, limit)
-			.list();
-	}
-
-	public Uni<List<ENTITY>> findAll(Pageable pageable) {
-
-		PanacheQuery<ENTITY> panacheQuery =
-			createPanacheQuery(
-				pageable.getSortBy().name(),
-				pageable.getAfterId(), pageable.getBeforeId());
-
-		return panacheQuery.list();
-
-	}
-
+	@Override
 	public Uni<Page<ENTITY>> findAllPaginated(
 		Pageable pageable, String searchText) {
 
@@ -89,6 +67,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
+	@Override
 	public Uni<Page<ENTITY>> findAllPaginated(
 		Pageable pageable, Filter filter) {
 
@@ -98,14 +77,17 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
+	@Override
 	public Uni<Page<ENTITY>> findAllPaginated(Pageable pageable) {
 
 		return findAllPaginated(pageable, Filter.DEFAULT);
 
 	}
 
+	@Override
 	public <T extends K9Entity> Uni<Page<T>> findAllPaginatedJoin(
-		Long[] entityIds, String joinField, Class<T> joinType, int limit, String sortBy,
+		Long[] entityIds, String joinField, Class<T> joinType, int limit,
+		String sortBy,
 		long afterId, long beforeId, String searchText) {
 
 		Filter filter = searchTextToFilter(searchText);
@@ -115,8 +97,10 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
+	@Override
 	public <T extends K9Entity> Uni<Page<T>> findAllPaginatedJoin(
-		Long[] entityIds, String joinField, Class<T> joinType, int limit, String sortBy,
+		Long[] entityIds, String joinField, Class<T> joinType, int limit,
+		String sortBy,
 		long afterId, long beforeId, Filter filter) {
 
 		return Uni.createFrom().deferred(() -> {
@@ -158,6 +142,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
+	@Override
 	public Uni<Page<ENTITY>> findAllPaginated(
 		int limit, String sortBy, long afterId, long beforeId, Filter filter) {
 
@@ -312,9 +297,9 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			countQuery.where(p);
 		});
 
-		return em.withSession(s -> {
+		return withTransaction((s) -> {
 
-				Uni<List<T>> resultList = (limit > 0
+				Uni<List<T>> resultList = (limit >= 0
 					? s.createQuery(criteriaQuery).setMaxResults(limit)
 					: s.createQuery(criteriaQuery)).getResultList();
 
@@ -328,40 +313,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			})
 			.map(t -> Page.of(limit, t.getItem1(), t.getItem2()));
-	}
-
-	private PanacheQuery<ENTITY> createPanacheQuery(
-		String sortBy, long afterId, long beforeId) {
-		Map<String, Object> params = new HashMap<>();
-
-		String query = "from " + getEntityClass().getSimpleName() + " e ";
-
-		if (afterId > 0 && beforeId > 0) {
-			query += "where id > :afterId and id < :beforeId";
-			params.put("afterId", afterId);
-			params.put("beforeId", beforeId);
-		}
-		else if (afterId > 0) {
-			query += "where id > :afterId";
-			params.put("afterId", afterId);
-		}
-		else if (beforeId > 0) {
-			query += "where id < :beforeId";
-			params.put("beforeId", beforeId);
-		}
-
-		Sort sort = createSort(sortBy);
-
-		return createPanacheQuery(params, query, sort);
-	}
-
-	private PanacheQuery<ENTITY> createPanacheQuery(
-		Map<String, Object> params, String query, Sort sort) {
-
-		return params.isEmpty()
-			? jpaOperations.find(getEntityClass(), query, sort)
-			: jpaOperations.find(getEntityClass(), query, sort, params);
-
 	}
 
 	public static Sort createSort(String sortBy) {
@@ -381,12 +332,14 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
+	@Override
 	public Uni<ENTITY> findById(long id) {
-		return (Uni<ENTITY>)jpaOperations.findById(getEntityClass(), id);
+		return withTransaction((s) -> s.find(getEntityClass(), id));
 	}
 
+	@Override
 	public Uni<ENTITY> patch(long id, DTO dto) {
-		return findById(id)
+		return withTransaction(() -> findById(id)
 			.onItem().ifNotNull()
 			.transformToUni(
 				(prev) -> persist(mapper.patch(prev, dto))
@@ -396,11 +349,12 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.onItem().ifNull().failWith(
 				() -> new IllegalStateException(
 					"dto: " + dto.getClass().getSimpleName() + " with id: " +
-					id + " not found"));
+					id + " not found")));
 	}
 
+	@Override
 	public Uni<ENTITY> update(long id, DTO dto) {
-		return findById(id)
+		return withTransaction(() -> findById(id)
 			.onItem().ifNotNull()
 			.transformToUni(
 				(prev) -> persist(mapper.update(prev, dto))
@@ -410,44 +364,69 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.onItem().ifNull().failWith(
 				() -> new IllegalStateException(
 					"entity: " + dto.getClass().getSimpleName() + " with id: " +
-					id + " not found"));
+					id + " not found")));
 	}
 
+	@Override
 	public Uni<ENTITY> create(DTO dto) {
 		return create(mapper.create(dto));
 	}
 
 	protected Uni<ENTITY> persist(ENTITY entity) {
-		return jpaOperations.persist(entity)
-			.flatMap(v -> jpaOperations.flush())
-			.map(v -> entity);
+		return withTransaction(
+			(s, t) -> jpaOperations
+				.persist(Uni.createFrom().item(s), entity)
+				.map(v -> entity)
+		);
 	}
 
+	@Override
 	public Uni<ENTITY> create(ENTITY entity) {
 		return persist(entity)
 			.invoke(e -> processor.onNext(
 				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
 	}
 
+	protected Uni<Void> remove(ENTITY entity) {
+		return withTransaction((s, t) -> s.remove(entity));
+	}
+
+	@Override
 	public Uni<ENTITY> deleteById(long entityId) {
-		return findById(entityId)
+		return withTransaction(() -> findById(entityId)
 			.onItem().ifNotNull()
-			.call(entity -> jpaOperations.delete(entity))
-			.call(() -> jpaOperations.flush())
+			.call(this::remove)
 			.invoke(e -> processor.onNext(
 				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
 			.onItem().ifNull().failWith(
 				() -> new IllegalStateException(
 					"entity with id: " + entityId + " for service: " +
-					getClass().getSimpleName() + " not found"));
+					getClass().getSimpleName() + " not found")));
 	}
 
 	public Uni<Long> count() {
-		return jpaOperations.count(getEntityClass());
+		return withTransaction(
+			session -> session.createQuery(
+				"SELECT COUNT(*) FROM " + PanacheJpaUtil.getEntityName(getEntityClass()), Long.class)
+				.getSingleResult());
 	}
 
 	public BroadcastProcessor<K9EntityEvent<ENTITY>> getProcessor() {
 		return (BroadcastProcessor<K9EntityEvent<ENTITY>>) processor;
+	}
+
+	protected <T> Uni<T> withTransaction(Supplier<Uni<T>> fun) {
+		return withTransaction((session, transaction) -> fun.get());
+	}
+
+	protected <T> Uni<T> withTransaction(
+		Function<Mutiny.Session, Uni<T>> fun) {
+		return withTransaction((session, transaction) -> fun.apply(session));
+	}
+
+	protected <T> Uni<T> withTransaction(
+		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> fun) {
+		return em.withTransaction(fun);
 	}
 
 	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>>

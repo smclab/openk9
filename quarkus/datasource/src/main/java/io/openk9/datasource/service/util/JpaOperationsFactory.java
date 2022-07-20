@@ -39,7 +39,7 @@ public class JpaOperationsFactory {
 			protected PanacheQueryImpl<T> createPanacheQuery(
 				Uni<Mutiny.Session> session, String query, String orderBy,
 				Object paramsArrayOrMap) {
-				return new PanacheQueryImpl<>(new CommonPanacheQueryImpl<T>(session, query, orderBy, paramsArrayOrMap)) {};
+				return new PanacheQueryImpl<>(new CommonPanacheQueryImpl<>(session, query, orderBy, paramsArrayOrMap)) {};
 			}
 
 			@Override
