@@ -81,7 +81,7 @@ public class TenantGraphqlResource {
 
 	@Mutation
 	public Uni<Tenant> createTenant(TenantDTO tenantDTO) {
-		return tenantService.persist(tenantDTO);
+		return tenantService.create(tenantDTO);
 	}
 
 	@Mutation

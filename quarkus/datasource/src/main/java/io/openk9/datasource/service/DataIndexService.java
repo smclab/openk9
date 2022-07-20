@@ -71,7 +71,7 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 						 .flatMap(dts -> {
 							 if (dts.add(docType)) {
 								 dataIndex.setDocTypes(dts);
-								 return persist(dataIndex)
+								 return create(dataIndex)
 									 .map(di -> Tuple2.of(di, docType));
 							 }
 							 return Uni.createFrom().nullItem();
@@ -92,7 +92,7 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 						.flatMap(dts -> {
 							if (dts.remove(docType)) {
 								dataIndex.setDocTypes(dts);
-								return persist(dataIndex)
+								return create(dataIndex)
 									.map(di -> Tuple2.of(di, docType));
 							}
 							return Uni.createFrom().nullItem();

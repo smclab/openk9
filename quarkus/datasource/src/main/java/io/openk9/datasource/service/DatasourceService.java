@@ -59,7 +59,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				.ifNotNull()
 				.transformToUni(entityIndex -> {
 					datasource.setEntityIndex(entityIndex);
-					return persist(datasource)
+					return create(datasource)
 						.map(d -> Tuple2.of(d, entityIndex));
 				}));
 	}
@@ -70,7 +70,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.ifNotNull()
 			.transformToUni(datasource -> {
 				datasource.setEntityIndex(null);
-				return persist(datasource);
+				return create(datasource);
 			});
 	}
 
@@ -83,7 +83,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				.ifNotNull()
 				.transformToUni(dataIndex -> {
 					datasource.setDataIndex(dataIndex);
-					return persist(datasource)
+					return create(datasource)
 						.map(d -> Tuple2.of(d, dataIndex));
 				}));
 	}
@@ -94,7 +94,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.ifNotNull()
 			.transformToUni(datasource -> {
 				datasource.setDataIndex(null);
-				return persist(datasource);
+				return create(datasource);
 			});
 	}
 
@@ -107,7 +107,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				.ifNotNull()
 				.transformToUni(enrichPipeline -> {
 					datasource.setEnrichPipeline(enrichPipeline);
-					return persist(datasource)
+					return create(datasource)
 						.map(d -> Tuple2.of(d, enrichPipeline));
 				}));
 	}
@@ -118,7 +118,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.ifNotNull()
 			.transformToUni(datasource -> {
 				datasource.setEnrichPipeline(null);
-				return persist(datasource);
+				return create(datasource);
 			});
 	}
 
@@ -133,7 +133,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.transformToUni(datasource -> pluginDriverService.findById(pluginDriverId)
 				.flatMap(pluginDriver -> {
 					datasource.setPluginDriver(pluginDriver);
-					return persist(datasource)
+					return create(datasource)
 						.map(d -> Tuple2.of(d, pluginDriver));
 				}));
 	}
@@ -144,7 +144,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.ifNotNull()
 			.transformToUni(datasource -> {
 				datasource.setPluginDriver(null);
-				return persist(datasource);
+				return create(datasource);
 			});
 	}
 

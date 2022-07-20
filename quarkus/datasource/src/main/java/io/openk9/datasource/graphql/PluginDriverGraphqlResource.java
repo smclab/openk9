@@ -64,7 +64,7 @@ public class PluginDriverGraphqlResource {
 
 	@Mutation
 	public Uni<PluginDriver> createPluginDriver(PluginDriverDTO pluginDriverDTO) {
-		return pluginDriverService.persist(pluginDriverDTO);
+		return pluginDriverService.create(pluginDriverDTO);
 	}
 
 	@Mutation

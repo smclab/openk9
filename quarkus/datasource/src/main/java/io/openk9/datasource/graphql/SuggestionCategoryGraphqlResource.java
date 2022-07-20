@@ -75,7 +75,7 @@ public class SuggestionCategoryGraphqlResource {
 
 	@Mutation
 	public Uni<SuggestionCategory> createSuggestionCategory(SuggestionCategoryDTO suggestionCategoryDTO) {
-		return suggestionCategoryService.persist(suggestionCategoryDTO);
+		return suggestionCategoryService.create(suggestionCategoryDTO);
 	}
 
 	@Mutation

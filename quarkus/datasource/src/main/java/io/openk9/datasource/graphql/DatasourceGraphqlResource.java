@@ -88,7 +88,7 @@ public class DatasourceGraphqlResource {
 
 	@Mutation
 	public Uni<Datasource> createDatasource(DatasourceDTO datasourceDTO) {
-		return datasourceService.persist(datasourceDTO);
+		return datasourceService.create(datasourceDTO);
 	}
 
 	@Mutation

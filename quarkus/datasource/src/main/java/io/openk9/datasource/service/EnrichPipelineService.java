@@ -77,7 +77,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 					.transformToUni(enrichItem -> Mutiny.fetch(enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
 						if (enrichItems.add(enrichItem)) {
 							enrichPipeline.setEnrichItems(enrichItems);
-							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
+							return create(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
 						} else {
 							return Uni.createFrom().nullItem();
 						}
@@ -95,7 +95,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 					.transformToUni(enrichItem -> Mutiny.fetch(enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
 						if (enrichItems.remove(enrichItem)) {
 							enrichPipeline.setEnrichItems(enrichItems);
-							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
+							return create(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
 						}
 						return Uni.createFrom().nullItem();
 					})));

@@ -83,7 +83,7 @@ public abstract class BaseK9EntityResource<
 
 	@POST
 	public Uni<ENTITY> persist(DTO entity) {
-		return this.service.persist(entity);
+		return this.service.create(entity);
 	}
 
 	@DELETE

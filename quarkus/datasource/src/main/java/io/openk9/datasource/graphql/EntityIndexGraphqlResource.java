@@ -64,7 +64,7 @@ public class EntityIndexGraphqlResource {
 
 	@Mutation
 	public Uni<EntityIndex> createEntityIndex(EntityIndexDTO entityIndexDTO) {
-		return entityIndexService.persist(entityIndexDTO);
+		return entityIndexService.create(entityIndexDTO);
 	}
 
 	@Mutation

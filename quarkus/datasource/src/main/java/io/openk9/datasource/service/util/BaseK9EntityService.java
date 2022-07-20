@@ -389,7 +389,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return findById(id)
 			.onItem().ifNotNull()
 			.transformToUni(
-				(prev) -> mapper.patch(prev, dto).<ENTITY>persistAndFlush()
+				(prev) -> persist(mapper.patch(prev, dto))
 					.invoke(newEntity -> processor.onNext(
 						K9EntityEvent.of(
 							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
@@ -403,7 +403,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return findById(id)
 			.onItem().ifNotNull()
 			.transformToUni(
-				(prev) -> mapper.update(prev, dto).<ENTITY>persistAndFlush()
+				(prev) -> persist(mapper.update(prev, dto))
 					.invoke(newEntity -> processor.onNext(
 						K9EntityEvent.of(
 							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
@@ -413,12 +413,18 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 					id + " not found"));
 	}
 
-	public Uni<ENTITY> persist(DTO dto) {
-		return persist(mapper.create(dto));
+	public Uni<ENTITY> create(DTO dto) {
+		return create(mapper.create(dto));
 	}
 
-	public Uni<ENTITY> persist(ENTITY entity) {
-		return entity.<ENTITY>persistAndFlush()
+	protected Uni<ENTITY> persist(ENTITY entity) {
+		return jpaOperations.persist(entity)
+			.flatMap(v -> jpaOperations.flush())
+			.map(v -> entity);
+	}
+
+	public Uni<ENTITY> create(ENTITY entity) {
+		return persist(entity)
 			.invoke(e -> processor.onNext(
 				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
 	}
@@ -426,7 +432,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<ENTITY> deleteById(long entityId) {
 		return findById(entityId)
 			.onItem().ifNotNull()
-			.call(() -> jpaOperations.deleteById(getEntityClass(), entityId))
+			.call(entity -> jpaOperations.delete(entity))
+			.call(() -> jpaOperations.flush())
 			.invoke(e -> processor.onNext(
 				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
 			.onItem().ifNull().failWith(

@@ -72,7 +72,7 @@ public class DataIndexGraphqlResource {
 
 	@Mutation
 	public Uni<DataIndex> createDataIndex(DataIndexDTO dataIndexDTO) {
-		return dataIndexService.persist(dataIndexDTO);
+		return dataIndexService.create(dataIndexDTO);
 	}
 
 	@Mutation

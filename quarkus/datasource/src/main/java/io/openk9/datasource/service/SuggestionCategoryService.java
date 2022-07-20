@@ -85,7 +85,7 @@ public class SuggestionCategoryService extends
 				.transformToUni(docTypeField -> Mutiny.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
 					if (docTypeFields.add(docTypeField)) {
 						suggestionCategory.setDocTypeFields(docTypeFields);
-						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
+						return create(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
 					}
 					return Uni.createFrom().nullItem();
 
@@ -103,7 +103,7 @@ public class SuggestionCategoryService extends
 				.transformToUni(docTypeField -> Mutiny.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
 					if (docTypeFields.remove(docTypeField)) {
 						suggestionCategory.setDocTypeFields(docTypeFields);
-						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
+						return create(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
 					}
 					return Uni.createFrom().nullItem();
 

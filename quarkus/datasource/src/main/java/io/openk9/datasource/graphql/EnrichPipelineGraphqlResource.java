@@ -75,7 +75,7 @@ public class EnrichPipelineGraphqlResource {
 
 	@Mutation
 	public Uni<EnrichPipeline> createEnrichPipeline(EnrichPipelineDTO enrichPipelineDTO) {
-		return enrichPipelineService.persist(enrichPipelineDTO);
+		return enrichPipelineService.create(enrichPipelineDTO);
 	}
 
 	@Mutation

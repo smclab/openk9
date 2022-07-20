@@ -77,7 +77,7 @@ public class DocTypeGraphqlResource {
 
 	@Mutation
 	public Uni<DocType> createDocType(DocTypeDTO docTypeDTO) {
-		return docTypeService.persist(docTypeDTO);
+		return docTypeService.create(docTypeDTO);
 	}
 
 	@Mutation

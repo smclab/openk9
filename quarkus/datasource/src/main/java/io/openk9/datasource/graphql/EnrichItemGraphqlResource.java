@@ -64,7 +64,7 @@ public class EnrichItemGraphqlResource {
 
 	@Mutation
 	public Uni<EnrichItem> createEnrichItem(EnrichItemDTO enrichItemDTO) {
-		return enrichItemService.persist(enrichItemDTO);
+		return enrichItemService.create(enrichItemDTO);
 	}
 
 	@Mutation
