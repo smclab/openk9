@@ -426,7 +426,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<ENTITY> deleteById(long entityId) {
 		return findById(entityId)
 			.onItem().ifNotNull()
-			.call(() -> ENTITY.deleteById(entityId))
+			.call(() -> jpaOperations.deleteById(getEntityClass(), entityId))
 			.invoke(e -> processor.onNext(
 				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
 			.onItem().ifNull().failWith(
