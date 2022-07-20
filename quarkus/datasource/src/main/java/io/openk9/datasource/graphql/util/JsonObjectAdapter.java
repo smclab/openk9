@@ -19,15 +19,27 @@ package io.openk9.datasource.graphql.util;
 
 import io.smallrye.graphql.api.Adapter;
 import io.vertx.core.json.JsonObject;
+import org.jboss.logging.Logger;
 
 public final class JsonObjectAdapter implements Adapter<JsonObject, String> {
 	@Override
 	public String to(JsonObject jsonObject) throws Exception {
-		return jsonObject.toString();
+		return jsonObject == null
+			? "{}"
+			: jsonObject.toString();
 	}
 
 	@Override
 	public JsonObject from(String json) throws Exception {
-		return new JsonObject(json);
+		try {
+			return new JsonObject(json);
+		}
+		catch (Exception e) {
+			LOGGER.warn("Invalid JSON: " + json + " error message: " + e.getMessage());
+			return new JsonObject();
+		}
 	}
+
+	private static final Logger LOGGER = Logger.getLogger(JsonObjectAdapter.class);
+
 }
