@@ -107,12 +107,14 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			if (after != null) {
 				RelayUtil.Cursor cursor = RelayUtil.decodeCursor(after);
-				where = criteriaBuilder.greaterThan(root.get("id"), cursor.getId());
+				where = criteriaBuilder.and(
+					where, criteriaBuilder.greaterThan(root.get("id"), cursor.getId()));
 			}
 
 			if (before != null) {
 				RelayUtil.Cursor cursor = RelayUtil.decodeCursor(before);
-				where = criteriaBuilder.lessThan(root.get("id"), cursor.getId());
+				where = criteriaBuilder.and(
+					where, criteriaBuilder.lessThan(root.get("id"), cursor.getId()));
 			}
 
 			criteriaBuilderQuery.where(where);
