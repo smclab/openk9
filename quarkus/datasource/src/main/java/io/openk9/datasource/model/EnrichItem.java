@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -34,6 +35,7 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 
 @Entity
+@Cacheable
 @Table(name = "enrich_item")
 @Getter
 @Setter
