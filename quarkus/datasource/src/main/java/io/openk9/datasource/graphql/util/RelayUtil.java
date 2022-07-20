@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.graphql.util;
 
+import graphql.relay.DefaultConnectionCursor;
 import graphql.relay.DefaultEdge;
 import graphql.relay.Edge;
 import io.openk9.datasource.model.util.K9Entity;
@@ -62,7 +63,8 @@ public class RelayUtil {
 		}
 
 		return entitiesList.stream()
-			.map(entity -> new DefaultEdge<>(entity, () -> RelayUtil.encodeCursor(entity)))
+			.map(entity -> new DefaultEdge<>(
+				entity, new DefaultConnectionCursor(RelayUtil.encodeCursor(entity))))
 			.collect(Collectors.toList());
 	}
 
