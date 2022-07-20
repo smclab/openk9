@@ -17,11 +17,11 @@
 
 package io.openk9.datasource.model.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.openk9.datasource.graphql.util.JsonNodeAdapter;
+import io.openk9.datasource.graphql.util.JsonObjectAdapter;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.smallrye.graphql.api.AdaptWith;
+import io.vertx.core.json.JsonObject;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,6 +38,6 @@ import javax.validation.constraints.NotNull;
 public class PluginDriverDTO extends K9EntityDTO {
 	@NotNull
 	private PluginDriver.PluginDriverType type;
-	@AdaptWith(JsonNodeAdapter.class)
-	private JsonNode jsonConfig;
+	@AdaptWith(JsonObjectAdapter.class)
+	private JsonObject jsonConfig;
 }

@@ -17,32 +17,29 @@
 
 package io.openk9.datasource.graphql.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.graphql.api.Adapter;
+import io.vertx.core.json.JsonObject;
 import org.jboss.logging.Logger;
 
-public final class JsonNodeAdapter implements Adapter<JsonNode, String> {
+public final class JsonObjectAdapter implements Adapter<JsonObject, String> {
 	@Override
-	public String to(JsonNode jsonObject) throws Exception {
+	public String to(JsonObject jsonObject) throws Exception {
 		return jsonObject == null
 			? "{}"
 			: jsonObject.toString();
 	}
 
 	@Override
-	public JsonNode from(String json) throws Exception {
+	public JsonObject from(String json) throws Exception {
 		try {
-			return INSTANCE.readTree(json)	;
+			return new JsonObject(json);
 		}
 		catch (Exception e) {
 			LOGGER.warn("Invalid JSON: " + json + " error message: " + e.getMessage());
-			return INSTANCE.createObjectNode();
+			return new JsonObject();
 		}
 	}
 
-	private static final Logger LOGGER = Logger.getLogger(JsonNodeAdapter.class);
-
-	private final static ObjectMapper INSTANCE = new ObjectMapper();
+	private static final Logger LOGGER = Logger.getLogger(JsonObjectAdapter.class);
 
 }

@@ -17,10 +17,10 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.openk9.datasource.graphql.util.JsonNodeAdapter;
+import io.openk9.datasource.graphql.util.JsonObjectAdapter;
 import io.openk9.datasource.model.util.K9Entity;
 import io.smallrye.graphql.api.AdaptWith;
+import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -54,9 +54,9 @@ public class EnrichItem extends K9Entity {
 	@Column(name = "validation_script")
 	private String validationScript;
 
-	@Column(name = "json_config", columnDefinition = "json")
-	@AdaptWith(JsonNodeAdapter.class)
-	private JsonNode jsonConfig;
+	@Column(name = "json_config")
+	@AdaptWith(JsonObjectAdapter.class)
+	private JsonObject jsonConfig;
 
 	public enum EnrichItemType {
 		ASYNC, SYNC
