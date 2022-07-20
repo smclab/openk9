@@ -34,6 +34,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 @Path("/doc-types")
 public class DocTypeResource extends
@@ -46,8 +47,9 @@ public class DocTypeResource extends
 	@GET
 	@Path("/{id}/doc-type-fields")
 	public Uni<Page<DocTypeField>> getDocTypeFields(
-		@PathParam("id") long id, @BeanParam Pageable pageable) {
-		return service.getDocTypeFields(id, pageable);
+		@PathParam("id") long id, @BeanParam Pageable pageable,
+		@QueryParam("searchText") String searchText) {
+		return service.getDocTypeFields(id, pageable, searchText);
 	}
 
 	@PUT

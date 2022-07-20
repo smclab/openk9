@@ -33,6 +33,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 @Path("/suggestion-categories")
 public class SuggestionCategoryResource extends
@@ -45,8 +46,10 @@ public class SuggestionCategoryResource extends
 	@GET
 	@Path("/{id}/doc-type-fields")
 	public Uni<Page<DocTypeField>> getDocTypeFields(
-		@PathParam("id") long suggestionCategoryId, @BeanParam Pageable pageable) {
-		return service.getDocTypeFields(suggestionCategoryId, pageable);
+		@PathParam("id") long suggestionCategoryId,
+		@BeanParam Pageable pageable, @QueryParam("searchText") String searchText) {
+		return service.getDocTypeFields(
+			suggestionCategoryId, pageable, searchText);
 	}
 
 	@PUT

@@ -33,6 +33,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 @Path("/data-indexes")
 public class DataIndexResource extends
@@ -45,8 +46,9 @@ public class DataIndexResource extends
 	@GET
 	@Path("/{id}/doc-types")
 	public Uni<Page<DocType>> getDocTypes(
-		@PathParam("id") long id, @BeanParam Pageable pageable) {
-		return service.getDocTypes(id, pageable);
+		@PathParam("id") long id, @BeanParam Pageable pageable,
+		@QueryParam("searchText") String searchText) {
+		return service.getDocTypes(id, pageable, searchText);
 	}
 
 	@PUT

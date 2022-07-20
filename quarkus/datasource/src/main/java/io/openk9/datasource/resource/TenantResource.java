@@ -34,6 +34,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 @Path("/tenants")
 public class TenantResource extends
@@ -45,8 +46,10 @@ public class TenantResource extends
 
 	@GET
 	@Path("/{id}/datasources")
-	public Uni<Page<Datasource>> getDatasources(@PathParam("id")long tenantId, @BeanParam Pageable pageable) {
-		return service.getDatasources(tenantId, pageable);
+	public Uni<Page<Datasource>> getDatasources(
+		@PathParam("id")long tenantId, @BeanParam Pageable pageable,
+		@QueryParam("searchText") String searchText) {
+		return service.getDatasources(tenantId, pageable, searchText);
 	}
 
 	@PUT
@@ -63,8 +66,10 @@ public class TenantResource extends
 
 	@GET
 	@Path("/{id}/suggestion-categories")
-	public Uni<Page<SuggestionCategory>> getSuggestionCategories(@PathParam("id") long tenantId, @BeanParam Pageable pageable) {
-		return service.getSuggestionCategories(tenantId, pageable);
+	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
+		@PathParam("id") long tenantId, @BeanParam Pageable pageable,
+		@QueryParam("searchText") String searchText) {
+		return service.getSuggestionCategories(tenantId, pageable, searchText);
 	}
 
 	@PUT

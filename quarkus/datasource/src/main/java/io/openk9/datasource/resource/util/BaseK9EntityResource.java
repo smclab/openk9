@@ -36,6 +36,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 @CircuitBreaker
@@ -50,8 +51,10 @@ public abstract class BaseK9EntityResource<
 	}
 
 	@GET
-	public Uni<Page<ENTITY>> findAll(@BeanParam Pageable pageable) {
-		return this.service.findAllPaginated(pageable);
+	public Uni<Page<ENTITY>> findAll(
+		@BeanParam Pageable pageable,
+		@QueryParam("searchText") String searchText) {
+		return this.service.findAllPaginated(pageable, searchText);
 	}
 
 	@GET

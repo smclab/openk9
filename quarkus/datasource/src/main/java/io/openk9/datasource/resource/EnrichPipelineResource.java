@@ -33,6 +33,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 @Path("/enrich-pipelines")
 public class EnrichPipelineResource extends
@@ -45,8 +46,9 @@ public class EnrichPipelineResource extends
 	@GET
 	@Path("/{id}/enrich-items")
 	public Uni<Page<EnrichItem>> getEnrichItems(
-		@PathParam("id") long enrichPipelineId, @BeanParam Pageable pageable) {
-		return service.getEnrichItems(enrichPipelineId, pageable);
+		@PathParam("id") long enrichPipelineId, @BeanParam Pageable pageable,
+		@QueryParam("searchText") String searchText) {
+		return service.getEnrichItems(enrichPipelineId, pageable, searchText);
 	}
 
 	@PUT
