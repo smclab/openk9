@@ -51,6 +51,11 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		return getDatasources(new Long[] {tenantId}, pageable, filter);
 	}
 
+	public Uni<Page<Datasource>> getDatasources(
+		long tenantId, Pageable pageable, String searchText) {
+		return getDatasources(new Long[] {tenantId}, pageable, searchText);
+	}
+
 	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
 		return getDatasources(new Long[] {tenantId}, pageable, Filter.DEFAULT);
 	}
@@ -58,6 +63,15 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	public Uni<Page<Datasource>> getDatasources(Tenant tenant, Pageable pageable) {
 		 return getDatasources(
 			 new Long[] {tenant.getId()}, pageable, Filter.DEFAULT);
+	}
+
+	public Uni<Page<Datasource>> getDatasources(
+		Long[] tenantIds, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			tenantIds, "datasources", Datasource.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), searchText);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(
@@ -72,6 +86,15 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
 		long tenantId, Pageable pageable) {
 		return getSuggestionCategories(tenantId, pageable, Filter.DEFAULT);
+	}
+
+	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
+		long tenantId, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			new Long[]{tenantId}, "suggestionCategories", SuggestionCategory.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), searchText);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
@@ -147,6 +170,11 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 					}
 					return Uni.createFrom().nullItem();
 				})));
+	}
+
+	@Override
+	protected String[] getSearchFields() {
+		return new String[] {"name", "virtualHost"};
 	}
 
 	@Inject

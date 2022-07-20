@@ -21,7 +21,6 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
-import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.TenantService;
@@ -45,24 +44,24 @@ import javax.inject.Inject;
 public class TenantGraphqlResource {
 
 	@Query
-	public Uni<Page<Tenant>> getTenants(Filter filter, Pageable pageable) {
+	public Uni<Page<Tenant>> getTenants(String searchText, Pageable pageable) {
 		return tenantService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, filter
+			pageable == null ? Pageable.DEFAULT : pageable, searchText
 		);
 	}
 
 	public Uni<Page<Datasource>> datasources(
-		@Source Tenant tenant, Pageable pageable, Filter filter) {
+		@Source Tenant tenant, Pageable pageable, String searchText) {
 		return tenantService.getDatasources(
 			tenant.getId(),
-			pageable == null ? Pageable.DEFAULT : pageable, filter);
+			pageable == null ? Pageable.DEFAULT : pageable, searchText);
 	}
 
 	public Uni<Page<SuggestionCategory>> suggestionCategories(
-		@Source Tenant tenant, Pageable pageable, Filter filter) {
+		@Source Tenant tenant, Pageable pageable, String searchText) {
 		return tenantService.getSuggestionCategories(
 			tenant.getId(),
-			pageable == null ? Pageable.DEFAULT : pageable, filter);
+			pageable == null ? Pageable.DEFAULT : pageable, searchText);
 	}
 
 	@Query

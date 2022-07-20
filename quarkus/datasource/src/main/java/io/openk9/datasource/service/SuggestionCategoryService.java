@@ -53,6 +53,17 @@ public class SuggestionCategoryService extends
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
+		long suggestionCategoryId, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			new Long[] { suggestionCategoryId },
+			"docTypeFields", DocTypeField.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(), searchText
+		);
+	}
+
+	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long suggestionCategoryId, Pageable pageable, Filter filter) {
 
 		return findAllPaginatedJoin(

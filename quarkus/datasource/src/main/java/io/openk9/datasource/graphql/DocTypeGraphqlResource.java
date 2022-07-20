@@ -21,7 +21,6 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DocTypeService;
@@ -46,19 +45,19 @@ public class DocTypeGraphqlResource {
 
 	@Query
 	public Uni<Page<DocType>> getDocTypes(
-		Filter filter, Pageable pageable) {
+		String searchText, Pageable pageable) {
 		return docTypeService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, filter
+			pageable == null ? Pageable.DEFAULT : pageable, searchText
 		);
 	}
 
 	@Query
 	public Uni<Page<DocTypeField>> docTypeFields(
 		@Source DocType docType,
-		Pageable pageable, Filter filter) {
+		Pageable pageable, String searchText) {
 		return docTypeService.getDocTypeFields(
 			docType.getId(),
-			pageable == null ? Pageable.DEFAULT : pageable, filter);
+			pageable == null ? Pageable.DEFAULT : pageable, searchText);
 	}
 
 	@Query

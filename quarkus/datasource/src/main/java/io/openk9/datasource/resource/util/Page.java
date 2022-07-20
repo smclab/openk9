@@ -17,8 +17,10 @@
 
 package io.openk9.datasource.resource.util;
 
+import io.openk9.datasource.model.util.K9Entity;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Iterator;
@@ -26,13 +28,14 @@ import java.util.List;
 
 @AllArgsConstructor(staticName = "of")
 @RequiredArgsConstructor(staticName = "of")
-@Getter
+@Data
+@Builder
 public class Page<ENTITY> implements Iterable<ENTITY> {
-	private final int limit;
-	private final long count;
+	private int limit;
+	private long count;
 	private long afterId = 0;
 	private long beforeId = 0;
-	private final List<ENTITY> content;
+	private List<ENTITY> content;
 
 	public static <T> Page<T> emptyPage() {
 		return (Page<T>)EMPTY;
@@ -40,8 +43,18 @@ public class Page<ENTITY> implements Iterable<ENTITY> {
 
 	public static final Page<?> EMPTY = Page.of(0, 0, 0, 0, List.of());
 
+	public static <T extends K9Entity> Page<T> of(
+		int limit, Long item1, List<T> item2) {
+		Page<T> page = new Page<>();
+		page.setLimit(limit);
+		page.setCount(item1);
+		page.setContent(item2);
+		return page;
+	}
+
 	@Override
 	public Iterator<ENTITY> iterator() {
 		return content.iterator();
 	}
+
 }

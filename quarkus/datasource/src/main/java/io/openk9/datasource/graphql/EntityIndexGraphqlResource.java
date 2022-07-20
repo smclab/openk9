@@ -19,7 +19,6 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.dto.EntityIndexDTO;
-import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.EntityIndexService;
@@ -42,9 +41,9 @@ public class EntityIndexGraphqlResource {
 
 	@Query
 	public Uni<Page<EntityIndex>> getEntityIndices(
-		Filter filter, Pageable pageable) {
+		String searchText, Pageable pageable) {
 		return entityIndexService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, filter
+			pageable == null ? Pageable.DEFAULT : pageable, searchText
 		);
 	}
 

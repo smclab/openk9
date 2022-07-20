@@ -44,6 +44,14 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 	}
 
 	public Uni<Page<DocType>> getDocTypes(
+		long dataIndexId, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			new Long[] {dataIndexId}, "docTypes", DocType.class, pageable.getLimit(),
+			pageable.getSortBy().name(), pageable.getAfterId(), pageable.getBeforeId(), searchText);
+	}
+
+	public Uni<Page<DocType>> getDocTypes(
 		long dataIndexId, Pageable pageable, Filter filter) {
 
 		return findAllPaginatedJoin(

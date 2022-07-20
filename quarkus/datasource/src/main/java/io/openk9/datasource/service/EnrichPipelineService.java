@@ -44,6 +44,17 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Page<EnrichItem>> getEnrichItems(
+		long enrichPipelineId, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			new Long[] { enrichPipelineId },
+			"enrichItems", EnrichItem.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(),
+			searchText);
+	}
+
+	public Uni<Page<EnrichItem>> getEnrichItems(
 		long enrichPipelineId, Pageable pageable,
 		Filter filter) {
 

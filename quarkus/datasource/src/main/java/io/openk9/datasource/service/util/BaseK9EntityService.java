@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO> {
@@ -78,6 +79,17 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	public Uni<Page<ENTITY>> findAllPaginated(
+		Pageable pageable, String searchText) {
+
+		if (searchText == null || searchText.isEmpty()) {
+			return findAllPaginated(pageable);
+		}
+
+		return findAllPaginated(pageable, searchTextToFilter(searchText));
+
+	}
+
+	public Uni<Page<ENTITY>> findAllPaginated(
 		Pageable pageable, Filter filter) {
 
 		return findAllPaginated(
@@ -89,6 +101,17 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<Page<ENTITY>> findAllPaginated(Pageable pageable) {
 
 		return findAllPaginated(pageable, Filter.DEFAULT);
+
+	}
+
+	public <T extends K9Entity> Uni<Page<T>> findAllPaginatedJoin(
+		Long[] entityIds, String joinField, Class<T> joinType, int limit, String sortBy,
+		long afterId, long beforeId, String searchText) {
+
+		Filter filter = searchTextToFilter(searchText);
+
+		return findAllPaginatedJoin(
+			entityIds, joinField, joinType, limit, sortBy, afterId, beforeId, filter);
 
 	}
 
@@ -156,6 +179,32 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 				criteriaQuery, countQuery);
 		});
 
+	}
+
+	protected Filter searchTextToFilter(String searchText) {
+
+		if (searchText == null || searchText.isEmpty()) {
+			return Filter.DEFAULT;
+		}
+
+		List<FilterField> filterFields =
+			Arrays
+				.stream(getSearchFields())
+				.map(s -> FilterField
+					.builder()
+					.fieldName(s)
+					.value(searchText)
+					.operator(FilterField.Operator.contains)
+					.build()
+				)
+				.collect(Collectors.toList());
+
+		return Filter.of(false, filterFields);
+
+	}
+
+	protected String[] getSearchFields() {
+		return new String[] {"name"};
 	}
 
 	protected String getEntityIdField() {
@@ -263,7 +312,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			countQuery.where(p);
 		});
 
-		return em.withSession(s -> {
+		return em.openSession().flatMap(s -> {
 
 				Uni<List<T>> resultList = (limit > 0
 					? s.createQuery(criteriaQuery).setMaxResults(limit)
@@ -392,36 +441,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	public BroadcastProcessor<K9EntityEvent<ENTITY>> getProcessor() {
 		return (BroadcastProcessor<K9EntityEvent<ENTITY>>) processor;
-	}
-
-	public static <T> Uni<Page<T>> createPage(
-		int limit, PanacheQuery<T> panacheQuery,
-		Uni<Long> countQuery) {
-
-		return Uni
-			.combine()
-			.all()
-			.unis(countQuery.memoize().indefinitely(), panacheQuery.list())
-			.combinedWith((count, content) -> Page.of(limit, count, content));
-	}
-
-	public static String createPageableQuery(
-		Pageable pageable, Map<String, Object> params, String query,
-		String prefix) {
-		if (pageable.getAfterId() > 0 && pageable.getBeforeId() > 0) {
-			query += "and " + prefix + ".id between :afterId and :beforeId ";
-			params.put("afterId", pageable.getAfterId());
-			params.put("beforeId", pageable.getBeforeId());
-		}
-		else if (pageable.getAfterId() > 0) {
-			query += "and " + prefix + ".id > :afterId ";
-			params.put("afterId", pageable.getAfterId());
-		}
-		else if (pageable.getBeforeId() > 0) {
-			query += "and " + prefix + ".id < :beforeId ";
-			params.put("beforeId", pageable.getBeforeId());
-		}
-		return query;
 	}
 
 	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>>

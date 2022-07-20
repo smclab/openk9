@@ -20,7 +20,6 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
-import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.DataIndexService;
@@ -45,15 +44,15 @@ public class DataIndexGraphqlResource {
 
 	@Query
 	public Uni<Page<DataIndex>> getDataIndices(
-		Filter filter, Pageable pageable) {
+		String searchText, Pageable pageable) {
 		return dataIndexService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, filter);
+			pageable == null ? Pageable.DEFAULT : pageable, searchText);
 	}
 
 	public Uni<Page<DocType>> docTypes(
-		@Source DataIndex dataIndex, Pageable pageable, Filter filter) {
+		@Source DataIndex dataIndex, Pageable pageable, String searchText) {
 		return dataIndexService.getDocTypes(
-			dataIndex.getId(), pageable == null ? Pageable.DEFAULT : pageable, filter);
+			dataIndex.getId(), pageable == null ? Pageable.DEFAULT : pageable, searchText);
 	}
 
 	@Query

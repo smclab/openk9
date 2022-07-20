@@ -46,6 +46,17 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
+		long docTypeId, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			new Long[] { docTypeId },
+			"docTypeFields", DocTypeField.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(),
+			searchText);
+	}
+
+	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long docTypeId, Pageable pageable, Filter filter) {
 
 		return findAllPaginatedJoin(

@@ -19,7 +19,6 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
-import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.PluginDriverService;
@@ -42,9 +41,9 @@ public class PluginDriverGraphqlResource {
 
 	@Query
 	public Uni<Page<PluginDriver>> getPluginDrivers(
-		Filter filter, Pageable pageable) {
+		String searchText, Pageable pageable) {
 		return pluginDriverService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, filter
+			pageable == null ? Pageable.DEFAULT : pageable, searchText
 		);
 	}
 
