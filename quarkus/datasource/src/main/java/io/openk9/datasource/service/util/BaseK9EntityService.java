@@ -89,7 +89,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	 *
 	 * EDIT2: The above ordering reflects pagination, not chronological order. Hence first is interpreted as 'first to be displayed', not 'first chronologically'. Therefore, you might want to swap ASC and DESC in step (4) and (5). Thanks to @Sytten for bringing this problem to my attention.
 	 *
-	 * @see https://github.com/graphql/graphql-relay-js/issues/94#issuecomment-232410564
+	 * @see @{@link <a href="https://github.com/graphql/graphql-relay-js/issues/94#issuecomment-232410564">...</a>}
 	 */
 	public Uni<Connection<ENTITY>> findConnection(
 		String after, String before, Integer first, Integer last) {
@@ -129,13 +129,9 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			Mutiny.Query<ENTITY> query = s.createQuery(criteriaBuilderQuery);
 
-			if (first != null) {
-				query.setMaxResults(first + 1);
-			}
+			int maxResults = _maxResults(first, last, 0);
 
-			if (last != null) {
-				query.setMaxResults(last + 1);
-			}
+			query.setMaxResults(maxResults);
 
 			Uni<List<ENTITY>> entities = query.getResultList();
 
@@ -143,29 +139,40 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 				List<Edge<ENTITY>> edges = RelayUtil.toEdgeList(entitiesList);
 
-				int size = edges.size();
+				int size = entitiesList.size();
 
 				ConnectionCursor startCursor =
-					edges.isEmpty()
+					entitiesList.isEmpty()
 						? null
 						: edges.get(0).getCursor();
 
 				ConnectionCursor endCursor =
-					edges.isEmpty()
+					entitiesList.isEmpty()
 						? null
 						: edges.get(size - 1).getCursor();
 
 
-				PageInfo pageInfo = DEFAULT_PAGE_INFO;
+				PageInfo pageInfo = null;
+
+				boolean hasMoreResults = size == maxResults;
 
 				if (first != null) {
 					pageInfo = new DefaultPageInfo(
-						startCursor, endCursor, false, size > first + 1);
+						startCursor, endCursor, false, hasMoreResults);
 				}
 
 				if (last != null) {
 					pageInfo = new DefaultPageInfo(
-						startCursor, endCursor, size > last + 1, false);
+						startCursor, endCursor, hasMoreResults, false);
+				}
+
+				if (pageInfo == null) {
+					pageInfo = new DefaultPageInfo(
+						startCursor, endCursor, false, hasMoreResults);
+				}
+
+				if (hasMoreResults && !edges.isEmpty()) {
+					edges.remove(size - 1);
 				}
 
 				return new DefaultConnection<>(edges, pageInfo);
@@ -174,6 +181,18 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		});
 
+	}
+
+	private int _maxResults(Integer first, Integer last, Integer defaultValue) {
+
+		if (first != null) {
+			return first + 1;
+		}
+		if (last != null) {
+			return last + 1;
+		}
+
+		return defaultValue;
 	}
 
 	@Override
