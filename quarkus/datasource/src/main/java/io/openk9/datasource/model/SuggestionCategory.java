@@ -54,6 +54,7 @@ public class SuggestionCategory extends K9Entity {
 
 	@ToString.Exclude
 	@ManyToOne(fetch = javax.persistence.FetchType.LAZY)
+	@JsonIgnore
 	@JoinColumn(name = "tenant_id")
 	private Tenant tenant;
 
