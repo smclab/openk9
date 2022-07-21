@@ -26,7 +26,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.Hibernate;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -40,9 +39,7 @@ public class RelayUtil {
 			Json.encode(
 				Cursor
 					.builder()
-					.cursorName(CURSOR_PREFIX)
 					.id(k9Entity.getId())
-					.entityClass(Hibernate.getClass(k9Entity).getName())
 					.build()
 				)
 				.getBytes(StandardCharsets.UTF_8)
@@ -68,17 +65,12 @@ public class RelayUtil {
 			.collect(Collectors.toList());
 	}
 
-	private static final String CURSOR_PREFIX = "k9_cursor";
-	private static final String CURSOR_SEPARATOR = ":";
-
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	@Builder
 	public static class Cursor {
-		private String entityClass;
 		private long id;
-		private String cursorName;
 	}
 
 }

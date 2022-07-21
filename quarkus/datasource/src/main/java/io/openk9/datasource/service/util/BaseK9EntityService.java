@@ -23,6 +23,7 @@ import graphql.relay.DefaultConnection;
 import graphql.relay.DefaultPageInfo;
 import graphql.relay.Edge;
 import graphql.relay.PageInfo;
+import io.openk9.datasource.graphql.exception.InvalidPageSizeException;
 import io.openk9.datasource.graphql.util.RelayUtil;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
@@ -56,6 +57,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.lang.String.format;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
 	implements K9EntityService<ENTITY, DTO> {
@@ -129,9 +132,20 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			Mutiny.Query<ENTITY> query = s.createQuery(criteriaBuilderQuery);
 
-			int maxResults = _maxResults(first, last, 0);
-
-			query.setMaxResults(maxResults);
+			if (first != null) {
+				if (first < 0) {
+					return Uni.createFrom().failure(
+						() -> new InvalidPageSizeException(format("The page size must not be negative: 'first'=%s", first)));
+				}
+				query.setMaxResults(first + 1);
+			}
+			if (last != null) {
+				if (last < 0) {
+					return Uni.createFrom().failure(
+						() -> new InvalidPageSizeException(format("The page size must not be negative: 'last'=%s", last)));
+				}
+				query.setMaxResults(last + 1);
+			}
 
 			Uni<List<ENTITY>> entities = query.getResultList();
 
@@ -154,21 +168,27 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 				PageInfo pageInfo = null;
 
-				boolean hasMoreResults = size == maxResults;
+				boolean hasMoreResults = false;
 
 				if (first != null) {
+
+					hasMoreResults = size == first + 1;
+
 					pageInfo = new DefaultPageInfo(
 						startCursor, endCursor, false, hasMoreResults);
 				}
 
 				if (last != null) {
+
+					hasMoreResults = size == last + 1;
+
 					pageInfo = new DefaultPageInfo(
 						startCursor, endCursor, hasMoreResults, false);
 				}
 
 				if (pageInfo == null) {
 					pageInfo = new DefaultPageInfo(
-						startCursor, endCursor, false, hasMoreResults);
+						startCursor, endCursor, false, false);
 				}
 
 				if (hasMoreResults && !edges.isEmpty()) {
