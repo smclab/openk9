@@ -82,6 +82,38 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
+	public <T extends K9Entity> Uni<Connection<T>> findJoinConnection(
+		long entityId, String joinField, Class<T> joinType, String after,
+		String before, Integer first, Integer last) {
+
+		return findJoinConnection(
+			entityId, joinField, joinType, after, before, first, last,
+			null, Set.of());
+
+	}
+
+	public <T extends K9Entity> Uni<Connection<T>> findJoinConnection(
+		long entityId, String joinField, Class<T> joinType, String after,
+		String before, Integer first, Integer last, String searchText,
+		Set<SortBy> sortByList) {
+
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+
+		CriteriaQuery<T> joinEntityQuery =
+			builder.createQuery(joinType);
+
+		Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
+
+		Join<ENTITY, T> join = entityRoot.joinSet(joinField);
+
+		return findConnection(
+			joinEntityQuery.select(join), join,
+			builder.equal(entityRoot.get("id"), entityId), after, before,
+			first, last, searchText, sortByList);
+
+
+	}
+
 	/**
 	 * Thus when I get the request I process it in the following way:
 	 *
@@ -108,20 +140,16 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	 *
 	 * @see {@link <a href="https://github.com/graphql/graphql-relay-js/issues/94#issuecomment-232410564">...</a>}
 	 */
-	public Uni<Connection<ENTITY>> findConnection(
-		String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList) {
+	public <T extends K9Entity> Uni<Connection<T>> findConnection(
+		CriteriaQuery<T> criteriaBuilderQuery, Path<T> root,
+		Predicate defaultWhere, String after, String before, Integer first,
+		Integer last, String searchText, Set<SortBy> sortByList) {
 
 		return withTransaction((s, t) -> {
 
+			Predicate where = defaultWhere;
+
 			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-
-			CriteriaQuery<ENTITY> criteriaBuilderQuery =
-				criteriaBuilder.createQuery(getEntityClass());
-
-			Root<ENTITY> root = criteriaBuilderQuery.from(getEntityClass());
-
-			Predicate where = criteriaBuilder.conjunction();
 
 			if (after != null) {
 				RelayUtil.Cursor cursor = RelayUtil.decodeCursor(after);
@@ -181,7 +209,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			criteriaBuilderQuery.orderBy(orders);
 
-			Mutiny.Query<ENTITY> query = s.createQuery(criteriaBuilderQuery);
+			Mutiny.Query<T> query = s.createQuery(criteriaBuilderQuery);
 
 			if (first != null) {
 				if (first < 0) {
@@ -198,11 +226,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 				query.setMaxResults(last + 1);
 			}
 
-			Uni<List<ENTITY>> entities = query.getResultList();
+			Uni<List<T>> entities = query.getResultList();
 
 			return entities.map(entitiesList -> {
 
-				List<Edge<ENTITY>> edges = RelayUtil.toEdgeList(entitiesList);
+				List<Edge<T>> edges = RelayUtil.toEdgeList(entitiesList);
 
 				int size = entitiesList.size();
 
@@ -251,6 +279,23 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			});
 
 		});
+
+	}
+
+	public Uni<Connection<ENTITY>> findConnection(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+
+		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+
+		CriteriaQuery<ENTITY> query =
+			criteriaBuilder.createQuery(getEntityClass());
+
+		Path<ENTITY> root = query.from(getEntityClass());
+
+		return findConnection(
+			query, root, criteriaBuilder.conjunction(), after, before, first,
+			last, searchText, sortByList);
 
 	}
 

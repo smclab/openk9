@@ -21,8 +21,6 @@ import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -59,10 +57,16 @@ public class DataIndexGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
-	public Uni<Page<DocType>> docTypes(
-		@Source DataIndex dataIndex, Pageable pageable, String searchText) {
-		return dataIndexService.getDocTypes(
-			dataIndex.getId(), pageable == null ? Pageable.DEFAULT : pageable, searchText);
+	public Uni<Connection<DocType>> docTypes(
+		@Source DataIndex dataIndex,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+
+		return dataIndexService.getDocTypesConnection(
+			dataIndex.getId(), after, before, first, last, searchText, sortByList);
 	}
 
 	@Query

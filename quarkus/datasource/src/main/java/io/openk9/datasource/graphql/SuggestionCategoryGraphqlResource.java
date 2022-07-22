@@ -21,8 +21,6 @@ import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -48,7 +46,6 @@ import java.util.Set;
 @CircuitBreaker
 public class SuggestionCategoryGraphqlResource {
 
-
 	@Query
 	public Uni<Connection<SuggestionCategory>> getSuggestionCategories(
 		@Description("fetching only nodes after this node (exclusive)") String after,
@@ -60,12 +57,16 @@ public class SuggestionCategoryGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
-	public Uni<Page<DocTypeField>> docTypeFields(
+	public Uni<Connection<DocTypeField>> docTypeFields(
 		@Source SuggestionCategory suggestionCategory,
-		Pageable pageable, String searchText) {
-		return suggestionCategoryService.getDocTypeFields(
-			suggestionCategory.getId(),
-			pageable == null ? Pageable.DEFAULT : pageable, searchText);
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return suggestionCategoryService.getDocTypeFieldsConnection(
+			suggestionCategory.getId(), after, before, first, last, searchText,
+			sortByList);
 	}
 
 	@Query

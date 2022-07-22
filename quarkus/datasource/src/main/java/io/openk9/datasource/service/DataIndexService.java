@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
@@ -24,6 +25,7 @@ import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -31,6 +33,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @ApplicationScoped
 public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDTO> {
@@ -43,6 +46,13 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 		return getDocTypes(dataIndexId, pageable, Filter.DEFAULT);
 	}
 
+	public Uni<Connection<DocType>> getDocTypesConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return findJoinConnection(
+			id, "docTypes", DocType.class, after, before, first, last,
+			searchText, sortByList);
+	}
 	public Uni<Page<DocType>> getDocTypes(
 		long dataIndexId, Pageable pageable, String searchText) {
 
@@ -108,4 +118,5 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 	public Class<DataIndex> getEntityClass() {
 		return DataIndex.class;
 	}
+
 }

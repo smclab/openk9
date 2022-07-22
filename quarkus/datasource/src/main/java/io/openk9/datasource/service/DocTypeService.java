@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.DocType;
@@ -26,6 +27,7 @@ import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -33,11 +35,20 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	 DocTypeService(DocTypeMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return findJoinConnection(
+			id, "docTypeFields", DocTypeField.class, after, before,
+			first, last, searchText, sortByList);
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
@@ -107,4 +118,5 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Class<DocType> getEntityClass() {
 		return DocType.class;
 	}
+
 }

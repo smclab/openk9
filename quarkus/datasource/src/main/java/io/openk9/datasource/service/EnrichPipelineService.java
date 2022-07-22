@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
@@ -24,6 +25,7 @@ import io.openk9.datasource.model.dto.EnrichPipelineDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -31,11 +33,21 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @ApplicationScoped
 public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, EnrichPipelineDTO> {
 	 EnrichPipelineService(EnrichPipelineMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	public Uni<Connection<EnrichItem>> getEnrichItemsConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+
+		return findJoinConnection(
+			id, "enrichItems", EnrichItem.class, after, before, first,
+			last, searchText, sortByList);
 	}
 
 	public Uni<Page<EnrichItem>> getEnrichItems(
@@ -108,4 +120,5 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Class<EnrichPipeline> getEntityClass() {
 		return EnrichPipeline.class;
 	}
+
 }

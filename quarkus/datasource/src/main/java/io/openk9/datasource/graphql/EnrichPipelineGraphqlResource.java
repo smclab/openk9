@@ -21,8 +21,6 @@ import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -59,13 +57,16 @@ public class EnrichPipelineGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
-
-	public Uni<Page<EnrichItem>> enrichItems(
+	public Uni<Connection<EnrichItem>> enrichItems(
 		@Source EnrichPipeline enrichPipeline,
-		Pageable pageable, String searchText) {
-		return enrichPipelineService.getEnrichItems(
-			enrichPipeline.getId(),
-			pageable == null ? Pageable.DEFAULT : pageable, searchText);
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return enrichPipelineService.getEnrichItemsConnection(
+			enrichPipeline.getId(), after, before, first, last, searchText,
+			sortByList);
 	}
 
 	@Query

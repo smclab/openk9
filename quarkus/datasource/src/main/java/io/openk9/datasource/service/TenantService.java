@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.TenantMapper;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -26,6 +27,7 @@ import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -34,11 +36,21 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	 TenantService(TenantMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	public Uni<Connection<Datasource>> getDatasourcesConnection(
+		long tenantId, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+
+		return findJoinConnection(
+			tenantId, "datasources", Datasource.class, after, before,
+			first, last, searchText, sortByList);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(List<Tenant> tenants, Pageable pageable) {
@@ -81,6 +93,14 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 			 tenantIds, "datasources", Datasource.class,
 			 pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
 			 pageable.getBeforeId(), filter);
+	}
+
+	public Uni<Connection<SuggestionCategory>> getSuggestionCategoriesConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return findJoinConnection(
+			id, "suggestionCategories", SuggestionCategory.class, after, before,
+			first, last, searchText, sortByList);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
@@ -192,4 +212,5 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	public Class<Tenant> getEntityClass() {
 		return Tenant.class;
 	}
+
 }

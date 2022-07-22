@@ -22,8 +22,6 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -63,12 +61,15 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Query
-	public Uni<Page<DocTypeField>> docTypeFields(
+	public Uni<Connection<DocTypeField>> docTypeFields(
 		@Source DocType docType,
-		Pageable pageable, String searchText) {
-		return docTypeService.getDocTypeFields(
-			docType.getId(),
-			pageable == null ? Pageable.DEFAULT : pageable, searchText);
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return docTypeService.getDocTypeFieldsConnection(
+			docType.getId(), after, before, first, last, searchText, sortByList);
 	}
 
 	@Query
