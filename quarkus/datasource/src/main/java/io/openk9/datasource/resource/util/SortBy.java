@@ -15,34 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.resource.util;
 
-import io.openk9.datasource.graphql.util.JsonObjectAdapter;
-import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.smallrye.graphql.api.AdaptWith;
-import io.vertx.core.json.JsonObject;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import org.eclipse.microprofile.graphql.DefaultValue;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-
-@NoArgsConstructor
-@SuperBuilder
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true)
-public class EnrichItemDTO extends K9EntityDTO {
-	@NotNull
-	private EnrichItem.EnrichItemType type;
-	@NotNull
-	@NotEmpty
-	private String serviceName;
-	private String validationScript;
-	@AdaptWith(JsonObjectAdapter.class)
-	private JsonObject jsonConfig;
+@Builder
+@AllArgsConstructor(staticName = "of")
+@NoArgsConstructor
+@EqualsAndHashCode
+public class SortBy {
+	private String column;
+	@EqualsAndHashCode.Exclude
+	@DefaultValue("ASC")
+	private Direction direction;
+
+	public enum Direction {
+		ASC, DESC
+	}
 }

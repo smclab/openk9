@@ -24,13 +24,16 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.TenantService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
@@ -38,6 +41,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -45,16 +49,11 @@ import javax.inject.Inject;
 public class TenantGraphqlResource {
 
 	@Query
-	public Uni<Connection<Tenant>> getTenantConnections(
-		String after, String before, Integer first, Integer last) {
-		return tenantService.findConnection(after, before, first, last);
-	}
-
-	@Query
-	public Uni<Page<Tenant>> getTenants(String searchText, Pageable pageable) {
-		return tenantService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, searchText
-		);
+	public Uni<Connection<Tenant>> getTenants(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return tenantService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
 
 	public Uni<Page<Datasource>> datasources(
@@ -76,19 +75,30 @@ public class TenantGraphqlResource {
 		return tenantService.findById(id);
 	}
 
-	@Mutation
-	public Uni<Tenant> patchTenant(long id, TenantDTO tenantDTO) {
-		return tenantService.patch(id, tenantDTO);
+	public Uni<Response<Tenant>> patchTenant(long id, TenantDTO tenantDTO) {
+		return tenantService.getValidator().patch(id, tenantDTO);
+	}
+
+	public Uni<Response<Tenant>> updateTenant(long id, TenantDTO tenantDTO) {
+		return tenantService.getValidator().update(id, tenantDTO);
+	}
+
+	public Uni<Response<Tenant>> createTenant(TenantDTO tenantDTO) {
+		return tenantService.getValidator().create(tenantDTO);
 	}
 
 	@Mutation
-	public Uni<Tenant> updateTenant(long id, TenantDTO tenantDTO) {
-		return tenantService.update(id, tenantDTO);
-	}
+	public Uni<Response<Tenant>> tenant(
+		Long id, TenantDTO tenantDTO, @DefaultValue("false") boolean patch) {
 
-	@Mutation
-	public Uni<Tenant> createTenant(TenantDTO tenantDTO) {
-		return tenantService.create(tenantDTO);
+		if (id == null) {
+			return createTenant(tenantDTO);
+		} else {
+			return patch
+				? patchTenant(id, tenantDTO)
+				: updateTenant(id, tenantDTO);
+		}
+
 	}
 
 	@Mutation

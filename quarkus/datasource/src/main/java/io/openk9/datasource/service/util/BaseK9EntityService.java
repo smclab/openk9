@@ -32,6 +32,8 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
+import io.openk9.datasource.validation.ValidatorK9EntityWrapper;
 import io.quarkus.hibernate.reactive.panache.common.runtime.AbstractJpaOperations;
 import io.quarkus.hibernate.reactive.panache.runtime.PanacheQueryImpl;
 import io.quarkus.panache.common.Sort;
@@ -46,12 +48,17 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.validation.Validator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -67,6 +74,13 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		new DefaultPageInfo(null, null, false, false);
 
 	public abstract Class<ENTITY> getEntityClass();
+
+	public Uni<Connection<ENTITY>> findConnection(
+		String after, String before, Integer first, Integer last) {
+
+		return findConnection(after, before, first, last, null, Set.of());
+
+	}
 
 	/**
 	 * Thus when I get the request I process it in the following way:
@@ -92,10 +106,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	 *
 	 * EDIT2: The above ordering reflects pagination, not chronological order. Hence first is interpreted as 'first to be displayed', not 'first chronologically'. Therefore, you might want to swap ASC and DESC in step (4) and (5). Thanks to @Sytten for bringing this problem to my attention.
 	 *
-	 * @see @{@link <a href="https://github.com/graphql/graphql-relay-js/issues/94#issuecomment-232410564">...</a>}
+	 * @see {@link <a href="https://github.com/graphql/graphql-relay-js/issues/94#issuecomment-232410564">...</a>}
 	 */
 	public Uni<Connection<ENTITY>> findConnection(
-		String after, String before, Integer first, Integer last) {
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
 
 		return withTransaction((s, t) -> {
 
@@ -120,15 +135,51 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 					where, criteriaBuilder.lessThan(root.get("id"), cursor.getId()));
 			}
 
+			if (searchText != null && !searchText.isBlank()) {
+
+				Predicate searchConditions = criteriaBuilder.disjunction();
+
+				for (String searchField : getSearchFields()) {
+					searchConditions = criteriaBuilder.or(
+						searchConditions, criteriaBuilder.like(
+							criteriaBuilder.lower(root.get(searchField)),
+							"%" + searchText.toLowerCase() + "%")
+					);
+				}
+
+				where = criteriaBuilder.and(where, searchConditions);
+
+			}
+
 			criteriaBuilderQuery.where(where);
 
-			if (first != null) {
-				criteriaBuilderQuery.orderBy(criteriaBuilder.desc(root.get("id")));
+			List<Order> orders = new ArrayList<>();
+
+			if (sortByList != null) {
+				for (SortBy sortBy : sortByList) {
+					Path<?> sortPath = root.get(sortBy.getColumn());
+					orders.add(
+						sortBy.getDirection() == SortBy.Direction.ASC
+							? criteriaBuilder.asc(sortPath)
+							: criteriaBuilder.desc(sortPath)
+					);
+				}
 			}
 
-			if (last != null) {
-				criteriaBuilderQuery.orderBy(criteriaBuilder.asc(root.get("id")));
+			Order order = null;
+
+			if (first != null) {
+				order = criteriaBuilder.desc(root.get("id"));
 			}
+			if (last != null) {
+				order = criteriaBuilder.asc(root.get("id"));
+			}
+
+			if (order != null) {
+				orders.add(order);
+			}
+
+			criteriaBuilderQuery.orderBy(orders);
 
 			Mutiny.Query<ENTITY> query = s.createQuery(criteriaBuilderQuery);
 
@@ -203,18 +254,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	private int _maxResults(Integer first, Integer last, Integer defaultValue) {
-
-		if (first != null) {
-			return first + 1;
-		}
-		if (last != null) {
-			return last + 1;
-		}
-
-		return defaultValue;
-	}
-
 	@Override
 	public Uni<Page<ENTITY>> findAllPaginated(
 		Pageable pageable, String searchText) {
@@ -272,8 +311,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
 
-			Root<T> root = joinEntityQuery.from(joinType);
-
 			Join<ENTITY, T> join = entityRoot.joinSet(joinField);
 
 			CriteriaQuery<T> criteriaQuery = joinEntityQuery.select(join);
@@ -294,7 +331,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			countQuery.where(entityRoot.get(getEntityIdField()).in(Arrays.asList(entityIds)));
 
 			return _pageCriteriaQuery(
-				limit, sortBy, afterId, beforeId, filter, builder, root,
+				limit, sortBy, afterId, beforeId, filter, builder, join,
 				criteriaQuery, countQuery);
 
 		});
@@ -357,7 +394,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	private <T extends K9Entity> Uni<Page<T>> _pageCriteriaQuery(
 		int limit, String sortBy, long afterId, long beforeId, Filter filter,
-		CriteriaBuilder builder, Root<T> root, CriteriaQuery<T> criteriaQuery,
+		CriteriaBuilder builder, Path<T> root, CriteriaQuery<T> criteriaQuery,
 		CriteriaQuery countQuery) {
 
 		filter = filter == null ? Filter.DEFAULT : filter;
@@ -531,11 +568,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return create(mapper.create(dto));
 	}
 
-	protected Uni<ENTITY> persist(ENTITY entity) {
+	protected <T extends K9Entity> Uni<T> persist(T entity) {
 		return withTransaction(
-			(s, t) -> jpaOperations
-				.persist(Uni.createFrom().item(s), entity)
+			(s, t) -> s.persist(entity)
 				.map(v -> entity)
+				.call(s::flush)
 		);
 	}
 
@@ -561,6 +598,18 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 				() -> new IllegalStateException(
 					"entity with id: " + entityId + " for service: " +
 					getClass().getSimpleName() + " not found")));
+	}
+
+	public ValidatorK9EntityWrapper<ENTITY, DTO> getValidator() {
+		ValidatorK9EntityWrapper<ENTITY, DTO> wrapper = validatorWrapper.get();
+
+		if (wrapper == null) {
+			validatorWrapper.set(
+				wrapper = new ValidatorK9EntityWrapper<>(this, validator));
+		}
+
+		return wrapper;
+
 	}
 
 	public Uni<Long> count() {
@@ -602,5 +651,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	@Inject
 	Logger logger;
+
+	@Inject
+	protected Validator validator;
+
+	private AtomicReference<ValidatorK9EntityWrapper<ENTITY, DTO>> validatorWrapper =
+		new AtomicReference<>();
 
 }

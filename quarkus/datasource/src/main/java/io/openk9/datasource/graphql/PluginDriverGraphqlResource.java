@@ -17,22 +17,25 @@
 
 package io.openk9.datasource.graphql;
 
+import graphql.relay.Connection;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -40,11 +43,11 @@ import javax.inject.Inject;
 public class PluginDriverGraphqlResource {
 
 	@Query
-	public Uni<Page<PluginDriver>> getPluginDrivers(
-		String searchText, Pageable pageable) {
-		return pluginDriverService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, searchText
-		);
+	public Uni<Connection<PluginDriver>> getPluginDrivers(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return pluginDriverService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
 
 	@Query
@@ -52,19 +55,31 @@ public class PluginDriverGraphqlResource {
 		return pluginDriverService.findById(id);
 	}
 
-	@Mutation
-	public Uni<PluginDriver> patchPluginDriver(long id, PluginDriverDTO pluginDriverDTO) {
-		return pluginDriverService.patch(id, pluginDriverDTO);
+	public Uni<Response<PluginDriver>> patchPluginDriver(long id, PluginDriverDTO pluginDriverDTO) {
+		return pluginDriverService.getValidator().patch(id, pluginDriverDTO);
+	}
+
+	public Uni<Response<PluginDriver>> updatePluginDriver(long id, PluginDriverDTO pluginDriverDTO) {
+		return pluginDriverService.getValidator().update(id, pluginDriverDTO);
+	}
+
+	public Uni<Response<PluginDriver>> createPluginDriver(PluginDriverDTO pluginDriverDTO) {
+		return pluginDriverService.getValidator().create(pluginDriverDTO);
 	}
 
 	@Mutation
-	public Uni<PluginDriver> updatePluginDriver(long id, PluginDriverDTO pluginDriverDTO) {
-		return pluginDriverService.update(id, pluginDriverDTO);
-	}
+	public Uni<Response<PluginDriver>> pluginDriver(
+		Long id, PluginDriverDTO pluginDriverDTO,
+		@DefaultValue("false") boolean patch) {
 
-	@Mutation
-	public Uni<PluginDriver> createPluginDriver(PluginDriverDTO pluginDriverDTO) {
-		return pluginDriverService.create(pluginDriverDTO);
+		if (id == null) {
+			return createPluginDriver(pluginDriverDTO);
+		} else {
+			return patch
+				? patchPluginDriver(id, pluginDriverDTO)
+				: updatePluginDriver(id, pluginDriverDTO);
+		}
+
 	}
 
 	@Mutation

@@ -76,9 +76,8 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> Mutiny.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
-				if (docTypeFields.add(docTypeField)) {
-					docType.setDocTypeFields(docTypeFields);
-					return create(docType)
+				if (docType.addDocTypeField(docTypeFields, docTypeField)) {
+					return persist(docType)
 						.map(dt -> Tuple2.of(dt, docTypeField));
 				}
 				return Uni.createFrom().nullItem();
@@ -90,13 +89,11 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> Mutiny.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
-				if (!docTypeFields.removeIf(docTypeField -> docTypeField.getId() == docTypeFieldId)) {
-					return Uni.createFrom().failure(() -> new IllegalArgumentException(
-						"DocTypeField not found with id " + docTypeFieldId));
+				if (docType.removeDocTypeField(docTypeFields, docTypeFieldId)) {
+					return persist(docType)
+						.map(dt -> Tuple2.of(dt, docTypeFieldId));
 				}
-				docType.setDocTypeFields(docTypeFields);
-				return create(docType)
-					.map(dt -> Tuple2.of(dt, docTypeFieldId));
+				return Uni.createFrom().nullItem();
 			}));
 	}
 

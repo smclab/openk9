@@ -66,9 +66,10 @@ public class Tenant extends K9Entity {
 	private String realmName;
 
 	@OneToMany(mappedBy = "tenant", cascade = {
-		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.REFRESH})
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<SuggestionCategory> suggestionCategories

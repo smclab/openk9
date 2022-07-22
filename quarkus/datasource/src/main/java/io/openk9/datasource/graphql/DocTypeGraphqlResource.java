@@ -17,19 +17,24 @@
 
 package io.openk9.datasource.graphql;
 
+import graphql.relay.Connection;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.validation.FieldValidator;
+import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
@@ -37,6 +42,8 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -44,11 +51,11 @@ import javax.inject.Inject;
 public class DocTypeGraphqlResource {
 
 	@Query
-	public Uni<Page<DocType>> getDocTypes(
-		String searchText, Pageable pageable) {
-		return docTypeService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, searchText
-		);
+	public Uni<Connection<DocType>> getDocTypes(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return docTypeService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
 
 	@Query
@@ -65,19 +72,31 @@ public class DocTypeGraphqlResource {
 		return docTypeService.findById(id);
 	}
 
-	@Mutation
-	public Uni<DocType> patchDocType(long id, DocTypeDTO docTypeDTO) {
-		return docTypeService.patch(id, docTypeDTO);
+	public Uni<Response<DocType>> patchDocType(long id, DocTypeDTO docTypeDTO) {
+		return docTypeService.getValidator().patch(id, docTypeDTO);
+	}
+
+	public Uni<Response<DocType>> updateDocType(long id, DocTypeDTO docTypeDTO) {
+		return docTypeService.getValidator().update(id, docTypeDTO);
+	}
+
+	public Uni<Response<DocType>> createDocType(DocTypeDTO docTypeDTO) {
+		return docTypeService.getValidator().create(docTypeDTO);
 	}
 
 	@Mutation
-	public Uni<DocType> updateDocType(long id, DocTypeDTO docTypeDTO) {
-		return docTypeService.update(id, docTypeDTO);
-	}
+	public Uni<Response<DocType>> docType(
+		Long id, DocTypeDTO docTypeDTO,
+		@DefaultValue("false") boolean patch) {
 
-	@Mutation
-	public Uni<DocType> createDocType(DocTypeDTO docTypeDTO) {
-		return docTypeService.create(docTypeDTO);
+		if (id == null) {
+			return createDocType(docTypeDTO);
+		} else {
+			return patch
+				? patchDocType(id, docTypeDTO)
+				: updateDocType(id, docTypeDTO);
+		}
+
 	}
 
 	@Mutation
@@ -86,9 +105,22 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<DocType, DocTypeField>> createDocTypeField(
+	public Uni<Response<DocTypeField>> createDocTypeField(
 		long docTypeId, DocTypeFieldDTO docTypeFieldDTO) {
-		return docTypeService.addDocTypeField(docTypeId, docTypeFieldDTO);
+
+		return Uni.createFrom().deferred(() -> {
+
+			List<FieldValidator> validatorList =
+				docTypeService.getValidator().validate(docTypeFieldDTO);
+
+			if (validatorList.isEmpty()) {
+				return docTypeService.addDocTypeField(docTypeId, docTypeFieldDTO)
+					.map(e -> Response.of(e.right, null));
+			}
+
+			return Uni.createFrom().item(Response.of(null, validatorList));
+		});
+
 	}
 
 	@Mutation

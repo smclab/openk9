@@ -17,21 +17,23 @@
 
 package io.openk9.datasource.graphql;
 
+import graphql.relay.Connection;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
@@ -40,6 +42,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -47,11 +50,11 @@ import javax.inject.Inject;
 public class DatasourceGraphqlResource {
 
 	@Query
-	public Uni<Page<Datasource>> getDatasources(
-		String searchText, Pageable pageable) {
-		return datasourceService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, searchText
-		);
+	public Uni<Connection<Datasource>> getDatasources(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return datasourceService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
 
 	public Uni<EnrichPipeline> enrichProcessor(
@@ -76,19 +79,31 @@ public class DatasourceGraphqlResource {
 		return datasourceService.findById(id);
 	}
 
-	@Mutation
-	public Uni<Datasource> patchDatasource(long id, DatasourceDTO datasourceDTO) {
-		return datasourceService.patch(id, datasourceDTO);
+	public Uni<Response<Datasource>> patchDatasource(long id, DatasourceDTO datasourceDTO) {
+		return datasourceService.getValidator().patch(id, datasourceDTO);
+	}
+
+	public Uni<Response<Datasource>> updateDatasource(long id, DatasourceDTO datasourceDTO) {
+		return datasourceService.getValidator().update(id, datasourceDTO);
+	}
+
+	public Uni<Response<Datasource>> createDatasource(DatasourceDTO datasourceDTO) {
+		return datasourceService.getValidator().create(datasourceDTO);
 	}
 
 	@Mutation
-	public Uni<Datasource> updateDatasource(long id, DatasourceDTO datasourceDTO) {
-		return datasourceService.update(id, datasourceDTO);
-	}
+	public Uni<Response<Datasource>> datasource(
+		Long id, DatasourceDTO datasourceDTO,
+		@DefaultValue("false") boolean patch) {
 
-	@Mutation
-	public Uni<Datasource> createDatasource(DatasourceDTO datasourceDTO) {
-		return datasourceService.create(datasourceDTO);
+		if (id == null) {
+			return createDatasource(datasourceDTO);
+		} else {
+			return patch
+				? patchDatasource(id, datasourceDTO)
+				: updateDatasource(id, datasourceDTO);
+		}
+
 	}
 
 	@Mutation
@@ -97,53 +112,53 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<Datasource, EntityIndex>> setEntityIndexToDatasource(
+	public Uni<Tuple2<Datasource, EntityIndex>> bindEntityIndexToDatasource(
 		@Name("datasourceId") long datasourceId,
 		@Name("entityIndexId") long entityIndexId) {
 		return datasourceService.setEntityIndex(datasourceId, entityIndexId);
 	}
 
 	@Mutation
-	public Uni<Datasource> unsetEntityIndexToDatasource(
+	public Uni<Datasource> unbindEntityIndexToDatasource(
 		@Name("datasourceId") long datasourceId) {
 		return datasourceService.unsetEntityIndex(datasourceId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Datasource, DataIndex>> setDataIndexToDatasource(
+	public Uni<Tuple2<Datasource, DataIndex>> bindDataIndexToDatasource(
 		@Name("datasourceId") long datasourceId,
 		@Name("dataIndexId") long dataIndexId) {
 		return datasourceService.setDataIndex(datasourceId, dataIndexId);
 	}
 
 	@Mutation
-	public Uni<Datasource> unsetDataIndexFromDatasource(
+	public Uni<Datasource> unbindDataIndexFromDatasource(
 		@Name("datasourceId") long datasourceId) {
 		return datasourceService.unsetDataIndex(datasourceId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Datasource, EnrichPipeline>> setEnrichPipelineToDatasource(
+	public Uni<Tuple2<Datasource, EnrichPipeline>> bindEnrichPipelineToDatasource(
 		@Name("datasourceId") long datasourceId,
 		@Name("enrichPipelineId") long enrichPipelineId) {
 		return datasourceService.setEnrichPipeline(datasourceId, enrichPipelineId);
 	}
 
 	@Mutation
-	public Uni<Datasource> unsetEnrichPipelineToDatasource(
+	public Uni<Datasource> unbindEnrichPipelineToDatasource(
 		@Name("datasourceId") long datasourceId) {
 		return datasourceService.unsetEnrichPipeline(datasourceId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Datasource, PluginDriver>> setPluginDriverToDatasource(
+	public Uni<Tuple2<Datasource, PluginDriver>> bindPluginDriverToDatasource(
 		@Name("datasourceId") long datasourceId,
 		@Name("pluginDriverId") long pluginDriverId) {
 		return datasourceService.setPluginDriver(datasourceId, pluginDriverId);
 	}
 
 	@Mutation
-	public Uni<Datasource> unsetPluginDriverToDatasource(
+	public Uni<Datasource> unbindPluginDriverToDatasource(
 		@Name("datasourceId") long datasourceId) {
 		return datasourceService.unsetPluginDriver(datasourceId);
 	}

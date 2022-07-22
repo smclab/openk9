@@ -17,22 +17,25 @@
 
 package io.openk9.datasource.graphql;
 
+import graphql.relay.Connection;
 import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.dto.EntityIndexDTO;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.EntityIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -40,11 +43,11 @@ import javax.inject.Inject;
 public class EntityIndexGraphqlResource {
 
 	@Query
-	public Uni<Page<EntityIndex>> getEntityIndices(
-		String searchText, Pageable pageable) {
-		return entityIndexService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, searchText
-		);
+	public Uni<Connection<EntityIndex>> getEntityIndices(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return entityIndexService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
 
 	@Query
@@ -52,19 +55,31 @@ public class EntityIndexGraphqlResource {
 		return entityIndexService.findById(id);
 	}
 
-	@Mutation
-	public Uni<EntityIndex> patchEntityIndex(long id, EntityIndexDTO entityIndexDTO) {
-		return entityIndexService.patch(id, entityIndexDTO);
+	public Uni<Response<EntityIndex>> patchEntityIndex(long id, EntityIndexDTO entityIndexDTO) {
+		return entityIndexService.getValidator().patch(id, entityIndexDTO);
+	}
+
+	public Uni<Response<EntityIndex>> updateEntityIndex(long id, EntityIndexDTO entityIndexDTO) {
+		return entityIndexService.getValidator().update(id, entityIndexDTO);
+	}
+
+	public Uni<Response<EntityIndex>> createEntityIndex(EntityIndexDTO entityIndexDTO) {
+		return entityIndexService.getValidator().create(entityIndexDTO);
 	}
 
 	@Mutation
-	public Uni<EntityIndex> updateEntityIndex(long id, EntityIndexDTO entityIndexDTO) {
-		return entityIndexService.update(id, entityIndexDTO);
-	}
+	public Uni<Response<EntityIndex>> entityIndex(
+		Long id, EntityIndexDTO entityIndexDTO,
+		@DefaultValue("false") boolean patch) {
 
-	@Mutation
-	public Uni<EntityIndex> createEntityIndex(EntityIndexDTO entityIndexDTO) {
-		return entityIndexService.create(entityIndexDTO);
+		if (id == null) {
+			return createEntityIndex(entityIndexDTO);
+		} else {
+			return patch
+				? patchEntityIndex(id, entityIndexDTO)
+				: updateEntityIndex(id, entityIndexDTO);
+		}
+
 	}
 
 	@Mutation

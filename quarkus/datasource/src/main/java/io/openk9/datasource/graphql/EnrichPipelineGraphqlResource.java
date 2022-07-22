@@ -17,18 +17,22 @@
 
 package io.openk9.datasource.graphql;
 
+import graphql.relay.Connection;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
@@ -36,6 +40,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -43,12 +48,13 @@ import javax.inject.Inject;
 public class EnrichPipelineGraphqlResource {
 
 	@Query
-	public Uni<Page<EnrichPipeline>> getEnrichPipelines(
-		String searchText, Pageable pageable) {
-		return enrichPipelineService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, searchText
-		);
+	public Uni<Connection<EnrichPipeline>> getEnrichPipelines(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return enrichPipelineService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
+
 
 	public Uni<Page<EnrichItem>> enrichItems(
 		@Source EnrichPipeline enrichPipeline,
@@ -63,19 +69,31 @@ public class EnrichPipelineGraphqlResource {
 		return enrichPipelineService.findById(id);
 	}
 
-	@Mutation
-	public Uni<EnrichPipeline> patchEnrichPipeline(long id, EnrichPipelineDTO enrichPipelineDTO) {
-		return enrichPipelineService.patch(id, enrichPipelineDTO);
+	public Uni<Response<EnrichPipeline>> patchEnrichPipeline(long id, EnrichPipelineDTO enrichPipelineDTO) {
+		return enrichPipelineService.getValidator().patch(id, enrichPipelineDTO);
+	}
+
+	public Uni<Response<EnrichPipeline>> updateEnrichPipeline(long id, EnrichPipelineDTO enrichPipelineDTO) {
+		return enrichPipelineService.getValidator().update(id, enrichPipelineDTO);
+	}
+
+	public Uni<Response<EnrichPipeline>> createEnrichPipeline(EnrichPipelineDTO enrichPipelineDTO) {
+		return enrichPipelineService.getValidator().create(enrichPipelineDTO);
 	}
 
 	@Mutation
-	public Uni<EnrichPipeline> updateEnrichPipeline(long id, EnrichPipelineDTO enrichPipelineDTO) {
-		return enrichPipelineService.update(id, enrichPipelineDTO);
-	}
+	public Uni<Response<EnrichPipeline>> enrichPipeline(
+		Long id, EnrichPipelineDTO enrichPipelineDTO,
+		@DefaultValue("false") boolean patch) {
 
-	@Mutation
-	public Uni<EnrichPipeline> createEnrichPipeline(EnrichPipelineDTO enrichPipelineDTO) {
-		return enrichPipelineService.create(enrichPipelineDTO);
+		if (id == null) {
+			return createEnrichPipeline(enrichPipelineDTO);
+		} else {
+			return patch
+				? patchEnrichPipeline(id, enrichPipelineDTO)
+				: updateEnrichPipeline(id, enrichPipelineDTO);
+		}
+
 	}
 
 	@Mutation

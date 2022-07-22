@@ -53,7 +53,15 @@ public class SuggestionCategory extends K9Entity {
 	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY)
+	@ManyToOne(
+		fetch = javax.persistence.FetchType.LAZY,
+		cascade = {
+			javax.persistence.CascadeType.PERSIST,
+			javax.persistence.CascadeType.MERGE,
+			javax.persistence.CascadeType.REFRESH,
+			javax.persistence.CascadeType.DETACH
+		}
+	)
 	@JsonIgnore
 	@JoinColumn(name = "tenant_id")
 	private Tenant tenant;

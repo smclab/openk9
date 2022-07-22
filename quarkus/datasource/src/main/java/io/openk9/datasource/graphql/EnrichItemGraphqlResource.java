@@ -17,22 +17,25 @@
 
 package io.openk9.datasource.graphql;
 
+import graphql.relay.Connection;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -40,11 +43,11 @@ import javax.inject.Inject;
 public class EnrichItemGraphqlResource {
 
 	@Query
-	public Uni<Page<EnrichItem>> getEnrichItems(
-		String searchText, Pageable pageable) {
-		return enrichItemService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, searchText
-		);
+	public Uni<Connection<EnrichItem>> getEnrichItems(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return enrichItemService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
 
 	@Query
@@ -52,20 +55,33 @@ public class EnrichItemGraphqlResource {
 		return enrichItemService.findById(id);
 	}
 
-	@Mutation
-	public Uni<EnrichItem> patchEnrichItem(long id, EnrichItemDTO enrichItemDTO) {
-		return enrichItemService.patch(id, enrichItemDTO);
+	public Uni<Response<EnrichItem>> patchEnrichItem(long id, EnrichItemDTO enrichItemDTO) {
+		return enrichItemService.getValidator().patch(id, enrichItemDTO);
+	}
+
+	public Uni<Response<EnrichItem>> updateEnrichItem(long id, EnrichItemDTO enrichItemDTO) {
+		return enrichItemService.getValidator().update(id, enrichItemDTO);
+	}
+
+	public Uni<Response<EnrichItem>> createEnrichItem(EnrichItemDTO enrichItemDTO) {
+		return enrichItemService.getValidator().create(enrichItemDTO);
 	}
 
 	@Mutation
-	public Uni<EnrichItem> updateEnrichItem(long id, EnrichItemDTO enrichItemDTO) {
-		return enrichItemService.update(id, enrichItemDTO);
+	public Uni<Response<EnrichItem>> enrichItem(
+		Long id, EnrichItemDTO enrichItemDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createEnrichItem(enrichItemDTO);
+		} else {
+			return patch
+				? patchEnrichItem(id, enrichItemDTO)
+				: updateEnrichItem(id, enrichItemDTO);
+		}
+
 	}
 
-	@Mutation
-	public Uni<EnrichItem> createEnrichItem(EnrichItemDTO enrichItemDTO) {
-		return enrichItemService.create(enrichItemDTO);
-	}
 
 	@Mutation
 	public Uni<EnrichItem> deleteEnrichItem(long enrichItemId) {

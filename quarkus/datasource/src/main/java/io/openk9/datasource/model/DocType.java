@@ -43,17 +43,28 @@ public class DocType extends K9Entity {
 	@JsonIgnore
 	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 
-	public void addDocTypeField(DocTypeField docTypeField) {
-		docTypeFields.add(docTypeField);
-		docTypeField.setDocType(this);
+	public boolean addDocTypeField(
+		Set<DocTypeField> docTypeFields, DocTypeField docTypeField) {
+		if (docTypeFields.add(docTypeField)) {
+			docTypeField.setDocType(this);
+			return true;
+		}
+		return false;
 	}
 
-	public void removeDocTypeField(DocTypeField docTypeField) {
-		docTypeFields.remove(docTypeField);
-		docTypeField.setDocType(null);
+	public boolean removeDocTypeField(
+		Set<DocTypeField> docTypeFields, DocTypeField docTypeField) {
+
+		if (docTypeFields.remove(docTypeField)) {
+			docTypeField.setDocType(null);
+			return true;
+		}
+
+		return false;
+
 	}
 
-	public boolean removeDocTypeField(long docTypeFieldId) {
+	public boolean removeDocTypeField(Set<DocTypeField> docTypeFields, long docTypeFieldId) {
 
 		Iterator<DocTypeField> iterator = docTypeFields.iterator();
 

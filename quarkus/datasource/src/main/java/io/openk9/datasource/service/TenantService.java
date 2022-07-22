@@ -107,36 +107,36 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	}
 
 	public Uni<Tuple2<Tenant, Datasource>> removeDatasource(long tenantId, long datasourceId) {
-		return findById(tenantId)
+		return withTransaction((s, tr) -> findById(tenantId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(tenant -> datasourceService.findById(datasourceId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(datasource -> Mutiny.fetch(tenant.getDatasources()).flatMap(datasources -> {
-					if (datasources.remove(datasource)) {
-						tenant.setDatasources(datasources);
-						return create(tenant).map(t -> Tuple2.of(t, datasource));
+				.transformToUni(datasource -> Mutiny.fetch(datasource.getTenants()).flatMap(tenants -> {
+					if (tenants.remove(tenant)) {
+						datasource.setTenants(tenants);
+						return persist(datasource).map((newD) -> Tuple2.of(tenant, newD));
 					}
 					return Uni.createFrom().nullItem();
-				})));
+				}))));
 	}
 
 	public Uni<Tuple2<Tenant, Datasource>> addDatasource(long tenantId, long datasourceId) {
 
-		return findById(tenantId)
+		return withTransaction((s, tr) -> findById(tenantId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(tenant -> datasourceService.findById(datasourceId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(datasource -> Mutiny.fetch(tenant.getDatasources()).flatMap(datasources -> {
-					if (datasources.add(datasource)) {
-						tenant.setDatasources(datasources);
-						return create(tenant).map(t -> Tuple2.of(t, datasource));
+				.transformToUni(datasource -> Mutiny.fetch(datasource.getTenants()).flatMap(tenants -> {
+					if (tenants.add(tenant)) {
+						datasource.setTenants(tenants);
+						return persist(datasource).map(newD -> Tuple2.of(tenant, newD));
 					}
 					return Uni.createFrom().nullItem();
-				})));
+				}))));
 
 	}
 
@@ -147,13 +147,14 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 			.transformToUni(tenant -> suggestionCategoryService.findById(suggestionCategoryId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(suggestionCategory -> Mutiny.fetch(tenant.getSuggestionCategories()).flatMap(categories -> {
-					if (categories.add(suggestionCategory)) {
-						tenant.setSuggestionCategories(categories);
-						return create(tenant).map(t -> Tuple2.of(tenant, suggestionCategory));
-					}
-					return Uni.createFrom().nullItem();
-				})));
+				.transformToUni(suggestionCategory -> {
+
+					suggestionCategory.setTenant(tenant);
+
+					return persist(suggestionCategory)
+						.map(newSC -> Tuple2.of(tenant, newSC));
+
+				}));
 	}
 
 	public Uni<Tuple2<Tenant, SuggestionCategory>> removeSuggestionCategory(long tenantId, long suggestionCategoryId) {
@@ -163,13 +164,14 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 			.transformToUni(tenant -> suggestionCategoryService.findById(suggestionCategoryId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(suggestionCategory -> Mutiny.fetch(tenant.getSuggestionCategories()).flatMap(categories -> {
-					if (categories.remove(suggestionCategory)) {
-						tenant.setSuggestionCategories(categories);
-						return create(tenant).map(t -> Tuple2.of(tenant, suggestionCategory));
-					}
-					return Uni.createFrom().nullItem();
-				})));
+				.transformToUni(suggestionCategory -> {
+
+					suggestionCategory.setTenant(null);
+
+					return persist(suggestionCategory)
+						.map(newSC -> Tuple2.of(null, newSC));
+
+				}));
 	}
 
 	@Override

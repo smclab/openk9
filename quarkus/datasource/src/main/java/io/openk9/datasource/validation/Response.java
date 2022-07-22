@@ -15,27 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto.util;
+package io.openk9.datasource.validation;
 
+import io.openk9.datasource.model.util.K9Entity;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
-import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
+@AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
-@SuperBuilder
-public class K9EntityDTO {
-
-	@Length(max = 255)
-	@NotNull
-	@NotEmpty
-	private String name;
-
-	@Length(max = 4096)
-	private String description;
-
+public class Response<E extends K9Entity> {
+	private E entity;
+	private List<FieldValidator> fieldValidators;
 }

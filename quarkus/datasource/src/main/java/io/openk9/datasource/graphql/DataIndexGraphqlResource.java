@@ -17,18 +17,22 @@
 
 package io.openk9.datasource.graphql;
 
+import graphql.relay.Connection;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
@@ -36,6 +40,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -43,10 +48,11 @@ import javax.inject.Inject;
 public class DataIndexGraphqlResource {
 
 	@Query
-	public Uni<Page<DataIndex>> getDataIndices(
-		String searchText, Pageable pageable) {
-		return dataIndexService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, searchText);
+	public Uni<Connection<DataIndex>> getDataIndices(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return dataIndexService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
 
 	public Uni<Page<DocType>> docTypes(
@@ -60,19 +66,31 @@ public class DataIndexGraphqlResource {
 		return dataIndexService.findById(id);
 	}
 
-	@Mutation
-	public Uni<DataIndex> patchDataIndex(long id, DataIndexDTO dataIndexDTO) {
-		return dataIndexService.patch(id, dataIndexDTO);
+	public Uni<Response<DataIndex>> patchDataIndex(long id, DataIndexDTO dataIndexDTO) {
+		return dataIndexService.getValidator().patch(id, dataIndexDTO);
+	}
+
+	public Uni<Response<DataIndex>> updateDataIndex(long id, DataIndexDTO dataIndexDTO) {
+		return dataIndexService.getValidator().update(id, dataIndexDTO);
+	}
+
+	public Uni<Response<DataIndex>> createDataIndex(DataIndexDTO dataIndexDTO) {
+		return dataIndexService.getValidator().create(dataIndexDTO);
 	}
 
 	@Mutation
-	public Uni<DataIndex> updateDataIndex(long id, DataIndexDTO dataIndexDTO) {
-		return dataIndexService.update(id, dataIndexDTO);
-	}
+	public Uni<Response<DataIndex>> dataIndex(
+		Long id, DataIndexDTO dataIndexDTO,
+		@DefaultValue("false") boolean patch) {
 
-	@Mutation
-	public Uni<DataIndex> createDataIndex(DataIndexDTO dataIndexDTO) {
-		return dataIndexService.create(dataIndexDTO);
+		if (id == null) {
+			return createDataIndex(dataIndexDTO);
+		} else {
+			return patch
+				? patchDataIndex(id, dataIndexDTO)
+				: updateDataIndex(id, dataIndexDTO);
+		}
+
 	}
 
 	@Mutation

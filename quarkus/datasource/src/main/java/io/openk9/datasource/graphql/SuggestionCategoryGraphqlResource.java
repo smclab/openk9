@@ -17,18 +17,22 @@
 
 package io.openk9.datasource.graphql;
 
+import graphql.relay.Connection;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
@@ -36,18 +40,20 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
 @CircuitBreaker
 public class SuggestionCategoryGraphqlResource {
 
+
 	@Query
-	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
-		String searchText, Pageable pageable) {
-		return suggestionCategoryService.findAllPaginated(
-			pageable == null ? Pageable.DEFAULT : pageable, searchText
-		);
+	public Uni<Connection<SuggestionCategory>> getSuggestionCategories(
+		String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return suggestionCategoryService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
 
 	public Uni<Page<DocTypeField>> docTypeFields(
@@ -63,19 +69,31 @@ public class SuggestionCategoryGraphqlResource {
 		return suggestionCategoryService.findById(id);
 	}
 
-	@Mutation
-	public Uni<SuggestionCategory> patchSuggestionCategory(long id, SuggestionCategoryDTO suggestionCategoryDTO) {
-		return suggestionCategoryService.patch(id, suggestionCategoryDTO);
+	public Uni<Response<SuggestionCategory>> patchSuggestionCategory(long id, SuggestionCategoryDTO suggestionCategoryDTO) {
+		return suggestionCategoryService.getValidator().patch(id, suggestionCategoryDTO);
+	}
+
+	public Uni<Response<SuggestionCategory>> updateSuggestionCategory(long id, SuggestionCategoryDTO suggestionCategoryDTO) {
+		return suggestionCategoryService.getValidator().update(id, suggestionCategoryDTO);
+	}
+
+	public Uni<Response<SuggestionCategory>> createSuggestionCategory(SuggestionCategoryDTO suggestionCategoryDTO) {
+		return suggestionCategoryService.getValidator().create(suggestionCategoryDTO);
 	}
 
 	@Mutation
-	public Uni<SuggestionCategory> updateSuggestionCategory(long id, SuggestionCategoryDTO suggestionCategoryDTO) {
-		return suggestionCategoryService.update(id, suggestionCategoryDTO);
-	}
+	public Uni<Response<SuggestionCategory>> suggestionCategory(
+		Long id, SuggestionCategoryDTO suggestionCategoryDTO,
+		@DefaultValue("false") boolean patch) {
 
-	@Mutation
-	public Uni<SuggestionCategory> createSuggestionCategory(SuggestionCategoryDTO suggestionCategoryDTO) {
-		return suggestionCategoryService.create(suggestionCategoryDTO);
+		if (id == null) {
+			return createSuggestionCategory(suggestionCategoryDTO);
+		} else {
+			return patch
+				? patchSuggestionCategory(id, suggestionCategoryDTO)
+				: updateSuggestionCategory(id, suggestionCategoryDTO);
+		}
+
 	}
 
 	@Mutation
