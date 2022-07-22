@@ -17,14 +17,14 @@
 
 package io.openk9.datasource.service.util;
 
-import graphql.relay.Connection;
-import graphql.relay.ConnectionCursor;
-import graphql.relay.DefaultConnection;
-import graphql.relay.DefaultPageInfo;
-import graphql.relay.Edge;
-import graphql.relay.PageInfo;
+
 import io.openk9.datasource.graphql.exception.InvalidPageSizeException;
-import io.openk9.datasource.graphql.util.RelayUtil;
+import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.datasource.graphql.util.relay.DefaultConnection;
+import io.openk9.datasource.graphql.util.relay.DefaultPageInfo;
+import io.openk9.datasource.graphql.util.relay.Edge;
+import io.openk9.datasource.graphql.util.relay.PageInfo;
+import io.openk9.datasource.graphql.util.relay.RelayUtil;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
@@ -206,12 +206,12 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 				int size = entitiesList.size();
 
-				ConnectionCursor startCursor =
+				String startCursor =
 					entitiesList.isEmpty()
 						? null
 						: edges.get(0).getCursor();
 
-				ConnectionCursor endCursor =
+				String endCursor =
 					entitiesList.isEmpty()
 						? null
 						: edges.get(size - 1).getCursor();

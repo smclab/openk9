@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.graphql;
 
-import graphql.relay.Connection;
+import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
@@ -33,6 +33,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
+import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
@@ -49,7 +50,10 @@ public class EnrichPipelineGraphqlResource {
 
 	@Query
 	public Uni<Connection<EnrichPipeline>> getEnrichPipelines(
-		String after, String before, Integer first, Integer last,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before, 
+		@Description("fetching only the first certain number of nodes") Integer first, 
+		@Description("fetching only the last certain number of nodes") Integer last,
 		String searchText, Set<SortBy> sortByList) {
 		return enrichPipelineService.findConnection(
 			after, before, first, last, searchText, sortByList);

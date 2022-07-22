@@ -15,11 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.graphql.util;
+package io.openk9.datasource.graphql.util.relay;
 
-import graphql.relay.DefaultConnectionCursor;
-import graphql.relay.DefaultEdge;
-import graphql.relay.Edge;
 import io.openk9.datasource.model.util.K9Entity;
 import io.vertx.core.json.Json;
 import lombok.AllArgsConstructor;
@@ -61,7 +58,7 @@ public class RelayUtil {
 
 		return entitiesList.stream()
 			.map(entity -> new DefaultEdge<>(
-				entity, new DefaultConnectionCursor(RelayUtil.encodeCursor(entity))))
+				entity, RelayUtil.encodeCursor(entity)))
 			.collect(Collectors.toList());
 	}
 
