@@ -49,8 +49,9 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		String searchText, Set<SortBy> sortByList) {
 
 		return findJoinConnection(
-			tenantId, "datasources", Datasource.class, after, before,
-			first, last, searchText, sortByList);
+			tenantId, "datasources", Datasource.class,
+			datasourceService.getSearchFields(), after, before, first, last,
+			searchText, sortByList);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(List<Tenant> tenants, Pageable pageable) {
@@ -99,8 +100,9 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList) {
 		return findJoinConnection(
-			id, "suggestionCategories", SuggestionCategory.class, after, before,
-			first, last, searchText, sortByList);
+			id, "suggestionCategories", SuggestionCategory.class,
+			suggestionCategoryService.getSearchFields(), after, before, first,
+			last, searchText, sortByList);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
@@ -195,7 +197,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	}
 
 	@Override
-	protected String[] getSearchFields() {
+	public String[] getSearchFields() {
 		return new String[] {"name", "virtualHost"};
 	}
 

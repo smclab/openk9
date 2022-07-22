@@ -36,7 +36,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	}
 
 	@Override
-	protected String[] getSearchFields() {
+	public String[] getSearchFields() {
 		return new String[] {"name", "fieldType"};
 	}
 

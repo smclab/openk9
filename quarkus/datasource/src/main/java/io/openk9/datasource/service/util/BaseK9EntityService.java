@@ -83,17 +83,18 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	public <T extends K9Entity> Uni<Connection<T>> findJoinConnection(
-		long entityId, String joinField, Class<T> joinType, String after,
-		String before, Integer first, Integer last) {
+		long entityId, String joinField, Class<T> joinType, String[] searchFields,
+		String after, String before, Integer first, Integer last) {
 
 		return findJoinConnection(
-			entityId, joinField, joinType, after, before, first, last,
-			null, Set.of());
+			entityId, joinField, joinType, searchFields, after, before, first,
+			last, null, Set.of());
 
 	}
 
 	public <T extends K9Entity> Uni<Connection<T>> findJoinConnection(
-		long entityId, String joinField, Class<T> joinType, String after,
+		long entityId, String joinField, Class<T> joinType,
+		String[] searchFields, String after,
 		String before, Integer first, Integer last, String searchText,
 		Set<SortBy> sortByList) {
 
@@ -108,8 +109,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return findConnection(
 			joinEntityQuery.select(join), join,
-			builder.equal(entityRoot.get("id"), entityId), after, before,
-			first, last, searchText, sortByList);
+			builder.equal(entityRoot.get("id"), entityId), searchFields, after,
+			before, first, last, searchText, sortByList);
 
 
 	}
@@ -142,8 +143,9 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	 */
 	public <T extends K9Entity> Uni<Connection<T>> findConnection(
 		CriteriaQuery<T> criteriaBuilderQuery, Path<T> root,
-		Predicate defaultWhere, String after, String before, Integer first,
-		Integer last, String searchText, Set<SortBy> sortByList) {
+		Predicate defaultWhere, String[] searchFields, String after,
+		String before, Integer first, Integer last, String searchText,
+		Set<SortBy> sortByList) {
 
 		return withTransaction((s, t) -> {
 
@@ -167,7 +169,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 				Predicate searchConditions = criteriaBuilder.disjunction();
 
-				for (String searchField : getSearchFields()) {
+				for (String searchField : searchFields) {
 					searchConditions = criteriaBuilder.or(
 						searchConditions, criteriaBuilder.like(
 							criteriaBuilder.lower(root.get(searchField)),
@@ -294,8 +296,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		Path<ENTITY> root = query.from(getEntityClass());
 
 		return findConnection(
-			query, root, criteriaBuilder.conjunction(), after, before, first,
-			last, searchText, sortByList);
+			query, root, criteriaBuilder.conjunction(), getSearchFields(),
+			after, before, first, last, searchText, sortByList);
 
 	}
 
@@ -429,7 +431,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	protected String[] getSearchFields() {
+	public String[] getSearchFields() {
 		return new String[] {"name"};
 	}
 

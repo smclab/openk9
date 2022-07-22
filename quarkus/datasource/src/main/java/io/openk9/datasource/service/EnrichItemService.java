@@ -36,7 +36,7 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 	}
 
 	@Override
-	protected String[] getSearchFields() {
+	public String[] getSearchFields() {
 		return new String[] {"name", "type", "serviceName"};
 	}
 }

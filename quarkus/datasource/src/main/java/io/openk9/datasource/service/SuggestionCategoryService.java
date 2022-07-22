@@ -50,6 +50,7 @@ public class SuggestionCategoryService extends
 
 		return findJoinConnection(
 			id, "docTypeFields", DocTypeField.class,
+			docTypeFieldService.getSearchFields(),
 			after, before, first, last, searchText, sortByList
 		);
 	}

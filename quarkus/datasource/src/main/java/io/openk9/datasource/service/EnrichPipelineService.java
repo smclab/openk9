@@ -46,7 +46,8 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		String searchText, Set<SortBy> sortByList) {
 
 		return findJoinConnection(
-			id, "enrichItems", EnrichItem.class, after, before, first,
+			id, "enrichItems", EnrichItem.class,
+			enrichItemService.getSearchFields(), after, before, first,
 			last, searchText, sortByList);
 	}
 
