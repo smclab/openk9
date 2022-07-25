@@ -236,6 +236,7 @@ public class EntityManagerConsumer {
 			jsonObject, Metadata.of(
 				new OutgoingRabbitMQMetadata.Builder()
 					.withRoutingKey(replyTo)
+					.withDeliveryMode(2)
 					.withTimestamp(ZonedDateTime.now())
 					.build()
 			)
