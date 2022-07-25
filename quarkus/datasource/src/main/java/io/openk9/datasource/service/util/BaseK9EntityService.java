@@ -241,40 +241,43 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 						? null
 						: edges.get(0).getCursor();
 
-				String endCursor =
-					entitiesList.isEmpty()
-						? null
-						: edges.get(size - 1).getCursor();
+				String endCursor = null;
 
-
-				PageInfo pageInfo = null;
-
-				boolean hasMoreResults = false;
+				boolean hasNextPage = false;
+				boolean hasPreviousPage = false;
 
 				if (first != null) {
 
-					hasMoreResults = size == first + 1;
+					hasNextPage = size == first + 1;
 
-					pageInfo = new DefaultPageInfo(
-						startCursor, endCursor, false, hasMoreResults);
+					if (hasNextPage) {
+						endCursor =
+							entitiesList.isEmpty()
+								? null
+								: edges.get(size - 2).getCursor();
+					}
+
 				}
 
 				if (last != null) {
 
-					hasMoreResults = size == last + 1;
+					hasPreviousPage = size == last + 1;
+					hasNextPage = false;
 
-					pageInfo = new DefaultPageInfo(
-						startCursor, endCursor, hasMoreResults, false);
+					if (hasPreviousPage) {
+						endCursor =
+							entitiesList.isEmpty()
+								? null
+								: edges.get(size - 2).getCursor();
+					}
 				}
 
-				if (pageInfo == null) {
-					pageInfo = new DefaultPageInfo(
-						startCursor, endCursor, false, false);
-				}
-
-				if (hasMoreResults && !edges.isEmpty()) {
+				if ((hasNextPage || hasPreviousPage) && !edges.isEmpty()) {
 					edges.remove(size - 1);
 				}
+
+				PageInfo pageInfo = new DefaultPageInfo(
+					startCursor, endCursor, hasPreviousPage, hasNextPage);
 
 				return new DefaultConnection<>(edges, pageInfo);
 
