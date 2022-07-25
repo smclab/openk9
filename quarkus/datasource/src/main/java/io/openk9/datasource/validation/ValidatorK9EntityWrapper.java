@@ -21,12 +21,15 @@ import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
+import io.vertx.pgclient.PgException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ValidatorK9EntityWrapper<E extends K9Entity, D extends K9EntityDTO> {
@@ -60,7 +63,40 @@ public class ValidatorK9EntityWrapper<E extends K9Entity, D extends K9EntityDTO>
 			Set<ConstraintViolation<D>> constraintViolationSet = validator.validate(dto);
 
 			if (constraintViolationSet.isEmpty()) {
-				return supplier.get().map(entity -> Response.of(entity, null));
+				return supplier
+					.get()
+					.onItemOrFailure()
+					.transform((entity, t) -> {
+
+						if (entity != null) {
+							return Response.of(entity, null);
+						}
+
+						PgException pgException = _findPgException(t);
+
+						if (pgException != null) {
+
+							String detail = pgException.getDetail();
+
+							return Response.of(
+								null, List.of(
+									FieldValidator.of(
+										_findFieldName(detail),
+										detail)
+								)
+							);
+
+						}
+
+						return Response.of(
+							null, List.of(
+								FieldValidator.of(
+									"error",
+									t.getMessage())
+							)
+						);
+
+					});
 			}
 
 			List<FieldValidator>
@@ -70,6 +106,26 @@ public class ValidatorK9EntityWrapper<E extends K9Entity, D extends K9EntityDTO>
 
 		});
 
+	}
+
+	private String _findFieldName(String detail) {
+		Matcher matcher = PATTERN_FIELD_NAME.matcher(detail);
+
+		if (matcher.find()) {
+			return matcher.group(1);
+		}
+
+		return "";
+	}
+
+	private PgException _findPgException(Throwable t) {
+		if (t instanceof PgException) {
+			return (PgException) t;
+		}
+		if (t.getCause() != null) {
+			return _findPgException(t.getCause());
+		}
+		return null;
 	}
 
 	private <T> List<FieldValidator> _toFieldValidators(
@@ -85,5 +141,8 @@ public class ValidatorK9EntityWrapper<E extends K9Entity, D extends K9EntityDTO>
 
 	private final BaseK9EntityService<E, D> delegate;
 	private final Validator validator;
+
+	private static final Pattern PATTERN_FIELD_NAME = Pattern.compile(
+		"Key \\(([a-zA-Z_-]+)\\)") ;
 
 }

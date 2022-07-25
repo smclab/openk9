@@ -20,6 +20,7 @@ package io.openk9.datasource.model.dto;
 import io.openk9.datasource.graphql.util.JsonObjectAdapter;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.validation.JavascriptScript;
 import io.smallrye.graphql.api.AdaptWith;
 import io.vertx.core.json.JsonObject;
 import lombok.EqualsAndHashCode;
@@ -42,6 +43,7 @@ public class EnrichItemDTO extends K9EntityDTO {
 	@NotNull
 	@NotEmpty
 	private String serviceName;
+	@JavascriptScript
 	private String validationScript;
 	@AdaptWith(JsonObjectAdapter.class)
 	private JsonObject jsonConfig;
