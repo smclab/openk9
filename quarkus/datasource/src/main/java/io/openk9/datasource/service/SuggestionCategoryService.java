@@ -90,7 +90,7 @@ public class SuggestionCategoryService extends
 
 	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeField(
 		long suggestionCategoryId, long docTypeFieldId) {
-		return findById(suggestionCategoryId)
+		return withTransaction(() -> findById(suggestionCategoryId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
@@ -103,12 +103,12 @@ public class SuggestionCategoryService extends
 					}
 					return Uni.createFrom().nullItem();
 
-				})));
+				}))));
 	}
 
 	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeField(
 		long suggestionCategoryId, long docTypeFieldId) {
-		return findById(suggestionCategoryId)
+		return withTransaction(() -> findById(suggestionCategoryId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
@@ -121,7 +121,7 @@ public class SuggestionCategoryService extends
 					}
 					return Uni.createFrom().nullItem();
 
-				})));
+				}))));
 	}
 
 	@Inject

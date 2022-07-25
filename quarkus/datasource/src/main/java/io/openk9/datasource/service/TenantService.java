@@ -163,37 +163,51 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	}
 
 	public Uni<Tuple2<Tenant, SuggestionCategory>> addSuggestionCategory(long tenantId, long suggestionCategoryId) {
-		return findById(tenantId)
+		return withTransaction((s, tr) -> findById(tenantId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(tenant -> suggestionCategoryService.findById(suggestionCategoryId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(suggestionCategory -> {
+				.transformToUni(suggestionCategory ->
+					Mutiny.fetch(tenant.getSuggestionCategories())
+						.onItem()
+						.ifNotNull()
+						.transformToUni(suggestionCategories -> {
 
-					suggestionCategory.setTenant(tenant);
+							if (tenant.addSuggestionCategory(
+								suggestionCategories, suggestionCategory)) {
 
-					return persist(suggestionCategory)
-						.map(newSC -> Tuple2.of(tenant, newSC));
+								return persist(tenant)
+									.map(newSC -> Tuple2.of(newSC, null));
+							}
 
-				}));
+							return Uni.createFrom().nullItem();
+
+						})
+				)
+			));
 	}
 
 	public Uni<Tuple2<Tenant, SuggestionCategory>> removeSuggestionCategory(long tenantId, long suggestionCategoryId) {
-		return findById(tenantId)
+		return withTransaction((s, tr) -> findById(tenantId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(tenant -> suggestionCategoryService.findById(suggestionCategoryId)
+			.transformToUni(tenant -> Mutiny.fetch(tenant.getSuggestionCategories())
 				.onItem()
 				.ifNotNull()
-				.transformToUni(suggestionCategory -> {
+				.transformToUni(suggestionCategories -> {
 
-					suggestionCategory.setTenant(null);
+					if (tenant.removeSuggestionCategory(
+						suggestionCategories, suggestionCategoryId)) {
 
-					return persist(suggestionCategory)
-						.map(newSC -> Tuple2.of(null, newSC));
+						return persist(tenant)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
 
-				}));
+					return Uni.createFrom().nullItem();
+
+				})));
 	}
 
 	@Override

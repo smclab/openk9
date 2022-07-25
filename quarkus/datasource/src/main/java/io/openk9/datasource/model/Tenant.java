@@ -30,6 +30,7 @@ import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -85,14 +86,37 @@ public class Tenant extends K9Entity {
 		datasource.getTenants().remove(this);
 	}
 
-	public void addSuggestionCategory(SuggestionCategory suggestionCategory) {
-		this.suggestionCategories.add(suggestionCategory);
+	public boolean addSuggestionCategory(
+		Set<SuggestionCategory> suggestionCategories,
+		SuggestionCategory suggestionCategory) {
+
+		if (suggestionCategory == null || suggestionCategories.contains(suggestionCategory)) {
+			return false;
+		}
+
+		suggestionCategories.add(suggestionCategory);
 		suggestionCategory.setTenant(this);
+
+		return true;
+
 	}
 
-	public void removeSuggestionCategory(SuggestionCategory suggestionCategory) {
-		this.suggestionCategories.remove(suggestionCategory);
-		suggestionCategory.setTenant(null);
+	public boolean removeSuggestionCategory(
+		Set<SuggestionCategory> suggestionCategories,
+		long suggestionCategoryId) {
+		Iterator<SuggestionCategory> iterator = suggestionCategories.iterator();
+
+		while (iterator.hasNext()) {
+			SuggestionCategory suggestionCategory = iterator.next();
+			if (suggestionCategory.getId() == suggestionCategoryId) {
+				iterator.remove();
+				suggestionCategory.setTenant(null);
+				return true;
+			}
+		}
+
+		return false;
+
 	}
 
 }

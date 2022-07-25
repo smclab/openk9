@@ -84,7 +84,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		DocTypeField docTypeField =
 			docTypeFieldMapper.create(docTypeFieldDTO);
 
-		return findById(id)
+		return withTransaction(() -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> Mutiny.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
@@ -93,11 +93,11 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 						.map(dt -> Tuple2.of(dt, docTypeField));
 				}
 				return Uni.createFrom().nullItem();
-			}));
+			})));
 	}
 
 	public Uni<Tuple2<DocType, Long>> removeDocTypeField(long id, long docTypeFieldId) {
-		return findById(id)
+		return withTransaction(() -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> Mutiny.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
@@ -106,7 +106,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 						.map(dt -> Tuple2.of(dt, docTypeFieldId));
 				}
 				return Uni.createFrom().nullItem();
-			}));
+			})));
 	}
 
 	@Inject

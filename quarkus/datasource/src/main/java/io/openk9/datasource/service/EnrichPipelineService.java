@@ -80,7 +80,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(long enrichPipelineId, long enrichItemId) {
-		return findById(enrichPipelineId)
+		return withTransaction(() -> findById(enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline ->
@@ -94,11 +94,11 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 						} else {
 							return Uni.createFrom().nullItem();
 						}
-					})));
+					}))));
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItem(long enrichPipelineId, long enrichItemId) {
-		return findById(enrichPipelineId)
+		return withTransaction(() -> findById(enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline ->
@@ -111,7 +111,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
 						}
 						return Uni.createFrom().nullItem();
-					})));
+					}))));
 	}
 
 	@Inject

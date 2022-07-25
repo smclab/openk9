@@ -51,7 +51,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<Tuple2<Datasource, EntityIndex>> setEntityIndex(long datasourceId, long entityIndexId) {
-		return findById(datasourceId)
+		return withTransaction(() -> findById(datasourceId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(datasource -> entityIndexService.findById(entityIndexId)
@@ -61,21 +61,21 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					datasource.setEntityIndex(entityIndex);
 					return persist(datasource)
 						.map(d -> Tuple2.of(d, entityIndex));
-				}));
+				})));
 	}
 
 	public Uni<Datasource> unsetEntityIndex(long datasourceId) {
-		return findById(datasourceId)
+		return withTransaction(() -> findById(datasourceId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(datasource -> {
 				datasource.setEntityIndex(null);
 				return persist(datasource);
-			});
+			}));
 	}
 
 	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(long datasourceId, long dataIndexId) {
-		return findById(datasourceId)
+		return withTransaction(() -> findById(datasourceId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(datasource -> dataIndexService.findById(dataIndexId)
@@ -85,21 +85,21 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					datasource.setDataIndex(dataIndex);
 					return persist(datasource)
 						.map(d -> Tuple2.of(d, dataIndex));
-				}));
+				})));
 	}
 
 	public Uni<Datasource> unsetDataIndex(long datasourceId) {
-		return findById(datasourceId)
+		return withTransaction(() -> findById(datasourceId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(datasource -> {
 				datasource.setDataIndex(null);
 				return persist(datasource);
-			});
+			}));
 	}
 
 	public Uni<Tuple2<Datasource, EnrichPipeline>> setEnrichPipeline(long datasourceId, long enrichPipelineId) {
-		return findById(datasourceId)
+		return withTransaction(() -> findById(datasourceId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(datasource -> enrichPipelineService.findById(enrichPipelineId)
@@ -109,17 +109,17 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					datasource.setEnrichPipeline(enrichPipeline);
 					return persist(datasource)
 						.map(d -> Tuple2.of(d, enrichPipeline));
-				}));
+				})));
 	}
 
 	public Uni<Datasource> unsetEnrichPipeline(long datasourceId) {
-		return findById(datasourceId)
+		return withTransaction(() -> findById(datasourceId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(datasource -> {
 				datasource.setEnrichPipeline(null);
 				return persist(datasource);
-			});
+			}));
 	}
 
 	public Uni<PluginDriver> getPluginDriver(long datasourceId) {
@@ -127,7 +127,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<Tuple2<Datasource, PluginDriver>> setPluginDriver(long datasourceId, long pluginDriverId) {
-		return findById(datasourceId)
+		return withTransaction(() -> findById(datasourceId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(datasource -> pluginDriverService.findById(pluginDriverId)
@@ -135,17 +135,17 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					datasource.setPluginDriver(pluginDriver);
 					return persist(datasource)
 						.map(d -> Tuple2.of(d, pluginDriver));
-				}));
+				})));
 	}
 
 	public Uni<Datasource> unsetPluginDriver(long datasourceId) {
-		return findById(datasourceId)
+		return withTransaction(() -> findById(datasourceId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(datasource -> {
 				datasource.setPluginDriver(null);
 				return persist(datasource);
-			});
+			}));
 	}
 
 	@Inject

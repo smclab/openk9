@@ -70,7 +70,7 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 	}
 
 	public Uni<Tuple2<DataIndex, DocType>> addDocType(long dataIndexId, long docTypeId) {
-		 return findById(dataIndexId)
+		return withTransaction(() -> findById(dataIndexId)
 			 .onItem()
 			 .ifNotNull()
 			 .transformToUni(dataIndex ->
@@ -87,11 +87,11 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 							 return Uni.createFrom().nullItem();
 						 })
 					 )
-			 );
+			 ));
 	}
 
 	public Uni<Tuple2<DataIndex, DocType>> removeDocType(long dataIndexId, long docTypeId) {
-		return findById(dataIndexId)
+		return withTransaction(() -> findById(dataIndexId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(dataIndex ->
@@ -108,7 +108,7 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 							return Uni.createFrom().nullItem();
 						})
 					)
-			);
+			));
 	}
 
 	@Inject
