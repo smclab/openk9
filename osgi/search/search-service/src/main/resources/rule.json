@@ -70,5 +70,9 @@
 	{
 		"lhs": "$Content",
 		"rhs": "$AUTOCOMPLETE"
+	},
+	{
+		"lhs": "$Content",
+		"rhs": "$QUOTE_TOKEN"
 	}
 ]

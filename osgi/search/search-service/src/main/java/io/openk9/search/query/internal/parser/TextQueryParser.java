@@ -23,6 +23,7 @@ import io.openk9.plugin.driver.manager.model.PluginDriverDTO;
 import io.openk9.plugin.driver.manager.model.SearchKeywordDTO;
 import io.openk9.search.api.query.QueryParser;
 import io.openk9.search.api.query.SearchToken;
+import io.openk9.search.query.internal.query.parser.util.Utils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -147,16 +148,28 @@ public class TextQueryParser implements QueryParser {
 
 		for (String value : values) {
 
-			MultiMatchQueryBuilder multiMatchQueryBuilder =
-				new MultiMatchQueryBuilder(value);
+			boolean inQuote = Utils.inQuote(value);
 
-			multiMatchQueryBuilder.fields(keywordBoostMap);
+			if (inQuote) {
+				value = Utils.removeQuote(value);
+			}
 
-			boolQueryBuilder.should(multiMatchQueryBuilder);
+			int length = value.split("\\s+").length;
 
-			if (value.split("\\s+").length > 1) {
+			if (!inQuote || length == 1) {
 
-				multiMatchQueryBuilder =
+				MultiMatchQueryBuilder multiMatchQueryBuilder =
+					new MultiMatchQueryBuilder(value);
+
+				multiMatchQueryBuilder.fields(keywordBoostMap);
+
+				boolQueryBuilder.should(multiMatchQueryBuilder);
+
+			}
+
+			if (length > 1) {
+
+				MultiMatchQueryBuilder multiMatchQueryBuilder =
 					new MultiMatchQueryBuilder(value);
 
 				multiMatchQueryBuilder.fields(keywordBoostMap);
@@ -164,7 +177,9 @@ public class TextQueryParser implements QueryParser {
 				multiMatchQueryBuilder.type(
 					MultiMatchQueryBuilder.Type.PHRASE);
 
-				multiMatchQueryBuilder.slop(2);
+				if (!inQuote) {
+					multiMatchQueryBuilder.slop(2);
+				}
 
 				multiMatchQueryBuilder.boost(2.0f);
 

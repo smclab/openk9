@@ -21,7 +21,9 @@ import io.openk9.common.api.constant.Strings;
 import io.openk9.search.api.query.parser.Tuple;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -39,13 +41,19 @@ public class Utils {
 		final int length = searchText.length();
 		final int lastIndex = length - 1;
 
+		boolean quote = false;
+
 		for (int i = 0, count = 0; i < length; i++) {
 
 			char c = searchText.charAt(i);
 
+			if (isQuote(c)) {
+				quote = !quote;
+			}
+
 			boolean whitespace = Character.isWhitespace(c);
 
-			if (whitespace) {
+			if (whitespace && !quote) {
 
 				StringBuilderTokenIndex stringBuilderTokenIndex =
 					map.get(count);
@@ -80,9 +88,40 @@ public class Utils {
 		return Collections.unmodifiableMap(map);
 
 	}
-	public static String[] split(String s) {
-		return s.strip().split("\\s+");
+	public static String[] split(String searchText) {
+
+		if ((_countQuote(searchText) % 2) != 0) {
+			return searchText.strip().split("\\s+");
+		}
+
+		boolean quoted = false;
+		int nStr = 0;
+
+		Map<Integer, StringBuilder> map = new HashMap<>();
+
+		for (int i = 0; i < searchText.length(); i++) {
+			char c = searchText.charAt(i);
+			if (isQuote(c)) {
+				quoted = !quoted;
+			}
+			if (quoted) {
+				map.computeIfAbsent(nStr, pos -> new StringBuilder()).append(c);
+			}
+			else if (Character.isWhitespace(c)) {
+				nStr++;
+			}
+			else {
+				map.computeIfAbsent(nStr, pos -> new StringBuilder()).append(c);
+			}
+		}
+		return map
+			.values()
+			.stream().map(StringBuilder::toString)
+			.toArray(String[]::new);
 	}
+
+	public static final List<Character> QUOTE_CHARACTER_LIST =
+		List.of('"', '\'', '`');
 
 	public static boolean equalsIgnoreSpaces(String str1, String str2) {
 		return Objects.equals(
@@ -96,6 +135,41 @@ public class Utils {
 		return s.replaceAll("\\s+", Strings.BLANK);
 	}
 
+	public static boolean startWithQuote(String s) {
+		if (s == null || s.isBlank()) {
+			return false;
+		}
+		return QUOTE_CHARACTER_LIST.contains(s.charAt(0));
+	}
+
+	public static boolean endWithQuote(String s) {
+		if (s == null || s.isBlank()) {
+			return false;
+		}
+		return QUOTE_CHARACTER_LIST.contains(s.charAt(s.length() - 1));
+	}
+
+	public static boolean inQuote(String s) {
+		if (s == null || s.isBlank() || s.length() < 3) {
+			return false;
+		}
+		return QUOTE_CHARACTER_LIST.contains(s.charAt(0)) &&
+			   QUOTE_CHARACTER_LIST.contains(s.charAt(s.length() - 1));
+	}
+
+	public static String removeQuote(String s) {
+		if (s == null || s.isBlank() || s.length() < 3) {
+			return s;
+		}
+
+		for (Character c : QUOTE_CHARACTER_LIST) {
+			s = s.replaceAll("^" + c + "|" + c + "$", Strings.BLANK);
+		}
+
+		return s;
+
+	}
+
 	public static <T> Tuple<T> toTuple(T[] rhs) {
 		if (rhs.length == 0) {
 			return Tuple.of();
@@ -105,6 +179,23 @@ public class Utils {
 
 	public static String[] toArray(Tuple<String> tuple) {
 		return tuple.toArray();
+	}
+
+
+	public static boolean isQuote(char c) {
+		return QUOTE_CHARACTER_LIST.contains(c);
+	}
+
+	private static int _countQuote(String searchText) {
+		int countQuote = 0;
+
+		for (int i = 0; i < searchText.length(); i++) {
+			char c = searchText.charAt(i);
+			if (isQuote(c)) {
+				countQuote++;
+			}
+		}
+		return countQuote;
 	}
 
 	private static class StringBuilderTokenIndex
