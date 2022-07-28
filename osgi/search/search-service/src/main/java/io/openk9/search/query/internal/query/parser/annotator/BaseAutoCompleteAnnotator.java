@@ -19,6 +19,7 @@ package io.openk9.search.query.internal.query.parser.annotator;
 
 import io.openk9.search.api.query.parser.CategorySemantics;
 import io.openk9.search.client.api.RestHighLevelClientProvider;
+import io.openk9.search.query.internal.query.parser.util.Utils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -70,6 +71,19 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 		if (tokens.length == 1) {
 			token = tokens[0];
+			if (Utils.inQuote(token)) {
+				return List.of(
+					CategorySemantics.of(
+						"$QUOTE_TOKEN",
+						Map.of(
+							"tokenType", "TEXT",
+							"value", token,
+							"score", 100.0f
+						)
+					)
+				);
+			}
+
 		}
 		else {
 			token = String.join(" ", tokens);
