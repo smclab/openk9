@@ -73,8 +73,8 @@
 		<autoVersionSubmodules>true</autoVersionSubmodules>
 
 		<product.name>OpenK9 Powered by SMC Treviso SRL</product.name>
-		<maven.compiler.release>11</maven.compiler.release>
-		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.release>17</maven.compiler.release>
+		<maven.compiler.target>17</maven.compiler.target>
 		<project.build.outputTimestamp>1665663582</project.build.outputTimestamp>
 
 		<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
@@ -118,7 +118,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<compiler-plugin.version>3.10.1</compiler-plugin.version>
 		<dependency.version.lombok>1.18.22</dependency.version.lombok>
-		<dependency.version.mapstruct>1.4.2.Final</dependency.version.mapstruct>
+		<dependency.version.mapstruct>1.5.2.Final</dependency.version.mapstruct>
 		<biz.aQute.bnd.version>6.2.0</biz.aQute.bnd.version>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
 	</properties>

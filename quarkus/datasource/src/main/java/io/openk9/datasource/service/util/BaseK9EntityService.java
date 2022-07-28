@@ -196,13 +196,10 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 				}
 			}
 
-			Order order = null;
+			Order order = criteriaBuilder.asc(root.get("id"));
 
-			if (first != null) {
-				order = criteriaBuilder.desc(root.get("id"));
-			}
 			if (last != null) {
-				order = criteriaBuilder.asc(root.get("id"));
+				order = criteriaBuilder.desc(root.get("id"));
 			}
 
 			if (order != null) {

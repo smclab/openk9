@@ -402,6 +402,11 @@
 				<artifactId>index-writer-entity-client-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.openk9.quarkus</groupId>
+				<artifactId>datasource-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
