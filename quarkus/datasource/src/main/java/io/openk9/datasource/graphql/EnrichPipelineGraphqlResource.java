@@ -113,7 +113,7 @@ public class EnrichPipelineGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItemToEnrichPipeline(long enrichPipelineId, long enrichItemId) {
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItemFromEnrichPipeline(long enrichPipelineId, long enrichItemId) {
 		return enrichPipelineService.removeEnrichItem(enrichPipelineId, enrichItemId);
 	}
 
