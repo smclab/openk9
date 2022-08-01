@@ -225,7 +225,9 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 				query.setMaxResults(last + 1);
 			}
 
-			Uni<List<T>> entities = query.getResultList();
+			Uni<List<T>> entities = query
+				.setCacheable(true)
+				.getResultList();
 
 			return entities.map(entitiesList -> {
 
