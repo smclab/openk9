@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 
 @Entity
@@ -44,8 +44,8 @@ public class PluginDriver extends K9Entity {
 	@Column(name = "type", nullable = false)
 	private PluginDriverType type;
 
-	@Column(name = "json_config", columnDefinition = "json")
-	@JsonRawValue
+	@Lob
+	@Column(name = "json_config")
 	private String jsonConfig;
 
 	public enum PluginDriverType {

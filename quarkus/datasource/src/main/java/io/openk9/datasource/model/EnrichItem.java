@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -52,8 +51,8 @@ public class EnrichItem extends K9Entity {
 	@Column(name = "validation_script")
 	private String validationScript;
 
-	@Column(name = "json_config", columnDefinition = "json")
-	@JsonRawValue
+	@Lob
+	@Column(name = "json_config")
 	private String jsonConfig;
 
 	public enum EnrichItemType {

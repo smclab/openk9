@@ -20,7 +20,6 @@ package io.openk9.datasource.model;
 import com.cronutils.model.CronType;
 import com.cronutils.validation.Cron;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +31,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
@@ -107,8 +107,8 @@ public class Datasource extends K9Entity {
 	@JsonIgnore
 	private Set<Tenant> tenants = new LinkedHashSet<>();
 
-	@Column(name = "json_config", columnDefinition = "json")
-	@JsonRawValue
+	@Lob
+	@Column(name = "json_config")
 	private String jsonConfig;
 
 	public void addTenant(Tenant tenant) {
