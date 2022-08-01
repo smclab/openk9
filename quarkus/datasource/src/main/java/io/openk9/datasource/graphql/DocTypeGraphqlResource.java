@@ -23,6 +23,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.SortBy;
+import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
@@ -68,8 +69,20 @@ public class DocTypeGraphqlResource {
 		@Description("fetching only the first certain number of nodes") Integer first,
 		@Description("fetching only the last certain number of nodes") Integer last,
 		String searchText, Set<SortBy> sortByList) {
-		return docTypeService.getDocTypeFieldsConnection(
+		return docTypeFields(
 			docType.getId(), after, before, first, last, searchText, sortByList);
+	}
+
+	@Query
+	public Uni<Connection<DocTypeField>> docTypeFields(
+		long docTypeId,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return docTypeService.getDocTypeFieldsConnection(
+			docTypeId, after, before, first, last, searchText, sortByList);
 	}
 
 	@Query
@@ -110,17 +123,28 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Response<DocTypeField>> createDocTypeField(
-		long docTypeId, DocTypeFieldDTO docTypeFieldDTO) {
+	public Uni<Response<DocTypeField>> docTypeField(
+		long docTypeId, Long docTypeFieldId, DocTypeFieldDTO docTypeFieldDTO,
+		@DefaultValue("false") boolean patch) {
 
 		return Uni.createFrom().deferred(() -> {
 
 			List<FieldValidator> validatorList =
-				docTypeService.getValidator().validate(docTypeFieldDTO);
+				docTypeFieldService.getValidator().validate(docTypeFieldDTO);
 
 			if (validatorList.isEmpty()) {
-				return docTypeService.addDocTypeField(docTypeId, docTypeFieldDTO)
-					.map(e -> Response.of(e.right, null));
+
+				if (docTypeFieldId == null) {
+					return docTypeService.addDocTypeField(docTypeId, docTypeFieldDTO)
+						.map(e -> Response.of(e.right, null));
+				} else {
+					return (
+						patch
+							? docTypeFieldService.patch(docTypeFieldId, docTypeFieldDTO)
+							: docTypeFieldService.update(docTypeFieldId, docTypeFieldDTO)
+					).map(e -> Response.of(e, null));
+				}
+
 			}
 
 			return Uni.createFrom().item(Response.of(null, validatorList));
@@ -160,5 +184,8 @@ public class DocTypeGraphqlResource {
 
 	@Inject
 	DocTypeService docTypeService;
+
+	@Inject
+	DocTypeFieldService docTypeFieldService;
 
 }
