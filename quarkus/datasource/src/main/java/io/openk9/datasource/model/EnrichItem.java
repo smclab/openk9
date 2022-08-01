@@ -17,15 +17,14 @@
 
 package io.openk9.datasource.model;
 
-import io.openk9.datasource.graphql.util.JsonObjectAdapter;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.openk9.datasource.model.util.K9Entity;
-import io.smallrye.graphql.api.AdaptWith;
-import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -39,6 +38,7 @@ import javax.persistence.Table;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@Cacheable
 public class EnrichItem extends K9Entity {
 
 	@Enumerated(EnumType.STRING)
@@ -52,9 +52,9 @@ public class EnrichItem extends K9Entity {
 	@Column(name = "validation_script")
 	private String validationScript;
 
-	@Column(name = "json_config")
-	@AdaptWith(JsonObjectAdapter.class)
-	private JsonObject jsonConfig;
+	@Column(name = "json_config", columnDefinition = "json")
+	@JsonRawValue
+	private String jsonConfig;
 
 	public enum EnrichItemType {
 		ASYNC, SYNC

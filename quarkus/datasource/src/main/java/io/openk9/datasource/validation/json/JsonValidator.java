@@ -15,36 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.validation;
+package io.openk9.datasource.validation.json;
 
-import io.openk9.datasource.script.JavascriptService;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonObject;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 @ApplicationScoped
-public class JavascriptScriptValidator implements ConstraintValidator<JavascriptScript, String> {
+public class JsonValidator implements ConstraintValidator<Json, String> {
 	@Override
 	public boolean isValid(String value, ConstraintValidatorContext context) {
 
-		if (value == null) {
-			return true;
+		if (value != null) {
+			try {
+				new JsonObject(value);
+			}
+			catch (DecodeException de) {
+				return false;
+			}
 		}
-
-		return javascriptService.isValidCondition(value)
-			.onFailure(e -> {
-					context.disableDefaultConstraintViolation();
-					context
-						.buildConstraintViolationWithTemplate(e.getMessage())
-						.addConstraintViolation();
-				}
-			)
-			.isSuccess();
+		return true;
 	}
-
-	@Inject
-	JavascriptService javascriptService;
 
 }

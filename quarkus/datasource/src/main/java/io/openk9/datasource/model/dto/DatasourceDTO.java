@@ -19,10 +19,8 @@ package io.openk9.datasource.model.dto;
 
 import com.cronutils.model.CronType;
 import com.cronutils.validation.Cron;
-import io.openk9.datasource.graphql.util.JsonObjectAdapter;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.smallrye.graphql.api.AdaptWith;
-import io.vertx.core.json.JsonObject;
+import io.openk9.datasource.validation.json.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,7 +45,7 @@ public class DatasourceDTO extends K9EntityDTO {
 
 	private Boolean schedulable = false;
 
-	@AdaptWith(JsonObjectAdapter.class)
-	private JsonObject jsonConfig;
+	@Json
+	private String jsonConfig;
 
 }

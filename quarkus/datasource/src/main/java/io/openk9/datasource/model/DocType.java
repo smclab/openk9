@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -37,6 +38,7 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@Cacheable
 public class DocType extends K9Entity {
 	@OneToMany(mappedBy = "docType", cascade = javax.persistence.CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude

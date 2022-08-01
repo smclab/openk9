@@ -20,15 +20,14 @@ package io.openk9.datasource.model;
 import com.cronutils.model.CronType;
 import com.cronutils.validation.Cron;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.graphql.util.JsonObjectAdapter;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.openk9.datasource.model.util.K9Entity;
-import io.smallrye.graphql.api.AdaptWith;
-import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -47,6 +46,7 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@Cacheable
 public class Datasource extends K9Entity {
 
 	@Column(name = "scheduling", nullable = false)
@@ -107,9 +107,9 @@ public class Datasource extends K9Entity {
 	@JsonIgnore
 	private Set<Tenant> tenants = new LinkedHashSet<>();
 
-	@Column(name = "json_config")
-	@AdaptWith(JsonObjectAdapter.class)
-	private JsonObject jsonConfig;
+	@Column(name = "json_config", columnDefinition = "json")
+	@JsonRawValue
+	private String jsonConfig;
 
 	public void addTenant(Tenant tenant) {
 		this.tenants.add(tenant);

@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -32,5 +33,6 @@ import javax.persistence.Table;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@Cacheable
 public class EntityIndex extends K9Entity {
 }

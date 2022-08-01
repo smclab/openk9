@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.validation;
+package io.openk9.datasource.validation.json;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
@@ -25,12 +25,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Constraint(validatedBy={JavascriptScriptValidator.class})
+@Constraint(validatedBy={JsonValidator.class})
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface JavascriptScript {
+public @interface Json {
 
-	String message() default "not a valid javascript script";
+	String message() default "not a valid json";
 
 	Class<?>[] groups() default {};
 
@@ -40,6 +40,6 @@ public @interface JavascriptScript {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@interface List {
-		JavascriptScript[] value();
+		Json[] value();
 	}
 }

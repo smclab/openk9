@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -39,6 +40,7 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@Cacheable
 public class SuggestionCategory extends K9Entity {
 	@ManyToMany(cascade = {
 		javax.persistence.CascadeType.REFRESH,
