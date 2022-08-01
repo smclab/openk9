@@ -833,6 +833,19 @@ export function OpenK9Client({
         throw new Error();
       }
     },
+
+    async getDateFilterFields() {
+      const response = await authFetch(`/api/datasource/v2/date-filter`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        throw new Error();
+      }
+      const data: Array<{ id: number; field: string; label: string }> =
+        await response.json();
+      return data;
+    },
   };
 }
 
