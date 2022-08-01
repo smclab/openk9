@@ -8,6 +8,7 @@ import { it } from "date-fns/locale";
 import { SearchDateRange } from "../embeddable/Main";
 import { useQuery } from "react-query";
 import Select from "react-select";
+import { useOpenK9Client } from "./client";
 
 const DateRangeFix = DateRange as any;
 const DefinedRangeFix = DefinedRange as any;
@@ -40,25 +41,9 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
     value: string;
     label: string;
   } | null>(null);
+  const client = useOpenK9Client();
   const options = useQuery(["date-range-keywordkey-options", {}], async () => {
-    return [
-      {
-        fieldName: "entityInfo.modifiedDate",
-        label: "Data di modifica",
-      },
-      {
-        fieldName: "calendar.date",
-        label: "Data Evento",
-      },
-      {
-        fieldName: "calendar.startTime",
-        label: "Data di inizio evento",
-      },
-      {
-        fieldName: "calendar.endTime",
-        label: "Data di fine evento",
-      },
-    ];
+    return await client.getDateFilterFields();
   });
   return (
     <div>
@@ -71,8 +56,8 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
         isLoading={options.isFetching}
         isSearchable={true}
         options={
-          options.data?.map(({ fieldName, label }) => ({
-            value: fieldName,
+          options.data?.map(({ id, field, label }) => ({
+            value: field,
             label,
           })) ?? []
         }
