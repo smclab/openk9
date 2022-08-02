@@ -17,18 +17,18 @@
 
 package io.openk9.datasource.model.util;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntity;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.eclipse.microprofile.graphql.Id;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
 import javax.persistence.MappedSuperclass;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -38,7 +38,7 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
-public abstract class K9Entity extends PanacheEntity {
+public abstract class K9Entity extends PanacheEntityBase {
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")
@@ -56,7 +56,11 @@ public abstract class K9Entity extends PanacheEntity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Id
+	@javax.persistence.Id
+	@GeneratedValue
+	@org.eclipse.microprofile.graphql.Id
+	public Long id;
+
 	public Long getId() {
 		return id;
 	}

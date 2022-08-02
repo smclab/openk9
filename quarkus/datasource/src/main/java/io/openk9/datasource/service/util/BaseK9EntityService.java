@@ -28,6 +28,7 @@ import io.openk9.datasource.graphql.util.relay.RelayUtil;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.model.util.K9Entity_;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
@@ -52,6 +53,7 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import javax.validation.Validator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,19 +113,37 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		CriteriaBuilder builder = em.getCriteriaBuilder();
 
-		CriteriaQuery<T> joinEntityQuery =
-			builder.createQuery(joinType);
+		CriteriaQuery<T> joinEntityQuery = builder.createQuery(joinType);
 
-		Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
+		if (not) {
 
-		Join<ENTITY, T> join = entityRoot.joinSet(joinField);
+			Root<T> upperRoot = joinEntityQuery.from(joinType);
 
-		return findConnection(
-			joinEntityQuery.distinct(true).select(join), join,
-			not
-				? builder.notEqual(entityRoot.get("id"), entityId)
-				: builder.equal(entityRoot.get("id"), entityId),
-			searchFields, after, before, first, last, searchText, sortByList);
+			Subquery<Long> subquery = joinEntityQuery.subquery(Long.class);
+
+			Root<ENTITY> subRoot = subquery.from(getEntityClass());
+
+			Join<ENTITY, T> subJoin = subRoot.joinSet(joinField);
+
+			subquery.select(subJoin.get(K9Entity_.id));
+
+			return findConnection(
+				joinEntityQuery, upperRoot,
+				builder.in(upperRoot.get(K9Entity_.id)).value(subquery).not(),
+				searchFields, after, before, first, last, searchText, sortByList);
+
+		}
+		else {
+
+			Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
+
+			Join<ENTITY, T> join = entityRoot.joinSet(joinField);
+
+			return findConnection(
+				joinEntityQuery.select(join), join,
+				builder.equal(entityRoot.get(K9Entity_.id), entityId),
+				searchFields, after, before, first, last, searchText, sortByList);
+		}
 
 	}
 
@@ -168,13 +188,13 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			if (after != null) {
 				RelayUtil.Cursor cursor = RelayUtil.decodeCursor(after);
 				where = criteriaBuilder.and(
-					where, criteriaBuilder.greaterThan(root.get("id"), cursor.getId()));
+					where, criteriaBuilder.greaterThan(root.get(K9Entity_.id), cursor.getId()));
 			}
 
 			if (before != null) {
 				RelayUtil.Cursor cursor = RelayUtil.decodeCursor(before);
 				where = criteriaBuilder.and(
-					where, criteriaBuilder.lessThan(root.get("id"), cursor.getId()));
+					where, criteriaBuilder.lessThan(root.get(K9Entity_.id), cursor.getId()));
 			}
 
 			if (searchText != null && !searchText.isBlank()) {
@@ -208,10 +228,10 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 				}
 			}
 
-			Order order = criteriaBuilder.asc(root.get("id"));
+			Order order = criteriaBuilder.asc(root.get(K9Entity_.id));
 
 			if (last != null) {
-				order = criteriaBuilder.desc(root.get("id"));
+				order = criteriaBuilder.desc(root.get(K9Entity_.id));
 			}
 
 			if (order != null) {
@@ -446,11 +466,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	public String[] getSearchFields() {
-		return new String[] {"name"};
+		return new String[] {K9Entity_.NAME};
 	}
 
 	protected String getEntityIdField() {
-		return "id";
+		return K9Entity_.ID;
 	}
 
 	private <T extends K9Entity> Uni<Page<T>> _pageCriteriaQuery(
@@ -581,10 +601,10 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		prefix = (prefix == null || prefix.isEmpty()) ? "" : prefix + ".";
 
 		if (sortBy != null && !sortBy.isBlank()) {
-			return Sort.by(prefix + "id");
+			return Sort.by(prefix + K9Entity_.ID);
 		}
 		else {
-			return Sort.by(prefix + sortBy).and(prefix + "id");
+			return Sort.by(prefix + sortBy).and(prefix + K9Entity_.ID);
 		}
 
 	}
