@@ -5,6 +5,7 @@ export type PdfResultItem = {
     contentType: string;
     url: string;
     content: string;
+    summary: string;
   };
   file: {
     path: string;
