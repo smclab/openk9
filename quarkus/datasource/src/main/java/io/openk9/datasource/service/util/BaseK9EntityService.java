@@ -119,7 +119,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		Join<ENTITY, T> join = entityRoot.joinSet(joinField);
 
 		return findConnection(
-			joinEntityQuery.select(join), join,
+			joinEntityQuery.distinct(true).select(join), join,
 			not
 				? builder.notEqual(entityRoot.get("id"), entityId)
 				: builder.equal(entityRoot.get("id"), entityId),
