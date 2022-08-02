@@ -5,5 +5,6 @@ export type DocumentResultItem = {
     contentType: string;
     url: string;
     content: string;
+    summary: string;
   };
 };

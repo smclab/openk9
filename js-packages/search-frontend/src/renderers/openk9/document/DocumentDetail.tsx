@@ -27,7 +27,37 @@ export function DocumentDetail({ result }: DocumentDetailProps) {
       <DetailLink href={result.source.document.url}>
         <HighlightableText result={result} path="document.url" />
       </DetailLink>
-      <DetailTextContent result={result} path="document.content" />
+      {'document.content' in result.highlight ? (
+          <div
+            style={{
+              marginTop: "8px",
+              maxWidth: "100%",
+              lineHeight: "1em",
+              maxHeight: "6em",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              wordWrap: "break-word",
+              wordBreak: "break-word",
+            }}
+          >
+            <HighlightableText result={result} path="document.content" />
+          </div>
+        ) : (
+          <div
+            style={{
+              marginTop: "8px",
+              maxWidth: "100%",
+              lineHeight: "1em",
+              maxHeight: "6em",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              wordWrap: "break-word",
+              wordBreak: "break-word",
+            }}
+          >
+            <DetailTextContent result={result} path="document.summary" />
+          </div>
+        )}
     </DetailContainer>
   );
 }
