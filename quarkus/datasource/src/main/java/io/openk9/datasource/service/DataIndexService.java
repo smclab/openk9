@@ -48,11 +48,12 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 
 	public Uni<Connection<DocType>> getDocTypesConnection(
 		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList) {
+		String searchText, Set<SortBy> sortByList, boolean not) {
 		return findJoinConnection(
 			id, "docTypes", DocType.class, docTypeService.getSearchFields(),
-			after, before, first, last, searchText, sortByList);
+			after, before, first, last, searchText, sortByList, not);
 	}
+
 	public Uni<Page<DocType>> getDocTypes(
 		long dataIndexId, Pageable pageable, String searchText) {
 

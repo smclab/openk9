@@ -46,12 +46,12 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 	public Uni<Connection<Datasource>> getDatasourcesConnection(
 		long tenantId, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList) {
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
 		return findJoinConnection(
 			tenantId, "datasources", Datasource.class,
 			datasourceService.getSearchFields(), after, before, first, last,
-			searchText, sortByList);
+			searchText, sortByList, notEqual);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(List<Tenant> tenants, Pageable pageable) {
@@ -98,11 +98,11 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 	public Uni<Connection<SuggestionCategory>> getSuggestionCategoriesConnection(
 		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList) {
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 		return findJoinConnection(
 			id, "suggestionCategories", SuggestionCategory.class,
 			suggestionCategoryService.getSearchFields(), after, before, first,
-			last, searchText, sortByList);
+			last, searchText, sortByList, notEqual);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(

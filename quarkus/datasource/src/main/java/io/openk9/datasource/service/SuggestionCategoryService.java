@@ -46,12 +46,12 @@ public class SuggestionCategoryService extends
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
 		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList) {
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
 		return findJoinConnection(
 			id, "docTypeFields", DocTypeField.class,
 			docTypeFieldService.getSearchFields(),
-			after, before, first, last, searchText, sortByList
+			after, before, first, last, searchText, sortByList, notEqual
 		);
 	}
 

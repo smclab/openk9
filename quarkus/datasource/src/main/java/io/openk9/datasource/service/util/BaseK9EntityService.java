@@ -88,7 +88,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return findJoinConnection(
 			entityId, joinField, joinType, searchFields, after, before, first,
-			last, null, Set.of());
+			last, null, Set.of(), false);
 
 	}
 
@@ -97,6 +97,17 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		String[] searchFields, String after,
 		String before, Integer first, Integer last, String searchText,
 		Set<SortBy> sortByList) {
+
+		return findJoinConnection(
+			entityId, joinField, joinType, searchFields, after, before, first,
+			last, searchText, sortByList, false);
+
+	}
+	public <T extends K9Entity> Uni<Connection<T>> findJoinConnection(
+		long entityId, String joinField, Class<T> joinType,
+		String[] searchFields, String after,
+		String before, Integer first, Integer last, String searchText,
+		Set<SortBy> sortByList, boolean not) {
 
 		CriteriaBuilder builder = em.getCriteriaBuilder();
 
@@ -109,9 +120,10 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return findConnection(
 			joinEntityQuery.select(join), join,
-			builder.equal(entityRoot.get("id"), entityId), searchFields, after,
-			before, first, last, searchText, sortByList);
-
+			not
+				? builder.notEqual(entityRoot.get("id"), entityId)
+				: builder.equal(entityRoot.get("id"), entityId),
+			searchFields, after, before, first, last, searchText, sortByList);
 
 	}
 

@@ -63,10 +63,11 @@ public class SuggestionCategoryGraphqlResource {
 		@Description("fetching only nodes before this node (exclusive)") String before,
 		@Description("fetching only the first certain number of nodes") Integer first,
 		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList) {
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities")@DefaultValue("false") boolean notEqual) {
 		return suggestionCategoryService.getDocTypeFieldsConnection(
 			suggestionCategory.getId(), after, before, first, last, searchText,
-			sortByList);
+			sortByList, notEqual);
 	}
 
 	@Query

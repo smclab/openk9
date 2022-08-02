@@ -64,10 +64,12 @@ public class TenantGraphqlResource {
 		@Description("fetching only nodes before this node (exclusive)") String before,
 		@Description("fetching only the first certain number of nodes") Integer first,
 		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList) {
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
 
 		return tenantService.getDatasourcesConnection(
-			tenant.getId(), after, before, first, last, searchText, sortByList);
+			tenant.getId(), after, before, first, last, searchText, sortByList,
+			notEqual);
 	}
 
 	public Uni<Connection<SuggestionCategory>> suggestionCategories(
@@ -76,10 +78,12 @@ public class TenantGraphqlResource {
 		@Description("fetching only nodes before this node (exclusive)") String before,
 		@Description("fetching only the first certain number of nodes") Integer first,
 		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList) {
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
 
 		return tenantService.getSuggestionCategoriesConnection(
-			tenant.getId(), after, before, first, last, searchText, sortByList);
+			tenant.getId(), after, before, first, last, searchText, sortByList,
+			notEqual);
 	}
 
 	@Query

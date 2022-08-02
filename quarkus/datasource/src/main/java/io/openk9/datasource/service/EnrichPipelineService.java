@@ -43,12 +43,12 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 	public Uni<Connection<EnrichItem>> getEnrichItemsConnection(
 		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList) {
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
 		return findJoinConnection(
 			id, "enrichItems", EnrichItem.class,
 			enrichItemService.getSearchFields(), after, before, first,
-			last, searchText, sortByList);
+			last, searchText, sortByList, notEqual);
 	}
 
 	public Uni<Page<EnrichItem>> getEnrichItems(
