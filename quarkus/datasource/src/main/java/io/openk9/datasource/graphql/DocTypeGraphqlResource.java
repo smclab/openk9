@@ -40,6 +40,7 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -91,6 +92,15 @@ public class DocTypeGraphqlResource {
 	@Query
 	public Uni<DocType> getDocType(@Id long id) {
 		return docTypeService.findById(id);
+	}
+
+	@Query
+	public Uni<DocTypeField> getDocTypeField(@Id long id) {
+		return docTypeFieldService.findById(id);
+	}
+
+	public Uni<DocType> docType(@Source DocTypeField docTypeField) {
+		return Mutiny.fetch(docTypeField.getDocType());
 	}
 
 	public Uni<Response<DocType>> patchDocType(@Id long id, DocTypeDTO docTypeDTO) {

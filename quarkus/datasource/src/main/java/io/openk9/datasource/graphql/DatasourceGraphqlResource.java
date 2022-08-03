@@ -62,7 +62,7 @@ public class DatasourceGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
-	public Uni<EnrichPipeline> enrichProcessor(
+	public Uni<EnrichPipeline> enrichPipeline(
 		@Source Datasource datasource) {
 		return datasourceService.getEnrichPipeline(datasource.getId());
 	}

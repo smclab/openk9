@@ -114,7 +114,7 @@ public class SuggestionCategoryGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeFieldToSuggestionCategory(@Id long suggestionCategoryId, @Id long docTypeFieldId) {
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeFieldFromSuggestionCategory(@Id long suggestionCategoryId, @Id long docTypeFieldId) {
 		return suggestionCategoryService.removeDocTypeField(suggestionCategoryId, docTypeFieldId);
 	}
 
