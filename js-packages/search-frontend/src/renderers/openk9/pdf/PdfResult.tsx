@@ -49,7 +49,7 @@ export function PdfResult({ result }: PdfResultProps) {
             wordBreak: "break-word",
           }}
         >
-          <DetailTextContent result={result} path="document.summary" />
+          <ResultTextContent result={result} path="document.summary" />
         </div>
       )}
     </ResultContainer>
