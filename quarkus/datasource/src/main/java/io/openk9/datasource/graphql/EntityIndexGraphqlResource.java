@@ -31,6 +31,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 
@@ -55,15 +56,15 @@ public class EntityIndexGraphqlResource {
 	}
 
 	@Query
-	public Uni<EntityIndex> getEntityIndex(long id) {
+	public Uni<EntityIndex> getEntityIndex(@Id long id) {
 		return entityIndexService.findById(id);
 	}
 
-	public Uni<Response<EntityIndex>> patchEntityIndex(long id, EntityIndexDTO entityIndexDTO) {
+	public Uni<Response<EntityIndex>> patchEntityIndex(@Id long id, EntityIndexDTO entityIndexDTO) {
 		return entityIndexService.getValidator().patch(id, entityIndexDTO);
 	}
 
-	public Uni<Response<EntityIndex>> updateEntityIndex(long id, EntityIndexDTO entityIndexDTO) {
+	public Uni<Response<EntityIndex>> updateEntityIndex(@Id long id, EntityIndexDTO entityIndexDTO) {
 		return entityIndexService.getValidator().update(id, entityIndexDTO);
 	}
 
@@ -73,7 +74,7 @@ public class EntityIndexGraphqlResource {
 
 	@Mutation
 	public Uni<Response<EntityIndex>> entityIndex(
-		Long id, EntityIndexDTO entityIndexDTO,
+		@Id Long id, EntityIndexDTO entityIndexDTO,
 		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
@@ -87,7 +88,7 @@ public class EntityIndexGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<EntityIndex> deleteEntityIndex(long entityIndexId) {
+	public Uni<EntityIndex> deleteEntityIndex(@Id long entityIndexId) {
 		return entityIndexService.deleteById(entityIndexId);
 	}
 

@@ -34,6 +34,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
@@ -87,15 +88,15 @@ public class TenantGraphqlResource {
 	}
 
 	@Query
-	public Uni<Tenant> getTenant(long id) {
+	public Uni<Tenant> getTenant(@Id long id) {
 		return tenantService.findById(id);
 	}
 
-	public Uni<Response<Tenant>> patchTenant(long id, TenantDTO tenantDTO) {
+	public Uni<Response<Tenant>> patchTenant(@Id long id, TenantDTO tenantDTO) {
 		return tenantService.getValidator().patch(id, tenantDTO);
 	}
 
-	public Uni<Response<Tenant>> updateTenant(long id, TenantDTO tenantDTO) {
+	public Uni<Response<Tenant>> updateTenant(@Id long id, TenantDTO tenantDTO) {
 		return tenantService.getValidator().update(id, tenantDTO);
 	}
 
@@ -105,7 +106,7 @@ public class TenantGraphqlResource {
 
 	@Mutation
 	public Uni<Response<Tenant>> tenant(
-		Long id, TenantDTO tenantDTO, @DefaultValue("false") boolean patch) {
+		@Id Long id, TenantDTO tenantDTO, @DefaultValue("false") boolean patch) {
 
 		if (id == null) {
 			return createTenant(tenantDTO);
@@ -118,27 +119,27 @@ public class TenantGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tenant> deleteTenant(long tenantId) {
+	public Uni<Tenant> deleteTenant(@Id long tenantId) {
 		return tenantService.deleteById(tenantId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Tenant, Datasource>> addDatasourceToTenant(long tenantId, long datasourceId) {
+	public Uni<Tuple2<Tenant, Datasource>> addDatasourceToTenant(@Id long tenantId, @Id long datasourceId) {
 		return tenantService.addDatasource(tenantId, datasourceId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Tenant, Datasource>> removeDatasourceFromTenant(long tenantId, long datasourceId) {
+	public Uni<Tuple2<Tenant, Datasource>> removeDatasourceFromTenant(@Id long tenantId, @Id long datasourceId) {
 		return tenantService.removeDatasource(tenantId, datasourceId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Tenant, SuggestionCategory>> addSuggestionCategoryToTenant(long tenantId, long suggestionCategoryId) {
+	public Uni<Tuple2<Tenant, SuggestionCategory>> addSuggestionCategoryToTenant(@Id long tenantId, @Id long suggestionCategoryId) {
 		return tenantService.addSuggestionCategory(tenantId, suggestionCategoryId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Tenant, SuggestionCategory>> removeSuggestionCategoryFromTenant(long tenantId, long suggestionCategoryId) {
+	public Uni<Tuple2<Tenant, SuggestionCategory>> removeSuggestionCategoryFromTenant(@Id long tenantId, @Id long suggestionCategoryId) {
 		return tenantService.removeSuggestionCategory(tenantId, suggestionCategoryId);
 	}
 

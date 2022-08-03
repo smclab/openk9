@@ -31,6 +31,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 
@@ -55,15 +56,15 @@ public class PluginDriverGraphqlResource {
 	}
 
 	@Query
-	public Uni<PluginDriver> getPluginDriver(long id) {
+	public Uni<PluginDriver> getPluginDriver(@Id long id) {
 		return pluginDriverService.findById(id);
 	}
 
-	public Uni<Response<PluginDriver>> patchPluginDriver(long id, PluginDriverDTO pluginDriverDTO) {
+	public Uni<Response<PluginDriver>> patchPluginDriver(@Id long id, PluginDriverDTO pluginDriverDTO) {
 		return pluginDriverService.getValidator().patch(id, pluginDriverDTO);
 	}
 
-	public Uni<Response<PluginDriver>> updatePluginDriver(long id, PluginDriverDTO pluginDriverDTO) {
+	public Uni<Response<PluginDriver>> updatePluginDriver(@Id long id, PluginDriverDTO pluginDriverDTO) {
 		return pluginDriverService.getValidator().update(id, pluginDriverDTO);
 	}
 
@@ -73,7 +74,7 @@ public class PluginDriverGraphqlResource {
 
 	@Mutation
 	public Uni<Response<PluginDriver>> pluginDriver(
-		Long id, PluginDriverDTO pluginDriverDTO,
+		@Id Long id, PluginDriverDTO pluginDriverDTO,
 		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
@@ -87,7 +88,7 @@ public class PluginDriverGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<PluginDriver> deletePluginDriver(long pluginDriverId) {
+	public Uni<PluginDriver> deletePluginDriver(@Id long pluginDriverId) {
 		return pluginDriverService.deleteById(pluginDriverId);
 	}
 

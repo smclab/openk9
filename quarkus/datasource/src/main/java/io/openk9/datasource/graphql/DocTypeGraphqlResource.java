@@ -36,6 +36,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
@@ -76,7 +77,7 @@ public class DocTypeGraphqlResource {
 
 	@Query
 	public Uni<Connection<DocTypeField>> getDocTypeFields(
-		long docTypeId,
+		@Id long docTypeId,
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,
 		@Description("fetching only the first certain number of nodes") Integer first,
@@ -88,15 +89,15 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Query
-	public Uni<DocType> getDocType(long id) {
+	public Uni<DocType> getDocType(@Id long id) {
 		return docTypeService.findById(id);
 	}
 
-	public Uni<Response<DocType>> patchDocType(long id, DocTypeDTO docTypeDTO) {
+	public Uni<Response<DocType>> patchDocType(@Id long id, DocTypeDTO docTypeDTO) {
 		return docTypeService.getValidator().patch(id, docTypeDTO);
 	}
 
-	public Uni<Response<DocType>> updateDocType(long id, DocTypeDTO docTypeDTO) {
+	public Uni<Response<DocType>> updateDocType(@Id long id, DocTypeDTO docTypeDTO) {
 		return docTypeService.getValidator().update(id, docTypeDTO);
 	}
 
@@ -106,7 +107,7 @@ public class DocTypeGraphqlResource {
 
 	@Mutation
 	public Uni<Response<DocType>> docType(
-		Long id, DocTypeDTO docTypeDTO,
+		@Id Long id, DocTypeDTO docTypeDTO,
 		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
@@ -120,13 +121,13 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<DocType> deleteDocType(long docTypeId) {
+	public Uni<DocType> deleteDocType(@Id long docTypeId) {
 		return docTypeService.deleteById(docTypeId);
 	}
 
 	@Mutation
 	public Uni<Response<DocTypeField>> docTypeField(
-		long docTypeId, Long docTypeFieldId, DocTypeFieldDTO docTypeFieldDTO,
+		@Id long docTypeId, @Id Long docTypeFieldId, DocTypeFieldDTO docTypeFieldDTO,
 		@DefaultValue("false") boolean patch) {
 
 		return Uni.createFrom().deferred(() -> {
@@ -156,7 +157,7 @@ public class DocTypeGraphqlResource {
 
 	@Mutation
 	public Uni<Tuple2<DocType, Long>> removeDocTypeField(
-		long docTypeId, long docTypeFieldId) {
+		@Id long docTypeId, @Id long docTypeFieldId) {
 		return docTypeService.removeDocTypeField(docTypeId, docTypeFieldId);
 	}
 

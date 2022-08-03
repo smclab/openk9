@@ -36,6 +36,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
@@ -79,15 +80,15 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Query
-	public Uni<Datasource> getDatasource(long id) {
+	public Uni<Datasource> getDatasource(@Id long id) {
 		return datasourceService.findById(id);
 	}
 
-	public Uni<Response<Datasource>> patchDatasource(long id, DatasourceDTO datasourceDTO) {
+	public Uni<Response<Datasource>> patchDatasource(@Id long id, DatasourceDTO datasourceDTO) {
 		return datasourceService.getValidator().patch(id, datasourceDTO);
 	}
 
-	public Uni<Response<Datasource>> updateDatasource(long id, DatasourceDTO datasourceDTO) {
+	public Uni<Response<Datasource>> updateDatasource(@Id long id, DatasourceDTO datasourceDTO) {
 		return datasourceService.getValidator().update(id, datasourceDTO);
 	}
 
@@ -97,7 +98,7 @@ public class DatasourceGraphqlResource {
 
 	@Mutation
 	public Uni<Response<Datasource>> datasource(
-		Long id, DatasourceDTO datasourceDTO,
+		@Id Long id, DatasourceDTO datasourceDTO,
 		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
@@ -111,59 +112,59 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Datasource> deleteDatasource(long datasourceId) {
+	public Uni<Datasource> deleteDatasource(@Id long datasourceId) {
 		return datasourceService.deleteById(datasourceId);
 	}
 
 	@Mutation
 	public Uni<Tuple2<Datasource, EntityIndex>> bindEntityIndexToDatasource(
-		@Name("datasourceId") long datasourceId,
-		@Name("entityIndexId") long entityIndexId) {
+		@Id @Name("datasourceId") long datasourceId,
+		@Id @Name("entityIndexId") long entityIndexId) {
 		return datasourceService.setEntityIndex(datasourceId, entityIndexId);
 	}
 
 	@Mutation
 	public Uni<Datasource> unbindEntityIndexToDatasource(
-		@Name("datasourceId") long datasourceId) {
+		@Id @Name("datasourceId") long datasourceId) {
 		return datasourceService.unsetEntityIndex(datasourceId);
 	}
 
 	@Mutation
 	public Uni<Tuple2<Datasource, DataIndex>> bindDataIndexToDatasource(
-		@Name("datasourceId") long datasourceId,
-		@Name("dataIndexId") long dataIndexId) {
+		@Id @Name("datasourceId") long datasourceId,
+		@Id @Name("dataIndexId") long dataIndexId) {
 		return datasourceService.setDataIndex(datasourceId, dataIndexId);
 	}
 
 	@Mutation
 	public Uni<Datasource> unbindDataIndexFromDatasource(
-		@Name("datasourceId") long datasourceId) {
+		@Id @Name("datasourceId") long datasourceId) {
 		return datasourceService.unsetDataIndex(datasourceId);
 	}
 
 	@Mutation
 	public Uni<Tuple2<Datasource, EnrichPipeline>> bindEnrichPipelineToDatasource(
-		@Name("datasourceId") long datasourceId,
-		@Name("enrichPipelineId") long enrichPipelineId) {
+		@Id @Name("datasourceId") long datasourceId,
+		@Id @Name("enrichPipelineId") long enrichPipelineId) {
 		return datasourceService.setEnrichPipeline(datasourceId, enrichPipelineId);
 	}
 
 	@Mutation
 	public Uni<Datasource> unbindEnrichPipelineToDatasource(
-		@Name("datasourceId") long datasourceId) {
+		@Id @Name("datasourceId") long datasourceId) {
 		return datasourceService.unsetEnrichPipeline(datasourceId);
 	}
 
 	@Mutation
 	public Uni<Tuple2<Datasource, PluginDriver>> bindPluginDriverToDatasource(
-		@Name("datasourceId") long datasourceId,
-		@Name("pluginDriverId") long pluginDriverId) {
+		@Id @Name("datasourceId") long datasourceId,
+		@Id @Name("pluginDriverId") long pluginDriverId) {
 		return datasourceService.setPluginDriver(datasourceId, pluginDriverId);
 	}
 
 	@Mutation
 	public Uni<Datasource> unbindPluginDriverToDatasource(
-		@Name("datasourceId") long datasourceId) {
+		@Id @Name("datasourceId") long datasourceId) {
 		return datasourceService.unsetPluginDriver(datasourceId);
 	}
 

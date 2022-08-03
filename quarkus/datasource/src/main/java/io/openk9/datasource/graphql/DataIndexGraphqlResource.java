@@ -33,6 +33,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
@@ -72,15 +73,15 @@ public class DataIndexGraphqlResource {
 	}
 
 	@Query
-	public Uni<DataIndex> getDataIndex(long id) {
+	public Uni<DataIndex> getDataIndex(@Id long id) {
 		return dataIndexService.findById(id);
 	}
 
-	public Uni<Response<DataIndex>> patchDataIndex(long id, DataIndexDTO dataIndexDTO) {
+	public Uni<Response<DataIndex>> patchDataIndex(@Id long id, DataIndexDTO dataIndexDTO) {
 		return dataIndexService.getValidator().patch(id, dataIndexDTO);
 	}
 
-	public Uni<Response<DataIndex>> updateDataIndex(long id, DataIndexDTO dataIndexDTO) {
+	public Uni<Response<DataIndex>> updateDataIndex(@Id long id, DataIndexDTO dataIndexDTO) {
 		return dataIndexService.getValidator().update(id, dataIndexDTO);
 	}
 
@@ -90,7 +91,7 @@ public class DataIndexGraphqlResource {
 
 	@Mutation
 	public Uni<Response<DataIndex>> dataIndex(
-		Long id, DataIndexDTO dataIndexDTO,
+		@Id Long id, DataIndexDTO dataIndexDTO,
 		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
@@ -104,17 +105,17 @@ public class DataIndexGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<DataIndex> deleteDataIndex(long dataIndexId) {
+	public Uni<DataIndex> deleteDataIndex(@Id long dataIndexId) {
 		return dataIndexService.deleteById(dataIndexId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<DataIndex, DocType>> addDocTypeToDataIndex(long dataIndexId, long docTypeId) {
+	public Uni<Tuple2<DataIndex, DocType>> addDocTypeToDataIndex(@Id long dataIndexId, @Id long docTypeId) {
 		return dataIndexService.addDocType(dataIndexId, docTypeId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<DataIndex, DocType>> removeDocTypeFromDataIndex(long dataIndexId, long docTypeId) {
+	public Uni<Tuple2<DataIndex, DocType>> removeDocTypeFromDataIndex(@Id long dataIndexId, @Id long docTypeId) {
 		return dataIndexService.removeDocType(dataIndexId, docTypeId);
 	}
 

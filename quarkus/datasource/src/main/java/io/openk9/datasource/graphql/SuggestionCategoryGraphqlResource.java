@@ -33,6 +33,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
@@ -71,15 +72,15 @@ public class SuggestionCategoryGraphqlResource {
 	}
 
 	@Query
-	public Uni<SuggestionCategory> getSuggestionCategory(long id) {
+	public Uni<SuggestionCategory> getSuggestionCategory(@Id long id) {
 		return suggestionCategoryService.findById(id);
 	}
 
-	public Uni<Response<SuggestionCategory>> patchSuggestionCategory(long id, SuggestionCategoryDTO suggestionCategoryDTO) {
+	public Uni<Response<SuggestionCategory>> patchSuggestionCategory(@Id long id, SuggestionCategoryDTO suggestionCategoryDTO) {
 		return suggestionCategoryService.getValidator().patch(id, suggestionCategoryDTO);
 	}
 
-	public Uni<Response<SuggestionCategory>> updateSuggestionCategory(long id, SuggestionCategoryDTO suggestionCategoryDTO) {
+	public Uni<Response<SuggestionCategory>> updateSuggestionCategory(@Id long id, SuggestionCategoryDTO suggestionCategoryDTO) {
 		return suggestionCategoryService.getValidator().update(id, suggestionCategoryDTO);
 	}
 
@@ -89,7 +90,7 @@ public class SuggestionCategoryGraphqlResource {
 
 	@Mutation
 	public Uni<Response<SuggestionCategory>> suggestionCategory(
-		Long id, SuggestionCategoryDTO suggestionCategoryDTO,
+		@Id Long id, SuggestionCategoryDTO suggestionCategoryDTO,
 		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
@@ -103,17 +104,17 @@ public class SuggestionCategoryGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<SuggestionCategory> deleteSuggestionCategory(long suggestionCategoryId) {
+	public Uni<SuggestionCategory> deleteSuggestionCategory(@Id long suggestionCategoryId) {
 		return suggestionCategoryService.deleteById(suggestionCategoryId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeFieldToSuggestionCategory(long suggestionCategoryId, long docTypeFieldId) {
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeFieldToSuggestionCategory(@Id long suggestionCategoryId, @Id long docTypeFieldId) {
 		return suggestionCategoryService.addDocTypeField(suggestionCategoryId, docTypeFieldId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeFieldToSuggestionCategory(long suggestionCategoryId, long docTypeFieldId) {
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeFieldToSuggestionCategory(@Id long suggestionCategoryId, @Id long docTypeFieldId) {
 		return suggestionCategoryService.removeDocTypeField(suggestionCategoryId, docTypeFieldId);
 	}
 

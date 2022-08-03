@@ -31,6 +31,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 
@@ -55,15 +56,15 @@ public class EnrichItemGraphqlResource {
 	}
 
 	@Query
-	public Uni<EnrichItem> getEnrichItem(long id) {
+	public Uni<EnrichItem> getEnrichItem(@Id long id) {
 		return enrichItemService.findById(id);
 	}
 
-	public Uni<Response<EnrichItem>> patchEnrichItem(long id, EnrichItemDTO enrichItemDTO) {
+	public Uni<Response<EnrichItem>> patchEnrichItem(@Id long id, EnrichItemDTO enrichItemDTO) {
 		return enrichItemService.getValidator().patch(id, enrichItemDTO);
 	}
 
-	public Uni<Response<EnrichItem>> updateEnrichItem(long id, EnrichItemDTO enrichItemDTO) {
+	public Uni<Response<EnrichItem>> updateEnrichItem(@Id long id, EnrichItemDTO enrichItemDTO) {
 		return enrichItemService.getValidator().update(id, enrichItemDTO);
 	}
 
@@ -73,7 +74,7 @@ public class EnrichItemGraphqlResource {
 
 	@Mutation
 	public Uni<Response<EnrichItem>> enrichItem(
-		Long id, EnrichItemDTO enrichItemDTO,
+		@Id Long id, EnrichItemDTO enrichItemDTO,
 		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
@@ -88,7 +89,7 @@ public class EnrichItemGraphqlResource {
 
 
 	@Mutation
-	public Uni<EnrichItem> deleteEnrichItem(long enrichItemId) {
+	public Uni<EnrichItem> deleteEnrichItem(@Id long enrichItemId) {
 		return enrichItemService.deleteById(enrichItemId);
 	}
 

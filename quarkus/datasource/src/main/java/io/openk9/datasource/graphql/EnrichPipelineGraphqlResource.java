@@ -33,6 +33,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
@@ -71,15 +72,15 @@ public class EnrichPipelineGraphqlResource {
 	}
 
 	@Query
-	public Uni<EnrichPipeline> getEnrichPipeline(long id) {
+	public Uni<EnrichPipeline> getEnrichPipeline(@Id long id) {
 		return enrichPipelineService.findById(id);
 	}
 
-	public Uni<Response<EnrichPipeline>> patchEnrichPipeline(long id, EnrichPipelineDTO enrichPipelineDTO) {
+	public Uni<Response<EnrichPipeline>> patchEnrichPipeline(@Id long id, EnrichPipelineDTO enrichPipelineDTO) {
 		return enrichPipelineService.getValidator().patch(id, enrichPipelineDTO);
 	}
 
-	public Uni<Response<EnrichPipeline>> updateEnrichPipeline(long id, EnrichPipelineDTO enrichPipelineDTO) {
+	public Uni<Response<EnrichPipeline>> updateEnrichPipeline(@Id long id, EnrichPipelineDTO enrichPipelineDTO) {
 		return enrichPipelineService.getValidator().update(id, enrichPipelineDTO);
 	}
 
@@ -89,7 +90,7 @@ public class EnrichPipelineGraphqlResource {
 
 	@Mutation
 	public Uni<Response<EnrichPipeline>> enrichPipeline(
-		Long id, EnrichPipelineDTO enrichPipelineDTO,
+		@Id Long id, EnrichPipelineDTO enrichPipelineDTO,
 		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
@@ -103,18 +104,18 @@ public class EnrichPipelineGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<EnrichPipeline> deleteEnrichPipeline(long enrichPipelineId) {
+	public Uni<EnrichPipeline> deleteEnrichPipeline(@Id long enrichPipelineId) {
 		return enrichPipelineService.deleteById(enrichPipelineId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItemToEnrichPipeline(long enrichPipelineId, long enrichItemId) {
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItemToEnrichPipeline(@Id long enrichPipelineId, @Id long enrichItemId) {
 		return enrichPipelineService.addEnrichItem(
 				enrichPipelineId, enrichItemId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItemFromEnrichPipeline(long enrichPipelineId, long enrichItemId) {
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItemFromEnrichPipeline(@Id long enrichPipelineId, @Id long enrichItemId) {
 		return enrichPipelineService.removeEnrichItem(enrichPipelineId, enrichItemId);
 	}
 
