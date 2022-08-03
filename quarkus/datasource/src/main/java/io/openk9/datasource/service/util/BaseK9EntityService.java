@@ -41,6 +41,7 @@ import io.quarkus.panache.common.Sort;
 import io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.reactivestreams.Processor;
@@ -206,6 +207,13 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 						searchConditions, criteriaBuilder.like(
 							criteriaBuilder.lower(root.get(searchField)),
 							"%" + searchText.toLowerCase() + "%")
+					);
+				}
+
+				if (StringUtils.isNumeric(searchText)) {
+					searchConditions = criteriaBuilder.or(
+						searchConditions, criteriaBuilder.equal(
+							root.get(K9Entity_.id), Long.parseLong(searchText))
 					);
 				}
 
