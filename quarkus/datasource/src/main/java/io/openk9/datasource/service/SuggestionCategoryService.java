@@ -22,6 +22,7 @@ import io.openk9.datasource.mapper.SuggestionCategoryMapper;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -29,7 +30,6 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -90,13 +90,13 @@ public class SuggestionCategoryService extends
 
 	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeField(
 		long suggestionCategoryId, long docTypeFieldId) {
-		return withTransaction(() -> findById(suggestionCategoryId)
+		return withTransaction((s) -> findById(suggestionCategoryId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(docTypeField -> Mutiny.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
+				.transformToUni(docTypeField -> Mutiny2.fetch(s, suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
 					if (docTypeFields.add(docTypeField)) {
 						suggestionCategory.setDocTypeFields(docTypeFields);
 						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
@@ -108,13 +108,13 @@ public class SuggestionCategoryService extends
 
 	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeField(
 		long suggestionCategoryId, long docTypeFieldId) {
-		return withTransaction(() -> findById(suggestionCategoryId)
+		return withTransaction((s) -> findById(suggestionCategoryId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(docTypeField -> Mutiny.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
+				.transformToUni(docTypeField -> Mutiny2.fetch(s, suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
 					if (docTypeFields.remove(docTypeField)) {
 						suggestionCategory.setDocTypeFields(docTypeFields);
 						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));

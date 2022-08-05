@@ -24,6 +24,7 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -135,7 +136,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 			.transformToUni(tenant -> datasourceService.findById(datasourceId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(datasource -> Mutiny.fetch(datasource.getTenants()).flatMap(tenants -> {
+				.transformToUni(datasource -> Mutiny2.fetch(s, datasource.getTenants()).flatMap(tenants -> {
 					if (tenants.remove(tenant)) {
 						datasource.setTenants(tenants);
 						return persist(datasource).map((newD) -> Tuple2.of(tenant, newD));
@@ -152,7 +153,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 			.transformToUni(tenant -> datasourceService.findById(datasourceId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(datasource -> Mutiny.fetch(datasource.getTenants()).flatMap(tenants -> {
+				.transformToUni(datasource -> Mutiny2.fetch(s, datasource.getTenants()).flatMap(tenants -> {
 					if (tenants.add(tenant)) {
 						datasource.setTenants(tenants);
 						return persist(datasource).map(newD -> Tuple2.of(tenant, newD));
@@ -170,7 +171,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 				.onItem()
 				.ifNotNull()
 				.transformToUni(suggestionCategory ->
-					Mutiny.fetch(tenant.getSuggestionCategories())
+					Mutiny2.fetch(s, tenant.getSuggestionCategories())
 						.onItem()
 						.ifNotNull()
 						.transformToUni(suggestionCategories -> {
@@ -193,7 +194,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		return withTransaction((s, tr) -> findById(tenantId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(tenant -> Mutiny.fetch(tenant.getSuggestionCategories())
+			.transformToUni(tenant -> Mutiny2.fetch(s, tenant.getSuggestionCategories())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(suggestionCategories -> {

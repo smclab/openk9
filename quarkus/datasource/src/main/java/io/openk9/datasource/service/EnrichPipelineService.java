@@ -22,6 +22,7 @@ import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
+import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -29,7 +30,6 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -80,14 +80,14 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(long enrichPipelineId, long enrichItemId) {
-		return withTransaction(() -> findById(enrichPipelineId)
+		return withTransaction((s) -> findById(enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline ->
 				enrichItemService.findById(enrichItemId)
 					.onItem()
 					.ifNotNull()
-					.transformToUni(enrichItem -> Mutiny.fetch(enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
+					.transformToUni(enrichItem -> Mutiny2.fetch(s, enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
 						if (enrichItems.add(enrichItem)) {
 							enrichPipeline.setEnrichItems(enrichItems);
 							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
@@ -98,14 +98,14 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItem(long enrichPipelineId, long enrichItemId) {
-		return withTransaction(() -> findById(enrichPipelineId)
+		return withTransaction((s) -> findById(enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline ->
 				enrichItemService.findById(enrichItemId)
 					.onItem()
 					.ifNotNull()
-					.transformToUni(enrichItem -> Mutiny.fetch(enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
+					.transformToUni(enrichItem -> Mutiny2.fetch(s, enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
 						if (enrichItems.remove(enrichItem)) {
 							enrichPipeline.setEnrichItems(enrichItems);
 							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));

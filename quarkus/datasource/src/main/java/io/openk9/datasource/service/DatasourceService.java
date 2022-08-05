@@ -24,10 +24,10 @@ import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
+import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -39,15 +39,18 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<EntityIndex> getEntityIndex(long datasourceId) {
-		return findById(datasourceId).flatMap(d -> Mutiny.fetch(d.getEntityIndex()));
+		return withTransaction(
+			s -> findById(datasourceId).flatMap(d -> Mutiny2.fetch(s, d.getEntityIndex())));
 	}
 
 	public Uni<DataIndex> getDataIndex(long datasourceId) {
-		return findById(datasourceId).flatMap(d -> Mutiny.fetch(d.getDataIndex()));
+		return withTransaction(
+			s -> findById(datasourceId).flatMap(d -> Mutiny2.fetch(s, d.getDataIndex())));
 	}
 
 	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
-		return findById(datasourceId).flatMap(d -> Mutiny.fetch(d.getEnrichPipeline()));
+		return withTransaction(
+			s -> findById(datasourceId).flatMap(d -> Mutiny2.fetch(s, d.getEnrichPipeline())));
 	}
 
 	public Uni<Tuple2<Datasource, EntityIndex>> setEntityIndex(long datasourceId, long entityIndexId) {

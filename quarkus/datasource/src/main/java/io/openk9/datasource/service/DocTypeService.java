@@ -24,6 +24,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -31,7 +32,6 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -84,10 +84,10 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		DocTypeField docTypeField =
 			docTypeFieldMapper.create(docTypeFieldDTO);
 
-		return withTransaction(() -> findById(id)
+		return withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(docType -> Mutiny.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
+			.transformToUni(docType -> Mutiny2.fetch(s, docType.getDocTypeFields()).flatMap(docTypeFields -> {
 				if (docType.addDocTypeField(docTypeFields, docTypeField)) {
 					return persist(docType)
 						.map(dt -> Tuple2.of(dt, docTypeField));
@@ -97,10 +97,10 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<Tuple2<DocType, Long>> removeDocTypeField(long id, long docTypeFieldId) {
-		return withTransaction(() -> findById(id)
+		return withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(docType -> Mutiny.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
+			.transformToUni(docType -> Mutiny2.fetch(s, docType.getDocTypeFields()).flatMap(docTypeFields -> {
 				if (docType.removeDocTypeField(docTypeFields, docTypeFieldId)) {
 					return persist(docType)
 						.map(dt -> Tuple2.of(dt, docTypeFieldId));

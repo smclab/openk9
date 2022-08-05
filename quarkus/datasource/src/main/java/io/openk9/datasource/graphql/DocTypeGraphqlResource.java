@@ -22,6 +22,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
@@ -40,7 +41,6 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -100,7 +100,8 @@ public class DocTypeGraphqlResource {
 	}
 
 	public Uni<DocType> docType(@Source DocTypeField docTypeField) {
-		return Mutiny.fetch(docTypeField.getDocType());
+		return docTypeFieldService.withTransaction(
+			(s) -> Mutiny2.fetch(s, docTypeField.getDocType()));
 	}
 
 	public Uni<Response<DocType>> patchDocType(@Id long id, DocTypeDTO docTypeDTO) {

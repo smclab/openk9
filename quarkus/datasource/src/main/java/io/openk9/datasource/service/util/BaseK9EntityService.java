@@ -712,16 +712,16 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return (BroadcastProcessor<K9EntityEvent<ENTITY>>) processor;
 	}
 
-	protected <T> Uni<T> withTransaction(Supplier<Uni<T>> fun) {
+	public <T> Uni<T> withTransaction(Supplier<Uni<T>> fun) {
 		return withTransaction((session, transaction) -> fun.get());
 	}
 
-	protected <T> Uni<T> withTransaction(
+	public <T> Uni<T> withTransaction(
 		Function<Mutiny.Session, Uni<T>> fun) {
 		return withTransaction((session, transaction) -> fun.apply(session));
 	}
 
-	protected <T> Uni<T> withTransaction(
+	public <T> Uni<T> withTransaction(
 		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> fun) {
 		return em.withTransaction(fun);
 	}
