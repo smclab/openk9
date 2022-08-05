@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
@@ -87,6 +88,10 @@ public class TenantGraphqlResource {
 			notEqual);
 	}
 
+	public Uni<QueryAnalysis> queryAnalysis(@Source Tenant tenant) {
+		return tenantService.getQueryAnalysis(tenant.getId());
+	}
+
 	@Query
 	public Uni<Tenant> getTenant(@Id long id) {
 		return tenantService.findById(id);
@@ -141,6 +146,18 @@ public class TenantGraphqlResource {
 	@Mutation
 	public Uni<Tuple2<Tenant, SuggestionCategory>> removeSuggestionCategoryFromTenant(@Id long tenantId, @Id long suggestionCategoryId) {
 		return tenantService.removeSuggestionCategory(tenantId, suggestionCategoryId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Tenant, QueryAnalysis>> bindQueryAnalysisToTenant(
+		@Id long tenantId, @Id long queryAnalysisId) {
+		return tenantService.bindQueryAnalysis(tenantId, queryAnalysisId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Tenant, QueryAnalysis>> unbindQueryAnalysisFromTenant(
+		@Id long tenantId) {
+		return tenantService.unbindQueryAnalysis(tenantId);
 	}
 
 	@Subscription

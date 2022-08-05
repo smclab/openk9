@@ -18,52 +18,65 @@
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.Analyzer;
+import io.openk9.datasource.model.util.Fuziness;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.Hibernate;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.util.Objects;
 
 @Entity
-@Table(name = "doc_type_field")
+@Table(name = "annotator")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 @Cacheable
-public class DocTypeField extends K9Entity {
-	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH}, optional = false)
-	@JoinColumn(name = "doc_type_id", nullable = false)
+public class Annotator extends K9Entity {
+	@Column(name = "type", nullable = false)
+	private String type;
+	@Column(name = "field", nullable = false)
+	private String field;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "fuziness")
+	private Fuziness fuziness;
+	@Column(name = "size")
+	private Integer size;
+	@OneToOne(
+		fetch = FetchType.LAZY
+	)
+	@JoinColumn(name = "doc_type_field_id")
 	@JsonIgnore
-	private DocType docType;
+	@ToString.Exclude
+	private DocTypeField docTypeField;
 
-	@Column(name = "searchable")
-	private Boolean searchable = false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || Hibernate.getClass(this) !=
+						 Hibernate.getClass(o)) {
+			return false;
+		}
+		Annotator annotator = (Annotator) o;
+		return id != null && Objects.equals(id, annotator.id);
+	}
 
-	@Column(name = "boost")
-	private Double boost;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "field_type", nullable = false)
-	private FieldType fieldType;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "analyzer")
-	private Analyzer analyzer;
-
+	@Override
+	public int hashCode() {
+		return getClass().hashCode();
+	}
 }

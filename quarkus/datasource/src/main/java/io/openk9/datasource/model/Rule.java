@@ -17,8 +17,6 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.Analyzer;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -28,42 +26,18 @@ import lombok.ToString;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "doc_type_field")
+@Table(name = "rule")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 @Cacheable
-public class DocTypeField extends K9Entity {
-	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH}, optional = false)
-	@JoinColumn(name = "doc_type_id", nullable = false)
-	@JsonIgnore
-	private DocType docType;
-
-	@Column(name = "searchable")
-	private Boolean searchable = false;
-
-	@Column(name = "boost")
-	private Double boost;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "field_type", nullable = false)
-	private FieldType fieldType;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "analyzer")
-	private Analyzer analyzer;
-
+public class Rule extends K9Entity {
+	@Column(name = "rhs", nullable = false)
+	private String rhs;
+	@Column(name = "lhs", nullable = false)
+	private String lhs;
 }

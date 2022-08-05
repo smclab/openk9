@@ -28,8 +28,11 @@ import lombok.ToString;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -78,15 +81,12 @@ public class Tenant extends K9Entity {
 	private Set<SuggestionCategory> suggestionCategories
 		= new LinkedHashSet<>();
 
-	public void addDatasource(Datasource datasource) {
-		this.datasources.add(datasource);
-		datasource.getTenants().add(this);
-	}
-
-	public void removeDatasource(Datasource datasource) {
-		this.datasources.remove(datasource);
-		datasource.getTenants().remove(this);
-	}
+	@OneToOne(
+		fetch = FetchType.LAZY
+	)
+	@JoinColumn(name = "query_analysis_id")
+	@ToString.Exclude
+	private QueryAnalysis queryAnalysis;
 
 	public boolean addSuggestionCategory(
 		Set<SuggestionCategory> suggestionCategories,

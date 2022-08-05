@@ -1,0 +1,105 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package io.openk9.datasource.service;
+
+import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.datasource.mapper.QueryAnalysisMapper;
+import io.openk9.datasource.model.Annotator;
+import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.QueryAnalysis_;
+import io.openk9.datasource.model.Rule;
+import io.openk9.datasource.model.dto.QueryAnalysisDTO;
+import io.openk9.datasource.model.util.Mutiny2;
+import io.openk9.datasource.resource.util.SortBy;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.smallrye.mutiny.Uni;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.Set;
+
+@ApplicationScoped
+public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, QueryAnalysisDTO> {
+	 QueryAnalysisService(QueryAnalysisMapper mapper) {
+		 this.mapper = mapper;
+	}
+
+
+	public Uni<Connection<Annotator>> getAnnotators(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, QueryAnalysis_.ANNOTATORS, Annotator.class,
+			annotatorService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
+	public Uni<Connection<Rule>> getRules(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, QueryAnalysis_.RULES, Rule.class,
+			ruleService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
+	@Override
+	public Class<QueryAnalysis> getEntityClass() {
+		return QueryAnalysis.class;
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {QueryAnalysis_.NAME, QueryAnalysis_.DESCRIPTION};
+	}
+
+	public Uni<QueryAnalysis> setStopwords(
+		long queryAnalysisId, Set<String> stopwords) {
+		 return findById(queryAnalysisId)
+			 .onItem()
+			 .ifNotNull()
+			 .transformToUni(e -> {
+				 e.setStopwords(stopwords);
+				 return persist(e);
+			 });
+	}
+
+	public Uni<QueryAnalysis> addStopwords(
+		long queryAnalysisId, Set<String> newStopwords) {
+		return findById(queryAnalysisId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(e -> Mutiny2.fetch(e.getStopwords())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(stopwords -> {
+					stopwords.addAll(newStopwords);
+					return persist(e);
+				}));
+	}
+
+	@Inject
+	AnnotatorService annotatorService;
+
+	@Inject
+	RuleService ruleService;
+
+
+}

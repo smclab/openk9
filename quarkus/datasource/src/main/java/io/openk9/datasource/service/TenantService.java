@@ -20,10 +20,11 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.TenantMapper;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.model.dto.TenantDTO;
-import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
@@ -32,11 +33,9 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Set;
 
 @ApplicationScoped
@@ -45,20 +44,19 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		 this.mapper = mapper;
 	}
 
+	public Uni<QueryAnalysis> getQueryAnalysis(long tenantId) {
+		return withTransaction(s -> findById(tenantId)
+			.flatMap(tenant -> Mutiny2.fetch(s, tenant.getQueryAnalysis())));
+	}
+
 	public Uni<Connection<Datasource>> getDatasourcesConnection(
 		long tenantId, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
 		return findJoinConnection(
-			tenantId, "datasources", Datasource.class,
+			tenantId, Tenant_.DATASOURCES, Datasource.class,
 			datasourceService.getSearchFields(), after, before, first, last,
 			searchText, sortByList, notEqual);
-	}
-
-	public Uni<Page<Datasource>> getDatasources(List<Tenant> tenants, Pageable pageable) {
-		return getDatasources(
-			tenants.stream().map(K9Entity::getId).toArray(Long[]::new),
-			pageable, Filter.DEFAULT);
 	}
 
 	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable, Filter filter) {
@@ -70,20 +68,11 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		return getDatasources(new Long[] {tenantId}, pageable, searchText);
 	}
 
-	public Uni<Page<Datasource>> getDatasources(long tenantId, Pageable pageable) {
-		return getDatasources(new Long[] {tenantId}, pageable, Filter.DEFAULT);
-	}
-
-	public Uni<Page<Datasource>> getDatasources(Tenant tenant, Pageable pageable) {
-		 return getDatasources(
-			 new Long[] {tenant.getId()}, pageable, Filter.DEFAULT);
-	}
-
 	public Uni<Page<Datasource>> getDatasources(
 		Long[] tenantIds, Pageable pageable, String searchText) {
 
 		return findAllPaginatedJoin(
-			tenantIds, "datasources", Datasource.class,
+			tenantIds, Tenant_.DATASOURCES, Datasource.class,
 			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
 			pageable.getBeforeId(), searchText);
 	}
@@ -92,7 +81,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		Long[] tenantIds, Pageable pageable, Filter filter) {
 
 		 return findAllPaginatedJoin(
-			 tenantIds, "datasources", Datasource.class,
+			 tenantIds, Tenant_.DATASOURCES, Datasource.class,
 			 pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
 			 pageable.getBeforeId(), filter);
 	}
@@ -101,21 +90,16 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 		return findJoinConnection(
-			id, "suggestionCategories", SuggestionCategory.class,
+			id, Tenant_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
 			suggestionCategoryService.getSearchFields(), after, before, first,
 			last, searchText, sortByList, notEqual);
-	}
-
-	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
-		long tenantId, Pageable pageable) {
-		return getSuggestionCategories(tenantId, pageable, Filter.DEFAULT);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
 		long tenantId, Pageable pageable, String searchText) {
 
 		return findAllPaginatedJoin(
-			new Long[]{tenantId}, "suggestionCategories", SuggestionCategory.class,
+			new Long[]{tenantId}, Tenant_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
 			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
 			pageable.getBeforeId(), searchText);
 	}
@@ -124,7 +108,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 		long tenantId, Pageable pageable, Filter filter) {
 
 		return findAllPaginatedJoin(
-			new Long[]{tenantId}, "suggestionCategories", SuggestionCategory.class,
+			new Long[]{tenantId}, Tenant_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
 			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
 			pageable.getBeforeId(), filter);
 	}
@@ -211,9 +195,32 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 				})));
 	}
 
+	public Uni<Tuple2<Tenant, QueryAnalysis>> bindQueryAnalysis(long tenantId, long queryAnalysisId) {
+		return withTransaction((s, tr) -> findById(tenantId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> queryAnalysisService.findById(queryAnalysisId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(queryAnalysis -> {
+					tenant.setQueryAnalysis(queryAnalysis);
+					return persist(tenant).map(t -> Tuple2.of(t, queryAnalysis));
+				})));
+	}
+
+	public Uni<Tuple2<Tenant, QueryAnalysis>> unbindQueryAnalysis(long tenantId) {
+		return withTransaction((s, tr) -> findById(tenantId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> {
+				tenant.setQueryAnalysis(null);
+				return persist(tenant).map(t -> Tuple2.of(t, null));
+			}));
+	}
+
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {"name", "virtualHost"};
+		return new String[] {Tenant_.NAME, Tenant_.VIRTUAL_HOST};
 	}
 
 	@Inject
@@ -223,7 +230,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 	SuggestionCategoryService suggestionCategoryService;
 
 	@Inject
-	Mutiny.Session session;
+	QueryAnalysisService queryAnalysisService;
 
 	@Override
 	public Class<Tenant> getEntityClass() {

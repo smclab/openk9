@@ -33,9 +33,7 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Collection;
 import java.util.Set;
-import java.util.function.Function;
 
 @ApplicationScoped
 public class SuggestionCategoryService extends
@@ -53,11 +51,6 @@ public class SuggestionCategoryService extends
 			docTypeFieldService.getSearchFields(),
 			after, before, first, last, searchText, sortByList, notEqual
 		);
-	}
-
-	public Uni<Collection<SuggestionCategory>> findByTenantId(long tenantId) {
-		return SuggestionCategory.<SuggestionCategory>list("tenant_id", tenantId)
-			.map(Function.identity());
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(

@@ -18,7 +18,6 @@
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.Analyzer;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,44 +25,50 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "doc_type_field")
+@Table(name = "query_analysis")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 @Cacheable
-public class DocTypeField extends K9Entity {
+public class QueryAnalysis extends K9Entity {
+	@ManyToMany(cascade = {
+		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
+		CascadeType.DETACH})
+	@JoinTable(name = "query_analysis_rules",
+		joinColumns = @JoinColumn(name = "query_analysis_id"),
+		inverseJoinColumns = @JoinColumn(name = "rules_id"))
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH}, optional = false)
-	@JoinColumn(name = "doc_type_id", nullable = false)
 	@JsonIgnore
-	private DocType docType;
+	private Set<Rule> rules = new LinkedHashSet<>();
 
-	@Column(name = "searchable")
-	private Boolean searchable = false;
+	@ElementCollection
+	@Column(name = "stopword")
+	@CollectionTable(name = "query_analysis_stopwords", joinColumns = @JoinColumn(name = "owner_id"))
+	@JsonIgnore
+	private Set<String> stopwords = new LinkedHashSet<>();
 
-	@Column(name = "boost")
-	private Double boost;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "field_type", nullable = false)
-	private FieldType fieldType;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "analyzer")
-	private Analyzer analyzer;
+	@ManyToMany(cascade = {
+		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
+		CascadeType.DETACH})
+	@JoinTable(name = "query_analysis_annotators",
+		joinColumns = @JoinColumn(name = "query_analysis_id"),
+		inverseJoinColumns = @JoinColumn(name = "annotators_id"))
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<Annotator> annotators = new LinkedHashSet<>();
 
 }
