@@ -40,7 +40,7 @@ import java.util.Collection;
 public interface PluginDriverClient {
 
 	@POST
-	@Path("/invoke-data-parser/")
+	@Path("/invoke-data-parser")
 	Uni<String> invokeDataParser(InvokeDataParserDTO invokeDataParserDTO);
 
 	@GET

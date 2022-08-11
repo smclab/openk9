@@ -43,7 +43,7 @@ public interface PluginDriverHttp {
 	@RolesAllowed({"plugin-driver-manager-write", "admin"})
 	@SecurityRequirement(name = "SecurityScheme")
 	@POST
-	@Path("/v1/plugin-driver/invoke-data-parser/")
+	@Path("/v1/plugin-driver/invoke-data-parser")
 	Uni<Void> invokeDataParser(InvokeDataParserDTO invokeDataParserDTO);
 
 	@RolesAllowed({"plugin-driver-manager-read", "admin"})
