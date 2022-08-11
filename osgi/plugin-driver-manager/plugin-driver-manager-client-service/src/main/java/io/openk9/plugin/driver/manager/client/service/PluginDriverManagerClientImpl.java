@@ -83,7 +83,7 @@ public class PluginDriverManagerClientImpl
 				_pluginDriverManagerClient
 					.request(
 						HttpHandler.POST,
-						"/v1/plugin-driver/invoke-data-parser/",
+						"/v1/plugin-driver/invoke-data-parser",
 						_jsonFactory.toJson(
 							InvokeDataParserDTO
 								.builder()

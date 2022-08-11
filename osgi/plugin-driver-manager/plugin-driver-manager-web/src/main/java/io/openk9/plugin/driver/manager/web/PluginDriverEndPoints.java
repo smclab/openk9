@@ -53,7 +53,7 @@ public class PluginDriverEndPoints implements RouterHandler {
 			.post("/v1/plugin-driver/context", this::_createPluginDriverContext)
 			.get("/v1/plugin-driver/", this::_findAll)
 			.get("/v1/plugin-driver/scheduler-enabled/{serviceDriverName}", this::_schedulerEnabled)
-			.post("/v1/plugin-driver/invoke-data-parser/", this::_invokeDataParser);
+			.post("/v1/plugin-driver/invoke-data-parser", this::_invokeDataParser);
 	}
 
 	private Publisher<Void> _createPluginDriverContext(
