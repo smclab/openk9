@@ -18,8 +18,8 @@
 package io.openk9.tika;
 
 import io.openk9.tika.config.TikaConfiguration;
-import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -30,38 +30,35 @@ import org.eclipse.microprofile.reactive.messaging.Metadata;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class Processor {
 
 	@Incoming("tika-no-ocr")
-	public Uni<Void> process(Message<?> message) {
+	@Blocking
+	public CompletionStage<Void> process(Message<?> message) {
 
-		return Uni.createFrom().deferred(() -> {
+		JsonObject json = _messagePayloadToJson(message);
 
-			JsonObject json = _messagePayloadToJson(message);
+		Tuple2<String, JsonObject> response =
+			tikaProcessor.process(
+				json, true, tikaConfiguration.getCharacterLength(),
+				tikaConfiguration.getOcrRoutingKey());
 
-			Tuple2<String, JsonObject> response =
-				tikaProcessor.process(
-					json, true, tikaConfiguration.getCharacterLength(),
-					tikaConfiguration.getOcrRoutingKey());
+		emitter.send(
+			Message.of(
+				response.getItem2(),
+				Metadata.of(
+					OutgoingRabbitMQMetadata
+						.builder()
+						.withRoutingKey(response.getItem1())
+						.withDeliveryMode(2)
+						.build()
+				)
+		));
 
-			emitter.send(
-				Message.of(
-					response.getItem2(),
-					Metadata.of(
-						OutgoingRabbitMQMetadata
-							.builder()
-							.withRoutingKey(response.getItem1())
-							.withDeliveryMode(2)
-							.build()
-					)
-			));
-
-			return Uni.createFrom().completionStage(message.ack());
-
-		});
-
+		return message.ack();
 
 	}
 
