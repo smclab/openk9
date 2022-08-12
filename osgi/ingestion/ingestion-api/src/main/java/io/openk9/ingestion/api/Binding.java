@@ -39,7 +39,7 @@ public interface Binding {
 	}
 
 	default boolean queueDurable() {
-		return false;
+		return true;
 	}
 
 	default boolean exchangeDurable() {
