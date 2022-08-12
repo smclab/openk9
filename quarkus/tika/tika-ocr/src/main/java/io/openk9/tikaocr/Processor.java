@@ -57,7 +57,7 @@ public class Processor {
 					)
 			));
 
-			return Uni.createFrom().voidItem();
+			return Uni.createFrom().completionStage(message.ack());
 
 		});
 
