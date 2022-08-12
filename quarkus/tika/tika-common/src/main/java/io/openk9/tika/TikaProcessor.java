@@ -231,7 +231,7 @@ public class TikaProcessor {
                             .put("contentType", contentType);
                     }
 
-                    return Tuple2.of(replyTo, jsonObject);
+                    return Tuple2.of(replyTo, response);
 
                 }
 
