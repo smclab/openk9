@@ -41,10 +41,4 @@ public class TikaConfiguration {
 	@ConfigProperty(name = "openk9.tika.rabbitmq.exchange", defaultValue = "amq.topic")
 	String currentExchange;
 
-	@ConfigProperty(name = "openk9.tika.rabbitmq.routingkey")
-	String currentRoutingKey;
-
-	@ConfigProperty(name = "openk9.tika.rabbitmq.queue.name")
-	String currentQueueName;
-
 }
