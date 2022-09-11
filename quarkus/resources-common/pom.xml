@@ -6,13 +6,13 @@
 	<parent>
 		<artifactId>quarkus</artifactId>
 		<groupId>io.openk9</groupId>
-		<version>1.1.8-SNAPSHOT</version>
+		<version>1.1.8</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<name>OpenK9 :: Quarkus :: Resources Common</name>
 	<artifactId>resources-common</artifactId>
-	<version>1.1.8-SNAPSHOT</version>
+	<version>1.1.8</version>
 	<packaging>jar</packaging>
 
 	<build>
@@ -54,6 +54,6 @@
 
 
   <scm>
-    <tag>v0.0.2</tag>
+    <tag>v1.1.8</tag>
   </scm>
 </project>
