@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>io.openk9.osgi.util</groupId>
 		<artifactId>util</artifactId>
-		<version>1.1.8</version>
+		<version>1.1.9-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -54,6 +54,6 @@
 
 
   <scm>
-    <tag>v1.1.8</tag>
+    <tag>v0.0.2</tag>
   </scm>
 </project>

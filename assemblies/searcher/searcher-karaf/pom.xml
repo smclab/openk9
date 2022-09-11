@@ -40,7 +40,7 @@
 	<parent>
 		<groupId>io.openk9.assemblies.searcher</groupId>
 		<artifactId>searcher</artifactId>
-		<version>1.1.8</version>
+		<version>1.1.9-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -157,6 +157,6 @@
 
 
   <scm>
-    <tag>v1.1.8</tag>
+    <tag>v0.0.2</tag>
   </scm>
 </project>
