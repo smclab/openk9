@@ -17,10 +17,7 @@
 
 package io.openk9.filemanager.web;
 
-import io.minio.GetObjectArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.UploadObjectArgs;
+import io.minio.*;
 import io.minio.errors.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -47,7 +44,7 @@ public class UploadService {
 				.build();
 
 		try {
-			minioClient.putObject(args);
+			ObjectWriteResponse response = minioClient.putObject(args);
 		} catch (MinioException e) {
 			throw new RuntimeException(e);
 		} catch (IOException e) {
