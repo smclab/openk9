@@ -9,13 +9,15 @@ import io.smallrye.mutiny.Uni;
 import javax.inject.Inject;
 import javax.validation.Valid;
 
+import static io.quarkus.hibernate.reactive.panache.PanacheEntityBase.persist;
+
 public class ResourceService {
 
-    public Uni<Resource> create(@Valid ResourceDto dto) {
+    public Uni<Void> create(@Valid ResourceDto dto) {
 
         Resource resource = _resourceMapper.toResource(dto);
 
-        return Panache.withTransaction(resource::persist);
+        return persist(resource);
 
     }
 
