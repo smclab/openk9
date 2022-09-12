@@ -17,11 +17,15 @@
 
 package io.openk9.filemanager.web;
 
+import io.minio.errors.*;
+
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 @Path("/v1/file-manager/upload")
@@ -31,7 +35,9 @@ public class UploadEndpoint {
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Path("/{datasourceId}/{fileId}")
 	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
-						 InputStream inputStream) throws IOException {
+						 InputStream inputStream) throws IOException, ServerException, InsufficientDataException,
+			ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
+			XmlParserException, InternalException {
 
 		String dataId = UUID.randomUUID().toString();
 

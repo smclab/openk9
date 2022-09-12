@@ -36,9 +36,24 @@ public class UploadService {
 	MinioClient minioClient;
 
 
-	public String uploadObject(InputStream inputStream, String datasourceId, String fileId, String dataId) throws IOException {
+	public String uploadObject(InputStream inputStream, String datasourceId, String fileId, String dataId) throws
+			IOException, ServerException, InsufficientDataException, ErrorResponseException,
+			NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException,
+			InternalException {
 
 		int length = inputStream.available();
+
+		String bucketName = "datasource" + datasourceId;
+
+		boolean found =
+				minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+		if (!found) {
+			// Create bucket with default region.
+			minioClient.makeBucket(
+				MakeBucketArgs.builder()
+						.bucket(bucketName)
+						.build());
+		}
 
 		PutObjectArgs args = PutObjectArgs.builder()
 				.bucket(datasourceId)
@@ -48,6 +63,7 @@ public class UploadService {
 
 		try {
 			ObjectWriteResponse response = minioClient.putObject(args);
+			return response.toString();
 		} catch (MinioException e) {
 			throw new RuntimeException(e);
 		} catch (IOException e) {
@@ -57,8 +73,6 @@ public class UploadService {
 		} catch (InvalidKeyException e) {
 			throw new RuntimeException(e);
 		}
-
-		return datasourceId;
 	}
 
 
