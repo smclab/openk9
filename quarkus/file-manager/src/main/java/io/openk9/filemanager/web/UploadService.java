@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 @ApplicationScoped
 public class UploadService {
@@ -36,10 +37,12 @@ public class UploadService {
 	MinioClient minioClient;
 
 
-	public String uploadObject(InputStream inputStream, String datasourceId, String fileId, String dataId) throws
+	public String uploadObject(InputStream inputStream, String datasourceId, String fileId) throws
 			IOException, ServerException, InsufficientDataException, ErrorResponseException,
 			NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException,
 			InternalException {
+
+		String dataId = UUID.randomUUID().toString();
 
 		int length = inputStream.available();
 
@@ -63,7 +66,7 @@ public class UploadService {
 
 		try {
 			ObjectWriteResponse response = minioClient.putObject(args);
-			return response.toString();
+			return dataId;
 		} catch (MinioException e) {
 			throw new RuntimeException(e);
 		} catch (IOException e) {

@@ -39,9 +39,7 @@ public class UploadEndpoint {
 			ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
 			XmlParserException, InternalException {
 
-		String dataId = UUID.randomUUID().toString();
-
-		return uploadService.uploadObject(inputStream, datasourceId, fileId, dataId);
+		return uploadService.uploadObject(inputStream, datasourceId, fileId);
 
 	}
 
