@@ -71,10 +71,12 @@ public class UploadService {
 				.stream(inputStream, length, -1)
 				.build();
 
+
 		ResourceDto resourceDto = new ResourceDto();
 		resourceDto.setResourceId(fileId);
 		resourceDto.setVersion("1");
 		resourceDto.setUrl("http://url");
+		resourceDto.setState(Resource.State.valueOf("PENDING"));
 
 		return resourceService.create(resourceDto).map(r -> {
 			try {
