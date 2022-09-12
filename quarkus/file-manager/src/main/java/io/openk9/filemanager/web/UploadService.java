@@ -45,34 +45,8 @@ public class UploadService {
 	ResourceService resourceService;
 
 
-	public Uni<String> uploadObject(InputStream inputStream, String datasourceId, String fileId, String resourceId) throws
-			IOException, ServerException, InsufficientDataException, ErrorResponseException,
-			NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException,
-			InternalException {
+	public Uni<String> uploadObject(InputStream inputStream, String datasourceId, String fileId, String resourceId) {
 
-		int length = inputStream.available();
-
-		String bucketName = "datasource" + datasourceId;
-
-		boolean found =
-				minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
-		if (!found) {
-			// Create bucket with default region.
-			logger.info("bucket not exist.");
-			minioClient.makeBucket(
-				MakeBucketArgs.builder()
-						.bucket(bucketName)
-						.build());
-		}
-		else {
-			logger.info("bucket already exist");
-		}
-
-		PutObjectArgs args = PutObjectArgs.builder()
-				.bucket(datasourceId)
-				.object(fileId)
-				.stream(inputStream, length, -1)
-				.build();
 
 		ResourceDto resourceDto = new ResourceDto();
 		resourceDto.setFileId(fileId);
@@ -82,18 +56,14 @@ public class UploadService {
 		resourceDto.setResourceId(resourceId);
 
 		return resourceService.create(resourceDto).map(r -> {
+
 			try {
-				ObjectWriteResponse response = minioClient.putObject(args);
-				return resourceId;
-			} catch (MinioException e) {
-				throw new RuntimeException(e);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			} catch (NoSuchAlgorithmException e) {
-				throw new RuntimeException(e);
-			} catch (InvalidKeyException e) {
+				this.saveObject(datasourceId, fileId, inputStream);
+			} catch (MinioException | IOException | NoSuchAlgorithmException | InvalidKeyException e) {
 				throw new RuntimeException(e);
 			}
+
+			return resourceId;
 		});
 
 	}
@@ -113,6 +83,40 @@ public class UploadService {
 			throw new RuntimeException(e.getMessage());
 		}
 	}*/
+
+	private void saveObject(String datasourceId, String fileId, InputStream inputStream) throws ServerException,
+			InsufficientDataException, ErrorResponseException,
+			IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
+			XmlParserException, InternalException {
+
+		String bucketName = "datasource" + datasourceId;
+
+		boolean found =
+				minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+
+		if (!found) {
+			// Create bucket with default region.
+			logger.info("bucket not exist.");
+			minioClient.makeBucket(
+					MakeBucketArgs.builder()
+							.bucket(bucketName)
+							.build());
+		}
+		else {
+			logger.info("bucket already exist");
+		}
+
+		int length = inputStream.available();
+
+		PutObjectArgs args = PutObjectArgs.builder()
+				.bucket(datasourceId)
+				.object(fileId)
+				.stream(inputStream, length, -1)
+				.build();
+
+		minioClient.putObject(args);
+
+	}
 
 	@Inject
 	Logger logger;

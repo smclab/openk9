@@ -36,16 +36,15 @@ public class UploadEndpoint {
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Path("/{datasourceId}/{fileId}")
-	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
+	@ReactiveTransactional
+	public Uni<String> upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
 					  InputStream inputStream) throws IOException, ServerException, InsufficientDataException,
 			ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
 			XmlParserException, InternalException {
 
 		String resourceId = UUID.randomUUID().toString();
 
-		uploadService.uploadObject(inputStream, datasourceId, fileId, resourceId);
-
-		return resourceId;
+		return uploadService.uploadObject(inputStream, datasourceId, fileId, resourceId);
 
 	}
 
