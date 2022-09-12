@@ -1,5 +1,6 @@
 package io.openk9.filemanager.model;
 
+import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -14,7 +15,7 @@ import javax.persistence.*;
 @ToString
 @RequiredArgsConstructor
 @Cacheable
-public class Resource {
+public class Resource extends PanacheEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
