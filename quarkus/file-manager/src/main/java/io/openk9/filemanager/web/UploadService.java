@@ -36,11 +36,14 @@ public class UploadService {
 	MinioClient minioClient;
 
 
-	public String uploadObject(InputStream inputStream, String datasourceId, String fileId, String dataId) {
+	public String uploadObject(InputStream inputStream, String datasourceId, String fileId, String dataId) throws IOException {
+
+		int length = inputStream.available();
+
 		PutObjectArgs args = PutObjectArgs.builder()
 				.bucket(datasourceId)
 				.object(fileId)
-				.stream(inputStream, -1, -1)
+				.stream(inputStream, length, -1)
 				.build();
 
 		try {

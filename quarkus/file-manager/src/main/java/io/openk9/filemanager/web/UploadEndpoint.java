@@ -20,6 +20,7 @@ package io.openk9.filemanager.web;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -30,7 +31,7 @@ public class UploadEndpoint {
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Path("/{datasourceId}/{fileId}")
 	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
-						 InputStream inputStream) {
+						 InputStream inputStream) throws IOException {
 
 		String dataId = UUID.randomUUID().toString();
 
