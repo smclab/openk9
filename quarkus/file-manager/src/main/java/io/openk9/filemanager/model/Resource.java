@@ -31,7 +31,7 @@ public class Resource {
     private String version;
 
     @Column(name = "url", nullable = false)
-    private String url  ;
+    private String url;
 
     public enum State {
         OK, KO, PENDING

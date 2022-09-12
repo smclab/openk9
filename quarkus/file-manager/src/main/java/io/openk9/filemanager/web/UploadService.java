@@ -19,6 +19,8 @@ package io.openk9.filemanager.web;
 
 import io.minio.*;
 import io.minio.errors.*;
+import io.openk9.filemanager.dto.ResourceDto;
+import io.openk9.filemanager.service.ResourceService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -35,6 +37,9 @@ public class UploadService {
 
 	@Inject
 	MinioClient minioClient;
+
+	@Inject
+	ResourceService resourceService;
 
 
 	public String uploadObject(InputStream inputStream, String datasourceId, String fileId) throws
@@ -63,6 +68,13 @@ public class UploadService {
 				.object(fileId)
 				.stream(inputStream, length, -1)
 				.build();
+
+		ResourceDto resourceDto = new ResourceDto();
+		resourceDto.setId(fileId);
+		resourceDto.setVersion("1");
+		resourceDto.setUrl("http://url");
+
+		resourceService.create(resourceDto);
 
 		try {
 			ObjectWriteResponse response = minioClient.putObject(args);
