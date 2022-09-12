@@ -18,6 +18,7 @@
 package io.openk9.filemanager.web;
 
 import io.minio.errors.*;
+import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
 import io.smallrye.mutiny.Uni;
 
 import javax.inject.Inject;
@@ -35,6 +36,7 @@ public class UploadEndpoint {
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Path("/{datasourceId}/{fileId}")
+	@ReactiveTransactional
 	public Uni<String> upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
 					  InputStream inputStream) throws IOException, ServerException, InsufficientDataException,
 			ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
