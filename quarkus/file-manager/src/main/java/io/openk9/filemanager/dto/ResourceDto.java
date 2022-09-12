@@ -30,9 +30,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 public class ResourceDto {
+    private String fileId;
+    private String datasourceId;
     private String resourceId;
     private String version;
-    private String url;
     @NotNull
     private Resource.State state;
 

@@ -24,6 +24,7 @@ import io.openk9.filemanager.model.Resource;
 import io.openk9.filemanager.service.ResourceService;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -44,12 +45,10 @@ public class UploadService {
 	ResourceService resourceService;
 
 
-	public Uni<String> uploadObject(InputStream inputStream, String datasourceId, String fileId) throws
+	public Uni<String> uploadObject(InputStream inputStream, String datasourceId, String fileId, String resourceId) throws
 			IOException, ServerException, InsufficientDataException, ErrorResponseException,
 			NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException,
 			InternalException {
-
-		String dataId = UUID.randomUUID().toString();
 
 		int length = inputStream.available();
 
@@ -59,10 +58,14 @@ public class UploadService {
 				minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
 		if (!found) {
 			// Create bucket with default region.
+			logger.info("bucket not exist.");
 			minioClient.makeBucket(
 				MakeBucketArgs.builder()
 						.bucket(bucketName)
 						.build());
+		}
+		else {
+			logger.info("bucket already exist");
 		}
 
 		PutObjectArgs args = PutObjectArgs.builder()
@@ -71,17 +74,17 @@ public class UploadService {
 				.stream(inputStream, length, -1)
 				.build();
 
-
 		ResourceDto resourceDto = new ResourceDto();
-		resourceDto.setResourceId(fileId);
+		resourceDto.setFileId(fileId);
+		resourceDto.setDatasourceId(datasourceId);
 		resourceDto.setVersion("1");
-		resourceDto.setUrl("http://url");
 		resourceDto.setState(Resource.State.valueOf("PENDING"));
+		resourceDto.setResourceId(resourceId);
 
 		return resourceService.create(resourceDto).map(r -> {
 			try {
 				ObjectWriteResponse response = minioClient.putObject(args);
-				return dataId;
+				return resourceId;
 			} catch (MinioException e) {
 				throw new RuntimeException(e);
 			} catch (IOException e) {
@@ -94,6 +97,25 @@ public class UploadService {
 		});
 
 	}
+
+
+	/*public boolean isObjectExist(String bucketName, String objectName) {
+		try {
+			minioClient.statObject(StatObjectArgs.builder()
+					.bucket(bucketName)
+					.object(objectName).build());
+			return true;
+		} catch (ErrorResponseException e) {
+			e.printStackTrace();
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		}
+	}*/
+
+	@Inject
+	Logger logger;
 
 
 }

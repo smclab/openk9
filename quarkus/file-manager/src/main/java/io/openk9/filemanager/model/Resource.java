@@ -17,14 +17,17 @@ import javax.persistence.*;
 @Cacheable
 public class Resource extends PanacheEntity {
 
-    @Column(name = "resourceId", nullable = false)
+    @Column(name = "dataId", nullable = false)
     private String resourceId;
+
+    @Column(name = "fileId", nullable = false)
+    private String fileId;
+
+    @Column(name = "datasourceId", nullable = false)
+    private String datasourceId;
 
     @Column(name = "version", nullable = false)
     private String version;
-
-    @Column(name = "url", nullable = false)
-    private String url;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
