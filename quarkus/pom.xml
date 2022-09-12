@@ -21,6 +21,7 @@
     <module>tika</module>
     <module>resources-common</module>
     <module>resources-validator</module>
+    <module>file-manager</module>
   </modules>
   <properties>
     <failsafe.useModulePath>false</failsafe.useModulePath>
