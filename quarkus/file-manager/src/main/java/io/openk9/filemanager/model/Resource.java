@@ -26,4 +26,15 @@ public class Resource extends PanacheEntity {
     @Column(name = "url", nullable = false)
     private String url;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false)
+    private State state;
+
+    public enum State {
+        OK, KO, PENDING
+    }
+
+
+
+
 }

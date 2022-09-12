@@ -71,12 +71,12 @@ public class UploadService {
 				.stream(inputStream, length, -1)
 				.build();
 
-		Resource resource = new Resource();
-		resource.setResourceId(fileId);
-		resource.setVersion("1");
-		resource.setUrl("http://url");
+		ResourceDto resourceDto = new ResourceDto();
+		resourceDto.setResourceId(fileId);
+		resourceDto.setVersion("1");
+		resourceDto.setUrl("http://url");
 
-		return resourceService.create(resource).map(r -> {
+		return resourceService.create(resourceDto).map(r -> {
 			try {
 				ObjectWriteResponse response = minioClient.putObject(args);
 				return dataId;

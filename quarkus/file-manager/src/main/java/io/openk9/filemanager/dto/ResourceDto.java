@@ -17,6 +17,8 @@
 
 package io.openk9.filemanager.dto;
 
+import io.openk9.filemanager.model.Resource;
+import io.smallrye.common.constraint.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,4 +33,7 @@ public class ResourceDto {
     private String resourceId;
     private String version;
     private String url;
+    @NotNull
+    private Resource.State state;
+
 }
