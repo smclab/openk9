@@ -15,9 +15,7 @@ import static io.quarkus.hibernate.reactive.panache.PanacheEntityBase.persist;
 @ApplicationScoped
 public class ResourceService {
 
-    public Uni<Resource> create(@Valid ResourceDto dto) {
-
-        Resource resource = _resourceMapper.toResource(dto);
+    public Uni<Resource> create(Resource resource) {
 
         return resource.persist();
 
