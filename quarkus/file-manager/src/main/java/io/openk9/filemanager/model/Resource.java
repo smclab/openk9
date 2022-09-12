@@ -17,10 +17,6 @@ import javax.persistence.*;
 @Cacheable
 public class Resource extends PanacheEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long resourceId;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
     private State state;
