@@ -17,10 +17,6 @@ import javax.persistence.*;
 @Cacheable
 public class Resource extends PanacheEntity {
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "state", nullable = false)
-    private State state;
-
     @Column(name = "id", nullable = false)
     private String id;
 
@@ -29,9 +25,5 @@ public class Resource extends PanacheEntity {
 
     @Column(name = "url", nullable = false)
     private String url;
-
-    public enum State {
-        OK, KO, PENDING
-    }
 
 }
