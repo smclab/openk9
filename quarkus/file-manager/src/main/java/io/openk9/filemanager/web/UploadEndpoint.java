@@ -36,7 +36,6 @@ public class UploadEndpoint {
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Path("/{datasourceId}/{fileId}")
-	@ReactiveTransactional
 	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
 					  InputStream inputStream) throws IOException, ServerException, InsufficientDataException,
 			ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
