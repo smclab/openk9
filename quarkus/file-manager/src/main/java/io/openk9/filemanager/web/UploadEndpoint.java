@@ -18,6 +18,7 @@
 package io.openk9.filemanager.web;
 
 import io.minio.errors.*;
+import io.smallrye.mutiny.Uni;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -34,8 +35,8 @@ public class UploadEndpoint {
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Path("/{datasourceId}/{fileId}")
-	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
-						 InputStream inputStream) throws IOException, ServerException, InsufficientDataException,
+	public Uni<String> upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
+					  InputStream inputStream) throws IOException, ServerException, InsufficientDataException,
 			ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
 			XmlParserException, InternalException {
 

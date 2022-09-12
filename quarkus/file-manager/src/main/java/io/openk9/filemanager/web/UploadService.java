@@ -22,6 +22,7 @@ import io.minio.errors.*;
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
 import io.openk9.filemanager.service.ResourceService;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -43,7 +44,7 @@ public class UploadService {
 	ResourceService resourceService;
 
 
-	public String uploadObject(InputStream inputStream, String datasourceId, String fileId) throws
+	public Uni<String> uploadObject(InputStream inputStream, String datasourceId, String fileId) throws
 			IOException, ServerException, InsufficientDataException, ErrorResponseException,
 			NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException,
 			InternalException {
@@ -75,20 +76,21 @@ public class UploadService {
 		resource.setVersion("1");
 		resource.setUrl("http://url");
 
-		resourceService.create(resource);
+		return resourceService.create(resource).map(r -> {
+			try {
+				ObjectWriteResponse response = minioClient.putObject(args);
+				return dataId;
+			} catch (MinioException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			} catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException(e);
+			} catch (InvalidKeyException e) {
+				throw new RuntimeException(e);
+			}
+		});
 
-		try {
-			ObjectWriteResponse response = minioClient.putObject(args);
-			return dataId;
-		} catch (MinioException e) {
-			throw new RuntimeException(e);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		} catch (InvalidKeyException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 
