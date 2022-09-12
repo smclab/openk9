@@ -11,7 +11,7 @@ Build Branch File Manager Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - 204-ottimizzazione-payload
+      - 241-ottimizzazione-payload
       - tags
     changes:
       - quarkus/resources-common/**/*
