@@ -20,8 +20,14 @@ package io.openk9.filemanager.mapper;
 
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
+import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
+@Mapper(
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        componentModel = "cdi"
+)
 public interface ResourceMapper {
     Resource toResource(ResourceDto dto);
     ResourceDto toDto(Resource datasource);
