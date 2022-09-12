@@ -17,8 +17,8 @@ import javax.persistence.*;
 @Cacheable
 public class Resource extends PanacheEntity {
 
-    @Column(name = "id", nullable = false)
-    private String id;
+    @Column(name = "resourceId", nullable = false)
+    private String resourceId;
 
     @Column(name = "version", nullable = false)
     private String version;

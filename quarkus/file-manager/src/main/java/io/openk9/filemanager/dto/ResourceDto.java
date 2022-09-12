@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 public class ResourceDto {
-    private String id;
+    private String resourceId;
     private String version;
     private String url;
 }

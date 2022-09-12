@@ -72,7 +72,7 @@ public class UploadService {
 				.build();
 
 		Resource resource = new Resource();
-		resource.setId(fileId);
+		resource.setResourceId(fileId);
 		resource.setVersion("1");
 		resource.setUrl("http://url");
 
