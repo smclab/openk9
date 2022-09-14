@@ -30,6 +30,7 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -55,10 +56,11 @@ public class QueryAnalysis extends K9Entity {
 	@JsonIgnore
 	private Set<Rule> rules = new LinkedHashSet<>();
 
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	@Column(name = "stopword")
 	@CollectionTable(name = "query_analysis_stopwords", joinColumns = @JoinColumn(name = "owner_id"))
 	@JsonIgnore
+	@ToString.Exclude
 	private Set<String> stopwords = new LinkedHashSet<>();
 
 	@ManyToMany(cascade = {
