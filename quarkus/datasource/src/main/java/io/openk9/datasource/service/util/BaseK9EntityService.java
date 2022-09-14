@@ -78,6 +78,24 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	public abstract Class<ENTITY> getEntityClass();
 
+	public Uni<List<ENTITY>> findAll() {
+		return withTransaction(s -> {
+
+			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+
+			CriteriaQuery<ENTITY> query =
+				criteriaBuilder.createQuery(getEntityClass());
+
+			query.from(getEntityClass());
+
+			return s.createQuery(query)
+				.setCacheable(true)
+				.getResultList();
+
+		});
+
+	}
+
 	public Uni<Connection<ENTITY>> findConnection(
 		String after, String before, Integer first, Integer last) {
 
@@ -655,6 +673,13 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Override
 	public Uni<ENTITY> create(DTO dto) {
 		return create(mapper.create(dto));
+	}
+
+	protected <T extends K9Entity> Uni<T> merge(T entity) {
+		return withTransaction(
+			(s, t) -> s.merge(entity)
+				.call(s::flush)
+		);
 	}
 
 	protected <T extends K9Entity> Uni<T> persist(T entity) {

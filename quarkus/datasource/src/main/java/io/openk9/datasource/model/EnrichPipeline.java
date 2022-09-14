@@ -26,11 +26,9 @@ import lombok.ToString;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
@@ -41,24 +39,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Cacheable
 public class EnrichPipeline extends K9Entity {
-	@ManyToMany(cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
-	@JoinTable(name = "enrich_pipeline_enrich_items",
-		joinColumns = @JoinColumn(name = "enrich_pipeline_id", referencedColumnName = "id"),
-		inverseJoinColumns = @JoinColumn(name = "enrich_items_id", referencedColumnName = "id"))
+
+	@OneToMany(mappedBy = "enrichPipeline", cascade = javax.persistence.CascadeType.ALL)
 	@ToString.Exclude
+	@OrderBy("weight ASC")
 	@JsonIgnore
-	private Set<EnrichItem> enrichItems = new LinkedHashSet<>();
-
-	public void addEnrichItem(EnrichItem enrichItem) {
-		enrichItems.add(enrichItem);
-	}
-
-	public void removeEnrichItem(EnrichItem enrichItem) {
-		enrichItems.remove(enrichItem);
-	}
+	private Set<EnrichPipelineItem> enrichPipelineItems
+		= new java.util.LinkedHashSet<>();
 
 }

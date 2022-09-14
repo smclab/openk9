@@ -21,7 +21,13 @@ import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.model.EnrichPipelineItemKey;
+import io.openk9.datasource.model.EnrichPipelineItemKey_;
+import io.openk9.datasource.model.EnrichPipelineItem_;
+import io.openk9.datasource.model.EnrichPipeline_;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
+import io.openk9.datasource.model.util.K9Entity_;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
@@ -33,7 +39,18 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
+import javax.persistence.criteria.Subquery;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, EnrichPipelineDTO> {
@@ -67,6 +84,115 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			searchText);
 	}
 
+	public Uni<Set<EnrichItem>> getEnrichItemsInEnrichPipeline(
+		long enrichPipelineId) {
+
+		return withTransaction(
+			s ->
+				findById(enrichPipelineId)
+					.flatMap(ep -> Mutiny2.fetch(s, ep.getEnrichPipelineItems()))
+					.map(l -> l
+						.stream()
+						.map(EnrichPipelineItem::getEnrichItem)
+						.collect(Collectors.toSet()))
+		);
+
+	}
+
+	public Uni<List<EnrichItem>> getEnrichItemsNotInEnrichPipeline(
+		long enrichPipelineId) {
+
+		return withTransaction(
+			s -> {
+
+				CriteriaBuilder cb = em.getCriteriaBuilder();
+
+				CriteriaQuery<EnrichItem> query =
+					cb.createQuery(EnrichItem.class);
+
+				Root<EnrichItem> root = query.from(EnrichItem.class);
+
+				Subquery<Long> subquery = query.subquery(Long.class);
+
+				Root<EnrichPipeline> from = subquery.from(EnrichPipeline.class);
+
+				SetJoin<EnrichPipeline, EnrichPipelineItem> rootJoin =
+					from.joinSet(EnrichPipeline_.ENRICH_PIPELINE_ITEMS);
+
+				Path<EnrichPipelineItemKey> enrichPipelineItemKeyPath =
+					rootJoin.get(EnrichPipelineItem_.key);
+
+				Path<Long> enrichItemId = enrichPipelineItemKeyPath.get(
+					EnrichPipelineItemKey_.enrichItemId);
+
+				subquery.select(enrichItemId);
+
+				subquery.where(
+					cb.equal(from.get(K9Entity_.id), enrichPipelineId));
+
+				query.where(
+					cb.in(root.get(K9Entity_.id)).value(subquery).not());
+
+				return s.createQuery(query).getResultList();
+
+			}
+		);
+
+	}
+
+	public Uni<EnrichPipeline> sortEnrichItems(
+		long enrichPipelineId, List<Long> enrichItemIdList) {
+
+
+		return withTransaction(s -> findById(enrichPipelineId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(enrichPipeline -> {
+
+				List<Uni<EnrichItem>> enrichItemList = new ArrayList<>();
+
+				for (Long enrichItemId : enrichItemIdList) {
+					enrichItemList.add(
+						enrichItemService.findById(enrichItemId));
+				}
+
+				return Uni
+					.combine()
+					.all()
+					.unis(enrichItemList)
+					.combinedWith(EnrichItem.class, Function.identity())
+					.flatMap(l -> Mutiny2
+						.fetch(s, enrichPipeline.getEnrichPipelineItems())
+						.flatMap(epi -> {
+
+							float weight = 0.0f;
+
+							for (Long enrichItemId : enrichItemIdList) {
+
+								for (EnrichPipelineItem enrichPipelineItem : epi) {
+									if (
+											Objects.equals(
+												enrichPipelineItem.getEnrichItem().getId(),
+												enrichItemId
+											)
+									) {
+										enrichPipelineItem.setWeight(weight);
+										weight += 1.0f;
+										break;
+									}
+								}
+
+							}
+
+							return merge(enrichPipeline);
+
+
+						})
+					);
+
+				}));
+	}
+
 	public Uni<Page<EnrichItem>> getEnrichItems(
 		long enrichPipelineId, Pageable pageable,
 		Filter filter) {
@@ -79,7 +205,14 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			filter);
 	}
 
-	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(long enrichPipelineId, long enrichItemId) {
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(
+		long enrichPipelineId, long enrichItemId) {
+		 return addEnrichItem(enrichPipelineId, enrichItemId, 0);
+	}
+
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(
+		long enrichPipelineId, long enrichItemId, float weight) {
+
 		return withTransaction((s) -> findById(enrichPipelineId)
 			.onItem()
 			.ifNotNull()
@@ -87,13 +220,25 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 				enrichItemService.findById(enrichItemId)
 					.onItem()
 					.ifNotNull()
-					.transformToUni(enrichItem -> Mutiny2.fetch(s, enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
-						if (enrichItems.add(enrichItem)) {
-							enrichPipeline.setEnrichItems(enrichItems);
+					.transformToUni(enrichItem ->
+						Mutiny2
+							.fetch(s, enrichPipeline.getEnrichPipelineItems())
+							.flatMap(enrichPipelineItems -> {
+
+						boolean add = enrichPipelineItems.add(
+							EnrichPipelineItem.of(
+								EnrichPipelineItemKey.of(
+									enrichPipeline.getId(),
+									enrichItem.getId()),
+								enrichPipeline, enrichItem, weight));
+
+						if (add) {
+							enrichPipeline.setEnrichPipelineItems(enrichPipelineItems);
 							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
 						} else {
 							return Uni.createFrom().nullItem();
 						}
+
 					}))));
 	}
 
@@ -105,13 +250,23 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 				enrichItemService.findById(enrichItemId)
 					.onItem()
 					.ifNotNull()
-					.transformToUni(enrichItem -> Mutiny2.fetch(s, enrichPipeline.getEnrichItems()).flatMap(enrichItems -> {
-						if (enrichItems.remove(enrichItem)) {
-							enrichPipeline.setEnrichItems(enrichItems);
-							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
-						}
-						return Uni.createFrom().nullItem();
-					}))));
+					.transformToUni(enrichItem ->
+						Mutiny2
+							.fetch(s, enrichPipeline.getEnrichPipelineItems())
+							.flatMap(enrichPipelineItems -> {
+
+								boolean removed = enrichPipelineItems.removeIf(
+									epi -> epi.getKey().getEnrichItemId() == enrichItemId
+										   && epi.getKey().getEnrichPipelineId() == enrichPipelineId);
+
+								if (removed) {
+									enrichPipeline.setEnrichPipelineItems(enrichPipelineItems);
+									return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
+								} else {
+									return Uni.createFrom().nullItem();
+								}
+
+							}))));
 	}
 
 	@Inject

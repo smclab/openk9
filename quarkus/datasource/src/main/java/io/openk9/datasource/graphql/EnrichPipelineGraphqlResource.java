@@ -40,6 +40,8 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -58,17 +60,13 @@ public class EnrichPipelineGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
-	public Uni<Connection<EnrichItem>> enrichItems(
+	public Uni<List<EnrichItem>> enrichItems(
 		@Source EnrichPipeline enrichPipeline,
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
-		return enrichPipelineService.getEnrichItemsConnection(
-			enrichPipeline.getId(), after, before, first, last, searchText,
-			sortByList, notEqual);
+		@DefaultValue("false") boolean not) {
+		return not
+			? enrichPipelineService.getEnrichItemsNotInEnrichPipeline(enrichPipeline.getId())
+			: enrichPipelineService.getEnrichItemsInEnrichPipeline(enrichPipeline.getId())
+			.map(ArrayList::new);
 	}
 
 	@Query
@@ -104,14 +102,23 @@ public class EnrichPipelineGraphqlResource {
 	}
 
 	@Mutation
+	public Uni<EnrichPipeline> sortEnrichItems(
+		@Id long enrichPipelineId, List<Long> enrichItemIdList) {
+		return enrichPipelineService.sortEnrichItems(
+			enrichPipelineId, enrichItemIdList);
+	}
+
+	@Mutation
 	public Uni<EnrichPipeline> deleteEnrichPipeline(@Id long enrichPipelineId) {
 		return enrichPipelineService.deleteById(enrichPipelineId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItemToEnrichPipeline(@Id long enrichPipelineId, @Id long enrichItemId) {
+	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItemToEnrichPipeline(
+		@Id long enrichPipelineId, @Id long enrichItemId,
+		@DefaultValue("0") float weight) {
 		return enrichPipelineService.addEnrichItem(
-				enrichPipelineId, enrichItemId);
+			enrichPipelineId, enrichItemId, weight);
 	}
 
 	@Mutation
