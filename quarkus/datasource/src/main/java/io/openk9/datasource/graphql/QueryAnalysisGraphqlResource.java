@@ -49,7 +49,7 @@ import java.util.Set;
 public class QueryAnalysisGraphqlResource {
 
 	@Query
-	public Uni<Connection<QueryAnalysis>> getQueryAnalysis(
+	public Uni<Connection<QueryAnalysis>> getQueryAnalyses(
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before, 
 		@Description("fetching only the first certain number of nodes") Integer first, 
@@ -60,7 +60,7 @@ public class QueryAnalysisGraphqlResource {
 	}
 
 	@Query
-	public Uni<QueryAnalysis> getQueryAnalysis_(@Id long id) {
+	public Uni<QueryAnalysis> getQueryAnalysis(@Id long id) {
 		return queryAnalysisService.findById(id);
 	}
 
