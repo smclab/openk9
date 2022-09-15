@@ -91,7 +91,7 @@ public class UploadService {
 	}*/
 
 	@ConsumeEvent
-	@ReactiveTransactional
+	@Transactional
 	public Uni<String> saveObject(UploadRequestDto uploadRequestDto) {
 
 		String datasourceId = uploadRequestDto.getDatasourceId();
