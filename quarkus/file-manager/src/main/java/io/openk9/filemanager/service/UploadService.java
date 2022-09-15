@@ -21,6 +21,7 @@ import io.minio.*;
 import io.minio.errors.*;
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
+import io.openk9.filemanager.model.UploadRequestDto;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
@@ -56,8 +57,14 @@ public class UploadService {
 		resourceDto.setState(Resource.State.valueOf("PENDING"));
 		resourceDto.setResourceId(resourceId);
 
+		UploadRequestDto uploadRequestDto = new UploadRequestDto();
+		uploadRequestDto.setDatasourceId(datasourceId);
+		uploadRequestDto.setFileId(fileId);
+		uploadRequestDto.setResourceId(resourceId);
+		uploadRequestDto.setInputStream(inputStream);
+
 		return resourceService.createOrUpdate(resourceDto).map(r -> {
-			this.saveObject(datasourceId, fileId, inputStream, resourceId);
+			this.saveObject(uploadRequestDto);
 			return resourceId;
 		});
 
@@ -80,7 +87,12 @@ public class UploadService {
 	}*/
 
 	@ConsumeEvent
-	private void saveObject(String datasourceId, String fileId, InputStream inputStream, String resourceId) {
+	private void saveObject(UploadRequestDto uploadRequestDto) {
+
+		String datasourceId = uploadRequestDto.getDatasourceId();
+		String resourceId = uploadRequestDto.getResourceId();
+		String fileId = uploadRequestDto.getFileId();
+		InputStream inputStream = uploadRequestDto.getInputStream();
 
 		try {
 			String bucketName = "datasource" + datasourceId;
