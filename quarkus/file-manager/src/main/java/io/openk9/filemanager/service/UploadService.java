@@ -22,6 +22,7 @@ import io.minio.errors.*;
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
 import io.openk9.filemanager.model.UploadRequestDto;
+import io.openk9.filemanager.repository.ResourceRepository;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
@@ -121,14 +122,7 @@ public class UploadService {
 
 			minioClient.putObject(args);
 
-			ResourceDto resourceDto = new ResourceDto();
-			resourceDto.setFileId(fileId);
-			resourceDto.setDatasourceId(datasourceId);
-			resourceDto.setVersion("1");
-			resourceDto.setState(Resource.State.valueOf("OK"));
-			resourceDto.setResourceId(resourceId);
-
-			return resourceService.createOrUpdate(resourceDto).map(r -> resourceId);
+			return resourceService.update("Ok", resourceId).map(r -> resourceId);
 
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
 			System.out.println("Error occurred: " + e);
@@ -150,6 +144,9 @@ public class UploadService {
 
 	@Inject
 	Logger logger;
+
+	@Inject
+	ResourceRepository repository;
 
 
 }
