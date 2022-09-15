@@ -22,7 +22,6 @@ import io.minio.errors.*;
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
 import io.openk9.filemanager.model.UploadRequestDto;
-import io.openk9.filemanager.repository.ResourceRepository;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
@@ -144,9 +143,6 @@ public class UploadService {
 
 	@Inject
 	Logger logger;
-
-	@Inject
-	ResourceRepository repository;
 
 
 }
