@@ -25,6 +25,8 @@ public class ResourceService {
 
     public Uni<Resource> update(long id, @Valid ResourceDto dto) {
 
+        logger.info(id);
+
         return Resource
                 .findById(id)
                 .onItem()
