@@ -23,7 +23,7 @@ public class ResourceService {
     }
 
 
-    public void update(long id, @Valid ResourceDto dto) {
+    public Uni<Resource> update(long id, @Valid ResourceDto dto) {
 
         logger.info(id);
 
@@ -31,6 +31,8 @@ public class ResourceService {
 
         logger.info(resource.getResourceId());
         logger.info(resource.toString());
+
+        return resource.persist();
 
     }
 
