@@ -125,6 +125,8 @@ public class UploadService {
 
 			minioClient.putObject(args);
 
+			logger.info("Upload done");
+
 			ResourceDto resourceDto = new ResourceDto();
 			resourceDto.setFileId(fileId);
 			resourceDto.setDatasourceId(datasourceId);

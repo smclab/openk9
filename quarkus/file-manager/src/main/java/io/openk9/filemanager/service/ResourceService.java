@@ -5,6 +5,7 @@ import io.openk9.filemanager.mapper.ResourceMapper;
 import io.openk9.filemanager.model.Resource;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -31,6 +32,7 @@ public class ResourceService {
                 .failWith(() -> new WebApplicationException(
                         "Resource with id of " + id  + " does not exist.", 404))
                 .flatMap(resource -> {
+                    logger.info(resource.toString());
                     Resource newResource =
                             _resourceMapper.update((Resource)resource, dto);
                     return newResource.persist();
@@ -40,6 +42,9 @@ public class ResourceService {
 
     @Inject
     ResourceMapper _resourceMapper;
+
+    @Inject
+    Logger logger;
 
 
 }
