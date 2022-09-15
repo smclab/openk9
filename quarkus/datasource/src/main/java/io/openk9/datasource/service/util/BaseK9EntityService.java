@@ -641,6 +641,12 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	@Override
+	public Uni<List<ENTITY>> findByIds(Set<Long> ids) {
+		return withTransaction(
+			(s) -> s.find(getEntityClass(), ids.toArray(new Object[0])));
+	}
+
+	@Override
 	public Uni<ENTITY> patch(long id, DTO dto) {
 		return withTransaction(() -> findById(id)
 			.onItem().ifNotNull()

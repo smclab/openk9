@@ -24,6 +24,9 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.smallrye.mutiny.Uni;
 
+import java.util.List;
+import java.util.Set;
+
 public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO> {
 	Uni<Page<ENTITY>> findAllPaginated(
 		Pageable pageable, String searchText);
@@ -47,6 +50,8 @@ public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDT
 		int limit, String sortBy, long afterId, long beforeId, Filter filter);
 
 	Uni<ENTITY> findById(long id);
+
+	Uni<List<ENTITY>> findByIds(Set<Long> ids);
 
 	Uni<ENTITY> patch(long id, DTO dto);
 

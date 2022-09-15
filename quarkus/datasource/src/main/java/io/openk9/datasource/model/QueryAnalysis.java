@@ -26,11 +26,7 @@ import lombok.ToString;
 
 import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -56,12 +52,6 @@ public class QueryAnalysis extends K9Entity {
 	@JsonIgnore
 	private Set<Rule> rules = new LinkedHashSet<>();
 
-	@ElementCollection(fetch = FetchType.EAGER)
-	@Column(name = "stopword")
-	@CollectionTable(name = "query_analysis_stopwords", joinColumns = @JoinColumn(name = "owner_id"))
-	@JsonIgnore
-	@ToString.Exclude
-	private Set<String> stopwords = new LinkedHashSet<>();
 
 	@ManyToMany(cascade = {
 		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
@@ -72,5 +62,14 @@ public class QueryAnalysis extends K9Entity {
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<Annotator> annotators = new LinkedHashSet<>();
+
+	@ToString.Exclude
+	@ManyToMany(cascade = {
+		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
+		CascadeType.DETACH})
+	@JoinTable(name = "query_analysis_stopWords",
+		joinColumns = @JoinColumn(name = "queryAnalysis_id"),
+		inverseJoinColumns = @JoinColumn(name = "stopWords_id"))
+	private Set<StopWord> stopWords = new LinkedHashSet<>();
 
 }

@@ -23,14 +23,15 @@ import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
+import io.openk9.datasource.model.StopWord;
 import io.openk9.datasource.model.dto.QueryAnalysisDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.HashSet;
 import java.util.Set;
 
 @ApplicationScoped
@@ -39,6 +40,15 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 		 this.mapper = mapper;
 	}
 
+	public Uni<Connection<StopWord>> getStopWords(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, QueryAnalysis_.STOP_WORDS, StopWord.class,
+			stopWordService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
 
 	public Uni<Connection<Annotator>> getAnnotators(
 		Long id, String after, String before, Integer first, Integer last,
@@ -71,28 +81,25 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 	}
 
 	public Uni<QueryAnalysis> setStopwords(
-		long queryAnalysisId, Set<String> stopwords) {
+		long queryAnalysisId, Set<Long> stopWordIds) {
 		 return withTransaction(() -> findById(queryAnalysisId)
 			 .onItem()
 			 .ifNotNull()
-			 .transformToUni(e -> {
-				 e.setStopwords(stopwords);
-				 return persist(e);
-			 }));
+			 .transformToUni(e ->
+				 stopWordService.findByIds(stopWordIds)
+					 .onItem()
+					 .ifNotNull()
+					 .transformToUni(stopWords -> {
+						 e.setStopWords(new HashSet<>(stopWords));
+						 return persist(e);
+					 })
+			 )
+		 );
 	}
 
 	public Uni<QueryAnalysis> addStopwords(
-		long queryAnalysisId, Set<String> newStopwords) {
-		return withTransaction(s -> findById(queryAnalysisId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(e -> Mutiny2.fetch(s, e.getStopwords())
-				.onItem()
-				.ifNotNull()
-				.transformToUni(stopwords -> {
-					stopwords.addAll(newStopwords);
-					return persist(e);
-				})));
+		long queryAnalysisId, Set<Long> newStopwordIds) {
+		return setStopwords(queryAnalysisId, newStopwordIds);
 	}
 
 	@Inject
@@ -100,6 +107,9 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 	@Inject
 	RuleService ruleService;
+
+	@Inject
+	StopWordService stopWordService;
 
 
 }
