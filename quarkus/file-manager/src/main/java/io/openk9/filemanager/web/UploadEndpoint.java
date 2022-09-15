@@ -18,6 +18,7 @@
 package io.openk9.filemanager.web;
 
 import io.minio.errors.*;
+import io.openk9.filemanager.service.UploadService;
 import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
 import io.smallrye.mutiny.Uni;
 
@@ -28,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.UUID;
 
 @Path("/v1/file-manager/upload")
 public class UploadEndpoint {
@@ -42,13 +42,11 @@ public class UploadEndpoint {
 			ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
 			XmlParserException, InternalException {
 
-		String resourceId = UUID.randomUUID().toString();
-
-		return uploadService.uploadObject(inputStream, datasourceId, fileId, resourceId);
+		return uploadService.uploadObject(inputStream, datasourceId, fileId);
 
 	}
 
 	@Inject
-	UploadService uploadService;
+    UploadService uploadService;
 
 }
