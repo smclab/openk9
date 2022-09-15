@@ -28,6 +28,7 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
@@ -87,6 +88,7 @@ public class UploadService {
 	}*/
 
 	@ConsumeEvent
+	@Transactional
 	private Uni<String> saveObject(UploadRequestDto uploadRequestDto) {
 
 		String datasourceId = uploadRequestDto.getDatasourceId();
