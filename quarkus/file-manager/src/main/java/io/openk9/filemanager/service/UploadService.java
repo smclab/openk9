@@ -114,7 +114,7 @@ public class UploadService {
 			int length = inputStream.available();
 
 			PutObjectArgs args = PutObjectArgs.builder()
-					.bucket(datasourceId)
+					.bucket(bucketName)
 					.object(fileId)
 					.stream(inputStream, length, -1)
 					.build();
