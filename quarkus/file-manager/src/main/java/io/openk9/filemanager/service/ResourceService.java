@@ -27,11 +27,13 @@ public class ResourceService {
 
         logger.info(id);
 
-        Uni<Resource> resource = Resource.findById(id);
-
-        logger.info(resource.toString());
-
-        return resource;
+        return Resource
+                .findById(id)
+                .flatMap(resource -> {
+                    Resource newResource =
+                            _resourceMapper.update((Resource)resource, dto);
+                    return Panache.withTransaction(newResource::persist);
+                });
 
     }
 
