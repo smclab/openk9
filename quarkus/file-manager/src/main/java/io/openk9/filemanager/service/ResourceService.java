@@ -27,12 +27,11 @@ public class ResourceService {
 
         logger.info(id);
 
-        Resource resource = (Resource)Resource.findById(id);
+        Uni<Resource> resource = Resource.findById(id);
 
-        logger.info(resource.getResourceId());
         logger.info(resource.toString());
 
-        return resource.persist();
+        return resource;
 
     }
 
