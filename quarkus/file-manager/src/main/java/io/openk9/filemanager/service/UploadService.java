@@ -64,7 +64,9 @@ public class UploadService {
 		uploadRequestDto.setResourceId(resourceId);
 		uploadRequestDto.setInputStream(inputStream);
 
+
 		return resourceService.create(resourceDto).map(r -> {
+			uploadRequestDto.setId(r.id);
 			this.saveObject(uploadRequestDto);
 			return resourceId;
 		});
@@ -89,7 +91,7 @@ public class UploadService {
 
 	@ConsumeEvent
 	@Transactional
-	private Uni<String> saveObject(UploadRequestDto uploadRequestDto) {
+	public Uni<String> saveObject(UploadRequestDto uploadRequestDto) {
 
 		String datasourceId = uploadRequestDto.getDatasourceId();
 		String resourceId = uploadRequestDto.getResourceId();
@@ -130,7 +132,7 @@ public class UploadService {
 			resourceDto.setState(Resource.State.valueOf("OK"));
 			resourceDto.setResourceId(resourceId);
 
-			return resourceService.update(resourceId, resourceDto).map(r -> resourceId);
+			return resourceService.update(uploadRequestDto.getId(), resourceDto).map(r -> resourceId);
 
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
 			System.out.println("Error occurred: " + e);
@@ -142,7 +144,7 @@ public class UploadService {
 			resourceDto.setState(Resource.State.valueOf("KO"));
 			resourceDto.setResourceId(resourceId);
 
-			return resourceService.create(resourceDto).map(r -> resourceId);
+			return resourceService.update(uploadRequestDto.getId(), resourceDto).map(r -> resourceId);
 
 		}
 

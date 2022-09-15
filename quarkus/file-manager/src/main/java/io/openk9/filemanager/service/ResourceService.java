@@ -22,14 +22,14 @@ public class ResourceService {
     }
 
 
-    public Uni<Resource> update(String resourceId, @Valid ResourceDto dto) {
+    public Uni<Resource> update(long id, @Valid ResourceDto dto) {
 
         return Resource
-                .findByResourceId(resourceId)
+                .findById(id)
                 .onItem()
                 .ifNull()
                 .failWith(() -> new WebApplicationException(
-                        "Resource with id of " + resourceId  + " does not exist.", 404))
+                        "Resource with id of " + id  + " does not exist.", 404))
                 .flatMap(resource -> {
                     Resource newResource =
                             _resourceMapper.update((Resource)resource, dto);

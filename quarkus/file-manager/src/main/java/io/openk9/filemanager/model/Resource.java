@@ -38,11 +38,4 @@ public class Resource extends PanacheEntity {
         OK, KO, PENDING
     }
 
-    public static Uni<Resource> findByResourceId(String resourceId){
-        return find("resourceId", resourceId).firstResult();
-    }
-
-
-
-
 }

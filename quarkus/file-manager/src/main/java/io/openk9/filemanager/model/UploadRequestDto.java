@@ -29,4 +29,5 @@ public class UploadRequestDto {
 	private InputStream inputStream;
 	private String resourceId;
 	private String state;
+	private Long id;
 }
