@@ -16,9 +16,7 @@ public class ResourceService {
     public Uni<Resource> create(ResourceDto resourceDto) {
 
         Resource resource = _resourceMapper.toResource(resourceDto);
-
         return resource.persist();
-
     }
 
 

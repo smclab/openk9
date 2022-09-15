@@ -128,7 +128,7 @@ public class UploadService {
 			resourceDto.setState(Resource.State.valueOf("OK"));
 			resourceDto.setResourceId(resourceId);
 
-			return resourceService.create(resourceDto).map(r -> resourceId);
+			return resourceService.update(resourceId, resourceDto).map(r -> resourceId);
 
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
 			System.out.println("Error occurred: " + e);
