@@ -22,6 +22,7 @@ import io.minio.errors.*;
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
 import io.openk9.filemanager.model.UploadRequestDto;
+import io.quarkus.hibernate.reactive.panache.common.runtime.ReactiveTransactional;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
@@ -90,7 +91,7 @@ public class UploadService {
 	}*/
 
 	@ConsumeEvent
-	@Transactional
+	@ReactiveTransactional
 	public Uni<String> saveObject(UploadRequestDto uploadRequestDto) {
 
 		String datasourceId = uploadRequestDto.getDatasourceId();
