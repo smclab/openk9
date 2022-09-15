@@ -72,27 +72,27 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 	public Uni<QueryAnalysis> setStopwords(
 		long queryAnalysisId, Set<String> stopwords) {
-		 return findById(queryAnalysisId)
+		 return withTransaction(() -> findById(queryAnalysisId)
 			 .onItem()
 			 .ifNotNull()
 			 .transformToUni(e -> {
 				 e.setStopwords(stopwords);
 				 return persist(e);
-			 });
+			 }));
 	}
 
 	public Uni<QueryAnalysis> addStopwords(
 		long queryAnalysisId, Set<String> newStopwords) {
-		return findById(queryAnalysisId)
+		return withTransaction(s -> findById(queryAnalysisId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(e -> Mutiny2.fetch(e.getStopwords())
+			.transformToUni(e -> Mutiny2.fetch(s, e.getStopwords())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(stopwords -> {
 					stopwords.addAll(newStopwords);
 					return persist(e);
-				}));
+				})));
 	}
 
 	@Inject
