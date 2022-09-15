@@ -1,6 +1,7 @@
 package io.openk9.filemanager.model;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
+import io.smallrye.mutiny.Uni;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -17,7 +18,7 @@ import javax.persistence.*;
 @Cacheable
 public class Resource extends PanacheEntity {
 
-    @Column(name = "dataId", nullable = false)
+    @Column(name = "resourceId", nullable = false)
     private String resourceId;
 
     @Column(name = "fileId", nullable = false)
@@ -35,6 +36,10 @@ public class Resource extends PanacheEntity {
 
     public enum State {
         OK, KO, PENDING
+    }
+
+    public static Uni<Resource> findByResourceId(String resourceId){
+        return find("resourceId", resourceId).firstResult();
     }
 
 

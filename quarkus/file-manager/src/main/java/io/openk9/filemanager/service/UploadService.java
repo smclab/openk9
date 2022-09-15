@@ -63,7 +63,7 @@ public class UploadService {
 		uploadRequestDto.setResourceId(resourceId);
 		uploadRequestDto.setInputStream(inputStream);
 
-		return resourceService.createOrUpdate(resourceDto).map(r -> {
+		return resourceService.create(resourceDto).map(r -> {
 			this.saveObject(uploadRequestDto);
 			return resourceId;
 		});
@@ -121,7 +121,14 @@ public class UploadService {
 
 			minioClient.putObject(args);
 
-			return resourceService.update("Ok", resourceId).map(r -> resourceId);
+			ResourceDto resourceDto = new ResourceDto();
+			resourceDto.setFileId(fileId);
+			resourceDto.setDatasourceId(datasourceId);
+			resourceDto.setVersion("1");
+			resourceDto.setState(Resource.State.valueOf("OK"));
+			resourceDto.setResourceId(resourceId);
+
+			return resourceService.create(resourceDto).map(r -> resourceId);
 
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
 			System.out.println("Error occurred: " + e);
@@ -133,9 +140,7 @@ public class UploadService {
 			resourceDto.setState(Resource.State.valueOf("KO"));
 			resourceDto.setResourceId(resourceId);
 
-			resourceService.createOrUpdate(resourceDto);
-
-			return resourceService.createOrUpdate(resourceDto).map(r -> resourceId);
+			return resourceService.create(resourceDto).map(r -> resourceId);
 
 		}
 
