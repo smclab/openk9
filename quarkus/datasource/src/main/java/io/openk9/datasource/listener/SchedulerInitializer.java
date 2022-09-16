@@ -204,7 +204,6 @@ public class SchedulerInitializer {
 		@Inject
 		SchedulerInitializer taskBean;
 
-		@ActivateRequestContext
 		public void execute(JobExecutionContext context) {
 
 			JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
