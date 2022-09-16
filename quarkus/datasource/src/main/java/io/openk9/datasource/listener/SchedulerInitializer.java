@@ -24,6 +24,7 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.DatasourceService;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
+import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -204,6 +205,8 @@ public class SchedulerInitializer {
 		SchedulerInitializer taskBean;
 
 		public void execute(JobExecutionContext context) {
+
+			VertxContextSafetyToggle.setCurrentContextSafe(true);
 
 			JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
