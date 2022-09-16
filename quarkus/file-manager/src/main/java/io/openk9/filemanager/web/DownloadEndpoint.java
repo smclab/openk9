@@ -17,34 +17,26 @@
 
 package io.openk9.filemanager.web;
 
-import io.minio.errors.*;
-import io.openk9.filemanager.service.UploadService;
+import io.openk9.filemanager.service.DownloadService;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.UUID;
 
-@Path("/v1/file-manager/upload")
-public class UploadEndpoint {
+@Path("/v1/file-manager/download")
+public class DownloadEndpoint {
 
-	@POST
-	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	@Path("/{datasourceId}/{fileId}")
-	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
-					  InputStream inputStream) {
+	@GET
+	@Path("/{resourceId}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public InputStream upload(@PathParam("resourceId") String resourceId) {
 
-		String resourceId = UUID.randomUUID().toString();
-
-		return uploadService.uploadObject(inputStream, datasourceId, fileId, resourceId);
+		return downloadService.downloadObject(resourceId);
 
 	}
 
 	@Inject
-    UploadService uploadService;
+	DownloadService downloadService;
 
 }

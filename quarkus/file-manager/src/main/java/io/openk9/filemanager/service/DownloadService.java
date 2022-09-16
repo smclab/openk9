@@ -18,34 +18,23 @@
 package io.openk9.filemanager.service;
 
 import io.minio.*;
-import io.minio.errors.*;
+import io.minio.errors.MinioException;
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
 import io.openk9.filemanager.model.UploadRequestDto;
+import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.core.eventbus.EventBus;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import io.quarkus.vertx.ConsumeEvent;
 
 @ApplicationScoped
-public class UploadService {
-
-	private static final ExecutorService executorService = new ThreadPoolExecutor(10, 150,
-			60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.DiscardOldestPolicy());
+public class DownloadService {
 
 	@Inject
 	MinioClient minioClient;
@@ -54,27 +43,24 @@ public class UploadService {
 	ResourceService resourceService;
 
 
-	public String uploadObject(InputStream inputStream, String datasourceId, String fileId, String resourceId) {
+	public InputStream downloadObject(String resourceId) {
 
-		ResourceDto resourceDto = new ResourceDto();
-		resourceDto.setFileId(fileId);
-		resourceDto.setDatasourceId(datasourceId);
-		resourceDto.setVersion("1");
-		resourceDto.setState(Resource.State.valueOf("PENDING"));
-		resourceDto.setResourceId(resourceId);
+		Resource resource = resourceService.findByResourceId(resourceId);
+		String datasourceId = resource.getDatasourceId();
+		String fileId = resource.getFileId();
 
-		UploadRequestDto uploadRequestDto = new UploadRequestDto();
-		uploadRequestDto.setDatasourceId(datasourceId);
-		uploadRequestDto.setFileId(fileId);
-		uploadRequestDto.setResourceId(resourceId);
-		uploadRequestDto.setInputStream(inputStream);
+		String bucketName = "datasource" + datasourceId;
 
-		long id = resourceService.create(resourceDto);
-		logger.info(id);
-		uploadRequestDto.setId(id);
-		this.saveObject(uploadRequestDto);
-
-		return resourceId;
+		try {
+			return minioClient.getObject(
+					GetObjectArgs.builder()
+							.bucket(bucketName)
+							.object(fileId)
+							.build());
+		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			return InputStream.nullInputStream();
+		}
 	}
 
 
@@ -93,6 +79,7 @@ public class UploadService {
 		}
 	}*/
 
+	@ConsumeEvent(value = "upload", blocking = true)
 	public void saveObject(UploadRequestDto uploadRequestDto) {
 
 			String datasourceId = uploadRequestDto.getDatasourceId();
@@ -123,44 +110,18 @@ public class UploadService {
 						.stream(inputStream,-1 , 1024L * 1024 * 5)
 						.build();
 
-				executorService.submit(new Runnable() {
+				minioClient.putObject(args);
 
-					@Override
-					public void run() {
-						try {
-							minioClient.putObject(args);
-						} catch (ErrorResponseException e) {
-							throw new RuntimeException(e);
-						} catch (InsufficientDataException e) {
-							throw new RuntimeException(e);
-						} catch (InternalException e) {
-							throw new RuntimeException(e);
-						} catch (InvalidKeyException e) {
-							throw new RuntimeException(e);
-						} catch (InvalidResponseException e) {
-							throw new RuntimeException(e);
-						} catch (IOException e) {
-							throw new RuntimeException(e);
-						} catch (NoSuchAlgorithmException e) {
-							throw new RuntimeException(e);
-						} catch (ServerException e) {
-							throw new RuntimeException(e);
-						} catch (XmlParserException e) {
-							throw new RuntimeException(e);
-						}
-						logger.info("Upload done");
+				logger.info("Upload done");
 
-						ResourceDto resourceDto = new ResourceDto();
-						resourceDto.setFileId(fileId);
-						resourceDto.setDatasourceId(datasourceId);
-						resourceDto.setVersion("1");
-						resourceDto.setState(Resource.State.valueOf("OK"));
-						resourceDto.setResourceId(resourceId);
+				ResourceDto resourceDto = new ResourceDto();
+				resourceDto.setFileId(fileId);
+				resourceDto.setDatasourceId(datasourceId);
+				resourceDto.setVersion("1");
+				resourceDto.setState(Resource.State.valueOf("OK"));
+				resourceDto.setResourceId(resourceId);
 
-						resourceService.update(uploadRequestDto.getId(), resourceDto);
-					}
-				});
-
+				resourceService.update(uploadRequestDto.getId(), resourceDto);
 
 			} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
 				System.out.println("Error occurred: " + e);

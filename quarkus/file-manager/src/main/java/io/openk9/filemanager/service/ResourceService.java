@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceUnit;
+import javax.persistence.Query;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
@@ -21,10 +22,11 @@ public class ResourceService {
     EntityManager em;
 
     @Transactional
-    public void create(ResourceDto resourceDto) {
+    public long create(ResourceDto resourceDto) {
 
         Resource resource = _resourceMapper.toResource(resourceDto);
         em.persist(resource);
+        return resource.getId();
     }
 
     @Transactional
@@ -38,6 +40,20 @@ public class ResourceService {
         }
         catch (EntityNotFoundException e) {
             logger.info("Entity not found");
+        }
+    }
+
+    @Transactional
+    public Resource findByResourceId(String resourceId) {
+
+        try {
+            Query query = em.createQuery("SELECT r FROM Resource r WHERE r.resourceId = :resourceId");
+            query.setParameter("resourceId", resourceId);
+            return (Resource) query.getSingleResult();
+        }
+        catch (EntityNotFoundException e) {
+            logger.info("Entity not found");
+            return null;
         }
     }
 
