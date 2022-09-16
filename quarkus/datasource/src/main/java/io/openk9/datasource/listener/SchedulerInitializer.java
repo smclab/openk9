@@ -17,14 +17,17 @@
 
 package io.openk9.datasource.listener;
 
-import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.util.Mutiny2;
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
+import io.openk9.datasource.service.DatasourceService;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.Json;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.DisallowConcurrentExecution;
@@ -46,6 +49,10 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.UUID;
 
 @ApplicationScoped
 public class SchedulerInitializer {
@@ -63,23 +70,22 @@ public class SchedulerInitializer {
 
 		logger.info("init scheduler");
 
-		Panache.withTransaction(() ->
-			Datasource
-				.<Datasource>listAll()
-				.onItem()
-				.invoke(list -> {
-					for (Datasource datasource : list) {
-						try {
-							createOrUpdateScheduler(datasource);
-						}
-						catch (RuntimeException e) {
-							throw e;
-						}
-						catch (Exception e) {
-							throw new RuntimeException(e);
-						}
+		datasourceService
+			.findAll()
+			.onItem()
+			.invoke(list -> {
+				for (Datasource datasource : list) {
+					try {
+						createOrUpdateScheduler(datasource);
 					}
-				}))
+					catch (RuntimeException e) {
+						throw e;
+					}
+					catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
+			})
 			.await()
 			.indefinitely();
 
@@ -150,48 +156,46 @@ public class SchedulerInitializer {
 
 	public Uni<Void> performTask(Long datasourceId) {
 
-		Uni<Datasource> datasourceUni =
-			Datasource.findById(datasourceId);
+		return datasourceService.withTransaction(
+			s -> datasourceService.findById(datasourceId).flatMap(
+				datasource -> Mutiny2
+					.fetch(s, datasource.getPluginDriver())
+					.onItem()
+					.call(pluginDriver -> {
 
-		/*return datasourceUni.flatMap(datasource -> {
-			String driverServiceName = datasource.getDriverServiceName();
+						if (pluginDriver == null) {
+							logger.warn(
+								"datasource with id: " + datasourceId + " has no pluginDriver");
+							return Uni.createFrom().voidItem();
+						}
 
-			Instant lastIngestionDate =
-				datasource.getLastIngestionDate();
+						OffsetDateTime lastIngestionDate =
+							datasource.getLastIngestionDate();
 
-			if (lastIngestionDate == null) {
-				lastIngestionDate = Instant.ofEpochMilli(0);
-			}
+						if (lastIngestionDate == null) {
+							lastIngestionDate = OffsetDateTime.ofInstant(
+								Instant.ofEpochMilli(0), ZoneId.systemDefault());
+						}
 
-			UUID uuid = UUID.randomUUID();
+						UUID uuid = UUID.randomUUID();
 
-			String scheduleId = uuid.toString();
+						String scheduleId = uuid.toString();
 
-			return _pluginDriverClient.invokeDataParser(
-				InvokeDataParserDTO.of(
-					driverServiceName, datasource,
-					Date.from(lastIngestionDate),
-					new Date(),
-					scheduleId
-				)
-			)
-			.call(() -> {
-				Schedule schedule = new Schedule();
-				schedule.setId(uuid);
-				schedule.setDatasource(datasource);
-				schedule.setStatus(Schedule.Status.RUNNING);
-				return schedule.persist();
-			})
-			.invoke(ignore -> logger.info(
-				"invoke data parser for datasource: " + datasourceId +
-				" driverServiceName: " + driverServiceName))
-			.onFailure().invoke((t) -> logger.warn(t.getMessage()))
-			.onFailure().recoverWithNull().replaceWithVoid();
+						switch (pluginDriver.getType()) {
+							case HTTP: {
+								return httpPluginDriverClient.invoke(
+									Json.decodeValue(
+										pluginDriver.getJsonConfig(),
+										HttpPluginDriverInfo.class),
+									lastIngestionDate, datasource.getId(), scheduleId
+								);
+							}
+						}
 
-		});
-*/
+						return Uni.createFrom().voidItem();
 
-		return Uni.createFrom().nothing();
+					}))
+				.replaceWithVoid());
 
 	}
 
@@ -219,10 +223,12 @@ public class SchedulerInitializer {
 	Instance<Scheduler> _scheduler;
 
 	@Inject
-	@RestClient
-	PluginDriverClient _pluginDriverClient;
+	Logger logger;
 
 	@Inject
-	Logger logger;
+	DatasourceService datasourceService;
+
+	@Inject
+	HttpPluginDriverClient httpPluginDriverClient;
 
 }

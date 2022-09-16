@@ -21,7 +21,6 @@ import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.Hibernate;
 import org.quartz.SchedulerException;
 
@@ -47,14 +46,21 @@ public class K9EntityListener {
 
 	@PostRemove
 	public void postRemove(K9Entity k9Entity) throws SchedulerException {
-		_handle(k9Entity, EventType.UPDATE);
+		_handle(k9Entity, EventType.DELETE);
 	}
 
 	private void _handle(K9Entity k9Entity, String create)
-
 		throws SchedulerException {
+
+
 		if (_isDatasource(k9Entity)) {
-			_createOrUpdateScheduler((Datasource) k9Entity);
+			if (EventType.DELETE.equals(create)) {
+				_schedulerInitializer.get().deleteScheduler(
+					(Datasource)k9Entity);
+			}
+			else {
+				_createOrUpdateScheduler((Datasource) k9Entity);
+			}
 		}
 
 		String pk = Long.toString(k9Entity.getId());
@@ -79,8 +85,5 @@ public class K9EntityListener {
 
 	@Inject
 	EventSender _eventSender;
-
-	@Inject
-	EventBus bus;
 
 }

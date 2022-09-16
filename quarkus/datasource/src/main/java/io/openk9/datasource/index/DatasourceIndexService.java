@@ -17,9 +17,7 @@
 
 package io.openk9.datasource.index;
 
-import io.openk9.datasource.client.plugindriver.PluginDriverClient;
 import io.openk9.datasource.model.Datasource;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
@@ -142,10 +140,6 @@ public class DatasourceIndexService {
 
 	@Inject
 	RestHighLevelClient client;
-
-	@Inject
-	@RestClient
-	PluginDriverClient pluginDriverClient;
 
 	@Inject
 	Logger logger;

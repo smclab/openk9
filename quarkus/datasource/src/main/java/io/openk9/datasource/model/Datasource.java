@@ -20,6 +20,7 @@ package io.openk9.datasource.model;
 import com.cronutils.model.CronType;
 import com.cronutils.validation.Cron;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.openk9.datasource.listener.K9EntityListener;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import lombok.ToString;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.Lob;
@@ -47,6 +49,7 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 @Cacheable
+@EntityListeners(K9EntityListener.class)
 public class Datasource extends K9Entity {
 
 	@Column(name = "scheduling", nullable = false)
