@@ -64,13 +64,13 @@ public class SchedulerInitializer {
 		eventBus.send("initialize_scheduler", "initialize_scheduler");
 	}
 
-	@ConsumeEvent(value = "initialize_scheduler", blocking = true)
+	@ConsumeEvent(value = "initialize_scheduler")
 	@Transactional
-	public void initScheduler(String testMessage) {
+	public Uni<Void> initScheduler(String testMessage) {
 
 		logger.info("init scheduler");
 
-		datasourceService
+		return datasourceService
 			.findAll()
 			.onItem()
 			.invoke(list -> {
@@ -86,8 +86,7 @@ public class SchedulerInitializer {
 					}
 				}
 			})
-			.await()
-			.indefinitely();
+			.replaceWithVoid();
 
 	}
 
