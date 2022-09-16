@@ -64,6 +64,7 @@ public class SchedulerInitializer {
 	}
 
 	@ConsumeEvent(value = "initialize_scheduler")
+	@ActivateRequestContext
 	public Uni<Void> initScheduler(String testMessage) {
 
 		logger.info("init scheduler");
