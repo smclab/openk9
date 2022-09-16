@@ -48,7 +48,6 @@ import javax.enterprise.context.control.ActivateRequestContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -65,7 +64,6 @@ public class SchedulerInitializer {
 	}
 
 	@ConsumeEvent(value = "initialize_scheduler")
-	@Transactional
 	public Uni<Void> initScheduler(String testMessage) {
 
 		logger.info("init scheduler");
