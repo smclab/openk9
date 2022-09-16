@@ -64,16 +64,16 @@ public class UploadService {
 		uploadRequestDto.setResourceId(resourceId);
 		uploadRequestDto.setInputStream(inputStream);
 
-		bus.request("upload", uploadRequestDto, event -> {
-			if (event.failed()) {
-				event.cause().printStackTrace();
-			}
-			else {
-				System.out.println("OK");
-			}
-		});
-
 		resourceService.create(resourceDto);
+
+//		bus.request("upload", uploadRequestDto, event -> {
+//			if (event.failed()) {
+//				event.cause().printStackTrace();
+//			}
+//			else {
+//				System.out.println("OK");
+//			}
+//		});
 
 		return resourceId;
 
