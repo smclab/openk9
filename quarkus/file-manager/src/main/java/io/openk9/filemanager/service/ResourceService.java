@@ -3,38 +3,42 @@ package io.openk9.filemanager.service;
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.mapper.ResourceMapper;
 import io.openk9.filemanager.model.Resource;
-import io.quarkus.hibernate.reactive.panache.Panache;
-import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.PersistenceUnit;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
-import javax.ws.rs.WebApplicationException;
 
 
 @ApplicationScoped
 public class ResourceService {
 
-    public Uni<Resource> create(ResourceDto resourceDto) {
+    @Inject
+    EntityManager em;
+
+    @Transactional
+    public void create(ResourceDto resourceDto) {
 
         Resource resource = _resourceMapper.toResource(resourceDto);
-        return resource.persist();
+        em.persist(resource);
     }
 
+    @Transactional
+    public void update(long id, @Valid ResourceDto dto) {
 
-    public Uni<Resource> update(long id, @Valid ResourceDto dto) {
+        try {
+            Resource resource = em.find(Resource.class, id);
+            Resource updatedResource = _resourceMapper.update(resource, dto);
+            em.persist(updatedResource);
 
-        logger.info(id);
-
-        return Resource
-                .findById(id)
-                .flatMap(resource -> {
-                    Resource newResource =
-                            _resourceMapper.update((Resource)resource, dto);
-                    return Panache.withTransaction(newResource::persist);
-                });
-
+        }
+        catch (EntityNotFoundException e) {
+            logger.info("Entity not found");
+        }
     }
 
     @Inject
