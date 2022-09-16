@@ -22,7 +22,6 @@ import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.DatasourceService;
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
@@ -208,8 +207,7 @@ public class SchedulerInitializer {
 
 			JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
-			Panache.withTransaction(
-				() -> taskBean.performTask(jobDataMap.getLong("datasourceId")))
+			taskBean.performTask(jobDataMap.getLong("datasourceId"))
 				.await()
 				.indefinitely();
 		}
