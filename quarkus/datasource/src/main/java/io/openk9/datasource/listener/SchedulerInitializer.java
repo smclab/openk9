@@ -24,9 +24,12 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.DatasourceService;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
+import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
+import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
-import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.jboss.logging.Logger;
 import org.quartz.CronScheduleBuilder;
@@ -209,18 +212,15 @@ public class SchedulerInitializer {
 
 		public void execute(JobExecutionContext context) {
 
-			vertx.executeBlockingAndForget(Uni.createFrom().item(() -> {
-
+			Context vertxContext = VertxContext.getOrCreateDuplicatedContext(vertx);
+			VertxContextSafetyToggle.setContextSafe(vertxContext, true);
+			vertxContext.runOnContext(unused -> {
 				JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
 				taskBean.performTask(jobDataMap.getLong("datasourceId"))
 					.await()
 					.indefinitely();
-
-				return null;
-
-			}));
-
+			});
 
 		}
 
