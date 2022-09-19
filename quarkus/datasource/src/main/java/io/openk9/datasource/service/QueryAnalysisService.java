@@ -25,8 +25,10 @@ import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.StopWord;
 import io.openk9.datasource.model.dto.QueryAnalysisDTO;
+import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -102,6 +104,57 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 		return setStopwords(queryAnalysisId, newStopwordIds);
 	}
 
+	public Uni<Tuple2<QueryAnalysis, Rule>> addRuleToQueryAnalysis(
+		long id, long ruleId) {
+
+		return withTransaction((s, tr) -> findById(id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(queryAnalysis -> ruleService.findById(ruleId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(rule ->
+					Mutiny2.fetch(s, queryAnalysis.getRules())
+						.onItem()
+						.ifNotNull()
+						.transformToUni(rules -> {
+
+							if (rules.add(rule)) {
+
+								queryAnalysis.setRules(rules);
+
+								return persist(queryAnalysis)
+									.map(newSC -> Tuple2.of(newSC, rule));
+							}
+
+							return Uni.createFrom().nullItem();
+
+						})
+				)
+			));
+	}
+
+	public Uni<Tuple2<QueryAnalysis, Rule>> removeRuleToQueryAnalysis(
+		long id, long ruleId) {
+		return withTransaction((s, tr) -> findById(id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(queryAnalysis -> Mutiny2.fetch(s, queryAnalysis.getRules())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(rules -> {
+
+					if (queryAnalysis.removeRule(rules, ruleId)) {
+
+						return persist(queryAnalysis)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
 	@Inject
 	AnnotatorService annotatorService;
 
@@ -110,6 +163,5 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 	@Inject
 	StopWordService stopWordService;
-
 
 }

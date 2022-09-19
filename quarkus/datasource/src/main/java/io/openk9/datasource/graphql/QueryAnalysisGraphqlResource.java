@@ -26,6 +26,7 @@ import io.openk9.datasource.model.dto.QueryAnalysisDTO;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.QueryAnalysisService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
@@ -115,6 +116,18 @@ public class QueryAnalysisGraphqlResource {
 
 	public Uni<Response<QueryAnalysis>> createQueryAnalysis(QueryAnalysisDTO queryAnalysisDTO) {
 		return queryAnalysisService.getValidator().create(queryAnalysisDTO);
+	}
+
+	@Mutation
+	public Uni<Tuple2<QueryAnalysis, Rule>> addRuleToQueryAnalysis(
+		@Id long id, @Id long ruleId) {
+		return queryAnalysisService.addRuleToQueryAnalysis(id, ruleId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<QueryAnalysis, Rule>> removeRuleFromQueryAnalysis(
+		@Id long id, @Id long ruleId) {
+		return queryAnalysisService.removeRuleToQueryAnalysis(id, ruleId);
 	}
 
 	@Mutation

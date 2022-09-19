@@ -31,6 +31,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -71,5 +72,22 @@ public class QueryAnalysis extends K9Entity {
 		joinColumns = @JoinColumn(name = "queryAnalysis_id"),
 		inverseJoinColumns = @JoinColumn(name = "stopWords_id"))
 	private Set<StopWord> stopWords = new LinkedHashSet<>();
+
+	public boolean removeRule(
+		Set<Rule> rules, long ruleId) {
+
+		Iterator<Rule> iterator = rules.iterator();
+
+		while (iterator.hasNext()) {
+			Rule rule = iterator.next();
+			if (rule.getId() == ruleId) {
+				iterator.remove();
+				return true;
+			}
+		}
+
+		return false;
+
+	}
 
 }
