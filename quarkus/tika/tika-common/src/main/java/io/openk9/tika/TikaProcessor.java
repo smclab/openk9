@@ -17,6 +17,7 @@
 
 package io.openk9.tika;
 
+import io.openk9.tika.client.filemanager.FileManagerClient;
 import io.openk9.tika.util.Detectors;
 import io.quarkus.tika.TikaContent;
 import io.quarkus.tika.TikaMetadata;
@@ -26,12 +27,14 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.tika.metadata.HttpHeaders;
 import org.apache.tika.mime.MediaType;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
@@ -73,18 +76,15 @@ public class TikaProcessor {
             JsonObject binaryJson =
                 binaries.getJsonObject(internalIndex);
 
-            String data = binaryJson.getString("data");
+            String resourceId = binaryJson.getString("resourceId");
 
             String name = binaryJson.getString("name");
 
-            byte[] contentBytes = Base64.getDecoder().decode(data);
+            InputStream inputStream = fileManagerClient.download(resourceId);
 
             try {
 
-                MediaType mediaType = _detectors.detect(
-                    new BufferedInputStream(
-                        new ByteArrayInputStream(contentBytes))
-                );
+                MediaType mediaType = _detectors.detect(inputStream);
 
                 String metaTypeString = mediaType.toString();
 
@@ -98,11 +98,7 @@ public class TikaProcessor {
 
                     Instant start = Instant.now();
 
-                    TikaContent tikaContent = _tikaParser.parse(
-                        new BufferedInputStream(
-                            new ByteArrayInputStream(contentBytes)
-                        )
-                    );
+                    TikaContent tikaContent = _tikaParser.parse(inputStream);
 
                     Duration end =
                         Duration.between(start, Instant.now());
@@ -254,5 +250,9 @@ public class TikaProcessor {
 
     @Inject
     Logger logger;
+
+    @Inject
+    @RestClient
+    FileManagerClient fileManagerClient;
 
 }

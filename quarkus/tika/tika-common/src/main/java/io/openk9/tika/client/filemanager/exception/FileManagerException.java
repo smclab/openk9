@@ -15,28 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.filemanager.web;
+package io.openk9.tika.client.filemanager.exception;
 
-import io.openk9.filemanager.service.DownloadService;
+public class FileManagerException extends RuntimeException {
 
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.io.InputStream;
-
-@Path("/v1/file-manager/download")
-public class DownloadEndpoint {
-
-	@GET
-	@Path("/{resourceId}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public InputStream download(@PathParam("resourceId") String resourceId) {
-
-		return downloadService.downloadObject(resourceId);
-
+	public FileManagerException(String message) {
+		super(message);
 	}
-
-	@Inject
-	DownloadService downloadService;
-
 }
