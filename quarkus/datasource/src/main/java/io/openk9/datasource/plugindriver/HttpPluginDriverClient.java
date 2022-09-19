@@ -19,16 +19,45 @@ public class HttpPluginDriverClient {
 		HttpPluginDriverInfo httpPluginDriverInfo,
 		OffsetDateTime fromDate, long datasourceId, String scheduleId) {
 
-		Map<String, Object> body = new HashMap<>(httpPluginDriverInfo.getBody());
+		String path = httpPluginDriverInfo.getPath();
+
+		if (path == null) {
+			path = "/invoke";
+		}
+
+		HttpPluginDriverInfo.Method httpMethod = httpPluginDriverInfo.getMethod();
+
+		if (httpMethod == null) {
+			httpMethod = HttpPluginDriverInfo.Method.POST;
+		}
+
+		String host = httpPluginDriverInfo.getHost();
+
+		if (host == null) {
+			host = "localhost";
+		}
+
+		int port = httpPluginDriverInfo.getPort();
+
+		if (port < 1 || port > 65535) {
+			port = 8080;
+		}
+
+		Map<String, Object> body = httpPluginDriverInfo.getBody();
+
+		if (body == null) {
+			body = new HashMap<>();
+		}
+
 		body.put("timestamp", fromDate.toInstant().toEpochMilli());
 		body.put("datasourceId", datasourceId);
 		body.put("scheduleId", scheduleId);
 
 		return webClient.request(
-				httpPluginDriverInfo.getMethod().getHttpMethod(),
-				httpPluginDriverInfo.getPort(),
-				httpPluginDriverInfo.getHost(),
-				httpPluginDriverInfo.getPath()
+				httpMethod.getHttpMethod(),
+				port,
+				host,
+				path
 			)
 			.ssl(httpPluginDriverInfo.isSecure())
 			.sendJson(body);
