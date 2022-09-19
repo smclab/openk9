@@ -30,6 +30,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.jboss.logging.Logger;
 import org.quartz.CronScheduleBuilder;
@@ -54,7 +55,6 @@ import javax.inject.Inject;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.Map;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -190,9 +190,8 @@ public class SchedulerInitializer {
 										pluginDriver.getJsonConfig(),
 										HttpPluginDriverInfo.class),
 									lastIngestionDate, datasource.getId(), scheduleId,
-									(Map<String, Object>)Json.decodeValue(
-										datasource.getJsonConfig()
-									));
+									new JsonObject(datasource.getJsonConfig()).getMap()
+								);
 							}
 						}
 
