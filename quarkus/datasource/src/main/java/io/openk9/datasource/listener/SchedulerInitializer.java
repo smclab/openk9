@@ -209,7 +209,7 @@ public class SchedulerInitializer {
 
 		public void execute(JobExecutionContext context) {
 
-			vertx.runOnContext(() -> {
+			vertx.executeBlockingAndForget(Uni.createFrom().item(() -> {
 
 				JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
@@ -217,7 +217,9 @@ public class SchedulerInitializer {
 					.await()
 					.indefinitely();
 
-			});
+				return null;
+
+			}));
 
 
 		}
