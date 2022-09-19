@@ -53,7 +53,10 @@ public class HttpPluginDriverClient {
 		body.put("timestamp", fromDate.toInstant().toEpochMilli());
 		body.put("datasourceId", datasourceId);
 		body.put("scheduleId", scheduleId);
-		body.putAll(datasourceConfig);
+
+		if (datasourceConfig != null) {
+			body.putAll(datasourceConfig);
+		}
 
 		return webClient.request(
 				httpMethod.getHttpMethod(),
