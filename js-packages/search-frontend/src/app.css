@@ -26,3 +26,10 @@
 .openk9-embeddable-search--result-container:hover {
   border: 1px solid var(--openk9-embeddable-search--active-color);
 }
+
+.openk9-embeddable-search--result-badge {
+  padding: 8px 16px;
+  background-color: var(--openk9-embeddable-search--secondary-background-color);
+  margin-right: 8px;
+  border-radius: 4px;
+}
