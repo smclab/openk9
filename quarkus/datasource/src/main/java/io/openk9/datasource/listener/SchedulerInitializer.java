@@ -210,16 +210,22 @@ public class SchedulerInitializer {
 		@Inject
 		Vertx vertx;
 
+		@Inject
+		Logger logger;
+
 		public void execute(JobExecutionContext context) {
 
 			Context vertxContext = VertxContext.getOrCreateDuplicatedContext(vertx);
 			VertxContextSafetyToggle.setContextSafe(vertxContext, true);
 			vertxContext.runOnContext(unused -> {
+
 				JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
 				taskBean.performTask(jobDataMap.getLong("datasourceId"))
-					.await()
-					.indefinitely();
+					.subscribe().with(
+						unused2 -> {},
+						e -> logger.error(e.getMessage(), e)
+					);
 			});
 
 		}
