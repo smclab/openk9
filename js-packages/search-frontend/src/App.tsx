@@ -9,6 +9,7 @@ import { MaintenancePage } from "./components/MaintenancePage";
 const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
+  searchReplaceText: true
 });
 
 export function App() {
