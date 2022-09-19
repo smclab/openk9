@@ -54,6 +54,7 @@ import javax.inject.Inject;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -188,8 +189,10 @@ public class SchedulerInitializer {
 									Json.decodeValue(
 										pluginDriver.getJsonConfig(),
 										HttpPluginDriverInfo.class),
-									lastIngestionDate, datasource.getId(), scheduleId
-								);
+									lastIngestionDate, datasource.getId(), scheduleId,
+									(Map<String, Object>)Json.decodeValue(
+										datasource.getJsonConfig()
+									));
 							}
 						}
 

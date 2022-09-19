@@ -17,7 +17,8 @@ public class HttpPluginDriverClient {
 
 	public Uni<HttpResponse<Buffer>> invoke(
 		HttpPluginDriverInfo httpPluginDriverInfo,
-		OffsetDateTime fromDate, long datasourceId, String scheduleId) {
+		OffsetDateTime fromDate, long datasourceId, String scheduleId,
+		Map<String, Object> datasourceConfig) {
 
 		String path = httpPluginDriverInfo.getPath();
 
@@ -52,6 +53,7 @@ public class HttpPluginDriverClient {
 		body.put("timestamp", fromDate.toInstant().toEpochMilli());
 		body.put("datasourceId", datasourceId);
 		body.put("scheduleId", scheduleId);
+		body.putAll(datasourceConfig);
 
 		return webClient.request(
 				httpMethod.getHttpMethod(),
@@ -65,8 +67,9 @@ public class HttpPluginDriverClient {
 
 	public void invokeAndForget(
 		HttpPluginDriverInfo httpPluginDriverInfo,
-		OffsetDateTime fromDate, long datasourceId, String scheduleId) {
-		invoke(httpPluginDriverInfo, fromDate, datasourceId, scheduleId)
+		OffsetDateTime fromDate, long datasourceId, String scheduleId,
+		Map<String, Object> datasourceConfig) {
+		invoke(httpPluginDriverInfo, fromDate, datasourceId, scheduleId, datasourceConfig)
 			.subscribe()
 			.with(
 				response -> {
