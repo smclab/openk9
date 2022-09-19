@@ -24,9 +24,9 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.DatasourceService;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
-import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
+import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.jboss.logging.Logger;
 import org.quartz.CronScheduleBuilder;
@@ -204,15 +204,22 @@ public class SchedulerInitializer {
 		@Inject
 		SchedulerInitializer taskBean;
 
+		@Inject
+		Vertx vertx;
+
 		public void execute(JobExecutionContext context) {
 
-			VertxContextSafetyToggle.setCurrentContextSafe(true);
+			vertx.runOnContext(() -> {
 
-			JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
+				JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
-			taskBean.performTask(jobDataMap.getLong("datasourceId"))
-				.await()
-				.indefinitely();
+				taskBean.performTask(jobDataMap.getLong("datasourceId"))
+					.await()
+					.indefinitely();
+
+			});
+
+
 		}
 
 	}
