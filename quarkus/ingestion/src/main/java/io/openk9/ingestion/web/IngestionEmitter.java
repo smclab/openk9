@@ -53,11 +53,11 @@ public class IngestionEmitter {
 	}
 
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
-		if (ingestionDTO.getResources().getBinaries() != null) {
-			return _fileManagerEmitter.send(_of(ingestionDTO));
+		if (ingestionDTO.getResources().getBinaries().isEmpty()) {
+			return _ingestionEmitter.send(_of(ingestionDTO));
 		}
 		else {
-			return _ingestionEmitter.send(_of(ingestionDTO));
+			return _fileManagerEmitter.send(_of(ingestionDTO));
 		}
 	}
 
