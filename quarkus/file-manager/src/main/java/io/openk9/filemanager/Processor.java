@@ -7,6 +7,7 @@ import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.*;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -16,7 +17,6 @@ import java.io.InputStream;
 import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
-import java.util.logging.Logger;
 
 @ApplicationScoped
 public class Processor {
