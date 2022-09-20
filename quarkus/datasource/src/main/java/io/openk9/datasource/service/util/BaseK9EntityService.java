@@ -692,7 +692,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		);
 	}
 
-	protected <T extends K9Entity> Uni<T> persist(T entity) {
+	public <T extends K9Entity> Uni<T> persist(T entity) {
 		return withTransaction(
 			(s, t) -> s.persist(entity)
 				.map(v -> entity)

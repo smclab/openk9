@@ -182,7 +182,7 @@ public class IndexerProcessor {
 
 								datasource.setDataIndex(di);
 
-								return datasourceService.merge(datasource);
+								return datasourceService.persist(datasource);
 
 							})
 								.replaceWithVoid();
