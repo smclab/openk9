@@ -20,7 +20,7 @@ import java.util.concurrent.CompletionStage;
 @ApplicationScoped
 public class Processor {
 
-    @Incoming("ingestion")
+    @Incoming("file-manager")
     @Blocking
     public CompletionStage<Void> process(Message<?> message) {
 
