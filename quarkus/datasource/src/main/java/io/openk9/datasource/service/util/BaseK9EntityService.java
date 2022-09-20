@@ -39,8 +39,12 @@ import io.quarkus.hibernate.reactive.panache.common.runtime.AbstractJpaOperation
 import io.quarkus.hibernate.reactive.panache.runtime.PanacheQueryImpl;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil;
+import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
+import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -754,7 +758,20 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	public <T> Uni<T> withTransaction(
 		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> fun) {
-		return em.withTransaction(fun);
+
+		return Uni.createFrom().emitter(sink -> {
+
+			Context vertxContext = VertxContext.getOrCreateDuplicatedContext(vertx);
+			VertxContextSafetyToggle.setContextSafe(vertxContext, true);
+			vertxContext.runOnContext(unused ->
+				em.withTransaction(fun)
+					.subscribe()
+					.with(sink::complete, sink::fail)
+			);
+
+		});
+
+
 	}
 
 	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>>
@@ -774,6 +791,9 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	@Inject
 	protected Validator validator;
+
+	@Inject
+	Vertx vertx;
 
 	private AtomicReference<ValidatorK9EntityWrapper<ENTITY, DTO>> validatorWrapper =
 		new AtomicReference<>();

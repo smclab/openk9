@@ -9,10 +9,8 @@ import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.DocTypeService;
-import io.openk9.datasource.util.VertxUtil;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -43,67 +41,65 @@ public class IndexerProcessor {
 	@Incoming("index-writer")
 	public Uni<Void> process(Message<?> message) {
 
-		return VertxUtil.contextRun(vertx, () -> {
+		IngestionIndexWriterPayload payload =
+			_messagePayloadToJson(message)
+				.mapTo(IngestionIndexWriterPayload.class);
 
-			IngestionIndexWriterPayload payload =
-				_messagePayloadToJson(message)
-					.mapTo(IngestionIndexWriterPayload.class);
+		IngestionPayload ingestionPayload = payload.getIngestionPayload();
 
-			IngestionPayload ingestionPayload = payload.getIngestionPayload();
+		return datasourceService
+			.findById(ingestionPayload.getDatasourceId())
+			.flatMap(datasource ->
+				datasourceService.getDataIndex(datasource)
+					.flatMap(dataIndex -> {
 
-			return datasourceService
-				.findById(ingestionPayload.getDatasourceId())
-				.flatMap(datasource ->
-					datasourceService.getDataIndex(datasource)
-						.flatMap(dataIndex -> {
+						if (dataIndex == null) {
 
-							if (dataIndex == null) {
+							String indexName =
+								datasource.getId() + "-data-" + UUID.randomUUID();
 
-								String indexName =
-									datasource.getId() + "-data-" + UUID.randomUUID();
+							IndexRequest indexRequest = new IndexRequest(indexName);
 
-								IndexRequest indexRequest = new IndexRequest(indexName);
+							JsonObject jsonObject = _toIndexDocument(ingestionPayload);
 
-								JsonObject jsonObject = _toIndexDocument(ingestionPayload);
+							indexRequest.source(
+								jsonObject.toString(),
+								XContentType.JSON
+							);
 
-								indexRequest.source(
-									jsonObject.toString(),
-									XContentType.JSON
-								);
+							indexRequest.setRefreshPolicy(
+								WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
-								indexRequest.setRefreshPolicy(
-									WriteRequest.RefreshPolicy.WAIT_UNTIL);
+							Uni<List<DocTypeField>> createDocumentUni =
+								_createDocAndReturnMappings(indexName, indexRequest);
 
-								Uni<List<DocTypeField>> createDocumentUni =
-									_createDocAndReturnMappings(indexName, indexRequest);
-
-								Uni<Map<String, List<DocTypeField>>> mapDocTypeNameDocTypeFieldList =
-									createDocumentUni
-										.map(list ->
-											list
-												.stream()
-												.map(dtf ->
-													Tuple2.of(
-														dtf.getName().contains(".")
-															? dtf
+							Uni<Map<String, List<DocTypeField>>> mapDocTypeNameDocTypeFieldList =
+								createDocumentUni
+									.map(list ->
+										list
+											.stream()
+											.map(dtf ->
+												Tuple2.of(
+													dtf.getName().contains(".")
+														? dtf
 															.getName()
 															.substring(0, dtf.getName().indexOf("."))
-															: dtf.getName(),
-														dtf
-													)
+														: dtf.getName(),
+													dtf
 												)
-												.collect(Collectors.groupingBy(
-													Tuple2::getItem1,
-													Collectors.mapping(
-														Tuple2::getItem2,
-														Collectors.toList())))
-										);
+											)
+											.collect(Collectors.groupingBy(
+												Tuple2::getItem1,
+												Collectors.mapping(
+													Tuple2::getItem2,
+													Collectors.toList())))
+									);
 
-								Uni<Map<DocType, List<DocTypeField>>> mapUni =
-									mapDocTypeNameDocTypeFieldList
-										.flatMap(dt -> {
-											List<Uni<Tuple2<DocType, ? extends List<DocTypeField>>>>
-												collect =
+							Uni<Map<DocType, List<DocTypeField>>> mapUni =
+								mapDocTypeNameDocTypeFieldList
+									.flatMap(dt -> {
+										List<Uni<Tuple2<DocType, ? extends List<DocTypeField>>>>
+											collect =
 												dt
 													.entrySet()
 													.stream()
@@ -138,12 +134,12 @@ public class IndexerProcessor {
 																		.getDocTypeFields(docType)
 																		.map(dtfl ->
 																			Stream.concat(
-																					dtfl.stream(),
-																					docTypeFields
+																				dtfl.stream(),
+																				docTypeFields
+																					.stream()
+																					.filter(dtf -> dtfl
 																						.stream()
-																						.filter(dtf -> dtfl
-																							.stream()
-																							.noneMatch(dtf2 -> dtf2.getName().equals(dtf.getName())))
+																						.noneMatch(dtf2 -> dtf2.getName().equals(dtf.getName())))
 																				)
 																				.collect(Collectors.toSet())
 																		)
@@ -161,75 +157,74 @@ public class IndexerProcessor {
 													)
 													.collect(Collectors.toList());
 
-											return Uni
-												.combine()
-												.all()
-												.unis(collect)
-												.combinedWith(e -> e
-													.stream()
-													.map(
-														e1 -> (Tuple2<DocType, List<DocTypeField>>) e1)
-													.collect(Collectors.toMap(
-														Tuple2::getItem1,
-														Tuple2::getItem2
-													))
-												);
-										});
+										return Uni
+											.combine()
+											.all()
+											.unis(collect)
+											.combinedWith(e -> e
+												.stream()
+												.map(
+													e1 -> (Tuple2<DocType, List<DocTypeField>>) e1)
+												.collect(Collectors.toMap(
+													Tuple2::getItem1,
+													Tuple2::getItem2
+												))
+											);
+									});
 
-								return mapUni.flatMap(m -> {
+							return mapUni.flatMap(m -> {
 
-										DataIndex di = new DataIndex();
+								DataIndex di = new DataIndex();
 
-										di.setName(indexName);
-										di.setDocTypes(m.keySet());
+								di.setName(indexName);
+								di.setDocTypes(m.keySet());
 
 
-										datasource.setDataIndex(di);
+								datasource.setDataIndex(di);
 
-										return datasourceService.merge(datasource);
+								return datasourceService.merge(datasource);
 
-									})
-									.replaceWithVoid();
-							}
-							else {
+							})
+								.replaceWithVoid();
+						}
+						else {
 
-								IndexRequest indexRequest = new IndexRequest(dataIndex.getName());
+							IndexRequest indexRequest = new IndexRequest(dataIndex.getName());
 
-								JsonObject jsonObject = _toIndexDocument(ingestionPayload);
+							JsonObject jsonObject = _toIndexDocument(ingestionPayload);
 
-								indexRequest.source(
-									jsonObject.toString(),
-									XContentType.JSON
-								);
+							indexRequest.source(
+								jsonObject.toString(),
+								XContentType.JSON
+							);
 
-								indexRequest.setRefreshPolicy(
-									WriteRequest.RefreshPolicy.WAIT_UNTIL);
+							indexRequest.setRefreshPolicy(
+								WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
-								return Uni
-									.createFrom()
-									.<IndexResponse>emitter(
-										sink -> client.indexAsync(
-											indexRequest, RequestOptions.DEFAULT,
-											new ActionListener<>() {
-												@Override
-												public void onResponse(
-													IndexResponse indexResponse) {
-													sink.complete(indexResponse);
-												}
+							return Uni
+								.createFrom()
+								.<IndexResponse>emitter(
+									sink -> client.indexAsync(
+										indexRequest, RequestOptions.DEFAULT,
+										new ActionListener<>() {
+											@Override
+											public void onResponse(
+												IndexResponse indexResponse) {
+												sink.complete(indexResponse);
+											}
 
-												@Override
-												public void onFailure(Exception e) {
-													sink.fail(e);
-												}
-											}))
-									.replaceWithVoid();
+											@Override
+											public void onFailure(Exception e) {
+												sink.fail(e);
+											}
+										}))
+								.replaceWithVoid();
 
-							}
+						}
 
-						})
-				)
-				.replaceWith(Uni.createFrom().completionStage(() -> message.ack()));
-		});
+					})
+			)
+			.replaceWith(Uni.createFrom().completionStage(() -> message.ack()));
 
 	}
 
@@ -448,8 +443,5 @@ public class IndexerProcessor {
 
 	@Inject
 	RestHighLevelClient client;
-
-	@Inject
-	Vertx vertx;
 
 }
