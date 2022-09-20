@@ -80,9 +80,11 @@ public class IndexerProcessor {
 											.stream()
 											.map(dtf ->
 												Tuple2.of(
-													dtf
-														.getName()
-														.substring(0, dtf.getName().indexOf(".")),
+													dtf.getName().contains(".")
+														? dtf
+															.getName()
+															.substring(0, dtf.getName().indexOf("."))
+														: dtf.getName(),
 													dtf
 												)
 											)
