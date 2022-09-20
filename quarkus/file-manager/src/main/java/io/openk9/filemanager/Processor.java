@@ -59,12 +59,8 @@ public class Processor {
 
             uploadService.uploadObject(inputStream, datasourceId, fileId, resourceId);
 
-            JsonObject responsePayload =
-                    response.getJsonObject("payload");
-
             JsonObject resources =
-                    responsePayload.getJsonObject("resources");
-
+                    jsonObject.getJsonObject("resources");
 
             JsonArray binariesArray =
                     resources.getJsonArray("binaries");
