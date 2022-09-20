@@ -209,23 +209,14 @@ public class TikaProcessor {
                         responsePayload.put("rawContent", text);
                     }
 
-                    Boolean retainBinaries =
-                        enrichItemConfig.getBoolean("retain_binaries", true);
-
                     JsonObject resources =
                         responsePayload.getJsonObject("resources");
 
-                    if (!retainBinaries) {
-                        JsonArray binariesArray = new JsonArray();
-                        resources.put("binaries", binariesArray);
-                    }
-                    else {
-                        JsonArray binariesArray =
-                            resources.getJsonArray("binaries");
-                        binariesArray
-                            .getJsonObject(internalIndex)
-                            .put("contentType", contentType);
-                    }
+                    JsonArray binariesArray =
+                        resources.getJsonArray("binaries");
+                    binariesArray
+                        .getJsonObject(internalIndex)
+                        .put("contentType", contentType);
 
                     return Tuple2.of(replyTo, response);
 

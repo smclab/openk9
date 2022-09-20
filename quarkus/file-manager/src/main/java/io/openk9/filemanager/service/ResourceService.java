@@ -22,11 +22,10 @@ public class ResourceService {
     EntityManager em;
 
     @Transactional
-    public long create(ResourceDto resourceDto) {
+    public void create(ResourceDto resourceDto) {
 
         Resource resource = _resourceMapper.toResource(resourceDto);
         em.persist(resource);
-        return resource.getId();
     }
 
     @Transactional
