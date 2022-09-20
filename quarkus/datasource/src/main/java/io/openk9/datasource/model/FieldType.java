@@ -84,4 +84,13 @@ public enum FieldType {
 
 	private final String type;
 
+	public static FieldType fromString(String type) {
+		for (FieldType fieldType : FieldType.values()) {
+			if (fieldType.getType().equals(type)) {
+				return fieldType;
+			}
+		}
+		return null;
+	}
+
 }

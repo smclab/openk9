@@ -22,6 +22,7 @@ import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.model.util.Mutiny2;
@@ -35,12 +36,16 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import java.util.List;
 import java.util.Set;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
-	 DocTypeService(DocTypeMapper mapper) {
-		 this.mapper = mapper;
+	DocTypeService(DocTypeMapper mapper) {
+		this.mapper = mapper;
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
@@ -54,7 +59,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long docTypeId, Pageable pageable) {
-		 return getDocTypeFields(docTypeId, pageable, Filter.DEFAULT);
+		return getDocTypeFields(docTypeId, pageable, Filter.DEFAULT);
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
@@ -77,6 +82,10 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(),
 			filter);
+	}
+
+	public Uni<Set<DocTypeField>> getDocTypeFields(DocType docType) {
+		return withTransaction(s -> Mutiny2.fetch(s, docType.getDocTypeFields()));
 	}
 
 	public Uni<Tuple2<DocType, DocTypeField>> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
@@ -107,6 +116,59 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 				}
 				return Uni.createFrom().nullItem();
 			})));
+	}
+
+	public Uni<DocType> findByName(String name) {
+		return withTransaction((s) -> {
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<DocType> cq = cb.createQuery(DocType.class);
+			Root<DocType> root = cq.from(DocType.class);
+			cq.where(cb.equal(root.get(DocType_.name), name));
+			return s.createQuery(cq).getSingleResultOrNull();
+		});
+	}
+
+	public Uni<List<DocType>> getDocTypeListByNames(String[] docTypeNames) {
+		return withTransaction(s -> {
+
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+
+			Class<DocType> entityClass = getEntityClass();
+
+			CriteriaQuery<DocType> query = cb.createQuery(entityClass);
+
+			Root<DocType> from = query.from(entityClass);
+
+			query.where(from.get(DocType_.name).in(List.of(docTypeNames)));
+
+			return s
+				.createQuery(query)
+				.getResultList();
+
+		});
+	}
+
+	public Uni<Boolean> existsByName(String name) {
+		return withTransaction(s -> {
+
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+
+			Class<DocType> entityClass = getEntityClass();
+
+			CriteriaQuery<Long> query = cb.createQuery(Long.class);
+
+			Root<DocType> from = query.from(entityClass);
+
+			query.select(cb.count(from));
+
+			query.where(cb.equal(from.get(DocType_.name), name));
+
+			return s
+				.createQuery(query)
+				.getSingleResult()
+				.map(count -> count > 0);
+
+		});
 	}
 
 	@Inject

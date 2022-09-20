@@ -40,6 +40,48 @@ import java.time.ZoneOffset;
 @ApplicationScoped
 public class DatasourceProcessor {
 
+	/*@Incoming("ingestion")
+	public Uni<Void> process2(Message<IngestionPayload> message) {
+
+		IngestionPayload ingestionPayload = message.getPayload();
+
+		long datasourceId = ingestionPayload.getDatasourceId();
+
+		datasourceService
+			.findById(datasourceId)
+			.onItem()
+			.transformToUni(datasource -> {
+
+				if (datasource == null) {
+					throw new RuntimeException(
+						"Datasource not found: " + datasourceId);
+				}
+
+				return datasourceService
+					.getEnrichPipeline(datasource)
+					.flatMap(ep -> {
+
+						if (ep == null) {
+							return List.of();
+						}
+
+						Set<EnrichPipelineItem> enrichPipelineItems =
+							ep.getEnrichPipelineItems();
+
+						if (enrichPipelineItems == null || enrichPipelineItems.isEmpty()) {
+							return List.of();
+						}
+
+
+
+
+					});
+
+			});
+
+	}*/
+
+
 	@Incoming("ingestion")
 	public Uni<Void> process(Message<?> message) {
 

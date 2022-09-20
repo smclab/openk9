@@ -681,7 +681,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return create(mapper.create(dto));
 	}
 
-	protected <T extends K9Entity> Uni<T> merge(T entity) {
+	public <T extends K9Entity> Uni<T> merge(T entity) {
 		return withTransaction(
 			(s, t) -> s.merge(entity)
 				.call(s::flush)

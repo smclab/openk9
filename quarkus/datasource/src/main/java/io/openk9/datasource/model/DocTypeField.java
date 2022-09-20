@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
@@ -41,6 +42,7 @@ import javax.persistence.Table;
 @ToString
 @RequiredArgsConstructor
 @Cacheable
+@SuperBuilder
 public class DocTypeField extends K9Entity {
 	@ToString.Exclude
 	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {

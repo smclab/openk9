@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -38,6 +39,7 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@SuperBuilder
 public abstract class K9Entity extends PanacheEntityBase {
 
 	@Setter(AccessLevel.NONE)

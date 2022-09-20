@@ -38,19 +38,34 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		 this.mapper = mapper;
 	}
 
+	public Uni<EntityIndex> getEntityIndex(Datasource datasource) {
+		return withTransaction(
+			s -> Mutiny2.fetch(s, datasource.getEntityIndex()));
+	}
+
 	public Uni<EntityIndex> getEntityIndex(long datasourceId) {
 		return withTransaction(
-			s -> findById(datasourceId).flatMap(d -> Mutiny2.fetch(s, d.getEntityIndex())));
+			() -> findById(datasourceId).flatMap(this::getEntityIndex));
+	}
+
+	public Uni<DataIndex> getDataIndex(Datasource datasource) {
+		return withTransaction(
+			s -> Mutiny2.fetch(s, datasource.getDataIndex()));
 	}
 
 	public Uni<DataIndex> getDataIndex(long datasourceId) {
 		return withTransaction(
-			s -> findById(datasourceId).flatMap(d -> Mutiny2.fetch(s, d.getDataIndex())));
+			() -> findById(datasourceId).flatMap(this::getDataIndex));
+	}
+
+	public Uni<EnrichPipeline> getEnrichPipeline(Datasource datasource) {
+		return withTransaction(
+			s -> Mutiny2.fetch(s, datasource.getEnrichPipeline()));
 	}
 
 	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
 		return withTransaction(
-			s -> findById(datasourceId).flatMap(d -> Mutiny2.fetch(s, d.getEnrichPipeline())));
+			() -> findById(datasourceId).flatMap(this::getEnrichPipeline));
 	}
 
 	public Uni<Tuple2<Datasource, EntityIndex>> setEntityIndex(long datasourceId, long entityIndexId) {

@@ -19,10 +19,13 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
@@ -40,6 +43,9 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 @Cacheable
+@NoArgsConstructor
+@AllArgsConstructor(staticName = "of")
+@SuperBuilder
 public class DataIndex extends K9Entity {
 	@ManyToMany(cascade = {
 		javax.persistence.CascadeType.MERGE,
