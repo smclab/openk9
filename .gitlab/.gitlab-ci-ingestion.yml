@@ -11,7 +11,7 @@ Build Latest Ingestion Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - main
+      - 241-ottimizzazione-payload
       - tags
     changes:
       - quarkus/resources-common/**/*
@@ -21,7 +21,7 @@ Build Latest Ingestion Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw -Psmc,quarkus package $MAVEN_CLI_OPTS -pl quarkus/ingestion -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - ./mvnw -Psmc,quarkus package $MAVEN_CLI_OPTS -pl quarkus/ingestion -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=241-ottimizzazione-payload
   cache:
     key: ingestion
     paths:

@@ -44,11 +44,21 @@ import java.util.stream.Collectors;
 public class IngestionEmitter {
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
-		return _emitter.send(_of(ingestionRequest));
+		if (ingestionRequest.getResources().getBinaryList().isEmpty()) {
+			return _ingestionEmitter.send(_of(ingestionRequest));
+		}
+		else {
+			return _fileManagerEmitter.send(_of(ingestionRequest));
+		}
 	}
 
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
-		return _emitter.send(_of(ingestionDTO));
+		if (ingestionDTO.getResources().getBinaries() != null) {
+			return _fileManagerEmitter.send(_of(ingestionDTO));
+		}
+		else {
+			return _ingestionEmitter.send(_of(ingestionDTO));
+		}
 	}
 
 	private IngestionPayloadWrapper _of(IngestionRequest dto) {
@@ -157,6 +167,10 @@ public class IngestionEmitter {
 
 	@Channel("ingestion")
 	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
-	Emitter<IngestionPayloadWrapper> _emitter;
+	Emitter<IngestionPayloadWrapper> _ingestionEmitter;
+
+	@Channel("file-manager")
+	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
+	Emitter<IngestionPayloadWrapper> _fileManagerEmitter;
 
 }
