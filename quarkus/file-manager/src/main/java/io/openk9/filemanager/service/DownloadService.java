@@ -21,7 +21,6 @@ import io.minio.*;
 import io.minio.errors.MinioException;
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
-import io.openk9.filemanager.model.UploadRequestDto;
 import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.core.eventbus.EventBus;
 import org.jboss.logging.Logger;
@@ -48,23 +47,19 @@ public class DownloadService {
 		Resource resource = resourceService.findByResourceId(resourceId);
 		String datasourceId = resource.getDatasourceId();
 		String fileId = resource.getFileId();
-		String state = String.valueOf(resource.getState());
 
 		String bucketName = "datasource" + datasourceId;
 
-		if (state.equalsIgnoreCase("Ok")) {
-			try {
-				return minioClient.getObject(
-						GetObjectArgs.builder()
-								.bucket(bucketName)
-								.object(fileId)
-								.build());
-			} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-				e.printStackTrace();
-				return InputStream.nullInputStream();
-			}
+		try {
+			return minioClient.getObject(
+					GetObjectArgs.builder()
+							.bucket(bucketName)
+							.object(fileId)
+							.build());
+		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			return InputStream.nullInputStream();
 		}
-		return null;
 	}
 
 
@@ -82,66 +77,6 @@ public class DownloadService {
 			throw new RuntimeException(e.getMessage());
 		}
 	}*/
-
-	@ConsumeEvent(value = "upload", blocking = true)
-	public void saveObject(UploadRequestDto uploadRequestDto) {
-
-			String datasourceId = uploadRequestDto.getDatasourceId();
-			String resourceId = uploadRequestDto.getResourceId();
-			String fileId = uploadRequestDto.getFileId();
-			InputStream inputStream = uploadRequestDto.getInputStream();
-
-			try {
-				String bucketName = "datasource" + datasourceId;
-
-				boolean found =
-						minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
-
-				if (!found) {
-					// Create bucket with default region.
-					logger.info("bucket not exist.");
-					minioClient.makeBucket(
-							MakeBucketArgs.builder()
-									.bucket(bucketName)
-									.build());
-				} else {
-					logger.info("bucket already exist");
-				}
-
-				PutObjectArgs args = PutObjectArgs.builder()
-						.bucket(bucketName)
-						.object(fileId)
-						.stream(inputStream,-1 , 1024L * 1024 * 5)
-						.build();
-
-				minioClient.putObject(args);
-
-				logger.info("Upload done");
-
-				ResourceDto resourceDto = new ResourceDto();
-				resourceDto.setFileId(fileId);
-				resourceDto.setDatasourceId(datasourceId);
-				resourceDto.setVersion("1");
-				resourceDto.setState(Resource.State.valueOf("OK"));
-				resourceDto.setResourceId(resourceId);
-
-				resourceService.update(uploadRequestDto.getId(), resourceDto);
-
-			} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-				System.out.println("Error occurred: " + e);
-
-				ResourceDto resourceDto = new ResourceDto();
-				resourceDto.setFileId(fileId);
-				resourceDto.setDatasourceId(datasourceId);
-				resourceDto.setVersion("1");
-				resourceDto.setState(Resource.State.valueOf("KO"));
-				resourceDto.setResourceId(resourceId);
-
-				resourceService.update(uploadRequestDto.getId(), resourceDto);
-
-			}
-
-	}
 
 	@Inject
 	Logger logger;

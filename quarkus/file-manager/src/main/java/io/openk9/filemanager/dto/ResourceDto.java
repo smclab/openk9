@@ -34,7 +34,4 @@ public class ResourceDto {
     private String datasourceId;
     private String resourceId;
     private String version;
-    @NotNull
-    private Resource.State state;
-
 }

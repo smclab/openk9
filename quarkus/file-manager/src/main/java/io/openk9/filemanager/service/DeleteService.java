@@ -17,14 +17,15 @@
 
 package io.openk9.filemanager.service;
 
-import io.minio.*;
-import io.minio.errors.*;
-import io.openk9.filemanager.dto.ResourceDto;
+import io.minio.GetObjectArgs;
+import io.minio.MinioClient;
+import io.minio.RemoveObjectArgs;
+import io.minio.errors.MinioException;
+import io.openk9.filemanager.model.Resource;
 import io.vertx.core.eventbus.EventBus;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +33,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 @ApplicationScoped
-public class UploadService {
+public class DeleteService {
 
 	@Inject
 	MinioClient minioClient;
@@ -41,49 +42,23 @@ public class UploadService {
 	ResourceService resourceService;
 
 
-	public void uploadObject(InputStream inputStream, String datasourceId, String fileId, String resourceId) {
+	public void deleteObject(String resourceId) {
+
+		Resource resource = resourceService.findByResourceId(resourceId);
+		String datasourceId = resource.getDatasourceId();
+		String fileId = resource.getFileId();
+
+		String bucketName = "datasource" + datasourceId;
 
 		try {
-			String bucketName = "datasource" + datasourceId;
-
-			boolean found =
-					minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
-
-			if (!found) {
-				// Create bucket with default region.
-				logger.info("bucket not exist.");
-				minioClient.makeBucket(
-						MakeBucketArgs.builder()
-								.bucket(bucketName)
-								.build());
-			} else {
-				logger.info("bucket already exist");
-			}
-
-			PutObjectArgs args = PutObjectArgs.builder()
-					.bucket(bucketName)
-					.object(fileId)
-					.stream(inputStream,-1 , 1024L * 1024 * 5)
-					.build();
-
-
-
-			minioClient.putObject(args);
-
-			logger.info("Upload done");
-
-			ResourceDto resourceDto = new ResourceDto();
-			resourceDto.setFileId(fileId);
-			resourceDto.setDatasourceId(datasourceId);
-			resourceDto.setVersion("1");
-			resourceDto.setResourceId(resourceId);
-
-			resourceService.create(resourceDto);
-
+			minioClient.removeObject(
+					RemoveObjectArgs.builder()
+							.bucket(bucketName)
+							.object(fileId)
+							.build());
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-			System.out.println("Error occurred: " + e);
+			e.printStackTrace();
 		}
-
 	}
 
 

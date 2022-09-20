@@ -15,19 +15,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.filemanager.model;
+package io.openk9.filemanager.web;
 
-import lombok.Data;
+import io.openk9.filemanager.service.DeleteService;
+import io.openk9.filemanager.service.DownloadService;
 
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
-import java.util.List;
 
-@Data
-public class UploadRequestDto {
-	private String datasourceId;
-	private String fileId;
-	private InputStream inputStream;
-	private String resourceId;
-	private String state;
-	private Long id;
+@Path("/v1/file-manager/delete")
+public class DeleteEndpoint {
+
+	@GET
+	@Path("/{resourceId}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public void delete(@PathParam("resourceId") String resourceId) {
+
+		deleteService.deleteObject(resourceId);
+
+	}
+
+	@Inject
+	DeleteService deleteService;
+
 }

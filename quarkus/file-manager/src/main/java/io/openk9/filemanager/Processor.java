@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
+import java.util.logging.Logger;
 
 @ApplicationScoped
 public class Processor {
@@ -28,9 +29,11 @@ public class Processor {
 
         JsonObject response = jsonObject.copy();
 
-        JsonObject payload = jsonObject.getJsonObject("payload");
+        JsonObject payload = jsonObject.getJsonObject("ingestionPayload");
 
-        String datasourceId = payload.getString("datasourceId");
+        String datasourceId = payload.getInteger("datasourceId").toString();
+
+        logger.info("founded " + datasourceId);
 
         JsonArray binaries =
                 payload
@@ -100,5 +103,8 @@ public class Processor {
 
     @Inject
     UploadService uploadService;
+
+    @Inject
+    Logger logger;
 
 }
