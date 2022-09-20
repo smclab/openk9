@@ -35,12 +35,12 @@ public class UploadEndpoint {
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Path("/{datasourceId}/{fileId}")
-	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
+	public void upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
 					  InputStream inputStream) {
 
 		String resourceId = UUID.randomUUID().toString();
 
-		return uploadService.uploadObject(inputStream, datasourceId, fileId, resourceId);
+		uploadService.uploadObject(inputStream, datasourceId, fileId, resourceId);
 
 	}
 
