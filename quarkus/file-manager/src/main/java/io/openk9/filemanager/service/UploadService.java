@@ -44,9 +44,6 @@ import io.quarkus.vertx.ConsumeEvent;
 @ApplicationScoped
 public class UploadService {
 
-	private static final ExecutorService executorService = new ThreadPoolExecutor(10, 150,
-			60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.DiscardOldestPolicy());
-
 	@Inject
 	MinioClient minioClient;
 
@@ -54,27 +51,49 @@ public class UploadService {
 	ResourceService resourceService;
 
 
-	public String uploadObject(InputStream inputStream, String datasourceId, String fileId, String resourceId) {
+	public void uploadObject(InputStream inputStream, String datasourceId, String fileId, String resourceId) {
 
-		ResourceDto resourceDto = new ResourceDto();
-		resourceDto.setFileId(fileId);
-		resourceDto.setDatasourceId(datasourceId);
-		resourceDto.setVersion("1");
-		resourceDto.setState(Resource.State.valueOf("PENDING"));
-		resourceDto.setResourceId(resourceId);
+		try {
+			String bucketName = "datasource" + datasourceId;
 
-		UploadRequestDto uploadRequestDto = new UploadRequestDto();
-		uploadRequestDto.setDatasourceId(datasourceId);
-		uploadRequestDto.setFileId(fileId);
-		uploadRequestDto.setResourceId(resourceId);
-		uploadRequestDto.setInputStream(inputStream);
+			boolean found =
+					minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
 
-		long id = resourceService.create(resourceDto);
-		logger.info(id);
-		uploadRequestDto.setId(id);
-		this.saveObject(uploadRequestDto);
+			if (!found) {
+				// Create bucket with default region.
+				logger.info("bucket not exist.");
+				minioClient.makeBucket(
+						MakeBucketArgs.builder()
+								.bucket(bucketName)
+								.build());
+			} else {
+				logger.info("bucket already exist");
+			}
 
-		return resourceId;
+			PutObjectArgs args = PutObjectArgs.builder()
+					.bucket(bucketName)
+					.object(fileId)
+					.stream(inputStream,-1 , 1024L * 1024 * 5)
+					.build();
+
+
+
+			minioClient.putObject(args);
+
+			logger.info("Upload done");
+
+			ResourceDto resourceDto = new ResourceDto();
+			resourceDto.setFileId(fileId);
+			resourceDto.setDatasourceId(datasourceId);
+			resourceDto.setVersion("1");
+			resourceDto.setResourceId(resourceId);
+
+			resourceService.create(resourceDto);
+
+		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+			System.out.println("Error occurred: " + e);
+		}
+
 	}
 
 
@@ -92,91 +111,6 @@ public class UploadService {
 			throw new RuntimeException(e.getMessage());
 		}
 	}*/
-
-	public void saveObject(UploadRequestDto uploadRequestDto) {
-
-			String datasourceId = uploadRequestDto.getDatasourceId();
-			String resourceId = uploadRequestDto.getResourceId();
-			String fileId = uploadRequestDto.getFileId();
-			InputStream inputStream = uploadRequestDto.getInputStream();
-
-			try {
-				String bucketName = "datasource" + datasourceId;
-
-				boolean found =
-						minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
-
-				if (!found) {
-					// Create bucket with default region.
-					logger.info("bucket not exist.");
-					minioClient.makeBucket(
-							MakeBucketArgs.builder()
-									.bucket(bucketName)
-									.build());
-				} else {
-					logger.info("bucket already exist");
-				}
-
-				PutObjectArgs args = PutObjectArgs.builder()
-						.bucket(bucketName)
-						.object(fileId)
-						.stream(inputStream,-1 , 1024L * 1024 * 5)
-						.build();
-
-				executorService.submit(new Runnable() {
-
-					@Override
-					public void run() {
-						try {
-							minioClient.putObject(args);
-						} catch (ErrorResponseException e) {
-							throw new RuntimeException(e);
-						} catch (InsufficientDataException e) {
-							throw new RuntimeException(e);
-						} catch (InternalException e) {
-							throw new RuntimeException(e);
-						} catch (InvalidKeyException e) {
-							throw new RuntimeException(e);
-						} catch (InvalidResponseException e) {
-							throw new RuntimeException(e);
-						} catch (IOException e) {
-							throw new RuntimeException(e);
-						} catch (NoSuchAlgorithmException e) {
-							throw new RuntimeException(e);
-						} catch (ServerException e) {
-							throw new RuntimeException(e);
-						} catch (XmlParserException e) {
-							throw new RuntimeException(e);
-						}
-						logger.info("Upload done");
-
-						ResourceDto resourceDto = new ResourceDto();
-						resourceDto.setFileId(fileId);
-						resourceDto.setDatasourceId(datasourceId);
-						resourceDto.setVersion("1");
-						resourceDto.setState(Resource.State.valueOf("OK"));
-						resourceDto.setResourceId(resourceId);
-
-						resourceService.update(uploadRequestDto.getId(), resourceDto);
-					}
-				});
-
-
-			} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-				System.out.println("Error occurred: " + e);
-
-				ResourceDto resourceDto = new ResourceDto();
-				resourceDto.setFileId(fileId);
-				resourceDto.setDatasourceId(datasourceId);
-				resourceDto.setVersion("1");
-				resourceDto.setState(Resource.State.valueOf("KO"));
-				resourceDto.setResourceId(resourceId);
-
-				resourceService.update(uploadRequestDto.getId(), resourceDto);
-
-			}
-
-	}
 
 	@Inject
 	Logger logger;

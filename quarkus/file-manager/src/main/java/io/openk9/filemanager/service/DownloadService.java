@@ -64,6 +64,7 @@ public class DownloadService {
 				return InputStream.nullInputStream();
 			}
 		}
+		return null;
 	}
 
 
