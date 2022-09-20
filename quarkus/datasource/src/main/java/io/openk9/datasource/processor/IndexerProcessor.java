@@ -369,6 +369,8 @@ public class IndexerProcessor {
 
 				Field.FieldBuilder builder = Field.builder();
 
+				builder.name(key);
+
 				if (localMap.containsKey("type")) {
 					builder.type((String)localMap.get("type"));
 				}
