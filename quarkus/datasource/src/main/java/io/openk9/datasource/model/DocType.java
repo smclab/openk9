@@ -23,7 +23,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.experimental.SuperBuilder;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
@@ -40,7 +39,6 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 @Cacheable
-@SuperBuilder
 public class DocType extends K9Entity {
 
 	@OneToMany(mappedBy = "docType", cascade = javax.persistence.CascadeType.ALL, orphanRemoval = true)

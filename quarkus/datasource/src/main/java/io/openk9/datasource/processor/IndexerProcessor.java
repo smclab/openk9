@@ -110,16 +110,18 @@ public class IndexerProcessor {
 																	new HashSet<>(e.getValue());
 
 																if (docType == null) {
+
+																	DocType newDocType = new DocType();
+
+																	newDocType.setDocTypeFields(docTypeFields);
+																	newDocType.setDescription(e.getKey());
+																	newDocType.setName(e.getKey());
+
 																	return Uni
 																		.createFrom()
 																		.item(
 																			Tuple2.<DocType, List<DocTypeField>>of(
-																				DocType
-																					.builder()
-																					.name(e.getKey())
-																					.description(e.getKey())
-																					.docTypeFields(docTypeFields)
-																					.build(),
+																				newDocType,
 																				e.getValue()
 																			)
 																		);
@@ -170,13 +172,13 @@ public class IndexerProcessor {
 
 							return mapUni.flatMap(m -> {
 
-								datasource.setDataIndex(
-									DataIndex
-										.builder()
-										.name(indexName)
-										.docTypes(m.keySet())
-										.build()
-								);
+								DataIndex di = new DataIndex();
+
+								di.setName(indexName);
+								di.setDocTypes(m.keySet());
+
+
+								datasource.setDataIndex(di);
 
 								return datasourceService.merge(datasource);
 
@@ -292,31 +294,30 @@ public class IndexerProcessor {
 
 			if (field.getType() != null) {
 
-				newFields.add(
-					DocTypeField
-						.builder()
-						.name(tmp.toString())
-						.description(tmp.toString())
-						.fieldType(FieldType.fromString(field.getType()))
-						.boost(1.0)
-						.searchable(false)
-						.build()
-				);
+				DocTypeField docTypeField = new DocTypeField();
+
+				docTypeField.setName(tmp.toString());
+				docTypeField.setFieldType(
+					FieldType.fromString(field.getType()));
+				docTypeField.setDescription(tmp.toString());
+				docTypeField.setBoost(1.0);
+
+				newFields.add(docTypeField);
 
 				if (field.getSubName() != null) {
 
 					tmp.append(".").append(field.getSubName());
 
-					newFields.add(
-						DocTypeField
-							.builder()
-							.name(tmp.toString())
-							.description(tmp.toString())
-							.fieldType(FieldType.fromString(field.getSubType()))
-							.boost(1.0)
-							.searchable(false)
-							.build()
-					);
+					docTypeField = new DocTypeField();
+
+					docTypeField.setName(tmp.toString());
+					docTypeField.setDescription(tmp.toString());
+					docTypeField.setFieldType(
+						FieldType.fromString(field.getType()));
+					docTypeField.setBoost(1.0);
+					docTypeField.setSearchable(false);
+					newFields.add(docTypeField);
+
 				}
 
 				tmp = null;
