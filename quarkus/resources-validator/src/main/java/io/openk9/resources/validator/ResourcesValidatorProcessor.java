@@ -64,7 +64,7 @@ public class ResourcesValidatorProcessor {
 
 		String replyTo = jsonObject.getString("replyTo");
 
-		JsonObject payload = jsonObject.getJsonObject("payload");
+		JsonObject payload = jsonObject.getJsonObject("ingestionPayload");
 
 		Long tenantId = payload.getLong("tenantId");
 

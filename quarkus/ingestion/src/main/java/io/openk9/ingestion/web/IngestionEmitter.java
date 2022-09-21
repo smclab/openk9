@@ -28,6 +28,7 @@ import io.openk9.ingestion.grpc.Binary;
 import io.openk9.ingestion.grpc.IngestionRequest;
 import io.openk9.ingestion.grpc.Resources;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
@@ -45,6 +46,9 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class IngestionEmitter {
 
+	@ConfigProperty(name = "use.resources-validator")
+	Boolean useResourcesValidator;
+
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
 		List<Binary> binaries = ingestionRequest.getResources().getBinaryList();
@@ -61,15 +65,21 @@ public class IngestionEmitter {
 
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
 
-		List<BinaryDTO> binaries = ingestionDTO.getResources().getBinaries();
-
-		if (binaries.isEmpty()) {
-			logger.info("Binaries empty");
-			return _ingestionEmitter.send(_of(ingestionDTO));
+		if (useResourcesValidator) {
+			logger.info("go to resources validator");
+			return _resourcesValidatorEmitter.send(_of(ingestionDTO));
 		}
 		else {
-			logger.info("Binaries not empty");
-			return _fileManagerEmitter.send(_of(ingestionDTO));
+
+			List<BinaryDTO> binaries = ingestionDTO.getResources().getBinaries();
+
+			if (binaries.isEmpty()) {
+				logger.info("Binaries empty");
+				return _ingestionEmitter.send(_of(ingestionDTO));
+			} else {
+				logger.info("Binaries not empty");
+				return _fileManagerEmitter.send(_of(ingestionDTO));
+			}
 		}
 	}
 
@@ -184,6 +194,10 @@ public class IngestionEmitter {
 	@Channel("file-manager")
 	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
 	Emitter<IngestionPayloadWrapper> _fileManagerEmitter;
+
+	@Channel("resources-validator")
+	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
+	Emitter<IngestionPayloadWrapper> _resourcesValidatorEmitter;
 
 	@Inject
 	Logger logger;
