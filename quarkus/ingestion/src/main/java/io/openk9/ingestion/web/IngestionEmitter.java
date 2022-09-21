@@ -31,8 +31,10 @@ import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,19 +46,29 @@ import java.util.stream.Collectors;
 public class IngestionEmitter {
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
-		if (ingestionRequest.getResources().getBinaryList().isEmpty()) {
+
+		List<Binary> binaries = ingestionRequest.getResources().getBinaryList();
+
+		if (binaries.isEmpty()) {
+			logger.info("Binaries empty");
 			return _ingestionEmitter.send(_of(ingestionRequest));
 		}
 		else {
+			logger.info("Binaries not empty");
 			return _fileManagerEmitter.send(_of(ingestionRequest));
 		}
 	}
 
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
-		if (ingestionDTO.getResources().getBinaries().isEmpty()) {
+
+		List<BinaryDTO> binaries = ingestionDTO.getResources().getBinaries();
+
+		if (binaries.isEmpty()) {
+			logger.info("Binaries empty");
 			return _ingestionEmitter.send(_of(ingestionDTO));
 		}
 		else {
+			logger.info("Binaries not empty");
 			return _fileManagerEmitter.send(_of(ingestionDTO));
 		}
 	}
@@ -172,5 +184,8 @@ public class IngestionEmitter {
 	@Channel("file-manager")
 	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
 	Emitter<IngestionPayloadWrapper> _fileManagerEmitter;
+
+	@Inject
+	Logger logger;
 
 }

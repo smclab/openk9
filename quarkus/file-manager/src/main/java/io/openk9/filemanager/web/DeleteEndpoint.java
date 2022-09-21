@@ -18,7 +18,6 @@
 package io.openk9.filemanager.web;
 
 import io.openk9.filemanager.service.DeleteService;
-import io.openk9.filemanager.service.DownloadService;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -26,7 +25,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.io.InputStream;
 
 @Path("/v1/file-manager/delete")
 public class DeleteEndpoint {

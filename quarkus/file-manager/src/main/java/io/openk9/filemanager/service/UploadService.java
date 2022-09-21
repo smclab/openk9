@@ -20,7 +20,6 @@ package io.openk9.filemanager.service;
 import io.minio.*;
 import io.minio.errors.*;
 import io.openk9.filemanager.dto.ResourceDto;
-import io.vertx.core.eventbus.EventBus;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -66,8 +65,6 @@ public class UploadService {
 					.stream(inputStream,-1 , 1024L * 1024 * 5)
 					.build();
 
-
-
 			minioClient.putObject(args);
 
 			logger.info("Upload done");
@@ -104,9 +101,6 @@ public class UploadService {
 
 	@Inject
 	Logger logger;
-
-	@Inject
-	EventBus bus;
 
 
 }
