@@ -285,78 +285,58 @@ public class IndexerProcessor {
 			)
 			.map(response -> response.mappings().get(indexName).sourceAsMap())
 			.map(IndexerProcessor::_toFlatFields)
-			.map(ff -> _toDocTypeFields(ff, docTypes));
+			.map(root -> {
+				List<DocTypeField> docTypeFields = new ArrayList<>();
+				_toDocTypeFields(
+					root, new ArrayList<>(), docTypeFields, docTypes);
+				return docTypeFields;
+			});
 	}
 
-	private static List<DocTypeField> _toDocTypeFields(
-		List<Field> fields, List<String> docTypes) {
+	private static void _toDocTypeFields(
+		Field root, List<String> acc, List<DocTypeField> docTypeFields,
+		List<String> docTypes) {
 
-		List<DocTypeField> newFields = new ArrayList<>();
+		String name = root.getName();
 
-		StringBuilder tmp = null;
-
-		for (Field field : fields) {
-
-			if (tmp == null) {
-				tmp = new StringBuilder(field.getName());
-			}
-			else {
-				tmp.append(".").append(field.getName());
-			}
-
-			if (field.getType() != null) {
-
-				DocTypeField docTypeField = new DocTypeField();
-
-				final String fieldName = tmp.toString();
-
-				if (docTypes
-					.stream()
-					.anyMatch(
-						docType -> fieldName.startsWith(docType + "."))) {
-
-					docTypeField.setName(fieldName);
-					docTypeField.setFieldType(
-						FieldType.fromString(field.getType()));
-					docTypeField.setDescription(fieldName);
-					docTypeField.setBoost(1.0);
-
-					newFields.add(docTypeField);
-
-					if (field.getSubName() != null) {
-
-						tmp.append(".").append(field.getSubName());
-
-						String subFieldName = tmp.toString();
-
-						docTypeField = new DocTypeField();
-
-						docTypeField.setName(subFieldName);
-						docTypeField.setDescription(subFieldName);
-						docTypeField.setFieldType(
-							FieldType.fromString(field.getType()));
-						docTypeField.setBoost(1.0);
-						docTypeField.setSearchable(false);
-						newFields.add(docTypeField);
-
-					}
-				}
-
-
-				tmp = null;
-
-			}
-
+		if (!root.isRoot()) {
+			acc.add(name);
 		}
-		return newFields;
+
+		String type = root.getType();
+
+		if (type != null) {
+
+			String fieldName = String.join(".", acc);
+
+			if (docTypes.stream().anyMatch(dt -> fieldName.startsWith(dt + "."))) {
+				DocTypeField docTypeField = new DocTypeField();
+				docTypeField.setName(fieldName);
+				docTypeField.setFieldType(FieldType.fromString(type));
+				docTypeField.setBoost(1.0);
+				docTypeField.setSearchable(false);
+				docTypeField.setDescription("this doc type field is auto generated");
+				docTypeFields.add(docTypeField);
+			}
+		}
+
+		for (Field subField : root.getSubFields()) {
+			_toDocTypeFields(
+				subField,
+				new ArrayList<>(acc),
+				docTypeFields,
+				docTypes);
+		}
 	}
 
-	private static List<Field> _toFlatFields(Map<String, Object> mappings) {
-		return _toFlatFields(mappings, new ArrayList<>());
+	private static Field _toFlatFields(Map<String, Object> mappings) {
+		Field root = Field.createRoot();
+		_toFlatFields(mappings, root);
+		return root;
 	}
 
-	private static List<Field> _toFlatFields(
-		Map<String, Object> mappings, List<Field> acc) {
+	private static void _toFlatFields(
+		Map<String, Object> mappings, Field root) {
 
 		for (Map.Entry<String, Object> kv : mappings.entrySet()) {
 
@@ -364,62 +344,51 @@ public class IndexerProcessor {
 			Object value = kv.getValue();
 
 			if (key.equals("properties")) {
-				acc = _toFlatFields((Map<String, Object>) value, acc);
+				_toFlatFields((Map<String, Object>) value, root);
 			}
 			else if (value instanceof Map && ((Map)value).size() == 1) {
 				Map<String, Object> map = (Map<String, Object>)value;
 				if (map.containsKey("type")) {
-					acc.add(
-						Field
-							.builder()
-							.name(key)
-							.type((String)map.get("type"))
-							.build()
-					);
+					root.addSubField(Field.of(key, (String)map.get("type")));
 				}
 				else {
-					acc.add(
-						Field
-							.builder()
-							.name(key)
-							.build()
-					);
-					acc = _toFlatFields((Map<String, Object>) value, acc);
+					Field newRoot = Field.of(key);
+					root.addSubField(newRoot);
+					_toFlatFields((Map<String, Object>) value, newRoot);
 				}
 			}
 			else if (value instanceof Map && ((Map)value).size() > 1) {
 				Map<String, Object> localMap = ((Map<String, Object>)value);
 
-				Field.FieldBuilder builder = Field.builder();
+				Field newRoot = Field.of(key);
 
-				builder.name(key);
+				root.addSubField(newRoot);
 
 				if (localMap.containsKey("type")) {
-					builder.type((String)localMap.get("type"));
-				}
-				if (localMap.containsKey("fields")) {
-					Map<String, Object> fields =
-						(Map<String, Object>)localMap.get("fields");
+					newRoot.setType((String)localMap.get("type"));
 
-					for (Map.Entry<String, Object> leafKV : fields.entrySet()) {
-						String leafKey = leafKV.getKey();
-						Map<String, Object> leafMap =
-							(Map<String, Object>)leafKV.getValue();
+					if (localMap.containsKey("fields")) {
+						Map<String, Object> fields =
+							(Map<String, Object>)localMap.get("fields");
 
-						builder.subName(leafKey);
+						List<Field> subFields = fields
+							.entrySet()
+							.stream()
+							.map(e -> Field.of(
+								e.getKey(),
+								(String)((Map<String, Object>) e.getValue())
+									.get("type")))
+							.collect(Collectors.toList());
 
-						builder.subType((String)leafMap.get("type"));
+						newRoot.addSubFields(subFields);
+
 					}
 
 				}
 
-				acc.add(builder.build());
-
 			}
 
 		}
-
-		return acc;
 
 	}
 
