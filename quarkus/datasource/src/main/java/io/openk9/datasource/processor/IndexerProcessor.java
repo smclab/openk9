@@ -49,7 +49,9 @@ public class IndexerProcessor {
 
 		return datasourceService
 			.findById(ingestionPayload.getDatasourceId())
-			.flatMap(datasource ->
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource ->
 				datasourceService.getDataIndex(datasource)
 					.flatMap(dataIndex -> {
 
@@ -71,7 +73,9 @@ public class IndexerProcessor {
 								WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
 							Uni<List<DocTypeField>> createDocumentUni =
-								_createDocAndReturnMappings(indexName, indexRequest);
+								_createDocAndReturnMappings(
+									indexName, indexRequest,
+									List.of(ingestionPayload.getDocumentTypes()));
 
 							Uni<Map<String, List<DocTypeField>>> mapDocTypeNameDocTypeFieldList =
 								createDocumentUni
@@ -118,6 +122,10 @@ public class IndexerProcessor {
 																	newDocType.setDocTypeFields(docTypeFields);
 																	newDocType.setDescription(e.getKey());
 																	newDocType.setName(e.getKey());
+
+																	for (DocTypeField docTypeField : docTypeFields) {
+																		docTypeField.setDocType(newDocType);
+																	}
 
 																	return Uni
 																		.createFrom()
@@ -182,7 +190,7 @@ public class IndexerProcessor {
 
 								datasource.setDataIndex(di);
 
-								return datasourceService.persist(datasource);
+								return datasourceService.merge(datasource);
 
 							})
 								.replaceWithVoid();
@@ -224,12 +232,14 @@ public class IndexerProcessor {
 
 					})
 			)
-			.replaceWith(Uni.createFrom().completionStage(() -> message.ack()));
+			.onFailure()
+			.call((t) -> Uni.createFrom().completionStage(() -> message.nack(t)))
+			.replaceWith(Uni.createFrom().completionStage(message::ack));
 
 	}
 
 	private Uni<List<DocTypeField>> _createDocAndReturnMappings(
-		String indexName, IndexRequest indexRequest) {
+		String indexName, IndexRequest indexRequest, List<String> docTypes) {
 		return Uni
 			.createFrom()
 			.<IndexResponse>emitter(
@@ -273,13 +283,13 @@ public class IndexerProcessor {
 								})
 					)
 			)
-			.map(response -> response.mappings().get(indexName).sourceAsMap()
-			)
+			.map(response -> response.mappings().get(indexName).sourceAsMap())
 			.map(IndexerProcessor::_toFlatFields)
-			.map(IndexerProcessor::_toDocTypeFields);
+			.map(ff -> _toDocTypeFields(ff, docTypes));
 	}
 
-	private static List<DocTypeField> _toDocTypeFields(List<Field> fields) {
+	private static List<DocTypeField> _toDocTypeFields(
+		List<Field> fields, List<String> docTypes) {
 
 		List<DocTypeField> newFields = new ArrayList<>();
 
@@ -298,29 +308,40 @@ public class IndexerProcessor {
 
 				DocTypeField docTypeField = new DocTypeField();
 
-				docTypeField.setName(tmp.toString());
-				docTypeField.setFieldType(
-					FieldType.fromString(field.getType()));
-				docTypeField.setDescription(tmp.toString());
-				docTypeField.setBoost(1.0);
+				final String fieldName = tmp.toString();
 
-				newFields.add(docTypeField);
+				if (docTypes
+					.stream()
+					.anyMatch(
+						docType -> fieldName.startsWith(docType + "."))) {
 
-				if (field.getSubName() != null) {
-
-					tmp.append(".").append(field.getSubName());
-
-					docTypeField = new DocTypeField();
-
-					docTypeField.setName(tmp.toString());
-					docTypeField.setDescription(tmp.toString());
+					docTypeField.setName(fieldName);
 					docTypeField.setFieldType(
 						FieldType.fromString(field.getType()));
+					docTypeField.setDescription(fieldName);
 					docTypeField.setBoost(1.0);
-					docTypeField.setSearchable(false);
+
 					newFields.add(docTypeField);
 
+					if (field.getSubName() != null) {
+
+						tmp.append(".").append(field.getSubName());
+
+						String subFieldName = tmp.toString();
+
+						docTypeField = new DocTypeField();
+
+						docTypeField.setName(subFieldName);
+						docTypeField.setDescription(subFieldName);
+						docTypeField.setFieldType(
+							FieldType.fromString(field.getType()));
+						docTypeField.setBoost(1.0);
+						docTypeField.setSearchable(false);
+						newFields.add(docTypeField);
+
+					}
 				}
+
 
 				tmp = null;
 

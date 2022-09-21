@@ -45,6 +45,7 @@ import java.util.Set;
 public class DataIndex extends K9Entity {
 	@ManyToMany(cascade = {
 		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.DETACH,
 		javax.persistence.CascadeType.REFRESH})
 	@JoinTable(name = "data_index_doc_types",
