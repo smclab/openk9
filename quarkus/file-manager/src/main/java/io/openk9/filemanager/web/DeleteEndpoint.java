@@ -20,16 +20,13 @@ package io.openk9.filemanager.web;
 import io.openk9.filemanager.service.DeleteService;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 @Path("/v1/file-manager/delete")
 public class DeleteEndpoint {
 
-	@GET
+	@POST
 	@Path("/{resourceId}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public void delete(@PathParam("resourceId") String resourceId) {

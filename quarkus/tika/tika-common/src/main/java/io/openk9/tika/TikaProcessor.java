@@ -82,6 +82,8 @@ public class TikaProcessor {
 
             InputStream inputStream = fileManagerClient.download(resourceId);
 
+            fileManagerClient.delete(resourceId);
+
             try {
 
                 MediaType mediaType = _detectors.detect(inputStream);

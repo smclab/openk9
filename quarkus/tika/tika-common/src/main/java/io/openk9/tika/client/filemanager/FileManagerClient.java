@@ -36,13 +36,16 @@ public interface FileManagerClient {
 	@Path("/download/{resourceId}")
 	InputStream download(@PathParam("resourceId") String resourceId);
 
+	@POST
+	@Path("/delete/{resourceId}")
+	void delete(@PathParam("resourceId") String resourceId);
+
 
 	@ClientExceptionMapper
 	static FileManagerException toException(Response response) {
 
 		if (response.getStatus() == 500) {
-			return new FileManagerException(
-					response.hasEntity() ? response.readEntity(String.class) : "plugin driver is disabled");
+			return new FileManagerException("error during download file");
 		}
 
 		return null;
