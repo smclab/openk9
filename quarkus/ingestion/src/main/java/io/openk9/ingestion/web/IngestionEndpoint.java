@@ -43,9 +43,6 @@ public class IngestionEndpoint {
 	}
 
 	@Inject
-	IngestionEmitter _emitter;
-
-	@Inject
 	FileManagerEmitter _fileManagerEmitter;
 
 }

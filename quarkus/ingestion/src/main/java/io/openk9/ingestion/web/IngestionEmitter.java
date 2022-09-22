@@ -51,36 +51,13 @@ public class IngestionEmitter {
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
-		List<Binary> binaries = ingestionRequest.getResources().getBinaryList();
+		return _emitter.send(_of(ingestionRequest));
 
-		if (binaries.isEmpty()) {
-			logger.info("Binaries empty");
-			return _ingestionEmitter.send(_of(ingestionRequest));
-		}
-		else {
-			logger.info("Binaries not empty");
-			return _fileManagerEmitter.send(_of(ingestionRequest));
-		}
 	}
 
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
 
-		if (useResourcesValidator) {
-			logger.info("go to resources validator");
-			return _resourcesValidatorEmitter.send(_of(ingestionDTO));
-		}
-		else {
-
-			List<BinaryDTO> binaries = ingestionDTO.getResources().getBinaries();
-
-			if (binaries.isEmpty()) {
-				logger.info("Binaries empty");
-				return _ingestionEmitter.send(_of(ingestionDTO));
-			} else {
-				logger.info("Binaries not empty");
-				return _fileManagerEmitter.send(_of(ingestionDTO));
-			}
-		}
+		return _emitter.send(_of(ingestionDTO));
 	}
 
 	private IngestionPayloadWrapper _of(IngestionRequest dto) {
@@ -189,15 +166,8 @@ public class IngestionEmitter {
 
 	@Channel("ingestion")
 	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
-	Emitter<IngestionPayloadWrapper> _ingestionEmitter;
+	Emitter<IngestionPayloadWrapper> _emitter;
 
-	@Channel("file-manager")
-	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
-	Emitter<IngestionPayloadWrapper> _fileManagerEmitter;
-
-	@Channel("resources-validator")
-	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
-	Emitter<IngestionPayloadWrapper> _resourcesValidatorEmitter;
 
 	@Inject
 	Logger logger;
