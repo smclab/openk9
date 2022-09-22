@@ -21,10 +21,8 @@ import io.openk9.ingestion.client.filemanager.exception.FileManagerException;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 
@@ -42,6 +40,7 @@ public interface FileManagerClient {
 
 	@POST
 	@Path("/upload/{datasourceId}/{fileId}")
+	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
 				InputStream inputStream);
 
