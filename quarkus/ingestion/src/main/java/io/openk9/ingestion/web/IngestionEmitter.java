@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 public class IngestionEmitter {
 
 	@ConfigProperty(name = "use.resources.validator")
-	Boolean useResourcesValidator;
+	boolean useResourcesValidator;
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
