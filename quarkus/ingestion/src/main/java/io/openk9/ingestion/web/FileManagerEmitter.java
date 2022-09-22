@@ -8,6 +8,7 @@ import io.openk9.ingestion.dto.ResourcesDTO;
 import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -78,5 +79,6 @@ public class FileManagerEmitter {
     IngestionEmitter emitter;
 
     @Inject
+    @RestClient
     FileManagerClient fileManagerClient;
 }
