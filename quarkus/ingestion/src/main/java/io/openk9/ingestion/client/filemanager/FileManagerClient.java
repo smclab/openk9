@@ -17,6 +17,8 @@
 
 package io.openk9.ingestion.client.filemanager;
 
+import io.openk9.ingestion.client.filemanager.exception.FileManagerException;
+import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.ws.rs.GET;
@@ -44,14 +46,13 @@ public interface FileManagerClient {
 				InputStream inputStream);
 
 
-//	@ClientExceptionMapper
-//	static FileManagerException toException(Response response) {
-//
-//		if (response.getStatus() == 500) {
-//			return new FileManagerException("error during download file");
-//		}
-//
-//		return null;
-//	}
-	
+	@ClientExceptionMapper
+	static FileManagerException toException(Response response) {
+
+		if (response.getStatus() == 500) {
+			return new FileManagerException("error during download file");
+		}
+
+		return null;
+	}
 }
