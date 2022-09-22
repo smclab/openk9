@@ -48,7 +48,7 @@ public class FileManagerEmitter {
 
                     BinaryDTO binary = binaries.get(internalIndex);
 
-                    String data = binary.getId();
+                    String data = binary.getData();
 
                     String fileId = binary.getId();
 
