@@ -37,12 +37,15 @@ public class IngestionEndpoint {
 
 		return Uni
 			.createFrom()
-			.completionStage(() -> _emitter.emit(dto))
+			.completionStage(() -> _fileManagerEmitter.emit(dto))
 			.replaceWith(() -> "{}");
 
 	}
 
 	@Inject
 	IngestionEmitter _emitter;
+
+	@Inject
+	FileManagerEmitter _fileManagerEmitter;
 
 }
