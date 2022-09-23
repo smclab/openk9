@@ -128,9 +128,6 @@ public class ResourcesValidatorProcessor {
 
 			}
 
-			logger.info(
-					"document not founf. message with contentId: " + contentId + " goes to next step");
-
 			payload.put("hashCodes", hashCodes);
 
 			emitter.send(
