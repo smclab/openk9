@@ -39,4 +39,5 @@ message Binary {
   string name = 2;
   optional string contentType = 3;
   string data = 4;
+  string resourceId = 5;
 }
