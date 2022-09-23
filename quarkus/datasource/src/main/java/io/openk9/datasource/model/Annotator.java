@@ -45,6 +45,10 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Cacheable
 public class Annotator extends K9Entity {
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
 	@Column(name = "type", nullable = false)
 	private String type;
 	@Column(name = "field", nullable = false)

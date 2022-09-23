@@ -33,21 +33,29 @@ import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "doc_type_field")
+@Table(name = "doc_type_field", uniqueConstraints = {
+	@UniqueConstraint(
+		name = "uc_doctypefield_name_doc_type_id",
+		columnNames = {"name", "doc_type_id"}
+	)
+})
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 @Cacheable
 public class DocTypeField extends K9Entity {
+
+	@Column(name = "name", nullable = false)
+	private String name;
+
+	@Column(name = "description", length = 4096)
+	private String description;
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH}, optional = false)
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL, optional = false)
 	@JoinColumn(name = "doc_type_id", nullable = false)
 	@JsonIgnore
 	private DocType docType;

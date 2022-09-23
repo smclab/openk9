@@ -33,6 +33,7 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.FlushMode;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -84,7 +85,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			filter);
 	}
 
-	public Uni<Set<DocTypeField>> getDocTypeFields(DocType docType) {
+	public Uni<List<DocTypeField>> getDocTypeFields(DocType docType) {
 		return withTransaction(s -> Mutiny2.fetch(s, docType.getDocTypeFields()));
 	}
 
@@ -118,13 +119,26 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			})));
 	}
 
+	public Uni<List<DocTypeField>> getDocTypeFieldsByName(String docTypeName) {
+		return withStatelessTransaction((s) -> {
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<DocTypeField> cq = cb.createQuery(DocTypeField.class);
+			Root<DocType> root = cq.from(DocType.class);
+			cq.select(root.join(DocType_.docTypeFields));
+			cq.where(cb.equal(root.get(DocType_.name), docTypeName));
+			return s.createQuery(cq).getResultList();
+		});
+	}
+
 	public Uni<DocType> findByName(String name) {
-		return withTransaction((s) -> {
+		return withStatelessTransaction((s) -> {
 			CriteriaBuilder cb = em.getCriteriaBuilder();
 			CriteriaQuery<DocType> cq = cb.createQuery(DocType.class);
 			Root<DocType> root = cq.from(DocType.class);
 			cq.where(cb.equal(root.get(DocType_.name), name));
-			return s.createQuery(cq).getSingleResultOrNull();
+			return s.createQuery(cq)
+				.setFlushMode(FlushMode.MANUAL)
+				.getSingleResultOrNull();
 		});
 	}
 

@@ -50,7 +50,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 	public Uni<DataIndex> getDataIndex(Datasource datasource) {
 		return withTransaction(
-			s -> Mutiny2.fetch(s, datasource.getDataIndex()));
+			s -> s.fetch(datasource.getDataIndex()));
 	}
 
 	public Uni<DataIndex> getDataIndex(long datasourceId) {

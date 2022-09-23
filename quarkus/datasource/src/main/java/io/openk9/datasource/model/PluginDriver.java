@@ -40,6 +40,11 @@ import javax.persistence.Table;
 @Cacheable
 public class PluginDriver extends K9Entity {
 
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "type", nullable = false)
 	private PluginDriverType type;

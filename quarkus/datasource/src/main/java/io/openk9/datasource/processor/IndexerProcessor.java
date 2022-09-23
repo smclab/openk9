@@ -1,20 +1,24 @@
 package io.openk9.datasource.processor;
 
 import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.processor.util.Field;
+import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
+import io.vertx.core.Vertx;
+import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.WriteRequest;
@@ -23,14 +27,14 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,6 +43,7 @@ import java.util.stream.Stream;
 public class IndexerProcessor {
 
 	@Incoming("index-writer")
+	@ActivateRequestContext
 	public Uni<Void> process(Message<?> message) {
 
 		IngestionIndexWriterPayload payload =
@@ -47,18 +52,26 @@ public class IndexerProcessor {
 
 		IngestionPayload ingestionPayload = payload.getIngestionPayload();
 
-		return datasourceService
-			.findById(ingestionPayload.getDatasourceId())
-			.onItem()
-			.ifNotNull()
-			.transformToUni(datasource ->
-				datasourceService.getDataIndex(datasource)
-					.flatMap(dataIndex -> {
+		ContextInternal context =(ContextInternal) Vertx.currentContext();
 
-						if (dataIndex == null) {
 
-							String indexName =
-								datasource.getId() + "-data-" + UUID.randomUUID();
+
+		return datasourceService.withTransaction(s ->
+			s.find(Datasource.class, ingestionPayload.getDatasourceId())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(datasource ->
+					s.fetch(datasource.getDataIndex())
+						.flatMap(dataIndex -> {
+
+							String indexName;
+
+							if (dataIndex != null) {
+								indexName = dataIndex.getName();
+							}
+							else {
+								indexName = datasource.getId() + "-data-" + UUID.randomUUID();
+							}
 
 							IndexRequest indexRequest = new IndexRequest(indexName);
 
@@ -72,217 +85,176 @@ public class IndexerProcessor {
 							indexRequest.setRefreshPolicy(
 								WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
-							Uni<List<DocTypeField>> createDocumentUni =
-								_createDocAndReturnMappings(
-									indexName, indexRequest,
-									List.of(ingestionPayload.getDocumentTypes()));
+							GetMappingsResponse mapping;
 
-							Uni<Map<String, List<DocTypeField>>> mapDocTypeNameDocTypeFieldList =
-								createDocumentUni
-									.map(list ->
-										list
-											.stream()
-											.map(dtf ->
-												Tuple2.of(
-													dtf.getName().contains(".")
-														? dtf
-															.getName()
-															.substring(0, dtf.getName().indexOf("."))
-														: dtf.getName(),
-													dtf
-												)
-											)
-											.collect(Collectors.groupingBy(
-												Tuple2::getItem1,
-												Collectors.mapping(
-													Tuple2::getItem2,
-													Collectors.toList())))
+							try {
+
+								client.index(
+									indexRequest,
+									RequestOptions.DEFAULT);
+
+								mapping =
+									client.indices().getMapping(
+										new GetMappingsRequest().indices(
+											indexName),
+										RequestOptions.DEFAULT
 									);
+							}
+							catch (Exception e) {
+								throw new RuntimeException(e);
+							}
 
-							Uni<Map<DocType, List<DocTypeField>>> mapUni =
-								mapDocTypeNameDocTypeFieldList
-									.flatMap(dt -> {
-										List<Uni<Tuple2<DocType, ? extends List<DocTypeField>>>>
-											collect =
-												dt
-													.entrySet()
-													.stream()
-													.map(e ->
-														docTypeService
-															.findByName(e.getKey())
-															.flatMap(docType -> {
+							Map<String, Object> map =
+								mapping.mappings().get(
+									indexName).sourceAsMap();
 
-																Set<DocTypeField> docTypeFields =
-																	new HashSet<>(e.getValue());
+							Field field =
+								IndexerProcessor._toFlatFields(map);
 
-																if (docType == null) {
+							List<DocTypeField> currDocTypeFields =
+								new ArrayList<>();
 
-																	DocType newDocType = new DocType();
+							_toDocTypeFields(
+								field, new ArrayList<>(), currDocTypeFields,
+								List.of(ingestionPayload.getDocumentTypes()));
 
-																	newDocType.setDocTypeFields(docTypeFields);
-																	newDocType.setDescription(e.getKey());
-																	newDocType.setName(e.getKey());
+							Map<String, List<DocTypeField>> dt =
+								currDocTypeFields
+									.stream()
+									.map(dtf ->
+										Tuple2.of(
+											dtf.getName().contains(".")
+												? dtf
+												.getName()
+												.substring(0,
+													dtf.getName().indexOf(
+														"."))
+												: dtf.getName(),
+											dtf
+										)
+									)
+									.collect(Collectors.groupingBy(
+										Tuple2::getItem1,
+										Collectors.mapping(
+											Tuple2::getItem2,
+											Collectors.toList())));
 
-																	for (DocTypeField docTypeField : docTypeFields) {
-																		docTypeField.setDocType(newDocType);
-																	}
+							Uni<List<DocType>> docTypeListUni =
+								dataIndex == null
+									? Uni.createFrom().<List<DocType>>item(List::of)
+									: s.fetch(dataIndex.getDocTypes());
 
-																	return Uni
-																		.createFrom()
-																		.item(
-																			Tuple2.<DocType, List<DocTypeField>>of(
-																				newDocType,
-																				e.getValue()
-																			)
-																		);
-																}
-																else {
+							Uni<List<DocType>> docTypesUni =
+								docTypeListUni.map(docTypes -> {
 
-																	return docTypeService
-																		.getDocTypeFields(docType)
-																		.map(dtfl ->
-																			Stream.concat(
-																				dtfl.stream(),
-																				docTypeFields
-																					.stream()
-																					.filter(dtf -> dtfl
-																						.stream()
-																						.noneMatch(dtf2 -> dtf2.getName().equals(dtf.getName())))
-																				)
-																				.collect(Collectors.toSet())
-																		)
-																		.map(s -> {
+									List<DocType> docTypeUniList =
+										new ArrayList<>();
 
-																			docType.setDocTypeFields(s);
+									for (String name : dt.keySet()) {
 
-																			return Tuple2.of(
-																				docType,
-																				new ArrayList<>(s)
-																			);
-																		});
-																}
-															})
-													)
-													.collect(Collectors.toList());
+										DocType docType = docTypes
+											.stream()
+											.filter(d -> d.getName().equals(
+												name))
+											.findFirst()
+											.orElse(null);
 
-										return Uni
-											.combine()
-											.all()
-											.unis(collect)
-											.combinedWith(e -> e
-												.stream()
-												.map(
-													e1 -> (Tuple2<DocType, List<DocTypeField>>) e1)
-												.collect(Collectors.toMap(
-													Tuple2::getItem1,
-													Tuple2::getItem2
-												))
-											);
-									});
+										List<DocTypeField>
+											docTypeFieldList = dt.get(name);
 
-							return mapUni.flatMap(m -> {
+										if (docType == null) {
+											DocType newDocType =
+												new DocType();
+											newDocType.setName(name);
+											newDocType.setDocTypeFields(
+												docTypeFieldList);
+											newDocType.setDescription(
+												"auto-generated");
+											docTypeUniList.add(newDocType);
 
-								DataIndex di = new DataIndex();
-
-								di.setName(indexName);
-								di.setDocTypes(m.keySet());
-
-
-								datasource.setDataIndex(di);
-
-								return datasourceService.merge(datasource);
-
-							})
-								.replaceWithVoid();
-						}
-						else {
-
-							IndexRequest indexRequest = new IndexRequest(dataIndex.getName());
-
-							JsonObject jsonObject = _toIndexDocument(ingestionPayload);
-
-							indexRequest.source(
-								jsonObject.toString(),
-								XContentType.JSON
-							);
-
-							indexRequest.setRefreshPolicy(
-								WriteRequest.RefreshPolicy.WAIT_UNTIL);
-
-							return Uni
-								.createFrom()
-								.<IndexResponse>emitter(
-									sink -> client.indexAsync(
-										indexRequest, RequestOptions.DEFAULT,
-										new ActionListener<>() {
-											@Override
-											public void onResponse(
-												IndexResponse indexResponse) {
-												sink.complete(indexResponse);
+											for (DocTypeField docTypeField : docTypeFieldList) {
+												docTypeField.setDocType(newDocType);
 											}
 
-											@Override
-											public void onFailure(Exception e) {
-												sink.fail(e);
+										}
+										else {
+
+											List<DocTypeField> docTypeFields =
+												docType.getDocTypeFields();
+
+											List<DocTypeField>
+												collect =
+												_mergeDocTypeList(
+													docTypeFieldList,
+													docTypeFields);
+
+											docType.setDocTypeFields(collect);
+
+											for (DocTypeField docTypeField : collect) {
+												docTypeField.setDocType(docType);
 											}
-										}))
-								.replaceWithVoid();
 
-						}
+											docTypeUniList.add(docType);
 
-					})
-			)
-			.onFailure()
-			.call((t) -> Uni.createFrom().completionStage(() -> message.nack(t)))
-			.replaceWith(Uni.createFrom().completionStage(message::ack));
 
+										}
+									}
+
+									return docTypeUniList;
+
+								});
+
+							return docTypesUni
+								.flatMap(docTypeList -> {
+
+									DataIndex di = dataIndex;
+
+									if (di == null) {
+										di = new DataIndex();
+										di.setName(indexName);
+									}
+
+									di.setDocTypes(docTypeList);
+									datasource.setDataIndex(di);
+									return s.merge(datasource);
+
+								});
+
+						})
+				)
+				.chain(s::flush)
+		)
+			.onItemOrFailure()
+			.transformToUni((datasource, throwable) -> {
+				if (throwable != null) {
+					logger.error("Error while saving datasource", throwable);
+					return Uni.createFrom().completionStage(message.nack(throwable));
+				}
+				else {
+					return Uni.createFrom().completionStage(message.ack());
+				}
+			});
 	}
 
-	private Uni<List<DocTypeField>> _createDocAndReturnMappings(
-		String indexName, IndexRequest indexRequest, List<String> docTypes) {
-		return Uni
-			.createFrom()
-			.<IndexResponse>emitter(
-				sink -> client.indexAsync(
-					indexRequest, RequestOptions.DEFAULT,
-					new ActionListener<>() {
-						@Override
-						public void onResponse(
-							IndexResponse indexResponse) {
-							sink.complete(indexResponse);
-						}
-
-						@Override
-						public void onFailure(Exception e) {
-							sink.fail(e);
-						}
-					}))
-			.flatMap(indexResponse ->
-				Uni
-					.createFrom()
-					.<GetMappingsResponse>emitter(
-						sink -> client
-							.indices()
-							.getMappingAsync(
-								new GetMappingsRequest().indices(
-									indexName),
-								RequestOptions.DEFAULT,
-								new ActionListener<>() {
-									@Override
-									public void onResponse(
-										GetMappingsResponse getMappingsResponse) {
-										sink.complete(
-											getMappingsResponse);
-									}
-
-									@Override
-									public void onFailure(
-										Exception e) {
-										sink.fail(e);
-									}
-								})
-					)
+	private static List<DocTypeField> _mergeDocTypeList(
+		List<DocTypeField> docTypeFieldList, List<DocTypeField> docTypeFields) {
+		return Stream.concat(
+			docTypeFields.stream(),
+			docTypeFieldList
+				.stream()
+				.filter(
+					dtf -> docTypeFields
+						.stream()
+						.noneMatch(dtf2 -> dtf2.getName().equals(dtf.getName()))
+				)
 			)
+			.collect(Collectors.toList());
+	}
+
+	private Uni<List<DocTypeField>> _indexDocAndReturnMappings(
+		String indexName, IndexRequest indexRequest, List<String> docTypes) {
+		return _indexDocument(indexRequest)
+			.flatMap(indexResponse -> _getMappings(indexName))
 			.map(response -> response.mappings().get(indexName).sourceAsMap())
 			.map(IndexerProcessor::_toFlatFields)
 			.map(root -> {
@@ -291,6 +263,28 @@ public class IndexerProcessor {
 					root, new ArrayList<>(), docTypeFields, docTypes);
 				return docTypeFields;
 			});
+	}
+
+	private Uni<GetMappingsResponse> _getMappings(String indexName) {
+		return Uni
+			.createFrom()
+			.emitter(
+				sink -> client
+					.indices()
+					.getMappingAsync(
+						new GetMappingsRequest().indices(indexName),
+						RequestOptions.DEFAULT,
+						UniActionListener.of(sink))
+			);
+	}
+
+	private Uni<IndexResponse> _indexDocument(IndexRequest indexRequest) {
+		return Uni
+			.createFrom()
+			.emitter(
+				sink -> client.indexAsync(
+					indexRequest, RequestOptions.DEFAULT,
+					UniActionListener.of(sink)));
 	}
 
 	private static void _toDocTypeFields(
@@ -322,10 +316,7 @@ public class IndexerProcessor {
 
 		for (Field subField : root.getSubFields()) {
 			_toDocTypeFields(
-				subField,
-				new ArrayList<>(acc),
-				docTypeFields,
-				docTypes);
+				subField, new ArrayList<>(acc), docTypeFields, docTypes);
 		}
 	}
 
@@ -433,5 +424,11 @@ public class IndexerProcessor {
 
 	@Inject
 	RestHighLevelClient client;
+
+	@Inject
+	DataIndexService dataIndexService;
+
+	@Inject
+	Logger logger;
 
 }

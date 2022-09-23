@@ -24,6 +24,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Cacheable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -35,4 +36,8 @@ import javax.persistence.Table;
 @RequiredArgsConstructor
 @Cacheable
 public class EntityIndex extends K9Entity {
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
 }

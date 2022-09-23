@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @RegisterForReflection
 public class Field {
@@ -55,7 +56,7 @@ public class Field {
 	}
 
 	public boolean isRoot() {
-		return name.equals(ROOT);
+		return Objects.equals(name, ROOT);
 	}
 
 	public static Field of(String name) {
@@ -74,6 +75,6 @@ public class Field {
 	private String type;
 	private List<Field> subFields;
 
-	public static final String ROOT = "root";
+	public static final String ROOT = "root-" + UUID.randomUUID();
 
 }

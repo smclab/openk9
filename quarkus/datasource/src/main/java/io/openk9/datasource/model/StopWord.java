@@ -25,6 +25,7 @@ import lombok.ToString;
 import org.hibernate.Hibernate;
 
 import javax.persistence.Cacheable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.util.Objects;
@@ -37,6 +38,10 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Cacheable
 public class StopWord extends K9Entity {
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {

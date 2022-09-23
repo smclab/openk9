@@ -52,6 +52,12 @@ import java.util.Set;
 @EntityListeners(K9EntityListener.class)
 public class Datasource extends K9Entity {
 
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+
+	@Column(name = "description", length = 4096)
+	private String description;
+
 	@Column(name = "scheduling", nullable = false)
 	@Cron(type = CronType.QUARTZ)
 	private String scheduling;
@@ -63,11 +69,7 @@ public class Datasource extends K9Entity {
 	private Boolean schedulable = false;
 
 	@ToString.Exclude
-	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
+	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
 	@JoinColumn(name = "data_index_id")
 	@JsonIgnore
 	private DataIndex dataIndex;

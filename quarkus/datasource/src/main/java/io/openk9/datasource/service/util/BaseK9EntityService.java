@@ -39,11 +39,8 @@ import io.quarkus.hibernate.reactive.panache.common.runtime.AbstractJpaOperation
 import io.quarkus.hibernate.reactive.panache.runtime.PanacheQueryImpl;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil;
-import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
-import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -146,7 +143,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			Root<ENTITY> subRoot = subquery.from(getEntityClass());
 
-			Join<ENTITY, T> subJoin = subRoot.joinSet(joinField);
+			Join<ENTITY, T> subJoin = subRoot.join(joinField);
 
 			subquery.select(subJoin.get(K9Entity_.id));
 
@@ -160,7 +157,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
 
-			Join<ENTITY, T> join = entityRoot.joinSet(joinField);
+			Join<ENTITY, T> join = entityRoot.join(joinField);
 
 			return findConnection(
 				joinEntityQuery.select(join), join,
@@ -496,7 +493,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	public String[] getSearchFields() {
-		return new String[] {K9Entity_.NAME};
+		return new String[] {};
 	}
 
 	protected String getEntityIdField() {
@@ -759,18 +756,26 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public <T> Uni<T> withTransaction(
 		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> fun) {
 
-		return Uni.createFrom().emitter(sink -> {
+		return Uni.createFrom().deferred(() -> em.withTransaction(fun));
 
-			Context vertxContext = VertxContext.getOrCreateDuplicatedContext(vertx);
-			VertxContextSafetyToggle.setContextSafe(vertxContext, true);
-			vertxContext.runOnContext(unused ->
-				em.withTransaction(fun)
-					.subscribe()
-					.with(sink::complete, sink::fail)
-			);
+	}
 
-		});
+	public <T> Uni<T> withStatelessTransaction(Supplier<Uni<T>> fun) {
+		return withStatelessTransaction((session, transaction) -> fun.get());
 
+	}
+
+	public <T> Uni<T> withStatelessTransaction(
+		Function<Mutiny.StatelessSession, Uni<T>> fun) {
+
+		return withStatelessTransaction((session, transaction) -> fun.apply(session));
+
+	}
+
+	public <T> Uni<T> withStatelessTransaction(
+		BiFunction<Mutiny.StatelessSession, Mutiny.Transaction, Uni<T>> fun) {
+
+		return Uni.createFrom().deferred(() -> em.withStatelessTransaction((fun)));
 
 	}
 

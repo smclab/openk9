@@ -25,11 +25,12 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Cacheable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name = "enrich_pipeline")
@@ -40,11 +41,16 @@ import java.util.Set;
 @Cacheable
 public class EnrichPipeline extends K9Entity {
 
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
+
 	@OneToMany(mappedBy = "enrichPipeline", cascade = javax.persistence.CascadeType.ALL)
 	@ToString.Exclude
 	@OrderBy("weight ASC")
 	@JsonIgnore
-	private Set<EnrichPipelineItem> enrichPipelineItems
-		= new java.util.LinkedHashSet<>();
+	private List<EnrichPipelineItem> enrichPipelineItems
+		= new java.util.LinkedList<>();
 
 }

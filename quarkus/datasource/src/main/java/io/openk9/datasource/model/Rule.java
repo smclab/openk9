@@ -36,6 +36,10 @@ import javax.persistence.Table;
 @RequiredArgsConstructor
 @Cacheable
 public class Rule extends K9Entity {
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
 	@Column(name = "rhs", nullable = false)
 	private String rhs;
 	@Column(name = "lhs", nullable = false)

@@ -18,6 +18,13 @@
 package io.openk9.datasource.index;
 
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.processor.util.Field;
+import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.util.UniActionListener;
+import io.smallrye.mutiny.Uni;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
@@ -25,17 +32,212 @@ import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.client.indices.ResizeRequest;
 import org.elasticsearch.client.indices.ResizeResponse;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.jboss.logging.Logger;
 import reactor.core.publisher.Mono;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class DatasourceIndexService {
+
+	public Uni<List<DocType>> getDocTypes(
+		String indexName, List<String> docTypes) {
+		getMappings(indexName)
+			.map(DatasourceIndexService::_toFlatFields)
+			.map(field -> _toDocTypes(field, docTypes));
+
+		return null;
+
+	}
+
+	public Uni<Map<String, Object>> getMappings(String indexName) {
+		return Uni
+			.createFrom()
+			.<GetMappingsResponse>emitter(
+				sink -> client
+					.indices()
+					.getMappingAsync(
+						new GetMappingsRequest().indices(indexName),
+						RequestOptions.DEFAULT,
+						UniActionListener.of(sink))
+			)
+			.map(GetMappingsResponse::mappings)
+			.map(m -> m.get(indexName))
+			.map(MappingMetadata::getSourceAsMap);
+
+	}
+
+	private Uni<List<DocType>> _toDocTypes(
+		Field field,  List<String> docTypes) {
+
+		/*List<DocTypeField> docTypeFields = new ArrayList<>();
+
+		_toDocTypeFields(
+			field, new ArrayList<>(), docTypeFields, docTypes);
+
+		Map<String, Set<DocTypeField>> docTypeNameMap =
+			docTypeFields
+				.stream()
+				.collect(
+					Collectors.groupingBy(
+						d -> d.getName().substring(0, d.getName().indexOf(".")),
+						Collectors.toSet())
+				);
+
+		List<Uni<DocType>> docTypeList = new ArrayList<>();
+
+		for (String docTypeName : docTypeNameMap.keySet()) {
+
+			Set<DocTypeField> currentDocTypeFields =
+				docTypeNameMap.get(docTypeName);
+
+			docTypeList.add(
+				docTypeService.withTransaction(s ->
+					docTypeService
+						.findByName(docTypeName)
+						.flatMap(docType -> {
+							if (docType == null) {
+								DocType newDocType = new DocType();
+								newDocType.setName(docTypeName);
+								newDocType.setDescription("auto-generated");
+								newDocType.setDocTypeFields(currentDocTypeFields);
+								return Uni.createFrom().item(newDocType);
+							}
+							else {
+								Mutiny2
+									.fetch(s, docType.getDocTypeFields())
+									.invoke(docTypeFieldList -> {
+										for (DocTypeField docTypeField : docTypeFieldList) {
+											if (currentDocTypeFields
+												.stream()
+												.noneMatch(cdtf -> cdtf.getName().equals(docTypeField.getName()))) {
+
+											}
+										}
+									});
+
+							}
+						})
+				)
+			)
+
+
+		}*/
+
+
+		return null;
+	}
+
+	private static void _toDocTypeFields(
+		Field root, List<String> acc, List<DocTypeField> docTypeFields,
+		List<String> supportedDocTypes) {
+
+		String name = root.getName();
+
+		if (!root.isRoot()) {
+			acc.add(name);
+		}
+
+		String type = root.getType();
+
+		if (type != null) {
+
+			String fieldName = String.join(".", acc);
+
+			if (supportedDocTypes.stream().anyMatch(
+				docType -> fieldName.startsWith(docType + "."))) {
+
+				DocTypeField docTypeField = new DocTypeField();
+				docTypeField.setName(fieldName);
+				docTypeField.setFieldType(FieldType.fromString(type));
+				docTypeField.setBoost(1.0);
+				docTypeField.setSearchable(false);
+				docTypeField.setDescription("this doc type field is auto generated");
+				docTypeFields.add(docTypeField);
+
+			}
+
+		}
+
+		for (Field subField : root.getSubFields()) {
+			_toDocTypeFields(
+				subField, new ArrayList<>(acc), docTypeFields, supportedDocTypes);
+		}
+	}
+
+	private static Field _toFlatFields(Map<String, Object> mappings) {
+		Field root = Field.createRoot();
+		_toFlatFields(mappings, root);
+		return root;
+	}
+
+	private static void _toFlatFields(
+		Map<String, Object> mappings, Field root) {
+
+		for (Map.Entry<String, Object> kv : mappings.entrySet()) {
+
+			String key = kv.getKey();
+			Object value = kv.getValue();
+
+			if (key.equals("properties")) {
+				_toFlatFields((Map<String, Object>) value, root);
+			}
+			else if (value instanceof Map && ((Map)value).size() == 1) {
+				Map<String, Object> map = (Map<String, Object>)value;
+				if (map.containsKey("type")) {
+					root.addSubField(Field.of(key, (String)map.get("type")));
+				}
+				else {
+					Field newRoot = Field.of(key);
+					root.addSubField(newRoot);
+					_toFlatFields((Map<String, Object>) value, newRoot);
+				}
+			}
+			else if (value instanceof Map && ((Map)value).size() > 1) {
+				Map<String, Object> localMap = ((Map<String, Object>)value);
+
+				Field newRoot = Field.of(key);
+
+				root.addSubField(newRoot);
+
+				if (localMap.containsKey("type")) {
+					newRoot.setType((String)localMap.get("type"));
+
+					if (localMap.containsKey("fields")) {
+						Map<String, Object> fields =
+							(Map<String, Object>)localMap.get("fields");
+
+						List<Field> subFields = fields
+							.entrySet()
+							.stream()
+							.map(e -> Field.of(
+								e.getKey(),
+								(String)((Map<String, Object>) e.getValue())
+									.get("type")))
+							.collect(Collectors.toList());
+
+						newRoot.addSubFields(subFields);
+
+					}
+
+				}
+
+			}
+
+		}
+
+	}
 
 	public Mono<Object> reindex(Datasource datasource) {
 
@@ -143,5 +345,8 @@ public class DatasourceIndexService {
 
 	@Inject
 	Logger logger;
+
+	@Inject
+	DocTypeService docTypeService;
 
 }

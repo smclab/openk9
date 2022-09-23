@@ -26,13 +26,13 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Cacheable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name = "data_index")
@@ -43,17 +43,23 @@ import java.util.Set;
 @Cacheable
 @AllArgsConstructor(staticName = "of")
 public class DataIndex extends K9Entity {
+
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+
+	@Column(name = "description", length = 4096)
+	private String description;
 	@ManyToMany(cascade = {
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.DETACH,
-		javax.persistence.CascadeType.REFRESH})
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
 	@JoinTable(name = "data_index_doc_types",
 		joinColumns = @JoinColumn(name = "data_index_id", referencedColumnName = "id"),
 		inverseJoinColumns = @JoinColumn(name = "doc_types_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<DocType> docTypes = new LinkedHashSet<>();
+	private List<DocType> docTypes = new java.util.ArrayList<>();
 
 	public void addDocType(DocType docType) {
 		docTypes.add(docType);

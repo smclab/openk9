@@ -25,6 +25,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Cacheable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -37,6 +38,10 @@ import javax.persistence.Table;
 @AllArgsConstructor(staticName = "of")
 @Cacheable
 public class DateFilter extends PanacheEntity {
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
 	private String field;
 	private String label;
 }

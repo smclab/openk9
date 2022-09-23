@@ -26,14 +26,16 @@ import lombok.ToString;
 
 import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 @Entity
 @Table(name = "query_analysis")
@@ -43,6 +45,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Cacheable
 public class QueryAnalysis extends K9Entity {
+
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
+
 	@ManyToMany(cascade = {
 		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
 		CascadeType.DETACH})
@@ -51,7 +59,7 @@ public class QueryAnalysis extends K9Entity {
 		inverseJoinColumns = @JoinColumn(name = "rules_id"))
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<Rule> rules = new LinkedHashSet<>();
+	private List<Rule> rules = new LinkedList<>();
 
 
 	@ManyToMany(cascade = {
@@ -62,7 +70,7 @@ public class QueryAnalysis extends K9Entity {
 		inverseJoinColumns = @JoinColumn(name = "annotators_id"))
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<Annotator> annotators = new LinkedHashSet<>();
+	private List<Annotator> annotators = new LinkedList<>();
 
 	@ToString.Exclude
 	@ManyToMany(cascade = {
@@ -71,10 +79,10 @@ public class QueryAnalysis extends K9Entity {
 	@JoinTable(name = "query_analysis_stopWords",
 		joinColumns = @JoinColumn(name = "queryAnalysis_id"),
 		inverseJoinColumns = @JoinColumn(name = "stopWords_id"))
-	private Set<StopWord> stopWords = new LinkedHashSet<>();
+	private List<StopWord> stopWords = new LinkedList<>();
 
 	public boolean removeRule(
-		Set<Rule> rules, long ruleId) {
+		Collection<Rule> rules, long ruleId) {
 
 		Iterator<Rule> iterator = rules.iterator();
 

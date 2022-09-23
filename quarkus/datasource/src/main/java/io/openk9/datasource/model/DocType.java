@@ -25,12 +25,15 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Cacheable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 @Entity
 @Table(name = "doc_type")
@@ -41,13 +44,23 @@ import java.util.Set;
 @Cacheable
 public class DocType extends K9Entity {
 
-	@OneToMany(mappedBy = "docType", cascade = javax.persistence.CascadeType.ALL, orphanRemoval = true)
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+
+	@Column(name = "description", length = 4096)
+	private String description;
+
+	@OneToMany(
+		mappedBy = "docType",
+		cascade = javax.persistence.CascadeType.ALL,
+		fetch = FetchType.EAGER
+	)
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
+	private List<DocTypeField> docTypeFields = new LinkedList<>();
 
 	public boolean addDocTypeField(
-		Set<DocTypeField> docTypeFields, DocTypeField docTypeField) {
+		Collection<DocTypeField> docTypeFields, DocTypeField docTypeField) {
 		if (docTypeFields.add(docTypeField)) {
 			docTypeField.setDocType(this);
 			return true;
@@ -56,7 +69,7 @@ public class DocType extends K9Entity {
 	}
 
 	public boolean removeDocTypeField(
-		Set<DocTypeField> docTypeFields, DocTypeField docTypeField) {
+		Collection<DocTypeField> docTypeFields, DocTypeField docTypeField) {
 
 		if (docTypeFields.remove(docTypeField)) {
 			docTypeField.setDocType(null);
@@ -67,7 +80,7 @@ public class DocType extends K9Entity {
 
 	}
 
-	public boolean removeDocTypeField(Set<DocTypeField> docTypeFields, long docTypeFieldId) {
+	public boolean removeDocTypeField(Collection<DocTypeField> docTypeFields, long docTypeFieldId) {
 
 		Iterator<DocTypeField> iterator = docTypeFields.iterator();
 

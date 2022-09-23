@@ -33,7 +33,7 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Set;
 
 @ApplicationScoped
@@ -92,7 +92,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 					 .onItem()
 					 .ifNotNull()
 					 .transformToUni(stopWords -> {
-						 e.setStopWords(new HashSet<>(stopWords));
+						 e.setStopWords(new ArrayList<>(stopWords));
 						 return persist(e);
 					 })
 			 )

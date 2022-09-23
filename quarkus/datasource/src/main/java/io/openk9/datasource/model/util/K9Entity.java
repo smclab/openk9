@@ -50,12 +50,6 @@ public abstract class K9Entity extends PanacheEntityBase {
 	@UpdateTimestamp
 	private OffsetDateTime modifiedDate;
 
-	@Column(name = "name", nullable = false, unique = true)
-	private String name;
-
-	@Column(name = "description", length = 4096)
-	private String description;
-
 	@javax.persistence.Id
 	@GeneratedValue
 	@org.eclipse.microprofile.graphql.Id

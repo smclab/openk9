@@ -34,9 +34,10 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 @Entity
 @Table(name = "tenant")
@@ -47,6 +48,12 @@ import java.util.Set;
 @Cacheable
 public class Tenant extends K9Entity {
 
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+
+	@Column(name = "description", length = 4096)
+	private String description;
+
 	@ManyToMany(mappedBy = "tenants", cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
@@ -54,7 +61,7 @@ public class Tenant extends K9Entity {
 		javax.persistence.CascadeType.DETACH})
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<Datasource> datasources = new LinkedHashSet<>();
+	private List<Datasource> datasources = new LinkedList<>();
 
 	@Column(name = "virtual_host", nullable = false, unique = true)
 	private String virtualHost;
@@ -78,8 +85,8 @@ public class Tenant extends K9Entity {
 		javax.persistence.CascadeType.DETACH})
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<SuggestionCategory> suggestionCategories
-		= new LinkedHashSet<>();
+	private List<SuggestionCategory> suggestionCategories
+		= new LinkedList<>();
 
 	@OneToOne(
 		fetch = FetchType.LAZY
@@ -89,7 +96,7 @@ public class Tenant extends K9Entity {
 	private QueryAnalysis queryAnalysis;
 
 	public boolean addSuggestionCategory(
-		Set<SuggestionCategory> suggestionCategories,
+		Collection<SuggestionCategory> suggestionCategories,
 		SuggestionCategory suggestionCategory) {
 
 		if (suggestionCategory == null || suggestionCategories.contains(suggestionCategory)) {
@@ -104,7 +111,7 @@ public class Tenant extends K9Entity {
 	}
 
 	public boolean removeSuggestionCategory(
-		Set<SuggestionCategory> suggestionCategories,
+		Collection<SuggestionCategory> suggestionCategories,
 		long suggestionCategoryId) {
 		Iterator<SuggestionCategory> iterator = suggestionCategories.iterator();
 
