@@ -17,13 +17,10 @@
 
 package io.openk9.ingestion.client.filemanager;
 
-import io.openk9.ingestion.client.filemanager.exception.FileManagerException;
-import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.InputStream;
 
 @Path("/v1/file-manager")
@@ -43,15 +40,4 @@ public interface FileManagerClient {
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
 				InputStream inputStream);
-
-
-	@ClientExceptionMapper
-	static FileManagerException toException(Response response) {
-
-		if (response.getStatus() == 500) {
-			return new FileManagerException("error during download file");
-		}
-
-		return null;
-	}
 }
