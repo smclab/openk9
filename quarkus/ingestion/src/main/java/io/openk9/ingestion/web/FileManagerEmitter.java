@@ -5,7 +5,6 @@ import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.IngestionDTO;
 import io.openk9.ingestion.dto.IngestionPayload;
 import io.openk9.ingestion.dto.ResourcesDTO;
-import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -57,14 +56,14 @@ public class FileManagerEmitter {
 
                     InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(contentBytes));
 
-                    Uni<String> resourceId = fileManagerClient.upload(datasourceId, fileId, inputStream);
+                    String resourceId = fileManagerClient.upload(datasourceId, fileId, inputStream);
 
                     BinaryDTO newBinaryDTO = new BinaryDTO();
                     newBinaryDTO.setId(fileId);
                     newBinaryDTO.setData(null);
                     newBinaryDTO.setName(binary.getName());
                     newBinaryDTO.setContentType(binary.getContentType());
-                    newBinaryDTO.setResourceId(resourceId.toString());
+                    newBinaryDTO.setResourceId(resourceId);
 
                     List<BinaryDTO> modifiedBinaries = new ArrayList<>();
                     modifiedBinaries.add(newBinaryDTO);

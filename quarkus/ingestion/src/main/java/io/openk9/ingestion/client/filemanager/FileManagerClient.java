@@ -17,7 +17,6 @@
 
 package io.openk9.ingestion.client.filemanager;
 
-import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.ws.rs.*;
@@ -39,6 +38,6 @@ public interface FileManagerClient {
 	@POST
 	@Path("/upload/{datasourceId}/{fileId}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	Uni<String> upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
-					   InputStream inputStream);
+	String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
+				InputStream inputStream);
 }
