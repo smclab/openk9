@@ -17,14 +17,10 @@
 
 package io.openk9.tika.client.filemanager;
 
-import io.openk9.tika.client.filemanager.exception.FileManagerException;
-import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 
@@ -34,21 +30,11 @@ public interface FileManagerClient {
 
 	@GET
 	@Path("/download/{resourceId}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	InputStream download(@PathParam("resourceId") String resourceId);
 
 	@POST
 	@Path("/delete/{resourceId}")
 	void delete(@PathParam("resourceId") String resourceId);
-
-
-	@ClientExceptionMapper
-	static FileManagerException toException(Response response) {
-
-		if (response.getStatus() == 500) {
-			return new FileManagerException("error during download file");
-		}
-
-		return null;
-	}
 	
 }
