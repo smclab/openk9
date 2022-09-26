@@ -31,6 +31,7 @@ public class UploadEndpoint {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	@Produces(MediaType.TEXT_PLAIN)
 	@Path("/{datasourceId}/{fileId}")
 	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
 					  InputStream inputStream) {

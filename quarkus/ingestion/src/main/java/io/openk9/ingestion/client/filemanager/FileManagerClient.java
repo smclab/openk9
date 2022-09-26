@@ -38,6 +38,7 @@ public interface FileManagerClient {
 	@POST
 	@Path("/upload/{datasourceId}/{fileId}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	@Produces(MediaType.TEXT_PLAIN)
 	String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
 				InputStream inputStream);
 }
