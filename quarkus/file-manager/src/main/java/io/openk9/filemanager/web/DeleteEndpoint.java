@@ -28,7 +28,6 @@ public class DeleteEndpoint {
 
 	@POST
 	@Path("/{resourceId}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public void delete(@PathParam("resourceId") String resourceId) {
 
 		deleteService.deleteObject(resourceId);
