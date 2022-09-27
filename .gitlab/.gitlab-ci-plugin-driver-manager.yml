@@ -11,7 +11,7 @@ Build Latest Plugin Driver Manager Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - main
+      - 241-ottimizzazione-payload
       - tags
     changes:
       - plugin-driver-manager/configs/*
@@ -63,7 +63,7 @@ Build Latest Plugin Driver Manager Docker Images:
   script:
     - ./mvnw install -Psmc,bom $MAVEN_CLI_OPTS
     - ./mvnw install -Psmc,assemblies -pl assemblies/plugin-driver-manager/plugin-driver-manager-kar -am $MAVEN_CLI_OPTS
-    - ./mvnw -Psmc,assemblies --file assemblies/plugin-driver-manager/plugin-driver-manager-karaf package jib:build -Dbase.docker.image.group.name=$CI_REGISTRY_NAME/openk9 -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
+    - ./mvnw -Psmc,assemblies --file assemblies/plugin-driver-manager/plugin-driver-manager-karaf package jib:build -Dbase.docker.image.group.name=$CI_REGISTRY_NAME/openk9 -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS -Dbase.docker.image.tag=241-ottimizzazione-payload
   cache:
     key: plugin-driver-manager
     paths:
