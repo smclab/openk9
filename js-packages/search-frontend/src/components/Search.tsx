@@ -237,7 +237,15 @@ export function Search({
                     isAuto: false,
                   },
                 });
-                if (
+                if (replaceText) {
+                  const text = option && (option.tokenType === "ENTITY" ? option.entityName : option.value)
+                  const cursorPosition = span.start + (text?.length ?? 0)
+                  console.log(option)
+                  setAdjustedSelection({
+                    selectionStart: cursorPosition,
+                    selectionEnd: cursorPosition
+                  })
+                } else if (
                   event.currentTarget.selectionStart &&
                   event.currentTarget.selectionEnd
                 ) {
