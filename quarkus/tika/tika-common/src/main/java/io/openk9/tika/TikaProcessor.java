@@ -80,7 +80,7 @@ public class TikaProcessor {
 
             String name = binaryJson.getString("name");
 
-            InputStream inputStream = fileManagerClient.download(resourceId);
+            InputStream inputStream = new BufferedInputStream(fileManagerClient.download(resourceId));
 
             fileManagerClient.delete(resourceId);
 
