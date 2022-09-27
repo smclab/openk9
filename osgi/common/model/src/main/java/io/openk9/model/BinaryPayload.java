@@ -31,4 +31,5 @@ public class BinaryPayload {
 	private String name;
 	private String contentType;
 	private String data;
+	private String resourceId;
 }
