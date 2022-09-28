@@ -19,3 +19,4 @@ export * from "./ResultTitle";
 export * from "./DownloadButton";
 export * from "./ImagesViewer";
 export * from "./truncatedLineStyle";
+export * from "./FileIcon";
