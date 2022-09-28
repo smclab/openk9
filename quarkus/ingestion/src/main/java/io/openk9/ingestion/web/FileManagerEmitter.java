@@ -9,6 +9,7 @@ import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -37,43 +38,48 @@ public class FileManagerEmitter {
     @PostConstruct
     private void init() {
 
-        processor.filter(ingestionDTO -> !ingestionDTO.getResources().getBinaries().isEmpty())
-                .subscribe().with(ingestionDTO -> {
+        processor.subscribe().with(ingestionDTO -> {
 
-                    String datasourceId = Long.toString(ingestionDTO.getDatasourceId());
+            if (!ingestionDTO.getResources().getBinaries().isEmpty()) {
 
-                    List<BinaryDTO> binaries = ingestionDTO.getResources().getBinaries();
+                logger.info("Handling binaries");
 
-                    final int internalIndex = 0;
+                String datasourceId = Long.toString(ingestionDTO.getDatasourceId());
 
-                    BinaryDTO binary = binaries.get(internalIndex);
+                List<BinaryDTO> binaries = ingestionDTO.getResources().getBinaries();
 
-                    String data = binary.getData();
+                final int internalIndex = 0;
 
-                    String fileId = binary.getId();
+                BinaryDTO binary = binaries.get(internalIndex);
 
-                    byte[] contentBytes = Base64.getDecoder().decode(data);
+                String data = binary.getData();
 
-                    InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(contentBytes));
+                String fileId = binary.getId();
 
-                    String resourceId = fileManagerClient.upload(datasourceId, fileId, inputStream);
+                byte[] contentBytes = Base64.getDecoder().decode(data);
 
-                    BinaryDTO newBinaryDTO = new BinaryDTO();
-                    newBinaryDTO.setId(fileId);
-                    newBinaryDTO.setData(null);
-                    newBinaryDTO.setName(binary.getName());
-                    newBinaryDTO.setContentType(binary.getContentType());
-                    newBinaryDTO.setResourceId(resourceId);
+                InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(contentBytes));
 
-                    List<BinaryDTO> modifiedBinaries = new ArrayList<>();
-                    modifiedBinaries.add(newBinaryDTO);
+                String resourceId = fileManagerClient.upload(datasourceId, fileId, inputStream);
 
-                    ResourcesDTO resourcesDTO = new ResourcesDTO();
-                    resourcesDTO.setBinaries(modifiedBinaries);
+                BinaryDTO newBinaryDTO = new BinaryDTO();
+                newBinaryDTO.setId(fileId);
+                newBinaryDTO.setData(null);
+                newBinaryDTO.setName(binary.getName());
+                newBinaryDTO.setContentType(binary.getContentType());
+                newBinaryDTO.setResourceId(resourceId);
 
-                    ingestionDTO.setResources(resourcesDTO);
+                List<BinaryDTO> modifiedBinaries = new ArrayList<>();
+                modifiedBinaries.add(newBinaryDTO);
 
-                    emitter.emit(ingestionDTO);
+                ResourcesDTO resourcesDTO = new ResourcesDTO();
+                resourcesDTO.setBinaries(modifiedBinaries);
+
+                ingestionDTO.setResources(resourcesDTO);
+            }
+
+            emitter.emit(ingestionDTO);
+
         });
     }
 
@@ -83,4 +89,7 @@ public class FileManagerEmitter {
     @Inject
     @RestClient
     FileManagerClient fileManagerClient;
+
+    @Inject
+    Logger logger;
 }
