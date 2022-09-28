@@ -82,7 +82,11 @@ public class TikaProcessor {
 
             InputStream inputStream = new BufferedInputStream(fileManagerClient.download(resourceId));
 
-            fileManagerClient.delete(resourceId);
+            boolean retainBinaries = enrichItemConfig.getBoolean("retain_binaries");
+
+            if (!retainBinaries) {
+                fileManagerClient.delete(resourceId);
+            }
 
             try {
 
