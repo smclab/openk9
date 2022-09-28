@@ -69,6 +69,7 @@ function useSuggestionCategories() {
     },
     {
       suspense: true,
+      keepPreviousData: true
     },
   );
 }

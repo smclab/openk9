@@ -1,8 +1,6 @@
 import React from "react";
 import { GenericResultItem } from "@openk9/rest-api";
 import { DocumentResultItem } from "./DocumentItem";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileAlt } from "@fortawesome/free-solid-svg-icons/faFileAlt";
 import {
   ResultTitle,
   ResultContainer,
@@ -10,11 +8,12 @@ import {
   ResultLink,
   ResultTextContent,
 } from "../../../renderer-components";
+import { FileIcon } from "../../../renderer-components/FileIcon";
 
 type DocumentResultProps = { result: GenericResultItem<DocumentResultItem> };
 export function DocumentResult({ result }: DocumentResultProps) {
   return (
-    <ResultContainer icon={<FontAwesomeIcon icon={faFileAlt} />}>
+    <ResultContainer icon={<FileIcon result={result}/>}>
       <ResultTitle>
         <HighlightableText result={result} path="document.title" />
       </ResultTitle>
