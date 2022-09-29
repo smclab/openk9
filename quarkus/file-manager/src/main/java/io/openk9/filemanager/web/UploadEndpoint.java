@@ -36,11 +36,8 @@ public class UploadEndpoint {
 	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
 					  InputStream inputStream) {
 
-		String resourceId = UUID.randomUUID().toString();
 
-		uploadService.uploadObject(inputStream, datasourceId, fileId, resourceId);
-
-		return resourceId;
+		return uploadService.uploadObject(inputStream, datasourceId, fileId);
 
 	}
 

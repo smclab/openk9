@@ -29,7 +29,4 @@ public class Resource {
     @Column(name = "datasourceId", nullable = false)
     private String datasourceId;
 
-    @Column(name = "version", nullable = false)
-    private String version;
-
 }

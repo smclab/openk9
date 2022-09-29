@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 @ApplicationScoped
 public class UploadService {
@@ -40,7 +41,9 @@ public class UploadService {
 	ResourceService resourceService;
 
 
-	public void uploadObject(InputStream inputStream, String datasourceId, String fileId, String resourceId) {
+	public String uploadObject(InputStream inputStream, String datasourceId, String fileId) {
+
+		String resourceId = UUID.randomUUID().toString();
 
 		try {
 			String bucketName = "datasource" + datasourceId;
@@ -72,32 +75,17 @@ public class UploadService {
 			ResourceDto resourceDto = new ResourceDto();
 			resourceDto.setFileId(fileId);
 			resourceDto.setDatasourceId(datasourceId);
-			resourceDto.setVersion("1");
 			resourceDto.setResourceId(resourceId);
 
 			resourceService.create(resourceDto);
 
+			return resourceId;
+
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-			System.out.println("Error occurred: " + e);
+			return null;
 		}
 
 	}
-
-
-	/*public boolean isObjectExist(String bucketName, String objectName) {
-		try {
-			minioClient.statObject(StatObjectArgs.builder()
-					.bucket(bucketName)
-					.object(objectName).build());
-			return true;
-		} catch (ErrorResponseException e) {
-			e.printStackTrace();
-			return false;
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
-		}
-	}*/
 
 	@Inject
 	Logger logger;

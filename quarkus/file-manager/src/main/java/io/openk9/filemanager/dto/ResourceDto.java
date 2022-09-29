@@ -33,5 +33,4 @@ public class ResourceDto {
     private String fileId;
     private String datasourceId;
     private String resourceId;
-    private String version;
 }

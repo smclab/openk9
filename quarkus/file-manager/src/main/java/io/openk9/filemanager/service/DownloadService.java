@@ -44,21 +44,28 @@ public class DownloadService {
 
 	public InputStream downloadObject(String resourceId) {
 
-		Resource resource = resourceService.findByResourceId(resourceId);
-		String datasourceId = resource.getDatasourceId();
-		String fileId = resource.getFileId();
-
-		String bucketName = "datasource" + datasourceId;
-
 		try {
-			return minioClient.getObject(
-					GetObjectArgs.builder()
-							.bucket(bucketName)
-							.object(fileId)
-							.build());
+
+			Resource resource = resourceService.findByResourceId(resourceId);
+
+			if (resource != null) {
+
+				String datasourceId = resource.getDatasourceId();
+				String fileId = resource.getFileId();
+
+				String bucketName = "datasource" + datasourceId;
+
+				return minioClient.getObject(
+						GetObjectArgs.builder()
+								.bucket(bucketName)
+								.object(fileId)
+								.build());
+			}
+			else {
+				return InputStream.nullInputStream();
+			}
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-			e.printStackTrace();
-			return InputStream.nullInputStream();
+				return InputStream.nullInputStream();
 		}
 	}
 
