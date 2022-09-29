@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Set;
+import javax.persistence.Lob;
 
 @NoArgsConstructor
 @SuperBuilder
@@ -32,4 +32,6 @@ import java.util.Set;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class QueryAnalysisDTO extends K9EntityDTO {
+    @Lob
+    private String stopWords;
 }

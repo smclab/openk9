@@ -23,7 +23,6 @@ import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
-import io.openk9.datasource.model.StopWord;
 import io.openk9.datasource.model.dto.QueryAnalysisDTO;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.SortBy;
@@ -33,7 +32,6 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.Set;
 
 @ApplicationScoped
@@ -42,15 +40,6 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 		 this.mapper = mapper;
 	}
 
-	public Uni<Connection<StopWord>> getStopWords(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-
-		return findJoinConnection(
-			id, QueryAnalysis_.STOP_WORDS, StopWord.class,
-			stopWordService.getSearchFields(), after, before, first,
-			last, searchText, sortByList, notEqual);
-	}
 
 	public Uni<Connection<Annotator>> getAnnotators(
 		Long id, String after, String before, Integer first, Integer last,
@@ -82,27 +71,9 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 		return new String[] {QueryAnalysis_.NAME, QueryAnalysis_.DESCRIPTION};
 	}
 
-	public Uni<QueryAnalysis> setStopwords(
-		long queryAnalysisId, Set<Long> stopWordIds) {
-		 return withTransaction(() -> findById(queryAnalysisId)
-			 .onItem()
-			 .ifNotNull()
-			 .transformToUni(e ->
-				 stopWordService.findByIds(stopWordIds)
-					 .onItem()
-					 .ifNotNull()
-					 .transformToUni(stopWords -> {
-						 e.setStopWords(new ArrayList<>(stopWords));
-						 return persist(e);
-					 })
-			 )
-		 );
-	}
 
-	public Uni<QueryAnalysis> addStopwords(
-		long queryAnalysisId, Set<Long> newStopwordIds) {
-		return setStopwords(queryAnalysisId, newStopwordIds);
-	}
+
+
 
 	public Uni<Tuple2<QueryAnalysis, Rule>> addRuleToQueryAnalysis(
 		long id, long ruleId) {
@@ -161,7 +132,5 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 	@Inject
 	RuleService ruleService;
 
-	@Inject
-	StopWordService stopWordService;
 
 }

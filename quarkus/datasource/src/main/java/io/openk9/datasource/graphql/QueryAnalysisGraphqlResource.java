@@ -21,7 +21,6 @@ import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
-import io.openk9.datasource.model.StopWord;
 import io.openk9.datasource.model.dto.QueryAnalysisDTO;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.QueryAnalysisService;
@@ -65,18 +64,6 @@ public class QueryAnalysisGraphqlResource {
 		return queryAnalysisService.findById(id);
 	}
 
-	public Uni<Connection<StopWord>> stopWords(
-		@Source QueryAnalysis queryAnalysis,
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@DefaultValue("false") boolean notEqual) {
-		return queryAnalysisService.getStopWords(
-			queryAnalysis.getId(), after, before, first, last, searchText, sortByList,
-			notEqual);
-	}
 
 	public Uni<Connection<Annotator>> annotators(
 		@Source QueryAnalysis queryAnalysis,
@@ -150,25 +137,6 @@ public class QueryAnalysisGraphqlResource {
 		return queryAnalysisService.deleteById(queryAnalysisId);
 	}
 
-	@Mutation
-	public Uni<QueryAnalysis> stopWords(
-		@Id long queryAnalysisId, Set<Long> stopWordIds,
-		@DefaultValue("true") boolean append) {
-		return append
-			? queryAnalysisService.addStopwords(queryAnalysisId, stopWordIds)
-			: queryAnalysisService.setStopwords(queryAnalysisId, stopWordIds);
-	}
-
-	public Uni<QueryAnalysis> setStopWords(
-		long queryAnalysisId, Set<Long> stopWordIds) {
-		return queryAnalysisService.setStopwords(queryAnalysisId, stopWordIds);
-	}
-
-
-	public Uni<QueryAnalysis> addStopWords(
-		long queryAnalysisId, Set<Long> stopWordIds) {
-		return queryAnalysisService.addStopwords(queryAnalysisId, stopWordIds);
-	}
 
 	@Subscription
 	public Multi<QueryAnalysis> queryAnalysisCreated() {
