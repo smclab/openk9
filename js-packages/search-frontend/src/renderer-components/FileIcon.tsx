@@ -16,7 +16,7 @@ export function FileIcon({
   contentTypeSet.add(result.source.document.contentType);
   console.log(contentTypeSet);
   if (result.source.document.contentType === "application/pdf")
-    return <FontAwesomeIcon icon={faFilePdf} size={"4x"}/>;
+    return <FontAwesomeIcon icon={faFilePdf} />;
   if (
     result.source.document.contentType ===
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
