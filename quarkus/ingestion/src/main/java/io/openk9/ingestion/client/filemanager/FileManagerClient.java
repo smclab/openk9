@@ -29,6 +29,7 @@ public interface FileManagerClient {
 
 	@GET
 	@Path("/download/{resourceId}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	InputStream download(@PathParam("resourceId") String resourceId);
 
 	@POST

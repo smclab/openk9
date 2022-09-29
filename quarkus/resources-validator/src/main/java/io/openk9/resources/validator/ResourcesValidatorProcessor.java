@@ -17,10 +17,12 @@
 
 package io.openk9.resources.validator;
 
+import io.openk9.resources.validator.client.filemanager.FileManagerClient;
 import io.quarkus.runtime.Startup;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -39,10 +41,8 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.io.InputStream;
+import java.util.*;
 import java.util.concurrent.CompletionStage;
 
 import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
@@ -164,10 +164,22 @@ public class ResourcesValidatorProcessor {
 
 			for (int i = 0; i < binaries.size(); i++) {
 
-				String dataBase64 =
-					binaries.getJsonObject(i).getString("data");
+				String resourceId =
+					binaries.getJsonObject(i).getString("resourceId");
 
-				hashCodes.add(dataBase64.hashCode());
+				InputStream inputStream = fileManagerClient.download(resourceId);
+
+				byte[] sourceBytes;
+
+				try {
+					sourceBytes = IOUtils.toByteArray(inputStream);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+
+				String encodedString = Base64.getEncoder().encodeToString(sourceBytes);
+
+				hashCodes.add(encodedString.hashCode());
 			}
 
 		}
@@ -185,6 +197,9 @@ public class ResourcesValidatorProcessor {
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+
+	@Inject
+	FileManagerClient fileManagerClient;
 
 	@Inject
 	Logger logger;
