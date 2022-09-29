@@ -23,7 +23,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -49,6 +48,11 @@ public class SuggestionCategory extends K9Entity {
 
 	@Column(name = "description", length = 4096)
 	private String description;
+
+	@Column(name = "priority", nullable = false)
+	private Float priority;
+
+
 	@ManyToMany(cascade = {
 		javax.persistence.CascadeType.REFRESH,
 		javax.persistence.CascadeType.PERSIST,

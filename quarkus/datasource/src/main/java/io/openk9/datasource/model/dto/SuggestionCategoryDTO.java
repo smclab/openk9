@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
 @SuperBuilder
@@ -30,4 +31,6 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class SuggestionCategoryDTO extends K9EntityDTO {
+    @NotNull
+    private Float priority;
 }
