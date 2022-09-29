@@ -28,6 +28,7 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Metadata;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -199,6 +200,7 @@ public class ResourcesValidatorProcessor {
 	RestHighLevelClient restHighLevelClient;
 
 	@Inject
+	@RestClient
 	FileManagerClient fileManagerClient;
 
 	@Inject
