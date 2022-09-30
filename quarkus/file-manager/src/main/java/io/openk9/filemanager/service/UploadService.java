@@ -44,8 +44,6 @@ public class UploadService {
 
 	public String uploadObject(InputStream inputStream, String datasourceId, String fileId) {
 
-		String resourceId = UUID.randomUUID().toString();
-
 		try {
 			String bucketName = "datasource" + datasourceId;
 
@@ -75,9 +73,13 @@ public class UploadService {
 
 			Resource resource = resourceService.findByDatasourceAndFile(datasourceId, fileId);
 
+			String resourceId;
+
 			if (resource == null) {
 
 				logger.info("Resource not exist. Creating in database.");
+
+				resourceId = UUID.randomUUID().toString();
 
 				ResourceDto resourceDto = new ResourceDto();
 				resourceDto.setFileId(fileId);
@@ -85,9 +87,15 @@ public class UploadService {
 				resourceDto.setResourceId(resourceId);
 
 				resourceService.create(resourceDto);
+
+			}
+			else {
+
+				resourceId = resource.getResourceId();
 			}
 
 			return resourceId;
+
 
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
 			return null;
