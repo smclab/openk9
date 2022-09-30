@@ -7,10 +7,7 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.PersistenceUnit;
-import javax.persistence.Query;
+import javax.persistence.*;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
@@ -66,7 +63,7 @@ public class ResourceService {
             query.setParameter("fileId", fileId);
             return (Resource) query.getSingleResult();
         }
-        catch (EntityNotFoundException e) {
+        catch (EntityNotFoundException | NoResultException e) {
             logger.info("Entity not found");
             return null;
         }
