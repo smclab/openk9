@@ -75,7 +75,7 @@ public class UploadService {
 
 			Resource resource = resourceService.findByDatasourceAndFile(datasourceId, fileId);
 
-			if (resource != null) {
+			if (resource == null) {
 
 				logger.info("Resource not exist. Creating in database.");
 
