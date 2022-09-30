@@ -21,6 +21,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -34,5 +35,9 @@ public interface FileManagerClient {
 	@Path("/download/{resourceId}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	InputStream download(@PathParam("resourceId") String resourceId);
+
+	@POST
+	@Path("/delete/{resourceId}")
+	void delete(@javax.ws.rs.PathParam("resourceId") String resourceId);
 
 }

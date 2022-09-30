@@ -119,6 +119,15 @@ public class ResourcesValidatorProcessor {
 
 					if (hashCodes.size() == documentHashCodesList.size() &&
 						hashCodes.containsAll(documentHashCodesList)) {
+
+						for (int i = 0; i < binaries.size(); i++) {
+
+							String resourceId =
+									binaries.getJsonObject(i).getString("resourceId");
+
+							fileManagerClient.delete(resourceId);
+						}
+
 						logger.info(
 							"document found. dropped message with contentId: "
 							+ contentId);
