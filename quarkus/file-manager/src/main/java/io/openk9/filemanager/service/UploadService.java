@@ -20,6 +20,7 @@ package io.openk9.filemanager.service;
 import io.minio.*;
 import io.minio.errors.*;
 import io.openk9.filemanager.dto.ResourceDto;
+import io.openk9.filemanager.model.Resource;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -72,12 +73,19 @@ public class UploadService {
 
 			logger.info("Upload done");
 
-			ResourceDto resourceDto = new ResourceDto();
-			resourceDto.setFileId(fileId);
-			resourceDto.setDatasourceId(datasourceId);
-			resourceDto.setResourceId(resourceId);
+			Resource resource = resourceService.findByDatasourceAndFile(datasourceId, fileId);
 
-			resourceService.create(resourceDto);
+			if (resource != null) {
+
+				logger.info("Resource not exist. Creating in database.");
+
+				ResourceDto resourceDto = new ResourceDto();
+				resourceDto.setFileId(fileId);
+				resourceDto.setDatasourceId(datasourceId);
+				resourceDto.setResourceId(resourceId);
+
+				resourceService.create(resourceDto);
+			}
 
 			return resourceId;
 

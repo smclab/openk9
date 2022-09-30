@@ -56,6 +56,23 @@ public class ResourceService {
         }
     }
 
+    @Transactional
+    public Resource findByDatasourceAndFile(String datasourceId, String fileId) {
+
+        try {
+            Query query = em.createQuery("SELECT r FROM Resource r WHERE r.datasourceId = :datasourceId AND " +
+                    "r.fileId = :fileId");
+            query.setParameter("datasourceId", datasourceId);
+            query.setParameter("fileId", fileId);
+            return (Resource) query.getSingleResult();
+        }
+        catch (EntityNotFoundException e) {
+            logger.info("Entity not found");
+            return null;
+        }
+    }
+
+
     @Inject
     ResourceMapper _resourceMapper;
 
