@@ -17,18 +17,14 @@
 
 package io.openk9.filemanager.service;
 
-import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
 import io.minio.errors.MinioException;
 import io.openk9.filemanager.model.Resource;
-import io.vertx.core.eventbus.EventBus;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -56,32 +52,10 @@ public class DeleteService {
 							.bucket(bucketName)
 							.object(fileId)
 							.build());
+
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 	}
-
-
-	/*public boolean isObjectExist(String bucketName, String objectName) {
-		try {
-			minioClient.statObject(StatObjectArgs.builder()
-					.bucket(bucketName)
-					.object(objectName).build());
-			return true;
-		} catch (ErrorResponseException e) {
-			e.printStackTrace();
-			return false;
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
-		}
-	}*/
-
-	@Inject
-	Logger logger;
-
-	@Inject
-	EventBus bus;
-
 
 }

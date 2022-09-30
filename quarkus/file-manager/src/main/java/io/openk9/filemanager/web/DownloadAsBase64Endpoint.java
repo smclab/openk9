@@ -17,29 +17,42 @@
 
 package io.openk9.filemanager.web;
 
-import io.openk9.filemanager.service.UploadService;
+import io.openk9.filemanager.service.DownloadService;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Base64;
+import org.apache.commons.io.IOUtils;
 
-@Path("/v1/file-manager/upload")
-public class UploadEndpoint {
+@Path("/v1/file-manager/download")
+public class DownloadAsBase64Endpoint {
 
-	@POST
-	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	@Produces(MediaType.TEXT_PLAIN)
-	@Path("/{datasourceId}/{fileId}")
-	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
-					  InputStream inputStream) {
+	@GET
+	@Path("/{resourceId}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public String downloadAsBase64(@PathParam("resourceId") String resourceId) {
 
+		InputStream inputStream = downloadService.downloadObject(resourceId);
 
-		return uploadService.uploadObject(inputStream, datasourceId, fileId);
+		byte[] sourceBytes;
+
+		try {
+			sourceBytes = IOUtils.toByteArray(inputStream);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		return Base64.getEncoder().encodeToString(sourceBytes);
 
 	}
 
 	@Inject
-    UploadService uploadService;
+	DownloadService downloadService;
 
 }

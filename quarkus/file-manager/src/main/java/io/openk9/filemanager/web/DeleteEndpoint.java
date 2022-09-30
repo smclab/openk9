@@ -21,7 +21,6 @@ import io.openk9.filemanager.service.DeleteService;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 
 @Path("/v1/file-manager/delete")
 public class DeleteEndpoint {

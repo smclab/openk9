@@ -19,11 +19,7 @@ package io.openk9.filemanager.service;
 
 import io.minio.*;
 import io.minio.errors.MinioException;
-import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
-import io.quarkus.vertx.ConsumeEvent;
-import io.vertx.core.eventbus.EventBus;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -84,12 +80,5 @@ public class DownloadService {
 			throw new RuntimeException(e.getMessage());
 		}
 	}*/
-
-	@Inject
-	Logger logger;
-
-	@Inject
-	EventBus bus;
-
 
 }

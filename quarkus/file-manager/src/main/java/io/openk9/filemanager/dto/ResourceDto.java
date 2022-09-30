@@ -17,8 +17,6 @@
 
 package io.openk9.filemanager.dto;
 
-import io.openk9.filemanager.model.Resource;
-import io.smallrye.common.constraint.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -21,6 +21,7 @@ import io.minio.*;
 import io.minio.errors.*;
 import io.openk9.filemanager.dto.ResourceDto;
 import io.openk9.filemanager.model.Resource;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -34,6 +35,9 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class UploadService {
+
+	@ConfigProperty(name = "part.size")
+	long partSize;
 
 	@Inject
 	MinioClient minioClient;
@@ -64,7 +68,7 @@ public class UploadService {
 			PutObjectArgs args = PutObjectArgs.builder()
 					.bucket(bucketName)
 					.object(fileId)
-					.stream(inputStream,-1 , 1024L * 1024 * 5)
+					.stream(inputStream,-1 , partSize)
 					.build();
 
 			minioClient.putObject(args);
@@ -90,6 +94,8 @@ public class UploadService {
 
 			}
 			else {
+
+				logger.info("Resource already exist. Skip persist.");
 
 				resourceId = resource.getResourceId();
 			}
