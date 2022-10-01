@@ -35,7 +35,7 @@ public class DownloadAsBase64Endpoint {
 
 	@GET
 	@Path("/{resourceId}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	@Produces(MediaType.TEXT_PLAIN)
 	public String downloadAsBase64(@PathParam("resourceId") String resourceId) {
 
 		InputStream inputStream = downloadService.downloadObject(resourceId);
