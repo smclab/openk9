@@ -7,6 +7,8 @@ import { faFilePdf } from "@fortawesome/free-solid-svg-icons/faFilePdf";
 import { faFileExcel } from "@fortawesome/free-solid-svg-icons/faFileExcel";
 import { faFileWord } from "@fortawesome/free-solid-svg-icons/faFileWord";
 import { faFilePowerpoint } from "@fortawesome/free-solid-svg-icons/faFilePowerpoint";
+import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
+import { faImage } from "@fortawesome/free-solid-svg-icons/faImage";
 
 export function FileIcon({
   result,
@@ -37,6 +39,15 @@ export function FileIcon({
   }
   if (result.source.document.contentType === "application/msword") {
     return <FontAwesomeIcon icon={faFileWord} />;
+  }
+  if (result.source.document.contentType === "image/png") {
+    return <FontAwesomeIcon icon={faImage} />;
+  }
+  if (result.source.document.contentType === "image/jpeg") {
+    return <FontAwesomeIcon icon={faImage} />;
+  }
+  if (result.source.document.contentType === "message/rfc822") {
+    return <FontAwesomeIcon icon={faEnvelope} />;
   }
 
   return <FontAwesomeIcon icon={faFileAlt} />;
