@@ -84,10 +84,6 @@ public class TikaProcessor {
 
             boolean retainBinaries = enrichItemConfig.getBoolean("retain_binaries");
 
-            if (!retainBinaries) {
-                fileManagerClient.delete(resourceId);
-            }
-
             try {
 
                 MediaType mediaType = _detectors.detect(inputStream);
@@ -223,6 +219,10 @@ public class TikaProcessor {
                     binariesArray
                         .getJsonObject(internalIndex)
                         .put("contentType", contentType);
+
+                    if (!retainBinaries) {
+                        fileManagerClient.delete(resourceId);
+                    }
 
                     return Tuple2.of(replyTo, response);
 
