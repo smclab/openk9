@@ -42,7 +42,6 @@ public class AnnotatorDTO extends K9EntityDTO {
 	@NotEmpty
 	private String field;
 	@NotNull
-	@NotEmpty
 	private Fuziness fuziness;
 	@Min(1)
 	private Integer size;
