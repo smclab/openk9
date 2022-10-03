@@ -82,9 +82,14 @@ public class FileManagerEmitter {
 
                     ResourcesDTO resourcesDTO = new ResourcesDTO();
                     resourcesDTO.setBinaries(modifiedBinaries);
-
                     ingestionDTO.setResources(resourcesDTO);
                 }
+                else {
+                    ResourcesDTO resourcesDTO = new ResourcesDTO();
+                    ingestionDTO.setResources(resourcesDTO);
+
+                }
+
             }
 
             emitter.emit(ingestionDTO);
