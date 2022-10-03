@@ -118,6 +118,20 @@ public class QueryAnalysisGraphqlResource {
 	}
 
 	@Mutation
+	public Uni<Tuple2<QueryAnalysis, Annotator>> addAnnotatorToQueryAnalysis(
+			@Id long id, @Id long annotatorId) {
+		return queryAnalysisService.addAnnotatorToQueryAnalysis(id, annotatorId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<QueryAnalysis, Annotator>> removeAnnotatorFromQueryAnalysis(
+			@Id long id, @Id long annotatorId) {
+		return queryAnalysisService.removeAnnotatorToQueryAnalysis(id, annotatorId);
+	}
+
+
+
+	@Mutation
 	public Uni<Response<QueryAnalysis>> queryAnalysis(
 		@Id Long id, QueryAnalysisDTO queryAnalysisDTO,
 		@DefaultValue("false") boolean patch) {

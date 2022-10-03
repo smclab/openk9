@@ -126,11 +126,62 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 				})));
 	}
 
+	public Uni<Tuple2<QueryAnalysis, Annotator>> addAnnotatorToQueryAnalysis(long id, long annotatorId) {
+		return withTransaction((s, tr) -> findById(id)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(queryAnalysis -> annotatorService.findById(annotatorId)
+						.onItem()
+						.ifNotNull()
+						.transformToUni(annotator ->
+								Mutiny2.fetch(s, queryAnalysis.getAnnotators())
+										.onItem()
+										.ifNotNull()
+										.transformToUni(annotators -> {
+
+											if (annotators.add(annotator)) {
+
+												queryAnalysis.setAnnotators(annotators);
+
+												return persist(queryAnalysis)
+														.map(newSC -> Tuple2.of(newSC, annotator));
+											}
+
+											return Uni.createFrom().nullItem();
+
+										})
+						)
+				));
+	}
+
+	public Uni<Tuple2<QueryAnalysis, Annotator>> removeAnnotatorToQueryAnalysis(long id, long annotatorId) {
+
+		return withTransaction((s, tr) -> findById(id)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(queryAnalysis -> Mutiny2.fetch(s, queryAnalysis.getAnnotators())
+						.onItem()
+						.ifNotNull()
+						.transformToUni(annotators -> {
+
+							if (queryAnalysis.removeAnnotators(annotators, annotatorId)) {
+
+								return persist(queryAnalysis)
+										.map(newSC -> Tuple2.of(newSC, null));
+							}
+
+							return Uni.createFrom().nullItem();
+
+						})));
+	}
+
 	@Inject
 	AnnotatorService annotatorService;
 
 	@Inject
 	RuleService ruleService;
+
+
 
 
 }

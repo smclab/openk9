@@ -86,4 +86,21 @@ public class QueryAnalysis extends K9Entity {
 
 	}
 
+    public boolean removeAnnotators(
+			Collection<Annotator> annotators, long annotatorId) {
+
+			Iterator<Annotator> iterator = annotators.iterator();
+
+			while (iterator.hasNext()) {
+				Annotator annotator = iterator.next();
+				if (annotator.getId() == annotatorId) {
+					iterator.remove();
+					return true;
+				}
+			}
+
+			return false;
+
+
+		}
 }
