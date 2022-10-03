@@ -8,6 +8,7 @@ import io.openk9.ingestion.dto.ResourcesDTO;
 import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.openapi.models.parameters.Parameter;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -61,26 +62,29 @@ public class FileManagerEmitter {
 
                 logger.info(name + " " + contentType);
 
-                byte[] contentBytes = Base64.getDecoder().decode(data);
+                if (data.length() > 0) {
 
-                InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(contentBytes));
+                    byte[] contentBytes = Base64.getDecoder().decode(data);
 
-                String resourceId = fileManagerClient.upload(datasourceId, fileId, inputStream);
+                    InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(contentBytes));
 
-                BinaryDTO newBinaryDTO = new BinaryDTO();
-                newBinaryDTO.setId(fileId);
-                newBinaryDTO.setData(null);
-                newBinaryDTO.setName(binary.getName());
-                newBinaryDTO.setContentType(binary.getContentType());
-                newBinaryDTO.setResourceId(resourceId);
+                    String resourceId = fileManagerClient.upload(datasourceId, fileId, inputStream);
 
-                List<BinaryDTO> modifiedBinaries = new ArrayList<>();
-                modifiedBinaries.add(newBinaryDTO);
+                    BinaryDTO newBinaryDTO = new BinaryDTO();
+                    newBinaryDTO.setId(fileId);
+                    newBinaryDTO.setData(null);
+                    newBinaryDTO.setName(binary.getName());
+                    newBinaryDTO.setContentType(binary.getContentType());
+                    newBinaryDTO.setResourceId(resourceId);
 
-                ResourcesDTO resourcesDTO = new ResourcesDTO();
-                resourcesDTO.setBinaries(modifiedBinaries);
+                    List<BinaryDTO> modifiedBinaries = new ArrayList<>();
+                    modifiedBinaries.add(newBinaryDTO);
 
-                ingestionDTO.setResources(resourcesDTO);
+                    ResourcesDTO resourcesDTO = new ResourcesDTO();
+                    resourcesDTO.setBinaries(modifiedBinaries);
+
+                    ingestionDTO.setResources(resourcesDTO);
+                }
             }
 
             emitter.emit(ingestionDTO);
