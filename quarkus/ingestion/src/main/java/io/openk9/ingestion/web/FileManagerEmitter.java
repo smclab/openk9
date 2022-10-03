@@ -56,6 +56,11 @@ public class FileManagerEmitter {
 
                 String fileId = binary.getId();
 
+                String contentType = binary.getContentType();
+                String name = binary.getName();
+
+                logger.info(name + " " + contentType);
+
                 byte[] contentBytes = Base64.getDecoder().decode(data);
 
                 InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(contentBytes));
