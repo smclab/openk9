@@ -21,6 +21,7 @@ import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
@@ -47,7 +48,7 @@ public class SuggestionCategoryService extends
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
 		return findJoinConnection(
-			id, "docTypeFields", DocTypeField.class,
+			id, SuggestionCategory_.DOC_TYPE_FIELDS, DocTypeField.class,
 			docTypeFieldService.getSearchFields(),
 			after, before, first, last, searchText, sortByList, notEqual
 		);
@@ -64,7 +65,7 @@ public class SuggestionCategoryService extends
 
 		return findAllPaginatedJoin(
 			new Long[] { suggestionCategoryId },
-			"docTypeFields", DocTypeField.class,
+			SuggestionCategory_.DOC_TYPE_FIELDS, DocTypeField.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(), searchText
 		);
@@ -75,7 +76,7 @@ public class SuggestionCategoryService extends
 
 		return findAllPaginatedJoin(
 			new Long[] { suggestionCategoryId },
-			"docTypeFields", DocTypeField.class,
+			SuggestionCategory_.DOC_TYPE_FIELDS, DocTypeField.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(), filter
 		);

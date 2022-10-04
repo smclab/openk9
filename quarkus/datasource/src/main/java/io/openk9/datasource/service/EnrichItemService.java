@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.EnrichItemMapper;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
@@ -37,6 +38,6 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {"name", "type", "serviceName"};
+		return new String[] {EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.SERVICE_NAME};
 	}
 }

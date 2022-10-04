@@ -19,10 +19,12 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
 import javax.enterprise.context.ApplicationScoped;
+
 
 @ApplicationScoped
 public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTypeFieldDTO> {
@@ -37,7 +39,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {"name", "fieldType"};
+		return new String[] {DocTypeField_.NAME, DocTypeField_.FIELD_TYPE};
 	}
 
 }

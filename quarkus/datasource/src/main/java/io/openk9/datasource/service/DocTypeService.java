@@ -53,7 +53,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 		return findJoinConnection(
-			id, "docTypeFields", DocTypeField.class,
+			id, DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
 			docTypeFieldService.getSearchFields(), after, before, first, last,
 			searchText, sortByList, notEqual);
 	}
@@ -68,7 +68,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 		return findAllPaginatedJoin(
 			new Long[] { docTypeId },
-			"docTypeFields", DocTypeField.class,
+			DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(),
 			searchText);
@@ -79,7 +79,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 		return findAllPaginatedJoin(
 			new Long[] { docTypeId },
-			"docTypeFields", DocTypeField.class,
+			DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(),
 			filter);

@@ -19,8 +19,7 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.DataIndexMapper;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.*;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
@@ -56,7 +55,7 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean not) {
 		return findJoinConnection(
-			id, "docTypes", DocType.class, docTypeService.getSearchFields(),
+			id, DataIndex_.DOC_TYPES, DocType.class, docTypeService.getSearchFields(),
 			after, before, first, last, searchText, sortByList, not);
 	}
 
@@ -64,7 +63,7 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 		long dataIndexId, Pageable pageable, String searchText) {
 
 		return findAllPaginatedJoin(
-			new Long[] {dataIndexId}, "docTypes", DocType.class, pageable.getLimit(),
+			new Long[] {dataIndexId}, DataIndex_.DOC_TYPES, DocType.class, pageable.getLimit(),
 			pageable.getSortBy().name(), pageable.getAfterId(), pageable.getBeforeId(), searchText);
 	}
 
@@ -72,7 +71,7 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 		long dataIndexId, Pageable pageable, Filter filter) {
 
 		return findAllPaginatedJoin(
-			new Long[] {dataIndexId}, "docTypes", DocType.class, pageable.getLimit(),
+			new Long[] {dataIndexId}, DataIndex_.DOC_TYPES, DocType.class, pageable.getLimit(),
 			pageable.getSortBy().name(), pageable.getAfterId(), pageable.getBeforeId(), filter);
 	}
 

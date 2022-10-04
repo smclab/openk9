@@ -63,7 +63,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
 		return findJoinConnection(
-			id, "enrichItems", EnrichItem.class,
+			id, EnrichPipeline_.ENRICH_PIPELINE_ITEMS, EnrichItem.class,
 			enrichItemService.getSearchFields(), after, before, first,
 			last, searchText, sortByList, notEqual);
 	}
@@ -78,7 +78,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 		return findAllPaginatedJoin(
 			new Long[] { enrichPipelineId },
-			"enrichItems", EnrichItem.class,
+			EnrichPipeline_.ENRICH_PIPELINE_ITEMS, EnrichItem.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(),
 			searchText);
@@ -199,7 +199,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 		return findAllPaginatedJoin(
 			new Long[] { enrichPipelineId },
-			"enrichItems", EnrichItem.class,
+			EnrichPipeline_.ENRICH_PIPELINE_ITEMS, EnrichItem.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(),
 			filter);
