@@ -41,6 +41,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
@@ -69,8 +70,16 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			last, searchText, sortByList, notEqual, enrichPipelineRoot ->
 				enrichPipelineRoot
 					.join(EnrichPipeline_.enrichPipelineItems)
-					.join(EnrichPipelineItem_.enrichItem)
-		);
+					.join(EnrichPipelineItem_.enrichItem),
+			(cb, enrichPipelineRoot) ->
+				enrichPipelineRoot
+					.getJoins()
+					.stream()
+					.filter(e -> Objects.equals(e.getAttribute(), EnrichPipeline_.enrichPipelineItems))
+					.map(e -> (Join<EnrichPipeline, EnrichPipelineItem>) e)
+					.map(e -> e.get(EnrichPipelineItem_.weight))
+					.map(cb::asc)
+					.collect(Collectors.toList()));
 
 	}
 

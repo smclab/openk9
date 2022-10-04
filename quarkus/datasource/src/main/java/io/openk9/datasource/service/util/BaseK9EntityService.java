@@ -123,7 +123,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return findJoinConnection(
 			entityId, joinField, joinType, searchFields, after, before, first,
 			last, searchText, sortByList, false,
-			entityRoot -> entityRoot.join(joinField));
+			entityRoot -> entityRoot.join(joinField),
+			(i1, i2) -> List.of());
 
 	}
 
@@ -136,7 +137,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return findJoinConnection(
 			entityId, joinField, joinType, searchFields, after, before, first,
 			last, searchText, sortByList, not,
-			entityRoot -> entityRoot.join(joinField));
+			entityRoot -> entityRoot.join(joinField),
+			(i1, i2) -> List.of());
 
 	}
 
@@ -145,7 +147,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		String[] searchFields, String after,
 		String before, Integer first, Integer last, String searchText,
 		Set<SortBy> sortByList, boolean not,
-		Function<Root<ENTITY>, Path<T>> mapper) {
+		Function<Root<ENTITY>, Path<T>> mapper,
+		BiFunction<CriteriaBuilder, Root<ENTITY>, List<Order>> defaultOrderFun) {
 
 		CriteriaBuilder builder = em.getCriteriaBuilder();
 
@@ -163,6 +166,9 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			subquery.select(subJoin.get(K9Entity_.id));
 
+			joinEntityQuery.orderBy(
+				defaultOrderFun.apply(builder, subRoot));
+
 			return findConnection(
 				joinEntityQuery, upperRoot,
 				builder.in(upperRoot.get(K9Entity_.id)).value(subquery).not(),
@@ -174,6 +180,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
 
 			Path<T> join = mapper.apply(entityRoot);
+
+			joinEntityQuery.orderBy(defaultOrderFun.apply(builder, entityRoot));
 
 			return findConnection(
 				joinEntityQuery.select(join), join,
@@ -258,7 +266,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			criteriaBuilderQuery.where(where);
 
-			List<Order> orders = new ArrayList<>();
+			List<Order> orders =
+				new ArrayList<>(criteriaBuilderQuery.getOrderList());
 
 			if (sortByList != null) {
 				for (SortBy sortBy : sortByList) {
