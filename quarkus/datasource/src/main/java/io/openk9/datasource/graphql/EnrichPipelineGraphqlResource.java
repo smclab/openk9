@@ -40,7 +40,6 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -60,13 +59,17 @@ public class EnrichPipelineGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
-	public Uni<List<EnrichItem>> enrichItems(
+	public Uni<Connection<EnrichItem>> enrichItems(
 		@Source EnrichPipeline enrichPipeline,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
 		@DefaultValue("false") boolean not) {
-		return not
-			? enrichPipelineService.getEnrichItemsNotInEnrichPipeline(enrichPipeline.getId())
-			: enrichPipelineService.getEnrichItemsInEnrichPipeline(enrichPipeline.getId())
-			.map(ArrayList::new);
+		return enrichPipelineService.getEnrichItemsConnection(
+			enrichPipeline.getId(), after, before, first, last,
+			searchText, sortByList, not);
 	}
 
 	@Query

@@ -122,14 +122,30 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return findJoinConnection(
 			entityId, joinField, joinType, searchFields, after, before, first,
-			last, searchText, sortByList, false);
+			last, searchText, sortByList, false,
+			entityRoot -> entityRoot.join(joinField));
 
 	}
+
 	public <T extends K9Entity> Uni<Connection<T>> findJoinConnection(
 		long entityId, String joinField, Class<T> joinType,
 		String[] searchFields, String after,
 		String before, Integer first, Integer last, String searchText,
 		Set<SortBy> sortByList, boolean not) {
+
+		return findJoinConnection(
+			entityId, joinField, joinType, searchFields, after, before, first,
+			last, searchText, sortByList, not,
+			entityRoot -> entityRoot.join(joinField));
+
+	}
+
+	public <T extends K9Entity> Uni<Connection<T>> findJoinConnection(
+		long entityId, String joinField, Class<T> joinType,
+		String[] searchFields, String after,
+		String before, Integer first, Integer last, String searchText,
+		Set<SortBy> sortByList, boolean not,
+		Function<Root<ENTITY>, Path<T>> mapper) {
 
 		CriteriaBuilder builder = em.getCriteriaBuilder();
 
@@ -143,7 +159,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			Root<ENTITY> subRoot = subquery.from(getEntityClass());
 
-			Join<ENTITY, T> subJoin = subRoot.join(joinField);
+			Path<T> subJoin = mapper.apply(subRoot);
 
 			subquery.select(subJoin.get(K9Entity_.id));
 
@@ -157,7 +173,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			Root<ENTITY> entityRoot = joinEntityQuery.from(getEntityClass());
 
-			Join<ENTITY, T> join = entityRoot.join(joinField);
+			Path<T> join = mapper.apply(entityRoot);
 
 			return findConnection(
 				joinEntityQuery.select(join), join,
