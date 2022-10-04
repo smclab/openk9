@@ -225,6 +225,11 @@ public class TikaProcessor {
                         return Tuple2.of(replyTo, response);
 
                     }
+                    else {
+                        if (!retainBinaries) {
+                            fileManagerClient.delete(resourceId);
+                        }
+                    }
 
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
