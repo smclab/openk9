@@ -49,45 +49,41 @@ public class FileManagerEmitter {
 
                 List<BinaryDTO> binaries = ingestionDTO.getResources().getBinaries();
 
-                final int internalIndex = 0;
+                for (BinaryDTO binaryDTO : binaries) {
 
-                BinaryDTO binary = binaries.get(internalIndex);
+                    String data = binaryDTO.getData();
 
-                String data = binary.getData();
+                    String fileId = binaryDTO.getId();
 
-                String fileId = binary.getId();
+                    if (data.length() > 0) {
 
-                String contentType = binary.getContentType();
-                String name = binary.getName();
+                        byte[] contentBytes = Base64.getDecoder().decode(data);
 
-                logger.info(name + " " + contentType);
+                        InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(contentBytes));
 
-                if (data.length() > 0) {
+                        String resourceId = fileManagerClient.upload(datasourceId, fileId, inputStream);
 
-                    byte[] contentBytes = Base64.getDecoder().decode(data);
+                        BinaryDTO newBinaryDTO = new BinaryDTO();
+                        newBinaryDTO.setId(fileId);
+                        newBinaryDTO.setData(null);
+                        newBinaryDTO.setName(binaryDTO.getName());
+                        newBinaryDTO.setContentType(binaryDTO.getContentType());
+                        newBinaryDTO.setResourceId(resourceId);
 
-                    InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(contentBytes));
+                        List<BinaryDTO> modifiedBinaries = new ArrayList<>();
+                        modifiedBinaries.add(newBinaryDTO);
 
-                    String resourceId = fileManagerClient.upload(datasourceId, fileId, inputStream);
+                        ResourcesDTO resourcesDTO = new ResourcesDTO();
+                        resourcesDTO.setBinaries(modifiedBinaries);
+                        ingestionDTO.setResources(resourcesDTO);
 
-                    BinaryDTO newBinaryDTO = new BinaryDTO();
-                    newBinaryDTO.setId(fileId);
-                    newBinaryDTO.setData(null);
-                    newBinaryDTO.setName(binary.getName());
-                    newBinaryDTO.setContentType(binary.getContentType());
-                    newBinaryDTO.setResourceId(resourceId);
+                    }
+                    else {
 
-                    List<BinaryDTO> modifiedBinaries = new ArrayList<>();
-                    modifiedBinaries.add(newBinaryDTO);
+                        ResourcesDTO resourcesDTO = new ResourcesDTO();
+                        ingestionDTO.setResources(resourcesDTO);
 
-                    ResourcesDTO resourcesDTO = new ResourcesDTO();
-                    resourcesDTO.setBinaries(modifiedBinaries);
-                    ingestionDTO.setResources(resourcesDTO);
-                }
-                else {
-                    ResourcesDTO resourcesDTO = new ResourcesDTO();
-                    ingestionDTO.setResources(resourcesDTO);
-
+                    }
                 }
 
             }
