@@ -172,7 +172,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			 .onItem()
 			 .ifNotNull()
 			 .transformToUni(pluginDriver-> {
-				 Datasource dataSource = _datasourceMapper.create(datasourceDTO);
+				 Datasource dataSource = mapper.create(datasourceDTO);
 				 dataSource.setPluginDriver(pluginDriver);
 				 return persist(dataSource).map(d -> Tuple2.of(d, pluginDriver));
 			 }));
@@ -191,12 +191,9 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	@Inject
 	PluginDriverService pluginDriverService;
 
-	@Inject
-	DatasourceMapper _datasourceMapper;
-
-
 	@Override
 	public Class<Datasource> getEntityClass() {
 		return Datasource.class;
 	}
+
 }

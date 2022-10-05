@@ -169,8 +169,11 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<Datasource,PluginDriver>> createDatasourceAndAddPluginDriver(DatasourceDTO datasourceDTO, @Id long id){
-		return datasourceService.createDatasourceAndAddPluginDriver(datasourceDTO,id);
+	public Uni<Tuple2<Datasource,PluginDriver>> createDatasourceAndAddPluginDriver(
+		DatasourceDTO datasourceDTO, @Id long id){
+
+		return datasourceService.createDatasourceAndAddPluginDriver(
+			datasourceDTO, id);
 	}
 
 	@Subscription
