@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.PluginDriverMapper;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.PluginDriver_;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
@@ -33,5 +34,10 @@ public class PluginDriverService extends BaseK9EntityService<PluginDriver, Plugi
 	@Override
 	public Class<PluginDriver> getEntityClass() {
 		return PluginDriver.class;
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[]{PluginDriver_.NAME,PluginDriver_.DESCRIPTION,PluginDriver_.TYPE};
 	}
 }

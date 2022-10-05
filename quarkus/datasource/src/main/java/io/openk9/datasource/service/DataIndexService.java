@@ -19,7 +19,9 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.DataIndexMapper;
-import io.openk9.datasource.model.*;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.DataIndex_;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
