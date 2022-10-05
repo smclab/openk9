@@ -38,6 +38,6 @@ public class PluginDriverService extends BaseK9EntityService<PluginDriver, Plugi
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[]{PluginDriver_.NAME,PluginDriver_.DESCRIPTION,PluginDriver_.TYPE};
+		return new String[]{PluginDriver_.NAME, PluginDriver_.DESCRIPTION, PluginDriver_.TYPE};
 	}
 }
