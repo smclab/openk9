@@ -168,6 +168,11 @@ public class DatasourceGraphqlResource {
 		return datasourceService.unsetPluginDriver(datasourceId);
 	}
 
+	@Mutation
+	public Uni<Tuple2<Datasource,PluginDriver>> createDatasourceAndAddPluginDriver(DatasourceDTO datasourceDTO, @Id long id){
+		return datasourceService.createDatasourceAndAddPluginDriver(datasourceDTO,id);
+	}
+
 	@Subscription
 	public Multi<Datasource> datasourceCreated() {
 		return datasourceService

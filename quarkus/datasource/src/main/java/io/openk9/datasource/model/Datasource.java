@@ -95,7 +95,11 @@ public class Datasource extends K9Entity {
 	private EnrichPipeline enrichPipeline;
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY)
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
 	@JoinColumn(name = "plugin_driver_id")
 	@JsonIgnore
 	private PluginDriver pluginDriver;

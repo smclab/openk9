@@ -166,6 +166,19 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			}));
 	}
 
+	public Uni<Tuple2<Datasource, PluginDriver>> createDatasourceAndAddPluginDriver(
+		DatasourceDTO datasourceDTO, long pluginDriverId) {
+		 return withTransaction(() -> pluginDriverService.findById(pluginDriverId)
+			 .onItem()
+			 .ifNotNull()
+			 .transformToUni(pluginDriver-> {
+				 Datasource dataSource = _datasourceMapper.create(datasourceDTO);
+				 dataSource.setPluginDriver(pluginDriver);
+				 return persist(dataSource).map(d -> Tuple2.of(d, pluginDriver));
+			 }));
+	}
+
+
 	@Inject
 	EntityIndexService entityIndexService;
 
@@ -177,6 +190,9 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 	@Inject
 	PluginDriverService pluginDriverService;
+
+	@Inject
+	DatasourceMapper _datasourceMapper;
 
 
 	@Override
