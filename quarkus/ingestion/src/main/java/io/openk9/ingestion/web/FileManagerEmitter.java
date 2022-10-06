@@ -89,8 +89,6 @@ public class FileManagerEmitter {
                             newIngestionDto.setRawContent("");
                             newIngestionDto.setDatasourcePayload(new HashMap<>());
 
-                            logger.info(newIngestionDto.toString());
-
                             emitter.emit(newIngestionDto);
                         }
                         else {

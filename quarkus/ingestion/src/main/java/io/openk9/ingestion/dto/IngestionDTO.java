@@ -18,7 +18,10 @@
 package io.openk9.ingestion.dto;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
@@ -28,7 +31,6 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 @RegisterForReflection
-@ToString
 public class IngestionDTO {
 	private long datasourceId;
 	private String contentId;
