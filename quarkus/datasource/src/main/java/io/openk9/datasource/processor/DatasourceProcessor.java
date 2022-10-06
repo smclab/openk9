@@ -57,6 +57,8 @@ public class DatasourceProcessor {
 			JsonObject ingestionPayloadJson =
 				jsonObject.getJsonObject("ingestionPayload");
 
+			logger.info(ingestionPayloadJson.toString());
+
 			long datasourceId = ingestionPayloadJson.getLong("datasourceId");
 
 			Uni<DatasourceContext> datasourceContextUni =
@@ -84,8 +86,6 @@ public class DatasourceProcessor {
 				}
 
 				datasource.setLastIngestionDate(instantParsingDate);
-
-				logger.info(ingestionPayload.toString());
 
 				return datasource.persist()
 					.replaceWith(
