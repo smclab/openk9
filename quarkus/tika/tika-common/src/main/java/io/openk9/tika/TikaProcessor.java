@@ -110,6 +110,8 @@ public class TikaProcessor {
 
                         TikaMetadata metadata = tikaContent.getMetadata();
 
+                        logger.info(metadata.toString());
+
                         String lastModified =
                                 metadata.getSingleValue("Last-Modified");
 
