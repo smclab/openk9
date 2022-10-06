@@ -76,7 +76,7 @@ public class FileManagerEmitter {
 
                             ResourcesDTO resourcesDTO = new ResourcesDTO();
                             List<BinaryDTO> singeBinariesList = new ArrayList<>();
-                            singeBinariesList.add(binaryDTO);
+                            singeBinariesList.add(newBinaryDTO);
 
                             resourcesDTO.setBinaries(singeBinariesList);
 
