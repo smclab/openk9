@@ -119,7 +119,7 @@ public class TikaProcessor {
                                 metadata.getSingleValue("X-Parsed-By");
 
                         String title =
-                            metadata.getSingleValue("dc:title");
+                            metadata.getSingleValue("title");
 
                         if (xParsedBy != null) {
                             logger.info(
