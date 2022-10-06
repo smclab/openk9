@@ -103,8 +103,6 @@ public class FileManagerEmitter {
                 resourcesDTO.setBinaries(modifiedBinaries);
                 ingestionDTO.setResources(resourcesDTO);
 
-                logger.info(ingestionDTO.toString());
-
             }
 
             emitter.emit(ingestionDTO);
