@@ -18,9 +18,7 @@ import javax.inject.Inject;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -49,6 +47,8 @@ public class FileManagerEmitter {
 
                 List<BinaryDTO> binaries = ingestionDTO.getResources().getBinaries();
 
+                List<BinaryDTO> modifiedBinaries = new ArrayList<>();
+
                 for (BinaryDTO binaryDTO : binaries) {
 
                     String data = binaryDTO.getData();
@@ -70,21 +70,28 @@ public class FileManagerEmitter {
                         newBinaryDTO.setContentType(binaryDTO.getContentType());
                         newBinaryDTO.setResourceId(resourceId);
 
-                        List<BinaryDTO> modifiedBinaries = new ArrayList<>();
                         modifiedBinaries.add(newBinaryDTO);
 
-                        ResourcesDTO resourcesDTO = new ResourcesDTO();
-                        resourcesDTO.setBinaries(modifiedBinaries);
-                        ingestionDTO.setResources(resourcesDTO);
+                        if (ingestionDTO.getResources().isSplitBinaries()) {
 
-                    }
-                    else {
+                            ResourcesDTO resourcesDTO = new ResourcesDTO();
+                            List<BinaryDTO> singeBinariesList = new ArrayList<>();
+                            singeBinariesList.add(binaryDTO);
 
-                        ResourcesDTO resourcesDTO = new ResourcesDTO();
-                        ingestionDTO.setResources(resourcesDTO);
+                            resourcesDTO.setBinaries(singeBinariesList);
 
+                            ingestionDTO.setResources(resourcesDTO);
+                            ingestionDTO.setContentId(fileId);
+                            ingestionDTO.setDatasourcePayload(new HashMap<>());
+
+                            emitter.emit(ingestionDTO);
+                        }
                     }
                 }
+
+                ResourcesDTO resourcesDTO = new ResourcesDTO();
+                resourcesDTO.setBinaries(modifiedBinaries);
+                ingestionDTO.setResources(resourcesDTO);
 
             }
 

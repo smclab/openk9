@@ -32,4 +32,5 @@ import java.util.List;
 @RegisterForReflection
 public class ResourcesDTO {
 	private List<BinaryDTO> binaries;
+	private boolean splitBinaries = false;
 }
