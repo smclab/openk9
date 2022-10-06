@@ -28,7 +28,8 @@
                   ],
                   "char_filter":[
                      "apex_char_filter",
-                     "underscore_char_filter"
+                     "underscore_char_filter",
+                     "dot_char_filter"
                   ]
                },
                "standard_lowercase_english_stop_words_filter": {
@@ -39,7 +40,8 @@
                   ],
                   "char_filter":[
                      "apex_char_filter",
-                     "underscore_char_filter"
+                     "underscore_char_filter",
+                     "dot_char_filter"
                   ]
                }
             },
@@ -64,6 +66,12 @@
                   "type":"mapping",
                   "mappings":[
                      "_ => ,"
+                  ]
+               },
+               "dot_char_filter":{
+                  "type":"mapping",
+                  "mappings":[
+                     ". => ,"
                   ]
                }
             }

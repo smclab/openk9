@@ -15,6 +15,23 @@
 						"filter": [
 							"lowercase",
 							"italian_stop_words_filter"
+						],
+						"char_filter":[
+							"apex_char_filter",
+							"underscore_char_filter",
+							"dot_char_filter"
+						]
+					},
+					"standard_lowercase_english_stop_words_filter": {
+						"tokenizer": "standard",
+						"filter": [
+							"lowercase",
+							"english_stop_words_filter"
+						],
+						"char_filter":[
+							"apex_char_filter",
+							"underscore_char_filter",
+							"dot_char_filter"
 						]
 					}
 				},
@@ -22,6 +39,30 @@
 					"italian_stop_words_filter": {
 						"type": "stop",
 						"stopwords":"_italian_"
+					},
+					"english_stop_words_filter": {
+						"type": "stop",
+						"stopwords":"_english_"
+					}
+				},
+				"char_filter":{
+					"apex_char_filter":{
+						"type":"mapping",
+						"mappings":[
+							"' => ,"
+						]
+					},
+					"underscore_char_filter":{
+						"type":"mapping",
+						"mappings":[
+							"_ => ,"
+						]
+					},
+					"dot_char_filter":{
+						"type":"mapping",
+						"mappings":[
+							". => ,"
+						]
 					}
 				}
 			}
