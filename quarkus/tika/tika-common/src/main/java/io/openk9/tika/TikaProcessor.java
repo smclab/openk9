@@ -167,6 +167,7 @@ public class TikaProcessor {
                         if (document == null) {
                             document = new JsonObject();
                             responsePayload.put("document", document);
+                            documentTypes.add("document");
                         }
 
                         Boolean includeContentType =
