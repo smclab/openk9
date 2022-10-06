@@ -74,13 +74,13 @@ public class FileManagerEmitter {
 
                             IngestionDTO newIngestionDto = new IngestionDTO();
 
-                            ResourcesDTO resourcesDTO = new ResourcesDTO();
+                            ResourcesDTO newResourcesDTO = new ResourcesDTO();
                             List<BinaryDTO> singeBinariesList = new ArrayList<>();
                             singeBinariesList.add(newBinaryDTO);
 
-                            resourcesDTO.setBinaries(singeBinariesList);
+                            newResourcesDTO.setBinaries(singeBinariesList);
 
-                            newIngestionDto.setResources(resourcesDTO);
+                            newIngestionDto.setResources(newResourcesDTO);
                             newIngestionDto.setContentId(fileId);
                             newIngestionDto.setAcl(ingestionDTO.getAcl());
                             newIngestionDto.setDatasourceId(ingestionDTO.getDatasourceId());
