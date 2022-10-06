@@ -49,8 +49,6 @@ public class TikaProcessor {
 
         JsonObject payload = jsonObject.getJsonObject("payload");
 
-        logger.info(jsonObject.toString());
-
         String replyTo = jsonObject.getString("replyTo");
 
         JsonArray binaries =
