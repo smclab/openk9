@@ -116,6 +116,9 @@ public class TikaProcessor {
                         String xParsedBy =
                                 metadata.getSingleValue("X-Parsed-By");
 
+                        String title =
+                            metadata.getSingleValue("title");
+
                         if (xParsedBy != null) {
                             logger.info(
                                     "document parsed by: " + xParsedBy +
@@ -200,6 +203,10 @@ public class TikaProcessor {
 
                         text = text.replaceAll("\\n", " ");
                         text = text.replaceAll("\\t", " ");
+
+                        if (document.getString("title") == null) {
+                            document.put("title", title);
+                        }
 
                         if (text.length() > maxLength && maxLength > 0) {
 
