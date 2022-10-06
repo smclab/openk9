@@ -87,7 +87,12 @@ public class FileManagerEmitter {
                             newIngestionDto.setScheduleId(ingestionDTO.getScheduleId());
                             newIngestionDto.setParsingDate(ingestionDTO.getParsingDate());
                             newIngestionDto.setRawContent("");
-                            newIngestionDto.setDatasourcePayload(new HashMap<>());
+
+                            Map<String, Object> datasourcePayload = new HashMap<>();
+                            datasourcePayload.put(
+                                "file",
+                                new JsonObject());
+                            newIngestionDto.setDatasourcePayload(datasourcePayload);
 
                             emitter.emit(newIngestionDto);
                         }
