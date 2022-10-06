@@ -57,6 +57,8 @@ public class DatasourceProcessor {
 			JsonObject ingestionPayloadJson =
 				jsonObject.getJsonObject("ingestionPayload");
 
+			logger.info(ingestionPayloadJson.toString());
+
 			long datasourceId = ingestionPayloadJson.getLong("datasourceId");
 
 			Uni<DatasourceContext> datasourceContextUni =
