@@ -46,7 +46,13 @@ export function FileIcon({
   if (result.source.document.contentType === "image/jpeg") {
     return <FontAwesomeIcon icon={faImage} />;
   }
+  if (result.source.document.contentType === "image/jpg") {
+    return <FontAwesomeIcon icon={faImage} />;
+  }
   if (result.source.document.contentType === "message/rfc822") {
+    return <FontAwesomeIcon icon={faEnvelope} />;
+  }
+  if (result.source.document.contentType === "application/mbox") {
     return <FontAwesomeIcon icon={faEnvelope} />;
   }
 
