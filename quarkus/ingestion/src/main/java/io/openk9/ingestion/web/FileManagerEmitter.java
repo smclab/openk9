@@ -70,9 +70,9 @@ public class FileManagerEmitter {
                         newBinaryDTO.setContentType(binaryDTO.getContentType());
                         newBinaryDTO.setResourceId(resourceId);
 
-                        modifiedBinaries.add(newBinaryDTO);
-
                         if (ingestionDTO.getResources().isSplitBinaries()) {
+
+                            IngestionDTO newIngestionDto = new IngestionDTO();
 
                             ResourcesDTO resourcesDTO = new ResourcesDTO();
                             List<BinaryDTO> singeBinariesList = new ArrayList<>();
@@ -80,11 +80,19 @@ public class FileManagerEmitter {
 
                             resourcesDTO.setBinaries(singeBinariesList);
 
-                            ingestionDTO.setResources(resourcesDTO);
-                            ingestionDTO.setContentId(fileId);
-                            ingestionDTO.setDatasourcePayload(new HashMap<>());
+                            newIngestionDto.setResources(resourcesDTO);
+                            newIngestionDto.setContentId(fileId);
+                            newIngestionDto.setAcl(ingestionDTO.getAcl());
+                            newIngestionDto.setDatasourceId(ingestionDTO.getDatasourceId());
+                            newIngestionDto.setScheduleId(ingestionDTO.getScheduleId());
+                            newIngestionDto.setParsingDate(ingestionDTO.getParsingDate());
+                            newIngestionDto.setRawContent("");
+                            newIngestionDto.setDatasourcePayload(new HashMap<>());
 
-                            emitter.emit(ingestionDTO);
+                            emitter.emit(newIngestionDto);
+                        }
+                        else {
+                            modifiedBinaries.add(newBinaryDTO);
                         }
                     }
                 }
