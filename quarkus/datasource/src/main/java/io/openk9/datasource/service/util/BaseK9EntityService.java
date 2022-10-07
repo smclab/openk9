@@ -166,9 +166,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			subquery.select(subJoin.get(K9Entity_.id));
 
-			joinEntityQuery.orderBy(
-				defaultOrderFun.apply(builder, subRoot));
-
 			return findConnection(
 				joinEntityQuery, upperRoot,
 				builder.in(upperRoot.get(K9Entity_.id)).value(subquery).not(),
