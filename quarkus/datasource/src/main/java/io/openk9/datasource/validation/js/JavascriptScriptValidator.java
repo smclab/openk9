@@ -29,7 +29,7 @@ public class JavascriptScriptValidator implements ConstraintValidator<Javascript
 	@Override
 	public boolean isValid(String value, ConstraintValidatorContext context) {
 
-		if (value == null) {
+		if (value == null || value.isBlank()) {
 			return true;
 		}
 
