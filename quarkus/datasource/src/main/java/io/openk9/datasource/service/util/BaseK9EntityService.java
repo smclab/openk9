@@ -166,6 +166,10 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			subquery.select(subJoin.get(K9Entity_.id));
 
+			subquery.where(
+				builder.equal(
+					subRoot.get(K9Entity_.id), entityId));
+
 			return findConnection(
 				joinEntityQuery, upperRoot,
 				builder.in(upperRoot.get(K9Entity_.id)).value(subquery).not(),
