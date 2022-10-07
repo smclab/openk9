@@ -275,8 +275,12 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 										   && epi.getKey().getEnrichPipelineId() == enrichPipelineId);
 
 								if (removed) {
-									enrichPipeline.setEnrichPipelineItems(enrichPipelineItems);
-									return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
+									return s.find(
+										EnrichPipelineItem.class,
+										EnrichPipelineItemKey.of(enrichPipelineId, enrichItemId)
+									)
+										.call(s::remove)
+										.map(ep -> Tuple2.of(enrichPipeline, enrichItem));
 								} else {
 									return Uni.createFrom().nullItem();
 								}
