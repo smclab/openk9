@@ -95,7 +95,7 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 			new MultiMatchQueryBuilder(token);
 
 		multiMatchQueryBuilder.type(
-			MultiMatchQueryBuilder.Type.PHRASE_PREFIX);
+			MultiMatchQueryBuilder.Type.BOOL_PREFIX);
 
 		for (String normalizedKeyword : normalizedKeywords) {
 			multiMatchQueryBuilder.field(normalizedKeyword + ".searchasyou");

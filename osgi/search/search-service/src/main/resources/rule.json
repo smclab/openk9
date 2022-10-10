@@ -40,6 +40,10 @@
 		"rhs": "$loc"
 	},
 	{
+		"lhs": "$Entity",
+		"rhs": "$email"
+	},
+	{
 		"lhs": "$Intent",
 		"rhs": "$Entity"
 	},
