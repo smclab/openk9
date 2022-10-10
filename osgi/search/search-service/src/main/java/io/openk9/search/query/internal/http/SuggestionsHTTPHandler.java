@@ -383,7 +383,7 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 			addSuggestions = (key, sugg) -> {
 
 				if (!suggestions.contains(sugg)) {
-					if (key.contains(suggestKeyword)) {
+					if (containsIgnoreCase(key, suggestKeyword)) {
 						suggestions.addFirst(sugg);
 					}
 				}
@@ -486,6 +486,23 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 		}
 
 		return SuggestionsResponse.of(suggestions, afterKey);
+	}
+
+	private static boolean containsIgnoreCase(String str, String searchStr) {
+		if (str == null || searchStr == null) {
+			return false;
+		}
+
+		final int length = searchStr.length();
+		if (length == 0) {
+			return true;
+		}
+		for (int i = str.length() - length; i >= 0; i--) {
+			if (str.regionMatches(true, i, searchStr, 0, length)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

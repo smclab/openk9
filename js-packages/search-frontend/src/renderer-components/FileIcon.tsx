@@ -16,7 +16,6 @@ export function FileIcon({
   result: GenericResultItem<DocumentResultItem>;
 }) {
   contentTypeSet.add(result.source.document.contentType);
-  console.log(contentTypeSet);
   if (result.source.document.contentType === "application/pdf")
     return <FontAwesomeIcon icon={faFilePdf} />;
   if (
