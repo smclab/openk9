@@ -2,6 +2,7 @@ package io.openk9.datasource.processor;
 
 import io.openk9.datasource.processor.enrich.EnrichStepHandler;
 import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.util.MessageUtil;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.smallrye.reactive.messaging.rabbitmq.IncomingRabbitMQMetadata;
@@ -34,7 +35,8 @@ public class EnrichPipelineProcessor {
 				Tuple2<Long, Long> t2 =
 					_getEnrichPipelineIdAndEnrichItemId(routingKey);
 
-				DataPayload payload = message.getPayload();
+				DataPayload payload = MessageUtil.toObj(
+					message, DataPayload.class);
 
 				return enrichStepHandler.consume(
 					EnrichStepHandler.EnrichStep

@@ -26,6 +26,7 @@ import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.EnrichPipelineService;
+import io.openk9.datasource.util.MessageUtil;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -42,7 +43,8 @@ public class DatasourceProcessor {
 	@Incoming("ingestion")
 	public Uni<Void> process(Message<IngestionIndexWriterPayload> message) {
 
-		IngestionIndexWriterPayload payload = message.getPayload();
+		IngestionIndexWriterPayload payload = MessageUtil.toObj(
+			message, IngestionIndexWriterPayload.class);
 
 		IngestionPayload ingestionPayload = payload.getIngestionPayload();
 
