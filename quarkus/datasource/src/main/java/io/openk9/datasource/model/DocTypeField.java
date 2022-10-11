@@ -74,4 +74,7 @@ public class DocTypeField extends K9Entity {
 	@Column(name = "analyzer")
 	private Analyzer analyzer;
 
+	@Column(name="exclude")
+	private Boolean exclude;
+
 }
