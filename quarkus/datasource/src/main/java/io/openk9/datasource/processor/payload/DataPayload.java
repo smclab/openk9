@@ -17,19 +17,42 @@
 
 package io.openk9.datasource.processor.payload;
 
-import io.openk9.datasource.model.Datasource;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Data
 @Builder
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 @RegisterForReflection
-public class IngestionDatasourcePayload {
-	private IngestionPayload ingestionPayload;
-	private Datasource datasourceContext;
+public class DataPayload {
+	private String ingestionId;
+	private long datasourceId;
+	private String contentId;
+	private long parsingDate;
+	private String rawContent;
+	private long tenantId;
+	private String[] documentTypes;
+	private ResourcesPayload resources;
+	private Map<String, List<String>> acl;
+	private Map<String, Object> rest = new HashMap<>();
+
+	@JsonAnySetter
+	public void addRest(String key, Object value) {
+		rest.put(key, value);
+	}
+
+	@JsonAnyGetter
+	public Map<String, Object> getRest() {
+		return rest;
+	}
 }

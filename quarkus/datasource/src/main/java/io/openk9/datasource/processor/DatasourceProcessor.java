@@ -18,18 +18,17 @@
 package io.openk9.datasource.processor;
 
 
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.processor.payload.IngestionDatasourcePayload;
+import io.openk9.datasource.model.util.Mutiny2;
+import io.openk9.datasource.processor.enrich.EnrichStepHandler;
+import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.EnrichPipelineService;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -40,134 +39,103 @@ import java.time.ZoneOffset;
 @ApplicationScoped
 public class DatasourceProcessor {
 
-	/*@Incoming("ingestion")
-	public Uni<Void> process2(Message<IngestionPayload> message) {
+	@Incoming("ingestion")
+	public Uni<Void> process(Message<IngestionIndexWriterPayload> message) {
 
-		IngestionPayload ingestionPayload = message.getPayload();
+		IngestionIndexWriterPayload payload = message.getPayload();
+
+		IngestionPayload ingestionPayload = payload.getIngestionPayload();
 
 		long datasourceId = ingestionPayload.getDatasourceId();
 
-		datasourceService
-			.findById(datasourceId)
-			.onItem()
-			.transformToUni(datasource -> {
+		return datasourceService.withTransaction(s ->
+			s
+				.find(Datasource.class, datasourceId)
+				.onItem()
+				.transformToUni(datasource -> {
 
-				if (datasource == null) {
-					throw new RuntimeException(
-						"Datasource not found: " + datasourceId);
-				}
+					long parsingDate = ingestionPayload.getParsingDate();
 
-				return datasourceService
-					.getEnrichPipeline(datasource)
+					OffsetDateTime lastIngestionDate =
+						datasource.getLastIngestionDate();
+
+					OffsetDateTime instantParsingDate =
+						OffsetDateTime.ofInstant(
+							Instant.ofEpochMilli(parsingDate), ZoneOffset.UTC);
+
+					if (lastIngestionDate != null) {
+
+						if (!lastIngestionDate.equals(instantParsingDate)) {
+
+							datasource.setLastIngestionDate(
+								instantParsingDate);
+
+							return s
+								.persist(datasource)
+								.map(v -> datasource);
+
+						}
+
+					}
+
+					return Uni.createFrom().item(datasource);
+				})
+				.flatMap(datasource -> Mutiny2
+					.fetch(s, datasource.getEnrichPipeline())
 					.flatMap(ep -> {
 
 						if (ep == null) {
-							return List.of();
+							return enrichStepHandler.consume(
+								EnrichStepHandler.EnrichStep.of(
+									ingestionPayloadMapper.map(
+										ingestionPayload),
+									0L,
+									0L
+								)
+							);
 						}
 
-						Set<EnrichPipelineItem> enrichPipelineItems =
-							ep.getEnrichPipelineItems();
+						return enrichPipelineService
+							.findFirstEnrichItem(ep.getId())
+							.flatMap(ei -> {
 
-						if (enrichPipelineItems == null || enrichPipelineItems.isEmpty()) {
-							return List.of();
-						}
+								if (ei == null) {
+									return enrichStepHandler.consume(
+										EnrichStepHandler.EnrichStep.of(
+											ingestionPayloadMapper.map(
+												ingestionPayload),
+											0L,
+											0L
+										)
+									);
+								}
 
+								return enrichStepHandler.consume(
+									EnrichStepHandler.EnrichStep.of(
+										ingestionPayloadMapper.map(
+											ingestionPayload),
+										ep.getId(),
+										ei.getId()
+									)
+								);
 
-
-
-					});
-
-			});
-
-	}*/
-
-
-	@Incoming("ingestion")
-	public Uni<Void> process(Message<?> message) {
-
-		return session
-			.withTransaction(t -> Uni.createFrom().item(message)
-			.onItem().call(m -> _consumeIngestionMessage(_messagePayloadToJson(m)))
-			.onItem().transformToUni(x -> Uni.createFrom().completionStage(message.ack())))
-			.onTermination().call(() -> session.close());
-
-	}
-
-	private Uni<Void> _consumeIngestionMessage(JsonObject jsonObject) {
-
-		return Uni.createFrom().deferred(() -> {
-
-			JsonObject ingestionPayloadJson =
-				jsonObject.getJsonObject("ingestionPayload");
-
-			long datasourceId = ingestionPayloadJson.getLong("datasourceId");
-
-			Uni<Datasource> datasourceContextUni =
-				datasourceService.findById(datasourceId);
-
-			return datasourceContextUni.flatMap(datasource -> {
-
-				IngestionPayload ingestionPayload =
-					ingestionPayloadJson.mapTo(IngestionPayload.class);
-
-				long parsingDate = ingestionPayload.getParsingDate();
-
-				OffsetDateTime lastIngestionDate = datasource.getLastIngestionDate();
-
-				OffsetDateTime instantParsingDate = OffsetDateTime.ofInstant(
-					Instant.ofEpochMilli(parsingDate), ZoneOffset.UTC);
-
-				if (lastIngestionDate != null) {
-
-					if (lastIngestionDate.equals(instantParsingDate)) {
-						return Uni
-							.createFrom()
-							.item(
-								IngestionDatasourcePayload.of(
-									ingestionPayload, datasource));
-					}
-
-				}
-
-				datasource.setLastIngestionDate(instantParsingDate);
-
-				return datasource.persist()
-					.replaceWith(
-						IngestionDatasourcePayload.of(
-							ingestionPayload, datasource));
-
-			})
-				.onItem()
-				.invoke(ingestionDatasourceEmitter::send)
-				.onFailure()
-				.invoke((t) -> logger.error(
-				"Error while processing ingestion message", t))
-				.replaceWithVoid();
-		});
+							});
+					})
+				)
+		);
 
 	}
-
-	private JsonObject _messagePayloadToJson(Message<?> message) {
-		Object obj = message.getPayload();
-
-		return obj instanceof JsonObject
-			? (JsonObject) obj
-			: new JsonObject(new String((byte[]) obj));
-
-	}
-
 
 	@Inject
 	DatasourceService datasourceService;
 
 	@Inject
-	Logger logger;
+	EnrichPipelineService enrichPipelineService;
 
 	@Inject
-	Mutiny.Session session;
+	EnrichStepHandler enrichStepHandler;
 
 	@Inject
-	@Channel("ingestion-datasource")
-	Emitter<IngestionDatasourcePayload> ingestionDatasourceEmitter;
+	IngestionPayloadMapper ingestionPayloadMapper;
 
 }

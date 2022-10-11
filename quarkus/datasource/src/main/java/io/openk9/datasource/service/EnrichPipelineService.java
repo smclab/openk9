@@ -36,6 +36,7 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -286,6 +287,57 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 								}
 
 							}))));
+	}
+
+	public Uni<EnrichItem> findFirstEnrichItem(
+		Mutiny.Session s, long enrichPipelineId) {
+
+		String queryString =
+			"select epi.enrichItem " +
+			"from EnrichPipelineItem epi " +
+			"where epi.enrichPipeline.id = :enrichPipelineId " +
+			"order by epi.weight asc";
+
+		Mutiny.Query<EnrichItem> query =
+			s.createQuery(queryString, EnrichItem.class);
+
+		query.setParameter("enrichPipelineId", enrichPipelineId);
+
+		query.setMaxResults(1);
+
+		return query.getSingleResultOrNull();
+	}
+
+	public Uni<EnrichItem> findFirstEnrichItem(long enrichPipelineId) {
+		return withTransaction(s -> findFirstEnrichItem(s, enrichPipelineId));
+	}
+
+	public Uni<EnrichItem> findNextEnrichItem(
+		long enrichPipelineId, long enrichItemId) {
+
+		 return withTransaction(s -> {
+
+			 String queryString =
+				 "select epi_next.enrichItem " +
+				 "from EnrichPipelineItem epi " +
+				 "left join EnrichPipelineItem epi_next on epi_next.enrichPipeline.id = epi.enrichPipeline.id " +
+				 "where epi.enrichPipeline.id = :enrichPipelineId " +
+				 "and epi.enrichItem.id = :enrichItemId " +
+				 "and epi_next.weight > epi.weight " +
+				 "order by epi_next.weight asc";
+
+			 Mutiny.Query<EnrichItem> query =
+				 s.createQuery(queryString, EnrichItem.class);
+
+			 query.setParameter("enrichPipelineId", enrichPipelineId);
+			 query.setParameter("enrichItemId", enrichItemId);
+
+			 query.setMaxResults(1);
+
+			 return query.getSingleResultOrNull();
+
+		 });
+
 	}
 
 	@Inject

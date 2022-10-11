@@ -5,17 +5,13 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
+import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.processor.util.Field;
-import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DatasourceService;
-import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
-import io.vertx.core.Vertx;
-import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -46,18 +42,12 @@ public class IndexerProcessor {
 	@ActivateRequestContext
 	public Uni<Void> process(Message<?> message) {
 
-		IngestionIndexWriterPayload payload =
+		DataPayload payload =
 			_messagePayloadToJson(message)
-				.mapTo(IngestionIndexWriterPayload.class);
-
-		IngestionPayload ingestionPayload = payload.getIngestionPayload();
-
-		ContextInternal context =(ContextInternal) Vertx.currentContext();
-
-
+				.mapTo(DataPayload.class);
 
 		return datasourceService.withTransaction(s ->
-			s.find(Datasource.class, ingestionPayload.getDatasourceId())
+			s.find(Datasource.class, payload.getDatasourceId())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(datasource ->
@@ -75,7 +65,7 @@ public class IndexerProcessor {
 
 							IndexRequest indexRequest = new IndexRequest(indexName);
 
-							JsonObject jsonObject = _toIndexDocument(ingestionPayload);
+							JsonObject jsonObject = JsonObject.mapFrom(payload);
 
 							indexRequest.source(
 								jsonObject.toString(),
@@ -116,7 +106,7 @@ public class IndexerProcessor {
 
 							_toDocTypeFields(
 								field, new ArrayList<>(), currDocTypeFields,
-								List.of(ingestionPayload.getDocumentTypes()));
+								List.of(payload.getDocumentTypes()));
 
 							Map<String, List<DocTypeField>> dt =
 								currDocTypeFields
@@ -420,13 +410,7 @@ public class IndexerProcessor {
 	DatasourceService datasourceService;
 
 	@Inject
-	DocTypeService docTypeService;
-
-	@Inject
 	RestHighLevelClient client;
-
-	@Inject
-	DataIndexService dataIndexService;
 
 	@Inject
 	Logger logger;
