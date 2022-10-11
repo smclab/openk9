@@ -56,16 +56,8 @@ public abstract class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 
-		List<String> normalizedKeywords =
-			tenantKeywordsMap.getOrDefault(
-				tenantId, tenantKeywordsMap.get(-1L));
-
 		String[] autocompleteEntityTypes =
 			_annotatorConfig.autocompleteEntityTypes();
-
-		if (normalizedKeywords == null) {
-			return List.of();
-		}
 
 		RestHighLevelClient restHighLevelClient =
 			restHighLevelClientProvider.get();
@@ -98,7 +90,7 @@ public abstract class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 			new MultiMatchQueryBuilder(token);
 
 		multiMatchQueryBuilder.type(
-			MultiMatchQueryBuilder.Type.BOOL_PREFIX);
+			MultiMatchQueryBuilder.Type.PHRASE_PREFIX);
 
 		multiMatchQueryBuilder.field("name.searchasyou");
 
@@ -128,12 +120,7 @@ public abstract class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 			String[] autocompleteEntityFields =
 				_annotatorConfig.autocompleteEntityFields();
 
-			String[] includes =
-				Stream.concat(
-						normalizedKeywords.stream(),
-						Arrays.stream(autocompleteEntityFields))
-					.distinct()
-					.toArray(String[]::new);
+			String[] includes = {"name"};
 
 			searchSourceBuilder.fetchSource(includes, null);
 
