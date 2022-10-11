@@ -34,6 +34,11 @@
 							"apex_char_filter",
 							"underscore_char_filter"
 						]
+					},
+					"suggest": {
+						"type": "custom",
+						"tokenizer": "standard",
+						"filter": ["lowercase","shingle"]
 					}
 				},
 				"filter": {
@@ -44,6 +49,11 @@
 					"english_stop_words_filter": {
 						"type": "stop",
 						"stopwords":"_english_"
+					},
+					"shingle": {
+						"type": "shingle",
+						"min_shingle_size": 2,
+						"max_shingle_size": 3
 					}
 				},
 				"char_filter":{
