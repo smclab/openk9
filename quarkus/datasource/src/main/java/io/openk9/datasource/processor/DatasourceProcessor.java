@@ -30,6 +30,7 @@ import io.openk9.datasource.util.MessageUtil;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -124,7 +125,19 @@ public class DatasourceProcessor {
 							});
 					})
 				)
-		);
+		)
+			.onItemOrFailure()
+			.transformToUni((item, failure) -> {
+
+				if (failure != null) {
+					logger.error(failure.getMessage(), failure);
+					return Uni.createFrom().completionStage(
+						() -> message.nack(failure));
+				}
+
+				return Uni.createFrom().completionStage(message::ack);
+
+			});
 
 	}
 
@@ -139,5 +152,8 @@ public class DatasourceProcessor {
 
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
+
+	@Inject
+	private Logger logger;
 
 }
