@@ -41,15 +41,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
+public abstract class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 
 	private final Map<Long, List<String>> tenantKeywordsMap;
 
-	public BaseAutoCompleteAnnotator(String...keywords) {
+	public BaseAutoCompleteNerAnnotator(String...keywords) {
 		this(List.of(keywords));
 	}
 
-	public BaseAutoCompleteAnnotator(List<String> keywords) {
+	public BaseAutoCompleteNerAnnotator(List<String> keywords) {
 		this.tenantKeywordsMap = _createTenantKeywordsMap(keywords);
 	}
 
@@ -59,6 +59,9 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 		List<String> normalizedKeywords =
 			tenantKeywordsMap.getOrDefault(
 				tenantId, tenantKeywordsMap.get(-1L));
+
+		String[] autocompleteEntityTypes =
+			_annotatorConfig.autocompleteEntityTypes();
 
 		if (normalizedKeywords == null) {
 			return List.of();
@@ -97,111 +100,109 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 		multiMatchQueryBuilder.type(
 			MultiMatchQueryBuilder.Type.BOOL_PREFIX);
 
-		for (String normalizedKeyword : normalizedKeywords) {
-			multiMatchQueryBuilder.field(normalizedKeyword + ".searchasyou");
-		}
+		multiMatchQueryBuilder.field("name.searchasyou");
 
 		builder.must(multiMatchQueryBuilder);
 
-		SearchRequest searchRequest;
+		List<CategorySemantics> categorySemantics = new ArrayList<>();
 
-		if (tenantId == -1) {
-			searchRequest = new SearchRequest(
-				"*-*-data");
-		}
-		else {
-			searchRequest = new SearchRequest(
-				tenantId + "-*-data");
-		}
+		for (String autocompleteEntityType : autocompleteEntityTypes) {
 
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+			builder.must(QueryBuilders.termQuery("type", autocompleteEntityType));
 
-		searchSourceBuilder.size(_annotatorConfig.autocompleteSize());
+			SearchRequest searchRequest;
 
-		searchSourceBuilder.query(builder);
+			if (tenantId == -1) {
+				searchRequest = new SearchRequest("*-entity");
+			}
+			else {
+				searchRequest = new SearchRequest(tenantId + "-entity");
+			}
 
-		String[] autocompleteEntityFields =
-			_annotatorConfig.autocompleteEntityFields();
+			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-		String[] includes =
-			Stream.concat(
-					normalizedKeywords.stream(),
-					Arrays.stream(autocompleteEntityFields))
-				.distinct()
-				.toArray(String[]::new);
+			searchSourceBuilder.size(_annotatorConfig.autocompleteSize());
 
-		searchSourceBuilder.fetchSource(includes, null);
+			searchSourceBuilder.query(builder);
 
-		searchRequest.source(searchSourceBuilder);
+			String[] autocompleteEntityFields =
+				_annotatorConfig.autocompleteEntityFields();
 
-		if (_log.isDebugEnabled()) {
-			_log.debug(builder.toString());
-		}
+			String[] includes =
+				Stream.concat(
+						normalizedKeywords.stream(),
+						Arrays.stream(autocompleteEntityFields))
+					.distinct()
+					.toArray(String[]::new);
 
-		try {
+			searchSourceBuilder.fetchSource(includes, null);
 
-			List<CategorySemantics> categorySemantics = new ArrayList<>();
+			searchRequest.source(searchSourceBuilder);
 
-			SearchResponse search =
-				restHighLevelClient.search(
-					searchRequest, RequestOptions.DEFAULT);
+			if (_log.isDebugEnabled()) {
+				_log.debug(builder.toString());
+			}
 
-			for (SearchHit hit : search.getHits()) {
-				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+			try {
 
-				for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
-					String keyword = entry.getKey();
-					Object value = entry.getValue();
+				SearchResponse search =
+					restHighLevelClient.search(
+						searchRequest, RequestOptions.DEFAULT);
 
-					if (value instanceof String) {
-						categorySemantics.add(
-							CategorySemantics.of(
-								"$AUTOCOMPLETE",
-								Map.of(
-									"tokenType", "TEXT",
-									"keywordName", keyword,
-									"keywordKey", keyword,
-									"value", value,
-									"score", 0.1f
-								)
-							)
-						);
-					}
-					else if (value instanceof Map) {
-						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
-							categorySemantics.add(
-								CategorySemantics.of(
-									"$AUTOCOMPLETE",
-									Map.of(
-										"tokenType", "TEXT",
-										"keywordName", e2.getKey(),
-										"keywordKey", e2.getKey(),
-										"value", e2.getValue(),
-										"score", 0.1f
-									)
-								)
-							);
+				for (SearchHit hit : search.getHits()) {
+					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+
+					if (!sourceAsMap.isEmpty()) {
+
+						Map<String, Object> entitySemantics = new HashMap<>();
+
+						entitySemantics.put("tokenType", "ENTITY");
+
+						entitySemantics.put("score", hit.getScore());
+
+						for (Map.Entry<String, Object> entitySourceField : sourceAsMap.entrySet()) {
+							String key = entitySourceField.getKey();
+							Object value = entitySourceField.getValue();
+
+							switch (key) {
+								case "id":
+									entitySemantics.put("value", value);
+									break;
+								case "name":
+									entitySemantics.put("entityName", value);
+									break;
+								case "type":
+									entitySemantics.put("entityType", value);
+									break;
+								case "tenantId":
+									entitySemantics.put("tenantId", value);
+									break;
+							}
+
 						}
+
+						categorySemantics.add(
+							CategorySemantics.of("$" + entitySemantics.get("entityType"), entitySemantics)
+						);
+
 					}
 
 				}
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"for token {} found {} category semantics", token,
+						categorySemantics);
+				}
+
+			}
+			catch (IOException e) {
+				_log.error(e.getMessage(), e);
 			}
 
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"for token {} found {} category semantics", token,
-					categorySemantics);
-			}
-
-			return categorySemantics;
-
-
-		}
-		catch (IOException e) {
-			_log.error(e.getMessage(), e);
 		}
 
-		return List.of();
+		return categorySemantics;
 
 	}
 
@@ -278,6 +279,6 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 	protected RestHighLevelClientProvider restHighLevelClientProvider;
 
 	private static final Logger _log = LoggerFactory.getLogger(
-		BaseAutoCompleteAnnotator.class);
+		BaseAutoCompleteNerAnnotator.class);
 
 }

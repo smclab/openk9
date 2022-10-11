@@ -43,6 +43,9 @@ public @interface AnnotatorConfig {
 
 	String[] autocompleteEntityFields() default {"name", "type", "id", "tenantId"};
 
+	String[] autocompleteEntityTypes() default {"person", "organization", "location", "email"};
+
+
 	String[] autocompleteAnnotator() default {};
 
 	String[] aggregatorAnnotator() default {};
