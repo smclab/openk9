@@ -14,5 +14,5 @@ import java.util.Map;
 public class EnrichPipelinePayload {
 	private DataPayload payload;
 	private Map<String, Object> enrichItemConfig;
-	private String replayTo;
+	private String replyTo;
 }
