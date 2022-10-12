@@ -138,6 +138,8 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 						String key = entitySourceField.getKey();
 						Object value = entitySourceField.getValue();
 
+						_log.info(value.toString());
+
 						switch (key) {
 							case "id":
 								entitySemantics.put("value", value);
