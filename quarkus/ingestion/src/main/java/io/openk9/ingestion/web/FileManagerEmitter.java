@@ -124,15 +124,17 @@ public class FileManagerEmitter {
                     resourcesDTO.setBinaries(modifiedBinaries);
                     ingestionDTO.setResources(resourcesDTO);
 
-                    emitter.emit(ingestionDTO);
-
                 }
                 catch (Exception e) {
 
                     logger.error(e.getMessage(), e);
 
+                    return;
+
                 }
             }
+
+            emitter.emit(ingestionDTO);
 
         });
     }
