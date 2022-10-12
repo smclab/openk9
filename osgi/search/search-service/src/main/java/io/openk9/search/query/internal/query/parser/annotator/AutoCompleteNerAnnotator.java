@@ -34,24 +34,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public abstract class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
-
-	private final Map<Long, List<String>> tenantKeywordsMap;
-
-	public BaseAutoCompleteNerAnnotator(String...keywords) {
-		this(List.of(keywords));
-	}
-
-	public BaseAutoCompleteNerAnnotator(List<String> keywords) {
-		this.tenantKeywordsMap = _createTenantKeywordsMap(keywords);
-	}
+public class AutoCompleteNerAnnotator extends BaseAnnotator {
 
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
@@ -212,52 +199,6 @@ public abstract class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 
 	}
 
-	private Map<Long, List<String>> _createTenantKeywordsMap(
-		List<String> keywords) {
-
-		if (keywords == null) {
-			return Map.of();
-		}
-
-		Map<Long, List<String>> tenantKeywordsMap = new HashMap<>();
-
-		for (String keyword : keywords) {
-			long tenantId = -1;
-			if (keyword.contains(";")) {
-				String[] split = keyword.split(";");
-				tenantId = Long.parseLong(split[0]);
-				keyword = split[1];
-			}
-
-			List<String> value = tenantKeywordsMap.computeIfAbsent(
-				tenantId, (k) -> new ArrayList<>());
-
-			if (!_arrayContains(value, keyword)) {
-				value.add(keyword);
-			}
-
-		}
-
-		List<String> allTenantKeywords = tenantKeywordsMap.get(-1L);
-
-		if (allTenantKeywords != null) {
-			for (Map.Entry<Long, List<String>> e : tenantKeywordsMap.entrySet()) {
-				if (e.getKey() == -1L) {
-					continue;
-				}
-				List<String> value = e.getValue();
-				for (String allTenantKeyword : allTenantKeywords) {
-					if (!_arrayContains(value, allTenantKeyword)) {
-						value.add(allTenantKeyword);
-					}
-				}
-			}
-		}
-
-		return tenantKeywordsMap;
-
-	}
-
 	protected void setRestHighLevelClientProvider(
 		RestHighLevelClientProvider restHighLevelClientProvider) {
 		this.restHighLevelClientProvider = restHighLevelClientProvider;
@@ -266,6 +207,6 @@ public abstract class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 	protected RestHighLevelClientProvider restHighLevelClientProvider;
 
 	private static final Logger _log = LoggerFactory.getLogger(
-		BaseAutoCompleteNerAnnotator.class);
+		AutoCompleteNerAnnotator.class);
 
 }

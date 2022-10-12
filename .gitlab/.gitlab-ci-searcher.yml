@@ -11,7 +11,7 @@ Build Latest Searcher Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - main
+      - 273-autocomplete-fix-query
       - tags
     changes:
       - searcher/configs/*
@@ -50,7 +50,7 @@ Build Latest Searcher Docker Images:
   script:
     - ./mvnw install -Psmc,bom $MAVEN_CLI_OPTS
     - ./mvnw install -Psmc,assemblies -pl assemblies/searcher/searcher-kar -am $MAVEN_CLI_OPTS
-    - ./mvnw -Psmc,assemblies --file assemblies/searcher/searcher-karaf package jib:build -Dbase.docker.image.group.name=$CI_REGISTRY_NAME/openk9 -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
+    - ./mvnw -Psmc,assemblies --file assemblies/searcher/searcher-karaf package jib:build -Dbase.docker.image.group.name=$CI_REGISTRY_NAME/openk9 -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS -Dbase.docker.image.tag=273-autocomplete-fix-query
   cache:
     key: searcher
     paths:
