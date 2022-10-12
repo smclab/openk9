@@ -128,13 +128,14 @@ public class FileManagerEmitter {
                     }
                     catch (Exception e) {
                         logger.error(e.getMessage(), e);
-                        continue;
                     }
 
-                    ResourcesDTO resourcesDTO = new ResourcesDTO();
-                    resourcesDTO.setBinaries(modifiedBinaries);
-                    ingestionDTO.setResources(resourcesDTO);
                 }
+
+                ResourcesDTO resourcesDTO = new ResourcesDTO();
+                resourcesDTO.setBinaries(modifiedBinaries);
+                ingestionDTO.setResources(resourcesDTO);
+
 
             }
 
