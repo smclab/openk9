@@ -112,9 +112,6 @@ public class AutoCompleteNerAnnotator extends BaseAnnotator {
 
 			searchSourceBuilder.query(builder);
 
-			String[] autocompleteEntityFields =
-				_annotatorConfig.autocompleteEntityFields();
-
 			String[] includes = {"name"};
 
 			searchSourceBuilder.fetchSource(includes, null);
@@ -134,6 +131,8 @@ public class AutoCompleteNerAnnotator extends BaseAnnotator {
 				for (SearchHit hit : search.getHits()) {
 					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 
+					_log.info(sourceAsMap.toString());
+
 					if (!sourceAsMap.isEmpty()) {
 
 						Map<String, Object> entitySemantics = new HashMap<>();
@@ -145,6 +144,8 @@ public class AutoCompleteNerAnnotator extends BaseAnnotator {
 						for (Map.Entry<String, Object> entitySourceField : sourceAsMap.entrySet()) {
 							String key = entitySourceField.getKey();
 							Object value = entitySourceField.getValue();
+
+							_log.info("test" + value.toString());
 
 							switch (key) {
 								case "id":
