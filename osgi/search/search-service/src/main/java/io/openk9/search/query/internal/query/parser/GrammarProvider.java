@@ -26,6 +26,7 @@ import io.openk9.search.query.internal.query.parser.annotator.AggregatorAnnotato
 import io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig;
 import io.openk9.search.query.internal.query.parser.annotator.AutoCompleteAnnotator;
 import io.openk9.search.query.internal.query.parser.annotator.AutoCompleteNerAnnotator;
+import io.openk9.search.query.internal.query.parser.annotator.BaseAutoCompleteNerAnnotator;
 import io.openk9.search.query.internal.query.parser.annotator.NerAnnotator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -115,9 +116,14 @@ public class GrammarProvider {
 				.map(keyword -> new AutoCompleteAnnotator(keyword, _config,
 					_restHighLevelClientProvider));
 
-		Stream<Annotator> autocompleteAnnotatorNerStream = Stream.of(
-			new AutoCompleteNerAnnotator(_config, _restHighLevelClientProvider)
-		);
+		String[] autocompleteEntityTypes =
+			_config.autocompleteEntityTypes();
+
+		Stream<Annotator> autocompleteAnnotatorNerStream =
+			Arrays
+				.stream(autocompleteEntityTypes)
+				.map(keyword -> new AutoCompleteNerAnnotator(keyword, _config,
+					_restHighLevelClientProvider));
 
 		List<Annotator> newAnnotators =
 			Stream.of(
