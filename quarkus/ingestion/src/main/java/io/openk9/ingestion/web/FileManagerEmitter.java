@@ -129,8 +129,6 @@ public class FileManagerEmitter {
 
                     logger.error(e.getMessage(), e);
 
-                    return;
-
                 }
             }
 
