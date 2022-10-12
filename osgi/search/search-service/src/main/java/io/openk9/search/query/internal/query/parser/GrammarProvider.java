@@ -115,11 +115,15 @@ public class GrammarProvider {
 				.map(keyword -> new AutoCompleteAnnotator(keyword, _config,
 					_restHighLevelClientProvider));
 
+		Stream<Annotator> autocompleteAnnotatorNerStream = Stream.of(
+			new AutoCompleteNerAnnotator()
+		);
+
 		List<Annotator> newAnnotators =
 			Stream.of(
 				_annotatorList.stream(), nerAnnotatorStream,
 				aggregatorAnnotatorStream, autocompleteAnnotatorStream,
-				Stream.of(new AutoCompleteNerAnnotator())
+					autocompleteAnnotatorNerStream
 			)
 				.flatMap(Function.identity())
 				.collect(Collectors.toList());
