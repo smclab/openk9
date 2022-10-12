@@ -120,13 +120,8 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 		searchSourceBuilder.query(builder);
 
-		String[] autocompleteEntityFields =
-			_annotatorConfig.autocompleteEntityFields();
-
 		String[] includes =
-			Stream.concat(
-					normalizedKeywords.stream(),
-					Arrays.stream(autocompleteEntityFields))
+			normalizedKeywords.stream()
 				.distinct()
 				.toArray(String[]::new);
 

@@ -160,8 +160,6 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 
 					}
 
-					_log.info(entitySemantics.get("entityType").toString());
-
 					categorySemantics.add(
 						CategorySemantics.of("$" + entitySemantics.get("entityType"), entitySemantics)
 					);
@@ -184,25 +182,6 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 	_log.info(categorySemantics.toString());
 
 	return categorySemantics;
-
-	}
-
-	private boolean _arrayContains(
-		List<String> autocompleteEntityFields, String keyword) {
-		return autocompleteEntityFields.contains(keyword);
-
-	}
-
-	private boolean _arrayContains(
-		String[] autocompleteEntityFields, String keyword) {
-
-		for (String autocompleteEntityField : autocompleteEntityFields) {
-			if (keyword.equals(autocompleteEntityField)) {
-				return true;
-			}
-		}
-
-		return false;
 
 	}
 
