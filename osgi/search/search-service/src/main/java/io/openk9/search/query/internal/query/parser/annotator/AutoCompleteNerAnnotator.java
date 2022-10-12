@@ -40,6 +40,14 @@ import java.util.Map;
 
 public class AutoCompleteNerAnnotator extends BaseAnnotator {
 
+
+	public AutoCompleteNerAnnotator(
+		AnnotatorConfig annotatorConfig,
+		RestHighLevelClientProvider restHighLevelClientProvider) {
+		super.setAnnotatorConfig(annotatorConfig);
+		setRestHighLevelClientProvider(restHighLevelClientProvider);
+	}
+
 	@Override
 	public List<CategorySemantics> annotate_(long tenantId, String...tokens) {
 

@@ -116,7 +116,7 @@ public class GrammarProvider {
 					_restHighLevelClientProvider));
 
 		Stream<Annotator> autocompleteAnnotatorNerStream = Stream.of(
-			new AutoCompleteNerAnnotator()
+			new AutoCompleteNerAnnotator(_config, _restHighLevelClientProvider)
 		);
 
 		List<Annotator> newAnnotators =
