@@ -160,6 +160,8 @@ public class AutoCompleteNerAnnotator extends BaseAnnotator {
 
 						}
 
+						_log.info(entitySemantics.get("entityType").toString());
+
 						categorySemantics.add(
 							CategorySemantics.of("$" + entitySemantics.get("entityType"), entitySemantics)
 						);
