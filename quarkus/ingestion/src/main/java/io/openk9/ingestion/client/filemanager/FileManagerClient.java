@@ -17,6 +17,7 @@
 
 package io.openk9.ingestion.client.filemanager;
 
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.ws.rs.*;
