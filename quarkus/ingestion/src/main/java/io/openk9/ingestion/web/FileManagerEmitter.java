@@ -42,19 +42,20 @@ public class FileManagerEmitter {
 
             if (!ingestionDTO.getResources().getBinaries().isEmpty()) {
 
-                try {
 
-                    logger.info("Handling binaries");
+                logger.info("Handling binaries");
 
-                    String datasourceId =
-                        Long.toString(ingestionDTO.getDatasourceId());
+                String datasourceId =
+                    Long.toString(ingestionDTO.getDatasourceId());
 
-                    List<BinaryDTO> binaries =
-                        ingestionDTO.getResources().getBinaries();
+                List<BinaryDTO> binaries =
+                    ingestionDTO.getResources().getBinaries();
 
-                    List<BinaryDTO> modifiedBinaries = new ArrayList<>();
+                List<BinaryDTO> modifiedBinaries = new ArrayList<>();
 
-                    for (BinaryDTO binaryDTO : binaries) {
+                for (BinaryDTO binaryDTO : binaries) {
+
+                    try {
 
                         String data = binaryDTO.getData();
 
@@ -65,11 +66,14 @@ public class FileManagerEmitter {
                             byte[] contentBytes =
                                 Base64.getDecoder().decode(data);
 
-                            InputStream inputStream = new BufferedInputStream(
-                                new ByteArrayInputStream(contentBytes));
+                            InputStream inputStream =
+                                new BufferedInputStream(
+                                    new ByteArrayInputStream(contentBytes));
 
                             String resourceId =
-                                fileManagerClient.upload(datasourceId, fileId,
+                                fileManagerClient.upload(
+                                    datasourceId,
+                                    fileId,
                                     inputStream);
 
                             BinaryDTO newBinaryDTO = new BinaryDTO();
@@ -91,11 +95,14 @@ public class FileManagerEmitter {
                                     new ArrayList<>();
                                 singeBinariesList.add(newBinaryDTO);
 
-                                newResourcesDTO.setBinaries(singeBinariesList);
+                                newResourcesDTO.setBinaries(
+                                    singeBinariesList);
 
-                                newIngestionDto.setResources(newResourcesDTO);
+                                newIngestionDto.setResources(
+                                    newResourcesDTO);
                                 newIngestionDto.setContentId(fileId);
-                                newIngestionDto.setAcl(ingestionDTO.getAcl());
+                                newIngestionDto.setAcl(
+                                    ingestionDTO.getAcl());
                                 newIngestionDto.setDatasourceId(
                                     ingestionDTO.getDatasourceId());
                                 newIngestionDto.setScheduleId(
@@ -119,17 +126,16 @@ public class FileManagerEmitter {
                             }
                         }
                     }
+                    catch (Exception e) {
+                        logger.error(e.getMessage(), e);
+                        continue;
+                    }
 
                     ResourcesDTO resourcesDTO = new ResourcesDTO();
                     resourcesDTO.setBinaries(modifiedBinaries);
                     ingestionDTO.setResources(resourcesDTO);
-
                 }
-                catch (Exception e) {
 
-                    logger.error(e.getMessage(), e);
-
-                }
             }
 
             emitter.emit(ingestionDTO);
