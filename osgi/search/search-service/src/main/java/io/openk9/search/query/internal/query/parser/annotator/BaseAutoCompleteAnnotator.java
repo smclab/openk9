@@ -150,6 +150,7 @@ public abstract class BaseAutoCompleteAnnotator extends BaseAnnotator {
 				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 
 				for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
+
 					String keyword = entry.getKey();
 					Object value = entry.getValue();
 

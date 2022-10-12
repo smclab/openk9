@@ -34,9 +34,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 
@@ -107,9 +109,10 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 
 		searchSourceBuilder.query(builder);
 
-		String[] includes = {"name"};
+		String[] autocompleteEntityFields =
+			_annotatorConfig.autocompleteEntityFields();
 
-		searchSourceBuilder.fetchSource(includes, null);
+		searchSourceBuilder.fetchSource(autocompleteEntityFields, null);
 
 		searchRequest.source(searchSourceBuilder);
 
