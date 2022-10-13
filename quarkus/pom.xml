@@ -4,14 +4,14 @@
   <parent>
     <groupId>io.openk9</groupId>
     <artifactId>openk9</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <name>OpenK9 :: Quarkus</name>
   <artifactId>quarkus</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
     <module>ingestion</module>
