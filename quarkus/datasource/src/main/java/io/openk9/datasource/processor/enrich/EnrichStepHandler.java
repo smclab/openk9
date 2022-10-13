@@ -21,6 +21,7 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Map;
 
 @ApplicationScoped
 public class EnrichStepHandler {
@@ -108,7 +109,12 @@ public class EnrichStepHandler {
 		return Uni
 			.createFrom()
 			.completionStage(
-				() -> indexWriterEmitter.send(enrichStep.getPayload()));
+				() -> indexWriterEmitter.send(
+					EnrichPipelinePayload.of(
+						enrichStep.getPayload(),
+						Map.of(), "")
+				)
+			);
 	}
 
 	@Data
@@ -128,7 +134,7 @@ public class EnrichStepHandler {
 
 	@Channel("index-writer-outgoing")
 	@Inject
-	Emitter<DataPayload> indexWriterEmitter;
+	Emitter<EnrichPipelinePayload> indexWriterEmitter;
 
 	@Inject
 	EnrichItemService enrichItemService;
