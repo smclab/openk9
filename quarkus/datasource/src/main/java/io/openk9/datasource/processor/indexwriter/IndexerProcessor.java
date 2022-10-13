@@ -36,6 +36,12 @@ public class IndexerProcessor {
 
 		long datasourceId = payload.getDatasourceId();
 
+		if (logger.isInfoEnabled()) {
+			logger.info(
+				"process message for datasourceId: " + datasourceId +
+				" ingestionId: " + payload.getIngestionId());
+		}
+
 		return _indexPayload(payload, _getIndexName(datasourceId))
 			.onItemOrFailure()
 			.transformToUni((response, throwable) -> {
@@ -91,8 +97,8 @@ public class IndexerProcessor {
 			});
 	}
 
-	private Uni<DataIndex> _getIndexName(
-		long datasourceId) {
+	private Uni<DataIndex> _getIndexName(long datasourceId) {
+
 		return sessionFactory.withTransaction(
 			s -> Uni.createFrom().deferred(() ->
 				s
@@ -104,6 +110,7 @@ public class IndexerProcessor {
 							.fetch(s, d.getDataIndex())
 							.flatMap(di -> {
 								if (di == null) {
+
 									String indexName =
 										d.getId() + "-data-" +
 										UUID.randomUUID();
@@ -119,7 +126,13 @@ public class IndexerProcessor {
 									return s
 										.persist(d)
 										.map(__ -> dataIndex)
-										.call(s::flush);
+										.call(s::flush)
+										.invoke(persistedDataIndex -> {
+											if (logger.isInfoEnabled()) {
+												logger.info(
+													"creating index: " + persistedDataIndex);
+											}
+										});
 								}
 								else {
 									return Uni.createFrom().item(di);
