@@ -61,7 +61,6 @@ public class TabGraphqlResource {
 			notEqual);
 	}
 
-	@Query
 	public Uni<Connection<SearchTokenDto>> searchTokens(
 		@Source Tab tab,
 		@Description("fetching only nodes after this node (exclusive)") String after,
@@ -203,4 +202,5 @@ public class TabGraphqlResource {
 
 	@Inject
 	TokenTabMapper _tokenTabMapper;
+
 }

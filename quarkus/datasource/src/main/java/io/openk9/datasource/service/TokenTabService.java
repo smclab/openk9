@@ -8,10 +8,12 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO>{
+public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> {
 
 	@Override
-	public Class<TokenTab> getEntityClass(){return TokenTab.class;}
+	public Class<TokenTab> getEntityClass(){
+		return TokenTab.class;
+	}
 
 	@Override
 	public String[] getSearchFields() {

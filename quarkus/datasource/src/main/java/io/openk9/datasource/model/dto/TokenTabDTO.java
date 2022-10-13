@@ -28,4 +28,5 @@ public class TokenTabDTO extends K9EntityDTO {
 	private String value;
 	@NotNull
 	private Boolean filter;
+
 }

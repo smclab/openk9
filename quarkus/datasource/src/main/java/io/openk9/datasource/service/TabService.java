@@ -182,5 +182,8 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	TokenTabMapper _tokenTabMapper;
 
 	@Override
-	public Class<Tab> getEntityClass() {return Tab.class;}
+	public Class<Tab> getEntityClass() {
+		return Tab.class;
+	}
+
 }

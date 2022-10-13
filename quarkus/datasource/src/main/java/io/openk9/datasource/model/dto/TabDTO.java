@@ -16,6 +16,7 @@ import javax.validation.constraints.NotNull;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class TabDTO extends K9EntityDTO {
+
 	@NotNull
 	private Integer priority;
 

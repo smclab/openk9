@@ -33,7 +33,7 @@ public class Tab extends K9Entity {
 	@Column(name="description", length = 4096)
 	private String description;
 
-	@Column(name = "priority")
+	@Column(name = "priority", nullable = false)
 	private Integer priority;
 
 	@OneToMany(

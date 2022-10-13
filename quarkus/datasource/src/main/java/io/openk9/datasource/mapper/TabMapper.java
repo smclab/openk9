@@ -7,7 +7,5 @@ import org.mapstruct.Mapper;
 @Mapper(
 	config = K9EntityMapper.class
 )
-public interface TabMapper extends K9EntityMapper<Tab, TabDTO>{
-
-
+public interface TabMapper extends K9EntityMapper<Tab, TabDTO> {
 }

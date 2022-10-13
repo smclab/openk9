@@ -11,14 +11,13 @@ import java.util.List;
 @Mapper(
 	config = K9EntityMapper.class
 )
-public interface TokenTabMapper extends K9EntityMapper<TokenTab, TokenTabDTO>{
+public interface TokenTabMapper extends K9EntityMapper<TokenTab, TokenTabDTO> {
 
 	@Mapping(target = "values",source = "value")
-	public SearchTokenDto toSearchTokenDto(TokenTab tokenTab);
+	SearchTokenDto toSearchTokenDto(TokenTab tokenTab);
 
 	default List<String> map(String value){
 		return List.of(value);
 	}
-
 
 }

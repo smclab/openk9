@@ -30,22 +30,22 @@ import javax.persistence.UniqueConstraint;
 @Cacheable
 public class TokenTab extends K9Entity {
 
-	@Column(name = "name", unique = true)
+	@Column(name = "name", nullable = false, unique = true)
 	private String name;
 
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Column(name = "token_type")
+	@Column(name = "token_type", nullable = false)
 	private String tokenType;
 
-	@Column(name = "keyword_key")
+	@Column(name = "keyword_key", nullable = false)
 	private String keywordKey;
 
 	@Column(name = "value")
 	private  String value;
 
-	@Column(name ="filter")
+	@Column(name ="filter", nullable = false)
 	private Boolean filter;
 
 	@ToString.Exclude
