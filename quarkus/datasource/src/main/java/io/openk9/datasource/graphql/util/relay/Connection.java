@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql.util.relay;
 import org.eclipse.microprofile.graphql.Description;
 
 import java.util.List;
+import java.util.function.Function;
 
 @Description("A connection to a list of items.")
 public interface Connection<T> {
@@ -35,5 +36,11 @@ public interface Connection<T> {
      */
     @Description("details about this specific page")
     PageInfo getPageInfo();
+
+    <R> Connection<R> map(Function<T, R> mapper);
+
+    static <R> Connection<R> of(List<Edge<R>> edges, PageInfo pageInfo) {
+        return new DefaultConnection<>(edges, pageInfo);
+    }
 
 }

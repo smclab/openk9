@@ -18,6 +18,9 @@
 package io.openk9.datasource.graphql.util.relay;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static graphql.Assert.assertNotNull;
 
@@ -47,6 +50,21 @@ public class DefaultConnection<T> implements Connection<T> {
     @Override
     public PageInfo getPageInfo() {
         return pageInfo;
+    }
+
+    @Override
+    public <R> Connection<R> map(Function<T, R> mapper) {
+
+        Objects.requireNonNull(mapper, "mapper is null");
+
+        return edges
+            .stream()
+            .map(edge -> edge.map(mapper))
+            .collect(Collectors.collectingAndThen(
+                Collectors.toList(),
+                newEdges -> Connection.of(newEdges, pageInfo))
+            );
+
     }
 
     @Override

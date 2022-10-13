@@ -17,6 +17,9 @@
 
 package io.openk9.datasource.graphql.util.relay;
 
+import java.util.Objects;
+import java.util.function.Function;
+
 import static graphql.Assert.assertNotNull;
 
 public class DefaultEdge<T> implements Edge<T> {
@@ -41,10 +44,17 @@ public class DefaultEdge<T> implements Edge<T> {
     }
 
     @Override
+    public <R> Edge<R> map(Function<T, R> mapper) {
+        Objects.requireNonNull(mapper, "mapper is null");
+        return new DefaultEdge<>(mapper.apply(node), cursor);
+    }
+
+    @Override
     public String toString() {
         return "DefaultEdge{" +
                 "node=" + node +
                 ", cursor=" + cursor +
                 '}';
     }
+
 }

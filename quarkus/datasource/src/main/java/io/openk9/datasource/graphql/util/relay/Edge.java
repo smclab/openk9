@@ -19,6 +19,8 @@ package io.openk9.datasource.graphql.util.relay;
 
 import org.eclipse.microprofile.graphql.Description;
 
+import java.util.function.Function;
+
 @Description("An edge in a connection")
 public interface Edge<T> {
 
@@ -33,5 +35,11 @@ public interface Edge<T> {
      */
     @Description("cursor marks a unique position or index into the connection")
     String getCursor();
+
+    <R> Edge<R> map(Function<T, R> mapper);
+
+    static <T> Edge<T> of(T node, String cursor) {
+        return new DefaultEdge<>(node, cursor);
+    }
 
 }
