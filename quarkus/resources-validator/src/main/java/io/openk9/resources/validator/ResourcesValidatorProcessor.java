@@ -174,22 +174,30 @@ public class ResourcesValidatorProcessor {
 
 			for (int i = 0; i < binaries.size(); i++) {
 
-				String resourceId =
-					binaries.getJsonObject(i).getString("resourceId");
-
-				InputStream inputStream = fileManagerClient.download(resourceId);
-
-				byte[] sourceBytes;
-
 				try {
-					sourceBytes = IOUtils.toByteArray(inputStream);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
+					String resourceId =
+						binaries.getJsonObject(i).getString("resourceId");
+
+					InputStream inputStream =
+						fileManagerClient.download(resourceId);
+
+					byte[] sourceBytes;
+
+					try {
+						sourceBytes = IOUtils.toByteArray(inputStream);
+					}
+					catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+
+					String encodedString =
+						Base64.getEncoder().encodeToString(sourceBytes);
+
+					hashCodes.add(encodedString.hashCode());
 				}
-
-				String encodedString = Base64.getEncoder().encodeToString(sourceBytes);
-
-				hashCodes.add(encodedString.hashCode());
+				catch (Exception e) {
+					logger.error(e.getMessage(), e);
+				}
 			}
 
 		}
