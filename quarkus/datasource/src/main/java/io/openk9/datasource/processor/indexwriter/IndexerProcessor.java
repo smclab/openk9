@@ -4,6 +4,7 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
 import io.openk9.datasource.util.MessageUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
@@ -32,7 +33,10 @@ public class IndexerProcessor {
 	@ActivateRequestContext
 	public Uni<Void> process(Message<?> message) {
 
-		DataPayload payload = MessageUtil.toObj(message, DataPayload.class);
+		EnrichPipelinePayload enrichPipelinePayload =
+			MessageUtil.toObj(message, EnrichPipelinePayload.class);
+
+		DataPayload payload = enrichPipelinePayload.getPayload();
 
 		long datasourceId = payload.getDatasourceId();
 
