@@ -38,9 +38,9 @@ public class HttpPluginDriverClient {
 			host = "localhost";
 		}
 
-		int port = httpPluginDriverInfo.getPort();
+		Integer port = httpPluginDriverInfo.getPort();
 
-		if (port < 1 || port > 65535) {
+		if (port == null || port < 1 || port > 65535) {
 			port = 8080;
 		}
 
