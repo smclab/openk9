@@ -11,7 +11,7 @@ Build Latest Tika Ocr Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - 241-ottimizzazione-payload
+      - main
       - tags
     changes:
       - quarkus/resources-common/**/*
@@ -24,7 +24,7 @@ Build Latest Tika Ocr Docker Images:
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
   script:
-   - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=241-ottimizzazione-payload
+   - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: tika-ocr
     paths:

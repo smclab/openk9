@@ -63,3 +63,7 @@ jobs:
       - name: Build and Push Resources Validator
         run: |
           ./mvnw package -Pquarkus --batch-mode -pl quarkus/resources-validator -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab
+
+      - name: Build and Push File Manager
+        run: |
+          ./mvnw package -Pquarkus --batch-mode -pl quarkus/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.registry=registry.hub.docker.com -Dquarkus.container-image.username=${{ secrets.DOCKERHUB_USERNAME }} -Dquarkus.container-image.password=${{ secrets.DOCKERHUB_TOKEN }} -Dquarkus.container-image.group=smclab

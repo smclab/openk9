@@ -11,7 +11,7 @@ Build Branch File Manager Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - 241-ottimizzazione-payload
+      - main
       - tags
     changes:
       - quarkus/resources-common/**/*
@@ -21,7 +21,7 @@ Build Branch File Manager Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=241-ottimizzazione-payload
+    - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: file-manager
     paths:
