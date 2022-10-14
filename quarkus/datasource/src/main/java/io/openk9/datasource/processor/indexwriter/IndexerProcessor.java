@@ -192,11 +192,9 @@ public class IndexerProcessor {
 
 									DataIndex dataIndex = DataIndex.of(
 										indexName, "auto-generated",
-										new ArrayList<>(), d);
+										new ArrayList<>());
 
 									d.setDataIndex(dataIndex);
-
-									dataIndex.setDatasource(d);
 
 									return s
 										.persist(d)
