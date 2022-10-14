@@ -102,7 +102,7 @@ public class IndexerProcessor {
 
 		})
 			.onItemOrFailure()
-			.transformToUni((searchResponse, throwable) -> {
+			.transform((searchResponse, throwable) -> {
 
 				if (throwable != null) {
 					logger.error(throwable.getMessage());
@@ -122,8 +122,7 @@ public class IndexerProcessor {
 
 						logger.info("delete document for contentId: " + dataPayload.getContentId());
 
-						return Uni.createFrom().item(
-							new DeleteRequest(indexName, documentId));
+						return new DeleteRequest(indexName, documentId);
 					}
 
 					indexRequest.id(documentId);
@@ -135,7 +134,7 @@ public class IndexerProcessor {
 
 				indexRequest.source(jsonObject.toString(), XContentType.JSON);
 
-				return Uni.createFrom().item(indexRequest);
+				return indexRequest;
 
 			});
 
