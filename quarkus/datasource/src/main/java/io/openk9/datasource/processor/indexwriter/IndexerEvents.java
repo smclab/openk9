@@ -24,6 +24,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -84,8 +85,6 @@ public class IndexerEvents {
 
 			Root<DocType> from = docTypeQuery.from(DocType.class);
 
-			from.fetch(DocType_.docTypeFields);
-
 			docTypeQuery.where(from.get(DocType_.name).in(docTypeNames));
 
 			Uni<List<DocType>> docTypeListUni = session
@@ -116,7 +115,7 @@ public class IndexerEvents {
 							docType = new DocType();
 							docType.setName(docTypeName);
 							docType.setDescription("auto-generated");
-							docType.setDocTypeFields(List.of());
+							docType.setDocTypeFields(new LinkedHashSet<>());
 						}
 
 						List<DocTypeField> docTypeFieldList =
@@ -131,9 +130,12 @@ public class IndexerEvents {
 							}
 						}
 
-						docType.setDocTypeFields(docTypeFieldList);
+						Set<DocTypeField> docTypeFields =
+							docType.getDocTypeFields();
 
-						for (DocTypeField docTypeField : docTypeFieldList) {
+						docTypeFields.addAll(docTypeFieldList);
+
+						for (DocTypeField docTypeField : docTypeFields) {
 							docTypeField.setDocType(docType);
 						}
 

@@ -85,7 +85,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			filter);
 	}
 
-	public Uni<List<DocTypeField>> getDocTypeFields(DocType docType) {
+	public Uni<Set<DocTypeField>> getDocTypeFields(DocType docType) {
 		return withTransaction(s -> Mutiny2.fetch(s, docType.getDocTypeFields()));
 	}
 

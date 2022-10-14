@@ -32,8 +32,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "doc_type")
@@ -57,7 +57,7 @@ public class DocType extends K9Entity {
 	)
 	@ToString.Exclude
 	@JsonIgnore
-	private List<DocTypeField> docTypeFields = new LinkedList<>();
+	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 
 	public boolean addDocTypeField(
 		Collection<DocTypeField> docTypeFields, DocTypeField docTypeField) {
