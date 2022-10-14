@@ -65,7 +65,7 @@ public class Datasource extends K9Entity {
 	@Column(name = "last_ingestion_date")
 	private OffsetDateTime lastIngestionDate;
 
-	@Column(name = "schedulable")
+	@Column(name = "schedulable", nullable = false)
 	private Boolean schedulable = false;
 
 	@ToString.Exclude

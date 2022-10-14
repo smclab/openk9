@@ -24,6 +24,7 @@ import io.openk9.datasource.validation.json.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
@@ -43,6 +44,7 @@ public class DatasourceDTO extends K9EntityDTO {
 
 	private OffsetDateTime lastIngestionDate;
 
+	@NonNull
 	private Boolean schedulable = false;
 
 	@Json
