@@ -162,7 +162,7 @@ public class IndexerEvents {
 						docTypes
 							.stream()
 							.map(a -> (String)a)
-							.filter(dc -> e.getName().startsWith(dc + "."))
+							.filter(dc -> e.getName().startsWith(dc + ".") || e.getName().equals(dc))
 							.findFirst()
 							.orElse("default"),
 					Collectors.toList()

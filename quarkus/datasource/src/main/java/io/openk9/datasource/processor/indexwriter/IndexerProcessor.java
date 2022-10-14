@@ -11,11 +11,19 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
+import org.elasticsearch.action.DocWriteRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -68,30 +76,94 @@ public class IndexerProcessor {
 
 	}
 
+	private Uni<DocWriteRequest<?>> _getDocWriteRequest(
+		DataPayload dataPayload, String indexName) {
+
+		return Uni.createFrom().deferred(() -> {
+
+			SearchRequest searchRequest = new SearchRequest(indexName);
+
+			MatchQueryBuilder matchQueryBuilder =
+				QueryBuilders.matchQuery("contentId", dataPayload.getContentId());
+
+			SearchSourceBuilder searchSourceBuilder =
+				new SearchSourceBuilder();
+
+			searchSourceBuilder.query(matchQueryBuilder);
+
+			searchRequest.source(searchSourceBuilder);
+
+			return Uni.createFrom().<SearchResponse>emitter(
+				(sink) -> client.searchAsync(
+					searchRequest, RequestOptions.DEFAULT,
+					UniActionListener.of(sink)
+				)
+			);
+
+		})
+			.onItemOrFailure()
+			.transformToUni((searchResponse, throwable) -> {
+
+				if (throwable != null) {
+					logger.error(throwable.getMessage());
+				}
+
+				IndexRequest indexRequest = new IndexRequest(indexName);
+
+				if (searchResponse != null && searchResponse.getHits().getHits().length > 0) {
+
+					logger.info("found document for contentId: " + dataPayload.getContentId());
+
+					String documentId = searchResponse.getHits().getAt(0).getId();
+
+					String[] documentTypes = dataPayload.getDocumentTypes();
+
+					if (documentTypes == null || documentTypes.length == 0) {
+
+						logger.info("delete document for contentId: " + dataPayload.getContentId());
+
+						return Uni.createFrom().item(
+							new DeleteRequest(indexName, documentId));
+					}
+
+					indexRequest.id(documentId);
+				}
+
+				logger.info("index document for contentId: " + dataPayload.getContentId());
+
+				JsonObject jsonObject = JsonObject.mapFrom(dataPayload);
+
+				indexRequest.source(jsonObject.toString(), XContentType.JSON);
+
+				return Uni.createFrom().item(indexRequest);
+
+			});
+
+	}
+
+
 	private Uni<?> _indexPayload(
 		DataPayload payload, Uni<DataIndex> indexNameUni) {
 
 		return indexNameUni
-			.call(dataIndex -> Uni.createFrom().emitter(sink -> {
+			.call(indexName -> _getDocWriteRequest(payload, indexName.getName())
+				.flatMap(docWriteRequest -> Uni.createFrom().emitter(sink -> {
 
-				IndexRequest indexRequest = new IndexRequest(dataIndex.getName());
+					BulkRequest bulkRequest = new BulkRequest();
 
-				JsonObject jsonObject = JsonObject.mapFrom(payload);
+					bulkRequest.add(docWriteRequest);
 
-				indexRequest.source(
-					jsonObject.toString(),
-					XContentType.JSON
-				);
+					bulkRequest.setRefreshPolicy(
+						WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
-				indexRequest.setRefreshPolicy(
-					WriteRequest.RefreshPolicy.WAIT_UNTIL);
+					client.bulkAsync(
+						bulkRequest,
+						RequestOptions.DEFAULT,
+						UniActionListener.of(sink));
 
-				client.indexAsync(
-					indexRequest,
-					RequestOptions.DEFAULT,
-					UniActionListener.of(sink));
-
-			}))
+					})
+				)
+			)
 			.invoke(dataIndex -> {
 
 				String[] documentTypes = payload.getDocumentTypes();
