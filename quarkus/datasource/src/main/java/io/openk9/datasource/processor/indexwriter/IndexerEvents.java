@@ -48,32 +48,31 @@ public class IndexerEvents {
 	@ActivateRequestContext
 	Uni<Void> createOrUpdateDataIndex(JsonObject jsonObject) {
 
-		return sessionFactory
-			.withTransaction(session -> Uni.createFrom().deferred(() -> {
+		return Uni.createFrom().deferred(() -> {
 
-				DataIndex dataIndex = jsonObject.getJsonObject("dataIndex").mapTo(DataIndex.class);
+			DataIndex dataIndex = jsonObject.getJsonObject("dataIndex").mapTo(DataIndex.class);
 
-				if (dataIndex == null) {
-					return Uni.createFrom().failure(
-						new IllegalArgumentException("dataIndexId is null"));
-				}
+			if (dataIndex == null) {
+				return Uni.createFrom().failure(
+					new IllegalArgumentException("dataIndexId is null"));
+			}
 
-				JsonArray docTypes = jsonObject.getJsonArray("docTypes");
+			JsonArray docTypes = jsonObject.getJsonArray("docTypes");
 
-				return this._getMappings(dataIndex.getName())
-					.map(IndexerEvents::_toFlatFields)
-					.map(IndexerEvents::_toDocTypeFields)
-					.map(_toDocTypeFieldMap(docTypes))
-					.call(_persistDocType(session, dataIndex))
-					.replaceWithVoid();
+			return this._getMappings(dataIndex.getName())
+				.map(IndexerEvents::_toFlatFields)
+				.map(IndexerEvents::_toDocTypeFields)
+				.map(_toDocTypeFieldMap(docTypes))
+				.call(_persistDocType(dataIndex))
+				.replaceWithVoid();
 
-			}));
+		});
 	}
 
 	private Function<Map<String, List<DocTypeField>>, Uni<?>> _persistDocType(
-		Mutiny.Session session, DataIndex dataIndex) {
+		DataIndex dataIndex) {
 
-		return m -> Uni.createFrom().deferred(() -> {
+		return m -> sessionFactory.withTransaction(session -> {
 
 			Set<String> docTypeNames = m.keySet();
 
