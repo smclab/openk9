@@ -72,7 +72,7 @@ public class IndexerEvents {
 	private Function<Map<String, List<DocTypeField>>, Uni<?>> _persistDocType(
 		Mutiny.Session session, DataIndex dataIndex) {
 
-		return m -> {
+		return m -> Uni.createFrom().deferred(() -> {
 
 			Set<String> docTypeNames = m.keySet();
 
@@ -90,6 +90,7 @@ public class IndexerEvents {
 
 			Uni<List<DocType>> docTypeListUni = session
 				.createQuery(docTypeQuery)
+				.setCacheable(true)
 				.getResultList();
 
 			return docTypeListUni
@@ -148,8 +149,7 @@ public class IndexerEvents {
 					return session.merge(dataIndex)
 						.call(session::flush);
 				});
-
-		};
+		});
 	}
 
 	private Function<List<DocTypeField>, Map<String, List<DocTypeField>>> _toDocTypeFieldMap(
