@@ -25,6 +25,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,23 @@ public class DataPayload {
 
 	@JsonAnySetter
 	public void addRest(String key, Object value) {
+
+		if (value == null) {
+			return;
+		}
+		else if (value instanceof Collection) {
+			if (((Collection) value).isEmpty()) {
+				return;
+			}
+		}
+		else if (value instanceof Map) {
+			if (((Map) value).isEmpty()) {
+				return;
+			}
+		}
+
 		rest.put(key, value);
+
 	}
 
 	@JsonAnyGetter
