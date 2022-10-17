@@ -180,7 +180,7 @@ public class IndexerProcessor {
 
 									DataIndex dataIndex = DataIndex.of(
 										indexName, "auto-generated",
-										new ArrayList<>(), d);
+										new ArrayList<>());
 
 									d.setDataIndex(dataIndex);
 
