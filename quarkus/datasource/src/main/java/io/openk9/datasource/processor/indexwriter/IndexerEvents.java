@@ -8,12 +8,19 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.processor.util.Field;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.EventBus;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -54,6 +61,10 @@ public class IndexerEvents {
 		return this._getMappings(dataIndex.getName())
 			.map(IndexerEvents::_toFlatFields)
 			.map(IndexerEvents::_toDocTypeFields)
+			.plug(docTypeFields -> Uni
+				.combine()
+				.all()
+				.unis(docTypeFields, _getDocumentTypes(dataIndex.getName())).asTuple())
 			.map(_toDocTypeFieldMap())
 			.call(_persistDocType(dataIndex))
 			.replaceWithVoid();
@@ -158,17 +169,12 @@ public class IndexerEvents {
 		});
 	}
 
-	private Function<List<DocTypeField>, Map<String, List<DocTypeField>>> _toDocTypeFieldMap() {
-		return list -> {
+	private Function<Tuple2<List<DocTypeField>, List<String>>, Map<String, List<DocTypeField>>> _toDocTypeFieldMap() {
+		return t2 -> {
 
-			List<String> documentTypes =
-				list
-					.stream()
-					.map(DocTypeField::getName)
-					.filter(name -> name.startsWith("documentTypes."))
-					.map(name -> name.substring("documentTypes.".length()))
-					.distinct()
-					.collect(Collectors.toList());
+			List<DocTypeField> list = t2.getItem1();
+
+			List<String> documentTypes = t2.getItem2();
 
 			return list
 				.stream()
@@ -184,6 +190,44 @@ public class IndexerEvents {
 					)
 				);
 		};
+	}
+
+	public Uni<List<String>> _getDocumentTypes(String indexName) {
+		return Uni
+			.createFrom()
+			.item(() -> {
+
+				SearchRequest searchRequest = new SearchRequest(indexName);
+
+				SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+				searchSourceBuilder.size(0);
+
+				searchSourceBuilder.aggregation(
+					AggregationBuilders
+						.terms("documentTypes")
+						.field("documentTypes.keyword")
+						.size(1000));
+
+				searchRequest.source(searchSourceBuilder);
+
+				try {
+					SearchResponse search = client.search(
+						searchRequest, RequestOptions.DEFAULT
+					);
+
+					return search.getAggregations()
+						.<Terms>get("documentTypes")
+						.getBuckets()
+						.stream()
+						.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+						.collect(Collectors.toList());
+				}
+				catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			});
+
 	}
 
 	private Uni<Map<String, Object>> _getMappings(String indexName) {
@@ -298,7 +342,7 @@ public class IndexerEvents {
 			docTypeField.setFieldType(FieldType.fromString(type));
 			docTypeField.setBoost(1.0);
 			docTypeField.setSearchable(false);
-			docTypeField.setDescription("this doc type field is auto generated");
+			docTypeField.setDescription("auto-generated");
 			docTypeFields.add(docTypeField);
 
 		}

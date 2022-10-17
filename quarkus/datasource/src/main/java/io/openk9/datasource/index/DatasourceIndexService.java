@@ -163,7 +163,7 @@ public class DatasourceIndexService {
 				docTypeField.setFieldType(FieldType.fromString(type));
 				docTypeField.setBoost(1.0);
 				docTypeField.setSearchable(false);
-				docTypeField.setDescription("this doc type field is auto generated");
+				docTypeField.setDescription("auto-generated");
 				docTypeFields.add(docTypeField);
 
 			}
