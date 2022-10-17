@@ -71,6 +71,7 @@ public class ReindexResource {
 					}
 
 					return s.persistAll(list.toArray(Object[]::new))
+						.flatMap(v -> s.flush())
 						.map(__ -> list);
 
 				})
