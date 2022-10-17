@@ -24,12 +24,12 @@ import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.processor.enrich.EnrichStepHandler;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.util.MessageUtil;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -51,7 +51,7 @@ public class DatasourceProcessor {
 
 		long datasourceId = ingestionPayload.getDatasourceId();
 
-		return datasourceService.withTransaction(s ->
+		return sf.withTransaction(s ->
 			s
 				.find(Datasource.class, datasourceId)
 				.onItem()
@@ -129,7 +129,7 @@ public class DatasourceProcessor {
 	}
 
 	@Inject
-	DatasourceService datasourceService;
+	Mutiny.SessionFactory sf;
 
 	@Inject
 	EnrichPipelineService enrichPipelineService;
