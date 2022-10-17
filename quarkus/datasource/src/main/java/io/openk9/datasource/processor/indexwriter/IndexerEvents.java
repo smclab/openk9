@@ -35,13 +35,28 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class IndexerEvents {
 
-	public void sendEvent(DataIndex dataIndex, List<String> docTypes) {
+	public void requestAndForget(DataIndex dataIndex, List<String> docTypes) {
 		eventBus.requestAndForget(
 			"createOrUpdateDataIndex",
 			new JsonObject()
 				.put("dataIndex", JsonObject.mapFrom(dataIndex))
 				.put("docTypes", new JsonArray(docTypes))
 		);
+	}
+
+	public Uni<Void> generateDocTypeFields(DataIndex dataIndex) {
+
+		if (dataIndex == null) {
+			return Uni.createFrom().failure(
+				new IllegalArgumentException("dataIndexId is null"));
+		}
+
+		return this._getMappings(dataIndex.getName())
+			.map(IndexerEvents::_toFlatFields)
+			.map(IndexerEvents::_toDocTypeFields)
+			.map(_toDocTypeFieldMap())
+			.call(_persistDocType(dataIndex))
+			.replaceWithVoid();
 	}
 
 	@ConsumeEvent("createOrUpdateDataIndex")
@@ -52,19 +67,7 @@ public class IndexerEvents {
 
 			DataIndex dataIndex = jsonObject.getJsonObject("dataIndex").mapTo(DataIndex.class);
 
-			if (dataIndex == null) {
-				return Uni.createFrom().failure(
-					new IllegalArgumentException("dataIndexId is null"));
-			}
-
-			JsonArray docTypes = jsonObject.getJsonArray("docTypes");
-
-			return this._getMappings(dataIndex.getName())
-				.map(IndexerEvents::_toFlatFields)
-				.map(IndexerEvents::_toDocTypeFields)
-				.map(_toDocTypeFieldMap(docTypes))
-				.call(_persistDocType(dataIndex))
-				.replaceWithVoid();
+			return generateDocTypeFields(dataIndex);
 
 		});
 	}
@@ -83,6 +86,8 @@ public class IndexerEvents {
 				criteriaBuilder.createQuery(DocType.class);
 
 			Root<DocType> from = docTypeQuery.from(DocType.class);
+
+			from.fetch(DocType_.docTypeFields);
 
 			docTypeQuery.where(from.get(DocType_.name).in(docTypeNames));
 
@@ -153,22 +158,32 @@ public class IndexerEvents {
 		});
 	}
 
-	private Function<List<DocTypeField>, Map<String, List<DocTypeField>>> _toDocTypeFieldMap(
-		JsonArray docTypes) {
-		return list -> list
-			.stream()
-			.collect(
-				Collectors.groupingBy(
-					e ->
-						docTypes
-							.stream()
-							.map(a -> (String)a)
-							.filter(dc -> e.getName().startsWith(dc + ".") || e.getName().equals(dc))
-							.findFirst()
-							.orElse("default"),
-					Collectors.toList()
-				)
-			);
+	private Function<List<DocTypeField>, Map<String, List<DocTypeField>>> _toDocTypeFieldMap() {
+		return list -> {
+
+			List<String> documentTypes =
+				list
+					.stream()
+					.map(DocTypeField::getName)
+					.filter(name -> name.startsWith("documentTypes."))
+					.map(name -> name.substring("documentTypes.".length()))
+					.distinct()
+					.collect(Collectors.toList());
+
+			return list
+				.stream()
+				.collect(
+					Collectors.groupingBy(
+						e ->
+							documentTypes
+								.stream()
+								.filter(dc -> e.getName().startsWith(dc + ".") || e.getName().equals(dc))
+								.findFirst()
+								.orElse("default"),
+						Collectors.toList()
+					)
+				);
+		};
 	}
 
 	private Uni<Map<String, Object>> _getMappings(String indexName) {

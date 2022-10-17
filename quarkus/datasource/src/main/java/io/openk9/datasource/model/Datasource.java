@@ -70,7 +70,7 @@ public class Datasource extends K9Entity {
 
 	@ToString.Exclude
 	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
-	@JoinColumn(name = "data_index_id")
+	@JoinColumn(name = "data_index_id", referencedColumnName = "id")
 	@JsonIgnore
 	private DataIndex dataIndex;
 

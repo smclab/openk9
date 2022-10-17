@@ -53,7 +53,7 @@ public class DocType extends K9Entity {
 	@OneToMany(
 		mappedBy = "docType",
 		cascade = javax.persistence.CascadeType.ALL,
-		fetch = FetchType.EAGER
+		fetch = FetchType.LAZY
 	)
 	@ToString.Exclude
 	@JsonIgnore

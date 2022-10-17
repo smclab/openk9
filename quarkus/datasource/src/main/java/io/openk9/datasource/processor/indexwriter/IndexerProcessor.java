@@ -17,7 +17,6 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -31,7 +30,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -152,9 +150,6 @@ public class IndexerProcessor {
 
 					bulkRequest.add(docWriteRequest);
 
-					bulkRequest.setRefreshPolicy(
-						WriteRequest.RefreshPolicy.WAIT_UNTIL);
-
 					client.bulkAsync(
 						bulkRequest,
 						RequestOptions.DEFAULT,
@@ -162,14 +157,7 @@ public class IndexerProcessor {
 
 					})
 				)
-			)
-			.invoke(dataIndex -> {
-
-				String[] documentTypes = payload.getDocumentTypes();
-
-				indexerEvents.sendEvent(dataIndex, List.of(documentTypes));
-
-			});
+			);
 	}
 
 	private Uni<DataIndex> _getIndexName(long datasourceId) {
@@ -192,7 +180,7 @@ public class IndexerProcessor {
 
 									DataIndex dataIndex = DataIndex.of(
 										indexName, "auto-generated",
-										new ArrayList<>());
+										new ArrayList<>(), d);
 
 									d.setDataIndex(dataIndex);
 
@@ -221,9 +209,6 @@ public class IndexerProcessor {
 
 	@Inject
 	Logger logger;
-
-	@Inject
-	IndexerEvents indexerEvents;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
