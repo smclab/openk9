@@ -1,5 +1,7 @@
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.mapper.DocTypeFieldMapper;
+import io.openk9.datasource.mapper.TokenTabMapper;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.dto.TokenTabDTO;
@@ -9,6 +11,7 @@ import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> {
+	TokenTabService(TokenTabMapper mapper) {this.mapper = mapper;}
 
 	@Override
 	public Class<TokenTab> getEntityClass(){

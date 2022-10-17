@@ -55,8 +55,8 @@ public class DocTypeField extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL, optional = false)
-	@JoinColumn(name = "doc_type_id", nullable = false)
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
+	@JoinColumn(name = "doc_type_id")
 	@JsonIgnore
 	private DocType docType;
 

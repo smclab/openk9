@@ -49,8 +49,8 @@ public class TokenTab extends K9Entity {
 	private Boolean filter;
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL, optional = false)
-	@JoinColumn(name = "tab_id", nullable = false)
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
+	@JoinColumn(name = "tab_id")
 	@JsonIgnore
 	private Tab tab;
 }

@@ -166,7 +166,7 @@ public class TabGraphqlResource {
 
 	@Mutation
 	public Uni<Tuple2<Tab, Long>> removeTokenTab(
-		@Id long tabId, @Id long tokenTabId) {
+		@Id long tabId, @Id Long tokenTabId) {
 		return _tabService.removeTokenTab(tabId, tokenTabId);
 	}
 

@@ -79,8 +79,6 @@ public class Tab extends K9Entity {
 			}
 		}
 		return false;
-
 	}
-
 
 }
