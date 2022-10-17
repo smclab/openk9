@@ -59,29 +59,16 @@ public class DatasourceProcessor {
 
 					long parsingDate = ingestionPayload.getParsingDate();
 
-					OffsetDateTime lastIngestionDate =
-						datasource.getLastIngestionDate();
-
 					OffsetDateTime instantParsingDate =
 						OffsetDateTime.ofInstant(
 							Instant.ofEpochMilli(parsingDate), ZoneOffset.UTC);
 
-					if (lastIngestionDate != null) {
+					datasource.setLastIngestionDate(instantParsingDate);
 
-						if (!lastIngestionDate.equals(instantParsingDate)) {
+					return s
+						.persist(datasource)
+						.map(v -> datasource);
 
-							datasource.setLastIngestionDate(
-								instantParsingDate);
-
-							return s
-								.persist(datasource)
-								.map(v -> datasource);
-
-						}
-
-					}
-
-					return Uni.createFrom().item(datasource);
 				})
 				.flatMap(datasource -> Mutiny2
 					.fetch(s, datasource.getEnrichPipeline())
