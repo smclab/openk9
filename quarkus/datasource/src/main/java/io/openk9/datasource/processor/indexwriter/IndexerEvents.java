@@ -1,5 +1,6 @@
 package io.openk9.datasource.processor.indexwriter;
 
+import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
@@ -16,7 +17,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
@@ -58,7 +58,7 @@ public class IndexerEvents {
 				new IllegalArgumentException("dataIndexId is null"));
 		}
 
-		return this._getMappings(dataIndex.getName())
+		return indexService.getMappings(dataIndex.getName())
 			.map(IndexerEvents::_toFlatFields)
 			.map(IndexerEvents::_toDocTypeFields)
 			.plug(docTypeFields -> Uni
@@ -230,25 +230,6 @@ public class IndexerEvents {
 
 	}
 
-	private Uni<Map<String, Object>> _getMappings(String indexName) {
-
-		return Uni
-			.createFrom()
-			.item(() -> {
-				try {
-					return client.indices().getMapping(
-						new GetMappingsRequest().indices(indexName),
-						RequestOptions.DEFAULT
-					);
-				}
-				catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			})
-			.map(response -> response.mappings().get(indexName).sourceAsMap());
-
-	}
-
 	private static Field _toFlatFields(Map<String, Object> mappings) {
 		Field root = Field.createRoot();
 		_toFlatFields(mappings, root);
@@ -361,5 +342,8 @@ public class IndexerEvents {
 
 	@Inject
 	EventBus eventBus;
+
+	@Inject
+	IndexService indexService;
 
 }

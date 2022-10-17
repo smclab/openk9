@@ -18,6 +18,7 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
@@ -29,6 +30,7 @@ import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.Json;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -75,6 +77,18 @@ public class DataIndexGraphqlResource {
 	@Query
 	public Uni<DataIndex> getDataIndex(@Id long id) {
 		return dataIndexService.findById(id);
+	}
+
+	public Uni<String> mappings(@Source DataIndex dataIndex) {
+		return indexService
+			.getMappings(dataIndex.getName())
+			.map(Json::encode);
+	}
+
+	public Uni<String> settings(@Source DataIndex dataIndex) {
+		return indexService
+			.getSettings(dataIndex.getName())
+			.map(Json::encode);
 	}
 
 	public Uni<Response<DataIndex>> patchDataIndex(@Id long id, DataIndexDTO dataIndexDTO) {
@@ -145,5 +159,8 @@ public class DataIndexGraphqlResource {
 
 	@Inject
 	DataIndexService dataIndexService;
+
+	@Inject
+	IndexService indexService;
 
 }
