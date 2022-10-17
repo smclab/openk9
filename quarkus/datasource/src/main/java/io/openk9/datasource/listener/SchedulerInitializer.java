@@ -55,7 +55,10 @@ import javax.inject.Inject;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 @ApplicationScoped
 public class SchedulerInitializer {
@@ -93,11 +96,30 @@ public class SchedulerInitializer {
 
 	}
 
+	public Uni<List<Long>> triggerJobs(List<Long> datasourceIds) {
+
+		List<Uni<Long>> triggers = new ArrayList<>(datasourceIds.size());
+
+		for (long datasourceId : datasourceIds) {
+			triggers.add(
+				triggerJob(datasourceId, String.valueOf(datasourceId))
+					.map(unused -> datasourceId)
+			);
+		}
+
+		return Uni
+			.combine()
+			.all()
+			.unis(triggers)
+			.combinedWith(Long.class, Function.identity());
+
+	}
+
 	
 	public Uni<Void> triggerJob(long datasourceId, String name) {
 
 		return Uni.createFrom().deferred(() -> {
-			logger.info("datasourceId: " + datasourceId + "trigger: " + name);
+			logger.info("datasourceId: " + datasourceId + " trigger: " + name);
 			return performTask(datasourceId);
 		});
 
