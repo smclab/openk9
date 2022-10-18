@@ -81,10 +81,10 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 
 				PhraseSuggestionBuilder builder =
 					SuggestBuilders.phraseSuggestion(
-							normalizedKeyword + ".suggest")
+							normalizedKeyword)
 						.addCandidateGenerator(
 							new DirectCandidateGeneratorBuilder(
-								normalizedKeyword + ".suggest")
+								normalizedKeyword)
 								.suggestMode("always"))
 						.text(token)
 						.size(_annotatorConfig.autocorrectionSize())
