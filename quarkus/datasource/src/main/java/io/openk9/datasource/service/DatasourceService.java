@@ -43,7 +43,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		return new String[] {Datasource_.NAME, Datasource_.DESCRIPTION};
 	}
 
-
 	public Uni<DataIndex> getDataIndex(Datasource datasource) {
 		return withTransaction(
 			s -> s.fetch(datasource.getDataIndex()));

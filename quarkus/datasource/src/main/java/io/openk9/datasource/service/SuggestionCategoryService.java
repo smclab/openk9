@@ -45,7 +45,11 @@ public class SuggestionCategoryService extends
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {SuggestionCategory_.NAME, SuggestionCategory_.DESCRIPTION,SuggestionCategory_.PRIORITY};
+		return new String[] {
+			SuggestionCategory_.NAME,
+			SuggestionCategory_.DESCRIPTION,
+			SuggestionCategory_.PRIORITY
+		};
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
