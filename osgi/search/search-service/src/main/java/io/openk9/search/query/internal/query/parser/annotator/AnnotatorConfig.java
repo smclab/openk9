@@ -48,6 +48,8 @@ public @interface AnnotatorConfig {
 
 	String[] autocompleteAnnotator() default {};
 
+	String[] autocorrectAnnotator() default {};
+
 	String[] aggregatorAnnotator() default {};
 
 	String[] nerAnnotator() default {
