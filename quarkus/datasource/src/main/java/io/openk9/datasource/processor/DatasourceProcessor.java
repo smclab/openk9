@@ -25,6 +25,7 @@ import io.openk9.datasource.processor.enrich.EnrichStepHandler;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.service.EnrichPipelineService;
+import io.openk9.datasource.tenant.TenantResolver;
 import io.openk9.datasource.util.MessageUtil;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -50,6 +51,8 @@ public class DatasourceProcessor {
 		IngestionPayload ingestionPayload = payload.getIngestionPayload();
 
 		long datasourceId = ingestionPayload.getDatasourceId();
+
+		ingestionPayload.setTenantId(tenantResolver.getTenantId());
 
 		return sf.withTransaction(s ->
 			s
@@ -141,6 +144,9 @@ public class DatasourceProcessor {
 	IngestionPayloadMapper ingestionPayloadMapper;
 
 	@Inject
-	private Logger logger;
+	TenantResolver tenantResolver;
+
+	@Inject
+	Logger logger;
 
 }

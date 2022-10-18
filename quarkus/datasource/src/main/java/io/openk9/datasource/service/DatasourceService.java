@@ -21,7 +21,6 @@ import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.util.Mutiny2;
@@ -36,16 +35,6 @@ import javax.inject.Inject;
 public class DatasourceService extends BaseK9EntityService<Datasource, DatasourceDTO> {
 	 DatasourceService(DatasourceMapper mapper) {
 		 this.mapper = mapper;
-	}
-
-	public Uni<EntityIndex> getEntityIndex(Datasource datasource) {
-		return withTransaction(
-			s -> Mutiny2.fetch(s, datasource.getEntityIndex()));
-	}
-
-	public Uni<EntityIndex> getEntityIndex(long datasourceId) {
-		return withTransaction(
-			() -> findById(datasourceId).flatMap(this::getEntityIndex));
 	}
 
 	public Uni<DataIndex> getDataIndex(Datasource datasource) {
@@ -66,30 +55,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
 		return withTransaction(
 			() -> findById(datasourceId).flatMap(this::getEnrichPipeline));
-	}
-
-	public Uni<Tuple2<Datasource, EntityIndex>> setEntityIndex(long datasourceId, long entityIndexId) {
-		return withTransaction(() -> findById(datasourceId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(datasource -> entityIndexService.findById(entityIndexId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(entityIndex -> {
-					datasource.setEntityIndex(entityIndex);
-					return persist(datasource)
-						.map(d -> Tuple2.of(d, entityIndex));
-				})));
-	}
-
-	public Uni<Datasource> unsetEntityIndex(long datasourceId) {
-		return withTransaction(() -> findById(datasourceId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(datasource -> {
-				datasource.setEntityIndex(null);
-				return persist(datasource);
-			}));
 	}
 
 	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(long datasourceId, long dataIndexId) {
@@ -177,10 +142,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				 return persist(dataSource).map(d -> Tuple2.of(d, pluginDriver));
 			 }));
 	}
-
-
-	@Inject
-	EntityIndexService entityIndexService;
 
 	@Inject
 	DataIndexService dataIndexService;

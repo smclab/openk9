@@ -75,16 +75,6 @@ public class Datasource extends K9Entity {
 	private DataIndex dataIndex;
 
 	@ToString.Exclude
-	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
-	@JoinColumn(name = "entity_index_id")
-	@JsonIgnore
-	private EntityIndex entityIndex;
-
-	@ToString.Exclude
 	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,

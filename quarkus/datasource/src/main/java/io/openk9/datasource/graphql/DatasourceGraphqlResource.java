@@ -21,7 +21,6 @@ import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.EntityIndex;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.resource.util.SortBy;
@@ -71,10 +70,6 @@ public class DatasourceGraphqlResource {
 		return datasourceService.getDataIndex(datasource.getId());
 	}
 
-	public Uni<EntityIndex> entityIndex(@Source Datasource datasource) {
-		return datasourceService.getEntityIndex(datasource.getId());
-	}
-
 	public Uni<PluginDriver> pluginDriver(@Source Datasource datasource) {
 		return datasourceService.getPluginDriver(datasource.getId());
 	}
@@ -114,19 +109,6 @@ public class DatasourceGraphqlResource {
 	@Mutation
 	public Uni<Datasource> deleteDatasource(@Id long datasourceId) {
 		return datasourceService.deleteById(datasourceId);
-	}
-
-	@Mutation
-	public Uni<Tuple2<Datasource, EntityIndex>> bindEntityIndexToDatasource(
-		@Id @Name("datasourceId") long datasourceId,
-		@Id @Name("entityIndexId") long entityIndexId) {
-		return datasourceService.setEntityIndex(datasourceId, entityIndexId);
-	}
-
-	@Mutation
-	public Uni<Datasource> unbindEntityIndexToDatasource(
-		@Id @Name("datasourceId") long datasourceId) {
-		return datasourceService.unsetEntityIndex(datasourceId);
 	}
 
 	@Mutation
