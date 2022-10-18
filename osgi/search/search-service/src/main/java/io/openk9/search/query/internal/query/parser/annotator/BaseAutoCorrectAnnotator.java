@@ -73,90 +73,107 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
+		String token;
+
 		if (tokens.length == 1) {
+			token = tokens[0];
+			if (Utils.inQuote(token)) {
+				return List.of(
+					CategorySemantics.of(
+						"$QUOTE_TOKEN",
+						Map.of(
+							"tokenType", "TEXT",
+							"value", token,
+							"score", 100.0f
+						)
+					)
+				);
+			}
 
-			String token = String.join(" ", tokens);
+		}
+		else {
+			token = String.join(" ", tokens);
+		}
 
-			for (String normalizedKeyword : normalizedKeywords) {
+		for (String normalizedKeyword : normalizedKeywords) {
 
-				PhraseSuggestionBuilder builder =
-					SuggestBuilders.phraseSuggestion(
+			PhraseSuggestionBuilder builder =
+				SuggestBuilders.phraseSuggestion(
+						normalizedKeyword)
+					.addCandidateGenerator(
+						new DirectCandidateGeneratorBuilder(
 							normalizedKeyword)
-						.addCandidateGenerator(
-							new DirectCandidateGeneratorBuilder(
-								normalizedKeyword)
-								.suggestMode("always"))
-						.text(token)
-						.size(_annotatorConfig.autocorrectionSize())
-						.maxErrors(2f)
-						.confidence(0f);
+							.suggestMode("always"))
+					.text(token)
+					.size(_annotatorConfig.autocorrectionSize())
+					.maxErrors(2f)
+					.confidence(0f);
 
-				SuggestBuilder suggestBuilder =
-					new SuggestBuilder().addSuggestion("suggestion", builder);
+			SuggestBuilder suggestBuilder =
+				new SuggestBuilder().addSuggestion("suggestion", builder);
 
-				searchSourceBuilder.suggest(suggestBuilder);
-			}
+			searchSourceBuilder.suggest(suggestBuilder);
+		}
 
-			SearchRequest searchRequest;
+		SearchRequest searchRequest;
 
-			if (tenantId == -1) {
-				searchRequest = new SearchRequest(
-					"*-*-data");
-			}
-			else {
-				searchRequest = new SearchRequest(
-					tenantId + "-*-data");
-			}
+		if (tenantId == -1) {
+			searchRequest = new SearchRequest(
+				"*-*-data");
+		}
+		else {
+			searchRequest = new SearchRequest(
+				tenantId + "-*-data");
+		}
 
-			searchRequest.source(searchSourceBuilder);
+		searchRequest.source(searchSourceBuilder);
 
-			try {
+		try {
 
-				List<CategorySemantics> categorySemantics = new ArrayList<>();
+			List<CategorySemantics> categorySemantics = new ArrayList<>();
 
-				SearchResponse search =
-					restHighLevelClient.search(
-						searchRequest, RequestOptions.DEFAULT);
+			SearchResponse search =
+				restHighLevelClient.search(
+					searchRequest, RequestOptions.DEFAULT);
 
-				for (Suggest.Suggestion<? extends Suggest.Suggestion.Entry<?
-					extends Suggest.Suggestion.Entry.Option>> entries : search.getSuggest()) {
+			for (Suggest.Suggestion<? extends Suggest.Suggestion.Entry<?
+				extends Suggest.Suggestion.Entry.Option>> entries : search.getSuggest()) {
 
-					_log.info("Entries: " + entries.toString());
+				_log.info("Entries: " + entries.toString());
 
-					for (Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option> entry : entries) {
+				for (Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option> entry : entries) {
 
-						for (Suggest.Suggestion.Entry.Option option : entry) {
+					for (Suggest.Suggestion.Entry.Option option : entry) {
 
-							String text = option.getText().string();
+						String text = option.getText().string();
 
-							categorySemantics.add(
-								CategorySemantics.of(
-									"$AUTOCORRECT",
-									Map.of(
-										"tokenType", "AUTOCORRECT",
-										"value", text,
-										"score", 0.0f
-									)
+						categorySemantics.add(
+							CategorySemantics.of(
+								"$AUTOCORRECT",
+								Map.of(
+									"tokenType", "AUTOCORRECT",
+									"value", text,
+									"score", 0.0f
 								)
-							);
-
-						}
+							)
+						);
 
 					}
 
 				}
 
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"for token {} found {} category semantics", token,
-						categorySemantics);
-				}
+			}
 
-				return categorySemantics;
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"for token {} found {} category semantics", token,
+					categorySemantics);
 			}
-			catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+
+			return categorySemantics;
+		}
+		catch (IOException e) {
+			_log.error(e.getMessage(), e);
 		}
 
 		return List.of();
