@@ -106,8 +106,8 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 							.suggestMode("always"))
 					.text(token)
 					.size(_annotatorConfig.autocorrectionSize())
-					.maxErrors(2f)
-					.confidence(0f);
+					.maxErrors(2)
+					.gramSize(3);
 
 			SuggestBuilder suggestBuilder =
 				new SuggestBuilder().addSuggestion("suggestion", builder);
