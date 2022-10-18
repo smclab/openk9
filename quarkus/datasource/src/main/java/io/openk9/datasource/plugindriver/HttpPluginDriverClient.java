@@ -8,17 +8,13 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @ApplicationScoped
 public class HttpPluginDriverClient {
 
 	public Uni<HttpResponse<Buffer>> invoke(
 		HttpPluginDriverInfo httpPluginDriverInfo,
-		OffsetDateTime fromDate, long datasourceId, String scheduleId,
-		Map<String, Object> datasourceConfig) {
+		HttpPluginDriverContext httpPluginDriverContext) {
 
 		String path = httpPluginDriverInfo.getPath();
 
@@ -44,20 +40,6 @@ public class HttpPluginDriverClient {
 			port = 8080;
 		}
 
-		Map<String, Object> body = httpPluginDriverInfo.getBody();
-
-		if (body == null) {
-			body = new HashMap<>();
-		}
-
-		body.put("timestamp", fromDate.toInstant().toEpochMilli());
-		body.put("datasourceId", datasourceId);
-		body.put("scheduleId", scheduleId);
-
-		if (datasourceConfig != null) {
-			body.putAll(datasourceConfig);
-		}
-
 		return webClient.request(
 				httpMethod.getHttpMethod(),
 				port,
@@ -65,14 +47,14 @@ public class HttpPluginDriverClient {
 				path
 			)
 			.ssl(httpPluginDriverInfo.isSecure())
-			.sendJson(body);
+			.sendJson(httpPluginDriverContext);
 	}
 
 	public void invokeAndForget(
 		HttpPluginDriverInfo httpPluginDriverInfo,
-		OffsetDateTime fromDate, long datasourceId, String scheduleId,
-		Map<String, Object> datasourceConfig) {
-		invoke(httpPluginDriverInfo, fromDate, datasourceId, scheduleId, datasourceConfig)
+		HttpPluginDriverContext httpPluginDriverContext) {
+
+		invoke(httpPluginDriverInfo, httpPluginDriverContext)
 			.subscribe()
 			.with(
 				response -> {

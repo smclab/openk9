@@ -20,8 +20,10 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.tenant.TenantResolver;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
@@ -211,8 +213,14 @@ public class SchedulerInitializer {
 									Json.decodeValue(
 										pluginDriver.getJsonConfig(),
 										HttpPluginDriverInfo.class),
-									lastIngestionDate, datasource.getId(), scheduleId,
-									new JsonObject(datasource.getJsonConfig()).getMap()
+									HttpPluginDriverContext
+										.builder()
+										.timestamp(lastIngestionDate)
+										.tenantId(tenantResolver.getTenantId())
+										.datasourceId(datasource.getId())
+										.scheduleId(scheduleId)
+										.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
+										.build()
 								);
 							}
 						}
@@ -267,5 +275,8 @@ public class SchedulerInitializer {
 
 	@Inject
 	HttpPluginDriverClient httpPluginDriverClient;
+
+	@Inject
+	TenantResolver tenantResolver;
 
 }
