@@ -30,6 +30,7 @@ import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.phrase.DirectCandidateGeneratorBuilder;
@@ -77,6 +78,7 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 			String token = String.join(" ", tokens);
 
 			for (String normalizedKeyword : normalizedKeywords) {
+
 				PhraseSuggestionBuilder builder =
 					SuggestBuilders.phraseSuggestion(
 							normalizedKeyword + ".suggest")
@@ -85,12 +87,13 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 								normalizedKeyword + ".suggest")
 								.suggestMode("always"))
 						.text(token)
-						.size(2)
+						.size(_annotatorConfig.autocorrectionSize())
 						.maxErrors(2f)
 						.confidence(0f);
 
 				SuggestBuilder suggestBuilder =
 					new SuggestBuilder().addSuggestion("suggestion", builder);
+
 				searchSourceBuilder.suggest(suggestBuilder);
 			}
 
@@ -115,27 +118,30 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 					restHighLevelClient.search(
 						searchRequest, RequestOptions.DEFAULT);
 
-				for (SearchHit hit : search.getHits()) {
-					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+				for (Suggest.Suggestion<? extends Suggest.Suggestion.Entry<?
+					extends Suggest.Suggestion.Entry.Option>> entries : search.getSuggest()) {
 
-					_log.info(sourceAsMap.toString());
+					for (Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option> entry : entries) {
 
-					for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
+						for (Suggest.Suggestion.Entry.Option option : entry) {
 
-						Object value = entry.getValue();
+							String text = option.getText().string();
 
-						categorySemantics.add(
-							CategorySemantics.of(
-								"$AUTOCORRECT",
-								Map.of(
-									"tokenType", "AUTOCORRECT",
-									"value", value,
-									"score", 0.1f
+							categorySemantics.add(
+								CategorySemantics.of(
+									"$AUTOCORRECT",
+									Map.of(
+										"tokenType", "AUTOCORRECT",
+										"value", text,
+										"score", 0.1f
+									)
 								)
-							)
-						);
+							);
+
+						}
 
 					}
+
 				}
 
 				if (_log.isDebugEnabled()) {
