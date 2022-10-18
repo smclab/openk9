@@ -135,7 +135,7 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 									Map.of(
 										"tokenType", "AUTOCORRECT",
 										"value", text,
-										"score", 0.1f
+										"score", 0.0f
 									)
 								)
 							);
