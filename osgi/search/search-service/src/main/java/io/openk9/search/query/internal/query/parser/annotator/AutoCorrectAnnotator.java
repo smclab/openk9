@@ -19,7 +19,7 @@ package io.openk9.search.query.internal.query.parser.annotator;
 
 import io.openk9.search.client.api.RestHighLevelClientProvider;
 
-public class AutoCorrectAnnotator extends BaseAutoCompleteAnnotator {
+public class AutoCorrectAnnotator extends BaseAutoCorrectAnnotator {
 
 	public AutoCorrectAnnotator(
 		String keyword,
