@@ -77,6 +77,10 @@
 	},
 	{
 		"lhs": "$Content",
+		"rhs": "$AUTOCORRECT"
+	},
+	{
+		"lhs": "$Content",
 		"rhs": "$QUOTE_TOKEN"
 	}
 ]

@@ -39,6 +39,8 @@ public @interface AnnotatorConfig {
 
 	int autocompleteSize() default 10;
 
+	int autocorrectionSize() default 2;
+
 	long timeoutMs() default 10_000;
 
 	String[] autocompleteEntityFields() default {"name", "type", "id", "tenantId"};
