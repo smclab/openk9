@@ -40,6 +40,15 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 		 this.mapper = mapper;
 	}
 
+	@Override
+	public Class<QueryAnalysis> getEntityClass() {
+		return QueryAnalysis.class;
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {QueryAnalysis_.NAME, QueryAnalysis_.DESCRIPTION};
+	}
 
 	public Uni<Connection<Annotator>> getAnnotators(
 		Long id, String after, String before, Integer first, Integer last,
@@ -60,20 +69,6 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 			ruleService.getSearchFields(), after, before, first,
 			last, searchText, sortByList, notEqual);
 	}
-
-	@Override
-	public Class<QueryAnalysis> getEntityClass() {
-		return QueryAnalysis.class;
-	}
-
-	@Override
-	public String[] getSearchFields() {
-		return new String[] {QueryAnalysis_.NAME, QueryAnalysis_.DESCRIPTION};
-	}
-
-
-
-
 
 	public Uni<Tuple2<QueryAnalysis, Rule>> addRuleToQueryAnalysis(
 		long id, long ruleId) {

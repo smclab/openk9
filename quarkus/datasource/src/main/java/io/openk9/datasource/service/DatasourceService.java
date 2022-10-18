@@ -20,6 +20,7 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
@@ -36,6 +37,12 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	 DatasourceService(DatasourceMapper mapper) {
 		 this.mapper = mapper;
 	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {Datasource_.NAME, Datasource_.DESCRIPTION};
+	}
+
 
 	public Uni<DataIndex> getDataIndex(Datasource datasource) {
 		return withTransaction(

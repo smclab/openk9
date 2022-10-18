@@ -60,6 +60,11 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		 this.mapper = mapper;
 	}
 
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {EnrichPipeline_.NAME, EnrichPipeline_.DESCRIPTION};
+	}
+
 	public Uni<Connection<EnrichItem>> getEnrichItemsConnection(
 		long enrichPipelineId, String after,
 		String before, Integer first, Integer last, String searchText,

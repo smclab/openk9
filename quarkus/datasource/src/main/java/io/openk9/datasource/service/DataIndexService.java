@@ -43,6 +43,11 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 		 this.mapper = mapper;
 	}
 
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {DataIndex_.NAME, DataIndex_.DESCRIPTION};
+	}
+
 	public Uni<List<DocType>> getDocTypes(
 		DataIndex dataIndex) {
 		return withTransaction(s -> Mutiny2.fetch(s, dataIndex.getDocTypes()));

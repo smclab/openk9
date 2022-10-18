@@ -32,6 +32,11 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 		this.mapper = mapper;
 	}
 
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {Tab_.NAME, Tab_.DESCRIPTION};
+	}
+
 	public Uni<Connection<TokenTab>> getTokenTabsConnection(
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {

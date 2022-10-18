@@ -49,6 +49,11 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		this.mapper = mapper;
 	}
 
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {DocType_.NAME, DocType_.DESCRIPTION};
+	}
+
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
