@@ -17,11 +17,12 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.dto.ReindexRequestDto;
-import io.openk9.datasource.dto.ReindexResponseDto;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
 import io.smallrye.mutiny.Uni;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.hibernate.reactive.mutiny.Mutiny;
 
@@ -96,5 +97,18 @@ public class ReindexResource {
 
 	@Inject
 	Instance<SchedulerInitializer> schedulerInitializer;
+
+	@Data
+	@AllArgsConstructor(staticName = "of")
+	@NoArgsConstructor(staticName = "of")
+	public static class ReindexResponseDto {
+		private long datasourceId;
+		private boolean status;
+	}
+
+	@Data
+	public static class ReindexRequestDto {
+		private List<Long> datasourceIds;
+	}
 
 }

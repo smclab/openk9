@@ -26,8 +26,8 @@
   <properties>
     <failsafe.useModulePath>false</failsafe.useModulePath>
     <jandex-maven-plugin.version>1.2.2</jandex-maven-plugin.version>
-    <maven.compiler.release>11</maven.compiler.release>
-    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
