@@ -21,6 +21,7 @@ import org.eclipse.microprofile.graphql.Description;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @Description("A connection to a list of items.")
 public interface Connection<T> {
@@ -38,6 +39,8 @@ public interface Connection<T> {
     PageInfo getPageInfo();
 
     <R> Connection<R> map(Function<T, R> mapper);
+
+    Connection<T> filter(Predicate<T> filter);
 
     static <R> Connection<R> of(List<Edge<R>> edges, PageInfo pageInfo) {
         return new DefaultConnection<>(edges, pageInfo);

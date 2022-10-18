@@ -416,11 +416,6 @@ public class SuggestionsHTTPHandler extends BaseSearchHTTPHandler {
 
 						long datasourceIdL = Long.parseLong(value);
 
-						_datasource(
-							datasourceList,
-							pluginDriverDTOList,
-							datasourceIdCategoryId,
-							addSuggestions, datasourceIdL);
 
 						break;
 					case "entities.context":

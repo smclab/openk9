@@ -5,8 +5,10 @@ import io.openk9.searcher.dto.SearchRequest;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.Searcher;
+import io.openk9.searcher.mapper.InternalSearcherMapper;
 import io.openk9.searcher.mapper.SearcherMapper;
 import io.openk9.searcher.payload.response.Response;
+import io.openk9.searcher.payload.response.SuggestionsResponse;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
@@ -30,7 +32,9 @@ import org.jboss.logging.Logger;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -41,23 +45,19 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
-@Path("/v1/search")
+@Path("/v1")
 public class SearchResource {
 
 	@Context
 	HttpServerRequest request;
 
 	@POST
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<Response> search(SearchRequest searchRequest) {
 
 		QueryParserRequest queryParserRequest =
-			searcherMapper
-				.toQueryParserRequest(searchRequest)
-				.toBuilder()
-				.setVirtualHost(request.host())
-				.build();
-
-		logger.info("queryParserRequest: " + queryParserRequest);
+			getQueryParserRequest(searchRequest);
 
 		Uni<QueryParserResponse> queryParserResponseUni =
 			searcherClient.queryParser(queryParserRequest);
@@ -106,6 +106,30 @@ public class SearchResource {
 			});
 
 	}
+
+	@POST
+	@Path("/suggestions")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<SuggestionsResponse> suggestions(SearchRequest searchRequest) {
+
+		QueryParserRequest queryParserRequest =
+			getQueryParserRequest(searchRequest);
+
+		return searcherClient
+			.suggestionsQueryParser(queryParserRequest)
+			.map(internalSearcherMapper::toSuggestionsResponse);
+
+	}
+
+	private QueryParserRequest getQueryParserRequest(
+		SearchRequest searchRequest) {
+		return searcherMapper
+			.toQueryParserRequest(searchRequest)
+			.toBuilder()
+			.setVirtualHost(request.host())
+			.build();
+	}
+
 
 	protected final <Resp> Resp parseEntity(final HttpEntity entity,
 											final CheckedFunction<XContentParser, Resp, IOException> entityParser) throws IOException {
@@ -201,6 +225,9 @@ public class SearchResource {
 
 	@Inject
 	SearcherMapper searcherMapper;
+
+	@Inject
+	InternalSearcherMapper internalSearcherMapper;
 
 	@Inject
 	RestHighLevelClient client;

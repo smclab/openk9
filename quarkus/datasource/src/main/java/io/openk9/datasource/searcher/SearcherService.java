@@ -2,59 +2,62 @@ package io.openk9.datasource.searcher;
 
 import com.google.protobuf.ByteString;
 import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Datasource_;
-import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.DocType_;
-import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.SearchConfig_;
-import io.openk9.datasource.model.Tenant;
-import io.openk9.datasource.model.Tenant_;
-import io.openk9.datasource.searcher.parser.ParserContext;
-import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
 import io.openk9.datasource.searcher.util.Utils;
+import io.openk9.datasource.tenant.TenantResolver;
+import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
-import io.openk9.searcher.mapper.SearcherMapper;
+import io.openk9.searcher.grpc.Suggestions;
+import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.common.io.stream.OutputStreamStreamOutput;
-import org.elasticsearch.common.xcontent.ToXContent;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregation;
+import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.composite.CompositeValuesSourceBuilder;
+import org.elasticsearch.search.aggregations.bucket.composite.TermsValuesSourceBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.filter.ParsedFilter;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.control.ActivateRequestContext;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Root;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 @GrpcService
-public class SearcherService implements Searcher {
+public class SearcherService extends BaseSearchService implements Searcher {
 	@Override
 	@ActivateRequestContext
 	public Uni<QueryParserResponse> queryParser(QueryParserRequest request) {
@@ -62,23 +65,7 @@ public class SearcherService implements Searcher {
 		return Uni.createFrom().deferred(() -> {
 
 			Map<String, List<ParserSearchToken>> tokenGroup =
-				request
-					.getSearchQueryList()
-					.stream()
-					.map(searcherMapper::toParserSearchToken)
-					.collect(
-						Collectors.groupingBy(ParserSearchToken::getTokenType));
-
-			String suggestKeyword = request.getSuggestKeyword();
-
-			if (StringUtils.isNotBlank(suggestKeyword)) {
-
-				List<ParserSearchToken> textTokens = tokenGroup.computeIfAbsent(
-					ParserSearchToken.TEXT, k -> new ArrayList<>(1));
-
-				textTokens.add(ParserSearchToken.ofText(suggestKeyword));
-
-			}
+				createTokenGroup(request);
 
 			if (tokenGroup.isEmpty()) {
 				return Uni
@@ -91,72 +78,17 @@ public class SearcherService implements Searcher {
 					);
 			}
 
-			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-
-			return sf
-				.openStatelessSession()
-				.flatMap(s -> _getTenantAndFetchRelations(s, request.getVirtualHost())
-					.eventually(s::close))
+			return getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
 				.map(tenant -> {
 
-					for (Map.Entry<String, List<ParserSearchToken>> entry : tokenGroup.entrySet()) {
-						String tokenType = entry.getKey();
-						List<ParserSearchToken> parserSearchTokens =
-							entry.getValue();
-						for (QueryParser queryParser : queryParserInstance) {
-							if (queryParser.isQueryParserGroup() &&
-								queryParser.getType().equals(tokenType)) {
-								queryParser.accept(
-									ParserContext
-										.builder()
-										.tokenTypeGroup(parserSearchTokens)
-										.mutableQuery(boolQueryBuilder)
-										.currentTenant(tenant)
-										.queryParserConfig(
-											getQueryParserConfig(
-												tenant, tokenType))
-										.build()
-								);
-							}
-						}
+					if (tenant == null) {
+						return QueryParserResponse
+							.newBuilder()
+							.build();
 					}
 
-					List<ParserSearchToken> parserSearchTokens = null;
-
-					for (QueryParser queryParser : queryParserInstance) {
-						if (!queryParser.isQueryParserGroup()) {
-
-							if (parserSearchTokens == null) {
-								parserSearchTokens = tokenGroup
-									.values()
-									.stream()
-									.flatMap(Collection::stream)
-									.toList();
-							}
-
-							queryParser.accept(
-								ParserContext
-									.builder()
-									.tokenTypeGroup(parserSearchTokens)
-									.mutableQuery(boolQueryBuilder)
-									.currentTenant(tenant)
-									.queryParserConfig(
-										getQueryParserConfig(
-											tenant, queryParser.getType()))
-									.build()
-							);
-
-						}
-					}
-
-					String[] indexNames =
-						tenant
-							.getDatasources()
-							.stream()
-							.map(Datasource::getDataIndex)
-							.map(DataIndex::getName)
-							.distinct()
-							.toArray(String[]::new);
+					BoolQueryBuilder boolQueryBuilder =
+						createBoolQuery(tokenGroup, tenant);
 
 					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -169,25 +101,43 @@ public class SearcherService implements Searcher {
 						searchSourceBuilder.size(request.getRange(1));
 					}
 
-					HighlightBuilder highlightBuilder = new HighlightBuilder();
-
 					List<DocTypeField> docTypeFieldList =
 						Utils
 							.getDocTypeFieldsFrom(tenant)
 							.toList();
 
-					docTypeFieldList
-						.stream()
-						.filter(DocTypeField::isText)
-						.map(DocTypeField::getName)
-						.distinct()
-						.forEach(highlightBuilder::field);
+					List<String> includes = new ArrayList<>();
+					List<String> excludes = new ArrayList<>();
+					Set<HighlightBuilder.Field> highlightFields = new HashSet<>();
+
+					for (DocTypeField docTypeField : docTypeFieldList) {
+						String name = docTypeField.getName();
+						if (docTypeField.isDefaultExclude()) {
+							excludes.add(name);
+						}
+						else {
+							includes.add(name);
+							if (docTypeField.isText()) {
+								highlightFields.add(new HighlightBuilder.Field(name));
+							}
+						}
+
+					}
+
+					HighlightBuilder highlightBuilder = new HighlightBuilder();
 
 					highlightBuilder.forceSource(true);
 
 					highlightBuilder.tagsSchema("default");
 
+					highlightBuilder.fields().addAll(highlightFields);
+
 					searchSourceBuilder.highlighter(highlightBuilder);
+
+					searchSourceBuilder.fetchSource(
+						includes.toArray(String[]::new),
+						excludes.toArray(String[]::new)
+					);
 
 					List<SearchTokenRequest> searchQuery =
 						request.getSearchQueryList();
@@ -202,30 +152,24 @@ public class SearcherService implements Searcher {
 							searchSourceBuilder.minScore(searchConfig.getMinScore());
 						}
 						else {
-							searchSourceBuilder.minScore(0.1f);
+							searchSourceBuilder.minScore(0.5f);
 						}
 
 					}
 
-					_includeExcludeFields(
-						searchSourceBuilder, docTypeFieldList);
+					String[] indexNames =
+						tenant
+							.getDatasources()
+							.stream()
+							.map(Datasource::getDataIndex)
+							.map(DataIndex::getName)
+							.distinct()
+							.toArray(String[]::new);
 
-					ByteString.Output outputStream = ByteString.newOutput();
-
-					try (
-						XContentBuilder builder =
-							searchSourceBuilder.toXContent(
-								new XContentBuilder(
-									XContentType.JSON.xContent(), new OutputStreamStreamOutput(outputStream)),
-								ToXContent.EMPTY_PARAMS)) {
-					}
-					catch (IOException e) {
-						throw new RuntimeException(e);
-					}
 
 					return QueryParserResponse
 						.newBuilder()
-						.setQuery(outputStream.toByteString())
+						.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
 						.addAllIndexName(List.of(indexNames))
 						.build();
 
@@ -235,117 +179,381 @@ public class SearcherService implements Searcher {
 
 	}
 
-	private void _includeExcludeFields(
-		SearchSourceBuilder searchSourceBuilder,
-		List<DocTypeField> documentTypeList) {
+	@Override
+	public Uni<SuggestionsResponse> suggestionsQueryParser(QueryParserRequest request) {
+		return Uni.createFrom().deferred(() -> {
 
-		Map<Boolean, String[]> collect =
-			documentTypeList
-				.stream()
-				.collect(
-					Collectors.partitioningBy(
-						DocTypeField::isDefaultExclude,
-						Collectors.mapping(
-							DocTypeField::getName,
-							Collectors.collectingAndThen(
-								Collectors.toList(),
-								l -> l.toArray(String[]::new))))
-				);
+			Map<String, List<ParserSearchToken>> tokenGroup =
+				createTokenGroup(request);
 
-		searchSourceBuilder.fetchSource(
-			collect.get(false), collect.get(true));
+			if (tokenGroup.isEmpty()) {
+				return Uni
+					.createFrom()
+					.item(
+						SuggestionsResponse
+							.newBuilder()
+							.build()
+					);
+			}
 
+			return getTenantAndFetchRelations(
+				request.getVirtualHost(), true, request.getSuggestionCategoryId())
+				.flatMap(tenant -> {
+
+					if (tenant == null) {
+						return Uni.createFrom().item(
+							SuggestionsResponse
+								.newBuilder()
+								.build()
+						);
+					}
+
+					BoolQueryBuilder boolQueryBuilder =
+						createBoolQuery(tokenGroup, tenant);
+
+					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+					searchSourceBuilder.query(boolQueryBuilder);
+
+					List<CompositeValuesSourceBuilder<?>> compositeValuesSourceBuilders =
+						new ArrayList<>();
+
+					Set<SuggestionCategory> suggestionCategories =
+						tenant.getSuggestionCategories();
+
+					String suggestKeyword = request.getSuggestKeyword();
+
+					if (!suggestionCategories.isEmpty()) {
+
+						for (SuggestionCategory suggestionCategory : suggestionCategories) {
+							for (DocTypeField docTypeField : suggestionCategory.getDocTypeFields()) {
+								String name = docTypeField.getName();
+								compositeValuesSourceBuilders.add(
+									new TermsValuesSourceBuilder(name)
+										.field(name)
+										.missingBucket(true));
+							}
+						}
+
+						CompositeAggregationBuilder compositeAggregation =
+							AggregationBuilders.composite(
+								"composite", compositeValuesSourceBuilders);
+
+						String afterKey = request.getAfterKey();
+
+						if (StringUtils.isNotBlank(afterKey)) {
+							byte[] afterKeyDecoded =
+								Base64.getDecoder().decode(afterKey);
+
+							Map<String, Object> map =
+								new JsonObject(
+									new String(afterKeyDecoded)).getMap();
+
+							compositeAggregation.aggregateAfter(map);
+
+						}
+
+						if (request.getRangeCount() == 2) {
+							int size = request.getRange(1);
+							compositeAggregation.size(size);
+						}
+
+						if (
+							request.getSuggestionCategoryId() != 0 &&
+							StringUtils.isNotBlank(suggestKeyword)) {
+
+							SuggestionCategory suggestionCategory =
+								suggestionCategories.iterator().next();
+
+							QueryBuilder matchQueryBuilder =
+								QueryBuilders.termsQuery(
+									suggestionCategory.getName(),
+									suggestKeyword.toLowerCase());
+
+							FilterAggregationBuilder suggestions =
+								AggregationBuilders
+									.filter("suggestions", matchQueryBuilder)
+									.subAggregation(compositeAggregation);
+
+							searchSourceBuilder.aggregation(suggestions);
+						}
+						else {
+							searchSourceBuilder.aggregation(
+								compositeAggregation);
+						}
+
+					}
+
+					searchSourceBuilder.from(0);
+					searchSourceBuilder.size(0);
+
+					searchSourceBuilder.highlighter(null);
+
+					String[] indexNames =
+						tenant
+							.getDatasources()
+							.stream()
+							.map(Datasource::getDataIndex)
+							.map(DataIndex::getName)
+							.distinct()
+							.toArray(String[]::new);
+
+					SearchRequest searchRequest =
+						new SearchRequest(indexNames, searchSourceBuilder);
+
+					Uni<SearchResponse> searchResponseUni = _search(searchRequest);
+
+					return searchResponseUni
+						.flatMap(searchResponse -> {
+
+							Aggregations aggregations = searchResponse.getAggregations();
+
+							if (aggregations == null) {
+								return Uni.createFrom().item(
+									SuggestionsResponse
+										.newBuilder()
+										.build());
+							}
+
+							Uni<Map<String, String[]>> suggestionsEntities =
+								_suggestionsEntities(searchResponse);
+
+							return suggestionsEntities.map(entityMap -> {
+								CompositeAggregation responseCompositeAggregation =
+									_getCompositeAggregation(searchResponse);
+
+								if (responseCompositeAggregation == null) {
+									return SuggestionsResponse
+										.newBuilder()
+										.build();
+								}
+
+								Map<String, Long> fieldNameCategoryIdMap =
+									suggestionCategories
+										.stream()
+										.flatMap(e -> e
+											.getDocTypeFields()
+											.stream()
+											.map(dtf ->
+												Map.entry(
+													dtf.getName(),
+													e.getId()
+												)
+											)
+										)
+										.collect(
+											Collectors.toMap(
+												Map.Entry::getKey,
+												Map.Entry::getValue
+											)
+										);
+
+								List<? extends CompositeAggregation.Bucket> buckets =
+									responseCompositeAggregation.getBuckets();
+
+								LinkedList<Suggestions> suggestions =
+									new LinkedList<>();
+
+								BiConsumer<String, Suggestions> addSuggestions;
+
+								if (StringUtils.isNotBlank(suggestKeyword)) {
+									addSuggestions = (key, sugg) -> {
+
+										if (!suggestions.contains(sugg)) {
+											if (containsIgnoreCase(key, suggestKeyword)) {
+												suggestions.addFirst(sugg);
+											}
+										}
+									};
+								}
+								else {
+									addSuggestions = (key, sugg) -> {
+										if (!suggestions.contains(sugg)) {
+											suggestions.add(sugg);
+										}
+									};
+								}
+
+								for (CompositeAggregation.Bucket bucket : buckets) {
+
+									Map<String, Object> keys = new HashMap<>(bucket.getKey());
+
+									for (Map.Entry<String, Object> entry : keys.entrySet()) {
+
+										String key = entry.getKey();
+										String value = (String)entry.getValue();
+
+										Long suggestionCategoryId =
+											fieldNameCategoryIdMap.get(key);
+
+										if (value == null) {
+											continue;
+										}
+
+										switch (key.replace(".keyword", "")) {
+											case "entities.context":
+												break;
+											case "entities.id":
+												String[] typeName = entityMap.get(value);
+
+												if (typeName != null) {
+													String type = typeName[0];
+													String name = typeName[1];
+
+													String entitiesContext =
+														(String)keys.get("entities.context");
+
+													if (entitiesContext != null) {
+														addSuggestions.accept(
+															name,
+															SuggestionsUtil.entity(
+																value,
+																suggestionCategoryId,
+																type, name, entitiesContext)
+														);
+													}
+													else {
+														addSuggestions.accept(
+															name,
+															SuggestionsUtil.entity(
+																value, suggestionCategoryId,
+																type, name)
+														);
+													}
+												}
+												break;
+											case "documentTypes":
+												addSuggestions.accept(
+													value,
+													SuggestionsUtil.docType(
+														value,
+														suggestionCategoryId)
+												);
+												break;
+											default:
+												addSuggestions.accept(
+													value, SuggestionsUtil.text(
+														value, suggestionCategoryId, key)
+												);
+
+										}
+									}
+
+								}
+
+								Map<String, Object> map =
+									responseCompositeAggregation.afterKey();
+								String newAfterKey = "";
+
+								if (map != null) {
+									newAfterKey = Json.encode(map);
+									newAfterKey = Base64.getEncoder().encodeToString(
+										newAfterKey.getBytes(StandardCharsets.UTF_8));
+								}
+
+								return SuggestionsResponse
+									.newBuilder()
+									.addAllResult(suggestions)
+									.setAfterKey(newAfterKey)
+									.build();
+							});
+
+					});
+
+				});
+
+		});
 	}
 
-	private Uni<Tenant> _getTenantAndFetchRelations(
-		Mutiny.StatelessSession s, String virtualHost) {
+	private Uni<Map<String, String[]>> _suggestionsEntities(SearchResponse searchResponse) {
 
-		CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
+		SearchRequest searchRequestEntity =
+			new SearchRequest(tenantResolver.getTenantId() + "-entity");
 
-		CriteriaQuery<Tenant> criteriaQuery = criteriaBuilder.createQuery(Tenant.class);
+		CompositeAggregation compositeAggregation =
+			_getCompositeAggregation(searchResponse);
 
-		Root<Tenant> tenantRoot = criteriaQuery.from(Tenant.class);
+		List<? extends CompositeAggregation.Bucket> buckets =
+			compositeAggregation.getBuckets();
 
-		tenantRoot
-			.fetch(Tenant_.searchConfig, JoinType.LEFT)
-			.fetch(SearchConfig_.queryParserConfigs, JoinType.LEFT);
+		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-		Fetch<Tenant, Datasource> datasourceRoot =
-			tenantRoot.fetch(Tenant_.datasources, JoinType.LEFT);
-
-		Fetch<Datasource, DataIndex> dataIndexRoot =
-			datasourceRoot.fetch(Datasource_.dataIndex, JoinType.LEFT);
-
-		Fetch<DataIndex, DocType> docTypeFetch =
-			dataIndexRoot.fetch(DataIndex_.docTypes, JoinType.LEFT);
-
-		docTypeFetch.fetch(DocType_.docTypeFields, JoinType.LEFT);
-
-		criteriaQuery.where(
-			criteriaBuilder.equal(
-				tenantRoot.get(Tenant_.virtualHost), virtualHost)
-		);
-
-		criteriaQuery.distinct(true);
-
-		return s
-			.createQuery(criteriaQuery)
-			.setCacheable(true)
-			.getSingleResult();
-
-
-	}
-
-	public static JsonObject getQueryParserConfig(Tenant tenant, String tokenType) {
-
-		SearchConfig searchConfig = tenant.getSearchConfig();
-
-		if (searchConfig == null) {
-			return EMPTY_JSON;
-		}
-
-		return searchConfig
-			.getQueryParserConfigs()
+		buckets
 			.stream()
-			.filter(queryParserConfig -> queryParserConfig.getType().equals(
-				tokenType))
-			.findFirst()
-			.map(SearcherService::toJsonObject)
-			.orElse(EMPTY_JSON);
+			.map(bucket -> (String)bucket.getKey().get("entities.id"))
+			.filter(Objects::nonNull)
+			.distinct()
+			.forEach(entityId -> boolQueryBuilder.should(
+				QueryBuilders.matchQuery("id", entityId)
+			));
+
+		SearchSourceBuilder ssb = searchRequestEntity.source();
+
+		ssb.query(boolQueryBuilder);
+		ssb.size(1000);
+		ssb.fetchSource(new String[]{"name", "id", "type"}, null);
+
+		return _search(searchRequestEntity)
+			.map(entityResponse -> {
+
+				Map<String, String[]> entityMap = new HashMap<>();
+
+				for (SearchHit hit : entityResponse.getHits()) {
+					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+					String name =(String)sourceAsMap.get("name");
+					String type =(String)sourceAsMap.get("type");
+					String entityId =(String)sourceAsMap.get("id");
+					entityMap.put(entityId, new String[]{type, name});
+				}
+
+				return entityMap;
+
+			});
 	}
 
-	public static JsonObject toJsonObject(QueryParserConfig queryParserConfig) {
+	private Uni<SearchResponse> _search(SearchRequest searchRequest) {
+		return Uni
+			.createFrom()
+			.emitter(sink -> client.searchAsync(
+				searchRequest, RequestOptions.DEFAULT,
+				UniActionListener.of(sink)));
+	}
 
-		String jsonConfig = queryParserConfig.getJsonConfig();
+	private CompositeAggregation _getCompositeAggregation(
+		SearchResponse searchResponse) {
+		Aggregations aggregations = searchResponse.getAggregations();
 
-		if (jsonConfig == null) {
-			Logger
-				.getLogger(SearcherService.class)
-				.warn("jsonConfig is null for queryParserConfig.type: " + queryParserConfig.getType());
-			return EMPTY_JSON;
+		ParsedFilter suggestions = aggregations.get("suggestions");
+
+		if (suggestions != null) {
+			return suggestions.getAggregations().get("composite");
+		}
+		else {
+			return aggregations.get("composite");
+		}
+	}
+
+	private static boolean containsIgnoreCase(String str, String searchStr) {
+		if (str == null || searchStr == null) {
+			return false;
 		}
 
-		try {
-			return new JsonObject(jsonConfig);
+		final int length = searchStr.length();
+		if (length == 0) {
+			return true;
 		}
-		catch (DecodeException e) {
-			Logger
-				.getLogger(SearcherService.class)
-				.warn("jsonConfig is not a valid json for queryParserConfig.type: " + queryParserConfig.getType() + " jsonConfig: " + jsonConfig);
-			return EMPTY_JSON;
+		for (int i = str.length() - length; i >= 0; i--) {
+			if (str.regionMatches(true, i, searchStr, 0, length)) {
+				return true;
+			}
 		}
-
+		return false;
 	}
 
 	@Inject
-	Instance<QueryParser> queryParserInstance;
+	RestHighLevelClient client;
 
 	@Inject
-	SearcherMapper searcherMapper;
-
-	@Inject
-	Mutiny.SessionFactory sf;
-
-	private static final JsonObject EMPTY_JSON = new JsonObject(Map.of());
+	TenantResolver tenantResolver;
 
 }

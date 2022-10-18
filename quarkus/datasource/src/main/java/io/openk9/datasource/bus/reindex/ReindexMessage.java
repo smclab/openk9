@@ -15,20 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.searcher.payload.response;
+package io.openk9.datasource.bus.reindex;
 
+import io.openk9.datasource.model.Datasource;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Collection;
-
 @Data
-@Builder
+@RegisterForReflection
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
-public class SuggestionsResponse {
-	private Collection<Object> result;
-	private String afterKey;
+public class ReindexMessage {
+	private Datasource datasource;
+	private String replayTo;
 }

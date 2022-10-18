@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,8 +32,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "suggestion_category")
@@ -63,7 +64,7 @@ public class SuggestionCategory extends K9Entity {
 		inverseJoinColumns = @JoinColumn(name = "doc_type_fields_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
-	private List<DocTypeField> docTypeFields = new LinkedList<>();
+	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 
 	@ToString.Exclude
 	@ManyToOne(

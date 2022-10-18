@@ -8,11 +8,32 @@ package grpc;
 
 service Searcher {
   rpc QueryParser(QueryParserRequest) returns (QueryParserResponse) {}
+  rpc SuggestionsQueryParser(QueryParserRequest) returns (SuggestionsResponse) {}
 }
 
 message QueryParserResponse {
   bytes query = 1;
   repeated string indexName = 2;
+}
+
+message SuggestionsResponse {
+  repeated Suggestions result = 1;
+  string afterKey = 2;
+}
+
+message Suggestions {
+  TokenType tokenType = 1;
+  string value = 2;
+  optional int64 suggestionCategoryId = 3;
+  string keywordKey = 4;
+  optional string entityType = 5;
+  optional string entityValue = 6;
+}
+
+enum TokenType {
+    ENTITY = 0;
+    TEXT = 1;
+    DOCTYPE = 2;
 }
 
 message QueryParserRequest {

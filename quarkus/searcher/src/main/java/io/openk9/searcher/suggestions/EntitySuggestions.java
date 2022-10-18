@@ -15,20 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.searcher.payload.response;
+package io.openk9.searcher.suggestions;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+class EntitySuggestions extends Suggestions {
 
-import java.util.Collection;
+	EntitySuggestions(
+		String value, long suggestionCategoryId, String entityType,
+		String entityValue) {
+		super(TokenType.ENTITY, value, suggestionCategoryId);
+		this.entityType = entityType;
+		this.entityValue = entityValue;
+	}
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor(staticName = "of")
-public class SuggestionsResponse {
-	private Collection<Object> result;
-	private String afterKey;
+	public String getEntityType() {
+		return entityType;
+	}
+
+	public String getEntityValue() {
+		return entityValue;
+	}
+
+	private final String entityType;
+	private final String entityValue;
+
 }

@@ -15,20 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.searcher.payload.response;
+package io.openk9.searcher.suggestions;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.Collection;
-
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor(staticName = "of")
-public class SuggestionsResponse {
-	private Collection<Object> result;
-	private String afterKey;
+class DocTypeSuggestions extends Suggestions {
+	DocTypeSuggestions(String value, long suggestionCategoryId) {
+		super(TokenType.DOCTYPE, value, suggestionCategoryId);
+	}
 }

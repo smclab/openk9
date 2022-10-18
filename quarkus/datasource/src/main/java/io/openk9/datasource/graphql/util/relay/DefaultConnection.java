@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql.util.relay;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static graphql.Assert.assertNotNull;
@@ -65,6 +66,18 @@ public class DefaultConnection<T> implements Connection<T> {
                 newEdges -> Connection.of(newEdges, pageInfo))
             );
 
+    }
+
+    @Override
+    public Connection<T> filter(Predicate<T> filter) {
+        Objects.requireNonNull(filter, "filter is null");
+        return edges
+            .stream()
+            .filter(edge -> filter.test(edge.getNode()))
+            .collect(Collectors.collectingAndThen(
+                Collectors.toList(),
+                newEdges -> Connection.of(newEdges, pageInfo))
+            );
     }
 
     @Override

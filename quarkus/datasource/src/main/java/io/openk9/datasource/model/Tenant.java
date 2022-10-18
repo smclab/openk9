@@ -39,8 +39,6 @@ import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -89,8 +87,8 @@ public class Tenant extends K9Entity {
 		javax.persistence.CascadeType.DETACH})
 	@ToString.Exclude
 	@JsonIgnore
-	private List<SuggestionCategory> suggestionCategories
-		= new LinkedList<>();
+	private Set<SuggestionCategory> suggestionCategories
+		= new LinkedHashSet<>();
 
 	@OneToOne(
 		fetch = FetchType.LAZY

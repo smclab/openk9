@@ -56,11 +56,20 @@ public class SuggestionCategoryService extends
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
-		return findJoinConnection(
-			id, SuggestionCategory_.DOC_TYPE_FIELDS, DocTypeField.class,
-			docTypeFieldService.getSearchFields(),
-			after, before, first, last, searchText, sortByList, notEqual
-		);
+		Uni<Connection<DocTypeField>> joinConnection =
+			findJoinConnection(
+				id, SuggestionCategory_.DOC_TYPE_FIELDS, DocTypeField.class,
+				docTypeFieldService.getSearchFields(),
+				after, before, first, last, searchText, sortByList, notEqual
+			);
+
+		if (notEqual) {
+			return joinConnection
+				.map(connection -> connection.filter(DocTypeField::isKeyword));
+		}
+
+		return joinConnection;
+
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
@@ -97,6 +106,12 @@ public class SuggestionCategoryService extends
 			.onItem()
 			.ifNotNull()
 			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
+				.onItem()
+				.ifNotNull()
+				.transform(docTypeField -> docTypeField.isKeyword()
+					? docTypeField
+					: null
+				)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(docTypeField -> Mutiny2.fetch(s, suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{

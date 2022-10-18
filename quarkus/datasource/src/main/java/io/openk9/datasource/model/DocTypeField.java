@@ -84,6 +84,10 @@ public class DocTypeField extends K9Entity {
 		return boost.floatValue();
 	}
 
+	public boolean isKeyword() {
+		return fieldType == FieldType.KEYWORD;
+	}
+
 	public boolean isText() {
 		return switch (fieldType) {
 			case TEXT, CONSTANT_KEYWORD, ANNOTATED_TEXT, KEYWORD -> true;
