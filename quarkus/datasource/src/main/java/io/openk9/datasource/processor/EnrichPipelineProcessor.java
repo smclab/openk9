@@ -1,7 +1,7 @@
 package io.openk9.datasource.processor;
 
 import io.openk9.datasource.processor.enrich.EnrichStepHandler;
-import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.processor.payload.PayloadWrapper;
 import io.openk9.datasource.util.MessageUtil;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 public class EnrichPipelineProcessor {
 
 	@Incoming("enrich-pipeline-incoming")
-	public Uni<Void> process(Message<DataPayload> message) {
+	public Uni<Void> process(Message<PayloadWrapper> message) {
 
 		Optional<IncomingRabbitMQMetadata> metadata =
 			message.getMetadata(IncomingRabbitMQMetadata.class);
@@ -35,15 +35,15 @@ public class EnrichPipelineProcessor {
 				Tuple2<Long, Long> t2 =
 					_getEnrichPipelineIdAndEnrichItemId(routingKey);
 
-				DataPayload payload = MessageUtil.toObj(
-					message, DataPayload.class);
+				PayloadWrapper payload = MessageUtil.toObj(
+					message, PayloadWrapper.class);
 
 				return enrichStepHandler.consume(
 					EnrichStepHandler.EnrichStep
 						.builder()
 						.enrichPipelineId(t2.getItem1())
 						.enrichItemId(t2.getItem2())
-						.payload(payload)
+						.payload(payload.getPayload())
 						.build()
 				);
 

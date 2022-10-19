@@ -22,6 +22,7 @@ import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.processor.enrich.EnrichStepHandler;
+import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.service.EnrichPipelineService;
@@ -54,6 +55,9 @@ public class DatasourceProcessor {
 
 		ingestionPayload.setTenantId(tenantResolver.getTenantId());
 
+		DataPayload dataPayload =
+			ingestionPayloadMapper.map(ingestionPayload);
+
 		return sf.withTransaction(s ->
 			s
 				.find(Datasource.class, datasourceId)
@@ -80,8 +84,7 @@ public class DatasourceProcessor {
 						if (ep == null) {
 							return enrichStepHandler.consume(
 								EnrichStepHandler.EnrichStep.of(
-									ingestionPayloadMapper.map(
-										ingestionPayload),
+									dataPayload,
 									0L,
 									0L
 								)
@@ -95,8 +98,7 @@ public class DatasourceProcessor {
 								if (ei == null) {
 									return enrichStepHandler.consume(
 										EnrichStepHandler.EnrichStep.of(
-											ingestionPayloadMapper.map(
-												ingestionPayload),
+											dataPayload,
 											0L,
 											0L
 										)
@@ -105,8 +107,7 @@ public class DatasourceProcessor {
 
 								return enrichStepHandler.consume(
 									EnrichStepHandler.EnrichStep.of(
-										ingestionPayloadMapper.map(
-											ingestionPayload),
+										dataPayload,
 										ep.getId(),
 										ei.getId()
 									)
