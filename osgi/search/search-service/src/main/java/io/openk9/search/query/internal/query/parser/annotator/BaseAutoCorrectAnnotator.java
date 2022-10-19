@@ -99,10 +99,10 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 
 			PhraseSuggestionBuilder builder =
 				SuggestBuilders.phraseSuggestion(
-						normalizedKeyword)
+						normalizedKeyword + ".suggest")
 					.addCandidateGenerator(
 						new DirectCandidateGeneratorBuilder(
-							normalizedKeyword)
+							normalizedKeyword + ".suggest")
 							.suggestMode("always"))
 					.text(token)
 					.size(_annotatorConfig.autocorrectionSize())
@@ -119,11 +119,11 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 
 		if (tenantId == -1) {
 			searchRequest = new SearchRequest(
-				"*-*-data");
+				"*-*-data", "*-entity");
 		}
 		else {
 			searchRequest = new SearchRequest(
-				tenantId + "-*-data");
+				tenantId + "-*-data", tenantId + "-entity");
 		}
 
 		searchRequest.source(searchSourceBuilder);

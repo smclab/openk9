@@ -39,14 +39,13 @@ public @interface AnnotatorConfig {
 
 	int autocompleteSize() default 10;
 
-	int autocorrectionSize() default 2;
+	int autocorrectionSize() default 1;
 
 	long timeoutMs() default 10_000;
 
 	String[] autocompleteEntityFields() default {"name", "type", "id", "tenantId"};
 
 	String[] autocompleteEntityTypes() default {"person", "organization", "location", "email"};
-
 
 	String[] autocompleteAnnotator() default {};
 
