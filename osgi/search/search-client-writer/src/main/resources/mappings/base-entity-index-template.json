@@ -102,7 +102,7 @@
                   },
                   "suggest":{
                      "type":"test",
-                     "analyser": "suggest"
+                     "analyzer": "suggest"
                   }
                }
             },
