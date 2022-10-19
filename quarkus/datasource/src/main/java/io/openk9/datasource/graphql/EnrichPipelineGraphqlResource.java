@@ -106,7 +106,7 @@ public class EnrichPipelineGraphqlResource {
 
 	@Mutation
 	public Uni<EnrichPipeline> sortEnrichItems(
-		@Id long enrichPipelineId, @Id List<Long> enrichItemIdList) {
+		@Id long enrichPipelineId, List<Long> enrichItemIdList) {
 		return enrichPipelineService.sortEnrichItems(
 			enrichPipelineId, enrichItemIdList);
 	}
