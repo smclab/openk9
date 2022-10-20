@@ -101,7 +101,7 @@
                      "type":"search_as_you_type"
                   },
                   "suggest":{
-                     "type":"test",
+                     "type":"text",
                      "analyzer": "suggest"
                   }
                }
