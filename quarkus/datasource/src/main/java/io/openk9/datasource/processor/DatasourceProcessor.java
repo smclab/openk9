@@ -169,7 +169,7 @@ public class DatasourceProcessor {
 
 		query.where(
 			criteriaBuilder.equal(
-				query.from(Datasource.class).get("id"), datasourceId));
+				rootDatasource.get(Datasource_.id), datasourceId));
 
 		return session.createQuery(query).getSingleResultOrNull();
 
