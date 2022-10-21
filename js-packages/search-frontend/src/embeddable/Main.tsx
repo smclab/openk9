@@ -341,14 +341,11 @@ function deriveSearchQuery(
           (selection) =>
             selection.start === span.start && selection.end === span.end,
         )?.token ?? null;
-      if (token) {
-        return analysisTokenToSearchToken(token);
-      }
-      return { tokenType: "TEXT", values: [span.text], filter: false };
+      return (token && analysisTokenToSearchToken(token)) ?? { tokenType: "TEXT", values: [span.text], filter: false };
     });
 }
 
-function analysisTokenToSearchToken(token: AnalysisToken): SearchToken {
+function analysisTokenToSearchToken(token: AnalysisToken): SearchToken | null {
   switch (token.tokenType) {
     case "DATASOURCE":
       return {
@@ -379,6 +376,7 @@ function analysisTokenToSearchToken(token: AnalysisToken): SearchToken {
         values: [token.value],
         filter: false,
       };
+      case "AUTOCORRECT": return null
   }
 }
 
