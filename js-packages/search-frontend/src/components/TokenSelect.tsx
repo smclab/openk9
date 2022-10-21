@@ -53,8 +53,10 @@ export function TokenSelect({
           white-space: pre;
           ${statusStyles[status]};
           border-radius: 4px;
-          border-top: ${isOpen ? "2px solid var(--openk9-embeddable-search--active-color)" : ""};
-          margin-top: ${isOpen ? "-2px" : ""}
+          border-top: ${isOpen
+            ? "2px solid var(--openk9-embeddable-search--active-color)"
+            : ""};
+          margin-top: ${isOpen ? "-2px" : ""};
         `}
       >
         {span.text}
@@ -115,8 +117,16 @@ export function TokenSelect({
                     {option.keywordName}:
                   </strong>
                 )}
-                <TokenIcon token={option} />
-                {getTokenLabel(option)}
+                {option.tokenType === "AUTOCORRECT" ? (
+                  <span>
+                    Did you mean? <strong>{option.value}</strong>
+                  </span>
+                ) : (
+                  <React.Fragment>
+                    <TokenIcon token={option} />
+                    {getTokenLabel(option)}
+                  </React.Fragment>
+                )}
               </div>
             );
           })}
