@@ -34,6 +34,7 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -115,7 +116,7 @@ public class DataIndexResource {
 
 					dataIndex.setName(indexName);
 
-					dataIndex.setDocTypes(docTypeList);
+					dataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
 
 					return s.persist(dataIndex)
 						.map(__ -> dataIndex)

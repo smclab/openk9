@@ -32,7 +32,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "data_index")
@@ -59,7 +60,7 @@ public class DataIndex extends K9Entity {
 		inverseJoinColumns = @JoinColumn(name = "doc_types_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
-	private List<DocType> docTypes = new java.util.ArrayList<>();
+	private Set<DocType> docTypes = new LinkedHashSet<>();
 
 	public void addDocType(DocType docType) {
 		docTypes.add(docType);

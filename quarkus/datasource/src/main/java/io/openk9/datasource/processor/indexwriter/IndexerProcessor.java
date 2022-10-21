@@ -2,7 +2,7 @@ package io.openk9.datasource.processor.indexwriter;
 
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.util.Mutiny2;
+import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
 import io.openk9.datasource.util.MessageUtil;
@@ -29,8 +29,10 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.UUID;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
 
 @ApplicationScoped
 public class IndexerProcessor {
@@ -163,45 +165,28 @@ public class IndexerProcessor {
 	private Uni<DataIndex> _getIndexName(long datasourceId) {
 
 		return sessionFactory.withTransaction(
-			s -> Uni.createFrom().deferred(() ->
-				s
-					.find(Datasource.class, datasourceId)
-					.onItem()
-					.ifNotNull()
-					.transformToUni(d ->
-						Mutiny2
-							.fetch(s, d.getDataIndex())
-							.flatMap(di -> {
-								if (di == null) {
+			s -> {
 
-									String indexName =
-										d.getId() + "-data-" +
-										UUID.randomUUID();
+				CriteriaBuilder criteriaBuilder =
+					sessionFactory.getCriteriaBuilder();
 
-									DataIndex dataIndex = DataIndex.of(
-										indexName, "auto-generated",
-										new ArrayList<>());
+				CriteriaQuery<DataIndex> criteriaQuery =
+					criteriaBuilder.createQuery(DataIndex.class);
 
-									d.setDataIndex(dataIndex);
+				Root<Datasource> datasourceRoot = criteriaQuery.from(Datasource.class);
 
-									return s
-										.persist(d)
-										.map(__ -> dataIndex)
-										.call(s::flush)
-										.invoke(persistedDataIndex -> {
-											if (logger.isInfoEnabled()) {
-												logger.info(
-													"creating index: " + persistedDataIndex);
-											}
-										});
-								}
-								else {
-									return Uni.createFrom().item(di);
-								}
-							})
-					)
-			)
-		);
+				Join<Datasource, DataIndex> dataIndexJoin =
+					datasourceRoot.join(Datasource_.dataIndex);
+
+				criteriaQuery.where(
+					criteriaBuilder.equal(
+						datasourceRoot.get(Datasource_.id), datasourceId));
+
+				criteriaQuery.select(dataIndexJoin);
+
+				return s.createQuery(criteriaQuery).getSingleResult();
+
+			});
 	}
 
 	@Inject

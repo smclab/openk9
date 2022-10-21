@@ -34,7 +34,6 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Set;
 
 @ApplicationScoped
@@ -48,7 +47,7 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 		return new String[] {DataIndex_.NAME, DataIndex_.DESCRIPTION};
 	}
 
-	public Uni<List<DocType>> getDocTypes(
+	public Uni<Set<DocType>> getDocTypes(
 		DataIndex dataIndex) {
 		return withTransaction(s -> Mutiny2.fetch(s, dataIndex.getDocTypes()));
 	}

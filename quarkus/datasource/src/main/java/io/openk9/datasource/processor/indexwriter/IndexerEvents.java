@@ -110,7 +110,7 @@ public class IndexerEvents {
 			return docTypeListUni
 				.map(results -> {
 
-					List<DocType> docTypes = new ArrayList<>(docTypeNames.size());
+					Set<DocType> docTypes = new LinkedHashSet<>(docTypeNames.size());
 
 					for (String docTypeName : docTypeNames) {
 
