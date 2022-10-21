@@ -276,7 +276,8 @@ public class CreateEntitiesRunnable
 				currentEntityRequest.getIngestionId(),
 				currentEntityRequest.isAssociated(),
 				currentEntityRequest.isIndexable(),
-				currentEntityRequest.getContext());
+				currentEntityRequest.getContext(),
+				currentEntityRequest.getIndexName());
 
 			List<EntityIndex> restCandidates =
 				entityCandidateList

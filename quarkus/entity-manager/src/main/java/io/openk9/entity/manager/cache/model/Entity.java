@@ -55,6 +55,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 	private boolean associated;
 	private boolean indexable;
 	private List<String> context;
+	private String indexName;
 
 	@Override
 	public int compareTo(Entity other) {
@@ -94,6 +95,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 		out.writeBoolean(associated);
 		out.writeBoolean(indexable);
 		out.writeObject(context);
+		out.writeString(indexName);
 	}
 
 	@Override
@@ -108,5 +110,6 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 		associated = in.readBoolean();
 		indexable = in.readBoolean();
 		context = in.readObject();
+		indexName = in.readString();
 	}
 }

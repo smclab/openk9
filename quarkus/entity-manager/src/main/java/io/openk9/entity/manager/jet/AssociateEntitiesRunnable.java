@@ -88,18 +88,21 @@ public class AssociateEntitiesRunnable
 			DataService dataService =
 				CDI.current().select(DataService.class).get();
 
-			Long tenantId =
-				v
-					.stream()
-					.map(Entity::getTenantId)
-					.findFirst()
-					.get();
+			Long tenantId = 0L;
+			String indexName = "";
+
+			for (Entity entity : v) {
+				tenantId = entity.getTenantId();
+				indexName = entity.getIndexName();
+				break;
+			}
 
 			try {
 
 				boolean associated =
 					dataService.associateEntities(
 						tenantId,
+						indexName,
 						ingestionId,
 						v
 							.stream()

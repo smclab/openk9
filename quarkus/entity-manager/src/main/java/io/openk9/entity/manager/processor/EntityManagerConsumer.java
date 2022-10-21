@@ -41,8 +41,6 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Metadata;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -116,13 +114,12 @@ public class EntityManagerConsumer {
 				transactionContext.getMultiMap("documentEntityMap");
 
 			EntityManagerRequest payload = request.getPayload();
-
 			_loggerAggregator.emitLog(
 				"process ingestionId", payload.getIngestionId());
 
 			long tenantId = payload.getTenantId();
 			String ingestionId = payload.getIngestionId();
-			List<EntityRequest> entities = payload.getEntities();
+			List<EntityRequest> entities = request.getEntities();
 
 			Map<EntityKey, Entity> localEntityMap =
 				new HashMap<>(entities.size());
@@ -138,7 +135,8 @@ public class EntityManagerConsumer {
 
 				Entity entity = new Entity(
 					null, cacheId, tenantId, name, type, null,
-					ingestionId, false, true, entityRequest.getContext());
+					ingestionId, false, true, entityRequest.getContext(),
+					payload.getIndexName());
 
 				entityTransactionalMap.set(key, entity);
 
@@ -245,12 +243,6 @@ public class EntityManagerConsumer {
 
 	@Inject
 	HazelcastInstance _hazelcastInstance;
-
-	@Inject
-	RestHighLevelClient _restHighLevelClient;
-
-	@Inject
-	Logger _log;
 
 	@Inject
 	LoggerAggregator _loggerAggregator;

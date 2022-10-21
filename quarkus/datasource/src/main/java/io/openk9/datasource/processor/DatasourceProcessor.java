@@ -19,7 +19,9 @@ package io.openk9.datasource.processor;
 
 
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.processor.enrich.EnrichStepHandler;
 import io.openk9.datasource.processor.payload.DataPayload;
@@ -36,9 +38,14 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.LinkedHashSet;
+import java.util.UUID;
 
 @ApplicationScoped
 public class DatasourceProcessor {
@@ -59,8 +66,7 @@ public class DatasourceProcessor {
 			ingestionPayloadMapper.map(ingestionPayload);
 
 		return sf.withTransaction(s ->
-			s
-				.find(Datasource.class, datasourceId)
+				_getDatasourceAndDataIndex(s, datasourceId)
 				.onItem()
 				.transformToUni(datasource -> {
 
@@ -71,6 +77,23 @@ public class DatasourceProcessor {
 							Instant.ofEpochMilli(parsingDate), ZoneOffset.UTC);
 
 					datasource.setLastIngestionDate(instantParsingDate);
+
+					DataIndex dataIndex = datasource.getDataIndex();
+
+					if (dataIndex == null) {
+						String indexName =
+							datasource.getId() + "-data-" +
+							UUID.randomUUID();
+
+						dataIndex = DataIndex.of(
+							indexName, "auto-generated",
+							new LinkedHashSet<>());
+
+						datasource.setDataIndex(dataIndex);
+
+					}
+
+					dataPayload.addRest("indexName", dataIndex.getName());
 
 					return s
 						.persist(datasource)
@@ -129,6 +152,26 @@ public class DatasourceProcessor {
 				return Uni.createFrom().completionStage(message::ack);
 
 			});
+
+	}
+
+	private Uni<Datasource> _getDatasourceAndDataIndex(
+		Mutiny.Session session, long datasourceId) {
+
+		CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
+
+		CriteriaQuery<Datasource> query =
+			criteriaBuilder.createQuery(Datasource.class);
+
+		Root<Datasource> rootDatasource = query.from(Datasource.class);
+
+		rootDatasource.fetch(Datasource_.dataIndex);
+
+		query.where(
+			criteriaBuilder.equal(
+				query.from(Datasource.class).get("id"), datasourceId));
+
+		return session.createQuery(query).getSingleResultOrNull();
 
 	}
 

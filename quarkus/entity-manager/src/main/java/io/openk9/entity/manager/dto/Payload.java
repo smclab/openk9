@@ -23,6 +23,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @Builder
@@ -31,4 +32,5 @@ import java.io.Serializable;
 public class Payload implements Serializable {
 	private EntityManagerRequest payload;
 	private String replyTo;
+	private List<EntityRequest> entities;
 }

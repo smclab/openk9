@@ -43,6 +43,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 	private String name;
 	private String type;
 	private Collection<String> context;
+	private String indexName;
 
 	@Override
 	public int compareTo(IngestionEntity other) {
@@ -78,6 +79,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 		out.writeString(name);
 		out.writeString(type);
 		out.writeObject(context);
+		out.writeString(indexName);
 	}
 
 	@Override
@@ -88,6 +90,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 		name = in.readString();
 		type = in.readString();
 		context = in.readObject();
+		indexName = in.readString();
 	}
 
 	public static IngestionEntity fromEntity(Entity entity) {
@@ -97,7 +100,8 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 			entity.getTenantId(),
 			entity.getName(),
 			entity.getType(),
-			entity.getContext()
+			entity.getContext(),
+			entity.getIndexName()
 		);
 	}
 
