@@ -1186,6 +1186,10 @@ export type AnalysisToken =
       keywordKey?: string;
       keywordName?: string;
       value: string;
+    }
+  | {
+      tokenType: "AUTOCORRECT";
+      value: string;
     };
 
 export type EntityDescription = {

@@ -53,7 +53,7 @@ function reducer(
     }
     case "set-selection": {
       const { text, selection } = (() => {
-        if (action.replaceText) {
+        if (action.replaceText || action.selection.token?.tokenType === "AUTOCORRECT") {
           const tokenText = action.selection.token
             ? getTokenText(action.selection.token)
             : state.text.slice(action.selection.start, action.selection.end);
@@ -61,7 +61,7 @@ function reducer(
             state.text.slice(0, action.selection.start) +
             tokenText +
             state.text.slice(action.selection.end);
-          const selection: Selection = {
+          const selection: Selection | null = action.selection.token?.tokenType === "AUTOCORRECT" ? null :{
             text: tokenText,
             start: action.selection.start,
             end: action.selection.start + tokenText.length,
@@ -81,8 +81,8 @@ function reducer(
         selection: shiftSelection(
           state.text,
           text,
-          state.selection.filter((s) => !isOverlapping(s, selection)),
-        ).concat([selection]),
+          selection ? state.selection.filter((s) => !isOverlapping(s, selection)) : state.selection,
+        ).concat(selection ? [selection] : []),
       };
     }
   }
@@ -165,6 +165,8 @@ function getTokenText(token: AnalysisToken) {
       return token.entityName;
     case "TEXT":
       return token.value;
+    case "AUTOCORRECT":
+      return token.value;
   }
 }
 
@@ -191,6 +193,7 @@ export function getAutoSelections(
 function getAutoSelection(entry: AnalysisResponseEntry) {
   const [first, second] = [...entry.tokens].sort((a, b) => a.score - b.score);
   if (first) {
+    if (first.tokenType === "AUTOCORRECT") return null
     if (!second || first.score >= second.score * 2) {
       return {
         text: entry.text,
