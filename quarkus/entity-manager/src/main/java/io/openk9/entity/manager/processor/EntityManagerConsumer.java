@@ -122,7 +122,7 @@ public class EntityManagerConsumer {
 
 			long tenantId = payload.getTenantId();
 			String ingestionId = payload.getIngestionId();
-			List<EntityRequest> entities = request.getEntities();
+			List<EntityRequest> entities = payload.getEntities();
 
 			Map<EntityKey, Entity> localEntityMap =
 				new HashMap<>(entities.size());

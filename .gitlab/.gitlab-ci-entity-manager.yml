@@ -1,5 +1,5 @@
 Build Latest Entity Manager Docker Images:
-  image: smclab/docker-java-11:latest
+  image: eclipse-temurin:17-jdk
   services:
     - docker:19.03.13-dind
   stage: build-docker
@@ -21,7 +21,7 @@ Build Latest Entity Manager Docker Images:
   except:
     - schedules
   script:
-    - ./mvnw -Psmc,quarkus package $MAVEN_CLI_OPTS -pl quarkus/entity-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - ./mvnw -Psmc,quarkus package $MAVEN_CLI_OPTS -pl quarkus/entity-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-entity-manager" -F ref=master $DEV_TRIGGER_URL
   cache:
