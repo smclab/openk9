@@ -119,9 +119,9 @@ public class EnrichPipelineGraphqlResource {
 	@Mutation
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItemToEnrichPipeline(
 		@Id long enrichPipelineId, @Id long enrichItemId,
-		@DefaultValue("0") float weight) {
+		@DefaultValue("true") boolean tail) {
 		return enrichPipelineService.addEnrichItem(
-			enrichPipelineId, enrichItemId, weight);
+			enrichPipelineId, enrichItemId, tail);
 	}
 
 	@Mutation

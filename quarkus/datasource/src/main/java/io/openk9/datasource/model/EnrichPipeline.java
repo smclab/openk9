@@ -30,7 +30,8 @@ import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "enrich_pipeline")
@@ -50,7 +51,7 @@ public class EnrichPipeline extends K9Entity {
 	@ToString.Exclude
 	@OrderBy("weight ASC")
 	@JsonIgnore
-	private List<EnrichPipelineItem> enrichPipelineItems
-		= new java.util.LinkedList<>();
+	private Set<EnrichPipelineItem> enrichPipelineItems
+		= new LinkedHashSet<>();
 
 }

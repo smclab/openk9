@@ -29,6 +29,7 @@ import io.smallrye.mutiny.Uni;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -55,8 +56,9 @@ public class EnrichPipelineResource extends
 	@Path("/{id}/enrich-items/{enrichItemId}")
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(
 		@PathParam("id") long enrichPipelineId,
-		@PathParam("enrichItemId") long enrichItemId) {
-		return service.addEnrichItem(enrichPipelineId, enrichItemId);
+		@PathParam("enrichItemId") long enrichItemId,
+		@QueryParam("tail") @DefaultValue("true") boolean tail) {
+		return service.addEnrichItem(enrichPipelineId, enrichItemId, tail);
 	}
 
 	@DELETE

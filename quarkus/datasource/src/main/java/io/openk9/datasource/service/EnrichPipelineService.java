@@ -53,6 +53,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 @ApplicationScoped
 public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, EnrichPipelineDTO> {
@@ -227,12 +228,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(
-		long enrichPipelineId, long enrichItemId) {
-		 return addEnrichItem(enrichPipelineId, enrichItemId, 0);
-	}
-
-	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(
-		long enrichPipelineId, long enrichItemId, float weight) {
+		long enrichPipelineId, long enrichItemId, boolean tail) {
 
 		return withTransaction((s) -> findById(enrichPipelineId)
 			.onItem()
@@ -246,21 +242,38 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 							.fetch(s, enrichPipeline.getEnrichPipelineItems())
 							.flatMap(enrichPipelineItems -> {
 
-						boolean add = enrichPipelineItems.add(
-							EnrichPipelineItem.of(
-								EnrichPipelineItemKey.of(
-									enrichPipeline.getId(),
-									enrichItem.getId()),
-								enrichPipeline, enrichItem, weight));
+								DoubleStream doubleStream =
+									enrichPipelineItems
+										.stream()
+										.mapToDouble(EnrichPipelineItem::getWeight);
 
-						if (add) {
-							enrichPipeline.setEnrichPipelineItems(enrichPipelineItems);
-							return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
-						} else {
-							return Uni.createFrom().nullItem();
-						}
+								double weight;
 
-					}))));
+								if (tail) {
+									weight = doubleStream.max().orElse(0.0) + 1.0;
+								}
+								else {
+									weight = doubleStream.min().orElse(0.0) - 1.0;
+								}
+
+								EnrichPipelineItem newEnrichPipelineItem =
+									EnrichPipelineItem.of(
+										EnrichPipelineItemKey.of(
+											enrichPipelineId, enrichItemId),
+										enrichPipeline, enrichItem, (float)weight
+									);
+
+								if (enrichPipelineItems.add(newEnrichPipelineItem)) {
+									enrichPipeline.setEnrichPipelineItems(enrichPipelineItems);
+									return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
+								} else {
+									return Uni.createFrom().nullItem();
+								}
+
+							})
+					)
+			)
+		);
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItem(long enrichPipelineId, long enrichItemId) {
