@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -182,7 +183,8 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 								set.addAll(list);
 
-								Set<SemanticsPos> scoreOrderedSet = new TreeSet<>(SemanticsPos::compareTo);
+								Set<SemanticsPos> scoreOrderedSet = set.stream().sorted(SemanticsPos::compareTo).collect(
+									Collectors.toCollection(LinkedHashSet::new));
 
 								scoreOrderedSet.addAll(set);
 
