@@ -404,7 +404,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 			String value1 =(String)o1.get("value");
 			String value2 =(String)o2.get("value");
 
-			return res != 0 ? res : value1.compareTo(value2);
+			return res != 0 ? res : (value1.compareTo(value2) & to1.compareTo(to2));
 
 		}
 
