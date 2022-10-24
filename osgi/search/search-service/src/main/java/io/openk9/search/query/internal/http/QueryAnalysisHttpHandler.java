@@ -174,7 +174,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 									}
 								}
 
-								list.sort(null);
+								list.sort(SemanticsPos::compareTo);
 
 								Set<SemanticsPos> set = new TreeSet<>(
 									SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);

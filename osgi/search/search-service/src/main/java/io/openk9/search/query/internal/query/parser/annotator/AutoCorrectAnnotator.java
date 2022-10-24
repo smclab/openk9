@@ -30,8 +30,4 @@ public class AutoCorrectAnnotator extends BaseAutoCorrectAnnotator {
 		super.setRestHighLevelClientProvider(restHighLevelClientProvider);
 	}
 
-	@Override
-	public int getLastTokenCount() {
-		return _annotatorConfig.autoCompleteTokenCount();
-	}
 }
