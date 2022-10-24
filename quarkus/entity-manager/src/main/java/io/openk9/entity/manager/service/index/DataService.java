@@ -101,7 +101,7 @@ public class DataService {
 	private SearchResponse search(
 		String currentIndexName, QueryBuilder queryBuilder) throws IOException {
 
-		SearchRequest searchRequest = new SearchRequest(currentIndexName + "-*-data");
+		SearchRequest searchRequest = new SearchRequest(currentIndexName);
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		searchSourceBuilder.query(queryBuilder);
 		searchRequest.source(searchSourceBuilder);
