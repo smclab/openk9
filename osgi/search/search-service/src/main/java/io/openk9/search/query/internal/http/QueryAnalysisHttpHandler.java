@@ -188,8 +188,6 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 								scoreOrderedSet.addAll(set);
 
-								_log.info(scoreOrderedSet.toString());
-
 								List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
 								Map<Tuple<Integer>, List<Map<String, Object>>> collect =
