@@ -36,8 +36,10 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "tenant")
@@ -61,7 +63,7 @@ public class Tenant extends K9Entity {
 		javax.persistence.CascadeType.DETACH})
 	@ToString.Exclude
 	@JsonIgnore
-	private List<Datasource> datasources = new LinkedList<>();
+	private Set<Datasource> datasources = new LinkedHashSet<>();
 
 	@Column(name = "virtual_host", nullable = false, unique = true)
 	private String virtualHost;

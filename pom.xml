@@ -159,6 +159,11 @@
 								<artifactId>hibernate-jpamodelgen</artifactId>
 								<version>5.6.10.Final</version>
 							</path>
+							<path>
+								<groupId>no.entur.mapstruct.spi</groupId>
+								<artifactId>protobuf-spi-impl</artifactId> <!-- Make sure mapstruct version here is the same as below -->
+								<version>1.39</version>
+							</path>
 						</annotationProcessorPaths>
 					</configuration>
 				</plugin>

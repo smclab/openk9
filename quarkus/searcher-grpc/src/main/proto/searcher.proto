@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.searcher.grpc";
+option java_outer_classname = "SearcherProto";
+
+package grpc;
+
+service Searcher {
+  rpc QueryParser(QueryParserRequest) returns (QueryParserResponse) {}
+}
+
+message QueryParserResponse {
+  bytes query = 1;
+  repeated string indexNames = 2;
+}
+
+message QueryParserRequest {
+  repeated SearchTokenRequest searchToken = 1;
+  int64 tenantId = 2;
+}
+
+message SearchTokenRequest {
+  string entityType = 1;
+  string entityName = 2;
+  string tokenType = 3;
+  string keywordKey = 4;
+  repeated string values = 5;
+  map<string, string> extra = 6;
+  bool filter = 7;
+}

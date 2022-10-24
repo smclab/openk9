@@ -22,6 +22,8 @@
     <module>resources-common</module>
     <module>resources-validator</module>
     <module>file-manager</module>
+    <module>searcher</module>
+    <module>searcher-grpc</module>
   </modules>
   <properties>
     <failsafe.useModulePath>false</failsafe.useModulePath>
@@ -35,6 +37,7 @@
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.version>2.13.2.Final</quarkus.platform.version>
+    <quarkus.version>${quarkus.platform.version}</quarkus.version>
     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
   </properties>
   <dependencyManagement>
@@ -49,6 +52,11 @@
       <dependency>
         <groupId>io.openk9</groupId>
         <artifactId>resources-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.openk9</groupId>
+        <artifactId>searcher-grpc</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

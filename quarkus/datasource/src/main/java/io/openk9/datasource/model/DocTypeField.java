@@ -35,6 +35,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import static io.openk9.datasource.model.FieldType.SEARCH_AS_YOU_TYPE;
+
 @Entity
 @Table(name = "doc_type_field", uniqueConstraints = {
 	@UniqueConstraint(
@@ -76,5 +78,41 @@ public class DocTypeField extends K9Entity {
 
 	@Column(name="exclude")
 	private Boolean exclude;
+
+	public Float getFloatBoost() {
+		return boost.floatValue();
+	}
+
+	public boolean isText() {
+		return switch (fieldType) {
+			case TEXT, CONSTANT_KEYWORD, ANNOTATED_TEXT, KEYWORD -> true;
+			default -> false;
+		};
+	}
+
+	public boolean isNumeric() {
+		return switch (fieldType) {
+			case LONG, INTEGER, SHORT, BYTE, DOUBLE, FLOAT, HALF_FLOAT, SCALED_FLOAT -> true;
+			default -> false;
+		};
+	}
+
+	public boolean isDate() {
+		return switch (fieldType) {
+			case DATE, DATE_NANOS, DATE_RANGE -> true;
+			default -> false;
+		};
+	}
+
+	public boolean isBoolean() {
+		return switch (fieldType) {
+			case BOOLEAN -> true;
+			default -> false;
+		};
+	}
+
+	public boolean isAutocomplete() {
+		return SEARCH_AS_YOU_TYPE == fieldType;
+	}
 
 }
