@@ -182,12 +182,16 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 								set.addAll(list);
 
-								_log.info(set.toString());
+								Set<SemanticsPos> scoreOrderedSet = new TreeSet<>(SemanticsPos::compareTo);
+
+								scoreOrderedSet.addAll(set);
+
+								_log.info(scoreOrderedSet.toString());
 
 								List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
 								Map<Tuple<Integer>, List<Map<String, Object>>> collect =
-									set
+									scoreOrderedSet
 										.stream()
 										.collect(
 											Collectors.groupingBy(
@@ -404,7 +408,7 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 			String value1 =(String)o1.get("value");
 			String value2 =(String)o2.get("value");
 
-			return res != 0 ? res : (value1.compareTo(value2) & to1.compareTo(to2));
+			return res != 0 ? res : value1.compareTo(value2);
 
 		}
 
