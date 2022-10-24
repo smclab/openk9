@@ -139,8 +139,6 @@ public abstract class BaseAutoCorrectAnnotator extends BaseAnnotator {
 			for (Suggest.Suggestion<? extends Suggest.Suggestion.Entry<?
 				extends Suggest.Suggestion.Entry.Option>> entries : search.getSuggest()) {
 
-				_log.info("Entries: " + entries.toString());
-
 				for (Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option> entry : entries) {
 
 					for (Suggest.Suggestion.Entry.Option option : entry) {
