@@ -31,6 +31,7 @@ import io.openk9.search.api.query.parser.Tuple;
 import io.openk9.search.query.internal.query.parser.Grammar;
 import io.openk9.search.query.internal.query.parser.GrammarProvider;
 import io.openk9.search.query.internal.query.parser.Parse;
+import io.openk9.search.query.internal.query.parser.Semantic;
 import io.openk9.search.query.internal.query.parser.SemanticType;
 import io.openk9.search.query.internal.query.parser.SemanticTypes;
 import io.openk9.search.query.internal.query.parser.annotator.AnnotatorConfig;
@@ -176,12 +177,12 @@ public class QueryAnalysisHttpHandler implements RouterHandler, HttpHandler {
 
 								list.sort(SemanticsPos::compareTo);
 
-								_log.info(list.toString());
-
 								Set<SemanticsPos> set = new TreeSet<>(
 									SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
 
 								set.addAll(list);
+
+								_log.info(set.toString());
 
 								List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
