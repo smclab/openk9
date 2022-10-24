@@ -214,6 +214,8 @@ public class EntityManagerConsumer {
 				}
 			}
 
+			transactionContext.commitTransaction();
+
 		}
 		catch (Exception e) {
 			transactionContext.rollbackTransaction();
@@ -221,9 +223,6 @@ public class EntityManagerConsumer {
 				throw (RuntimeException)e;
 			}
 			throw new RuntimeException(e);
-		}
-		finally {
-			transactionContext.commitTransaction();
 		}
 
 		String replyTo = request.getReplyTo();
