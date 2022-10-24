@@ -11,7 +11,7 @@ Build Latest Searcher Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - main
+      - 284-fix-ner-autocomplete
       - tags
     changes:
       - searcher/configs/*

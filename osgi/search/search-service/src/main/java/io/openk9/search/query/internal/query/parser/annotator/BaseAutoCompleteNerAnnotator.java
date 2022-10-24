@@ -174,6 +174,8 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 					categorySemantics);
 			}
 
+			return categorySemantics;
+
 		}
 		catch (IOException e) {
 			_log.error(e.getMessage(), e);
@@ -181,7 +183,7 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 
 	_log.info(categorySemantics.toString());
 
-	return categorySemantics;
+	return List.of();
 
 	}
 
