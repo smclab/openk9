@@ -21,7 +21,7 @@ import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -92,7 +92,7 @@ public class SearchResource {
 	private org.elasticsearch.action.search.SearchRequest _decodeElasticSearchRequest(
 		ByteString query, String[] indices) {
 
-		try(XContentParser parser = XContentType.JSON.xContent().createParser(
+		try(XContentParser parser = JsonXContent.jsonXContent.createParser(
 			NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
 			new InputStreamStreamInput(query.newInput()))) {
 
