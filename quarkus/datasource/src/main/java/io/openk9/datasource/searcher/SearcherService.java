@@ -25,9 +25,10 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.io.stream.OutputStreamStreamOutput;
-import org.elasticsearch.common.io.stream.StreamOutput;
+import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -153,9 +154,7 @@ public class SearcherService implements Searcher {
 							.distinct()
 							.toArray(String[]::new);
 
-					SearchRequest searchRequest = new SearchRequest(indexNames);
-
-					SearchSourceBuilder searchSourceBuilder = searchRequest.source();
+					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
 					searchSourceBuilder.trackTotalHits(true);
 
@@ -202,14 +201,17 @@ public class SearcherService implements Searcher {
 
 					try (
 						ByteString.Output outputStream = ByteString.newOutput();
-						StreamOutput streamOutput = new OutputStreamStreamOutput(outputStream)
+						XContentBuilder builder = new XContentBuilder(
+							XContentType.JSON.xContent(), new OutputStreamStreamOutput(outputStream));
 					) {
 
-						searchRequest.writeTo(streamOutput);
+						searchSourceBuilder.toXContent(
+							builder, ToXContent.EMPTY_PARAMS);
 
 						return QueryParserResponse
 							.newBuilder()
 							.setQuery(outputStream.toByteString())
+							.addAllIndexName(List.of(indexNames))
 							.build();
 
 					}
@@ -232,7 +234,7 @@ public class SearcherService implements Searcher {
 				.stream()
 				.collect(
 					Collectors.partitioningBy(
-						DocTypeField::getExclude,
+						DocTypeField::isExclude,
 						Collectors.mapping(
 							DocTypeField::getName,
 							Collectors.collectingAndThen(

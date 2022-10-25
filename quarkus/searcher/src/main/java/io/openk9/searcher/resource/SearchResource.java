@@ -17,14 +17,15 @@ import org.elasticsearch.action.search.ShardSearchFailure;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.io.stream.InputStreamStreamInput;
-import org.elasticsearch.common.io.stream.NamedWriteableAwareStreamInput;
-import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
 import org.elasticsearch.common.io.stream.StreamInput;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.text.Text;
+import org.elasticsearch.common.xcontent.DeprecationHandler;
+import org.elasticsearch.common.xcontent.NamedXContentRegistry;
+import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.SearchModule;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.jboss.logging.Logger;
 
@@ -35,7 +36,6 @@ import javax.ws.rs.core.Context;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +65,9 @@ public class SearchResource {
 			.flatMap(queryParserResponse -> {
 
 				org.elasticsearch.action.search.SearchRequest searchRequestElastic =
-					_decodeElasticSearchRequest(queryParserResponse.getQuery());
+					_decodeElasticSearchRequest(
+						queryParserResponse.getQuery(),
+						queryParserResponse.getIndexNameList().toArray(String[]::new));
 
 				return Uni.createFrom().<SearchResponse>emitter((sink) ->
 					client.searchAsync(
@@ -89,11 +91,20 @@ public class SearchResource {
 	}
 
 	private org.elasticsearch.action.search.SearchRequest _decodeElasticSearchRequest(
-		ByteString query) {
+		ByteString query, String[] indices) {
 
-		try(StreamInput streamInput = new NamedWriteableAwareStreamInput(
-			new InputStreamStreamInput(query.newInput()), xContentRegistry)) {
-			return new org.elasticsearch.action.search.SearchRequest(streamInput);
+		try(StreamInput streamInput = new InputStreamStreamInput(query.newInput())) {
+
+			XContentType xContentType = XContentType.JSON;
+
+			XContentParser parser = xContentType.xContent().createParser(
+				NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
+				streamInput);
+
+			SearchSourceBuilder searchSourceBuilder =
+				SearchSourceBuilder.fromXContent(parser);
+
+			return new org.elasticsearch.action.search.SearchRequest(indices, searchSourceBuilder);
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);
@@ -168,15 +179,5 @@ public class SearchResource {
 
 	@Inject
 	Logger logger;
-
-	private static final NamedWriteableRegistry xContentRegistry;
-
-	static {
-		SearchModule searchModule =
-			new SearchModule(Settings.EMPTY, false, Collections.emptyList());
-
-		xContentRegistry =
-			new NamedWriteableRegistry(searchModule.getNamedWriteables());
-	}
 
 }

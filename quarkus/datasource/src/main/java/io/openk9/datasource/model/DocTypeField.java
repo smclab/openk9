@@ -113,4 +113,8 @@ public class DocTypeField extends K9Entity {
 		return SEARCH_AS_YOU_TYPE == fieldType;
 	}
 
+	public boolean isExclude() {
+		return exclude != null && exclude;
+	}
+
 }
