@@ -11,50 +11,23 @@ Build Latest Searcher Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - main
+      - 280-searcher-refactoring
       - tags
     changes:
-      - searcher/configs/*
-      - osgi/common/reactory-netty-util/**/*
-      - osgi/web/http-api/**/*
-      - osgi/web/http-service/**/*
-      - osgi/web/http-bundle-ext/**/*
-      - osgi/metrics/metrics-api/**/*
-      - osgi/metrics/metrics-service/**/*
-      - osgi/common/common-api/**/*
-      - osgi/common/core-api/**/*
-      - osgi/common/model/**/*
-      - osgi/common/osgi-api/**/*
-      - osgi/common/serialization-api/**/*
-      - osgi/common/serialization-service/**/*
-      - osgi/third-party/**/*
-      - osgi/common/http-serialization/**/*
-      - osgi/index-writer/index-writer-model/**/*
-      - osgi/search/**/*
-      - osgi/datasource/datasource-client-api/**/*
-      - osgi/datasource/datasource-client-service/**/*
-      - osgi/auth/auth-api/**/*
-      - osgi/auth/auth-service/**/*
-      - osgi/auth/auth-query-parser/**/*
-      - osgi/ingestion/ingestion-api/**/*
-      - osgi/ingestion/ingestion-service/**/*
-      - osgi/plugin-driver-manager/plugin-driver-manager-client-api/**/*
-      - osgi/plugin-driver-manager/plugin-driver-manager-client-service/**/*
-      - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
-      - osgi/third-party/caffeine/**/*
-      - osgi/vertx/**/*
-      - assemblies/searcher/**/*
+      - quarkus/resources-common/**/*
+      - quarkus/searcher/**/*
       - .gitlab/.gitlab-ci-searcher.yml
+      - quarkus/pom.xml
   except:
     - schedules
   script:
-    - ./mvnw install -Psmc,bom $MAVEN_CLI_OPTS
-    - ./mvnw install -Psmc,assemblies -pl assemblies/searcher/searcher-kar -am $MAVEN_CLI_OPTS
-    - ./mvnw -Psmc,assemblies --file assemblies/searcher/searcher-karaf package jib:build -Dbase.docker.image.group.name=$CI_REGISTRY_NAME/openk9 -Djib.to.auth.username=$CI_REGISTRY_USERNAME -Djib.to.auth.password=$CI_REGISTRY_PASSWORD $MAVEN_CLI_OPTS
+    - ./mvnw -Psmc,quarkus package $MAVEN_CLI_OPTS -pl quarkus/searcher -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=280-searcher-refactoring
+  after_script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
   cache:
     key: searcher
     paths:
-      - .m2/repository
+      - .m2/repositoryy
 
 
 trigger_deploy_searcher:
