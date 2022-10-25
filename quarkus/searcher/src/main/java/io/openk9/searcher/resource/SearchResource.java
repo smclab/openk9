@@ -17,7 +17,6 @@ import org.elasticsearch.action.search.ShardSearchFailure;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.io.stream.InputStreamStreamInput;
-import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -93,13 +92,9 @@ public class SearchResource {
 	private org.elasticsearch.action.search.SearchRequest _decodeElasticSearchRequest(
 		ByteString query, String[] indices) {
 
-		try(StreamInput streamInput = new InputStreamStreamInput(query.newInput())) {
-
-			XContentType xContentType = XContentType.JSON;
-
-			XContentParser parser = xContentType.xContent().createParser(
-				NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
-				streamInput);
+		try(XContentParser parser = XContentType.JSON.xContent().createParser(
+			NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
+			new InputStreamStreamInput(query.newInput()))) {
 
 			SearchSourceBuilder searchSourceBuilder =
 				SearchSourceBuilder.fromXContent(parser);

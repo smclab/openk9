@@ -92,7 +92,9 @@ public class SearcherService implements Searcher {
 			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
 			return sf
-				.withTransaction(s -> _getTenantAndFetchRelations(s, request.getVirtualHost()))
+				.openStatelessSession()
+				.flatMap(s -> _getTenantAndFetchRelations(s, request.getVirtualHost())
+					.eventually(s::close))
 				.map(tenant -> {
 
 					for (Map.Entry<String, List<ParserSearchToken>> entry : tokenGroup.entrySet()) {
@@ -199,25 +201,24 @@ public class SearcherService implements Searcher {
 					_includeExcludeFields(
 						searchSourceBuilder, docTypeFieldList);
 
+					ByteString.Output outputStream = ByteString.newOutput();
+
 					try (
-						ByteString.Output outputStream = ByteString.newOutput();
-						XContentBuilder builder = new XContentBuilder(
-							XContentType.JSON.xContent(), new OutputStreamStreamOutput(outputStream));
-					) {
-
-						searchSourceBuilder.toXContent(
-							builder, ToXContent.EMPTY_PARAMS);
-
-						return QueryParserResponse
-							.newBuilder()
-							.setQuery(outputStream.toByteString())
-							.addAllIndexName(List.of(indexNames))
-							.build();
-
+						XContentBuilder builder =
+							searchSourceBuilder.toXContent(
+								new XContentBuilder(
+									XContentType.JSON.xContent(), new OutputStreamStreamOutput(outputStream)),
+								ToXContent.EMPTY_PARAMS)) {
 					}
 					catch (IOException e) {
 						throw new RuntimeException(e);
 					}
+
+					return QueryParserResponse
+						.newBuilder()
+						.setQuery(outputStream.toByteString())
+						.addAllIndexName(List.of(indexNames))
+						.build();
 
 				});
 
@@ -248,42 +249,39 @@ public class SearcherService implements Searcher {
 	}
 
 	private Uni<Tenant> _getTenantAndFetchRelations(
-		Mutiny.Session s, String virtualHost) {
+		Mutiny.StatelessSession s, String virtualHost) {
 
-		return Uni.createFrom().deferred(() -> {
+		CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
-			CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
+		CriteriaQuery<Tenant> criteriaQuery = criteriaBuilder.createQuery(Tenant.class);
 
-			CriteriaQuery<Tenant> criteriaQuery = criteriaBuilder.createQuery(Tenant.class);
+		Root<Tenant> tenantRoot = criteriaQuery.from(Tenant.class);
 
-			Root<Tenant> tenantRoot = criteriaQuery.from(Tenant.class);
+		tenantRoot.fetch(Tenant_.queryParserConfigs, JoinType.LEFT);
 
-			Fetch<Tenant, Datasource> datasourceRoot =
-				tenantRoot.fetch(Tenant_.datasources);
+		Fetch<Tenant, Datasource> datasourceRoot =
+			tenantRoot.fetch(Tenant_.datasources);
 
-			tenantRoot.fetch(Tenant_.queryParserConfigs, JoinType.LEFT);
+		Fetch<Datasource, DataIndex> dataIndexRoot =
+			datasourceRoot.fetch(Datasource_.dataIndex);
 
-			Fetch<Datasource, DataIndex> dataIndexRoot =
-				datasourceRoot.fetch(Datasource_.dataIndex);
+		Fetch<DataIndex, DocType> docTypeFetch =
+			dataIndexRoot.fetch(DataIndex_.docTypes);
 
-			Fetch<DataIndex, DocType> docTypeFetch =
-				dataIndexRoot.fetch(DataIndex_.docTypes);
+		docTypeFetch.fetch(DocType_.docTypeFields);
 
-			docTypeFetch.fetch(DocType_.docTypeFields);
+		criteriaQuery.where(
+			criteriaBuilder.equal(
+				tenantRoot.get(Tenant_.virtualHost), virtualHost)
+		);
 
-			criteriaQuery.where(
-				criteriaBuilder.equal(
-					tenantRoot.get(Tenant_.virtualHost), virtualHost)
-			);
+		criteriaQuery.distinct(true);
 
-			criteriaQuery.distinct(true);
+		return s
+			.createQuery(criteriaQuery)
+			.setCacheable(true)
+			.getSingleResult();
 
-			return s
-				.createQuery(criteriaQuery)
-				.setCacheable(true)
-				.getSingleResult();
-
-		});
 
 	}
 

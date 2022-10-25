@@ -98,8 +98,7 @@ public class Tenant extends K9Entity {
 	@ToString.Exclude
 	private QueryAnalysis queryAnalysis;
 
-	@OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
-	@ToString.Exclude
+	@OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL)
 	private Set<QueryParserConfig> queryParserConfigs = new LinkedHashSet<>();
 
 	public boolean addSuggestionCategory(
