@@ -1,6 +1,5 @@
-package io.openk9.searcher.payload.request;
+package io.openk9.searcher.dto;
 
-import io.openk9.searcher.dto.ParserSearchToken;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 public class SearchRequest {
 	private List<ParserSearchToken> searchQuery;
-	private int[] range;
+	private List<Integer> range;
 	private String afterKey;
 	private String suggestKeyword;
 	private Long suggestionCategoryId;

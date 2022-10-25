@@ -15,7 +15,7 @@ message QueryParserResponse {
 }
 
 message QueryParserRequest {
-  repeated SearchTokenRequest searchToken = 1;
+  repeated SearchTokenRequest searchQuery = 1;
   repeated int32 range = 2;
   string afterKey = 3;
   string suggestKeyword = 4;

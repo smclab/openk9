@@ -1,13 +1,11 @@
 package io.openk9.searcher.resource;
 
 import com.google.protobuf.ByteString;
-import io.openk9.searcher.dto.ParserSearchToken;
+import io.openk9.searcher.dto.SearchRequest;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
-import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.mapper.SearcherMapper;
-import io.openk9.searcher.payload.request.SearchRequest;
 import io.openk9.searcher.payload.response.Response;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
@@ -41,17 +39,11 @@ public class SearchResource {
 	@POST
 	public Uni<Response> search(SearchRequest searchRequest) {
 
-		List<ParserSearchToken> searchQuery = searchRequest.getSearchQuery();
-
-		List<SearchTokenRequest> searchTokenRequests =
-			searcherMapper.toQueryParserRequest(searchQuery);
+		QueryParserRequest queryParserRequest =
+			searcherMapper.toQueryParserRequest(searchRequest);
 
 		Uni<QueryParserResponse> queryParserResponseUni =
-			searcherClient.queryParser(
-				QueryParserRequest.newBuilder()
-					.addAllSearchToken(searchTokenRequests)
-					.build()
-			);
+			searcherClient.queryParser(queryParserRequest);
 
 		return queryParserResponseUni
 			.flatMap(queryParserResponse -> {
