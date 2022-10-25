@@ -154,7 +154,7 @@ public class SearchResource {
 	@Inject
 	RestHighLevelClient client;
 
-	@GrpcClient
+	@GrpcClient("searcher")
 	Searcher searcherClient;
 
 	@Inject
