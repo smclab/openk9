@@ -33,9 +33,12 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -93,7 +96,7 @@ public class SearchResource {
 		ByteString query, String[] indices) {
 
 		try(XContentParser parser = JsonXContent.jsonXContent.createParser(
-			NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
+			getNamedXContentRegistry(), DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
 			new InputStreamStreamInput(query.newInput()))) {
 
 			SearchSourceBuilder searchSourceBuilder =
@@ -104,6 +107,25 @@ public class SearchResource {
 		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+
+	}
+
+	private NamedXContentRegistry getNamedXContentRegistry() {
+
+		return namedXContentRegistryMap.computeIfAbsent(
+			namedXContentRegistryKey, o -> {
+				try {
+					Field registry =
+						RestHighLevelClient.class.getDeclaredField("registry");
+
+					registry.setAccessible(true);
+
+					return (NamedXContentRegistry)registry.get(client);
+				}
+				catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			});
 
 	}
 
@@ -175,4 +197,8 @@ public class SearchResource {
 	@Inject
 	Logger logger;
 
+	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
+		Collections.synchronizedMap(new IdentityHashMap<>());
+
+	private static final Object namedXContentRegistryKey = new Object();
 }
