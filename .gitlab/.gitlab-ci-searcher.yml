@@ -11,7 +11,7 @@ Build Latest Searcher Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - 280-searcher-refactoring
+      - 206-datasource-er-improvements
       - tags
     changes:
       - quarkus/resources-common/**/*
