@@ -16,6 +16,7 @@ Build Latest Searcher Docker Images:
     changes:
       - quarkus/resources-common/**/*
       - quarkus/searcher/**/*
+      - quarkus/searcher-grpc/**/*
       - .gitlab/.gitlab-ci-searcher.yml
       - quarkus/pom.xml
   except:

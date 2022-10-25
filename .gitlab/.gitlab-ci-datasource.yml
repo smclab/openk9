@@ -16,6 +16,7 @@ Build Latest Datasource Docker Images:
     changes:
       - quarkus/resources-common/**/*
       - quarkus/datasource/**/*
+      - quarkus/searcher-grpc/**/*
       - .gitlab/.gitlab-ci-datasource.yml
       - quarkus/pom.xml
   except:
