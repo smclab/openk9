@@ -10,21 +10,20 @@ import io.openk9.searcher.payload.response.Response;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
+import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.ShardSearchFailure;
-import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.io.stream.InputStreamStreamInput;
+import org.elasticsearch.common.CheckedFunction;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.json.JsonXContent;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.jboss.logging.Logger;
 
@@ -66,48 +65,63 @@ public class SearchResource {
 		return queryParserResponseUni
 			.flatMap(queryParserResponse -> {
 
-				org.elasticsearch.action.search.SearchRequest searchRequestElastic =
-					_decodeElasticSearchRequest(
-						queryParserResponse.getQuery(),
-						queryParserResponse.getIndexNameList().toArray(String[]::new));
+				ByteString query = queryParserResponse.getQuery();
 
-				return Uni.createFrom().<SearchResponse>emitter((sink) ->
-					client.searchAsync(
-						searchRequestElastic, RequestOptions.DEFAULT,
-						new ActionListener<>() {
-							@Override
-							public void onResponse(
-								SearchResponse searchResponse) {
+				String searchRequestElasticS = query.toStringUtf8();
+
+				String indexNames =
+					String.join(",", queryParserResponse.getIndexNameList());
+
+				org.elasticsearch.client.Request request =
+					new org.elasticsearch.client.Request(
+						"GET", "/" + indexNames + "/_search");
+
+				request.setJsonEntity(searchRequestElasticS);
+
+				return Uni.createFrom().<SearchResponse>emitter((sink) -> client
+					.getLowLevelClient()
+					.performRequestAsync(request, new ResponseListener() {
+						@Override
+						public void onSuccess(
+							org.elasticsearch.client.Response response) {
+							try {
+								SearchResponse searchResponse =
+									parseEntity(response.getEntity(),
+										SearchResponse::fromXContent);
+
 								sink.complete(searchResponse);
 							}
-
-							@Override
-							public void onFailure(Exception e) {
+							catch (IOException e) {
 								sink.fail(e);
 							}
-						}))
+						}
+
+						@Override
+						public void onFailure(Exception e) {
+							sink.fail(e);
+						}
+					}))
 					.map(this::_toSearchResponse);
 
 			});
 
 	}
 
-	private org.elasticsearch.action.search.SearchRequest _decodeElasticSearchRequest(
-		ByteString query, String[] indices) {
-
-		try(XContentParser parser = JsonXContent.jsonXContent.createParser(
-			getNamedXContentRegistry(), DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
-			new InputStreamStreamInput(query.newInput()))) {
-
-			SearchSourceBuilder searchSourceBuilder =
-				SearchSourceBuilder.fromXContent(parser);
-
-			return new org.elasticsearch.action.search.SearchRequest(indices, searchSourceBuilder);
+	protected final <Resp> Resp parseEntity(final HttpEntity entity,
+											final CheckedFunction<XContentParser, Resp, IOException> entityParser) throws IOException {
+		if (entity == null) {
+			throw new IllegalStateException("Response body expected but not returned");
 		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
+		if (entity.getContentType() == null) {
+			throw new IllegalStateException("Elasticsearch didn't return the [Content-Type] header, unable to parse response body");
 		}
-
+		XContentType xContentType = XContentType.fromMediaTypeOrFormat(entity.getContentType().getValue());
+		if (xContentType == null) {
+			throw new IllegalStateException("Unsupported Content-Type: " + entity.getContentType().getValue());
+		}
+		try (XContentParser parser = xContentType.xContent().createParser(getNamedXContentRegistry(), DeprecationHandler.THROW_UNSUPPORTED_OPERATION, entity.getContent())) {
+			return entityParser.apply(parser);
+		}
 	}
 
 	private NamedXContentRegistry getNamedXContentRegistry() {
