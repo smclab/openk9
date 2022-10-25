@@ -9,6 +9,7 @@ import io.openk9.searcher.mapper.SearcherMapper;
 import io.openk9.searcher.payload.response.Response;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpServerRequest;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.SearchResponse;
@@ -26,6 +27,7 @@ import org.jboss.logging.Logger;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,11 +38,20 @@ import java.util.Map;
 @Path("/v1/search")
 public class SearchResource {
 
+	@Context
+	HttpServerRequest request;
+
 	@POST
 	public Uni<Response> search(SearchRequest searchRequest) {
 
 		QueryParserRequest queryParserRequest =
-			searcherMapper.toQueryParserRequest(searchRequest);
+			searcherMapper
+				.toQueryParserRequest(searchRequest)
+				.toBuilder()
+				.setVirtualHost(request.host())
+				.build();
+
+		logger.info("queryParserRequest: " + queryParserRequest);
 
 		Uni<QueryParserResponse> queryParserResponseUni =
 			searcherClient.queryParser(queryParserRequest);
