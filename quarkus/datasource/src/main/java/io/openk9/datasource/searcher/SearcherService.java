@@ -60,7 +60,7 @@ public class SearcherService implements Searcher {
 
 			Map<String, List<ParserSearchToken>> tokenGroup =
 				request
-					.getSearchTokenList()
+					.getSearchQueryList()
 					.stream()
 					.map(searcherMapper::toParserSearchToken)
 					.collect(
@@ -187,7 +187,7 @@ public class SearcherService implements Searcher {
 					searchSourceBuilder.highlighter(highlightBuilder);
 
 					List<SearchTokenRequest> searchQuery =
-						request.getSearchTokenList();
+						request.getSearchQueryList();
 
 					if (!searchQuery.isEmpty() && searchQuery
 						.stream()
