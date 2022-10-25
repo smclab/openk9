@@ -9,6 +9,7 @@ import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.mapper.SearcherMapper;
 import io.openk9.searcher.payload.request.SearchRequest;
 import io.openk9.searcher.payload.response.Response;
+import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.ActionListener;
@@ -153,7 +154,7 @@ public class SearchResource {
 	@Inject
 	RestHighLevelClient client;
 
-	@Inject
+	@GrpcClient
 	Searcher searcherClient;
 
 	@Inject
