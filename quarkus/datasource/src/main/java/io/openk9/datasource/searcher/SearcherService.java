@@ -6,21 +6,34 @@ import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocType_;
+import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
+import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.mapper.SearcherMapper;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.common.io.stream.OutputStreamStreamOutput;
+import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.enterprise.inject.Instance;
@@ -28,7 +41,10 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -36,132 +52,282 @@ import java.util.stream.Collectors;
 
 @GrpcService
 public class SearcherService implements Searcher {
-    @Override
-    @ActivateRequestContext
-    public Uni<QueryParserResponse> queryParser(QueryParserRequest request) {
+	@Override
+	@ActivateRequestContext
+	public Uni<QueryParserResponse> queryParser(QueryParserRequest request) {
 
-        return Uni.createFrom().deferred(() -> {
+		return Uni.createFrom().deferred(() -> {
 
-            Map<String, List<ParserSearchToken>> tokenGroup =
-                request
-                    .getSearchTokenList()
-                    .stream()
-                    .map(searcherMapper::toParserSearchToken)
-                    .collect(
-                        Collectors.groupingBy(ParserSearchToken::getTokenType));
+			Map<String, List<ParserSearchToken>> tokenGroup =
+				request
+					.getSearchTokenList()
+					.stream()
+					.map(searcherMapper::toParserSearchToken)
+					.collect(
+						Collectors.groupingBy(ParserSearchToken::getTokenType));
 
-            if (tokenGroup.isEmpty()) {
-                return Uni
-                    .createFrom()
-                    .item(
-                        QueryParserResponse
-                            .newBuilder()
-                            .setQuery(ByteString.EMPTY)
-                            .build()
-                    );
-            }
+			String suggestKeyword = request.getSuggestKeyword();
 
-            BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+			if (StringUtils.isNotBlank(suggestKeyword)) {
 
-            return sf
-                .withTransaction(s -> _getTenantAndFetchRelations(s, request.getTenantId()))
-                .map(tenant -> {
+				List<ParserSearchToken> textTokens = tokenGroup.computeIfAbsent(
+					ParserSearchToken.TEXT, k -> new ArrayList<>(1));
 
-                    for (Map.Entry<String, List<ParserSearchToken>> entry : tokenGroup.entrySet()) {
-                        String tokenType = entry.getKey();
-                        List<ParserSearchToken> parserSearchTokens = entry.getValue();
-                        for (QueryParser queryParser : queryParserInstance) {
-                            if (queryParser.isQueryParserGroup() && queryParser.getType().equals(tokenType)) {
-                                queryParser.accept(
-                                    ParserContext
-                                        .builder()
-                                        .tokenTypeGroup(parserSearchTokens)
-                                        .mutableQuery(boolQueryBuilder)
-                                        .currentTenant(tenant)
-                                        .build()
-                                );
-                            }
-                        }
-                    }
+				textTokens.add(ParserSearchToken.ofText(suggestKeyword));
 
-                    List<ParserSearchToken> parserSearchTokens = null;
+			}
 
-                    for (QueryParser queryParser : queryParserInstance) {
-                        if (!queryParser.isQueryParserGroup()) {
+			if (tokenGroup.isEmpty()) {
+				return Uni
+					.createFrom()
+					.item(
+						QueryParserResponse
+							.newBuilder()
+							.setQuery(ByteString.EMPTY)
+							.build()
+					);
+			}
 
-                            if (parserSearchTokens == null) {
-                                parserSearchTokens = tokenGroup
-                                    .values()
-                                    .stream()
-                                    .flatMap(Collection::stream)
-                                    .toList();
-                            }
+			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-                            queryParser.accept(
-                                ParserContext
-                                    .builder()
-                                    .tokenTypeGroup(parserSearchTokens)
-                                    .mutableQuery(boolQueryBuilder)
-                                    .currentTenant(tenant)
-                                    .build()
-                            );
+			return sf
+				.withTransaction(s -> _getTenantAndFetchRelations(s, request.getVirtualHost()))
+				.map(tenant -> {
 
-                        }
-                    }
+					for (Map.Entry<String, List<ParserSearchToken>> entry : tokenGroup.entrySet()) {
+						String tokenType = entry.getKey();
+						List<ParserSearchToken> parserSearchTokens =
+							entry.getValue();
+						for (QueryParser queryParser : queryParserInstance) {
+							if (queryParser.isQueryParserGroup() &&
+								queryParser.getType().equals(tokenType)) {
+								queryParser.accept(
+									ParserContext
+										.builder()
+										.tokenTypeGroup(parserSearchTokens)
+										.mutableQuery(boolQueryBuilder)
+										.currentTenant(tenant)
+										.queryParserConfig(
+											getQueryParserConfig(
+												tenant, tokenType))
+										.build()
+								);
+							}
+						}
+					}
 
-                    return QueryParserResponse
-                        .newBuilder()
-                        .setQuery(ByteString.copyFromUtf8(boolQueryBuilder.toString()))
-                        .build();
+					List<ParserSearchToken> parserSearchTokens = null;
 
-                });
+					for (QueryParser queryParser : queryParserInstance) {
+						if (!queryParser.isQueryParserGroup()) {
 
-        });
+							if (parserSearchTokens == null) {
+								parserSearchTokens = tokenGroup
+									.values()
+									.stream()
+									.flatMap(Collection::stream)
+									.toList();
+							}
 
+							queryParser.accept(
+								ParserContext
+									.builder()
+									.tokenTypeGroup(parserSearchTokens)
+									.mutableQuery(boolQueryBuilder)
+									.currentTenant(tenant)
+									.queryParserConfig(
+										getQueryParserConfig(
+											tenant, queryParser.getType()))
+									.build()
+							);
 
-    }
+						}
+					}
 
-    private Uni<Tenant> _getTenantAndFetchRelations(
-        Mutiny.Session s, long tenantId) {
+					String[] indexNames =
+						tenant
+							.getDatasources()
+							.stream()
+							.map(Datasource::getDataIndex)
+							.map(DataIndex::getName)
+							.distinct()
+							.toArray(String[]::new);
 
-        return Uni.createFrom().deferred(() -> {
+					SearchRequest searchRequest = new SearchRequest(indexNames);
 
-            CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
+					SearchSourceBuilder searchSourceBuilder = searchRequest.source();
 
-            CriteriaQuery<Tenant> criteriaQuery = criteriaBuilder.createQuery(Tenant.class);
+					searchSourceBuilder.trackTotalHits(true);
 
-            Root<Tenant> tenantRoot = criteriaQuery.from(Tenant.class);
+					searchSourceBuilder.query(boolQueryBuilder);
 
-            Fetch<Tenant, Datasource> datasourceRoot =
-                tenantRoot.fetch(Tenant_.datasources);
+					if (request.getRangeCount() == 2) {
+						searchSourceBuilder.from(request.getRange(0));
+						searchSourceBuilder.size(request.getRange(1));
+					}
 
-            Fetch<Datasource, DataIndex> dataIndexRoot =
-                datasourceRoot.fetch(Datasource_.dataIndex);
+					HighlightBuilder highlightBuilder = new HighlightBuilder();
 
-            Fetch<DataIndex, DocType> docTypeFetch =
-                dataIndexRoot.fetch(DataIndex_.docTypes);
+					List<DocTypeField> docTypeFieldList =
+						Utils
+							.getDocTypeFieldsFrom(tenant)
+							.toList();
 
-            docTypeFetch.fetch(DocType_.docTypeFields);
+					docTypeFieldList
+						.stream()
+						.filter(DocTypeField::isText)
+						.map(DocTypeField::getName)
+						.distinct()
+						.forEach(highlightBuilder::field);
 
-            criteriaQuery.where(
-                criteriaBuilder.equal(tenantRoot.get(Tenant_.id), tenantId)
-            );
+					highlightBuilder.forceSource(true);
 
-            criteriaQuery.distinct(true);
+					highlightBuilder.tagsSchema("default");
 
-            return s.createQuery(criteriaQuery).getSingleResult();
+					searchSourceBuilder.highlighter(highlightBuilder);
 
-        });
+					List<SearchTokenRequest> searchQuery =
+						request.getSearchTokenList();
 
-    }
+					if (!searchQuery.isEmpty() && searchQuery
+						.stream()
+						.anyMatch(st -> !st.getFilter())) {
 
-    @Inject
-    Instance<QueryParser> queryParserInstance;
+						searchSourceBuilder.minScore(0.5f);
 
-    @Inject
-    SearcherMapper searcherMapper;
+					}
 
-    @Inject
-    Mutiny.SessionFactory sf;
+					_includeExcludeFields(
+						searchSourceBuilder, docTypeFieldList);
+
+					try (
+						ByteString.Output outputStream = ByteString.newOutput();
+						StreamOutput streamOutput = new OutputStreamStreamOutput(outputStream)
+					) {
+
+						searchRequest.writeTo(streamOutput);
+
+						return QueryParserResponse
+							.newBuilder()
+							.setQuery(outputStream.toByteString())
+							.build();
+
+					}
+					catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+
+				});
+
+		});
+
+	}
+
+	private void _includeExcludeFields(
+		SearchSourceBuilder searchSourceBuilder,
+		List<DocTypeField> documentTypeList) {
+
+		Map<Boolean, String[]> collect =
+			documentTypeList
+				.stream()
+				.collect(
+					Collectors.partitioningBy(
+						DocTypeField::getExclude,
+						Collectors.mapping(
+							DocTypeField::getName,
+							Collectors.collectingAndThen(
+								Collectors.toList(),
+								l -> l.toArray(String[]::new))))
+				);
+
+		searchSourceBuilder.fetchSource(
+			collect.get(false), collect.get(true));
+
+	}
+
+	private Uni<Tenant> _getTenantAndFetchRelations(
+		Mutiny.Session s, String virtualHost) {
+
+		return Uni.createFrom().deferred(() -> {
+
+			CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
+
+			CriteriaQuery<Tenant> criteriaQuery = criteriaBuilder.createQuery(Tenant.class);
+
+			Root<Tenant> tenantRoot = criteriaQuery.from(Tenant.class);
+
+			Fetch<Tenant, Datasource> datasourceRoot =
+				tenantRoot.fetch(Tenant_.datasources);
+
+			tenantRoot.fetch(Tenant_.queryParserConfigs, JoinType.LEFT);
+
+			Fetch<Datasource, DataIndex> dataIndexRoot =
+				datasourceRoot.fetch(Datasource_.dataIndex);
+
+			Fetch<DataIndex, DocType> docTypeFetch =
+				dataIndexRoot.fetch(DataIndex_.docTypes);
+
+			docTypeFetch.fetch(DocType_.docTypeFields);
+
+			criteriaQuery.where(
+				criteriaBuilder.equal(
+					tenantRoot.get(Tenant_.virtualHost), virtualHost)
+			);
+
+			criteriaQuery.distinct(true);
+
+			return s
+				.createQuery(criteriaQuery)
+				.setCacheable(true)
+				.getSingleResult();
+
+		});
+
+	}
+
+	public static JsonObject getQueryParserConfig(Tenant tenant, String tokenType) {
+		return tenant
+			.getQueryParserConfigs()
+			.stream()
+			.filter(queryParserConfig -> queryParserConfig.getType().equals(
+				tokenType))
+			.findFirst()
+			.map(SearcherService::toJsonObject)
+			.orElse(EMPTY_JSON);
+	}
+
+	public static JsonObject toJsonObject(QueryParserConfig queryParserConfig) {
+
+		String jsonConfig = queryParserConfig.getJsonConfig();
+
+		if (jsonConfig == null) {
+			Logger
+				.getLogger(SearcherService.class)
+				.warn("jsonConfig is null for queryParserConfig.type: " + queryParserConfig.getType());
+			return EMPTY_JSON;
+		}
+
+		try {
+			return new JsonObject(jsonConfig);
+		}
+		catch (DecodeException e) {
+			Logger
+				.getLogger(SearcherService.class)
+				.warn("jsonConfig is not a valid json for queryParserConfig.type: " + queryParserConfig.getType() + " jsonConfig: " + jsonConfig);
+			return EMPTY_JSON;
+		}
+
+	}
+
+	@Inject
+	Instance<QueryParser> queryParserInstance;
+
+	@Inject
+	SearcherMapper searcherMapper;
+
+	@Inject
+	Mutiny.SessionFactory sf;
+
+	private static final JsonObject EMPTY_JSON = new JsonObject(Map.of());
 
 }

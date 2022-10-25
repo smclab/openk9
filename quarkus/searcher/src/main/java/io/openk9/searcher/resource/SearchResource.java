@@ -1,5 +1,6 @@
 package io.openk9.searcher.resource;
 
+import com.google.protobuf.ByteString;
 import io.openk9.searcher.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
@@ -15,18 +16,18 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.ShardSearchFailure;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.io.stream.InputStreamStreamInput;
+import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.text.Text;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,36 +55,8 @@ public class SearchResource {
 		return queryParserResponseUni
 			.flatMap(queryParserResponse -> {
 
-				String[] indexNames =
-					queryParserResponse.getIndexNamesList()
-						.toArray(String[]::new);
-
-				SearchSourceBuilder searchSourceBuilder =
-					new SearchSourceBuilder();
-
-				searchSourceBuilder.query(
-					QueryBuilders.wrapperQuery(
-						queryParserResponse.toByteArray()
-					));
-
-				int[] range = searchRequest.getRange();
-
-				if (range != null) {
-					searchSourceBuilder.from(range[0]);
-					searchSourceBuilder.size(range[1]);
-				}
-
 				org.elasticsearch.action.search.SearchRequest searchRequestElastic =
-					new org.elasticsearch.action.search.SearchRequest(
-						indexNames, searchSourceBuilder);
-
-				HighlightBuilder highlightBuilder = new HighlightBuilder();
-
-				highlightBuilder.forceSource(true);
-
-				highlightBuilder.tagsSchema("default");
-
-				searchSourceBuilder.highlighter(highlightBuilder);
+					_decodeElasticSearchRequest(queryParserResponse.getQuery());
 
 				return Uni.createFrom().<SearchResponse>emitter((sink) ->
 					client.searchAsync(
@@ -103,6 +76,18 @@ public class SearchResource {
 					.map(this::_toSearchResponse);
 
 			});
+
+	}
+
+	private org.elasticsearch.action.search.SearchRequest _decodeElasticSearchRequest(
+		ByteString query) {
+
+		try(StreamInput streamInput = new InputStreamStreamInput(query.newInput())) {
+			return new org.elasticsearch.action.search.SearchRequest(streamInput);
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
 	}
 

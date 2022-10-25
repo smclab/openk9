@@ -18,33 +18,52 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.searcher.parser.QueryParserConfigListener;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "query_parser_config")
+@Table(
+	name = "query_parser_config",
+	uniqueConstraints = {
+		@UniqueConstraint(
+			name = "uc_queryparserconfig_type",
+			columnNames = {"type", "tenant_id"}
+		)
+	}
+)
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 @Cacheable
-@EntityListeners(QueryParserConfigListener.class)
 public class QueryParserConfig extends K9Entity {
-	@Column(name = "type", nullable = false, unique = true)
+	@Column(name = "type", nullable = false)
 	private String type;
 	@Column(name = "description", length = 4096)
 	private String description;
 	@Lob
 	@Column(name = "json_config")
 	private String jsonConfig;
+
+	@ManyToOne(
+		cascade = CascadeType.ALL,
+		fetch = FetchType.LAZY
+	)
+	@JoinColumn(name = "tenant_id")
+	@ToString.Exclude
+	private Tenant tenant;
+
 }

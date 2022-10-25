@@ -1,19 +1,17 @@
 package io.openk9.datasource.searcher.parser.impl;
 
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.dto.ParserSearchToken;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +24,7 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 
 	@Override
 	public String getType() {
-		return "AUTOCOMPLETE";
+		return TYPE;
 	}
 
 	@Override
@@ -63,14 +61,9 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 							 searchKeyword.getName().equals(keywordKey);
 
 		Map<String, Float> keywordBoostMap =
-			datasources
-				.stream()
-				.map(Datasource::getDataIndex)
-				.map(DataIndex::getDocTypes)
-				.flatMap(Collection::stream)
-				.map(DocType::getDocTypeFields)
-				.flatMap(Collection::stream)
+			Utils.getDocTypeFieldsFrom(datasources)
 				.filter(DocTypeField::getSearchable)
+				.filter(DocTypeField::isAutocomplete)
 				.filter(keywordKeyPredicate)
 				.collect(
 					Collectors.toMap(

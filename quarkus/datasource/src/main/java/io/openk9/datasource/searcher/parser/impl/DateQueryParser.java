@@ -1,12 +1,10 @@
 package io.openk9.datasource.searcher.parser.impl;
 
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.dto.ParserSearchToken;
 import io.smallrye.mutiny.tuples.Tuple2;
 import org.apache.commons.lang3.StringUtils;
@@ -15,7 +13,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -37,13 +34,7 @@ public class DateQueryParser implements QueryParser {
 		Tenant currentTenant = parserContext.getCurrentTenant();
 
 		List<Tuple2<DocTypeField, ParserSearchToken>> collect =
-			currentTenant.getDatasources()
-				.stream()
-				.map(Datasource::getDataIndex)
-				.map(DataIndex::getDocTypes)
-				.flatMap(Collection::stream)
-				.map(DocType::getDocTypeFields)
-				.flatMap(Collection::stream)
+			Utils.getDocTypeFieldsFrom(currentTenant)
 				.filter(DocTypeField::getSearchable)
 				.filter(DocTypeField::isDate)
 				.flatMap(docTypeField -> {

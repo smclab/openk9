@@ -17,14 +17,36 @@
 
 package io.openk9.datasource.searcher.util;
 
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.Tenant;
+
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class Utils {
+
+	public static Stream<DocTypeField> getDocTypeFieldsFrom(Tenant tenant) {
+		return getDocTypeFieldsFrom(tenant.getDatasources());
+	}
+
+	public static Stream<DocTypeField> getDocTypeFieldsFrom(
+		Collection<Datasource> datasources) {
+		return datasources.stream()
+			.map(Datasource::getDataIndex)
+			.map(DataIndex::getDocTypes)
+			.flatMap(Collection::stream)
+			.map(DocType::getDocTypeFields)
+			.flatMap(Collection::stream);
+	}
 
 	public static Map<Integer, ? extends TokenIndex> toTokenIndexMap(
 		String searchText) {

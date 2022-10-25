@@ -35,6 +35,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import static io.openk9.datasource.model.FieldType.BOOLEAN;
 import static io.openk9.datasource.model.FieldType.SEARCH_AS_YOU_TYPE;
 
 @Entity
@@ -105,10 +106,7 @@ public class DocTypeField extends K9Entity {
 	}
 
 	public boolean isBoolean() {
-		return switch (fieldType) {
-			case BOOLEAN -> true;
-			default -> false;
-		};
+		return BOOLEAN == fieldType;
 	}
 
 	public boolean isAutocomplete() {

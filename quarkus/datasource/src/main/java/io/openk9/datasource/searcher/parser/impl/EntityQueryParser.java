@@ -1,5 +1,7 @@
 package io.openk9.datasource.searcher.parser.impl;
 
+import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.searcher.SearcherService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
@@ -15,7 +17,6 @@ import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -33,6 +34,8 @@ public class EntityQueryParser implements QueryParser {
 
 		BoolQueryBuilder outerBoolQueryBuilder =
 			QueryBuilders.boolQuery();
+
+		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
 
 		Map<String, List<ParserSearchToken>> searchTokenGroupingByType =
 			parserContext
@@ -73,7 +76,7 @@ public class EntityQueryParser implements QueryParser {
 
 			if (ids.length != 0) {
 				outerBoolQueryBuilder.must(
-					_multiMatchValues(ENTITIES_ID, ids, boost.get()));
+					_multiMatchValues(ENTITIES_ID, ids, getBoost(queryParserConfig)));
 				addOuterBoolQuery = true;
 			}
 
@@ -94,11 +97,13 @@ public class EntityQueryParser implements QueryParser {
 		}
 
 		if (addOuterBoolQuery) {
-			queryCondition.get().useConfiguredQueryType(mutableQuery, outerBoolQueryBuilder);
+			getQueryCondition(queryParserConfig)
+				.useConfiguredQueryType(mutableQuery, outerBoolQueryBuilder);
 		}
 
-		if (manageEntityName.get()) {
-			List<ParserSearchToken> collect =
+		if (getManageEntityName(queryParserConfig)) {
+
+			List<ParserSearchToken> textParserSearchTokenList =
 				parserContext.getTokenTypeGroup()
 					.stream()
 					.map(ParserSearchToken::getEntityName)
@@ -109,30 +114,39 @@ public class EntityQueryParser implements QueryParser {
 							.builder()
 							.values(List.of(entityName))
 							.tokenType(textQueryParser.getType())
-							.build()
-					).toList();
+							.build())
+					.toList();
+
+			Tenant currentTenant = parserContext.getCurrentTenant();
+
+			JsonObject textQueryParserConfig =
+				SearcherService.getQueryParserConfig(
+					currentTenant, textQueryParser.getType());
+
 			textQueryParser.accept(
-				ParserContext.of(collect, mutableQuery, parserContext.getCurrentTenant())
+				ParserContext
+					.builder()
+					.mutableQuery(mutableQuery)
+					.currentTenant(parserContext.getCurrentTenant())
+					.tokenTypeGroup(textParserSearchTokenList)
+					.queryParserConfig(textQueryParserConfig)
+					.build()
 			);
 		}
 
 	}
 
-	@Override
-	public void configure(JsonObject configuration) {
-		boost.set(configuration.getFloat("boost", 50.0f));
-		manageEntityName.set(configuration.getBoolean("manageEntityName", true));
-		queryCondition.set(
-			QueryType.valueOf(
-				configuration.getString("queryCondition", "SHOULD")));
+	static Float getBoost(JsonObject queryParserConfig) {
+		return queryParserConfig.getFloat("boost", 50.0f);
 	}
 
-	@Override
-	public JsonObject getConfiguration() {
-		return new JsonObject()
-			.put("boost", boost.get())
-			.put("manageEntityName", manageEntityName.get())
-			.put("queryCondition", queryCondition.get());
+	static Boolean getManageEntityName(JsonObject queryParserConfig) {
+		return queryParserConfig.getBoolean("manageEntityName", true);
+	}
+
+	static QueryType getQueryCondition(JsonObject queryParserConfig) {
+		return QueryType.valueOf(
+			queryParserConfig.getString("queryCondition", "SHOULD"));
 	}
 
 	private QueryBuilder _multiMatchValues(
@@ -149,10 +163,6 @@ public class EntityQueryParser implements QueryParser {
 		return boolQuery;
 
 	}
-
-	private final AtomicReference<Float> boost = new AtomicReference<>(50.0f);
-	private final AtomicReference<Boolean> manageEntityName = new AtomicReference<>(true);
-	private final AtomicReference<QueryType> queryCondition = new AtomicReference<>(QueryType.SHOULD);
 
 	public static final String TYPE = "ENTITY";
 	public static final String ENTITIES_ID = "entities.id";

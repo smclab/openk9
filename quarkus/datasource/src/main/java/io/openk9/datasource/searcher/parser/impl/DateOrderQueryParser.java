@@ -1,12 +1,10 @@
 package io.openk9.datasource.searcher.parser.impl;
 
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.searcher.util.Utils;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -14,9 +12,7 @@ import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.Collection;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicReference;
 
 @ApplicationScoped
 public class DateOrderQueryParser implements QueryParser {
@@ -32,34 +28,16 @@ public class DateOrderQueryParser implements QueryParser {
 	}
 
 	@Override
-	public void configure(JsonObject configuration) {
-		scale.set(configuration.getString("scale", "3650d"));
-		boost.set(configuration.getFloat("boost",  0.1F));
-	}
-
-	@Override
-	public JsonObject getConfiguration() {
-		return new JsonObject()
-			.put("scale", scale.get())
-			.put("boost", boost.get());
-	}
-
-	@Override
 	public void accept(ParserContext parserContext) {
 
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
 		Tenant currentTenant = parserContext.getCurrentTenant();
 
+		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
+
 		Iterator<String> iterator =
-			currentTenant
-				.getDatasources()
-				.stream()
-				.map(Datasource::getDataIndex)
-				.map(DataIndex::getDocTypes)
-				.flatMap(Collection::stream)
-				.map(DocType::getDocTypeFields)
-				.flatMap(Collection::stream)
+			Utils.getDocTypeFieldsFrom(currentTenant)
 				.filter(DocTypeField::getSearchable)
 				.filter(DocTypeField::isDate)
 				.map(DocTypeField::getName)
@@ -70,7 +48,7 @@ public class DateOrderQueryParser implements QueryParser {
 
 			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-			boolQueryBuilder.boost(boost.get());
+			boolQueryBuilder.boost(getBoost(queryParserConfig));
 
 			while (iterator.hasNext()) {
 
@@ -80,7 +58,7 @@ public class DateOrderQueryParser implements QueryParser {
 					filterFunctionBuilder =
 					new FunctionScoreQueryBuilder.FilterFunctionBuilder(
 						ScoreFunctionBuilders.linearDecayFunction(
-							keyword, null, scale.get()));
+							keyword, null, getScale(queryParserConfig)));
 
 				boolQueryBuilder.should(
 					QueryBuilders.functionScoreQuery(
@@ -97,11 +75,12 @@ public class DateOrderQueryParser implements QueryParser {
 		}
 	}
 
-	private final AtomicReference<String> scale =
-		new AtomicReference<>("3650d");
+	static String getScale(JsonObject queryParserConfig) {
+		return queryParserConfig.getString("scale", "3650d");
+	}
 
-	private final AtomicReference<Float> boost =
-		new AtomicReference<>(0.1F);
-
+	static Float getBoost(JsonObject queryParserConfig) {
+		return queryParserConfig.getFloat("boost", 0.1F);
+	}
 
 }

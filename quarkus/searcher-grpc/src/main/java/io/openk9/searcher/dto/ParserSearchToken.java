@@ -20,4 +20,26 @@ public class ParserSearchToken {
 	private List<String> values;
 	private Map<String, String> extra;
 	private boolean filter;
+
+	public static ParserSearchToken ofText(String value) {
+		return ofText(List.of(value), null, false);
+	}
+
+	public static ParserSearchToken ofText(List<String> values) {
+		return ofText(values, null, false);
+	}
+
+	public static ParserSearchToken ofText(List<String> values, String keywordKey) {
+		return ofText(values, keywordKey, false);
+	}
+
+	public static ParserSearchToken ofText(
+		List<String> values, String keywordKey, boolean filter) {
+
+		return new ParserSearchToken(
+			null, null, TEXT, keywordKey, values, Map.of(), filter);
+	}
+
+	public static final String TEXT = "TEXT";
+
 }

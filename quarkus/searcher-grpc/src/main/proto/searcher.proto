@@ -12,12 +12,15 @@ service Searcher {
 
 message QueryParserResponse {
   bytes query = 1;
-  repeated string indexNames = 2;
 }
 
 message QueryParserRequest {
   repeated SearchTokenRequest searchToken = 1;
-  int64 tenantId = 2;
+  repeated int32 range = 2;
+  string afterKey = 3;
+  string suggestKeyword = 4;
+  int64 suggestionCategoryId = 5;
+  string virtualHost = 6;
 }
 
 message SearchTokenRequest {

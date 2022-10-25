@@ -1,8 +1,6 @@
 package io.openk9.datasource.searcher.parser.impl;
 
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.searcher.parser.ParserContext;
@@ -16,12 +14,10 @@ import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -41,14 +37,10 @@ public class TextQueryParser implements QueryParser {
 
 		Set<Datasource> datasources = currentTenant.getDatasources();
 
+		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
+
 		List<DocTypeField> docTypeFieldList =
-			datasources
-				.stream()
-				.map(Datasource::getDataIndex)
-				.map(DataIndex::getDocTypes)
-				.flatMap(Collection::stream)
-				.map(DocType::getDocTypeFields)
-				.flatMap(Collection::stream)
+			Utils.getDocTypeFieldsFrom(datasources)
 				.filter(DocTypeField::isText)
 				.filter(DocTypeField::getSearchable)
 				.toList();
@@ -91,7 +83,7 @@ public class TextQueryParser implements QueryParser {
 
 			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-			boolQueryBuilder.boost(boost.get());
+			boolQueryBuilder.boost(getBoost(queryParserConfig));
 
 			for (String value : values) {
 
@@ -130,46 +122,34 @@ public class TextQueryParser implements QueryParser {
 
 					multiMatchQueryBuilder.boost(2.0f);
 
-					valuesQueryType.get().useConfiguredQueryType(
-						boolQueryBuilder, multiMatchQueryBuilder);
+					getValuesQueryType(queryParserConfig)
+						.useConfiguredQueryType(
+							boolQueryBuilder, multiMatchQueryBuilder);
 
 				}
 
 			}
 
-			globalQueryType.get().useConfiguredQueryType(
-				mutableQuery, boolQueryBuilder);
+			getGlobalQueryType(queryParserConfig)
+				.useConfiguredQueryType(
+					mutableQuery, boolQueryBuilder);
 
 		}
 
 	}
 
-	@Override
-	public void configure(JsonObject configuration) {
-		boost.set(configuration.getFloat("boost", 1.0f));
-		valuesQueryType.set(
-			QueryType.valueOf(
-				configuration.getString("valuesQueryType", QueryType.SHOULD.name())));
-		globalQueryType.set(
-			QueryType.valueOf(
-				configuration.getString("globalQueryType", QueryType.MUST.name())));
+	static float getBoost(JsonObject jsonConfig) {
+		return jsonConfig.getFloat("boost", 1.0F);
 	}
 
-	@Override
-	public JsonObject getConfiguration() {
-		return new JsonObject()
-			.put("boost", boost.get())
-			.put("valuesQueryType", valuesQueryType.get().name())
-			.put("globalQueryType", globalQueryType.get().name());
+	static QueryType getValuesQueryType(JsonObject jsonConfig) {
+		return QueryType.valueOf(
+			jsonConfig.getString("valuesQueryType", "SHOULD"));
 	}
 
-	private final AtomicReference<Float> boost =
-		new AtomicReference<>(1.0F);
-
-	private final AtomicReference<QueryType> valuesQueryType =
-		new AtomicReference<>(QueryType.SHOULD);
-
-	private final AtomicReference<QueryType> globalQueryType =
-		new AtomicReference<>(QueryType.MUST);
+	static QueryType getGlobalQueryType(JsonObject jsonConfig) {
+		return QueryType.valueOf(
+			jsonConfig.getString("globalQueryType", "MUST"));
+	}
 
 }

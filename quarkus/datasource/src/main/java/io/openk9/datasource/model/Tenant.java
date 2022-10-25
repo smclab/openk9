@@ -26,6 +26,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -96,6 +97,10 @@ public class Tenant extends K9Entity {
 	@JoinColumn(name = "query_analysis_id")
 	@ToString.Exclude
 	private QueryAnalysis queryAnalysis;
+
+	@OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
+	@ToString.Exclude
+	private Set<QueryParserConfig> queryParserConfigs = new LinkedHashSet<>();
 
 	public boolean addSuggestionCategory(
 		Collection<SuggestionCategory> suggestionCategories,
