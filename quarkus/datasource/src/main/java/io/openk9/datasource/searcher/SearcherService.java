@@ -234,7 +234,7 @@ public class SearcherService implements Searcher {
 				.stream()
 				.collect(
 					Collectors.partitioningBy(
-						DocTypeField::isExclude,
+						DocTypeField::isDefaultExclude,
 						Collectors.mapping(
 							DocTypeField::getName,
 							Collectors.collectingAndThen(
