@@ -37,7 +37,6 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 public class AnnotatorDTO extends K9EntityDTO {
 	@NotNull
-	@NotEmpty
 	private AnnotatorType type;
 	@NotNull
 	@NotEmpty
