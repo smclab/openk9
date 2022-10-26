@@ -27,5 +27,4 @@ public enum AnnotatorType {
 	STOPWORD,
 	TOKEN
 
-
 }
