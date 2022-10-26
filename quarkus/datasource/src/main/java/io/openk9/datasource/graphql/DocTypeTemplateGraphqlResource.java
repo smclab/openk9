@@ -25,7 +25,7 @@ import javax.inject.Inject;
 public class DocTypeTemplateGraphqlResource {
 
 	@Query
-	public Uni<DocTypeTemplate> getDocTypeFieldTemplate(@Id long id) {
+	public Uni<DocTypeTemplate> getDocTypeTemplate(@Id long id) {
 		return _docTypeTemplateService.findById(id);
 	}
 
