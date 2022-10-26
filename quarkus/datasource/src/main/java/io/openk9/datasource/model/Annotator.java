@@ -49,8 +49,9 @@ public class Annotator extends K9Entity {
 	private String name;
 	@Column(name = "description", length = 4096)
 	private String description;
+	@Enumerated(EnumType.STRING)
 	@Column(name = "type", nullable = false)
-	private String type;
+	private AnnotatorType type;
 	@Column(name = "field", nullable = false)
 	private String field;
 	@Enumerated(EnumType.STRING)
