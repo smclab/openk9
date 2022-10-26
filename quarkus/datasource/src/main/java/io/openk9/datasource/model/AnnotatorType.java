@@ -19,33 +19,13 @@ package io.openk9.datasource.model;
 
 public enum AnnotatorType {
 
-	NULL("null"),
+	AGGREGATOR,
+	NER,
+	AUTOCOMPLETE,
+	DOCTYPE,
+	AUTOCORRECT,
+	STOPWORD,
+	TOKEN
 
-	AGGREGATOR("aggregator"),
-	NER("ner"),
-	AUTOCOMPLETE("autocomplete"),
-	DOCTYPE("doctype"),
-	AUTOCORRECT("autocorrect"),
-	STOPWORD("stopword"),
-	TOKEN("token");
-
-	AnnotatorType(String type) {
-		this.type = type;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	private final String type;
-
-	public static AnnotatorType fromString(String type) {
-		for (AnnotatorType annotatorType : AnnotatorType.values()) {
-			if (annotatorType.getType().equals(type)) {
-				return annotatorType;
-			}
-		}
-		return null;
-	}
 
 }
