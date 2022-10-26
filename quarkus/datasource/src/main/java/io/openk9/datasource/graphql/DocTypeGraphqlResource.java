@@ -18,8 +18,11 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.model.util.Mutiny2;
@@ -39,6 +42,7 @@ import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
+import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
@@ -170,6 +174,19 @@ public class DocTypeGraphqlResource {
 	public Uni<Tuple2<DocType, Long>> removeDocTypeField(
 		@Id long docTypeId, @Id long docTypeFieldId) {
 		return docTypeService.removeDocTypeField(docTypeId, docTypeFieldId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<DocType, DocTypeTemplate>> bindDocTypeToDocTypeTemplate(
+		@Id @Name("docTypeId") long docTypeId,
+		@Id @Name("docTypeTemplateId") long docTypeTemplateId) {
+		return docTypeService.setDocTypeTemplate(docTypeId, docTypeTemplateId);
+	}
+
+	@Mutation
+	public Uni<DocType> unbindDocTypeTemplateFromDocType(
+		@Id @Name("docTypeId") long docTypeId) {
+		return docTypeService.unsetDocType(docTypeId);
 	}
 
 	@Subscription

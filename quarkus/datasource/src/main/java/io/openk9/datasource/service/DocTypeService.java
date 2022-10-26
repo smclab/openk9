@@ -22,6 +22,7 @@ import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
@@ -124,6 +125,30 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			})));
 	}
 
+	public Uni<Tuple2<DocType, DocTypeTemplate>> setDocTypeTemplate(long docTypeId, long docTypeTemplateId) {
+		return withTransaction(() -> findById(docTypeId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docType -> docTypeTemplateService.findById(docTypeTemplateId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(docTypeTemplate -> {
+					docType.set_docTypeTemplate(docTypeTemplate);
+					return persist(docType)
+						.map(d -> Tuple2.of(d, docTypeTemplate));
+				})));
+	}
+
+	public Uni<DocType> unsetDocType(long docTypeId) {
+		return withTransaction(() -> findById(docTypeId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docType -> {
+				docType.set_docTypeTemplate(null);
+				return persist(docType);
+			}));
+	}
+
 	public Uni<List<DocTypeField>> getDocTypeFieldsByName(String docTypeName) {
 		return withStatelessTransaction((s) -> {
 			CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -192,6 +217,9 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	@Inject
 	DocTypeFieldService docTypeFieldService;
+
+	@Inject
+	DocTypeTemplateService docTypeTemplateService;
 
 	@Inject
 	DocTypeFieldMapper docTypeFieldMapper;

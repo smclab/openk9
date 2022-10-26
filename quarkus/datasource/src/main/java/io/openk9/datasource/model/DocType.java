@@ -28,7 +28,9 @@ import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
@@ -58,6 +60,12 @@ public class DocType extends K9Entity {
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
+
+	@ToString.Exclude
+	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
+	@JoinColumn(name = "doc_type_template_id", referencedColumnName = "id")
+	@JsonIgnore
+	private DocTypeTemplate _docTypeTemplate;
 
 	public boolean addDocTypeField(
 		Collection<DocTypeField> docTypeFields, DocTypeField docTypeField) {
