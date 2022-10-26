@@ -20,6 +20,7 @@ package io.openk9.datasource.model.dto;
 import io.openk9.datasource.model.AnnotatorType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.Fuziness;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,18 +32,16 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
-@SuperBuilder
-@Getter
-@Setter
+@Data
 @EqualsAndHashCode(callSuper = true)
 public class AnnotatorDTO extends K9EntityDTO {
 	@NotNull
 	private AnnotatorType type;
 	@NotNull
-	@NotEmpty
-	private String field;
-	@NotNull
 	private Fuziness fuziness;
 	@Min(1)
 	private Integer size;
+	@NotNull
+	@NotEmpty
+	private String fieldName;
 }

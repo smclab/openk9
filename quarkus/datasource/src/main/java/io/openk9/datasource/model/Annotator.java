@@ -52,8 +52,6 @@ public class Annotator extends K9Entity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "type", nullable = false)
 	private AnnotatorType type;
-	@Column(name = "field", nullable = false)
-	private String field;
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fuziness")
 	private Fuziness fuziness;
@@ -66,6 +64,8 @@ public class Annotator extends K9Entity {
 	@JsonIgnore
 	@ToString.Exclude
 	private DocTypeField docTypeField;
+	@Column(name = "field_name", nullable = false)
+	private String fieldName;
 
 	@Override
 	public boolean equals(Object o) {
