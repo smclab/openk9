@@ -1,7 +1,13 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.model.util.K9Entity;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
+import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,33 +20,27 @@ import java.util.Set;
 
 @Entity
 @Table(name = "search_config")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@AllArgsConstructor(staticName = "of")
+@Cacheable
 public class SearchConfig extends K9Entity {
 
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
 	@Column(name = "min_score")
 	private Float minScore;
-
 	@ManyToMany(cascade = {
 		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
 		CascadeType.DETACH})
 	@JoinTable(name = "search_config_query_parser_config",
 		joinColumns = @JoinColumn(name = "search_config_id"),
 		inverseJoinColumns = @JoinColumn(name = "query_parser_configs_id"))
+	@ToString.Exclude
 	private Set<QueryParserConfig> queryParserConfigs = new LinkedHashSet<>();
 
-	public Set<QueryParserConfig> getQueryParserConfigs() {
-		return queryParserConfigs;
-	}
-
-	public void setQueryParserConfigs(
-		Set<QueryParserConfig> queryParserConfigs) {
-		this.queryParserConfigs = queryParserConfigs;
-	}
-
-	public Float getMinScore() {
-		return minScore;
-	}
-
-	public void setMinScore(Float minScore) {
-		this.minScore = minScore;
-	}
 }
