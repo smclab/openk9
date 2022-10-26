@@ -30,7 +30,7 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "template")
+@Table(name = "doc_type_template")
 @Getter
 @Setter
 @ToString
