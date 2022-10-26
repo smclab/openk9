@@ -171,7 +171,7 @@ public class DatasourceProcessor {
 			criteriaBuilder.equal(
 				rootDatasource.get(Datasource_.id), datasourceId));
 
-		return session.createQuery(query).getSingleResultOrNull();
+		return session.createQuery(query).getSingleResult();
 
 	}
 
