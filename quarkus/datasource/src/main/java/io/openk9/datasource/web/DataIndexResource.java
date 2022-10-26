@@ -248,12 +248,6 @@ public class DataIndexResource {
 
 					current.put("type", fieldType.getType());
 
-					AnalyzerType analyzer = docTypeField.getAnalyzerType();
-
-					if (analyzer != null) {
-						current.put("analyzer", analyzer.name());
-					}
-
 					if (isFields) {
 						if (fieldType == FieldType.KEYWORD) {
 							current.put("ignore_above", 256);
