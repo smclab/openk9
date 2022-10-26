@@ -15,35 +15,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.model;
 
-import io.openk9.datasource.model.AnnotatorType;
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.model.util.Fuziness;
-import lombok.EqualsAndHashCode;
+import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import lombok.ToString;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Lob;
+import javax.persistence.Table;
 
-@NoArgsConstructor
-@SuperBuilder
+@Entity
+@Table(name = "template")
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true)
-public class AnnotatorDTO extends K9EntityDTO {
-	@NotNull
-	@NotEmpty
-	private AnnotatorType type;
-	@NotNull
-	@NotEmpty
-	private String field;
-	@NotNull
-	private Fuziness fuziness;
-	@Min(1)
-	private Integer size;
+@ToString
+@RequiredArgsConstructor
+@Cacheable
+public class DocTypeTemplate extends K9Entity {
+
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "description", length = 4096)
+	private String description;
+	@Column(name = "source")
+	@Lob
+	private String source;
+	@Column(name = "compiled")
+	@Lob
+	private String compiled;
+
 }

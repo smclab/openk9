@@ -17,16 +17,14 @@
 
 package io.openk9.datasource.model.dto;
 
-import io.openk9.datasource.model.AnnotatorType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.model.util.Fuziness;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import javax.validation.constraints.Min;
+import javax.persistence.Lob;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -35,15 +33,13 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-public class AnnotatorDTO extends K9EntityDTO {
-	@NotNull
+public class DocTypeTemplateDTO extends K9EntityDTO {
+	@Lob
 	@NotEmpty
-	private AnnotatorType type;
 	@NotNull
+	private String source;
+	@Lob
 	@NotEmpty
-	private String field;
 	@NotNull
-	private Fuziness fuziness;
-	@Min(1)
-	private Integer size;
+	private String compiled;
 }
