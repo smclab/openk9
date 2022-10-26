@@ -40,6 +40,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -165,7 +166,7 @@ public class DatasourceProcessor {
 
 		Root<Datasource> rootDatasource = query.from(Datasource.class);
 
-		rootDatasource.fetch(Datasource_.dataIndex);
+		rootDatasource.fetch(Datasource_.dataIndex, JoinType.LEFT);
 
 		query.where(
 			criteriaBuilder.equal(
