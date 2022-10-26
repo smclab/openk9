@@ -32,6 +32,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -98,8 +99,12 @@ public class Tenant extends K9Entity {
 	@ToString.Exclude
 	private QueryAnalysis queryAnalysis;
 
-	@OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL)
-	private Set<QueryParserConfig> queryParserConfigs = new LinkedHashSet<>();
+	@ManyToOne(
+		cascade = CascadeType.ALL,
+		fetch = FetchType.LAZY
+	)
+	@JoinColumn(name = "search_config_id")
+	private SearchConfig searchConfig;
 
 	public boolean addSuggestionCategory(
 		Collection<SuggestionCategory> suggestionCategories,

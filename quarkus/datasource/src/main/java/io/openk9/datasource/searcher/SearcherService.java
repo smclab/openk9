@@ -9,6 +9,8 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.QueryParserConfig;
+import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.SearchConfig_;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.searcher.parser.ParserContext;
@@ -194,7 +196,14 @@ public class SearcherService implements Searcher {
 						.stream()
 						.anyMatch(st -> !st.getFilter())) {
 
-						searchSourceBuilder.minScore(0.5f);
+						SearchConfig searchConfig = tenant.getSearchConfig();
+
+						if (searchConfig != null && searchConfig.getMinScore() != null) {
+							searchSourceBuilder.minScore(searchConfig.getMinScore());
+						}
+						else {
+							searchSourceBuilder.minScore(0.1f);
+						}
 
 					}
 
@@ -257,18 +266,20 @@ public class SearcherService implements Searcher {
 
 		Root<Tenant> tenantRoot = criteriaQuery.from(Tenant.class);
 
-		tenantRoot.fetch(Tenant_.queryParserConfigs, JoinType.LEFT);
+		tenantRoot
+			.fetch(Tenant_.searchConfig, JoinType.LEFT)
+			.fetch(SearchConfig_.queryParserConfigs, JoinType.LEFT);
 
 		Fetch<Tenant, Datasource> datasourceRoot =
-			tenantRoot.fetch(Tenant_.datasources);
+			tenantRoot.fetch(Tenant_.datasources, JoinType.LEFT);
 
 		Fetch<Datasource, DataIndex> dataIndexRoot =
-			datasourceRoot.fetch(Datasource_.dataIndex);
+			datasourceRoot.fetch(Datasource_.dataIndex, JoinType.LEFT);
 
 		Fetch<DataIndex, DocType> docTypeFetch =
-			dataIndexRoot.fetch(DataIndex_.docTypes);
+			dataIndexRoot.fetch(DataIndex_.docTypes, JoinType.LEFT);
 
-		docTypeFetch.fetch(DocType_.docTypeFields);
+		docTypeFetch.fetch(DocType_.docTypeFields, JoinType.LEFT);
 
 		criteriaQuery.where(
 			criteriaBuilder.equal(
@@ -286,7 +297,14 @@ public class SearcherService implements Searcher {
 	}
 
 	public static JsonObject getQueryParserConfig(Tenant tenant, String tokenType) {
-		return tenant
+
+		SearchConfig searchConfig = tenant.getSearchConfig();
+
+		if (searchConfig == null) {
+			return EMPTY_JSON;
+		}
+
+		return searchConfig
 			.getQueryParserConfigs()
 			.stream()
 			.filter(queryParserConfig -> queryParserConfig.getType().equals(
