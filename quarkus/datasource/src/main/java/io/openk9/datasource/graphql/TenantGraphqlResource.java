@@ -163,8 +163,8 @@ public class TenantGraphqlResource {
 
 	@Mutation
 	public Uni<Tuple2<Tenant, SearchConfig>> bindSearchConfigToTenant(
-		@Id long tenantId, @Id long queryAnalysisId) {
-		return tenantService.bindSearchConfig(tenantId, queryAnalysisId);
+		@Id long tenantId, @Id long searchConfigId) {
+		return tenantService.bindSearchConfig(tenantId, searchConfigId);
 	}
 
 	@Mutation

@@ -18,15 +18,10 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
-import io.openk9.datasource.model.Annotator;
-import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryParserConfig;
-import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.dto.QueryAnalysisDTO;
 import io.openk9.datasource.model.dto.SearchConfigDTO;
 import io.openk9.datasource.resource.util.SortBy;
-import io.openk9.datasource.service.QueryAnalysisService;
 import io.openk9.datasource.service.SearchConfigService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
@@ -97,14 +92,14 @@ public class SearchConfigGraphqlResource {
 
 	@Mutation
 	public Uni<Tuple2<SearchConfig, QueryParserConfig>> addQueryParserConfigToSearchConfig(
-		@Id long id, @Id long ruleId) {
-		return searchConfigService.addQueryParserConfigToSearchConfig(id, ruleId);
+		@Id long id, @Id long queryParserConfigId) {
+		return searchConfigService.addQueryParserConfigToSearchConfig(id, queryParserConfigId);
 	}
 
 	@Mutation
 	public Uni<Tuple2<SearchConfig, QueryParserConfig>> removeQueryParserConfigFromSearchConfig(
-		@Id long id, @Id long ruleId) {
-		return searchConfigService.removeQueryParserConfigFromSearchConfig(id, ruleId);
+		@Id long id, @Id long queryParserConfigId) {
+		return searchConfigService.removeQueryParserConfigFromSearchConfig(id, queryParserConfigId);
 	}
 
 	@Mutation

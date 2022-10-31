@@ -17,16 +17,12 @@
 
 package io.openk9.datasource.model.dto;
 
-import io.openk9.datasource.model.AnnotatorType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.model.util.Fuziness;
 import io.openk9.datasource.validation.json.Json;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
