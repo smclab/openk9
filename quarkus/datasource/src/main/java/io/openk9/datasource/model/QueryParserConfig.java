@@ -37,6 +37,9 @@ import javax.persistence.Table;
 @RequiredArgsConstructor
 @Cacheable
 public class QueryParserConfig extends K9Entity {
+
+	@Column(name = "name", nullable = false)
+	private String name;
 	@Column(name = "type", nullable = false)
 	private String type;
 	@Column(name = "description", length = 4096)
