@@ -21,6 +21,7 @@ import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.TenantMapper;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
@@ -218,6 +219,30 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 			}));
 	}
 
+
+	public Uni<Tuple2<Tenant, SearchConfig>> bindSearchConfig(long tenantId, long searchConfigId) {
+		return withTransaction((s, tr) -> findById(tenantId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> searchConfigService.findById(searchConfigId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(searchConfig -> {
+					tenant.setSearchConfig(searchConfig);
+					return persist(tenant).map(t -> Tuple2.of(t, searchConfig));
+				})));
+	}
+
+	public Uni<Tuple2<Tenant, SearchConfig>> unbindSearchConfig(long tenantId) {
+		return withTransaction((s, tr) -> findById(tenantId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> {
+				tenant.setSearchConfig(null);
+				return persist(tenant).map(t -> Tuple2.of(t, null));
+			}));
+	}
+
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {Tenant_.NAME, Tenant_.VIRTUAL_HOST};
@@ -231,6 +256,9 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 	@Inject
 	QueryAnalysisService queryAnalysisService;
+
+	@Inject
+	SearchConfigService searchConfigService;
 
 	@Override
 	public Class<Tenant> getEntityClass() {

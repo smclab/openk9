@@ -15,6 +15,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -42,5 +44,22 @@ public class SearchConfig extends K9Entity {
 		inverseJoinColumns = @JoinColumn(name = "query_parser_configs_id"))
 	@ToString.Exclude
 	private Set<QueryParserConfig> queryParserConfigs = new LinkedHashSet<>();
+
+	public boolean removeQueryParserConfig(
+		Collection<QueryParserConfig> queryParserConfigs, long queryParserConfigId) {
+
+		Iterator<QueryParserConfig> iterator = queryParserConfigs.iterator();
+
+		while (iterator.hasNext()) {
+			QueryParserConfig queryParserConfig = iterator.next();
+			if (queryParserConfig.getId() == queryParserConfigId) {
+				iterator.remove();
+				return true;
+			}
+		}
+
+		return false;
+
+	}
 
 }

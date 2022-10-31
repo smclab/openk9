@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
@@ -158,6 +159,18 @@ public class TenantGraphqlResource {
 	public Uni<Tuple2<Tenant, QueryAnalysis>> unbindQueryAnalysisFromTenant(
 		@Id long tenantId) {
 		return tenantService.unbindQueryAnalysis(tenantId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Tenant, SearchConfig>> bindSearchConfigToTenant(
+		@Id long tenantId, @Id long queryAnalysisId) {
+		return tenantService.bindSearchConfig(tenantId, queryAnalysisId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Tenant, SearchConfig>> unbindSearchConfigFromTenant(
+		@Id long tenantId) {
+		return tenantService.unbindSearchConfig(tenantId);
 	}
 
 	@Subscription
