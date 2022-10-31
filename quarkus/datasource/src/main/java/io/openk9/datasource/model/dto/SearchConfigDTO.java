@@ -30,9 +30,5 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 public class SearchConfigDTO extends K9EntityDTO {
 	@NotNull
-	private String name;
-	@NotNull
-	private String description;
-	@NotNull
 	private Float minScore;
 }
