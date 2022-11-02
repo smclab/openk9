@@ -6,7 +6,6 @@ import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
@@ -39,7 +38,6 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import java.io.IOException;
@@ -89,26 +87,26 @@ public abstract class BaseSearchService {
 
 		if (suggestion) {
 
-			Fetch<Tenant, SuggestionCategory> suggestionCategoryFetch =
-				tenantRoot.fetch(Tenant_.suggestionCategories);
-
-			Fetch<SuggestionCategory, DocTypeField> suggestionCategoryDocTypeFieldFetch =
-				suggestionCategoryFetch.fetch(
-					SuggestionCategory_.docTypeFields);
-
 			if (suggestionCategoryId > 0) {
 
-				Join<Tenant, SuggestionCategory> join =
-					(Join<Tenant, SuggestionCategory>)suggestionCategoryFetch;
+				Root<SuggestionCategory> suggestionCategoryRoot =
+					criteriaQuery.from(SuggestionCategory.class);
 
-				join
-					.on(
-						criteriaBuilder.equal(
-							join.get(SuggestionCategory_.id),
-							suggestionCategoryId
-						)
-					);
+				suggestionCategoryRoot.fetch(
+					SuggestionCategory_.docTypeFields);
 
+				criteriaQuery.where(
+					criteriaBuilder.equal(
+						suggestionCategoryRoot.get(SuggestionCategory_.id),
+						suggestionCategoryId
+					)
+				);
+
+			}
+			else {
+				tenantRoot
+					.fetch(Tenant_.suggestionCategories)
+					.fetch(SuggestionCategory_.docTypeFields);
 			}
 
 		}
