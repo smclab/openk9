@@ -29,7 +29,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.composite.CompositeAggregation;
@@ -51,7 +50,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -311,185 +309,133 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					Uni<SearchResponse> searchResponseUni = _search(searchRequest);
 
-					return searchResponseUni
-						.flatMap(searchResponse -> {
+					return searchResponseUni.map(searchResponse -> {
 
-							Aggregations aggregations = searchResponse.getAggregations();
+							Aggregations aggregations =
+								searchResponse.getAggregations();
 
 							if (aggregations == null) {
-								return Uni.createFrom().item(
-									SuggestionsResponse
-										.newBuilder()
-										.build());
-							}
-
-							Uni<Map<String, String[]>> suggestionsEntities =
-								_suggestionsEntities(searchResponse);
-
-							return suggestionsEntities.map(entityMap -> {
-								CompositeAggregation responseCompositeAggregation =
-									_getCompositeAggregation(searchResponse);
-
-								if (responseCompositeAggregation == null) {
-									return SuggestionsResponse
-										.newBuilder()
-										.build();
-								}
-
-								Map<String, Long> fieldNameCategoryIdMap =
-									suggestionCategories
-										.stream()
-										.flatMap(e -> e
-											.getDocTypeFields()
-											.stream()
-											.map(dtf ->
-												Map.entry(
-													dtf.getName(),
-													e.getId()
-												)
-											)
-										)
-										.collect(
-											Collectors.toMap(
-												Map.Entry::getKey,
-												Map.Entry::getValue
-											)
-										);
-
-								List<? extends CompositeAggregation.Bucket> buckets =
-									responseCompositeAggregation.getBuckets();
-
-								LinkedList<Suggestions> suggestions =
-									new LinkedList<>();
-
-								BiConsumer<String, Suggestions> addSuggestions;
-
-								if (StringUtils.isNotBlank(suggestKeyword)) {
-									addSuggestions = (key, sugg) -> {
-
-										if (!suggestions.contains(sugg)) {
-											if (containsIgnoreCase(key, suggestKeyword)) {
-												suggestions.addFirst(sugg);
-											}
-										}
-									};
-								}
-								else {
-									addSuggestions = (key, sugg) -> {
-										if (!suggestions.contains(sugg)) {
-											suggestions.add(sugg);
-										}
-									};
-								}
-
-								for (CompositeAggregation.Bucket bucket : buckets) {
-
-									Map<String, Object> keys = new HashMap<>(bucket.getKey());
-
-									for (Map.Entry<String, Object> entry : keys.entrySet()) {
-
-										String key = entry.getKey();
-										String value = (String)entry.getValue();
-
-										Long suggestionCategoryId =
-											fieldNameCategoryIdMap.get(key);
-
-										if (value == null) {
-											continue;
-										}
-
-										long docCount = bucket.getDocCount();
-
-										if ("documentTypes".equals(key.replace(".keyword", ""))) {
-											addSuggestions.accept(
-												value,
-												SuggestionsUtil.docType(
-													value,
-													suggestionCategoryId,
-													docCount)
-											);
-										}
-										else {
-											addSuggestions.accept(
-												value,
-												SuggestionsUtil.text(
-													value, suggestionCategoryId,
-													key, docCount
-												)
-											);
-										}
-									}
-
-								}
-
-								Map<String, Object> map =
-									responseCompositeAggregation.afterKey();
-								String newAfterKey = "";
-
-								if (map != null) {
-									newAfterKey = Json.encode(map);
-									newAfterKey = Base64.getEncoder().encodeToString(
-										newAfterKey.getBytes(StandardCharsets.UTF_8));
-								}
-
 								return SuggestionsResponse
 									.newBuilder()
-									.addAllResult(suggestions)
-									.setAfterKey(newAfterKey)
 									.build();
-							});
+							}
+
+							CompositeAggregation responseCompositeAggregation =
+								_getCompositeAggregation(searchResponse);
+
+							if (responseCompositeAggregation == null) {
+								return SuggestionsResponse
+									.newBuilder()
+									.build();
+							}
+
+							Map<String, Long> fieldNameCategoryIdMap =
+								suggestionCategories
+									.stream()
+									.flatMap(e -> e
+										.getDocTypeFields()
+										.stream()
+										.map(dtf ->
+											Map.entry(
+												dtf.getName(),
+												e.getId()
+											)
+										)
+									)
+									.collect(
+										Collectors.toMap(
+											Map.Entry::getKey,
+											Map.Entry::getValue
+										)
+									);
+
+							List<? extends CompositeAggregation.Bucket> buckets =
+								responseCompositeAggregation.getBuckets();
+
+							LinkedList<Suggestions> suggestions =
+								new LinkedList<>();
+
+							BiConsumer<String, Suggestions> addSuggestions;
+
+							if (StringUtils.isNotBlank(suggestKeyword)) {
+								addSuggestions = (key, sugg) -> {
+
+									if (!suggestions.contains(sugg)) {
+										if (containsIgnoreCase(key, suggestKeyword)) {
+											suggestions.addFirst(sugg);
+										}
+									}
+								};
+							}
+							else {
+								addSuggestions = (key, sugg) -> {
+									if (!suggestions.contains(sugg)) {
+										suggestions.add(sugg);
+									}
+								};
+							}
+
+							for (CompositeAggregation.Bucket bucket : buckets) {
+
+								Map<String, Object> keys = new HashMap<>(bucket.getKey());
+
+								for (Map.Entry<String, Object> entry : keys.entrySet()) {
+
+									String key = entry.getKey();
+									String value = (String)entry.getValue();
+
+									Long suggestionCategoryId =
+										fieldNameCategoryIdMap.get(key);
+
+									if (value == null) {
+										continue;
+									}
+
+									long docCount = bucket.getDocCount();
+
+									if ("documentTypes".equals(key.replace(".keyword", ""))) {
+										addSuggestions.accept(
+											value,
+											SuggestionsUtil.docType(
+												value,
+												suggestionCategoryId,
+												docCount)
+										);
+									}
+									else {
+										addSuggestions.accept(
+											value,
+											SuggestionsUtil.text(
+												value, suggestionCategoryId,
+												key, docCount
+											)
+										);
+									}
+								}
+
+							}
+
+							Map<String, Object> map =
+								responseCompositeAggregation.afterKey();
+							String newAfterKey = "";
+
+							if (map != null) {
+								newAfterKey = Json.encode(map);
+								newAfterKey = Base64.getEncoder().encodeToString(
+									newAfterKey.getBytes(StandardCharsets.UTF_8));
+							}
+
+							return SuggestionsResponse
+								.newBuilder()
+								.addAllResult(suggestions)
+								.setAfterKey(newAfterKey)
+								.build();
 
 					});
 
 				});
 
 		});
-	}
-
-	private Uni<Map<String, String[]>> _suggestionsEntities(SearchResponse searchResponse) {
-
-		SearchRequest searchRequestEntity =
-			new SearchRequest(tenantResolver.getTenantId() + "-entity");
-
-		CompositeAggregation compositeAggregation =
-			_getCompositeAggregation(searchResponse);
-
-		List<? extends CompositeAggregation.Bucket> buckets =
-			compositeAggregation.getBuckets();
-
-		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-
-		buckets
-			.stream()
-			.map(bucket -> (String)bucket.getKey().get("entities.id"))
-			.filter(Objects::nonNull)
-			.distinct()
-			.forEach(entityId -> boolQueryBuilder.should(
-				QueryBuilders.matchQuery("id", entityId)
-			));
-
-		SearchSourceBuilder ssb = searchRequestEntity.source();
-
-		ssb.query(boolQueryBuilder);
-		ssb.size(1000);
-		ssb.fetchSource(new String[]{"name", "id", "type"}, null);
-
-		return _search(searchRequestEntity)
-			.map(entityResponse -> {
-
-				Map<String, String[]> entityMap = new HashMap<>();
-
-				for (SearchHit hit : entityResponse.getHits()) {
-					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
-					String name =(String)sourceAsMap.get("name");
-					String type =(String)sourceAsMap.get("type");
-					String entityId =(String)sourceAsMap.get("id");
-					entityMap.put(entityId, new String[]{type, name});
-				}
-
-				return entityMap;
-
-			});
 	}
 
 	private Uni<SearchResponse> _search(SearchRequest searchRequest) {
