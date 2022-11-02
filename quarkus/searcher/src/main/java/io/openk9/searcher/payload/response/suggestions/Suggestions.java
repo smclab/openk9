@@ -41,6 +41,10 @@ public abstract class Suggestions {
 		return suggestionCategoryId;
 	}
 
+	public long getCount() {
+		return count;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
