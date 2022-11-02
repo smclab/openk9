@@ -90,7 +90,7 @@ public class Tenant extends K9Entity {
 	private Set<SuggestionCategory> suggestionCategories
 		= new LinkedHashSet<>();
 
-	@OneToOne(
+	@ManyToOne(
 		fetch = FetchType.LAZY
 	)
 	@JoinColumn(name = "query_analysis_id")
