@@ -101,7 +101,7 @@ public abstract class BaseSearchService {
 							suggestionCategoryId
 						)
 					)
-					.fetch(SuggestionCategory_.docTypeFields);
+					.join(SuggestionCategory_.docTypeFields);
 
 			}
 			else {
