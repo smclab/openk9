@@ -18,8 +18,6 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeTemplate;
@@ -106,6 +104,11 @@ public class DocTypeGraphqlResource {
 	public Uni<DocType> docType(@Source DocTypeField docTypeField) {
 		return docTypeFieldService.withTransaction(
 			(s) -> Mutiny2.fetch(s, docTypeField.getDocType()));
+	}
+
+	public Uni<DocTypeTemplate> docTypeTemplate(@Source DocType docType) {
+		return docTypeFieldService.withTransaction(
+			(s) -> Mutiny2.fetch(s, docType.getDocTypeTemplate()));
 	}
 
 	public Uni<Response<DocType>> patchDocType(@Id long id, DocTypeDTO docTypeDTO) {

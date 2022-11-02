@@ -65,7 +65,7 @@ public class DocType extends K9Entity {
 	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
 	@JoinColumn(name = "doc_type_template_id", referencedColumnName = "id")
 	@JsonIgnore
-	private DocTypeTemplate _docTypeTemplate;
+	private DocTypeTemplate docTypeTemplate;
 
 	public boolean addDocTypeField(
 		Collection<DocTypeField> docTypeFields, DocTypeField docTypeField) {

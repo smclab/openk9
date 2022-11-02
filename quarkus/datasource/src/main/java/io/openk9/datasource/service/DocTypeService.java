@@ -133,7 +133,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 				.onItem()
 				.ifNotNull()
 				.transformToUni(docTypeTemplate -> {
-					docType.set_docTypeTemplate(docTypeTemplate);
+					docType.setDocTypeTemplate(docTypeTemplate);
 					return persist(docType)
 						.map(d -> Tuple2.of(d, docTypeTemplate));
 				})));
@@ -144,7 +144,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> {
-				docType.set_docTypeTemplate(null);
+				docType.setDocTypeTemplate(null);
 				return persist(docType);
 			}));
 	}
