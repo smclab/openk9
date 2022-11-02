@@ -7,6 +7,8 @@ import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.dto.ParserSearchToken;
 import io.smallrye.mutiny.tuples.Tuple2;
+import io.vavr.Function0;
+import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -33,18 +35,36 @@ public class DateQueryParser implements QueryParser {
 
 		Tenant currentTenant = parserContext.getCurrentTenant();
 
+		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
+
+		Function0<Boolean> allFieldsWhenKeywordIsEmpty =
+			Function0
+				.of(
+					() -> queryParserConfig.getBoolean(
+						"allFieldsWhenKeywordIsEmpty", true))
+				.memoized();
+
 		List<Tuple2<DocTypeField, ParserSearchToken>> collect =
 			Utils.getDocTypeFieldsFrom(currentTenant)
-				.filter(DocTypeField::getSearchable)
-				.filter(DocTypeField::isDate)
+				.filter(DocTypeField::isSearchableAndDate)
 				.flatMap(docTypeField -> {
 
 					for (ParserSearchToken searchToken : searchTokens) {
-						if (searchToken.getKeywordKey() != null
-							&& searchToken.getKeywordKey().equals(
-							docTypeField.getName())) {
-							return Stream.of(
-								Tuple2.of(docTypeField, searchToken));
+
+						if (searchToken.getKeywordKey() == null) {
+
+							if (allFieldsWhenKeywordIsEmpty.get()) {
+								return Stream.of(
+									Tuple2.of(docTypeField, searchToken));
+							}
+							else {
+								continue;
+							}
+
+						}
+
+						if (searchToken.getKeywordKey().equals(docTypeField.getName())) {
+							return Stream.of(Tuple2.of(docTypeField, searchToken));
 						}
 					}
 

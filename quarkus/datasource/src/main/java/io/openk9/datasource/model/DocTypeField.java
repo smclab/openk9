@@ -121,4 +121,8 @@ public class DocTypeField extends K9Entity {
 		return exclude != null && exclude;
 	}
 
+	public boolean isSearchableAndDate() {
+		return getSearchable() && isDate();
+	}
+
 }
