@@ -51,22 +51,25 @@ public class SuggestionsUtil {
 	}
 
 	public static Suggestions text(
-		String value, long suggestionCategoryId, String keywordKey) {
+		String value, long suggestionCategoryId, String keywordKey, long count) {
 		return Suggestions
 			.newBuilder()
 			.setTokenType(TokenType.TEXT)
 			.setSuggestionCategoryId(suggestionCategoryId)
 			.setValue(value)
 			.setKeywordKey(keywordKey)
+			.setCount(count)
 			.build();
 	}
 
-	public static Suggestions docType(String value, long suggestionCategoryId) {
+	public static Suggestions docType(
+		String value, long suggestionCategoryId, long count) {
 		return Suggestions
 			.newBuilder()
 			.setTokenType(TokenType.DOCTYPE)
 			.setSuggestionCategoryId(suggestionCategoryId)
 			.setValue(value)
+			.setCount(count)
 			.build();
 	}
 

@@ -18,7 +18,7 @@
 package io.openk9.searcher.payload.response.suggestions;
 
 class DatasourceSuggestions extends Suggestions {
-	DatasourceSuggestions(String value, long suggestionCategoryId) {
-		super(TokenType.DATASOURCE, value, suggestionCategoryId);
+	DatasourceSuggestions(String value, long suggestionCategoryId, long count) {
+		super(TokenType.DATASOURCE, value, suggestionCategoryId, count);
 	}
 }

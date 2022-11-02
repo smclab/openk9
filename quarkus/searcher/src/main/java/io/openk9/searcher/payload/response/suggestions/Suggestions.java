@@ -21,10 +21,12 @@ import java.util.Objects;
 
 public abstract class Suggestions {
 
-	Suggestions(TokenType tokenType, String value, long suggestionCategoryId) {
+	Suggestions(TokenType tokenType, String value, long suggestionCategoryId,
+				long count) {
 		this.tokenType = tokenType;
 		this.value = value;
 		this.suggestionCategoryId = suggestionCategoryId;
+		this.count = count;
 	}
 
 	public TokenType getTokenType() {
@@ -60,32 +62,37 @@ public abstract class Suggestions {
 	private final String value;
 	private final long suggestionCategoryId;
 
+	private final long count;
+
 	public static Suggestions entity(
-		String value, long suggestionCategoryId, String entityType, String entityValue) {
+		String value, long suggestionCategoryId, String entityType, String entityValue,
+		long count) {
 
 		return new EntitySuggestions(
-			value, suggestionCategoryId, entityType, entityValue);
+			value, suggestionCategoryId, entityType, entityValue, count);
 	}
 
 	public static Suggestions entity(
 		String value, long suggestionCategoryId, String entityType,
-		String entityValue, String keywordKey) {
+		String entityValue, String keywordKey, long count) {
 
 		return new EntityContextSuggestions(
-			value, suggestionCategoryId, entityType, entityValue, keywordKey);
+			value, suggestionCategoryId, entityType, entityValue, keywordKey, count);
 	}
 
 	public static Suggestions text(
-		String value, long suggestionCategoryId, String keywordKey) {
-		return new TextSuggestions(value, suggestionCategoryId, keywordKey);
+		String value, long suggestionCategoryId, String keywordKey, long count) {
+		return new TextSuggestions(value, suggestionCategoryId, keywordKey, count);
 	}
 
-	public static Suggestions docType(String value, long suggestionCategoryId) {
-		return new DocTypeSuggestions(value, suggestionCategoryId);
+	public static Suggestions docType(
+		String value, long suggestionCategoryId, long count) {
+
+		return new DocTypeSuggestions(value, suggestionCategoryId, count);
 	}
 
-	public static Suggestions datasource(String value, long suggestionCategoryId) {
-		return new DatasourceSuggestions(value, suggestionCategoryId);
+	public static Suggestions datasource(String value, long suggestionCategoryId, long count) {
+		return new DatasourceSuggestions(value, suggestionCategoryId, count);
 	}
 
 }

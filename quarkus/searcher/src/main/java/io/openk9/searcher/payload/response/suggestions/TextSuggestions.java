@@ -20,8 +20,9 @@ package io.openk9.searcher.payload.response.suggestions;
 class TextSuggestions extends Suggestions {
 
 	TextSuggestions(
-		String value, long suggestionCategoryId, String keywordKey) {
-		super(TokenType.TEXT, value, suggestionCategoryId);
+		String value, long suggestionCategoryId, String keywordKey,
+		long count) {
+		super(TokenType.TEXT, value, suggestionCategoryId, count);
 		this.keywordKey = keywordKey;
 	}
 

@@ -28,6 +28,7 @@ message Suggestions {
   string keywordKey = 4;
   optional string entityType = 5;
   optional string entityValue = 6;
+  int64 count = 7;
 }
 
 enum TokenType {

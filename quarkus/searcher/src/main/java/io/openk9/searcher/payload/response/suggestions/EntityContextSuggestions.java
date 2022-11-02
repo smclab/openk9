@@ -23,8 +23,8 @@ class EntityContextSuggestions extends EntitySuggestions {
 
 	EntityContextSuggestions(
 		String value, long suggestionCategoryId, String entityType,
-		String entityValue, String keywordKey) {
-		super(value, suggestionCategoryId, entityType, entityValue);
+		String entityValue, String keywordKey, long count) {
+		super(value, suggestionCategoryId, entityType, entityValue, count);
 		this.keywordKey = keywordKey;
 	}
 

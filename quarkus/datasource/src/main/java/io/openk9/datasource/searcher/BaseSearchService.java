@@ -92,19 +92,23 @@ public abstract class BaseSearchService {
 
 				SetJoin<Tenant, SuggestionCategory> join =
 					tenantRoot.join(
-						Tenant_.suggestionCategories, JoinType.LEFT);
+						Tenant_.suggestionCategories);
 
-				join.on(
-					criteriaBuilder.equal(
-						join.get(SuggestionCategory_.id),
-						suggestionCategoryId)
-				);
+				join
+					.on(
+						criteriaBuilder.equal(
+							join.get(SuggestionCategory_.id),
+							suggestionCategoryId
+						)
+					)
+					.fetch(SuggestionCategory_.docTypeFields);
 
 			}
-
-			tenantRoot
-				.fetch(Tenant_.suggestionCategories, JoinType.LEFT)
-				.fetch(SuggestionCategory_.docTypeFields, JoinType.LEFT);
+			else {
+				tenantRoot
+					.fetch(Tenant_.suggestionCategories)
+					.fetch(SuggestionCategory_.docTypeFields);
+			}
 
 		}
 

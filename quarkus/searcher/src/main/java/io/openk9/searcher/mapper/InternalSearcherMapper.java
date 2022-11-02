@@ -43,11 +43,14 @@ public interface InternalSearcherMapper {
 		return switch (value.getTokenType()) {
 			case ENTITY -> Suggestions.entity(
 				value.getValue(), value.getSuggestionCategoryId(),
-				value.getEntityType(), value.getEntityValue(), value.getKeywordKey());
+				value.getEntityType(), value.getEntityValue(), value.getKeywordKey(),
+				value.getCount());
 			case TEXT -> Suggestions.text(
-				value.getValue(), value.getSuggestionCategoryId(), value.getKeywordKey());
+				value.getValue(), value.getSuggestionCategoryId(), value.getKeywordKey(),
+				value.getCount());
 			case DOCTYPE -> Suggestions.docType(
-				value.getValue(), value.getSuggestionCategoryId());
+				value.getValue(), value.getSuggestionCategoryId(),
+				value.getCount());
 			case UNRECOGNIZED -> null;
 		};
 	}

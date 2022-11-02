@@ -21,8 +21,8 @@ class EntitySuggestions extends Suggestions {
 
 	EntitySuggestions(
 		String value, long suggestionCategoryId, String entityType,
-		String entityValue) {
-		super(TokenType.ENTITY, value, suggestionCategoryId);
+		String entityValue, long count) {
+		super(TokenType.ENTITY, value, suggestionCategoryId, count);
 		this.entityType = entityType;
 		this.entityValue = entityValue;
 	}

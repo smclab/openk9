@@ -208,6 +208,17 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						);
 					}
 
+					Set<SuggestionCategory> suggestionCategories =
+						tenant.getSuggestionCategories();
+
+					if (suggestionCategories == null || suggestionCategories.isEmpty()) {
+						return Uni.createFrom().item(
+							SuggestionsResponse
+								.newBuilder()
+								.build()
+						);
+					}
+
 					BoolQueryBuilder boolQueryBuilder =
 						createBoolQuery(tokenGroup, tenant);
 
@@ -217,9 +228,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					List<CompositeValuesSourceBuilder<?>> compositeValuesSourceBuilders =
 						new ArrayList<>();
-
-					Set<SuggestionCategory> suggestionCategories =
-						tenant.getSuggestionCategories();
 
 					String suggestKeyword = request.getSuggestKeyword();
 
@@ -390,52 +398,25 @@ public class SearcherService extends BaseSearchService implements Searcher {
 											continue;
 										}
 
-										switch (key.replace(".keyword", "")) {
-											case "entities.context":
-												break;
-											case "entities.id":
-												String[] typeName = entityMap.get(value);
+										long docCount = bucket.getDocCount();
 
-												if (typeName != null) {
-													String type = typeName[0];
-													String name = typeName[1];
-
-													String entitiesContext =
-														(String)keys.get("entities.context");
-
-													if (entitiesContext != null) {
-														addSuggestions.accept(
-															name,
-															SuggestionsUtil.entity(
-																value,
-																suggestionCategoryId,
-																type, name, entitiesContext)
-														);
-													}
-													else {
-														addSuggestions.accept(
-															name,
-															SuggestionsUtil.entity(
-																value, suggestionCategoryId,
-																type, name)
-														);
-													}
-												}
-												break;
-											case "documentTypes":
-												addSuggestions.accept(
+										if ("documentTypes".equals(key.replace(".keyword", ""))) {
+											addSuggestions.accept(
+												value,
+												SuggestionsUtil.docType(
 													value,
-													SuggestionsUtil.docType(
-														value,
-														suggestionCategoryId)
-												);
-												break;
-											default:
-												addSuggestions.accept(
-													value, SuggestionsUtil.text(
-														value, suggestionCategoryId, key)
-												);
-
+													suggestionCategoryId,
+													docCount)
+											);
+										}
+										else {
+											addSuggestions.accept(
+												value,
+												SuggestionsUtil.text(
+													value, suggestionCategoryId,
+													key, docCount
+												)
+											);
 										}
 									}
 

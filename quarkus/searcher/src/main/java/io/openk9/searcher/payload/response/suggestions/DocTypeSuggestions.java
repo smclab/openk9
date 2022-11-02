@@ -18,7 +18,7 @@
 package io.openk9.searcher.payload.response.suggestions;
 
 class DocTypeSuggestions extends Suggestions {
-	DocTypeSuggestions(String value, long suggestionCategoryId) {
-		super(TokenType.DOCTYPE, value, suggestionCategoryId);
+	DocTypeSuggestions(String value, long suggestionCategoryId, long count) {
+		super(TokenType.DOCTYPE, value, suggestionCategoryId, count);
 	}
 }
