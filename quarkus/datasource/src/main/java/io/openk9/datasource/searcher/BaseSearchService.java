@@ -37,8 +37,11 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -85,28 +88,26 @@ public abstract class BaseSearchService {
 			.fetch(Tenant_.searchConfig, JoinType.LEFT)
 			.fetch(SearchConfig_.queryParserConfigs, JoinType.LEFT);
 
+		Predicate disjunction = criteriaBuilder.conjunction();
+
+		List<Expression<Boolean>> expressions = disjunction.getExpressions();
+
 		if (suggestion) {
+
+			Fetch<Tenant, SuggestionCategory> suggestionCategoryFetch =
+				tenantRoot.fetch(Tenant_.suggestionCategories);
+
+			suggestionCategoryFetch.fetch(
+				SuggestionCategory_.docTypeFields);
 
 			if (suggestionCategoryId > 0) {
 
-				Root<SuggestionCategory> suggestionCategoryRoot =
-					criteriaQuery.from(SuggestionCategory.class);
-
-				suggestionCategoryRoot.fetch(
-					SuggestionCategory_.docTypeFields);
-
-				criteriaQuery.where(
+				expressions.add(
 					criteriaBuilder.equal(
-						suggestionCategoryRoot.get(SuggestionCategory_.id),
-						suggestionCategoryId
-					)
+						((Path<SuggestionCategory>)suggestionCategoryFetch)
+							.get(SuggestionCategory_.id),
+						suggestionCategoryId)
 				);
-
-			}
-			else {
-				tenantRoot
-					.fetch(Tenant_.suggestionCategories)
-					.fetch(SuggestionCategory_.docTypeFields);
 			}
 
 		}
@@ -122,9 +123,11 @@ public abstract class BaseSearchService {
 
 		docTypeFetch.fetch(DocType_.docTypeFields, JoinType.LEFT);
 
-		criteriaQuery.where(
+		expressions.add(
 			criteriaBuilder.equal(
 				tenantRoot.get(Tenant_.virtualHost), virtualHost));
+
+		criteriaQuery.where(disjunction);
 
 		criteriaQuery.distinct(true);
 
