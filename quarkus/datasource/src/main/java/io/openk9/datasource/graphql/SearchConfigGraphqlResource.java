@@ -64,7 +64,7 @@ public class SearchConfigGraphqlResource {
 	}
 
 
-	public Uni<Connection<QueryParserConfig>> queryParseConfigs(
+	public Uni<Connection<QueryParserConfig>> queryParserConfigs(
 		@Source SearchConfig searchConfig,
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,
@@ -73,13 +73,13 @@ public class SearchConfigGraphqlResource {
 		String searchText, Set<SortBy> sortByList,
 		@DefaultValue("false") boolean notEqual) {
 
-		return queryParseConfigs(
+		return queryParserConfigs(
 			searchConfig.getId(), after, before, first, last, searchText,
 			sortByList, notEqual);
 	}
 
 	@Query
-	public Uni<Connection<QueryParserConfig>> queryParseConfigs(
+	public Uni<Connection<QueryParserConfig>> queryParserConfigs(
 		@Id long searchConfigId,
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,
