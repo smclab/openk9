@@ -1,5 +1,6 @@
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,9 +12,11 @@ import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
@@ -26,7 +29,6 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@AllArgsConstructor(staticName = "of")
 @Cacheable
 public class SearchConfig extends K9Entity {
 
@@ -36,17 +38,37 @@ public class SearchConfig extends K9Entity {
 	private String description;
 	@Column(name = "min_score")
 	private Float minScore;
-	@ManyToMany(cascade = {
-		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
-		CascadeType.DETACH})
-	@JoinTable(name = "search_config_query_parser_config",
-		joinColumns = @JoinColumn(name = "search_config_id"),
-		inverseJoinColumns = @JoinColumn(name = "query_parser_configs_id"))
+	@OneToMany(
+		mappedBy = "searchConfig",
+		cascade = javax.persistence.CascadeType.ALL,
+		fetch = FetchType.LAZY
+	)
 	@ToString.Exclude
+	@JsonIgnore
 	private Set<QueryParserConfig> queryParserConfigs = new LinkedHashSet<>();
 
+	public boolean addQueryParserConfig(
+		Collection<QueryParserConfig> queryParserConfigs, QueryParserConfig queryParserConfig) {
+		if (queryParserConfigs.add(queryParserConfig)) {
+			queryParserConfig.setSearchConfig(this);
+			return true;
+		}
+		return false;
+	}
+
 	public boolean removeQueryParserConfig(
-		Collection<QueryParserConfig> queryParserConfigs, long queryParserConfigId) {
+		Collection<QueryParserConfig> queryParserConfigs, QueryParserConfig queryParserConfig) {
+
+		if (queryParserConfigs.remove(queryParserConfig)) {
+			queryParserConfig.setSearchConfig(null);
+			return true;
+		}
+
+		return false;
+
+	}
+
+	public boolean removeQueryParserConfig(Collection<QueryParserConfig> queryParserConfigs, long queryParserConfigId) {
 
 		Iterator<QueryParserConfig> iterator = queryParserConfigs.iterator();
 
@@ -54,12 +76,13 @@ public class SearchConfig extends K9Entity {
 			QueryParserConfig queryParserConfig = iterator.next();
 			if (queryParserConfig.getId() == queryParserConfigId) {
 				iterator.remove();
+				queryParserConfig.setSearchConfig(null);
 				return true;
 			}
 		}
-
 		return false;
-
 	}
+
+
 
 }

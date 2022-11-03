@@ -20,8 +20,10 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.dto.TenantDTO;
 import io.openk9.datasource.resource.util.SortBy;
@@ -89,6 +91,20 @@ public class TenantGraphqlResource {
 			notEqual);
 	}
 
+	public Uni<Connection<Tab>> tabs(
+		@Source Tenant tenant,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@DefaultValue("false") boolean notEqual) {
+
+		return tenantService.getTabs(
+			tenant.getId(), after, before, first, last, searchText,
+			sortByList, notEqual);
+	}
+
 	public Uni<QueryAnalysis> queryAnalysis(@Source Tenant tenant) {
 		return tenantService.getQueryAnalysis(tenant.getId());
 	}
@@ -108,6 +124,18 @@ public class TenantGraphqlResource {
 
 	public Uni<Response<Tenant>> createTenant(TenantDTO tenantDTO) {
 		return tenantService.getValidator().create(tenantDTO);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Tenant, Tab>> addTabToTenant(
+		@Id long id, @Id long tabId) {
+		return tenantService.addTabToTenant(id, tabId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Tenant, Tab>> removeTabFromTenant(
+		@Id long id, @Id long tabId) {
+		return tenantService.removeTabFromTenant(id, tabId);
 	}
 
 	@Mutation

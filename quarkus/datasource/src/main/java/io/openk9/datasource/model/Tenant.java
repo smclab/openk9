@@ -31,6 +31,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -39,6 +40,8 @@ import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -103,6 +106,33 @@ public class Tenant extends K9Entity {
 	)
 	@JoinColumn(name = "search_config_id")
 	private SearchConfig searchConfig;
+
+	@ManyToMany(cascade = {
+		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
+		CascadeType.DETACH})
+	@JoinTable(name = "tenants_tabs",
+		joinColumns = @JoinColumn(name = "tenants_id"),
+		inverseJoinColumns = @JoinColumn(name = "tabs_id"))
+	@ToString.Exclude
+	@JsonIgnore
+	private List<Tab> tabs = new LinkedList<>();
+
+	public boolean removeTab(
+		Collection<Tab> tabs, long tabId) {
+
+		Iterator<Tab> iterator = tabs.iterator();
+
+		while (iterator.hasNext()) {
+			Tab tab = iterator.next();
+			if (tab.getId() == tabId) {
+				iterator.remove();
+				return true;
+			}
+		}
+
+		return false;
+
+	}
 
 	public boolean addSuggestionCategory(
 		Collection<SuggestionCategory> suggestionCategories,

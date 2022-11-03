@@ -18,13 +18,19 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.SearchConfigDTO;
 import io.openk9.datasource.resource.util.SortBy;
+import io.openk9.datasource.service.QueryParserConfigService;
 import io.openk9.datasource.service.SearchConfigService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.validation.FieldValidator;
 import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
@@ -40,6 +46,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -93,6 +100,11 @@ public class SearchConfigGraphqlResource {
 			sortByList, notEqual);
 	}
 
+	@Query
+	public Uni<QueryParserConfig> getQueryParserConfig(@Id long id) {
+		return _queryParserConfigService.findById(id);
+	}
+
 	public Uni<Response<SearchConfig>> patchSearchConfig(@Id long id, SearchConfigDTO searchConfigDTO) {
 		return searchConfigService.getValidator().patch(id, searchConfigDTO);
 	}
@@ -106,16 +118,41 @@ public class SearchConfigGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<SearchConfig, QueryParserConfig>> addQueryParserConfigToSearchConfig(
-		@Id long id, @Id long queryParserConfigId) {
-		return searchConfigService.addQueryParserConfigToSearchConfig(id, queryParserConfigId);
+	public Uni<Response<QueryParserConfig>> queryParserConfig(
+		@Id long searchConfigId, @Id Long queryParserConfigId, QueryParserConfigDTO queryParserConfigDTO,
+		@DefaultValue("false") boolean patch) {
+
+		return Uni.createFrom().deferred(() -> {
+
+			List<FieldValidator> validatorList =
+				_queryParserConfigService.getValidator().validate(queryParserConfigDTO);
+
+			if (validatorList.isEmpty()) {
+
+				if (queryParserConfigId == null) {
+					return searchConfigService.addQueryParserConfig(searchConfigId, queryParserConfigDTO)
+						.map(e -> Response.of(e.right, null));
+				} else {
+					return (
+						patch
+							? _queryParserConfigService.patch(queryParserConfigId, queryParserConfigDTO)
+							: _queryParserConfigService.update(queryParserConfigId, queryParserConfigDTO)
+					).map(e -> Response.of(e, null));
+				}
+
+			}
+
+			return Uni.createFrom().item(Response.of(null, validatorList));
+		});
+
 	}
 
 	@Mutation
-	public Uni<Tuple2<SearchConfig, QueryParserConfig>> removeQueryParserConfigFromSearchConfig(
-		@Id long id, @Id long queryParserConfigId) {
-		return searchConfigService.removeQueryParserConfigFromSearchConfig(id, queryParserConfigId);
+	public Uni<Tuple2<SearchConfig, Long>> removeQueryParserConfig(
+		@Id long searchConfigId, @Id long queryParserConfigId) {
+		return searchConfigService.removeQueryParserConfig(searchConfigId, queryParserConfigId);
 	}
+
 
 	@Mutation
 	public Uni<Response<SearchConfig>> searchConfig(
@@ -164,5 +201,7 @@ public class SearchConfigGraphqlResource {
 
 	@Inject
 	SearchConfigService searchConfigService;
+	@Inject
+	QueryParserConfigService _queryParserConfigService;
 
 }

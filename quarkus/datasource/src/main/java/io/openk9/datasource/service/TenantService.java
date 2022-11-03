@@ -19,10 +19,14 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.TenantMapper;
+import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.QueryAnalysis_;
+import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.model.dto.TenantDTO;
@@ -87,6 +91,17 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 			 pageable.getBeforeId(), filter);
 	}
 
+	public Uni<Connection<Tab>> getTabs(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, Tenant_.TABS, Tab.class,
+			tabService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
+
 	public Uni<Connection<SuggestionCategory>> getSuggestionCategoriesConnection(
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
@@ -146,6 +161,57 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 					return Uni.createFrom().nullItem();
 				}))));
 
+	}
+
+	public Uni<Tuple2<Tenant, Tab>> addTabToTenant(
+		long id, long tabId) {
+
+		return withTransaction((s, tr) -> findById(id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> tabService.findById(tabId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(tab ->
+					Mutiny2.fetch(s, tenant.getTabs())
+						.onItem()
+						.ifNotNull()
+						.transformToUni(tabs -> {
+
+							if (tabs.add(tab)) {
+
+								tenant.setTabs(tabs);
+
+								return persist(tenant)
+									.map(newSC -> Tuple2.of(newSC, tab));
+							}
+
+							return Uni.createFrom().nullItem();
+
+						})
+				)
+			));
+	}
+
+	public Uni<Tuple2<Tenant, Tab>> removeTabFromTenant(
+		long id, long tabId) {
+		return withTransaction((s, tr) -> findById(id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tenant -> Mutiny2.fetch(s, tenant.getTabs())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(tabs -> {
+
+					if (tenant.removeTab(tabs, tabId)) {
+
+						return persist(tenant)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
 	}
 
 	public Uni<Tuple2<Tenant, SuggestionCategory>> addSuggestionCategory(long tenantId, long suggestionCategoryId) {
@@ -259,6 +325,9 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 	@Inject
 	SearchConfigService searchConfigService;
+
+	@Inject
+	TabService tabService;
 
 	@Override
 	public Class<Tenant> getEntityClass() {
