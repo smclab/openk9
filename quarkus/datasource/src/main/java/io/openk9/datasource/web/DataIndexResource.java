@@ -7,7 +7,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.util.Analyzer;
+import io.openk9.datasource.model.util.AnalyzerType;
 import io.openk9.datasource.processor.indexwriter.IndexerEvents;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
@@ -247,7 +247,7 @@ public class DataIndexResource {
 
 					current.put("type", fieldType.getType());
 
-					Analyzer analyzer = docTypeField.getAnalyzer();
+					AnalyzerType analyzer = docTypeField.getAnalyzerType();
 
 					if (analyzer != null) {
 						current.put("analyzer", analyzer.name());

@@ -17,13 +17,25 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
+import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
+import io.openk9.datasource.model.DocType_;
+import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.Tuple2;
+import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.persistence.Id;
+import java.util.Set;
 
 
 @ApplicationScoped
@@ -41,5 +53,41 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	public String[] getSearchFields() {
 		return new String[] {DocTypeField_.NAME, DocTypeField_.FIELD_TYPE};
 	}
+
+	public Uni<Tuple2<DocTypeField, Analyzer>> bindAnalyzer(long docTypeFieldId, long analyzerId) {
+		return withTransaction((s, tr) -> findById(docTypeFieldId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docTypeField -> _analyzerService.findById(analyzerId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(analyzer -> {
+					docTypeField.setAnalyzer(analyzer);
+					return persist(docTypeField).map(t -> Tuple2.of(t, analyzer));
+				})));
+	}
+
+	public Uni<Tuple2<DocTypeField, Analyzer>> unbindAnalyzer(long docTypeFieldId) {
+		return withTransaction((s, tr) -> findById(docTypeFieldId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docTypeField -> {
+				docTypeField.setAnalyzer(null);
+				return persist(docTypeField).map(t -> Tuple2.of(t, null));
+			}));
+	}
+
+	public Uni<Connection<Analyzer>> getAnalyzersConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		return findJoinConnection(
+			id, DocTypeField_.ANALYZER, Analyzer.class,
+			_analyzerService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
+
+	@Inject
+	AnalyzerService _analyzerService;
 
 }

@@ -18,7 +18,7 @@
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.Analyzer;
+import io.openk9.datasource.model.util.AnalyzerType;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -74,11 +74,23 @@ public class DocTypeField extends K9Entity {
 	private FieldType fieldType;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "analyzer")
-	private Analyzer analyzer;
+	@Column(name = "analyzerType")
+	private AnalyzerType analyzerType;
 
 	@Column(name="exclude")
 	private Boolean exclude;
+
+	@ToString.Exclude
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
+	@JoinColumn(name = "analyzer")
+	@JsonIgnore
+	private Analyzer analyzer;
+
+
 
 	public Float getFloatBoost() {
 		return boost.floatValue();

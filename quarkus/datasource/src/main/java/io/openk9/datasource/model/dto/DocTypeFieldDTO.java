@@ -17,9 +17,10 @@
 
 package io.openk9.datasource.model.dto;
 
+import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.model.util.Analyzer;
+import io.openk9.datasource.model.util.AnalyzerType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,6 +40,7 @@ public class DocTypeFieldDTO extends K9EntityDTO {
 	private Double boost = 1.0;
 	@NotNull
 	private FieldType fieldType;
-	private Analyzer analyzer;
+	private AnalyzerType analyzerType;
+	private Analyzer _analyzer;
 	private Boolean exclude;
 }

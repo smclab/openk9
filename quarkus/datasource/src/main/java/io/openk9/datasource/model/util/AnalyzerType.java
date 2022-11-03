@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.model.util;
 
-public enum Analyzer {
+public enum AnalyzerType {
 	standard,
 	simple,
 	whitespace,
