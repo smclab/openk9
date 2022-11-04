@@ -8,9 +8,6 @@ import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
-import io.openk9.datasource.model.dto.DocTypeTemplateDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.DocTypeTemplateService;
 import io.smallrye.mutiny.Uni;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,12 +28,7 @@ import java.util.List;
 
 @ApplicationScoped
 @Path("/v1/template")
-public class TemplateResource extends
-	BaseK9EntityResource<DocTypeTemplateService, DocTypeTemplate, DocTypeTemplateDTO> {
-
-	protected TemplateResource(DocTypeTemplateService service) {
-		super(service);
-	}
+public class TemplateResource {
 
 	@Path("/get/{virtualhost}")
 	@POST
