@@ -16,19 +16,20 @@ public class AnnotatorFactory {
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords) {
 
-		String name = annotator.getDocTypeField().getName();
-
 		return switch (annotator.getType()) {
 			case TOKEN -> new TokenAnnotator(tenant, annotator, stopWords);
 			case STOPWORD -> new StopWordsAnnotator(tenant, annotator, stopWords);
 			case NER -> new BaseNerAnnotator(
-				tenant, annotator, stopWords, name, client, tenantResolver);
+				tenant, annotator, stopWords,
+				annotator.getDocTypeField().getName(), client, tenantResolver);
 			case DOCTYPE -> new DocTypeAnnotator(
 				tenant, annotator, stopWords, client);
 			case AGGREGATOR -> new AggregatorAnnotator(
-				name, tenant, annotator, stopWords, client);
+				annotator.getDocTypeField().getName(),
+				tenant, annotator, stopWords, client);
 			case AUTOCOMPLETE -> new BaseAutoCompleteAnnotator(
-				tenant, annotator, stopWords, client, name);
+				tenant, annotator, stopWords, client,
+				annotator.getDocTypeField().getName());
 			case AUTOCORRECT -> Annotator.DUMMY_ANNOTATOR;
 		};
 	}
