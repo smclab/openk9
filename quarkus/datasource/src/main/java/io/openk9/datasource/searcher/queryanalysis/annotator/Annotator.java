@@ -54,9 +54,8 @@ public interface Annotator extends Comparable<Annotator> {
 			return 0;
 		}
 
-		private static final Logger logger = Logger.getLogger(
-			Annotator.DUMMY_ANNOTATOR.getClass());
-
 	};
+
+	Logger logger = Logger.getLogger(Annotator.class);
 
 }
