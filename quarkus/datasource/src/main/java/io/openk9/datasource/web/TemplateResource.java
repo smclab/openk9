@@ -98,7 +98,4 @@ public class TemplateResource extends
 	@Inject
 	Mutiny.SessionFactory sf;
 
-	@Inject
-	DocTypeTemplateService _docTypeTemplateService;
-
 }
