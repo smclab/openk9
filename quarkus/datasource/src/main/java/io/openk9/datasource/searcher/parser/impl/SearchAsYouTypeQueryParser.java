@@ -6,7 +6,7 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
-import io.openk9.searcher.dto.ParserSearchToken;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;

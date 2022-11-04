@@ -1,14 +1,18 @@
 package io.openk9.searcher.resource;
 
 import com.google.protobuf.ByteString;
-import io.openk9.searcher.dto.SearchRequest;
+import com.google.protobuf.Descriptors;
+import io.openk9.searcher.client.dto.SearchRequest;
+import io.openk9.searcher.client.mapper.SearcherMapper;
+import io.openk9.searcher.grpc.QueryAnalysisRequest;
+import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.mapper.InternalSearcherMapper;
-import io.openk9.searcher.mapper.SearcherMapper;
 import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
+import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
@@ -119,6 +123,60 @@ public class SearchResource {
 			.suggestionsQueryParser(queryParserRequest)
 			.map(internalSearcherMapper::toSuggestionsResponse);
 
+	}
+
+	@POST
+	@Path("/query-analysis")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<io.openk9.searcher.queryanalysis.QueryAnalysisResponse> queryAnalysis(
+		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
+
+		QueryAnalysisRequest queryAnalysisRequest =
+			getQueryAnalysisRequest(searchRequest);
+
+		return searcherClient
+			.queryAnalysis(queryAnalysisRequest)
+			.map(internalSearcherMapper::toQueryAnalysisResponse);
+
+	}
+
+	private QueryAnalysisRequest getQueryAnalysisRequest(
+		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
+
+		QueryAnalysisRequest.Builder builder =
+			QueryAnalysisRequest.newBuilder();
+
+		builder.setSearchText(searchRequest.getSearchText());
+		builder.setVirtualHost(request.host());
+
+		for (QueryAnalysisToken token : searchRequest.getTokens()) {
+			QueryAnalysisSearchToken.Builder qastBuilder = _createQastBuilder(token);
+			builder
+				.addTokens(
+					io.openk9.searcher.grpc.QueryAnalysisToken
+						.newBuilder()
+						.setText(token.getText())
+						.setEnd(token.getEnd())
+						.setStart(token.getStart())
+						.addAllPos(List.of(token.getPos()))
+						.setToken(qastBuilder));
+		}
+
+		return builder.build();
+
+	}
+
+	private static QueryAnalysisSearchToken.Builder _createQastBuilder(
+		QueryAnalysisToken token) {
+		Map<String, Object> tokenMap = token.getToken();
+		QueryAnalysisSearchToken.Builder qastBuilder =
+			QueryAnalysisSearchToken.newBuilder();
+		for (Descriptors.FieldDescriptor field : QueryAnalysisSearchToken.getDescriptor().getFields()) {
+			if (tokenMap.containsKey(field.getName())) {
+				qastBuilder.setField(field, tokenMap.get(field.getName()));
+			}
+		}
+		return qastBuilder;
 	}
 
 	private QueryParserRequest getQueryParserRequest(

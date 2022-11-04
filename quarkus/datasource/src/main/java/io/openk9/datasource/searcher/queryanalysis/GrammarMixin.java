@@ -15,30 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.searcher.queryanalysis;
 
-import io.openk9.datasource.model.AnnotatorType;
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.model.util.Fuzziness;
+import io.openk9.datasource.searcher.queryanalysis.annotator.Annotator;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
-@NoArgsConstructor
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class AnnotatorDTO extends K9EntityDTO {
-	@NotNull
-	private AnnotatorType type;
-	@NotNull
-	private Fuzziness fuziness;
-	@Min(1)
-	private Integer size;
-	@NotNull
-	@NotEmpty
-	private String fieldName;
+@NoArgsConstructor
+@AllArgsConstructor(staticName = "of")
+public class GrammarMixin {
+	private List<Rule> rules;
+	private List<Annotator> annotators;
 }

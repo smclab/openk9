@@ -24,7 +24,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -68,6 +76,17 @@ public class QueryAnalysis extends K9Entity {
 	@JsonIgnore
 	private List<Annotator> annotators = new LinkedList<>();
 
+
+	public List<String> getStopWordsList() {
+		List<String> stopWordsList = new LinkedList<>();
+		if (stopWords != null) {
+			String[] split = stopWords.split(",");
+			for (String s : split) {
+				stopWordsList.add(s.strip());
+			}
+		}
+		return stopWordsList;
+	}
 
 	public boolean removeRule(
 		Collection<Rule> rules, long ruleId) {

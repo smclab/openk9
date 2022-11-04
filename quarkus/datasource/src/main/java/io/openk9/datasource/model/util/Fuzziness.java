@@ -17,6 +17,20 @@
 
 package io.openk9.datasource.model.util;
 
-public enum Fuziness {
-	ZERO, ONE, TWO, AUTO
+public enum Fuzziness {
+	ZERO(org.elasticsearch.common.unit.Fuzziness.ZERO),
+	ONE(org.elasticsearch.common.unit.Fuzziness.ONE),
+	TWO(org.elasticsearch.common.unit.Fuzziness.TWO),
+	AUTO(org.elasticsearch.common.unit.Fuzziness.AUTO);
+
+	Fuzziness(org.elasticsearch.common.unit.Fuzziness fuzziness) {
+		this.fuzziness = fuzziness;
+	}
+
+	public org.elasticsearch.common.unit.Fuzziness toElasticType() {
+		return fuzziness;
+	}
+
+	private final org.elasticsearch.common.unit.Fuzziness fuzziness;
+
 }

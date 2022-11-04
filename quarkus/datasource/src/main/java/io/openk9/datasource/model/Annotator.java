@@ -18,7 +18,7 @@
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.Fuziness;
+import io.openk9.datasource.model.util.Fuzziness;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +54,7 @@ public class Annotator extends K9Entity {
 	private AnnotatorType type;
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fuziness")
-	private Fuziness fuziness;
+	private Fuzziness fuziness;
 	@Column(name = "size")
 	private Integer size;
 	@OneToOne(

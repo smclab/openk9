@@ -1,7 +1,7 @@
 package io.openk9.datasource.searcher.parser;
 
 import io.openk9.datasource.model.Tenant;
-import io.openk9.searcher.dto.ParserSearchToken;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package io.openk9.searcher.dto;
+package io.openk9.searcher.client.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

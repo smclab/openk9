@@ -5,7 +5,7 @@ import io.openk9.datasource.searcher.SearcherService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
-import io.openk9.searcher.dto.ParserSearchToken;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;

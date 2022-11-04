@@ -9,6 +9,7 @@ package grpc;
 service Searcher {
   rpc QueryParser(QueryParserRequest) returns (QueryParserResponse) {}
   rpc SuggestionsQueryParser(QueryParserRequest) returns (SuggestionsResponse) {}
+  rpc QueryAnalysis(QueryAnalysisRequest) returns (QueryAnalysisResponse) {}
 }
 
 message QueryParserResponse {
@@ -54,4 +55,43 @@ message SearchTokenRequest {
   repeated string values = 5;
   map<string, string> extra = 6;
   bool filter = 7;
+}
+
+
+message QueryAnalysisRequest {
+  string searchText = 1;
+  repeated QueryAnalysisToken tokens = 2;
+  string virtualHost = 3;
+}
+
+message QueryAnalysisToken {
+  string text = 1;
+  int32 start = 2;
+  int32 end = 3;
+  QueryAnalysisSearchToken token = 4;
+  repeated int32 pos = 5;
+}
+
+message QueryAnalysisTokens {
+  string text = 1;
+  int32 start = 2;
+  int32 end = 3;
+  repeated QueryAnalysisSearchToken tokens = 4;
+  repeated int32 pos = 5;
+}
+
+message QueryAnalysisSearchToken {
+  TokenType tokenType = 1;
+  string value = 2;
+  double score = 3;
+  optional string keywordKey = 4;
+  optional string keywordName = 5;
+  optional string entityType = 6;
+  optional string entityValue = 7;
+  optional int64 tenantId = 8;
+}
+
+message QueryAnalysisResponse {
+  string searchText = 1;
+  repeated QueryAnalysisTokens analysis = 2;
 }

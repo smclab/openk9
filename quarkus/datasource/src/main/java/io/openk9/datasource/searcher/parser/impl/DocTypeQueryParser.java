@@ -2,7 +2,7 @@ package io.openk9.datasource.searcher.parser.impl;
 
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
-import io.openk9.searcher.dto.ParserSearchToken;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;

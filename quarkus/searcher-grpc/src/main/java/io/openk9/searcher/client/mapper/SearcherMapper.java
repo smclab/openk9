@@ -1,7 +1,7 @@
-package io.openk9.searcher.mapper;
+package io.openk9.searcher.client.mapper;
 
-import io.openk9.searcher.dto.ParserSearchToken;
-import io.openk9.searcher.dto.SearchRequest;
+import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.SearchTokenRequest;
 import org.mapstruct.CollectionMappingStrategy;
