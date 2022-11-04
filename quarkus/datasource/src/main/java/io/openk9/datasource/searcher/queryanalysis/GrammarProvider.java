@@ -65,7 +65,8 @@ public class GrammarProvider {
 
 		return rules
 			.stream()
-			.map(r -> io.openk9.datasource.searcher.queryanalysis.Rule.of(r.getLhs(), r.getRhs()))
+			.map(r -> io.openk9.datasource.searcher.queryanalysis.Rule.of(
+				r.getLhs(), r.getRhs(), Semantic.identity()))
 			.toList();
 	}
 
