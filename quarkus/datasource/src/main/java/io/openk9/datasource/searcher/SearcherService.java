@@ -573,8 +573,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 								.setStart(startTokenIndex.getStartIndex())
 							.setEnd(endTokenIndex.getEndIndex())
 							.addAllTokens(_toAnalysisTokens(entry.getValue()))
-							.setPos(0, startTokenIndex.getPos())
-							.setPos(1, endTokenIndex.getPos())
+							.addPos(startTokenIndex.getPos())
+							.addPos(endTokenIndex.getPos())
 							.build()
 					);
 
@@ -589,7 +589,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.setStart(startTokenIndex.getStartIndex())
 							.setEnd(startTokenIndex.getEndIndex())
 							.addAllTokens(_toAnalysisTokens(entry.getValue()))
-							.setPos(0, startTokenIndex.getPos())
+							.addPos(startTokenIndex.getPos())
 							.build()
 					);
 				}
