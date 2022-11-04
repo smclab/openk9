@@ -149,17 +149,22 @@ public class SearchResource {
 		builder.setSearchText(searchRequest.getSearchText());
 		builder.setVirtualHost(request.host());
 
-		for (QueryAnalysisToken token : searchRequest.getTokens()) {
-			QueryAnalysisSearchToken.Builder qastBuilder = _createQastBuilder(token);
-			builder
-				.addTokens(
-					io.openk9.searcher.grpc.QueryAnalysisToken
-						.newBuilder()
-						.setText(token.getText())
-						.setEnd(token.getEnd())
-						.setStart(token.getStart())
-						.addAllPos(List.of(token.getPos()))
-						.setToken(qastBuilder));
+		if (searchRequest.getTokens() != null) {
+
+			for (QueryAnalysisToken token : searchRequest.getTokens()) {
+				QueryAnalysisSearchToken.Builder qastBuilder =
+					_createQastBuilder(token);
+				builder
+					.addTokens(
+						io.openk9.searcher.grpc.QueryAnalysisToken
+							.newBuilder()
+							.setText(token.getText())
+							.setEnd(token.getEnd())
+							.setStart(token.getStart())
+							.addAllPos(List.of(token.getPos()))
+							.setToken(qastBuilder));
+			}
+
 		}
 
 		return builder.build();
