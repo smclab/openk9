@@ -15,10 +15,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -38,29 +36,27 @@ public class TemplateResource {
 	}
 
 	private Uni<List<DocTypeTemplate>> getDocTypeTemplateList(String virtualhost) {
-
 		return sf.withTransaction(session -> {
 
 			CriteriaBuilder cb = sf.getCriteriaBuilder();
 
 			CriteriaQuery<DocTypeTemplate> query = cb.createQuery(DocTypeTemplate.class);
 
-				Root<Tenant> from = query.from(Tenant.class);
+			Root<Tenant> from = query.from(Tenant.class);
 
-				Fetch<DocType, DocTypeTemplate> fetch =
-					from.fetch(Tenant_.datasources, JoinType.LEFT)
-						.fetch(Datasource_.dataIndex, JoinType.LEFT)
-						.fetch(DataIndex_.docTypes, JoinType.LEFT)
-						.fetch(DocType_.docTypeTemplate);
+			Join<DocType, DocTypeTemplate> fetch =
+				from.join(Tenant_.datasources)
+					.join(Datasource_.dataIndex)
+					.join(DataIndex_.docTypes)
+					.join(DocType_.docTypeTemplate);
 
-				query.select((Selection<? extends DocTypeTemplate>) fetch);
+			query.select(fetch);
 
-				query.where(cb.equal(from.get(Tenant_.virtualHost), virtualhost));
+			query.where(cb.equal(from.get(Tenant_.virtualHost), virtualhost));
 
-				return session.createQuery(query).getResultList();
+			return session.createQuery(query).getResultList();
 
-			}
-		);
+		});
 
 	}
 
