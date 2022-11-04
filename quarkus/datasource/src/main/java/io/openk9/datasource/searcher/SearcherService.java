@@ -624,7 +624,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			}
 
 			if (map.containsKey("score")) {
-				builder.setScore((Double)map.get("score"));
+				builder.setScore((Float)map.get("score"));
 			}
 
 			if (map.containsKey("keywordKey")) {

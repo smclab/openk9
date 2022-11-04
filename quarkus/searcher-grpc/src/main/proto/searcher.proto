@@ -83,7 +83,7 @@ message QueryAnalysisTokens {
 message QueryAnalysisSearchToken {
   TokenType tokenType = 1;
   string value = 2;
-  double score = 3;
+  float score = 3;
   optional string keywordKey = 4;
   optional string keywordName = 5;
   optional string entityType = 6;
