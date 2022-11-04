@@ -18,6 +18,7 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.model.util.TemplateType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -26,6 +27,8 @@ import lombok.ToString;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
@@ -42,6 +45,9 @@ public class DocTypeTemplate extends K9Entity {
 	private String name;
 	@Column(name = "description", length = 4096)
 	private String description;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "template_type", nullable = false)
+	private TemplateType templateType;
 	@Column(name = "source")
 	@Lob
 	private String source;

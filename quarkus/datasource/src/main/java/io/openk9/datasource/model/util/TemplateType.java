@@ -15,35 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.model.util;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.model.util.TemplateType;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+public enum TemplateType {
 
-import javax.persistence.Lob;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+	JAVASCRIPT_SOURCE("javascript source"),
 
-@NoArgsConstructor
-@SuperBuilder
-@Getter
-@Setter
-@EqualsAndHashCode(callSuper = true)
-public class DocTypeTemplateDTO extends K9EntityDTO {
+	TYPESCRIPT_SOURCE("typescript source"),
+	JAVASCRIPT_COMPILED("javascript compiled");
 
-	@NotNull
-	private TemplateType _templateType;
-	@Lob
-	@NotEmpty
-	@NotNull
-	private String source;
-	@Lob
-	@NotEmpty
-	@NotNull
-	private String compiled;
+	TemplateType(String type) {
+		this.type = type;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	private final String type;
+
 }
