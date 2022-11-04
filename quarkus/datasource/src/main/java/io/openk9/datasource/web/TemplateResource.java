@@ -51,7 +51,7 @@ public class TemplateResource {
 					from.fetch(Tenant_.datasources, JoinType.LEFT)
 						.fetch(Datasource_.dataIndex, JoinType.LEFT)
 						.fetch(DataIndex_.docTypes, JoinType.LEFT)
-						.fetch(DocType_._docTypeTemplate);
+						.fetch(DocType_.docTypeTemplate);
 
 				query.select((Selection<? extends DocTypeTemplate>) fetch);
 
