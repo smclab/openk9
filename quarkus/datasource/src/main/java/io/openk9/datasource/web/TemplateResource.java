@@ -9,6 +9,9 @@ import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
 import io.smallrye.mutiny.Uni;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -28,32 +31,15 @@ import java.util.List;
 public class TemplateResource {
 
 
-	@Path("/get/full/{virtualhost}")
+	@Path("/get/{virtualhost}")
 	@POST
-	public Uni<List<DocTypeTemplate>> getTemplates(@PathParam("virtualhost") String virtualhost) {
+	public Uni<List<TemplateResponseDto>> getTemplates(@PathParam("virtualhost") String virtualhost) {
 
 		return getDocTypeTemplateList(virtualhost);
 
 	}
 
-	@Path("/get/id/{virtualhost}")
-	@POST
-	public Uni<List<Long>> getTemplatesIds(@PathParam("virtualhost") String virtualhost) {
-
-		List<Long> templatesIds = new ArrayList<>();
-
-		getDocTypeTemplateList(virtualhost).invoke(docTypeTemplates -> {
-			for (DocTypeTemplate docTypeTemplate : docTypeTemplates) {
-				templatesIds.add(docTypeTemplate.getId());
-			}
-
-		});
-
-		return Uni.createFrom().item(templatesIds);
-
-	}
-
-	private Uni<List<DocTypeTemplate>> getDocTypeTemplateList(String virtualhost) {
+	private Uni<List<TemplateResponseDto>> getDocTypeTemplateList(String virtualhost) {
 		return sf.withTransaction(session -> {
 
 			CriteriaBuilder cb = sf.getCriteriaBuilder();
@@ -72,10 +58,34 @@ public class TemplateResource {
 
 			query.where(cb.equal(from.get(Tenant_.virtualHost), virtualhost));
 
-			return session.createQuery(query).getResultList();
+
+			return session.createQuery(query).getResultList().map(docTypeTemplates -> {
+
+				List<TemplateResponseDto> responseDtos = new ArrayList<>();
+
+				for (DocTypeTemplate docTypeTemplate : docTypeTemplates) {
+
+					TemplateResponseDto templateResponseDto = new TemplateResponseDto();
+					templateResponseDto.setName(docTypeTemplate.getName());
+					templateResponseDto.setId(docTypeTemplate.getId());
+
+					responseDtos.add(templateResponseDto);
+				}
+
+				return responseDtos;
+
+			});
 
 		});
 
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class TemplateResponseDto {
+		private String name;
+		private Long id;
 	}
 
 	@Inject
