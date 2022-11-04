@@ -20,6 +20,7 @@ import javax.persistence.criteria.Root;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
@@ -27,11 +28,28 @@ import java.util.List;
 public class TemplateResource {
 
 
-	@Path("/get/{virtualhost}")
+	@Path("/get/full/{virtualhost}")
 	@POST
 	public Uni<List<DocTypeTemplate>> getTemplates(@PathParam("virtualhost") String virtualhost) {
 
 		return getDocTypeTemplateList(virtualhost);
+
+	}
+
+	@Path("/get/id/{virtualhost}")
+	@POST
+	public Uni<List<Long>> getTemplatesIds(@PathParam("virtualhost") String virtualhost) {
+
+		List<Long> templatesIds = new ArrayList<>();
+
+		getDocTypeTemplateList(virtualhost).invoke(docTypeTemplates -> {
+			for (DocTypeTemplate docTypeTemplate : docTypeTemplates) {
+				templatesIds.add(docTypeTemplate.getId());
+			}
+
+		});
+
+		return Uni.createFrom().item(templatesIds);
 
 	}
 
@@ -59,7 +77,6 @@ public class TemplateResource {
 		});
 
 	}
-
 
 	@Inject
 	Mutiny.SessionFactory sf;
