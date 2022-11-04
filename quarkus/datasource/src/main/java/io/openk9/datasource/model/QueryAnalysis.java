@@ -35,8 +35,10 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "query_analysis")
@@ -63,7 +65,7 @@ public class QueryAnalysis extends K9Entity {
 		inverseJoinColumns = @JoinColumn(name = "rules_id"))
 	@ToString.Exclude
 	@JsonIgnore
-	private List<Rule> rules = new LinkedList<>();
+	private Set<Rule> rules = new LinkedHashSet<>();
 
 
 	@ManyToMany(cascade = {
@@ -74,7 +76,7 @@ public class QueryAnalysis extends K9Entity {
 		inverseJoinColumns = @JoinColumn(name = "annotators_id"))
 	@ToString.Exclude
 	@JsonIgnore
-	private List<Annotator> annotators = new LinkedList<>();
+	private Set<Annotator> annotators = new LinkedHashSet<>();
 
 
 	public List<String> getStopWordsList() {
@@ -106,20 +108,18 @@ public class QueryAnalysis extends K9Entity {
 	}
 
     public boolean removeAnnotators(
-			Collection<Annotator> annotators, long annotatorId) {
+		Collection<Annotator> annotators, long annotatorId) {
 
-			Iterator<Annotator> iterator = annotators.iterator();
+		Iterator<Annotator> iterator = annotators.iterator();
 
-			while (iterator.hasNext()) {
-				Annotator annotator = iterator.next();
-				if (annotator.getId() == annotatorId) {
-					iterator.remove();
-					return true;
-				}
+		while (iterator.hasNext()) {
+			Annotator annotator = iterator.next();
+			if (annotator.getId() == annotatorId) {
+				iterator.remove();
+				return true;
 			}
-
-			return false;
-
-
 		}
+		return false;
+
+	}
 }

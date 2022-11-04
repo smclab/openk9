@@ -19,7 +19,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class GrammarProvider {
@@ -34,7 +36,7 @@ public class GrammarProvider {
 
 				QueryAnalysis queryAnalysis = t.getQueryAnalysis();
 
-				List<Rule> rules = queryAnalysis.getRules();
+				Set<Rule> rules = queryAnalysis.getRules();
 
 				List<io.openk9.datasource.searcher.queryanalysis.Rule> mappedRules =
 					_toGrammarRule(rules);
@@ -59,7 +61,7 @@ public class GrammarProvider {
 	}
 
 	private List<io.openk9.datasource.searcher.queryanalysis.Rule> _toGrammarRule(
-		List<Rule> rules) {
+		Collection<Rule> rules) {
 
 		return rules
 			.stream()
@@ -91,6 +93,8 @@ public class GrammarProvider {
 					.fetch(Annotator_.docTypeField, JoinType.LEFT);
 
 				query.where(cb.equal(tenantRoot.get(Tenant_.virtualHost), virtualHost));
+
+				query.distinct(true);
 
 				return s.createQuery(query).getSingleResultOrNull();
 
