@@ -1,7 +1,6 @@
 package io.openk9.datasource.searcher;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Descriptors;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
@@ -29,6 +28,7 @@ import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
+import io.openk9.searcher.grpc.TokenType;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
@@ -610,18 +610,41 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		List<QueryAnalysisSearchToken> result = new ArrayList<>(list.size());
 
-		List<Descriptors.FieldDescriptor> fields =
-			QueryAnalysisSearchToken.getDescriptor().getFields();
-
 		for (Map<String, Object> map : list) {
 			QueryAnalysisSearchToken.Builder builder =
 				QueryAnalysisSearchToken.newBuilder();
 
-			for (Descriptors.FieldDescriptor field : fields) {
-				Object value = map.get(field.getName());
-				if (value != null) {
-					builder.setField(field, value);
-				}
+			if (map.containsKey("tokenType")) {
+				builder.setTokenType(
+					TokenType.valueOf((String)map.get("tokenType")));
+			}
+
+			if (map.containsKey("value")) {
+				builder.setValue((String)map.get("value"));
+			}
+
+			if (map.containsKey("score")) {
+				builder.setScore((Float)map.get("score"));
+			}
+
+			if (map.containsKey("keywordKey")) {
+				builder.setKeywordKey((String)map.get("keywordKey"));
+			}
+
+			if (map.containsKey("keywordName")) {
+				builder.setKeywordName((String)map.get("keywordName"));
+			}
+
+			if (map.containsKey("entityType")) {
+				builder.setEntityType((String)map.get("entityType"));
+			}
+
+			if (map.containsKey("entityValue")) {
+				builder.setEntityValue((String)map.get("entityValue"));
+			}
+
+			if (map.containsKey("tenantId")) {
+				builder.setTenantId((Long)map.get("tenantId"));
 			}
 
 			result.add(builder.build());
