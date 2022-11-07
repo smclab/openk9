@@ -51,7 +51,7 @@ public class DateQueryParser implements QueryParser {
 
 					for (ParserSearchToken searchToken : searchTokens) {
 
-						if (searchToken.getKeywordKey() == null) {
+						if (StringUtils.isBlank(searchToken.getKeywordKey())) {
 
 							if (allFieldsWhenKeywordIsEmpty.get()) {
 								return Stream.of(
