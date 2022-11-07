@@ -5,7 +5,9 @@ import com.google.protobuf.Descriptors;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
+import io.openk9.searcher.grpc.QueryAnalysisResponse;
 import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
+import io.openk9.searcher.grpc.QueryAnalysisTokens;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.Searcher;
@@ -43,6 +45,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -136,7 +139,60 @@ public class SearchResource {
 
 		return searcherClient
 			.queryAnalysis(queryAnalysisRequest)
-			.map(internalSearcherMapper::toQueryAnalysisResponse);
+			.map(this::_toQueryAnalysisResponse);
+
+	}
+
+	private io.openk9.searcher.queryanalysis.QueryAnalysisResponse _toQueryAnalysisResponse(
+		QueryAnalysisResponse queryAnalysisResponse) {
+
+		io.openk9.searcher.queryanalysis.QueryAnalysisResponse.QueryAnalysisResponseBuilder
+			builder =
+			io.openk9.searcher.queryanalysis.QueryAnalysisResponse.builder();
+
+		builder.searchText(queryAnalysisResponse.getSearchText());
+
+		List<io.openk9.searcher.queryanalysis.QueryAnalysisTokens> queryAnalysisTokensList =
+			new ArrayList<>();
+
+		for (QueryAnalysisTokens queryAnalysisTokensGRPC : queryAnalysisResponse.getAnalysisList()) {
+
+			io.openk9.searcher.queryanalysis.QueryAnalysisTokens queryAnalysisTokens =
+				new io.openk9.searcher.queryanalysis.QueryAnalysisTokens();
+
+			queryAnalysisTokens.setText(queryAnalysisTokensGRPC.getText());
+			queryAnalysisTokens.setStart(queryAnalysisTokensGRPC.getStart());
+			queryAnalysisTokens.setEnd(queryAnalysisTokensGRPC.getEnd());
+			queryAnalysisTokens.setPos(queryAnalysisTokensGRPC.getPosList().toArray(Integer[]::new));
+			List<QueryAnalysisSearchToken> tokensList =
+				queryAnalysisTokensGRPC.getTokensList();
+
+			Collection<Map<String, Object>> tokens = new ArrayList<>(tokensList.size());
+
+			for (QueryAnalysisSearchToken queryAnalysisSearchToken : tokensList) {
+
+				Map<String, Object> token = new HashMap<>();
+
+				token.put("tokenType", queryAnalysisSearchToken.getTokenType());
+				token.put("value", queryAnalysisSearchToken.getValue());
+				token.put("score", queryAnalysisSearchToken.getScore());
+				token.put("keywordKey", queryAnalysisSearchToken.getKeywordKey());
+				token.put("keywordName", queryAnalysisSearchToken.getKeywordName());
+				token.put("entityType", queryAnalysisSearchToken.getEntityType());
+				token.put("entityValue", queryAnalysisSearchToken.getEntityValue());
+				token.put("tenantId", queryAnalysisSearchToken.getTenantId());
+
+				tokens.add(token);
+
+			}
+
+			queryAnalysisTokens.setTokens(tokens);
+
+			queryAnalysisTokensList.add(queryAnalysisTokens);
+
+		}
+
+		return builder.analysis(queryAnalysisTokensList).build();
 
 	}
 
