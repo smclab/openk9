@@ -18,6 +18,7 @@ import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchResponse;
@@ -176,11 +177,22 @@ public class SearchResource {
 				token.put("tokenType", queryAnalysisSearchToken.getTokenType());
 				token.put("value", queryAnalysisSearchToken.getValue());
 				token.put("score", queryAnalysisSearchToken.getScore());
-				token.put("keywordKey", queryAnalysisSearchToken.getKeywordKey());
-				token.put("keywordName", queryAnalysisSearchToken.getKeywordName());
-				token.put("entityType", queryAnalysisSearchToken.getEntityType());
-				token.put("entityValue", queryAnalysisSearchToken.getEntityValue());
-				token.put("tenantId", queryAnalysisSearchToken.getTenantId());
+
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getKeywordKey())) {
+					token.put("keywordKey", queryAnalysisSearchToken.getKeywordKey());
+				}
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getKeywordName())) {
+					token.put("keywordName", queryAnalysisSearchToken.getKeywordName());
+				}
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityType())) {
+					token.put("entityType", queryAnalysisSearchToken.getEntityType());
+				}
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityValue())) {
+					token.put("entityValue", queryAnalysisSearchToken.getEntityValue());
+				}
+				if (queryAnalysisSearchToken.getTenantId() > 0) {
+					token.put("tenantId", queryAnalysisSearchToken.getTenantId());
+				}
 
 				tokens.add(token);
 
