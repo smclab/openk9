@@ -9,6 +9,7 @@ import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpServerRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,11 +31,14 @@ import java.util.List;
 @Path("/v1/template")
 public class TemplateResource {
 
-	@Path("/get/{virtualhost}")
-	@POST
-	public Uni<List<TemplateResponseDto>> getTemplates(@PathParam("virtualhost") String virtualhost) {
+	@Context
+	HttpServerRequest request;
 
-		return getDocTypeTemplateList(virtualhost);
+	@Path("/get-by-virtualhost")
+	@POST
+	public Uni<List<TemplateResponseDto>> getTemplates() {
+
+		return getDocTypeTemplateList(request.host());
 
 	}
 
