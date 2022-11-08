@@ -26,34 +26,38 @@ public class OIDCTenantResolver implements TenantConfigResolver {
     private Uni<OidcTenantConfig> createTenantConfig(
         RoutingContext context, String tenantName) {
 
-        TenantRegistry.Tenant tenant = _tenantRegistry.getTenantNullable(tenantName);
+        return _tenantRegistry
+            .getTenantNullable(tenantName)
+            .map(tenant -> {
 
-        if (tenant == null) {
-            logger.warn("tenant " + tenantName + " not found");
-            return Uni.createFrom().nullItem();
-        }
+                if (tenant == null) {
+                    logger.warn("tenant " + tenantName + " not found");
+                    return null;
+                }
 
-        logger.info("tenant: " + tenantName);
+                logger.info("tenant: " + tenantName);
 
-        final OidcTenantConfig config = new OidcTenantConfig();
+                final OidcTenantConfig config = new OidcTenantConfig();
 
-        config.setTenantId(tenant.realmName());
-        config.setAuthServerUrl(
-            _createAuthServerUrl(tenant.realmName())
-        );
-        config.setClientId(tenant.clientId());
-        config.setApplicationType(OidcTenantConfig.ApplicationType.SERVICE);
+                config.setTenantId(tenant.realmName());
+                config.setAuthServerUrl(
+                    _createAuthServerUrl(tenant.realmName())
+                );
+                config.setClientId(tenant.clientId());
+                config.setApplicationType(OidcTenantConfig.ApplicationType.SERVICE);
 
-        if (tenant.clientSecret() != null && !tenant.clientSecret().isBlank()) {
-            OidcTenantConfig.Credentials credentials =
-                new OidcTenantConfig.Credentials();
-            credentials.setSecret(tenant.clientSecret());
-            config.setCredentials(credentials);
-        }
+                if (tenant.clientSecret() != null && !tenant.clientSecret().isBlank()) {
+                    OidcTenantConfig.Credentials credentials =
+                        new OidcTenantConfig.Credentials();
+                    credentials.setSecret(tenant.clientSecret());
+                    config.setCredentials(credentials);
+                }
 
-        context.put("tenantId", tenant.schemaName());
+                context.put("tenantId", tenant.schemaName());
 
-        return Uni.createFrom().item(config);
+                return config;
+
+            });
 
     }
 
