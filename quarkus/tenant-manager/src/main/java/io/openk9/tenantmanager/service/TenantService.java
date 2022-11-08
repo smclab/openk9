@@ -32,6 +32,8 @@ public class TenantService {
 
 				CriteriaQuery<Tenant> query = cb.createQuery(Tenant.class);
 
+				query.from(Tenant.class);
+
 				return s.createQuery(query).getResultList();
 
 			}
