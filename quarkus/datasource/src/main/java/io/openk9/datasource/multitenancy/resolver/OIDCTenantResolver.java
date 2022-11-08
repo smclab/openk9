@@ -40,6 +40,9 @@ public class OIDCTenantResolver implements TenantConfigResolver {
                 final OidcTenantConfig config = new OidcTenantConfig();
 
                 config.setTenantId(tenant.realmName());
+                config.setDiscoveryEnabled(true);
+                config.setApplicationType(
+                    OidcTenantConfig.ApplicationType.HYBRID);
                 config.setAuthServerUrl(
                     _createAuthServerUrl(tenant.realmName())
                 );
