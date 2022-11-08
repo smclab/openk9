@@ -27,7 +27,7 @@ public class OIDCTenantResolver implements TenantConfigResolver {
         RoutingContext context, String tenantName) {
 
         return _tenantRegistry
-            .getTenantNullable(tenantName)
+            .getTenantByVirtualHost(tenantName)
             .map(tenant -> {
 
                 if (tenant == null) {
