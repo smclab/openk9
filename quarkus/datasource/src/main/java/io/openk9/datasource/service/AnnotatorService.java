@@ -17,17 +17,20 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.AnnotatorMapper;
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.Annotator_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.AnnotatorDTO;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @ApplicationScoped
 public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDTO> {
@@ -43,6 +46,15 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {Annotator_.NAME, Annotator_.FUZINESS, Annotator_.TYPE, Annotator_.DESCRIPTION};
+	}
+
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsNotInAnnotator(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return findJoinConnection(
+			id, Annotator_.DOC_TYPE_FIELD, DocTypeField.class,
+			docTypeFieldService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, true);
 	}
 
 	public Uni<Tuple2<Annotator, DocTypeField>> bindDocTypeField(
