@@ -70,7 +70,7 @@ public class TenantRegistry {
 	private final Map<String, Tenant> _tenantMap =
 		new ConcurrentHashMap<>();
 
-	@GrpcClient("tenant-manager")
+	@GrpcClient("tenantmanager")
 	TenantManager tenantManager;
 
 	public record Tenant(
