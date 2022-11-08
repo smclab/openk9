@@ -6,10 +6,8 @@ import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
 
 @ApplicationScoped
-@ActivateRequestContext
 public class TenantRegistry {
 
 	public Uni<Tenant> getTenantByVirtualHost(String virtualHost) {
