@@ -32,9 +32,9 @@ public class TabResource {
 
 	@Path("/getTab-by-virtualhost")
 	@GET
-	public Uni<List<TabResponseDto>> getTemplates() {
+	public Uni<List<TabResponseDto>> getTabs() {
 
-		return getTabList("test.openk9.io");
+		return getTabList(request.host());
 
 	}
 
