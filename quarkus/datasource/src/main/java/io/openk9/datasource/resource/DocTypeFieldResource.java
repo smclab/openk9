@@ -17,12 +17,37 @@
 
 package io.openk9.datasource.resource;
 
+import io.openk9.datasource.model.DataIndex_;
+import io.openk9.datasource.model.Datasource_;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
+import io.openk9.datasource.model.DocType_;
+import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.DocTypeFieldService;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpServerRequest;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.reactive.mutiny.Mutiny;
 
-//@Path("/doc-type-fields")
+import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import java.util.ArrayList;
+import java.util.List;
+
+@Path("/doc-type-fields")
 public class DocTypeFieldResource extends
 	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
 
@@ -30,4 +55,67 @@ public class DocTypeFieldResource extends
 		super(service);
 	}
 
+	@Context
+	HttpServerRequest request;
+
+	@Path("/getDocTypeField-by-virtualhost")
+	@POST
+	public Uni<List<DocTypeFieldResponseDto>> getFields() {
+		return getDocTypeFieldList(request.host());
+	}
+
+	private Uni<List<DocTypeFieldResponseDto>> getDocTypeFieldList(String virtualhost) {
+		return sf.withTransaction(session -> {
+
+			CriteriaBuilder cb = sf.getCriteriaBuilder();
+
+			CriteriaQuery<DocTypeField> query = cb.createQuery(DocTypeField.class);
+
+			Root<Tenant> from = query.from(Tenant.class);
+
+			Join<DocType, DocTypeField> fetch =
+				from.join(Tenant_.datasources)
+					.join(Datasource_.dataIndex)
+					.join(DataIndex_.docTypes)
+					.join(DocType_.docTypeFields);
+
+			fetch.on(
+				cb.and(
+					cb.isTrue(fetch.get(DocTypeField_.SEARCHABLE)),
+					cb.equal(fetch.get(DocTypeField_.fieldType), FieldType.DATE)
+				));
+
+			query.select(fetch);
+
+			query.where(cb.equal(from.get(Tenant_.virtualHost), virtualhost));
+
+			return session.createQuery(query).getResultList().map(docTypeFields -> {
+
+				List<DocTypeFieldResponseDto> docTypeFieldResponseDtos = new ArrayList<>();
+
+				for(DocTypeField docTypeField : docTypeFields){
+					DocTypeFieldResponseDto docTypeFieldResponseDto = new DocTypeFieldResponseDto();
+					docTypeFieldResponseDto.setId(docTypeField.getId());
+					docTypeFieldResponseDto.setName(docTypeField.getName());
+					docTypeFieldResponseDto.setFieldName(docTypeField.getFieldName());
+
+					docTypeFieldResponseDtos.add(docTypeFieldResponseDto);
+				}
+				return docTypeFieldResponseDtos;
+
+			});
+			});
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class DocTypeFieldResponseDto {
+		private String name;
+		private Long id;
+		private String fieldName;
+	}
+
+	@Inject
+	Mutiny.SessionFactory sf;
 }

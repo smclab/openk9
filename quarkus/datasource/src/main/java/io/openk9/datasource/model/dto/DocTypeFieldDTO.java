@@ -35,6 +35,7 @@ import javax.validation.constraints.NotNull;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class DocTypeFieldDTO extends K9EntityDTO {
+
 	@NotNull
 	private Boolean searchable = false;
 	private Double boost = 1.0;
@@ -43,4 +44,6 @@ public class DocTypeFieldDTO extends K9EntityDTO {
 	private AnalyzerType analyzerType;
 	private Analyzer _analyzer;
 	private Boolean exclude;
+	@NotNull
+	private String fieldName;
 }
