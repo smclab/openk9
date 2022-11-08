@@ -9,6 +9,7 @@ import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.util.AnalyzerType;
 import io.openk9.datasource.processor.indexwriter.IndexerEvents;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
 import lombok.AllArgsConstructor;
@@ -291,7 +292,7 @@ public class DataIndexResource {
 	}
 
 	@Inject
-	Mutiny.SessionFactory sf;
+	TransactionInvoker sf;
 
 	@Inject
 	IndexerEvents indexerEvents;

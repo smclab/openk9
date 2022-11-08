@@ -8,9 +8,9 @@ import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -71,7 +71,7 @@ public class GrammarProvider {
 	}
 
 	private Uni<Tenant> _getTenant(String virtualHost) {
-		return sf.withStatelessSession(
+		return sf.withStatelessTransaction(
 			s -> {
 
 				CriteriaBuilder cb = sf.getCriteriaBuilder();
@@ -104,7 +104,7 @@ public class GrammarProvider {
 	}
 
 	@Inject
-	Mutiny.SessionFactory sf;
+	TransactionInvoker sf;
 
 	@Inject
 	AnnotatorFactory annotatorFactory;

@@ -28,6 +28,7 @@ import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.service.EnrichPipelineService;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.tenant.TenantResolver;
 import io.openk9.datasource.util.MessageUtil;
 import io.smallrye.mutiny.Uni;
@@ -177,7 +178,7 @@ public class DatasourceProcessor {
 	}
 
 	@Inject
-	Mutiny.SessionFactory sf;
+	TransactionInvoker sf;
 
 	@Inject
 	EnrichPipelineService enrichPipelineService;

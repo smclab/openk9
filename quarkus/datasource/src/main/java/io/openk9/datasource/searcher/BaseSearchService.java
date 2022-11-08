@@ -16,6 +16,7 @@ import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;
@@ -30,7 +31,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.Instance;
@@ -56,8 +56,7 @@ public abstract class BaseSearchService {
 		String virtualHost, boolean suggestion, long suggestionCategoryId) {
 
 		return sf
-			.openStatelessSession()
-			.flatMap(s -> {
+			.withStatelessTransaction(s -> {
 
 				CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
@@ -277,7 +276,7 @@ public abstract class BaseSearchService {
 	}
 
 	@Inject
-	Mutiny.SessionFactory sf;
+	TransactionInvoker sf;
 
 	@Inject
 	Instance<QueryParser> queryParserInstance;

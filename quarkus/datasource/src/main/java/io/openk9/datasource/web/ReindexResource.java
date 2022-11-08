@@ -19,12 +19,12 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
@@ -93,7 +93,7 @@ public class ReindexResource {
 	}
 
 	@Inject
-	Mutiny.SessionFactory sf;
+	TransactionInvoker sf;
 
 	@Inject
 	Instance<SchedulerInitializer> schedulerInitializer;

@@ -810,7 +810,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected K9EntityMapper<ENTITY, DTO> mapper;
 
 	@Inject
-	protected Mutiny.SessionFactory em;
+	protected TransactionInvoker em;
 
 	@Inject
 	Logger logger;

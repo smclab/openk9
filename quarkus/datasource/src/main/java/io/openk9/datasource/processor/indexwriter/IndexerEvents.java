@@ -7,6 +7,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.processor.util.Field;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -21,7 +22,6 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
@@ -338,7 +338,7 @@ public class IndexerEvents {
 	RestHighLevelClient client;
 
 	@Inject
-	Mutiny.SessionFactory sessionFactory;
+	TransactionInvoker sessionFactory;
 
 	@Inject
 	EventBus eventBus;

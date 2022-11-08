@@ -5,6 +5,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.MessageUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
@@ -23,7 +24,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -196,6 +196,6 @@ public class IndexerProcessor {
 	Logger logger;
 
 	@Inject
-	Mutiny.SessionFactory sessionFactory;
+	TransactionInvoker sessionFactory;
 
 }

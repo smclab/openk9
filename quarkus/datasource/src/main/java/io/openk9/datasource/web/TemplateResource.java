@@ -8,12 +8,12 @@ import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -92,6 +92,6 @@ public class TemplateResource {
 	}
 
 	@Inject
-	Mutiny.SessionFactory sf;
+	TransactionInvoker sf;
 
 }
