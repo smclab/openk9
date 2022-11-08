@@ -20,6 +20,30 @@ public enum QueryType {
 			mutableQuery.should(queryBuilder);
 		}
 	},
+	MIN_SHOULD_1 {
+		@Override
+		public void useConfiguredQueryType(
+			BoolQueryBuilder mutableQuery, QueryBuilder queryBuilder) {
+
+			mutableQuery.should(queryBuilder).minimumShouldMatch(1);
+		}
+	},
+	MIN_SHOULD_2 {
+		@Override
+		public void useConfiguredQueryType(
+			BoolQueryBuilder mutableQuery, QueryBuilder queryBuilder) {
+
+			mutableQuery.should(queryBuilder).minimumShouldMatch(2);
+		}
+	},
+	MIN_SHOULD_3 {
+		@Override
+		public void useConfiguredQueryType(
+			BoolQueryBuilder mutableQuery, QueryBuilder queryBuilder) {
+
+			mutableQuery.should(queryBuilder).minimumShouldMatch(3);
+		}
+	},
 	MUST_NOT {
 		@Override
 		public void useConfiguredQueryType(

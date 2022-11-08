@@ -38,7 +38,7 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -55,7 +55,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
-@ApplicationScoped
+@RequestScoped
 public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, EnrichPipelineDTO> {
 	 EnrichPipelineService(EnrichPipelineMapper mapper) {
 		 this.mapper = mapper;

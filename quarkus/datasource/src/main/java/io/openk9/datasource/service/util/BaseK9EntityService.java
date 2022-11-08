@@ -34,14 +34,12 @@ import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.resource.util.SortBy;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.validation.ValidatorK9EntityWrapper;
-import io.quarkus.hibernate.reactive.panache.common.runtime.AbstractJpaOperations;
-import io.quarkus.hibernate.reactive.panache.runtime.PanacheQueryImpl;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
-import io.vertx.core.Vertx;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -782,7 +780,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public <T> Uni<T> withTransaction(
 		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> fun) {
 
-		return Uni.createFrom().deferred(() -> em.withTransaction(fun));
+		return transactionInvoker.withTransaction(fun);
 
 	}
 
@@ -801,7 +799,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public <T> Uni<T> withStatelessTransaction(
 		BiFunction<Mutiny.StatelessSession, Mutiny.Transaction, Uni<T>> fun) {
 
-		return Uni.createFrom().deferred(() -> em.withStatelessTransaction((fun)));
+		return transactionInvoker.withStatelessTransaction(fun);
 
 	}
 
@@ -810,9 +808,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		BroadcastProcessor.create();
 
 	protected K9EntityMapper<ENTITY, DTO> mapper;
-
-	@Inject
-	protected AbstractJpaOperations<PanacheQueryImpl<ENTITY>> jpaOperations;
 
 	@Inject
 	protected Mutiny.SessionFactory em;
@@ -824,7 +819,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected Validator validator;
 
 	@Inject
-	Vertx vertx;
+	TransactionInvoker transactionInvoker;
 
 	private AtomicReference<ValidatorK9EntityWrapper<ENTITY, DTO>> validatorWrapper =
 		new AtomicReference<>();

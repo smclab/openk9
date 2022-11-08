@@ -23,9 +23,9 @@ import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 
-@ApplicationScoped
+@RequestScoped
 public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichItemDTO> {
 	 EnrichItemService(EnrichItemMapper mapper) {
 		 this.mapper = mapper;

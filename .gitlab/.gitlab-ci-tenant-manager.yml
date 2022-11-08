@@ -1,4 +1,4 @@
-Build Latest Searcher Docker Images:
+Build Latest Tenant Manager Docker Images:
   image: eclipse-temurin:17-jdk
   services:
     - docker:19.03.13-dind
@@ -15,31 +15,31 @@ Build Latest Searcher Docker Images:
       - tags
     changes:
       - quarkus/resources-common/**/*
-      - quarkus/searcher/**/*
-      - quarkus/searcher-grpc/**/*
-      - .gitlab/.gitlab-ci-searcher.yml
+      - quarkus/tenant-manager/**/*
+      - quarkus/client/tenant-manager-grpc/**/*
+      - .gitlab/.gitlab-ci-tenant-manager.yml
       - quarkus/pom.xml
   except:
     - schedules
   script:
-    - ./mvnw -Psmc,quarkus package $MAVEN_CLI_OPTS -pl quarkus/searcher -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
+    - ./mvnw -Psmc,quarkus package $MAVEN_CLI_OPTS -pl quarkus/tenant-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
   after_script:
-    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-tenant-manager" -F ref=master $DEV_TRIGGER_URL
   cache:
-    key: searcher
+    key: tenant-manager
     paths:
       - .m2/repository
 
 
-trigger_deploy_searcher:
+trigger_deploy_tenant-manager:
   image: curlimages/curl
   stage: deploy
-  needs: ['Build Latest Searcher Docker Images']
+  needs: ['Build Latest Tenant Manager Docker Images']
   only:
     refs:
       - main
     changes:
-      - searcher/configs/*
+      - tenant-manager/configs/*
       - osgi/common/reactory-netty-util/**/*
       - osgi/web/http-api/**/*
       - osgi/web/http-service/**/*
@@ -68,11 +68,11 @@ trigger_deploy_searcher:
       - osgi/plugin-driver-manager/plugin-driver-manager-model/**/*
       - osgi/third-party/caffeine/**/*
       - osgi/vertx/**/*
-      - assemblies/searcher/**/*
-      - .gitlab/.gitlab-ci-searcher.yml
+      - assemblies/tenant-manager/**/*
+      - .gitlab/.gitlab-ci-tenant-manager.yml
   except:
     - schedules
   before_script:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
-    - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEPLOY_TRIGGER_URL
+    - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-tenant-manager" -F ref=master $DEPLOY_TRIGGER_URL

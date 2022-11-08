@@ -26,10 +26,10 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
-@ApplicationScoped
+@RequestScoped
 public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDTO> {
 	 AnnotatorService(AnnotatorMapper mapper) {
 		 this.mapper = mapper;

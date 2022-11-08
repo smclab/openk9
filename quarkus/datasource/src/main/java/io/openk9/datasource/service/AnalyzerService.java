@@ -19,11 +19,11 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.graphql.Source;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import java.util.Set;
 
-@ApplicationScoped
+@RequestScoped
 public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> {
 	AnalyzerService(AnalyzerMapper mapper) {
 		this.mapper = mapper;

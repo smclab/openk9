@@ -6,9 +6,9 @@ import io.openk9.datasource.model.Tokenizer_;
 import io.openk9.datasource.model.dto.TokenizerDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 
-@ApplicationScoped
+@RequestScoped
 public class TokenizerService extends BaseK9EntityService<Tokenizer, TokenizerDTO> {
 	TokenizerService(TokenizerMapper mapper){this.mapper=mapper;}
 
