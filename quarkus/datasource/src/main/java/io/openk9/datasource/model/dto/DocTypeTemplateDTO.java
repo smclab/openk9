@@ -37,7 +37,7 @@ import javax.validation.constraints.NotNull;
 public class DocTypeTemplateDTO extends K9EntityDTO {
 
 	@NotNull
-	private TemplateType _templateType;
+	private TemplateType templateType;
 	@Lob
 	@NotEmpty
 	@NotNull
