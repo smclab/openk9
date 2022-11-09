@@ -5,10 +5,6 @@ import io.openk9.datasource.mapper.AnalyzerMapper;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.Analyzer_;
 import io.openk9.datasource.model.CharFilter;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.QueryAnalysis;
-import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.dto.AnalyzerDTO;
@@ -17,13 +13,12 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import org.eclipse.microprofile.graphql.Source;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Set;
 
-@RequestScoped
+@ApplicationScoped
 public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> {
 	AnalyzerService(AnalyzerMapper mapper) {
 		this.mapper = mapper;

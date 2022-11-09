@@ -23,9 +23,9 @@ import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.dto.QueryParserConfigDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 
-@RequestScoped
+@ApplicationScoped
 public class QueryParserConfigService extends BaseK9EntityService<QueryParserConfig, QueryParserConfigDTO> {
 	 QueryParserConfigService(QueryParserConfigMapper mapper) {
 		 this.mapper = mapper;

@@ -21,6 +21,7 @@ import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.tenant.TenantResolver;
 import org.hibernate.Hibernate;
 import org.quartz.SchedulerException;
 
@@ -72,7 +73,8 @@ public class K9EntityListener {
 
 	private void _createOrUpdateScheduler(Datasource datasource)
 		throws SchedulerException {
-		_schedulerInitializer.get().createOrUpdateScheduler(datasource);
+		_schedulerInitializer.get().createOrUpdateScheduler(
+			tenantResolver.getTenantName(), datasource);
 	}
 
 	private boolean _isDatasource(K9Entity k9Entity) {
@@ -85,5 +87,8 @@ public class K9EntityListener {
 
 	@Inject
 	EventSender _eventSender;
+
+	@Inject
+	TenantResolver tenantResolver;
 
 }

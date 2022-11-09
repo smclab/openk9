@@ -23,9 +23,9 @@ import io.openk9.datasource.model.Rule_;
 import io.openk9.datasource.model.dto.RuleDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 
-@RequestScoped
+@ApplicationScoped
 public class RuleService extends BaseK9EntityService<Rule, RuleDTO> {
 	 RuleService(RuleMapper mapper) {
 		 this.mapper = mapper;

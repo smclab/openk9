@@ -1,6 +1,7 @@
 package io.openk9.datasource.multitenancy.resolver;
 
 import io.openk9.datasource.multitenancy.TenantRegistry;
+import io.openk9.datasource.tenant.TenantResolver;
 import io.quarkus.oidc.OidcRequestContext;
 import io.quarkus.oidc.OidcTenantConfig;
 import io.quarkus.oidc.TenantConfigResolver;
@@ -20,13 +21,12 @@ public class OIDCTenantResolver implements TenantConfigResolver {
         RoutingContext context,
         OidcRequestContext<OidcTenantConfig> requestContext) {
 
-        return createTenantConfig(context, context.request().host());
+        return createTenantConfig(context.request().host());
     }
 
-    private Uni<OidcTenantConfig> createTenantConfig(
-        RoutingContext context, String tenantName) {
+    private Uni<OidcTenantConfig> createTenantConfig(String tenantName) {
 
-        return _tenantRegistry
+        return tenantRegistry
             .getTenantByVirtualHost(tenantName)
             .map(tenant -> {
 
@@ -56,7 +56,7 @@ public class OIDCTenantResolver implements TenantConfigResolver {
                     config.setCredentials(credentials);
                 }
 
-                context.put("tenantId", tenant.schemaName());
+                tenantResolver.setTenant(tenant.schemaName());
 
                 return config;
 
@@ -73,7 +73,10 @@ public class OIDCTenantResolver implements TenantConfigResolver {
     Logger logger;
 
     @Inject
-    TenantRegistry _tenantRegistry;
+    TenantRegistry tenantRegistry;
+
+    @Inject
+    TenantResolver tenantResolver;
 
     @ConfigProperty(
         name = "openk9.authServerUrl.template"

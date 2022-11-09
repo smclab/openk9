@@ -8,14 +8,14 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.List;
 
-@RequestScoped
+@ApplicationScoped
 public class DocTypeTemplateService extends BaseK9EntityService<DocTypeTemplate, DocTypeTemplateDTO> {
 	DocTypeTemplateService(DocTypeTemplateMapper mapper) {
 		this.mapper = mapper;

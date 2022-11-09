@@ -32,11 +32,11 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Set;
 
-@RequestScoped
+@ApplicationScoped
 public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDTO> {
 	DataIndexService(DataIndexMapper mapper) {
 		 this.mapper = mapper;

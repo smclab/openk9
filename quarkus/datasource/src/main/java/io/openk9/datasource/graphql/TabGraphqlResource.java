@@ -12,6 +12,7 @@ import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TokenTabService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.validation.FieldValidator;
 import io.openk9.datasource.validation.Response;
 import io.openk9.datasource.web.SearchTokenDto;
@@ -98,7 +99,7 @@ public class TabGraphqlResource {
 	}
 
 	public Uni<Tab> tab(@Source TokenTab tokenTab) {
-		return _tokenTabService.withTransaction(
+		return transactionInvoker.withTransaction(
 			(s) -> Mutiny2.fetch(s, tokenTab.getTab()));
 	}
 
@@ -199,6 +200,9 @@ public class TabGraphqlResource {
 
 	@Inject
 	TokenTabService _tokenTabService;
+
+	@Inject
+	TransactionInvoker transactionInvoker;
 
 	@Inject
 	TokenTabMapper _tokenTabMapper;

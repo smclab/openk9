@@ -36,7 +36,7 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -44,7 +44,7 @@ import javax.persistence.criteria.Root;
 import java.util.List;
 import java.util.Set;
 
-@RequestScoped
+@ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	DocTypeService(DocTypeMapper mapper) {
 		this.mapper = mapper;

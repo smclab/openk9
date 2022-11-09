@@ -17,13 +17,19 @@
 
 package io.openk9.datasource.listener;
 
+import com.google.protobuf.Empty;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.tenant.TenantResolver;
+import io.openk9.tenantmanager.grpc.TenantListResponse;
+import io.openk9.tenantmanager.grpc.TenantManager;
+import io.openk9.tenantmanager.grpc.TenantResponse;
+import io.quarkus.grpc.GrpcClient;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
@@ -65,36 +71,58 @@ import java.util.function.Function;
 @ApplicationScoped
 public class SchedulerInitializer {
 
-	@Inject
-	EventBus eventBus;
-
 	public void startUp(@Observes StartupEvent event) {
 		eventBus.send("initialize_scheduler", "initialize_scheduler");
 	}
+
+	@GrpcClient("tenantmanager")
+	TenantManager tenantManager;
 
 	@ConsumeEvent(value = "initialize_scheduler")
 	@ActivateRequestContext
 	public Uni<Void> initScheduler(String testMessage) {
 
+		Uni<TenantListResponse> tenantList =
+			tenantManager.findTenantList(Empty.getDefaultInstance());
+
 		logger.info("init scheduler");
 
-		return datasourceService
-			.findAll()
-			.onItem()
-			.invoke(list -> {
-				for (Datasource datasource : list) {
-					try {
-						createOrUpdateScheduler(datasource);
-					}
-					catch (RuntimeException e) {
-						throw e;
-					}
-					catch (Exception e) {
-						throw new RuntimeException(e);
-					}
+		return tenantList
+			.map(TenantListResponse::getTenantResponseList)
+			.flatMap(list -> {
+				List<Uni<Void>> unis = new ArrayList<>(list.size());
+				for (TenantResponse tenantResponse : list) {
+					String schemaName = tenantResponse.getSchemaName();
+					tenantResolver.setTenant(schemaName);
+					Uni<List<Datasource>> listDatasource = datasourceService.findAll();
+
+					Uni<Void> voidUni = listDatasource
+						.onItem()
+						.invoke(tenantDatasourceList -> {
+							for (Datasource datasource : tenantDatasourceList) {
+								try {
+									createOrUpdateScheduler(schemaName, datasource);
+								}
+								catch (RuntimeException e) {
+									throw e;
+								}
+								catch (Exception e) {
+									throw new RuntimeException(e);
+								}
+							}
+						})
+						.replaceWithVoid();
+
+					unis.add(voidUni);
+
 				}
-			})
-			.replaceWithVoid();
+
+				return Uni.combine()
+					.all()
+					.unis(unis)
+					.discardItems();
+
+			});
 
 	}
 
@@ -122,13 +150,15 @@ public class SchedulerInitializer {
 
 		return Uni.createFrom().deferred(() -> {
 			logger.info("datasourceId: " + datasourceId + " trigger: " + name);
-			return performTask(datasourceId);
+			return performTask(
+				tenantResolver.getTenantName(), datasourceId);
 		});
 
 	}
 
 	public void createOrUpdateScheduler(
-		Datasource datasource) throws SchedulerException {
+			String tenantName, Datasource datasource)
+		throws SchedulerException {
 
 		if (!datasource.getSchedulable()) {
 			deleteScheduler(datasource);
@@ -139,7 +169,7 @@ public class SchedulerInitializer {
 
 		JobKey jobKey = JobKey.jobKey(name);
 
-		if (_scheduler.get().checkExists(jobKey)) {
+		if (scheduler.get().checkExists(jobKey)) {
 
 			Trigger trigger = TriggerBuilder.newTrigger()
 				.withIdentity(name)
@@ -151,7 +181,7 @@ public class SchedulerInitializer {
 
 			TriggerKey triggerKey = TriggerKey.triggerKey(name);
 
-			_scheduler.get().rescheduleJob(triggerKey, trigger);
+			scheduler.get().rescheduleJob(triggerKey, trigger);
 
 		}
 		else {
@@ -159,6 +189,7 @@ public class SchedulerInitializer {
 			JobDetail job = JobBuilder.newJob(DatasourceJob.class)
 				.withIdentity(name)
 				.usingJobData("datasourceId", datasource.getId())
+				.usingJobData("tenantName", tenantName)
 				.build();
 
 			Trigger trigger = TriggerBuilder.newTrigger()
@@ -169,7 +200,7 @@ public class SchedulerInitializer {
 						datasource.getScheduling()))
 				.build();
 
-			_scheduler.get().scheduleJob(job, trigger);
+			scheduler.get().scheduleJob(job, trigger);
 
 		}
 
@@ -177,12 +208,13 @@ public class SchedulerInitializer {
 
 	public void deleteScheduler(Datasource datasource)
 		throws SchedulerException {
-		_scheduler.get().deleteJob(JobKey.jobKey(datasource.getName()));
+		scheduler.get().deleteJob(JobKey.jobKey(datasource.getName()));
 	}
 
-	public Uni<Void> performTask(Long datasourceId) {
+	public Uni<Void> performTask(String schemaName, Long datasourceId) {
 
-		return datasourceService.withTransaction(
+		return transactionInvoker.withTransaction(
+			schemaName,
 			s -> datasourceService.findById(datasourceId).flatMap(
 				datasource -> Mutiny2
 					.fetch(s, datasource.getPluginDriver())
@@ -253,7 +285,11 @@ public class SchedulerInitializer {
 
 				JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 
-				taskBean.performTask(jobDataMap.getLong("datasourceId"))
+				taskBean
+					.performTask(
+						jobDataMap.getString("tenantName"),
+						jobDataMap.getLong("datasourceId")
+					)
 					.subscribe().with(
 						unused2 -> {},
 						e -> logger.error(e.getMessage(), e)
@@ -265,7 +301,7 @@ public class SchedulerInitializer {
 	}
 
 	@Inject
-	Instance<Scheduler> _scheduler;
+	Instance<Scheduler> scheduler;
 
 	@Inject
 	Logger logger;
@@ -278,5 +314,11 @@ public class SchedulerInitializer {
 
 	@Inject
 	TenantResolver tenantResolver;
+
+	@Inject
+	EventBus eventBus;
+
+	@Inject
+	TransactionInvoker transactionInvoker;
 
 }

@@ -26,6 +26,7 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.AnnotatorService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
@@ -65,7 +66,7 @@ public class AnnotatorGraphqlResource {
 	}
 
 	public Uni<DocTypeField> docTypeField(@Source Annotator annotator) {
-		return annotatorService.withTransaction(s -> Mutiny2.fetch(s, annotator.getDocTypeField()));
+		return transactionInvoker.withTransaction(s -> Mutiny2.fetch(s, annotator.getDocTypeField()));
 	}
 
 	public Uni<Response<Annotator>> patchAnnotator(@Id long id, AnnotatorDTO annotatorDTO) {
@@ -135,6 +136,9 @@ public class AnnotatorGraphqlResource {
 			.filter(K9EntityEvent::isUpdate)
 			.map(K9EntityEvent::getEntity);
 	}
+
+	@Inject
+	TransactionInvoker transactionInvoker;
 
 	@Inject
 	AnnotatorService annotatorService;

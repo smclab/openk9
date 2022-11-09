@@ -23,9 +23,9 @@ import io.openk9.datasource.model.PluginDriver_;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 
-@RequestScoped
+@ApplicationScoped
 public class PluginDriverService extends BaseK9EntityService<PluginDriver, PluginDriverDTO> {
 	 PluginDriverService(PluginDriverMapper mapper) {
 		 this.mapper = mapper;

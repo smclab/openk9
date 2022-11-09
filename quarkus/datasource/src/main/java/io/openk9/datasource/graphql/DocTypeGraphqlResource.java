@@ -29,6 +29,7 @@ import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.validation.FieldValidator;
 import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
@@ -102,12 +103,12 @@ public class DocTypeGraphqlResource {
 	}
 
 	public Uni<DocType> docType(@Source DocTypeField docTypeField) {
-		return docTypeFieldService.withTransaction(
+		return transactionInvoker.withTransaction(
 			(s) -> Mutiny2.fetch(s, docTypeField.getDocType()));
 	}
 
 	public Uni<DocTypeTemplate> docTypeTemplate(@Source DocType docType) {
-		return docTypeFieldService.withTransaction(
+		return transactionInvoker.withTransaction(
 			(s) -> Mutiny2.fetch(s, docType.getDocTypeTemplate()));
 	}
 
@@ -218,6 +219,9 @@ public class DocTypeGraphqlResource {
 
 	@Inject
 	DocTypeService docTypeService;
+
+	@Inject
+	TransactionInvoker transactionInvoker;
 
 	@Inject
 	DocTypeFieldService docTypeFieldService;

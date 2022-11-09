@@ -6,9 +6,9 @@ import io.openk9.datasource.model.TokenFilter_;
 import io.openk9.datasource.model.dto.TokenFilterDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 
-@RequestScoped
+@ApplicationScoped
 public class TokenFilterService extends BaseK9EntityService<TokenFilter, TokenFilterDTO> {
 	TokenFilterService(TokenFilterMapper mapper) {this.mapper = mapper;}
 

@@ -1,11 +1,11 @@
 package io.openk9.datasource.sql;
 
 import io.openk9.datasource.multitenancy.MultiTenancyConfig;
+import io.openk9.datasource.tenant.TenantResolver;
 import io.smallrye.mutiny.Uni;
-import io.vertx.ext.web.RoutingContext;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.validation.Validator;
@@ -13,7 +13,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@RequestScoped
+@ApplicationScoped
 public class TransactionInvoker {
 
 	public CriteriaBuilder getCriteriaBuilder() {
@@ -21,18 +21,35 @@ public class TransactionInvoker {
 	}
 
 	public <T> Uni<T> withTransaction(Supplier<Uni<T>> fun) {
-		return withTransaction((session, transaction) -> fun.get());
+		return withTransaction(null, (session, transaction) -> fun.get());
 	}
 
 	public <T> Uni<T> withTransaction(
 		Function<Mutiny.Session, Uni<T>> fun) {
-		return withTransaction((session, transaction) -> fun.apply(session));
+		return withTransaction(null, (session, transaction) -> fun.apply(session));
 	}
 
 	public <T> Uni<T> withTransaction(
 		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> fun) {
 
+		return withTransaction(null, fun);
+
+	}
+
+	public <T> Uni<T> withTransaction(String schema, Supplier<Uni<T>> fun) {
+		return withTransaction(schema, (session, transaction) -> fun.get());
+	}
+
+	public <T> Uni<T> withTransaction(
+		String schema, Function<Mutiny.Session, Uni<T>> fun) {
+		return withTransaction(schema, (session, transaction) -> fun.apply(session));
+	}
+
+	public <T> Uni<T> withTransaction(
+		String schema, BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> fun) {
+
 		return withTransaction(
+			schema,
 			em::withTransaction,
 			Mutiny.Session::isOpen,
 			Mutiny.Session::createNativeQuery, fun);
@@ -40,21 +57,41 @@ public class TransactionInvoker {
 	}
 
 	public <T> Uni<T> withStatelessTransaction(Supplier<Uni<T>> fun) {
-		return withStatelessTransaction((session, transaction) -> fun.get());
+		return withStatelessTransaction(null, (session, transaction) -> fun.get());
 
 	}
 
 	public <T> Uni<T> withStatelessTransaction(
 		Function<Mutiny.StatelessSession, Uni<T>> fun) {
 
-		return withStatelessTransaction((session, transaction) -> fun.apply(session));
+		return withStatelessTransaction(null, (session, transaction) -> fun.apply(session));
+
+	}
+
+	public <T> Uni<T> withStatelessTransaction(String schema, Supplier<Uni<T>> fun) {
+		return withStatelessTransaction(schema, (session, transaction) -> fun.get());
+
+	}
+
+	public <T> Uni<T> withStatelessTransaction(
+		String schema, Function<Mutiny.StatelessSession, Uni<T>> fun) {
+
+		return withStatelessTransaction(schema, (session, transaction) -> fun.apply(session));
 
 	}
 
 	public <T> Uni<T> withStatelessTransaction(
 		BiFunction<Mutiny.StatelessSession, Mutiny.Transaction, Uni<T>> fun) {
 
+		return withStatelessTransaction(null, fun);
+
+	}
+
+	public <T> Uni<T> withStatelessTransaction(
+		String schema, BiFunction<Mutiny.StatelessSession, Mutiny.Transaction, Uni<T>> fun) {
+
 		return withTransaction(
+			schema,
 			em::withStatelessTransaction,
 			Mutiny.StatelessSession::isOpen,
 			Mutiny.StatelessSession::createNativeQuery, fun);
@@ -62,6 +99,7 @@ public class TransactionInvoker {
 	}
 
 	private <S, T> Uni<T> withTransaction(
+		String schema,
 		Function<BiFunction<S, Mutiny.Transaction, Uni<T>>, Uni<T>> fun,
 		java.util.function.Predicate<S> isOpen,
 		BiFunction<S, String, Mutiny.Query<?>> createNativeQuery,
@@ -79,7 +117,9 @@ public class TransactionInvoker {
 						"unexpected state: Hibernate session is not active in tenant transaction interceptor");
 				}
 
-				String sessionTenantId = context.get("tenantId");
+				String sessionTenantId = schema == null
+					? tenantResolver.getTenantName()
+					: schema;
 				if (!validator.validate(sessionTenantId).isEmpty()) {
 					// double check just in case to avoid potential SQL injection
 					// (hint appreciated: how to properly escape postgres string literal here instead?)
@@ -107,7 +147,7 @@ public class TransactionInvoker {
 	Validator validator;
 
 	@Inject
-	RoutingContext context;
+	TenantResolver tenantResolver;
 
 	@Inject
 	MultiTenancyConfig multiTenancyConfig;

@@ -7,9 +7,9 @@ import io.openk9.datasource.model.CharFilter_;
 import io.openk9.datasource.model.dto.CharFilterDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 
-@RequestScoped
+@ApplicationScoped
 public class CharFilterService extends BaseK9EntityService<CharFilter, CharFilterDTO> {
 	CharFilterService(CharFilterMapper mapper){this.mapper=mapper;}
 

@@ -39,12 +39,12 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Set;
 
-@RequestScoped
+@ApplicationScoped
 public class SearchConfigService extends BaseK9EntityService<SearchConfig, SearchConfigDTO> {
 	 SearchConfigService(SearchConfigMapper mapper) {
 		 this.mapper = mapper;

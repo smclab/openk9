@@ -1,18 +1,56 @@
 package io.openk9.datasource.tenant.impl;
 
 import io.openk9.datasource.tenant.TenantResolver;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import io.vertx.core.Vertx;
+import io.vertx.ext.web.RoutingContext;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.CDI;
+import javax.inject.Inject;
 
-@RequestScoped
+@ApplicationScoped
 public class DefaultTenantResolver implements TenantResolver {
 
 	public long getTenantId() {
-		return tenantId;
+		return -1;
 	}
 
-	@ConfigProperty(name = "openk9.datasource.tenant.id", defaultValue = "1")
-	long tenantId;
+	@Override
+	public String getTenantName() {
+
+		if (beanManager.isScope(RequestScoped.class)) {
+			return CDI
+				.current()
+				.select(RoutingContext.class)
+				.get()
+				.get(TENANT_ID);
+		}
+
+		return Vertx.currentContext().get(TENANT_ID);
+
+	}
+
+	@Override
+	public void setTenant(String name) {
+
+		if (beanManager.isScope(RequestScoped.class)) {
+			CDI
+				.current()
+				.select(RoutingContext.class)
+				.get()
+				.put(TENANT_ID, name);
+		}
+		else {
+			Vertx.currentContext().put(TENANT_ID, name);
+		}
+
+	}
+
+	public static final String TENANT_ID = "tenantId";
+
+	@Inject
+	BeanManager beanManager;
 
 }
