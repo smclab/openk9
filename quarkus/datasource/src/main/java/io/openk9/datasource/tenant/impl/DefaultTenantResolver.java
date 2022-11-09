@@ -14,13 +14,13 @@ public class DefaultTenantResolver implements TenantResolver {
 
 	@Override
 	public String getTenantName() {
-		return Vertx.currentContext().get(TENANT_ID);
+		return Vertx.currentContext().getLocal(TENANT_ID);
 
 	}
 
 	@Override
 	public void setTenant(String name) {
-		Vertx.currentContext().put(TENANT_ID, name);
+		Vertx.currentContext().putLocal(TENANT_ID, name);
 	}
 
 	public static final String TENANT_ID = "tenantId";
