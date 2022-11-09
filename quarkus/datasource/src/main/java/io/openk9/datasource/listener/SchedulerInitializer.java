@@ -248,7 +248,7 @@ public class SchedulerInitializer {
 									HttpPluginDriverContext
 										.builder()
 										.timestamp(lastIngestionDate)
-										.tenantId(tenantResolver.getTenantId())
+										.tenantId(schemaName.hashCode())
 										.datasourceId(datasource.getId())
 										.scheduleId(scheduleId)
 										.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
