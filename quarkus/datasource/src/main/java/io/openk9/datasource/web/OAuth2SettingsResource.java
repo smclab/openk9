@@ -1,6 +1,8 @@
 package io.openk9.datasource.web;
 
-import io.quarkus.oidc.OidcConfigurationMetadata;
+import io.quarkus.oidc.OidcTenantConfig;
+import io.smallrye.mutiny.Uni;
+import io.vertx.ext.web.RoutingContext;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -10,12 +12,22 @@ import javax.ws.rs.Path;
 public class OAuth2SettingsResource {
 
     @Inject
-    OidcConfigurationMetadata configMetadata;
+    RoutingContext routingContext;
 
     @GET
     @Path("/settings")
-    public OidcConfigurationMetadata settings() {
-        return configMetadata;
+    public Uni<Settings> settings() {
+        Uni<OidcTenantConfig> oidcConfigUni =
+            routingContext.get("dynamic.tenant.config");
+
+        return oidcConfigUni.map(oidcConfig -> new Settings(
+            oidcConfig.getAuthServerUrl().orElse(""),
+            oidcConfig.getClientId().orElse(""),
+            oidcConfig.getTenantId().orElse("")
+        ));
+
     }
+
+    public record Settings(String issuer, String clientId, String tenantId) {}
 
 }
