@@ -17,49 +17,104 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.model.DateFilter;
-import io.quarkus.panache.common.Page;
-import io.quarkus.panache.common.Sort;
+import io.openk9.datasource.model.DataIndex_;
+import io.openk9.datasource.model.Datasource_;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
+import io.openk9.datasource.model.DocType_;
+import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Tenant_;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.resource.util.BaseK9EntityResource;
+import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
-import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import io.vertx.core.http.HttpServerRequest;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.ws.rs.DefaultValue;
+import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Context;
+import java.util.ArrayList;
 import java.util.List;
 
-@CircuitBreaker
-@Path("/v2/date-filter")
-public class DateFilterResource {
+@Path("/v1/date-filter")
+public class DateFilterResource extends
+	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
 
-	@GET
-	@Path("/count")
-	public Uni<Long> count(){
-		return DateFilter.count();
+	protected DateFilterResource(DocTypeFieldService service) {
+		super(service);
 	}
 
-	@GET
-	@Path("/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<DateFilter> findById(@PathParam("id") long id){
-		return DateFilter.findById(id);
-	}
+	@Context
+	HttpServerRequest request;
 
 	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<List<DateFilter>> findAll(
-		@QueryParam("sort") List<String> sortQuery,
-		@QueryParam("page") @DefaultValue("0") int pageIndex,
-		@QueryParam("size") @DefaultValue("20") int pageSize
-	) {
-		Page page = Page.of(pageIndex, pageSize);
-		Sort sort = Sort.by(sortQuery.toArray(String[]::new));
-
-		return DateFilter.findAll(sort).page(page).list();
+	public Uni<List<DocTypeFieldResponseDto>> getFields() {
+		return getDocTypeFieldList(request.host());
 	}
 
+	private Uni<List<DocTypeFieldResponseDto>> getDocTypeFieldList(String virtualhost) {
+		return transactionInvoker.withTransaction(session -> {
+
+			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+
+			CriteriaQuery<DocTypeField> query = cb.createQuery(DocTypeField.class);
+
+			Root<Tenant> from = query.from(Tenant.class);
+
+			Join<DocType, DocTypeField> fetch =
+				from.join(Tenant_.datasources)
+					.join(Datasource_.dataIndex)
+					.join(DataIndex_.docTypes)
+					.join(DocType_.docTypeFields);
+
+			fetch.on(
+				cb.and(
+					cb.isTrue(fetch.get(DocTypeField_.SEARCHABLE)),
+					cb.equal(fetch.get(DocTypeField_.fieldType), FieldType.DATE)
+				));
+
+			query.select(fetch);
+
+			query.where(cb.equal(from.get(Tenant_.virtualHost), virtualhost));
+
+			return session.createQuery(query).getResultList().map(docTypeFields -> {
+
+				List<DocTypeFieldResponseDto> docTypeFieldResponseDtos = new ArrayList<>();
+
+				for(DocTypeField docTypeField : docTypeFields){
+					DocTypeFieldResponseDto docTypeFieldResponseDto = new DocTypeFieldResponseDto();
+					docTypeFieldResponseDto.setId(docTypeField.getId());
+					docTypeFieldResponseDto.setName(docTypeField.getName());
+					docTypeFieldResponseDto.setFieldName(docTypeField.getFieldName());
+
+					docTypeFieldResponseDtos.add(docTypeFieldResponseDto);
+				}
+				return docTypeFieldResponseDtos;
+
+			});
+			});
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class DocTypeFieldResponseDto {
+		private String name;
+		private Long id;
+		private String fieldName;
+	}
+
+	@Inject
+	TransactionInvoker transactionInvoker;
 }

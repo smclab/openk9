@@ -21,7 +21,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
-import javax.ws.rs.POST;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class TemplateResource {
 	HttpServerRequest request;
 
 	@Path("/get-by-virtualhost")
-	@POST
+	@GET
 	public Uni<List<TemplateResponseDto>> getTemplates() {
 
 		return getDocTypeTemplateList(request.host());
