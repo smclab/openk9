@@ -30,7 +30,7 @@ public class OIDCTenantResolver implements TenantConfigResolver {
             .getTenantByVirtualHost(tenantName)
             .map(tenant -> {
 
-                if (tenant == null) {
+                if (tenant == null ) {
                     logger.warn("tenant " + tenantName + " not found");
                     return null;
                 }

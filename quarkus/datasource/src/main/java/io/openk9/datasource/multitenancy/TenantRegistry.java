@@ -2,6 +2,7 @@ package io.openk9.datasource.multitenancy;
 
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantRequest;
+import io.openk9.tenantmanager.grpc.TenantResponse;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 
@@ -17,13 +18,17 @@ public class TenantRegistry {
 					.setVirtualHost(virtualHost)
 					.build()
 			)
-			.map(tenantResponse -> new Tenant(
-				tenantResponse.getVirtualHost(),
-				tenantResponse.getSchemaName(),
-				tenantResponse.getClientId(),
-				tenantResponse.getClientSecret(),
-				tenantResponse.getRealmName()
-			));
+			.map(
+				tenantResponse ->
+					tenantResponse != TenantResponse.getDefaultInstance()
+				? new Tenant(
+					tenantResponse.getVirtualHost(),
+					tenantResponse.getSchemaName(),
+					tenantResponse.getClientId(),
+					tenantResponse.getClientSecret(),
+					tenantResponse.getRealmName())
+				: null
+			);
 	}
 
 	@GrpcClient("tenantmanager")
