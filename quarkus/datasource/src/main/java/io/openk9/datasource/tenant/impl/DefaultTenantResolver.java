@@ -9,7 +9,7 @@ import javax.enterprise.context.ApplicationScoped;
 public class DefaultTenantResolver implements TenantResolver {
 
 	public long getTenantId() {
-		return -1;
+		return getTenantName().hashCode();
 	}
 
 	@Override

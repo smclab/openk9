@@ -62,8 +62,6 @@ public class DatasourceProcessor {
 
 		long datasourceId = ingestionPayload.getDatasourceId();
 
-		ingestionPayload.setTenantId(tenantResolver.getTenantId());
-
 		DataPayload dataPayload =
 			ingestionPayloadMapper.map(ingestionPayload);
 
