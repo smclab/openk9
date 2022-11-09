@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource;
+package io.openk9.datasource.web;
 
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource_;
@@ -29,12 +29,12 @@ import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -47,7 +47,7 @@ import javax.ws.rs.core.Context;
 import java.util.ArrayList;
 import java.util.List;
 
-@Path("/doc-type-fields")
+@Path("/v1/doc-type-fields")
 public class DocTypeFieldResource extends
 	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
 
@@ -58,16 +58,16 @@ public class DocTypeFieldResource extends
 	@Context
 	HttpServerRequest request;
 
-	@Path("/getDocTypeField-by-virtualhost")
+	@Path("/get-by-virtualhost")
 	@POST
 	public Uni<List<DocTypeFieldResponseDto>> getFields() {
 		return getDocTypeFieldList(request.host());
 	}
 
 	private Uni<List<DocTypeFieldResponseDto>> getDocTypeFieldList(String virtualhost) {
-		return sf.withTransaction(session -> {
+		return transactionInvoker.withTransaction(session -> {
 
-			CriteriaBuilder cb = sf.getCriteriaBuilder();
+			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 
 			CriteriaQuery<DocTypeField> query = cb.createQuery(DocTypeField.class);
 
@@ -117,5 +117,5 @@ public class DocTypeFieldResource extends
 	}
 
 	@Inject
-	Mutiny.SessionFactory sf;
+	TransactionInvoker transactionInvoker;
 }

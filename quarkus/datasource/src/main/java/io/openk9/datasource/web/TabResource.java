@@ -1,15 +1,15 @@
-package io.openk9.datasource.resource;
+package io.openk9.datasource.web;
 
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -24,13 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
-@Path("/tab")
+@Path("/v1/tab")
 public class TabResource {
 
 	@Context
 	HttpServerRequest request;
 
-	@Path("/getTab-by-virtualhost")
+	@Path("/get-by-virtualhost")
 	@GET
 	public Uni<List<TabResponseDto>> getTabs() {
 
@@ -39,9 +39,9 @@ public class TabResource {
 	}
 
 	private Uni<List<TabResponseDto>> getTabList(String virtualhost) {
-		return sf.withTransaction(session -> {
+		return transactionInvoker.withTransaction(session -> {
 
-			CriteriaBuilder cb = sf.getCriteriaBuilder();
+			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 
 			CriteriaQuery<Tab> query = cb.createQuery(Tab.class);
 
@@ -101,7 +101,7 @@ public class TabResource {
 
 
 	@Inject
-	Mutiny.SessionFactory sf;
+	TransactionInvoker transactionInvoker;
 
 }
 

@@ -42,7 +42,7 @@ public class DocTypeFieldDTO extends K9EntityDTO {
 	@NotNull
 	private FieldType fieldType;
 	private AnalyzerType analyzerType;
-	private Analyzer _analyzer;
+	private Analyzer analyzer;
 	private Boolean exclude;
 	@NotNull
 	private String fieldName;
