@@ -26,9 +26,6 @@ import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.Tenant_;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
@@ -48,12 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Path("/v1/date-filter")
-public class DateFilterResource extends
-	BaseK9EntityResource<DocTypeFieldService, DocTypeField, DocTypeFieldDTO> {
-
-	protected DateFilterResource(DocTypeFieldService service) {
-		super(service);
-	}
+public class DateFilterResource {
 
 	@Context
 	HttpServerRequest request;
