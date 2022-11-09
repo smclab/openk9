@@ -6,6 +6,7 @@ import io.vertx.ext.web.RoutingContext;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.control.RequestContextController;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
@@ -36,11 +37,17 @@ public class DefaultTenantResolver implements TenantResolver {
 	public void setTenant(String name) {
 
 		if (beanManager.isScope(RequestScoped.class)) {
-			CDI
-				.current()
-				.select(RoutingContext.class)
-				.get()
-				.put(TENANT_ID, name);
+			try {
+				requestContextController.activate();
+				CDI
+					.current()
+					.select(RoutingContext.class)
+					.get()
+					.put(TENANT_ID, name);
+			}
+			finally {
+				requestContextController.deactivate();
+			}
 		}
 		else {
 			Vertx.currentContext().put(TENANT_ID, name);
@@ -52,5 +59,8 @@ public class DefaultTenantResolver implements TenantResolver {
 
 	@Inject
 	BeanManager beanManager;
+
+	@Inject
+	RequestContextController requestContextController;
 
 }
