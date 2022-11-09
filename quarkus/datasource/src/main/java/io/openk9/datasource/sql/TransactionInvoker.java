@@ -3,6 +3,8 @@ package io.openk9.datasource.sql;
 import io.openk9.datasource.multitenancy.MultiTenancyConfig;
 import io.openk9.datasource.tenant.TenantResolver;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -108,7 +110,12 @@ public class TransactionInvoker {
 		return Uni
 			.createFrom()
 			.deferred(() -> fun.apply((s, t) -> {
-				if (!multiTenancyConfig.isEnabled()) {
+
+				Context context = Vertx.currentContext();
+
+				Object flag = context.getLocal("flag");
+
+				if (!multiTenancyConfig.isEnabled() || flag != null) {
 					return fun2.apply(s, t);
 				}
 
@@ -120,6 +127,7 @@ public class TransactionInvoker {
 				String sessionTenantId = schema == null
 					? tenantResolver.getTenantName()
 					: schema;
+
 				if (!validator.validate(sessionTenantId).isEmpty()) {
 					// double check just in case to avoid potential SQL injection
 					// (hint appreciated: how to properly escape postgres string literal here instead?)
@@ -129,6 +137,7 @@ public class TransactionInvoker {
 
 				return createNativeQuery.apply(s, "SET LOCAL SCHEMA '" + sessionTenantId + "'")
 					.executeUpdate()
+					.invoke(() -> context.putLocal("flag", true))
 					.flatMap((ignore) -> {
 						try {
 							return fun2.apply(s, t);
