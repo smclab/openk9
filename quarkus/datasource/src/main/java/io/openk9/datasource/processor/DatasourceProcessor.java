@@ -65,93 +65,94 @@ public class DatasourceProcessor {
 		DataPayload dataPayload =
 			ingestionPayloadMapper.map(ingestionPayload);
 
-		return sf.withTransaction(s ->
-				_getDatasourceAndDataIndex(s, datasourceId)
-				.onItem()
-				.transformToUni(datasource -> {
+		return sf.withTransaction(
+				ingestionPayload.getTenantId(),
+				s -> _getDatasourceAndDataIndex(s, datasourceId)
+					.onItem()
+					.transformToUni(datasource -> {
 
-					long parsingDate = ingestionPayload.getParsingDate();
+						long parsingDate = ingestionPayload.getParsingDate();
 
-					OffsetDateTime instantParsingDate =
-						OffsetDateTime.ofInstant(
-							Instant.ofEpochMilli(parsingDate), ZoneOffset.UTC);
+						OffsetDateTime instantParsingDate =
+							OffsetDateTime.ofInstant(
+								Instant.ofEpochMilli(parsingDate), ZoneOffset.UTC);
 
-					datasource.setLastIngestionDate(instantParsingDate);
+						datasource.setLastIngestionDate(instantParsingDate);
 
-					DataIndex dataIndex = datasource.getDataIndex();
+						DataIndex dataIndex = datasource.getDataIndex();
 
-					if (dataIndex == null) {
-						String indexName =
-							datasource.getId() + "-data-" +
-							UUID.randomUUID();
+						if (dataIndex == null) {
+							String indexName =
+								datasource.getId() + "-data-" +
+								UUID.randomUUID();
 
-						dataIndex = DataIndex.of(
-							indexName, "auto-generated",
-							new LinkedHashSet<>());
+							dataIndex = DataIndex.of(
+								indexName, "auto-generated",
+								new LinkedHashSet<>());
 
-						datasource.setDataIndex(dataIndex);
+							datasource.setDataIndex(dataIndex);
 
-					}
-
-					dataPayload.addRest("indexName", dataIndex.getName());
-
-					return s
-						.persist(datasource)
-						.map(v -> datasource);
-
-				})
-				.flatMap(datasource -> Mutiny2
-					.fetch(s, datasource.getEnrichPipeline())
-					.flatMap(ep -> {
-
-						if (ep == null) {
-							return enrichStepHandler.consume(
-								EnrichStepHandler.EnrichStep.of(
-									dataPayload,
-									0L,
-									0L
-								)
-							);
 						}
 
-						return enrichPipelineService
-							.findFirstEnrichItem(ep.getId())
-							.flatMap(ei -> {
+						dataPayload.addRest("indexName", dataIndex.getName());
 
-								if (ei == null) {
-									return enrichStepHandler.consume(
-										EnrichStepHandler.EnrichStep.of(
-											dataPayload,
-											0L,
-											0L
-										)
-									);
-								}
+						return s
+							.persist(datasource)
+							.map(v -> datasource);
 
+					})
+					.flatMap(datasource -> Mutiny2
+						.fetch(s, datasource.getEnrichPipeline())
+						.flatMap(ep -> {
+
+							if (ep == null) {
 								return enrichStepHandler.consume(
 									EnrichStepHandler.EnrichStep.of(
 										dataPayload,
-										ep.getId(),
-										ei.getId()
+										0L,
+										0L
 									)
 								);
+							}
 
-							});
-					})
-				)
-		)
-			.onItemOrFailure()
-			.transformToUni((item, failure) -> {
+							return enrichPipelineService
+								.findFirstEnrichItem(ep.getId())
+								.flatMap(ei -> {
 
-				if (failure != null) {
-					logger.error(failure.getMessage(), failure);
-					return Uni.createFrom().completionStage(
-						() -> message.nack(failure));
-				}
+									if (ei == null) {
+										return enrichStepHandler.consume(
+											EnrichStepHandler.EnrichStep.of(
+												dataPayload,
+												0L,
+												0L
+											)
+										);
+									}
 
-				return Uni.createFrom().completionStage(message::ack);
+									return enrichStepHandler.consume(
+										EnrichStepHandler.EnrichStep.of(
+											dataPayload,
+											ep.getId(),
+											ei.getId()
+										)
+									);
 
-			});
+								});
+						})
+					)
+			)
+				.onItemOrFailure()
+				.transformToUni((item, failure) -> {
+
+					if (failure != null) {
+						logger.error(failure.getMessage(), failure);
+						return Uni.createFrom().completionStage(
+							() -> message.nack(failure));
+					}
+
+					return Uni.createFrom().completionStage(message::ack);
+
+				});
 
 	}
 

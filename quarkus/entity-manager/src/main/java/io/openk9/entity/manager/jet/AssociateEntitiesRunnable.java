@@ -88,7 +88,7 @@ public class AssociateEntitiesRunnable
 			DataService dataService =
 				CDI.current().select(DataService.class).get();
 
-			Long tenantId = 0L;
+			String tenantId = "";
 			String indexName = "";
 
 			for (Entity entity : v) {

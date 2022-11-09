@@ -42,7 +42,7 @@ public class OrganizationEntityNameCleaner extends DefaultEntityNameCleaner {
 	}
 
 	@Override
-	public QueryBuilder cleanEntityName(long tenantId, String entityName) {
+	public QueryBuilder cleanEntityName(String tenantId, String entityName) {
 		return super.cleanEntityName(tenantId, entityName);
 	}
 

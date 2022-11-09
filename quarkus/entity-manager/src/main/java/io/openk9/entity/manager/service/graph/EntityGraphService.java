@@ -204,36 +204,6 @@ public class EntityGraphService {
 
 	}
 
-	public EntityGraph searchByNameAndType(
-		long tenantId, String name, String type) {
-
-		try (Session session = driver.session()) {
-
-			Result result = session.run(
-				"MATCH (a:" + type + ") " +
-				"WHERE a.name = $name AND a.tenantId = $tenantId " +
-				"RETURN a",
-				Values.parameters(
-					"tenantId", tenantId,
-					"name", name
-				)
-			);
-
-			if (result.hasNext()) {
-				Record next = result.next();
-				Node node = next.get("a").asNode();
-				String entityName = node.get("name").asString();
-				String id = node.get("id").asString();
-				return EntityGraph.of(
-					id, node.id(), tenantId, entityName, type);
-			}
-			else {
-				return null;
-			}
-		}
-
-	}
-
 	@Inject
 	Driver driver;
 

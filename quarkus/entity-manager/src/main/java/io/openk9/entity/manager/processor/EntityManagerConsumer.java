@@ -117,7 +117,7 @@ public class EntityManagerConsumer {
 			_loggerAggregator.emitLog(
 				"process ingestionId", payload.getIngestionId());
 
-			long tenantId = payload.getTenantId();
+			String tenantId = payload.getTenantId();
 			String ingestionId = payload.getIngestionId();
 			List<EntityRequest> entities = request.getEntities();
 

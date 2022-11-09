@@ -28,7 +28,7 @@ import org.neo4j.driver.types.Node;
 public class EntityGraph {
 	private String id;
 	private Long graphId;
-	private long tenantId;
+	private String tenantId;
 	private String name;
 	private String type;
 
@@ -36,7 +36,7 @@ public class EntityGraph {
 		return new EntityGraph(
 			node.get("id").asString(),
 			node.id(),
-			node.get("tenantId").asLong(),
+			node.get("tenantId").asString(),
 			node.get("name").asString(),
 			type
 		);

@@ -28,14 +28,14 @@ import org.neo4j.driver.types.Node;
 public class DocumentGraph {
 	private Long id;
 	private Long datasourceId;
-	private Long tenantId;
+	private String tenantId;
 	private String contentId;
 
 	public static DocumentGraph from(Node node) {
 		return new DocumentGraph(
 			node.id(),
 			node.get("datasourceId").asLong(),
-			node.get("tenantId").asLong(),
+			node.get("tenantId").asString(),
 			node.get("contentId").asString()
 		);
 	}

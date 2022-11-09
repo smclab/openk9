@@ -43,7 +43,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 	@EqualsAndHashCode.Include
 	private String cacheId;
 	@ToString.Include
-	private Long tenantId;
+	private String tenantId;
 	@ToString.Include
 	private String name;
 	@ToString.Include
@@ -70,7 +70,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 		if (res != 0) {
 			return res;
 		}
-		return Long.compare(p1.getTenantId(), other.getTenantId());
+		return p1.getTenantId().compareTo(other.getTenantId());
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 	public void writeData(ObjectDataOutput out) throws IOException {
 		out.writeString(id);
 		out.writeString(cacheId);
-		out.writeObject(tenantId);
+		out.writeString(tenantId);
 		out.writeString(name);
 		out.writeString(type);
 		out.writeObject(graphId);
@@ -102,7 +102,7 @@ public class Entity implements IdentifiedDataSerializable, Comparable<Entity> {
 	public void readData(ObjectDataInput in) throws IOException {
 		id = in.readString();
 		cacheId = in.readString();
-		tenantId = in.readObject();
+		tenantId = in.readString();
 		name = in.readString();
 		type = in.readString();
 		graphId = in.readObject();

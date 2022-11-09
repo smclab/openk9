@@ -38,7 +38,7 @@ public class DocumentKey implements IdentifiedDataSerializable {
 
 	private long datasourceId;
 	private String contentId;
-	private long tenantId;
+	private String tenantId;
 
 	@Override
 	public int getFactoryId() {
@@ -54,13 +54,13 @@ public class DocumentKey implements IdentifiedDataSerializable {
 	public void writeData(ObjectDataOutput out) throws IOException {
 		out.writeLong(datasourceId);
 		out.writeString(contentId);
-		out.writeLong(tenantId);
+		out.writeString(tenantId);
 	}
 
 	@Override
 	public void readData(ObjectDataInput in) throws IOException {
 		datasourceId = in.readLong();
 		contentId = in.readString();
-		tenantId = in.readLong();
+		tenantId = in.readString();
 	}
 }

@@ -29,7 +29,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 public class EntityManagerRequest implements Serializable {
-	private long tenantId;
+	private String tenantId;
 	private String ingestionId;
 	private String contentId;
 	private long datasourceId;

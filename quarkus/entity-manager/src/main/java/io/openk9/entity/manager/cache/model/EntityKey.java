@@ -38,7 +38,7 @@ import java.util.Objects;
 @AllArgsConstructor(staticName = "of")
 @EqualsAndHashCode
 public class EntityKey implements IdentifiedDataSerializable, PartitionAware<Integer> {
-	private long tenantId;
+	private String tenantId;
 	private String name;
 	private String type;
 	private String cacheId;
@@ -56,7 +56,7 @@ public class EntityKey implements IdentifiedDataSerializable, PartitionAware<Int
 
 	@Override
 	public void writeData(ObjectDataOutput out) throws IOException {
-		out.writeLong(tenantId);
+		out.writeString(tenantId);
 		out.writeString(name);
 		out.writeString(type);
 		out.writeString(cacheId);
@@ -65,7 +65,7 @@ public class EntityKey implements IdentifiedDataSerializable, PartitionAware<Int
 
 	@Override
 	public void readData(ObjectDataInput in) throws IOException {
-		tenantId = in.readLong();
+		tenantId = in.readString();
 		name = in.readString();
 		type = in.readString();
 		cacheId = in.readString();

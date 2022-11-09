@@ -39,7 +39,7 @@ import java.io.IOException;
 public class IngestionKey implements IdentifiedDataSerializable, PartitionAware<String> {
 	private String entityId;
 	private String ingestionId;
-	private long tenantId;
+	private String tenantId;
 
 	@Override
 	public String getPartitionKey() {
@@ -60,13 +60,13 @@ public class IngestionKey implements IdentifiedDataSerializable, PartitionAware<
 	public void writeData(ObjectDataOutput out) throws IOException {
 		out.writeString(entityId);
 		out.writeString(ingestionId);
-		out.writeLong(tenantId);
+		out.writeString(tenantId);
 	}
 
 	@Override
 	public void readData(ObjectDataInput in) throws IOException {
 		entityId = in.readString();
 		ingestionId = in.readString();
-		tenantId = in.readLong();
+		tenantId = in.readString();
 	}
 }

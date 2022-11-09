@@ -22,7 +22,7 @@ import java.util.Map;
 @RegisterForReflection
 public class HttpPluginDriverContext {
 	private long datasourceId;
-	private long tenantId;
+	private String tenantId;
 	private String scheduleId;
 	@JsonSerialize(using = TemporalAccessorToMillisecondsSerializer.class)
 	private OffsetDateTime timestamp;

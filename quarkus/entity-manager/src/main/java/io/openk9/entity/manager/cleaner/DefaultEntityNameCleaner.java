@@ -28,7 +28,7 @@ public class DefaultEntityNameCleaner implements EntityNameCleaner {
 	}
 
 	@Override
-	public QueryBuilder cleanEntityName(long tenantId, String entityName) {
+	public QueryBuilder cleanEntityName(String tenantId, String entityName) {
 		return createQueryBuilder(cleanEntityName(entityName));
 
 	}

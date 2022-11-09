@@ -45,7 +45,7 @@ import java.util.List;
 public class DataService {
 
 	public boolean associateEntities(
-		long tenantId, String currentIndexName, String ingestionId,
+		String tenantId, String currentIndexName, String ingestionId,
 		List<IngestionEntity> ingestionEntities)
 		throws IOException {
 

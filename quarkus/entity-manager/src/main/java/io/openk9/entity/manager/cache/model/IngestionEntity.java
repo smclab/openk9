@@ -39,7 +39,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 	private String id;
 	@EqualsAndHashCode.Include
 	private String cacheId;
-	private Long tenantId;
+	private String tenantId;
 	private String name;
 	private String type;
 	private Collection<String> context;
@@ -58,7 +58,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 		if (res != 0) {
 			return res;
 		}
-		return Long.compare(p1.getTenantId(), other.getTenantId());
+		return p1.getTenantId().compareTo(other.getTenantId());
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 	public void writeData(ObjectDataOutput out) throws IOException {
 		out.writeString(id);
 		out.writeString(cacheId);
-		out.writeObject(tenantId);
+		out.writeString(tenantId);
 		out.writeString(name);
 		out.writeString(type);
 		out.writeObject(context);
@@ -86,7 +86,7 @@ public class IngestionEntity implements IdentifiedDataSerializable, Comparable<I
 	public void readData(ObjectDataInput in) throws IOException {
 		id = in.readString();
 		cacheId = in.readString();
-		tenantId = in.readObject();
+		tenantId = in.readString();
 		name = in.readString();
 		type = in.readString();
 		context = in.readObject();

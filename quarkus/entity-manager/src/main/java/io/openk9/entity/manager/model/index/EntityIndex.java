@@ -34,7 +34,7 @@ public class EntityIndex {
 	@ToString.Include
 	private Long graphId;
 	@ToString.Include
-	private long tenantId;
+	private String tenantId;
 	@ToString.Include
 	private String name;
 	@ToString.Include

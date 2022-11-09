@@ -48,13 +48,15 @@ public class IndexerProcessor {
 
 		long datasourceId = payload.getDatasourceId();
 
+		String tenantId = payload.getTenantId();
+
 		if (logger.isInfoEnabled()) {
 			logger.info(
 				"process message for datasourceId: " + datasourceId +
 				" ingestionId: " + payload.getIngestionId());
 		}
 
-		return _indexPayload(payload, _getIndexName(datasourceId))
+		return _indexPayload(payload, _getIndexName(tenantId, datasourceId))
 			.onItemOrFailure()
 			.transformToUni((response, throwable) -> {
 
@@ -162,9 +164,10 @@ public class IndexerProcessor {
 			);
 	}
 
-	private Uni<DataIndex> _getIndexName(long datasourceId) {
+	private Uni<DataIndex> _getIndexName(String tenantId, long datasourceId) {
 
 		return sessionFactory.withTransaction(
+			tenantId,
 			s -> {
 
 				CriteriaBuilder criteriaBuilder =

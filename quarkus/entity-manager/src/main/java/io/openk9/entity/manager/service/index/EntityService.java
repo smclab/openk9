@@ -118,7 +118,7 @@ public class EntityService {
 	}
 
 	public EntityIndex searchByNameAndType(
-		long tenantId, String name, String type) {
+		String tenantId, String name, String type) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -134,11 +134,7 @@ public class EntityService {
 		return search.get(0);
 	}
 
-	public List<EntityIndex> search(long tenantId, String term, String match) {
-		return search(tenantId, QueryBuilders.matchQuery(term, match), 0, 20);
-	}
-
-	public List<EntityIndex> search(long tenantId, QueryBuilder queryBuilder, int from, int size) {
+	public List<EntityIndex> search(String tenantId, QueryBuilder queryBuilder, int from, int size) {
 
 		SearchRequest searchRequest = new SearchRequest(tenantId + "-entity");
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();

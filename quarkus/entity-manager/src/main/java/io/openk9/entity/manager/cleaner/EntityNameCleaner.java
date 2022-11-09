@@ -29,7 +29,7 @@ public interface EntityNameCleaner {
 
 	String getEntityType();
 
-	QueryBuilder cleanEntityName(long tenantId, String entityName);
+	QueryBuilder cleanEntityName(String tenantId, String entityName);
 
 	default String cleanEntityName(String entityName) {
 		return entityName.strip();
@@ -44,7 +44,7 @@ public interface EntityNameCleaner {
 		private String entityType;
 
 		@Override
-		public QueryBuilder cleanEntityName(long tenantId, String entityName) {
+		public QueryBuilder cleanEntityName(String tenantId, String entityName) {
 			return createQueryBuilder(cleanEntityName(entityName));
 		}
 
