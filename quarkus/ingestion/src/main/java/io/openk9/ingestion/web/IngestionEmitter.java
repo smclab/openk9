@@ -28,7 +28,6 @@ import io.openk9.ingestion.grpc.Binary;
 import io.openk9.ingestion.grpc.IngestionRequest;
 import io.openk9.ingestion.grpc.Resources;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
@@ -83,7 +82,7 @@ public class IngestionEmitter {
 				dto.getParsingDate(),
 				dto.getRawContent(),
 				datasourcePayload,
-				-1,
+				dto.getTenantId(),
 				datasourcePayload
 					.keySet()
 					.toArray(new String[0]),
@@ -103,7 +102,7 @@ public class IngestionEmitter {
 				dto.getParsingDate(),
 				dto.getRawContent(),
 				dto.getDatasourcePayload(),
-				-1,
+				dto.getTenantId(),
 				dto.getDatasourcePayload()
 					.keySet()
 					.toArray(new String[0]),

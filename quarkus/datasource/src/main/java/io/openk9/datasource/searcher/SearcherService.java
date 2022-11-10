@@ -644,7 +644,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			}
 
 			if (map.containsKey("tenantId")) {
-				builder.setTenantId((Long)map.get("tenantId"));
+				builder.setTenantId((String)map.get("tenantId"));
 			}
 
 			result.add(builder.build());

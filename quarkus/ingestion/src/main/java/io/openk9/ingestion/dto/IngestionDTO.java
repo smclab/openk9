@@ -33,6 +33,7 @@ import java.util.Map;
 @RegisterForReflection
 public class IngestionDTO {
 	private long datasourceId;
+	private String tenantId;
 	private String contentId;
 	private long parsingDate;
 	private String rawContent;

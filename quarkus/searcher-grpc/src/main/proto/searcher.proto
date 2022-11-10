@@ -88,7 +88,7 @@ message QueryAnalysisSearchToken {
   optional string keywordName = 5;
   optional string entityType = 6;
   optional string entityValue = 7;
-  optional int64 tenantId = 8;
+  optional string tenantId = 8;
 }
 
 message QueryAnalysisResponse {

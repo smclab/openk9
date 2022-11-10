@@ -38,7 +38,7 @@ public  class IngestionPayload {
 	private long parsingDate;
 	private String rawContent;
 	private Map<String, Object> datasourcePayload;
-	private long tenantId;
+	private String tenantId;
 	private String[] documentTypes;
 	private ResourcesPayload resources;
 	private Map<String, List<String>> acl;

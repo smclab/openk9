@@ -24,6 +24,7 @@ message IngestionRequest {
   optional Resources resources = 6;
   map<string, Acl> acl  = 7;
   string scheduleId = 8;
+  string tenantId = 9;
 }
 
 message Acl {
