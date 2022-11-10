@@ -36,12 +36,12 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import javassist.NotFoundException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.ws.rs.NotFoundException;
 import java.util.Set;
 
 @ApplicationScoped
@@ -361,7 +361,7 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {Tenant_.NAME, Tenant_.VIRTUAL_HOST};
+		return new String[] {Tenant_.NAME, Tenant_.DESCRIPTION};
 	}
 
 	@Inject
