@@ -17,14 +17,14 @@
 
 package io.openk9.datasource.resource;
 
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.Tenant;
-import io.openk9.datasource.model.dto.TenantDTO;
+import io.openk9.datasource.model.dto.BucketDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.service.TenantService;
+import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
@@ -36,52 +36,52 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
-@Path("/tenants")
-public class TenantResource extends
-	BaseK9EntityResource<TenantService, Tenant, TenantDTO> {
+@Path("/buckets")
+public class BucketResource extends
+	BaseK9EntityResource<BucketService, Bucket, BucketDTO> {
 
-	protected TenantResource(TenantService service) {
+	protected BucketResource(BucketService service) {
 		super(service);
 	}
 
 	@GET
 	@Path("/{id}/datasources")
 	public Uni<Page<Datasource>> getDatasources(
-		@PathParam("id")long tenantId, @BeanParam Pageable pageable,
+		@PathParam("id")long bucketId, @BeanParam Pageable pageable,
 		@QueryParam("searchText") String searchText) {
-		return service.getDatasources(tenantId, pageable, searchText);
+		return service.getDatasources(bucketId, pageable, searchText);
 	}
 
 	@PUT
 	@Path("/{id}/datasources/{datasourceId}")
-	public Uni<Tuple2<Tenant, Datasource>> addDatasource(@PathParam("id")long tenantId, @PathParam("datasourceId")long datasourceId) {
-		return service.addDatasource(tenantId, datasourceId);
+	public Uni<Tuple2<Bucket, Datasource>> addDatasource(@PathParam("id")long bucketId, @PathParam("datasourceId")long datasourceId) {
+		return service.addDatasource(bucketId, datasourceId);
 	}
 
 	@DELETE
 	@Path("/{id}/datasources/{datasourceId}")
-	public Uni<Tuple2<Tenant, Datasource>> removeDatasource(@PathParam("id")long tenantId, @PathParam("datasourceId")long datasourceId) {
-		return service.removeDatasource(tenantId, datasourceId);
+	public Uni<Tuple2<Bucket, Datasource>> removeDatasource(@PathParam("id")long bucketId, @PathParam("datasourceId")long datasourceId) {
+		return service.removeDatasource(bucketId, datasourceId);
 	}
 
 	@GET
 	@Path("/{id}/suggestion-categories")
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
-		@PathParam("id") long tenantId, @BeanParam Pageable pageable,
+		@PathParam("id") long bucketId, @BeanParam Pageable pageable,
 		@QueryParam("searchText") String searchText) {
-		return service.getSuggestionCategories(tenantId, pageable, searchText);
+		return service.getSuggestionCategories(bucketId, pageable, searchText);
 	}
 
 	@PUT
 	@Path("/{id}/suggestion-categories/{suggestionCategoryId}")
-	public Uni<Tuple2<Tenant, SuggestionCategory>> addSuggestionCategory(long tenantId, long suggestionCategoryId) {
-		return service.addSuggestionCategory(tenantId, suggestionCategoryId);
+	public Uni<Tuple2<Bucket, SuggestionCategory>> addSuggestionCategory(long bucketId, long suggestionCategoryId) {
+		return service.addSuggestionCategory(bucketId, suggestionCategoryId);
 	}
 
 	@DELETE
 	@Path("/{id}/suggestion-categories/{suggestionCategoryId}")
-	public Uni<Tuple2<Tenant, SuggestionCategory>> removeSuggestionCategory(long tenantId, long suggestionCategoryId) {
-		return service.removeSuggestionCategory(tenantId, suggestionCategoryId);
+	public Uni<Tuple2<Bucket, SuggestionCategory>> removeSuggestionCategory(long bucketId, long suggestionCategoryId) {
+		return service.removeSuggestionCategory(bucketId, suggestionCategoryId);
 	}
 
 }

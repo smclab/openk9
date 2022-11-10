@@ -1,8 +1,8 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import io.openk9.datasource.searcher.util.Utils;
 import org.elasticsearch.action.search.SearchRequest;
@@ -24,21 +24,21 @@ import java.util.Map;
 public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 	public BaseAutoCompleteAnnotator(
-		Tenant tenant,
+		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
 		String...keywords) {
-		this(tenant, annotator, stopWords, restHighLevelClient, List.of(keywords));
+		this(bucket, annotator, stopWords, restHighLevelClient, List.of(keywords));
 	}
 
 	public BaseAutoCompleteAnnotator(
-		Tenant tenant,
+		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
 		List<String> keywords) {
-		super(tenant, annotator, stopWords, null);
+		super(bucket, annotator, stopWords, null);
 		this.keywords = keywords;
 		this.restHighLevelClient = restHighLevelClient;
 	}
@@ -89,7 +89,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 		builder.must(multiMatchQueryBuilder);
 
 		String[] indexNames =
-			tenant
+			bucket
 				.getDatasources()
 				.stream()
 				.map(Datasource::getDataIndex)

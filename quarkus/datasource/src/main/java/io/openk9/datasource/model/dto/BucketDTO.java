@@ -29,5 +29,5 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-public class TenantDTO extends K9EntityDTO {
+public class BucketDTO extends K9EntityDTO {
 }

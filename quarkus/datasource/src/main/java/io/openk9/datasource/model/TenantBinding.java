@@ -26,7 +26,7 @@ public class TenantBinding extends K9Entity {
 	private String virtualHost;
 
 	@OneToOne(cascade = {CascadeType.ALL})
-	@JoinColumn(name = "tenant_binding_tenant_id")
-	private Tenant tenant;
+	@JoinColumn(name = "tenant_binding_bucket_id")
+	private Bucket bucket;
 
 }

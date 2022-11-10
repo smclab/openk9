@@ -1,7 +1,7 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
 import io.openk9.datasource.model.Annotator;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 
 import java.util.List;
@@ -10,8 +10,8 @@ import java.util.Map;
 class StopWordsAnnotator extends BaseAnnotator {
 
 	public StopWordsAnnotator(
-		Tenant tenant, Annotator annotator, List<String> stopwords) {
-		super(tenant, annotator, stopwords, null);
+		Bucket bucket, Annotator annotator, List<String> stopwords) {
+		super(bucket, annotator, stopwords, null);
 	}
 
 	@Override

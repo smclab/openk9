@@ -17,12 +17,12 @@
 
 package io.openk9.datasource.mapper;
 
-import io.openk9.datasource.model.Tenant;
-import io.openk9.datasource.model.dto.TenantDTO;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.dto.BucketDTO;
 import org.mapstruct.Mapper;
 
 @Mapper(
 	config = K9EntityMapper.class
 )
-public interface TenantMapper extends K9EntityMapper<Tenant, TenantDTO> {
+public interface BucketMapper extends K9EntityMapper<Bucket, BucketDTO> {
 }

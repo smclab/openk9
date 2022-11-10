@@ -2,7 +2,7 @@ package io.openk9.datasource.searcher.parser.impl;
 
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
@@ -35,7 +35,7 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 		List<ParserSearchToken> tokenTypeGroup =
 			parserContext.getTokenTypeGroup();
 
-		Tenant currentTenant = parserContext.getCurrentTenant();
+		Bucket currentTenant = parserContext.getCurrentTenant();
 
 		for (ParserSearchToken searchToken : tokenTypeGroup) {
 			_termSearchAsYouTypeQueryValues(

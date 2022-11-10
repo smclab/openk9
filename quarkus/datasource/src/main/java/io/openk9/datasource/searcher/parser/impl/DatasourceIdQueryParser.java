@@ -1,7 +1,7 @@
 package io.openk9.datasource.searcher.parser.impl;
 
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -21,7 +21,7 @@ public class DatasourceIdQueryParser implements QueryParser {
 	@Override
 	public void accept(ParserContext parserContext) {
 
-		Tenant currentTenant = parserContext.getCurrentTenant();
+		Bucket currentTenant = parserContext.getCurrentTenant();
 
 		Set<Datasource> datasources = currentTenant.getDatasources();
 

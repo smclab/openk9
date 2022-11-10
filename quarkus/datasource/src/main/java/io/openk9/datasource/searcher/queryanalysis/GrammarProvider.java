@@ -1,14 +1,14 @@
 package io.openk9.datasource.searcher.queryanalysis;
 
 import io.openk9.datasource.model.Annotator_;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
-import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
@@ -31,7 +31,7 @@ public class GrammarProvider {
 
 	public Uni<Grammar> getOrCreateGrammar(String virtualHost) {
 
-		Uni<Tenant> getTenantUni = _getTenant(virtualHost);
+		Uni<Bucket> getTenantUni = _getTenant(virtualHost);
 
 		return getTenantUni
 			.emitOn(Infrastructure.getDefaultWorkerPool())
@@ -56,10 +56,10 @@ public class GrammarProvider {
 	}
 
 	private List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> _toAnnotator(
-		Tenant tenant, List<String> stopWords) {
-		return tenant.getQueryAnalysis().getAnnotators()
+		Bucket bucket, List<String> stopWords) {
+		return bucket.getQueryAnalysis().getAnnotators()
 			.stream()
-			.map(a -> annotatorFactory.getAnnotator(tenant, a, stopWords))
+			.map(a -> annotatorFactory.getAnnotator(bucket, a, stopWords))
 			.toList();
 	}
 
@@ -73,25 +73,25 @@ public class GrammarProvider {
 			.toList();
 	}
 
-	private Uni<Tenant> _getTenant(String virtualHost) {
+	private Uni<Bucket> _getTenant(String virtualHost) {
 		return sf.withStatelessTransaction(
 			s -> {
 
 				CriteriaBuilder cb = sf.getCriteriaBuilder();
 
-				CriteriaQuery<Tenant> query = cb.createQuery(Tenant.class);
+				CriteriaQuery<Bucket> query = cb.createQuery(Bucket.class);
 
-				Root<Tenant> tenantRoot = query.from(Tenant.class);
+				Root<Bucket> tenantRoot = query.from(Bucket.class);
 
-				Join<Tenant, TenantBinding> tenantBindingJoin =
-					tenantRoot.join(Tenant_.tenantBinding);
+				Join<Bucket, TenantBinding> tenantBindingJoin =
+					tenantRoot.join(Bucket_.tenantBinding);
 
 				tenantRoot
-					.fetch(Tenant_.datasources)
+					.fetch(Bucket_.datasources)
 					.fetch(Datasource_.dataIndex);
 
-				Fetch<Tenant, QueryAnalysis> queryAnalysisFetch =
-					tenantRoot.fetch(Tenant_.queryAnalysis);
+				Fetch<Bucket, QueryAnalysis> queryAnalysisFetch =
+					tenantRoot.fetch(Bucket_.queryAnalysis);
 
 				queryAnalysisFetch.fetch(QueryAnalysis_.rules);
 

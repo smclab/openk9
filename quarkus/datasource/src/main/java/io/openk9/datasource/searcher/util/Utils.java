@@ -17,11 +17,11 @@
 
 package io.openk9.datasource.searcher.util;
 
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.Tenant;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -34,8 +34,8 @@ import java.util.stream.Stream;
 
 public class Utils {
 
-	public static Stream<DocTypeField> getDocTypeFieldsFrom(Tenant tenant) {
-		return getDocTypeFieldsFrom(tenant.getDatasources());
+	public static Stream<DocTypeField> getDocTypeFieldsFrom(Bucket bucket) {
+		return getDocTypeFieldsFrom(bucket.getDatasources());
 	}
 
 	public static Stream<DocTypeField> getDocTypeFieldsFrom(

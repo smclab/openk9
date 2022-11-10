@@ -1,6 +1,8 @@
 package io.openk9.datasource.searcher;
 
 import com.google.protobuf.ByteString;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
@@ -12,10 +14,8 @@ import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SearchConfig_;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
-import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 
 public abstract class BaseSearchService {
 
-	protected Uni<Tenant> getTenantAndFetchRelations(
+	protected Uni<Bucket> getTenantAndFetchRelations(
 		String virtualHost, boolean suggestion, long suggestionCategoryId) {
 
 		return sf
@@ -63,8 +63,8 @@ public abstract class BaseSearchService {
 
 				CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
-				CriteriaQuery<Tenant> criteriaQuery =
-					criteriaBuilder.createQuery(Tenant.class);
+				CriteriaQuery<Bucket> criteriaQuery =
+					criteriaBuilder.createQuery(Bucket.class);
 
 				customizeCriteriaBuilder(
 					virtualHost, criteriaBuilder, criteriaQuery, suggestion,
@@ -81,16 +81,16 @@ public abstract class BaseSearchService {
 
 	protected void customizeCriteriaBuilder(
 		String virtualHost, CriteriaBuilder criteriaBuilder,
-		CriteriaQuery<Tenant> criteriaQuery, boolean suggestion,
+		CriteriaQuery<Bucket> criteriaQuery, boolean suggestion,
 		long suggestionCategoryId) {
 
-		Root<Tenant> tenantRoot = criteriaQuery.from(Tenant.class);
+		Root<Bucket> tenantRoot = criteriaQuery.from(Bucket.class);
 
-		Join<Tenant, TenantBinding> tenantBindingJoin =
-			tenantRoot.join(Tenant_.tenantBinding);
+		Join<Bucket, TenantBinding> tenantBindingJoin =
+			tenantRoot.join(Bucket_.tenantBinding);
 
 		tenantRoot
-			.fetch(Tenant_.searchConfig, JoinType.LEFT)
+			.fetch(Bucket_.searchConfig, JoinType.LEFT)
 			.fetch(SearchConfig_.queryParserConfigs, JoinType.LEFT);
 
 		Predicate disjunction = criteriaBuilder.conjunction();
@@ -99,8 +99,8 @@ public abstract class BaseSearchService {
 
 		if (suggestion) {
 
-			Fetch<Tenant, SuggestionCategory> suggestionCategoryFetch =
-				tenantRoot.fetch(Tenant_.suggestionCategories);
+			Fetch<Bucket, SuggestionCategory> suggestionCategoryFetch =
+				tenantRoot.fetch(Bucket_.suggestionCategories);
 
 			suggestionCategoryFetch.fetch(
 				SuggestionCategory_.docTypeFields);
@@ -117,8 +117,8 @@ public abstract class BaseSearchService {
 
 		}
 
-		Fetch<Tenant, Datasource> datasourceRoot =
-			tenantRoot.fetch(Tenant_.datasources, JoinType.LEFT);
+		Fetch<Bucket, Datasource> datasourceRoot =
+			tenantRoot.fetch(Bucket_.datasources, JoinType.LEFT);
 
 		Fetch<Datasource, DataIndex> dataIndexRoot =
 			datasourceRoot.fetch(Datasource_.dataIndex, JoinType.LEFT);
@@ -142,7 +142,7 @@ public abstract class BaseSearchService {
 	}
 
 	protected BoolQueryBuilder createBoolQuery(
-		Map<String, List<ParserSearchToken>> tokenGroup, Tenant tenant) {
+		Map<String, List<ParserSearchToken>> tokenGroup, Bucket bucket) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -158,10 +158,10 @@ public abstract class BaseSearchService {
 							.builder()
 							.tokenTypeGroup(parserSearchTokens)
 							.mutableQuery(boolQueryBuilder)
-							.currentTenant(tenant)
+							.currentTenant(bucket)
 							.queryParserConfig(
 								getQueryParserConfig(
-									tenant, tokenType))
+									bucket, tokenType))
 							.build()
 					);
 				}
@@ -186,10 +186,10 @@ public abstract class BaseSearchService {
 						.builder()
 						.tokenTypeGroup(parserSearchTokens)
 						.mutableQuery(boolQueryBuilder)
-						.currentTenant(tenant)
+						.currentTenant(bucket)
 						.queryParserConfig(
 							getQueryParserConfig(
-								tenant, queryParser.getType()))
+								bucket, queryParser.getType()))
 						.build()
 				);
 
@@ -243,9 +243,9 @@ public abstract class BaseSearchService {
 		return outputStream.toByteString();
 	}
 
-	public static JsonObject getQueryParserConfig(Tenant tenant, String tokenType) {
+	public static JsonObject getQueryParserConfig(Bucket bucket, String tokenType) {
 
-		SearchConfig searchConfig = tenant.getSearchConfig();
+		SearchConfig searchConfig = bucket.getSearchConfig();
 
 		if (searchConfig == null) {
 			return EMPTY_JSON;

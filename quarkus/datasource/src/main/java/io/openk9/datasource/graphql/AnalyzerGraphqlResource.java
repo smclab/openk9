@@ -3,8 +3,6 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.CharFilter;
-import io.openk9.datasource.model.QueryAnalysis;
-import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.dto.AnalyzerDTO;

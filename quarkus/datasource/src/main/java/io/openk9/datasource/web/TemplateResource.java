@@ -6,10 +6,10 @@ import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.Tenant_;
+import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
@@ -51,13 +51,13 @@ public class TemplateResource {
 
 			CriteriaQuery<DocTypeTemplate> query = cb.createQuery(DocTypeTemplate.class);
 
-			Root<Tenant> from = query.from(Tenant.class);
+			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Tenant, TenantBinding> tenantBindingJoin =
-				from.join(Tenant_.tenantBinding);
+			Join<Bucket, TenantBinding> tenantBindingJoin =
+				from.join(Bucket_.tenantBinding);
 
 			Join<DocType, DocTypeTemplate> fetch =
-				from.join(Tenant_.datasources)
+				from.join(Bucket_.datasources)
 					.join(Datasource_.dataIndex)
 					.join(DataIndex_.docTypes)
 					.join(DocType_.docTypeTemplate);

@@ -24,10 +24,10 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.Tenant_;
+import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
@@ -64,13 +64,13 @@ public class DateFilterResource {
 
 			CriteriaQuery<DocTypeField> query = cb.createQuery(DocTypeField.class);
 
-			Root<Tenant> from = query.from(Tenant.class);
+			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Tenant, TenantBinding> tenantBindingFetch =
-				from.join(Tenant_.tenantBinding);
+			Join<Bucket, TenantBinding> tenantBindingFetch =
+				from.join(Bucket_.tenantBinding);
 
 			Join<DocType, DocTypeField> fetch =
-				from.join(Tenant_.datasources)
+				from.join(Bucket_.datasources)
 					.join(Datasource_.dataIndex)
 					.join(DataIndex_.docTypes)
 					.join(DocType_.docTypeFields);

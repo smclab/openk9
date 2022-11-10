@@ -99,25 +99,15 @@ public class Datasource extends K9Entity {
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.DETACH,
 		javax.persistence.CascadeType.REFRESH})
-	@JoinTable(name = "datasource_tenants",
+	@JoinTable(name = "datasource_buckets",
 		joinColumns = @JoinColumn(name = "datasource_id", referencedColumnName = "id"),
-		inverseJoinColumns = @JoinColumn(name = "tenants_id", referencedColumnName = "id"))
+		inverseJoinColumns = @JoinColumn(name = "buckets_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<Tenant> tenants = new LinkedHashSet<>();
+	private Set<Bucket> buckets = new LinkedHashSet<>();
 
 	@Lob
 	@Column(name = "json_config")
 	private String jsonConfig;
-
-	public void addTenant(Tenant tenant) {
-		this.tenants.add(tenant);
-		tenant.getDatasources().add(this);
-	}
-
-	public void removeTenant(Tenant tenant) {
-		this.tenants.remove(tenant);
-		tenant.getDatasources().remove(this);
-	}
 
 }

@@ -1,10 +1,10 @@
 package io.openk9.datasource.web;
 
 import io.openk9.datasource.model.Tab;
-import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.Tenant_;
+import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
@@ -47,12 +47,12 @@ public class TabResource {
 
 			CriteriaQuery<Tab> query = cb.createQuery(Tab.class);
 
-			Root<Tenant> from = query.from(Tenant.class);
+			Root<Bucket> from = query.from(Bucket.class);
 
-			Join<Tenant, TenantBinding> tenantBindingJoin =
-				from.join(Tenant_.tenantBinding);
+			Join<Bucket, TenantBinding> tenantBindingJoin =
+				from.join(Bucket_.tenantBinding);
 
-			Join<Tenant, Tab> fetch = from.join(Tenant_.tabs);
+			Join<Bucket, Tab> fetch = from.join(Bucket_.tabs);
 
 			query.select(fetch);
 

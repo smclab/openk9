@@ -22,10 +22,6 @@ import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
-import io.openk9.datasource.model.DocType_;
-import io.openk9.datasource.model.QueryAnalysis;
-import io.openk9.datasource.model.Tenant;
-import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
@@ -34,7 +30,6 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.persistence.Id;
 import java.util.Set;
 
 

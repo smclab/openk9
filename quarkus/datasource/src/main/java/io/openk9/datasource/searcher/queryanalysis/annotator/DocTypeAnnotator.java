@@ -1,6 +1,6 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import org.elasticsearch.client.RestHighLevelClient;
 
@@ -10,10 +10,10 @@ import java.util.Map;
 public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 
 	public DocTypeAnnotator(
-		Tenant tenant,
+		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, RestHighLevelClient restHighLevelClient) {
-		super(tenant, annotator, stopWords, restHighLevelClient, null, "documentTypes.keyword");
+		super(bucket, annotator, stopWords, restHighLevelClient, null, "documentTypes.keyword");
 	}
 
 	@Override

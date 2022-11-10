@@ -29,7 +29,6 @@ import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.sql.TransactionInvoker;
-import io.openk9.datasource.tenant.TenantResolver;
 import io.openk9.datasource.util.MessageUtil;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -187,9 +186,6 @@ public class DatasourceProcessor {
 
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
-
-	@Inject
-	TenantResolver tenantResolver;
 
 	@Inject
 	Logger logger;

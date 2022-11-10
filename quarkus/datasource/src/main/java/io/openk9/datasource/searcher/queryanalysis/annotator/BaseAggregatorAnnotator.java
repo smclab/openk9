@@ -1,8 +1,8 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Tenant;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.tenant.TenantResolver;
@@ -31,23 +31,23 @@ import java.util.function.Supplier;
 abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 	public BaseAggregatorAnnotator(
-		Tenant tenant,
+		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, RestHighLevelClient restHighLevelClient,
 		TenantResolver tenantResolver,
 		String...keywords) {
 		this(
-			tenant, annotator, stopWords, restHighLevelClient, tenantResolver,
+			bucket, annotator, stopWords, restHighLevelClient, tenantResolver,
 			List.of(keywords));
 	}
 
 	public BaseAggregatorAnnotator(
-		Tenant tenant,
+		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, RestHighLevelClient restHighLevelClient,
 		TenantResolver tenantResolver,
 		List<String> keywords) {
-		super(tenant, annotator, stopWords, tenantResolver);
+		super(bucket, annotator, stopWords, tenantResolver);
 		this.keywords = keywords;
 		this.restHighLevelClient = restHighLevelClient;
 	}
@@ -89,7 +89,7 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		builder.must(boolQueryBuilder);
 
 		String[] indexNames =
-			tenant
+			bucket
 				.getDatasources()
 				.stream()
 				.map(Datasource::getDataIndex)

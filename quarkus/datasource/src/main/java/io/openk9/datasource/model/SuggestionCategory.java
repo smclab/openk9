@@ -77,8 +77,8 @@ public class SuggestionCategory extends K9Entity {
 		}
 	)
 	@JsonIgnore
-	@JoinColumn(name = "tenant_id")
-	private Tenant tenant;
+	@JoinColumn(name = "bucket_id")
+	private Bucket bucket;
 
 	public void addDocTypeField(DocTypeField docTypeField) {
 		docTypeFields.add(docTypeField);

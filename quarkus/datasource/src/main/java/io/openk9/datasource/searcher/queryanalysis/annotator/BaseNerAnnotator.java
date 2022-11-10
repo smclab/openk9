@@ -1,6 +1,6 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import io.openk9.datasource.tenant.TenantResolver;
 import org.elasticsearch.action.search.SearchRequest;
@@ -22,12 +22,12 @@ import java.util.Map;
 public class BaseNerAnnotator extends BaseAnnotator {
 
 	public BaseNerAnnotator(
-		Tenant tenant,
+		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, String category,
 		RestHighLevelClient restHighLevelClient,
 		TenantResolver tenantResolver) {
-		super(tenant, annotator, stopWords, tenantResolver);
+		super(bucket, annotator, stopWords, tenantResolver);
 		this.category = category;
 		this.restHighLevelClient = restHighLevelClient;
 	}

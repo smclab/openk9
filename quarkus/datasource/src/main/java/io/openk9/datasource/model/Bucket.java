@@ -44,13 +44,13 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "tenant")
+@Table(name = "bucket")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 @Cacheable
-public class Tenant extends K9Entity {
+public class Bucket extends K9Entity {
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
@@ -58,7 +58,7 @@ public class Tenant extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@ManyToMany(mappedBy = "tenants", cascade = {
+	@ManyToMany(mappedBy = "buckets", cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.REFRESH,
@@ -67,7 +67,7 @@ public class Tenant extends K9Entity {
 	@JsonIgnore
 	private Set<Datasource> datasources = new LinkedHashSet<>();
 
-	@OneToMany(mappedBy = "tenant", cascade = {
+	@OneToMany(mappedBy = "bucket", cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.REFRESH,
@@ -95,14 +95,14 @@ public class Tenant extends K9Entity {
 	@ManyToMany(cascade = {
 		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
 		CascadeType.DETACH})
-	@JoinTable(name = "tenants_tabs",
-		joinColumns = @JoinColumn(name = "tenants_id"),
+	@JoinTable(name = "buckets_tabs",
+		joinColumns = @JoinColumn(name = "buckets_id"),
 		inverseJoinColumns = @JoinColumn(name = "tabs_id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private List<Tab> tabs = new LinkedList<>();
 
-	@OneToOne(mappedBy = "tenant", cascade = CascadeType.ALL)
+	@OneToOne(mappedBy = "bucket", cascade = CascadeType.ALL)
 	@JsonIgnore
 	private TenantBinding tenantBinding;
 
@@ -132,7 +132,7 @@ public class Tenant extends K9Entity {
 		}
 
 		suggestionCategories.add(suggestionCategory);
-		suggestionCategory.setTenant(this);
+		suggestionCategory.setBucket(this);
 
 		return true;
 
@@ -147,7 +147,7 @@ public class Tenant extends K9Entity {
 			SuggestionCategory suggestionCategory = iterator.next();
 			if (suggestionCategory.getId() == suggestionCategoryId) {
 				iterator.remove();
-				suggestionCategory.setTenant(null);
+				suggestionCategory.setBucket(null);
 				return true;
 			}
 		}

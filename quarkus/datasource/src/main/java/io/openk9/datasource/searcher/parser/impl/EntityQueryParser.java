@@ -1,6 +1,6 @@
 package io.openk9.datasource.searcher.parser.impl;
 
-import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.SearcherService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
@@ -117,7 +117,7 @@ public class EntityQueryParser implements QueryParser {
 							.build())
 					.toList();
 
-			Tenant currentTenant = parserContext.getCurrentTenant();
+			Bucket currentTenant = parserContext.getCurrentTenant();
 
 			JsonObject textQueryParserConfig =
 				SearcherService.getQueryParserConfig(
