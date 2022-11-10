@@ -23,6 +23,7 @@ import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
@@ -47,6 +48,16 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {DocTypeField_.NAME, DocTypeField_.FIELD_TYPE};
+	}
+
+	public Uni<Analyzer> getAnalyzer(DocTypeField docTypeField) {
+		return withTransaction(
+			s -> Mutiny2.fetch(s, docTypeField.getAnalyzer()));
+	}
+
+	public Uni<Analyzer> getAnalyzer(long docTypeFieldId) {
+		return withTransaction(
+			() -> findById(docTypeFieldId).flatMap(this::getAnalyzer));
 	}
 
 	public Uni<Tuple2<DocTypeField, Analyzer>> bindAnalyzer(long docTypeFieldId, long analyzerId) {
