@@ -190,7 +190,7 @@ public class SearchResource {
 				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityValue())) {
 					token.put("entityValue", queryAnalysisSearchToken.getEntityValue());
 				}
-				if (queryAnalysisSearchToken.getTenantId() > 0) {
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getTenantId())) {
 					token.put("tenantId", queryAnalysisSearchToken.getTenantId());
 				}
 
