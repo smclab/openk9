@@ -20,7 +20,6 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.QueryAnalysis;
-import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
@@ -105,6 +104,10 @@ public class TenantGraphqlResource {
 			sortByList, notEqual);
 	}
 
+	public Uni<Boolean> enabled(@Source Tenant tenant) {
+		return Uni.createFrom().item(tenant.getTenantBinding() != null);
+	}
+
 	public Uni<QueryAnalysis> queryAnalysis(@Source Tenant tenant) {
 		return tenantService.getQueryAnalysis(tenant.getId());
 	}
@@ -124,6 +127,11 @@ public class TenantGraphqlResource {
 
 	public Uni<Response<Tenant>> createTenant(TenantDTO tenantDTO) {
 		return tenantService.getValidator().create(tenantDTO);
+	}
+
+	@Mutation
+	public Uni<Tenant> enableTenant(@Id long id) {
+		return tenantService.enableTenant(id);
 	}
 
 	@Mutation

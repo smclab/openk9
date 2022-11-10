@@ -19,7 +19,6 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
-import io.quarkus.resteasy.reactive.jackson.SecureField;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -68,21 +67,6 @@ public class Tenant extends K9Entity {
 	@JsonIgnore
 	private Set<Datasource> datasources = new LinkedHashSet<>();
 
-	@Column(name = "virtual_host", nullable = false, unique = true)
-	private String virtualHost;
-
-	@Column(name = "client_id")
-	@SecureField(rolesAllowed = "admin")
-	private String clientId;
-
-	@Column(name = "client_secret")
-	@SecureField(rolesAllowed = "admin")
-	private String clientSecret;
-
-	@Column(name = "realm_name")
-	@SecureField(rolesAllowed = "admin")
-	private String realmName;
-
 	@OneToMany(mappedBy = "tenant", cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
@@ -105,6 +89,7 @@ public class Tenant extends K9Entity {
 		fetch = FetchType.LAZY
 	)
 	@JoinColumn(name = "search_config_id")
+	@ToString.Exclude
 	private SearchConfig searchConfig;
 
 	@ManyToMany(cascade = {
@@ -116,6 +101,10 @@ public class Tenant extends K9Entity {
 	@ToString.Exclude
 	@JsonIgnore
 	private List<Tab> tabs = new LinkedList<>();
+
+	@OneToOne(mappedBy = "tenant", cascade = CascadeType.ALL)
+	@JsonIgnore
+	private TenantBinding tenantBinding;
 
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {

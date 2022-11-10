@@ -25,6 +25,8 @@ import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.TenantBinding;
+import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
@@ -64,6 +66,9 @@ public class DateFilterResource {
 
 			Root<Tenant> from = query.from(Tenant.class);
 
+			Join<Tenant, TenantBinding> tenantBindingFetch =
+				from.join(Tenant_.tenantBinding);
+
 			Join<DocType, DocTypeField> fetch =
 				from.join(Tenant_.datasources)
 					.join(Datasource_.dataIndex)
@@ -78,7 +83,13 @@ public class DateFilterResource {
 
 			query.select(fetch);
 
-			query.where(cb.equal(from.get(Tenant_.virtualHost), virtualhost));
+			query.where(
+				cb.equal(
+					tenantBindingFetch.get(
+						TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
 
 			return session.createQuery(query).getResultList().map(docTypeFields -> {
 

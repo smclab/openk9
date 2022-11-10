@@ -2,6 +2,8 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.TenantBinding;
+import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -47,12 +49,19 @@ public class TabResource {
 
 			Root<Tenant> from = query.from(Tenant.class);
 
-			Join<Tenant, Tab> fetch =
-				from.join(Tenant_.tabs);
+			Join<Tenant, TenantBinding> tenantBindingJoin =
+				from.join(Tenant_.tenantBinding);
+
+			Join<Tenant, Tab> fetch = from.join(Tenant_.tabs);
 
 			query.select(fetch);
 
-			query.where(cb.equal(from.get(Tenant_.virtualHost), virtualhost));
+			query.where(
+				cb.equal(
+					tenantBindingJoin.get(TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
 
 			return session.createQuery(query).getResultList().map(tabs -> {
 

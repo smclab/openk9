@@ -13,6 +13,8 @@ import io.openk9.datasource.model.SearchConfig_;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.TenantBinding;
+import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
@@ -39,6 +41,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -83,6 +86,9 @@ public abstract class BaseSearchService {
 
 		Root<Tenant> tenantRoot = criteriaQuery.from(Tenant.class);
 
+		Join<Tenant, TenantBinding> tenantBindingJoin =
+			tenantRoot.join(Tenant_.tenantBinding);
+
 		tenantRoot
 			.fetch(Tenant_.searchConfig, JoinType.LEFT)
 			.fetch(SearchConfig_.queryParserConfigs, JoinType.LEFT);
@@ -124,7 +130,10 @@ public abstract class BaseSearchService {
 
 		expressions.add(
 			criteriaBuilder.equal(
-				tenantRoot.get(Tenant_.virtualHost), virtualHost));
+				tenantBindingJoin.get(TenantBinding_.virtualHost),
+				virtualHost
+			)
+		);
 
 		criteriaQuery.where(disjunction);
 

@@ -19,15 +19,13 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.TenantMapper;
-import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.QueryAnalysis;
-import io.openk9.datasource.model.QueryAnalysis_;
-import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.model.dto.TenantDTO;
 import io.openk9.datasource.model.util.Mutiny2;
@@ -38,9 +36,12 @@ import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import javassist.NotFoundException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import java.util.Set;
 
 @ApplicationScoped
@@ -306,6 +307,55 @@ public class TenantService extends BaseK9EntityService<Tenant, TenantDTO> {
 			.transformToUni(tenant -> {
 				tenant.setSearchConfig(null);
 				return persist(tenant).map(t -> Tuple2.of(t, null));
+			}));
+	}
+
+	public Uni<Tenant> enableTenant(long id) {
+		return withTransaction(s -> s
+			.find(Tenant.class, id)
+			.flatMap(tenant -> {
+
+				if (tenant == null) {
+					return Uni
+						.createFrom()
+						.failure(new NotFoundException("Tenant not found for id " + id));
+				}
+
+				TenantBinding tenantBinding = tenant.getTenantBinding();
+
+				if (tenantBinding == null) {
+					CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+
+					CriteriaQuery<TenantBinding> query =
+						criteriaBuilder.createQuery(TenantBinding.class);
+
+					query.from(TenantBinding.class);
+
+					return s
+						.createQuery(query)
+						.getSingleResultOrNull()
+						.flatMap(tb -> {
+
+							if (tb == null) {
+								return Uni
+									.createFrom()
+									.failure(new NotFoundException("Tenant binding not found create one first"));
+							}
+
+							tenant.setTenantBinding(tb);
+							tb.setTenant(tenant);
+
+							return s
+								.persist(tb)
+								.map(t -> tenant)
+								.call(s::flush);
+
+						});
+
+				}
+
+				return Uni.createFrom().item(tenant);
+
 			}));
 	}
 

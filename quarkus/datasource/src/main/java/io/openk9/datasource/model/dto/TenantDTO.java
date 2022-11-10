@@ -24,19 +24,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-
 @NoArgsConstructor
 @SuperBuilder
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class TenantDTO extends K9EntityDTO {
-	@NotNull
-	@NotEmpty
-	private String virtualHost;
-	private String clientId;
-	private String clientSecret;
-	private String realmName;
 }

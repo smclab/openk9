@@ -6,6 +6,8 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.Tenant;
+import io.openk9.datasource.model.TenantBinding;
+import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.Tenant_;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -17,6 +19,7 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import java.util.Collection;
@@ -80,6 +83,9 @@ public class GrammarProvider {
 
 				Root<Tenant> tenantRoot = query.from(Tenant.class);
 
+				Join<Tenant, TenantBinding> tenantBindingJoin =
+					tenantRoot.join(Tenant_.tenantBinding);
+
 				tenantRoot
 					.fetch(Tenant_.datasources)
 					.fetch(Datasource_.dataIndex);
@@ -93,7 +99,12 @@ public class GrammarProvider {
 					.fetch(QueryAnalysis_.annotators, JoinType.LEFT)
 					.fetch(Annotator_.docTypeField, JoinType.LEFT);
 
-				query.where(cb.equal(tenantRoot.get(Tenant_.virtualHost), virtualHost));
+				query.where(
+					cb.equal(
+						tenantBindingJoin.get(TenantBinding_.virtualHost),
+						virtualHost
+					)
+				);
 
 				query.distinct(true);
 
