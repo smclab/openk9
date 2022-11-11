@@ -318,13 +318,7 @@ public class IndexerEvents {
 
 			String fieldName = String.join(".", acc);
 
-			DocTypeField docTypeField = new DocTypeField();
-			docTypeField.setName(fieldName);
-			docTypeField.setFieldType(FieldType.fromString(type));
-			docTypeField.setBoost(1.0);
-			docTypeField.setSearchable(false);
-			docTypeField.setDescription("auto-generated");
-			docTypeFields.add(docTypeField);
+			createAndAddDocTypeField(docTypeFields, type, fieldName);
 
 		}
 
@@ -332,6 +326,18 @@ public class IndexerEvents {
 			_toDocTypeFields(
 				subField, new ArrayList<>(acc), docTypeFields);
 		}
+	}
+
+	public static void createAndAddDocTypeField(
+		List<DocTypeField> docTypeFields, String type, String fieldName) {
+		DocTypeField docTypeField = new DocTypeField();
+		docTypeField.setName(fieldName);
+		docTypeField.setFieldName(fieldName);
+		docTypeField.setFieldType(FieldType.fromString(type));
+		docTypeField.setBoost(1.0);
+		docTypeField.setSearchable(false);
+		docTypeField.setDescription("auto-generated");
+		docTypeFields.add(docTypeField);
 	}
 
 	@Inject
