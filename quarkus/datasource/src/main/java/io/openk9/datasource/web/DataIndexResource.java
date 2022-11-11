@@ -1,20 +1,28 @@
 package io.openk9.datasource.web;
 
+import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.Analyzer_;
+import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.util.AnalyzerType;
+import io.openk9.datasource.model.TokenFilter;
+import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.processor.indexwriter.IndexerEvents;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
@@ -23,11 +31,14 @@ import org.elasticsearch.client.indices.PutComposableIndexTemplateRequest;
 import org.elasticsearch.cluster.metadata.ComposableIndexTemplate;
 import org.elasticsearch.cluster.metadata.Template;
 import org.elasticsearch.common.compress.CompressedXContent;
+import org.elasticsearch.common.settings.Settings;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -38,6 +49,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @CircuitBreaker
@@ -74,9 +87,18 @@ public class DataIndexResource {
 	@Path("/get-mappings-from-doc-types")
 	@POST
 	public Uni<Map<String, Object>> getMappings(
-		GetMappingsFromDocTypesRequest request) {
+		GetMappingsOrSettingsFromDocTypesRequest request) {
 
 		return getMappingsFromDocTypes(request.getDocTypeIds());
+
+	}
+
+	@Path("/get-settings-from-doc-types")
+	@POST
+	public Uni<Map<String, Object>> getSettings(
+		GetMappingsOrSettingsFromDocTypesRequest request) {
+
+		return getSettingsFromDocTypes(request.getDocTypeIds());
 
 	}
 
@@ -99,11 +121,11 @@ public class DataIndexResource {
 			List<Long> docTypeIds = request.getDocTypeIds();
 
 			Uni<List<DocType>> docTypeListUni =
-				_findDocTypes(docTypeIds, s);
+				_findDocTypes(docTypeIds, s, true);
 
 			return docTypeListUni
 				.onItem()
-				.transformToUni(docTypeList -> {
+				.transformToUni(Unchecked.function(docTypeList -> {
 
 					if (docTypeList.size() != docTypeIds.size()) {
 						throw new RuntimeException(
@@ -128,24 +150,31 @@ public class DataIndexResource {
 								IndicesClient indices = client.indices();
 
 								Map<String, Object> mappings =
-									di
-										.getDocTypes()
-										.stream()
-										.map(DocType::getDocTypeFields)
-										.flatMap(Collection::stream)
-										.collect(
-											Collectors.collectingAndThen(
-												Collectors.toList(),
-												DataIndexResource::docTypeFieldsToMappings)
-										);
+									_createMappings(di.getDocTypes());
 
-								PutComposableIndexTemplateRequest putComposableIndexTemplateRequest =
+								Settings settings;
+
+								Map<String, Object> settingsMap =
+									_createSettings(di.getDocTypes());
+
+								if (settingsMap.isEmpty()) {
+									settings = Settings.EMPTY;
+								}
+								else {
+									settings = Settings.builder()
+										.loadFromMap(settingsMap)
+										.build();
+								}
+
+								PutComposableIndexTemplateRequest
+									putComposableIndexTemplateRequest =
 									new PutComposableIndexTemplateRequest();
 
 								ComposableIndexTemplate composableIndexTemplate =
 									new ComposableIndexTemplate(
 										List.of(indexName),
-										new Template(null, new CompressedXContent(Json.encode(mappings)), null),
+										new Template(settings, new CompressedXContent(
+											Json.encode(mappings)), null),
 										null, null, null, null);
 
 								putComposableIndexTemplateRequest
@@ -162,10 +191,163 @@ public class DataIndexResource {
 
 						}));
 
-				});
+				}));
 
 		});
 
+	}
+
+	private static Map<String, Object> _createSettings(Collection<DocType> docTypes) {
+
+		List<Analyzer> analyzers =
+			docTypes
+				.stream()
+				.map(DocType::getDocTypeFields)
+				.flatMap(Collection::stream)
+				.map(DocTypeField::getAnalyzer)
+				.filter(Objects::nonNull)
+				.distinct()
+				.toList();
+
+		Map<String, Object> analyzerMap = _createAnalyzer(analyzers);
+
+		Map<String, Object> tokenizerMap = _createTokenizer(analyzers);
+
+		Map<String, Object> filterMap = _createFilter(analyzers);
+
+		Map<String, Object> charFilterMap = _createCharFilter(analyzers);
+
+		Map<String, Object> analysis = new LinkedHashMap<>();
+
+		if (!analyzerMap.isEmpty()) {
+			analysis.put("analyzer", analyzerMap);
+		}
+
+		if (!tokenizerMap.isEmpty()) {
+			analysis.put("tokenizer", tokenizerMap);
+		}
+
+		if (!filterMap.isEmpty()) {
+			analysis.put("filter", filterMap);
+		}
+
+		if (!charFilterMap.isEmpty()) {
+			analysis.put("char_filter", charFilterMap);
+		}
+
+		if (!analysis.isEmpty()) {
+			Map<String, Object> settingsMap = new LinkedHashMap<>();
+
+			settingsMap.put("analysis", analysis);
+
+			return settingsMap;
+
+		}
+
+		return Map.of();
+
+	}
+
+	private static Map<String, Object> _createCharFilter(List<Analyzer> analyzers) {
+		return analyzers
+			.stream()
+			.map(Analyzer::getCharFilters)
+			.filter(Objects::nonNull)
+			.flatMap(Collection::stream)
+			.filter(tokenFilter -> StringUtils.isNotBlank(tokenFilter.getJsonConfig()))
+			.distinct()
+			.collect(
+				Collectors.toMap(
+					CharFilter::getName,
+					charFilter -> new JsonObject(charFilter.getJsonConfig()).getMap())
+			);
+	}
+
+	private static Map<String, Object> _createFilter(List<Analyzer> analyzers) {
+		return analyzers
+			.stream()
+			.map(Analyzer::getTokenFilters)
+			.filter(Objects::nonNull)
+			.flatMap(Collection::stream)
+			.filter(tokenFilter -> StringUtils.isNotBlank(tokenFilter.getJsonConfig()))
+			.distinct()
+			.collect(
+				Collectors.toMap(
+					TokenFilter::getName,
+					tokenFilter -> new JsonObject(tokenFilter.getJsonConfig()).getMap())
+			);
+	}
+
+	private static Map<String, Object> _createTokenizer(List<Analyzer> analyzers) {
+
+		return analyzers
+			.stream()
+			.map(Analyzer::getTokenizer)
+			.filter(tokenizer -> tokenizer != null && StringUtils.isNotBlank(tokenizer.getJsonConfig()))
+			.distinct()
+			.collect(
+				Collectors.toMap(
+					Tokenizer::getName,
+					tokenizer -> new JsonObject(tokenizer.getJsonConfig()).getMap())
+			);
+
+	}
+
+	private static Map<String, Object> _createAnalyzer(
+		List<Analyzer> analyzers) {
+
+		Map<String, Object> analyzerMap = new LinkedHashMap<>();
+
+		for (Analyzer analyzer : analyzers) {
+
+			Map<String, Object> internalSettings = new LinkedHashMap<>();
+
+			Tokenizer tokenizer = analyzer.getTokenizer();
+
+			if (tokenizer != null) {
+				internalSettings.put("tokenizer", tokenizer.getName());
+			}
+
+			Set<TokenFilter> tokenFilters = analyzer.getTokenFilters();
+
+			if (tokenFilters != null && !tokenFilters.isEmpty()) {
+				internalSettings.put(
+					"filter", tokenFilters
+						.stream()
+						.map(TokenFilter::getName)
+						.toList()
+				);
+			}
+
+			Set<CharFilter> charFilters = analyzer.getCharFilters();
+
+			if (charFilters != null && !charFilters.isEmpty()) {
+				internalSettings.put(
+					"char_filter", charFilters
+						.stream()
+						.map(CharFilter::getName)
+						.toList()
+				);
+			}
+
+			analyzerMap.put(analyzer.getName(), internalSettings);
+
+		}
+
+		return analyzerMap;
+	}
+
+	private static Map<String, Object> _createMappings(
+		Collection<DocType> docTypes) {
+		return docTypes
+			.stream()
+			.map(DocType::getDocTypeFields)
+			.flatMap(Collection::stream)
+			.collect(
+				Collectors.collectingAndThen(
+					Collectors.toList(),
+					DataIndexResource::docTypeFieldsToMappings)
+			);
 	}
 
 	private Uni<Map<String, Object>> getMappingsFromDocTypes(
@@ -173,26 +355,30 @@ public class DataIndexResource {
 
 		return sf.withTransaction(session -> {
 
-			Uni<List<DocType>> docTypeListUni = _findDocTypes(docTypeIds, session);
+			Uni<List<DocType>> docTypeListUni =
+				_findDocTypes(docTypeIds, session, false);
 
-			return docTypeListUni
-				.map(docTypeList ->
-					docTypeList
-						.stream()
-						.map(DocType::getDocTypeFields)
-						.flatMap(Collection::stream)
-						.collect(
-							Collectors.collectingAndThen(
-								Collectors.toList(),
-								DataIndexResource::docTypeFieldsToMappings)
-						)
-				);
+			return docTypeListUni.map(DataIndexResource::_createMappings);
+
+		});
+	}
+
+	private Uni<Map<String, Object>> getSettingsFromDocTypes(
+		List<Long> docTypeIds) {
+
+		return sf.withTransaction(session -> {
+
+			Uni<List<DocType>> docTypeListUni =
+				_findDocTypes(docTypeIds, session, true);
+
+			return docTypeListUni.map(DataIndexResource::_createSettings);
 
 		});
 	}
 
 	private Uni<List<DocType>> _findDocTypes(
-		List<Long> docTypeIds, Mutiny.Session session) {
+		List<Long> docTypeIds, Mutiny.Session session,
+		boolean includeAnalyzerSubtypes) {
 
 		CriteriaBuilder cb = sf.getCriteriaBuilder();
 
@@ -200,7 +386,16 @@ public class DataIndexResource {
 
 		Root<DocType> from = query.from(DocType.class);
 
-		from.fetch(DocType_.docTypeFields);
+		Fetch<DocTypeField, Analyzer> analyzerFetch =
+			from
+				.fetch(DocType_.docTypeFields)
+				.fetch(DocTypeField_.analyzer, JoinType.LEFT);
+
+		if (includeAnalyzerSubtypes) {
+			analyzerFetch.fetch(Analyzer_.tokenizer, JoinType.LEFT);
+			analyzerFetch.fetch(Analyzer_.tokenFilters, JoinType.LEFT);
+			analyzerFetch.fetch(Analyzer_.charFilters, JoinType.LEFT);
+		}
 
 		query.where(from.get(DocType_.id).in(docTypeIds));
 
@@ -219,7 +414,7 @@ public class DataIndexResource {
 		List<DocTypeField> orderedFieldNames = fieldNames
 			.stream()
 			.sorted(Comparator.comparingInt((DocTypeField f) -> f.getName().length()))
-			.collect(Collectors.toList());
+			.toList();
 
 		for (DocTypeField docTypeField : orderedFieldNames) {
 
@@ -248,6 +443,12 @@ public class DataIndexResource {
 
 					current.put("type", fieldType.getType());
 
+					Analyzer analyzer = docTypeField.getAnalyzer();
+
+					if (analyzer != null) {
+						current.put("analyzer", analyzer.getName());
+					}
+
 					if (isFields) {
 						if (fieldType == FieldType.KEYWORD) {
 							current.put("ignore_above", 256);
@@ -273,7 +474,7 @@ public class DataIndexResource {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class GetMappingsFromDocTypesRequest {
+	public static class GetMappingsOrSettingsFromDocTypesRequest {
 		private List<Long> docTypeIds;
 	}
 
