@@ -81,7 +81,7 @@ public class TabResource {
 
 					TabResponseDto tabResponseDto = new TabResponseDto();
 					tabResponseDto.setLabel(tab.getName());
-					tabResponseDto.setTokenTabs(tokenTabResponseDtos);
+					tabResponseDto.setTokens(tokenTabResponseDtos);
 					tabResponseDtos.add(tabResponseDto);
 				}
 				return tabResponseDtos;
@@ -95,7 +95,7 @@ public class TabResource {
 	@NoArgsConstructor
 	public static class TabResponseDto {
 		private String label;
-		private List<TokenTabResponseDto> tokenTabs;
+		private List<TokenTabResponseDto> tokens;
 	}
 
 	@Data
