@@ -22,6 +22,9 @@ import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;
+import io.openk9.tenantmanager.grpc.TenantManager;
+import io.openk9.tenantmanager.grpc.TenantRequest;
+import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
@@ -58,24 +61,27 @@ public abstract class BaseSearchService {
 	protected Uni<Bucket> getTenantAndFetchRelations(
 		String virtualHost, boolean suggestion, long suggestionCategoryId) {
 
-		return sf
-			.withStatelessTransaction(s -> {
+		return tenantManager
+			.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
+			.flatMap(tenantResponse -> sf
+				.withStatelessTransaction(tenantResponse.getSchemaName(), s -> {
 
-				CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
+					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
-				CriteriaQuery<Bucket> criteriaQuery =
-					criteriaBuilder.createQuery(Bucket.class);
+					CriteriaQuery<Bucket> criteriaQuery =
+						criteriaBuilder.createQuery(Bucket.class);
 
-				customizeCriteriaBuilder(
-					virtualHost, criteriaBuilder, criteriaQuery, suggestion,
-					suggestionCategoryId);
+					customizeCriteriaBuilder(
+						virtualHost, criteriaBuilder, criteriaQuery, suggestion,
+						suggestionCategoryId);
 
-				return s
-					.createQuery(criteriaQuery)
-					.setCacheable(true)
-					.getSingleResultOrNull()
-					.eventually(s::close);
-			});
+					return s
+						.createQuery(criteriaQuery)
+						.setCacheable(true)
+						.getSingleResultOrNull()
+						.eventually(s::close);
+				}));
+
 
 	}
 
@@ -292,6 +298,9 @@ public abstract class BaseSearchService {
 
 	@Inject
 	SearcherMapper searcherMapper;
+
+	@GrpcClient("tenantmanager")
+	TenantManager tenantManager;
 
 	private static final JsonObject EMPTY_JSON = new JsonObject(Map.of());
 
