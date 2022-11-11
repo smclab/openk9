@@ -78,8 +78,7 @@ public abstract class BaseSearchService {
 					return s
 						.createQuery(criteriaQuery)
 						.setCacheable(true)
-						.getSingleResultOrNull()
-						.eventually(s::close);
+						.getSingleResultOrNull();
 				}));
 
 
