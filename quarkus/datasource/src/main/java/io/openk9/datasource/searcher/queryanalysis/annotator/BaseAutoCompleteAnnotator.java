@@ -28,29 +28,15 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
-		String...keywords) {
-		this(bucket, annotator, stopWords, restHighLevelClient, List.of(keywords));
-	}
-
-	public BaseAutoCompleteAnnotator(
-		Bucket bucket,
-		io.openk9.datasource.model.Annotator annotator,
-		List<String> stopWords,
-		RestHighLevelClient restHighLevelClient,
-		List<String> keywords) {
+		String includeField, String searchKeyword) {
 		super(bucket, annotator, stopWords, null);
-		this.keywords = keywords;
+		this.includeField = includeField;
+		this.searchKeyword = searchKeyword;
 		this.restHighLevelClient = restHighLevelClient;
 	}
 
 	@Override
 	public List<CategorySemantics> annotate(String...tokens) {
-
-		List<String> normalizedKeywords = keywords;
-
-		if (normalizedKeywords == null) {
-			return List.of();
-		}
 
 		String token;
 
@@ -82,9 +68,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 		multiMatchQueryBuilder.type(
 			MultiMatchQueryBuilder.Type.PHRASE_PREFIX);
 
-		for (String normalizedKeyword : normalizedKeywords) {
-			multiMatchQueryBuilder.field(normalizedKeyword);
-		}
+		multiMatchQueryBuilder.field(searchKeyword);
 
 		builder.must(multiMatchQueryBuilder);
 
@@ -104,12 +88,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 		searchSourceBuilder.query(builder);
 
-		String[] includes =
-			normalizedKeywords.stream()
-				.distinct()
-				.toArray(String[]::new);
-
-		searchSourceBuilder.fetchSource(includes, null);
+		searchSourceBuilder.fetchSource(new String[] {includeField}, null);
 
 		searchRequest.source(searchSourceBuilder);
 
@@ -205,7 +184,9 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 	protected final RestHighLevelClient restHighLevelClient;
 
-	protected final List<String> keywords;
+	protected final String searchKeyword;
+
+	protected final String includeField;
 
 	private static final Logger _log = Logger.getLogger(
 		BaseAutoCompleteAnnotator.class);
