@@ -19,7 +19,11 @@ public class AclQueryParser implements QueryParser {
 	@Override
 	public void accept(ParserContext parserContext) {
 
-		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
+		BoolQueryBuilder innerQuery =
+			QueryBuilders
+				.boolQuery()
+				.minimumShouldMatch(1)
+				.should(QueryBuilders.matchQuery("acl.public", true));
 
 		List<String> acl = parserContext.getAcl();
 
@@ -27,9 +31,10 @@ public class AclQueryParser implements QueryParser {
 
 			String fieldName = "acl.rolesName.keyword";
 
-			mutableQuery.should(QueryBuilders.termsQuery(fieldName, acl));
-
+			innerQuery.should(QueryBuilders.termsQuery(fieldName, acl));
 		}
+
+		parserContext.getMutableQuery().filter(innerQuery);
 
 	}
 
