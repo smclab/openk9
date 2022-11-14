@@ -10,8 +10,10 @@ import lombok.ToString;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -53,4 +55,12 @@ public class TokenTab extends K9Entity {
 	@JoinColumn(name = "tab_id")
 	@JsonIgnore
 	private Tab tab;
+
+	@OneToOne(
+		fetch = FetchType.LAZY
+	)
+	@JoinColumn(name = "doc_type_field_id")
+	@JsonIgnore
+	@ToString.Exclude
+	private DocTypeField docTypeField;
 }
