@@ -33,6 +33,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
+import java.util.Map;
 
 @ApplicationScoped
 public class IndexerProcessor {
@@ -133,6 +134,13 @@ public class IndexerProcessor {
 				logger.info("index document for contentId: " + dataPayload.getContentId());
 
 				JsonObject jsonObject = JsonObject.mapFrom(dataPayload);
+
+				JsonObject acl =
+					jsonObject.getJsonObject("acl");
+
+				if (acl == null || acl.isEmpty()) {
+					jsonObject.put("acl", Map.of("public", true));
+				}
 
 				indexRequest.source(jsonObject.toString(), XContentType.JSON);
 
