@@ -20,20 +20,30 @@ package io.openk9.datasource.script;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.vavr.control.Try;
 import org.graalvm.polyglot.Context;
-import org.jboss.logging.Logger;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class JavascriptService {
+
+	@PostConstruct
+	void init() {
+		context = Context.newBuilder("js").build();
+	}
+
+	@PreDestroy
+	void destroy() {
+		context.close();
+	}
 
 	public Try<Boolean> isValidCondition(String script) {
 		return executeScriptCondition(script, new IngestionPayload());
 	}
 
 	public Try<Boolean> executeScriptCondition(String script, IngestionPayload payload) {
-		return Try.withResources(() -> Context.newBuilder("js").build())
+		return Try.withResources(() -> context)
 			.of(ctx -> {
 				ctx
 					.getBindings("js")
@@ -44,7 +54,6 @@ public class JavascriptService {
 			});
 	}
 
-	@Inject
-	Logger logger;
+	private Context context;
 
 }
