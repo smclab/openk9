@@ -31,7 +31,10 @@ public class AnnotatorFactory {
 				bucket, annotator, stopWords, client,
 				annotator.getFieldName(),
 				annotator.getDocTypeField().getName());
-			case AUTOCORRECT -> Annotator.DUMMY_ANNOTATOR;
+			case AUTOCORRECT -> new BaseAutoCorrectAnnotator(
+				bucket, annotator, stopWords, client,
+				annotator.getFieldName(),
+				annotator.getDocTypeField().getName());
 		};
 	}
 
