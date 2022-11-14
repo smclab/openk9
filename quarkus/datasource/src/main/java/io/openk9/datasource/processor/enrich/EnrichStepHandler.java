@@ -72,16 +72,21 @@ public class EnrichStepHandler {
 
 						Boolean validation =
 							executeScriptCondition
-								.onFailure(throwable -> {
-									logger.error(
-										"Error executing validation script: " +
-										validationScript, throwable);
-								})
+								.onFailure(throwable -> logger.error(
+									"Error executing validation script: " +
+									validationScript, throwable))
 								.getOrElse(false);
 
 						if (!validation) {
-							logger.warn("validation for enrichItem: " + enrichItem + " failed");
-							return Uni.createFrom().nullItem();
+							logger.warn("validation for enrichItem: " + enrichItemId + " failed skip to next enrichItem");
+							return consume(
+								EnrichStep
+									.builder()
+									.enrichItemId(t2.getItem2().getId())
+									.enrichPipelineId(enrichStep.getEnrichPipelineId())
+									.payload(enrichStep.getPayload())
+									.build()
+							);
 						}
 						else {
 							logger.info("Validation script executed successfully for enrich item: " + enrichItemId);
