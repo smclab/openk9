@@ -18,6 +18,22 @@
 		<module>tenant-manager-grpc</module>
 	</modules>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jboss.jandex</groupId>
+				<artifactId>jandex-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+			</plugin>
+		</plugins>
+	</build>
+
   <scm>
     <tag>v0.0.2</tag>
   </scm>
