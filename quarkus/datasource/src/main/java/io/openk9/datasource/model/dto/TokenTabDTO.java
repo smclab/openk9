@@ -17,15 +17,15 @@ import javax.validation.constraints.NotNull;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class TokenTabDTO extends K9EntityDTO {
+
 	@NotNull
 	@NotEmpty
 	private String tokenType;
-	@NotNull
-	@NotEmpty
-	private String keywordKey;
+
 	@NotNull
 	@NotEmpty
 	private String value;
+
 	@NotNull
 	private Boolean filter;
 

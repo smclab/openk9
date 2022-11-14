@@ -144,7 +144,7 @@ public class BucketResource {
 					List<TokenTabResponseDto> tokenTabResponseDtos = new ArrayList<>(tokenTabs.size());
 					for(TokenTab token : tokenTabs){
 						TokenTabResponseDto tokenTabResponseDto = new TokenTabResponseDto();
-						tokenTabResponseDto.setKeywordKey(token.getKeywordKey());
+						tokenTabResponseDto.setKeywordKey(token.getDocTypeField().getFieldName());
 						tokenTabResponseDto.setTokenType(token.getTokenType());
 						tokenTabResponseDto.setFilter(token.getFilter());
 						tokenTabResponseDto.setValues(List.of(token.getValue()));

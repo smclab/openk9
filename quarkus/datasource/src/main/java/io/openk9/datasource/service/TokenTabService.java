@@ -24,7 +24,7 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {TokenTab_.NAME, TokenTab_.TOKEN_TYPE,TokenTab_.KEYWORD_KEY};
+		return new String[] {TokenTab_.NAME, TokenTab_.TOKEN_TYPE};
 	}
 
 	public Uni<DocTypeField> getDocTypeField(TokenTab tokenTab) {

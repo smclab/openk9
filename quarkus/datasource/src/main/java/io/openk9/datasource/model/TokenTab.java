@@ -41,9 +41,6 @@ public class TokenTab extends K9Entity {
 	@Column(name = "token_type", nullable = false)
 	private String tokenType;
 
-	@Column(name = "keyword_key", nullable = false)
-	private String keywordKey;
-
 	@Column(name = "value")
 	private  String value;
 
