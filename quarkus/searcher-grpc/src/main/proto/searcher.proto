@@ -36,6 +36,7 @@ enum TokenType {
     ENTITY = 0;
     TEXT = 1;
     DOCTYPE = 2;
+    AUTOCORRECT = 3;
 }
 
 message QueryParserRequest {
