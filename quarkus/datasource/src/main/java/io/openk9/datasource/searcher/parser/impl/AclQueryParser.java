@@ -33,4 +33,8 @@ public class AclQueryParser implements QueryParser {
 
 	}
 
+	@Override
+	public boolean isQueryParserGroup() {
+		return false;
+	}
 }
