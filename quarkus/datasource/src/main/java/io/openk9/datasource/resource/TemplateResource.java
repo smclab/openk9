@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Uni;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
 @Path("/templates")
 public class TemplateResource extends
@@ -19,6 +20,7 @@ public class TemplateResource extends
 	}
 
 	@GET
+	@Produces("text/javascript")
 	@Path("/{id}/compiled")
 	public Uni<String> getTemplateCompiled(@PathParam("id") long docTypeTemplateId) {
 
