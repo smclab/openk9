@@ -31,7 +31,6 @@
   </modules>
   <properties>
     <failsafe.useModulePath>false</failsafe.useModulePath>
-    <jandex-maven-plugin.version>1.2.2</jandex-maven-plugin.version>
     <maven.compiler.release>17</maven.compiler.release>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -40,9 +39,10 @@
     <quarkus.package.type>fast-jar</quarkus.package.type>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>2.13.3.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.14.0.Final</quarkus.platform.version>
     <quarkus.version>${quarkus.platform.version}</quarkus.version>
     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+    <jandex-maven-plugin.version>3.0.0</jandex-maven-plugin.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -141,7 +141,7 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.jboss.jandex</groupId>
+          <groupId>io.smallrye</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
           <version>${jandex-maven-plugin.version}</version>
           <executions>
