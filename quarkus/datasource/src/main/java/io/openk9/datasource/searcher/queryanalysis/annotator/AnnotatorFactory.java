@@ -18,6 +18,7 @@ public class AnnotatorFactory {
 
 		return switch (annotator.getType()) {
 			case TOKEN -> new TokenAnnotator(bucket, annotator, stopWords);
+			case KEYWORD -> new KeywordAnnotator(bucket, annotator, stopWords);
 			case STOPWORD -> new StopWordsAnnotator(bucket, annotator, stopWords);
 			case NER -> new BaseNerAnnotator(
 				bucket, annotator, stopWords,

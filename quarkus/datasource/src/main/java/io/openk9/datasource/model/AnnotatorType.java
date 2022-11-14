@@ -25,6 +25,8 @@ public enum AnnotatorType {
 	DOCTYPE,
 	AUTOCORRECT,
 	STOPWORD,
-	TOKEN
+	TOKEN,
+
+	KEYWORD
 
 }

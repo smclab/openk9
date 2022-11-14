@@ -4,7 +4,6 @@ import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
-import io.openk9.datasource.searcher.util.Utils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -38,27 +37,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 	@Override
 	public List<CategorySemantics> annotate(String...tokens) {
 
-		String token;
-
-		if (tokens.length == 1) {
-			token = tokens[0];
-			if (Utils.inQuote(token)) {
-				return List.of(
-					CategorySemantics.of(
-						"$QUOTE_TOKEN",
-						Map.of(
-							"tokenType", "TEXT",
-							"value", token,
-							"score", 100.0f
-						)
-					)
-				);
-			}
-
-		}
-		else {
-			token = String.join(" ", tokens);
-		}
+		String token = String.join(" ", tokens);
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
