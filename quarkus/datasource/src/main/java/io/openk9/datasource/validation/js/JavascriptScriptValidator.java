@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.validation.js;
 
-import io.openk9.datasource.script.JavascriptService;
+import io.openk9.datasource.script.GroovyService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -33,7 +33,7 @@ public class JavascriptScriptValidator implements ConstraintValidator<Javascript
 			return true;
 		}
 
-		return javascriptService.isValidCondition(value)
+		return groovyService.isValidCondition(value)
 			.onFailure(e -> {
 					context.disableDefaultConstraintViolation();
 					context
@@ -45,6 +45,6 @@ public class JavascriptScriptValidator implements ConstraintValidator<Javascript
 	}
 
 	@Inject
-	JavascriptService javascriptService;
+	GroovyService groovyService;
 
 }

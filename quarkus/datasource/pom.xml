@@ -132,11 +132,6 @@
       <artifactId>quarkus-grpc</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.graalvm.js</groupId>
-      <artifactId>js</artifactId>
-      <version>22.3.0</version>
-    </dependency>
-    <dependency>
       <groupId>io.vavr</groupId>
       <artifactId>vavr</artifactId>
       <version>0.10.4</version>
@@ -171,6 +166,12 @@
       <groupId>io.openk9</groupId>
       <artifactId>auth-service</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>4.0.6</version>
+    </dependency>
+
   </dependencies>
   <build>
     <plugins>

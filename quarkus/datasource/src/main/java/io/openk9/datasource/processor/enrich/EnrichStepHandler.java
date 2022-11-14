@@ -3,17 +3,20 @@ package io.openk9.datasource.processor.enrich;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
+import io.openk9.datasource.script.GroovyService;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
+import io.vavr.control.Try;
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -57,6 +60,33 @@ public class EnrichStepHandler {
 
 					if (enrichItem == null) {
 						return emitToIndexWriter(enrichStep);
+					}
+
+					String validationScript = enrichItem.getValidationScript();
+
+					if (StringUtils.isNotBlank(validationScript)) {
+
+						Try<Boolean> executeScriptCondition =
+							groovyService.executeScriptCondition(
+								validationScript, enrichStep.getPayload());
+
+						Boolean validation =
+							executeScriptCondition
+								.onFailure(throwable -> {
+									logger.error(
+										"Error executing validation script: " +
+										validationScript, throwable);
+								})
+								.getOrElse(false);
+
+						if (!validation) {
+							logger.warn("validation for enrichItem: " + enrichItem + " failed");
+							return Uni.createFrom().nullItem();
+						}
+						else {
+							logger.info("Validation script executed successfully for enrich item: " + enrichItemId);
+						}
+
 					}
 
 					String serviceName = enrichItem.getServiceName();
@@ -153,6 +183,10 @@ public class EnrichStepHandler {
 
 	@Inject
 	TransactionInvoker transactionInvoker;
+
+	@Inject
+	GroovyService groovyService;
+
 
 	public static final String ROUTING_KEY_PREFIX = "io.openk9.enrich.pipeline.";
 
