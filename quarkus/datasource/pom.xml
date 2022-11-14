@@ -171,6 +171,11 @@
       <artifactId>groovy</artifactId>
       <version>4.0.6</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-suggest</artifactId>
+      <version>8.9.0</version>
+    </dependency>
 
   </dependencies>
   <build>
