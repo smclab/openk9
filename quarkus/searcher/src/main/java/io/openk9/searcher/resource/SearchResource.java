@@ -16,6 +16,7 @@ import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
 import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
 import io.quarkus.grpc.GrpcClient;
+import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -55,9 +56,6 @@ import java.util.Map;
 
 @Path("/v1")
 public class SearchResource {
-
-	@Context
-	HttpServerRequest request;
 
 	@POST
 	@Path("/search")
@@ -258,6 +256,7 @@ public class SearchResource {
 			.toQueryParserRequest(searchRequest)
 			.toBuilder()
 			.setVirtualHost(request.host())
+			.addAllAcl(securityIdentity.getRoles())
 			.build();
 	}
 
@@ -368,6 +367,13 @@ public class SearchResource {
 
 	@Inject
 	Logger logger;
+
+	@Inject
+	SecurityIdentity securityIdentity;
+
+	@Context
+	HttpServerRequest request;
+
 
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
 		Collections.synchronizedMap(new IdentityHashMap<>());

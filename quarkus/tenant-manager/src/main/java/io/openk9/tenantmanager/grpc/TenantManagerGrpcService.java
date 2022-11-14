@@ -5,7 +5,6 @@ import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
@@ -46,7 +45,7 @@ public class TenantManagerGrpcService implements TenantManager {
 			.transform(list ->
 					list
 						.stream()
-						.map(tenant ->TenantResponse.newBuilder()
+						.map(tenant -> TenantResponse.newBuilder()
 							.setClientId(tenant.getClientId())
 							.setClientSecret(tenant.getClientSecret())
 							.setSchemaName(tenant.getSchemaName())
@@ -61,9 +60,6 @@ public class TenantManagerGrpcService implements TenantManager {
 						))
 			);
 	}
-
-	@Inject
-	Mutiny.SessionFactory sf;
 
 	@Inject
 	TenantService tenantService;

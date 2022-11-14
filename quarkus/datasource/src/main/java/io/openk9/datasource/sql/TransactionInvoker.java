@@ -1,7 +1,7 @@
 package io.openk9.datasource.sql;
 
-import io.openk9.datasource.multitenancy.MultiTenancyConfig;
-import io.openk9.datasource.tenant.TenantResolver;
+import io.openk9.auth.tenant.MultiTenancyConfig;
+import io.openk9.auth.tenant.TenantResolver;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;

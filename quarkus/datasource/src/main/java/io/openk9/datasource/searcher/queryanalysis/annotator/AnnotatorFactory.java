@@ -1,7 +1,7 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.tenant.TenantResolver;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import javax.enterprise.context.ApplicationScoped;

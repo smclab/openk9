@@ -1,4 +1,4 @@
-package io.openk9.datasource.multitenancy;
+package io.openk9.auth.tenant;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 

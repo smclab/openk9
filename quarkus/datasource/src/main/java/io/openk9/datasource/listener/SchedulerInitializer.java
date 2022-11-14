@@ -18,6 +18,7 @@
 package io.openk9.datasource.listener;
 
 import com.google.protobuf.Empty;
+import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
@@ -25,7 +26,6 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
-import io.openk9.datasource.tenant.TenantResolver;
 import io.openk9.tenantmanager.grpc.TenantListResponse;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantResponse;

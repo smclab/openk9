@@ -116,6 +116,14 @@
 			<artifactId>searcher-grpc</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>io.openk9</groupId>
+			<artifactId>auth-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.openk9</groupId>
+			<artifactId>tenant-manager-client</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

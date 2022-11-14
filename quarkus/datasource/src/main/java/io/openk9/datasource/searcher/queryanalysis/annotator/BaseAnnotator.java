@@ -1,8 +1,8 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
-import io.openk9.datasource.tenant.TenantResolver;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 

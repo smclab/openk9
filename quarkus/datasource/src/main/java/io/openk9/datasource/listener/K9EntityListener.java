@@ -17,11 +17,11 @@
 
 package io.openk9.datasource.listener;
 
+import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.tenant.TenantResolver;
 import org.hibernate.Hibernate;
 import org.quartz.SchedulerException;
 

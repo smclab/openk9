@@ -1,11 +1,11 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import io.openk9.datasource.searcher.util.Tuple;
-import io.openk9.datasource.tenant.TenantResolver;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;

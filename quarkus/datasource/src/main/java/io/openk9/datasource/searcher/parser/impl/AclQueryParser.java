@@ -2,15 +2,13 @@ package io.openk9.datasource.searcher.parser.impl;
 
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
-import io.quarkus.security.identity.SecurityIdentity;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import java.util.Set;
+import javax.enterprise.context.ApplicationScoped;
+import java.util.List;
 
-@RequestScoped
+@ApplicationScoped
 public class AclQueryParser implements QueryParser {
 
 	@Override
@@ -23,19 +21,16 @@ public class AclQueryParser implements QueryParser {
 
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
-		Set<String> roles = identity.getRoles();
+		List<String> acl = parserContext.getAcl();
 
-		if (roles != null && !roles.isEmpty()) {
+		if (acl != null && !acl.isEmpty()) {
 
 			String fieldName = "acl.rolesName.keyword";
 
-			mutableQuery.should(QueryBuilders.termsQuery(fieldName, roles));
+			mutableQuery.should(QueryBuilders.termsQuery(fieldName, acl));
 
 		}
 
 	}
-
-	@Inject
-	SecurityIdentity identity;
 
 }

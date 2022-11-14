@@ -147,7 +147,8 @@ public abstract class BaseSearchService {
 	}
 
 	protected BoolQueryBuilder createBoolQuery(
-		Map<String, List<ParserSearchToken>> tokenGroup, Bucket bucket) {
+		Map<String, List<ParserSearchToken>> tokenGroup, Bucket bucket,
+		List<String> acl) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -167,6 +168,7 @@ public abstract class BaseSearchService {
 							.queryParserConfig(
 								getQueryParserConfig(
 									bucket, tokenType))
+							.acl(acl)
 							.build()
 					);
 				}
@@ -195,6 +197,7 @@ public abstract class BaseSearchService {
 						.queryParserConfig(
 							getQueryParserConfig(
 								bucket, queryParser.getType()))
+						.acl(acl)
 						.build()
 				);
 

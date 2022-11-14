@@ -7,15 +7,14 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<name>OpenK9 :: Quarkus :: Client</name>
+	<name>OpenK9 :: Quarkus :: Api</name>
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>client</artifactId>
+	<artifactId>api</artifactId>
 	<packaging>pom</packaging>
 	<modules>
-		<module>tenant-manager-client</module>
-		<module>tenant-manager-grpc</module>
+		<module>tenant-manager-api</module>
 	</modules>
 
   <scm>

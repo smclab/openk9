@@ -1,4 +1,4 @@
-package io.openk9.datasource.tenant;
+package io.openk9.auth.tenant;
 
 public interface TenantResolver {
 	long getTenantId();

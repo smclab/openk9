@@ -1,6 +1,6 @@
-package io.openk9.datasource.tenant.impl;
+package io.openk9.auth.tenant.impl;
 
-import io.openk9.datasource.tenant.TenantResolver;
+import io.openk9.auth.tenant.TenantResolver;
 import io.vertx.core.Vertx;
 
 import javax.enterprise.context.ApplicationScoped;

@@ -20,4 +20,5 @@ public class ParserContext {
 	private BoolQueryBuilder mutableQuery;
 	private Bucket currentTenant;
 	private JsonObject queryParserConfig;
+	private List<String> acl;
 }

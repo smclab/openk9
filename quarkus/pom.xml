@@ -26,6 +26,8 @@
     <module>searcher-grpc</module>
     <module>client</module>
     <module>tenant-manager</module>
+    <module>auth</module>
+    <module>api</module>
   </modules>
   <properties>
     <failsafe.useModulePath>false</failsafe.useModulePath>
@@ -63,7 +65,22 @@
       </dependency>
       <dependency>
         <groupId>io.openk9</groupId>
+        <artifactId>tenant-manager-grpc</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.openk9</groupId>
         <artifactId>searcher-grpc</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.openk9</groupId>
+        <artifactId>auth-service</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.openk9</groupId>
+        <artifactId>tenant-manager-api</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

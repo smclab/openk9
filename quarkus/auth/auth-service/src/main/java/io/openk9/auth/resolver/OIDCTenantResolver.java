@@ -1,7 +1,7 @@
-package io.openk9.datasource.multitenancy.resolver;
+package io.openk9.auth.resolver;
 
-import io.openk9.datasource.multitenancy.TenantRegistry;
-import io.openk9.datasource.tenant.TenantResolver;
+import io.openk9.auth.tenant.TenantRegistry;
+import io.openk9.auth.tenant.TenantResolver;
 import io.quarkus.oidc.OidcRequestContext;
 import io.quarkus.oidc.OidcTenantConfig;
 import io.quarkus.oidc.TenantConfigResolver;

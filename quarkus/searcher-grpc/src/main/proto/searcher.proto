@@ -45,6 +45,7 @@ message QueryParserRequest {
   string suggestKeyword = 4;
   int64 suggestionCategoryId = 5;
   string virtualHost = 6;
+  repeated string acl = 7;
 }
 
 message SearchTokenRequest {
