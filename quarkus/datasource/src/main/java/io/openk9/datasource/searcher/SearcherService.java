@@ -1,6 +1,5 @@
 package io.openk9.datasource.searcher;
 
-import com.google.protobuf.ByteString;
 import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -85,17 +84,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 			Map<String, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
-
-			if (tokenGroup.isEmpty()) {
-				return Uni
-					.createFrom()
-					.item(
-						QueryParserResponse
-							.newBuilder()
-							.setQuery(ByteString.EMPTY)
-							.build()
-					);
-			}
 
 			return getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
 				.map(tenant -> {
@@ -185,7 +173,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.distinct()
 							.toArray(String[]::new);
 
-
 					return QueryParserResponse
 						.newBuilder()
 						.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
@@ -204,16 +191,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 			Map<String, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
-
-			if (tokenGroup.isEmpty()) {
-				return Uni
-					.createFrom()
-					.item(
-						SuggestionsResponse
-							.newBuilder()
-							.build()
-					);
-			}
 
 			return getTenantAndFetchRelations(
 				request.getVirtualHost(), true, request.getSuggestionCategoryId())

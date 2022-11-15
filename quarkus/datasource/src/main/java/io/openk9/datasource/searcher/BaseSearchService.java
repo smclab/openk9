@@ -152,6 +152,10 @@ public abstract class BaseSearchService {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
+		if (tokenGroup == null || tokenGroup.isEmpty()) {
+			return boolQueryBuilder;
+		}
+
 		for (Map.Entry<String, List<ParserSearchToken>> entry : tokenGroup.entrySet()) {
 			String tokenType = entry.getKey();
 			List<ParserSearchToken> parserSearchTokens =
