@@ -185,8 +185,8 @@ public class SearchResource {
 				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityType())) {
 					token.put("entityType", queryAnalysisSearchToken.getEntityType());
 				}
-				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityValue())) {
-					token.put("entityValue", queryAnalysisSearchToken.getEntityValue());
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityName())) {
+					token.put("entityName", queryAnalysisSearchToken.getEntityName());
 				}
 				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getTenantId())) {
 					token.put("tenantId", queryAnalysisSearchToken.getTenantId());
