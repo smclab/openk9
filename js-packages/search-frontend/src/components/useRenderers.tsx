@@ -1,58 +1,40 @@
-import { ResultRendererPlugin, Plugin } from "@openk9/rest-api";
 import { useQuery } from "react-query";
 import { useOpenK9Client } from "./client";
+import { groupBy, mapValues } from "lodash";
+import { DetailRendererProps, ResultRendererProps, Template } from "@openk9/rest-api";
 
-export function useRenderers() {
+export type Renderers = {
+  resultRenderers: {
+    [x: string]: React.FC<ResultRendererProps<unknown>>
+  };
+  detailRenderers: {
+    [x: string]: React.FC<DetailRendererProps<unknown>>
+  };
+};
+
+export function useRenderers(): Renderers |undefined {
   const client = useOpenK9Client();
   const { data: renderers } = useQuery(
     ["renderers"],
     async () => {
-      const pluginInfos = await client.getPlugins();
-      const plugins = (
+      const templateIds = await client.getTemplatesByVirtualHost();
+      const templates = (
         await Promise.all(
-          pluginInfos.map((pluginInfo) =>
-            client
-              .loadPlugin(
-                pluginInfo.pluginId,
-                pluginInfo.bundleInfo.lastModified,
-              )
-              .catch(() => null),
-          ),
+          templateIds.map((templateId) => client.loadTemplate(templateId)),
         )
-      ).filter((plugin) => plugin !== null) as Plugin<unknown>[];
-      if (client.debugPluginsOverride)
-        return getRenderersFromPlugins(client.debugPluginsOverride);
-      return getRenderersFromPlugins(plugins);
+      ).filter((template) => template !== null) as Array<Template<unknown>>;
+      const byResultType = groupBy(
+        templates,
+        (template) => template.resultType,
+      );
+      const byPriority = mapValues(byResultType, (templates) =>
+        templates.sort((a, b) => (a.priority || -1) - (b.priority || -1)),
+      );
+      const resultRenderers = mapValues(byPriority, ([{ result }]) => result);
+      const detailRenderers = mapValues(byPriority, ([{ detail }]) => detail);
+      return { resultRenderers, detailRenderers };
     },
     { suspense: true },
   );
   return renderers;
-}
-
-export type Renderers = ReturnType<typeof useRenderers>; // TODO explicit type
-
-function getRenderersFromPlugins(plugins: Plugin<unknown>[]) {
-  const resultRendererPluginServices = plugins
-    ?.flatMap((p) => p.pluginServices)
-    .filter(
-      (ps) => ps.type === "RESULT_RENDERER",
-    ) as ResultRendererPlugin<unknown>[];
-  const resultTypes = [
-    ...new Set(resultRendererPluginServices.map((ps) => ps.resultType)),
-  ];
-  const byPriority = resultTypes.map((type) => {
-    return [
-      type,
-      resultRendererPluginServices
-        .filter((ps) => ps.resultType === type)
-        .sort((a, b) => (a.priority || -1) - (b.priority || -1))[0],
-    ] as const;
-  });
-  const resultRenderers = Object.fromEntries(
-    byPriority.map(([type, { resultRenderer }]) => [type, resultRenderer]),
-  );
-  const sidebarRenderers = Object.fromEntries(
-    byPriority.map(([type, { sidebarRenderer }]) => [type, sidebarRenderer]),
-  );
-  return { resultRenderers, sidebarRenderers };
 }

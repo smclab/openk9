@@ -24,6 +24,7 @@ type ResultsProps<E> = {
 };
 function Results<E>({ displayMode, onDetail, searchQuery }: ResultsProps<E>) {
   const renderers = useRenderers();
+  if (!renderers) return null;
   switch (displayMode.type) {
     case "finite":
       return (

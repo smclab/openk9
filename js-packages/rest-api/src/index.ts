@@ -226,8 +226,6 @@ export function OpenK9Client({
       listeners[event].delete(listener as any);
     },
 
-    debugPluginsOverride: undefined as undefined | Array<Plugin<unknown>>,
-
     async getServiceStatus(): Promise<"up" | "down"> {
       const response = await fetch(`${tenant}/api/status`);
       if (response.ok) return "up";
@@ -235,7 +233,7 @@ export function OpenK9Client({
     },
 
     async doSearch<E>(searchRequest: SearchRequest): Promise<SearchResult<E>> {
-      const response = await authFetch(`/api/searcher/v1/search`, {
+      const response = await authFetch(`/v1/search`, {
         method: "POST",
         body: JSON.stringify(searchRequest),
         headers: {
@@ -565,32 +563,30 @@ export function OpenK9Client({
       });
     },
 
-    async getPlugins(): Promise<PluginInfo[]> {
-      const response = await authFetch(`/api/plugin-driver-manager/v1/plugin`, {
+    async getTemplatesByVirtualHost(): Promise<Array<string>> {
+      const response = await authFetch(`/buckets/current/templates`, {
         headers: {
           Accept: "application/json",
         },
       });
       const data = await response.json();
-      return data;
+      return data.map(({id}: any) => id);
     },
 
-    async loadPlugin<E>(id: string, lastModified: number): Promise<Plugin<E>> {
-      const defaultPlugin: Plugin<any> = {
-        pluginId: id,
-        displayName: id,
-        pluginServices: [],
-      };
-
+    async loadTemplate<E>(id: string): Promise<Template<E> | null> {
       try {
-        const jsURL = `${tenant}/api/plugin-driver-manager/plugins/${id}/static/build/index.js?t=${lastModified}`;
+        const jsURL = `${tenant}/templates/${id}/compiled`;
+        if (true) {
+          const response = await fetch(jsURL)
+          const data = await response.text()
+          return (new Function(`var exports = {};\n${data}\n;return exports;`)()).template
+        }
         // @ts-ignore
         const code = await import(/* webpackIgnore: true */ jsURL);
-        const plugin = code.plugin as Plugin<E>;
-        return plugin;
+        return code.template
       } catch (err) {
         console.warn(err);
-        return defaultPlugin;
+        return null;
       }
     },
 
@@ -607,7 +603,7 @@ export function OpenK9Client({
     async fetchQueryAnalysis(
       request: AnalysisRequest,
     ): Promise<AnalysisResponse> {
-      const response = await authFetch("/api/searcher/v1/query-analysis", {
+      const response = await authFetch("/v1/query-analysis", {
         method: "POST",
         body: JSON.stringify(request),
         headers: {
@@ -637,7 +633,7 @@ export function OpenK9Client({
       suggestKeyword?: string; // to source by text in suggestions
       order: "desc" | "asc";
     }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
-      const request = await authFetch(`/api/searcher/v1/suggestions`, {
+      const request = await authFetch(`/v1/suggestions`, {
         method: "POST",
         body: JSON.stringify({
           searchQuery,
@@ -668,8 +664,23 @@ export function OpenK9Client({
       return { tenant, config };
     },
 
+    async getTabsByVirtualHost(): Promise<
+      Array<{ label: string; tokens: Array<SearchToken> }>
+    > {
+      const response = await authFetch(`/buckets/current/tabs`, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      const data = await response.json();
+      return data.map(({ label, tokenTabs }: any) => ({
+        label,
+        tokens: tokenTabs,
+      }));
+    },
+
     async getSuggestionCategories(): Promise<SuggestionsCategoriesResult> {
-      const response = await authFetch(`/api/searcher/suggestion-categories`, {
+      const response = await authFetch(`/buckets/current/suggestionCategories`, {
         headers: {
           Accept: "application/json",
         },
@@ -835,7 +846,7 @@ export function OpenK9Client({
     },
 
     async getDateFilterFields() {
-      const response = await authFetch(`/api/datasource/v2/date-filter`, {
+      const response = await authFetch(`/v1/date-filter`, {
         method: "GET",
         headers: { Accept: "application/json" },
       });
@@ -1069,71 +1080,18 @@ export type Tenant = {
   jsonConfig: string;
 };
 
-export type Plugin<E> = {
-  pluginId: string;
-  displayName: string;
-  pluginServices: PluginService<E>[];
-};
-
-export type PluginInfo = {
-  pluginId: string;
-  bundleInfo: {
-    id: number;
-    lastModified: number;
-    state: string;
-    symbolicName: string;
-    version: string;
-  };
-};
-
-export type PluginService<E> =
-  | DataSourcePlugin
-  | EnrichPlugin
-  | SuggestionsPlugin
-  | ResultRendererPlugin<E>;
-
-export type DataSourcePlugin = {
-  type: "DATASOURCE";
-  displayName: string;
-  driverServiceName: string;
-  iconRenderer?: ReactFC<{ size?: number } & any>;
-  initialSettings: string;
-  settingsRenderer?: ReactFC<{
-    currentSettings: string;
-    setCurrentSettings(a: string): void;
-  }>;
-};
-
-export type EnrichPlugin = {
-  type: "ENRICH";
-  displayName: string;
-  serviceName: string;
-  iconRenderer?: ReactFC<{ size?: number } & any>;
-  initialSettings: string;
-  settingsRenderer?: ReactFC<{
-    currentSettings: string;
-    setCurrentSettings(a: string): void;
-  }>;
-};
-
-export type SuggestionsPlugin = {
-  type: "SUGGESTIONS";
-  renderSuggestionIcons?: ReactFC<{ suggestion: SuggestionResult }>;
-};
-
-export type ResultRendererPlugin<E> = {
-  type: "RESULT_RENDERER";
-  priority?: number;
+export type Template<E> = {
   resultType: string;
-  resultRenderer: ReactFC<ResultRendererProps<E>>;
-  sidebarRenderer: ReactFC<SidebarRendererProps<E>>;
+  priority: number;
+  result: ReactFC<ResultRendererProps<E>>;
+  detail: ReactFC<DetailRendererProps<E>>;
 };
 
 export type ResultRendererProps<E> = {
   result: GenericResultItem<E>;
 };
 
-export type SidebarRendererProps<E> = {
+export type DetailRendererProps<E> = {
   result: GenericResultItem<E>;
 };
 
@@ -1214,9 +1172,7 @@ export type TenantJSONConfig = {
 
 type SuggestionsCategoriesResult = Array<{
   name: string;
-  parentCategoryId: number;
-  suggestionCategoryId: number;
-  tenantId: number;
+  id: number;
 }>;
 
 export type DatasourceSuggestionCategory = {

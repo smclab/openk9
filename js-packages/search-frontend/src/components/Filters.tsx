@@ -44,9 +44,9 @@ function Filters({
         {suggestionCategories.data?.map((suggestionCategory) => {
           return (
             <FilterCategoryMemo
-              key={suggestionCategory.suggestionCategoryId}
+              key={suggestionCategory.id}
               suggestionCategoryName={suggestionCategory.name}
-              suggestionCategoryId={suggestionCategory.suggestionCategoryId}
+              suggestionCategoryId={suggestionCategory.id}
               tokens={lastSearchQueryWithResults}
               onAdd={onAddFilterToken}
               onRemove={onRemoveFilterToken}

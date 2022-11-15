@@ -39,7 +39,7 @@ function Detail<E>(props: DetailProps<E>) {
         {(() => {
           const Renderer: React.FC<SidebarRendererProps<E>> =
             result.source.documentTypes
-              .map((k: string) => renderers?.sidebarRenderers[k])
+              .map((k: string) => renderers?.detailRenderers[k])
               .find(Boolean);
           if (Renderer) {
             return <Renderer result={result} />;

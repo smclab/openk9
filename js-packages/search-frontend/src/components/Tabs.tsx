@@ -69,68 +69,13 @@ export const TabsMemo = React.memo(Tabs);
 
 export type Tab = { label: string; tokens: Array<SearchToken> };
 
-export function useTenantTabTokens(): Array<Tab> {
+export function useTabTokens(): Array<Tab> {
   const client = useOpenK9Client();
-  const tenantConfiguration = useQuery(
-    ["tenant-configuration"] as const,
+  const tabsByVirtualHostQuery = useQuery(
+    ["tabs-by-virtualhost"] as const,
     ({ queryKey }) => {
-      return client.getTenantWithConfiguration();
+      return client.getTabsByVirtualHost();
     },
   );
-  const tabTokens = React.useMemo(() => {
-    if (tenantConfiguration.data?.config.querySourceBarShortcuts) {
-      return [
-        {
-          label: "All",
-          tokens: [],
-        },
-        ...tenantConfiguration.data.config.querySourceBarShortcuts.map(
-          (s): Tab => {
-            return {
-              label: s.text,
-              tokens: [
-                {
-                  tokenType: "DOCTYPE",
-                  keywordKey: "type",
-                  values: [s.id],
-                  filter: true,
-                },
-              ],
-            };
-          },
-        ),
-      ];
-    } else {
-      return defaultTabTokens;
-    }
-  }, [tenantConfiguration.data?.config.querySourceBarShortcuts]);
-  return tabTokens;
+  return tabsByVirtualHostQuery.data ?? []
 }
-const defaultTabTokens: Array<Tab> = [
-  {
-    label: "All",
-    tokens: [],
-  },
-  {
-    label: "Web",
-    tokens: [
-      {
-        tokenType: "DOCTYPE",
-        keywordKey: "type",
-        values: ["web"],
-        filter: true,
-      },
-    ],
-  },
-  {
-    label: "Document",
-    tokens: [
-      {
-        tokenType: "DOCTYPE",
-        keywordKey: "type",
-        values: ["document"],
-        filter: true,
-      },
-    ],
-  },
-];
