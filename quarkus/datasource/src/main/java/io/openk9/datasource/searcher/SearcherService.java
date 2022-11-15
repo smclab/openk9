@@ -1,6 +1,5 @@
 package io.openk9.datasource.searcher;
 
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
@@ -616,8 +615,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				builder.setEntityType((String)map.get("entityType"));
 			}
 
-			if (map.containsKey("entityValue")) {
-				builder.setEntityValue((String)map.get("entityValue"));
+			if (map.containsKey("entityName")) {
+				builder.setEntityName((String)map.get("entityName"));
 			}
 
 			if (map.containsKey("tenantId")) {
@@ -697,7 +696,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		QueryAnalysisSearchToken token) {
 		Map<String, Object> map = new HashMap<>();
 		map.put("value", token.getValue());
-		map.put("entityValue", token.getEntityValue());
+		map.put("entityName", token.getEntityName());
 		map.put("type", token.getTokenType().name());
 		map.put("entityType", token.getEntityType());
 		map.put("keywordKey", token.getKeywordKey());
@@ -707,9 +706,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Inject
 	RestHighLevelClient client;
-
-	@Inject
-	TenantResolver tenantResolver;
 
 	@Inject
 	GrammarProvider grammarProvider;

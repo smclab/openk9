@@ -89,7 +89,7 @@ message QueryAnalysisSearchToken {
   optional string keywordKey = 4;
   optional string keywordName = 5;
   optional string entityType = 6;
-  optional string entityValue = 7;
+  optional string entityName = 7;
   optional string tenantId = 8;
 }
 
