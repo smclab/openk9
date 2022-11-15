@@ -53,11 +53,11 @@ public class DateFilterResource {
 	HttpServerRequest request;
 
 	@GET
-	public Uni<List<DocTypeFieldResponseDto>> getFields() {
+	public Uni<List<DateFilterResponseDto>> getFields() {
 		return getDocTypeFieldList(request.host());
 	}
 
-	private Uni<List<DocTypeFieldResponseDto>> getDocTypeFieldList(String virtualhost) {
+	private Uni<List<DateFilterResponseDto>> getDocTypeFieldList(String virtualhost) {
 		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
@@ -93,10 +93,10 @@ public class DateFilterResource {
 
 			return session.createQuery(query).getResultList().map(docTypeFields -> {
 
-				List<DocTypeFieldResponseDto> docTypeFieldResponseDtos = new ArrayList<>();
+				List<DateFilterResponseDto> docTypeFieldResponseDtos = new ArrayList<>();
 
 				for(DocTypeField docTypeField : docTypeFields){
-					DocTypeFieldResponseDto docTypeFieldResponseDto = new DocTypeFieldResponseDto();
+					DateFilterResponseDto docTypeFieldResponseDto = new DateFilterResponseDto();
 					docTypeFieldResponseDto.setId(docTypeField.getId());
 					docTypeFieldResponseDto.setField(docTypeField.getName());
 					docTypeFieldResponseDto.setLabel(docTypeField.getFieldName());
@@ -112,7 +112,7 @@ public class DateFilterResource {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class DocTypeFieldResponseDto {
+	public static class DateFilterResponseDto {
 		private String field;
 		private Long id;
 		private String label;
