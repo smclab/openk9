@@ -62,7 +62,8 @@ public class BaseNerAnnotator extends BaseAnnotator {
 			}
 		}
 
-		SearchRequest searchRequest = new SearchRequest(tenantResolver.getTenantId() + "-entity");
+		SearchRequest searchRequest = new SearchRequest(
+			tenantResolver.getTenantName() + "-entity");
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
