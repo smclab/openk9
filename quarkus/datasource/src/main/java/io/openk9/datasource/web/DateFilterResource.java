@@ -98,8 +98,8 @@ public class DateFilterResource {
 				for(DocTypeField docTypeField : docTypeFields){
 					DocTypeFieldResponseDto docTypeFieldResponseDto = new DocTypeFieldResponseDto();
 					docTypeFieldResponseDto.setId(docTypeField.getId());
-					docTypeFieldResponseDto.setName(docTypeField.getName());
-					docTypeFieldResponseDto.setFieldName(docTypeField.getFieldName());
+					docTypeFieldResponseDto.setField(docTypeField.getName());
+					docTypeFieldResponseDto.setLabel(docTypeField.getFieldName());
 
 					docTypeFieldResponseDtos.add(docTypeFieldResponseDto);
 				}
@@ -113,9 +113,9 @@ public class DateFilterResource {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class DocTypeFieldResponseDto {
-		private String name;
+		private String field;
 		private Long id;
-		private String fieldName;
+		private String label;
 	}
 
 	@Inject
