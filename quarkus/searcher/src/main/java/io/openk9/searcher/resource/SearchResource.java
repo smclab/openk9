@@ -244,7 +244,16 @@ public class SearchResource {
 			QueryAnalysisSearchToken.newBuilder();
 		for (Descriptors.FieldDescriptor field : QueryAnalysisSearchToken.getDescriptor().getFields()) {
 			if (tokenMap.containsKey(field.getName())) {
-				qastBuilder.setField(field, tokenMap.get(field.getName()));
+				if (field.getJavaType() == Descriptors.FieldDescriptor.JavaType.ENUM) {
+					qastBuilder.setField(
+						field,
+						field
+							.getEnumType()
+							.findValueByName((String)tokenMap.get(field.getName())));
+				}
+				else {
+					qastBuilder.setField(field, tokenMap.get(field.getName()));
+				}
 			}
 		}
 		return qastBuilder;
