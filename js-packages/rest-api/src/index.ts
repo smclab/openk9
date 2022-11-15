@@ -570,15 +570,20 @@ export function OpenK9Client({
         },
       });
       const data = await response.json();
-      return data.map(({ id }: any) => id);
+      return data.map(({id}: any) => id);
     },
 
     async loadTemplate<E>(id: string): Promise<Template<E> | null> {
       try {
         const jsURL = `${tenant}/templates/${id}/compiled`;
+        if (true) {
+          const response = await fetch(jsURL)
+          const data = await response.text()
+          return (new Function(`var exports = {};\n${data}\n;return exports;`)()).template
+        }
         // @ts-ignore
         const code = await import(/* webpackIgnore: true */ jsURL);
-        return code.template;
+        return code.template
       } catch (err) {
         console.warn(err);
         return null;
@@ -668,18 +673,18 @@ export function OpenK9Client({
         },
       });
       const data = await response.json();
-      return data;
+      return data.map(({ label, tokenTabs }: any) => ({
+        label,
+        tokens: tokenTabs,
+      }));
     },
 
     async getSuggestionCategories(): Promise<SuggestionsCategoriesResult> {
-      const response = await authFetch(
-        `/buckets/current/suggestionCategories`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
+      const response = await authFetch(`/buckets/current/suggestionCategories`, {
+        headers: {
+          Accept: "application/json",
         },
-      );
+      });
       const data = await response.json();
       return data;
     },
