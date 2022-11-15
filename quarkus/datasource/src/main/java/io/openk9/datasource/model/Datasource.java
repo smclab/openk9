@@ -26,6 +26,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.eclipse.microprofile.graphql.Description;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
@@ -58,13 +59,16 @@ public class Datasource extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
+	@Description("Chron quartz expression to define scheduling of datasource")
 	@Column(name = "scheduling", nullable = false)
 	@Cron(type = CronType.QUARTZ)
 	private String scheduling;
 
+	@Description("Last ingestion date of data for current datasource")
 	@Column(name = "last_ingestion_date")
 	private OffsetDateTime lastIngestionDate;
 
+	@Description("If true set datasource as schedulable")
 	@Column(name = "schedulable", nullable = false)
 	private Boolean schedulable = false;
 
