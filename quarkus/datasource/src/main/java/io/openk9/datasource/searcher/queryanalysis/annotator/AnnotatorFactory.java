@@ -21,8 +21,7 @@ public class AnnotatorFactory {
 			case KEYWORD -> new KeywordAnnotator(bucket, annotator, stopWords);
 			case STOPWORD -> new StopWordsAnnotator(bucket, annotator, stopWords);
 			case NER -> new BaseNerAnnotator(
-				bucket, annotator, stopWords,
-				annotator.getDocTypeField().getName(), client, tenantResolver);
+				bucket, annotator, stopWords, annotator.getFieldName(), client, tenantResolver);
 			case DOCTYPE -> new DocTypeAnnotator(
 				bucket, annotator, stopWords, client);
 			case AGGREGATOR -> new AggregatorAnnotator(
