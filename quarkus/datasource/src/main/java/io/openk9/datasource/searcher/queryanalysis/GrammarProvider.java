@@ -1,5 +1,6 @@
 package io.openk9.datasource.searcher.queryanalysis;
 
+import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Annotator_;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
@@ -16,6 +17,7 @@ import io.openk9.tenantmanager.grpc.TenantRequest;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.tuples.Tuple2;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -34,11 +36,14 @@ public class GrammarProvider {
 
 	public Uni<Grammar> getOrCreateGrammar(String virtualHost) {
 
-		Uni<Bucket> getTenantUni = _getTenant(virtualHost);
+		Uni<Tuple2<String, Bucket>> getTenantUni = _getTenant(virtualHost);
 
 		return getTenantUni
 			.emitOn(Infrastructure.getDefaultWorkerPool())
-			.map(t -> {
+			.map(t2 -> {
+
+				String schemaName = t2.getItem1();
+				Bucket t = t2.getItem2();
 
 				QueryAnalysis queryAnalysis = t.getQueryAnalysis();
 
@@ -53,7 +58,8 @@ public class GrammarProvider {
 				GrammarMixin grammarMixin = GrammarMixin.of(
 					mappedRules, mappedAnnotators);
 
-				return new Grammar(List.of(grammarMixin));
+				return new Grammar(
+					() -> tenantResolver.setTenant(schemaName), List.of(grammarMixin));
 
 			});
 	}
@@ -76,7 +82,7 @@ public class GrammarProvider {
 			.toList();
 	}
 
-	private Uni<Bucket> _getTenant(String virtualHost) {
+	private Uni<Tuple2<String, Bucket>> _getTenant(String virtualHost) {
 		return
 			tenantManager
 				.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
@@ -114,7 +120,11 @@ public class GrammarProvider {
 
 					query.distinct(true);
 
-					return s.createQuery(query).getSingleResultOrNull();
+					return s
+						.createQuery(query)
+						.getSingleResultOrNull()
+						.map(b -> Tuple2.of(tenantResponse.getSchemaName(), b));
+
 				}));
 	}
 
@@ -126,5 +136,8 @@ public class GrammarProvider {
 
 	@GrpcClient("tenantmanager")
 	TenantManager tenantManager;
+
+	@Inject
+	TenantResolver tenantResolver;
 
 }

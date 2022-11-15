@@ -21,7 +21,6 @@ import io.openk9.datasource.searcher.queryanalysis.annotator.Annotator;
 import io.openk9.datasource.searcher.queryanalysis.util.Itertools;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
-import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,12 +36,13 @@ import java.util.stream.Stream;
 
 public class Grammar {
 
-	public Grammar(List<GrammarMixin> bases) {
-		this(bases, "$ROOT");
+	public Grammar(Runnable schemaSetter, List<GrammarMixin> bases) {
+		this(schemaSetter, bases, "$ROOT");
 	}
 
 	public Grammar(
-		List<GrammarMixin> bases, String startSymbol) {
+		Runnable schemaSetter, List<GrammarMixin> bases, String startSymbol) {
+		this.schemaSetter = schemaSetter;
 		for (GrammarMixin base : bases) {
 			rules.addAll(base.getRules());
 			annotators.addAll(base.getAnnotators());
@@ -63,8 +63,9 @@ public class Grammar {
 
 	public List<Parse> parseInput(String[] tokens) {
 
-		Map<Tuple, List<Parse>> chart =
-			new HashMap<>();
+		schemaSetter.run();
+
+		Map<Tuple, List<Parse>> chart = new HashMap<>();
 
 		for (int j = 1; j < tokens.length + 1; j++) {
 			for (int i = j - 1; i != -1 ; i--) {
@@ -366,7 +367,7 @@ public class Grammar {
 	private final Map<Tuple, List<Rule>> binaryRules = new HashMap<>();
 	private final Set<String> categories = new HashSet<>();
 	private final List<Rule> rules = new ArrayList<>();
+	private final Runnable schemaSetter;
 	private final List<Annotator> annotators = new ArrayList<>();
-	private static final Logger _log = Logger.getLogger(Grammar.class);
 
 }
