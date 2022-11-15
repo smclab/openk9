@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.eclipse.microprofile.graphql.Description;
 
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
@@ -40,14 +41,17 @@ public class DatasourceDTO extends K9EntityDTO {
 
 	@NotNull
 	@Cron(type = CronType.QUARTZ)
+	@Description("Chron quartz expression to define scheduling of datasource")
 	private String scheduling;
 
 	private OffsetDateTime lastIngestionDate;
 
 	@NonNull
+	@Description("If true datasource is scheduled based on defined scheduling expression")
 	private Boolean schedulable = false;
 
 	@Json
+	@Description("Json configuration with custom fields for datasource")
 	private String jsonConfig;
 
 }

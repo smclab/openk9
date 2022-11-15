@@ -20,12 +20,12 @@ package io.openk9.datasource.model.dto;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.model.util.AnalyzerType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.eclipse.microprofile.graphql.Description;
 
 import javax.validation.constraints.NotNull;
 
@@ -37,13 +37,21 @@ import javax.validation.constraints.NotNull;
 public class DocTypeFieldDTO extends K9EntityDTO {
 
 	@NotNull
+	@Description("If true field is used for matches during search")
 	private Boolean searchable = false;
+
+	@Description("Value to define boost on score in case of matches on current field")
 	private Double boost = 1.0;
+
+	@Description("Define type used to map field in index")
 	@NotNull
 	private FieldType fieldType;
-	private AnalyzerType analyzerType;
+
 	private Analyzer analyzer;
+
+	@Description("If true field is not returned by search")
 	private Boolean exclude;
+
 	@NotNull
 	private String fieldName;
 }
