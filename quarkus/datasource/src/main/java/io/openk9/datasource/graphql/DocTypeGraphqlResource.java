@@ -66,18 +66,6 @@ public class DocTypeGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
-
-	@Query
-	public Uni<Connection<DocTypeField>> docTypeFields(
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList) {
-		return docTypeFieldService.findConnection(
-			after, before, first, last, searchText, sortByList);
-	}
-
 	public Uni<Connection<DocTypeField>> docTypeFields(
 		@Source DocType docType,
 		@Description("fetching only nodes after this node (exclusive)") String after,
@@ -86,13 +74,13 @@ public class DocTypeGraphqlResource {
 		@Description("fetching only the last certain number of nodes") Integer last,
 		String searchText, Set<SortBy> sortByList,
 		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
-		return getDocTypeFields(
+		return getDocTypeFieldsFromDocType(
 			docType.getId(), after, before, first, last, searchText, sortByList,
 			notEqual);
 	}
 
 	@Query
-	public Uni<Connection<DocTypeField>> getDocTypeFields(
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsFromDocType(
 		@Id long docTypeId,
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,
