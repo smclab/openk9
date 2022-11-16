@@ -105,12 +105,13 @@ public class GrammarProvider {
 						.fetch(Datasource_.dataIndex);
 
 					Join<Bucket, QueryAnalysis> queryAnalysisFetch =
-						tenantRoot.join(Bucket_.queryAnalysis);
+						(Join<Bucket, QueryAnalysis>)
+							tenantRoot.fetch(Bucket_.queryAnalysis);
 
 					queryAnalysisFetch.fetch(QueryAnalysis_.rules);
 
-					SetJoin<QueryAnalysis, Annotator> annotatorInnerJoin =
-						queryAnalysisFetch.join(
+					Join<QueryAnalysis, Annotator> annotatorInnerJoin =
+						(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
 							QueryAnalysis_.annotators, JoinType.INNER);
 
 					Predicate annotatorOn =
@@ -127,7 +128,7 @@ public class GrammarProvider {
 					annotatorInnerJoin.fetch(Annotator_.docTypeField);
 
 					SetJoin<QueryAnalysis, Annotator> annotatorLeftJoin =
-						queryAnalysisFetch.join(
+						(SetJoin<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
 							QueryAnalysis_.annotators, JoinType.INNER);
 
 					annotatorLeftJoin.on(annotatorOn.not());

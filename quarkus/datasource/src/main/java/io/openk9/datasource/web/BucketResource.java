@@ -160,7 +160,6 @@ public class BucketResource {
 
 	public record TemplateResponseDto(String name, Long id) {}
 
-
 	@Inject
 	BucketResourceMapper mapper;
 
