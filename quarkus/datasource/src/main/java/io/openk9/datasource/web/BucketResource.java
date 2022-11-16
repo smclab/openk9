@@ -87,7 +87,7 @@ public class BucketResource {
 				.createQuery(query)
 				.setCacheable(true)
 				.getResultList()
-				.map(BucketResourceMapper.INSTANCE::toTemplateResponseDtoList);
+				.map(INSTANCE::toTemplateResponseDtoList);
 
 		});
 
@@ -120,7 +120,7 @@ public class BucketResource {
 				.createQuery(query)
 				.setCacheable(true)
 				.getResultList()
-				.map(BucketResourceMapper.INSTANCE::toTabResponseDtoList);
+				.map(INSTANCE::toTabResponseDtoList);
 
 		});
 
@@ -164,9 +164,7 @@ public class BucketResource {
 	public record TemplateResponseDto(String name, Long id) {}
 
 	@Mapper
-	interface BucketResourceMapper {
-
-		BucketResourceMapper INSTANCE = Mappers.getMapper(BucketResourceMapper.class);
+	public interface BucketResourceMapper {
 
 		List<TemplateResponseDto> toTemplateResponseDtoList(
 			List<DocTypeTemplate> docTypeTemplateList);
@@ -193,6 +191,8 @@ public class BucketResource {
 		}
 
 	}
+
+	BucketResourceMapper INSTANCE = Mappers.getMapper(BucketResourceMapper.class);
 
 	@Inject
 	TransactionInvoker transactionInvoker;
