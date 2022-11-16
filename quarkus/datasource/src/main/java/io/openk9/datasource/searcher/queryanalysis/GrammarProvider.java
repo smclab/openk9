@@ -27,9 +27,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -110,35 +108,38 @@ public class GrammarProvider {
 
 					queryAnalysisFetch.fetch(QueryAnalysis_.rules);
 
-					Join<QueryAnalysis, Annotator> annotatorInnerJoin =
+					Join<QueryAnalysis, Annotator> annotatorJoin1 =
 						(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
 							QueryAnalysis_.annotators, JoinType.INNER);
 
-					Predicate annotatorOn =
-						annotatorInnerJoin
-							.get(Annotator_.type)
-							.in(
-								AnnotatorType.AGGREGATOR,
-								AnnotatorType.AUTOCOMPLETE,
-								AnnotatorType.AUTOCORRECT
-							);
+					annotatorJoin1.fetch(Annotator_.docTypeField);
 
-					annotatorInnerJoin.on(annotatorOn);
-
-					annotatorInnerJoin.fetch(Annotator_.docTypeField);
-
-					SetJoin<QueryAnalysis, Annotator> annotatorLeftJoin =
-						(SetJoin<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
+					Join<QueryAnalysis, Annotator> annotatorJoin2 =
+						(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
 							QueryAnalysis_.annotators, JoinType.INNER);
 
-					annotatorLeftJoin.on(annotatorOn.not());
-
-					annotatorLeftJoin.fetch(Annotator_.docTypeField, JoinType.LEFT);
+					annotatorJoin2.fetch(Annotator_.docTypeField, JoinType.LEFT);
 
 					query.where(
-						cb.equal(
-							tenantBindingJoin.get(TenantBinding_.virtualHost),
-							virtualHost
+						cb.and(
+							cb.equal(
+								tenantBindingJoin.get(TenantBinding_.virtualHost),
+								virtualHost
+							),
+							annotatorJoin1
+								.get(Annotator_.type)
+								.in(
+									AnnotatorType.AGGREGATOR,
+									AnnotatorType.AUTOCOMPLETE,
+									AnnotatorType.AUTOCORRECT
+								),
+							annotatorJoin2
+								.get(Annotator_.type)
+								.in(
+									AnnotatorType.AGGREGATOR,
+									AnnotatorType.AUTOCOMPLETE,
+									AnnotatorType.AUTOCORRECT
+								).not()
 						)
 					);
 
