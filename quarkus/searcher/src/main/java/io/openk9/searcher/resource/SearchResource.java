@@ -227,7 +227,10 @@ public class SearchResource {
 							.setText(token.getText())
 							.setEnd(token.getEnd())
 							.setStart(token.getStart())
-							.addAllPos(List.of(token.getPos()))
+							.addAllPos(token.getPos() == null
+								? List.of()
+								: List.of(token.getPos())
+							)
 							.setToken(qastBuilder));
 			}
 
