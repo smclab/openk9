@@ -55,12 +55,13 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
         }}
         isLoading={options.isFetching}
         isSearchable={true}
-        options={
-          options.data?.map(({ id, field, label }) => ({
+        options={[
+          { value: undefined as any, label: "Any" },
+          ...(options.data?.map(({ id, field, label }) => ({
             value: field,
             label,
-          })) ?? []
-        }
+          })) ?? []),
+        ]}
         theme={(theme) => ({
           ...theme,
           colors: {
@@ -129,9 +130,7 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
           Non filtrare per data
         </button>
         <button
-          disabled={
-            !Boolean((value.startDate || value.endDate) && value.keywordKey)
-          }
+          disabled={!Boolean(value.startDate || value.endDate)}
           onClick={() => {
             onChange({
               keywordKey: value.keywordKey,
