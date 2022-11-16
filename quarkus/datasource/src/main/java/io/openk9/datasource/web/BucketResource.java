@@ -1,6 +1,7 @@
 package io.openk9.datasource.web;
 
 
+import io.openk9.datasource.mapper.BucketResourceMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex_;
@@ -12,13 +13,9 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -87,7 +84,7 @@ public class BucketResource {
 				.createQuery(query)
 				.setCacheable(true)
 				.getResultList()
-				.map(INSTANCE::toTemplateResponseDtoList);
+				.map(mapper::toTemplateResponseDtoList);
 
 		});
 
@@ -120,7 +117,7 @@ public class BucketResource {
 				.createQuery(query)
 				.setCacheable(true)
 				.getResultList()
-				.map(INSTANCE::toTabResponseDtoList);
+				.map(mapper::toTabResponseDtoList);
 
 		});
 
@@ -163,36 +160,9 @@ public class BucketResource {
 
 	public record TemplateResponseDto(String name, Long id) {}
 
-	@Mapper
-	public interface BucketResourceMapper {
 
-		List<TemplateResponseDto> toTemplateResponseDtoList(
-			List<DocTypeTemplate> docTypeTemplateList);
-
-		TemplateResponseDto toTemplateResponseDto(DocTypeTemplate docTypeTemplate);
-
-		List<TabResponseDto> toTabResponseDtoList(List<Tab> tabList);
-
-		@Mapping(
-			target = "label", source = "name"
-		)
-		TabResponseDto toTabResponseDto(Tab tab);
-
-		@Mapping(
-			target = "keywordKey", source = "docTypeField.fieldName"
-		)
-		@Mapping(
-			target = "values", source = "value"
-		)
-		TokenTabResponseDto toTokenTabResponseDto(TokenTab tokenTab);
-
-		static List<String> toValues(String value) {
-			return value == null ? List.of() : List.of(value);
-		}
-
-	}
-
-	BucketResourceMapper INSTANCE = Mappers.getMapper(BucketResourceMapper.class);
+	@Inject
+	BucketResourceMapper mapper;
 
 	@Inject
 	TransactionInvoker transactionInvoker;
