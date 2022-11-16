@@ -48,7 +48,7 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
   return (
     <div>
       <Select
-        defaultValue={{ value: "" as any, label: "Any" }}
+        value={selectedOption}
         onChange={(option) => {
           setSelectedOption(option);
           setValue({ ...value, keywordKey: option?.value });
@@ -56,7 +56,7 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
         isLoading={options.isFetching}
         isSearchable={true}
         options={[
-          { value: "" as any, label: "Any" },
+          { value: undefined as any, label: "Any" },
           ...(options.data?.map(({ id, field, label }) => ({
             value: field,
             label,
