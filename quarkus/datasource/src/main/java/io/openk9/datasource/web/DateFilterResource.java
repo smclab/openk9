@@ -93,6 +93,7 @@ public class DateFilterResource {
 
 			return session
 				.createQuery(query)
+				.setCacheable(true)
 				.getResultList()
 				.map(docTypeFields ->
 					docTypeFields

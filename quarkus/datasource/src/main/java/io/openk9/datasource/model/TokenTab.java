@@ -42,7 +42,7 @@ public class TokenTab extends K9Entity {
 	private String tokenType;
 
 	@Column(name = "value")
-	private  String value;
+	private String value;
 
 	@Column(name ="filter", nullable = false)
 	private Boolean filter;
