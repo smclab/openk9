@@ -697,7 +697,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		Map<String, Object> map = new HashMap<>();
 		map.put("value", token.getValue());
 		map.put("entityName", token.getEntityName());
-		map.put("type", token.getTokenType().name());
+		map.put("tokenType", token.getTokenType().name());
 		map.put("entityType", token.getEntityType());
 		map.put("keywordKey", token.getKeywordKey());
 		map.put("keywordName", token.getKeywordName());
