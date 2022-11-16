@@ -227,10 +227,7 @@ public class SearchResource {
 							.setText(token.getText())
 							.setEnd(token.getEnd())
 							.setStart(token.getStart())
-							.addAllPos(token.getPos() == null
-								? List.of()
-								: List.of(token.getPos())
-							)
+							.addAllPos(_toList(token.getPos()))
 							.setToken(qastBuilder));
 			}
 
@@ -238,6 +235,13 @@ public class SearchResource {
 
 		return builder.build();
 
+	}
+
+	private static Iterable<Integer> _toList(Integer[] pos) {
+		if (pos == null || pos.length == 0) {
+			return List.of();
+		}
+		return List.of(pos);
 	}
 
 	private static QueryAnalysisSearchToken.Builder _createQastBuilder(
