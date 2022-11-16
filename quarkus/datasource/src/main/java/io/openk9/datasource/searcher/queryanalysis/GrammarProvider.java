@@ -25,8 +25,11 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.Collection;
 import java.util.List;
@@ -102,9 +105,8 @@ public class GrammarProvider {
 						.fetch(Bucket_.datasources)
 						.fetch(Datasource_.dataIndex);
 
-					Join<Bucket, QueryAnalysis> queryAnalysisFetch =
-						(Join<Bucket, QueryAnalysis>)
-							tenantRoot.fetch(Bucket_.queryAnalysis);
+					Fetch<Bucket, QueryAnalysis> queryAnalysisFetch =
+						tenantRoot.fetch(Bucket_.queryAnalysis);
 
 					queryAnalysisFetch.fetch(QueryAnalysis_.rules);
 
@@ -118,28 +120,14 @@ public class GrammarProvider {
 						(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
 							QueryAnalysis_.annotators, JoinType.INNER);
 
-					annotatorJoin2.fetch(Annotator_.docTypeField, JoinType.LEFT);
-
 					query.where(
 						cb.and(
 							cb.equal(
 								tenantBindingJoin.get(TenantBinding_.virtualHost),
 								virtualHost
 							),
-							annotatorJoin1
-								.get(Annotator_.type)
-								.in(
-									AnnotatorType.AGGREGATOR,
-									AnnotatorType.AUTOCOMPLETE,
-									AnnotatorType.AUTOCORRECT
-								),
-							annotatorJoin2
-								.get(Annotator_.type)
-								.in(
-									AnnotatorType.AGGREGATOR,
-									AnnotatorType.AUTOCOMPLETE,
-									AnnotatorType.AUTOCORRECT
-								).not()
+							createAnnotatorTypePredicate(annotatorJoin1),
+							createAnnotatorTypePredicate(annotatorJoin2).not()
 						)
 					);
 
@@ -152,6 +140,16 @@ public class GrammarProvider {
 						.map(b -> Tuple2.of(tenantResponse.getSchemaName(), b));
 
 				}));
+	}
+
+	private static Predicate createAnnotatorTypePredicate(Path<Annotator> path) {
+		return path
+			.get(Annotator_.type)
+			.in(
+				AnnotatorType.AGGREGATOR,
+				AnnotatorType.AUTOCOMPLETE,
+				AnnotatorType.AUTOCORRECT
+			);
 	}
 
 	@Inject
