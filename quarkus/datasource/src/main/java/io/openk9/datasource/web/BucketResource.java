@@ -149,7 +149,10 @@ public class BucketResource {
 				)
 			);
 
-			return session.createQuery(query).getResultList();
+			return session
+				.createQuery(query)
+				.setCacheable(true)
+				.getResultList();
 		});
 
 	}

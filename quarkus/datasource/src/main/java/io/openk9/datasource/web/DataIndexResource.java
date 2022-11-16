@@ -404,6 +404,7 @@ public class DataIndexResource {
 
 		return session
 			.createQuery(query)
+			.setCacheable(true)
 			.getResultList();
 	}
 
