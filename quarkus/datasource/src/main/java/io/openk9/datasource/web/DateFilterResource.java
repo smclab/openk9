@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.web;
 
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
@@ -24,14 +26,13 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -43,7 +44,6 @@ import javax.persistence.criteria.Root;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
-import java.util.ArrayList;
 import java.util.List;
 
 @Path("/v1/date-filter")
@@ -91,27 +91,27 @@ public class DateFilterResource {
 				)
 			);
 
-			return session.createQuery(query).getResultList().map(docTypeFields -> {
-
-				List<DateFilterResponseDto> docTypeFieldResponseDtos = new ArrayList<>();
-
-				for(DocTypeField docTypeField : docTypeFields){
-					DateFilterResponseDto docTypeFieldResponseDto = new DateFilterResponseDto();
-					docTypeFieldResponseDto.setId(docTypeField.getId());
-					docTypeFieldResponseDto.setField(docTypeField.getName());
-					docTypeFieldResponseDto.setLabel(docTypeField.getFieldName());
-
-					docTypeFieldResponseDtos.add(docTypeFieldResponseDto);
-				}
-				return docTypeFieldResponseDtos;
-
-			});
-			});
+			return session
+				.createQuery(query)
+				.getResultList()
+				.map(docTypeFields ->
+					docTypeFields
+						.stream()
+						.map(docTypeField ->
+							DateFilterResponseDto.builder()
+								.id(docTypeField.getId())
+								.field(docTypeField.getFieldName())
+								.label(docTypeField.getName())
+								.build()
+						)
+						.toList());
+		});
 	}
 
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@Builder
 	public static class DateFilterResponseDto {
 		private String field;
 		private Long id;
@@ -120,4 +120,5 @@ public class DateFilterResource {
 
 	@Inject
 	TransactionInvoker transactionInvoker;
+
 }
