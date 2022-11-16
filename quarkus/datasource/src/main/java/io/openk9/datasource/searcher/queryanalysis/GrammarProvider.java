@@ -1,6 +1,8 @@
 package io.openk9.datasource.searcher.queryanalysis;
 
 import io.openk9.auth.tenant.TenantResolver;
+import io.openk9.datasource.model.Annotator;
+import io.openk9.datasource.model.AnnotatorType;
 import io.openk9.datasource.model.Annotator_;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
@@ -23,10 +25,11 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -86,8 +89,7 @@ public class GrammarProvider {
 		return
 			tenantManager
 				.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
-				.flatMap(tenantResponse -> sf.withStatelessTransaction(
-					tenantResponse.getSchemaName(), s -> {
+				.flatMap(tenantResponse -> sf.withStatelessTransaction(tenantResponse.getSchemaName(), s -> {
 
 					CriteriaBuilder cb = sf.getCriteriaBuilder();
 
@@ -102,14 +104,35 @@ public class GrammarProvider {
 						.fetch(Bucket_.datasources)
 						.fetch(Datasource_.dataIndex);
 
-					Fetch<Bucket, QueryAnalysis> queryAnalysisFetch =
-						tenantRoot.fetch(Bucket_.queryAnalysis);
+					Join<Bucket, QueryAnalysis> queryAnalysisFetch =
+						tenantRoot.join(Bucket_.queryAnalysis);
 
 					queryAnalysisFetch.fetch(QueryAnalysis_.rules);
 
-					queryAnalysisFetch
-						.fetch(QueryAnalysis_.annotators, JoinType.LEFT)
-						.fetch(Annotator_.docTypeField, JoinType.LEFT);
+					SetJoin<QueryAnalysis, Annotator> annotatorInnerJoin =
+						queryAnalysisFetch.join(
+							QueryAnalysis_.annotators, JoinType.INNER);
+
+					Predicate annotatorOn =
+						annotatorInnerJoin
+							.get(Annotator_.type)
+							.in(
+								AnnotatorType.AGGREGATOR,
+								AnnotatorType.AUTOCOMPLETE,
+								AnnotatorType.AUTOCORRECT
+							);
+
+					annotatorInnerJoin.on(annotatorOn);
+
+					annotatorInnerJoin.fetch(Annotator_.docTypeField);
+
+					SetJoin<QueryAnalysis, Annotator> annotatorLeftJoin =
+						queryAnalysisFetch.join(
+							QueryAnalysis_.annotators, JoinType.INNER);
+
+					annotatorLeftJoin.on(annotatorOn.not());
+
+					annotatorLeftJoin.fetch(Annotator_.docTypeField, JoinType.LEFT);
 
 					query.where(
 						cb.equal(
