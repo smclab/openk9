@@ -1,17 +1,21 @@
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.TokenTabMapper;
+import io.openk9.datasource.model.Annotator_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.dto.TokenTabDTO;
 import io.openk9.datasource.model.util.Mutiny2;
+import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Set;
 
 @ApplicationScoped
 public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> {
@@ -65,6 +69,16 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 					return persist(tokenTab)
 						.map(newTokenTab -> Tuple2.of(newTokenTab, docTypeField));
 				})));
+	}
+
+
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsNotInTokenTab(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return findJoinConnection(
+			id, TokenTab_.DOC_TYPE_FIELD, DocTypeField.class,
+			docTypeFieldService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, true);
 	}
 
 	@Inject
