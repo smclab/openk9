@@ -31,6 +31,8 @@ public class AnnotatorFactory {
 				bucket, annotator, stopWords, client,
 				annotator.getFieldName(),
 				annotator.getDocTypeField().getFieldName());
+			case NER_AUTOCOMPLETE -> new BaseAutoCompleteNerAnnotator(
+				bucket, annotator, stopWords, annotator.getFieldName(), client, tenantResolver);
 			case AUTOCORRECT -> new BaseAutoCorrectAnnotator(
 				bucket, annotator, stopWords, client,
 				annotator.getFieldName(),

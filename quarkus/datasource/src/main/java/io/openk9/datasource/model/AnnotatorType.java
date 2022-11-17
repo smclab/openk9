@@ -26,7 +26,7 @@ public enum AnnotatorType {
 	AUTOCORRECT,
 	STOPWORD,
 	TOKEN,
-
-	KEYWORD
+	KEYWORD,
+	NER_AUTOCOMPLETE
 
 }
