@@ -62,11 +62,6 @@ module.exports = {
         changeOrigin: true,
         secure: false,
       },
-      "/oauth2": {
-        target: "https://test.openk9.io",
-        changeOrigin: true,
-        secure: false,
-      },
       "/templates": {
         target: "https://test.openk9.io",
         changeOrigin: true,

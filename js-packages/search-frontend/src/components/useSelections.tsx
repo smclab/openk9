@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  AnalysisResponseEntry,
-  AnalysisToken,
-  useOpenK9Client,
-} from "./client";
+import { AnalysisResponseEntry, AnalysisToken } from "./client";
 import { loadQueryString, saveQueryString } from "./queryString";
 
 export function useSelections() {
@@ -12,18 +8,9 @@ export function useSelections() {
     initial,
     (initial) => loadQueryString<SelectionsState>() ?? initial,
   );
-  const [canSave, setCanSave] = React.useState(false);
-  const client = useOpenK9Client();
   React.useEffect(() => {
-    client.authInit.then(() => {
-      setCanSave(true);
-    });
-  }, []);
-  React.useEffect(() => {
-    if (canSave) {
-      saveQueryString(state);
-    }
-  }, [canSave, state]);
+    saveQueryString(state);
+  }, [state]);
   return [state, dispatch] as const;
 }
 

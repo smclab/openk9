@@ -9,21 +9,13 @@ export function useOpenK9Client() {
   return React.useContext(OpenK9ClientContext);
 }
 
-declare global {
-  interface Window {
-    KEYCLOAK_URL: string;
-    KEYCLOAK_REALM: string;
-    KEYCLOAK_CLIENT_ID: string;
-  }
-}
-
 export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
   const keycloak = new Keycloak({
-    url: window.KEYCLOAK_URL,
-    realm: window.KEYCLOAK_REALM,
-    clientId: window.KEYCLOAK_CLIENT_ID,
+    url: "https://keycloak-test.openk9.io",
+    realm: "test.openk9.io",
+    clientId: "openk9",
   });
-  const keycloakInit = keycloak.init({ onLoad: "check-sso" });
+  const keycloakInit = keycloak.init({});
   keycloakInit.then(() => {
     onAuthenticated();
   });
@@ -49,9 +41,6 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     },
     async deauthenticate() {
       await keycloak.logout();
-    },
-    async getUserProfile() {
-      return await keycloak.loadUserInfo();
     },
     async getServiceStatus(): Promise<"up" | "down"> {
       const response = await fetch(`/api/status`);

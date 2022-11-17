@@ -16,7 +16,7 @@ import {
   AnalysisResponseEntry,
   AnalysisToken,
   GenericResultItem,
-} from "@openk9/rest-api";
+} from "./client";
 import { SelectionsAction, SelectionsState } from "./useSelections";
 import { DateRangePicker } from "./DateRangePicker";
 import { SearchDateRange } from "../embeddable/Main";
@@ -238,12 +238,16 @@ export function Search({
                   },
                 });
                 if (replaceText) {
-                  const text = option && (option.tokenType === "ENTITY" ? option.entityName : option.value)
-                  const cursorPosition = span.start + (text?.length ?? 0)
+                  const text =
+                    option &&
+                    (option.tokenType === "ENTITY"
+                      ? option.entityName
+                      : option.value);
+                  const cursorPosition = span.start + (text?.length ?? 0);
                   setAdjustedSelection({
                     selectionStart: cursorPosition,
-                    selectionEnd: cursorPosition
-                  })
+                    selectionEnd: cursorPosition,
+                  });
                 } else if (
                   event.currentTarget.selectionStart &&
                   event.currentTarget.selectionEnd

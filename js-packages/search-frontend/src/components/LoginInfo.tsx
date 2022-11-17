@@ -4,10 +4,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons/faRightFromBracket";
 import { faRightToBracket } from "@fortawesome/free-solid-svg-icons/faRightToBracket";
 import { useOpenK9Client } from "./client";
-import { useQuery } from "react-query";
-import { faUser } from "@fortawesome/free-solid-svg-icons/faUser";
-import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
-import { useClickAway } from "./useClickAway";
 
 type LoginInfoProps = {};
 function LoginInfoComponent({}: LoginInfoProps) {
@@ -16,14 +12,6 @@ function LoginInfoComponent({}: LoginInfoProps) {
   React.useEffect(() => {
     client.authInit.then(setAuthenticated);
   }, []);
-  const userProfileQuery = useQuery(["user-profile"], async () => {
-    return await client.getUserProfile();
-  });
-  const [isOpen, setIsOpen] = React.useState(false);
-  const dropdownRef = React.useRef<HTMLDivElement | null>(null);
-  useClickAway([dropdownRef], () => {
-    setIsOpen(false);
-  });
   if (!authenticated) {
     return (
       <button
@@ -35,95 +23,20 @@ function LoginInfoComponent({}: LoginInfoProps) {
         `}
       >
         <FontAwesomeIcon icon={faRightToBracket} />
-        &nbsp;Login
       </button>
     );
   } else {
     return (
-      <div
-        ref={dropdownRef}
+      <button
+        onClick={() => {
+          client.deauthenticate();
+        }}
         css={css`
-          position: relative;
+          ${buttonStyle};
         `}
       >
-        <button
-          onClick={() => {
-            setIsOpen(!isOpen);
-          }}
-          css={css`
-            ${buttonStyle};
-          `}
-        >
-          <FontAwesomeIcon icon={faUser} />
-        </button>
-        {isOpen && (
-          <div
-            css={css`
-              position: absolute;
-              right: 16px;
-              background-color: var(
-                --openk9-embeddable-search--primary-background-color
-              );
-              border: 1px solid var(--openk9-embeddable-search--border-color);
-              z-index: 1;
-              border-radius: 4px;
-              width: 300px;
-              overflow: hidden;
-            `}
-          >
-            <div
-              css={css`
-                padding: 8px 16px 8px 16px;
-                font-size: 1.5rem;
-              `}
-            >
-              {userProfileQuery.data?.name}
-            </div>
-            <div
-              css={css`
-                padding: 0px 16px 8px 16px;
-              `}
-            >
-              <FontAwesomeIcon icon={faUser} />
-              &nbsp;{userProfileQuery.data?.preferred_username}
-            </div>
-            <div
-              css={css`
-                padding: 0px 16px 8px 16px;
-              `}
-            >
-              <FontAwesomeIcon icon={faEnvelope} />
-              &nbsp;{userProfileQuery.data?.email}
-            </div>
-            <div
-              css={css`
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 8px 16px 8px 16px;
-                background-color: var(
-                  --openk9-embeddable-search--secondary-background-color
-                );
-              `}
-            >
-              <a href="/admin" target="admin" css={css``}>
-                Admin
-              </a>
-              <button
-                onClick={() => {
-                  client.deauthenticate();
-                }}
-                css={css`
-                  ${buttonStyle};
-                `}
-              >
-                <FontAwesomeIcon icon={faRightFromBracket} />
-                &nbsp;Logout
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+        <FontAwesomeIcon icon={faRightFromBracket} />
+      </button>
     );
   }
 }
@@ -136,7 +49,7 @@ const buttonStyle = css`
   :hover {
     color: var(--openk9-embeddable-search--primary-color);
   }
-  background: var(--openk9-embeddable-search--primary-background-color);
+  background: none;
   appearance: none;
   border: 1px solid var(--openk9-embeddable-search--primary-color);
   border-radius: 4px;
