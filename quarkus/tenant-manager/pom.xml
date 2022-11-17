@@ -101,6 +101,14 @@
 			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
 		</dependency>
+        <dependency>
+          <groupId>io.quarkus</groupId>
+          <artifactId>quarkus-smallrye-stork</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>io.smallrye.stork</groupId>
+          <artifactId>stork-service-discovery-eureka</artifactId>
+        </dependency>
 	</dependencies>
 
   <scm>
