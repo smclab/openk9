@@ -1,7 +1,6 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.graphql.util.relay.Connection;
-import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.resource.util.SortBy;
@@ -43,7 +42,7 @@ public class TokenTabGraphqlResource {
 	}
 
 	public Uni<Connection<DocTypeField>> docTypeFieldsNotInTokenTab(
-		@Source Annotator annotator,
+		@Source TokenTab tokenTab,
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,
 		@Description("fetching only the first certain number of nodes") Integer first,
@@ -51,12 +50,12 @@ public class TokenTabGraphqlResource {
 		String searchText, Set<SortBy> sortByList) {
 
 		return tokenTabService.getDocTypeFieldsNotInTokenTab(
-			annotator.getId(), after, before, first, last, searchText, sortByList);
+			tokenTab.getId(), after, before, first, last, searchText, sortByList);
 	}
 
 	@Query
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsNotInTokenTab(
-		@Id long annotatorId,
+		@Id long tokenTabId,
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,
 		@Description("fetching only the first certain number of nodes") Integer first,
@@ -64,7 +63,7 @@ public class TokenTabGraphqlResource {
 		String searchText, Set<SortBy> sortByList,
 		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
 		return tokenTabService.getDocTypeFieldsNotInTokenTab(
-			annotatorId, after, before, first, last, searchText, sortByList);
+			tokenTabId, after, before, first, last, searchText, sortByList);
 	}
 
 	@Inject
