@@ -52,8 +52,18 @@ module.exports = {
       watch: true,
     },
     proxy: {
-      "/api": {
-        target: "https://dev.openk9.io",
+      "/v1": {
+        target: "https://test.openk9.io",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/buckets": {
+        target: "https://test.openk9.io",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/templates": {
+        target: "https://test.openk9.io",
         changeOrigin: true,
         secure: false,
       },

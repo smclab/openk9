@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { WebDetail } from "../renderers/openk9/web/WebDetail";
-import { GenericResultItem, SidebarRendererProps } from "@openk9/rest-api";
+import { GenericResultItem, DetailRendererProps } from "./client";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
 import { useRenderers } from "./useRenderers";
@@ -37,7 +37,7 @@ function Detail<E>(props: DetailProps<E>) {
         `}
       >
         {(() => {
-          const Renderer: React.FC<SidebarRendererProps<E>> =
+          const Renderer: React.FC<DetailRendererProps<E>> =
             result.source.documentTypes
               .map((k: string) => renderers?.detailRenderers[k])
               .find(Boolean);

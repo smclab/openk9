@@ -2,7 +2,7 @@ import React from "react";
 import { useQuery } from "react-query";
 import { css } from "styled-components/macro";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { SearchToken } from "@openk9/rest-api";
+import { SearchToken } from "./client";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { useOpenK9Client } from "./client";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
@@ -77,5 +77,5 @@ export function useTabTokens(): Array<Tab> {
       return client.getTabsByVirtualHost();
     },
   );
-  return tabsByVirtualHostQuery.data ?? []
+  return tabsByVirtualHostQuery.data ?? [];
 }

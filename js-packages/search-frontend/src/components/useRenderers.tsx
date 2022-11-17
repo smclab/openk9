@@ -1,18 +1,18 @@
 import { useQuery } from "react-query";
 import { useOpenK9Client } from "./client";
 import { groupBy, mapValues } from "lodash";
-import { DetailRendererProps, ResultRendererProps, Template } from "@openk9/rest-api";
+import { DetailRendererProps, ResultRendererProps, Template } from "./client";
 
 export type Renderers = {
   resultRenderers: {
-    [x: string]: React.FC<ResultRendererProps<unknown>>
+    [x: string]: React.FC<ResultRendererProps<unknown>>;
   };
   detailRenderers: {
-    [x: string]: React.FC<DetailRendererProps<unknown>>
+    [x: string]: React.FC<DetailRendererProps<unknown>>;
   };
 };
 
-export function useRenderers(): Renderers |undefined {
+export function useRenderers(): Renderers | undefined {
   const client = useOpenK9Client();
   const { data: renderers } = useQuery(
     ["renderers"],

@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { WebResult } from "../renderers/openk9/web/WebResult";
-import { GenericResultItem, ResultRendererProps } from "@openk9/rest-api";
+import { GenericResultItem, ResultRendererProps } from "./client";
 import { DocumentResult } from "../renderers/openk9/document/DocumentResult";
 import { PdfResult } from "../renderers/openk9/pdf/PdfResult";
 import { Renderers } from "./useRenderers";

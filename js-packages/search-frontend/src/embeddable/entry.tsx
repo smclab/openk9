@@ -1,10 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "react-query";
-import * as RestApi from "@openk9/rest-api";
-import { OpenK9Client, SearchToken } from "@openk9/rest-api";
+import * as RestApi from "../components/client";
+import {
+  OpenK9Client,
+  SearchToken,
+  OpenK9ClientContext,
+} from "../components/client";
 import * as RendererComponents from "../renderer-components";
-import { OpenK9ClientContext } from "../components/client";
 import { Main, QueryState } from "./Main";
 import { ResultsDisplayMode } from "../components/ResultList";
 import { Tab } from "../components/Tabs";
@@ -42,10 +45,10 @@ export class OpenK9 {
         },
       },
     });
-    this.client = OpenK9Client({ tenant: this.configuration.tenant });
-    this.client.addEventListener("authenticationStateChange", () => {
-      // invalidate all ched data when user logs in or logs out
-      this.queryClient.invalidateQueries();
+    this.client = OpenK9Client({
+      onAuthenticated: () => {
+        this.queryClient.invalidateQueries();
+      },
     });
     this.render();
   }
@@ -113,8 +116,8 @@ export class OpenK9 {
   }
 
   /** authenticate the user with given token */
-  authenticate = (loginInfo: RestApi.LoginInfo) => {
-    return this.client.authenticate(loginInfo);
+  authenticate = () => {
+    return this.client.authenticate();
   };
 
   /** logs out the user, all subsequent queries will be anonymous */
@@ -150,7 +153,6 @@ export class OpenK9 {
 }
 
 export type Configuration = {
-  tenant: string;
   enabled: boolean;
   search: Element | string | null;
   tabs: Element | string | null;
@@ -167,7 +169,6 @@ export type Configuration = {
 };
 
 const defaultConfiguration: Configuration = {
-  tenant: "",
   enabled: false,
   search: null,
   tabs: null,

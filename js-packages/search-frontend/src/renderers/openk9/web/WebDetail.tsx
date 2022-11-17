@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericResultItem } from "@openk9/rest-api";
+import { GenericResultItem } from "../../../components/client";
 import { WebResultItem } from "./WebItem";
 import {
   DetailContainer,

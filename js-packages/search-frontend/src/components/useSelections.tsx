@@ -1,5 +1,5 @@
 import React from "react";
-import { AnalysisResponseEntry, AnalysisToken } from "@openk9/rest-api";
+import { AnalysisResponseEntry, AnalysisToken } from "./client";
 import { loadQueryString, saveQueryString } from "./queryString";
 
 export function useSelections() {
@@ -53,7 +53,10 @@ function reducer(
     }
     case "set-selection": {
       const { text, selection } = (() => {
-        if (action.replaceText || action.selection.token?.tokenType === "AUTOCORRECT") {
+        if (
+          action.replaceText ||
+          action.selection.token?.tokenType === "AUTOCORRECT"
+        ) {
           const tokenText = action.selection.token
             ? getTokenText(action.selection.token)
             : state.text.slice(action.selection.start, action.selection.end);
@@ -61,13 +64,16 @@ function reducer(
             state.text.slice(0, action.selection.start) +
             tokenText +
             state.text.slice(action.selection.end);
-          const selection: Selection | null = action.selection.token?.tokenType === "AUTOCORRECT" ? null :{
-            text: tokenText,
-            start: action.selection.start,
-            end: action.selection.start + tokenText.length,
-            token: action.selection.token,
-            isAuto: action.selection.isAuto,
-          };
+          const selection: Selection | null =
+            action.selection.token?.tokenType === "AUTOCORRECT"
+              ? null
+              : {
+                  text: tokenText,
+                  start: action.selection.start,
+                  end: action.selection.start + tokenText.length,
+                  token: action.selection.token,
+                  isAuto: action.selection.isAuto,
+                };
           return {
             text,
             selection,
@@ -81,7 +87,9 @@ function reducer(
         selection: shiftSelection(
           state.text,
           text,
-          selection ? state.selection.filter((s) => !isOverlapping(s, selection)) : state.selection,
+          selection
+            ? state.selection.filter((s) => !isOverlapping(s, selection))
+            : state.selection,
         ).concat(selection ? [selection] : []),
       };
     }
@@ -193,7 +201,7 @@ export function getAutoSelections(
 function getAutoSelection(entry: AnalysisResponseEntry) {
   const [first, second] = [...entry.tokens].sort((a, b) => a.score - b.score);
   if (first) {
-    if (first.tokenType === "AUTOCORRECT") return null
+    if (first.tokenType === "AUTOCORRECT") return null;
     if (!second || first.score >= second.score * 2) {
       return {
         text: entry.text,

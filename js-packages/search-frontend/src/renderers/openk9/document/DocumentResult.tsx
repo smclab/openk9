@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericResultItem } from "@openk9/rest-api";
+import { GenericResultItem } from "../../../components/client";
 import { DocumentResultItem } from "./DocumentItem";
 import {
   ResultTitle,
@@ -13,14 +13,14 @@ import { FileIcon } from "../../../renderer-components/FileIcon";
 type DocumentResultProps = { result: GenericResultItem<DocumentResultItem> };
 export function DocumentResult({ result }: DocumentResultProps) {
   return (
-    <ResultContainer icon={<FileIcon result={result}/>}>
+    <ResultContainer icon={<FileIcon result={result} />}>
       <ResultTitle>
         <HighlightableText result={result} path="document.title" />
       </ResultTitle>
       <ResultLink href={result.source.document.url}>
         <HighlightableText result={result} path="document.url" />
       </ResultLink>
-      {'document.content' in result.highlight ? (
+      {"document.content" in result.highlight ? (
         <div
           style={{
             marginTop: "8px",

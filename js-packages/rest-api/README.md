@@ -1,3 +1,5 @@
+# DEPRECATED
+
 # OpenK9 JS REST API Interface
 
 This package contains tpescript client for the OpenK9 REST API.

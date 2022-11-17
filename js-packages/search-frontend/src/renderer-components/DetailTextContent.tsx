@@ -1,5 +1,8 @@
 import React from "react";
-import { GenericResultItem, GenericResultItemFields } from "@openk9/rest-api";
+import {
+  GenericResultItem,
+  GenericResultItemFields,
+} from "../components/client";
 import get from "lodash/get";
 import { HighlightedText } from "./HighlightedText";
 

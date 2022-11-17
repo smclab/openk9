@@ -2,7 +2,7 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { Virtuoso } from "react-virtuoso";
 import { ResultMemo } from "./Result";
-import { GenericResultItem, SearchToken } from "@openk9/rest-api";
+import { GenericResultItem, SearchToken } from "./client";
 import { Logo } from "./Logo";
 import { Renderers, useRenderers } from "./useRenderers";
 import { CustomVirtualScrollbar } from "./CustomScrollbar";

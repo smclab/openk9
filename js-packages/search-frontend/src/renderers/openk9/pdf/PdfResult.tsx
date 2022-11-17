@@ -1,7 +1,7 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilePdf } from "@fortawesome/free-solid-svg-icons/faFilePdf";
-import { GenericResultItem } from "@openk9/rest-api";
+import { GenericResultItem } from "../../../components/client";
 import { PdfResultItem } from "./PdfItem";
 import {
   ResultContainer,
@@ -21,7 +21,7 @@ export function PdfResult({ result }: PdfResultProps) {
       <ResultLink href={result.source.document.url}>
         <HighlightableText result={result} path="document.url" />
       </ResultLink>
-      {'document.content' in result.highlight ? (
+      {"document.content" in result.highlight ? (
         <div
           style={{
             marginTop: "8px",

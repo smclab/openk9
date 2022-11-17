@@ -8,7 +8,6 @@ import {
   isOverlapping,
   useSelections,
 } from "../components/useSelections";
-import { useLoginInfo } from "../components/useLogin";
 import { LoginInfoComponentMemo } from "../components/LoginInfo";
 import {
   AnalysisRequest,
@@ -18,7 +17,7 @@ import {
   AnalysisToken,
   GenericResultItem,
   SearchToken,
-} from "@openk9/rest-api";
+} from "../components/client";
 import isEqual from "lodash/isEqual";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
 import { Tab, TabsMemo, useTabTokens } from "../components/Tabs";
@@ -60,7 +59,6 @@ export function Main({
     onQueryStateChange,
   });
   const { detail, setDetail } = useDetails(searchQuery);
-  const login = useLoginInfo();
   return (
     <React.Fragment>
       {renderPortal(
@@ -103,14 +101,7 @@ export function Main({
         configuration.results,
       )}
       {renderPortal(<DetailMemo result={detail} />, configuration.details)}
-      {renderPortal(
-        <LoginInfoComponentMemo
-          loginState={login.state}
-          onLogin={login.login}
-          onLogout={login.logout}
-        />,
-        configuration.login,
-      )}
+      {renderPortal(<LoginInfoComponentMemo />, configuration.login)}
     </React.Fragment>
   );
 }
@@ -341,7 +332,13 @@ function deriveSearchQuery(
           (selection) =>
             selection.start === span.start && selection.end === span.end,
         )?.token ?? null;
-      return (token && analysisTokenToSearchToken(token)) ?? { tokenType: "TEXT", values: [span.text], filter: false };
+      return (
+        (token && analysisTokenToSearchToken(token)) ?? {
+          tokenType: "TEXT",
+          values: [span.text],
+          filter: false,
+        }
+      );
     });
 }
 
@@ -376,7 +373,8 @@ function analysisTokenToSearchToken(token: AnalysisToken): SearchToken | null {
         values: [token.value],
         filter: false,
       };
-      case "AUTOCORRECT": return null
+    case "AUTOCORRECT":
+      return null;
   }
 }
 

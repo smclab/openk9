@@ -1,6 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { SearchToken } from "@openk9/rest-api";
+import { SearchToken } from "./client";
 import { FilterCategoryMemo } from "./FilterCategory";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";
@@ -69,7 +69,7 @@ function useSuggestionCategories() {
     },
     {
       suspense: true,
-      keepPreviousData: true
+      keepPreviousData: true,
     },
   );
 }

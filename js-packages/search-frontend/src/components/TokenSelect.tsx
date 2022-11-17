@@ -1,6 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { AnalysisResponseEntry, AnalysisToken } from "@openk9/rest-api";
+import { AnalysisResponseEntry, AnalysisToken } from "./client";
 import { TokenIcon } from "./TokenIcon";
 
 type TokenSelectProps = {

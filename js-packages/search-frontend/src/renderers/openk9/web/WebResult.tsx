@@ -1,6 +1,6 @@
 import React from "react";
 import { WebResultItem } from "./WebItem";
-import { GenericResultItem } from "@openk9/rest-api";
+import { GenericResultItem } from "../../../components/client";
 import {
   HighlightableText,
   ResultTextContent,

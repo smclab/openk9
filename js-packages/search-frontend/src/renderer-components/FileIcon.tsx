@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericResultItem } from "@openk9/rest-api";
+import { GenericResultItem } from "../components/client";
 import { DocumentResultItem } from "../renderers/openk9/document/DocumentItem";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileAlt } from "@fortawesome/free-solid-svg-icons/faFileAlt";
