@@ -42,6 +42,9 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     async deauthenticate() {
       await keycloak.logout();
     },
+    async getUserProfile(){
+      return await keycloak.loadUserProfile()
+    },
     async getServiceStatus(): Promise<"up" | "down"> {
       const response = await fetch(`/api/status`);
       if (response.ok) return "up";
