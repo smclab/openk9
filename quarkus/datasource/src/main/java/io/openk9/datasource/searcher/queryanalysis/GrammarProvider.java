@@ -117,7 +117,7 @@ public class GrammarProvider {
 
 					annotatorJoin1
 						.fetch(Annotator_.docTypeField)
-						.fetch(DocTypeField_.subDocTypeFields);
+						.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
 
 					Join<QueryAnalysis, Annotator> annotatorJoin2 =
 						(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
