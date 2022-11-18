@@ -25,6 +25,9 @@ public interface BucketResourceMapper {
 	@Mapping(
 		target = "label", source = "name"
 	)
+	@Mapping(
+		target = "tokens", source = "tokenTabs"
+	)
 	BucketResource.TabResponseDto toTabResponseDto(Tab tab);
 
 	@Mapping(
