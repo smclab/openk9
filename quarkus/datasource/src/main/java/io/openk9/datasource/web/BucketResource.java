@@ -11,6 +11,7 @@ import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
+import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -103,6 +104,8 @@ public class BucketResource {
 				from.join(Bucket_.tenantBinding);
 
 			Join<Bucket, Tab> fetch = from.join(Bucket_.tabs);
+
+			fetch.fetch(Tab_.tokenTabs);
 
 			query.select(fetch);
 

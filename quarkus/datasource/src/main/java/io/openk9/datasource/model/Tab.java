@@ -39,7 +39,7 @@ public class Tab extends K9Entity {
 	@OneToMany(
 		mappedBy = "tab",
 		cascade = javax.persistence.CascadeType.ALL,
-		fetch = FetchType.EAGER
+		fetch = FetchType.LAZY
 	)
 	@ToString.Exclude
 	@JsonIgnore
