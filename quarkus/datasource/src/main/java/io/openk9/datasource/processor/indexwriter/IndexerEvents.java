@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -105,10 +106,10 @@ public class IndexerEvents {
 				.fetch(DocType_.docTypeFields);
 
 			docTypeFieldFetch
-				.fetch(DocTypeField_.subDocTypeFields);
+				.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
 
 			docTypeFieldFetch
-				.fetch(DocTypeField_.parentDocTypeField);
+				.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
 
 			docTypeQuery.where(from.get(DocType_.name).in(docTypeNames));
 

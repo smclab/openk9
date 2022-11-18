@@ -7,6 +7,7 @@ import io.openk9.datasource.model.Annotator_;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.Datasource_;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
@@ -114,7 +115,9 @@ public class GrammarProvider {
 						(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
 							QueryAnalysis_.annotators, JoinType.INNER);
 
-					annotatorJoin1.fetch(Annotator_.docTypeField);
+					annotatorJoin1
+						.fetch(Annotator_.docTypeField)
+						.fetch(DocTypeField_.subDocTypeFields);
 
 					Join<QueryAnalysis, Annotator> annotatorJoin2 =
 						(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(

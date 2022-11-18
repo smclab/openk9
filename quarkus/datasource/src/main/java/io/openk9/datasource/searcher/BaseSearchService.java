@@ -8,6 +8,7 @@ import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
@@ -107,8 +108,9 @@ public abstract class BaseSearchService {
 			Fetch<Bucket, SuggestionCategory> suggestionCategoryFetch =
 				tenantRoot.fetch(Bucket_.suggestionCategories);
 
-			suggestionCategoryFetch.fetch(
-				SuggestionCategory_.docTypeFields);
+			suggestionCategoryFetch
+				.fetch(SuggestionCategory_.docTypeFields)
+				.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
 
 			if (suggestionCategoryId > 0) {
 
@@ -131,7 +133,9 @@ public abstract class BaseSearchService {
 		Fetch<DataIndex, DocType> docTypeFetch =
 			dataIndexRoot.fetch(DataIndex_.docTypes, JoinType.LEFT);
 
-		docTypeFetch.fetch(DocType_.docTypeFields, JoinType.LEFT);
+		docTypeFetch
+			.fetch(DocType_.docTypeFields, JoinType.LEFT)
+			.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
 
 		expressions.add(
 			criteriaBuilder.equal(

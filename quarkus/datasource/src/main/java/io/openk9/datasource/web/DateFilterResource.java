@@ -40,7 +40,9 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
@@ -81,7 +83,16 @@ public class DateFilterResource {
 					cb.equal(fetch.get(DocTypeField_.fieldType), FieldType.DATE)
 				));
 
-			query.select(fetch);
+			SetJoin<DocTypeField, DocTypeField> subDocTypeFieldJoin =
+				fetch.join(DocTypeField_.subDocTypeFields, JoinType.LEFT);
+
+			subDocTypeFieldJoin.on(
+				cb.and(
+					cb.isTrue(subDocTypeFieldJoin.get(DocTypeField_.SEARCHABLE)),
+					cb.equal(subDocTypeFieldJoin.get(DocTypeField_.fieldType), FieldType.DATE)
+				));
+
+			query.multiselect(fetch, subDocTypeFieldJoin);
 
 			query.where(
 				cb.equal(

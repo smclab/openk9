@@ -393,16 +393,24 @@ public class DataIndexResource {
 		Fetch<DocType, DocTypeField> docTypeFieldFetch = from
 			.fetch(DocType_.docTypeFields);
 
+		Fetch<DocTypeField, DocTypeField> subDocTypeFieldFetch =
+			docTypeFieldFetch.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
+
 		Fetch<DocTypeField, Analyzer> analyzerFetch =
 			docTypeFieldFetch
 				.fetch(DocTypeField_.analyzer, JoinType.LEFT);
 
-		docTypeFieldFetch.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
+		Fetch<DocTypeField, Analyzer> subAnalyzerFetch =
+			subDocTypeFieldFetch
+				.fetch(DocTypeField_.analyzer, JoinType.LEFT);
 
 		if (includeAnalyzerSubtypes) {
 			analyzerFetch.fetch(Analyzer_.tokenizer, JoinType.LEFT);
 			analyzerFetch.fetch(Analyzer_.tokenFilters, JoinType.LEFT);
 			analyzerFetch.fetch(Analyzer_.charFilters, JoinType.LEFT);
+			subAnalyzerFetch.fetch(Analyzer_.tokenizer, JoinType.LEFT);
+			subAnalyzerFetch.fetch(Analyzer_.tokenFilters, JoinType.LEFT);
+			subAnalyzerFetch.fetch(Analyzer_.charFilters, JoinType.LEFT);
 		}
 
 		query.where(from.get(DocType_.id).in(docTypeIds));
