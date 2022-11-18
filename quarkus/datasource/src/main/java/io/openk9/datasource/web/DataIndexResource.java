@@ -441,9 +441,11 @@ public class DataIndexResource {
 
 			Map<String, Object> current = properties;
 
-			for (String fieldName : fieldNamesArray) {
+			for (int i = 0; i < fieldNamesArray.length; i++) {
 
-				boolean isLast = current.containsKey("type");
+				String fieldName = fieldNamesArray[i];
+
+				boolean isLast = i == fieldNamesArray.length - 1;
 
 				current = (Map<String, Object>) current.computeIfAbsent(
 					"properties", k -> new LinkedHashMap<>());
@@ -493,10 +495,6 @@ public class DataIndexResource {
 		FieldType fieldType = docTypeField.getFieldType();
 
 		docTypeFieldMap.put("type", fieldType);
-
-		if (fieldType == FieldType.KEYWORD) {
-			docTypeFieldMap.put("ignore_above", 256);
-		}
 
 		Analyzer analyzer = docTypeField.getAnalyzer();
 
