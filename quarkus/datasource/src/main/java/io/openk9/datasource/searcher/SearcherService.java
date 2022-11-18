@@ -273,6 +273,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 									.getDocTypeFields()
 									.stream()
 									.map(DocTypeField::getFieldName)
+									.map(field -> field.replace(".keyword", ""))
 									.distinct()
 									.toArray(String[]::new);
 
