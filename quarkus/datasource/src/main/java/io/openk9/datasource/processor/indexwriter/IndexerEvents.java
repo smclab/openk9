@@ -4,6 +4,7 @@ import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.processor.util.Field;
@@ -28,9 +29,11 @@ import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Root;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +101,14 @@ public class IndexerEvents {
 
 			Root<DocType> from = docTypeQuery.from(DocType.class);
 
-			from.fetch(DocType_.docTypeFields);
+			Fetch<DocType, DocTypeField> docTypeFieldFetch = from
+				.fetch(DocType_.docTypeFields);
+
+			docTypeFieldFetch
+				.fetch(DocTypeField_.subDocTypeFields);
+
+			docTypeFieldFetch
+				.fetch(DocTypeField_.parentDocTypeField);
 
 			docTypeQuery.where(from.get(DocType_.name).in(docTypeNames));
 
@@ -138,10 +148,50 @@ public class IndexerEvents {
 
 						for (DocTypeField docTypeField : docTypeFieldList) {
 							for (DocTypeField typeField : docType.getDocTypeFields()) {
-								if (typeField.getName().equals(docTypeField.getName())) {
+
+								boolean breakLoop = false;
+
+								if (typeField.getFieldName().equals(docTypeField.getFieldName())) {
 									docTypeField.setId(typeField.getId());
+									breakLoop = true;
+								}
+
+								DocTypeField parentDocTypeField =
+									typeField.getParentDocTypeField();
+
+								if (parentDocTypeField != null) {
+									if (parentDocTypeField.getFieldName().equals(
+										docTypeField.getFieldName())) {
+										docTypeField.setId(
+											parentDocTypeField.getId());
+										breakLoop = true;
+									}
+								}
+
+								Set<DocTypeField> subDocTypeFields =
+									typeField.getSubDocTypeFields();
+
+								if (subDocTypeFields != null) {
+									Optional<DocTypeField> subDocTypeField =
+										subDocTypeFields
+											.stream()
+											.filter(
+												subTypeField -> subTypeField
+													.getFieldName()
+													.equals(docTypeField.getFieldName()))
+											.findFirst();
+
+									if (subDocTypeField.isPresent()) {
+										docTypeField.setId(
+											subDocTypeField.get().getId());
+										breakLoop = true;
+									}
+								}
+
+								if (breakLoop) {
 									break;
 								}
+
 							}
 						}
 
@@ -183,7 +233,7 @@ public class IndexerEvents {
 						e ->
 							documentTypes
 								.stream()
-								.filter(dc -> e.getName().startsWith(dc + ".") || e.getName().equals(dc))
+								.filter(dc -> e.getFieldName().startsWith(dc + ".") || e.getFieldName().equals(dc))
 								.findFirst()
 								.orElse("default"),
 						Collectors.toList()
@@ -297,14 +347,15 @@ public class IndexerEvents {
 
 		List<DocTypeField> docTypeFields = new ArrayList<>();
 
-		_toDocTypeFields(root, new ArrayList<>(), docTypeFields);
+		_toDocTypeFields(root, new ArrayList<>(), null, docTypeFields);
 
 		return docTypeFields;
 
 	}
 
 	private static void _toDocTypeFields(
-		Field root, List<String> acc, List<DocTypeField> docTypeFields) {
+		Field root, List<String> acc, DocTypeField parent,
+		Collection<DocTypeField> docTypeFields) {
 
 		String name = root.getName();
 
@@ -318,26 +369,35 @@ public class IndexerEvents {
 
 			String fieldName = String.join(".", acc);
 
-			createAndAddDocTypeField(docTypeFields, type, fieldName);
+			DocTypeField docTypeField = new DocTypeField();
+			docTypeField.setName(fieldName);
+			docTypeField.setFieldName(fieldName);
+			docTypeField.setFieldType(FieldType.fromString(type));
+			docTypeField.setBoost(1.0);
+			docTypeField.setSearchable(false);
+			docTypeField.setDescription("auto-generated");
+			docTypeField.setSubDocTypeFields(new LinkedHashSet<>());
+
+			if (parent != null) {
+				parent.setParentDocTypeField(parent);
+			}
+
+			docTypeFields.add(docTypeField);
+
+			for (Field subField : root.getSubFields()) {
+				_toDocTypeFields(
+					subField, new ArrayList<>(acc), docTypeField,
+					docTypeField.getSubDocTypeFields());
+			}
 
 		}
-
-		for (Field subField : root.getSubFields()) {
-			_toDocTypeFields(
-				subField, new ArrayList<>(acc), docTypeFields);
+		else {
+			for (Field subField : root.getSubFields()) {
+				_toDocTypeFields(
+					subField, new ArrayList<>(acc), null, docTypeFields);
+			}
 		}
-	}
 
-	public static void createAndAddDocTypeField(
-		List<DocTypeField> docTypeFields, String type, String fieldName) {
-		DocTypeField docTypeField = new DocTypeField();
-		docTypeField.setName(fieldName);
-		docTypeField.setFieldName(fieldName);
-		docTypeField.setFieldType(FieldType.fromString(type));
-		docTypeField.setBoost(1.0);
-		docTypeField.setSearchable(false);
-		docTypeField.setDescription("auto-generated");
-		docTypeFields.add(docTypeField);
 	}
 
 	@Inject

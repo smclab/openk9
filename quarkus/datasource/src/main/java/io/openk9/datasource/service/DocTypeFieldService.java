@@ -92,6 +92,46 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			searchText, sortByList, notEqual);
 	}
 
+	public Uni<DocTypeField> getParent(DocTypeField docTypeField) {
+		return withTransaction(
+			s -> Mutiny2.fetch(s, docTypeField.getParentDocTypeField()));
+	}
+
+	public Uni<Connection<DocTypeField>> getSubDocTypeFields(
+		DocTypeField docTypeField, String after, String before, Integer first,
+		Integer last, String searchText, Set<SortBy> sortByList,
+		boolean notEqual) {
+		return findJoinConnection(
+			docTypeField.getId(), DocTypeField_.SUB_DOC_TYPE_FIELDS,
+			DocTypeField.class, getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
+	public Uni<DocTypeField> createSubField(
+		long parentDocTypeFieldId, DocTypeFieldDTO docTypeFieldDTO) {
+
+		return withTransaction((s, tr) -> findById(parentDocTypeFieldId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(parentDocTypeField -> {
+
+				String fieldName = docTypeFieldDTO.getFieldName();
+				String parentFieldName = parentDocTypeField.getFieldName();
+
+				if (!fieldName.startsWith(parentFieldName)) {
+					return Uni.createFrom().failure(
+						new IllegalArgumentException(
+							"fieldName must start with parentFieldName: " + parentFieldName));
+				}
+
+				DocTypeField docTypeField = mapper.create(docTypeFieldDTO);
+				docTypeField.setParentDocTypeField(parentDocTypeField);
+				parentDocTypeField.getSubDocTypeFields().add(docTypeField);
+				return persist(docTypeField);
+			}));
+
+	}
+
 
 	@Inject
 	AnalyzerService _analyzerService;

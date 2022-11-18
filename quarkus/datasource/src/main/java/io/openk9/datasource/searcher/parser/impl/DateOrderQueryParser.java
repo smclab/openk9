@@ -1,7 +1,7 @@
 package io.openk9.datasource.searcher.parser.impl;
 
-import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
@@ -40,7 +40,7 @@ public class DateOrderQueryParser implements QueryParser {
 			Utils.getDocTypeFieldsFrom(currentTenant)
 				.filter(DocTypeField::getSearchable)
 				.filter(DocTypeField::isDate)
-				.map(DocTypeField::getName)
+				.map(DocTypeField::getFieldName)
 				.distinct()
 				.iterator();
 

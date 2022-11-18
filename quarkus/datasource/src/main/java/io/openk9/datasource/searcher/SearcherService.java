@@ -117,7 +117,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					Set<HighlightBuilder.Field> highlightFields = new HashSet<>();
 
 					for (DocTypeField docTypeField : docTypeFieldList) {
-						String name = docTypeField.getName();
+						String name = docTypeField.getFieldName();
 						if (docTypeField.isDefaultExclude()) {
 							excludes.add(name);
 						}
@@ -230,7 +230,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 						for (SuggestionCategory suggestionCategory : suggestionCategories) {
 							for (DocTypeField docTypeField : suggestionCategory.getDocTypeFields()) {
-								String name = docTypeField.getName();
+								String name = docTypeField.getFieldName();
 								compositeValuesSourceBuilders.add(
 									new TermsValuesSourceBuilder(name)
 										.field(name)
@@ -347,7 +347,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 										.stream()
 										.map(dtf ->
 											Map.entry(
-												dtf.getName(),
+												dtf.getFieldName(),
 												e.getId()
 											)
 										)

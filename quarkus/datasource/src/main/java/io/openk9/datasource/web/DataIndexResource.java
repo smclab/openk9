@@ -45,6 +45,7 @@ import javax.ws.rs.Path;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -387,10 +388,14 @@ public class DataIndexResource {
 
 		Root<DocType> from = query.from(DocType.class);
 
+		Fetch<DocType, DocTypeField> docTypeFieldFetch = from
+			.fetch(DocType_.docTypeFields);
+
 		Fetch<DocTypeField, Analyzer> analyzerFetch =
-			from
-				.fetch(DocType_.docTypeFields)
+			docTypeFieldFetch
 				.fetch(DocTypeField_.analyzer, JoinType.LEFT);
+
+		docTypeFieldFetch.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
 
 		if (includeAnalyzerSubtypes) {
 			analyzerFetch.fetch(Analyzer_.tokenizer, JoinType.LEFT);
@@ -413,56 +418,81 @@ public class DataIndexResource {
 
 		Map<String, Object> properties = new LinkedHashMap<>();
 
-		List<DocTypeField> orderedFieldNames = fieldNames
+		Iterator<DocTypeField> orderedFieldNames = fieldNames
 			.stream()
-			.sorted(Comparator.comparingInt((DocTypeField f) -> f.getName().length()))
-			.toList();
+			.sorted(Comparator.comparingInt((DocTypeField f) -> f.getFieldName().length()))
+			.iterator();
 
-		for (DocTypeField docTypeField : orderedFieldNames) {
+		while (orderedFieldNames.hasNext()) {
 
-			String[] fieldNamesArray = docTypeField.getName().split("\\.");
+			DocTypeField docTypeField = orderedFieldNames.next();
+
+			String[] fieldNamesArray = docTypeField.getFieldName().split("\\.");
 
 			Map<String, Object> current = properties;
 
-			for (int i = 0; i < fieldNamesArray.length; i++) {
+			for (String fieldName : fieldNamesArray) {
 
-				String fieldName = fieldNamesArray[i];
+				boolean isLast = current.containsKey("type");
 
-				boolean isLast = i == fieldNamesArray.length - 1;
-				boolean isFields = isLast && current.containsKey("type");
-
-				current = (Map<String, Object>)current.computeIfAbsent(
-					isFields ? "fields" : "properties", k -> new LinkedHashMap<>());
+				current = (Map<String, Object>) current.computeIfAbsent(
+					"properties", k -> new LinkedHashMap<>());
 
 				current =
-					(Map<String, Object>)current.computeIfAbsent(
+					(Map<String, Object>) current.computeIfAbsent(
 						fieldName, k -> new LinkedHashMap<>());
 
 				if (isLast) {
 
-					FieldType fieldType =
-						docTypeField.getFieldType();
+					_populateDocTypeFieldMap(docTypeField, current);
 
-					current.put("type", fieldType.getType());
+					Set<DocTypeField> subDocTypeFields =
+						docTypeField.getSubDocTypeFields();
 
-					Analyzer analyzer = docTypeField.getAnalyzer();
+					if (subDocTypeFields != null) {
+						for (DocTypeField subDocTypeField : subDocTypeFields) {
 
-					if (analyzer != null) {
-						current.put("analyzer", analyzer.getName());
-					}
+							Map<String, Object> fields =
+								(Map<String, Object>) current.computeIfAbsent(
+									"fields", k -> new LinkedHashMap<>());
 
-					if (isFields) {
-						if (fieldType == FieldType.KEYWORD) {
-							current.put("ignore_above", 256);
+							String subFieldName =
+								subDocTypeField.getFieldName().substring(
+									docTypeField.getFieldName().length() + 1);
+
+							Map<String, Object> subFieldMap =
+								(Map<String, Object>) fields.computeIfAbsent(
+									subFieldName, k -> new LinkedHashMap<>());
+
+							_populateDocTypeFieldMap(
+								subDocTypeField, subFieldMap);
+
 						}
 					}
 				}
-
 			}
-
 		}
 
 		return properties;
+
+	}
+
+	private static void _populateDocTypeFieldMap(
+		DocTypeField docTypeField, Map<String, Object> docTypeFieldMap) {
+
+		FieldType fieldType = docTypeField.getFieldType();
+
+		docTypeFieldMap.put("type", fieldType);
+
+		if (fieldType == FieldType.KEYWORD) {
+			docTypeFieldMap.put("ignore_above", 256);
+		}
+
+		Analyzer analyzer = docTypeField.getAnalyzer();
+
+		if (analyzer != null) {
+			docTypeFieldMap.put("analyzer", analyzer.getName());
+		}
 
 	}
 

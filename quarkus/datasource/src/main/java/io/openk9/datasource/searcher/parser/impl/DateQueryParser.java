@@ -1,7 +1,7 @@
 package io.openk9.datasource.searcher.parser.impl;
 
-import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
@@ -63,7 +63,7 @@ public class DateQueryParser implements QueryParser {
 
 						}
 
-						if (searchToken.getKeywordKey().equals(docTypeField.getName())) {
+						if (searchToken.getKeywordKey().equals(docTypeField.getFieldName())) {
 							return Stream.of(Tuple2.of(docTypeField, searchToken));
 						}
 					}

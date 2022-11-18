@@ -1,8 +1,8 @@
 package io.openk9.datasource.searcher.parser.impl;
 
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
@@ -62,7 +62,7 @@ public class TextQueryParser implements QueryParser {
 
 			if (keywordKeyIsPresent) {
 				keywordKeyPredicate = docTypeField ->
-					docTypeField.getName().equals(keywordKey);
+					docTypeField.getFieldName().equals(keywordKey);
 			}
 			else {
 				keywordKeyPredicate = __ -> true;
@@ -74,7 +74,7 @@ public class TextQueryParser implements QueryParser {
 					.filter(keywordKeyPredicate)
 					.collect(
 						Collectors.toMap(
-							DocTypeField::getName,
+							DocTypeField::getFieldName,
 							DocTypeField::getFloatBoost,
 							Math::max,
 							HashMap::new

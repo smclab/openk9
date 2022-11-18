@@ -1,8 +1,8 @@
 package io.openk9.datasource.searcher.parser.impl;
 
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
@@ -58,7 +58,7 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 
 		Predicate<DocTypeField> keywordKeyPredicate =
 			searchKeyword -> keywordKey == null || keywordKey.isEmpty() ||
-							 searchKeyword.getName().equals(keywordKey);
+							 searchKeyword.getFieldName().equals(keywordKey);
 
 		Map<String, Float> keywordBoostMap =
 			Utils.getDocTypeFieldsFrom(datasources)
@@ -67,7 +67,7 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 				.filter(keywordKeyPredicate)
 				.collect(
 					Collectors.toMap(
-						DocTypeField::getName,
+						DocTypeField::getFieldName,
 						DocTypeField::getFloatBoost,
 						Math::max,
 						HashMap::new

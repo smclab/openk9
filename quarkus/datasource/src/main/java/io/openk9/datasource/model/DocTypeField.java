@@ -18,22 +18,27 @@
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.AnalyzerType;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.Hibernate;
 
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
 
 import static io.openk9.datasource.model.FieldType.BOOLEAN;
 import static io.openk9.datasource.model.FieldType.SEARCH_AS_YOU_TYPE;
@@ -42,7 +47,7 @@ import static io.openk9.datasource.model.FieldType.SEARCH_AS_YOU_TYPE;
 @Table(name = "doc_type_field", uniqueConstraints = {
 	@UniqueConstraint(
 		name = "uc_doctypefield_name_doc_type_id",
-		columnNames = {"name", "doc_type_id"}
+		columnNames = {"fieldName", "doc_type_id"}
 	)
 })
 @Getter
@@ -58,7 +63,7 @@ public class DocTypeField extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Column(name= "fieldName", length = 4096)
+	@Column(name = "fieldName", nullable = false, updatable = false, length = 4096)
 	private String fieldName;
 
 	@ToString.Exclude
@@ -74,27 +79,30 @@ public class DocTypeField extends K9Entity {
 	private Double boost;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "field_type", nullable = false)
+	@Column(name = "field_type", nullable = false, updatable = false)
 	private FieldType fieldType;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "analyzerType")
-	private AnalyzerType analyzerType;
 
 	@Column(name="exclude")
 	private Boolean exclude;
 
 	@ToString.Exclude
 	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
-	@JoinColumn(name = "analyzer")
+		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
+		CascadeType.DETACH})
+	@JoinColumn(name = "analyzer", updatable = false)
 	@JsonIgnore
 	private Analyzer analyzer;
 
+	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = CascadeType.ALL)
+	@JoinColumn(name = "parent_doc_type_field_id", updatable = false)
+	@JsonIgnore
+	@ToString.Exclude
+	private DocTypeField parentDocTypeField;
 
+	@OneToMany(mappedBy = "parentDocTypeField", cascade = CascadeType.ALL)
+	@JsonIgnore
+	@ToString.Exclude
+	private Set<DocTypeField> subDocTypeFields = new LinkedHashSet<>();
 
 	public Float getFloatBoost() {
 		return boost.floatValue();
@@ -141,4 +149,22 @@ public class DocTypeField extends K9Entity {
 		return getSearchable() && isDate();
 	}
 
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || Hibernate.getClass(this) !=
+						 Hibernate.getClass(o)) {
+			return false;
+		}
+		DocTypeField that = (DocTypeField) o;
+		return id != null && Objects.equals(id, that.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode();
+	}
 }
