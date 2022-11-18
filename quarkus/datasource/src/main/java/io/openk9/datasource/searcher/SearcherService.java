@@ -268,17 +268,29 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							SuggestionCategory suggestionCategory =
 								suggestionCategories.iterator().next();
 
-							QueryBuilder matchQueryBuilder =
-								QueryBuilders.termsQuery(
-									suggestionCategory.getName(),
-									suggestKeyword.toLowerCase());
+							String[] fields =
+								suggestionCategory
+									.getDocTypeFields()
+									.stream()
+									.map(DocTypeField::getFieldName)
+									.distinct()
+									.toArray(String[]::new);
 
-							FilterAggregationBuilder suggestions =
-								AggregationBuilders
-									.filter("suggestions", matchQueryBuilder)
-									.subAggregation(compositeAggregation);
+							if (fields.length > 0) {
 
-							searchSourceBuilder.aggregation(suggestions);
+								QueryBuilder matchQueryBuilder =
+									QueryBuilders.multiMatchQuery(
+										suggestKeyword.toLowerCase(),
+										fields);
+
+								FilterAggregationBuilder suggestions =
+									AggregationBuilders
+										.filter("suggestions", matchQueryBuilder)
+										.subAggregation(compositeAggregation);
+
+								searchSourceBuilder.aggregation(suggestions);
+
+							}
 						}
 						else {
 							searchSourceBuilder.aggregation(
