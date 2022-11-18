@@ -253,10 +253,13 @@ public class SearchResource {
 		for (Map.Entry<String, Object> entry : tokenMap.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
+			if (value == null) {
+				continue;
+			}
 			switch (key) {
 				case "tokenType" -> qastBuilder.setTokenType(TokenType.valueOf((String) value));
 				case "value" -> qastBuilder.setValue((String) value);
-				case "score" -> qastBuilder.setScore((Float) value);
+				case "score" -> qastBuilder.setScore(((Number)value).floatValue());
 				case "keywordKey" -> qastBuilder.setKeywordKey((String) value);
 				case "keywordName" -> qastBuilder.setKeywordName((String) value);
 				case "entityType" -> qastBuilder.setEntityType((String) value);
