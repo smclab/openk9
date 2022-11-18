@@ -150,11 +150,9 @@ public class IndexerEvents {
 						for (DocTypeField docTypeField : docTypeFieldList) {
 							for (DocTypeField typeField : docType.getDocTypeFields()) {
 
-								boolean breakLoop = false;
-
 								if (typeField.getFieldName().equals(docTypeField.getFieldName())) {
 									docTypeField.setId(typeField.getId());
-									breakLoop = true;
+									break;
 								}
 
 								DocTypeField parentDocTypeField =
@@ -165,7 +163,7 @@ public class IndexerEvents {
 										docTypeField.getFieldName())) {
 										docTypeField.setId(
 											parentDocTypeField.getId());
-										breakLoop = true;
+										break;
 									}
 								}
 
@@ -185,12 +183,8 @@ public class IndexerEvents {
 									if (subDocTypeField.isPresent()) {
 										docTypeField.setId(
 											subDocTypeField.get().getId());
-										breakLoop = true;
+										break;
 									}
-								}
-
-								if (breakLoop) {
-									break;
 								}
 
 							}

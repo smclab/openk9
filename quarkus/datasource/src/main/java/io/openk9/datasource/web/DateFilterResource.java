@@ -37,6 +37,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.inject.Inject;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -47,6 +48,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Path("/v1/date-filter")
 public class DateFilterResource {
@@ -64,7 +66,7 @@ public class DateFilterResource {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 
-			CriteriaQuery<DocTypeField> query = cb.createQuery(DocTypeField.class);
+			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 
 			Root<Bucket> from = query.from(Bucket.class);
 
@@ -106,9 +108,33 @@ public class DateFilterResource {
 				.createQuery(query)
 				.setCacheable(true)
 				.getResultList()
+				.map(tList ->
+					tList
+						.stream()
+						.flatMap(t -> {
+
+							Stream.Builder<DocTypeField> builder =
+								Stream.builder();
+
+							DocTypeField docTypeField1 =
+								t.get(0, DocTypeField.class);
+
+							if (docTypeField1 != null) {
+								builder.add(docTypeField1);
+							}
+
+							DocTypeField docTypeField2 =
+								t.get(1, DocTypeField.class);
+
+							if (docTypeField2 != null) {
+								builder.add(docTypeField2);
+							}
+
+							return builder.build();
+						})
+				)
 				.map(docTypeFields ->
 					docTypeFields
-						.stream()
 						.map(docTypeField ->
 							DateFilterResponseDto.builder()
 								.id(docTypeField.getId())
