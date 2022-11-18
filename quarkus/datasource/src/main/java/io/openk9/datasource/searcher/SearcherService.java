@@ -3,6 +3,7 @@ package io.openk9.datasource.searcher;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.searcher.queryanalysis.Grammar;
@@ -272,8 +273,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 								suggestionCategory
 									.getDocTypeFields()
 									.stream()
+									.map(DocTypeField::getParentDocTypeField)
+									.filter(dtf -> dtf != null && dtf.getFieldType() == FieldType.TEXT)
 									.map(DocTypeField::getFieldName)
-									.map(field -> field.replace(".keyword", ""))
 									.distinct()
 									.toArray(String[]::new);
 

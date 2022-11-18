@@ -8,6 +8,7 @@ import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.QueryParserConfig;
@@ -108,9 +109,15 @@ public abstract class BaseSearchService {
 			Fetch<Bucket, SuggestionCategory> suggestionCategoryFetch =
 				tenantRoot.fetch(Bucket_.suggestionCategories);
 
-			suggestionCategoryFetch
-				.fetch(SuggestionCategory_.docTypeFields)
+			Fetch<SuggestionCategory, DocTypeField> categoryDocTypeFieldFetch =
+				suggestionCategoryFetch
+					.fetch(SuggestionCategory_.docTypeFields);
+
+			categoryDocTypeFieldFetch
 				.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
+
+			categoryDocTypeFieldFetch
+				.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
 
 			if (suggestionCategoryId > 0) {
 
