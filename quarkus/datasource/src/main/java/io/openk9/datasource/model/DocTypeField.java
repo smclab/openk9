@@ -45,10 +45,8 @@ import static io.openk9.datasource.model.FieldType.SEARCH_AS_YOU_TYPE;
 
 @Entity
 @Table(name = "doc_type_field", uniqueConstraints = {
-	@UniqueConstraint(
-		name = "uc_doctypefield_name_doc_type_id",
-		columnNames = {"fieldName", "doc_type_id"}
-	)
+	@UniqueConstraint(name = "field_name_doc_type_id_parent_doc_type_field_id", columnNames = {
+		"field_name", "doc_type_id", "parent_doc_type_field_id"})
 })
 @Getter
 @Setter
@@ -63,7 +61,7 @@ public class DocTypeField extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Column(name = "fieldName", nullable = false, updatable = false, length = 4096)
+	@Column(name = "field_name", nullable = false, updatable = false, length = 4096)
 	private String fieldName;
 
 	@ToString.Exclude
