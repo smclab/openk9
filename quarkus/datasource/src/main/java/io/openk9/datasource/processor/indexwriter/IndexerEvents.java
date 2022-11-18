@@ -380,7 +380,7 @@ public class IndexerEvents {
 			docTypeField.setSubDocTypeFields(new LinkedHashSet<>());
 
 			if (parent != null) {
-				parent.setParentDocTypeField(parent);
+				docTypeField.setParentDocTypeField(parent);
 			}
 
 			docTypeFields.add(docTypeField);
