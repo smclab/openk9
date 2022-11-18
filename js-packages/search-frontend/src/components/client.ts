@@ -15,7 +15,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     realm: "test.openk9.io",
     clientId: "openk9",
   });
-  const keycloakInit = keycloak.init({});
+  const keycloakInit = keycloak.init({ onLoad: "check-sso" });
   keycloakInit.then(() => {
     onAuthenticated();
   });
