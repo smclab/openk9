@@ -32,6 +32,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -101,6 +102,10 @@ public class DocTypeField extends K9Entity {
 	@JsonIgnore
 	@ToString.Exclude
 	private Set<DocTypeField> subDocTypeFields = new LinkedHashSet<>();
+
+	@Lob
+	@Column(name = "json_config")
+	private String jsonConfig;
 
 	public Set<DocTypeField> getDocTypeFieldAndChildren() {
 		Set<DocTypeField> docTypeFields = new LinkedHashSet<>();

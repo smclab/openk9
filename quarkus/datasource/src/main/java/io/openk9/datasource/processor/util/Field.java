@@ -5,6 +5,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -12,13 +13,20 @@ import java.util.UUID;
 public class Field {
 
 	private Field(String name) {
-		this.name = Objects.requireNonNull(name, "name is null");
+		this(name, null);
 	}
 
 	private Field(String name, String type) {
-		this(name);
-		this.type = type;
+		this(name, type, Map.of());
 	}
+
+	private Field(String name, String type, Map<String, Object> extra) {
+		this.name = Objects.requireNonNull(name, "name is null");
+		this.type = type;
+		this.extra = extra;
+	}
+
+
 
 	public void addSubFields(Collection<Field> fields) {
 
@@ -51,6 +59,14 @@ public class Field {
 		return subFields == null ? List.of() : subFields;
 	}
 
+	public Map<String, Object> getExtra() {
+		return extra;
+	}
+
+	public void setExtra(Map<String, Object> extra) {
+		this.extra = extra;
+	}
+
 	public void setType(String type) {
 		this.type = type;
 	}
@@ -67,12 +83,18 @@ public class Field {
 		return new Field(name, type);
 	}
 
+	public static Field of(String name, String type, Map<String, Object> extra) {
+		return new Field(name, type, extra);
+	}
+
 	public static Field createRoot() {
 		return new Field(ROOT);
 	}
 
 	private final String name;
 	private String type;
+
+	private Map<String, Object> extra;
 	private List<Field> subFields;
 
 	public static final String ROOT = "root-" + UUID.randomUUID();

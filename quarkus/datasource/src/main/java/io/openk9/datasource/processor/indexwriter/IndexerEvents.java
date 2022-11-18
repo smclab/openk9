@@ -35,6 +35,7 @@ import javax.persistence.criteria.Root;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -311,30 +312,50 @@ public class IndexerEvents {
 				root.addSubField(newRoot);
 
 				if (localMap.containsKey("type")) {
-					newRoot.setType((String)localMap.get("type"));
-
-					if (localMap.containsKey("fields")) {
-						Map<String, Object> fields =
-							(Map<String, Object>)localMap.get("fields");
-
-						List<Field> subFields = fields
-							.entrySet()
-							.stream()
-							.map(e -> Field.of(
-								e.getKey(),
-								(String)((Map<String, Object>) e.getValue())
-									.get("type")))
-							.collect(Collectors.toList());
-
-						newRoot.addSubFields(subFields);
-
-					}
-
+					_populateField(newRoot, localMap);
 				}
 
 			}
 
 		}
+
+	}
+
+	private static Field _populateField(Field field, Map<String, Object> props) {
+
+		if (props == null) {
+			return field;
+		}
+
+		Map<String, Object> extra = new LinkedHashMap<>();
+		for (Map.Entry<String, Object> entry : props.entrySet()) {
+			String entryKey = entry.getKey();
+			Object entryValue = entry.getValue();
+			switch (entryKey) {
+				case "type" -> field.setType((String) entryValue);
+				case "fields" -> {
+					Map<String, Object> fields =
+						(Map<String, Object>) entryValue;
+
+					List<Field> subFields = fields
+						.entrySet()
+						.stream()
+						.map(e -> _populateField(
+							Field.of(e.getKey()),
+							(Map<String, Object>)e.getValue())
+						)
+						.collect(Collectors.toList());
+
+					field.addSubFields(subFields);
+				}
+				default -> extra.put(entryKey, entryValue);
+			}
+		}
+		if (!extra.isEmpty()) {
+			field.setExtra(extra);
+		}
+
+		return field;
 
 	}
 

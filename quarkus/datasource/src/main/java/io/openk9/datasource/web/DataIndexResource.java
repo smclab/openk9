@@ -504,6 +504,15 @@ public class DataIndexResource {
 			docTypeFieldMap.put("analyzer", analyzer.getName());
 		}
 
+		String fieldConfig = docTypeField.getJsonConfig();
+
+		if (fieldConfig != null) {
+			JsonObject fieldConfigJson = new JsonObject(fieldConfig);
+			for (Map.Entry<String, Object> entry : fieldConfigJson) {
+				docTypeFieldMap.putIfAbsent(entry.getKey(), entry.getValue());
+			}
+		}
+
 	}
 
 	@Data
