@@ -45,6 +45,8 @@ public class Utils {
 			.map(DataIndex::getDocTypes)
 			.flatMap(Collection::stream)
 			.map(DocType::getDocTypeFields)
+			.flatMap(Collection::stream)
+			.map(DocTypeField::getDocTypeFieldAndChildren)
 			.flatMap(Collection::stream);
 	}
 

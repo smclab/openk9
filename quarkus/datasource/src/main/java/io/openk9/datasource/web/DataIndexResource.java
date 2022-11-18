@@ -206,6 +206,8 @@ public class DataIndexResource {
 				.stream()
 				.map(DocType::getDocTypeFields)
 				.flatMap(Collection::stream)
+				.map(DocTypeField::getDocTypeFieldAndChildren)
+				.flatMap(Collection::stream)
 				.map(DocTypeField::getAnalyzer)
 				.filter(Objects::nonNull)
 				.distinct()

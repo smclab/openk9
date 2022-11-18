@@ -104,6 +104,15 @@ public class DocTypeField extends K9Entity {
 	@ToString.Exclude
 	private Set<DocTypeField> subDocTypeFields = new LinkedHashSet<>();
 
+	public Set<DocTypeField> getDocTypeFieldAndChildren() {
+		Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
+		docTypeFields.add(this);
+		if (subDocTypeFields != null) {
+			docTypeFields.addAll(subDocTypeFields);
+		}
+		return docTypeFields;
+	}
+
 	public Float getFloatBoost() {
 		return boost.floatValue();
 	}
