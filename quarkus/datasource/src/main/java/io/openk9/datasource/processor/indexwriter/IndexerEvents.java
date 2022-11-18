@@ -393,6 +393,10 @@ public class IndexerEvents {
 			docTypeField.setSearchable(false);
 			docTypeField.setDescription("auto-generated");
 			docTypeField.setSubDocTypeFields(new LinkedHashSet<>());
+			if (root.getExtra() != null && !root.getExtra().isEmpty()) {
+				docTypeField.setJsonConfig(
+					new JsonObject(root.getExtra()).toString());
+			}
 
 			if (parent != null) {
 				docTypeField.setParentDocTypeField(parent);
