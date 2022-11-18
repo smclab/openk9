@@ -1,7 +1,6 @@
 package io.openk9.searcher.resource;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Descriptors;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
@@ -11,6 +10,7 @@ import io.openk9.searcher.grpc.QueryAnalysisTokens;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.Searcher;
+import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.mapper.InternalSearcherMapper;
 import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
@@ -249,20 +249,22 @@ public class SearchResource {
 		Map<String, Object> tokenMap = token.getToken();
 		QueryAnalysisSearchToken.Builder qastBuilder =
 			QueryAnalysisSearchToken.newBuilder();
-		for (Descriptors.FieldDescriptor field : QueryAnalysisSearchToken.getDescriptor().getFields()) {
-			if (tokenMap.containsKey(field.getName())) {
-				if (field.getJavaType() == Descriptors.FieldDescriptor.JavaType.ENUM) {
-					qastBuilder.setField(
-						field,
-						field
-							.getEnumType()
-							.findValueByName((String)tokenMap.get(field.getName())));
-				}
-				else {
-					qastBuilder.setField(field, tokenMap.get(field.getName()));
-				}
+
+		for (Map.Entry<String, Object> entry : tokenMap.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			switch (key) {
+				case "tokenType" -> qastBuilder.setTokenType(TokenType.valueOf((String) value));
+				case "value" -> qastBuilder.setValue((String) value);
+				case "score" -> qastBuilder.setScore((Float) value);
+				case "keywordKey" -> qastBuilder.setKeywordKey((String) value);
+				case "keywordName" -> qastBuilder.setKeywordName((String) value);
+				case "entityType" -> qastBuilder.setEntityType((String) value);
+				case "entityName" -> qastBuilder.setEntityName((String) value);
+				case "tenantId" -> qastBuilder.setTenantId((String) value);
 			}
 		}
+
 		return qastBuilder;
 	}
 
