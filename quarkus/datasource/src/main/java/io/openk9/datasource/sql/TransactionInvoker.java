@@ -7,16 +7,22 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.validation.Validator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@ApplicationScoped
-public class TransactionInvoker {
+public abstract class TransactionInvoker {
+
+	protected TransactionInvoker(
+		Mutiny.SessionFactory em, Validator validator,
+		TenantResolver tenantResolver, MultiTenancyConfig multiTenancyConfig) {
+		this.em = em;
+		this.validator = validator;
+		this.tenantResolver = tenantResolver;
+		this.multiTenancyConfig = multiTenancyConfig;
+	}
 
 	public CriteriaBuilder getCriteriaBuilder() {
 		return em.getCriteriaBuilder();
@@ -135,7 +141,7 @@ public class TransactionInvoker {
 						"unexpected state: Hibernate session is not active in tenant transaction interceptor");
 				}
 
-				return createNativeQuery.apply(s, "SET LOCAL SCHEMA '" + sessionTenantId + "'")
+				return createNativeQuery.apply(s, alterSchemaSession(sessionTenantId))
 					.executeUpdate()
 					.invoke(() -> context.putLocal("flag", true))
 					.flatMap((ignore) -> {
@@ -149,16 +155,14 @@ public class TransactionInvoker {
 
 	}
 
-	@Inject
-	Mutiny.SessionFactory em;
+	protected abstract String alterSchemaSession(String schemaName);
 
-	@Inject
-	Validator validator;
+	private final Mutiny.SessionFactory em;
 
-	@Inject
-	TenantResolver tenantResolver;
+	private final Validator validator;
 
-	@Inject
-	MultiTenancyConfig multiTenancyConfig;
+	private final TenantResolver tenantResolver;
+
+	private final MultiTenancyConfig multiTenancyConfig;
 
 }
