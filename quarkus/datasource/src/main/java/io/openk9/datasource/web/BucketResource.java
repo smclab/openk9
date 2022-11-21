@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -105,7 +106,7 @@ public class BucketResource {
 
 			Join<Bucket, Tab> fetch = from.join(Bucket_.tabs);
 
-			fetch.fetch(Tab_.tokenTabs);
+			fetch.fetch(Tab_.tokenTabs, JoinType.LEFT);
 
 			query.select(fetch);
 
