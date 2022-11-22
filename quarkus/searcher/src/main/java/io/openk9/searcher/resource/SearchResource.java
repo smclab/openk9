@@ -58,6 +58,27 @@ import java.util.Map;
 public class SearchResource {
 
 	@POST
+	@Path("/search-query")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<String> searchQuery(SearchRequest searchRequest) {
+
+		QueryParserRequest queryParserRequest =
+			getQueryParserRequest(searchRequest);
+
+		Uni<QueryParserResponse> queryParserResponseUni =
+			searcherClient.queryParser(queryParserRequest);
+
+		return queryParserResponseUni.map(queryParserResponse -> {
+
+			ByteString query = queryParserResponse.getQuery();
+
+			return query.toStringUtf8();
+
+		});
+
+	}
+
+	@POST
 	@Path("/search")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<Response> search(SearchRequest searchRequest) {
