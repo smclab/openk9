@@ -15,8 +15,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "tab")
@@ -43,7 +43,7 @@ public class Tab extends K9Entity {
 	)
 	@ToString.Exclude
 	@JsonIgnore
-	private List<TokenTab> tokenTabs = new LinkedList<>();
+	private Set<TokenTab> tokenTabs = new LinkedHashSet<>();
 
 	public boolean addTokenTab(
 		Collection<TokenTab> tokenTabs, TokenTab tokenTab) {
