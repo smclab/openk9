@@ -10,6 +10,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
@@ -117,6 +118,8 @@ public class BucketResource {
 				)
 			);
 
+			query.orderBy(cb.asc(fetch.get(Tab_.priority)));
+
 			return session
 				.createQuery(query)
 				.setCacheable(true)
@@ -149,6 +152,8 @@ public class BucketResource {
 					virtualhost
 				)
 			);
+
+			query.orderBy(cb.asc(fetch.get(SuggestionCategory_.priority)));
 
 			return session
 				.createQuery(query)
