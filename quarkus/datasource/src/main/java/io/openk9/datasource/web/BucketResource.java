@@ -118,7 +118,7 @@ public class BucketResource {
 				)
 			);
 
-			query.orderBy(cb.asc(fetch.get(Tab_.priority)));
+			query.orderBy(cb.desc(fetch.get(Tab_.priority)));
 
 			return session
 				.createQuery(query)
@@ -153,7 +153,7 @@ public class BucketResource {
 				)
 			);
 
-			query.orderBy(cb.asc(fetch.get(SuggestionCategory_.priority)));
+			query.orderBy(cb.desc(fetch.get(SuggestionCategory_.priority)));
 
 			return session
 				.createQuery(query)
