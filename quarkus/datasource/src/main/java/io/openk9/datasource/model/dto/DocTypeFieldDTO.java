@@ -57,5 +57,5 @@ public class DocTypeFieldDTO extends K9EntityDTO {
 	private String fieldName;
 
 	@Json
-	private String fieldConfig;
+	private String jsonConfig;
 }
