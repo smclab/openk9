@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Plugin Driver Manager Client Api
-Bundle-SymbolicName: io.openk9.plugin.driver.manager.client.api
-
-Export-Package: io.openk9.plugin.driver.manager.client.api
-

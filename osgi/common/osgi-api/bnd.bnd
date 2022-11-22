@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] OSGi Api
-Bundle-SymbolicName: io.openk9.osgi.api
-
-Export-Package: io.openk9.osgi.*
-

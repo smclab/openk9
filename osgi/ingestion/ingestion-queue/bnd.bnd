@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Ingestion Queue
-Bundle-SymbolicName: io.openk9.ingestion.queue
-
-Rabbit-Exchange: amq.topic
-Rabbit-Routing-Key: io.openk9.ingestion

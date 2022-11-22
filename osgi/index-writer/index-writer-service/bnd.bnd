@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Index Writer Service
-Bundle-SymbolicName: io.openk9.index.writer.service
-
-
-
-Import-Package: *;resolution:=optional

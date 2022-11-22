@@ -69,6 +69,11 @@
 		</developer>
 	</developers>
 
+	<modules>
+		<module>client</module>
+		<module>api</module>
+	</modules>
+
 	<properties>
 		<autoVersionSubmodules>true</autoVersionSubmodules>
 
@@ -83,20 +88,6 @@
 
 		<maven-plugin-annotations.version>3.6.0</maven-plugin-annotations.version>
 		<maven.resolver.version>1.3.1</maven.resolver.version>
-
-		<karaf.version>4.3.6</karaf.version>
-
-		<osgi.version>7.0.0</osgi.version>
-		<org.osgi.service.cm.version>1.6.0</org.osgi.service.cm.version>
-		<org.osgi.service.component.version>1.4.0</org.osgi.service.component.version>
-		<org.osgi.service.component.annotations.version>1.4.0</org.osgi.service.component.annotations.version>
-		<org.osgi.service.event.version>1.4.0</org.osgi.service.event.version>
-		<org.osgi.service.log.version>1.4.0</org.osgi.service.log.version>
-		<org.osgi.service.metatype.version>1.4.0</org.osgi.service.metatype.version>
-		<org.osgi.service.metatype.annotations.version>${org.osgi.service.metatype.version}</org.osgi.service.metatype.annotations.version>
-		<org.osgi.util.promise.version>1.2.0</org.osgi.util.promise.version>
-
-		<osgi-component-annotations.version>1.4.0</osgi-component-annotations.version>
 
 		<io.vavr.version>0.10.2</io.vavr.version>
 		<org.slf4j.version>1.7.33</org.slf4j.version>
@@ -121,7 +112,72 @@
 		<dependency.version.mapstruct>1.5.2.Final</dependency.version.mapstruct>
 		<biz.aQute.bnd.version>6.2.0</biz.aQute.bnd.version>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
+		<failsafe.useModulePath>false</failsafe.useModulePath>
+		<maven.compiler.release>17</maven.compiler.release>
+		<maven.compiler.target>17</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
+		<quarkus.package.type>fast-jar</quarkus.package.type>
+		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+		<quarkus.platform.version>2.14.0.Final</quarkus.platform.version>
+		<quarkus.version>${quarkus.platform.version}</quarkus.version>
+		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+		<jandex-maven-plugin.version>3.0.0</jandex-maven-plugin.version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>${quarkus.platform.group-id}</groupId>
+				<artifactId>${quarkus.platform.artifact-id}</artifactId>
+				<version>${quarkus.platform.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9</groupId>
+				<artifactId>resources-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9</groupId>
+				<artifactId>tenant-manager-client</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9</groupId>
+				<artifactId>tenant-manager-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9</groupId>
+				<artifactId>searcher-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9</groupId>
+				<artifactId>auth-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9</groupId>
+				<artifactId>tenant-manager-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${dependency.version.lombok}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mapstruct</groupId>
+				<artifactId>mapstruct</artifactId>
+				<version>${dependency.version.mapstruct}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
@@ -242,66 +298,6 @@
 					<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
 				</snapshotRepository>
 			</distributionManagement>
-		</profile>
-		<profile>
-			<id>all</id>
-			<modules>
-				<module>bom</module>
-				<module>osgi</module>
-				<module>quarkus</module>
-				<module>assemblies</module>
-				<module>plugins</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>releases-kar</id>
-			<modules>
-				<module>bom</module>
-				<module>osgi</module>
-				<module>quarkus</module>
-				<module>plugins</module>
-				<module>assemblies/index-writer/index-writer-kar</module>
-				<module>assemblies/searcher/searcher-kar</module>
-				<module>assemblies/plugin-driver-manager/plugin-driver-manager-kar</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>releases</id>
-			<modules>
-				<module>bom</module>
-				<module>osgi</module>
-				<module>quarkus</module>
-				<module>plugins</module>
-				<module>assemblies</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>bom</id>
-			<modules>
-				<module>bom</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>osgi</id>
-			<modules>
-				<module>bom</module>
-				<module>osgi</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>assemblies</id>
-			<modules>
-				<module>bom</module>
-				<module>osgi</module>
-				<module>assemblies</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>quarkus</id>
-			<modules>
-				<module>bom</module>
-				<module>quarkus</module>
-			</modules>
 		</profile>
 	</profiles>
 

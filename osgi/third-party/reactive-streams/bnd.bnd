@@ -1,7 +1,0 @@
-Bundle-Name: [OpenK9 - Third Party] Reactive Streams
-Bundle-SymbolicName: io.openk9.third.party.reactive.streams
-
-Export-Package: org.reactivestreams.*
-
--fixupmessages: Classes found in the wrong directory: ...;is:=ignore
-

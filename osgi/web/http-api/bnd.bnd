@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Http Api
-Bundle-SymbolicName: io.openk9.http.api
-
-Export-Package: \
- io.openk9.http.*
-

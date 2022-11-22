@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Index Writer Entity Client Api
-Bundle-SymbolicName: io.openk9.index.writer.entity.client.api
-
-
-
-Export-Package: io.openk9.index.writer.entity.client.api

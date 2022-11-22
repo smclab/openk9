@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Auth Query Parser
-Bundle-SymbolicName: io.openk9.auth.query.parser
-
-Import-Package: org.reactivestreams, *
-

@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Index Writer Entity Model
-Bundle-SymbolicName: io.openk9.index.writer.entity.model
-
-Export-Package: io.openk9.index.writer.entity.model
-

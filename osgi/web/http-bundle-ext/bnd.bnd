@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Http Bundle Ext
-Bundle-SymbolicName: io.openk9.http.bundle.ext
-
-Bundle-Activator: io.openk9.http.bundle.ext.HttpBundleExtender
-

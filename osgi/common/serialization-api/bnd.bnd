@@ -1,6 +1,0 @@
-Bundle-Name: [OpenK9] Serialization Api
-Bundle-SymbolicName: io.openk9.json.api
-
-Export-Package: io.openk9.json.*, io.openk9.cbor.*
-
-

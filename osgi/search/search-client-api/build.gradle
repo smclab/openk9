@@ -1,4 +1,0 @@
-dependencies {
-	compile project(':osgi:common:serialization-api')
-	compile libraries.elasticsearch
-}

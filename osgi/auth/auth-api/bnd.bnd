@@ -1,7 +1,0 @@
-Bundle-Name: [OpenK9] Auth API
-Bundle-SymbolicName: io.openk9.auth.api
-
-Export-Package: io.openk9.auth.api
-
-Import-Package: org.reactivestreams, *
-

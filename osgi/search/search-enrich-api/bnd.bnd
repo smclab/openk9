@@ -1,7 +1,0 @@
-Bundle-Name: [OpenK9] Search Enrich Api
-Bundle-SymbolicName: io.openk9.search.enrich.api
-
-Export-Package: io.openk9.search.enrich.api, io.openk9.search.enrich.api.dto
-
-Import-Package: org.reactivestreams, *
-

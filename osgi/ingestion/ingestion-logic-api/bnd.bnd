@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Ingestion Logic API
-Bundle-SymbolicName: io.openk9.ingestion.logic.api
-
-Export-Package: io.openk9.ingestion.logic.api
-

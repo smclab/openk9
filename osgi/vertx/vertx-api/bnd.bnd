@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Vertx Api
-Bundle-SymbolicName: io.openk9.vertx.api
-
-Export-Package: io.vertx.*
-

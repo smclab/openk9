@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Datasource Client Api
-Bundle-SymbolicName: io.openk9.datasource.client.api
-
-Export-Package: io.openk9.datasource.client.api
-

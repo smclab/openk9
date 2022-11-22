@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Metrics Api
-Bundle-SymbolicName: io.openk9.metrics.api
-
-Export-Package: io.openk9.metrics.api
-

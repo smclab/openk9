@@ -1,4 +1,0 @@
-Bundle-Name: [OpenK9] Vertx Service
-Bundle-SymbolicName: io.openk9.vertx.service
-
-Import-Package: *;resolution:=optional

@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Index Writer Mappings Pub Sub
-Bundle-SymbolicName: io.openk9.index.writer.mappings.pub.sub
-
-Import-Package: org.reactivestreams, *
-

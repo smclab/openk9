@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Core Api
-Bundle-SymbolicName: io.openk9.core.api
-
-Export-Package: io.openk9.core.api.*
-

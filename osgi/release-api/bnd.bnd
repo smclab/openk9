@@ -1,4 +1,0 @@
-Bundle-Name: [OpenK9] Release Api
-Bundle-SymbolicName: io.openk9.release.api
-
-Export-Package: *;-split-package:=merge-last

@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.searcher.grpc";
+option java_outer_classname = "SearcherProto";
+
+package grpc;
+
+service Searcher {
+  rpc QueryParser(QueryParserRequest) returns (QueryParserResponse) {}
+  rpc SuggestionsQueryParser(QueryParserRequest) returns (SuggestionsResponse) {}
+  rpc QueryAnalysis(QueryAnalysisRequest) returns (QueryAnalysisResponse) {}
+}
+
+message QueryParserResponse {
+  bytes query = 1;
+  repeated string indexName = 2;
+}
+
+message SuggestionsResponse {
+  repeated Suggestions result = 1;
+  string afterKey = 2;
+}
+
+message Suggestions {
+  TokenType tokenType = 1;
+  string value = 2;
+  optional int64 suggestionCategoryId = 3;
+  string keywordKey = 4;
+  optional string entityType = 5;
+  optional string entityValue = 6;
+  int64 count = 7;
+}
+
+enum TokenType {
+    ENTITY = 0;
+    TEXT = 1;
+    DOCTYPE = 2;
+    AUTOCORRECT = 3;
+}
+
+message QueryParserRequest {
+  repeated SearchTokenRequest searchQuery = 1;
+  repeated int32 range = 2;
+  string afterKey = 3;
+  string suggestKeyword = 4;
+  int64 suggestionCategoryId = 5;
+  string virtualHost = 6;
+  repeated string acl = 7;
+}
+
+message SearchTokenRequest {
+  string entityType = 1;
+  string entityName = 2;
+  string tokenType = 3;
+  string keywordKey = 4;
+  repeated string values = 5;
+  map<string, string> extra = 6;
+  bool filter = 7;
+}
+
+
+message QueryAnalysisRequest {
+  string searchText = 1;
+  repeated QueryAnalysisToken tokens = 2;
+  string virtualHost = 3;
+}
+
+message QueryAnalysisToken {
+  string text = 1;
+  int32 start = 2;
+  int32 end = 3;
+  QueryAnalysisSearchToken token = 4;
+  repeated int32 pos = 5;
+}
+
+message QueryAnalysisTokens {
+  string text = 1;
+  int32 start = 2;
+  int32 end = 3;
+  repeated QueryAnalysisSearchToken tokens = 4;
+  repeated int32 pos = 5;
+}
+
+message QueryAnalysisSearchToken {
+  TokenType tokenType = 1;
+  string value = 2;
+  float score = 3;
+  optional string keywordKey = 4;
+  optional string keywordName = 5;
+  optional string entityType = 6;
+  optional string entityName = 7;
+  optional string tenantId = 8;
+}
+
+message QueryAnalysisResponse {
+  string searchText = 1;
+  repeated QueryAnalysisTokens analysis = 2;
+}

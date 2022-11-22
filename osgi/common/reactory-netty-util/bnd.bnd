@@ -1,7 +1,0 @@
-Bundle-Name: [OpenK9] Reactor Netty Util
-Bundle-SymbolicName: io.openk9.reactor.netty.util
-
-Export-Package: io.openk9.reactor.netty.util
-
-Import-Package: org.reactivestreams, *
-

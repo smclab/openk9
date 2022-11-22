@@ -1,5 +1,0 @@
-Bundle-Name: [OpenK9] Index Writer Mappings Publisher Api
-Bundle-SymbolicName: io.openk9.index.writer.mappings.publisher.api
-
-Export-Package: io.openk9.index.writer.mappings.publisher.api
-
