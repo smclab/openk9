@@ -90,9 +90,8 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 			.transformToUni(tab -> Mutiny2.fetch(s, tab.getTokenTabs()).flatMap(
 				tokenTabs -> {
 					if (tab.addTokenTab(tokenTabs, tokenTab)) {
-						tab.setTokenTabs(tokenTabs);
-						return persist(tab)
-							.map(dt -> Tuple2.of(dt, tokenTab));
+						return persist(tokenTab)
+							.map(dt -> Tuple2.of(tab, tokenTab));
 					}
 					return Uni.createFrom().nullItem();
 				})));
