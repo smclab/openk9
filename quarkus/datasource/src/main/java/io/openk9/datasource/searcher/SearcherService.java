@@ -124,7 +124,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						}
 						else {
 							includes.add(name);
-							if (docTypeField.isText()) {
+							if (docTypeField.isSearchableAndText()) {
 								highlightFields.add(new HighlightBuilder.Field(name));
 							}
 						}

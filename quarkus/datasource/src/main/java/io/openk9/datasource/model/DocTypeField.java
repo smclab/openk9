@@ -131,6 +131,10 @@ public class DocTypeField extends K9Entity {
 		};
 	}
 
+	public boolean isSearchableAndText() {
+		return searchable && isText();
+	}
+
 	public boolean isNumeric() {
 		return switch (fieldType) {
 			case LONG, INTEGER, SHORT, BYTE, DOUBLE, FLOAT, HALF_FLOAT, SCALED_FLOAT -> true;

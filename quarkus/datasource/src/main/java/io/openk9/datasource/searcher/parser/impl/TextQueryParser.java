@@ -41,9 +41,12 @@ public class TextQueryParser implements QueryParser {
 
 		List<DocTypeField> docTypeFieldList =
 			Utils.getDocTypeFieldsFrom(datasources)
-				.filter(DocTypeField::isText)
-				.filter(DocTypeField::getSearchable)
+				.filter(DocTypeField::isSearchableAndText)
 				.toList();
+
+		if (docTypeFieldList.isEmpty()) {
+			return;
+		}
 
 		for (ParserSearchToken token : parserContext.getTokenTypeGroup()) {
 
