@@ -88,7 +88,7 @@ public class DocTypeField extends K9Entity {
 	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
 		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
 		CascadeType.DETACH})
-	@JoinColumn(name = "analyzer", updatable = false)
+	@JoinColumn(name = "analyzer")
 	@JsonIgnore
 	private Analyzer analyzer;
 
