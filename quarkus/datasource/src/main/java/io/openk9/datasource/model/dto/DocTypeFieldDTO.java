@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.model.dto;
 
-import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.json.Json;
@@ -47,8 +46,6 @@ public class DocTypeFieldDTO extends K9EntityDTO {
 	@Description("Define type used to map field in index")
 	@NotNull
 	private FieldType fieldType;
-
-	private Analyzer analyzer;
 
 	@Description("If true field is not returned by search")
 	private Boolean exclude;
