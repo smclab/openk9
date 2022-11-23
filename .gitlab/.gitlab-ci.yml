@@ -23,6 +23,7 @@ include:
   - local: '/.gitlab/.gitlab-ci-tika-ocr.yml'
   - local: '/.gitlab/.gitlab-ci-resources-validator.yml'
   - local: '/.gitlab/.gitlab-ci-file-manager.yml'
+  - local: '/.gitlab/.gitlab-ci-native.yml'
 
 sonarqube-check:
   stage: quality
