@@ -1,5 +1,5 @@
 Build Latest Datasource Native Docker Images:
-  image: registry.smc.it:49083/openk9/docker-java-17
+  image: registry.smc.it:49083/openk9/docker-java-17:latest
   services:
     - docker:dind
   stage: build-docker
