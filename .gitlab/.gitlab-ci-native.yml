@@ -1,12 +1,32 @@
 Build Latest Datasource Native Docker Images:
-  image: eclipse-temurin:17-jdk
+  image: registry.smc.it:49083/openk9/docker-java-17
   services:
-    - docker:19.03.13-dind
+    - docker:dind
   stage: build-docker
   variables:
-    TEST_NAME: local/test
-    DOCKER_HOST: tcp://localhost:2375
-    DOCKER_TLS_CERTDIR: ""
+    # When using dind service, you must instruct Docker to talk with
+    # the daemon started inside of the service. The daemon is available
+    # with a network connection instead of the default
+    # /var/run/docker.sock socket.
+    DOCKER_HOST: tcp://localhost:2376
+    #
+    # The 'docker' hostname is the alias of the service container as described at
+    # https://docs.gitlab.com/ee/ci/services/#accessing-the-services.
+    # If you're using GitLab Runner 12.7 or earlier with the Kubernetes executor and Kubernetes 1.6 or earlier,
+    # the variable must be set to tcp://localhost:2376 because of how the
+    # Kubernetes executor connects services to the job container
+    # DOCKER_HOST: tcp://localhost:2376
+    #
+    # Specify to Docker where to create the certificates. Docker
+    # creates them automatically on boot, and creates
+    # `/certs/client` to share between the service and job
+    # container, thanks to volume mount from config.toml
+    DOCKER_TLS_CERTDIR: "/certs"
+    # These are usually specified by the entrypoint, however the
+    # Kubernetes executor doesn't run entrypoints
+    # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4125
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
     MAVEN_CLI_OPTS: "--batch-mode"
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   rules:
