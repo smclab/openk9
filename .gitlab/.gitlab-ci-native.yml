@@ -33,7 +33,8 @@ Build Latest Datasource Native Docker Images:
     - if: '$CI_COMMIT_REF_NAME == "206-datasource-er-improvements"'
       when: manual
   script:
-    - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
+    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/datasource -am
+    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/datasource -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
   cache:
     key: datasource
     paths:
