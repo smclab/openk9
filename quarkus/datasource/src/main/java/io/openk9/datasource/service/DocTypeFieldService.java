@@ -124,10 +124,19 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 							"fieldName must start with parentFieldName: " + parentFieldName));
 				}
 
-				DocTypeField docTypeField = mapper.create(docTypeFieldDTO);
-				docTypeField.setParentDocTypeField(parentDocTypeField);
-				parentDocTypeField.getSubDocTypeFields().add(docTypeField);
-				return persist(docTypeField);
+				return Mutiny2
+					.fetch(s, parentDocTypeField.getSubDocTypeFields())
+					.onItem()
+					.ifNotNull()
+					.transformToUni(subList -> {
+
+						DocTypeField docTypeField = mapper.create(docTypeFieldDTO);
+						docTypeField.setParentDocTypeField(parentDocTypeField);
+						subList.add(docTypeField);
+						return persist(docTypeField);
+
+					});
+
 			}));
 
 	}
