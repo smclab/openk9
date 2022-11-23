@@ -1,4 +1,4 @@
-Build Latest Datasource Docker Images:
+Build Latest Datasource Native Docker Images:
   image: eclipse-temurin:17-jdk
   services:
     - docker:19.03.13-dind
