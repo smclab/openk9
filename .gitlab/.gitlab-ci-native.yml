@@ -10,7 +10,7 @@ Build Latest Datasource Native Docker Images:
     MAVEN_CLI_OPTS: "--batch-mode"
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   rules:
-    - if: '$CI_COMMIT_REF_NAME != "206-datasource-er-improvements"'
+    - if: '$CI_COMMIT_REF_NAME == "206-datasource-er-improvements"'
       when: manual
   script:
     - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
