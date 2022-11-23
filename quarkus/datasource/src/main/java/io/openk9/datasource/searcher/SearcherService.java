@@ -113,8 +113,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.getDocTypeFieldsFrom(tenant)
 							.toList();
 
-					List<String> includes = new ArrayList<>();
-					List<String> excludes = new ArrayList<>();
+					Set<String> includes = new HashSet<>();
+					Set<String> excludes = new HashSet<>();
 					Set<HighlightBuilder.Field> highlightFields = new HashSet<>();
 
 					for (DocTypeField docTypeField : docTypeFieldList) {

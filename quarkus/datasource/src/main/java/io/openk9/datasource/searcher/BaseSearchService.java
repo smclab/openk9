@@ -163,31 +163,33 @@ public abstract class BaseSearchService {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-		if (tokenGroup == null || tokenGroup.isEmpty()) {
-			return boolQueryBuilder;
-		}
+		boolean hasToken = tokenGroup != null && !tokenGroup.isEmpty();
 
-		for (Map.Entry<String, List<ParserSearchToken>> entry : tokenGroup.entrySet()) {
-			String tokenType = entry.getKey();
-			List<ParserSearchToken> parserSearchTokens =
-				entry.getValue();
-			for (QueryParser queryParser : queryParserInstance) {
-				if (queryParser.isQueryParserGroup() &&
-					queryParser.getType().equals(tokenType)) {
-					queryParser.accept(
-						ParserContext
-							.builder()
-							.tokenTypeGroup(parserSearchTokens)
-							.mutableQuery(boolQueryBuilder)
-							.currentTenant(bucket)
-							.queryParserConfig(
-								getQueryParserConfig(
-									bucket, tokenType))
-							.acl(acl)
-							.build()
-					);
+		if (hasToken) {
+
+			for (Map.Entry<String, List<ParserSearchToken>> entry : tokenGroup.entrySet()) {
+				String tokenType = entry.getKey();
+				List<ParserSearchToken> parserSearchTokens =
+					entry.getValue();
+				for (QueryParser queryParser : queryParserInstance) {
+					if (queryParser.isQueryParserGroup() &&
+						queryParser.getType().equals(tokenType)) {
+						queryParser.accept(
+							ParserContext
+								.builder()
+								.tokenTypeGroup(parserSearchTokens)
+								.mutableQuery(boolQueryBuilder)
+								.currentTenant(bucket)
+								.queryParserConfig(
+									getQueryParserConfig(
+										bucket, tokenType))
+								.acl(acl)
+								.build()
+						);
+					}
 				}
 			}
+
 		}
 
 		List<ParserSearchToken> parserSearchTokens = null;
@@ -196,11 +198,16 @@ public abstract class BaseSearchService {
 			if (!queryParser.isQueryParserGroup()) {
 
 				if (parserSearchTokens == null) {
-					parserSearchTokens = tokenGroup
-						.values()
-						.stream()
-						.flatMap(Collection::stream)
-						.toList();
+					if (hasToken) {
+						parserSearchTokens = tokenGroup
+							.values()
+							.stream()
+							.flatMap(Collection::stream)
+							.collect(Collectors.toList());
+					}
+					else {
+						parserSearchTokens = new ArrayList<>();
+					}
 				}
 
 				queryParser.accept(
