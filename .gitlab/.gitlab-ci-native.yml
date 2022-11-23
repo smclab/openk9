@@ -39,3 +39,85 @@ Build Latest Datasource Native Docker Images:
     key: datasource
     paths:
       - .m2/repository
+Build Latest Ingestion Native Docker Images:
+  image: smclab/docker-java-17
+  services:
+    - docker:dind
+  stage: build-docker
+  variables:
+    # When using dind service, you must instruct Docker to talk with
+    # the daemon started inside of the service. The daemon is available
+    # with a network connection instead of the default
+    # /var/run/docker.sock socket.
+    DOCKER_HOST: tcp://localhost:2376
+    #
+    # The 'docker' hostname is the alias of the service container as described at
+    # https://docs.gitlab.com/ee/ci/services/#accessing-the-services.
+    # If you're using GitLab Runner 12.7 or earlier with the Kubernetes executor and Kubernetes 1.6 or earlier,
+    # the variable must be set to tcp://localhost:2376 because of how the
+    # Kubernetes executor connects services to the job container
+    # DOCKER_HOST: tcp://localhost:2376
+    #
+    # Specify to Docker where to create the certificates. Docker
+    # creates them automatically on boot, and creates
+    # `/certs/client` to share between the service and job
+    # container, thanks to volume mount from config.toml
+    DOCKER_TLS_CERTDIR: "/certs"
+    # These are usually specified by the entrypoint, however the
+    # Kubernetes executor doesn't run entrypoints
+    # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4125
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+    MAVEN_CLI_OPTS: "--batch-mode"
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "206-datasource-er-improvements"'
+      when: manual
+  script:
+    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/ingestion -am
+    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
+  cache:
+    key: ingestion
+    paths:
+      - .m2/repository
+Build Latest Tenant Manager Native Docker Images:
+  image: smclab/docker-java-17
+  services:
+    - docker:dind
+  stage: build-docker
+  variables:
+    # When using dind service, you must instruct Docker to talk with
+    # the daemon started inside of the service. The daemon is available
+    # with a network connection instead of the default
+    # /var/run/docker.sock socket.
+    DOCKER_HOST: tcp://localhost:2376
+    #
+    # The 'docker' hostname is the alias of the service container as described at
+    # https://docs.gitlab.com/ee/ci/services/#accessing-the-services.
+    # If you're using GitLab Runner 12.7 or earlier with the Kubernetes executor and Kubernetes 1.6 or earlier,
+    # the variable must be set to tcp://localhost:2376 because of how the
+    # Kubernetes executor connects services to the job container
+    # DOCKER_HOST: tcp://localhost:2376
+    #
+    # Specify to Docker where to create the certificates. Docker
+    # creates them automatically on boot, and creates
+    # `/certs/client` to share between the service and job
+    # container, thanks to volume mount from config.toml
+    DOCKER_TLS_CERTDIR: "/certs"
+    # These are usually specified by the entrypoint, however the
+    # Kubernetes executor doesn't run entrypoints
+    # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4125
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+    MAVEN_CLI_OPTS: "--batch-mode"
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "206-datasource-er-improvements"'
+      when: manual
+  script:
+    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/tenant-manager -am
+    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/tenant-manager -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
+  cache:
+    key: tenant-manager
+    paths:
+      - .m2/repository
