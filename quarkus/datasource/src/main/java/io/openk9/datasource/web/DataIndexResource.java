@@ -494,7 +494,7 @@ public class DataIndexResource {
 
 		FieldType fieldType = docTypeField.getFieldType();
 
-		docTypeFieldMap.put("type", fieldType);
+		docTypeFieldMap.put("type", fieldType.getType());
 
 		Analyzer analyzer = docTypeField.getAnalyzer();
 
