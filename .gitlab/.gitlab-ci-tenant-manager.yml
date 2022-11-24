@@ -18,6 +18,7 @@ Build Latest Tenant Manager Docker Images:
       - core/app/common/resources-common/pom.xml
       - core/app/tenant-manager/**/*
       - core/app/pom.xml
+      - core/pom.xml
   except:
     - schedules
   script:

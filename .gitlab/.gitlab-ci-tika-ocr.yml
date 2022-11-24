@@ -19,6 +19,7 @@ Build Latest Tika Ocr Docker Images:
       - core/app/tika/tika-common/**/*
       - core/app/tika/tika-ocr/**/*
       - core/app/pom.xml
+      - core/pom.xml
   except:
     - schedules
   before_script:

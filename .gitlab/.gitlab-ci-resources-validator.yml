@@ -18,6 +18,7 @@ Build Latest Resources Validator Docker Images:
       - core/app/common/resources-common/pom.xml
       - core/app/resources-validator/**/*
       - core/app/pom.xml
+      - core/pom.xml
   except:
     - schedules
   script:

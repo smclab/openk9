@@ -18,6 +18,7 @@ Build Branch File Manager Docker Images:
       - core/app/common/resources-common/pom.xml
       - core/app/file-manager/**/*
       - core/app/pom.xml
+      - core/pom.xml
   except:
     - schedules
   script:

@@ -18,6 +18,7 @@ Build Latest Ingestion Docker Images:
       - core/app/common/resources-common/pom.xml
       - core/app/ingestion/**/*
       - core/app/pom.xml
+      - core/pom.xml
   except:
     - schedules
   script:
