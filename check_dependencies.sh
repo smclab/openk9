@@ -7,11 +7,12 @@ check_changes() {
       do
          if [[ "$dir" == *$(dirname $change) ]]
          then
-           echo "true"
-           break
+           echo "Changes detected in $dir for $change"
+           return 0
          fi
       done
   done
+  return 1
 }
 
 git_changes="$(git diff-tree --no-commit-id --name-only -r "$(git log --format="%H" -n 1)")"
@@ -19,7 +20,8 @@ git_changes="$(git diff-tree --no-commit-id --name-only -r "$(git log --format="
 for project_name in $OPENK9_PROJECT_NAMES
 do
   project_dirs="$(cd core ; ./mvnw -q --also-make exec:exec -Dexec.executable="pwd" -pl $project_name)"
-  if [ "$(check_changes $project_dirs $git_changes)" == "true" ]
+  check_changes $project_dirs $git_changes
+  if [ $? -eq 0 ]
   then
     echo "Project $project_name has changes"
     case $project_name in
@@ -50,3 +52,5 @@ do
     esac
   fi
 done
+
+exit 0
