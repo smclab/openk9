@@ -13,8 +13,6 @@ Build Latest Datasource Docker Images:
     refs:
       - 206-datasource-er-improvements
       - tags
-    changes:
-      - core/app/datasource/ci.properties
   except:
     - schedules
   script:
