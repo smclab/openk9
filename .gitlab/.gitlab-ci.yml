@@ -1,5 +1,6 @@
 stages:
   - quality
+  - check-dependencies
   - build
   - test
   - build-docker
@@ -55,3 +56,9 @@ push-github:
     - git checkout main
     - git remote add public https://$GITHUB_TOKEN@github.com/smclab/openk9.git
     - git push public main
+
+check-dependencies:
+  stage: check-dependencies
+  image: smclab/java-17-git:latest
+  script:
+    - bash check_dependencies.sh
