@@ -14,14 +14,15 @@ Build Latest Resources Validator Docker Images:
       - main
       - tags
     changes:
-      - quarkus/resources-common/**/*
-      - quarkus/resources-validator/**/*
-      - .gitlab/.gitlab-ci-resources-validator.yml
-      - quarkus/pom.xml
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
+      - core/app/resources-validator/**/*
+      - core/app/pom.xml
   except:
     - schedules
   script:
-   - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/resources-validator -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/resources-validator -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: resources-validator
     paths:
@@ -35,7 +36,8 @@ trigger_deploy_resources_validator:
     refs:
       - main
     changes:
-      - quarkus/resources-common/**/*
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
       - quarkus/resources-validator/**/*
       - .gitlab/.gitlab-ci-resources-validator.yml
       - quarkus/pom.xml

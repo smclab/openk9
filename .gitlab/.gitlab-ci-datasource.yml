@@ -14,15 +14,15 @@ Build Latest Datasource Docker Images:
       - 206-datasource-er-improvements
       - tags
     changes:
-      - quarkus/resources-common/**/*
-      - quarkus/datasource/**/*
-      - quarkus/searcher-grpc/**/*
-      - .gitlab/.gitlab-ci-datasource.yml
-      - quarkus/pom.xml
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
+      - core/app/datasource/**/*
+      - core/app/pom.xml
   except:
     - schedules
   script:
-    - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
   cache:
     key: datasource
     paths:
@@ -36,7 +36,8 @@ trigger_deploy_datasource:
     refs:
       - main
     changes:
-      - quarkus/resources-common/**/*
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
       - quarkus/datasource/**/*
       - .gitlab/.gitlab-ci-datasource.yml
       - quarkus/pom.xml

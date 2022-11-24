@@ -14,17 +14,18 @@ Build Latest Tika Ocr Docker Images:
       - main
       - tags
     changes:
-      - quarkus/resources-common/**/*
-      - quarkus/tika/tika-ocr/**/*
-      - quarkus/tika/tika-common/**/*
-      - .gitlab/.gitlab-ci-tika-ocr.yml
-      - quarkus/pom.xml
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
+      - core/app/tika/tika-common/**/*
+      - core/app/tika/tika-ocr/**/*
+      - core/app/pom.xml
   except:
     - schedules
   before_script:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
   script:
-   - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: tika-ocr
     paths:
@@ -38,7 +39,8 @@ trigger_deploy_tika_ocr:
     refs:
       - main
     changes:
-      - quarkus/resources-common/**/*
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
       - quarkus/tika/tika-ocr/**/*
       - quarkus/tika/tika-common/**/*
       - .gitlab/.gitlab-ci-tika-ocr.yml

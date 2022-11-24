@@ -14,14 +14,15 @@ Build Branch File Manager Docker Images:
       - main
       - tags
     changes:
-      - quarkus/resources-common/**/*
-      - quarkus/file-manager/**/*
-      - .gitlab/.gitlab-ci-file-manager.yml
-      - quarkus/pom.xml
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
+      - core/app/file-manager/**/*
+      - core/app/pom.xml
   except:
     - schedules
   script:
-    - ./mvnw package -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: file-manager
     paths:

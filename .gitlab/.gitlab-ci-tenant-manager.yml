@@ -14,15 +14,15 @@ Build Latest Tenant Manager Docker Images:
       - 206-datasource-er-improvements
       - tags
     changes:
-      - quarkus/resources-common/**/*
-      - quarkus/tenant-manager/**/*
-      - quarkus/client/tenant-manager-grpc/**/*
-      - .gitlab/.gitlab-ci-tenant-manager.yml
-      - quarkus/pom.xml
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
+      - core/app/tenant-manager/**/*
+      - core/app/pom.xml
   except:
     - schedules
   script:
-    - ./mvnw -Psmc,quarkus package $MAVEN_CLI_OPTS -pl quarkus/tenant-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tenant-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-tenant-manager" -F ref=master $DEV_TRIGGER_URL
   cache:

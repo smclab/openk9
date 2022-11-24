@@ -14,14 +14,15 @@ Build Latest Ingestion Docker Images:
       - 206-datasource-er-improvements
       - tags
     changes:
-      - quarkus/resources-common/**/*
-      - quarkus/ingestion/**/*
-      - .gitlab/.gitlab-ci-ingestion.yml
-      - quarkus/pom.xml
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
+      - core/app/ingestion/**/*
+      - core/app/pom.xml
   except:
     - schedules
   script:
-    - ./mvnw -Psmc,quarkus package $MAVEN_CLI_OPTS -pl quarkus/ingestion -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/ingestion -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
   cache:
     key: ingestion
     paths:
@@ -35,7 +36,8 @@ trigger_deploy_ingestion:
     refs:
       - main
     changes:
-      - quarkus/resources-common/**/*
+      - core/app/common/resources-common/**/*
+      - core/app/common/resources-common/pom.xml
       - quarkus/ingestion/**/*
       - .gitlab/.gitlab-ci-ingestion.yml
       - quarkus/pom.xml
