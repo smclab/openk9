@@ -14,12 +14,7 @@ Build Latest Tika Ocr Docker Images:
       - main
       - tags
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - core/app/tika/tika-common/**/*
-      - core/app/tika/tika-ocr/**/*
-      - core/app/pom.xml
-      - core/pom.xml
+      - core/app/tika/tika-ocr/ci.properties
   except:
     - schedules
   before_script:

@@ -14,11 +14,7 @@ Build Latest Datasource Docker Images:
       - 206-datasource-er-improvements
       - tags
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - core/app/datasource/**/*
-      - core/app/pom.xml
-      - core/pom.xml
+      - core/app/datasource/ci.properties
   except:
     - schedules
   script:

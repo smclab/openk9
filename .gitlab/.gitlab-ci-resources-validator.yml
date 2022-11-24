@@ -14,11 +14,7 @@ Build Latest Resources Validator Docker Images:
       - main
       - tags
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - core/app/resources-validator/**/*
-      - core/app/pom.xml
-      - core/pom.xml
+      - core/app/resources-validator/ci.properties
   except:
     - schedules
   script:

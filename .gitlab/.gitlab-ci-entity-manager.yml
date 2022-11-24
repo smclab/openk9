@@ -14,11 +14,7 @@ Build Latest Entity Manager Docker Images:
       - 206-datasource-er-improvements
       - tags
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - core/app/entity-manager/**/*
-      - core/app/pom.xml
-      - core/pom.xml
+      - core/app/entity-manager/ci.properties
   except:
     - schedules
   script:

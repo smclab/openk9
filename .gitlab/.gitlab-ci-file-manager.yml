@@ -14,11 +14,7 @@ Build Branch File Manager Docker Images:
       - main
       - tags
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - core/app/file-manager/**/*
-      - core/app/pom.xml
-      - core/pom.xml
+      - core/app/file-manager/ci.properties
   except:
     - schedules
   script:
