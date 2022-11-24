@@ -75,6 +75,7 @@ Build Latest Ingestion Native Docker Images:
     - if: '$CI_COMMIT_REF_NAME == "206-datasource-er-improvements"'
       when: manual
   script:
+    - cd core
     - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/ingestion -am
     - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
   cache:
@@ -116,6 +117,7 @@ Build Latest Tenant Manager Native Docker Images:
     - if: '$CI_COMMIT_REF_NAME == "206-datasource-er-improvements"'
       when: manual
   script:
+    - cd core
     - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/tenant-manager -am
     - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/tenant-manager -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
   cache:
