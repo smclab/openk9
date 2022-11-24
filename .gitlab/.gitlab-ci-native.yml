@@ -33,8 +33,9 @@ Build Latest Datasource Native Docker Images:
     - if: '$CI_COMMIT_REF_NAME == "206-datasource-er-improvements"'
       when: manual
   script:
-    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/datasource -am
-    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/datasource -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
+    - cd core
+    - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/datasource -am
+    - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/datasource -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
   cache:
     key: datasource
     paths:
@@ -74,8 +75,8 @@ Build Latest Ingestion Native Docker Images:
     - if: '$CI_COMMIT_REF_NAME == "206-datasource-er-improvements"'
       when: manual
   script:
-    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/ingestion -am
-    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
+    - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/ingestion -am
+    - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/ingestion -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
   cache:
     key: ingestion
     paths:
@@ -115,8 +116,8 @@ Build Latest Tenant Manager Native Docker Images:
     - if: '$CI_COMMIT_REF_NAME == "206-datasource-er-improvements"'
       when: manual
   script:
-    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/tenant-manager -am
-    - ./mvnw install -Psmc,quarkus $MAVEN_CLI_OPTS -pl quarkus/tenant-manager -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
+    - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/tenant-manager -am
+    - ./mvnw install $MAVEN_CLI_OPTS -pl core/app/tenant-manager -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements-native -Dnative -DskipTests -Dquarkus.native.container-build=true
   cache:
     key: tenant-manager
     paths:
