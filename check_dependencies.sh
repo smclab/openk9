@@ -30,13 +30,13 @@ check_changes() {
 
 for project_name in $OPENK9_PROJECT_NAMES
 do
-  project_dirs="$(cd core || exit ; ./mvnw -q --also-make exec:exec -Dexec.executable="pwd" -pl "$project_name")"
+  project_dirs="$(cd core || exit ; ./mvnw install -q -no-transfer-progress --also-make exec:exec -Dexec.executable="pwd" -pl "$project_name")"
   if check_changes "$project_dirs" ; then
     echo "Project $project_name has changes"
     echo ""
     echo "Starting build"
     echo ""
-    (cd core || exit ; ./mvnw package --batch-mode -pl "$project_name" -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag="$OPENK9_CONTAINER_IMAGE_TAG")
+    (cd core || exit ; ./mvnw package -no-transfer-progress --batch-mode -pl "$project_name" -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag="$OPENK9_CONTAINER_IMAGE_TAG")
   else
     echo "Project $project_name has no changes"
   fi
