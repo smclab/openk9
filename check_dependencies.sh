@@ -7,7 +7,7 @@ echo "$git_changes"
 echo ""
 
 check_changes() {
-  for dir in $@
+  for dir in "$@"
   do
       for change in $git_changes
       do
@@ -19,6 +19,12 @@ check_changes() {
         fi
       done
   done
+  echo "No changes found in: "
+  echo "$@"
+  echo ""
+  echo "for git changes:"
+  echo "$git_changes"
+  echo ""
   return 1
 }
 

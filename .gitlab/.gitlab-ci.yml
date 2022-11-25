@@ -61,7 +61,12 @@ check-dependencies:
   stage: check-dependencies
   image: smclab/java-17-git:latest
   variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
     OPENK9_CONTAINER_IMAGE_TAG: 206-datasource-er-improvements
     OPENK9_PROJECT_NAMES: "io.openk9.app:tenant-manager io.openk9.app:datasource io.openk9.app:searcher io.openk9.app:entity-manager io.openk9.app:file-manager io.openk9.app:ingestion io.openk9.app:resources-validator"
   script:
     - bash check_dependencies.sh
+  cache:
+    key: check_dependencies
+    paths:
+      - .m2/repository
