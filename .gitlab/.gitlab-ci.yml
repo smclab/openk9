@@ -60,5 +60,7 @@ push-github:
 check-dependencies:
   stage: check-dependencies
   image: smclab/java-17-git:latest
+  variables:
+    $OPENK9_CONTAINER_IMAGE_TAG: 206-datasource-er-improvements
   script:
     - bash check_dependencies.sh
