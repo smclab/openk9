@@ -1,9 +1,11 @@
 #!/bin/bash
 
+git_changes="$(git diff-tree --no-commit-id --name-only -r "$(git log --format="%H" -n 1)")"
+
 check_changes() {
   for dir in $1
   do
-      for change in $2
+      for change in $git_changes
       do
          if [[ "$dir" == *$(dirname $change) ]]
          then
@@ -15,41 +17,14 @@ check_changes() {
   return 1
 }
 
-git_changes="$(git diff-tree --no-commit-id --name-only -r "$(git log --format="%H" -n 1)")"
-
 for project_name in $OPENK9_PROJECT_NAMES
 do
   project_dirs="$(cd core ; ./mvnw -q --also-make exec:exec -Dexec.executable="pwd" -pl $project_name)"
-  check_changes $project_dirs $git_changes
-  if [ $? -eq 0 ]
-  then
+  if check_changes $project_dirs ; then
     echo "Project $project_name has changes"
-    case $project_name in
-      "io.openk9.app:tenant-manager")
-        export OPENK9_TENANT_MANAGER="true"
-        ;;
-
-      "io.openk9.app:searcher")
-        export OPENK9_SEARCHER="true"
-        ;;
-
-      "io.openk9.app:ingestion")
-        export OPENK9_INGESTION="true"
-        ;;
-
-      "io.openk9.app:datasource")
-        export OPENK9_DATASOURCE="true"
-        ;;
-      "io.openk9.app:entity-manager")
-        export OPENK9_ENTITY_MANAGER="true"
-        ;;
-      "io.openk9.app:file-manager")
-        export OPENK9_FILE_MANAGER="true"
-        ;;
-      "io.openk9.app:resources-validator")
-        export OPENK9_RESOURCES_VALIDATOR="true"
-        ;;
-    esac
+    (cd core ; ./mvnw package --batch-mode -pl $$project_name -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$OPENK9_CONTAINER_IMAGE_TAG)
+  else
+    echo "Project $project_name has no changes"
   fi
 done
 
