@@ -7,17 +7,19 @@ echo "$git_changes"
 echo ""
 
 check_changes() {
-  for dir in "$@"
+  for dir in $@
   do
-      for change in $git_changes
-      do
-        changeDirName=$(dirname "$change")
-        if [[ $dir == *$changeDirName* ]]
-        then
-          echo "Changes found in $dir"
-          return 0
-        fi
-      done
+    dir="${dir#$(pwd)/}"
+    for change in $git_changes
+    do
+      change=$(dirname "$change")
+      change="${change%src/}"
+      if [[ "$change" == "$dir" ]]
+      then
+        echo "Changes found in $dir"
+        return 0
+      fi
+    done
   done
   echo "No changes found in: "
   echo "$@"
@@ -36,7 +38,7 @@ do
     echo ""
     echo "Starting build"
     echo ""
-    (cd core || exit ; mvnd package -no-transfer-progress --batch-mode -pl "$project_name" -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag="$OPENK9_CONTAINER_IMAGE_TAG")
+    (cd core || exit ; ./mvnw package -no-transfer-progress --batch-mode -pl "$project_name" -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag="$OPENK9_CONTAINER_IMAGE_TAG")
   else
     echo "Project $project_name has no changes"
   fi
