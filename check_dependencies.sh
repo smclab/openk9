@@ -30,7 +30,7 @@ check_changes() {
 
 for project_name in $OPENK9_PROJECT_NAMES
 do
-  project_dirs="$(cd core || exit ; mvnd install -q -no-transfer-progress --also-make exec:exec -Dexec.executable="pwd" -pl "$project_name")"
+  project_dirs="$(cd core || exit ; ./mvnw install -q -no-transfer-progress --also-make exec:exec -Dexec.executable="pwd" -pl "$project_name")"
   if check_changes "$project_dirs" ; then
     echo "Project $project_name has changes"
     echo ""
