@@ -319,9 +319,6 @@
 		</profile>
 		<profile>
 			<id>smc</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
 			<repositories>
 				<repository>
 					<id>smc</id>
