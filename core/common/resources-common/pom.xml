@@ -62,4 +62,5 @@
 			<artifactId>quarkus-resteasy-reactive</artifactId>
 		</dependency>
 	</dependencies>
+
 </project>
