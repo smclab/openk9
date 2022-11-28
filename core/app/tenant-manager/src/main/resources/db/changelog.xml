@@ -1,0 +1,1054 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.16.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+	<changeSet id="1669634728716-1" author="cristianbianco (generated)">
+		<createTable tableName="doc_type_field">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="doc_type_field_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="boost" type="FLOAT8"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="exclude" type="BOOLEAN"/>
+			<column name="field_name" type="VARCHAR(4096)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="field_type" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="searchable" type="BOOLEAN"/>
+			<column name="analyzer" type="BIGINT"/>
+			<column name="doc_type_id" type="BIGINT"/>
+			<column name="parent_doc_type_field_id" type="BIGINT"/>
+			<column name="json_config" type="TEXT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-2" author="cristianbianco (generated)">
+		<createTable tableName="token_tab">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="token_tab_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="filter" type="BOOLEAN">
+				<constraints nullable="false"/>
+			</column>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="token_type" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="value" type="VARCHAR(255)"/>
+			<column name="tab_id" type="BIGINT"/>
+			<column name="doc_type_field_id" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-3" author="cristianbianco (generated)">
+		<createTable tableName="query_analysis">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="query_analysis_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="stopwords" type="TEXT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-4" author="cristianbianco (generated)">
+		<createTable tableName="enrich_item">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="enrich_item_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="json_config" type="TEXT"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="service_name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="type" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="validation_script" type="TEXT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-5" author="cristianbianco (generated)">
+		<createTable tableName="suggestion_category">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="suggestion_category_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="priority" type="FLOAT4">
+				<constraints nullable="false"/>
+			</column>
+			<column name="tenant_id" type="BIGINT"/>
+			<column name="bucket_id" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-6" author="cristianbianco (generated)">
+		<createTable tableName="search_config">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="search_config_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="min_score" type="FLOAT4"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-7" author="cristianbianco (generated)">
+		<createTable tableName="tenant_binding">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="tenant_binding_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="virtual_host" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="tenant_binding_tenant_id" type="BIGINT"/>
+			<column name="tenant_binding_bucket_id" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-8" author="cristianbianco (generated)">
+		<createTable tableName="annotator">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="annotator_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="field_name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="fuziness" type="VARCHAR(255)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="size" type="INTEGER"/>
+			<column name="type" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="doc_type_field_id" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-9" author="cristianbianco (generated)">
+		<createTable tableName="datasource">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="datasource_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="json_config" type="TEXT"/>
+			<column name="last_ingestion_date"
+					type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="schedulable" type="BOOLEAN">
+				<constraints nullable="false"/>
+			</column>
+			<column name="scheduling" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="data_index_id" type="BIGINT"/>
+			<column name="enrich_pipeline_id" type="BIGINT"/>
+			<column name="plugin_driver_id" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-10" author="cristianbianco (generated)">
+		<createTable tableName="tenant">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="tenant_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="client_id" type="VARCHAR(255)"/>
+			<column name="client_secret" type="VARCHAR(255)"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="realm_name" type="VARCHAR(255)"/>
+			<column name="virtual_host" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="query_analysis_id" type="BIGINT"/>
+			<column name="search_config_id" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-11" author="cristianbianco (generated)">
+		<createTable tableName="data_index">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="data_index_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-12" author="cristianbianco (generated)">
+		<createTable tableName="rule">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="rule_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="lhs" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="rhs" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-13" author="cristianbianco (generated)">
+		<createTable tableName="bucket">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="bucket_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="query_analysis_id" type="BIGINT"/>
+			<column name="search_config_id" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-14" author="cristianbianco (generated)">
+		<createTable tableName="char_filter">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="char_filter_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="json_config" type="TEXT"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-15" author="cristianbianco (generated)">
+		<createTable tableName="enrich_pipeline">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="enrich_pipeline_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-16" author="cristianbianco (generated)">
+		<createTable tableName="date_filter">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="date_filter_pkey"/>
+			</column>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="field" type="VARCHAR(255)"/>
+			<column name="label" type="VARCHAR(255)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-17" author="cristianbianco (generated)">
+		<createTable tableName="token_filter">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="token_filter_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="json_config" type="TEXT"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-18" author="cristianbianco (generated)">
+		<createTable tableName="plugin_driver">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="plugin_driver_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="json_config" type="TEXT"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="type" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-19" author="cristianbianco (generated)">
+		<createTable tableName="tab">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="tab_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="priority" type="INTEGER">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-20" author="cristianbianco (generated)">
+		<createTable tableName="tokenizer">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="tokenizer_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="json_config" type="TEXT"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-21" author="cristianbianco (generated)">
+		<createTable tableName="doc_type_template">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="doc_type_template_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="compiled" type="TEXT"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="source" type="TEXT"/>
+			<column name="template_type" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-22" author="cristianbianco (generated)">
+		<createTable tableName="analyzer">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="analyzer_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="type" type="VARCHAR(255)"/>
+			<column name="tokenizer" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-23" author="cristianbianco (generated)">
+		<addUniqueConstraint
+			columnNames="field_name, doc_type_id, parent_doc_type_field_id"
+			constraintName="field_name_doc_type_id_parent_doc_type_field_id"
+			tableName="doc_type_field"/>
+	</changeSet>
+	<changeSet id="1669634728716-24" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name, tab_id"
+							 constraintName="uc_tokentab_name_tab_id"
+							 tableName="token_tab"/>
+	</changeSet>
+	<changeSet id="1669634728716-25" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_712f8fp1ftw1ug66hrmkgphrf"
+							 tableName="token_tab"/>
+	</changeSet>
+	<changeSet id="1669634728716-26" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_26k3dv00807y6dy0x82xx8mjd"
+							 tableName="query_analysis"/>
+	</changeSet>
+	<changeSet id="1669634728716-27" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_30eqiwulrtffhilqri8poy0e9"
+							 tableName="enrich_item"/>
+	</changeSet>
+	<changeSet id="1669634728716-28" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_4c591r8ch4g8rilsgfvb32kgn"
+							 tableName="suggestion_category"/>
+	</changeSet>
+	<changeSet id="1669634728716-29" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_5abkod761uq37sv3j2p4weaf0"
+							 tableName="search_config"/>
+	</changeSet>
+	<changeSet id="1669634728716-30" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="virtual_host"
+							 constraintName="uk_6wrs6ncojuw0wde7a5jw2wjh1"
+							 tableName="tenant_binding"/>
+	</changeSet>
+	<changeSet id="1669634728716-31" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_9318c5hvkjhrqjlq8rd3jkhe9"
+							 tableName="annotator"/>
+	</changeSet>
+	<changeSet id="1669634728716-32" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_c270jcqlmvthpcasvusahxb7h"
+							 tableName="datasource"/>
+	</changeSet>
+	<changeSet id="1669634728716-33" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_dcxf3ksi0gyn1tieeq0id96lm"
+							 tableName="tenant"/>
+	</changeSet>
+	<changeSet id="1669634728716-34" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="virtual_host"
+							 constraintName="uk_ww2yffcngi9y67p35ifew6sg"
+							 tableName="tenant"/>
+	</changeSet>
+	<changeSet id="1669634728716-35" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_ecnihy9mdplwt30pbahqcv9fw"
+							 tableName="data_index"/>
+	</changeSet>
+	<changeSet id="1669634728716-36" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_g0aibm7vybna15mqfxis5nnf1"
+							 tableName="rule"/>
+	</changeSet>
+	<changeSet id="1669634728716-37" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_he0xrer6rh4dgaalutt7prhbm"
+							 tableName="bucket"/>
+	</changeSet>
+	<changeSet id="1669634728716-38" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_hgk1crqb2kqnbkad5mr76v4v0"
+							 tableName="char_filter"/>
+	</changeSet>
+	<changeSet id="1669634728716-39" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_hgxv753bx3d7mwghpktnxkk8h"
+							 tableName="enrich_pipeline"/>
+	</changeSet>
+	<changeSet id="1669634728716-40" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_jpk3jl91vryok1nxj08ufmcwq"
+							 tableName="date_filter"/>
+	</changeSet>
+	<changeSet id="1669634728716-41" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_mbf4ldxsh6umx4bx0kgcwrmg2"
+							 tableName="token_filter"/>
+	</changeSet>
+	<changeSet id="1669634728716-42" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_o3hjnq90nnkxc3y34jumnhyg9"
+							 tableName="plugin_driver"/>
+	</changeSet>
+	<changeSet id="1669634728716-43" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_r17opdmucm7ij4aveppoa8wep"
+							 tableName="tab"/>
+	</changeSet>
+	<changeSet id="1669634728716-44" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_re72pk1pijmchwmusxdil83sy"
+							 tableName="tokenizer"/>
+	</changeSet>
+	<changeSet id="1669634728716-45" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_t7tmy5syhhbjxbfktw4l3ejdf"
+							 tableName="doc_type_template"/>
+	</changeSet>
+	<changeSet id="1669634728716-46" author="cristianbianco (generated)">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="uk_tb9s0i7disnbabdksial8ic43"
+							 tableName="analyzer"/>
+	</changeSet>
+	<changeSet id="1669634728716-47" author="cristianbianco (generated)">
+		<createSequence cacheSize="1" cycle="false" dataType="bigint"
+						incrementBy="1" maxValue="9223372036854775807"
+						minValue="1" sequenceName="hibernate_sequence"
+						startValue="1"/>
+	</changeSet>
+	<changeSet id="1669634728716-48" author="cristianbianco (generated)">
+		<createTable tableName="analyzer_char_filter">
+			<column name="analyzer" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="analyzer_char_filter_pkey"/>
+			</column>
+			<column name="char_filter" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="analyzer_char_filter_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-49" author="cristianbianco (generated)">
+		<createTable tableName="analyzer_token_filter">
+			<column name="analyzer" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="analyzer_token_filter_pkey"/>
+			</column>
+			<column name="token_filter" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="analyzer_token_filter_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-50" author="cristianbianco (generated)">
+		<createTable tableName="buckets_tabs">
+			<column name="buckets_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="tabs_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-51" author="cristianbianco (generated)">
+		<createTable tableName="data_index_doc_types">
+			<column name="data_index_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="data_index_doc_types_pkey"/>
+			</column>
+			<column name="doc_types_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="data_index_doc_types_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-52" author="cristianbianco (generated)">
+		<createTable tableName="datasource_buckets">
+			<column name="datasource_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="datasource_buckets_pkey"/>
+			</column>
+			<column name="buckets_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="datasource_buckets_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-53" author="cristianbianco (generated)">
+		<createTable tableName="datasource_tenants">
+			<column name="datasource_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="datasource_tenants_pkey"/>
+			</column>
+			<column name="tenants_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="datasource_tenants_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-54" author="cristianbianco (generated)">
+		<createTable tableName="doc_type">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="doc_type_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="doc_type_template_id" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-55" author="cristianbianco (generated)">
+		<createTable tableName="enrich_pipeline_item">
+			<column name="enrich_item_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="enrich_pipeline_item_pkey"/>
+			</column>
+			<column name="enrich_pipeline_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="enrich_pipeline_item_pkey"/>
+			</column>
+			<column name="weight" type="FLOAT4">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-56" author="cristianbianco (generated)">
+		<createTable tableName="query_analysis_annotators">
+			<column name="query_analysis_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="query_analysis_annotators_pkey"/>
+			</column>
+			<column name="annotators_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="query_analysis_annotators_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-57" author="cristianbianco (generated)">
+		<createTable tableName="query_analysis_rules">
+			<column name="query_analysis_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="query_analysis_rules_pkey"/>
+			</column>
+			<column name="rules_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="query_analysis_rules_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-58" author="cristianbianco (generated)">
+		<createTable tableName="query_parser_config">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="query_parser_config_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="json_config" type="TEXT"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="type" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="search_config" type="BIGINT"/>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-59" author="cristianbianco (generated)">
+		<createTable tableName="resource">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="resource_pkey"/>
+			</column>
+			<column name="datasourceid" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="fileid" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="resourceid" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-60" author="cristianbianco (generated)">
+		<createTable tableName="suggestion_category_doc_type_fields">
+			<column name="suggestion_category_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="suggestion_category_doc_type_fields_pkey"/>
+			</column>
+			<column name="doc_type_fields_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="suggestion_category_doc_type_fields_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-61" author="cristianbianco (generated)">
+		<createTable tableName="tenants_tabs">
+			<column name="tenants_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="tabs_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1669634728716-62" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="doc_types_id"
+								 baseTableName="data_index_doc_types"
+								 constraintName="fk1a9m9bg9q7ni7gc9ysg3rq6fp"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="doc_type"/>
+	</changeSet>
+	<changeSet id="1669634728716-63" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="doc_type_template_id"
+								 baseTableName="doc_type"
+								 constraintName="fk1ocwbmim5560h0bysfpunyq46"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="doc_type_template"/>
+	</changeSet>
+	<changeSet id="1669634728716-64" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="doc_type_field_id"
+								 baseTableName="token_tab"
+								 constraintName="fk37w5m3swa2cebgar0umrnytyy"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="doc_type_field"/>
+	</changeSet>
+	<changeSet id="1669634728716-65" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="tabs_id"
+								 baseTableName="tenants_tabs"
+								 constraintName="fk3rcxluwp2wbpxs39mkdv9jypw"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="tab"/>
+	</changeSet>
+	<changeSet id="1669634728716-66" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="bucket_id"
+								 baseTableName="suggestion_category"
+								 constraintName="fk3svyhailyqjc0iofjqpqymm78"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="bucket"/>
+	</changeSet>
+	<changeSet id="1669634728716-67" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="parent_doc_type_field_id"
+								 baseTableName="doc_type_field"
+								 constraintName="fk44qu7fg8d1tl3bn4d43sge02x"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="doc_type_field"/>
+	</changeSet>
+	<changeSet id="1669634728716-68" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="tenant_binding_tenant_id"
+								 baseTableName="tenant_binding"
+								 constraintName="fk4mg6aykslqy34dcnr4uyk1kvw"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="tenant"/>
+	</changeSet>
+	<changeSet id="1669634728716-69" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="query_analysis_id"
+								 baseTableName="query_analysis_rules"
+								 constraintName="fk5412heryog6cetwbsq5enp335"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="query_analysis"/>
+	</changeSet>
+	<changeSet id="1669634728716-70" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="tenant_id"
+								 baseTableName="suggestion_category"
+								 constraintName="fk7ktftebf4i9vc57kump1i6yn0"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="tenant"/>
+	</changeSet>
+	<changeSet id="1669634728716-71" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="datasource_id"
+								 baseTableName="datasource_buckets"
+								 constraintName="fk80gj884mrv2t03t7g36qlrae9"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="datasource"/>
+	</changeSet>
+	<changeSet id="1669634728716-72" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="token_filter"
+								 baseTableName="analyzer_token_filter"
+								 constraintName="fk84vkkc91bhjv3ye2l19iimcl8"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="token_filter"/>
+	</changeSet>
+	<changeSet id="1669634728716-73" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="analyzer"
+								 baseTableName="analyzer_token_filter"
+								 constraintName="fk8knl2njy74t871j2eycwu5fql"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="analyzer"/>
+	</changeSet>
+	<changeSet id="1669634728716-74" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="data_index_id"
+								 baseTableName="data_index_doc_types"
+								 constraintName="fk9tu5iup1pex2vpk80jftsfbey"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="data_index"/>
+	</changeSet>
+	<changeSet id="1669634728716-75" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="query_analysis_id"
+								 baseTableName="query_analysis_annotators"
+								 constraintName="fka1ext4cmdvvc0pjxgci94xvvn"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="query_analysis"/>
+	</changeSet>
+	<changeSet id="1669634728716-76" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="tokenizer"
+								 baseTableName="analyzer"
+								 constraintName="fkc7nh3nt723kkehd09dl3jpcmw"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="tokenizer"/>
+	</changeSet>
+	<changeSet id="1669634728716-77" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="query_analysis_id"
+								 baseTableName="tenant"
+								 constraintName="fkdschd2lycvvp0xgdpnlh8emyq"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="query_analysis"/>
+	</changeSet>
+	<changeSet id="1669634728716-78" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="enrich_pipeline_id"
+								 baseTableName="datasource"
+								 constraintName="fkewjpbr7f4fkff02y19op5g6a"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="enrich_pipeline"/>
+	</changeSet>
+	<changeSet id="1669634728716-79" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="plugin_driver_id"
+								 baseTableName="datasource"
+								 constraintName="fkeyxlmk7fbek60xtie38cwu2v2"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="plugin_driver"/>
+	</changeSet>
+	<changeSet id="1669634728716-80" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="tenants_id"
+								 baseTableName="tenants_tabs"
+								 constraintName="fkfaa6a8qu0kw9moymqv6ylfk9t"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="tenant"/>
+	</changeSet>
+	<changeSet id="1669634728716-81" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="doc_type_field_id"
+								 baseTableName="annotator"
+								 constraintName="fkfiv3bsnm26bb802cm7i1ei4q2"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="doc_type_field"/>
+	</changeSet>
+	<changeSet id="1669634728716-82" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="analyzer"
+								 baseTableName="analyzer_char_filter"
+								 constraintName="fkfjki6k33j86nxxjtpjfsjk0bg"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="analyzer"/>
+	</changeSet>
+	<changeSet id="1669634728716-83" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="analyzer"
+								 baseTableName="doc_type_field"
+								 constraintName="fkfjuk779hqxyt5ngdk9asog0bj"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="analyzer"/>
+	</changeSet>
+	<changeSet id="1669634728716-84" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="tenants_id"
+								 baseTableName="datasource_tenants"
+								 constraintName="fkg79a49c1w4876v1sbx64uj231"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="tenant"/>
+	</changeSet>
+	<changeSet id="1669634728716-85" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="query_analysis_id"
+								 baseTableName="bucket"
+								 constraintName="fkgj8f2hdk19shy1gwqu3u4ae9x"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="query_analysis"/>
+	</changeSet>
+	<changeSet id="1669634728716-86" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="buckets_id"
+								 baseTableName="buckets_tabs"
+								 constraintName="fki0729hs5mp7hisvr1xc4kcnio"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="bucket"/>
+	</changeSet>
+	<changeSet id="1669634728716-87" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="tenant_binding_bucket_id"
+								 baseTableName="tenant_binding"
+								 constraintName="fki7bn20nxw6x541wfvvwe62t28"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="bucket"/>
+	</changeSet>
+	<changeSet id="1669634728716-88" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="buckets_id"
+								 baseTableName="datasource_buckets"
+								 constraintName="fki9t38w4aa24jenr7lp4uguxb2"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="bucket"/>
+	</changeSet>
+	<changeSet id="1669634728716-89" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="char_filter"
+								 baseTableName="analyzer_char_filter"
+								 constraintName="fki9uan06v9eosrqrj0d2ab839l"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="char_filter"/>
+	</changeSet>
+	<changeSet id="1669634728716-90" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="tab_id"
+								 baseTableName="token_tab"
+								 constraintName="fkiyk7xhe4lx9pbr64vv2yit6jd"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="tab"/>
+	</changeSet>
+	<changeSet id="1669634728716-91" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="annotators_id"
+								 baseTableName="query_analysis_annotators"
+								 constraintName="fkj6bkvkacmj53kv5o5k8065hvt"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="annotator"/>
+	</changeSet>
+	<changeSet id="1669634728716-92" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="tabs_id"
+								 baseTableName="buckets_tabs"
+								 constraintName="fkkivu1a4ehytvoy78u74r3vq3l"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="tab"/>
+	</changeSet>
+	<changeSet id="1669634728716-93" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="doc_type_fields_id"
+								 baseTableName="suggestion_category_doc_type_fields"
+								 constraintName="fklfdkxdh7p8pkjn7qtwa2qeckc"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="doc_type_field"/>
+	</changeSet>
+	<changeSet id="1669634728716-94" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="suggestion_category_id"
+								 baseTableName="suggestion_category_doc_type_fields"
+								 constraintName="fkm97oc2r4h2fi5lym1g5f8pkwj"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="suggestion_category"/>
+	</changeSet>
+	<changeSet id="1669634728716-95" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="rules_id"
+								 baseTableName="query_analysis_rules"
+								 constraintName="fkmbqqghon1m8h554uh8hi0qkru"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="rule"/>
+	</changeSet>
+	<changeSet id="1669634728716-96" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="enrich_item_id"
+								 baseTableName="enrich_pipeline_item"
+								 constraintName="fkmjidj39ui867w3ig9iccnmrxb"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="enrich_item"/>
+	</changeSet>
+	<changeSet id="1669634728716-97" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="doc_type_id"
+								 baseTableName="doc_type_field"
+								 constraintName="fkn1p060bcao42e9fn7l1mb1jju"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="doc_type"/>
+	</changeSet>
+	<changeSet id="1669634728716-98" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="search_config_id"
+								 baseTableName="bucket"
+								 constraintName="fkn9yvqd7qsenqu5unq6yfj7j2a"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="search_config"/>
+	</changeSet>
+	<changeSet id="1669634728716-99" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="data_index_id"
+								 baseTableName="datasource"
+								 constraintName="fknbh6wdfjww9no5xqxn65qchfy"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="data_index"/>
+	</changeSet>
+	<changeSet id="1669634728716-100" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="datasource_id"
+								 baseTableName="datasource_tenants"
+								 constraintName="fknfdkewbnnl1l1wa2agdttk0l6"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="datasource"/>
+	</changeSet>
+	<changeSet id="1669634728716-101" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="enrich_pipeline_id"
+								 baseTableName="enrich_pipeline_item"
+								 constraintName="fkreyxykt1gox8ghwcuobr5pjan"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="enrich_pipeline"/>
+	</changeSet>
+	<changeSet id="1669634728716-102" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="search_config"
+								 baseTableName="query_parser_config"
+								 constraintName="fktmj4jra4g99dajgs7ilywk41b"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="search_config"/>
+	</changeSet>
+	<changeSet id="1669634728716-103" author="cristianbianco (generated)">
+		<addForeignKeyConstraint baseColumnNames="search_config_id"
+								 baseTableName="tenant"
+								 constraintName="fkyuovxy4rxyy5jjx7shc1vqy4"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="search_config"/>
+	</changeSet>
+
+</databaseChangeLog>

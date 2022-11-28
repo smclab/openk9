@@ -17,5 +17,6 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>resources-common</module>
+		<module>util</module>
 	</modules>
 </project>

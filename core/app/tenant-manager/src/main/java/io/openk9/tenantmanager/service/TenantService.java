@@ -20,7 +20,6 @@ public class TenantService {
 			session -> session
 				.persist(tenant)
 				.map(__ -> tenant)
-				.eventually(session::close)
 		);
 	}
 
@@ -57,6 +56,26 @@ public class TenantService {
 				);
 
 				return s.createQuery(query).getSingleResultOrNull();
+
+			}
+		);
+	}
+
+	public Uni<List<String>> findAllSchemaName() {
+		return sf.withStatelessSession(
+			s -> {
+
+				CriteriaBuilder cb = sf.getCriteriaBuilder();
+
+				CriteriaQuery<String> query = cb.createQuery(String.class);
+
+				Root<Tenant> root = query.from(Tenant.class);
+
+				query.select(root.get(Tenant_.schemaName));
+
+				query.distinct(true);
+
+				return s.createQuery(query).getResultList();
 
 			}
 		);

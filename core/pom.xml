@@ -158,6 +158,11 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>util</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>io.openk9.api</groupId>
 				<artifactId>tenant-manager-api</artifactId>
 				<version>${project.version}</version>
