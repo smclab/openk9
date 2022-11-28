@@ -50,8 +50,9 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 			}
 			catch (Exception e) {
 				tenantActor.tell(new TenantMessage.Error(e));
-				return TypedActor.Die();
+				return TypedActor.Stay();
 			}
+
 			this.realmName = realmRepresentation.getRealm();
 			printRealmInfo(realmRepresentation);
 
@@ -72,6 +73,7 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 			return TypedActor.Die();
 		}
 		else if (message instanceof TenantMessage.Finished) {
+			logger.info("Tenant " + realmName + " finished");
 			return TypedActor.Die();
 		}
 

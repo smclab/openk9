@@ -74,9 +74,14 @@ public class TenantBehavior implements TypedActor.Behavior<TenantMessage> {
 				() -> backgroundProcessService.updateBackgroundProcessStatus(
 				this.requestId, BackgroundProcess.Status.FAILED,
 				ExceptionUtil.generateStackTrace(exception))
+					.invoke(this::_tellError)
+					.invoke(this::_tellFinished)
 			);
 
-			_tellError();
+			return TypedActor.Stay();
+		}
+		else if (message instanceof TenantMessage.Finished) {
+			LOGGER.info("Tenant finished " + this.requestId);
 			return TypedActor.Die();
 		}
 
@@ -110,8 +115,6 @@ public class TenantBehavior implements TypedActor.Behavior<TenantMessage> {
 					})
 			);
 
-			return TypedActor.Die();
-
 		}
 
 		return TypedActor.Stay();
@@ -124,8 +127,10 @@ public class TenantBehavior implements TypedActor.Behavior<TenantMessage> {
 	}
 
 	private void _tellFinished() {
-		keycloak.tell(new TenantMessage.Finished());
-		schema.tell(new TenantMessage.Finished());
+		TenantMessage.Finished finished = new TenantMessage.Finished();
+		keycloak.tell(finished);
+		schema.tell(finished);
+		self.tell(finished);
 	}
 
 	private final UUID requestId;

@@ -37,7 +37,6 @@ public class SchemaBehavior implements TypedActor.Behavior<TenantMessage> {
 			}
 			catch (LiquibaseException e) {
 				tenantActor.tell(new TenantMessage.Error(e));
-				return TypedActor.Die();
 			}
 
 		}
@@ -49,6 +48,7 @@ public class SchemaBehavior implements TypedActor.Behavior<TenantMessage> {
 			return TypedActor.Die();
 		}
 		else if (message instanceof TenantMessage.Finished) {
+			LOGGER.info("Schema " + schemaName + " finished");
 			return TypedActor.Die();
 		}
 
