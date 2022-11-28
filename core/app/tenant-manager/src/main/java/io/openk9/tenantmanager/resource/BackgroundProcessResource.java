@@ -13,7 +13,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.UUID;
 
-@Path("/background-process")
+@Path("/tenant-manager/background-process")
 public class BackgroundProcessResource {
 
 	@GET

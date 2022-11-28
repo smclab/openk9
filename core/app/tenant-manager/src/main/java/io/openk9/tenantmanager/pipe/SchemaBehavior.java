@@ -54,6 +54,7 @@ public class SchemaBehavior implements TypedActor.Behavior<TenantMessage> {
 		else if (message instanceof TenantMessage.SimpleError) {
 			if (schemaName != null) {
 				liquibaseService.rollbackRunLiquibaseMigration(schemaName);
+				LOGGER.warn("Rollback schema: " + schemaName);
 			}
 			return TypedActor.Die();
 		}
