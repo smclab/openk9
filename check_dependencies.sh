@@ -18,11 +18,14 @@ check_changes() {
       then
         echo "Changes found in $dir"
         return 0
+      else
+        echo "$change != $dir"
       fi
     done
   done
   echo "No changes found in: "
   echo "$@"
+  echo ""
   echo ""
   echo "for git changes:"
   echo "$git_changes"
