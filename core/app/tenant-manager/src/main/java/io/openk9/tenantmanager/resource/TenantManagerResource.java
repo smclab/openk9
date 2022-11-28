@@ -5,6 +5,7 @@ import io.openk9.tenantmanager.pipe.TenantManagerActorSystem;
 import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 
 import javax.inject.Inject;
 import javax.ws.rs.POST;
@@ -16,6 +17,7 @@ import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @Path("/tenant-manager/tenant")
+@SecurityRequirement(name = "SecurityScheme")
 public class TenantManagerResource {
 
 	@POST

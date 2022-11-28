@@ -3,6 +3,7 @@ package io.openk9.tenantmanager.resource;
 import io.openk9.tenantmanager.model.BackgroundProcess;
 import io.openk9.tenantmanager.service.BackgroundProcessService;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Path("/tenant-manager/background-process")
+@SecurityRequirement(name = "SecurityScheme")
 public class BackgroundProcessResource {
 
 	@GET
