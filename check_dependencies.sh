@@ -13,7 +13,7 @@ check_changes() {
     for change in $git_changes
     do
       change=$(dirname "$change")
-      change="${change%src/}"
+      change="${change%/src}"
       if [[ "$change" == "$dir" ]]
       then
         echo "Changes found in $dir"
