@@ -20,8 +20,8 @@ import java.sql.Statement;
 @ApplicationScoped
 public class LiquibaseService {
 
-	@ConfigProperty(name = "quarkus.datasource.reactive.url")
-	String datasourceUrl;
+	@ConfigProperty(name = "openk9.datasource.url")
+	String openk9DatasourceUrl;
 
 	@ConfigProperty(name = "quarkus.datasource.username")
 	String datasourceUsername;
@@ -47,7 +47,7 @@ public class LiquibaseService {
 		String liquibaseSchema = schemaName + "_liquibase";
 
 		DatabaseConnection connection = DatabaseFactory.getInstance().openConnection(
-			_toJdbcUrl(datasourceUrl), datasourceUsername, datasourcePassword,
+			_toJdbcUrl(openk9DatasourceUrl), datasourceUsername, datasourcePassword,
 			null, resourceAccessor);
 
 		Database database = _createDatabase(connection, schemaName, liquibaseSchema);
@@ -78,7 +78,7 @@ public class LiquibaseService {
 
 		try (DatabaseConnection connection =
 				 DatabaseFactory.getInstance().openConnection(
-					 _toJdbcUrl(datasourceUrl), datasourceUsername,
+					 _toJdbcUrl(openk9DatasourceUrl), datasourceUsername,
 					 datasourcePassword,
 					 null, resourceAccessor);) {
 
@@ -130,8 +130,8 @@ public class LiquibaseService {
 		try (Statement statement1 = jdbcConnection.createStatement();
 			 Statement statement2 = jdbcConnection.createStatement();) {
 
-			statement1.executeUpdate("DROP SCHEMA IF EXISTS " + schemaName);
-			statement2.executeUpdate("DROP SCHEMA IF EXISTS " + liquibaseSchema);
+			statement1.executeUpdate("DROP SCHEMA IF EXISTS " + schemaName + " CASCADE");
+			statement2.executeUpdate("DROP SCHEMA IF EXISTS " + liquibaseSchema + " CASCADE");
 
 			jdbcConnection.commit();
 		}
