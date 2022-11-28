@@ -1,11 +1,8 @@
 package io.openk9.tenantmanager.pipe;
 
 import io.openk9.tenantmanager.actor.TypedActor;
-import io.openk9.tenantmanager.model.BackgroundProcess;
 import io.openk9.tenantmanager.service.BackgroundProcessService;
 import io.openk9.tenantmanager.service.LiquibaseService;
-import io.openk9.tenantmanager.util.VertxUtil;
-import io.quarkus.runtime.util.ExceptionUtil;
 import liquibase.exception.LiquibaseException;
 import org.jboss.logging.Logger;
 
@@ -39,15 +36,8 @@ public class SchemaBehavior implements TypedActor.Behavior<TenantMessage> {
 					.tell(new TenantMessage.SchemaCreated(schemaName));
 			}
 			catch (LiquibaseException e) {
-
-				VertxUtil.runOnContext(() ->
-					backgroundProcessService.updateBackgroundProcessStatus(
-						requestId, BackgroundProcess.Status.FAILED,
-						ExceptionUtil.generateStackTrace(e)
-					)
-						.invoke(() -> tenantActor.tell(new TenantMessage.Error(e)))
-				);
-
+				tenantActor.tell(new TenantMessage.Error(e));
+				return TypedActor.Die();
 			}
 
 		}
