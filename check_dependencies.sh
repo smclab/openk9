@@ -10,6 +10,7 @@ check_changes() {
   for dir in $@
   do
     dir="${dir#$(pwd)/}"
+    dir="${dir%/src}"
     for change in $git_changes
     do
       change=$(dirname "$change")
