@@ -1,6 +1,7 @@
 package io.openk9.searcher.resource;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.ProtocolStringList;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
@@ -96,8 +97,15 @@ public class SearchResource {
 
 				String searchRequestElasticS = query.toStringUtf8();
 
+				ProtocolStringList indexNameList =
+					queryParserResponse.getIndexNameList();
+
+				if (indexNameList == null || indexNameList.isEmpty()) {
+					return Uni.createFrom().item(Response.EMPTY);
+				}
+
 				String indexNames =
-					String.join(",", queryParserResponse.getIndexNameList());
+					String.join(",", indexNameList);
 
 				org.elasticsearch.client.Request request =
 					new org.elasticsearch.client.Request(

@@ -21,10 +21,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Response {
 	private Object result;
 	long total;
+
+	public static final Response EMPTY = new Response(List.of(), 0);
+
 }

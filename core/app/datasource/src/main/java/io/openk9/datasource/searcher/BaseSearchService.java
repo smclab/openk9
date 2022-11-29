@@ -132,10 +132,10 @@ public abstract class BaseSearchService {
 		}
 
 		Fetch<Bucket, Datasource> datasourceRoot =
-			tenantRoot.fetch(Bucket_.datasources, JoinType.LEFT);
+			tenantRoot.fetch(Bucket_.datasources);
 
 		Fetch<Datasource, DataIndex> dataIndexRoot =
-			datasourceRoot.fetch(Datasource_.dataIndex, JoinType.LEFT);
+			datasourceRoot.fetch(Datasource_.dataIndex);
 
 		Fetch<DataIndex, DocType> docTypeFetch =
 			dataIndexRoot.fetch(DataIndex_.docTypes, JoinType.LEFT);
