@@ -7,6 +7,7 @@ import io.vertx.ext.web.RoutingContext;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import java.util.Optional;
 
 @Path("/oauth2")
 public class OAuth2SettingsResource {
@@ -21,13 +22,19 @@ public class OAuth2SettingsResource {
             routingContext.get("dynamic.tenant.config");
 
         return oidcConfigUni.map(oidcConfig -> new Settings(
-            oidcConfig.getAuthServerUrl().orElse(""),
-            oidcConfig.getClientId().orElse(""),
-            oidcConfig.getTenantId().orElse("")
+            _createUrl(oidcConfig.getAuthServerUrl()),
+            oidcConfig.getTenantId().orElse(""),
+            oidcConfig.getClientId().orElse("")
         ));
 
     }
 
-    public record Settings(String issuer, String clientId, String tenantId) {}
+    private String _createUrl(Optional<String> authServerUrl) {
+        return authServerUrl
+            .map(s -> s.substring(0, s.lastIndexOf("/")))
+            .orElse("");
+    }
+
+    public record Settings(String url, String realm, String clientId) {}
 
 }
