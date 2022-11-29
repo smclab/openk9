@@ -129,8 +129,10 @@ public class GrammarProvider {
 								tenantBindingJoin.get(TenantBinding_.virtualHost),
 								virtualHost
 							),
-							createAnnotatorTypePredicate(annotatorJoin1),
-							createAnnotatorTypePredicate(annotatorJoin2).not()
+							cb.or(
+								createAnnotatorTypePredicate(annotatorJoin1),
+								createAnnotatorTypePredicate(annotatorJoin2).not()
+							)
 						)
 					);
 
