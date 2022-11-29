@@ -34,27 +34,25 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 			realmRepresentation.setDisplayName(virtualHost);
 			realmRepresentation.setClients(
 				List.of(
-					createClientRepresentation(virtualHost, "openk9")
+					_createClientRepresentation(virtualHost, "openk9")
 				)
 			);
-			realmRepresentation.setRoles(createRolesRepresentation());
+			realmRepresentation.setRoles(_createRolesRepresentation());
 
 			realmRepresentation.setUsers(
 				List.of(
-					createAdminUserRepresentation()
+					_createAdminUserRepresentation()
 				)
 			);
 
 			try {
 				keycloak.realms().create(realmRepresentation);
+				_saveUserInfo(realmRepresentation);
 			}
 			catch (Exception e) {
 				tenantActor.tell(new TenantMessage.Error(e));
 				return TypedActor.Stay();
 			}
-
-			this.realmName = realmRepresentation.getRealm();
-			printRealmInfo(realmRepresentation);
 
 			createSchema
 				.next()
@@ -74,22 +72,44 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 		}
 		else if (message instanceof TenantMessage.Finished) {
 			logger.info("Tenant " + realmName + " finished");
+			logger.info(adminUserInfo);
 			return TypedActor.Die();
 		}
 
 		return TypedActor.Stay();
  	}
 
-	private void printRealmInfo(RealmRepresentation realmRepresentation) {
+	private void _saveUserInfo(RealmRepresentation realmRepresentation) {
 
-		logger.info("Realm created: " + realmRepresentation.getRealm());
-		logger.info("Client created: " + realmRepresentation.getClients().get(0).getClientId());
-		logger.info("User created: " + realmRepresentation.getUsers().get(0).getUsername());
-		logger.info("User password: " + realmRepresentation.getUsers().get(0).getCredentials().get(0).getValue());
+		adminUserInfo = "Realm created: " +
+						realmRepresentation.getRealm() +
+						"\n" +
+						"Client created: " +
+						realmRepresentation
+						.getClients()
+						.get(0)
+						.getClientId() +
+						"\n" +
+						"User created: " +
+						realmRepresentation
+						.getUsers()
+						.get(0)
+						.getUsername() +
+						"\n" +
+						"User password: " +
+						realmRepresentation
+						.getUsers()
+						.get(0)
+						.getCredentials()
+						.get(0)
+						.getValue() +
+						"\n";
+
+		this.realmName = realmRepresentation.getRealm();
 
 	}
 
-	private UserRepresentation createAdminUserRepresentation() {
+	private UserRepresentation _createAdminUserRepresentation() {
 		UserRepresentation userRepresentation = new UserRepresentation();
 		userRepresentation.setUsername("k9admin");
 		userRepresentation.setFirstName("k9admin");
@@ -100,13 +120,13 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 		userRepresentation.setEnabled(true);
 		userRepresentation.setCredentials(
 			List.of(
-				createAdminCredentialRepresentation()
+				_createAdminCredentialRepresentation()
 			)
 		);
 		return userRepresentation;
 	}
 
-	private CredentialRepresentation createAdminCredentialRepresentation() {
+	private CredentialRepresentation _createAdminCredentialRepresentation() {
 		CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
 		credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
 		credentialRepresentation.setValue(UUID.randomUUID().toString());
@@ -114,14 +134,14 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 		return credentialRepresentation;
 	}
 
-	private RolesRepresentation createRolesRepresentation() {
+	private RolesRepresentation _createRolesRepresentation() {
 
 		RolesRepresentation rolesRepresentation = new RolesRepresentation();
 		rolesRepresentation.setRealm(
 			List.of(
-				createRoleRepresentation("k9-admin", "K9 Admin Role"),
-				createRoleRepresentation("k9-write", "K9 Write Role"),
-				createRoleRepresentation("k9-read", "K9 Read Role")
+				_createRoleRepresentation("k9-admin", "K9 Admin Role"),
+				_createRoleRepresentation("k9-write", "K9 Write Role"),
+				_createRoleRepresentation("k9-read", "K9 Read Role")
 			)
 		);
 		return rolesRepresentation;
@@ -129,7 +149,7 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 	}
 
 
-	private static RoleRepresentation createRoleRepresentation(
+	private static RoleRepresentation _createRoleRepresentation(
 		String name, String description) {
 		RoleRepresentation k9admin = new RoleRepresentation();
 		k9admin.setName(name);
@@ -139,7 +159,7 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 		return k9admin;
 	}
 
-	private static ClientRepresentation createClientRepresentation(
+	private static ClientRepresentation _createClientRepresentation(
 		String virtualHost, String clientId) {
 		ClientRepresentation clientRepresentation = new ClientRepresentation();
 		clientRepresentation.setName(clientId);
@@ -180,6 +200,7 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 	private final Keycloak keycloak;
 
 	private String realmName;
+	private String adminUserInfo;
 	private final static Logger logger = Logger.getLogger(KeycloakBehavior.class);
 
 }
