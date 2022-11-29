@@ -1,6 +1,7 @@
 package io.openk9.tenantmanager.grpc;
 
 import com.google.protobuf.Empty;
+import io.openk9.tenantmanager.mapper.TenantMapper;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.grpc.GrpcService;
@@ -23,15 +24,7 @@ public class TenantManagerGrpcService implements TenantManager {
 		return tenantUni
 			.onItem()
 			.ifNotNull()
-			.transform(tenant ->
-				TenantResponse.newBuilder()
-					.setClientId(tenant.getClientId())
-					.setClientSecret(tenant.getClientSecret())
-					.setSchemaName(tenant.getSchemaName())
-					.setVirtualHost(tenant.getVirtualHost())
-					.setRealmName(tenant.getRealmName())
-					.build()
-			);
+			.transform(tenantMapper::toTenantResponse);
 
 	}
 
@@ -45,23 +38,22 @@ public class TenantManagerGrpcService implements TenantManager {
 			.transform(list ->
 					list
 						.stream()
-						.map(tenant -> TenantResponse.newBuilder()
-							.setClientId(tenant.getClientId())
-							.setClientSecret(tenant.getClientSecret())
-							.setSchemaName(tenant.getSchemaName())
-							.setVirtualHost(tenant.getVirtualHost())
-							.setRealmName(tenant.getRealmName())
-							.build())
-						.collect(Collectors.collectingAndThen(
-							Collectors.toList(),
-							collect -> TenantListResponse.newBuilder()
-								.addAllTenantResponse(collect)
-								.build()
-						))
+						.map(tenantMapper::toTenantResponse)
+						.collect(
+							Collectors.collectingAndThen(
+								Collectors.toList(),
+								collect -> TenantListResponse.newBuilder()
+									.addAllTenantResponse(collect)
+									.build()
+							)
+						)
 			);
 	}
 
 	@Inject
 	TenantService tenantService;
+
+	@Inject
+	TenantMapper tenantMapper;
 
 }
