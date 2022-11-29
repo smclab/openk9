@@ -1,6 +1,7 @@
 package io.openk9.tenantmanager.service;
 
 import io.openk9.tenantmanager.model.BackgroundProcess;
+import io.openk9.tenantmanager.model.Tenant;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
@@ -66,10 +67,16 @@ public class BackgroundProcessService {
 	}
 
 	public Uni<Void> updateBackgroundProcessStatus(UUID id, BackgroundProcess.Status status) {
-		return updateBackgroundProcessStatus(id, status, null);
+		return updateBackgroundProcessStatus(id, status, null, null);
 	}
 
-	public Uni<Void> updateBackgroundProcessStatus(UUID id, BackgroundProcess.Status status, String message) {
+	public Uni<Void> updateBackgroundProcessStatus(
+		UUID id, BackgroundProcess.Status status, String message) {
+		return updateBackgroundProcessStatus(id, status, message, null);
+	}
+
+	public Uni<Void> updateBackgroundProcessStatus(
+		UUID id, BackgroundProcess.Status status, String message, Tenant tenant) {
 		return sf.withTransaction(
 			session -> session
 				.find(BackgroundProcess.class, id)
@@ -78,6 +85,7 @@ public class BackgroundProcessService {
 				.transformToUni(backgroundProcess -> {
 					backgroundProcess.setStatus(status);
 					backgroundProcess.setMessage(message);
+					backgroundProcess.setTenant(tenant);
 					return session.persist(backgroundProcess);
 				})
 		);

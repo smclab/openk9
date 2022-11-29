@@ -7,7 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -15,8 +18,11 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -35,6 +41,16 @@ public class BackgroundProcess {
 	@Column(name = "id", nullable = false)
 	private UUID id;
 
+	@Setter(AccessLevel.NONE)
+	@Column(name = "create_date")
+	@CreationTimestamp
+	private OffsetDateTime createDate;
+
+	@Setter(AccessLevel.NONE)
+	@Column(name = "modified_date")
+	@UpdateTimestamp
+	private OffsetDateTime modifiedDate;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
 	private Status status;
@@ -42,6 +58,10 @@ public class BackgroundProcess {
 	@Lob
 	@Column(name = "message")
 	private String message;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "tenant_id", unique = true)
+	private Tenant tenant;
 
 	@Override
 	public boolean equals(Object o) {

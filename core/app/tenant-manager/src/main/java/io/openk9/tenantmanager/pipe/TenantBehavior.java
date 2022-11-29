@@ -103,7 +103,7 @@ public class TenantBehavior implements TypedActor.Behavior<TenantMessage> {
 						if (t == null) {
 							return backgroundProcessService.updateBackgroundProcessStatus(
 								this.requestId, BackgroundProcess.Status.FINISHED,
-								"Tenant created with properties: " + tenant)
+								"", tenant)
 								.invoke(this::_tellFinished);
 						}
 
