@@ -10,17 +10,17 @@ check_changes() {
   for dir in $@
   do
     dir="${dir#$(pwd)/}"
-    dir="${dir%/src}"
+    dir="${dir#*/src}"
     for change in $git_changes
     do
       change=$(dirname "$change")
-      change="${change%/src}"
+      change="${change%/src/*}"
       if [[ "$change" == "$dir" ]]
       then
         echo "Changes found in $dir"
         return 0
       else
-        echo "$change != $dir"
+        echo "$dir != $change"
       fi
     done
   done
