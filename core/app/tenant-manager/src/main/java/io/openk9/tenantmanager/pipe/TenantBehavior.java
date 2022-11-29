@@ -50,7 +50,7 @@ public class TenantBehavior implements TypedActor.Behavior<TenantMessage> {
 
 			schema.tell(
 				new TenantMessage.CreateSchema(
-					self, start.realmName()));
+					self, virtualHost, start.realmName()));
 
 		}
 		else if (message instanceof TenantMessage.RealmCreated) {

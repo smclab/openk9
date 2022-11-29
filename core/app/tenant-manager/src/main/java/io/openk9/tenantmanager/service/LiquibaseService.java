@@ -38,7 +38,7 @@ public class LiquibaseService {
 	@ConfigProperty(name = "quarkus.liquibase.database-change-log-table-name")
 	String changeLogTableName;
 
-	public void runLiquibaseMigration(String schemaName) throws LiquibaseException {
+	public void runLiquibaseMigration(String schemaName, String virtualHost) throws LiquibaseException {
 
 		ClassLoaderResourceAccessor resourceAccessor =
 			new ClassLoaderResourceAccessor(
@@ -59,6 +59,8 @@ public class LiquibaseService {
 			liquibase.validate();
 			liquibase.update(new Contexts(), new LabelExpression());
 
+			_insertIntoTenantBinding(connection, schemaName, virtualHost);
+
 
 		} catch (Exception ex) {
 			if (ex instanceof LiquibaseException) {
@@ -66,6 +68,26 @@ public class LiquibaseService {
 			}
 			throw new LiquibaseException(ex);
 		}
+	}
+
+	private void _insertIntoTenantBinding(
+			DatabaseConnection connection, String schemaName, String virtualHost)
+		throws Exception {
+
+		JdbcConnection jdbcConnection = (JdbcConnection)connection;
+
+		try (Statement statement1 = jdbcConnection.createStatement();) {
+
+			statement1.executeUpdate("SET LOCAL SCHEMA '" + schemaName + "'");
+
+			statement1.executeUpdate(
+				"INSERT INTO tenant_binding (id, virtual_host, create_date, modified_date) " +
+				"VALUES(1, '"  + virtualHost + "', now(), now());");
+
+			jdbcConnection.commit();
+
+		}
+
 	}
 
 	public void rollbackRunLiquibaseMigration(String schemaName) {

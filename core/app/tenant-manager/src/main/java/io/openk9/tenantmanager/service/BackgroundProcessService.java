@@ -86,7 +86,7 @@ public class BackgroundProcessService {
 					backgroundProcess.setStatus(status);
 					backgroundProcess.setMessage(message);
 					backgroundProcess.setTenant(tenant);
-					return session.persist(backgroundProcess);
+					return session.merge(backgroundProcess).replaceWithVoid();
 				})
 		);
 	}

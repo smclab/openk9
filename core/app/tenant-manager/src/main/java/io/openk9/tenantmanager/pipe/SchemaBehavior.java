@@ -27,9 +27,10 @@ public class SchemaBehavior implements TypedActor.Behavior<TenantMessage> {
 			TenantMessage.CreateSchema createSchema = (TenantMessage.CreateSchema)message;
 
 			String schemaName = createSchema.schemaName();
+			String virtualHost = createSchema.virtualHost();
 
 			try {
-				liquibaseService.runLiquibaseMigration(schemaName);
+				liquibaseService.runLiquibaseMigration(schemaName, virtualHost);
 				this.schemaName = schemaName;
 				createSchema
 					.next()
