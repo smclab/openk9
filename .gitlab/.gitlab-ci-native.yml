@@ -40,6 +40,7 @@ Build Latest Datasource Native Docker Images:
     key: datasource
     paths:
       - .m2/repository
+
 Build Latest Ingestion Native Docker Images:
   image: smclab/docker-java-17
   services:
@@ -82,6 +83,7 @@ Build Latest Ingestion Native Docker Images:
     key: ingestion
     paths:
       - .m2/repository
+
 Build Latest Tenant Manager Native Docker Images:
   image: smclab/docker-java-17
   services:
