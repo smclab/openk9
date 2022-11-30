@@ -2,8 +2,11 @@ package io.openk9.tenantmanager.pipe;
 
 
 import io.openk9.tenantmanager.actor.TypedActor;
+import io.openk9.tenantmanager.pipe.message.KeycloakMessage;
+import io.openk9.tenantmanager.pipe.message.SchemaMessage;
+import io.openk9.tenantmanager.pipe.message.TenantMessage;
 import io.openk9.tenantmanager.service.BackgroundProcessService;
-import io.openk9.tenantmanager.service.LiquibaseService;
+import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfigUtil;
@@ -11,7 +14,6 @@ import io.smallrye.context.api.ManagedExecutorConfig;
 import io.smallrye.context.api.NamedInstance;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.eclipse.microprofile.context.ThreadContext;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 
@@ -22,9 +24,6 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class TenantManagerActorSystem {
-
-	@Inject
-	KeycloakAdminClientConfig config;
 
 	@PostConstruct
 	public void init() {
@@ -64,13 +63,12 @@ public class TenantManagerActorSystem {
 							requestId, virtualHost, tenantService,
 							backgroundProcessService, self));
 
-				TypedActor.Address<TenantMessage> keycloakActor =
+				TypedActor.Address<KeycloakMessage> keycloakActor =
 					system.actorOf(self -> new KeycloakBehavior(keycloak, tenantActor));
 
-				TypedActor.Address<TenantMessage> schemaActor =
+				TypedActor.Address<SchemaMessage> schemaActor =
 					system.actorOf(
-						self -> new SchemaBehavior(requestId, tenantActor, liquibaseService,
-							backgroundProcessService));
+						self -> new SchemaBehavior(tenantActor, liquibaseService));
 
 				tenantActor.tell(
 					new TenantMessage.Start(keycloakActor, schemaActor, realmName));
@@ -81,6 +79,11 @@ public class TenantManagerActorSystem {
 
 	private TypedActor.System system;
 
+	private Keycloak keycloak;
+
+	@Inject
+	KeycloakAdminClientConfig config;
+
 	@Inject
 	TenantService tenantService;
 
@@ -88,12 +91,10 @@ public class TenantManagerActorSystem {
 	BackgroundProcessService backgroundProcessService;
 
 	@Inject
-	LiquibaseService liquibaseService;
-
-	Keycloak keycloak;
+	DatasourceLiquibaseService liquibaseService;
 
 	@Inject
-	@ManagedExecutorConfig(cleared = ThreadContext.TRANSACTION)
+	@ManagedExecutorConfig
 	@NamedInstance("tenant-actor-executor")
 	ManagedExecutor sharedConfiguredExecutor;
 

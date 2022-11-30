@@ -1,5 +1,6 @@
 package io.openk9.tenantmanager.model;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,6 +34,7 @@ import java.util.UUID;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@RegisterForReflection
 public class BackgroundProcess {
 
 	@Setter(AccessLevel.NONE)

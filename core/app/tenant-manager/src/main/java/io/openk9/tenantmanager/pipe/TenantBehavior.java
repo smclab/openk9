@@ -3,6 +3,9 @@ package io.openk9.tenantmanager.pipe;
 import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.model.BackgroundProcess;
 import io.openk9.tenantmanager.model.Tenant;
+import io.openk9.tenantmanager.pipe.message.KeycloakMessage;
+import io.openk9.tenantmanager.pipe.message.SchemaMessage;
+import io.openk9.tenantmanager.pipe.message.TenantMessage;
 import io.openk9.tenantmanager.service.BackgroundProcessService;
 import io.openk9.tenantmanager.service.TenantService;
 import io.openk9.tenantmanager.util.VertxUtil;
@@ -45,11 +48,11 @@ public class TenantBehavior implements TypedActor.Behavior<TenantMessage> {
 			this.schema = start.schema();
 
 			keycloak.tell(
-				new TenantMessage.CreateRealm(
+				new KeycloakMessage.Start(
 					self, virtualHost, start.realmName()));
 
 			schema.tell(
-				new TenantMessage.CreateSchema(
+				new SchemaMessage.Start(
 					self, virtualHost, start.realmName()));
 
 		}
@@ -80,7 +83,7 @@ public class TenantBehavior implements TypedActor.Behavior<TenantMessage> {
 
 			return TypedActor.Stay();
 		}
-		else if (message instanceof TenantMessage.Finished) {
+		else if (message instanceof TenantMessage.Stop) {
 			LOGGER.info("Tenant finished " + this.requestId);
 			return TypedActor.Die();
 		}
@@ -122,15 +125,14 @@ public class TenantBehavior implements TypedActor.Behavior<TenantMessage> {
 	}
 
 	private void _tellError() {
-		keycloak.tell(new TenantMessage.SimpleError());
-		schema.tell(new TenantMessage.SimpleError());
+		keycloak.tell(new KeycloakMessage.Rollback());
+		schema.tell(new SchemaMessage.Rollback());
 	}
 
 	private void _tellFinished() {
-		TenantMessage.Finished finished = new TenantMessage.Finished();
-		keycloak.tell(finished);
-		schema.tell(finished);
-		self.tell(finished);
+		keycloak.tell(new KeycloakMessage.Stop());
+		schema.tell(new SchemaMessage.Stop());
+		self.tell(new TenantMessage.Stop());
 	}
 
 	private final UUID requestId;
@@ -140,8 +142,8 @@ public class TenantBehavior implements TypedActor.Behavior<TenantMessage> {
 	private String clientId;
 	private String clientSecret;
 	private final TypedActor.Address<TenantMessage> self;
-	private TypedActor.Address<TenantMessage> keycloak;
-	private TypedActor.Address<TenantMessage> schema;
+	private TypedActor.Address<KeycloakMessage> keycloak;
+	private TypedActor.Address<SchemaMessage> schema;
 	private final TenantService tenantService;
 	private final BackgroundProcessService backgroundProcessService;
 

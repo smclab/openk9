@@ -1,5 +1,6 @@
 package io.openk9.tenantmanager.model;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,10 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@RegisterForReflection
 public class Tenant {
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id", nullable = false)
 	private Long id;
 

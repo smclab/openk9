@@ -16,9 +16,10 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.sql.Statement;
+import java.util.List;
 
 @ApplicationScoped
-public class LiquibaseService {
+public class DatasourceLiquibaseService {
 
 	@ConfigProperty(name = "openk9.datasource.url")
 	String openk9DatasourceUrl;
@@ -29,16 +30,16 @@ public class LiquibaseService {
 	@ConfigProperty(name = "quarkus.datasource.password")
 	String datasourcePassword;
 
-	@ConfigProperty(name = "quarkus.liquibase.change-log")
+	@ConfigProperty(name = "openk9.datasource.liquibase.change-log")
 	String changeLogLocation;
 
-	@ConfigProperty(name = "quarkus.liquibase.database-change-log-lock-table-name")
+	@ConfigProperty(name = "openk9.datasource.liquibase.database-change-log-lock-table-name")
 	String changeLogLockTableName;
 
-	@ConfigProperty(name = "quarkus.liquibase.database-change-log-table-name")
+	@ConfigProperty(name = "openk9.datasource.liquibase.database-change-log-table-name")
 	String changeLogTableName;
 
-	public void runLiquibaseMigration(String schemaName, String virtualHost) throws LiquibaseException {
+	public void runInitialization(String schemaName, String virtualHost) throws LiquibaseException {
 
 		ClassLoaderResourceAccessor resourceAccessor =
 			new ClassLoaderResourceAccessor(
@@ -47,7 +48,7 @@ public class LiquibaseService {
 		String liquibaseSchema = schemaName + "_liquibase";
 
 		DatabaseConnection connection = DatabaseFactory.getInstance().openConnection(
-			_toJdbcUrl(openk9DatasourceUrl), datasourceUsername, datasourcePassword,
+			toJdbcUrl(openk9DatasourceUrl), datasourceUsername, datasourcePassword,
 			null, resourceAccessor);
 
 		Database database = _createDatabase(connection, schemaName, liquibaseSchema);
@@ -70,21 +71,34 @@ public class LiquibaseService {
 		}
 	}
 
-	private void _insertIntoTenantBinding(
-			DatabaseConnection connection, String schemaName, String virtualHost)
-		throws Exception {
+	public void runUpdate(List<String> schemaNames) throws LiquibaseException {
 
-		JdbcConnection jdbcConnection = (JdbcConnection)connection;
+		ClassLoaderResourceAccessor resourceAccessor =
+			new ClassLoaderResourceAccessor(
+				Thread.currentThread().getContextClassLoader());
 
-		try (Statement statement1 = jdbcConnection.createStatement();) {
+		for (String schemaName : schemaNames) {
 
-			statement1.executeUpdate("SET LOCAL SCHEMA '" + schemaName + "'");
+			DatabaseConnection connection = DatabaseFactory.getInstance().openConnection(
+				toJdbcUrl(openk9DatasourceUrl), datasourceUsername, datasourcePassword,
+				null, resourceAccessor);
 
-			statement1.executeUpdate(
-				"INSERT INTO tenant_binding (id, virtual_host, create_date, modified_date) " +
-				"VALUES(1, '"  + virtualHost + "', now(), now());");
+			Database database = _createDatabase(
+				connection, schemaName, schemaName + "_liquibase");
 
-			jdbcConnection.commit();
+			try {
+				Liquibase liquibase = new Liquibase(changeLogLocation, resourceAccessor, database);
+				liquibase.validate();
+				liquibase.update(new Contexts(), new LabelExpression());
+
+			} catch (Exception ex) {
+				if (ex instanceof LiquibaseException) {
+					throw (LiquibaseException) ex;
+				}
+				throw new LiquibaseException(ex);
+			}
+
+			logger.info("Liquibase update for schema " + schemaName + " completed");
 
 		}
 
@@ -100,7 +114,7 @@ public class LiquibaseService {
 
 		try (DatabaseConnection connection =
 				 DatabaseFactory.getInstance().openConnection(
-					 _toJdbcUrl(openk9DatasourceUrl), datasourceUsername,
+					 toJdbcUrl(openk9DatasourceUrl), datasourceUsername,
 					 datasourcePassword,
 					 null, resourceAccessor);) {
 
@@ -110,6 +124,7 @@ public class LiquibaseService {
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+
 	}
 
 	private Database _createDatabase(
@@ -123,6 +138,26 @@ public class LiquibaseService {
 		database.setLiquibaseSchemaName(liquibaseSchema);
 
 		return database;
+
+	}
+
+	private void _insertIntoTenantBinding(
+		DatabaseConnection connection, String schemaName, String virtualHost)
+		throws Exception {
+
+		JdbcConnection jdbcConnection = (JdbcConnection)connection;
+
+		try (Statement statement1 = jdbcConnection.createStatement();) {
+
+			statement1.executeUpdate("SET LOCAL SCHEMA '" + schemaName + "'");
+
+			statement1.executeUpdate(
+				"INSERT INTO tenant_binding (id, virtual_host, create_date, modified_date) " +
+				"VALUES(1, '"  + virtualHost + "', now(), now());");
+
+			jdbcConnection.commit();
+
+		}
 
 	}
 
@@ -160,9 +195,7 @@ public class LiquibaseService {
 
 	}
 
-
-
-	private String _toJdbcUrl(String datasourceUrl) {
+	public String toJdbcUrl(String datasourceUrl) {
 
 		if (datasourceUrl.startsWith("vertx-reactive:")) {
 			datasourceUrl = datasourceUrl.replace("vertx-reactive:", "jdbc:");

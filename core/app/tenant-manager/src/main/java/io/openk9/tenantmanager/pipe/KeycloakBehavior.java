@@ -1,6 +1,8 @@
 package io.openk9.tenantmanager.pipe;
 
 import io.openk9.tenantmanager.actor.TypedActor;
+import io.openk9.tenantmanager.pipe.message.KeycloakMessage;
+import io.openk9.tenantmanager.pipe.message.TenantMessage;
 import org.jboss.logging.Logger;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientRepresentation;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
+public class KeycloakBehavior implements TypedActor.Behavior<KeycloakMessage> {
 
 	public KeycloakBehavior(
 		Keycloak keycloak, TypedActor.Address<TenantMessage> tenantActor) {
@@ -23,9 +25,9 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 	}
 
 	@Override
-	public TypedActor.Effect<TenantMessage> apply(TenantMessage message) {
-		if (message instanceof TenantMessage.CreateRealm) {
-			TenantMessage.CreateRealm createSchema = (TenantMessage.CreateRealm)message;
+	public TypedActor.Effect<KeycloakMessage> apply(KeycloakMessage message) {
+		if (message instanceof KeycloakMessage.Start) {
+			KeycloakMessage.Start createSchema = (KeycloakMessage.Start)message;
 			String virtualHost = createSchema.virtualHost();
 			String realmName = createSchema.realmName();
 			RealmRepresentation realmRepresentation = new RealmRepresentation();
@@ -55,7 +57,7 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 			}
 
 			createSchema
-				.next()
+				.tenant()
 				.tell(
 					new TenantMessage.RealmCreated(
 						realmName, "openk9", null
@@ -63,16 +65,20 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 				);
 
 		}
-		else if (message instanceof TenantMessage.SimpleError) {
+		else if (message instanceof KeycloakMessage.Rollback) {
 			if (realmName != null) {
 				keycloak.realms().realm(realmName).remove();
 				logger.warn("Realm " + realmName + " rollbacked");
 			}
 			return TypedActor.Die();
 		}
-		else if (message instanceof TenantMessage.Finished) {
-			logger.info("Tenant " + realmName + " finished");
-			logger.info(adminUserInfo);
+		else if (message instanceof KeycloakMessage.Stop) {
+			if (realmName != null) {
+				logger.info("Realm created");
+				logger.info("Realm: " + realmRepresentation.getRealm());
+				logger.info("User: " + realmRepresentation.getUsers().get(0).getUsername());
+				logger.info("Password: " + realmRepresentation.getUsers().get(0).getCredentials().get(0).getValue());
+			}
 			return TypedActor.Die();
 		}
 
@@ -80,33 +86,8 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
  	}
 
 	private void _saveUserInfo(RealmRepresentation realmRepresentation) {
-
-		adminUserInfo = "Realm created: " +
-						realmRepresentation.getRealm() +
-						"\n" +
-						"Client created: " +
-						realmRepresentation
-						.getClients()
-						.get(0)
-						.getClientId() +
-						"\n" +
-						"User created: " +
-						realmRepresentation
-						.getUsers()
-						.get(0)
-						.getUsername() +
-						"\n" +
-						"User password: " +
-						realmRepresentation
-						.getUsers()
-						.get(0)
-						.getCredentials()
-						.get(0)
-						.getValue() +
-						"\n";
-
+		this.realmRepresentation = realmRepresentation;
 		this.realmName = realmRepresentation.getRealm();
-
 	}
 
 	private UserRepresentation _createAdminUserRepresentation() {
@@ -198,9 +179,8 @@ public class KeycloakBehavior implements TypedActor.Behavior<TenantMessage> {
 
 	private final TypedActor.Address<TenantMessage> tenantActor;
 	private final Keycloak keycloak;
-
 	private String realmName;
-	private String adminUserInfo;
+	private RealmRepresentation realmRepresentation;
 	private final static Logger logger = Logger.getLogger(KeycloakBehavior.class);
 
 }

@@ -1,39 +1,35 @@
 package io.openk9.tenantmanager.pipe;
 
 import io.openk9.tenantmanager.actor.TypedActor;
-import io.openk9.tenantmanager.service.BackgroundProcessService;
-import io.openk9.tenantmanager.service.LiquibaseService;
+import io.openk9.tenantmanager.pipe.message.SchemaMessage;
+import io.openk9.tenantmanager.pipe.message.TenantMessage;
+import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import liquibase.exception.LiquibaseException;
 import org.jboss.logging.Logger;
 
-import java.util.UUID;
-
-public class SchemaBehavior implements TypedActor.Behavior<TenantMessage> {
+public class SchemaBehavior implements TypedActor.Behavior<SchemaMessage> {
 
 	public SchemaBehavior(
-		UUID requestId, TypedActor.Address<TenantMessage> tenantActor,
-		LiquibaseService liquibaseService,
-		BackgroundProcessService backgroundProcessService) {
-		this.requestId = requestId;
+		TypedActor.Address<TenantMessage> tenantActor,
+		DatasourceLiquibaseService liquibaseService) {
 		this.tenantActor = tenantActor;
 		this.liquibaseService = liquibaseService;
-		this.backgroundProcessService = backgroundProcessService;
 	}
 
 	@Override
-	public TypedActor.Effect<TenantMessage> apply(TenantMessage message) {
-		if (message instanceof TenantMessage.CreateSchema) {
+	public TypedActor.Effect<SchemaMessage> apply(SchemaMessage message) {
+		if (message instanceof SchemaMessage.Start) {
 
-			TenantMessage.CreateSchema createSchema = (TenantMessage.CreateSchema)message;
+			SchemaMessage.Start createSchema =(SchemaMessage.Start)message;
 
 			String schemaName = createSchema.schemaName();
 			String virtualHost = createSchema.virtualHost();
 
 			try {
-				liquibaseService.runLiquibaseMigration(schemaName, virtualHost);
+				liquibaseService.runInitialization(schemaName, virtualHost);
 				this.schemaName = schemaName;
 				createSchema
-					.next()
+					.tenant()
 					.tell(new TenantMessage.SchemaCreated(schemaName));
 			}
 			catch (LiquibaseException e) {
@@ -41,14 +37,14 @@ public class SchemaBehavior implements TypedActor.Behavior<TenantMessage> {
 			}
 
 		}
-		else if (message instanceof TenantMessage.SimpleError) {
+		else if (message instanceof SchemaMessage.Rollback) {
 			if (schemaName != null) {
 				liquibaseService.rollbackRunLiquibaseMigration(schemaName);
 				LOGGER.warn("Rollback schema: " + schemaName);
 			}
 			return TypedActor.Die();
 		}
-		else if (message instanceof TenantMessage.Finished) {
+		else if (message instanceof SchemaMessage.Stop) {
 			LOGGER.info("Schema " + schemaName + " finished");
 			return TypedActor.Die();
 		}
@@ -57,12 +53,9 @@ public class SchemaBehavior implements TypedActor.Behavior<TenantMessage> {
 
  	}
 
-	private final UUID requestId;
 	private final TypedActor.Address<TenantMessage> tenantActor;
-	private final LiquibaseService liquibaseService;
-	private final BackgroundProcessService backgroundProcessService;
+	private final DatasourceLiquibaseService liquibaseService;
 	private String schemaName;
-
 	private static final Logger LOGGER = Logger.getLogger(SchemaBehavior.class);
 
 }
