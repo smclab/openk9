@@ -5,6 +5,7 @@ import io.openk9.tenantmanager.service.TenantService;
 import io.openk9.tenantmanager.util.VertxUtil;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
@@ -34,11 +35,14 @@ public class TenantManagerInitializer {
 					runTenantManagerLiquibase();
 					logger.info("Tenant Manager Liquibase Initialized");
 					return null;
-				}));
+				}))
+				.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+				.replaceWithVoid();
 
 		Uni<Void> tenantUpgrade =
 			tenantService
 				.findAllSchemaName()
+				.emitOn(Infrastructure.getDefaultWorkerPool())
 				.flatMap((schemas) -> Uni
 					.createFrom()
 					.item(Unchecked.supplier(() -> {
