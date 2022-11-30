@@ -1,8 +1,8 @@
-package io.openk9.tenantmanager.pipe;
+package io.openk9.tenantmanager.pipe.tenant.create;
 
 import io.openk9.tenantmanager.actor.TypedActor;
-import io.openk9.tenantmanager.pipe.message.SchemaMessage;
-import io.openk9.tenantmanager.pipe.message.TenantMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.SchemaMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.TenantMessage;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import liquibase.exception.LiquibaseException;
 import org.jboss.logging.Logger;

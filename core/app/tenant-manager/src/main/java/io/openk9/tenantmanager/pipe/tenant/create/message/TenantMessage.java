@@ -1,4 +1,4 @@
-package io.openk9.tenantmanager.pipe.message;
+package io.openk9.tenantmanager.pipe.tenant.create.message;
 
 import io.openk9.tenantmanager.actor.TypedActor;
 

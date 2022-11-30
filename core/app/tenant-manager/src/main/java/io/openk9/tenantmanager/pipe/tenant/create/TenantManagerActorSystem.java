@@ -1,21 +1,19 @@
-package io.openk9.tenantmanager.pipe;
+package io.openk9.tenantmanager.pipe.tenant.create;
 
 
 import io.openk9.tenantmanager.actor.TypedActor;
-import io.openk9.tenantmanager.pipe.message.KeycloakMessage;
-import io.openk9.tenantmanager.pipe.message.SchemaMessage;
-import io.openk9.tenantmanager.pipe.message.TenantMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.KeycloakMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.SchemaMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.TenantMessage;
 import io.openk9.tenantmanager.service.BackgroundProcessService;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
-import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfigUtil;
 import io.smallrye.context.api.ManagedExecutorConfig;
 import io.smallrye.context.api.NamedInstance;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -27,28 +25,7 @@ public class TenantManagerActorSystem {
 
 	@PostConstruct
 	public void init() {
-
-		KeycloakAdminClientConfigUtil.validate(config);
-
-		if (config.serverUrl.isEmpty()) {
-			throw new IllegalStateException("keycloak serverUrl is empty");
-		}
-
-		KeycloakBuilder keycloakBuilder = KeycloakBuilder
-			.builder()
-			.clientId(config.clientId)
-			.clientSecret(config.clientSecret.orElse(null))
-			.grantType(config.grantType.asString())
-			.username(config.username.orElse(null))
-			.password(config.password.orElse(null))
-			.realm(config.realm)
-			.serverUrl(config.serverUrl.get())
-			.scope(config.scope.orElse(null));
-
-		keycloak = keycloakBuilder.build();
-
 		system = new TypedActor.System(sharedConfiguredExecutor);
-
 	}
 
 	public Uni<UUID> startCreateTenant(String virtualHost, String realmName) {
@@ -79,7 +56,8 @@ public class TenantManagerActorSystem {
 
 	private TypedActor.System system;
 
-	private Keycloak keycloak;
+	@Inject
+	Keycloak keycloak;
 
 	@Inject
 	KeycloakAdminClientConfig config;

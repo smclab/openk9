@@ -1,8 +1,8 @@
-package io.openk9.tenantmanager.pipe;
+package io.openk9.tenantmanager.pipe.tenant.create;
 
 import io.openk9.tenantmanager.actor.TypedActor;
-import io.openk9.tenantmanager.pipe.message.KeycloakMessage;
-import io.openk9.tenantmanager.pipe.message.TenantMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.KeycloakMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.TenantMessage;
 import org.jboss.logging.Logger;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientRepresentation;

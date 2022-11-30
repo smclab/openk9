@@ -1,11 +1,11 @@
-package io.openk9.tenantmanager.pipe;
+package io.openk9.tenantmanager.pipe.tenant.create;
 
 import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.model.BackgroundProcess;
 import io.openk9.tenantmanager.model.Tenant;
-import io.openk9.tenantmanager.pipe.message.KeycloakMessage;
-import io.openk9.tenantmanager.pipe.message.SchemaMessage;
-import io.openk9.tenantmanager.pipe.message.TenantMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.KeycloakMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.SchemaMessage;
+import io.openk9.tenantmanager.pipe.tenant.create.message.TenantMessage;
 import io.openk9.tenantmanager.service.BackgroundProcessService;
 import io.openk9.tenantmanager.service.TenantService;
 import io.openk9.tenantmanager.util.VertxUtil;

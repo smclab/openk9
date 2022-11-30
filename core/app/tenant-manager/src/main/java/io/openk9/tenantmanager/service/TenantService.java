@@ -23,6 +23,14 @@ public class TenantService {
 		);
 	}
 
+	public Uni<Void> deleteTenant(long tenantId) {
+		return sf.withTransaction(
+			session -> session
+				.find(Tenant.class, tenantId)
+				.chain(session::remove)
+		);
+	}
+
 	public Uni<List<Tenant>> findAllTenant() {
 		return sf.withStatelessSession(
 			s -> {
