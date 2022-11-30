@@ -74,7 +74,7 @@ public class TenantManagerInitializer {
 
 	}
 
-	@ConfigProperty(name = "openk9.datasource.url")
+	@ConfigProperty(name = "quarkus.datasource.reactive.url")
 	String openk9DatasourceUrl;
 
 	@ConfigProperty(name = "quarkus.datasource.username")
