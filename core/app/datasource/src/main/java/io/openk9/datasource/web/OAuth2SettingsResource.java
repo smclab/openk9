@@ -39,9 +39,9 @@ public class OAuth2SettingsResource {
 
         return oidcConfigUni.map(
             oidcConfig -> String.format(
-                "window.KEYCLOAK_URL = '%s';" +
-                "window.KEYCLOAK_REALM = '%s';" +
-                "window.KEYCLOAK_CLIENT_ID = '%s';",
+                "window.KEYCLOAK_URL='%s';" +
+                "window.KEYCLOAK_REALM='%s';" +
+                "window.KEYCLOAK_CLIENT_ID='%s';",
                 _createUrl(oidcConfig.getAuthServerUrl()),
                 oidcConfig.getTenantId().orElse(""),
                 oidcConfig.getClientId().orElse("")
@@ -50,9 +50,14 @@ public class OAuth2SettingsResource {
 
     }
 
-    private String _createUrl(Optional<String> authServerUrl) {
+    private static String _createUrl(Optional<String> authServerUrl) {
+
         return authServerUrl
-            .map(s -> s.substring(0, s.lastIndexOf("/")))
+            .map(s -> {
+                int start = s.indexOf("://");
+                int end = s.indexOf("/", start + 3);
+                return s.substring(0, end);
+            })
             .orElse("");
     }
 
