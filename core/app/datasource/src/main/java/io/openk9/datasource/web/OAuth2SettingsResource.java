@@ -32,7 +32,7 @@ public class OAuth2SettingsResource {
 
     @GET
     @Path("/settings.js")
-    @Produces("application/javascript")
+    @Produces("text/javascript")
     public Uni<String> settingsJs() {
         Uni<OidcTenantConfig> oidcConfigUni =
             routingContext.get("dynamic.tenant.config");
