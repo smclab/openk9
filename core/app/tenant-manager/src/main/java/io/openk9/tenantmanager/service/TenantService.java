@@ -24,10 +24,20 @@ public class TenantService {
 	}
 
 	public Uni<Void> deleteTenant(long tenantId) {
+
 		return sf.withTransaction(
-			session -> session
-				.find(Tenant.class, tenantId)
-				.chain(session::remove)
+			session ->
+				session
+				.createQuery("delete from BackgroundProcess where tenant.id = :tenantId")
+				.setParameter("tenantId", tenantId)
+				.executeUpdate()
+				.chain(() ->
+					session
+						.createQuery("delete from Tenant where id = :tenantId")
+						.setParameter("tenantId", tenantId)
+						.executeUpdate()
+				)
+				.replaceWithVoid()
 		);
 	}
 
