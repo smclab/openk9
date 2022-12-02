@@ -19,6 +19,6 @@ public class PostgresqlTransactionInvoker extends TransactionInvoker {
 
 	@Override
 	protected String alterSchemaSession(String schemaName) {
-		return "SET LOCAL SCHEMA '" + schemaName + "'";
+		return "SET SESSION SCHEMA '" + schemaName + "'";
 	}
 }
