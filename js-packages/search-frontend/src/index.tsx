@@ -19,6 +19,14 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 
+declare global {
+  interface Window {
+    KEYCLOAK_URL: string;
+    KEYCLOAK_REALM: string;
+    KEYCLOAK_CLIENT_ID: string;
+  }
+}
+
 const container = document.getElementById("root") as HTMLElement;
 const root = createRoot(container);
 root.render(
