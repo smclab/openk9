@@ -11,9 +11,9 @@ export function useOpenK9Client() {
 
 export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
   const keycloak = new Keycloak({
-    url: "https://keycloak-test.openk9.io",
-    realm: "test.openk9.io",
-    clientId: "openk9",
+    url: window.KEYCLOAK_URL,
+    realm: window.KEYCLOAK_REALM,
+    clientId: window.KEYCLOAK_CLIENT_ID,
   });
   const keycloakInit = keycloak.init({ onLoad: "check-sso" });
   keycloakInit.then(() => {
@@ -42,8 +42,8 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     async deauthenticate() {
       await keycloak.logout();
     },
-    async getUserProfile(){
-      return await keycloak.loadUserProfile()
+    async getUserProfile() {
+      return await keycloak.loadUserProfile();
     },
     async getServiceStatus(): Promise<"up" | "down"> {
       const response = await fetch(`/api/status`);
