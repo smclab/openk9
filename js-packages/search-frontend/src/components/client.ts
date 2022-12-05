@@ -9,6 +9,14 @@ export function useOpenK9Client() {
   return React.useContext(OpenK9ClientContext);
 }
 
+declare global {
+  interface Window {
+    KEYCLOAK_URL: string;
+    KEYCLOAK_REALM: string;
+    KEYCLOAK_CLIENT_ID: string;
+  }
+}
+
 export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
   const keycloak = new Keycloak({
     url: window.KEYCLOAK_URL,
