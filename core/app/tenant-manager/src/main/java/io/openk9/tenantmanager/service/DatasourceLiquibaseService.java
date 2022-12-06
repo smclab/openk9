@@ -86,8 +86,7 @@ public class DatasourceLiquibaseService {
 			Database database = _createDatabase(
 				connection, schemaName, schemaName + "_liquibase");
 
-			try {
-				Liquibase liquibase = new Liquibase(changeLogLocation, resourceAccessor, database);
+			try(Liquibase liquibase = new Liquibase(changeLogLocation, resourceAccessor, database)) {
 				liquibase.validate();
 				liquibase.update(new Contexts(), new LabelExpression());
 
