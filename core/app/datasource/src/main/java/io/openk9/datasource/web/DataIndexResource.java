@@ -334,6 +334,22 @@ public class DataIndexResource {
 				);
 			}
 
+			String jsonConfig = analyzer.getJsonConfig();
+
+			if (jsonConfig != null) {
+
+				JsonObject jsonObject = new JsonObject(jsonConfig);
+
+				Map<String, Object> map = jsonObject.getMap();
+
+				for (Map.Entry<String, Object> entry : map.entrySet()) {
+					if (!internalSettings.containsKey(entry.getKey())) {
+						internalSettings.put(entry.getKey(), entry.getValue());
+					}
+				}
+
+			}
+
 			analyzerMap.put(analyzer.getName(), internalSettings);
 
 		}

@@ -4,6 +4,11 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.16.xsd">
-	<includeAll path="db/datasource/2022"/>
 
+	<changeSet id="add-column-analyzer-table" author="openk9">
+		<addColumn tableName="analyzer">
+			<column name="json_config" type="TEXT" />
+		</addColumn>
+	</changeSet>
+	
 </databaseChangeLog>
