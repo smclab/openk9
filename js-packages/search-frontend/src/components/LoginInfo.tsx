@@ -77,8 +77,7 @@ function LoginInfoComponent({}: LoginInfoProps) {
                 font-size: 1.5rem;
               `}
             >
-                {userProfileQuery.data?.firstName}&nbsp;
-                {userProfileQuery.data?.lastName}
+              {userProfileQuery.data?.name}
             </div>
             <div
               css={css`
@@ -86,7 +85,7 @@ function LoginInfoComponent({}: LoginInfoProps) {
               `}
             >
               <FontAwesomeIcon icon={faUser} />
-              &nbsp;{userProfileQuery.data?.username}
+              &nbsp;{userProfileQuery.data?.preferred_username}
             </div>
             <div
               css={css`
