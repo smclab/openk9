@@ -12,6 +12,8 @@ import io.smallrye.mutiny.unchecked.Unchecked;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
+import liquibase.Scope;
+import liquibase.ScopeManager;
 import liquibase.database.Database;
 import liquibase.database.DatabaseConnection;
 import liquibase.database.DatabaseFactory;
@@ -32,6 +34,8 @@ public class TenantManagerInitializer {
 
 	@PostConstruct
 	public void onStart() {
+
+		setThreadLocalLiquibaseScopeManager();
 
 		Uni<Void> tenantManagerLiquibase =
 			Uni
@@ -105,6 +109,35 @@ public class TenantManagerInitializer {
 			liquibase.update(new Contexts(), new LabelExpression());
 		}
 
+	}
+
+	private static void setThreadLocalLiquibaseScopeManager() {
+		Scope.setScopeManager(new ScopeManager() {
+
+			private final ThreadLocal<Scope> currentScope = new ThreadLocal<>();
+			private final Scope rootScope = Scope.getCurrentScope();
+
+			@Override
+			public synchronized Scope getCurrentScope() {
+				Scope returnedScope = currentScope.get();
+
+				if (returnedScope == null) {
+					returnedScope = rootScope;
+				}
+
+				return returnedScope;
+			}
+
+			@Override
+			protected Scope init(Scope scope) throws Exception {
+				return scope;
+			}
+
+			@Override
+			protected synchronized void setCurrentScope(Scope scope) {
+				this.currentScope.set(scope);
+			}
+		});
 	}
 
 	@ConfigProperty(name = "quarkus.datasource.reactive.url")
