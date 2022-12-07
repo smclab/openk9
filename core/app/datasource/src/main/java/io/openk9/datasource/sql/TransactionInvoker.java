@@ -2,6 +2,7 @@ package io.openk9.datasource.sql;
 
 import io.openk9.auth.tenant.MultiTenancyConfig;
 import io.openk9.auth.tenant.TenantResolver;
+import io.openk9.datasource.service.exception.K9Error;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -148,7 +149,10 @@ public abstract class TransactionInvoker {
 						try {
 							return fun2.apply(s, t);
 						} catch (Exception e) {
-							return Uni.createFrom().failure(e);
+							if (e instanceof K9Error) {
+								return Uni.createFrom().failure(e);
+							}
+							return Uni.createFrom().failure(new K9Error(e));
 						}
 					});
 			}));
