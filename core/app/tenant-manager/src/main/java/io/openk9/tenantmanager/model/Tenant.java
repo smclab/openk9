@@ -1,5 +1,6 @@
 package io.openk9.tenantmanager.model;
 
+import io.openk9.common.graphql.util.relay.GraphqlId;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -26,7 +27,7 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @RegisterForReflection
-public class Tenant {
+public class Tenant implements GraphqlId {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id", nullable = false)

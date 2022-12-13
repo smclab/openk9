@@ -15,29 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource.util;
+package io.openk9.common.graphql.util.relay;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.eclipse.microprofile.graphql.DefaultValue;
+import org.eclipse.microprofile.graphql.Description;
 
-@Getter
-@Setter
-@Builder
-@AllArgsConstructor(staticName = "of")
-@NoArgsConstructor
-@EqualsAndHashCode
-public class SortBy {
-	private String column;
-	@EqualsAndHashCode.Exclude
-	@DefaultValue("ASC")
-	private Direction direction;
+import java.util.function.Function;
 
-	public enum Direction {
-		ASC, DESC
-	}
+@Description("An edge in a connection")
+public interface Edge<T> {
+
+    /**
+     * @return the node of data that this edge represents
+     */
+    @Description("The item at the end of the edge")
+    T getNode();
+
+    /**
+     * @return the cursor for this edge node
+     */
+    @Description("cursor marks a unique position or index into the connection")
+    String getCursor();
+
+    <R> Edge<R> map(Function<T, R> mapper);
+
+    static <T> Edge<T> of(T node, String cursor) {
+        return new DefaultEdge<>(node, cursor);
+    }
+
 }

@@ -11,7 +11,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
-import java.util.UUID;
 
 @Path("/tenant-manager/background-process")
 public class BackgroundProcessResource {
@@ -34,7 +33,7 @@ public class BackgroundProcessResource {
 	@GET
 	@Path("/id/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<BackgroundProcess> findBackgroundProcessById(UUID id) {
+	public Uni<BackgroundProcess> findBackgroundProcessById(Long id) {
 		return backgroundProcessService.findBackgroundProcessById(id);
 	}
 

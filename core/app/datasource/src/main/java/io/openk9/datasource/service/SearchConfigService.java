@@ -17,32 +17,29 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.QueryParserConfigMapper;
 import io.openk9.datasource.mapper.SearchConfigMapper;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SearchConfig_;
-import io.openk9.datasource.model.Tab;
-import io.openk9.datasource.model.Tab_;
-import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.SearchConfigDTO;
-import io.openk9.datasource.model.dto.TokenTabDTO;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Set;
+
+;
 
 @ApplicationScoped
 public class SearchConfigService extends BaseK9EntityService<SearchConfig, SearchConfigDTO> {

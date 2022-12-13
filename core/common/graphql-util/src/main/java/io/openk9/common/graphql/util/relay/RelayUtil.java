@@ -15,9 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.graphql.util.relay;
+package io.openk9.common.graphql.util.relay;
 
-import io.openk9.datasource.model.util.K9Entity;
 import io.vertx.core.json.Json;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,12 +30,12 @@ import java.util.stream.Collectors;
 
 public class RelayUtil {
 
-	public static String encodeCursor(K9Entity k9Entity) {
+	public static String encodeCursor(GraphqlId graphqlId) {
 		return Base64.getEncoder().encodeToString(
 			Json.encode(
 				Cursor
 					.builder()
-					.id(k9Entity.getId())
+					.id(graphqlId.getId())
 					.build()
 				)
 				.getBytes(StandardCharsets.UTF_8)
@@ -50,7 +49,7 @@ public class RelayUtil {
 		);
 	}
 
-	public static <T extends K9Entity> List<Edge<T>> toEdgeList(List<T> entitiesList) {
+	public static <T extends GraphqlId> List<Edge<T>> toEdgeList(List<T> entitiesList) {
 
 		if (entitiesList == null || entitiesList.isEmpty()) {
 			return List.of();

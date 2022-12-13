@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.graphql.util;
+package io.openk9.common.graphql.util;
 
 import io.smallrye.graphql.api.Adapter;
 import io.vertx.core.json.JsonObject;

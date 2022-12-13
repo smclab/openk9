@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.graphql.util.relay;
+package io.openk9.common.graphql.util.relay;
 
 import graphql.Assert;
 

@@ -1,13 +1,13 @@
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.datasource.mapper.TokenTabMapper;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TabDTO;
 import io.openk9.datasource.model.dto.TokenTabDTO;
 import io.openk9.datasource.model.util.Mutiny2;
-import io.openk9.datasource.resource.util.SortBy;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TokenTabService;
 import io.openk9.datasource.service.util.K9EntityEvent;

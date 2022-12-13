@@ -17,15 +17,12 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.util.relay.Connection;
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
+import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.SearchConfigDTO;
-import io.openk9.datasource.resource.util.SortBy;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.service.QueryParserConfigService;
 import io.openk9.datasource.service.SearchConfigService;
 import io.openk9.datasource.service.util.K9EntityEvent;

@@ -1,14 +1,13 @@
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.TokenTabMapper;
-import io.openk9.datasource.model.Annotator_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.dto.TokenTabDTO;
 import io.openk9.datasource.model.util.Mutiny2;
-import io.openk9.datasource.resource.util.SortBy;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -16,6 +15,8 @@ import io.smallrye.mutiny.Uni;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Set;
+
+;
 
 @ApplicationScoped
 public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> {

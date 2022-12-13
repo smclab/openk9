@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model.util;
 
+import io.openk9.common.graphql.util.relay.GraphqlId;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -38,7 +39,7 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
-public abstract class K9Entity extends PanacheEntityBase {
+public abstract class K9Entity extends PanacheEntityBase implements GraphqlId {
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")

@@ -28,4 +28,21 @@
 	<name>OpenK9 :: Common :: Util</name>
 	<artifactId>util</artifactId>
 	<packaging>jar</packaging>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>io.smallrye</groupId>
+				<artifactId>jandex-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>

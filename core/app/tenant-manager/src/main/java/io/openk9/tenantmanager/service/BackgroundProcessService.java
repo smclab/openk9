@@ -1,7 +1,6 @@
 package io.openk9.tenantmanager.service;
 
 import io.openk9.tenantmanager.model.BackgroundProcess;
-import io.openk9.tenantmanager.model.Tenant;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
@@ -13,22 +12,53 @@ import java.util.UUID;
 @ApplicationScoped
 public class BackgroundProcessService {
 
-	public Uni<UUID> addBackgroundProcess() {
-		return sf.withTransaction(
-			session -> {
+	public Uni<Void> updateBackgroundProcess(
+		long id, BackgroundProcess.Status status, String message, String name) {
 
-				BackgroundProcess backgroundProcess = new BackgroundProcess();
-				backgroundProcess.setStatus(BackgroundProcess.Status.IN_PROGRESS);
+		return sf
+			.withTransaction((session, transaction) ->
+				session.find(BackgroundProcess.class, id).chain(bp -> {
 
-				return session
-					.persist(backgroundProcess)
-					.map(__ -> backgroundProcess.getId());
+					if (status != null) {
+						bp.setStatus(status);
+					}
 
-			}
+					if (message != null) {
+						bp.setMessage(message);
+					}
+
+					if (name != null) {
+						bp.setName(name);
+					}
+
+					return session.persist(bp);
+
+				})
+			);
+	}
+	public Uni<BackgroundProcess> createBackgroundProcess(
+		BackgroundProcess backgroundProcess) {
+
+		return sf.withSession(
+			session -> session.persist(backgroundProcess)
+				.chain(session::flush)
+				.replaceWith(backgroundProcess)
 		);
 	}
 
-	public Uni<BackgroundProcess> findBackgroundProcessById(UUID id) {
+	public Uni<List<BackgroundProcess>> findBackgroundProcessListByProcessId(UUID processId) {
+		return sf.withSession(
+			session -> session
+				.createQuery(
+					"select bp from BackgroundProcess bp where bp.processId = :processId",
+					BackgroundProcess.class
+				)
+				.setParameter("processId", processId)
+				.getResultList()
+		);
+	}
+
+	public Uni<BackgroundProcess> findBackgroundProcessById(long id) {
 		return sf.withStatelessSession(s -> s.get(BackgroundProcess.class, id));
 	}
 
@@ -63,31 +93,6 @@ public class BackgroundProcessService {
 				)
 				.setParameter("status", status)
 				.getResultList()
-		);
-	}
-
-	public Uni<Void> updateBackgroundProcessStatus(UUID id, BackgroundProcess.Status status) {
-		return updateBackgroundProcessStatus(id, status, null, null);
-	}
-
-	public Uni<Void> updateBackgroundProcessStatus(
-		UUID id, BackgroundProcess.Status status, String message) {
-		return updateBackgroundProcessStatus(id, status, message, null);
-	}
-
-	public Uni<Void> updateBackgroundProcessStatus(
-		UUID id, BackgroundProcess.Status status, String message, Tenant tenant) {
-		return sf.withTransaction(
-			session -> session
-				.find(BackgroundProcess.class, id)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(backgroundProcess -> {
-					backgroundProcess.setStatus(status);
-					backgroundProcess.setMessage(message);
-					backgroundProcess.setTenant(tenant);
-					return session.merge(backgroundProcess).replaceWithVoid();
-				})
 		);
 	}
 

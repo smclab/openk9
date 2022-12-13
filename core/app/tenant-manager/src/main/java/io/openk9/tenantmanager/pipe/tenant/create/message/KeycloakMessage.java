@@ -1,15 +1,19 @@
 package io.openk9.tenantmanager.pipe.tenant.create.message;
 
-import io.openk9.tenantmanager.actor.TypedActor;
+import akka.actor.typed.ActorRef;
 
 public sealed interface KeycloakMessage {
 
 	record Start(
-		TypedActor.Address<TenantMessage> tenant,
+		ActorRef<TenantMessage> tenant,
 		String virtualHost,
 		String realmName) implements KeycloakMessage {}
 
-	record Rollback() implements KeycloakMessage {}
-	record Stop() implements KeycloakMessage {}
+	record ProcessCreatedId(
+		Long processId, String virtualHost, String realmName,
+		ActorRef<TenantMessage> tenant) implements KeycloakMessage {}
+
+	enum Rollback implements KeycloakMessage {INSTANCE}
+	enum Stop implements KeycloakMessage {INSTANCE}
 
 }

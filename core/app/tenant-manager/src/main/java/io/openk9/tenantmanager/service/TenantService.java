@@ -1,5 +1,6 @@
 package io.openk9.tenantmanager.service;
 
+import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.model.Tenant_;
 import io.smallrye.mutiny.Uni;
@@ -10,10 +11,17 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.List;
+import java.util.function.BiFunction;
 
 @ApplicationScoped
-public class TenantService {
+public class TenantService extends GraphQLService<Tenant> {
+
+	public Uni<Tenant> findById(Long id) {
+		return sf.withStatelessTransaction(
+			(s) -> s.get(Tenant.class, id));
+	}
 
 	public Uni<Tenant> addTenant(Tenant tenant) {
 		return sf.withTransaction(
@@ -97,6 +105,37 @@ public class TenantService {
 
 			}
 		);
+	}
+
+	@Override
+	protected Class<Tenant> getEntityClass() {
+		return Tenant.class;
+	}
+
+	@Override
+	protected String[] getSearchFields() {
+		return new String[] {
+			Tenant_.VIRTUAL_HOST,
+			Tenant_.REALM_NAME,
+			Tenant_.CLIENT_ID,
+			Tenant_.SCHEMA_NAME
+		};
+	}
+
+	@Override
+	protected CriteriaBuilder getCriteriaBuilder() {
+		return sf.getCriteriaBuilder();
+	}
+
+	@Override
+	protected final SingularAttribute<Tenant, Long> getIdAttribute() {
+		return Tenant_.id;
+	}
+
+	@Override
+	protected <T> Uni<T> withTransaction(
+		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> function) {
+		return sf.withTransaction(function);
 	}
 
 	@Inject

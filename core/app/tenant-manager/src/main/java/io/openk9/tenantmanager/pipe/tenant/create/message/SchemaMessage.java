@@ -1,16 +1,20 @@
 package io.openk9.tenantmanager.pipe.tenant.create.message;
 
-import io.openk9.tenantmanager.actor.TypedActor;
+import akka.actor.typed.ActorRef;
 
 public sealed interface SchemaMessage {
 
 	record Start(
-		TypedActor.Address<TenantMessage> tenant,
+		ActorRef<TenantMessage> tenant,
 		String virtualHost,
 		String schemaName
 	) implements SchemaMessage {}
 
-	record Rollback() implements SchemaMessage {}
-	record Stop() implements SchemaMessage {}
+	record ProcessCreatedId(
+		Long processId, String virtualHost, String schemaName,
+		ActorRef<TenantMessage> tenant
+	) implements SchemaMessage {}
+	enum Rollback implements SchemaMessage {INSTANCE}
+	enum Stop implements SchemaMessage {INSTANCE}
 
 }

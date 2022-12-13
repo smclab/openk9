@@ -1,12 +1,12 @@
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.dto.AnalyzerDTO;
-import io.openk9.datasource.resource.util.SortBy;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.service.AnalyzerService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;

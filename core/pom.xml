@@ -172,6 +172,11 @@
 				<artifactId>tenant-manager-bridge</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>graphql-util</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

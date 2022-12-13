@@ -1,10 +1,10 @@
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.util.relay.Connection;
+import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.SortBy;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.validation.FieldValidator;

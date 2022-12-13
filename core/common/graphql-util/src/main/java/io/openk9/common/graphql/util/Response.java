@@ -15,16 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.graphql.exception;
+package io.openk9.common.graphql.util;
 
-public class InvalidPageSizeException extends Exception {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-    public InvalidPageSizeException(String message) {
-        this(message, null);
-    }
+@Data
+@AllArgsConstructor(staticName = "of")
+@NoArgsConstructor
+public class Response {
 
-    public InvalidPageSizeException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	private String message;
+	public static final Response INSTANCE = new Response("nothing");
 
 }

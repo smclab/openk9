@@ -1,9 +1,16 @@
 package io.openk9.tenantmanager.pipe.tenant.create;
 
-import io.openk9.tenantmanager.actor.TypedActor;
+import akka.actor.typed.ActorRef;
+import akka.actor.typed.Behavior;
+import akka.actor.typed.javadsl.AbstractBehavior;
+import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.Behaviors;
+import akka.actor.typed.javadsl.Receive;
+import io.openk9.tenantmanager.model.BackgroundProcess;
 import io.openk9.tenantmanager.pipe.tenant.create.message.KeycloakMessage;
 import io.openk9.tenantmanager.pipe.tenant.create.message.TenantMessage;
-import org.jboss.logging.Logger;
+import io.openk9.tenantmanager.service.BackgroundProcessService;
+import io.openk9.tenantmanager.util.VertxUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -16,74 +23,141 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class KeycloakBehavior implements TypedActor.Behavior<KeycloakMessage> {
+public class KeycloakBehavior extends AbstractBehavior<KeycloakMessage> {
 
 	public KeycloakBehavior(
-		Keycloak keycloak, TypedActor.Address<TenantMessage> tenantActor) {
+		ActorContext<KeycloakMessage> context,
+		Keycloak keycloak, UUID processId,
+		BackgroundProcessService backgroundProcessService,
+		ActorRef<TenantMessage> tenantActor) {
+		super(context);
 		this.tenantActor = tenantActor;
 		this.keycloak = keycloak;
+		this.requestId = processId;
+		this.backgroundProcessService = backgroundProcessService;
+	}
+
+	public static Behavior<KeycloakMessage> create(
+		Keycloak keycloak, UUID processId,
+		BackgroundProcessService backgroundProcessService,
+		ActorRef<TenantMessage> tenantActor) {
+		return Behaviors.setup(
+			context -> new KeycloakBehavior(
+				context, keycloak, processId, backgroundProcessService,
+				tenantActor));
 	}
 
 	@Override
-	public TypedActor.Effect<KeycloakMessage> apply(KeycloakMessage message) {
-		if (message instanceof KeycloakMessage.Start) {
-			KeycloakMessage.Start createSchema = (KeycloakMessage.Start)message;
-			String virtualHost = createSchema.virtualHost();
-			String realmName = createSchema.realmName();
-			RealmRepresentation realmRepresentation = new RealmRepresentation();
-			realmRepresentation.setRealm(realmName);
-			realmRepresentation.setEnabled(true);
-			realmRepresentation.setDisplayName(virtualHost);
-			realmRepresentation.setClients(
-				List.of(
-					_createClientRepresentation(virtualHost, "openk9")
+	public Receive<KeycloakMessage> createReceive() {
+		return newReceiveBuilder()
+			.onMessage(KeycloakMessage.Start.class, this::onStart)
+			.onMessage(KeycloakMessage.ProcessCreatedId.class, this::onProcessCreatedId)
+			.onMessage(KeycloakMessage.Rollback.class, this::onRollback)
+			.onMessage(KeycloakMessage.Stop.class, this::onStop)
+			.build();
+	}
+
+	private Behavior<KeycloakMessage> onProcessCreatedId(KeycloakMessage.ProcessCreatedId pcid) {
+
+		this.processId = pcid.processId();
+
+		String virtualHost = pcid.virtualHost();
+		String realmName = pcid.realmName();
+		RealmRepresentation realmRepresentation = new RealmRepresentation();
+		realmRepresentation.setRealm(realmName);
+		realmRepresentation.setEnabled(true);
+		realmRepresentation.setDisplayName(virtualHost);
+
+		realmRepresentation.setClients(
+			List.of(
+				_createClientRepresentation(virtualHost, "openk9")
+			)
+		);
+		realmRepresentation.setRoles(_createRolesRepresentation());
+
+		realmRepresentation.setUsers(
+			List.of(
+				_createAdminUserRepresentation()
+			)
+		);
+
+		try {
+			keycloak.realms().create(realmRepresentation);
+			_saveUserInfo(realmRepresentation);
+		}
+		catch (Exception e) {
+			tenantActor.tell(new TenantMessage.Error(e));
+			return Behaviors.same();
+		}
+
+		pcid
+			.tenant()
+			.tell(
+				new TenantMessage.RealmCreated(
+					realmName, "openk9", null
 				)
 			);
-			realmRepresentation.setRoles(_createRolesRepresentation());
 
-			realmRepresentation.setUsers(
-				List.of(
-					_createAdminUserRepresentation()
+		return this;
+	}
+
+	private Behavior<KeycloakMessage> onStart(KeycloakMessage.Start createSchema) {
+
+		VertxUtil.runOnContext(() ->
+			backgroundProcessService.createBackgroundProcess(
+				BackgroundProcess
+					.builder()
+					.processId(requestId)
+					.name("create-keycloak-realm")
+					.message("Starting create keycloak realm: " + createSchema.realmName())
+					.status(BackgroundProcess.Status.IN_PROGRESS)
+					.build()
+			)
+				.invoke(bp ->
+					getContext()
+						.getSelf()
+						.tell(
+							new KeycloakMessage.ProcessCreatedId(
+								bp.getId(),
+								createSchema.virtualHost(),
+								createSchema.realmName(),
+								createSchema.tenant()))
 				)
+		);
+
+		return this;
+
+	}
+
+	private Behavior<KeycloakMessage> onRollback(KeycloakMessage.Rollback rollback) {
+		if (realmName != null) {
+			keycloak.realms().realm(realmName).remove();
+			getContext().getLog().warn("Realm " + realmName + " rollbacked");
+			VertxUtil.runOnContext(() ->
+				backgroundProcessService.updateBackgroundProcess(
+					processId, BackgroundProcess.Status.ROOLBACK,
+					"Realm " + realmName + " rollbacked",
+					"create-keycloak-realm")
 			);
-
-			try {
-				keycloak.realms().create(realmRepresentation);
-				_saveUserInfo(realmRepresentation);
-			}
-			catch (Exception e) {
-				tenantActor.tell(new TenantMessage.Error(e));
-				return TypedActor.Stay();
-			}
-
-			createSchema
-				.tenant()
-				.tell(
-					new TenantMessage.RealmCreated(
-						realmName, "openk9", null
-					)
-				);
-
 		}
-		else if (message instanceof KeycloakMessage.Rollback) {
-			if (realmName != null) {
-				keycloak.realms().realm(realmName).remove();
-				logger.warn("Realm " + realmName + " rollbacked");
-			}
-			return TypedActor.Die();
-		}
-		else if (message instanceof KeycloakMessage.Stop) {
-			if (realmName != null) {
-				logger.info("Realm created");
-				logger.info("Realm: " + realmRepresentation.getRealm());
-				logger.info("User: " + realmRepresentation.getUsers().get(0).getUsername());
-				logger.info("Password: " + realmRepresentation.getUsers().get(0).getCredentials().get(0).getValue());
-			}
-			return TypedActor.Die();
-		}
+		return Behaviors.stopped();
+	}
 
-		return TypedActor.Stay();
- 	}
+	private Behavior<KeycloakMessage> onStop(KeycloakMessage.Stop stop) {
+		if (realmName != null) {
+			getContext().getLog().info("Realm created");
+			getContext().getLog().info("Realm: " + realmRepresentation.getRealm());
+			getContext().getLog().info("User: " + realmRepresentation.getUsers().get(0).getUsername());
+			getContext().getLog().info("Password: " + realmRepresentation.getUsers().get(0).getCredentials().get(0).getValue());
+			VertxUtil.runOnContext(() ->
+				backgroundProcessService.updateBackgroundProcess(
+					processId, BackgroundProcess.Status.FINISHED,
+					"Realm " + realmName + " created",
+					"create-keycloak-realm")
+			);
+		}
+		return Behaviors.stopped();
+	}
 
 	private void _saveUserInfo(RealmRepresentation realmRepresentation) {
 		this.realmRepresentation = realmRepresentation;
@@ -95,6 +169,7 @@ public class KeycloakBehavior implements TypedActor.Behavior<KeycloakMessage> {
 		userRepresentation.setUsername("k9admin");
 		userRepresentation.setFirstName("k9admin");
 		userRepresentation.setLastName("k9admin");
+		userRepresentation.setEmail("k9admin@openk9.io");
 		userRepresentation.setRealmRoles(
 			List.of("k9-admin", "k9-write", "k9-read")
 		);
@@ -148,6 +223,9 @@ public class KeycloakBehavior implements TypedActor.Behavior<KeycloakMessage> {
 		clientRepresentation.setEnabled(true);
 		clientRepresentation.setProtocol("openid-connect");
 		clientRepresentation.setClientAuthenticatorType("client-secret");
+		clientRepresentation.setDefaultClientScopes(
+			List.of("profile", "email"));
+
 		clientRepresentation.setAttributes(
 			Map.of(
 				"login_theme", clientId
@@ -155,7 +233,6 @@ public class KeycloakBehavior implements TypedActor.Behavior<KeycloakMessage> {
 		);
 		clientRepresentation.setRedirectUris(
 			List.of(
-				"http://" + virtualHost + "/*",
 				"https://" + virtualHost + "/*"
 			)
 		);
@@ -177,10 +254,12 @@ public class KeycloakBehavior implements TypedActor.Behavior<KeycloakMessage> {
 		return clientRepresentation;
 	}
 
-	private final TypedActor.Address<TenantMessage> tenantActor;
+	private final ActorRef<TenantMessage> tenantActor;
 	private final Keycloak keycloak;
+	private final UUID requestId;
+	private long processId;
+	private final BackgroundProcessService backgroundProcessService;
 	private String realmName;
 	private RealmRepresentation realmRepresentation;
-	private final static Logger logger = Logger.getLogger(KeycloakBehavior.class);
 
 }

@@ -15,18 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.graphql.util;
+package io.openk9.common.util;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@Builder
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
-public class Response {
+@EqualsAndHashCode
+public class SortBy {
+	private String column;
+	@EqualsAndHashCode.Exclude
+	private Direction direction = Direction.ASC;
 
-	private String message;
-	public static final Response INSTANCE = new Response("nothing");
-
+	public enum Direction {
+		ASC, DESC
+	}
 }
