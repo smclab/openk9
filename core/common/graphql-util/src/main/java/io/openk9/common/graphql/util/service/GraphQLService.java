@@ -336,7 +336,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 		Class<?> javaType = searchPath.getJavaType();
 
 		if (javaType == String.class) {
-			return criteriaBuilder.or(
+			searchConditions = criteriaBuilder.or(
 				searchConditions, criteriaBuilder.like(
 					criteriaBuilder.lower(searchPath.as(String.class)),
 					"%" + searchText.toLowerCase() + "%")
@@ -362,14 +362,14 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 				number = new BigDecimal(searchText);
 			}
 
-			return criteriaBuilder.or(
+			searchConditions = criteriaBuilder.or(
 				searchConditions, criteriaBuilder.equal(
 					searchPath, number)
 			);
 
 		}
 		else if (javaType == Boolean.class) {
-			return criteriaBuilder.or(
+			searchConditions = criteriaBuilder.or(
 				searchConditions, criteriaBuilder.equal(
 					searchPath, Boolean.valueOf(searchText))
 			);
@@ -377,7 +377,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 		else if (javaType == UUID.class) {
 
 			try {
-				return criteriaBuilder.or(
+				searchConditions = criteriaBuilder.or(
 					searchConditions, criteriaBuilder.equal(
 						searchPath,
 						UUID.fromString(searchText)
@@ -390,13 +390,14 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 		}
 		else {
-			return criteriaBuilder.or(
+			searchConditions = criteriaBuilder.or(
 				searchConditions, criteriaBuilder.like(
 					criteriaBuilder.lower(searchPath.as(String.class)),
 					"%" + searchText.toLowerCase() + "%")
 			);
 		}
 
+		return searchConditions;
 	}
 
 	protected abstract Class<ENTITY> getEntityClass();
