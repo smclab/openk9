@@ -12,6 +12,7 @@ import io.openk9.common.util.SortBy;
 import io.smallrye.mutiny.Uni;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -21,6 +22,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -185,61 +187,10 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 					Path<?> searchPath = root.get(searchField);
 
-					Class<?> javaType = searchPath.getJavaType();
+					_getSearchConditions(
+						criteriaBuilder, searchConditions, searchPath,
+						searchText);
 
-					if (javaType == String.class) {
-						searchConditions = criteriaBuilder.or(
-							searchConditions, criteriaBuilder.like(
-								criteriaBuilder.lower(searchPath.as(String.class)),
-								"%" + searchText.toLowerCase() + "%")
-						);
-					}
-					else if (javaType == UUID.class) {
-
-						try {
-							searchConditions = criteriaBuilder.or(
-								searchConditions, criteriaBuilder.equal(
-									searchPath.as(UUID.class),
-									UUID.fromString(searchText)
-								)
-							);
-						}
-						catch (IllegalArgumentException e) {
-							// ignore
-						}
-
-					}
-					else if (javaType.isAssignableFrom(Float.class) && StringUtils.isNumeric(searchText)) {
-						searchConditions = criteriaBuilder.or(
-							searchConditions, criteriaBuilder.equal(
-								searchPath, Float.parseFloat(searchText))
-						);
-					}
-					else if (javaType.isAssignableFrom(Double.class) && StringUtils.isNumeric(searchText)) {
-						searchConditions = criteriaBuilder.or(
-							searchConditions, criteriaBuilder.equal(
-								searchPath, Double.parseDouble(searchText))
-						);
-					}
-					else if (javaType.isAssignableFrom(Number.class) && StringUtils.isNumeric(searchText)) {
-
-						searchConditions = criteriaBuilder.or(
-							searchConditions, criteriaBuilder.equal(
-								searchPath, Long.parseLong(searchText))
-						);
-
-						searchConditions = criteriaBuilder.or(
-							searchConditions, criteriaBuilder.equal(
-								root.get(getIdAttribute()), Long.parseLong(searchText))
-						);
-
-					}
-					else if (javaType == Boolean.class) {
-						searchConditions = criteriaBuilder.or(
-							searchConditions, criteriaBuilder.equal(
-								searchPath, Boolean.valueOf(searchText))
-						);
-					}
 				}
 
 				where = criteriaBuilder.and(where, searchConditions);
@@ -369,6 +320,73 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 	}
 
+	private void _getSearchConditions(
+		CriteriaBuilder criteriaBuilder, Predicate searchConditions,
+		Path<?> searchPath, String searchText) {
+
+		Class<?> javaType = searchPath.getJavaType();
+
+		if (javaType == String.class) {
+			criteriaBuilder.or(
+				searchConditions, criteriaBuilder.like(
+					searchPath.as(String.class), "%" + searchText + "%")
+			);
+		}
+		else if (javaType == Boolean.class) {
+			criteriaBuilder.or(
+				searchConditions, criteriaBuilder.equal(
+					searchPath, Boolean.valueOf(searchText))
+			);
+		}
+		else if (javaType.isAssignableFrom(Number.class) && StringUtils.isNumeric(searchText)) {
+
+			Number number;
+
+			if (javaType == Integer.class) {
+				number = Integer.parseInt(searchText);
+			}
+			else if (javaType == Long.class) {
+				number = Long.parseLong(searchText);
+			}
+			else if (javaType == Float.class) {
+				number = Float.parseFloat(searchText);
+			}
+			else if (javaType == Double.class) {
+				number = Double.parseDouble(searchText);
+			}
+			else {
+				number = new BigDecimal(searchText);
+			}
+
+			criteriaBuilder.or(
+				searchConditions, criteriaBuilder.equal(
+					searchPath, number)
+			);
+
+		}
+		else if (javaType == UUID.class) {
+
+			try {
+				criteriaBuilder.or(
+					searchConditions, criteriaBuilder.equal(
+						searchPath,
+						UUID.fromString(searchText)
+					)
+				);
+			}
+			catch (IllegalArgumentException e) {
+				// ignore
+			}
+
+		}
+		else {
+			LOGGER.warn(
+				"Unsupported search field type: " + javaType.getName() +
+				" for field: " + searchPath);
+		}
+
+	}
+
 	protected abstract Class<ENTITY> getEntityClass();
 
 	protected abstract String[] getSearchFields();
@@ -379,5 +397,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 	protected abstract <T> Uni<T> withTransaction(
 		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> function);
+
+	private static final Logger LOGGER = Logger.getLogger(GraphQLService.class);
 
 }
