@@ -1,5 +1,6 @@
 package io.openk9.tenantmanager.model;
 
+import io.openk9.common.graphql.util.relay.GraphqlId;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -34,7 +35,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @RegisterForReflection
-public class BackgroundProcess {
+public class BackgroundProcess implements GraphqlId {
 
 	@Setter(AccessLevel.NONE)
 	@Id

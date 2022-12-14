@@ -8,6 +8,7 @@ import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Query;
 
 import javax.annotation.security.RolesAllowed;
@@ -33,7 +34,7 @@ public class TenantGraphqlResource {
 	}
 
 	@Query
-	public Uni<Tenant> getTenant(long id) {
+	public Uni<Tenant> getTenant(@Id long id) {
 		return tenantService.findById(id);
 	}
 
