@@ -188,13 +188,13 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 					Path<?> searchPath = root.get(searchField);
 
-					_addSearchCondition(
+					searchConditions = _addSearchCondition(
 						criteriaBuilder, searchConditions, searchPath,
 						searchText);
 
 				}
 				if (StringUtils.isNumeric(searchText)) {
-					criteriaBuilder.or(
+					searchConditions = criteriaBuilder.or(
 						searchConditions, criteriaBuilder.equal(
 							root.get(getIdAttribute()),
 							Long.parseLong(searchText)
@@ -329,14 +329,14 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 	}
 
-	private void _addSearchCondition(
+	private Predicate _addSearchCondition(
 		CriteriaBuilder criteriaBuilder, Predicate searchConditions,
 		Path<?> searchPath, String searchText) {
 
 		Class<?> javaType = searchPath.getJavaType();
 
 		if (javaType == String.class) {
-			criteriaBuilder.or(
+			return criteriaBuilder.or(
 				searchConditions, criteriaBuilder.like(
 					criteriaBuilder.lower(searchPath.as(String.class)),
 					"%" + searchText.toLowerCase() + "%")
@@ -362,14 +362,14 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 				number = new BigDecimal(searchText);
 			}
 
-			criteriaBuilder.or(
+			return criteriaBuilder.or(
 				searchConditions, criteriaBuilder.equal(
 					searchPath, number)
 			);
 
 		}
 		else if (javaType == Boolean.class) {
-			criteriaBuilder.or(
+			return criteriaBuilder.or(
 				searchConditions, criteriaBuilder.equal(
 					searchPath, Boolean.valueOf(searchText))
 			);
@@ -377,7 +377,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 		else if (javaType == UUID.class) {
 
 			try {
-				criteriaBuilder.or(
+				return criteriaBuilder.or(
 					searchConditions, criteriaBuilder.equal(
 						searchPath,
 						UUID.fromString(searchText)
@@ -390,7 +390,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 		}
 		else {
-			criteriaBuilder.or(
+			return criteriaBuilder.or(
 				searchConditions, criteriaBuilder.like(
 					criteriaBuilder.lower(searchPath.as(String.class)),
 					"%" + searchText.toLowerCase() + "%")
