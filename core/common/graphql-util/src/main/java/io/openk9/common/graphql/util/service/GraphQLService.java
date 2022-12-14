@@ -195,11 +195,30 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 						);
 					}
 					else if (javaType == UUID.class) {
+
+						try {
+							searchConditions = criteriaBuilder.or(
+								searchConditions, criteriaBuilder.equal(
+									searchPath.as(UUID.class),
+									UUID.fromString(searchText)
+								)
+							);
+						}
+						catch (IllegalArgumentException e) {
+							// ignore
+						}
+
+					}
+					else if (javaType.isAssignableFrom(Float.class) && StringUtils.isNumeric(searchText)) {
 						searchConditions = criteriaBuilder.or(
 							searchConditions, criteriaBuilder.equal(
-								searchPath.as(UUID.class),
-								searchText.toLowerCase()
-							)
+								searchPath, Float.parseFloat(searchText))
+						);
+					}
+					else if (javaType.isAssignableFrom(Double.class) && StringUtils.isNumeric(searchText)) {
+						searchConditions = criteriaBuilder.or(
+							searchConditions, criteriaBuilder.equal(
+								searchPath, Double.parseDouble(searchText))
 						);
 					}
 					else if (javaType.isAssignableFrom(Number.class) && StringUtils.isNumeric(searchText)) {
