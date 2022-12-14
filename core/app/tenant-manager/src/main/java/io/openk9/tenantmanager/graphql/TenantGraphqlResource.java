@@ -10,6 +10,7 @@ import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Query;
 
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Set;
@@ -17,6 +18,7 @@ import java.util.Set;
 @GraphQLApi
 @ApplicationScoped
 @CircuitBreaker
+@RolesAllowed("admin")
 public class TenantGraphqlResource {
 
 	@Query

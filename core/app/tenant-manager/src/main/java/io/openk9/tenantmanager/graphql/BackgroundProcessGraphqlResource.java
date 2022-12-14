@@ -7,6 +7,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Query;
 
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @GraphQLApi
 @ApplicationScoped
 @CircuitBreaker
+@RolesAllowed("admin")
 public class BackgroundProcessGraphqlResource {
 
 	@Query
