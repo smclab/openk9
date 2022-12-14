@@ -24,6 +24,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -181,18 +182,45 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 				Predicate searchConditions = criteriaBuilder.disjunction();
 
 				for (String searchField : searchFields) {
-					searchConditions = criteriaBuilder.or(
-						searchConditions, criteriaBuilder.like(
-							criteriaBuilder.lower(root.get(searchField)),
-							"%" + searchText.toLowerCase() + "%")
-					);
-				}
 
-				if (StringUtils.isNumeric(searchText)) {
-					searchConditions = criteriaBuilder.or(
-						searchConditions, criteriaBuilder.equal(
-							root.get(getIdAttribute()), Long.parseLong(searchText))
-					);
+					Path<?> searchPath = root.get(searchField);
+
+					Class<?> javaType = searchPath.getJavaType();
+
+					if (javaType == String.class) {
+						searchConditions = criteriaBuilder.or(
+							searchConditions, criteriaBuilder.like(
+								criteriaBuilder.lower(searchPath.as(String.class)),
+								"%" + searchText.toLowerCase() + "%")
+						);
+					}
+					else if (javaType == UUID.class) {
+						searchConditions = criteriaBuilder.or(
+							searchConditions, criteriaBuilder.equal(
+								searchPath.as(UUID.class),
+								searchText.toLowerCase()
+							)
+						);
+					}
+					else if (javaType.isAssignableFrom(Number.class) && StringUtils.isNumeric(searchText)) {
+
+						searchConditions = criteriaBuilder.or(
+							searchConditions, criteriaBuilder.equal(
+								searchPath, Long.parseLong(searchText))
+						);
+
+						searchConditions = criteriaBuilder.or(
+							searchConditions, criteriaBuilder.equal(
+								root.get(getIdAttribute()), Long.parseLong(searchText))
+						);
+
+					}
+					else if (javaType == Boolean.class) {
+						searchConditions = criteriaBuilder.or(
+							searchConditions, criteriaBuilder.equal(
+								searchPath, Boolean.valueOf(searchText))
+						);
+					}
 				}
 
 				where = criteriaBuilder.and(where, searchConditions);
