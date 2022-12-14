@@ -10,6 +10,7 @@ import io.openk9.common.graphql.util.relay.PageInfo;
 import io.openk9.common.graphql.util.relay.RelayUtil;
 import io.openk9.common.util.SortBy;
 import io.smallrye.mutiny.Uni;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -192,10 +193,14 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 						searchText);
 
 				}
-
-				_addSearchCondition(
-					criteriaBuilder, searchConditions,
-					root.get(getIdAttribute()), searchText);
+				if (StringUtils.isNumeric(searchText)) {
+					criteriaBuilder.or(
+						searchConditions, criteriaBuilder.equal(
+							root.get(getIdAttribute()),
+							Long.parseLong(searchText)
+						)
+					);
+				}
 
 				where = criteriaBuilder.and(where, searchConditions);
 
@@ -333,29 +338,24 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 		if (javaType == String.class) {
 			criteriaBuilder.or(
 				searchConditions, criteriaBuilder.like(
-					searchPath.as(String.class), "%" + searchText + "%")
-			);
-		}
-		else if (javaType == Boolean.class) {
-			criteriaBuilder.or(
-				searchConditions, criteriaBuilder.equal(
-					searchPath, Boolean.valueOf(searchText))
+					criteriaBuilder.lower(searchPath.as(String.class)),
+					"%" + searchText.toLowerCase() + "%")
 			);
 		}
 		else if (StringUtils.isNumeric(searchText)) {
 
 			Number number;
 
-			if (javaType == Integer.class) {
+			if (ClassUtils.isAssignable(javaType, Integer.class)) {
 				number = Integer.parseInt(searchText);
 			}
-			else if (javaType == Long.class) {
+			else if (ClassUtils.isAssignable(javaType, Long.class)) {
 				number = Long.parseLong(searchText);
 			}
-			else if (javaType == Float.class) {
+			else if (ClassUtils.isAssignable(javaType, Float.class)) {
 				number = Float.parseFloat(searchText);
 			}
-			else if (javaType == Double.class) {
+			else if (ClassUtils.isAssignable(javaType, Double.class)) {
 				number = Double.parseDouble(searchText);
 			}
 			else {
@@ -367,6 +367,12 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 					searchPath, number)
 			);
 
+		}
+		else if (javaType == Boolean.class) {
+			criteriaBuilder.or(
+				searchConditions, criteriaBuilder.equal(
+					searchPath, Boolean.valueOf(searchText))
+			);
 		}
 		else if (javaType == UUID.class) {
 
@@ -384,9 +390,11 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 		}
 		else {
-			LOGGER.warn(
-				"Unsupported search field type: " + javaType.getName() +
-				" for field: " + searchPath);
+			criteriaBuilder.or(
+				searchConditions, criteriaBuilder.like(
+					criteriaBuilder.lower(searchPath.as(String.class)),
+					"%" + searchText.toLowerCase() + "%")
+			);
 		}
 
 	}
