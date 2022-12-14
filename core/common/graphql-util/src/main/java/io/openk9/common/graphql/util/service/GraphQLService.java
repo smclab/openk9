@@ -342,7 +342,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 					searchPath, Boolean.valueOf(searchText))
 			);
 		}
-		else if (javaType.isAssignableFrom(Number.class) && StringUtils.isNumeric(searchText)) {
+		else if (StringUtils.isNumeric(searchText)) {
 
 			Number number;
 
