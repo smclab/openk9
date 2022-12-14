@@ -187,11 +187,15 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 					Path<?> searchPath = root.get(searchField);
 
-					_getSearchConditions(
+					_addSearchCondition(
 						criteriaBuilder, searchConditions, searchPath,
 						searchText);
 
 				}
+
+				_addSearchCondition(
+					criteriaBuilder, searchConditions,
+					root.get(getIdAttribute()), searchText);
 
 				where = criteriaBuilder.and(where, searchConditions);
 
@@ -320,7 +324,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 	}
 
-	private void _getSearchConditions(
+	private void _addSearchCondition(
 		CriteriaBuilder criteriaBuilder, Predicate searchConditions,
 		Path<?> searchPath, String searchText) {
 
