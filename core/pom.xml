@@ -103,7 +103,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<compiler-plugin.version>3.10.1</compiler-plugin.version>
 		<dependency.version.lombok>1.18.22</dependency.version.lombok>
-		<dependency.version.mapstruct>1.5.2.Final</dependency.version.mapstruct>
+		<dependency.version.mapstruct>1.5.3.Final</dependency.version.mapstruct>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -112,10 +112,11 @@
 		<quarkus.package.type>fast-jar</quarkus.package.type>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>2.14.1.Final</quarkus.platform.version>
+		<quarkus.platform.version>2.15.0.Final</quarkus.platform.version>
 		<quarkus.version>${quarkus.platform.version}</quarkus.version>
 		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
-		<jandex-maven-plugin.version>3.0.0</jandex-maven-plugin.version>
+		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
+		<reactor-bom-version>2022.0.1</reactor-bom-version>
 	</properties>
 
 	<dependencyManagement>
@@ -124,6 +125,13 @@
 				<groupId>${quarkus.platform.group-id}</groupId>
 				<artifactId>${quarkus.platform.artifact-id}</artifactId>
 				<version>${quarkus.platform.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-bom</artifactId>
+				<version>2022.0.1</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>

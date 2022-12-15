@@ -58,7 +58,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-opentelemetry-exporter-otlp</artifactId>
+      <artifactId>quarkus-opentelemetry</artifactId>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
@@ -75,7 +75,6 @@
     <dependency>
       <groupId>io.projectreactor</groupId>
       <artifactId>reactor-core</artifactId>
-      <version>3.4.19</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
