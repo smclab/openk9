@@ -35,6 +35,7 @@ import io.quarkus.vertx.ConsumeEvent;
 import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -98,29 +99,30 @@ public class SchedulerInitializer {
 
 					Uni<Void> voidUni = listDatasource
 						.onItem()
-						.invoke(tenantDatasourceList -> {
+						.invoke(Unchecked.consumer(tenantDatasourceList -> {
 							for (Datasource datasource : tenantDatasourceList) {
 								try {
 									createOrUpdateScheduler(schemaName, datasource);
 								}
-								catch (RuntimeException e) {
-									throw e;
-								}
 								catch (Exception e) {
-									throw new RuntimeException(e);
+									throw new RuntimeException(
+										"error createOrUpdateScheduler in schema: " + schemaName, e);
 								}
 							}
-						})
+						}))
 						.replaceWithVoid();
 
 					unis.add(voidUni);
 
 				}
 
-				return Uni.combine()
-					.all()
-					.unis(unis)
-					.discardItems();
+				return Uni
+					.join()
+					.all(unis)
+					.andCollectFailures()
+					.onFailure()
+					.invoke(t -> logger.warn("error init scheduler", t))
+					.replaceWithVoid();
 
 			});
 
