@@ -98,8 +98,15 @@ public class SchedulerInitializer {
 					Uni<List<Datasource>> listDatasource = datasourceService.findAll();
 
 					Uni<Void> voidUni = listDatasource
-						.onItem()
-						.invoke(Unchecked.consumer(tenantDatasourceList -> {
+						.onItemOrFailure()
+						.invoke(Unchecked.consumer((tenantDatasourceList, t) -> {
+
+							if (t != null) {
+								logger.error(
+									"error createOrUpdateScheduler in schema: " + schemaName, t);
+								return;
+							}
+
 							for (Datasource datasource : tenantDatasourceList) {
 								try {
 									logger.info("start datasource: " + datasource.getName() + " schema " + schemaName);
@@ -107,8 +114,9 @@ public class SchedulerInitializer {
 									logger.info("end   datasource: " + datasource.getName() + " schema " + schemaName);
 								}
 								catch (Exception e) {
-									throw new RuntimeException(
-										"error createOrUpdateScheduler in schema: " + schemaName, e);
+									logger.error(
+										"error createOrUpdateScheduler in schema: " +
+										schemaName + " datasource.name: " + datasource.getName(), e);
 								}
 							}
 						}))
@@ -122,8 +130,6 @@ public class SchedulerInitializer {
 					.join()
 					.all(unis)
 					.andCollectFailures()
-					.onFailure()
-					.invoke(t -> logger.warn("error init scheduler: " + t.getMessage(), t))
 					.replaceWithVoid();
 
 			});
