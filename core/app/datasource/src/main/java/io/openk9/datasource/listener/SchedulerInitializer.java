@@ -102,7 +102,9 @@ public class SchedulerInitializer {
 						.invoke(Unchecked.consumer(tenantDatasourceList -> {
 							for (Datasource datasource : tenantDatasourceList) {
 								try {
+									logger.info("start datasource: " + datasource.getName() + " schema " + schemaName));
 									createOrUpdateScheduler(schemaName, datasource);
+									logger.info("end   datasource: " + datasource.getName() + " schema " + schemaName));
 								}
 								catch (Exception e) {
 									throw new RuntimeException(
@@ -121,7 +123,7 @@ public class SchedulerInitializer {
 					.all(unis)
 					.andCollectFailures()
 					.onFailure()
-					.invoke(t -> logger.warn("error init scheduler", t))
+					.invoke(t -> logger.warn("error init scheduler: " + t.getMessage(), t))
 					.replaceWithVoid();
 
 			});
