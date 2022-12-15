@@ -2,6 +2,7 @@ package io.openk9.tenantmanager.init;
 
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
+import io.openk9.tenantmanager.util.CustomClassLoaderResourceAccessor;
 import io.openk9.tenantmanager.util.VertxUtil;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfigUtil;
@@ -17,7 +18,6 @@ import liquibase.ScopeManager;
 import liquibase.database.Database;
 import liquibase.database.DatabaseConnection;
 import liquibase.database.DatabaseFactory;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.keycloak.admin.client.Keycloak;
@@ -94,8 +94,8 @@ public class TenantManagerInitializer {
 
 	public void runTenantManagerLiquibase() throws Exception {
 
-		ClassLoaderResourceAccessor resourceAccessor =
-			new ClassLoaderResourceAccessor(
+		CustomClassLoaderResourceAccessor resourceAccessor =
+			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
 
 		DatabaseConnection connection = DatabaseFactory.getInstance().openConnection(

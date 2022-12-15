@@ -1,5 +1,6 @@
 package io.openk9.tenantmanager.service;
 
+import io.openk9.tenantmanager.util.CustomClassLoaderResourceAccessor;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
@@ -9,7 +10,6 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -41,8 +41,8 @@ public class DatasourceLiquibaseService {
 
 	public void runInitialization(String schemaName, String virtualHost) throws LiquibaseException {
 
-		ClassLoaderResourceAccessor resourceAccessor =
-			new ClassLoaderResourceAccessor(
+		CustomClassLoaderResourceAccessor resourceAccessor =
+			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
 
 		String liquibaseSchema = schemaName + "_liquibase";
@@ -73,8 +73,8 @@ public class DatasourceLiquibaseService {
 
 	public void runUpdate(List<String> schemaNames) throws LiquibaseException {
 
-		ClassLoaderResourceAccessor resourceAccessor =
-			new ClassLoaderResourceAccessor(
+		CustomClassLoaderResourceAccessor resourceAccessor =
+			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
 
 		for (String schemaName : schemaNames) {
@@ -105,8 +105,8 @@ public class DatasourceLiquibaseService {
 
 	public void rollbackRunLiquibaseMigration(String schemaName) {
 
-		ClassLoaderResourceAccessor resourceAccessor =
-			new ClassLoaderResourceAccessor(
+		CustomClassLoaderResourceAccessor resourceAccessor =
+			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
 
 		String liquibaseSchema = schemaName + "_liquibase";
