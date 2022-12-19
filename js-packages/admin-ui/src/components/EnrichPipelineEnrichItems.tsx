@@ -20,7 +20,7 @@ import ClayForm, { ClayInput } from "@clayui/form";
 import useDebounced from "./useDebounced";
 import ClayEmptyState from "@clayui/empty-state";
 
-export const AssociatedEnrichPipelineEnrichItemsQuery = gql`
+const AssociatedEnrichPipelineEnrichItemsQuery = gql`
   query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {
     enrichPipeline(id: $enrichPipelineId) {
       id
@@ -41,7 +41,7 @@ export const AssociatedEnrichPipelineEnrichItemsQuery = gql`
   }
 `;
 
-export const UnassociatedEnrichPipelineEnrichItemsQuery = gql`
+const UnassociatedEnrichPipelineEnrichItemsQuery = gql`
   query UnassociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!, $searchText: String) {
     enrichPipeline(id: $enrichPipelineId) {
       id
@@ -151,7 +151,6 @@ export function EnrichPipelineEnrichItems() {
             </ClayToolbar.Item>
             <ClayToolbar.Item>
               <ClayButtonWithIcon
-                aria-label=""
                 symbol="plus"
                 small
                 onClick={() => {
@@ -405,7 +404,6 @@ function ItemActions({ actions }: { actions: Array<{ label: string; icon: string
           {actions.map((action, index) => {
             return (
               <ClayButtonWithIcon
-                aria-label=""
                 key={index}
                 symbol={action.icon}
                 className="component-action quick-action-item"
@@ -416,7 +414,7 @@ function ItemActions({ actions }: { actions: Array<{ label: string; icon: string
         </div>
       </div>
       <ClayDropDownWithItems
-        trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />}
+        trigger={<ClayButtonWithIcon symbol="ellipsis-v" className="component-action" />}
         items={actions.map((action) => ({
           label: action.label,
           onClick: action.onClick,

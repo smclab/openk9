@@ -78,10 +78,6 @@ import { BucketSuggestionCategories } from "./components/BucketSuggestionCategor
 import { DropBoxWizard } from "./wizards/DropBoxWizard";
 import { DocumentTypesSettings } from "./components/DocumentTypesSettings";
 import { SubFieldsDocumentType } from "./components/SubFieldsDocumentType";
-import { MachingLearning } from "./components/MachingLearning";
-import { HuggingFaceCard } from "./components/HuggingFaceCards";
-import { HuggingFace } from "./components/HuggingFace";
-import { PluginDriverToAcl } from "./components/PluginDriverToAcl";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -99,30 +95,8 @@ export default function App() {
                     <Route path="" element={<DashBoard />} />
                     <Route path="data-sources" element={<DataSources />} />
                     <Route path="data-sources/:datasourceId" element={<DataSource />} />
-                    <Route path="plugin-drivers">
-                      <Route path="" element={<PluginDrivers />} />
-                      <Route path="new" element={<PluginDriver />} />
-                      <Route
-                        path=":pluginDriverId"
-                        element={
-                          <React.Fragment>
-                            <NavTabs
-                              tabs={[
-                                { label: "Attributes", path: "" },
-                                {
-                                  label: "associated acl",
-                                  path: "associated-acl",
-                                },
-                              ]}
-                            />
-                            <Outlet />
-                          </React.Fragment>
-                        }
-                      >
-                        <Route path="" element={<PluginDriver />} />
-                        <Route path="associated-acl" element={<PluginDriverToAcl />} />
-                      </Route>
-                    </Route>
+                    <Route path="plugin-drivers" element={<PluginDrivers />} />
+                    <Route path="plugin-drivers/:pluginDriverId" element={<PluginDriver />} />
                     <Route path="enrich-pipelines" element={<EnrichPipelines />} />
                     <Route
                       path="enrich-pipelines/:enrichPipelineId"
@@ -143,14 +117,8 @@ export default function App() {
                             <NavTabs
                               tabs={[
                                 { label: "Attributes", path: "" },
-                                {
-                                  label: "Associated Data Sources",
-                                  path: "data-sources",
-                                },
-                                {
-                                  label: "Associated Suggestion Categories",
-                                  path: "suggestion-categories",
-                                },
+                                { label: "Associated Data Sources", path: "data-sources" },
+                                { label: "Associated Suggestion Categories", path: "suggestion-categories" },
                                 { label: "Associated Tabs", path: "tabs" },
                               ]}
                             />
@@ -176,10 +144,7 @@ export default function App() {
                             <NavTabs
                               tabs={[
                                 { label: "Attributes", path: "" },
-                                {
-                                  label: "Document Type Fields",
-                                  path: "document-type-fields",
-                                },
+                                { label: "Document Type Fields", path: "document-type-fields" },
                               ]}
                             />
                             <Outlet />
@@ -222,10 +187,7 @@ export default function App() {
                             <NavTabs
                               tabs={[
                                 { label: "Attributes", path: "" },
-                                {
-                                  label: "Document Type Fields",
-                                  path: "document-type-fields",
-                                },
+                                { label: "Document Type Fields", path: "document-type-fields" },
                                 { label: "Mappings", path: "mappings" },
                               ]}
                             />
@@ -249,10 +211,7 @@ export default function App() {
                             <NavTabs
                               tabs={[
                                 { label: "Attributes", path: "" },
-                                {
-                                  label: "Query Parsers",
-                                  path: "query-parsers",
-                                },
+                                { label: "Query Parsers", path: "query-parsers" },
                               ]}
                             />
                             <Outlet />
@@ -366,13 +325,6 @@ export default function App() {
                         }
                       >
                         <Route path="" element={<CharFilter />} />
-                      </Route>
-                    </Route>
-                    <Route path="maching-learning">
-                      <Route path="" element={<MachingLearning />} />
-                      <Route path="hugging-face-view">
-                        <Route path="" element={<HuggingFaceCard />} />
-                        <Route path="configure-hugging-face" element={<HuggingFace />} />
                       </Route>
                     </Route>
                     <Route path="annotators">

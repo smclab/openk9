@@ -107,7 +107,6 @@ export function TableWithSubFields<
                 />
                 {searchText !== "" && (
                   <ClayButtonWithIcon
-                    aria-label=""
                     symbol="times"
                     className="component-action"
                     onClick={() => {
@@ -120,7 +119,7 @@ export function TableWithSubFields<
             </ClayToolbar.Item>
             <ClayToolbar.Item>
               <Link to={onCreatePath}>
-                <ClayButtonWithIcon aria-label="" symbol="plus" small />
+                <ClayButtonWithIcon symbol="plus" small />
               </Link>
             </ClayToolbar.Item>
             {isItemsSelectable && (
@@ -188,14 +187,13 @@ export function TableWithSubFields<
                         {isSelected.selected && isSelected.id === row?.id && (
                           <span key={index + "spanButton" + row?.id}>
                             <Link to={`newSubFields/${row?.id}/new`}>
-                              <ClayButtonWithIcon aria-label="" className="component-action " symbol="plus" small />
+                              <ClayButtonWithIcon className="component-action " symbol="plus" small />
                             </Link>
                           </span>
                         )}
                         {JSON.stringify(row?.subFields.edges) !== "[]" ? (
                           <span key={index + "subField" + row?.id}>
                             <ClayButtonWithIcon
-                              aria-label=""
                               className="component-action "
                               key={"button" + index}
                               symbol={isSelected.id === row?.id && isSelected.selected ? "angle-up-small" : "angle-down-small"}
@@ -211,14 +209,7 @@ export function TableWithSubFields<
                         ) : (
                           <span key={index + "link" + row?.id}>
                             <Link to={`newSubFields/${row?.id}/new`}>
-                              <ClayButtonWithIcon
-                                aria-label=""
-                                arial-aria-label=""
-                                key={"button" + index}
-                                className="component-action "
-                                symbol="plus"
-                                small
-                              />
+                              <ClayButtonWithIcon key={"button" + index} className="component-action " symbol="plus" small />
                             </Link>
                           </span>
                         )}
@@ -334,7 +325,6 @@ export function Table<
                 />
                 {searchText !== "" && (
                   <ClayButtonWithIcon
-                    aria-label=""
                     symbol="times"
                     className="component-action"
                     onClick={() => {
@@ -347,7 +337,7 @@ export function Table<
             </ClayToolbar.Item>
             <ClayToolbar.Item>
               <Link to={onCreatePath}>
-                <ClayButtonWithIcon aria-label="" symbol="plus" small />
+                <ClayButtonWithIcon symbol="plus" small />
               </Link>
             </ClayToolbar.Item>
             {isItemsSelectable && (
@@ -520,7 +510,6 @@ function TableRowActions({ actions }: { actions: Array<{ label: string; icon: st
           if (action.icon !== "") {
             return (
               <ClayButtonWithIcon
-                aria-label=""
                 key={index}
                 symbol={action.icon}
                 className="component-action quick-action-item"
@@ -532,7 +521,7 @@ function TableRowActions({ actions }: { actions: Array<{ label: string; icon: st
       </div>
 
       <ClayDropDownWithItems
-        trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />}
+        trigger={<ClayButtonWithIcon symbol="ellipsis-v" className="component-action" />}
         items={actions.map((action) => ({
           label: action.label,
           onClick: action.onClick,
@@ -548,15 +537,13 @@ function TableRowActionsSubFields({ actions }: { actions: Array<{ label: string;
       <span>
         {actions.map((action, index) => {
           if (action.icon !== "") {
-            return (
-              <ClayButtonWithIcon aria-label="" key={index} className="component-action " symbol={action.icon} onClick={action.onClick} />
-            );
+            return <ClayButtonWithIcon key={index} className="component-action " symbol={action.icon} onClick={action.onClick} />;
           }
         })}
       </span>
       <span>
         <ClayDropDownWithItems
-          trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />}
+          trigger={<ClayButtonWithIcon symbol="ellipsis-v" className="component-action" />}
           items={actions.map((action) => ({
             label: action.label,
             onClick: action.onClick,
@@ -576,7 +563,7 @@ function TableRowsActions({ actions }: { actions: Array<{ label: string; disable
           </ClayButton>
         );
       })}
-      <ClayDropDownWithItems trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" displayType="secondary" />} items={actions} />
+      <ClayDropDownWithItems trigger={<ClayButtonWithIcon symbol="ellipsis-v" displayType="secondary" />} items={actions} />
     </ClayButton.Group>
   );
 }

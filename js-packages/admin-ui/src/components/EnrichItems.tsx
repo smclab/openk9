@@ -3,7 +3,6 @@ import { gql } from "@apollo/client";
 import { useDeleteEnrichItemMutation, useEnrichItemsQuery } from "../graphql-generated";
 import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
-import { AssociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQuery } from "./EnrichPipelineEnrichItems";
 
 export const EnrichItemsQuery = gql`
   query EnrichItems($searchText: String, $cursor: String) {
@@ -38,15 +37,15 @@ export function EnrichItems() {
   const enrichItemsQuery = useEnrichItemsQuery();
   const showToast = useToast();
   const [deleteEnrichItemMutate] = useDeleteEnrichItemMutation({
-    refetchQueries: [EnrichItemsQuery, AssociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQuery],
+    refetchQueries: [EnrichItemsQuery],
     onCompleted(data) {
       if (data.deleteEnrichItem?.id) {
         showToast({ displayType: "success", title: "Enrich items deleted", content: data.deleteEnrichItem.name ?? "" });
       }
     },
     onError(error) {
-      showToast({ displayType: "danger", title: "Enrich items error", content: error.message ?? "" });
-    },
+      showToast({ displayType: "danger", title: "Enrich items error", content: error.message ?? "" })
+    }
   });
 
   return (

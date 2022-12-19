@@ -13,7 +13,6 @@ import ClayPanel from "@clayui/panel";
 import ClayMultiSelect from "@clayui/multi-select";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
-import { UserField } from "../graphql-generated";
 
 type Nullable<T> = T | null | undefined;
 export const fromFieldValidators =
@@ -178,7 +177,6 @@ export function TextInput({ id, label, value, onChange, disabled, validationMess
         ></input>
         {value !== "" && (
           <ClayButtonWithIcon
-            aria-label=""
             symbol="times"
             className="component-action"
             onClick={() => {
@@ -303,35 +301,6 @@ export function EnumSelect<E extends Record<string, any>>({
   );
 }
 
-export function EnumSelectSimple<E extends Record<string, any>>({
-  id,
-  label,
-  value,
-  onChange,
-  dict,
-  dimension,
-}: BaseInputProps<E[string]> & { dict: E; dimension: number }) {
-  return (
-    <div className="form-group">
-      <label htmlFor={id}>{label}</label>
-      <select
-        style={{ maxWidth: dimension + "px" }}
-        className="form-control"
-        id={id}
-        value={value}
-        onChange={(event) => onChange(event.currentTarget.value as E[string])}
-      >
-        {Object.entries(dict).map(([label, value]) => {
-          return (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          );
-        })}
-      </select>
-    </div>
-  );
-}
 export function BooleanInput({ id, label, value, onChange, disabled, validationMessages }: BaseInputProps<boolean>) {
   return (
     <div className={`form-group ${validationMessages.length ? "has-warning" : ""}`}>
@@ -442,14 +411,7 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
         <label>{label}</label>
         <ClayInput.Group>
           <ClayInput.GroupItem>
-            <ClayInput
-              type="text"
-              className="form-control"
-              style={{ backgroundColor: "#f1f2f5" }}
-              readOnly
-              disabled={!value}
-              value={valueQuery.data?.value?.name ?? ""}
-            />
+            <ClayInput type="text" readOnly disabled={!value} value={valueQuery.data?.value?.name ?? ""} />
           </ClayInput.GroupItem>
           <ClayInput.GroupItem append shrink>
             <ClayButton.Group>
@@ -458,7 +420,6 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
               </ClayButton>
               <ClayButton
                 displayType="secondary"
-                disabled={typeof valueQuery.data?.value?.name === "string" ? false : true}
                 onClick={() => {
                   if (!changeMutation.loading && !removeMutation.loading)
                     removeMutate({
@@ -600,7 +561,6 @@ export function AssociatedEntities<Q>({
       unassociatedListQuery.refetch();
     },
   });
-  unassociatedListQuery.refetch();
   const [removeMutate, removeMutation] = useRemoveMutation({
     onCompleted() {
       associatedListQuery.refetch();
@@ -624,7 +584,7 @@ export function AssociatedEntities<Q>({
               />
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <ClayButtonWithIcon aria-label="" symbol="plus" small onClick={() => onOpenChange(true)} />
+              <ClayButtonWithIcon symbol="plus" small onClick={() => onOpenChange(true)} />
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ClayLayout.ContainerFluid>
@@ -718,176 +678,6 @@ export function AssociatedEntities<Q>({
                               onClick={() => {
                                 if (edge?.node?.id) {
                                   addMutate({ variables: { parentId, childId: edge.node.id } });
-                                }
-                              }}
-                              symbol="link"
-                            />
-                          )}
-                        </ClayList.QuickActionMenu>
-                      </ClayList.ItemField>
-                    </ClayList.Item>
-                  );
-                }) as any
-              }
-            </ClayList>
-          </ClayModal.Body>
-        </ClayModal>
-      )}
-    </React.Fragment>
-  );
-}
-
-export function AssociatedEntitiesWithSelect<Q>({
-  label,
-  parentId,
-  list: { useListQuery, field },
-  useAddMutation,
-  useRemoveMutation,
-  notSelect,
-}: {
-  label: string;
-  parentId: string;
-  notSelect: any;
-  list: {
-    useListQuery: QueryHook<Q, { parentId: string; searchText?: string | null; cursor?: string | null }>;
-    field(data: Q | undefined): any;
-  };
-  useAddMutation: any;
-  useRemoveMutation: MutationHook<any, { parentId: string; childId: string }>;
-}) {
-  const [searchText, setSearchText] = React.useState("");
-  const searchTextDebounced = useDebounced(searchText);
-  const associatedListQuery = useListQuery({ variables: { parentId, searchText: searchTextDebounced } });
-  const unassociatedListQuery = notSelect();
-
-  const [addMutate, addMutation] = useAddMutation({
-    onCompleted() {
-      associatedListQuery.refetch();
-      // unassociatedListQuery.refetch();
-    },
-  });
-  const [removeMutate, removeMutation] = useRemoveMutation({
-    onCompleted() {
-      associatedListQuery.refetch();
-      unassociatedListQuery.refetch();
-    },
-  });
-  const { observer, onOpenChange, open } = useModal();
-  const scrollerRef = React.useRef<HTMLElement>();
-  const canAct = !addMutation.loading && !removeMutation.loading;
-  const [userField, setUserField] = React.useState(UserField.Email);
-  return (
-    <React.Fragment>
-      <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
-          <ClayToolbar.Nav>
-            <ClayToolbar.Item expand>
-              <ClayToolbar.Input
-                placeholder="Search..."
-                sizing="sm"
-                value={searchText}
-                onChange={(event) => setSearchText(event.currentTarget.value)}
-              />
-            </ClayToolbar.Item>
-            <ClayToolbar.Item>
-              <ClayButtonWithIcon aria-label="" symbol="plus" small onClick={() => onOpenChange(true)} />
-            </ClayToolbar.Item>
-          </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
-      </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
-        {(field(associatedListQuery.data)?.edges?.length ?? 0) === 0 && !associatedListQuery.loading && (
-          <ClayEmptyState description="There are no matching associated entities" title="No entities" className="c-empty-state-animation" />
-        )}
-        <Virtuoso
-          totalCount={field(associatedListQuery.data)?.edges?.length}
-          scrollerRef={(element) => (scrollerRef.current = element as any)}
-          style={{ height: "70vh" }}
-          components={ClayListComponents}
-          itemContent={(index) => {
-            const row = field(associatedListQuery.data)?.edges?.[index]?.node ?? undefined;
-            return (
-              <React.Fragment>
-                <ClayList.ItemField expand>
-                  <ClayList.ItemTitle>{row?.name || "..."}</ClayList.ItemTitle>
-                  <ClayList.ItemText>{row?.description || "..."}</ClayList.ItemText>
-                </ClayList.ItemField>
-                <ClayList.ItemField>
-                  <ClayList.QuickActionMenu>
-                    {canAct && (
-                      <ClayList.QuickActionMenu.Item
-                        onClick={() => {
-                          if (row?.id) {
-                            removeMutate({ variables: { parentId, childId: row.id } });
-                          }
-                        }}
-                        symbol="chain-broken"
-                      />
-                    )}
-                  </ClayList.QuickActionMenu>
-                </ClayList.ItemField>
-              </React.Fragment>
-            );
-          }}
-          endReached={() => {
-            if (field(associatedListQuery.data)?.pageInfo?.hasNextPage) {
-              associatedListQuery.fetchMore({
-                variables: {
-                  cursor: field(associatedListQuery.data)?.pageInfo?.endCursor,
-                },
-              });
-            }
-          }}
-          isScrolling={(isScrolling) => {
-            if (scrollerRef.current) {
-              if (isScrolling) {
-                scrollerRef.current.style.pointerEvents = "none";
-              } else {
-                scrollerRef.current.style.pointerEvents = "auto";
-              }
-            }
-          }}
-        />
-      </ClayLayout.ContainerFluid>
-      {open && (
-        <ClayModal observer={observer}>
-          <ClayModal.Header>{label}</ClayModal.Header>
-          <ClayModal.Body>
-            <EnumSelectSimple
-              dict={UserField}
-              disabled={false}
-              id={""}
-              label="Select User Field"
-              onChange={setUserField}
-              value={userField}
-              dimension={800}
-              validationMessages={[]}
-              key={""}
-            ></EnumSelectSimple>
-
-            {(unassociatedListQuery.data?.docTypeFields.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
-              <ClayEmptyState
-                description="There are no matching unassociated entities"
-                title="No entities"
-                className="c-empty-state-animation"
-              />
-            )}
-            <ClayList showQuickActionsOnHover>
-              {
-                unassociatedListQuery.data?.docTypeFields.edges?.map((edge: any) => {
-                  return (
-                    <ClayList.Item flex key={edge?.node?.id}>
-                      <ClayList.ItemField expand>
-                        <ClayList.ItemTitle>{edge?.node?.name || "..."}</ClayList.ItemTitle>
-                        <ClayList.ItemText>{edge?.node?.description || "..."}</ClayList.ItemText>
-                      </ClayList.ItemField>
-                      <ClayList.ItemField>
-                        <ClayList.QuickActionMenu>
-                          {canAct && (
-                            <ClayList.QuickActionMenu.Item
-                              onClick={() => {
-                                if (edge?.node?.id) {
-                                  addMutate({ variables: { parentId, childId: edge.node.id, userField: userField } });
                                 }
                               }}
                               symbol="link"

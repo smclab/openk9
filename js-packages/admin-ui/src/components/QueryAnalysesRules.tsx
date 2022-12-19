@@ -7,10 +7,11 @@ import {
 } from "../graphql-generated";
 import { AssociatedEntities } from "./Form";
 
-export const QueryAnalysesRule = gql`
+gql`
   query QueryAnalysesRules($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     queryAnalysis(id: $parentId) {
       id
+
       rules(searchText: $searchText, notEqual: $unassociated, first: 25, after: $cursor) {
         edges {
           node {
@@ -29,7 +30,7 @@ export const QueryAnalysesRule = gql`
   }
 `;
 
-export const AddRuleToQueryAnalyses = gql`
+gql`
   mutation AddRulesToQueryAnalyses($childId: ID!, $parentId: ID!) {
     addRuleToQueryAnalysis(ruleId: $childId, id: $parentId) {
       left {
@@ -42,7 +43,7 @@ export const AddRuleToQueryAnalyses = gql`
   }
 `;
 
-export const RemoveRuleFromQueryAnalyses = gql`
+gql`
   mutation RemoveRuleFromQueryAnalyses($childId: ID!, $parentId: ID!) {
     removeRuleFromQueryAnalysis(ruleId: $childId, id: $parentId) {
       left {

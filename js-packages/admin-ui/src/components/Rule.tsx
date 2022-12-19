@@ -3,12 +3,11 @@ import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
-import { useCreateOrUpdateRuleQueryMutation, useQueryAnalysesRulesQuery, useRuleQuery } from "../graphql-generated";
+import { useCreateOrUpdateRuleQueryMutation, useRuleQuery } from "../graphql-generated";
 import { RulesQuery } from "./Rules";
 import { useForm, fromFieldValidators, TextInput, TextArea } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
-import { AddRuleToQueryAnalyses, QueryAnalysesRule, RemoveRuleFromQueryAnalyses } from "./QueryAnalysesRules";
 
 const RuleQuery = gql`
   query Rule($id: ID!) {
@@ -46,7 +45,7 @@ export function Rule() {
     skip: !ruleId || ruleId === "new",
   });
   const [createOrUpdateRuleMutate, createOrUpdateRuleMutation] = useCreateOrUpdateRuleQueryMutation({
-    refetchQueries: [RuleQuery, RulesQuery, QueryAnalysesRule, AddRuleToQueryAnalyses, RemoveRuleFromQueryAnalyses],
+    refetchQueries: [RuleQuery, RulesQuery],
     onCompleted(data) {
       if (data.rule?.entity) {
         if (ruleId === "new") {

@@ -188,7 +188,7 @@ function EventData({ id }: EventDataProps) {
           </ClayModal.Body>
         </ClayModal>
       )}
-      <ClayButtonWithIcon aria-label="" symbol="info-panel-open" onClick={() => onOpenChange(true)} />
+      <ClayButtonWithIcon symbol="info-panel-open" onClick={() => onOpenChange(true)} />
     </>
   );
 }

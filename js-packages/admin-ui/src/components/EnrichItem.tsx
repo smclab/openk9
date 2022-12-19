@@ -9,7 +9,6 @@ import { CodeInput } from "./CodeInput";
 import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
-import { AssociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQuery } from "./EnrichPipelineEnrichItems";
 
 const EnrichItemQuery = gql`
   query EnrichItem($id: ID!) {
@@ -67,12 +66,7 @@ export function EnrichItem() {
     skip: !enrichItemId || enrichItemId === "new",
   });
   const [createOrUpdateEnrichItemMutate, createOrUpdateEnrichItemMutation] = useCreateOrUpdateEnrichItemMutation({
-    refetchQueries: [
-      EnrichItemQuery,
-      EnrichItemsQuery,
-      AssociatedEnrichPipelineEnrichItemsQuery,
-      UnassociatedEnrichPipelineEnrichItemsQuery,
-    ],
+    refetchQueries: [EnrichItemQuery, EnrichItemsQuery],
     onCompleted(data) {
       if (data.enrichItem?.entity) {
         if (enrichItemId === "new") {

@@ -127,7 +127,7 @@ export function QueryParserConfig() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/search-configs/${searchConfigId}/query-parsers`}>
-                <ClayButtonWithIcon aria-label="" symbol="angle-left" small />
+                <ClayButtonWithIcon symbol="angle-left" small />
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>

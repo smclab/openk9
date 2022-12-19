@@ -25,7 +25,7 @@ module.exports = function (app) {
   app.use(
     "/k8s",
     createProxyMiddleware({
-      target: "https://test.openk9.io",
+      target: "https://kubernetes-monitoring.openk9.io",
       changeOrigin: true,
     })
   );

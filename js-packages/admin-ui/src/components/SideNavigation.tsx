@@ -49,7 +49,6 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
                 <SideNavigationItem label="Events" path="/monitoring-events" />
                 <SideNavigationItem label="Logs" path="/logs" />
               </SideNavigationCollapsible>
-              <SideNavigationItem label="Maching Learning" path="maching-learning" />
             </ul>
           </nav>
         </div>

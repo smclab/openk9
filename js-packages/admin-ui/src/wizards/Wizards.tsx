@@ -92,7 +92,7 @@ export function Wizards() {
               />
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <ClayButtonWithIcon aria-label="" symbol="plus" small />
+              <ClayButtonWithIcon symbol="plus" small />
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ClayLayout.ContainerFluid>

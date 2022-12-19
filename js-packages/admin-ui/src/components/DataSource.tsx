@@ -27,7 +27,6 @@ import ClayToolbar from "@clayui/toolbar";
 import { useRestClient } from "./queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "./ToastProvider";
-import { AddDataSourceToBucket, BucketsdataSources, RemoveDataSourceFromBucket } from "./BucketDataSource";
 
 const DataSourceQuery = gql`
   query DataSource($id: ID!) {
@@ -85,7 +84,7 @@ export function DataSource() {
     skip: !datasourceId || datasourceId === "new",
   });
   const [createOrUpdateDataSourceMutate, createOrUpdateDataSourceMutation] = useCreateOrUpdateDataSourceMutation({
-    refetchQueries: [DataSourceQuery, DataSourcesQuery, BucketsdataSources, AddDataSourceToBucket, RemoveDataSourceFromBucket],
+    refetchQueries: [DataSourceQuery, DataSourcesQuery],
     onCompleted(data) {
       if (data.datasource?.entity) {
         if (datasourceId === "new") {

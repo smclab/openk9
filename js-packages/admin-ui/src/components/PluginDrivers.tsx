@@ -13,12 +13,6 @@ export const PluginDriversQuery = gql`
           name
           description
           type
-          aclMappings {
-            userField
-            docTypeField {
-              fieldName
-            }
-          }
         }
       }
       pageInfo {
