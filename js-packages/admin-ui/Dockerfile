@@ -1,11 +1,10 @@
 FROM node:16.18-alpine as react-build
 
-COPY ./js-packages/admin-ui/ /app
+COPY ./js-packages/admin-ui /app
 
 WORKDIR /app
-
-RUN yarn
-RUN yarn build
+RUN yarn install --frozen-lockfile
+RUN NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
 FROM nginx:alpine
