@@ -1,0 +1,68 @@
+Build Latest Tenant Ui Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    refs:
+      - main
+      - 325-ui-tenant-manager
+    changes:
+      - .gitlab/.gitlab-ci-tenant-frontend.yml
+      - js-packages/tenant-ui/**/*
+  except:
+    - schedules
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - docker build -t tenant-ui:latest -f js-packages/tenant-ui/Dockerfile .
+    - docker tag tenant-ui:latest $CI_REGISTRY_NAME/openk9/tenant-ui:latest
+    - docker push $CI_REGISTRY_NAME/openk9/tenant-ui:325-ui-tenant-manager
+
+
+Build Tagged Tenant Ui Docker Image:
+  image: docker:19.03.13
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    refs:
+      - tags
+    changes:
+      - .gitlab/.gitlab-ci-tenant-frontend.yml
+      - js-packages/tenant-ui/**/*
+  except:
+    - schedules
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - docker build -t tenant-ui:${CI_COMMIT_REF_NAME} -f js-packages/tenant-ui/Dockerfile .
+    - docker tag tenant-ui:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/tenant-ui:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9/tenant-ui:${CI_COMMIT_REF_NAME}
+
+trigger_deploy_tenant_frontend:
+  image: curlimages/curl
+  stage: deploy
+  needs: ['Build Latest Admin Ui Docker Image']
+  only:
+    refs:
+      - main
+      - .gitlab/.gitlab-ci-tenant-frontend.yml
+    changes:
+      - js-packages/tenant-ui/**/*
+  except:
+    - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-admin-ui" -F ref=master $DEPLOY_TRIGGER_URL

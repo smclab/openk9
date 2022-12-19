@@ -1,0 +1,88 @@
+{
+  "name": "openk9-tenant-ui-2",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@apollo/client": "^3.7.2",
+    "@babel/standalone": "^7.20.1",
+    "@clayui/alert": "^3.70.1",
+    "@clayui/button": "^3.73.0",
+    "@clayui/card": "^3.75.2",
+    "@clayui/core": "^3.69.0",
+    "@clayui/css": "^3.69.0",
+    "@clayui/drop-down": "^3.69.0",
+    "@clayui/empty-state": "^3.65.0",
+    "@clayui/form": "^3.70.0",
+    "@clayui/icon": "^3.56.0",
+    "@clayui/layout": "^3.65.1",
+    "@clayui/list": "^3.69.0",
+    "@clayui/multi-select": "^3.75.3",
+    "@clayui/nav": "^3.69.0",
+    "@clayui/panel": "^3.70.0",
+    "@clayui/table": "^3.56.0",
+    "@clayui/toolbar": "^3.69.0",
+    "@clayui/tooltip": "^3.79.0",
+    "@craco/craco": "^7.0.0",
+    "@fortawesome/fontawesome-svg-core": "^6.1.2",
+    "@fortawesome/free-solid-svg-icons": "^6.1.2",
+    "@fortawesome/react-fontawesome": "^0.2.0",
+    "@graphql-codegen/cli": "^2.11.3",
+    "@graphql-codegen/typescript": "^2.7.2",
+    "@graphql-codegen/typescript-operations": "^2.5.2",
+    "@graphql-codegen/typescript-react-apollo": "^3.3.2",
+    "@tanstack/react-query": "^4.12.0",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^13.0.0",
+    "@testing-library/user-event": "^14.3.0",
+    "@types/babel__standalone": "^7.1.4",
+    "@types/jest": "^28.1.6",
+    "@types/keycloak-js": "^3.4.1",
+    "@types/node": "^18.6.3",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@types/styled-components": "^5.1.25",
+    "graphql": "^16.5.0",
+    "http-proxy-middleware": "^2.0.6",
+    "keycloak-js": "^20.0.1",
+    "monaco-editor": "^0.34.0",
+    "monaco-editor-webpack-plugin": "^7.0.1",
+    "openapi-typescript-codegen": "^0.23.0",
+    "prettier": "^2.7.1",
+    "react": "^18.2.0",
+    "react-app-rewired": "^2.2.1",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0",
+    "react-scripts": "5.0.1",
+    "react-virtuoso": "^2.16.4",
+    "styled-components": "^5.3.5",
+    "typescript": "^4.4.2",
+    "web-vitals": "^2.1.0",
+    "webpack-bundle-analyzer": "^4.7.0"
+  },
+  "scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "react-scripts eject",
+    "compile-graphql": "graphql-codegen --watch --verbose",
+    "compile-openapi": "openapi --input https://tenant-manager.openk9.io/q/openapi --output ./src/openapi-generated --name OpenApiRestClient"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
