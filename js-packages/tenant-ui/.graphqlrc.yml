@@ -1,0 +1,2 @@
+schema: "https://tenant-manager.openk9.io/graphql"
+documents: "src/**/*.{tsx}"
