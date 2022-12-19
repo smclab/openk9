@@ -11,9 +11,6 @@ Build Latest Admin Ui Docker Image:
     refs:
       - main
     changes:
-      - js-packages/rest-api/**/*
-      - js-packages/search-ui-components/**/*
-      - js-packages/plugin-scripts/**/*
       - js-packages/admin-ui/**/*
   except:
     - schedules
@@ -21,9 +18,9 @@ Build Latest Admin Ui Docker Image:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
-    - docker build -t search-admin:latest -f js-packages/admin-ui/Dockerfile .
-    - docker tag search-admin:latest $CI_REGISTRY_NAME/openk9/search-admin:latest
-    - docker push $CI_REGISTRY_NAME/openk9/search-admin:latest
+    - docker build -t openk9-admin-ui:latest -f js-packages/admin-ui/Dockerfile .
+    - docker tag openk9-admin-ui:latest $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
+    - docker push $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
 
 
 Build Tagged Admin Ui Docker Image:
@@ -39,9 +36,6 @@ Build Tagged Admin Ui Docker Image:
     refs:
       - tags
     changes:
-      - js-packages/rest-api/**/*
-      - js-packages/search-ui-components/**/*
-      - js-packages/plugin-scripts/**/*
       - js-packages/admin-ui/**/*
   except:
     - schedules
@@ -49,9 +43,9 @@ Build Tagged Admin Ui Docker Image:
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
-    - docker build -t search-admin:${CI_COMMIT_REF_NAME} -f js-packages/admin-ui/Dockerfile .
-    - docker tag search-admin:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-admin:${CI_COMMIT_REF_NAME}
-    - docker push $CI_REGISTRY_NAME/openk9/search-admin:${CI_COMMIT_REF_NAME}
+    - docker build -t openk9-admin-ui:${CI_COMMIT_REF_NAME} -f js-packages/admin-ui/Dockerfile .
+    - docker tag openk9-admin-ui:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/openk9-admin-ui:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9openk9-admin-ui:${CI_COMMIT_REF_NAME}
 
 trigger_deploy_admin_frontend:
   image: curlimages/curl

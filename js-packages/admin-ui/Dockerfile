@@ -1,30 +1,18 @@
-FROM node:14-alpine
+FROM node:16.18-alpine as react-build
 
-RUN mkdir -p /app/js-packages/rest-api
-RUN mkdir -p /app/js-packages/search-frontend
-RUN mkdir -p /app/js-packages/admin-ui
-
-COPY ./package.json /app
-COPY ./yarn.lock /app
-COPY ./js-packages/rest-api/package.json /app/js-packages/rest-api
-COPY ./js-packages/search-frontend/package.json /app/js-packages/search-frontend
-COPY ./js-packages/admin-ui/package.json /app/js-packages/admin-ui
+COPY . /app
 
 WORKDIR /app
-RUN yarn install --frozen-lockfile
 
-COPY ./js-packages/rest-api /app/js-packages/rest-api
-WORKDIR /app/js-packages/rest-api
+RUN yarn
 RUN yarn build
 
-COPY ./js-packages/search-frontend /app/js-packages/search-frontend
-WORKDIR /app/js-packages/search-frontend
-RUN NODE_ENV=production yarn build
-
-COPY ./js-packages/admin-ui /app/js-packages/admin-ui
-WORKDIR /app/js-packages/admin-ui
-# RUN yarn build
-
-EXPOSE 3000
-# CMD "yarn" "run" "start"
-CMD "yarn" "run" "dev"
+# Stage 2 - the production environment
+FROM nginx:alpine
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+RUN mkdir -p /usr/share/nginx/html/
+COPY --from=react-build /app/build /usr/share/nginx/html/
+RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
+	&& chmod g+rw /var/cache/nginx /var/run
+EXPOSE 8080
+CMD ["nginx", "-g", "daemon off;"]

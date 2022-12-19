@@ -1,0 +1,72 @@
+import React from "react";
+import ClayLayout from "@clayui/layout";
+import { Link } from "react-router-dom";
+import ClayLabel from "@clayui/label";
+import ClayCard from "@clayui/card";
+
+export function PodsStatus() {
+  const status = usePodsStatus();
+  const data = React.useMemo(() => Object.values(status).sort((a, b) => a.serviceName.localeCompare(b.serviceName)), [status]);
+  return (
+    <ClayLayout.ContainerFluid view>
+      <div className="row">
+        {data.map(({ podName, serviceName, status }) => {
+          return (
+            <div key={serviceName} className="col-sm-6 col-md-4 col-lg-3">
+              <ClayCard>
+                <ClayCard.Body>
+                  <ClayCard.Row>
+                    <div className="autofit-col autofit-col-expand">
+                      <section className="autofit-section">
+                        <ClayCard.Description displayType="title">{serviceName}</ClayCard.Description>
+                        <ClayCard.Caption>
+                          <ClayLabel displayType={getStatusDisplayType(status)}>{status}</ClayLabel>
+                        </ClayCard.Caption>
+                      </section>
+                    </div>
+                  </ClayCard.Row>
+                  <Link to={`/logs/${podName}`} className="card-link">
+                    Logs
+                  </Link>
+                </ClayCard.Body>
+              </ClayCard>
+            </div>
+          );
+        })}
+      </div>
+    </ClayLayout.ContainerFluid>
+  );
+}
+
+function getStatusDisplayType(status: string) {
+  switch (status) {
+    case "Succeded":
+    case "Running":
+      return "success";
+    case "Pending":
+      return "warning";
+    case "Failed":
+    case "Evicted":
+      return "danger";
+    default:
+      throw new Error();
+  }
+}
+
+function usePodsStatus() {
+  const [status, setStatus] = React.useState<Record<string, { serviceName: string; status: string; podName: string }>>({});
+  React.useEffect(() => {
+    const eventSource = new EventSource("/k8s/pods/sse");
+    eventSource.addEventListener("message", (event) => {
+      const data = JSON.parse(event.data);
+      setStatus((status) => ({
+        ...status,
+        [data.podName]: { serviceName: data.serviceName, status: data.status, podName: data.podName },
+      }));
+    });
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+  return status;
+}

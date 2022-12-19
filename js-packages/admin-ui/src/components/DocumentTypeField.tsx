@@ -1,0 +1,271 @@
+import { gql } from "@apollo/client";
+import ClayForm from "@clayui/form";
+import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  FieldType,
+  useAnalyzerOptionsQuery,
+  useAnalyzerValueQuery,
+  useBindAnalyzerToDocTypeFieldMutation,
+  useCreateOrUpdateDocumentTypeFieldMutation,
+  useDocumentTypeFieldQuery,
+  useUnbindnAlyzerToDocTypeFieldMutation,
+} from "../graphql-generated";
+import { BooleanInput, EnumSelect, fromFieldValidators, NumberInput, SearchSelect, TextArea, TextInput, useForm } from "./Form";
+import ClayButton from "@clayui/button";
+import ClayLayout from "@clayui/layout";
+import { ClayButtonWithIcon } from "@clayui/button";
+import { Link } from "react-router-dom";
+import ClayToolbar from "@clayui/toolbar";
+import { CodeInput } from "./CodeInput";
+import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
+
+const DocumentTypeFieldQuery = gql`
+  query DocumentTypeField($id: ID!) {
+    docTypeField(id: $id) {
+      id
+      name
+      description
+      fieldType
+      boost
+      searchable
+      exclude
+      fieldName
+      jsonConfig
+      analyzer {
+        id
+      }
+    }
+  }
+`;
+
+gql`
+  mutation CreateOrUpdateDocumentTypeField(
+    $documentTypeId: ID!
+    $documentTypeFieldId: ID
+    $name: String!
+    $fieldName: String!
+    $description: String
+    $fieldType: FieldType!
+    $boost: Float
+    $searchable: Boolean!
+    $exclude: Boolean
+    $jsonConfig: String
+  ) {
+    docTypeField(
+      docTypeId: $documentTypeId
+      docTypeFieldId: $documentTypeFieldId
+      docTypeFieldDTO: {
+        name: $name
+        description: $description
+        fieldType: $fieldType
+        boost: $boost
+        searchable: $searchable
+        exclude: $exclude
+        fieldName: $fieldName
+        jsonConfig: $jsonConfig
+      }
+    ) {
+      entity {
+        id
+      }
+      fieldValidators {
+        field
+        message
+      }
+    }
+  }
+`;
+
+gql`
+  mutation createOrUpdateDocumentTypeSubFields(
+    $parentDocTypeFieldId: ID!
+    $name: String!
+    $fieldName: String!
+    $jsonConfig: String
+    $searchable: Boolean!
+    $boost: Float
+    $fieldType: FieldType!
+  ) {
+    createSubField(
+      parentDocTypeFieldId: $parentDocTypeFieldId
+      docTypeFieldDTO: {
+        name: $name
+        fieldName: $fieldName
+        jsonConfig: $jsonConfig
+        searchable: $searchable
+        boost: $boost
+        fieldType: $fieldType
+      }
+    ) {
+      entity {
+        id
+      }
+      fieldValidators {
+        field
+        message
+      }
+    }
+  }
+`;
+
+export function DocumentTypeField() {
+  const { documentTypeId, documentTypeFieldId = "new" } = useParams();
+  const navigate = useNavigate();
+  const documentTypeFieldQuery = useDocumentTypeFieldQuery({
+    variables: { id: documentTypeFieldId as string },
+    skip: !documentTypeFieldId || documentTypeFieldId === "new",
+  });
+  const [createOrUpdateDocumentTypeFieldMutate, createOrUpdateDocumentTypeFieldMutation] = useCreateOrUpdateDocumentTypeFieldMutation({
+    refetchQueries: [DocumentTypeFieldQuery, DocumentTypeFieldsQuery],
+    onCompleted(data) {
+      if (data.docTypeField?.entity) {
+        if (documentTypeFieldId === "new") navigate(`/document-types/${documentTypeId}/document-type-fields`, { replace: true });
+        else navigate(`/document-types/${documentTypeId}/document-type-fields/${data.docTypeField.entity.id}`, { replace: true });
+      }
+    },
+  });
+  const form = useForm({
+    initialValues: React.useMemo(
+      () => ({
+        name: "",
+        fieldName: "",
+        description: "",
+        fieldType: FieldType.Text,
+        boost: 1,
+        searchable: false,
+        exclude: false,
+        jsonConfig: "{}",
+      }),
+      []
+    ),
+    originalValues: documentTypeFieldQuery.data?.docTypeField,
+    isLoading: documentTypeFieldQuery.loading || createOrUpdateDocumentTypeFieldMutation.loading,
+    onSubmit(data) {
+      createOrUpdateDocumentTypeFieldMutate({
+        variables: {
+          documentTypeId: documentTypeId as string,
+          documentTypeFieldId: documentTypeFieldId !== "new" ? documentTypeFieldId : undefined,
+          ...data,
+        },
+      });
+    },
+    getValidationMessages: fromFieldValidators(createOrUpdateDocumentTypeFieldMutation.data?.docTypeField?.fieldValidators),
+  });
+  return (
+    <React.Fragment>
+      <ClayToolbar light>
+        <ClayLayout.ContainerFluid>
+          <ClayToolbar.Nav>
+            <ClayToolbar.Item>
+              <Link to={`/document-types/${documentTypeId}/document-type-fields`}>
+                <ClayButtonWithIcon symbol="angle-left" small />
+              </Link>
+            </ClayToolbar.Item>
+          </ClayToolbar.Nav>
+        </ClayLayout.ContainerFluid>
+      </ClayToolbar>
+      <ClayLayout.ContainerFluid view>
+        <ClayForm
+          className="sheet"
+          onSubmit={(event) => {
+            event.preventDefault();
+            form.submit();
+          }}
+        >
+          <TextInput label="Name" {...form.inputProps("name")} />
+          <TextInput label="Field Name" {...form.inputProps("fieldName")} />
+          <TextArea label="Description" {...form.inputProps("description")} />
+          <EnumSelect label="Field Type" dict={FieldType} {...form.inputProps("fieldType")} />
+          <NumberInput label="Boost" {...form.inputProps("boost")} />
+          <BooleanInput label="Searchable" {...form.inputProps("searchable")} />
+          <BooleanInput label="Exclude" {...form.inputProps("exclude")} />
+          {documentTypeFieldId !== "new" && (
+            <ClayForm
+              className="sheet"
+              onSubmit={(event) => {
+                event.preventDefault();
+              }}
+            >
+              <SearchSelect
+                label="Analyzer"
+                value={documentTypeFieldQuery.data?.docTypeField?.analyzer?.id}
+                useValueQuery={useAnalyzerValueQuery}
+                useOptionsQuery={useAnalyzerOptionsQuery}
+                useChangeMutation={useBindAnalyzerToDocTypeFieldMutation}
+                mapValueToMutationVariables={(analayzerId) => ({ documentTypeFieldId: documentTypeFieldId, analyzerId: analayzerId })}
+                useRemoveMutation={useUnbindnAlyzerToDocTypeFieldMutation}
+                mapValueToRemoveMutationVariables={() => ({ documentTypeFieldId })}
+                invalidate={() => documentTypeFieldQuery.refetch()}
+              />
+            </ClayForm>
+          )}
+          <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
+          <div className="sheet-footer">
+            <ClayButton type="submit" disabled={!form.canSubmit}>
+              {documentTypeFieldId === "new" ? "Create" : "Update"}
+            </ClayButton>
+          </div>
+        </ClayForm>
+      </ClayLayout.ContainerFluid>
+    </React.Fragment>
+  );
+}
+
+gql`
+  query AnalyzerOptions($searchText: String, $cursor: String) {
+    options: analyzers(searchText: $searchText, first: 5, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+gql`
+  query AnalyzerValue($id: ID!) {
+    value: analyzer(id: $id) {
+      id
+      name
+      description
+    }
+  }
+`;
+gql`
+  mutation BindAnalyzerToDocTypeField($documentTypeFieldId: ID!, $analyzerId: ID!) {
+    bindAnalyzerToDocTypeField(docTypeFieldId: $documentTypeFieldId, analyzerId: $analyzerId) {
+      left {
+        id
+        analyzer {
+          id
+        }
+      }
+      right {
+        id
+      }
+    }
+  }
+`;
+
+gql`
+  mutation UnbindnAlyzerToDocTypeField($documentTypeFieldId: ID!) {
+    unbindAnalyzerFromDocTypeField(docTypeFieldId: $documentTypeFieldId) {
+      left {
+        id
+        analyzer {
+          id
+        }
+      }
+      right {
+        id
+      }
+    }
+  }
+`;

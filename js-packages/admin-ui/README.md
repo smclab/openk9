@@ -1,27 +1,37 @@
 # OpenK9 Admin UI
 
-This package contains the Next App for the search admin configuration. See Next.js documentation for more info.
+[![license](https://img.shields.io/badge/license-AGPL-blue.svg)](https://github.com/smclab/OpenK9/blob/master/LICENSE)
+[![license](https://img.shields.io/github/v/release/smclab/openk9)](https://github.com/smclab/OpenK9/releases)
+[![Follow on Twitter](https://img.shields.io/twitter/follow/K9Open.svg?label=follow+K9Open)](https://twitter.com/K9Open)
 
-## Building Docker Image
+## Getting Started
 
-On the root folder of the repository:
+to start, after installing the dependencies run the command `yarn start`
 
-```
-docker build -t smclab/admin-ui:latest -f js-packages/admin-ui/Dockerfile .
-docker run -p 3000:3000 smclab/admin-ui
-```
+## Front-end development
 
-## Building and linking reast-api and search-frontend
+To install depencies run `yarn` command.
 
-cd rest-api && yarn build && yarn link
-cd search-frontend && yarn build && yarn link
-cd admin-ui && yarn link @openk9/rest-api && yarn link @openk9/search-frontend
+...
 
-## Development
+This project uses graphql generator. To be able to use it, you need to open a new terminal, and run the command `yarn compile-graphql` [documentation]
+(https://www.graphql-code-generator.com/docs/getting-started)
 
-To start development run the task `yarn dev`. To set up proxy for API set the `BASE_PROXY_PATH` variable in a `.env.local` file.
+This project also uses openapi generator. To be able to use it, you need to open a new terminal, and run the command `yarn compile-openapi`
 
-### Development with custom back-end
+## License
 
-`yarn dev`
-`node reverseProxy.js`
+Copyright (c) the respective contributors, as shown by the AUTHORS file.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
