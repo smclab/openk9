@@ -305,12 +305,14 @@ public class SearchResource {
 
 	private QueryParserRequest getQueryParserRequest(
 		SearchRequest searchRequest) {
+
 		return searcherMapper
 			.toQueryParserRequest(searchRequest)
 			.toBuilder()
 			.setVirtualHost(request.host())
-			.setJwt(rawToken)
+			.setJwt(rawToken == null ? "" : rawToken)
 			.build();
+
 	}
 
 
