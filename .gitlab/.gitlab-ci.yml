@@ -59,6 +59,9 @@ push-github:
 check-dependencies:
   stage: check-dependencies
   image: smclab/k9-ci-build-utils:latest
+  only:
+    refs:
+      - 206-datasource-er-improvements
   variables:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
     OPENK9_CONTAINER_IMAGE_TAG: 206-datasource-er-improvements
