@@ -18,11 +18,14 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.datasource.model.AclMapping;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.validation.Response;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
@@ -34,6 +37,7 @@ import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -53,6 +57,19 @@ public class PluginDriverGraphqlResource {
 		String searchText, Set<SortBy> sortByList) {
 		return pluginDriverService.findConnection(
 			after, before, first, last, searchText, sortByList);
+	}
+
+	public Uni<Connection<DocTypeField>> docTypeFields(
+		@Source PluginDriver pluginDriver,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@DefaultValue("false") boolean not) {
+		return pluginDriverService.getDocTypeFieldsConnection(
+			pluginDriver.getId(), after, before, first, last,
+			searchText, sortByList, not);
 	}
 
 	@Query
@@ -90,6 +107,19 @@ public class PluginDriverGraphqlResource {
 	@Mutation
 	public Uni<PluginDriver> deletePluginDriver(@Id long pluginDriverId) {
 		return pluginDriverService.deleteById(pluginDriverId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<PluginDriver, DocTypeField>> addDocTypeFieldToPluginDriver(
+		@Id long pluginDriverId, @Id long docTypeFieldId,
+		AclMapping.UserField userField) {
+		return pluginDriverService.addDocTypeField(
+			pluginDriverId, docTypeFieldId, userField);
+	}
+
+	@Mutation
+	public Uni<Tuple2<PluginDriver, DocTypeField>> removeDocTypeFieldFromPluginDriver(@Id long pluginDriverId, @Id long docTypeFieldId) {
+		return pluginDriverService.removeDocTypeField(pluginDriverId, docTypeFieldId);
 	}
 
 	@Subscription

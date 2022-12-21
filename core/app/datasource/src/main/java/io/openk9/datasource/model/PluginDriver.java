@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,10 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Lob;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "plugin_driver")
@@ -52,6 +56,12 @@ public class PluginDriver extends K9Entity {
 	@Lob
 	@Column(name = "json_config")
 	private String jsonConfig;
+
+	@OneToMany(mappedBy = "pluginDriver", cascade = javax.persistence.CascadeType.ALL)
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<AclMapping> aclMappings
+		= new LinkedHashSet<>();
 
 	public enum PluginDriverType {
 		HTTP
