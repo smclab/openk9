@@ -1,7 +1,10 @@
 package io.openk9.datasource.searcher.parser.impl;
 
+import io.openk9.datasource.model.AclMapping;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.searcher.util.JWT;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
@@ -25,13 +28,23 @@ public class AclQueryParser implements QueryParser {
 				.minimumShouldMatch(1)
 				.should(QueryBuilders.matchQuery("acl.public", true));
 
-		List<String> acl = parserContext.getAcl();
+		JWT jwt = parserContext.getJwt();
 
-		if (acl != null && !acl.isEmpty()) {
+		List<AclMapping> aclMappings =
+			parserContext
+				.getCurrentTenant()
+				.getDatasources()
+				.stream()
+				.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
+				.distinct()
+				.toList();
 
-			String fieldName = "acl.rolesName.keyword";
+		for (AclMapping aclMapping : aclMappings) {
 
-			innerQuery.should(QueryBuilders.termsQuery(fieldName, acl));
+			DocTypeField docTypeField = aclMapping.getDocTypeField();
+
+			aclMapping.getUserField().apply(docTypeField, jwt, innerQuery);
+
 		}
 
 		parserContext.getMutableQuery().filter(innerQuery);

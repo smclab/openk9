@@ -17,12 +17,13 @@ import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
 import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
 import io.quarkus.grpc.GrpcClient;
-import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.ShardSearchFailure;
 import org.elasticsearch.client.ResponseListener;
@@ -38,6 +39,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.jboss.logging.Logger;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -56,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1")
+@RequestScoped
 public class SearchResource {
 
 	@POST
@@ -306,7 +309,7 @@ public class SearchResource {
 			.toQueryParserRequest(searchRequest)
 			.toBuilder()
 			.setVirtualHost(request.host())
-			.addAllAcl(securityIdentity.getRoles())
+			.setJwt(rawToken)
 			.build();
 	}
 
@@ -419,7 +422,8 @@ public class SearchResource {
 	Logger logger;
 
 	@Inject
-	SecurityIdentity securityIdentity;
+	@Claim(standard = Claims.raw_token)
+	String rawToken;
 
 	@Context
 	HttpServerRequest request;

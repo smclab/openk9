@@ -12,6 +12,7 @@ import io.openk9.datasource.searcher.queryanalysis.Parse;
 import io.openk9.datasource.searcher.queryanalysis.SemanticType;
 import io.openk9.datasource.searcher.queryanalysis.SemanticTypes;
 import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
+import io.openk9.datasource.searcher.util.JWT;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.datasource.util.UniActionListener;
@@ -95,7 +96,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					}
 
 					BoolQueryBuilder boolQueryBuilder =
-						createBoolQuery(tokenGroup, tenant, request.getAclList());
+						createBoolQuery(tokenGroup, tenant, JWT.of(request.getJwt()));
 
 					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -216,7 +217,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					}
 
 					BoolQueryBuilder boolQueryBuilder =
-						createBoolQuery(tokenGroup, tenant, request.getAclList());
+						createBoolQuery(tokenGroup, tenant, JWT.of(request.getJwt()));
 
 					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 

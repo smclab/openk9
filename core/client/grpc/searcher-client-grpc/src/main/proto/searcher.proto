@@ -46,7 +46,7 @@ message QueryParserRequest {
   string suggestKeyword = 4;
   int64 suggestionCategoryId = 5;
   string virtualHost = 6;
-  repeated string acl = 7;
+  optional string jwt = 7;
 }
 
 message SearchTokenRequest {
@@ -64,6 +64,7 @@ message QueryAnalysisRequest {
   string searchText = 1;
   repeated QueryAnalysisToken tokens = 2;
   string virtualHost = 3;
+  optional string jwt = 4;
 }
 
 message QueryAnalysisToken {

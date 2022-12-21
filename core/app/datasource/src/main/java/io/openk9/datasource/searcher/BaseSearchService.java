@@ -11,6 +11,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
+import io.openk9.datasource.model.PluginDriver_;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SearchConfig_;
@@ -20,6 +21,7 @@ import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.searcher.util.JWT;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.mapper.SearcherMapper;
@@ -134,6 +136,10 @@ public abstract class BaseSearchService {
 		Fetch<Bucket, Datasource> datasourceRoot =
 			tenantRoot.fetch(Bucket_.datasources);
 
+		datasourceRoot
+			.fetch(Datasource_.pluginDriver)
+			.fetch(PluginDriver_.aclMappings, JoinType.LEFT);
+
 		Fetch<Datasource, DataIndex> dataIndexRoot =
 			datasourceRoot.fetch(Datasource_.dataIndex);
 
@@ -159,7 +165,7 @@ public abstract class BaseSearchService {
 
 	protected BoolQueryBuilder createBoolQuery(
 		Map<String, List<ParserSearchToken>> tokenGroup, Bucket bucket,
-		List<String> acl) {
+		JWT jwt) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -183,7 +189,7 @@ public abstract class BaseSearchService {
 								.queryParserConfig(
 									getQueryParserConfig(
 										bucket, tokenType))
-								.acl(acl)
+								.jwt(jwt)
 								.build()
 						);
 					}
@@ -219,7 +225,7 @@ public abstract class BaseSearchService {
 						.queryParserConfig(
 							getQueryParserConfig(
 								bucket, queryParser.getType()))
-						.acl(acl)
+						.jwt(jwt)
 						.build()
 				);
 
