@@ -30,21 +30,23 @@ public class AclQueryParser implements QueryParser {
 
 		JWT jwt = parserContext.getJwt();
 
-		List<AclMapping> aclMappings =
-			parserContext
-				.getCurrentTenant()
-				.getDatasources()
-				.stream()
-				.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
-				.distinct()
-				.toList();
+		if (!jwt.isEmpty()) {
+			List<AclMapping> aclMappings =
+				parserContext
+					.getCurrentTenant()
+					.getDatasources()
+					.stream()
+					.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
+					.distinct()
+					.toList();
 
-		for (AclMapping aclMapping : aclMappings) {
+			for (AclMapping aclMapping : aclMappings) {
 
-			DocTypeField docTypeField = aclMapping.getDocTypeField();
+				DocTypeField docTypeField = aclMapping.getDocTypeField();
 
-			aclMapping.getUserField().apply(docTypeField, jwt, innerQuery);
+				aclMapping.getUserField().apply(docTypeField, jwt, innerQuery);
 
+			}
 		}
 
 		parserContext.getMutableQuery().filter(innerQuery);

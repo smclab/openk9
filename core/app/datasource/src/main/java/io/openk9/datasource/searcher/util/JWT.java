@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -64,9 +65,23 @@ public class JWT {
 	}
 
 	public static JWT of(String jwt) {
-		return jwt == null || jwt.isBlank()
-			? EMPTY
-			: new JsonObject(jwt).mapTo(JWT.class);
+
+		if (jwt == null || jwt.isBlank()) {
+			return EMPTY;
+		}
+
+		if (jwt.contains(".")) {
+			String[] split = jwt.split("\\.");
+			String payload = split[1];
+			return new JsonObject(
+				new String(Base64.getDecoder().decode(payload))
+			)
+				.mapTo(JWT.class);
+		}
+		else {
+			return new JsonObject(jwt).mapTo(JWT.class);
+		}
+
 	}
 
 	private static final JWT EMPTY = new JWT();
