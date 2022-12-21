@@ -107,6 +107,11 @@ public class DocTypeField extends K9Entity {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
+	@OneToMany(mappedBy = "docTypeField", cascade = javax.persistence.CascadeType.ALL)
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<AclMapping> aclMappings = new LinkedHashSet<>();
+
 	public Set<DocTypeField> getDocTypeFieldAndChildren() {
 		Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 		docTypeFields.add(this);
