@@ -72,3 +72,4 @@ check-dependencies:
     key: check_dependencies
     paths:
       - .m2/repository
+  allow_failure: true
