@@ -60,7 +60,7 @@ public class PluginDriverGraphqlResource {
 	}
 
 	@Query
-	public Uni<Connection<DocTypeField>> docTypeFieldsPluginDriver(
+	public Uni<Connection<DocTypeField>> docTypeFields(
 		@Source PluginDriver pluginDriver,
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,
