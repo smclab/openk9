@@ -36,7 +36,6 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import org.eclipse.microprofile.graphql.Query;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -70,7 +69,6 @@ public class PluginDriverService
 			PluginDriver_.NAME, PluginDriver_.DESCRIPTION, PluginDriver_.TYPE};
 	}
 
-	@Query
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
 		long pluginDriverId, String after,
 		String before, Integer first, Integer last, String searchText,
