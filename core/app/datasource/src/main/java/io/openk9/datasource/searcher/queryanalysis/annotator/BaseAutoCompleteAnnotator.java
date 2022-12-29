@@ -170,4 +170,9 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 	private static final Logger _log = Logger.getLogger(
 		BaseAutoCompleteAnnotator.class);
 
+	@Override
+	public int getLastTokenCount() {
+		return 2;
+	}
+
 }
