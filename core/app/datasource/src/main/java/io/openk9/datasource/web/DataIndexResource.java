@@ -223,6 +223,14 @@ public class DataIndexResource {
 
 		Map<String, Object> analysis = new LinkedHashMap<>();
 
+		Map<String, Object> index = new LinkedHashMap<>();
+
+		Map<String, Object> highlight = new LinkedHashMap<>();
+
+		highlight.put("max_analyzed_offset", "10000000");
+
+		index.put("highlight", highlight);
+
 		if (!analyzerMap.isEmpty()) {
 			analysis.put("analyzer", analyzerMap);
 		}
@@ -239,10 +247,12 @@ public class DataIndexResource {
 			analysis.put("char_filter", charFilterMap);
 		}
 
-		if (!analysis.isEmpty()) {
+		if (!analysis.isEmpty() || !index.isEmpty() ) {
 			Map<String, Object> settingsMap = new LinkedHashMap<>();
 
 			settingsMap.put("analysis", analysis);
+
+			settingsMap.put("index", index);
 
 			return settingsMap;
 
