@@ -56,7 +56,7 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
         isLoading={options.isFetching}
         isSearchable={true}
         options={[
-          { value: undefined as any, label: "Any" },
+          { value: "" as any, label: "Any" },
           ...(options.data?.map(({ id, field, label }) => ({
             value: field,
             label,
