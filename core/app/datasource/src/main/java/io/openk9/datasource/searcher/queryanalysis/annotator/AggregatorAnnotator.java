@@ -31,6 +31,7 @@ public class AggregatorAnnotator extends BaseAggregatorAnnotator {
 
 		semantics.put("tokenType", "TEXT");
 		semantics.put("keywordName", aggregatorName);
+		semantics.put("keywordKey", aggregatorName);
 		semantics.put("value", aggregatorKey);
 		semantics.put("score", 50.0f);
 
