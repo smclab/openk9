@@ -18,7 +18,7 @@ public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 
 	@Override
 	protected CategorySemantics _createCategorySemantics(
-		String aggregatorName, String aggregatorKey) {
+		String aggregatorName, String aggregatorKey, String fieldName) {
 
 		return CategorySemantics.of(
 			"$DOCTYPE",

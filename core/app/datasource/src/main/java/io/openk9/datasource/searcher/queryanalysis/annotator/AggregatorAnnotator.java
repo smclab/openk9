@@ -21,7 +21,7 @@ public class AggregatorAnnotator extends BaseAggregatorAnnotator {
 
 	@Override
 	protected CategorySemantics _createCategorySemantics(
-		String aggregatorName, String aggregatorKey) {
+		String aggregatorName, String aggregatorKey, String fieldName) {
 
 		Map<String, Object> semantics = new HashMap<>(5);
 
@@ -30,7 +30,7 @@ public class AggregatorAnnotator extends BaseAggregatorAnnotator {
 		}
 
 		semantics.put("tokenType", "TEXT");
-		semantics.put("keywordName", aggregatorName);
+		semantics.put("keywordName", fieldName);
 		semantics.put("keywordKey", aggregatorName);
 		semantics.put("value", aggregatorKey);
 		semantics.put("score", 50.0f);

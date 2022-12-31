@@ -138,7 +138,7 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 						if (token.equalsIgnoreCase(keyAsString)) {
 							return List.of(_createCategorySemantics(
-								terms.getName(), keyAsString));
+								terms.getName(), keyAsString, annotator.getFieldName()));
 						}
 
 						scoreKeys.add(
@@ -171,12 +171,12 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		String key = (String)scoreKeys.get(0).get(1);
 		String name = (String)scoreKeys.get(0).get(2);
 
-		return List.of(_createCategorySemantics(name, key));
+		return List.of(_createCategorySemantics(name, key, annotator.getFieldName()));
 
 	}
 
 	protected abstract CategorySemantics _createCategorySemantics(
-		String aggregatorName, String aggregatorKey);
+		String aggregatorName, String aggregatorKey, String fieldName);
 	private static double _levenshteinDistance(String x, String y) {
 
 		int xLength = x.length();
