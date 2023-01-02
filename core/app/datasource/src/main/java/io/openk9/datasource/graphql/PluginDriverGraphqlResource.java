@@ -59,7 +59,6 @@ public class PluginDriverGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
-	@Query
 	public Uni<Connection<DocTypeField>> docTypeFields(
 		@Source PluginDriver pluginDriver,
 		@Description("fetching only nodes after this node (exclusive)") String after,
