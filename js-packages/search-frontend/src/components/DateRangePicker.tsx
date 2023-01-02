@@ -49,6 +49,7 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
     <div>
       <Select
         value={selectedOption}
+        defaultValue={{ value: "" as any, label: "Any" }}
         onChange={(option) => {
           setSelectedOption(option);
           setValue({ ...value, keywordKey: option?.value });
