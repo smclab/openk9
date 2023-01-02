@@ -46,6 +46,10 @@
 			<artifactId>quarkus-grpc</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.openk9.client.grpc</groupId>
+			<artifactId>file-manager-client-grpc</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-panache-common</artifactId>
 		</dependency>
@@ -90,6 +94,10 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.openk9.client.grpc</groupId>
+			<artifactId>file-manager-client-grpc</artifactId>
 		</dependency>
 	</dependencies>
 	<build>

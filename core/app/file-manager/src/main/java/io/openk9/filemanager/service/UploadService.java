@@ -17,15 +17,19 @@
 
 package io.openk9.filemanager.service;
 
-import io.minio.*;
-import io.minio.errors.*;
-import io.openk9.filemanager.dto.ResourceDto;
-import io.openk9.filemanager.model.Resource;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.errors.MinioException;
+import io.openk9.filemanager.grpc.FileManager;
+import io.openk9.filemanager.grpc.FileResourceRequest;
+import io.quarkus.grpc.GrpcClient;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +50,7 @@ public class UploadService {
 	ResourceService resourceService;
 
 
-	public String uploadObject(InputStream inputStream, String datasourceId, String fileId) {
+	public Uni<String> uploadObject(InputStream inputStream, String datasourceId, String fileId) {
 
 		try {
 			String bucketName = "datasource" + datasourceId;
@@ -75,42 +79,51 @@ public class UploadService {
 
 			logger.info("Upload done");
 
-			Resource resource = resourceService.findByDatasourceAndFile(datasourceId, fileId);
+			filemanager.findFileResourceByResourceId(
+				FileResourceRequest.newBuilder()
+					.setDatasourceId(datasourceId)
+					.setFileId(fileId).build()).flatMap(
+						fileResourceRequest -> {
 
-			String resourceId;
+							String resourceId;
 
-			if (resource == null) {
+							if (fileResourceRequest == null) {
 
-				logger.info("Resource not exist. Creating in database.");
+								logger.info("Resource not exist. Creating in database.");
 
-				resourceId = UUID.randomUUID().toString();
+								resourceId = UUID.randomUUID().toString();
 
-				ResourceDto resourceDto = new ResourceDto();
-				resourceDto.setFileId(fileId);
-				resourceDto.setDatasourceId(datasourceId);
-				resourceDto.setResourceId(resourceId);
+								FileResourceRequest fileResourceRequest1 = FileResourceRequest.newBuilder()
+									.setDatasourceId(datasourceId)
+									.setFileId(fileId).setResourceId(resourceId).build();
 
-				resourceService.create(resourceDto);
+								filemanager.createFileResource(fileResourceRequest1);
 
-			}
-			else {
+							}
+							else {
 
-				logger.info("Resource already exist. Skip persist.");
+								logger.info("Resource already exist. Skip persist.");
 
-				resourceId = resource.getResourceId();
-			}
+								resourceId = fileResourceRequest.getResourceId();
+							}
 
-			return resourceId;
+							return null;
+						}
+			);
 
 
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
 			return null;
 		}
 
+		return null;
 	}
 
 	@Inject
 	Logger logger;
+
+	@GrpcClient("filemanager")
+	FileManager filemanager;
 
 
 }

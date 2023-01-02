@@ -37,6 +37,7 @@
 	<modules>
 		<module>searcher-client-grpc</module>
 		<module>tenant-manager-client-grpc</module>
+		<module>file-manager-client-grpc</module>
 	</modules>
 
 	<build>

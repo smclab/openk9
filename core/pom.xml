@@ -156,6 +156,11 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>file-manager-client-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>io.openk9.service</groupId>
 				<artifactId>auth-service</artifactId>
 				<version>${project.version}</version>

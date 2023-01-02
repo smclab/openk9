@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.filemanager.grpc";
+option java_outer_classname = "FileManagerProto";
+import "google/protobuf/empty.proto";
+
+package grpc;
+
+service FileManager {
+  rpc FindFileResource(FileResourceRequest) returns (FileResourceRequest) {}
+  rpc FindFileResourceByResourceId(FileResourceRequest) returns (FileResourceRequest) {}
+  rpc CreateFileResource(FileResourceRequest) returns (FileResourceRequest) {}
+}
+
+message FileResourceRequest {
+  string fileId = 1;
+  string datasourceId = 2;
+  string resourceId = 3;
+}
