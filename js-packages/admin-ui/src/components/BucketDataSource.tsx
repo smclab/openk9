@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useAddDataSourceToBucketMutation, useRemoveDataSourceFromBucketMutation, useBucketDataSourcesQuery } from "../graphql-generated";
 import { AssociatedEntities } from "./Form";
 
-gql`
+export const BucketsdataSources = gql`
   query BucketDataSources($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     bucket(id: $parentId) {
       id
@@ -12,6 +12,7 @@ gql`
           node {
             id
             name
+            description
             schedulable
             lastIngestionDate
             scheduling
@@ -26,7 +27,7 @@ gql`
   }
 `;
 
-gql`
+export const AddDataSourceToBucket = gql`
   mutation AddDataSourceToBucket($childId: ID!, $parentId: ID!) {
     addDatasourceToBucket(datasourceId: $childId, bucketId: $parentId) {
       left {
@@ -39,7 +40,7 @@ gql`
   }
 `;
 
-gql`
+export const RemoveDataSourceFromBucket = gql`
   mutation RemoveDataSourceFromBucket($childId: ID!, $parentId: ID!) {
     removeDatasourceFromBucket(datasourceId: $childId, bucketId: $parentId) {
       left {

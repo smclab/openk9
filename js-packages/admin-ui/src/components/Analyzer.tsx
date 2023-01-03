@@ -1,7 +1,7 @@
 import React from "react";
 import { gql } from "@apollo/client";
-import { Link, NavLink, useNavigate, useParams } from "react-router-dom";
-import ClayForm, { ClaySelect, ClayToggle } from "@clayui/form";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import {
   useAnalyzerQuery,
@@ -66,11 +66,6 @@ export function Analyzer() {
   const [templateChoice, setTemplateChoice] = React.useState<KeyValue>(JSON.parse(analyzerQuery.data?.analyzer?.jsonConfig || `{}`));
   const [IsEmpty, setIsEmpty] = React.useState(false);
   const [isCustom, setIsCustom] = React.useState(false);
-  const tabs = [
-    { label: "Attributes", path: "" },
-    { label: "Char Filters", path: "char-filters" },
-    { label: "Token Filters", path: "token-filters" },
-  ];
   const [createOrUpdateAnalyzerMutate, createOrUpdateanalyzerMutation] = useCreateOrUpdateAnalyzerMutation({
     refetchQueries: [AnalyzerQuery, AnalyzersQuery],
     onCompleted(data) {
@@ -215,23 +210,23 @@ export function Analyzer() {
   );
 }
 
-// gql`
-//   query TokenizerOptions($searchText: String, $cursor: String) {
-//     options: tokenizers(searchText: $searchText, first: 5, after: $cursor) {
-//       edges {
-//         node {
-//           id
-//           name
-//           description
-//         }
-//       }
-//       pageInfo {
-//         hasNextPage
-//         endCursor
-//       }
-//     }
-//   }
-// `;
+gql`
+  query TokenizerOptions($searchText: String, $cursor: String) {
+    options: tokenizers(searchText: $searchText, first: 5, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
 gql`
   query TokenizerValue($id: ID!) {
     value: tokenizer(id: $id) {

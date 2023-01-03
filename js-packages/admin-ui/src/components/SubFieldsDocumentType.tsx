@@ -170,7 +170,7 @@ export function SubFieldsDocumentType() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/document-types/${documentTypeId}/document-type-fields`}>
-                <ClayButtonWithIcon symbol="angle-left" small />
+                <ClayButtonWithIcon aria-label="" symbol="angle-left" small />
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>

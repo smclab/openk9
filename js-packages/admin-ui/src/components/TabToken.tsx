@@ -107,7 +107,7 @@ export function TabToken() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/tabs/${tabId}/tab-tokens`}>
-                <ClayButtonWithIcon symbol="angle-left" small />
+                <ClayButtonWithIcon aria-label="" symbol="angle-left" small />
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>

@@ -1,0 +1,229 @@
+import ClayForm, { ClaySelect } from "@clayui/form";
+import ClayLayout from "@clayui/layout";
+import ClayButton from "@clayui/button";
+import React from "react";
+import { Spacy } from "../wizards/Logo/Spacy";
+import { Button, useModal } from "@clayui/core";
+import { Trasformers } from "../wizards/Logo/Trasformers";
+import { Fastai } from "../wizards/Logo/Fastai";
+import { Flair } from "../wizards/Logo/Flair";
+import { Stanza } from "../wizards/Logo/Stanza";
+import ClayModal from "@clayui/modal";
+import ClayButtonGroup from "@clayui/button/lib/Group";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "./ToastProvider";
+
+export function HuggingFace() {
+  const [name, setName] = React.useState("");
+  const [task, setTask] = React.useState("");
+  const [library, setLibrary] = React.useState("");
+  const [isInvalidateName, setIsInvalidateName] = React.useState(false);
+  const [isInvalidateTask, setIsInvalidateTask] = React.useState(false);
+  const [isInvalidateLibrary, setIsInvalidateLibrary] = React.useState(false);
+  const { observer, onOpenChange, open } = useModal();
+  const showToast = useToast();
+  const navigate = useNavigate();
+  return (
+    <React.Fragment>
+      {open && (
+        <ClayModal observer={observer} size="sm" status="info">
+          <ClayModal.Body>
+            <h1>{"Are you sure you want to release it?"}</h1>
+          </ClayModal.Body>
+          <ClayModal.Footer
+            last={
+              <ClayButtonGroup spaced style={{ alignItems: "center" }}>
+                <Button
+                  displayType="primary"
+                  onClick={() => {
+                    const json = JSON.parse(JSON.stringify(" name: " + name + " task: " + task + " library: " + library));
+
+                    const requestOptions = {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ pipelineName: task, modelName: name, tokenizerName: "string", library: library }),
+                    };
+                    fetch("https://test.openk9.io/k8s/deploy-ml-model", requestOptions)
+                      .then((response) => response.json())
+                      .then((data) => console.log(data));
+
+                    onOpenChange(false);
+                    navigate(`/maching-learning/hugging-face-view`, { replace: true });
+                    showToast({ displayType: "success", title: "successfully released", content: "" });
+                  }}
+                >
+                  {"yes"}
+                </Button>
+                <Button
+                  displayType="primary"
+                  onClick={() => {
+                    onOpenChange(false);
+                  }}
+                >
+                  {"no"}
+                </Button>
+              </ClayButtonGroup>
+            }
+          />
+        </ClayModal>
+      )}
+
+      <ClayLayout.ContainerFluid view>
+        <ClayForm
+          className="sheet"
+          onSubmit={(event) => {
+            if (name !== "" && library !== "" && task !== "") {
+              event.preventDefault();
+              onOpenChange(true);
+            } else {
+              event.preventDefault();
+              if (name === "") {
+                setIsInvalidateName(true);
+                setTimeout(() => {
+                  setIsInvalidateName(false);
+                }, 3000);
+              }
+              if (task === "") {
+                setIsInvalidateTask(true);
+                setTimeout(() => {
+                  setIsInvalidateTask(false);
+                }, 3000);
+              }
+              if (library === "") {
+                setIsInvalidateLibrary(true);
+                setTimeout(() => {
+                  setIsInvalidateLibrary(false);
+                }, 3000);
+              }
+            }
+          }}
+        >
+          <div className="form-group-item">
+            <label style={{ paddingTop: "18px" }}>Name</label>
+            <input
+              type="text"
+              className="form-control"
+              value={name}
+              onChange={(event) => {
+                setName(event.currentTarget.value);
+              }}
+            ></input>
+            {isInvalidateName && (
+              <div className="form-feedback-group has-warning">
+                <div className="form-feedback-item">{"must not be empty"}</div>
+              </div>
+            )}
+          </div>
+
+          <div className="form-group-item">
+            <label style={{ paddingTop: "18px" }}>Library:</label>
+            <div>
+              <Button
+                displayType={null}
+                className={library === "spacy" ? "btn-info" : ""}
+                onClick={(event) => {
+                  if (library === "spacy") {
+                    setLibrary("");
+                  } else {
+                    setLibrary("spacy");
+                  }
+                }}
+              >
+                <Spacy />
+                Spacy
+              </Button>
+              <Button
+                displayType={null}
+                className={library === "transformers" ? "btn-info" : ""}
+                onClick={(event) => {
+                  if (library === "transformers") {
+                    setLibrary("");
+                  } else {
+                    setLibrary("transformers");
+                  }
+                }}
+              >
+                <Trasformers />
+                <span style={{ marginLeft: "10px" }}> Transformers</span>
+              </Button>
+              <Button
+                displayType={null}
+                className={library === "flair" ? "btn-info" : ""}
+                onClick={(event) => {
+                  if (library === "flair") {
+                    setLibrary("");
+                  } else {
+                    setLibrary("flair");
+                  }
+                }}
+              >
+                <Flair />
+                Flair
+              </Button>
+              <Button
+                displayType={null}
+                className={library === "stanza" ? "btn-info" : ""}
+                onClick={(event) => {
+                  if (library === "stanza") {
+                    setLibrary("");
+                  } else {
+                    setLibrary("stanza");
+                  }
+                }}
+              >
+                <Stanza />
+                Stanza
+              </Button>
+              <Button
+                displayType={null}
+                className={library === "fastai" ? "btn-info" : ""}
+                onClick={(event) => {
+                  if (library === "fastai") {
+                    setLibrary("");
+                  } else {
+                    setLibrary("fastai");
+                  }
+                }}
+              >
+                <Fastai />
+                Fastai
+              </Button>
+            </div>
+          </div>
+          {isInvalidateLibrary && (
+            <div className="form-feedback-group has-warning">
+              <div className="form-feedback-item">{"please choose library"}</div>
+            </div>
+          )}
+          <div className="form-group-item">
+            <label style={{ paddingTop: "18px" }}>Task</label>
+            <ClaySelect
+              defaultValue={task}
+              className={library === "task" ? "btn-info" : ""}
+              onClick={(event) => {
+                setTask(event.currentTarget.value);
+              }}
+            >
+              <ClaySelect.Option label={"select task"} value={""} />
+              <ClaySelect.Option label={"text-classification"} value={"text-classification"} />
+              <ClaySelect.Option label={"token classification"} value={"token classification"} />
+              <ClaySelect.Option label={"object detection"} value={"object detection"} />
+              <ClaySelect.Option label={"image classifcation"} value={"image classifcation"} />
+              <ClaySelect.Option label={"summarizzation"} value={"summarizzation"} />
+              <ClaySelect.Option label={"translation"} value={"translation"} />
+              <ClaySelect.Option label={"audio classification"} value={"audio classification"} />
+            </ClaySelect>
+          </div>
+          {isInvalidateTask && (
+            <div className="form-feedback-group has-warning">
+              <div className="form-feedback-item">{"please choose task"}</div>
+            </div>
+          )}
+          <div className="sheet-footer">
+            <ClayButton type="submit">Deploy</ClayButton>
+          </div>
+        </ClayForm>
+      </ClayLayout.ContainerFluid>
+    </React.Fragment>
+  );
+}

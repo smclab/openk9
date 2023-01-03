@@ -67,6 +67,8 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
               <Route path="document-type-templates/*" element={"Document Type Template"} />
               <Route path="logs" element={"Logs"} />
               <Route path="logs/*" element={"Logs"} />
+              <Route path="maching-learning" element={"Maching Learning"} />
+              <Route path="maching-learning/*" element={"Maching Learning"} />
               <Route path="wizards">
                 <Route path="" element={"Connect your stuff"} />
                 <Route path="sitemap" element={"Connect Site Map"} />
@@ -94,6 +96,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
               )}
               {isAuthenticated && (
                 <ClayButtonWithIcon
+                  aria-label=""
                   symbol="logout"
                   displayType="danger"
                   onClick={() => {

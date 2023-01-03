@@ -32,7 +32,10 @@
       "**/react-scripts/**",
       "**/@docusaurus/core/**",
       "**/babel-loader",
-      "**/webpack"
+      "**/webpack",
+      "**/craco",
+      "**/react",
+      "**/react-router-dom"
     ]
   }
 }
