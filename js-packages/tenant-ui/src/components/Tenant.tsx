@@ -37,6 +37,7 @@ export function Tenant() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <ClayButtonWithIcon
+                aria-label=""
                 symbol="angle-left"
                 small
                 onClick={() => {
