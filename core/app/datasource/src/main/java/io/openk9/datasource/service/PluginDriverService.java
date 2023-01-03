@@ -248,7 +248,7 @@ public class PluginDriverService
 	}
 
 	public Uni<Set<AclMapping>> getAclMappings(PluginDriver pluginDriver) {
-		return withTransaction(s -> Mutiny2.fetch(s, pluginDriver.getAclMappings()));
+		return withStatelessTransaction(s -> s.fetch(pluginDriver.getAclMappings()));
 	}
 
 	@Inject
