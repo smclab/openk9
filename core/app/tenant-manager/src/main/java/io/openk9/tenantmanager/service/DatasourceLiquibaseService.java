@@ -15,7 +15,10 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @ApplicationScoped
@@ -146,13 +149,27 @@ public class DatasourceLiquibaseService {
 
 		JdbcConnection jdbcConnection = (JdbcConnection)connection;
 
-		try (Statement statement1 = jdbcConnection.createStatement();) {
+		String query;
 
-			statement1.executeUpdate("SET LOCAL SCHEMA '" + schemaName + "'");
+		if (jdbcConnection.getDatabaseProductName().equals("Oracle")) {
+			query = "ALTER SESSION SET CURRENT_SCHEMA = ?; ";
+		}
+		else {
+			query = "SET LOCAL SCHEMA ?; ";
+		}
 
-			statement1.executeUpdate(
-				"INSERT INTO tenant_binding (id, virtual_host, create_date, modified_date) " +
-				"VALUES(1, '"  + virtualHost + "', now(), now());");
+		query += " INSERT INTO tenant_binding (id, virtual_host, create_date, modified_date) VALUES(?, ?, ?, ?);";
+
+		try (PreparedStatement statement1 = jdbcConnection.prepareStatement(query);) {
+
+			statement1.setString(1, schemaName);
+			statement1.setLong(2, 1);
+			statement1.setString(3, virtualHost);
+			Instant instant = OffsetDateTime.now().toInstant();
+			statement1.setLong(4, instant.toEpochMilli());
+			statement1.setLong(5, instant.toEpochMilli());
+
+			statement1.executeUpdate();
 
 			jdbcConnection.commit();
 
@@ -169,8 +186,8 @@ public class DatasourceLiquibaseService {
 		try (Statement statement1 = jdbcConnection.createStatement();
 			 Statement statement2 = jdbcConnection.createStatement();) {
 
-			statement1.executeUpdate("CREATE SCHEMA IF NOT EXISTS " + schemaName);
-			statement2.executeUpdate("CREATE SCHEMA IF NOT EXISTS " + liquibaseSchema);
+			statement1.executeUpdate("CREATE SCHEMA " + schemaName);
+			statement2.executeUpdate("CREATE SCHEMA " + liquibaseSchema);
 
 			jdbcConnection.commit();
 		}
@@ -186,8 +203,8 @@ public class DatasourceLiquibaseService {
 		try (Statement statement1 = jdbcConnection.createStatement();
 			 Statement statement2 = jdbcConnection.createStatement();) {
 
-			statement1.executeUpdate("DROP SCHEMA IF EXISTS " + schemaName + " CASCADE");
-			statement2.executeUpdate("DROP SCHEMA IF EXISTS " + liquibaseSchema + " CASCADE");
+			statement1.executeUpdate("DROP SCHEMA " + schemaName + " CASCADE");
+			statement2.executeUpdate("DROP SCHEMA " + liquibaseSchema + " CASCADE");
 
 			jdbcConnection.commit();
 		}
