@@ -18,11 +18,12 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.datasource.model.AclMapping;
+import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.response.PluginDriverAclMapping;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
-import io.openk9.common.util.SortBy;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
@@ -41,6 +42,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -70,6 +72,16 @@ public class PluginDriverGraphqlResource {
 		return pluginDriverService.getDocTypeFieldsConnection(
 			pluginDriver.getId(), after, before, first, last,
 			searchText, sortByList, not);
+	}
+
+	public Uni<List<PluginDriverAclMapping>> aclMappings(@Source PluginDriver pluginDriver) {
+		return pluginDriverService
+			.getAclMappings(pluginDriver)
+			.map(l -> l
+				.stream()
+				.map(t -> new PluginDriverAclMapping(t.getDocTypeField(), t.getUserField()))
+				.toList()
+			);
 	}
 
 	@Query
@@ -112,7 +124,7 @@ public class PluginDriverGraphqlResource {
 	@Mutation
 	public Uni<Tuple2<PluginDriver, DocTypeField>> addDocTypeFieldToPluginDriver(
 		@Id long pluginDriverId, @Id long docTypeFieldId,
-		AclMapping.UserField userField) {
+		UserField userField) {
 		return pluginDriverService.addDocTypeField(
 			pluginDriverId, docTypeFieldId, userField);
 	}

@@ -104,7 +104,7 @@ public class DateQueryParser implements QueryParser {
 						else if (values.size() == 2) {
 							gte = values.get(0);
 							lte = values.get(1);
-							if (StringUtils.isNotBlank(gte)) {
+							if (StringUtils.isBlank(gte)) {
 								rangeQueryBuilder.lte(lte);
 							}
 							else {

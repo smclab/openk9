@@ -27,6 +27,7 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.PluginDriverDocTypeFieldKey;
 import io.openk9.datasource.model.PluginDriverDocTypeFieldKey_;
 import io.openk9.datasource.model.PluginDriver_;
+import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.util.K9Entity_;
 import io.openk9.datasource.model.util.Mutiny2;
@@ -93,6 +94,8 @@ public class PluginDriverService
 					.collect(Collectors.toList()));
 
 	}
+
+	
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long pluginDriverId, Pageable pageable) {
@@ -179,7 +182,7 @@ public class PluginDriverService
 	}
 
 	public Uni<Tuple2<PluginDriver, DocTypeField>> addDocTypeField(
-		long pluginDriverId, long docTypeFieldId, AclMapping.UserField userField) {
+		long pluginDriverId, long docTypeFieldId, UserField userField) {
 
 		return withTransaction((s) -> findById(pluginDriverId)
 			.onItem()
@@ -244,6 +247,11 @@ public class PluginDriverService
 							}))));
 	}
 
+	public Uni<Set<AclMapping>> getAclMappings(PluginDriver pluginDriver) {
+		return withTransaction(s -> Mutiny2.fetch(s, pluginDriver.getAclMappings()));
+	}
+
 	@Inject
 	DocTypeFieldService docTypeFieldService;
+
 }
