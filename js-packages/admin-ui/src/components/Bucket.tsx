@@ -110,44 +110,43 @@ export function Bucket() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
+        {bucketId !== "new" && (
+          <ClayForm
+            onSubmit={(event) => {
+              event.preventDefault();
+            }}
+          >
+            <SearchSelect
+              label="Query Analyzer"
+              value={bucketQuery.data?.bucket?.queryAnalysis?.id}
+              useValueQuery={useQueryAnalysisValueQuery}
+              useOptionsQuery={useQueryAnalysisOptionsQuery}
+              useChangeMutation={useBindQueryAnalysisToBucketMutation}
+              mapValueToMutationVariables={(queryAnalysis) => ({ bucketId, queryAnalysis })}
+              useRemoveMutation={useUnbindQueryAnalysisFromBucketMutation}
+              mapValueToRemoveMutationVariables={() => ({ bucketId })}
+              invalidate={() => bucketQuery.refetch()}
+            />
+
+            <SearchSelect
+              label="Search Config"
+              value={bucketQuery.data?.bucket?.searchConfig?.id}
+              useValueQuery={useSearchConfigValueQuery}
+              useOptionsQuery={useSearchConfigOptionsQuery}
+              useChangeMutation={useBindSearchConfigToBucketMutation}
+              mapValueToMutationVariables={(searchConfigId) => ({ bucketId, searchConfigId })}
+              useRemoveMutation={useUnbindSearchConfigFromBucketMutation}
+              mapValueToRemoveMutationVariables={() => ({ bucketId })}
+              invalidate={() => bucketQuery.refetch()}
+            />
+          </ClayForm>
+        )}
         <div className="sheet-footer">
           <ClayButton type="submit" disabled={!form.canSubmit}>
             {bucketId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>
       </ClayForm>
-      {bucketId !== "new" && (
-        <ClayForm
-          className="sheet"
-          onSubmit={(event) => {
-            event.preventDefault();
-          }}
-        >
-          <SearchSelect
-            label="Query Analyzer"
-            value={bucketQuery.data?.bucket?.queryAnalysis?.id}
-            useValueQuery={useQueryAnalysisValueQuery}
-            useOptionsQuery={useQueryAnalysisOptionsQuery}
-            useChangeMutation={useBindQueryAnalysisToBucketMutation}
-            mapValueToMutationVariables={(queryAnalysis) => ({ bucketId, queryAnalysis })}
-            useRemoveMutation={useUnbindQueryAnalysisFromBucketMutation}
-            mapValueToRemoveMutationVariables={() => ({ bucketId })}
-            invalidate={() => bucketQuery.refetch()}
-          />
-
-          <SearchSelect
-            label="Search Config"
-            value={bucketQuery.data?.bucket?.searchConfig?.id}
-            useValueQuery={useSearchConfigValueQuery}
-            useOptionsQuery={useSearchConfigOptionsQuery}
-            useChangeMutation={useBindSearchConfigToBucketMutation}
-            mapValueToMutationVariables={(searchConfigId) => ({ bucketId, searchConfigId })}
-            useRemoveMutation={useUnbindSearchConfigFromBucketMutation}
-            mapValueToRemoveMutationVariables={() => ({ bucketId })}
-            invalidate={() => bucketQuery.refetch()}
-          />
-        </ClayForm>
-      )}
     </ClayLayout.ContainerFluid>
   );
 }

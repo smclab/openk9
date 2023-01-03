@@ -38,7 +38,7 @@ export function PodsStatus() {
   );
 }
 
-function getStatusDisplayType(status: string) {
+export function getStatusDisplayType(status: string) {
   switch (status) {
     case "Succeded":
     case "Running":
@@ -55,18 +55,30 @@ function getStatusDisplayType(status: string) {
 
 function usePodsStatus() {
   const [status, setStatus] = React.useState<Record<string, { serviceName: string; status: string; podName: string }>>({});
-  React.useEffect(() => {
-    const eventSource = new EventSource("/k8s/pods/sse");
-    eventSource.addEventListener("message", (event) => {
-      const data = JSON.parse(event.data);
-      setStatus((status) => ({
-        ...status,
-        [data.podName]: { serviceName: data.serviceName, status: data.status, podName: data.podName },
-      }));
-    });
-    return () => {
-      eventSource.close();
-    };
+
+  const useIntervalAsync = (fn: () => Promise<unknown>, ms: number) => {
+    const timeout = React.useRef<number>();
+    const mountedRef = React.useRef(false);
+    const run = React.useCallback(async () => {
+      await fn();
+      if (mountedRef.current) {
+        timeout.current = window.setTimeout(run, ms);
+      }
+    }, [fn, ms]);
+    React.useEffect(() => {
+      mountedRef.current = true;
+      run();
+      return () => {
+        mountedRef.current = false;
+        window.clearTimeout(timeout.current);
+      };
+    }, [run]);
+  };
+  const updateState = React.useCallback(async () => {
+    const response = await fetch("/k8s/get/pods");
+    const data = await response.json();
+    setStatus(data);
   }, []);
+  useIntervalAsync(updateState, 3000);
   return status;
 }

@@ -1143,6 +1143,7 @@ export type Mutation = {
   addAnnotatorToQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Annotator>;
   addCharFilterToAnalyzer?: Maybe<Tuple2_Analyzer_CharFilter>;
   addDatasourceToBucket?: Maybe<Tuple2_Bucket_Datasource>;
+  addDocTypeFieldToPluginDriver?: Maybe<Tuple2_PluginDriver_DocTypeField>;
   addDocTypeFieldToSuggestionCategory?: Maybe<Tuple2_SuggestionCategory_DocTypeField>;
   addDocTypeToDataIndex?: Maybe<Tuple2_DataIndex_DocType>;
   addEnrichItemToEnrichPipeline?: Maybe<Tuple2_EnrichPipeline_EnrichItem>;
@@ -1199,6 +1200,7 @@ export type Mutation = {
   removeCharFilterFromAnalyzer?: Maybe<Tuple2_Analyzer_CharFilter>;
   removeDatasourceFromBucket?: Maybe<Tuple2_Bucket_Datasource>;
   removeDocTypeField?: Maybe<Tuple2_DocType_BigInteger>;
+  removeDocTypeFieldFromPluginDriver?: Maybe<Tuple2_PluginDriver_DocTypeField>;
   removeDocTypeFieldFromSuggestionCategory?: Maybe<Tuple2_SuggestionCategory_DocTypeField>;
   removeDocTypeFromDataIndex?: Maybe<Tuple2_DataIndex_DocType>;
   removeEnrichItemFromEnrichPipeline?: Maybe<Tuple2_EnrichPipeline_EnrichItem>;
@@ -1247,6 +1249,14 @@ export type MutationAddCharFilterToAnalyzerArgs = {
 export type MutationAddDatasourceToBucketArgs = {
   bucketId: Scalars['ID'];
   datasourceId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationAddDocTypeFieldToPluginDriverArgs = {
+  docTypeFieldId: Scalars['ID'];
+  pluginDriverId: Scalars['ID'];
+  userField?: InputMaybe<UserField>;
 };
 
 
@@ -1641,6 +1651,13 @@ export type MutationRemoveDocTypeFieldArgs = {
 
 
 /** Mutation root */
+export type MutationRemoveDocTypeFieldFromPluginDriverArgs = {
+  docTypeFieldId: Scalars['ID'];
+  pluginDriverId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationRemoveDocTypeFieldFromSuggestionCategoryArgs = {
   docTypeFieldId: Scalars['ID'];
   suggestionCategoryId: Scalars['ID'];
@@ -1842,15 +1859,34 @@ export type PageInfo = {
 
 export type PluginDriver = {
   __typename?: 'PluginDriver';
+  aclMappings?: Maybe<Array<Maybe<PluginDriverAclMapping>>>;
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   description?: Maybe<Scalars['String']>;
+  docTypeFields?: Maybe<Connection_DocTypeField>;
   id?: Maybe<Scalars['ID']>;
   jsonConfig?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   type?: Maybe<PluginDriverType>;
+};
+
+
+export type PluginDriverDocTypeFieldsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  not?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+export type PluginDriverAclMapping = {
+  __typename?: 'PluginDriverAclMapping';
+  docTypeField?: Maybe<DocTypeField>;
+  userField?: Maybe<UserField>;
 };
 
 export type PluginDriverDtoInput = {
@@ -1867,6 +1903,7 @@ export enum PluginDriverType {
 /** Query root */
 export type Query = {
   __typename?: 'Query';
+  _service: _Service;
   analyzer?: Maybe<Analyzer>;
   analyzers?: Maybe<Connection_Analyzer>;
   annotator?: Maybe<Annotator>;
@@ -2913,6 +2950,12 @@ export type Tuple2_EnrichPipeline_EnrichItem = {
   right?: Maybe<EnrichItem>;
 };
 
+export type Tuple2_PluginDriver_DocTypeField = {
+  __typename?: 'Tuple2_PluginDriver_DocTypeField';
+  left?: Maybe<PluginDriver>;
+  right?: Maybe<DocTypeField>;
+};
+
 export type Tuple2_QueryAnalysis_Annotator = {
   __typename?: 'Tuple2_QueryAnalysis_Annotator';
   left?: Maybe<QueryAnalysis>;
@@ -2947,6 +2990,20 @@ export type Tuple2_TokenTab_DocTypeField = {
   __typename?: 'Tuple2_TokenTab_DocTypeField';
   left?: Maybe<TokenTab>;
   right?: Maybe<DocTypeField>;
+};
+
+export enum UserField {
+  Email = 'EMAIL',
+  Name = 'NAME',
+  NameSurname = 'NAME_SURNAME',
+  Roles = 'ROLES',
+  Surname = 'SURNAME',
+  Username = 'USERNAME'
+}
+
+export type _Service = {
+  __typename?: '_Service';
+  sdl: Scalars['String'];
 };
 
 export type AnalyzerQueryVariables = Exact<{
@@ -3222,7 +3279,7 @@ export type BucketDataSourcesQueryVariables = Exact<{
 }>;
 
 
-export type BucketDataSourcesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, lastIngestionDate?: any | null, scheduling?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type BucketDataSourcesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, lastIngestionDate?: any | null, scheduling?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
 
 export type AddDataSourceToBucketMutationVariables = Exact<{
   childId: Scalars['ID'];
@@ -3777,13 +3834,44 @@ export type PluginDriverByNameQueryVariables = Exact<{
 
 export type PluginDriverByNameQuery = { __typename?: 'Query', pluginDrivers?: { __typename?: 'DefaultConnection_PluginDriver', edges?: Array<{ __typename?: 'DefaultEdge_PluginDriver', node?: { __typename?: 'PluginDriver', id?: string | null } | null } | null> | null } | null };
 
+export type PluginDriverToDocumentTypeFieldsQueryVariables = Exact<{
+  parentId: Scalars['ID'];
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type PluginDriverToDocumentTypeFieldsQuery = { __typename?: 'Query', pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, docTypeFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, docType?: { __typename?: 'DocType', id?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+
+export type DocumentTypeFieldsForPluginQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type DocumentTypeFieldsForPluginQuery = { __typename?: 'Query', docTypeFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null } | null };
+
+export type AddDocumentTypeFieldToPluginDriversMutationVariables = Exact<{
+  childId: Scalars['ID'];
+  parentId: Scalars['ID'];
+  userField?: InputMaybe<UserField>;
+}>;
+
+
+export type AddDocumentTypeFieldToPluginDriversMutation = { __typename?: 'Mutation', addDocTypeFieldToPluginDriver?: { __typename?: 'Tuple2_PluginDriver_DocTypeField', left?: { __typename?: 'PluginDriver', id?: string | null } | null, right?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+
+export type RemoveDocumentTypeFieldFromPluginDriversMutationVariables = Exact<{
+  childId: Scalars['ID'];
+  parentId: Scalars['ID'];
+}>;
+
+
+export type RemoveDocumentTypeFieldFromPluginDriversMutation = { __typename?: 'Mutation', removeDocTypeFieldFromPluginDriver?: { __typename?: 'Tuple2_PluginDriver_DocTypeField', left?: { __typename?: 'PluginDriver', id?: string | null } | null, right?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+
 export type PluginDriversQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
   cursor?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type PluginDriversQuery = { __typename?: 'Query', pluginDrivers?: { __typename?: 'DefaultConnection_PluginDriver', edges?: Array<{ __typename?: 'DefaultEdge_PluginDriver', node?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, type?: PluginDriverType | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type PluginDriversQuery = { __typename?: 'Query', pluginDrivers?: { __typename?: 'DefaultConnection_PluginDriver', edges?: Array<{ __typename?: 'DefaultEdge_PluginDriver', node?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, type?: PluginDriverType | null, aclMappings?: Array<{ __typename?: 'PluginDriverAclMapping', userField?: UserField | null, docTypeField?: { __typename?: 'DocTypeField', fieldName?: string | null } | null } | null> | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeletePluginDriverMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -5641,6 +5729,7 @@ export const BucketDataSourcesDocument = gql`
         node {
           id
           name
+          description
           schedulable
           lastIngestionDate
           scheduling
@@ -8557,6 +8646,185 @@ export function usePluginDriverByNameLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type PluginDriverByNameQueryHookResult = ReturnType<typeof usePluginDriverByNameQuery>;
 export type PluginDriverByNameLazyQueryHookResult = ReturnType<typeof usePluginDriverByNameLazyQuery>;
 export type PluginDriverByNameQueryResult = Apollo.QueryResult<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>;
+export const PluginDriverToDocumentTypeFieldsDocument = gql`
+    query PluginDriverToDocumentTypeFields($parentId: ID!, $searchText: String, $cursor: String) {
+  pluginDriver(id: $parentId) {
+    id
+    docTypeFields(searchText: $searchText, first: 25, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          description
+          docType {
+            id
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __usePluginDriverToDocumentTypeFieldsQuery__
+ *
+ * To run a query within a React component, call `usePluginDriverToDocumentTypeFieldsQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePluginDriverToDocumentTypeFieldsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePluginDriverToDocumentTypeFieldsQuery({
+ *   variables: {
+ *      parentId: // value for 'parentId'
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function usePluginDriverToDocumentTypeFieldsQuery(baseOptions: Apollo.QueryHookOptions<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>(PluginDriverToDocumentTypeFieldsDocument, options);
+      }
+export function usePluginDriverToDocumentTypeFieldsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>(PluginDriverToDocumentTypeFieldsDocument, options);
+        }
+export type PluginDriverToDocumentTypeFieldsQueryHookResult = ReturnType<typeof usePluginDriverToDocumentTypeFieldsQuery>;
+export type PluginDriverToDocumentTypeFieldsLazyQueryHookResult = ReturnType<typeof usePluginDriverToDocumentTypeFieldsLazyQuery>;
+export type PluginDriverToDocumentTypeFieldsQueryResult = Apollo.QueryResult<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>;
+export const DocumentTypeFieldsForPluginDocument = gql`
+    query DocumentTypeFieldsForPlugin {
+  docTypeFields {
+    edges {
+      node {
+        id
+        name
+        description
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useDocumentTypeFieldsForPluginQuery__
+ *
+ * To run a query within a React component, call `useDocumentTypeFieldsForPluginQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDocumentTypeFieldsForPluginQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDocumentTypeFieldsForPluginQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useDocumentTypeFieldsForPluginQuery(baseOptions?: Apollo.QueryHookOptions<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>(DocumentTypeFieldsForPluginDocument, options);
+      }
+export function useDocumentTypeFieldsForPluginLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>(DocumentTypeFieldsForPluginDocument, options);
+        }
+export type DocumentTypeFieldsForPluginQueryHookResult = ReturnType<typeof useDocumentTypeFieldsForPluginQuery>;
+export type DocumentTypeFieldsForPluginLazyQueryHookResult = ReturnType<typeof useDocumentTypeFieldsForPluginLazyQuery>;
+export type DocumentTypeFieldsForPluginQueryResult = Apollo.QueryResult<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>;
+export const AddDocumentTypeFieldToPluginDriversDocument = gql`
+    mutation AddDocumentTypeFieldToPluginDrivers($childId: ID!, $parentId: ID!, $userField: UserField) {
+  addDocTypeFieldToPluginDriver(
+    docTypeFieldId: $childId
+    pluginDriverId: $parentId
+    userField: $userField
+  ) {
+    left {
+      id
+    }
+    right {
+      id
+    }
+  }
+}
+    `;
+export type AddDocumentTypeFieldToPluginDriversMutationFn = Apollo.MutationFunction<AddDocumentTypeFieldToPluginDriversMutation, AddDocumentTypeFieldToPluginDriversMutationVariables>;
+
+/**
+ * __useAddDocumentTypeFieldToPluginDriversMutation__
+ *
+ * To run a mutation, you first call `useAddDocumentTypeFieldToPluginDriversMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddDocumentTypeFieldToPluginDriversMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addDocumentTypeFieldToPluginDriversMutation, { data, loading, error }] = useAddDocumentTypeFieldToPluginDriversMutation({
+ *   variables: {
+ *      childId: // value for 'childId'
+ *      parentId: // value for 'parentId'
+ *      userField: // value for 'userField'
+ *   },
+ * });
+ */
+export function useAddDocumentTypeFieldToPluginDriversMutation(baseOptions?: Apollo.MutationHookOptions<AddDocumentTypeFieldToPluginDriversMutation, AddDocumentTypeFieldToPluginDriversMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddDocumentTypeFieldToPluginDriversMutation, AddDocumentTypeFieldToPluginDriversMutationVariables>(AddDocumentTypeFieldToPluginDriversDocument, options);
+      }
+export type AddDocumentTypeFieldToPluginDriversMutationHookResult = ReturnType<typeof useAddDocumentTypeFieldToPluginDriversMutation>;
+export type AddDocumentTypeFieldToPluginDriversMutationResult = Apollo.MutationResult<AddDocumentTypeFieldToPluginDriversMutation>;
+export type AddDocumentTypeFieldToPluginDriversMutationOptions = Apollo.BaseMutationOptions<AddDocumentTypeFieldToPluginDriversMutation, AddDocumentTypeFieldToPluginDriversMutationVariables>;
+export const RemoveDocumentTypeFieldFromPluginDriversDocument = gql`
+    mutation RemoveDocumentTypeFieldFromPluginDrivers($childId: ID!, $parentId: ID!) {
+  removeDocTypeFieldFromPluginDriver(
+    docTypeFieldId: $childId
+    pluginDriverId: $parentId
+  ) {
+    left {
+      id
+    }
+    right {
+      id
+    }
+  }
+}
+    `;
+export type RemoveDocumentTypeFieldFromPluginDriversMutationFn = Apollo.MutationFunction<RemoveDocumentTypeFieldFromPluginDriversMutation, RemoveDocumentTypeFieldFromPluginDriversMutationVariables>;
+
+/**
+ * __useRemoveDocumentTypeFieldFromPluginDriversMutation__
+ *
+ * To run a mutation, you first call `useRemoveDocumentTypeFieldFromPluginDriversMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveDocumentTypeFieldFromPluginDriversMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeDocumentTypeFieldFromPluginDriversMutation, { data, loading, error }] = useRemoveDocumentTypeFieldFromPluginDriversMutation({
+ *   variables: {
+ *      childId: // value for 'childId'
+ *      parentId: // value for 'parentId'
+ *   },
+ * });
+ */
+export function useRemoveDocumentTypeFieldFromPluginDriversMutation(baseOptions?: Apollo.MutationHookOptions<RemoveDocumentTypeFieldFromPluginDriversMutation, RemoveDocumentTypeFieldFromPluginDriversMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveDocumentTypeFieldFromPluginDriversMutation, RemoveDocumentTypeFieldFromPluginDriversMutationVariables>(RemoveDocumentTypeFieldFromPluginDriversDocument, options);
+      }
+export type RemoveDocumentTypeFieldFromPluginDriversMutationHookResult = ReturnType<typeof useRemoveDocumentTypeFieldFromPluginDriversMutation>;
+export type RemoveDocumentTypeFieldFromPluginDriversMutationResult = Apollo.MutationResult<RemoveDocumentTypeFieldFromPluginDriversMutation>;
+export type RemoveDocumentTypeFieldFromPluginDriversMutationOptions = Apollo.BaseMutationOptions<RemoveDocumentTypeFieldFromPluginDriversMutation, RemoveDocumentTypeFieldFromPluginDriversMutationVariables>;
 export const PluginDriversDocument = gql`
     query PluginDrivers($searchText: String, $cursor: String) {
   pluginDrivers(searchText: $searchText, first: 25, after: $cursor) {
@@ -8566,6 +8834,12 @@ export const PluginDriversDocument = gql`
         name
         description
         type
+        aclMappings {
+          userField
+          docTypeField {
+            fieldName
+          }
+        }
       }
     }
     pageInfo {

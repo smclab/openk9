@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 import { useDeleteRulesMutation, useRulesQuery } from "../graphql-generated";
+import { AddRuleToQueryAnalyses, QueryAnalysesRule, RemoveRuleFromQueryAnalyses } from "./QueryAnalysesRules";
 import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
 
@@ -33,8 +34,9 @@ gql`
 export function Rules() {
   const rulesQuery = useRulesQuery();
   const showToast = useToast();
+
   const [deleteRuleMutate] = useDeleteRulesMutation({
-    refetchQueries: [RulesQuery],
+    refetchQueries: [RulesQuery, QueryAnalysesRule, AddRuleToQueryAnalyses, RemoveRuleFromQueryAnalyses],
     onCompleted(data) {
       if (data.deleteRule?.id) {
         showToast({ displayType: "success", title: "Rule deleted", content: data.deleteRule.name ?? "" });

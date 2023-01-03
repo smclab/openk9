@@ -260,7 +260,7 @@ const Filters = [
         }`,
   },
   {
-    title: "shingles",
+    title: "shingle",
     description:
       "Add shingles, or word n-grams, to a token stream by concatenating adjacent tokens. By default, the shingle token filter outputs two-word shingles and unigrams.",
     Json: `
@@ -388,6 +388,22 @@ const Filters = [
     {
       "type":"type of filter",
       "max_token_count": "Maximum number of tokens to keep. Once this limit is reached, any remaining tokens are excluded from the output. Defaults to 1."
+
+    }`,
+  },
+  {
+    title: "lowercase",
+    description: "Changes token text to lowercase. For example, you can use the lowercase filter to change THE Lazy DoG to the lazy dog.",
+    Json: `
+    {
+      "type": "lowercase",
+      "language": ""
+    }`,
+    visible: "false",
+    descriptionAttribute: `
+    {
+      "type":"type of filter",
+      "language": "Language-specific lowercase token filter to use. Example:greek,irish,turkish."
 
     }`,
   },
