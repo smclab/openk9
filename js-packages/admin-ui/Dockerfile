@@ -1,6 +1,7 @@
 FROM node:16.18-alpine as react-build
 
 COPY ./js-packages/admin-ui /app
+COPY ./yarn.lock /app
 
 WORKDIR /app
 RUN yarn install --frozen-lockfile
