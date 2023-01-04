@@ -80,6 +80,8 @@ public class DateQueryParser implements QueryParser {
 
 			for (Tuple2<DocTypeField, ParserSearchToken> searchKeywordToken : collect) {
 
+				DocTypeField docTypeField = searchKeywordToken.getItem1();
+
 				ParserSearchToken searchToken = searchKeywordToken.getItem2();
 
 				Map<String, String> extra = searchToken.getExtra();
@@ -95,7 +97,7 @@ public class DateQueryParser implements QueryParser {
 
 						RangeQueryBuilder rangeQueryBuilder =
 							QueryBuilders.rangeQuery(
-								searchToken.getKeywordKey());
+								docTypeField.getFieldName());
 
 						if (values.size() == 1) {
 							gte = values.get(0);
@@ -132,7 +134,7 @@ public class DateQueryParser implements QueryParser {
 
 					RangeQueryBuilder rangeQueryBuilder =
 						QueryBuilders.rangeQuery(
-							searchToken.getKeywordKey());
+							docTypeField.getFieldName());
 
 					if (gte != null) {
 						rangeQueryBuilder.gte(gte);
