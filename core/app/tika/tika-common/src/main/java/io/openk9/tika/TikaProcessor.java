@@ -33,12 +33,10 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
 
 @ApplicationScoped
 public class TikaProcessor {
@@ -80,6 +78,8 @@ public class TikaProcessor {
             String resourceId = binaryJson.getString("resourceId");
 
             String name = binaryJson.getString("name");
+
+            logger.info("Processing resource with id: " + resourceId + " and name: " + name);
 
             boolean retainBinaries = enrichItemConfig.getBoolean("retain_binaries");
 
@@ -229,6 +229,7 @@ public class TikaProcessor {
                                 .put("contentType", contentType);
 
                         if (!retainBinaries) {
+                            logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
                             fileManagerClient.delete(resourceId);
                         }
 
@@ -237,12 +238,14 @@ public class TikaProcessor {
                     }
                     else {
                         if (!retainBinaries) {
+                            logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
                             fileManagerClient.delete(resourceId);
                         }
                     }
 
                 } catch (Exception e) {
                     if (!retainBinaries) {
+                        logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
                         fileManagerClient.delete(resourceId);
                     }
                     logger.error(e.getMessage(), e);
@@ -251,6 +254,7 @@ public class TikaProcessor {
 
             } catch (IOException e) {
                 if (!retainBinaries) {
+                    logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
                     fileManagerClient.delete(resourceId);
                 }
                 logger.error(e.getMessage(), e);
