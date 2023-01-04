@@ -10,8 +10,10 @@ Build Latest Admin Ui Docker Image:
   only:
     refs:
       - main
+      - 305-refactoring-con-nuovi-endpoint-search-frontend
     changes:
       - js-packages/admin-ui/**/*
+      - .gitlab/.gitlab-ci-admin-frontend.yml
   except:
     - schedules
   before_script:
@@ -19,8 +21,8 @@ Build Latest Admin Ui Docker Image:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
     - docker build -t openk9-admin-ui:latest -f js-packages/admin-ui/Dockerfile .
-    - docker tag openk9-admin-ui:latest $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
-    - docker push $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
+    - docker tag openk9-admin-ui:latest $CI_REGISTRY_NAME/openk9/openk9-admin-ui:305-refactoring-con-nuovi-endpoint-search-frontend
+    - docker push $CI_REGISTRY_NAME/openk9/openk9-admin-ui:305-refactoring-con-nuovi-endpoint-search-frontend
 
 
 Build Tagged Admin Ui Docker Image:
