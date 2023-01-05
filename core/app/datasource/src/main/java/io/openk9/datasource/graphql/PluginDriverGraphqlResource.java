@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.response.PluginDriverAclMapping;
+import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.UserField;
@@ -53,8 +54,8 @@ public class PluginDriverGraphqlResource {
 	@Query
 	public Uni<Connection<PluginDriver>> getPluginDrivers(
 		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before, 
-		@Description("fetching only the first certain number of nodes") Integer first, 
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
 		@Description("fetching only the last certain number of nodes") Integer last,
 		String searchText, Set<SortBy> sortByList) {
 		return pluginDriverService.findConnection(
@@ -74,12 +75,15 @@ public class PluginDriverGraphqlResource {
 			searchText, sortByList, not);
 	}
 
-	public Uni<List<PluginDriverAclMapping>> aclMappings(@Source PluginDriver pluginDriver) {
+
+	public Uni<List<PluginDriverAclMapping>> aclMappings(
+		@Source PluginDriver pluginDriver) {
 		return pluginDriverService
 			.getAclMappings(pluginDriver)
 			.map(l -> l
 				.stream()
-				.map(t -> new PluginDriverAclMapping(t.getDocTypeField(), t.getUserField()))
+				.map(t -> new PluginDriverAclMapping(t.getDocTypeField(),
+					t.getUserField()))
 				.toList()
 			);
 	}
@@ -89,15 +93,18 @@ public class PluginDriverGraphqlResource {
 		return pluginDriverService.findById(id);
 	}
 
-	public Uni<Response<PluginDriver>> patchPluginDriver(@Id long id, PluginDriverDTO pluginDriverDTO) {
+	public Uni<Response<PluginDriver>> patchPluginDriver(
+		@Id long id, PluginDriverDTO pluginDriverDTO) {
 		return pluginDriverService.getValidator().patch(id, pluginDriverDTO);
 	}
 
-	public Uni<Response<PluginDriver>> updatePluginDriver(@Id long id, PluginDriverDTO pluginDriverDTO) {
+	public Uni<Response<PluginDriver>> updatePluginDriver(
+		@Id long id, PluginDriverDTO pluginDriverDTO) {
 		return pluginDriverService.getValidator().update(id, pluginDriverDTO);
 	}
 
-	public Uni<Response<PluginDriver>> createPluginDriver(PluginDriverDTO pluginDriverDTO) {
+	public Uni<Response<PluginDriver>> createPluginDriver(
+		PluginDriverDTO pluginDriverDTO) {
 		return pluginDriverService.getValidator().create(pluginDriverDTO);
 	}
 
@@ -108,7 +115,8 @@ public class PluginDriverGraphqlResource {
 
 		if (id == null) {
 			return createPluginDriver(pluginDriverDTO);
-		} else {
+		}
+		else {
 			return patch
 				? patchPluginDriver(id, pluginDriverDTO)
 				: updatePluginDriver(id, pluginDriverDTO);
@@ -121,6 +129,15 @@ public class PluginDriverGraphqlResource {
 		return pluginDriverService.deleteById(pluginDriverId);
 	}
 
+
+	@Mutation
+	public Uni<AclMapping> setUserField(
+		@Id long pluginDriverId, @Id long docTypeFieldId, UserField userField) {
+		return pluginDriverService.setUserField(
+			pluginDriverId, docTypeFieldId, userField);
+	}
+
+
 	@Mutation
 	public Uni<Tuple2<PluginDriver, DocTypeField>> addDocTypeFieldToPluginDriver(
 		@Id long pluginDriverId, @Id long docTypeFieldId,
@@ -130,8 +147,10 @@ public class PluginDriverGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<PluginDriver, DocTypeField>> removeDocTypeFieldFromPluginDriver(@Id long pluginDriverId, @Id long docTypeFieldId) {
-		return pluginDriverService.removeDocTypeField(pluginDriverId, docTypeFieldId);
+	public Uni<Tuple2<PluginDriver, DocTypeField>> removeDocTypeFieldFromPluginDriver(
+		@Id long pluginDriverId, @Id long docTypeFieldId) {
+		return pluginDriverService.removeDocTypeField(
+			pluginDriverId, docTypeFieldId);
 	}
 
 	@Subscription

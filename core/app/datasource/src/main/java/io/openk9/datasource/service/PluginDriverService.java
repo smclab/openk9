@@ -42,6 +42,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
@@ -250,6 +251,36 @@ public class PluginDriverService
 	public Uni<Set<AclMapping>> getAclMappings(PluginDriver pluginDriver) {
 		return withStatelessTransaction(s -> s.fetch(pluginDriver.getAclMappings()));
 	}
+
+	public Uni<AclMapping> setUserField(
+		long pluginDriverId,
+		long docTypeFieldId, UserField userField){
+
+		return withTransaction(s-> {
+			CriteriaBuilder criteria= em.getCriteriaBuilder();
+
+			CriteriaUpdate<AclMapping> query =
+				criteria.createCriteriaUpdate(AclMapping.class);
+
+			Root<AclMapping> from = query.from(AclMapping.class);
+
+			query.where(criteria.and(
+				criteria.equal(from.get(AclMapping_.key).get(PluginDriverDocTypeFieldKey_.pluginDriverId),pluginDriverId),
+				criteria.equal(from.get(AclMapping_.key).get(PluginDriverDocTypeFieldKey_.docTypeFieldId),docTypeFieldId),
+				criteria.notEqual(from.get(AclMapping_.userField), userField)
+			));
+
+			query.set(from.get(AclMapping_.userField),userField);
+
+			return s.createQuery(query).executeUpdate().call(s::flush).flatMap(rowCount -> {
+				if(rowCount==0){
+					return Uni.createFrom().nullItem();
+				}
+				return s.find(AclMapping.class, PluginDriverDocTypeFieldKey.of(pluginDriverId, docTypeFieldId));
+			});
+		});
+	}
+
 
 	@Inject
 	DocTypeFieldService docTypeFieldService;
