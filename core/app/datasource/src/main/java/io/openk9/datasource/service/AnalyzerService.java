@@ -116,6 +116,46 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				})));
 	}
 
+	public Uni<Analyzer> removeTokenFilterListFromAnalyzer(
+		long analyzerId) {
+		return withTransaction((s, tr) -> findById(analyzerId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getTokenFilters())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(tokenFilters -> {
+
+					if(!tokenFilters.isEmpty()){
+						tokenFilters.clear();
+						return persist(analyzer);
+					};
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
+	public Uni<Analyzer> removeCharFilterListFromAnalyzer(
+		long analyzerId) {
+		return withTransaction((s, tr) -> findById(analyzerId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getCharFilters())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(charFilters -> {
+
+					if(!charFilters.isEmpty()){
+						charFilters.clear();
+						return persist(analyzer);
+					};
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
 	public Uni<Tuple2<Analyzer, CharFilter>> addCharFilterToAnalyzer(
 		long id, long charFilterId) {
 

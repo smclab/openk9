@@ -112,6 +112,17 @@ public class AnalyzerGraphqlResource {
 	}
 
 	@Mutation
+	public Uni<Analyzer> removeTokenFilterListFromAnalyzer(
+		long analyzerId) {
+		return _analyzerService.removeTokenFilterListFromAnalyzer(analyzerId);
+	}
+
+	@Mutation
+	public Uni<Analyzer> removeCharFilterListFromAnalyzer(long analyzerId){
+		return _analyzerService.removeCharFilterListFromAnalyzer(analyzerId);
+	}
+
+	@Mutation
 	public Uni<Tuple2<Analyzer, TokenFilter>> removeTokenFilterFromAnalyzer(
 		@Id long id, @Id long tokenFilterId) {
 		return _analyzerService.removeTokenFilterToAnalyzer(id, tokenFilterId);
