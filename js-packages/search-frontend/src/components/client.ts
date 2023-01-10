@@ -59,7 +59,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
       else return "down";
     },
     async doSearch<E>(searchRequest: SearchRequest): Promise<SearchResult<E>> {
-      const response = await authFetch(`/v1/search`, {
+      const response = await authFetch(`/api/searcher/v1/search`, {
         method: "POST",
         body: JSON.stringify(searchRequest),
         headers: {
@@ -97,7 +97,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
       suggestKeyword?: string; // to source by text in suggestions
       order: "desc" | "asc";
     }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
-      const request = await authFetch(`/v1/suggestions`, {
+      const request = await authFetch(`/api/searcher/v1/suggestions`, {
         method: "POST",
         body: JSON.stringify({
           searchQuery,
@@ -161,7 +161,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     async fetchQueryAnalysis(
       request: AnalysisRequest,
     ): Promise<AnalysisResponse> {
-      const response = await authFetch("/v1/query-analysis", {
+      const response = await authFetch("/api/searcher/v1/query-analysis", {
         method: "POST",
         body: JSON.stringify(request),
         headers: {
