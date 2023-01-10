@@ -7,6 +7,7 @@ import { FetchHttpRequest } from './core/FetchHttpRequest';
 
 import { BackgroundProcessResourceService } from './services/BackgroundProcessResourceService';
 import { MetricsResourceService } from './services/MetricsResourceService';
+import { OAuth2SettingsResourceService } from './services/OAuth2SettingsResourceService';
 import { TenantManagerResourceService } from './services/TenantManagerResourceService';
 
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
@@ -15,6 +16,7 @@ export class OpenApiRestClient {
 
     public readonly backgroundProcessResource: BackgroundProcessResourceService;
     public readonly metricsResource: MetricsResourceService;
+    public readonly oAuth2SettingsResource: OAuth2SettingsResourceService;
     public readonly tenantManagerResource: TenantManagerResourceService;
 
     public readonly request: BaseHttpRequest;
@@ -34,6 +36,7 @@ export class OpenApiRestClient {
 
         this.backgroundProcessResource = new BackgroundProcessResourceService(this.request);
         this.metricsResource = new MetricsResourceService(this.request);
+        this.oAuth2SettingsResource = new OAuth2SettingsResourceService(this.request);
         this.tenantManagerResource = new TenantManagerResourceService(this.request);
     }
 }

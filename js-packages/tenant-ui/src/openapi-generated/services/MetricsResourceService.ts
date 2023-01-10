@@ -12,10 +12,10 @@ export class MetricsResourceService {
      * @returns string OK
      * @throws ApiError
      */
-    public getMetricsThreads(): CancelablePromise<string> {
+    public getApiTenantManagerMetricsThreads(): CancelablePromise<string> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/metrics/threads',
+            url: '/api/tenant-manager/metrics/threads',
         });
     }
 

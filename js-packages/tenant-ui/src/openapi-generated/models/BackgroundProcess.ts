@@ -4,14 +4,14 @@
 
 import type { OffsetDateTime } from './OffsetDateTime';
 import type { Status } from './Status';
-import type { Tenant } from './Tenant';
 import type { UUID } from './UUID';
 
 export type BackgroundProcess = {
-    id?: UUID;
+    id?: number;
     createDate?: OffsetDateTime;
     modifiedDate?: OffsetDateTime;
     status?: Status;
     message?: string;
-    tenant?: Tenant;
+    processId?: UUID;
+    name?: string;
 };

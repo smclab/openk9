@@ -4,7 +4,7 @@ import { keycloak } from "./authentication";
 
 export const apolloClient = new ApolloClient({
   link: new HttpLink({
-    uri: "/graphql",
+    uri: "/api/tenant-manager/graphql",
     async fetch(input, init?) {
       if (keycloak.authenticated) {
         await keycloak.updateToken(30);

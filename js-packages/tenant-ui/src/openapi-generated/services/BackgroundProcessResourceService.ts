@@ -3,7 +3,6 @@
 /* eslint-disable */
 import type { BackgroundProcess } from '../models/BackgroundProcess';
 import type { Status } from '../models/Status';
-import type { UUID } from '../models/UUID';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
@@ -16,10 +15,10 @@ export class BackgroundProcessResourceService {
      * @returns BackgroundProcess OK
      * @throws ApiError
      */
-    public getTenantManagerBackgroundProcessAll(): CancelablePromise<Array<BackgroundProcess>> {
+    public getApiTenantManagerTenantManagerBackgroundProcessAll(): CancelablePromise<Array<BackgroundProcess>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/tenant-manager/background-process/all',
+            url: '/api/tenant-manager/tenant-manager/background-process/all',
         });
     }
 
@@ -28,12 +27,12 @@ export class BackgroundProcessResourceService {
      * @returns BackgroundProcess OK
      * @throws ApiError
      */
-    public getTenantManagerBackgroundProcessId(
-id: UUID,
+    public getApiTenantManagerTenantManagerBackgroundProcessId(
+id: number,
 ): CancelablePromise<BackgroundProcess> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/tenant-manager/background-process/id/{id}',
+            url: '/api/tenant-manager/tenant-manager/background-process/id/{id}',
             path: {
                 'id': id,
             },
@@ -45,12 +44,12 @@ id: UUID,
      * @returns BackgroundProcess OK
      * @throws ApiError
      */
-    public getTenantManagerBackgroundProcessStatus(
+    public getApiTenantManagerTenantManagerBackgroundProcessStatus(
 status: Status,
 ): CancelablePromise<Array<BackgroundProcess>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/tenant-manager/background-process/status/{status}',
+            url: '/api/tenant-manager/tenant-manager/background-process/status/{status}',
             path: {
                 'status': status,
             },

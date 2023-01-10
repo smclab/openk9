@@ -2,21 +2,21 @@ const { createProxyMiddleware } = require("http-proxy-middleware");
 
 module.exports = function (app) {
   app.use(
-    "/graphql",
+    "/api/tenant-manager/graphql",
     createProxyMiddleware({
       target: "https://tenant-manager.openk9.io",
       changeOrigin: true,
     })
   );
   app.use(
-    "/oauth2",
+    "/api/tenant-manager/oauth2",
     createProxyMiddleware({
       target: "https://tenant-manager.openk9.io",
       changeOrigin: true,
     })
   );
   app.use(
-    "/tenant-manager",
+    "/api/tenant-manager/tenant-manager",
     createProxyMiddleware({
       target: "https://tenant-manager.openk9.io",
       changeOrigin: true,

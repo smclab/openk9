@@ -17,9 +17,9 @@ export type { EffectiveDeleteTenantRequest } from './models/EffectiveDeleteTenan
 export type { OffsetDateTime } from './models/OffsetDateTime';
 export type { RequestId } from './models/RequestId';
 export { Status } from './models/Status';
-export type { Tenant } from './models/Tenant';
 export type { UUID } from './models/UUID';
 
 export { BackgroundProcessResourceService } from './services/BackgroundProcessResourceService';
 export { MetricsResourceService } from './services/MetricsResourceService';
+export { OAuth2SettingsResourceService } from './services/OAuth2SettingsResourceService';
 export { TenantManagerResourceService } from './services/TenantManagerResourceService';

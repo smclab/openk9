@@ -19,12 +19,12 @@ export class TenantManagerResourceService {
      * @returns RequestId OK
      * @throws ApiError
      */
-    public postTenantManagerTenant(
+    public postApiTenantManagerTenantManagerTenant(
 requestBody?: CreateTenantRequest,
 ): CancelablePromise<RequestId> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/tenant-manager/tenant',
+            url: '/api/tenant-manager/tenant-manager/tenant',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -35,12 +35,12 @@ requestBody?: CreateTenantRequest,
      * @returns DeleteTenantResponse OK
      * @throws ApiError
      */
-    public postTenantManagerTenantDelete(
+    public postApiTenantManagerTenantManagerTenantDelete(
 requestBody?: DeleteTenantRequest,
 ): CancelablePromise<DeleteTenantResponse> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/tenant-manager/tenant/delete',
+            url: '/api/tenant-manager/tenant-manager/tenant/delete',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -51,12 +51,12 @@ requestBody?: DeleteTenantRequest,
      * @returns DeleteTenantResponse OK
      * @throws ApiError
      */
-    public deleteTenantManagerTenantDelete(
+    public deleteApiTenantManagerTenantManagerTenantDelete(
 requestBody?: EffectiveDeleteTenantRequest,
 ): CancelablePromise<DeleteTenantResponse> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/tenant-manager/tenant/delete',
+            url: '/api/tenant-manager/tenant-manager/tenant/delete',
             body: requestBody,
             mediaType: 'application/json',
         });
