@@ -17,8 +17,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.time.Instant;
-import java.time.OffsetDateTime;
+import java.sql.Timestamp;
 import java.util.List;
 
 @ApplicationScoped
@@ -152,24 +151,23 @@ public class DatasourceLiquibaseService {
 		String query;
 
 		if (jdbcConnection.getDatabaseProductName().equals("Oracle")) {
-			query = "ALTER SESSION SET CURRENT_SCHEMA = ?; ";
+			query = "ALTER SESSION SET CURRENT_SCHEMA = '" + schemaName + "';";
 		}
 		else {
-			query = "SET LOCAL SCHEMA ?; ";
+			query = "SET LOCAL SCHEMA '" + schemaName + "';";
 		}
 
-		query += " INSERT INTO tenant_binding (id, virtual_host, create_date, modified_date) VALUES(?, ?, ?, ?);";
+		query += "INSERT INTO tenant_binding(id, virtual_host, create_date, modified_date) VALUES(?, ?, ?, ?);";
 
-		try (PreparedStatement statement1 = jdbcConnection.prepareStatement(query);) {
+		try (PreparedStatement statement2 = jdbcConnection.prepareStatement(query)) {
 
-			statement1.setString(1, schemaName);
-			statement1.setLong(2, 1);
-			statement1.setString(3, virtualHost);
-			Instant instant = OffsetDateTime.now().toInstant();
-			statement1.setLong(4, instant.toEpochMilli());
-			statement1.setLong(5, instant.toEpochMilli());
+			statement2.setLong(1, 1);
+			statement2.setString(2, virtualHost);
+			Timestamp now = new Timestamp(System.currentTimeMillis());
+			statement2.setTimestamp(3, now);
+			statement2.setTimestamp(4, now);
 
-			statement1.executeUpdate();
+			statement2.executeUpdate();
 
 			jdbcConnection.commit();
 
