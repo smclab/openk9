@@ -11,13 +11,13 @@ Build Latest Datasource Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - 206-datasource-er-improvements
+      - main
       - tags
   except:
     - schedules
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: datasource
     paths:

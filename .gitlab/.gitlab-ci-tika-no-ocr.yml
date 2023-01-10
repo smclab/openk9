@@ -11,7 +11,7 @@ Build Latest Tika No Ocr Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - 206-datasource-er-improvements
+      - main
       - tags
     changes:
       - core/app/tika/tika-no-ocr/ci.properties

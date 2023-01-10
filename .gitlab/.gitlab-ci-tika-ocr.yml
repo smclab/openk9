@@ -11,7 +11,7 @@ Build Latest Tika Ocr Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - 206-datasource-er-improvements
+      - main
       - tags
     changes:
       - core/app/tika/tika-ocr/ci.properties
@@ -19,7 +19,7 @@ Build Latest Tika Ocr Docker Images:
     - schedules
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=206-datasource-er-improvements
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=main
   cache:
     key: tika-ocr
     paths:
