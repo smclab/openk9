@@ -52,6 +52,7 @@ export function TabTokenTabs() {
         queryResult: tabTokensQuery,
         field: (data) => data?.tokenTabs,
       }}
+      label="Tab Tokens"
       onCreatePath="new"
       onDelete={(tabToken) => {
         if (tabToken?.id) deleteTabTokenMutate({ variables: { tabId: tabId, TabTokenTabs: tabToken.id } });

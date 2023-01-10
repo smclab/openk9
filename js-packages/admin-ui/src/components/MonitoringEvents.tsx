@@ -7,6 +7,7 @@ import ClayDropDown from "@clayui/drop-down";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import { TableVirtuoso } from "react-virtuoso";
+import { ClassNameButton } from "../App";
 
 gql`
   query MonitoringEvents($field: EventSortable, $ordering: String) {
@@ -188,7 +189,7 @@ function EventData({ id }: EventDataProps) {
           </ClayModal.Body>
         </ClayModal>
       )}
-      <ClayButtonWithIcon aria-label="" symbol="info-panel-open" onClick={() => onOpenChange(true)} />
+      <ClayButtonWithIcon className={ClassNameButton} aria-label="" symbol="info-panel-open" onClick={() => onOpenChange(true)} />
     </>
   );
 }

@@ -20,10 +20,12 @@ import {
   KeyValue,
   MultiSelectForDinamicallyFieldsWithoutType,
   CreateDinamicallyFieldWithout,
+  MainTitle,
 } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { AnalyzersQuery } from "./Analyzers";
+import { ClassNameButton } from "../App";
 
 const AnalyzerQuery = gql`
   query Analyzer($id: ID!) {
@@ -157,6 +159,7 @@ export function Analyzer() {
         </div>
       )}
       <ClayLayout.ContainerFluid view>
+        {analyzerId !== "new" && <MainTitle title="Attributes" />}
         <ClayForm
           className="sheet"
           onSubmit={(event) => {
@@ -200,7 +203,7 @@ export function Analyzer() {
             </ClayForm>
           )}
           <div className="sheet-footer">
-            <ClayButton type="submit" disabled={!form.canSubmit}>
+            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
               {analyzerId === "new" ? "Create" : "Update"}
             </ClayButton>
           </div>

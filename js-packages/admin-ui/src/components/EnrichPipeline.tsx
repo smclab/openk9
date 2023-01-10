@@ -8,6 +8,7 @@ import { fromFieldValidators, TextArea, TextInput, useForm } from "./Form";
 import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "../App";
 
 const EnrichPipelineQuery = gql`
   query EnrichPipeline($id: ID!) {
@@ -83,7 +84,7 @@ export function EnrichPipeline() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {enrichPipelineId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

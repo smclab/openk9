@@ -25,7 +25,7 @@ export class SuggestionCategoryResourceService {
      * @returns PageSuggestionCategory OK
      * @throws ApiError
      */
-    public getSuggestionCategories(
+    public getApiDatasourceSuggestionCategories(
 afterId: number = -1,
 beforeId: number = -1,
 limit: number = 20,
@@ -34,7 +34,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageSuggestionCategory> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/suggestion-categories',
+            url: '/api/datasource/suggestion-categories',
             query: {
                 'after_id': afterId,
                 'before_id': beforeId,
@@ -50,12 +50,12 @@ sortBy?: K9Column,
      * @returns SuggestionCategory OK
      * @throws ApiError
      */
-    public postSuggestionCategories(
+    public postApiDatasourceSuggestionCategories(
 requestBody?: SuggestionCategoryDTO,
 ): CancelablePromise<SuggestionCategory> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/suggestion-categories',
+            url: '/api/datasource/suggestion-categories',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -65,10 +65,10 @@ requestBody?: SuggestionCategoryDTO,
      * @returns number OK
      * @throws ApiError
      */
-    public getSuggestionCategoriesCount(): CancelablePromise<number> {
+    public getApiDatasourceSuggestionCategoriesCount(): CancelablePromise<number> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/suggestion-categories/count',
+            url: '/api/datasource/suggestion-categories/count',
         });
     }
 
@@ -76,10 +76,10 @@ requestBody?: SuggestionCategoryDTO,
      * @returns K9EntityEventSuggestionCategory OK
      * @throws ApiError
      */
-    public getSuggestionCategoriesStream(): CancelablePromise<Array<K9EntityEventSuggestionCategory>> {
+    public getApiDatasourceSuggestionCategoriesStream(): CancelablePromise<Array<K9EntityEventSuggestionCategory>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/suggestion-categories/stream',
+            url: '/api/datasource/suggestion-categories/stream',
         });
     }
 
@@ -88,12 +88,12 @@ requestBody?: SuggestionCategoryDTO,
      * @returns SuggestionCategory OK
      * @throws ApiError
      */
-    public getSuggestionCategories1(
+    public getApiDatasourceSuggestionCategories1(
 id: number,
 ): CancelablePromise<SuggestionCategory> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/suggestion-categories/{id}',
+            url: '/api/datasource/suggestion-categories/{id}',
             path: {
                 'id': id,
             },
@@ -106,13 +106,13 @@ id: number,
      * @returns SuggestionCategory OK
      * @throws ApiError
      */
-    public putSuggestionCategories(
+    public putApiDatasourceSuggestionCategories(
 id: number,
 requestBody?: SuggestionCategoryDTO,
 ): CancelablePromise<SuggestionCategory> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/suggestion-categories/{id}',
+            url: '/api/datasource/suggestion-categories/{id}',
             path: {
                 'id': id,
             },
@@ -126,12 +126,12 @@ requestBody?: SuggestionCategoryDTO,
      * @returns SuggestionCategory OK
      * @throws ApiError
      */
-    public deleteSuggestionCategories(
+    public deleteApiDatasourceSuggestionCategories(
 id: number,
 ): CancelablePromise<SuggestionCategory> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/suggestion-categories/{id}',
+            url: '/api/datasource/suggestion-categories/{id}',
             path: {
                 'id': id,
             },
@@ -144,13 +144,13 @@ id: number,
      * @returns SuggestionCategory OK
      * @throws ApiError
      */
-    public patchSuggestionCategories(
+    public patchApiDatasourceSuggestionCategories(
 id: number,
 requestBody?: SuggestionCategoryDTO,
 ): CancelablePromise<SuggestionCategory> {
         return this.httpRequest.request({
             method: 'PATCH',
-            url: '/suggestion-categories/{id}',
+            url: '/api/datasource/suggestion-categories/{id}',
             path: {
                 'id': id,
             },
@@ -169,7 +169,7 @@ requestBody?: SuggestionCategoryDTO,
      * @returns PageDocTypeField OK
      * @throws ApiError
      */
-    public getSuggestionCategoriesDocTypeFields(
+    public getApiDatasourceSuggestionCategoriesDocTypeFields(
 id: number,
 afterId: number = -1,
 beforeId: number = -1,
@@ -179,7 +179,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageDocTypeField> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/suggestion-categories/{id}/doc-type-fields',
+            url: '/api/datasource/suggestion-categories/{id}/doc-type-fields',
             path: {
                 'id': id,
             },
@@ -199,13 +199,13 @@ sortBy?: K9Column,
      * @returns Tuple2SuggestionCategoryDocTypeField OK
      * @throws ApiError
      */
-    public putSuggestionCategoriesDocTypeFields(
+    public putApiDatasourceSuggestionCategoriesDocTypeFields(
 docTypeFieldId: number,
 id: number,
 ): CancelablePromise<Tuple2SuggestionCategoryDocTypeField> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/suggestion-categories/{id}/doc-type-fields/{docTypeFieldId}',
+            url: '/api/datasource/suggestion-categories/{id}/doc-type-fields/{docTypeFieldId}',
             path: {
                 'docTypeFieldId': docTypeFieldId,
                 'id': id,
@@ -219,13 +219,13 @@ id: number,
      * @returns Tuple2SuggestionCategoryDocTypeField OK
      * @throws ApiError
      */
-    public deleteSuggestionCategoriesDocTypeFields(
+    public deleteApiDatasourceSuggestionCategoriesDocTypeFields(
 docTypeFieldId: number,
 id: number,
 ): CancelablePromise<Tuple2SuggestionCategoryDocTypeField> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/suggestion-categories/{id}/doc-type-fields/{docTypeFieldId}',
+            url: '/api/datasource/suggestion-categories/{id}/doc-type-fields/{docTypeFieldId}',
             path: {
                 'docTypeFieldId': docTypeFieldId,
                 'id': id,

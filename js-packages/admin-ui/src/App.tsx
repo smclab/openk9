@@ -82,6 +82,8 @@ import { MachingLearning } from "./components/MachingLearning";
 import { HuggingFaceCard } from "./components/HuggingFaceCards";
 import { HuggingFace } from "./components/HuggingFace";
 import { PluginDriverToAcl } from "./components/PluginDriverToAcl";
+import styled from "styled-components";
+import Button from "@clayui/button";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -373,6 +375,7 @@ export default function App() {
                       <Route path="hugging-face-view">
                         <Route path="" element={<HuggingFaceCard />} />
                         <Route path="configure-hugging-face" element={<HuggingFace />} />
+                        <Route path="enrich-item/:name" element={<EnrichItem />} />
                       </Route>
                     </Route>
                     <Route path="annotators">
@@ -424,20 +427,36 @@ export default function App() {
 
 function NavTabs({ tabs }: { tabs: Array<{ label: string; path: string }> }) {
   return (
-    <div className="navbar navbar-underline navigation-bar navigation-bar-secondary navbar-expand-md" style={{ position: "sticky" }}>
-      <div className="container-fluid container-fluid-max-xl">
-        <ul className="navbar-nav">
-          {tabs.map(({ label, path }, index) => {
-            return (
-              <li className="nav-item" key={index}>
-                <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to={path} end={true}>
-                  <span className="navbar-text-truncate">{label}</span>
-                </NavLink>
-              </li>
-            );
-          })}
-        </ul>
+    <React.Fragment>
+      <div className="navbar navbar-underline navigation-bar navigation-bar-secondary navbar-expand-md" style={{ position: "sticky" }}>
+        <div className="container-fluid container-fluid-max-xl">
+          <ul className="navbar-nav">
+            {tabs.map(({ label, path }, index) => {
+              return (
+                <li className="nav-item" key={index}>
+                  <NavLink
+                    style={{ outline: "none", boxShadow: "none" }}
+                    className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
+                    to={path}
+                    end={true}
+                  >
+                    <span className="navbar-text-truncate">{label}</span>
+                  </NavLink>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
-    </div>
+
+      <style type="text/css">
+        {`
+        .navbar-underline.navbar-expand-md .navbar-nav .nav-link.active:after{
+          background-color: red;
+    `}
+      </style>
+    </React.Fragment>
   );
 }
+
+export const ClassNameButton = "btn btn-danger";

@@ -2,12 +2,13 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSearchConfigQuery, useCreateOrUpdateSearchConfigMutation } from "../graphql-generated";
-import { fromFieldValidators, NumberInput, TextArea, TextInput, useForm } from "./Form";
+import { fromFieldValidators, MainTitle, NumberInput, TextArea, TextInput, useForm } from "./Form";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { SearchConfigsQuery } from "./SearchConfigs";
+import { ClassNameButton } from "../App";
 
 const SearchConfigQuery = gql`
   query SearchConfig($id: ID!) {
@@ -79,6 +80,7 @@ export function SearchConfig() {
   return (
     <React.Fragment>
       <ClayLayout.ContainerFluid view>
+        {searchConfigId !== "new" && <MainTitle title="Attributes" />}
         <ClayForm
           className="sheet"
           onSubmit={(event) => {
@@ -90,7 +92,7 @@ export function SearchConfig() {
           <TextArea label="Description" {...form.inputProps("description")} />
           <NumberInput label="minScore" {...form.inputProps("minScore")} />
           <div className="sheet-footer">
-            <ClayButton type="submit" disabled={!form.canSubmit}>
+            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
               {searchConfigId === "new" ? "Create" : "Update"}
             </ClayButton>
           </div>

@@ -10,6 +10,7 @@ import ClayButton from "@clayui/button";
 import ClayForm from "@clayui/form";
 import { TextInput, useForm } from "./Form";
 import { useNavigate } from "react-router-dom";
+import { ClassNameButton } from "../App";
 
 export const DocumentTypesQuery = gql`
   query DocumentTypes($searchText: String, $cursor: String) {
@@ -74,7 +75,7 @@ export function DocumentTypes() {
               label: "Show Settings",
               disabled: rows.length === 0,
               async onClick() {
-                const data = await restClient.dataIndexResource.postV1DataIndexGetSettingsFromDocTypes({
+                const data = await restClient.dataIndexResource.postApiDatasourceV1DataIndexGetSettingsFromDocTypes({
                   docTypeIds: rows.map((row) => Number(row.id!)),
                 });
                 navigate(`settings`, { state: { data: data } });
@@ -93,7 +94,7 @@ function useCreateDataIndexModal() {
   const showToast = useToast();
   const createDataIndexMutation = useMutation(
     async ({ indexName, docTypeIds }: { indexName: string; docTypeIds: Array<string> }) => {
-      return await restClient.dataIndexResource.postV1DataIndexCreateDataIndexFromDocTypes({
+      return await restClient.dataIndexResource.postApiDatasourceV1DataIndexCreateDataIndexFromDocTypes({
         indexName,
         docTypeIds: docTypeIds.map(Number),
       });
@@ -145,6 +146,7 @@ function useCreateDataIndexModal() {
       <ClayModal.Footer
         last={
           <ClayButton
+            className={ClassNameButton}
             disabled={!form.canSubmit}
             onClick={() => {
               form.submit();

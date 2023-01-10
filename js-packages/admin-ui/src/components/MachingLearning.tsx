@@ -3,6 +3,7 @@ import ClayLayout from "@clayui/layout";
 import ClayButton from "@clayui/button";
 import React from "react";
 import { Link } from "react-router-dom";
+import { ClassNameButton } from "../App";
 
 export function MachingLearning() {
   return (
@@ -39,7 +40,7 @@ function Card({ title, description, link, nameButton }: { title: string; descrip
             {description}
           </ClayCard.Description>
           <Link to={link}>
-            <ClayButton displayType="primary" style={{ margin: "16px" }}>
+            <ClayButton className={ClassNameButton} displayType="primary" style={{ margin: "16px" }}>
               {nameButton}
             </ClayButton>
           </Link>

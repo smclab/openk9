@@ -21,7 +21,7 @@ export function DocumentTypeMappings() {
   }
 
   const documentTypeMappingsQuery = useQuery([documentTypeId], async () => {
-    return await restClient.dataIndexResource.postV1DataIndexGetMappingsFromDocTypes({ docTypeIds: [Number(documentTypeId)] });
+    return await restClient.dataIndexResource.postApiDatasourceV1DataIndexGetMappingsFromDocTypes({ docTypeIds: [Number(documentTypeId)] });
   });
   return (
     <React.Fragment>

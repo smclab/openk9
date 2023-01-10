@@ -23,7 +23,7 @@ export class TemplateResourceService {
      * @returns PageDocTypeTemplate OK
      * @throws ApiError
      */
-    public getTemplates(
+    public getApiDatasourceTemplates(
 afterId: number = -1,
 beforeId: number = -1,
 limit: number = 20,
@@ -32,7 +32,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageDocTypeTemplate> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/templates',
+            url: '/api/datasource/templates',
             query: {
                 'after_id': afterId,
                 'before_id': beforeId,
@@ -48,12 +48,12 @@ sortBy?: K9Column,
      * @returns DocTypeTemplate OK
      * @throws ApiError
      */
-    public postTemplates(
+    public postApiDatasourceTemplates(
 requestBody?: DocTypeTemplateDTO,
 ): CancelablePromise<DocTypeTemplate> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/templates',
+            url: '/api/datasource/templates',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -63,10 +63,10 @@ requestBody?: DocTypeTemplateDTO,
      * @returns number OK
      * @throws ApiError
      */
-    public getTemplatesCount(): CancelablePromise<number> {
+    public getApiDatasourceTemplatesCount(): CancelablePromise<number> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/templates/count',
+            url: '/api/datasource/templates/count',
         });
     }
 
@@ -74,10 +74,10 @@ requestBody?: DocTypeTemplateDTO,
      * @returns K9EntityEventDocTypeTemplate OK
      * @throws ApiError
      */
-    public getTemplatesStream(): CancelablePromise<Array<K9EntityEventDocTypeTemplate>> {
+    public getApiDatasourceTemplatesStream(): CancelablePromise<Array<K9EntityEventDocTypeTemplate>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/templates/stream',
+            url: '/api/datasource/templates/stream',
         });
     }
 
@@ -86,12 +86,12 @@ requestBody?: DocTypeTemplateDTO,
      * @returns DocTypeTemplate OK
      * @throws ApiError
      */
-    public getTemplates1(
+    public getApiDatasourceTemplates1(
 id: number,
 ): CancelablePromise<DocTypeTemplate> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/templates/{id}',
+            url: '/api/datasource/templates/{id}',
             path: {
                 'id': id,
             },
@@ -104,13 +104,13 @@ id: number,
      * @returns DocTypeTemplate OK
      * @throws ApiError
      */
-    public putTemplates(
+    public putApiDatasourceTemplates(
 id: number,
 requestBody?: DocTypeTemplateDTO,
 ): CancelablePromise<DocTypeTemplate> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/templates/{id}',
+            url: '/api/datasource/templates/{id}',
             path: {
                 'id': id,
             },
@@ -124,12 +124,12 @@ requestBody?: DocTypeTemplateDTO,
      * @returns DocTypeTemplate OK
      * @throws ApiError
      */
-    public deleteTemplates(
+    public deleteApiDatasourceTemplates(
 id: number,
 ): CancelablePromise<DocTypeTemplate> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/templates/{id}',
+            url: '/api/datasource/templates/{id}',
             path: {
                 'id': id,
             },
@@ -142,13 +142,13 @@ id: number,
      * @returns DocTypeTemplate OK
      * @throws ApiError
      */
-    public patchTemplates(
+    public patchApiDatasourceTemplates(
 id: number,
 requestBody?: DocTypeTemplateDTO,
 ): CancelablePromise<DocTypeTemplate> {
         return this.httpRequest.request({
             method: 'PATCH',
-            url: '/templates/{id}',
+            url: '/api/datasource/templates/{id}',
             path: {
                 'id': id,
             },
@@ -162,12 +162,12 @@ requestBody?: DocTypeTemplateDTO,
      * @returns string OK
      * @throws ApiError
      */
-    public getTemplatesCompiled(
+    public getApiDatasourceTemplatesCompiled(
 id: number,
 ): CancelablePromise<string> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/templates/{id}/compiled',
+            url: '/api/datasource/templates/{id}/compiled',
             path: {
                 'id': id,
             },

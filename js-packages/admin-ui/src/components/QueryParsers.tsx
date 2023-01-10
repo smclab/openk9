@@ -45,22 +45,25 @@ export function QueryParsers() {
 
   if (!searchConfigId) throw new Error();
   return (
-    <Table
-      data={{
-        queryResult: queryParserConfigsQuery,
-        field: (data) => data?.queryParserConfigs,
-      }}
-      onCreatePath="new"
-      onDelete={(queryparser) => {
-        if (queryparser?.id) {
-          deleteQueryParserMutate({ variables: { searchConfigId: searchConfigId!, queryParserConfigId: queryparser.id } });
-        }
-      }}
-      columns={[
-        { header: "Name", content: (queryParserConfig) => formatName(queryParserConfig) },
-        { header: "Description", content: (queryParserConfig) => queryParserConfig?.description },
-        { header: "Type", content: (queryParserConfig) => queryParserConfig?.type },
-      ]}
-    />
+    <React.Fragment>
+      <Table
+        data={{
+          queryResult: queryParserConfigsQuery,
+          field: (data) => data?.queryParserConfigs,
+        }}
+        label="Query Parsaers"
+        onCreatePath="new"
+        onDelete={(queryparser) => {
+          if (queryparser?.id) {
+            deleteQueryParserMutate({ variables: { searchConfigId: searchConfigId!, queryParserConfigId: queryparser.id } });
+          }
+        }}
+        columns={[
+          { header: "Name", content: (queryParserConfig) => formatName(queryParserConfig) },
+          { header: "Description", content: (queryParserConfig) => queryParserConfig?.description },
+          { header: "Type", content: (queryParserConfig) => queryParserConfig?.type },
+        ]}
+      />
+    </React.Fragment>
   );
 }

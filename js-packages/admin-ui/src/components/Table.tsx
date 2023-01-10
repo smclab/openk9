@@ -12,6 +12,9 @@ import ClayEmptyState from "@clayui/empty-state";
 import { ClayCheckbox } from "@clayui/form";
 import useMap from "./useMap";
 import { ClayToggle } from "@clayui/form";
+import { MainTitle } from "./Form";
+import { ClassNameButton } from "../App";
+import ClayIcon from "@clayui/icon";
 
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
   return value?.id && <Link to={value.id}>{value.name}</Link>;
@@ -45,6 +48,7 @@ export function TableWithSubFields<
     description?: string | null;
     fieldType?: string | null;
     subFields?: any;
+    label?: string;
   },
   Parameters extends { searchText?: string | null; cursor?: string | null }
 >({
@@ -60,6 +64,7 @@ export function TableWithSubFields<
   onCreatePathSubFields,
   rowActions = () => [],
   rowsActions = () => [],
+  label,
 }: {
   data: {
     queryResult: QueryResult<Query, Parameters>;
@@ -71,6 +76,7 @@ export function TableWithSubFields<
       | null
       | undefined;
   };
+  label: string;
   id: string;
   isItemsSelectable?: boolean;
   columns: Array<{ header: React.ReactNode; content(row: Row | undefined): React.ReactNode }>;
@@ -146,6 +152,7 @@ export function TableWithSubFields<
         </ClayLayout.ContainerFluid>
       </ClayToolbar>
       <ClayLayout.ContainerFluid view>
+        {<MainTitle title={label} />}
         <ClayTable className="table table-list" style={{ tableLayout: "fixed" }}>
           <ClayTable.Head>
             <ClayTable.Row>
@@ -284,6 +291,7 @@ export function Table<
     field,
   },
   isItemsSelectable,
+  label,
   columns,
   onCreatePath,
   onDelete,
@@ -300,7 +308,7 @@ export function Table<
       | null
       | undefined;
   };
-
+  label?: string;
   isItemsSelectable?: boolean;
   columns: Array<{ header: React.ReactNode; content(row: Row | undefined): React.ReactNode }>;
   onDelete(row: Row | undefined): void;
@@ -347,7 +355,12 @@ export function Table<
             </ClayToolbar.Item>
             <ClayToolbar.Item>
               <Link to={onCreatePath}>
-                <ClayButtonWithIcon aria-label="" symbol="plus" small />
+                <ClayButton className={`${ClassNameButton} btn-sm`}>
+                  <span className="inline-item inline-item-before">
+                    <ClayIcon symbol="plus" />
+                  </span>
+                  {"Add New"}
+                </ClayButton>
               </Link>
             </ClayToolbar.Item>
             {isItemsSelectable && (
@@ -373,6 +386,7 @@ export function Table<
         </ClayLayout.ContainerFluid>
       </ClayToolbar>
       <ClayLayout.ContainerFluid view>
+        {label && <MainTitle title={label} />}
         <table hidden={!showSelectedItemsTable} className="table table-list" style={{ tableLayout: "fixed" }}>
           <thead>
             <tr>
@@ -512,7 +526,7 @@ export function Table<
   );
 }
 
-function TableRowActions({ actions }: { actions: Array<{ label: string; icon: string; onClick: () => void }> }) {
+export function TableRowActions({ actions }: { actions: Array<{ label: string; icon: string; onClick: () => void }> }) {
   return (
     <React.Fragment>
       <div className="quick-action-menu" style={{ alignItems: "center" }}>

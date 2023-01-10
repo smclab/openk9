@@ -1,4 +1,4 @@
-schema: https://test.openk9.io/graphql
+schema: https://test.openk9.io/api/datasource/graphql
 documents: "./src/**/*.tsx"
 generates:
   src/graphql-generated.ts:

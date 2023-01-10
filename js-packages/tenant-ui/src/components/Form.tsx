@@ -587,7 +587,7 @@ export function AssociatedEntities<Q>({
               />
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <ClayButtonWithIcon symbol="plus" small onClick={() => onOpenChange(true)} />
+              <ClayButtonWithIcon aria-label="" symbol="plus" small onClick={() => onOpenChange(true)} />
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ClayLayout.ContainerFluid>

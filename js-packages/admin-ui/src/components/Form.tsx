@@ -2,11 +2,12 @@ import React from "react";
 import ClayForm, { ClayInput, ClaySelect, ClayToggle } from "@clayui/form";
 import { MutationHookOptions, MutationTuple, QueryHookOptions, QueryResult } from "@apollo/client";
 import useDebounced from "./useDebounced";
+import ClayTable from "@clayui/table";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import ClayList from "@clayui/list";
 import ClayEmptyState from "@clayui/empty-state";
-import { Virtuoso, Components as VirtuosoComponents } from "react-virtuoso";
+import { Virtuoso, Components as VirtuosoComponents, TableVirtuoso } from "react-virtuoso";
 import ClayLayout from "@clayui/layout";
 import ClayToolbar from "@clayui/toolbar";
 import ClayPanel from "@clayui/panel";
@@ -14,6 +15,8 @@ import ClayMultiSelect from "@clayui/multi-select";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 import { UserField } from "../graphql-generated";
+import { TableRowActions } from "./Table";
+import { ClassNameButton } from "../App";
 
 type Nullable<T> = T | null | undefined;
 export const fromFieldValidators =
@@ -591,9 +594,11 @@ export function AssociatedEntities<Q>({
   useRemoveMutation: MutationHook<any, { parentId: string; childId: string }>;
 }) {
   const [searchText, setSearchText] = React.useState("");
+  const [modalSearchText, setModalSearchText] = React.useState("");
   const searchTextDebounced = useDebounced(searchText);
+  const modalSearchTextDebouced = useDebounced(modalSearchText);
   const associatedListQuery = useListQuery({ variables: { parentId, unassociated: false, searchText: searchTextDebounced } });
-  const unassociatedListQuery = useListQuery({ variables: { parentId, unassociated: true, searchText: searchTextDebounced } });
+  const unassociatedListQuery = useListQuery({ variables: { parentId, unassociated: true, searchText: modalSearchTextDebouced } });
   const [addMutate, addMutation] = useAddMutation({
     onCompleted() {
       associatedListQuery.refetch();
@@ -624,12 +629,18 @@ export function AssociatedEntities<Q>({
               />
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <ClayButtonWithIcon aria-label="" symbol="plus" small onClick={() => onOpenChange(true)} />
+              <ClayButton className={`${ClassNameButton}`} onClick={() => onOpenChange(true)}>
+                <span className="inline-item inline-item-before">
+                  <ClayIcon symbol="plus" />
+                </span>
+                {"Associate"}
+              </ClayButton>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ClayLayout.ContainerFluid>
       </ClayToolbar>
       <ClayLayout.ContainerFluid view>
+        {(field(associatedListQuery.data)?.edges?.length ?? 0) !== 0 && <MainTitle title={label} />}
         {(field(associatedListQuery.data)?.edges?.length ?? 0) === 0 && !associatedListQuery.loading && (
           <ClayEmptyState description="There are no matching associated entities" title="No entities" className="c-empty-state-animation" />
         )}
@@ -686,13 +697,13 @@ export function AssociatedEntities<Q>({
       {open && (
         <ClayModal observer={observer}>
           <ClayModal.Header>{label}</ClayModal.Header>
-          <ClayModal.Body>
+          <ClayModal.Body scrollable={true}>
             <ClayForm.Group>
               <ClayInput
                 type="search"
                 placeholder="search"
-                value={searchText}
-                onChange={(event) => setSearchText(event.currentTarget.value)}
+                value={modalSearchText}
+                onChange={(event) => setModalSearchText(event.currentTarget.value)}
               />
             </ClayForm.Group>
             {(field(unassociatedListQuery.data)?.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
@@ -737,6 +748,18 @@ export function AssociatedEntities<Q>({
   );
 }
 
+export function MainTitle({ title }: { title: string }) {
+  return (
+    <li className="list-group-item list-group-item-flex" style={{ overflowAnchor: "none" }}>
+      <div className="autofit-col autofit-col-expand" style={{ alignItems: "center" }}>
+        <p className="navbar-title navbar-text-truncate " style={{ color: "red" }}>
+          {title}
+        </p>
+      </div>
+    </li>
+  );
+}
+
 export function AssociatedEntitiesWithSelect<Q>({
   label,
   parentId,
@@ -756,10 +779,11 @@ export function AssociatedEntitiesWithSelect<Q>({
   useRemoveMutation: MutationHook<any, { parentId: string; childId: string }>;
 }) {
   const [searchText, setSearchText] = React.useState("");
+  const [modalSearchText, setModalSearchText] = React.useState("");
   const searchTextDebounced = useDebounced(searchText);
+  const searchTextDebouncedInternal = useDebounced(modalSearchText);
   const associatedListQuery = useListQuery({ variables: { parentId, searchText: searchTextDebounced } });
-  const unassociatedListQuery = notSelect();
-
+  const unassociatedListQuery = notSelect({ variables: { searchText: searchTextDebouncedInternal } });
   const [addMutate, addMutation] = useAddMutation({
     onCompleted() {
       associatedListQuery.refetch();
@@ -776,6 +800,7 @@ export function AssociatedEntitiesWithSelect<Q>({
   const scrollerRef = React.useRef<HTMLElement>();
   const canAct = !addMutation.loading && !removeMutation.loading;
   const [userField, setUserField] = React.useState(UserField.Email);
+  associatedListQuery.refetch();
   return (
     <React.Fragment>
       <ClayToolbar light>
@@ -796,47 +821,78 @@ export function AssociatedEntitiesWithSelect<Q>({
         </ClayLayout.ContainerFluid>
       </ClayToolbar>
       <ClayLayout.ContainerFluid view>
-        {(field(associatedListQuery.data)?.edges?.length ?? 0) === 0 && !associatedListQuery.loading && (
-          <ClayEmptyState description="There are no matching associated entities" title="No entities" className="c-empty-state-animation" />
-        )}
-        <Virtuoso
+        {(field(associatedListQuery.data)?.edges?.length ?? 0) !== 0 && <MainTitle title={label} />}
+        <TableVirtuoso
           totalCount={field(associatedListQuery.data)?.edges?.length}
           scrollerRef={(element) => (scrollerRef.current = element as any)}
-          style={{ height: "70vh" }}
-          components={ClayListComponents}
+          style={{ height: "80vh" }}
+          components={{
+            Table: (props) => (
+              <table
+                {...props}
+                style={{ ...props.style, tableLayout: "fixed" }}
+                className="table table-hover show-quick-actions-on-Hover table-list"
+              />
+            ),
+            TableBody: ClayTable.Body,
+            TableHead: ClayTable.Head,
+            TableRow: ClayTable.Row,
+            EmptyPlaceholder: () => (
+              <tbody>
+                <tr>
+                  <td colSpan={field(associatedListQuery.data)?.edges?.length + 3} style={{ backgroundColor: "white" }}>
+                    <ClayEmptyState description="There are no matching entities" title="No entities" className="c-empty-state-animation" />
+                  </td>
+                </tr>
+              </tbody>
+            ),
+          }}
+          fixedHeaderContent={() => (
+            <ClayTable.Row>
+              <ClayTable.Cell headingCell headingTitle>
+                {<span className="text-truncate">Field Name</span>}
+              </ClayTable.Cell>
+              <ClayTable.Cell headingCell headingTitle>
+                {<span className="text-truncate">Userfield</span>}
+              </ClayTable.Cell>
+              <ClayTable.Cell headingCell style={{ width: "56px" }} />
+            </ClayTable.Row>
+          )}
           itemContent={(index) => {
-            const row = field(associatedListQuery.data)?.edges?.[index]?.node ?? undefined;
+            const row = JSON.parse(JSON.stringify(associatedListQuery.data))?.pluginDriver?.aclMappings[index] ?? undefined;
             return (
               <React.Fragment>
-                <ClayList.ItemField expand>
-                  <ClayList.ItemTitle>{row?.name || "..."}</ClayList.ItemTitle>
-                  <ClayList.ItemText>{row?.description || "..."}</ClayList.ItemText>
-                </ClayList.ItemField>
-                <ClayList.ItemField>
-                  <ClayList.QuickActionMenu>
-                    {canAct && (
-                      <ClayList.QuickActionMenu.Item
-                        onClick={() => {
-                          if (row?.id) {
-                            removeMutate({ variables: { parentId, childId: row.id } });
+                <ClayTable.Cell>{row?.docTypeField?.name || "..."}</ClayTable.Cell>
+                <ClayTable.Cell>
+                  <EnumSelectSimple
+                    dict={UserField}
+                    disabled={false}
+                    id={""}
+                    label=""
+                    onChange={() => {}}
+                    value={row?.userField ?? userField}
+                    dimension={130}
+                    validationMessages={[]}
+                    key={""}
+                  />
+                </ClayTable.Cell>
+                <ClayTable.Cell>
+                  <TableRowActions
+                    actions={[
+                      {
+                        label: "Remove Association",
+                        icon: "trash",
+                        onClick: () => {
+                          if (row?.docTypeField?.id) {
+                            removeMutate({ variables: { parentId, childId: row?.docTypeField?.id } });
                           }
-                        }}
-                        symbol="chain-broken"
-                      />
-                    )}
-                  </ClayList.QuickActionMenu>
-                </ClayList.ItemField>
+                        },
+                      },
+                    ]}
+                  />
+                </ClayTable.Cell>
               </React.Fragment>
             );
-          }}
-          endReached={() => {
-            if (field(associatedListQuery.data)?.pageInfo?.hasNextPage) {
-              associatedListQuery.fetchMore({
-                variables: {
-                  cursor: field(associatedListQuery.data)?.pageInfo?.endCursor,
-                },
-              });
-            }
           }}
           isScrolling={(isScrolling) => {
             if (scrollerRef.current) {
@@ -853,6 +909,14 @@ export function AssociatedEntitiesWithSelect<Q>({
         <ClayModal observer={observer}>
           <ClayModal.Header>{label}</ClayModal.Header>
           <ClayModal.Body>
+            <ClayForm.Group>
+              <ClayInput
+                type="search"
+                placeholder="search"
+                value={modalSearchText}
+                onChange={(event) => setModalSearchText(event.currentTarget.value)}
+              />
+            </ClayForm.Group>
             <EnumSelectSimple
               dict={UserField}
               disabled={false}
@@ -864,7 +928,8 @@ export function AssociatedEntitiesWithSelect<Q>({
               validationMessages={[]}
               key={""}
             ></EnumSelectSimple>
-
+          </ClayModal.Body>
+          <ClayModal.Body scrollable={true}>
             {(unassociatedListQuery.data?.docTypeFields.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
               <ClayEmptyState
                 description="There are no matching unassociated entities"
@@ -1036,19 +1101,22 @@ export function CreateFieldDinamically({
               );
             }
             if (typeof templateChoice?.[keysOfFields[i]] === "object") {
-              fields.push(
-                <MultiSelectSimple
-                  key={keysOfFields[i]}
-                  keyofF={keysOfFields[i]}
-                  description={descriptionsFields[keysOfFields[i]]}
-                  items={templateChoice?.[keysOfFields[i]].map((value: any) => {
-                    return { label: value, value };
-                  })}
-                  onItemchange={(value: Array<{ label?: string; value?: string }>) => {
-                    setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: value.map(({ value }) => value!) });
-                  }}
-                />
-              );
+              if (!Array.isArray(templateChoice?.[keysOfFields[i]])) {
+              } else {
+                fields.push(
+                  <MultiSelectSimple
+                    key={keysOfFields[i]}
+                    keyofF={keysOfFields[i]}
+                    description={descriptionsFields[keysOfFields[i]]}
+                    items={templateChoice?.[keysOfFields[i]].map((value: any) => {
+                      return { label: value, value };
+                    })}
+                    onItemchange={(value: Array<{ label?: string; value?: string }>) => {
+                      setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: value.map(({ value }) => value!) });
+                    }}
+                  />
+                );
+              }
             }
 
             i++;

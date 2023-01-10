@@ -14,10 +14,10 @@ export class DateFilterResourceService {
      * @returns DateFilterResponseDto OK
      * @throws ApiError
      */
-    public getV1DateFilter(): CancelablePromise<Array<DateFilterResponseDto>> {
+    public getApiDatasourceV1DateFilter(): CancelablePromise<Array<DateFilterResponseDto>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/v1/date-filter',
+            url: '/api/datasource/v1/date-filter',
         });
     }
 

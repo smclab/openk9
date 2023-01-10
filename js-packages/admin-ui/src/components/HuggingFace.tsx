@@ -12,6 +12,7 @@ import ClayModal from "@clayui/modal";
 import ClayButtonGroup from "@clayui/button/lib/Group";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "../App";
 
 export function HuggingFace() {
   const [name, setName] = React.useState("");
@@ -34,6 +35,15 @@ export function HuggingFace() {
             last={
               <ClayButtonGroup spaced style={{ alignItems: "center" }}>
                 <Button
+                  className={ClassNameButton}
+                  displayType="primary"
+                  onClick={() => {
+                    onOpenChange(false);
+                  }}
+                >
+                  {"no"}
+                </Button>
+                <Button
                   displayType="primary"
                   onClick={() => {
                     const json = JSON.parse(JSON.stringify(" name: " + name + " task: " + task + " library: " + library));
@@ -43,24 +53,20 @@ export function HuggingFace() {
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ pipelineName: task, modelName: name, tokenizerName: "string", library: library }),
                     };
-                    fetch("https://test.openk9.io/k8s/deploy-ml-model", requestOptions)
+                    fetch("k8s/deploy-ml-model", requestOptions)
                       .then((response) => response.json())
-                      .then((data) => console.log(data));
-
+                      .then((data) => {
+                        if (data?.status === "DANGER") {
+                          showToast({ displayType: "danger", title: "error released", content: "" + data?.message });
+                        } else {
+                          showToast({ displayType: "success", title: "successfully released", content: "" });
+                        }
+                      });
                     onOpenChange(false);
                     navigate(`/maching-learning/hugging-face-view`, { replace: true });
-                    showToast({ displayType: "success", title: "successfully released", content: "" });
                   }}
                 >
                   {"yes"}
-                </Button>
-                <Button
-                  displayType="primary"
-                  onClick={() => {
-                    onOpenChange(false);
-                  }}
-                >
-                  {"no"}
                 </Button>
               </ClayButtonGroup>
             }
@@ -220,7 +226,9 @@ export function HuggingFace() {
             </div>
           )}
           <div className="sheet-footer">
-            <ClayButton type="submit">Deploy</ClayButton>
+            <ClayButton className={ClassNameButton} type="submit">
+              Deploy
+            </ClayButton>
           </div>
         </ClayForm>
       </ClayLayout.ContainerFluid>

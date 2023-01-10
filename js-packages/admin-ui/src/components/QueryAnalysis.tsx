@@ -5,10 +5,11 @@ import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { useCreateOrUpdateQueryAnalysisMutation, useQueryAnalysisQuery } from "../graphql-generated";
 import { QueryAnalysesQuery } from "./QueryAnalyses";
-import { useForm, fromFieldValidators, TextInput, TextArea } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, MainTitle } from "./Form";
 import { CodeInput } from "./CodeInput";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "../App";
 
 const QueryAnalysisQuery = gql`
   query QueryAnalysis($id: ID!) {
@@ -75,6 +76,7 @@ export function QueryAnalysis() {
   });
   return (
     <ClayLayout.ContainerFluid view>
+      {queryAnalysisId !== "new" && <MainTitle title="Query Analysis" />}
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -86,7 +88,7 @@ export function QueryAnalysis() {
         <TextArea label="Description" {...form.inputProps("description")} />
         <CodeInput label="Stop Words" language="text" {...form.inputProps("stopWords")} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {queryAnalysisId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

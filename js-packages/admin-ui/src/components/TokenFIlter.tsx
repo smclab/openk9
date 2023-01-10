@@ -4,10 +4,20 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, KeyValue, MultiSelectForDinamicFields, CreateFieldDinamically } from "./Form";
+import {
+  useForm,
+  fromFieldValidators,
+  TextInput,
+  TextArea,
+  KeyValue,
+  MultiSelectForDinamicFields,
+  CreateFieldDinamically,
+  MainTitle,
+} from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { TokenFiltersQuery } from "./TokenFilters";
+import { ClassNameButton } from "../App";
 
 const TokenFilterQuery = gql`
   query TokenFilter($id: ID!) {
@@ -110,6 +120,7 @@ export function TokenFilter() {
   return (
     <>
       <ClayLayout.ContainerFluid view>
+        {tokenFilterId !== "new" && <MainTitle title="Attributes" />}
         <ClayForm
           className="sheet"
           onSubmit={(event) => {
@@ -128,7 +139,7 @@ export function TokenFilter() {
           />
           <CreateFieldDinamically templates={Filters} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} />
           <div className="sheet-footer">
-            <ClayButton type="submit" disabled={!form.canSubmit}>
+            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
               {tokenFilterId === "new" ? "Create" : "Update"}
             </ClayButton>
           </div>

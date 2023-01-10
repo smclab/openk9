@@ -29,7 +29,7 @@ export class DatasourceResourceService {
      * @returns PageDatasource OK
      * @throws ApiError
      */
-    public getDatasources(
+    public getApiDatasourceDatasources(
 afterId: number = -1,
 beforeId: number = -1,
 limit: number = 20,
@@ -38,7 +38,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageDatasource> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/datasources',
+            url: '/api/datasource/datasources',
             query: {
                 'after_id': afterId,
                 'before_id': beforeId,
@@ -54,12 +54,12 @@ sortBy?: K9Column,
      * @returns Datasource OK
      * @throws ApiError
      */
-    public postDatasources(
+    public postApiDatasourceDatasources(
 requestBody?: DatasourceDTO,
 ): CancelablePromise<Datasource> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/datasources',
+            url: '/api/datasource/datasources',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -69,10 +69,10 @@ requestBody?: DatasourceDTO,
      * @returns number OK
      * @throws ApiError
      */
-    public getDatasourcesCount(): CancelablePromise<number> {
+    public getApiDatasourceDatasourcesCount(): CancelablePromise<number> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/datasources/count',
+            url: '/api/datasource/datasources/count',
         });
     }
 
@@ -80,10 +80,10 @@ requestBody?: DatasourceDTO,
      * @returns K9EntityEventDatasource OK
      * @throws ApiError
      */
-    public getDatasourcesStream(): CancelablePromise<Array<K9EntityEventDatasource>> {
+    public getApiDatasourceDatasourcesStream(): CancelablePromise<Array<K9EntityEventDatasource>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/datasources/stream',
+            url: '/api/datasource/datasources/stream',
         });
     }
 
@@ -92,12 +92,12 @@ requestBody?: DatasourceDTO,
      * @returns Datasource OK
      * @throws ApiError
      */
-    public getDatasources1(
+    public getApiDatasourceDatasources1(
 id: number,
 ): CancelablePromise<Datasource> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/datasources/{id}',
+            url: '/api/datasource/datasources/{id}',
             path: {
                 'id': id,
             },
@@ -110,13 +110,13 @@ id: number,
      * @returns Datasource OK
      * @throws ApiError
      */
-    public putDatasources(
+    public putApiDatasourceDatasources(
 id: number,
 requestBody?: DatasourceDTO,
 ): CancelablePromise<Datasource> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/datasources/{id}',
+            url: '/api/datasource/datasources/{id}',
             path: {
                 'id': id,
             },
@@ -130,12 +130,12 @@ requestBody?: DatasourceDTO,
      * @returns Datasource OK
      * @throws ApiError
      */
-    public deleteDatasources(
+    public deleteApiDatasourceDatasources(
 id: number,
 ): CancelablePromise<Datasource> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/datasources/{id}',
+            url: '/api/datasource/datasources/{id}',
             path: {
                 'id': id,
             },
@@ -148,13 +148,13 @@ id: number,
      * @returns Datasource OK
      * @throws ApiError
      */
-    public patchDatasources(
+    public patchApiDatasourceDatasources(
 id: number,
 requestBody?: DatasourceDTO,
 ): CancelablePromise<Datasource> {
         return this.httpRequest.request({
             method: 'PATCH',
-            url: '/datasources/{id}',
+            url: '/api/datasource/datasources/{id}',
             path: {
                 'id': id,
             },
@@ -168,12 +168,12 @@ requestBody?: DatasourceDTO,
      * @returns Datasource OK
      * @throws ApiError
      */
-    public deleteDatasourcesDataIndex(
+    public deleteApiDatasourceDatasourcesDataIndex(
 id: number,
 ): CancelablePromise<Datasource> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/datasources/{id}/data-index',
+            url: '/api/datasource/datasources/{id}/data-index',
             path: {
                 'id': id,
             },
@@ -186,13 +186,13 @@ id: number,
      * @returns DataIndex OK
      * @throws ApiError
      */
-    public getDatasourcesDataIndex(
+    public getApiDatasourceDatasourcesDataIndex(
 dataIndexId: number,
 id: number,
 ): CancelablePromise<DataIndex> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/datasources/{id}/data-index/{dataIndexId}',
+            url: '/api/datasource/datasources/{id}/data-index/{dataIndexId}',
             path: {
                 'dataIndexId': dataIndexId,
                 'id': id,
@@ -206,13 +206,13 @@ id: number,
      * @returns Tuple2DatasourceDataIndex OK
      * @throws ApiError
      */
-    public putDatasourcesDataIndex(
+    public putApiDatasourceDatasourcesDataIndex(
 dataIndexId: number,
 id: number,
 ): CancelablePromise<Tuple2DatasourceDataIndex> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/datasources/{id}/data-index/{dataIndexId}',
+            url: '/api/datasource/datasources/{id}/data-index/{dataIndexId}',
             path: {
                 'dataIndexId': dataIndexId,
                 'id': id,
@@ -225,12 +225,12 @@ id: number,
      * @returns EnrichPipeline OK
      * @throws ApiError
      */
-    public getDatasourcesEnrichPipeline(
+    public getApiDatasourceDatasourcesEnrichPipeline(
 id: number,
 ): CancelablePromise<EnrichPipeline> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/datasources/{id}/enrich-pipeline',
+            url: '/api/datasource/datasources/{id}/enrich-pipeline',
             path: {
                 'id': id,
             },
@@ -242,12 +242,12 @@ id: number,
      * @returns Datasource OK
      * @throws ApiError
      */
-    public deleteDatasourcesEnrichPipeline(
+    public deleteApiDatasourceDatasourcesEnrichPipeline(
 id: number,
 ): CancelablePromise<Datasource> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/datasources/{id}/enrich-pipeline',
+            url: '/api/datasource/datasources/{id}/enrich-pipeline',
             path: {
                 'id': id,
             },
@@ -260,13 +260,13 @@ id: number,
      * @returns Tuple2DatasourceEnrichPipeline OK
      * @throws ApiError
      */
-    public putDatasourcesEnrichPipeline(
+    public putApiDatasourceDatasourcesEnrichPipeline(
 enrichPipelineId: number,
 id: number,
 ): CancelablePromise<Tuple2DatasourceEnrichPipeline> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/datasources/{id}/enrich-pipeline/{enrichPipelineId}',
+            url: '/api/datasource/datasources/{id}/enrich-pipeline/{enrichPipelineId}',
             path: {
                 'enrichPipelineId': enrichPipelineId,
                 'id': id,
@@ -279,12 +279,12 @@ id: number,
      * @returns PluginDriver OK
      * @throws ApiError
      */
-    public getDatasourcesPluginDriver(
+    public getApiDatasourceDatasourcesPluginDriver(
 id: number,
 ): CancelablePromise<PluginDriver> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/datasources/{id}/plugin-driver',
+            url: '/api/datasource/datasources/{id}/plugin-driver',
             path: {
                 'id': id,
             },
@@ -296,12 +296,12 @@ id: number,
      * @returns Datasource OK
      * @throws ApiError
      */
-    public deleteDatasourcesPluginDriver(
+    public deleteApiDatasourceDatasourcesPluginDriver(
 id: number,
 ): CancelablePromise<Datasource> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/datasources/{id}/plugin-driver',
+            url: '/api/datasource/datasources/{id}/plugin-driver',
             path: {
                 'id': id,
             },
@@ -314,13 +314,13 @@ id: number,
      * @returns Tuple2DatasourcePluginDriver OK
      * @throws ApiError
      */
-    public putDatasourcesPluginDriver(
+    public putApiDatasourceDatasourcesPluginDriver(
 id: number,
 pluginDriverId: number,
 ): CancelablePromise<Tuple2DatasourcePluginDriver> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/datasources/{id}/plugin-driver/{pluginDriverId}',
+            url: '/api/datasource/datasources/{id}/plugin-driver/{pluginDriverId}',
             path: {
                 'id': id,
                 'pluginDriverId': pluginDriverId,

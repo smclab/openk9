@@ -4,11 +4,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { useCharFilterQuery, useCreateOrUpdateCharFilterMutation } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, KeyValue, MultiSelectForDinamicFields, CreateFieldDinamically } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { CodeInput } from "./CodeInput";
 import { CharFiltersQuery } from "./CharFilters";
+import { ClassNameButton } from "../App";
 
 const CharFilterQuery = gql`
   query CharFilter($id: ID!) {
@@ -44,6 +45,7 @@ export function CharFilter() {
     variables: { id: charFilterId as string },
     skip: !charFilterId || charFilterId === "new",
   });
+  const [templateChoice, setTemplateChoice] = React.useState<KeyValue>(JSON.parse(charFilterQuery.data?.charFilter?.jsonConfig || `{}`));
   const [createOrUpdateCharFilterMutate, createOrUpdateCharFilterMutation] = useCreateOrUpdateCharFilterMutation({
     refetchQueries: [CharFilterQuery, CharFiltersQuery],
     onCompleted(data) {
@@ -62,7 +64,7 @@ export function CharFilter() {
     initialValues: React.useMemo(
       () => ({
         name: "",
-        description: "",
+        description: Filters[0].description,
         jsonConfig: "{}",
       }),
       []
@@ -74,6 +76,37 @@ export function CharFilter() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateCharFilterMutation.data?.charFilter?.fieldValidators),
   });
+  React.useEffect(() => {
+    if (JSON.stringify(templateChoice) !== "{}") {
+      form.inputProps("jsonConfig").onChange(JSON.stringify(templateChoice));
+    }
+  }, [templateChoice]);
+
+  if (charFilterId === "new" && JSON.stringify(templateChoice) === "{}") {
+    try {
+      const value = JSON.parse(Filters[0].Json);
+      setTemplateChoice(value);
+    } catch (error) {}
+  }
+  if (charFilterId !== "new") {
+    Filters.forEach((filter) => {
+      if (filter.title === templateChoice.type) {
+        filter.visible = "" + true;
+      }
+    });
+  }
+  if (charFilterId === "new") {
+    Filters[0].visible = "" + true;
+  }
+  if (charFilterQuery.loading) {
+    return <div></div>;
+  }
+  if (charFilterId !== "new" && JSON.stringify(templateChoice) === "{}") {
+    try {
+      const value = JSON.parse(form.inputProps("jsonConfig").value);
+      setTemplateChoice(value);
+    } catch (error) {}
+  }
   return (
     <ClayLayout.ContainerFluid view>
       <ClayForm
@@ -85,10 +118,16 @@ export function CharFilter() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
-
+        <MultiSelectForDinamicFields
+          id={charFilterId}
+          templates={Filters}
+          onChangeDescription={form.inputProps("description").onChange}
+          templateChoice={templateChoice}
+          setTemplateChoice={setTemplateChoice}
+        />
+        <CreateFieldDinamically templates={Filters} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {charFilterId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>
@@ -96,3 +135,59 @@ export function CharFilter() {
     </ClayLayout.ContainerFluid>
   );
 }
+
+const Filters = [
+  {
+    title: "html_strip",
+    description: "Strips HTML elements from a text and replaces HTML entities with their decoded value.",
+    Json: `
+    {
+      "type":"html_strip",
+      "escaped_tags": ["p"]
+    }`,
+    descriptionAttribute: `
+    {
+      "type":"type of filter",
+      "escaped_tags":"(Optional, array of strings) Array of HTML elements without enclosing angle brackets (< >). The filter skips these HTML elements when stripping HTML from the text. For example, a value of [ 'p' ] skips the <p> HTML element."
+    }`,
+    visible: "false",
+  },
+  {
+    title: "mapping",
+    description:
+      "The mapping character filter accepts a map of keys and values. Whenever it encounters a string of characters that is the same as a key, it replaces them with the value associated with that key.",
+    Json: `
+    {
+      "type":"mapping",
+      "mappings": ["key => value"],
+      "mappings_path": ["key => value"]
+    }`,
+    descriptionAttribute: `
+    {
+      "type":"type of filter",
+      "mappings":"Either this or the mappings_path parameter must be specified.",
+      "mappings_path":"This path must be absolute or relative to the config location, and the file must be UTF-8 encoded. Each mapping in the file must be separated by a line break."
+    }`,
+    visible: "false",
+  },
+  {
+    title: "pattern_replace",
+    description:
+      "The pattern_replace character filter uses a regular expression to match characters which should be replaced with the specified replacement string. The replacement string can refer to capture groups in the regular expression.",
+    Json: `
+    {
+      "type":"pattern_replace",
+      "pattern": "",
+      "replacement": "",
+      "flags":""
+    }`,
+    descriptionAttribute: `
+    {
+      "type":"type of filter",
+      "pattern":"A Java regular expression. Required.",
+      "replacement":"The replacement string, which can reference capture groups using the $1..$9 syntax, as explained here.",
+      "flags":"Java regular expression flags. Flags should be pipe-separated, eg 'CASE_INSENSITIVE|COMMENTS'."
+    }`,
+    visible: "false",
+  },
+];

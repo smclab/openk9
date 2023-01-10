@@ -17,6 +17,7 @@ import {
   useTabTokenTabQuery,
   useUnbindDocTypeFieldToTabTokenMutation,
 } from "../graphql-generated";
+import { useToast } from "./ToastProvider";
 
 const TabTokenQuery = gql`
   query TabTokenTab($id: ID!) {
@@ -63,6 +64,7 @@ gql`
 export function TabToken() {
   const { tabId, tabTokenId = "new" } = useParams();
   const navigate = useNavigate();
+  const showToast = useToast();
   const tabTokenTabQuery = useTabTokenTabQuery({
     variables: { id: tabTokenId as string },
     skip: !tabTokenId || tabTokenId === "new",
@@ -71,8 +73,13 @@ export function TabToken() {
     refetchQueries: [TabTokenQuery, TabTokens],
     onCompleted(data: any) {
       if (data.tokenTab?.entity) {
-        if (tabTokenId === "new") navigate(`/tabs/${tabId}/tab-tokens`, { replace: true });
-        else navigate(`/tabs/${tabId}/tab-tokens/${data.tokenTab.entity.id}`, { replace: true });
+        if (tabTokenId === "new") {
+          navigate(`/tabs/${tabId}/tab-tokens`, { replace: true });
+          showToast({ displayType: "success", title: "Token Tab created", content: "" });
+        } else {
+          navigate(`/tabs/${tabId}/tab-tokens/${data.tokenTab.entity.id}`, { replace: true });
+          showToast({ displayType: "success", title: "Token Tab update", content: "" });
+        }
       }
     },
   });

@@ -10,6 +10,7 @@ import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { AssociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQuery } from "./EnrichPipelineEnrichItems";
+import { ClassNameButton } from "../App";
 
 const EnrichItemQuery = gql`
   query EnrichItem($id: ID!) {
@@ -59,7 +60,7 @@ gql`
 `;
 
 export function EnrichItem() {
-  const { enrichItemId = "new" } = useParams();
+  const { enrichItemId = "new", name } = useParams();
   const navigate = useNavigate();
   const showToast = useToast();
   const enrichItemQuery = useEnrichItemQuery({
@@ -88,10 +89,10 @@ export function EnrichItem() {
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
-        name: "",
+        name: name ?? "",
         description: "",
         type: EnrichItemType.Async,
-        serviceName: "",
+        serviceName: name ?? "",
         jsonConfig: "{}",
         validationScript: "",
       }),
@@ -122,7 +123,7 @@ export function EnrichItem() {
         <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
         <CodeInput language="javascript" label="Validation Script" {...form.inputProps("validationScript")} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {enrichItemId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

@@ -27,7 +27,7 @@ export class DocTypeResourceService {
      * @returns PageDocType OK
      * @throws ApiError
      */
-    public getDocTypes(
+    public getApiDatasourceDocTypes(
 afterId: number = -1,
 beforeId: number = -1,
 limit: number = 20,
@@ -36,7 +36,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageDocType> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/doc-types',
+            url: '/api/datasource/doc-types',
             query: {
                 'after_id': afterId,
                 'before_id': beforeId,
@@ -52,12 +52,12 @@ sortBy?: K9Column,
      * @returns DocType OK
      * @throws ApiError
      */
-    public postDocTypes(
+    public postApiDatasourceDocTypes(
 requestBody?: DocTypeDTO,
 ): CancelablePromise<DocType> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/doc-types',
+            url: '/api/datasource/doc-types',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -67,10 +67,10 @@ requestBody?: DocTypeDTO,
      * @returns number OK
      * @throws ApiError
      */
-    public getDocTypesCount(): CancelablePromise<number> {
+    public getApiDatasourceDocTypesCount(): CancelablePromise<number> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/doc-types/count',
+            url: '/api/datasource/doc-types/count',
         });
     }
 
@@ -78,10 +78,10 @@ requestBody?: DocTypeDTO,
      * @returns K9EntityEventDocType OK
      * @throws ApiError
      */
-    public getDocTypesStream(): CancelablePromise<Array<K9EntityEventDocType>> {
+    public getApiDatasourceDocTypesStream(): CancelablePromise<Array<K9EntityEventDocType>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/doc-types/stream',
+            url: '/api/datasource/doc-types/stream',
         });
     }
 
@@ -90,12 +90,12 @@ requestBody?: DocTypeDTO,
      * @returns DocType OK
      * @throws ApiError
      */
-    public getDocTypes1(
+    public getApiDatasourceDocTypes1(
 id: number,
 ): CancelablePromise<DocType> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/doc-types/{id}',
+            url: '/api/datasource/doc-types/{id}',
             path: {
                 'id': id,
             },
@@ -108,13 +108,13 @@ id: number,
      * @returns DocType OK
      * @throws ApiError
      */
-    public putDocTypes(
+    public putApiDatasourceDocTypes(
 id: number,
 requestBody?: DocTypeDTO,
 ): CancelablePromise<DocType> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/doc-types/{id}',
+            url: '/api/datasource/doc-types/{id}',
             path: {
                 'id': id,
             },
@@ -128,12 +128,12 @@ requestBody?: DocTypeDTO,
      * @returns DocType OK
      * @throws ApiError
      */
-    public deleteDocTypes(
+    public deleteApiDatasourceDocTypes(
 id: number,
 ): CancelablePromise<DocType> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/doc-types/{id}',
+            url: '/api/datasource/doc-types/{id}',
             path: {
                 'id': id,
             },
@@ -146,13 +146,13 @@ id: number,
      * @returns DocType OK
      * @throws ApiError
      */
-    public patchDocTypes(
+    public patchApiDatasourceDocTypes(
 id: number,
 requestBody?: DocTypeDTO,
 ): CancelablePromise<DocType> {
         return this.httpRequest.request({
             method: 'PATCH',
-            url: '/doc-types/{id}',
+            url: '/api/datasource/doc-types/{id}',
             path: {
                 'id': id,
             },
@@ -171,7 +171,7 @@ requestBody?: DocTypeDTO,
      * @returns PageDocTypeField OK
      * @throws ApiError
      */
-    public getDocTypesDocTypeFields(
+    public getApiDatasourceDocTypesDocTypeFields(
 id: number,
 afterId: number = -1,
 beforeId: number = -1,
@@ -181,7 +181,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageDocTypeField> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/doc-types/{id}/doc-type-fields',
+            url: '/api/datasource/doc-types/{id}/doc-type-fields',
             path: {
                 'id': id,
             },
@@ -201,13 +201,13 @@ sortBy?: K9Column,
      * @returns Tuple2DocTypeDocTypeField OK
      * @throws ApiError
      */
-    public putDocTypesDocTypeFields(
+    public putApiDatasourceDocTypesDocTypeFields(
 id: number,
 requestBody?: DocTypeFieldDTO,
 ): CancelablePromise<Tuple2DocTypeDocTypeField> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/doc-types/{id}/doc-type-fields',
+            url: '/api/datasource/doc-types/{id}/doc-type-fields',
             path: {
                 'id': id,
             },
@@ -222,13 +222,13 @@ requestBody?: DocTypeFieldDTO,
      * @returns Tuple2DocTypeLong OK
      * @throws ApiError
      */
-    public deleteDocTypesDocTypeFields(
+    public deleteApiDatasourceDocTypesDocTypeFields(
 docTypeFieldId: number,
 id: number,
 ): CancelablePromise<Tuple2DocTypeLong> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/doc-types/{id}/doc-type-fields/{docTypeFieldId}',
+            url: '/api/datasource/doc-types/{id}/doc-type-fields/{docTypeFieldId}',
             path: {
                 'docTypeFieldId': docTypeFieldId,
                 'id': id,

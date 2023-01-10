@@ -4,10 +4,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { useCreateOrUpdateTabMutation, useTabQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, MainTitle } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { TabsQuery } from "./Tabs";
 import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "../App";
 
 const TabQuery = gql`
   query Tab($id: ID!) {
@@ -76,6 +77,7 @@ export function Tab() {
   });
   return (
     <ClayLayout.ContainerFluid view>
+      {tabId !== "new" && <MainTitle title="Attributes" />}
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -87,7 +89,7 @@ export function Tab() {
         <TextArea label="Description" {...form.inputProps("description")} />
         <NumberInput label="Priority" {...form.inputProps("priority")} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {tabId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

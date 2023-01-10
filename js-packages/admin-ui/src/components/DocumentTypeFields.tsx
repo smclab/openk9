@@ -33,85 +33,88 @@ export function DocumentTypeFields() {
   if (!documentTypeId) throw new Error();
 
   return (
-    <TableWithSubFields
-      data={{
-        queryResult: documentTypeFieldsQuery,
-        field: (data) => data?.docTypeFieldsFromDocType,
-      }}
-      onCreatePath="new"
-      onCreatePathSubFields="newSubFields"
-      onDelete={(documentTypeField) => {
-        if (documentTypeField?.id) {
-          deleteDocumentTypeFieldMutate({ variables: { documentTypeId: documentTypeId!, documentTypeFieldId: documentTypeField.id } });
-        }
-      }}
-      id={documentTypeId}
-      columns={[
-        { header: "Name", content: (documentTypeField) => formatName(documentTypeField) },
-        { header: "Description", content: (documentTypeField) => documentTypeField?.description },
-        { header: "Field Type", content: (documentTypeField) => documentTypeField?.fieldType },
-        { header: "Boost", content: (documentTypeField) => documentTypeField?.boost },
-        {
-          header: "Searchable",
-          content: (documentTypeField) => (
-            <ClayToggle
-              toggled={documentTypeField?.searchable ?? false}
-              onToggle={(searchable) => {
-                if (
-                  documentTypeField &&
-                  documentTypeField.id &&
-                  documentTypeField.fieldType &&
-                  documentTypeField.name &&
-                  documentTypeField.fieldName
-                ) {
-                  updateDocumentTypeFieldMutate({
-                    variables: {
-                      documentTypeFieldId: documentTypeField.id,
-                      documentTypeId: documentTypeId,
-                      searchable,
-                      fieldType: documentTypeField.fieldType,
-                      name: documentTypeField.name,
-                      description: documentTypeField.description,
-                      fieldName: documentTypeField.fieldName,
-                    },
-                  });
-                }
-              }}
-            />
-          ),
-        },
-        {
-          header: "Exclude",
-          content: (documentTypeField) => (
-            <ClayToggle
-              toggled={documentTypeField?.exclude ?? false}
-              onToggle={(exclude) => {
-                if (
-                  documentTypeField &&
-                  documentTypeField.id &&
-                  documentTypeField.fieldType &&
-                  documentTypeField.name &&
-                  documentTypeField.fieldName &&
-                  typeof documentTypeField.searchable === "boolean"
-                ) {
-                  updateDocumentTypeFieldMutate({
-                    variables: {
-                      documentTypeFieldId: documentTypeField.id,
-                      documentTypeId: documentTypeId,
-                      exclude,
-                      description: documentTypeField.description,
-                      fieldType: documentTypeField.fieldType,
-                      name: documentTypeField.name,
-                      searchable: documentTypeField.searchable,
-                      fieldName: documentTypeField.fieldName,
-                    },
-                  });
-                }
-              }}
-            />
-          ),
-        },
-      ]}
-    />
+    <React.Fragment>
+      <TableWithSubFields
+        data={{
+          queryResult: documentTypeFieldsQuery,
+          field: (data) => data?.docTypeFieldsFromDocType,
+        }}
+        label="Document Type Fields"
+        onCreatePath="new"
+        onCreatePathSubFields="newSubFields"
+        onDelete={(documentTypeField) => {
+          if (documentTypeField?.id) {
+            deleteDocumentTypeFieldMutate({ variables: { documentTypeId: documentTypeId!, documentTypeFieldId: documentTypeField.id } });
+          }
+        }}
+        id={documentTypeId}
+        columns={[
+          { header: "Name", content: (documentTypeField) => formatName(documentTypeField) },
+          { header: "Description", content: (documentTypeField) => documentTypeField?.description },
+          { header: "Field Type", content: (documentTypeField) => documentTypeField?.fieldType },
+          { header: "Boost", content: (documentTypeField) => documentTypeField?.boost },
+          {
+            header: "Searchable",
+            content: (documentTypeField) => (
+              <ClayToggle
+                toggled={documentTypeField?.searchable ?? false}
+                onToggle={(searchable) => {
+                  if (
+                    documentTypeField &&
+                    documentTypeField.id &&
+                    documentTypeField.fieldType &&
+                    documentTypeField.name &&
+                    documentTypeField.fieldName
+                  ) {
+                    updateDocumentTypeFieldMutate({
+                      variables: {
+                        documentTypeFieldId: documentTypeField.id,
+                        documentTypeId: documentTypeId,
+                        searchable,
+                        fieldType: documentTypeField.fieldType,
+                        name: documentTypeField.name,
+                        description: documentTypeField.description,
+                        fieldName: documentTypeField.fieldName,
+                      },
+                    });
+                  }
+                }}
+              />
+            ),
+          },
+          {
+            header: "Exclude",
+            content: (documentTypeField) => (
+              <ClayToggle
+                toggled={documentTypeField?.exclude ?? false}
+                onToggle={(exclude) => {
+                  if (
+                    documentTypeField &&
+                    documentTypeField.id &&
+                    documentTypeField.fieldType &&
+                    documentTypeField.name &&
+                    documentTypeField.fieldName &&
+                    typeof documentTypeField.searchable === "boolean"
+                  ) {
+                    updateDocumentTypeFieldMutate({
+                      variables: {
+                        documentTypeFieldId: documentTypeField.id,
+                        documentTypeId: documentTypeId,
+                        exclude,
+                        description: documentTypeField.description,
+                        fieldType: documentTypeField.fieldType,
+                        name: documentTypeField.name,
+                        searchable: documentTypeField.searchable,
+                        fieldName: documentTypeField.fieldName,
+                      },
+                    });
+                  }
+                }}
+              />
+            ),
+          },
+        ]}
+      />
+    </React.Fragment>
   );
 }

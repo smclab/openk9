@@ -12,6 +12,13 @@ gql`
   query PluginDriverToDocumentTypeFields($parentId: ID!, $searchText: String, $cursor: String) {
     pluginDriver(id: $parentId) {
       id
+      aclMappings {
+        userField
+        docTypeField {
+          id
+          name
+        }
+      }
       docTypeFields(searchText: $searchText, first: 25, after: $cursor) {
         edges {
           node {
@@ -33,8 +40,8 @@ gql`
 `;
 
 gql`
-  query DocumentTypeFieldsForPlugin {
-    docTypeFields {
+  query DocumentTypeFieldsForPlugin($searchText: String) {
+    docTypeFields(searchText: $searchText) {
       edges {
         node {
           id
@@ -72,13 +79,19 @@ gql`
   }
 `;
 
+// gql`
+//   mutation ChangeUserfield() {
+//   }
+// `;
+
 export function PluginDriverToAcl() {
   const { pluginDriverId } = useParams();
   if (!pluginDriverId) return null;
+
   return (
     <React.Fragment>
       <AssociatedEntitiesWithSelect
-        label="Associate Document Type Fields"
+        label="Associate Plugin Driver To Acl"
         parentId={pluginDriverId}
         list={{
           useListQuery: usePluginDriverToDocumentTypeFieldsQuery,
@@ -91,3 +104,5 @@ export function PluginDriverToAcl() {
     </React.Fragment>
   );
 }
+
+export const aclOption = ["EMAIL", "NAME", "NAMESURNAME", "ROLES", "SURNAME", "USERNAME"];

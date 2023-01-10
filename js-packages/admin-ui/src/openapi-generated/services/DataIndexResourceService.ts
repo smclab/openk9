@@ -28,7 +28,7 @@ export class DataIndexResourceService {
      * @returns PageDataIndex OK
      * @throws ApiError
      */
-    public getDataIndexes(
+    public getApiDatasourceDataIndexes(
 afterId: number = -1,
 beforeId: number = -1,
 limit: number = 20,
@@ -37,7 +37,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageDataIndex> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/data-indexes',
+            url: '/api/datasource/data-indexes',
             query: {
                 'after_id': afterId,
                 'before_id': beforeId,
@@ -53,12 +53,12 @@ sortBy?: K9Column,
      * @returns DataIndex OK
      * @throws ApiError
      */
-    public postDataIndexes(
+    public postApiDatasourceDataIndexes(
 requestBody?: DataIndexDTO,
 ): CancelablePromise<DataIndex> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/data-indexes',
+            url: '/api/datasource/data-indexes',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -68,10 +68,10 @@ requestBody?: DataIndexDTO,
      * @returns number OK
      * @throws ApiError
      */
-    public getDataIndexesCount(): CancelablePromise<number> {
+    public getApiDatasourceDataIndexesCount(): CancelablePromise<number> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/data-indexes/count',
+            url: '/api/datasource/data-indexes/count',
         });
     }
 
@@ -79,10 +79,10 @@ requestBody?: DataIndexDTO,
      * @returns K9EntityEventDataIndex OK
      * @throws ApiError
      */
-    public getDataIndexesStream(): CancelablePromise<Array<K9EntityEventDataIndex>> {
+    public getApiDatasourceDataIndexesStream(): CancelablePromise<Array<K9EntityEventDataIndex>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/data-indexes/stream',
+            url: '/api/datasource/data-indexes/stream',
         });
     }
 
@@ -91,12 +91,12 @@ requestBody?: DataIndexDTO,
      * @returns DataIndex OK
      * @throws ApiError
      */
-    public getDataIndexes1(
+    public getApiDatasourceDataIndexes1(
 id: number,
 ): CancelablePromise<DataIndex> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/data-indexes/{id}',
+            url: '/api/datasource/data-indexes/{id}',
             path: {
                 'id': id,
             },
@@ -109,13 +109,13 @@ id: number,
      * @returns DataIndex OK
      * @throws ApiError
      */
-    public putDataIndexes(
+    public putApiDatasourceDataIndexes(
 id: number,
 requestBody?: DataIndexDTO,
 ): CancelablePromise<DataIndex> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/data-indexes/{id}',
+            url: '/api/datasource/data-indexes/{id}',
             path: {
                 'id': id,
             },
@@ -129,12 +129,12 @@ requestBody?: DataIndexDTO,
      * @returns DataIndex OK
      * @throws ApiError
      */
-    public deleteDataIndexes(
+    public deleteApiDatasourceDataIndexes(
 id: number,
 ): CancelablePromise<DataIndex> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/data-indexes/{id}',
+            url: '/api/datasource/data-indexes/{id}',
             path: {
                 'id': id,
             },
@@ -147,13 +147,13 @@ id: number,
      * @returns DataIndex OK
      * @throws ApiError
      */
-    public patchDataIndexes(
+    public patchApiDatasourceDataIndexes(
 id: number,
 requestBody?: DataIndexDTO,
 ): CancelablePromise<DataIndex> {
         return this.httpRequest.request({
             method: 'PATCH',
-            url: '/data-indexes/{id}',
+            url: '/api/datasource/data-indexes/{id}',
             path: {
                 'id': id,
             },
@@ -172,7 +172,7 @@ requestBody?: DataIndexDTO,
      * @returns PageDocType OK
      * @throws ApiError
      */
-    public getDataIndexesDocTypes(
+    public getApiDatasourceDataIndexesDocTypes(
 id: number,
 afterId: number = -1,
 beforeId: number = -1,
@@ -182,7 +182,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageDocType> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/data-indexes/{id}/doc-types',
+            url: '/api/datasource/data-indexes/{id}/doc-types',
             path: {
                 'id': id,
             },
@@ -202,13 +202,13 @@ sortBy?: K9Column,
      * @returns Tuple2DataIndexDocType OK
      * @throws ApiError
      */
-    public putDataIndexesDocTypes(
+    public putApiDatasourceDataIndexesDocTypes(
 docTypeId: number,
 id: number,
 ): CancelablePromise<Tuple2DataIndexDocType> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/data-indexes/{id}/doc-types/{docTypeId}',
+            url: '/api/datasource/data-indexes/{id}/doc-types/{docTypeId}',
             path: {
                 'docTypeId': docTypeId,
                 'id': id,
@@ -222,13 +222,13 @@ id: number,
      * @returns Tuple2DataIndexDocType OK
      * @throws ApiError
      */
-    public deleteDataIndexesDocTypes(
+    public deleteApiDatasourceDataIndexesDocTypes(
 docTypeId: number,
 id: number,
 ): CancelablePromise<Tuple2DataIndexDocType> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/data-indexes/{id}/doc-types/{docTypeId}',
+            url: '/api/datasource/data-indexes/{id}/doc-types/{docTypeId}',
             path: {
                 'docTypeId': docTypeId,
                 'id': id,
@@ -241,12 +241,12 @@ id: number,
      * @returns any Created
      * @throws ApiError
      */
-    public postV1DataIndexAutoGenerateDocTypes(
+    public postApiDatasourceV1DataIndexAutoGenerateDocTypes(
 requestBody?: AutoGenerateDocTypesRequest,
 ): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/v1/data-index/auto-generate-doc-types',
+            url: '/api/datasource/v1/data-index/auto-generate-doc-types',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -257,12 +257,12 @@ requestBody?: AutoGenerateDocTypesRequest,
      * @returns DataIndex OK
      * @throws ApiError
      */
-    public postV1DataIndexCreateDataIndexFromDocTypes(
+    public postApiDatasourceV1DataIndexCreateDataIndexFromDocTypes(
 requestBody?: CreateDataIndexFromDocTypesRequest,
 ): CancelablePromise<DataIndex> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/v1/data-index/create-data-index-from-doc-types',
+            url: '/api/datasource/v1/data-index/create-data-index-from-doc-types',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -273,12 +273,12 @@ requestBody?: CreateDataIndexFromDocTypesRequest,
      * @returns any OK
      * @throws ApiError
      */
-    public postV1DataIndexGetMappingsFromDocTypes(
+    public postApiDatasourceV1DataIndexGetMappingsFromDocTypes(
 requestBody?: GetMappingsOrSettingsFromDocTypesRequest,
 ): CancelablePromise<Record<string, any>> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/v1/data-index/get-mappings-from-doc-types',
+            url: '/api/datasource/v1/data-index/get-mappings-from-doc-types',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -289,12 +289,12 @@ requestBody?: GetMappingsOrSettingsFromDocTypesRequest,
      * @returns any OK
      * @throws ApiError
      */
-    public postV1DataIndexGetSettingsFromDocTypes(
+    public postApiDatasourceV1DataIndexGetSettingsFromDocTypes(
 requestBody?: GetMappingsOrSettingsFromDocTypesRequest,
 ): CancelablePromise<Record<string, any>> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/v1/data-index/get-settings-from-doc-types',
+            url: '/api/datasource/v1/data-index/get-settings-from-doc-types',
             body: requestBody,
             mediaType: 'application/json',
         });

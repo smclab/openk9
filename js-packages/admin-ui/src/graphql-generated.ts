@@ -18,6 +18,14 @@ export type Scalars = {
   DateTime: any;
 };
 
+export type AclMapping = {
+  __typename?: 'AclMapping';
+  docTypeField?: Maybe<DocTypeField>;
+  key?: Maybe<PluginDriverDocTypeFieldKey>;
+  pluginDriver?: Maybe<PluginDriver>;
+  userField?: Maybe<UserField>;
+};
+
 export type Analyzer = {
   __typename?: 'Analyzer';
   charFilters?: Maybe<Connection_CharFilter>;
@@ -1198,6 +1206,7 @@ export type Mutation = {
   queryParserConfig?: Maybe<Response_QueryParserConfig>;
   removeAnnotatorFromQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Annotator>;
   removeCharFilterFromAnalyzer?: Maybe<Tuple2_Analyzer_CharFilter>;
+  removeCharFilterListFromAnalyzer?: Maybe<Analyzer>;
   removeDatasourceFromBucket?: Maybe<Tuple2_Bucket_Datasource>;
   removeDocTypeField?: Maybe<Tuple2_DocType_BigInteger>;
   removeDocTypeFieldFromPluginDriver?: Maybe<Tuple2_PluginDriver_DocTypeField>;
@@ -1209,6 +1218,7 @@ export type Mutation = {
   removeSuggestionCategoryFromBucket?: Maybe<Tuple2_Bucket_SuggestionCategory>;
   removeTabFromBucket?: Maybe<Tuple2_Bucket_Tab>;
   removeTokenFilterFromAnalyzer?: Maybe<Tuple2_Analyzer_TokenFilter>;
+  removeTokenFilterListFromAnalyzer?: Maybe<Analyzer>;
   removeTokenTab?: Maybe<Tuple2_Tab_BigInteger>;
   rule?: Maybe<Response_Rule>;
   searchConfig?: Maybe<Response_SearchConfig>;
@@ -1228,6 +1238,7 @@ export type Mutation = {
   unbindQueryAnalysisFromBucket?: Maybe<Tuple2_Bucket_QueryAnalysis>;
   unbindSearchConfigFromBucket?: Maybe<Tuple2_Bucket_SearchConfig>;
   unbindTokenizerFromAnalyzer?: Maybe<Tuple2_Analyzer_Tokenizer>;
+  userField?: Maybe<AclMapping>;
 };
 
 
@@ -1637,6 +1648,12 @@ export type MutationRemoveCharFilterFromAnalyzerArgs = {
 
 
 /** Mutation root */
+export type MutationRemoveCharFilterListFromAnalyzerArgs = {
+  analyzerId: Scalars['BigInteger'];
+};
+
+
+/** Mutation root */
 export type MutationRemoveDatasourceFromBucketArgs = {
   bucketId: Scalars['ID'];
   datasourceId: Scalars['ID'];
@@ -1710,6 +1727,12 @@ export type MutationRemoveTabFromBucketArgs = {
 export type MutationRemoveTokenFilterFromAnalyzerArgs = {
   id: Scalars['ID'];
   tokenFilterId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationRemoveTokenFilterListFromAnalyzerArgs = {
+  analyzerId: Scalars['BigInteger'];
 };
 
 
@@ -1845,6 +1868,14 @@ export type MutationUnbindTokenizerFromAnalyzerArgs = {
   analyzerId: Scalars['ID'];
 };
 
+
+/** Mutation root */
+export type MutationUserFieldArgs = {
+  docTypeFieldId: Scalars['ID'];
+  pluginDriverId: Scalars['ID'];
+  userField?: InputMaybe<UserField>;
+};
+
 /** Information about pagination in a connection. */
 export type PageInfo = {
   /** When paginating forwards, the cursor to continue. */
@@ -1894,6 +1925,12 @@ export type PluginDriverDtoInput = {
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   type: PluginDriverType;
+};
+
+export type PluginDriverDocTypeFieldKey = {
+  __typename?: 'PluginDriverDocTypeFieldKey';
+  docTypeFieldId?: Maybe<Scalars['BigInteger']>;
+  pluginDriverId?: Maybe<Scalars['BigInteger']>;
 };
 
 export enum PluginDriverType {
@@ -3841,9 +3878,11 @@ export type PluginDriverToDocumentTypeFieldsQueryVariables = Exact<{
 }>;
 
 
-export type PluginDriverToDocumentTypeFieldsQuery = { __typename?: 'Query', pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, docTypeFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, docType?: { __typename?: 'DocType', id?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type PluginDriverToDocumentTypeFieldsQuery = { __typename?: 'Query', pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, aclMappings?: Array<{ __typename?: 'PluginDriverAclMapping', userField?: UserField | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null> | null, docTypeFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, docType?: { __typename?: 'DocType', id?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
 
-export type DocumentTypeFieldsForPluginQueryVariables = Exact<{ [key: string]: never; }>;
+export type DocumentTypeFieldsForPluginQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+}>;
 
 
 export type DocumentTypeFieldsForPluginQuery = { __typename?: 'Query', docTypeFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null } | null };
@@ -8650,6 +8689,13 @@ export const PluginDriverToDocumentTypeFieldsDocument = gql`
     query PluginDriverToDocumentTypeFields($parentId: ID!, $searchText: String, $cursor: String) {
   pluginDriver(id: $parentId) {
     id
+    aclMappings {
+      userField
+      docTypeField {
+        id
+        name
+      }
+    }
     docTypeFields(searchText: $searchText, first: 25, after: $cursor) {
       edges {
         node {
@@ -8700,8 +8746,8 @@ export type PluginDriverToDocumentTypeFieldsQueryHookResult = ReturnType<typeof 
 export type PluginDriverToDocumentTypeFieldsLazyQueryHookResult = ReturnType<typeof usePluginDriverToDocumentTypeFieldsLazyQuery>;
 export type PluginDriverToDocumentTypeFieldsQueryResult = Apollo.QueryResult<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>;
 export const DocumentTypeFieldsForPluginDocument = gql`
-    query DocumentTypeFieldsForPlugin {
-  docTypeFields {
+    query DocumentTypeFieldsForPlugin($searchText: String) {
+  docTypeFields(searchText: $searchText) {
     edges {
       node {
         id
@@ -8725,6 +8771,7 @@ export const DocumentTypeFieldsForPluginDocument = gql`
  * @example
  * const { data, loading, error } = useDocumentTypeFieldsForPluginQuery({
  *   variables: {
+ *      searchText: // value for 'searchText'
  *   },
  * });
  */

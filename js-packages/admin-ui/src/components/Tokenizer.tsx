@@ -4,10 +4,20 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { useCreateOrUpdateTokenizerMutation, useTokenizerQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, KeyValue, CreateFieldDinamically, MultiSelectForDinamicFields } from "./Form";
+import {
+  useForm,
+  fromFieldValidators,
+  TextInput,
+  TextArea,
+  KeyValue,
+  CreateFieldDinamically,
+  MultiSelectForDinamicFields,
+  MainTitle,
+} from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { TokenizersQuery } from "./Tokenizers";
+import { ClassNameButton } from "../App";
 
 const TokenizerQuery = gql`
   query Tokenizer($id: ID!) {
@@ -107,6 +117,7 @@ export function Tokenizer() {
   }
   return (
     <ClayLayout.ContainerFluid view>
+      {tokenizerId !== "new" && <MainTitle title="Attributes" />}
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -125,7 +136,7 @@ export function Tokenizer() {
         />
         <CreateFieldDinamically templates={TokenizerFilters} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {tokenizerId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

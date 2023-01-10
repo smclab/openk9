@@ -9,6 +9,7 @@ import { useForm, fromFieldValidators, TextInput, TextArea } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { AddRuleToQueryAnalyses, QueryAnalysesRule, RemoveRuleFromQueryAnalyses } from "./QueryAnalysesRules";
+import { ClassNameButton } from "../App";
 
 const RuleQuery = gql`
   query Rule($id: ID!) {
@@ -90,7 +91,7 @@ export function Rule() {
         <TextInput label="Left Hand Side" {...form.inputProps("lhs")} />
         <TextInput label="Right Hand Side" {...form.inputProps("rhs")} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {ruleId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

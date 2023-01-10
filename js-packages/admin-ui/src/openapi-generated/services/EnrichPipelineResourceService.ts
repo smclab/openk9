@@ -25,7 +25,7 @@ export class EnrichPipelineResourceService {
      * @returns PageEnrichPipeline OK
      * @throws ApiError
      */
-    public getEnrichPipelines(
+    public getApiDatasourceEnrichPipelines(
 afterId: number = -1,
 beforeId: number = -1,
 limit: number = 20,
@@ -34,7 +34,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageEnrichPipeline> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/enrich-pipelines',
+            url: '/api/datasource/enrich-pipelines',
             query: {
                 'after_id': afterId,
                 'before_id': beforeId,
@@ -50,12 +50,12 @@ sortBy?: K9Column,
      * @returns EnrichPipeline OK
      * @throws ApiError
      */
-    public postEnrichPipelines(
+    public postApiDatasourceEnrichPipelines(
 requestBody?: EnrichPipelineDTO,
 ): CancelablePromise<EnrichPipeline> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/enrich-pipelines',
+            url: '/api/datasource/enrich-pipelines',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -65,10 +65,10 @@ requestBody?: EnrichPipelineDTO,
      * @returns number OK
      * @throws ApiError
      */
-    public getEnrichPipelinesCount(): CancelablePromise<number> {
+    public getApiDatasourceEnrichPipelinesCount(): CancelablePromise<number> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/enrich-pipelines/count',
+            url: '/api/datasource/enrich-pipelines/count',
         });
     }
 
@@ -76,10 +76,10 @@ requestBody?: EnrichPipelineDTO,
      * @returns K9EntityEventEnrichPipeline OK
      * @throws ApiError
      */
-    public getEnrichPipelinesStream(): CancelablePromise<Array<K9EntityEventEnrichPipeline>> {
+    public getApiDatasourceEnrichPipelinesStream(): CancelablePromise<Array<K9EntityEventEnrichPipeline>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/enrich-pipelines/stream',
+            url: '/api/datasource/enrich-pipelines/stream',
         });
     }
 
@@ -88,12 +88,12 @@ requestBody?: EnrichPipelineDTO,
      * @returns EnrichPipeline OK
      * @throws ApiError
      */
-    public getEnrichPipelines1(
+    public getApiDatasourceEnrichPipelines1(
 id: number,
 ): CancelablePromise<EnrichPipeline> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/enrich-pipelines/{id}',
+            url: '/api/datasource/enrich-pipelines/{id}',
             path: {
                 'id': id,
             },
@@ -106,13 +106,13 @@ id: number,
      * @returns EnrichPipeline OK
      * @throws ApiError
      */
-    public putEnrichPipelines(
+    public putApiDatasourceEnrichPipelines(
 id: number,
 requestBody?: EnrichPipelineDTO,
 ): CancelablePromise<EnrichPipeline> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/enrich-pipelines/{id}',
+            url: '/api/datasource/enrich-pipelines/{id}',
             path: {
                 'id': id,
             },
@@ -126,12 +126,12 @@ requestBody?: EnrichPipelineDTO,
      * @returns EnrichPipeline OK
      * @throws ApiError
      */
-    public deleteEnrichPipelines(
+    public deleteApiDatasourceEnrichPipelines(
 id: number,
 ): CancelablePromise<EnrichPipeline> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/enrich-pipelines/{id}',
+            url: '/api/datasource/enrich-pipelines/{id}',
             path: {
                 'id': id,
             },
@@ -144,13 +144,13 @@ id: number,
      * @returns EnrichPipeline OK
      * @throws ApiError
      */
-    public patchEnrichPipelines(
+    public patchApiDatasourceEnrichPipelines(
 id: number,
 requestBody?: EnrichPipelineDTO,
 ): CancelablePromise<EnrichPipeline> {
         return this.httpRequest.request({
             method: 'PATCH',
-            url: '/enrich-pipelines/{id}',
+            url: '/api/datasource/enrich-pipelines/{id}',
             path: {
                 'id': id,
             },
@@ -169,7 +169,7 @@ requestBody?: EnrichPipelineDTO,
      * @returns PageEnrichItem OK
      * @throws ApiError
      */
-    public getEnrichPipelinesEnrichItems(
+    public getApiDatasourceEnrichPipelinesEnrichItems(
 id: number,
 afterId: number = -1,
 beforeId: number = -1,
@@ -179,7 +179,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageEnrichItem> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/enrich-pipelines/{id}/enrich-items',
+            url: '/api/datasource/enrich-pipelines/{id}/enrich-items',
             path: {
                 'id': id,
             },
@@ -200,14 +200,14 @@ sortBy?: K9Column,
      * @returns Tuple2EnrichPipelineEnrichItem OK
      * @throws ApiError
      */
-    public putEnrichPipelinesEnrichItems(
+    public putApiDatasourceEnrichPipelinesEnrichItems(
 enrichItemId: number,
 id: number,
 tail: boolean = true,
 ): CancelablePromise<Tuple2EnrichPipelineEnrichItem> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/enrich-pipelines/{id}/enrich-items/{enrichItemId}',
+            url: '/api/datasource/enrich-pipelines/{id}/enrich-items/{enrichItemId}',
             path: {
                 'enrichItemId': enrichItemId,
                 'id': id,
@@ -224,13 +224,13 @@ tail: boolean = true,
      * @returns Tuple2EnrichPipelineEnrichItem OK
      * @throws ApiError
      */
-    public deleteEnrichPipelinesEnrichItems(
+    public deleteApiDatasourceEnrichPipelinesEnrichItems(
 enrichItemId: number,
 id: number,
 ): CancelablePromise<Tuple2EnrichPipelineEnrichItem> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/enrich-pipelines/{id}/enrich-items/{enrichItemId}',
+            url: '/api/datasource/enrich-pipelines/{id}/enrich-items/{enrichItemId}',
             path: {
                 'enrichItemId': enrichItemId,
                 'id': id,

@@ -19,6 +19,7 @@ import ClayModal, { useModal } from "@clayui/modal";
 import ClayForm, { ClayInput } from "@clayui/form";
 import useDebounced from "./useDebounced";
 import ClayEmptyState from "@clayui/empty-state";
+import { ClassNameButton } from "../App";
 
 export const AssociatedEnrichPipelineEnrichItemsQuery = gql`
   query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {

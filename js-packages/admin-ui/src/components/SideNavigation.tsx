@@ -1,9 +1,10 @@
 import ClayIcon from "@clayui/icon";
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { NavLink } from "react-router-dom";
 import { BrandLogo } from "./BrandLogo";
 
 export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) {
+  const [select, setSelect] = React.useState("");
   return (
     <div className={`sidenav-fixed sidenav-menu-slider ${isSideMenuOpen ? "open" : "close"}`}>
       <div className="sidebar sidebar-dark sidenav-menu product-menu">
@@ -15,41 +16,125 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
         </div>
         <div className="sidebar-body">
           <nav className="menubar">
-            <ul className="nav nav-nested">
-              <SideNavigationItem label="Dashboard" path="/" />
-              <SideNavigationItem label="Connect your data source" path="/wizards" />
+            <ul className="nav nav-nested  ">
+              <SideNavigationItem IsChildren={false} setSelect={setSelect} elementSelect={select} label="Dashboard" path="/" />
+              <SideNavigationItem
+                IsChildren={false}
+                setSelect={setSelect}
+                elementSelect={select}
+                label="Connect your data source"
+                path="/wizards"
+              />
               <SideNavigationCollapsible label="Datasource configuration">
-                <SideNavigationItem label="Buckets" path="/buckets" />
-                <SideNavigationItem label="Data Sources" path="/data-sources" />
-                <SideNavigationItem label="Plugin Drivers" path="/plugin-drivers" />
+                <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Buckets" path="/buckets" />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Data Sources"
+                  path="/data-sources"
+                />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Plugin Drivers"
+                  path="/plugin-drivers"
+                />
               </SideNavigationCollapsible>
               <SideNavigationCollapsible label="Data Enrichment">
-                <SideNavigationItem label="Enrich Pipelines" path="/enrich-pipelines" />
-                <SideNavigationItem label="Enrich Items" path="/enrich-items" />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Enrich Pipelines"
+                  path="/enrich-pipelines"
+                />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Enrich Items"
+                  path="/enrich-items"
+                />
               </SideNavigationCollapsible>
               <SideNavigationCollapsible label="Mappings configuration">
-                <SideNavigationItem label="Document Types" path="/document-types" />
-                <SideNavigationItem label="Document Type Templates" path="/document-type-templates" />
-                <SideNavigationItem label="Analyzers" path="/analyzers" />
-                <SideNavigationItem label="Tokenizers" path="/tokenizers" />
-                <SideNavigationItem label="Token Filters" path="/token-filters" />
-                <SideNavigationItem label="Char Filters" path="/char-filters" />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Document Types"
+                  path="/document-types"
+                />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Document Type Templates"
+                  path="/document-type-templates"
+                />
+                <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Analyzers" path="/analyzers" />
+                <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Tokenizers" path="/tokenizers" />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Token Filters"
+                  path="/token-filters"
+                />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Char Filters"
+                  path="/char-filters"
+                />
               </SideNavigationCollapsible>
               <SideNavigationCollapsible label="Search Filters Configuration">
-                <SideNavigationItem label="Search Config" path="/search-configs" />
-                <SideNavigationItem label="Suggestion Categories" path="/suggestion-categories" />
-                <SideNavigationItem label="Tabs" path="/tabs" />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Search Config"
+                  path="/search-configs"
+                />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Suggestion Categories"
+                  path="/suggestion-categories"
+                />
+                <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Tabs" path="/tabs" />
               </SideNavigationCollapsible>
               <SideNavigationCollapsible label="Query Analysis configuration">
-                <SideNavigationItem label="Query Analyses" path="/query-analyses" />
-                <SideNavigationItem label="Rules" path="/rules" />
-                <SideNavigationItem label="Annotators" path="/annotators" />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Query Analyses"
+                  path="/query-analyses"
+                />
+                <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Rules" path="/rules" />
+                <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Annotators" path="/annotators" />
               </SideNavigationCollapsible>
               <SideNavigationCollapsible label="Monitoring">
-                <SideNavigationItem label="Events" path="/monitoring-events" />
-                <SideNavigationItem label="Logs" path="/logs" />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Events"
+                  path="/monitoring-events"
+                />
+                <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Logs" path="/logs" />
               </SideNavigationCollapsible>
-              <SideNavigationItem label="Maching Learning" path="maching-learning" />
+              <SideNavigationItem
+                IsChildren={false}
+                setSelect={setSelect}
+                elementSelect={select}
+                label="Maching Learning"
+                path="maching-learning"
+              />
             </ul>
           </nav>
         </div>
@@ -61,14 +146,33 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
 type SideNavigationItemProps = {
   label: string;
   path: string;
+  setSelect: Dispatch<SetStateAction<string>>;
+  elementSelect: string;
+  IsChildren: boolean;
 };
-function SideNavigationItem({ label, path }: SideNavigationItemProps) {
+function SideNavigationItem({ label, path, setSelect, elementSelect, IsChildren }: SideNavigationItemProps) {
   return (
-    <li className="nav-item">
-      <NavLink to={path} className="nav-link">
-        {label}
-      </NavLink>
-    </li>
+    <React.Fragment>
+      <li className="nav-item" style={{ display: "flex", alignItems: "center" }}>
+        <NavLink
+          to={path}
+          className="nav-link "
+          style={{ outline: "none", boxShadow: "none" }}
+          onClick={() => {
+            setSelect(label);
+          }}
+        >
+          {elementSelect === label ? (
+            <div>
+              <span style={{ borderLeft: "3px solid red", marginLeft: IsChildren ? "-15px" : "" }}></span>
+              <span style={{ marginLeft: "15px" }}>{label}</span>
+            </div>
+          ) : (
+            label
+          )}
+        </NavLink>
+      </li>
+    </React.Fragment>
   );
 }
 
@@ -79,7 +183,7 @@ type SideNavigationCollapsibleProps = {
 function SideNavigationCollapsible({ label, children }: SideNavigationCollapsibleProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   return (
-    <li className="nav-item">
+    <li className="nav-item ">
       <button
         className={`collapse-icon nav-link btn-unstyled ${!isOpen ? "collapsed" : ""}`}
         onClick={() => {
@@ -88,10 +192,10 @@ function SideNavigationCollapsible({ label, children }: SideNavigationCollapsibl
       >
         {label}
         <span className="collapse-icon-closed">
-          <ClayIcon symbol="caret-right" />
+          <ClayIcon symbol="caret-bottom" />
         </span>
         <span className="collapse-icon-open">
-          <ClayIcon symbol="caret-bottom" />
+          <ClayIcon symbol="caret-top" />
         </span>
       </button>
       <div className={`collapse ${isOpen ? "show" : ""}`} id="navCollapse01">

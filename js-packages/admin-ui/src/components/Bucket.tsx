@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 
-import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, BooleanInput } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, BooleanInput, MainTitle } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import {
@@ -20,6 +20,7 @@ import {
   useUnbindSearchConfigFromBucketMutation,
 } from "../graphql-generated";
 import { BucketsQuery } from "./Buckets";
+import { ClassNameButton } from "../App";
 
 const BucketQuery = gql`
   query Bucket($id: ID!) {
@@ -101,6 +102,7 @@ export function Bucket() {
   });
   return (
     <ClayLayout.ContainerFluid view>
+      {bucketId !== "new" && <MainTitle title="Attribute" />}
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -142,7 +144,7 @@ export function Bucket() {
           </ClayForm>
         )}
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {bucketId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

@@ -38,6 +38,7 @@ export function Tenant() {
             <ClayToolbar.Item>
               <ClayButtonWithIcon
                 symbol="angle-left"
+                aria-label=""
                 small
                 onClick={() => {
                   navigate(`/tenants/`, { replace: true });

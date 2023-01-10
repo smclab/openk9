@@ -23,7 +23,7 @@ export class EnrichItemResourceService {
      * @returns PageEnrichItem OK
      * @throws ApiError
      */
-    public getEnrichItems(
+    public getApiDatasourceEnrichItems(
 afterId: number = -1,
 beforeId: number = -1,
 limit: number = 20,
@@ -32,7 +32,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageEnrichItem> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/enrich-items',
+            url: '/api/datasource/enrich-items',
             query: {
                 'after_id': afterId,
                 'before_id': beforeId,
@@ -48,12 +48,12 @@ sortBy?: K9Column,
      * @returns EnrichItem OK
      * @throws ApiError
      */
-    public postEnrichItems(
+    public postApiDatasourceEnrichItems(
 requestBody?: EnrichItemDTO,
 ): CancelablePromise<EnrichItem> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/enrich-items',
+            url: '/api/datasource/enrich-items',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -63,10 +63,10 @@ requestBody?: EnrichItemDTO,
      * @returns number OK
      * @throws ApiError
      */
-    public getEnrichItemsCount(): CancelablePromise<number> {
+    public getApiDatasourceEnrichItemsCount(): CancelablePromise<number> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/enrich-items/count',
+            url: '/api/datasource/enrich-items/count',
         });
     }
 
@@ -74,10 +74,10 @@ requestBody?: EnrichItemDTO,
      * @returns K9EntityEventEnrichItem OK
      * @throws ApiError
      */
-    public getEnrichItemsStream(): CancelablePromise<Array<K9EntityEventEnrichItem>> {
+    public getApiDatasourceEnrichItemsStream(): CancelablePromise<Array<K9EntityEventEnrichItem>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/enrich-items/stream',
+            url: '/api/datasource/enrich-items/stream',
         });
     }
 
@@ -86,12 +86,12 @@ requestBody?: EnrichItemDTO,
      * @returns EnrichItem OK
      * @throws ApiError
      */
-    public getEnrichItems1(
+    public getApiDatasourceEnrichItems1(
 id: number,
 ): CancelablePromise<EnrichItem> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/enrich-items/{id}',
+            url: '/api/datasource/enrich-items/{id}',
             path: {
                 'id': id,
             },
@@ -104,13 +104,13 @@ id: number,
      * @returns EnrichItem OK
      * @throws ApiError
      */
-    public putEnrichItems(
+    public putApiDatasourceEnrichItems(
 id: number,
 requestBody?: EnrichItemDTO,
 ): CancelablePromise<EnrichItem> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/enrich-items/{id}',
+            url: '/api/datasource/enrich-items/{id}',
             path: {
                 'id': id,
             },
@@ -124,12 +124,12 @@ requestBody?: EnrichItemDTO,
      * @returns EnrichItem OK
      * @throws ApiError
      */
-    public deleteEnrichItems(
+    public deleteApiDatasourceEnrichItems(
 id: number,
 ): CancelablePromise<EnrichItem> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/enrich-items/{id}',
+            url: '/api/datasource/enrich-items/{id}',
             path: {
                 'id': id,
             },
@@ -142,13 +142,13 @@ id: number,
      * @returns EnrichItem OK
      * @throws ApiError
      */
-    public patchEnrichItems(
+    public patchApiDatasourceEnrichItems(
 id: number,
 requestBody?: EnrichItemDTO,
 ): CancelablePromise<EnrichItem> {
         return this.httpRequest.request({
             method: 'PATCH',
-            url: '/enrich-items/{id}',
+            url: '/api/datasource/enrich-items/{id}',
             path: {
                 'id': id,
             },

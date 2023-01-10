@@ -52,22 +52,22 @@ module.exports = {
       watch: true,
     },
     proxy: {
-      "/v1": {
+      "/api/searcher/v1": {
         target: "https://test.openk9.io",
         changeOrigin: true,
         secure: false,
       },
-      "/buckets": {
+      "/api/datasource/buckets": {
         target: "https://test.openk9.io",
         changeOrigin: true,
         secure: false,
       },
-      "/oauth2": {
+      "/api/datasource/oauth2": {
         target: "https://test.openk9.io",
         changeOrigin: true,
         secure: false,
       },
-      "/templates": {
+      "/api/datasource/templates": {
         target: "https://test.openk9.io",
         changeOrigin: true,
         secure: false,

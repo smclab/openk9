@@ -14,10 +14,21 @@ export class OAuth2SettingsResourceService {
      * @returns Settings OK
      * @throws ApiError
      */
-    public getOauth2Settings(): CancelablePromise<Settings> {
+    public getApiDatasourceOauth2Settings(): CancelablePromise<Settings> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/oauth2/settings',
+            url: '/api/datasource/oauth2/settings',
+        });
+    }
+
+    /**
+     * @returns string OK
+     * @throws ApiError
+     */
+    public getApiDatasourceOauth2SettingsJs(): CancelablePromise<string> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/datasource/oauth2/settings.js',
         });
     }
 

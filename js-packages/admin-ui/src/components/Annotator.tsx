@@ -17,6 +17,7 @@ import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, NumberIn
 import { AnnotatorsQuery } from "./Annotators";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "../App";
 
 const AnnotatorQuery = gql`
   query Annotator($id: ID!) {
@@ -143,7 +144,7 @@ export function Annotator() {
           </ClayForm>
         )}
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {annotatorId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

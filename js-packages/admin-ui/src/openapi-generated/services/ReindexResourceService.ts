@@ -16,12 +16,12 @@ export class ReindexResourceService {
      * @returns ReindexResponseDto OK
      * @throws ApiError
      */
-    public postV1IndexReindex(
+    public postApiDatasourceV1IndexReindex(
 requestBody?: ReindexRequestDto,
 ): CancelablePromise<Array<ReindexResponseDto>> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/v1/index/reindex',
+            url: '/api/datasource/v1/index/reindex',
             body: requestBody,
             mediaType: 'application/json',
         });

@@ -11,9 +11,10 @@ import {
   useDocumentTypeTemplateValueQuery,
   useUnbindDocumentTypeTemplateFromDocumentTypeMutation,
 } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle } from "./Form";
 import { DocumentTypesQuery } from "./DocumentTypes";
 import ClayLayout from "@clayui/layout";
+import { ClassNameButton } from "../App";
 
 const DocumentTypeQuery = gql`
   query DocumentType($id: ID!) {
@@ -77,6 +78,7 @@ export function DocumentType() {
   });
   return (
     <ClayLayout.ContainerFluid view>
+      {documentTypeId !== "new" && <MainTitle title="Attributes" />}
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -106,7 +108,7 @@ export function DocumentType() {
           </ClayForm>
         )}
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {documentTypeId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

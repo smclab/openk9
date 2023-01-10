@@ -23,7 +23,7 @@ export class PluginDriverFieldResourceService {
      * @returns PagePluginDriver OK
      * @throws ApiError
      */
-    public getPluginDrivers(
+    public getApiDatasourcePluginDrivers(
 afterId: number = -1,
 beforeId: number = -1,
 limit: number = 20,
@@ -32,7 +32,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PagePluginDriver> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/plugin-drivers',
+            url: '/api/datasource/plugin-drivers',
             query: {
                 'after_id': afterId,
                 'before_id': beforeId,
@@ -48,12 +48,12 @@ sortBy?: K9Column,
      * @returns PluginDriver OK
      * @throws ApiError
      */
-    public postPluginDrivers(
+    public postApiDatasourcePluginDrivers(
 requestBody?: PluginDriverDTO,
 ): CancelablePromise<PluginDriver> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/plugin-drivers',
+            url: '/api/datasource/plugin-drivers',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -63,10 +63,10 @@ requestBody?: PluginDriverDTO,
      * @returns number OK
      * @throws ApiError
      */
-    public getPluginDriversCount(): CancelablePromise<number> {
+    public getApiDatasourcePluginDriversCount(): CancelablePromise<number> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/plugin-drivers/count',
+            url: '/api/datasource/plugin-drivers/count',
         });
     }
 
@@ -74,10 +74,10 @@ requestBody?: PluginDriverDTO,
      * @returns K9EntityEventPluginDriver OK
      * @throws ApiError
      */
-    public getPluginDriversStream(): CancelablePromise<Array<K9EntityEventPluginDriver>> {
+    public getApiDatasourcePluginDriversStream(): CancelablePromise<Array<K9EntityEventPluginDriver>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/plugin-drivers/stream',
+            url: '/api/datasource/plugin-drivers/stream',
         });
     }
 
@@ -86,12 +86,12 @@ requestBody?: PluginDriverDTO,
      * @returns PluginDriver OK
      * @throws ApiError
      */
-    public getPluginDrivers1(
+    public getApiDatasourcePluginDrivers1(
 id: number,
 ): CancelablePromise<PluginDriver> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/plugin-drivers/{id}',
+            url: '/api/datasource/plugin-drivers/{id}',
             path: {
                 'id': id,
             },
@@ -104,13 +104,13 @@ id: number,
      * @returns PluginDriver OK
      * @throws ApiError
      */
-    public putPluginDrivers(
+    public putApiDatasourcePluginDrivers(
 id: number,
 requestBody?: PluginDriverDTO,
 ): CancelablePromise<PluginDriver> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/plugin-drivers/{id}',
+            url: '/api/datasource/plugin-drivers/{id}',
             path: {
                 'id': id,
             },
@@ -124,12 +124,12 @@ requestBody?: PluginDriverDTO,
      * @returns PluginDriver OK
      * @throws ApiError
      */
-    public deletePluginDrivers(
+    public deleteApiDatasourcePluginDrivers(
 id: number,
 ): CancelablePromise<PluginDriver> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/plugin-drivers/{id}',
+            url: '/api/datasource/plugin-drivers/{id}',
             path: {
                 'id': id,
             },
@@ -142,13 +142,13 @@ id: number,
      * @returns PluginDriver OK
      * @throws ApiError
      */
-    public patchPluginDrivers(
+    public patchApiDatasourcePluginDrivers(
 id: number,
 requestBody?: PluginDriverDTO,
 ): CancelablePromise<PluginDriver> {
         return this.httpRequest.request({
             method: 'PATCH',
-            url: '/plugin-drivers/{id}',
+            url: '/api/datasource/plugin-drivers/{id}',
             path: {
                 'id': id,
             },

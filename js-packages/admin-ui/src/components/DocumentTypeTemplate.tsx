@@ -10,6 +10,7 @@ import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { DocumentTypeTemplatesQuery } from "./DocumentTypeTemplates";
 import { transform, availablePresets } from "@babel/standalone";
+import { ClassNameButton } from "../App";
 
 const DocumentTypeTemplateQuery = gql`
   query DocumentTypeTemplate($id: ID!) {
@@ -131,7 +132,7 @@ export function DocumentTypeTemplate() {
           }
         })()}
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {documentTypeTemplateId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

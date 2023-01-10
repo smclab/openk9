@@ -30,7 +30,7 @@ export class BucketResourceService {
      * @returns PageBucket OK
      * @throws ApiError
      */
-    public getBuckets(
+    public getApiDatasourceBuckets(
 afterId: number = -1,
 beforeId: number = -1,
 limit: number = 20,
@@ -39,7 +39,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageBucket> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/buckets',
+            url: '/api/datasource/buckets',
             query: {
                 'after_id': afterId,
                 'before_id': beforeId,
@@ -55,12 +55,12 @@ sortBy?: K9Column,
      * @returns Bucket OK
      * @throws ApiError
      */
-    public postBuckets(
+    public postApiDatasourceBuckets(
 requestBody?: BucketDTO,
 ): CancelablePromise<Bucket> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/buckets',
+            url: '/api/datasource/buckets',
             body: requestBody,
             mediaType: 'application/json',
         });
@@ -70,10 +70,10 @@ requestBody?: BucketDTO,
      * @returns number OK
      * @throws ApiError
      */
-    public getBucketsCount(): CancelablePromise<number> {
+    public getApiDatasourceBucketsCount(): CancelablePromise<number> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/buckets/count',
+            url: '/api/datasource/buckets/count',
         });
     }
 
@@ -81,10 +81,10 @@ requestBody?: BucketDTO,
      * @returns SuggestionCategory OK
      * @throws ApiError
      */
-    public getBucketsCurrentSuggestionCategories(): CancelablePromise<Array<SuggestionCategory>> {
+    public getApiDatasourceBucketsCurrentSuggestionCategories(): CancelablePromise<Array<SuggestionCategory>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/buckets/current/suggestionCategories',
+            url: '/api/datasource/buckets/current/suggestionCategories',
         });
     }
 
@@ -92,10 +92,10 @@ requestBody?: BucketDTO,
      * @returns TabResponseDto OK
      * @throws ApiError
      */
-    public getBucketsCurrentTabs(): CancelablePromise<Array<TabResponseDto>> {
+    public getApiDatasourceBucketsCurrentTabs(): CancelablePromise<Array<TabResponseDto>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/buckets/current/tabs',
+            url: '/api/datasource/buckets/current/tabs',
         });
     }
 
@@ -103,10 +103,10 @@ requestBody?: BucketDTO,
      * @returns TemplateResponseDto OK
      * @throws ApiError
      */
-    public getBucketsCurrentTemplates(): CancelablePromise<Array<TemplateResponseDto>> {
+    public getApiDatasourceBucketsCurrentTemplates(): CancelablePromise<Array<TemplateResponseDto>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/buckets/current/templates',
+            url: '/api/datasource/buckets/current/templates',
         });
     }
 
@@ -114,10 +114,10 @@ requestBody?: BucketDTO,
      * @returns K9EntityEventBucket OK
      * @throws ApiError
      */
-    public getBucketsStream(): CancelablePromise<Array<K9EntityEventBucket>> {
+    public getApiDatasourceBucketsStream(): CancelablePromise<Array<K9EntityEventBucket>> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/buckets/stream',
+            url: '/api/datasource/buckets/stream',
         });
     }
 
@@ -126,12 +126,12 @@ requestBody?: BucketDTO,
      * @returns Bucket OK
      * @throws ApiError
      */
-    public getBuckets1(
+    public getApiDatasourceBuckets1(
 id: number,
 ): CancelablePromise<Bucket> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/buckets/{id}',
+            url: '/api/datasource/buckets/{id}',
             path: {
                 'id': id,
             },
@@ -144,13 +144,13 @@ id: number,
      * @returns Bucket OK
      * @throws ApiError
      */
-    public putBuckets(
+    public putApiDatasourceBuckets(
 id: number,
 requestBody?: BucketDTO,
 ): CancelablePromise<Bucket> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/buckets/{id}',
+            url: '/api/datasource/buckets/{id}',
             path: {
                 'id': id,
             },
@@ -164,12 +164,12 @@ requestBody?: BucketDTO,
      * @returns Bucket OK
      * @throws ApiError
      */
-    public deleteBuckets(
+    public deleteApiDatasourceBuckets(
 id: number,
 ): CancelablePromise<Bucket> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/buckets/{id}',
+            url: '/api/datasource/buckets/{id}',
             path: {
                 'id': id,
             },
@@ -182,13 +182,13 @@ id: number,
      * @returns Bucket OK
      * @throws ApiError
      */
-    public patchBuckets(
+    public patchApiDatasourceBuckets(
 id: number,
 requestBody?: BucketDTO,
 ): CancelablePromise<Bucket> {
         return this.httpRequest.request({
             method: 'PATCH',
-            url: '/buckets/{id}',
+            url: '/api/datasource/buckets/{id}',
             path: {
                 'id': id,
             },
@@ -207,7 +207,7 @@ requestBody?: BucketDTO,
      * @returns PageDatasource OK
      * @throws ApiError
      */
-    public getBucketsDatasources(
+    public getApiDatasourceBucketsDatasources(
 id: number,
 afterId: number = -1,
 beforeId: number = -1,
@@ -217,7 +217,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageDatasource> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/buckets/{id}/datasources',
+            url: '/api/datasource/buckets/{id}/datasources',
             path: {
                 'id': id,
             },
@@ -237,13 +237,13 @@ sortBy?: K9Column,
      * @returns Tuple2BucketDatasource OK
      * @throws ApiError
      */
-    public putBucketsDatasources(
+    public putApiDatasourceBucketsDatasources(
 datasourceId: number,
 id: number,
 ): CancelablePromise<Tuple2BucketDatasource> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/buckets/{id}/datasources/{datasourceId}',
+            url: '/api/datasource/buckets/{id}/datasources/{datasourceId}',
             path: {
                 'datasourceId': datasourceId,
                 'id': id,
@@ -257,13 +257,13 @@ id: number,
      * @returns Tuple2BucketDatasource OK
      * @throws ApiError
      */
-    public deleteBucketsDatasources(
+    public deleteApiDatasourceBucketsDatasources(
 datasourceId: number,
 id: number,
 ): CancelablePromise<Tuple2BucketDatasource> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/buckets/{id}/datasources/{datasourceId}',
+            url: '/api/datasource/buckets/{id}/datasources/{datasourceId}',
             path: {
                 'datasourceId': datasourceId,
                 'id': id,
@@ -281,7 +281,7 @@ id: number,
      * @returns PageSuggestionCategory OK
      * @throws ApiError
      */
-    public getBucketsSuggestionCategories(
+    public getApiDatasourceBucketsSuggestionCategories(
 id: number,
 afterId: number = -1,
 beforeId: number = -1,
@@ -291,7 +291,7 @@ sortBy?: K9Column,
 ): CancelablePromise<PageSuggestionCategory> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/buckets/{id}/suggestion-categories',
+            url: '/api/datasource/buckets/{id}/suggestion-categories',
             path: {
                 'id': id,
             },
@@ -311,13 +311,13 @@ sortBy?: K9Column,
      * @returns Tuple2BucketSuggestionCategory OK
      * @throws ApiError
      */
-    public putBucketsSuggestionCategories(
+    public putApiDatasourceBucketsSuggestionCategories(
 suggestionCategoryId: number,
 requestBody?: number,
 ): CancelablePromise<Tuple2BucketSuggestionCategory> {
         return this.httpRequest.request({
             method: 'PUT',
-            url: '/buckets/{id}/suggestion-categories/{suggestionCategoryId}',
+            url: '/api/datasource/buckets/{id}/suggestion-categories/{suggestionCategoryId}',
             path: {
                 'suggestionCategoryId': suggestionCategoryId,
             },
@@ -332,13 +332,13 @@ requestBody?: number,
      * @returns Tuple2BucketSuggestionCategory OK
      * @throws ApiError
      */
-    public deleteBucketsSuggestionCategories(
+    public deleteApiDatasourceBucketsSuggestionCategories(
 suggestionCategoryId: number,
 requestBody?: number,
 ): CancelablePromise<Tuple2BucketSuggestionCategory> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/buckets/{id}/suggestion-categories/{suggestionCategoryId}',
+            url: '/api/datasource/buckets/{id}/suggestion-categories/{suggestionCategoryId}',
             path: {
                 'suggestionCategoryId': suggestionCategoryId,
             },

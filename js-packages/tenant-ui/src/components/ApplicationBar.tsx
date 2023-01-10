@@ -46,6 +46,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
               )}
               {isAuthenticated && (
                 <ClayButtonWithIcon
+                  aria-label=""
                   symbol="logout"
                   displayType="danger"
                   onClick={() => {

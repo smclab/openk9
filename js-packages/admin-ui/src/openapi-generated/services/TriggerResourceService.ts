@@ -15,12 +15,12 @@ export class TriggerResourceService {
      * @returns number OK
      * @throws ApiError
      */
-    public postV1Trigger(
+    public postApiDatasourceV1Trigger(
 requestBody?: TriggerResourceRequest,
 ): CancelablePromise<Array<number>> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/v1/trigger',
+            url: '/api/datasource/v1/trigger',
             body: requestBody,
             mediaType: 'application/json',
         });

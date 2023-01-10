@@ -1,6 +1,6 @@
 import ClayCard from "@clayui/card";
 import ClayLayout from "@clayui/layout";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import React from "react";
 import ClayToolbar from "@clayui/toolbar";
 import { ClayButtonWithIcon } from "@clayui/button";
@@ -22,12 +22,14 @@ import { Translation } from "../wizards/Logo/Traslation";
 import { AudioClassification } from "../wizards/Logo/AudioClassification";
 import ClayModal from "@clayui/modal";
 import ClayButtonGroup from "@clayui/button/lib/Group";
+import { ClassNameButton } from "../App";
 
 export function HuggingFaceCard() {
   const status = usePodsStatus();
   const { observer, onOpenChange, open } = useModal();
   const data = React.useMemo(() => Object.values(status).sort((a, b) => a.name.localeCompare(b.name)), [status]);
   const [name, setName] = React.useState("");
+  const navigate = useNavigate();
   return (
     <React.Fragment>
       {open && (
@@ -40,33 +42,36 @@ export function HuggingFaceCard() {
               <ClayButtonGroup spaced style={{ alignItems: "center" }}>
                 <Button
                   displayType="primary"
-                  onClick={() => {
-                    fetch(`/k8s/delete-ml-model/${name}`, { method: "DELETE" }).then(() => alert("eliminato"));
-                  }}
-                >
-                  {"yes"}
-                </Button>
-                <Button
-                  displayType="primary"
+                  className={ClassNameButton}
                   onClick={() => {
                     onOpenChange(false);
                   }}
                 >
                   {"no"}
                 </Button>
+                <Button
+                  displayType="primary"
+                  className={ClassNameButton}
+                  onClick={() => {
+                    const ciao = fetch(`/k8s/delete-ml-model/${name}`, { method: "DELETE" }).then(() => {});
+                    console.log(ciao + "tt");
+                    onOpenChange(false);
+                  }}
+                >
+                  {"yes"}
+                </Button>
               </ClayButtonGroup>
             }
           />
         </ClayModal>
       )}
-
       <ClayToolbar light>
         <ClayLayout.ContainerFluid>
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand></ClayToolbar.Item>
             <ClayToolbar.Item>
               <Link to={"configure-hugging-face"}>
-                <ClayButtonWithIcon aria-label="" symbol="plus" small />
+                <ClayButtonWithIcon className={ClassNameButton} aria-label="" symbol="plus" small />
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
@@ -124,15 +129,24 @@ export function HuggingFaceCard() {
                         </section>
                       </div>
                     </ClayCard.Row>
-                    <ClayCard.Row style={{ marginTop: "12px", marginLeft: "30px" }}>
+                    <ClayCard.Row style={{ marginTop: "12px" }}>
                       <div className="row">
                         <div className="col-sm-6">
-                          <Button small style={{ whiteSpace: "nowrap", textAlign: "center" }}>
-                            create item
+                          <Button
+                            className={ClassNameButton}
+                            small
+                            style={{ whiteSpace: "nowrap", textAlign: "center" }}
+                            onClick={() => {
+                              navigate(`/maching-learning/hugging-face-view/enrich-item/${name}`, { replace: true });
+                            }}
+                          >
+                            create enrich item
                           </Button>
                         </div>
                         <div className="col-sm-6">
                           <Button
+                            className={ClassNameButton}
+                            style={{ marginLeft: "10px" }}
                             small
                             onClick={() => {
                               setName(name);

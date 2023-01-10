@@ -48,6 +48,8 @@ export function getStatusDisplayType(status: string) {
     case "Failed":
     case "Evicted":
       return "danger";
+    case "Terminating":
+      return "danger";
     default:
       throw new Error();
   }

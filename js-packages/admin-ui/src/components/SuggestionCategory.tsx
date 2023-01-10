@@ -8,6 +8,7 @@ import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput } from "
 import { SuggestionCategoriesQuery } from "./SuggestionCategories";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "../App";
 
 const SuggestionCategoryQuery = gql`
   query SuggestionCategory($id: ID!) {
@@ -87,7 +88,7 @@ export function SuggestionCategory() {
         <TextArea label="Description" {...form.inputProps("description")} />
         <NumberInput label="Priority" {...form.inputProps("priority")} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {suggestionCategoryId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>

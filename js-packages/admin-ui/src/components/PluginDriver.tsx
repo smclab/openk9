@@ -15,6 +15,7 @@ import { PluginDriversQuery } from "./PluginDrivers";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import ClayPanel from "@clayui/panel";
+import { ClassNameButton } from "../App";
 
 const PluginDriverQuery = gql`
   query PluginDriver($id: ID!) {
@@ -222,7 +223,7 @@ export function PluginDriver() {
           }
         })}
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {pluginDriverId === "new" ? "Create" : "Update"}
           </ClayButton>
         </div>
