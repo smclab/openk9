@@ -71,7 +71,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
       return data;
     },
     async getDateFilterFields() {
-      const response = await authFetch(`/v1/date-filter`, {
+      const response = await authFetch(`/api/datasource/v1/date-filter`, {
         method: "GET",
         headers: { Accept: "application/json" },
       });
@@ -117,7 +117,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     },
     async getSuggestionCategories(): Promise<SuggestionsCategoriesResult> {
       const response = await authFetch(
-        `/buckets/current/suggestionCategories`,
+        `/api/datasource/buckets/current/suggestionCategories`,
         {
           headers: {
             Accept: "application/json",
@@ -130,7 +130,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     async getTabsByVirtualHost(): Promise<
       Array<{ label: string; tokens: Array<SearchToken> }>
     > {
-      const response = await authFetch(`/buckets/current/tabs`, {
+      const response = await authFetch(`/api/datasource/buckets/current/tabs`, {
         headers: {
           Accept: "application/json",
         },
@@ -139,7 +139,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
       return data;
     },
     async getTemplatesByVirtualHost(): Promise<Array<string>> {
-      const response = await authFetch(`/buckets/current/templates`, {
+      const response = await authFetch(`/api/datasource/buckets/current/templates`, {
         headers: {
           Accept: "application/json",
         },
