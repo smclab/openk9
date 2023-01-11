@@ -18,6 +18,9 @@ public class TenantDTO {
 	private String schemaName;
 	@NotBlank
 	@NotNull
+	private String liquibaseSchemaName;
+	@NotBlank
+	@NotNull
 	private String virtualHost;
 	@NotBlank
 	@NotNull

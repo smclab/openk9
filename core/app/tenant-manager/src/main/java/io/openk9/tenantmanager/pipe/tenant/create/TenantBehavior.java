@@ -85,6 +85,7 @@ public class TenantBehavior extends AbstractBehavior<TenantMessage> {
 			tenant.setVirtualHost(this.virtualHost);
 			tenant.setRealmName(this.realmName);
 			tenant.setSchemaName(this.schemaName);
+			tenant.setLiquibaseSchemaName(this.schemaName + "_liquibase");
 			tenant.setClientId(this.clientId);
 			tenant.setClientSecret(this.clientSecret);
 

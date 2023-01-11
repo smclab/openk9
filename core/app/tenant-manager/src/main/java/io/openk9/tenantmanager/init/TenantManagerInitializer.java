@@ -50,7 +50,7 @@ public class TenantManagerInitializer {
 
 		Uni<Void> tenantUpgrade =
 			tenantService
-				.findAllSchemaName()
+				.findAllSchemaNameAndLiquibaseSchemaName()
 				.emitOn(Infrastructure.getDefaultWorkerPool())
 				.flatMap((schemas) -> Uni
 					.createFrom()

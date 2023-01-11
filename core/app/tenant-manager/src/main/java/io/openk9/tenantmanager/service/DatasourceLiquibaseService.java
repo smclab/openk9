@@ -1,5 +1,6 @@
 package io.openk9.tenantmanager.service;
 
+import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.util.CustomClassLoaderResourceAccessor;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
@@ -51,7 +52,11 @@ public class DatasourceLiquibaseService {
 			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
 
-		String liquibaseSchema = schemaName + "_liquibase";
+		String liquibaseSchema = schemaName;
+
+		if (createSchema) {
+			liquibaseSchema += "_liquibase";
+		}
 
 		DatabaseConnection connection = DatabaseFactory.getInstance().openConnection(
 			toJdbcUrl(openk9DatasourceUrl), datasourceUsername, datasourcePassword,
@@ -80,20 +85,23 @@ public class DatasourceLiquibaseService {
 		}
 	}
 
-	public void runUpdate(List<String> schemaNames) throws LiquibaseException {
+	public void runUpdate(List<SchemaTuple> schemaNames) throws LiquibaseException {
 
 		CustomClassLoaderResourceAccessor resourceAccessor =
 			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
 
-		for (String schemaName : schemaNames) {
+		for (SchemaTuple t2 : schemaNames) {
+
+			String schemaName = t2.schemaName();
+			String liquibaseSchema = t2.liquibaseSchemaName();
 
 			DatabaseConnection connection = DatabaseFactory.getInstance().openConnection(
 				toJdbcUrl(openk9DatasourceUrl), datasourceUsername, datasourcePassword,
 				null, resourceAccessor);
 
 			Database database = _createDatabase(
-				connection, schemaName, schemaName + "_liquibase");
+				connection, schemaName, liquibaseSchema);
 
 			try(Liquibase liquibase = new Liquibase(changeLogLocation, resourceAccessor, database)) {
 				liquibase.validate();
@@ -113,12 +121,14 @@ public class DatasourceLiquibaseService {
 	}
 
 	public void rollbackRunLiquibaseMigration(String schemaName) {
+		rollbackRunLiquibaseMigration(schemaName, schemaName + "_liquibase");
+	}
+
+	public void rollbackRunLiquibaseMigration(String schemaName, String liquibaseSchema) {
 
 		CustomClassLoaderResourceAccessor resourceAccessor =
 			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
-
-		String liquibaseSchema = schemaName + "_liquibase";
 
 		try (DatabaseConnection connection =
 				 DatabaseFactory.getInstance().openConnection(

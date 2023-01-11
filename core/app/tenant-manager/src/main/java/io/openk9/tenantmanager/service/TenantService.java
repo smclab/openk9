@@ -1,6 +1,7 @@
 package io.openk9.tenantmanager.service;
 
 import io.openk9.common.graphql.util.service.GraphQLService;
+import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.model.Tenant_;
 import io.smallrye.mutiny.Uni;
@@ -98,6 +99,29 @@ public class TenantService extends GraphQLService<Tenant> {
 				Root<Tenant> root = query.from(Tenant.class);
 
 				query.select(root.get(Tenant_.schemaName));
+
+				query.distinct(true);
+
+				return s.createQuery(query).getResultList();
+
+			}
+		);
+	}
+
+	public Uni<List<SchemaTuple>> findAllSchemaNameAndLiquibaseSchemaName() {
+		return sf.withStatelessSession(
+			s -> {
+
+				CriteriaBuilder cb = sf.getCriteriaBuilder();
+
+				CriteriaQuery<SchemaTuple> query = cb.createQuery(SchemaTuple.class);
+
+				Root<Tenant> root = query.from(Tenant.class);
+
+				query.multiselect(
+					root.get(Tenant_.schemaName),
+					root.get(Tenant_.liquibaseSchemaName)
+				);
 
 				query.distinct(true);
 

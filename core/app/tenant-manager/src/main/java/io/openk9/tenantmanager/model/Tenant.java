@@ -46,6 +46,9 @@ public class Tenant implements GraphqlId {
 	@Column(name = "schema_name", nullable = false)
 	private String schemaName;
 
+	@Column(name = "liquibase_schema_name", nullable = false)
+	private String liquibaseSchemaName;
+
 	@Column(name = "virtual_host", nullable = false, unique = true)
 	private String virtualHost;
 
