@@ -10,7 +10,6 @@ Build Latest Tenant Ui Docker Image:
   only:
     refs:
       - main
-      - 305-refactoring-con-nuovi-endpoint-search-frontend
     changes:
       - .gitlab/.gitlab-ci-tenant-frontend.yml
       - js-packages/tenant-ui/**/*
@@ -21,8 +20,8 @@ Build Latest Tenant Ui Docker Image:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
     - docker build -t openk9-tenant-ui:latest -f js-packages/tenant-ui/Dockerfile .
-    - docker tag openk9-tenant-ui:latest $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:305-refactoring-con-nuovi-endpoint-search-frontend
-    - docker push $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:305-refactoring-con-nuovi-endpoint-search-frontend
+    - docker tag openk9-tenant-ui:latest $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:latest
+    - docker push $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:latest
 
 
 Build Tagged Tenant Ui Docker Image:
