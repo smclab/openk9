@@ -24,7 +24,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 
-@Path("/v1/file-manager/download")
+@Path("/v1/download")
 public class DownloadEndpoint {
 
 	@GET

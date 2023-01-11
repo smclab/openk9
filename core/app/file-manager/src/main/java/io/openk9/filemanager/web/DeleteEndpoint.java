@@ -22,7 +22,7 @@ import io.openk9.filemanager.service.DeleteService;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 
-@Path("/v1/file-manager/delete")
+@Path("/v1/delete")
 public class DeleteEndpoint {
 
 	@POST

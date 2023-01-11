@@ -30,7 +30,7 @@ import java.io.InputStream;
 import java.util.Base64;
 import org.apache.commons.io.IOUtils;
 
-@Path("/v1/file-manager/download/base64")
+@Path("/v1/download/base64")
 public class DownloadAsBase64Endpoint {
 
 	@GET
