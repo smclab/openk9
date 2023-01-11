@@ -69,5 +69,13 @@
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-micrometer-registry-prometheus</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-opentelemetry</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
+		</dependency>
 	</dependencies>
 </project>
