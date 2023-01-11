@@ -37,6 +37,20 @@ public class TenantManagerActorSystem {
 
 	}
 
+	public Uni<Void> populateSchema(String schemaName, String virtualHost) {
+		return Uni.createFrom().emitter(sink -> {
+
+			try {
+				liquibaseService.runInitialization(schemaName, virtualHost, false);
+				sink.complete(null);
+			}
+			catch (Exception e) {
+				sink.fail(e);
+			}
+
+		});
+	}
+
 	@Inject
 	Keycloak keycloak;
 

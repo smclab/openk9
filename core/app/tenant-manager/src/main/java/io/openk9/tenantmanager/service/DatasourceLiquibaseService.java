@@ -42,6 +42,10 @@ public class DatasourceLiquibaseService {
 	String changeLogTableName;
 
 	public void runInitialization(String schemaName, String virtualHost) throws LiquibaseException {
+		runInitialization(schemaName, virtualHost, true);
+	}
+
+	public void runInitialization(String schemaName, String virtualHost, boolean createSchema) throws LiquibaseException {
 
 		CustomClassLoaderResourceAccessor resourceAccessor =
 			new CustomClassLoaderResourceAccessor(
@@ -57,7 +61,10 @@ public class DatasourceLiquibaseService {
 
 		try(Liquibase liquibase = new Liquibase(changeLogLocation, resourceAccessor, database)) {
 
-			_createSchemas(connection, schemaName, liquibaseSchema);
+
+			if (createSchema) {
+				_createSchemas(connection, schemaName, liquibaseSchema);
+			}
 
 			liquibase.validate();
 			liquibase.update(new Contexts(), new LabelExpression());

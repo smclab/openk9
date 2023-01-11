@@ -7,10 +7,12 @@ import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -18,6 +20,7 @@ import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @Path("/tenant-manager/tenant")
+@RolesAllowed("admin")
 public class TenantManagerResource {
 
 	@POST
@@ -53,6 +56,35 @@ public class TenantManagerResource {
 						);
 				}
 			});
+	}
+
+	@POST
+	@Path("/{id}/tables")
+	public Uni<CreateTablesResponse> createTables(@PathParam("id") Long id) {
+		return tenantService.findById(id).flatMap(t -> {
+			if (t == null) {
+				return Uni.createFrom().failure(
+					new WebApplicationException(
+						"Tenant not found with id: " + id,
+						Response.Status.NOT_FOUND)
+				);
+			}
+			else {
+				return tenantManagerActorSystem
+					.populateSchema(t.getSchemaName(), t.getVirtualHost())
+					.onItemOrFailure()
+					.transformToUni((ignore, err) -> {
+						if (err != null) {
+							return Uni.createFrom().failure(new WebApplicationException(err));
+						}
+						else {
+							return Uni.createFrom().item(
+								new CreateTablesResponse(
+									"Tables for schema " + t.getSchemaName() + " created"));
+						}
+					});
+			}
+		});
 	}
 
 	@POST
@@ -124,5 +156,8 @@ public class TenantManagerResource {
 
 	@RegisterForReflection
 	record DeleteTenantResponse(String message) { }
+
+	@RegisterForReflection
+	record CreateTablesResponse(String message) { }
 
 }

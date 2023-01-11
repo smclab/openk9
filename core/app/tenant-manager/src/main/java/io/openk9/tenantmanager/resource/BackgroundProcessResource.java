@@ -4,6 +4,7 @@ import io.openk9.tenantmanager.model.BackgroundProcess;
 import io.openk9.tenantmanager.service.BackgroundProcessService;
 import io.smallrye.mutiny.Uni;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -13,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/tenant-manager/background-process")
+@RolesAllowed("admin")
 public class BackgroundProcessResource {
 
 	@GET
