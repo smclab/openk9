@@ -90,7 +90,7 @@ public class TenantBehavior extends AbstractBehavior<TenantMessage> {
 
 			VertxUtil.runOnContext(
 				() -> tenantService
-					.addTenant(tenant)
+					.persist(tenant)
 					.onItemOrFailure()
 					.transformToUni((e, t) -> {
 

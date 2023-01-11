@@ -23,7 +23,7 @@ public class TenantService extends GraphQLService<Tenant> {
 			(s) -> s.get(Tenant.class, id));
 	}
 
-	public Uni<Tenant> addTenant(Tenant tenant) {
+	public Uni<Tenant> persist(Tenant tenant) {
 		return sf.withTransaction(
 			session -> session
 				.persist(tenant)
