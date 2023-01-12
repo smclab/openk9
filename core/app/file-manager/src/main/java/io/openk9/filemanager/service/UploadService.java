@@ -77,14 +77,18 @@ public class UploadService {
 
 			logger.info("Upload done");
 
-			FileResourceRequest fileResourceRequest = filemanager.findFileResourceByResourceId(
-				FileResourceRequest.newBuilder()
-					.setDatasourceId(datasourceId)
-					.setFileId(fileId).setResourceId("test").build());
+			FileResourceRequest fileResourceRequest = FileResourceRequest.newBuilder()
+				.setDatasourceId(datasourceId)
+				.setFileId(fileId).setResourceId("test").build();
+
+			logger.info(fileResourceRequest.toString());
+
+			FileResourceRequest fileResourceRequest_ =
+				filemanager.findFileResourceByResourceId(fileResourceRequest);
 
 			String resourceId;
 
-			if (fileResourceRequest == null) {
+			if (fileResourceRequest_ == null) {
 
 				logger.info("Resource not exist. Creating in database.");
 
