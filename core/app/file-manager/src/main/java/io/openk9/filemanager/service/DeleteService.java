@@ -20,7 +20,10 @@ package io.openk9.filemanager.service;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
 import io.minio.errors.MinioException;
+import io.openk9.filemanager.grpc.FileManagerGrpc;
+import io.openk9.filemanager.grpc.FileResourceRequest;
 import io.openk9.filemanager.model.Resource;
+import io.quarkus.grpc.GrpcClient;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -34,15 +37,15 @@ public class DeleteService {
 	@Inject
 	MinioClient minioClient;
 
-	@Inject
-	ResourceService resourceService;
-
 
 	public void deleteObject(String resourceId) {
 
-		Resource resource = resourceService.findByResourceId(resourceId);
-		String datasourceId = resource.getDatasourceId();
-		String fileId = resource.getFileId();
+		FileResourceRequest fileResourceRequest = filemanager.findFileResourceByResourceId(
+			FileResourceRequest.newBuilder()
+				.setResourceId(resourceId).build());
+
+		String datasourceId = fileResourceRequest.getDatasourceId();
+		String fileId = fileResourceRequest.getFileId();
 
 		String bucketName = "datasource" + datasourceId;
 
@@ -57,5 +60,8 @@ public class DeleteService {
 			e.printStackTrace();
 		}
 	}
+
+	@GrpcClient("filemanager")
+	FileManagerGrpc.FileManagerBlockingStub filemanager;
 
 }

@@ -19,7 +19,10 @@ package io.openk9.filemanager.service;
 
 import io.minio.*;
 import io.minio.errors.MinioException;
+import io.openk9.filemanager.grpc.FileManagerGrpc;
+import io.openk9.filemanager.grpc.FileResourceRequest;
 import io.openk9.filemanager.model.Resource;
+import io.quarkus.grpc.GrpcClient;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -34,20 +37,19 @@ public class DownloadService {
 	@Inject
 	MinioClient minioClient;
 
-	@Inject
-	ResourceService resourceService;
-
 
 	public InputStream downloadObject(String resourceId) {
 
 		try {
 
-			Resource resource = resourceService.findByResourceId(resourceId);
+			FileResourceRequest fileResourceRequest = filemanager.findFileResourceByResourceId(
+				FileResourceRequest.newBuilder()
+					.setResourceId(resourceId).build());
 
-			if (resource != null) {
+			if (fileResourceRequest != null) {
 
-				String datasourceId = resource.getDatasourceId();
-				String fileId = resource.getFileId();
+				String datasourceId = fileResourceRequest.getDatasourceId();
+				String fileId = fileResourceRequest.getFileId();
 
 				String bucketName = "datasource" + datasourceId;
 
@@ -64,6 +66,9 @@ public class DownloadService {
 				return InputStream.nullInputStream();
 		}
 	}
+
+	@GrpcClient("filemanager")
+	FileManagerGrpc.FileManagerBlockingStub filemanager;
 
 
 	/*public boolean isObjectExist(String bucketName, String objectName) {

@@ -22,6 +22,7 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.MinioException;
+import io.openk9.filemanager.grpc.FileManagerGrpc;
 import io.openk9.filemanager.grpc.FileManager;
 import io.openk9.filemanager.grpc.FileResourceRequest;
 import io.quarkus.grpc.GrpcClient;
@@ -46,11 +47,8 @@ public class UploadService {
 	@Inject
 	MinioClient minioClient;
 
-	@Inject
-	ResourceService resourceService;
 
-
-	public Uni<String> uploadObject(InputStream inputStream, String datasourceId, String fileId) {
+	public String uploadObject(InputStream inputStream, String datasourceId, String fileId) {
 
 		try {
 			String bucketName = "datasource" + datasourceId;
@@ -79,51 +77,47 @@ public class UploadService {
 
 			logger.info("Upload done");
 
-			filemanager.findFileResourceByResourceId(
+			FileResourceRequest fileResourceRequest = filemanager.findFileResourceByResourceId(
 				FileResourceRequest.newBuilder()
 					.setDatasourceId(datasourceId)
-					.setFileId(fileId).build()).flatMap(
-						fileResourceRequest -> {
+					.setFileId(fileId).build());
 
-							String resourceId;
+			String resourceId;
 
-							if (fileResourceRequest == null) {
+			if (fileResourceRequest == null) {
 
-								logger.info("Resource not exist. Creating in database.");
+				logger.info("Resource not exist. Creating in database.");
 
-								resourceId = UUID.randomUUID().toString();
+				resourceId = UUID.randomUUID().toString();
 
-								FileResourceRequest fileResourceRequest1 = FileResourceRequest.newBuilder()
-									.setDatasourceId(datasourceId)
-									.setFileId(fileId).setResourceId(resourceId).build();
+				FileResourceRequest fileResourceRequest1 = FileResourceRequest.newBuilder()
+					.setDatasourceId(datasourceId)
+					.setFileId(fileId).setResourceId(resourceId).build();
 
-								filemanager.createFileResource(fileResourceRequest1);
+				filemanager.createFileResource(fileResourceRequest1);
 
-							}
-							else {
+			}
+			else {
 
-								logger.info("Resource already exist. Skip persist.");
+				logger.info("Resource already exist. Skip persist.");
 
-								resourceId = fileResourceRequest.getResourceId();
-							}
+				resourceId = fileResourceRequest.getResourceId();
+			}
 
-							return null;
-						}
-			);
+			return null;
 
 
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
 			return null;
 		}
 
-		return null;
 	}
 
 	@Inject
 	Logger logger;
 
 	@GrpcClient("filemanager")
-	FileManager filemanager;
+	FileManagerGrpc.FileManagerBlockingStub filemanager;
 
 
 }
