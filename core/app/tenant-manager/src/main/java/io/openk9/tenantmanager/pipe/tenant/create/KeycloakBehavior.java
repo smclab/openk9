@@ -224,7 +224,7 @@ public class KeycloakBehavior extends AbstractBehavior<KeycloakMessage> {
 		clientRepresentation.setProtocol("openid-connect");
 		clientRepresentation.setClientAuthenticatorType("client-secret");
 		clientRepresentation.setDefaultClientScopes(
-			List.of("profile", "email"));
+			List.of("profile", "email", "roles"));
 
 		clientRepresentation.setAttributes(
 			Map.of(
