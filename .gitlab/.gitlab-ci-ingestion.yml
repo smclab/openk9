@@ -20,7 +20,7 @@ Build Latest Ingestion Docker Images:
     - schedules
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl app/ingestion -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=298-kubernetes-log-service
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/ingestion -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=324-fix-resource-entity-file-manager
   cache:
     key: ingestion
     paths:
