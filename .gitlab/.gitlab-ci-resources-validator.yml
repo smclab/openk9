@@ -1,5 +1,5 @@
 Build Latest Resources Validator Docker Images:
-  image: smclab/docker-java-11:latest
+  image: eclipse-temurin:17-jdk
   services:
     - docker:19.03.13-dind
   stage: build-docker
