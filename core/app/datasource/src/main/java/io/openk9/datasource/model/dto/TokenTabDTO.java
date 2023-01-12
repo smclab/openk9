@@ -1,6 +1,7 @@
 package io.openk9.datasource.model.dto;
 
 
+import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -19,8 +20,7 @@ import javax.validation.constraints.NotNull;
 public class TokenTabDTO extends K9EntityDTO {
 
 	@NotNull
-	@NotEmpty
-	private String tokenType;
+	private TokenTab.TokenType tokenType;
 
 	@NotNull
 	@NotEmpty

@@ -10,6 +10,8 @@ import lombok.ToString;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -38,8 +40,9 @@ public class TokenTab extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
+	@Enumerated(EnumType.STRING)
 	@Column(name = "token_type", nullable = false)
-	private String tokenType;
+	private TokenType tokenType;
 
 	@Column(name = "value")
 	private String value;
@@ -60,4 +63,8 @@ public class TokenTab extends K9Entity {
 	@JsonIgnore
 	@ToString.Exclude
 	private DocTypeField docTypeField;
+
+	public enum TokenType {
+		DATE, DOCTYPE, TEXT, ENTITY, AUTOCOMPLETE
+	}
 }
