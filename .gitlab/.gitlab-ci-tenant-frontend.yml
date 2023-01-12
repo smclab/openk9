@@ -52,7 +52,7 @@ Build Tagged Tenant Ui Docker Image:
 trigger_deploy_tenant_frontend:
   image: curlimages/curl
   stage: deploy
-  needs: ['Build Latest Admin Ui Docker Image']
+  needs: ['Build Latest Tenant Ui Docker Image']
   only:
     refs:
       - main
