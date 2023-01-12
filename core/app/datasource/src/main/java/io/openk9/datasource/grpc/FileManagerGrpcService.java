@@ -32,7 +32,6 @@ public class FileManagerGrpcService implements FileManager {
 	}
 
 	@Override
-	@ActivateRequestContext
 	public Uni<FileResourceRequest> findFileResourceByResourceId(
 		FileResourceRequest request) {
 
