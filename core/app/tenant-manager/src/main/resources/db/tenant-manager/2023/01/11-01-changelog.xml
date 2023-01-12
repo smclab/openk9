@@ -8,15 +8,18 @@
 
 	<changeSet id="1673450209846-1" author="openk9">
 		<addColumn tableName="tenant">
-			<column name="liquibase_schema_name" type="VARCHAR(255)">
-				<constraints nullable="false" />
-			</column>
+			<column name="liquibase_schema_name" type="VARCHAR(255)" />
 		</addColumn>
 		<sql>
 			UPDATE tenant
 			SET liquibase_schema_name = CONCAT(schema_name, '_liquibase')
 			WHERE liquibase_schema_name IS NULL;
 		</sql>
+		<update tableName="tenant">
+			<column name="liquibase_schema_name">
+				<constraints nullable="false" />
+			</column>
+		</update>
 	</changeSet>
 	
 </databaseChangeLog>
