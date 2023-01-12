@@ -2,7 +2,7 @@ import ClayIcon from "@clayui/icon";
 import { Route, Routes } from "react-router-dom";
 import ClayButton from "@clayui/button";
 import { getUserProfile, keycloak, useAuthentication } from "./authentication";
-import { DropDown } from "@clayui/core";
+import DropDown from "@clayui/drop-down";
 import React from "react";
 
 export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMenuOpen: boolean; onSideMenuToggle(isOpen: boolean): void }) {
@@ -101,14 +101,6 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
                 </ClayButton>
               )}
               {isAuthenticated && (
-                // <ClayButtonWithIcon
-                //   aria-label=""
-                //   symbol="logout"
-                //   displayType="danger"
-                //   onClick={() => {
-                //     keycloak.logout();
-                //   }}
-                // />
                 <DropDown
                   trigger={
                     <button className="btn btn-unstyled nav-btn nav-btn-monospaced">
