@@ -5,6 +5,7 @@ import { formatDate, formatName, Table } from "./Table";
 import { useReindexMutation, useTriggerSchedulerMutation } from "./DataSource";
 import { useToast } from "./ToastProvider";
 import { ClayToggle } from "@clayui/form";
+import { StyleToggle } from "./Form";
 
 export const DataSourcesQuery = gql`
   query DataSources($searchText: String, $cursor: String) {
@@ -69,15 +70,18 @@ export function DataSources() {
         {
           header: "Schedulable",
           content: (dataSource) => (
-            <ClayToggle
-              toggled={dataSource?.schedulable ?? false}
-              onToggle={(schedulable) => {
-                if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
-                  updateDataSourceMutate({
-                    variables: { id: dataSource.id, schedulable, name: dataSource.name, scheduling: dataSource.scheduling },
-                  });
-              }}
-            />
+            <React.Fragment>
+              <ClayToggle
+                toggled={dataSource?.schedulable ?? false}
+                onToggle={(schedulable) => {
+                  if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
+                    updateDataSourceMutate({
+                      variables: { id: dataSource.id, schedulable, name: dataSource.name, scheduling: dataSource.scheduling },
+                    });
+                }}
+              />
+              <style type="text/css">{StyleToggle}</style>
+            </React.Fragment>
           ),
         },
         { header: "Last Ingestion Date", content: (dataSource) => formatDate(dataSource?.lastIngestionDate) },

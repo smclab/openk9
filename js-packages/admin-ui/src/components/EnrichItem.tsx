@@ -80,7 +80,6 @@ export function EnrichItem() {
           navigate(`/enrich-items/`, { replace: true });
           showToast({ displayType: "success", title: "Enrich items created", content: data.enrichItem.entity.name ?? "" });
         } else {
-          navigate(`/enrich-items/`, { replace: true });
           showToast({ displayType: "info", title: "Enrich items updated", content: data.enrichItem.entity.name ?? "" });
         }
       }

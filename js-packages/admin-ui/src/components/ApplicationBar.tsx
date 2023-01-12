@@ -1,10 +1,16 @@
 import ClayIcon from "@clayui/icon";
 import { Route, Routes } from "react-router-dom";
-import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
-import { keycloak, useAuthentication } from "./authentication";
+import ClayButton from "@clayui/button";
+import { getUserProfile, keycloak, useAuthentication } from "./authentication";
+import { DropDown } from "@clayui/core";
+import React from "react";
 
 export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMenuOpen: boolean; onSideMenuToggle(isOpen: boolean): void }) {
   const { isAuthenticated } = useAuthentication();
+  const [name, setName] = React.useState("");
+  getUserProfile().then((data) => {
+    setName(JSON.parse(JSON.stringify(data))?.name);
+  });
   return (
     <div
       className="control-menu-container"
@@ -95,14 +101,42 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
                 </ClayButton>
               )}
               {isAuthenticated && (
-                <ClayButtonWithIcon
-                  aria-label=""
-                  symbol="logout"
-                  displayType="danger"
-                  onClick={() => {
-                    keycloak.logout();
-                  }}
-                />
+                // <ClayButtonWithIcon
+                //   aria-label=""
+                //   symbol="logout"
+                //   displayType="danger"
+                //   onClick={() => {
+                //     keycloak.logout();
+                //   }}
+                // />
+                <DropDown
+                  trigger={
+                    <button className="btn btn-unstyled nav-btn nav-btn-monospaced">
+                      <ClayIcon symbol={"user"} style={{ color: "white" }} fontSize="25px" />
+                    </button>
+                  }
+                >
+                  <DropDown.ItemList>
+                    <DropDown.Item>
+                      <div style={{ display: "inline-block", width: "100%" }} onClick={() => {}}>
+                        <ClayIcon symbol={"user"} style={{ color: "black" }} />
+                        <span style={{ marginLeft: "10px" }}> {name}</span>
+                      </div>
+                    </DropDown.Item>
+                    <DropDown.Divider />
+                    <DropDown.Item>
+                      <div
+                        style={{ display: "inline-block", width: "100%" }}
+                        onClick={() => {
+                          keycloak.logout();
+                        }}
+                      >
+                        <ClayIcon symbol={"sign-in"} style={{ color: "black" }} />
+                        <span style={{ marginLeft: "10px" }}> Logout</span>
+                      </div>
+                    </DropDown.Item>
+                  </DropDown.ItemList>
+                </DropDown>
               )}
             </li>
           </ul>

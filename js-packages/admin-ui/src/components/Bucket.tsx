@@ -78,7 +78,6 @@ export function Bucket() {
           navigate(`/buckets/`, { replace: true });
           showToast({ displayType: "success", title: "Bucket created", content: data.bucket.entity.name ?? "" });
         } else {
-          navigate(`/buckets/`, { replace: true });
           showToast({ displayType: "info", title: "Bucket updated", content: data.bucket.entity.name ?? "" });
         }
       }

@@ -12,12 +12,18 @@ import ClayEmptyState from "@clayui/empty-state";
 import { ClayCheckbox } from "@clayui/form";
 import useMap from "./useMap";
 import { ClayToggle } from "@clayui/form";
-import { MainTitle } from "./Form";
+import { MainTitle, StyleToggle } from "./Form";
 import { ClassNameButton } from "../App";
 import ClayIcon from "@clayui/icon";
 
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
-  return value?.id && <Link to={value.id}>{value.name}</Link>;
+  return (
+    value?.id && (
+      <Link style={{ color: "#da1414", textDecoration: "none" }} to={value.id}>
+        {value.name}
+      </Link>
+    )
+  );
 }
 
 export function formatBoolean(value: boolean | undefined) {
@@ -132,6 +138,7 @@ export function TableWithSubFields<
             {isItemsSelectable && (
               <React.Fragment>
                 <ClayToolbar.Item>
+                  <style type="text/css">{StyleToggle}</style>
                   <ClayToggle
                     label={"Show selected (" + selection.size + ")"}
                     toggled={showSelectedItemsTable}
@@ -366,6 +373,7 @@ export function Table<
             {isItemsSelectable && (
               <React.Fragment>
                 <ClayToolbar.Item>
+                  <style type="text/css">{StyleToggle}</style>
                   <ClayToggle
                     label={"Show selected (" + selection.size + ")"}
                     toggled={showSelectedItemsTable}

@@ -338,6 +338,7 @@ export function EnumSelectSimple<E extends Record<string, any>>({
 export function BooleanInput({ id, label, value, onChange, disabled, validationMessages }: BaseInputProps<boolean>) {
   return (
     <div className={`form-group ${validationMessages.length ? "has-warning" : ""}`}>
+      <style type="text/css">{StyleToggle}</style>
       <ClayToggle id={id} label={label} toggled={value} onToggle={onChange} disabled={disabled} />
       <div className="form-feedback-group">
         {validationMessages.map((validationMessage, index) => {
@@ -766,11 +767,13 @@ export function AssociatedEntitiesWithSelect<Q>({
   list: { useListQuery, field },
   useAddMutation,
   useRemoveMutation,
+  remove,
   notSelect,
 }: {
   label: string;
   parentId: string;
   notSelect: any;
+  remove: any;
   list: {
     useListQuery: QueryHook<Q, { parentId: string; searchText?: string | null; cursor?: string | null }>;
     field(data: Q | undefined): any;
@@ -869,7 +872,9 @@ export function AssociatedEntitiesWithSelect<Q>({
                     disabled={false}
                     id={""}
                     label=""
-                    onChange={() => {}}
+                    onChange={(value) => {
+                      remove(row?.docTypeField?.id, value);
+                    }}
                     value={row?.userField ?? userField}
                     dimension={130}
                     validationMessages={[]}
@@ -1186,6 +1191,7 @@ export function InputBooleanSimple({
 }) {
   return (
     <div className="form-group" style={{ paddingTop: "18px" }} key={keyofF}>
+      <style type="text/css">{StyleToggle}</style>
       <ClayToggle label={keyofF} id={keyofF} toggled={value} onToggle={onChange} />
       {InformationField(description)}
     </div>
@@ -1383,3 +1389,20 @@ export function CreateDinamicallyFieldWithout({
     </React.Fragment>
   );
 }
+
+export const StyleToggle = `
+  .toggle-switch-check:checked ~ .toggle-switch-bar::before {
+    background-color: #da1414;
+    border-color: white;
+  }
+  .toggle-switch-check ~ .toggle-switch-bar::before {
+    background-color: white;
+    border-color: #da1414;
+  }
+  .toggle-switch-check:checked ~ .toggle-switch-bar::after {
+    background-color: white;
+  }
+  .toggle-switch-check ~ .toggle-switch-bar::after {
+    background-color: #da1414;
+  }
+`;

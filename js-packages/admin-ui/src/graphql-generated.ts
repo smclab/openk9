@@ -1940,7 +1940,6 @@ export enum PluginDriverType {
 /** Query root */
 export type Query = {
   __typename?: 'Query';
-  _service: _Service;
   analyzer?: Maybe<Analyzer>;
   analyzers?: Maybe<Connection_Analyzer>;
   annotator?: Maybe<Annotator>;
@@ -3038,11 +3037,6 @@ export enum UserField {
   Username = 'USERNAME'
 }
 
-export type _Service = {
-  __typename?: '_Service';
-  sdl: Scalars['String'];
-};
-
 export type AnalyzerQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -3903,6 +3897,15 @@ export type RemoveDocumentTypeFieldFromPluginDriversMutationVariables = Exact<{
 
 
 export type RemoveDocumentTypeFieldFromPluginDriversMutation = { __typename?: 'Mutation', removeDocTypeFieldFromPluginDriver?: { __typename?: 'Tuple2_PluginDriver_DocTypeField', left?: { __typename?: 'PluginDriver', id?: string | null } | null, right?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+
+export type ChangeUserfieldMutationVariables = Exact<{
+  docTypeFieldId: Scalars['ID'];
+  pluginDriverId: Scalars['ID'];
+  userField?: InputMaybe<UserField>;
+}>;
+
+
+export type ChangeUserfieldMutation = { __typename?: 'Mutation', userField?: { __typename?: 'AclMapping', userField?: UserField | null } | null };
 
 export type PluginDriversQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -8872,6 +8875,45 @@ export function useRemoveDocumentTypeFieldFromPluginDriversMutation(baseOptions?
 export type RemoveDocumentTypeFieldFromPluginDriversMutationHookResult = ReturnType<typeof useRemoveDocumentTypeFieldFromPluginDriversMutation>;
 export type RemoveDocumentTypeFieldFromPluginDriversMutationResult = Apollo.MutationResult<RemoveDocumentTypeFieldFromPluginDriversMutation>;
 export type RemoveDocumentTypeFieldFromPluginDriversMutationOptions = Apollo.BaseMutationOptions<RemoveDocumentTypeFieldFromPluginDriversMutation, RemoveDocumentTypeFieldFromPluginDriversMutationVariables>;
+export const ChangeUserfieldDocument = gql`
+    mutation ChangeUserfield($docTypeFieldId: ID!, $pluginDriverId: ID!, $userField: UserField) {
+  userField(
+    docTypeFieldId: $docTypeFieldId
+    pluginDriverId: $pluginDriverId
+    userField: $userField
+  ) {
+    userField
+  }
+}
+    `;
+export type ChangeUserfieldMutationFn = Apollo.MutationFunction<ChangeUserfieldMutation, ChangeUserfieldMutationVariables>;
+
+/**
+ * __useChangeUserfieldMutation__
+ *
+ * To run a mutation, you first call `useChangeUserfieldMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useChangeUserfieldMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [changeUserfieldMutation, { data, loading, error }] = useChangeUserfieldMutation({
+ *   variables: {
+ *      docTypeFieldId: // value for 'docTypeFieldId'
+ *      pluginDriverId: // value for 'pluginDriverId'
+ *      userField: // value for 'userField'
+ *   },
+ * });
+ */
+export function useChangeUserfieldMutation(baseOptions?: Apollo.MutationHookOptions<ChangeUserfieldMutation, ChangeUserfieldMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ChangeUserfieldMutation, ChangeUserfieldMutationVariables>(ChangeUserfieldDocument, options);
+      }
+export type ChangeUserfieldMutationHookResult = ReturnType<typeof useChangeUserfieldMutation>;
+export type ChangeUserfieldMutationResult = Apollo.MutationResult<ChangeUserfieldMutation>;
+export type ChangeUserfieldMutationOptions = Apollo.BaseMutationOptions<ChangeUserfieldMutation, ChangeUserfieldMutationVariables>;
 export const PluginDriversDocument = gql`
     query PluginDrivers($searchText: String, $cursor: String) {
   pluginDrivers(searchText: $searchText, first: 25, after: $cursor) {

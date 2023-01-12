@@ -44,6 +44,7 @@ export function HuggingFace() {
                   {"no"}
                 </Button>
                 <Button
+                  className={ClassNameButton}
                   displayType="primary"
                   onClick={() => {
                     const json = JSON.parse(JSON.stringify(" name: " + name + " task: " + task + " library: " + library));
@@ -53,7 +54,7 @@ export function HuggingFace() {
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ pipelineName: task, modelName: name, tokenizerName: "string", library: library }),
                     };
-                    fetch("k8s/deploy-ml-model", requestOptions)
+                    fetch("/k8s/deploy-ml-model", requestOptions)
                       .then((response) => response.json())
                       .then((data) => {
                         if (data?.status === "DANGER") {

@@ -4,6 +4,7 @@ import { useCreateOrUpdateTabTokenMutation, useDeleteTabTokenTabMutation, useTab
 import { formatName, Table } from "./Table";
 import { useParams } from "react-router-dom";
 import { ClayToggle } from "@clayui/form";
+import { StyleToggle } from "./Form";
 
 export const TabTokens = gql`
   query TabTokens($tabId: ID!, $searchText: String, $cursor: String) {
@@ -64,23 +65,27 @@ export function TabTokenTabs() {
         {
           header: "Filter",
           content: (tabToken) => (
-            <ClayToggle
-              toggled={tabToken?.filter ?? false}
-              onToggle={(filter) => {
-                if (tabToken && tabToken.id && tabToken.name && tabToken.tokenType && tabToken.value) {
-                  updateTabTokenMutate({
-                    variables: {
-                      tabId,
-                      tabTokenId: tabToken.id,
-                      filter,
-                      name: tabToken.name,
-                      tokenType: tabToken.tokenType,
-                      value: tabToken.value,
-                    },
-                  });
-                }
-              }}
-            />
+            <React.Fragment>
+              {" "}
+              <ClayToggle
+                toggled={tabToken?.filter ?? false}
+                onToggle={(filter) => {
+                  if (tabToken && tabToken.id && tabToken.name && tabToken.tokenType && tabToken.value) {
+                    updateTabTokenMutate({
+                      variables: {
+                        tabId,
+                        tabTokenId: tabToken.id,
+                        filter,
+                        name: tabToken.name,
+                        tokenType: tabToken.tokenType,
+                        value: tabToken.value,
+                      },
+                    });
+                  }
+                }}
+              />{" "}
+              <style type="text/css">{StyleToggle}</style>
+            </React.Fragment>
           ),
         },
       ]}

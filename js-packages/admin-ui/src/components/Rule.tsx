@@ -54,7 +54,6 @@ export function Rule() {
           navigate(`/rules/`, { replace: true });
           showToast({ displayType: "success", title: "Rule created", content: data.rule.entity.name ?? "" });
         } else {
-          navigate(`/rules/`, { replace: true });
           showToast({ displayType: "info", title: "Rule updated", content: data.rule.entity.name ?? "" });
         }
       }

@@ -3,7 +3,7 @@ import ClayForm, { ClaySelect, ClayToggle } from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery } from "../graphql-generated";
-import { fromFieldValidators, InformationField, KeyValue, TextArea, TextInput, useForm } from "./Form";
+import { fromFieldValidators, InformationField, KeyValue, StyleToggle, TextArea, TextInput, useForm } from "./Form";
 import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
 import { ClayButtonWithIcon } from "@clayui/button";
@@ -252,6 +252,7 @@ export function QueryParserConfig() {
                 if (typeof templateChoice?.[keysOfFields[i]] == "boolean") {
                   fields.push(
                     <div className="form-group" style={{ paddingTop: "18px" }} key={keysOfFields[i]}>
+                      <style type="text/css">{StyleToggle}</style>
                       <ClayToggle
                         label={keysOfFields[i]}
                         id={keysOfFields[i] + i}

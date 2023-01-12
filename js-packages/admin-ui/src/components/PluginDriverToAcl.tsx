@@ -2,6 +2,7 @@ import { gql } from "@apollo/client";
 import { useParams } from "react-router-dom";
 import {
   useAddDocumentTypeFieldToPluginDriversMutation,
+  useChangeUserfieldMutation,
   useDocumentTypeFieldsForPluginQuery,
   usePluginDriverToDocumentTypeFieldsQuery,
   useRemoveDocumentTypeFieldFromPluginDriversMutation,
@@ -39,7 +40,7 @@ gql`
   }
 `;
 
-gql`
+const documentTypeFieldsFortPlugin = gql`
   query DocumentTypeFieldsForPlugin($searchText: String) {
     docTypeFields(searchText: $searchText) {
       edges {
@@ -79,13 +80,19 @@ gql`
   }
 `;
 
-// gql`
-//   mutation ChangeUserfield() {
-//   }
-// `;
+gql`
+  mutation ChangeUserfield($docTypeFieldId: ID!, $pluginDriverId: ID!, $userField: UserField) {
+    userField(docTypeFieldId: $docTypeFieldId, pluginDriverId: $pluginDriverId, userField: $userField) {
+      userField
+    }
+  }
+`;
 
 export function PluginDriverToAcl() {
   const { pluginDriverId } = useParams();
+  const [ChangeUserfield] = useChangeUserfieldMutation({
+    refetchQueries: [{ query: documentTypeFieldsFortPlugin }],
+  });
   if (!pluginDriverId) return null;
 
   return (
@@ -96,6 +103,11 @@ export function PluginDriverToAcl() {
         list={{
           useListQuery: usePluginDriverToDocumentTypeFieldsQuery,
           field: (data) => data?.pluginDriver?.docTypeFields,
+        }}
+        remove={(id: string, userfield: any) => {
+          if (id && userfield) {
+            ChangeUserfield({ variables: { pluginDriverId: pluginDriverId, docTypeFieldId: id, userField: userfield } });
+          }
         }}
         notSelect={useDocumentTypeFieldsForPluginQuery}
         useAddMutation={useAddDocumentTypeFieldToPluginDriversMutation}

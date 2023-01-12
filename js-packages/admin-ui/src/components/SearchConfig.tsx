@@ -53,7 +53,6 @@ export function SearchConfig() {
           navigate(`/search-configs/`, { replace: true });
           showToast({ displayType: "success", title: "Search Config created", content: "" });
         } else {
-          navigate(`/search-configs/`, { replace: true });
           showToast({ displayType: "info", title: "Search Config updated", content: "" });
         }
       }

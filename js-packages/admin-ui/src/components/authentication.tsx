@@ -21,6 +21,10 @@ export function AuthenticationProvider({ children }: { children: React.ReactNode
   }, []);
   return <AuthenticationContext.Provider value={value}>{children}</AuthenticationContext.Provider>;
 }
+export async function getUserProfile() {
+  return await keycloak.loadUserInfo();
+}
+
 export function useAuthentication() {
   return React.useContext(AuthenticationContext);
 }

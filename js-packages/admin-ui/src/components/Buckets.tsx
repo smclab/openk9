@@ -4,6 +4,7 @@ import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
 import { useBucketsQuery, useDeleteBucketMutation, useEnableBucketMutation } from "../graphql-generated";
 import { ClayToggle } from "@clayui/form";
+import { StyleToggle } from "./Form";
 
 export const BucketsQuery = gql`
   query Buckets($searchText: String, $cursor: String) {
@@ -67,15 +68,18 @@ export function Buckets() {
         {
           header: "Enabled",
           content: (buckets) => (
-            <ClayToggle
-              toggled={buckets?.enabled ?? false}
-              onToggle={(enabled) => {
-                if (buckets && buckets.id && buckets.name && !buckets.enabled)
-                  updateBucketsMutate({
-                    variables: { id: buckets.id },
-                  });
-              }}
-            />
+            <React.Fragment>
+              <ClayToggle
+                toggled={buckets?.enabled ?? false}
+                onToggle={(enabled) => {
+                  if (buckets && buckets.id && buckets.name && !buckets.enabled)
+                    updateBucketsMutate({
+                      variables: { id: buckets.id },
+                    });
+                }}
+              />
+              <style type="text/css">{StyleToggle}</style>
+            </React.Fragment>
           ),
         },
       ]}

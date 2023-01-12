@@ -51,7 +51,6 @@ export function EnrichPipeline() {
           navigate(`/enrich-pipelines/`, { replace: true });
           showToast({ displayType: "success", title: "Enrich pipelines created", content: data.enrichPipeline.entity.name ?? "" });
         } else {
-          navigate(`/enrich-pipelines/`, { replace: true });
           showToast({ displayType: "info", title: "Enrich pipelines updated", content: data.enrichPipeline.entity.name ?? "" });
         }
       }

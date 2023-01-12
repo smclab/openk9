@@ -15,6 +15,7 @@ import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTi
 import { DocumentTypesQuery } from "./DocumentTypes";
 import ClayLayout from "@clayui/layout";
 import { ClassNameButton } from "../App";
+import { useToast } from "./ToastProvider";
 
 const DocumentTypeQuery = gql`
   query DocumentType($id: ID!) {
@@ -50,12 +51,15 @@ export function DocumentType() {
     variables: { id: documentTypeId as string },
     skip: !documentTypeId || documentTypeId === "new",
   });
+  const showToast = useToast();
   const [createOrUpdateDocumentTypeMutate, createOrUpdateDocumentTypeMutation] = useCreateOrUpdateDocumentTypeMutation({
     refetchQueries: [DocumentTypeQuery, DocumentTypesQuery],
     onCompleted(data) {
       if (data.docType?.entity) {
-        if (documentTypeId === "new") navigate(`/document-types/`, { replace: true });
-        else navigate(`/document-types/${data.docType?.entity?.id}`, { replace: true });
+        if (documentTypeId === "new") {
+          navigate(`/document-types/`, { replace: true });
+          showToast({ displayType: "success", title: "Document Type Create", content: "" });
+        } else showToast({ displayType: "info", title: "Document Type Update", content: "" });
       }
     },
   });

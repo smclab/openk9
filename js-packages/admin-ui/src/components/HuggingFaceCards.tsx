@@ -23,6 +23,7 @@ import { AudioClassification } from "../wizards/Logo/AudioClassification";
 import ClayModal from "@clayui/modal";
 import ClayButtonGroup from "@clayui/button/lib/Group";
 import { ClassNameButton } from "../App";
+import { useToast } from "./ToastProvider";
 
 export function HuggingFaceCard() {
   const status = usePodsStatus();
@@ -30,6 +31,7 @@ export function HuggingFaceCard() {
   const data = React.useMemo(() => Object.values(status).sort((a, b) => a.name.localeCompare(b.name)), [status]);
   const [name, setName] = React.useState("");
   const navigate = useNavigate();
+  const showToast = useToast();
   return (
     <React.Fragment>
       {open && (
@@ -53,8 +55,18 @@ export function HuggingFaceCard() {
                   displayType="primary"
                   className={ClassNameButton}
                   onClick={() => {
-                    const ciao = fetch(`/k8s/delete-ml-model/${name}`, { method: "DELETE" }).then(() => {});
-                    console.log(ciao + "tt");
+                    fetch(`/k8s/delete-ml-model/${name}`, { method: "DELETE" })
+                      .then((response) => {
+                        if (response.ok) {
+                          showToast({ displayType: "success", title: "delete done", content: "" });
+                        } else {
+                          showToast({ displayType: "danger", title: "Error", content: "" });
+                        }
+                      })
+                      .then((responseJson) => {})
+                      .catch((error) => {
+                        console.log(error);
+                      });
                     onOpenChange(false);
                   }}
                 >

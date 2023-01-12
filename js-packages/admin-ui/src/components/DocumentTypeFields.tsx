@@ -9,6 +9,7 @@ import { formatName, TableWithSubFields } from "./Table";
 import { useParams } from "react-router-dom";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
 import { ClayToggle } from "@clayui/form";
+import { StyleToggle } from "./Form";
 
 gql`
   mutation DeleteDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID!) {
@@ -56,30 +57,33 @@ export function DocumentTypeFields() {
           {
             header: "Searchable",
             content: (documentTypeField) => (
-              <ClayToggle
-                toggled={documentTypeField?.searchable ?? false}
-                onToggle={(searchable) => {
-                  if (
-                    documentTypeField &&
-                    documentTypeField.id &&
-                    documentTypeField.fieldType &&
-                    documentTypeField.name &&
-                    documentTypeField.fieldName
-                  ) {
-                    updateDocumentTypeFieldMutate({
-                      variables: {
-                        documentTypeFieldId: documentTypeField.id,
-                        documentTypeId: documentTypeId,
-                        searchable,
-                        fieldType: documentTypeField.fieldType,
-                        name: documentTypeField.name,
-                        description: documentTypeField.description,
-                        fieldName: documentTypeField.fieldName,
-                      },
-                    });
-                  }
-                }}
-              />
+              <React.Fragment>
+                <ClayToggle
+                  toggled={documentTypeField?.searchable ?? false}
+                  onToggle={(searchable) => {
+                    if (
+                      documentTypeField &&
+                      documentTypeField.id &&
+                      documentTypeField.fieldType &&
+                      documentTypeField.name &&
+                      documentTypeField.fieldName
+                    ) {
+                      updateDocumentTypeFieldMutate({
+                        variables: {
+                          documentTypeFieldId: documentTypeField.id,
+                          documentTypeId: documentTypeId,
+                          searchable,
+                          fieldType: documentTypeField.fieldType,
+                          name: documentTypeField.name,
+                          description: documentTypeField.description,
+                          fieldName: documentTypeField.fieldName,
+                        },
+                      });
+                    }
+                  }}
+                />
+                <style type="text/css">{StyleToggle}</style>
+              </React.Fragment>
             ),
           },
           {

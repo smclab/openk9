@@ -54,7 +54,6 @@ export function CharFilter() {
           navigate(`/char-filters/`, { replace: true });
           showToast({ displayType: "success", title: "Char filter created", content: data.charFilter.entity.name ?? "" });
         } else {
-          navigate(`/char-filters/`, { replace: true });
           showToast({ displayType: "info", title: "char filter updated", content: data.charFilter.entity.name ?? "" });
         }
       }

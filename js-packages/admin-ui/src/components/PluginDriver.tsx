@@ -10,7 +10,7 @@ import {
   usePluginDriverByNameQuery,
   usePluginDriverQuery,
 } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, KeyValue, InformationField } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, KeyValue, InformationField, StyleToggle } from "./Form";
 import { PluginDriversQuery } from "./PluginDrivers";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
@@ -205,6 +205,7 @@ export function PluginDriver() {
               if (typeof templateChoice?.[keysOfFields[i]] == "boolean") {
                 fields.push(
                   <div className="form-group" style={{ paddingTop: "18px" }} key={keysOfFields[i]}>
+                    <style type="text/css">{StyleToggle}</style>
                     <ClayToggle
                       label={keysOfFields[i]}
                       id={keysOfFields[i] + i}

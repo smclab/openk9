@@ -62,7 +62,6 @@ export function Tokenizer() {
           navigate(`/tokenizers/`, { replace: true });
           showToast({ displayType: "success", title: "Tokenizer created", content: data.tokenizer.entity.name ?? "" });
         } else {
-          navigate(`/tokenizers/`, { replace: true });
           showToast({ displayType: "info", title: "Tokenizer updated", content: data.tokenizer.entity.name ?? "" });
         }
       }

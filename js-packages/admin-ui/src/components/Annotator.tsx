@@ -78,7 +78,6 @@ export function Annotator() {
           navigate(`/annotators/`, { replace: true });
           showToast({ displayType: "success", title: "Annotator created", content: data.annotator.entity.name ?? "" });
         } else {
-          navigate(`/annotators/`, { replace: true });
           showToast({ displayType: "info", title: "Annotator updated", content: data.annotator.entity.name ?? "" });
         }
       }

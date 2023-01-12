@@ -19,6 +19,7 @@ import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
 import { CodeInput } from "./CodeInput";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
+import { useToast } from "./ToastProvider";
 
 const DocumentTypeFieldQuery = gql`
   query DocumentTypeField($id: ID!) {
@@ -116,12 +117,17 @@ export function DocumentTypeField() {
     variables: { id: documentTypeFieldId as string },
     skip: !documentTypeFieldId || documentTypeFieldId === "new",
   });
+  const showToast = useToast();
   const [createOrUpdateDocumentTypeFieldMutate, createOrUpdateDocumentTypeFieldMutation] = useCreateOrUpdateDocumentTypeFieldMutation({
     refetchQueries: [DocumentTypeFieldQuery, DocumentTypeFieldsQuery],
     onCompleted(data) {
       if (data.docTypeField?.entity) {
-        if (documentTypeFieldId === "new") navigate(`/document-types/${documentTypeId}/document-type-fields`, { replace: true });
-        else navigate(`/document-types/${documentTypeId}/document-type-fields/${data.docTypeField.entity.id}`, { replace: true });
+        if (documentTypeFieldId === "new") {
+          showToast({ displayType: "success", title: "Document Type Fields created", content: "" });
+          navigate(`/document-types/${documentTypeId}/document-type-fields`, { replace: true });
+        } else {
+          showToast({ displayType: "info", title: "Document Type Fields update", content: "" });
+        }
       }
     },
   });

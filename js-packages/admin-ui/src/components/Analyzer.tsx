@@ -76,7 +76,6 @@ export function Analyzer() {
           navigate(`/analyzers/`, { replace: true });
           showToast({ displayType: "success", title: "Analyzer created", content: data.analyzer.entity.name ?? "" });
         } else {
-          navigate(`/analyzers/`, { replace: true });
           showToast({ displayType: "info", title: "Analyzer updated", content: data.analyzer.entity.name ?? "" });
         }
       }
