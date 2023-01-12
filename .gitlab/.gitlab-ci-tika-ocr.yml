@@ -33,12 +33,7 @@ trigger_deploy_tika_ocr:
     refs:
       - main
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - quarkus/tika/tika-ocr/**/*
-      - quarkus/tika/tika-common/**/*
-      - .gitlab/.gitlab-ci-tika-ocr.yml
-      - quarkus/pom.xml
+      - core/app/tika/tika-ocr/ci.properties
   except:
     - schedules
   before_script:

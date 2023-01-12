@@ -35,11 +35,7 @@ trigger_deploy_entity_manager:
     refs:
       - main
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - quarkus/entity-manager/**/*
-      - .gitlab/.gitlab-ci-entity-manager.yml
-      - quarkus/pom.xml
+      - core/app/entity-manager/ci.properties
   except:
     - schedules
   before_script:

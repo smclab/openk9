@@ -33,11 +33,7 @@ trigger_deploy_ingestion:
     refs:
       - main
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - quarkus/ingestion/**/*
-      - .gitlab/.gitlab-ci-ingestion.yml
-      - quarkus/pom.xml
+      - core/app/ingestion/ci.properties
   except:
     - schedules
   before_script:

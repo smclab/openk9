@@ -33,12 +33,7 @@ trigger_deploy_tika_no_ocr:
     refs:
       - main
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - quarkus/tika/tika-no-ocr/**/*
-      - quarkus/tika/tika-common/**/*
-      - .gitlab/.gitlab-ci-tika-no-ocr.yml
-      - quarkus/pom.xml
+      - core/app/tika/tika-no-ocr/ci.properties
   except:
     - schedules
   before_script:

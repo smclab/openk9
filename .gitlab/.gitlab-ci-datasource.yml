@@ -13,6 +13,8 @@ Build Latest Datasource Docker Images:
     refs:
       - main
       - tags
+    changes:
+      - core/app/datasource/ci.properties
   except:
     - schedules
   script:
@@ -31,11 +33,7 @@ trigger_deploy_datasource:
     refs:
       - main
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - quarkus/datasource/**/*
-      - .gitlab/.gitlab-ci-datasource.yml
-      - quarkus/pom.xml
+      - core/app/datasource/ci.properties
   except:
     - schedules
   before_script:

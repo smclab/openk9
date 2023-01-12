@@ -33,11 +33,7 @@ trigger_deploy_resources_validator:
     refs:
       - main
     changes:
-      - core/app/common/resources-common/**/*
-      - core/app/common/resources-common/pom.xml
-      - quarkus/resources-validator/**/*
-      - .gitlab/.gitlab-ci-resources-validator.yml
-      - quarkus/pom.xml
+      - core/app/resources-validator/ci.properties
   except:
     - schedules
   before_script:

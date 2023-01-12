@@ -11,7 +11,6 @@ Build Search Frontend Docker Image:
     refs:
       - main
     changes:
-      - js-packages/rest-api/**/*
       - js-packages/search-frontend/**/*
       - .gitlab/.gitlab-ci-search-frontend.yml
   except:
@@ -35,9 +34,8 @@ Build Search Frontend Test Docker Image:
     DOCKER_TLS_CERTDIR: ""
   only:
     refs:
-      - 305-refactoring-con-nuovi-endpoint-search-frontend
+      - main
     changes:
-      - js-packages/rest-api/**/*
       - js-packages/search-frontend/**/*
       - .gitlab/.gitlab-ci-search-frontend.yml
   except:
