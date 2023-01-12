@@ -34,6 +34,7 @@ import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.settings.Settings;
 import org.hibernate.reactive.mutiny.Mutiny;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -56,6 +57,7 @@ import java.util.stream.Collectors;
 
 @CircuitBreaker
 @Path("/v1/data-index")
+@RolesAllowed("k9-admin")
 public class DataIndexResource {
 
 	@Path("/auto-generate-doc-types")

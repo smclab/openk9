@@ -28,6 +28,7 @@ import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -37,6 +38,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 @Path("/buckets")
+@RolesAllowed("k9-admin")
 public class BucketResource extends
 	BaseK9EntityResource<BucketService, Bucket, BucketDTO> {
 

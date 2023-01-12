@@ -28,6 +28,7 @@ import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -37,6 +38,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 @Path("/doc-types")
+@RolesAllowed("k9-admin")
 public class DocTypeResource extends
 	BaseK9EntityResource<DocTypeService, DocType, DocTypeDTO> {
 

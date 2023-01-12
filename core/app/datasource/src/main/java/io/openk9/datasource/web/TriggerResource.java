@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -16,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/v1/trigger")
+@RolesAllowed("k9-admin")
 public class TriggerResource {
 
 	@POST

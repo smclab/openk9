@@ -27,6 +27,7 @@ import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -34,6 +35,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 @Path("/datasources")
+@RolesAllowed("k9-admin")
 public class DatasourceResource extends
 	BaseK9EntityResource<DatasourceService, Datasource, DatasourceDTO> {
 

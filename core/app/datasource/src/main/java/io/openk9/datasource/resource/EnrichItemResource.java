@@ -22,9 +22,11 @@ import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.EnrichItemService;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Path;
 
 @Path("/enrich-items")
+@RolesAllowed("k9-admin")
 public class EnrichItemResource extends
 	BaseK9EntityResource<EnrichItemService, EnrichItem, EnrichItemDTO> {
 

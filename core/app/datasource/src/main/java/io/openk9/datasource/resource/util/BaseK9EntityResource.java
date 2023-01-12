@@ -27,6 +27,7 @@ import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -41,6 +42,7 @@ import javax.ws.rs.core.MediaType;
 
 @CircuitBreaker
 @ReactiveTransactional
+@RolesAllowed("k9-admin")
 public abstract class BaseK9EntityResource<
 	SERVICE extends BaseK9EntityService<ENTITY, DTO>,
 	ENTITY extends K9Entity,

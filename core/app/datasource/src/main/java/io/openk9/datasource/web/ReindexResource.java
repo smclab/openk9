@@ -26,6 +26,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.enterprise.inject.Instance;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
 @Path("/v1/index")
 @ApplicationScoped
 @ActivateRequestContext
+@RolesAllowed("k9-admin")
 public class ReindexResource {
 
 	@POST

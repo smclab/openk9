@@ -6,6 +6,7 @@ import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.DocTypeTemplateService;
 import io.smallrye.mutiny.Uni;
 
+import javax.annotation.security.PermitAll;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -22,6 +23,7 @@ public class TemplateResource extends
 	@GET
 	@Produces("text/javascript")
 	@Path("/{id}/compiled")
+	@PermitAll
 	public Uni<String> getTemplateCompiled(@PathParam("id") long docTypeTemplateId) {
 
 		return service.findById(docTypeTemplateId).map(

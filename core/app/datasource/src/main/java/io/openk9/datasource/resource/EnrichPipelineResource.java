@@ -27,6 +27,7 @@ import io.openk9.datasource.service.EnrichPipelineService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -37,6 +38,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 @Path("/enrich-pipelines")
+@RolesAllowed("k9-admin")
 public class EnrichPipelineResource extends
 	BaseK9EntityResource<EnrichPipelineService, EnrichPipeline, EnrichPipelineDTO> {
 

@@ -22,9 +22,11 @@ import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.PluginDriverService;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Path;
 
 @Path("/plugin-drivers")
+@RolesAllowed("k9-admin")
 public class PluginDriverFieldResource extends
 	BaseK9EntityResource<PluginDriverService, PluginDriver, PluginDriverDTO> {
 
