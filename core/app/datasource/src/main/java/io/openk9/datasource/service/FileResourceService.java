@@ -18,7 +18,6 @@ import javax.persistence.criteria.Root;
 @ApplicationScoped
 public class FileResourceService extends BaseK9EntityService<FileResource, FileResourceDTO> {
 
-
     @Override
     public Class<FileResource> getEntityClass() {
         return FileResource.class;
@@ -32,7 +31,6 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
             cq.where(cb.equal(root.get(FileResource_.datasourceId), datasourceId));
             cq.where(cb.equal(root.get(FileResource_.fileId), fileId));
             return s.createQuery(cq)
-                .setFlushMode(FlushMode.MANUAL)
                 .getSingleResultOrNull();
         });
     }
@@ -45,7 +43,6 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
             Root<FileResource> root = cq.from(FileResource.class);
             cq.where(cb.equal(root.get(FileResource_.resourceId), resourceId));
             return s.createQuery(cq)
-                .setFlushMode(FlushMode.MANUAL)
                 .getSingleResultOrNull();
         });
     }
