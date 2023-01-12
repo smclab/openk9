@@ -80,7 +80,7 @@ public class UploadService {
 			FileResourceRequest fileResourceRequest = filemanager.findFileResourceByResourceId(
 				FileResourceRequest.newBuilder()
 					.setDatasourceId(datasourceId)
-					.setFileId(fileId).build());
+					.setFileId(fileId).setResourceId("test").build());
 
 			String resourceId;
 
