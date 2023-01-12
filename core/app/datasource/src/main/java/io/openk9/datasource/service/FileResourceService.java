@@ -6,8 +6,10 @@ import io.openk9.datasource.model.dto.FileResourceDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -23,7 +25,7 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
     }
 
     public Uni<FileResource> findByDatasourceAndFile(String datasourceId, String fileId) {
-        return withStatelessTransaction((s) -> {
+        return sf.withStatelessTransaction((s) -> {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
             Root<FileResource> root = cq.from(FileResource.class);
@@ -37,7 +39,7 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
 
 
     public Uni<FileResource> findByResourceId(String resourceId) {
-        return withStatelessTransaction((s) -> {
+        return sf.withStatelessTransaction((s) -> {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
             Root<FileResource> root = cq.from(FileResource.class);
@@ -47,6 +49,9 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
                 .getSingleResultOrNull();
         });
     }
+
+    @Inject
+    Mutiny.SessionFactory sf;
 
 
 }

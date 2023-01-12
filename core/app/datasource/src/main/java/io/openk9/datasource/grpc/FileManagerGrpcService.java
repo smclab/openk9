@@ -8,6 +8,7 @@ import io.openk9.filemanager.grpc.FileResourceRequest;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
 
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 
 @GrpcService
@@ -31,6 +32,7 @@ public class FileManagerGrpcService implements FileManager {
 	}
 
 	@Override
+	@ActivateRequestContext
 	public Uni<FileResourceRequest> findFileResourceByResourceId(
 		FileResourceRequest request) {
 
