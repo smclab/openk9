@@ -104,6 +104,20 @@ export type GraphqlId = {
   id?: Maybe<Scalars['BigInteger']>;
 };
 
+/** Mutation root */
+export type Mutation = {
+  __typename?: 'Mutation';
+  tenant?: Maybe<Tenant>;
+};
+
+
+/** Mutation root */
+export type MutationTenantArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+  tenantDTO?: InputMaybe<TenantDtoInput>;
+};
+
 /** Information about pagination in a connection. */
 export type PageInfo = {
   /** When paginating forwards, the cursor to continue. */
@@ -119,7 +133,6 @@ export type PageInfo = {
 /** Query root */
 export type Query = {
   __typename?: 'Query';
-  _service: _Service;
   backgroundProcess?: Maybe<BackgroundProcess>;
   backgroundProcesses?: Maybe<Connection_BackgroundProcess>;
   tenant?: Maybe<Tenant>;
@@ -186,9 +199,12 @@ export type Tenant = GraphqlId & {
   virtualHost?: Maybe<Scalars['String']>;
 };
 
-export type _Service = {
-  __typename?: '_Service';
-  sdl: Scalars['String'];
+export type TenantDtoInput = {
+  clientId: Scalars['String'];
+  clientSecret?: InputMaybe<Scalars['String']>;
+  realmName: Scalars['String'];
+  schemaName: Scalars['String'];
+  virtualHost: Scalars['String'];
 };
 
 export type ProcessesQueryVariables = Exact<{ [key: string]: never; }>;
@@ -203,7 +219,10 @@ export type TenantQueryVariables = Exact<{
 
 export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'Tenant', id?: any | null, realmName?: string | null, schemaName?: string | null, modifiedDate?: any | null, virtualHost?: string | null, clientSecret?: string | null, createDate?: any | null } | null };
 
-export type TenantsQueryVariables = Exact<{ [key: string]: never; }>;
+export type TenantsQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
 
 
 export type TenantsQuery = { __typename?: 'Query', tenants?: { __typename?: 'DefaultConnection_Tenant', edges?: Array<{ __typename?: 'DefaultEdge_Tenant', node?: { __typename?: 'Tenant', id?: any | null, virtualHost?: string | null, createDate?: any | null, modifiedDate?: any | null } | null } | null> | null } | null };
@@ -298,8 +317,8 @@ export type TenantQueryHookResult = ReturnType<typeof useTenantQuery>;
 export type TenantLazyQueryHookResult = ReturnType<typeof useTenantLazyQuery>;
 export type TenantQueryResult = Apollo.QueryResult<TenantQuery, TenantQueryVariables>;
 export const TenantsDocument = gql`
-    query Tenants {
-  tenants {
+    query Tenants($searchText: String, $cursor: String) {
+  tenants(searchText: $searchText, first: 25, after: $cursor) {
     edges {
       node {
         id
@@ -324,6 +343,8 @@ export const TenantsDocument = gql`
  * @example
  * const { data, loading, error } = useTenantsQuery({
  *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
  *   },
  * });
  */

@@ -2,7 +2,6 @@ import React from "react";
 import { QueryResult } from "@apollo/client";
 import ClayTable from "@clayui/table";
 import { TableVirtuoso } from "react-virtuoso";
-import ClayToolbar from "@clayui/toolbar";
 import ClayLayout from "@clayui/layout";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import useDebounced from "./useDebounced";
@@ -13,7 +12,7 @@ import { ClayCheckbox } from "@clayui/form";
 import useMap from "./useMap";
 import ClayModal, { useModal } from "@clayui/modal";
 import { useRestClient } from "./queryClient";
-import { RequestId } from "../openapi-generated";
+import ClayToolbar from "@clayui/toolbar";
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
   return value?.id && <Link to={value.id}>{value.name}</Link>;
 }
@@ -78,7 +77,6 @@ export function Table<
   const [searchText, setSearchText] = React.useState("");
   const { observer, onOpenChange, open } = useModal();
   const restClient = useRestClient();
-  let test: RequestId;
   const searchTextDebounced = useDebounced(searchText);
   const selection = useMap<Row>();
   const [valueModal, setValueModal] = React.useState("");
@@ -86,9 +84,50 @@ export function Table<
   React.useEffect(() => {
     refetch({ searchText: searchTextDebounced } as any);
   }, [refetch, searchTextDebounced]);
+
   const scrollerRef = React.useRef<HTMLElement>();
   return (
     <React.Fragment>
+      <ClayToolbar light>
+        <ClayLayout.ContainerFluid>
+          <ClayToolbar.Nav>
+            <ClayToolbar.Item expand>
+              <div style={{ position: "relative" }}>
+                <ClayToolbar.Input
+                  placeholder="Search..."
+                  sizing="sm"
+                  value={searchText}
+                  onChange={(event) => {
+                    setSearchText(event.currentTarget.value);
+                    setShowSelectedItemsTable(false);
+                  }}
+                />
+                {searchText !== "" && (
+                  <ClayButtonWithIcon
+                    aria-label=""
+                    symbol="times"
+                    className="component-action"
+                    onClick={() => {
+                      setSearchText("");
+                    }}
+                    style={{ position: "absolute", right: "10px", top: "0px" }}
+                  />
+                )}
+              </div>
+            </ClayToolbar.Item>
+            <ClayToolbar.Item>
+              <ClayButtonWithIcon
+                aria-label=""
+                symbol="plus"
+                small
+                onClick={() => {
+                  onOpenChange(true);
+                }}
+              />
+            </ClayToolbar.Item>
+          </ClayToolbar.Nav>
+        </ClayLayout.ContainerFluid>
+      </ClayToolbar>
       {open && (
         <ClayModal observer={observer}>
           <ClayModal.Header>{"Create Tenant"}</ClayModal.Header>
@@ -110,7 +149,7 @@ export function Table<
             last={
               <ClayButton
                 onClick={async () => {
-                  await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenantDelete({ virtualHost: valueModal });
+                  await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({ virtualHost: valueModal });
                 }}
               >
                 {"Create"}
@@ -194,16 +233,7 @@ export function Table<
                   </ClayTable.Cell>
                 );
               })}
-              <ClayTable.Cell headingCell style={{ width: "56px" }}>
-                <ClayButtonWithIcon
-                  aria-label=""
-                  symbol="plus"
-                  small
-                  onClick={() => {
-                    onOpenChange(true);
-                  }}
-                />
-              </ClayTable.Cell>
+              <ClayTable.Cell headingCell style={{ width: "56px" }}></ClayTable.Cell>
             </ClayTable.Row>
           )}
           itemContent={(index) => {

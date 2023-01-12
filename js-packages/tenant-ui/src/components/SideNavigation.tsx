@@ -1,9 +1,10 @@
 import ClayIcon from "@clayui/icon";
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { NavLink } from "react-router-dom";
 import { BrandLogo } from "./BrandLogo";
 
 export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) {
+  const [elementSelect, setSelect] = React.useState("");
   return (
     <div className={`sidenav-fixed sidenav-menu-slider ${isSideMenuOpen ? "open" : "close"}`}>
       <div className="sidebar sidebar-dark sidenav-menu product-menu">
@@ -16,9 +17,9 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
         <div className="sidebar-body">
           <nav className="menubar">
             <ul className="nav nav-nested">
-              <SideNavigationItem label="Dashboard" path="/" />
-              <SideNavigationItem label="Tenant" path="/tenants" />
-              <SideNavigationItem label="Process" path="/process" />
+              <SideNavigationItem setSelect={setSelect} elementSelect={elementSelect} IsChildren={false} label="Dashboard" path="/" />
+              <SideNavigationItem setSelect={setSelect} elementSelect={elementSelect} IsChildren={false} label="Tenant" path="/tenants" />
+              <SideNavigationItem setSelect={setSelect} elementSelect={elementSelect} IsChildren={false} label="Process" path="/process" />
             </ul>
           </nav>
         </div>
@@ -30,42 +31,29 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
 type SideNavigationItemProps = {
   label: string;
   path: string;
+  setSelect: Dispatch<SetStateAction<string>>;
+  elementSelect: string;
+  IsChildren: boolean;
 };
-function SideNavigationItem({ label, path }: SideNavigationItemProps) {
+function SideNavigationItem({ label, path, setSelect, elementSelect, IsChildren }: SideNavigationItemProps) {
   return (
     <li className="nav-item">
-      <NavLink to={path} className="nav-link">
-        {label}
-      </NavLink>
-    </li>
-  );
-}
-
-type SideNavigationCollapsibleProps = {
-  label: string;
-  children: React.ReactNode;
-};
-function SideNavigationCollapsible({ label, children }: SideNavigationCollapsibleProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
-  return (
-    <li className="nav-item">
-      <button
-        className={`collapse-icon nav-link btn-unstyled ${!isOpen ? "collapsed" : ""}`}
+      <NavLink
+        to={path}
+        className="nav-link"
         onClick={() => {
-          setIsOpen(!isOpen);
+          setSelect(label);
         }}
       >
-        {label}
-        <span className="collapse-icon-closed">
-          <ClayIcon symbol="caret-right" />
-        </span>
-        <span className="collapse-icon-open">
-          <ClayIcon symbol="caret-bottom" />
-        </span>
-      </button>
-      <div className={`collapse ${isOpen ? "show" : ""}`} id="navCollapse01">
-        <ul className="nav nav-stacked">{children}</ul>
-      </div>
+        {elementSelect === label ? (
+          <div>
+            <span style={{ borderLeft: "3px solid red", marginLeft: IsChildren ? "-15px" : "" }}></span>
+            <span style={{ marginLeft: "15px" }}>{label}</span>
+          </div>
+        ) : (
+          label
+        )}
+      </NavLink>
     </li>
   );
 }

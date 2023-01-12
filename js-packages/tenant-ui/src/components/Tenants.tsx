@@ -4,8 +4,8 @@ import { formatVirtualHost, Table } from "./Table";
 import React from "react";
 
 const TenantsQuery = gql`
-  query Tenants {
-    tenants {
+  query Tenants($searchText: String, $cursor: String) {
+    tenants(searchText: $searchText, first: 25, after: $cursor) {
       edges {
         node {
           id
