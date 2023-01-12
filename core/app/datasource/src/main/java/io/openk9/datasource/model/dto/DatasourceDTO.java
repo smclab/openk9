@@ -24,13 +24,11 @@ import io.openk9.datasource.validation.json.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.eclipse.microprofile.graphql.Description;
 
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
 
 @NoArgsConstructor
 @SuperBuilder
@@ -44,9 +42,7 @@ public class DatasourceDTO extends K9EntityDTO {
 	@Description("Chron quartz expression to define scheduling of datasource")
 	private String scheduling;
 
-	private OffsetDateTime lastIngestionDate;
-
-	@NonNull
+	@NotNull
 	@Description("If true datasource is scheduled based on defined scheduling expression")
 	private Boolean schedulable = false;
 
