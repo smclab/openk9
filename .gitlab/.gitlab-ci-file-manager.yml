@@ -13,13 +13,14 @@ Build Branch File Manager Docker Images:
     refs:
       - main
       - tags
+      - 324-fix-resource-entity-file-manager
     changes:
       - core/app/file-manager/ci.properties
   except:
     - schedules
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl app/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=298-kubernetes-log-service
   cache:
     key: file-manager
     paths:
