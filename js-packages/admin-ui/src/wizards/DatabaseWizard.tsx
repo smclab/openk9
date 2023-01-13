@@ -8,6 +8,7 @@ import { DataSourcesQuery } from "../components/DataSources";
 import { useNavigate } from "react-router-dom";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
+import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 
 gql`
   mutation CreateSitemapDataSource(

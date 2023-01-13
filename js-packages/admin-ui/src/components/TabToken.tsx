@@ -2,7 +2,7 @@ import { gql } from "@apollo/client";
 import ClayForm from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BooleanInput, fromFieldValidators, SearchSelect, TextArea, TextInput, useForm } from "./Form";
+import { BooleanInput, EnumSelect, fromFieldValidators, SearchSelect, TextArea, TextInput, useForm } from "./Form";
 import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
 import { ClayButtonWithIcon } from "@clayui/button";
@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
 import { TabTokens } from "./TabTokens";
 import {
+  TokenType,
   useBindDocTypeFieldToTabTokenMutation,
   useCreateOrUpdateTabTokenMutation,
   useDocTypeFieldOptionsTokenTabQuery,
@@ -90,7 +91,7 @@ export function TabToken() {
         description: "",
         value: "",
         filter: true,
-        tokenType: "",
+        tokenType: TokenType.Autocomplete,
       }),
       []
     ),
@@ -131,7 +132,7 @@ export function TabToken() {
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
           <TextInput label="Value" {...form.inputProps("value")} />
-          <TextInput label="Token Type" {...form.inputProps("tokenType")} />
+          <EnumSelect label="Token Type" dict={TokenType} {...form.inputProps("tokenType")} />
           <BooleanInput label="Filter" {...form.inputProps("filter")} />
           {tabTokenId !== "new" && (
             <ClayForm
