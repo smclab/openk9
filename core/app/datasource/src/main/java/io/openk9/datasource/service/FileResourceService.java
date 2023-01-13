@@ -25,7 +25,7 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
 
     public Uni<FileResource> findByDatasourceAndFile(String datasourceId, String fileId) {
         return sf.withStatelessTransaction((s) -> {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaBuilder cb = sf.getCriteriaBuilder();
             CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
             Root<FileResource> root = cq.from(FileResource.class);
             cq.where(cb.equal(root.get(FileResource_.datasourceId), datasourceId));
@@ -38,7 +38,7 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
 
     public Uni<FileResource> findByResourceId(String resourceId) {
         return sf.withStatelessTransaction((s) -> {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaBuilder cb = sf.getCriteriaBuilder();
             CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
             Root<FileResource> root = cq.from(FileResource.class);
             cq.where(cb.equal(root.get(FileResource_.resourceId), resourceId));
