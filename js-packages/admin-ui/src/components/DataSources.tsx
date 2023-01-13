@@ -17,6 +17,8 @@ export const DataSourcesQuery = gql`
           schedulable
           lastIngestionDate
           scheduling
+          jsonConfig
+          description
         }
       }
       pageInfo {
@@ -76,7 +78,14 @@ export function DataSources() {
                 onToggle={(schedulable) => {
                   if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
                     updateDataSourceMutate({
-                      variables: { id: dataSource.id, schedulable, name: dataSource.name, scheduling: dataSource.scheduling },
+                      variables: {
+                        id: dataSource.id,
+                        schedulable,
+                        name: dataSource.name,
+                        scheduling: dataSource.scheduling,
+                        jsonConfig: dataSource.jsonConfig ?? "{}",
+                        description: dataSource.description ?? "",
+                      },
                     });
                 }}
               />
