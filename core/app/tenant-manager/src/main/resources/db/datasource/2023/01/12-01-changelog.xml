@@ -24,5 +24,17 @@
 			</column>
 		</createTable>
 	</changeSet>
+	<changeSet id="1673543649792-2" author="openk9">
+		<addUniqueConstraint
+			columnNames="fileId, datasourceId"
+			constraintName="uc_fileresource_fileid_datasourceId"
+			tableName="file_resource"/>
+	</changeSet>
+	<changeSet id="1673543649792-3" author="openk9">
+		<addUniqueConstraint
+			columnNames="resourceId"
+			constraintName="uc_fileresource_resourceid"
+			tableName="file_resource"/>
+	</changeSet>
 	
 </databaseChangeLog>

@@ -11,14 +11,20 @@ import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "file_resource")
+@Table(name = "file_resource", uniqueConstraints = {
+    @UniqueConstraint(name = "uc_fileresource_resourceid", columnNames = {
+        "resourceId"}),
+    @UniqueConstraint(name = "uc_fileresource_fileid_datasourceId", columnNames = {
+        "fileId", "datasourceId"})
+})
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-@AllArgsConstructor(staticName = "of")
+@AllArgsConstructor
 @Cacheable
 public class FileResource extends K9Entity {
 
