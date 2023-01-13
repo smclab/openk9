@@ -51,7 +51,7 @@ public class UploadService {
 	MinioClient minioClient;
 
 
-	public String uploadObject(InputStream inputStream, String datasourceId, String fileId) {
+	public String uploadObject(InputStream inputStream, String datasourceId, String fileId, String schemaName) {
 
 		try {
 			String bucketName = "datasource" + datasourceId;
@@ -82,7 +82,7 @@ public class UploadService {
 
 			FindFileResourceByDatasourceIdFileIdRequest findFileResourceByDatasourceIdFileIdRequest =
 				FindFileResourceByDatasourceIdFileIdRequest
-				.newBuilder().setDatasourceId(datasourceId).setFileId(fileId).build();
+				.newBuilder().setDatasourceId(datasourceId).setFileId(fileId).setSchemaName(schemaName).build();
 
 			FileResourceResponse fileResourceResponse =
 				filemanager.findFileResourceByDatasourceIdAndFileId(findFileResourceByDatasourceIdFileIdRequest);
@@ -97,7 +97,7 @@ public class UploadService {
 
 				FileResourceRequest fileResourceRequest1 = FileResourceRequest.newBuilder()
 					.setDatasourceId(datasourceId)
-					.setFileId(fileId).setResourceId(resourceId).build();
+					.setFileId(fileId).setResourceId(resourceId).setSchemaName(schemaName).build();
 
 				filemanager.createFileResource(fileResourceRequest1);
 

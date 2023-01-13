@@ -1,5 +1,6 @@
 package io.openk9.datasource.grpc;
 
+import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.mapper.FileResourceMapper;
 import io.openk9.datasource.model.dto.FileResourceDTO;
 import io.openk9.datasource.service.FileResourceService;
@@ -22,9 +23,14 @@ public class FileManagerGrpcService implements FileManager {
 	@Inject
 	FileResourceMapper fileResourceMapper;
 
+	@Inject
+	TenantResolver _tenantResolver;
+
 	@Override
 	public Uni<FileResourceResponse> findFileResourceByResourceId(
 		FindFileResourceByResourceIdRequest request) {
+
+		_tenantResolver.setTenant(request.getSchemaName());
 
 		return fileResourceService.findByResourceId(
 				request.getResourceId()
@@ -39,6 +45,8 @@ public class FileManagerGrpcService implements FileManager {
 	public Uni<FileResourceResponse> findFileResourceByDatasourceIdAndFileId(
 		FindFileResourceByDatasourceIdFileIdRequest request) {
 
+		_tenantResolver.setTenant(request.getSchemaName());
+
 		return fileResourceService.findByDatasourceAndFile(
 				request.getDatasourceId(), request.getFileId()
 			)
@@ -50,6 +58,8 @@ public class FileManagerGrpcService implements FileManager {
 	@Override
 	public Uni<FileResourceResponse> createFileResource(
 		FileResourceRequest request) {
+
+		_tenantResolver.setTenant(request.getSchemaName());
 
 		FileResourceDTO fileResourceDTO = fileResourceMapper.toFileResourceDTO(request);
 

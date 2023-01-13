@@ -30,12 +30,12 @@ public class UploadEndpoint {
 	@POST
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.TEXT_PLAIN)
-	@Path("/{datasourceId}/{fileId}")
+	@Path("/{datasourceId}/{fileId}/{schemaName}")
 	public String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
+						 @PathParam("schemaName") String schemaName,
 					  InputStream inputStream) {
 
-
-		return uploadService.uploadObject(inputStream, datasourceId, fileId);
+		return uploadService.uploadObject(inputStream, datasourceId, fileId, schemaName);
 
 	}
 

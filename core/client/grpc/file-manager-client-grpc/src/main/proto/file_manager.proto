@@ -15,11 +15,13 @@ service FileManager {
 
 message FindFileResourceByResourceIdRequest {
   string resourceId = 1;
+  string schemaName = 2;
 }
 
 message FindFileResourceByDatasourceIdFileIdRequest {
   string datasourceId = 1;
   string fileId = 2;
+  string schemaName = 3;
 }
 
 message FileResourceResponse {
@@ -32,4 +34,5 @@ message FileResourceRequest {
   string fileId = 1;
   string datasourceId = 2;
   string resourceId = 3;
+  string schemaName = 4;
 }
