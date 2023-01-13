@@ -9,12 +9,11 @@ import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 import { useNavigate } from "react-router-dom";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
-
 gql`
   mutation CreateWebCrawlerDataSource(
     $name: String!
     $description: String
-    $schedulable: Boolean
+    $schedulable: Boolean!
     $scheduling: String!
     $jsonConfig: String
   ) {
@@ -31,7 +30,6 @@ gql`
     }
   }
 `;
-
 export function WebCrawlerWizard() {
   const navigate = useNavigate();
   const triggerSchedulerMutation = useTriggerSchedulerMutation();

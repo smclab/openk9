@@ -10,22 +10,6 @@ import { useNavigate } from "react-router-dom";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
 
-gql`
-  mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean, $scheduling: String!, $jsonConfig: String) {
-    datasource(
-      datasourceDTO: { name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig }
-    ) {
-      entity {
-        id
-      }
-      fieldValidators {
-        field
-        message
-      }
-    }
-  }
-`;
-
 export function GoogleWizard() {
   const navigate = useNavigate();
   const triggerSchedulerMutation = useTriggerSchedulerMutation();

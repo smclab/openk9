@@ -2685,6 +2685,14 @@
     "@graphql-tools/utils" "^9.0.0"
     tslib "~2.4.0"
 
+"@graphql-codegen/time@^3.2.3":
+  version "3.2.3"
+  resolved "https://registry.npmjs.org/@graphql-codegen/time/-/time-3.2.3.tgz#a58aaf5bb71ffdea5ea9da9d4c980c3f4f3bdf29"
+  integrity sha512-mnDUVEC8w45XKXUOaJU6plVJ2vLEwClWSCmN34vSSf5PqMLEyf8RotAZfXpSPXExbDZ8/BfKqoQbENG75oHuQA==
+  dependencies:
+    "@graphql-codegen/plugin-helpers" "^3.1.1"
+    moment "~2.29.1"
+
 "@graphql-codegen/typescript-operations@^2.5.2":
   version "2.5.11"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/typescript-operations/-/typescript-operations-2.5.11.tgz#ca201462e64a68441f97c311689b625623b0363f"
@@ -13541,6 +13549,11 @@ modify-values@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/modify-values/-/modify-values-1.0.1.tgz#b3939fa605546474e3e3e3c63d64bd43b4ee6022"
   integrity sha512-xV2bxeN6F7oYjZWTe/YPAy6MN2M+sL4u/Rlm2AHCIVGfo2p1yGmBHQ6vHehl4bRTZBdHu3TSkWdYgkwpYzAGSw==
+
+moment@~2.29.1:
+  version "2.29.4"
+  resolved "https://registry.npmjs.org/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
+  integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
 
 monaco-editor-webpack-plugin@^7.0.1:
   version "7.0.1"

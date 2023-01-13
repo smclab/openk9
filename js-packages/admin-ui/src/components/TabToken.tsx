@@ -43,7 +43,7 @@ gql`
     $description: String
     $value: String!
     $filter: Boolean!
-    $tokenType: String!
+    $tokenType: TokenType!
   ) {
     tokenTab(
       tabId: $tabId

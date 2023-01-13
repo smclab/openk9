@@ -423,11 +423,9 @@ export type DatasourceDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   /** Json configuration with custom fields for datasource */
   jsonConfig?: InputMaybe<Scalars['String']>;
-  /** ISO-8601 */
-  lastIngestionDate?: InputMaybe<Scalars['DateTime']>;
   name: Scalars['String'];
   /** If true datasource is scheduled based on defined scheduling expression */
-  schedulable?: InputMaybe<Scalars['Boolean']>;
+  schedulable: Scalars['Boolean'];
   /** Chron quartz expression to define scheduling of datasource */
   scheduling: Scalars['String'];
 };
@@ -2844,7 +2842,7 @@ export type TokenTab = {
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   tab?: Maybe<Tab>;
-  tokenType?: Maybe<Scalars['String']>;
+  tokenType?: Maybe<TokenType>;
   value?: Maybe<Scalars['String']>;
 };
 
@@ -2862,9 +2860,17 @@ export type TokenTabDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   filter: Scalars['Boolean'];
   name: Scalars['String'];
-  tokenType: Scalars['String'];
+  tokenType: TokenType;
   value: Scalars['String'];
 };
+
+export enum TokenType {
+  Autocomplete = 'AUTOCOMPLETE',
+  Date = 'DATE',
+  Doctype = 'DOCTYPE',
+  Entity = 'ENTITY',
+  Text = 'TEXT'
+}
 
 export type Tokenizer = {
   __typename?: 'Tokenizer';
@@ -3438,7 +3444,7 @@ export type CreateOrUpdateDataSourceMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
-  schedulable?: InputMaybe<Scalars['Boolean']>;
+  schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
 }>;
@@ -4210,7 +4216,7 @@ export type TabTokenTabQueryVariables = Exact<{
 }>;
 
 
-export type TabTokenTabQuery = { __typename?: 'Query', tokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null, value?: string | null, filter?: boolean | null, tokenType?: string | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+export type TabTokenTabQuery = { __typename?: 'Query', tokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null, value?: string | null, filter?: boolean | null, tokenType?: TokenType | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
 
 export type CreateOrUpdateTabTokenMutationVariables = Exact<{
   tabId: Scalars['ID'];
@@ -4219,7 +4225,7 @@ export type CreateOrUpdateTabTokenMutationVariables = Exact<{
   description?: InputMaybe<Scalars['String']>;
   value: Scalars['String'];
   filter: Scalars['Boolean'];
-  tokenType: Scalars['String'];
+  tokenType: TokenType;
 }>;
 
 
@@ -4256,7 +4262,7 @@ export type TabTokensQueryVariables = Exact<{
 }>;
 
 
-export type TabTokensQuery = { __typename?: 'Query', tokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, tokenType?: string | null, value?: string | null, filter?: boolean | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type TabTokensQuery = { __typename?: 'Query', tokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, tokenType?: TokenType | null, value?: string | null, filter?: boolean | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteTabTokenTabMutationVariables = Exact<{
   tabId: Scalars['ID'];
@@ -4348,7 +4354,7 @@ export type DeleteTokenizerMutation = { __typename?: 'Mutation', deleteTokenizer
 export type CreateSitemapDataSourceMutationVariables = Exact<{
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
-  schedulable?: InputMaybe<Scalars['Boolean']>;
+  schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
 }>;
@@ -4359,7 +4365,7 @@ export type CreateSitemapDataSourceMutation = { __typename?: 'Mutation', datasou
 export type CreateWebCrawlerDataSourceMutationVariables = Exact<{
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
-  schedulable?: InputMaybe<Scalars['Boolean']>;
+  schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
 }>;
@@ -6463,7 +6469,7 @@ export type DataSourceQueryHookResult = ReturnType<typeof useDataSourceQuery>;
 export type DataSourceLazyQueryHookResult = ReturnType<typeof useDataSourceLazyQuery>;
 export type DataSourceQueryResult = Apollo.QueryResult<DataSourceQuery, DataSourceQueryVariables>;
 export const CreateOrUpdateDataSourceDocument = gql`
-    mutation CreateOrUpdateDataSource($id: ID, $name: String!, $description: String, $schedulable: Boolean, $scheduling: String!, $jsonConfig: String) {
+    mutation CreateOrUpdateDataSource($id: ID, $name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String) {
   datasource(
     id: $id
     datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig}
@@ -10506,7 +10512,7 @@ export type TabTokenTabQueryHookResult = ReturnType<typeof useTabTokenTabQuery>;
 export type TabTokenTabLazyQueryHookResult = ReturnType<typeof useTabTokenTabLazyQuery>;
 export type TabTokenTabQueryResult = Apollo.QueryResult<TabTokenTabQuery, TabTokenTabQueryVariables>;
 export const CreateOrUpdateTabTokenDocument = gql`
-    mutation CreateOrUpdateTabToken($tabId: ID!, $tabTokenId: ID, $name: String!, $description: String, $value: String!, $filter: Boolean!, $tokenType: String!) {
+    mutation CreateOrUpdateTabToken($tabId: ID!, $tabTokenId: ID, $name: String!, $description: String, $value: String!, $filter: Boolean!, $tokenType: TokenType!) {
   tokenTab(
     tabId: $tabId
     tokenTabId: $tabTokenId
@@ -11177,7 +11183,7 @@ export type DeleteTokenizerMutationHookResult = ReturnType<typeof useDeleteToken
 export type DeleteTokenizerMutationResult = Apollo.MutationResult<DeleteTokenizerMutation>;
 export type DeleteTokenizerMutationOptions = Apollo.BaseMutationOptions<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>;
 export const CreateSitemapDataSourceDocument = gql`
-    mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean, $scheduling: String!, $jsonConfig: String) {
+    mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String) {
   datasource(
     datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig}
   ) {
@@ -11222,7 +11228,7 @@ export type CreateSitemapDataSourceMutationHookResult = ReturnType<typeof useCre
 export type CreateSitemapDataSourceMutationResult = Apollo.MutationResult<CreateSitemapDataSourceMutation>;
 export type CreateSitemapDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateSitemapDataSourceMutation, CreateSitemapDataSourceMutationVariables>;
 export const CreateWebCrawlerDataSourceDocument = gql`
-    mutation CreateWebCrawlerDataSource($name: String!, $description: String, $schedulable: Boolean, $scheduling: String!, $jsonConfig: String) {
+    mutation CreateWebCrawlerDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String) {
   datasource(
     datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig}
   ) {
@@ -11266,3 +11272,4 @@ export function useCreateWebCrawlerDataSourceMutation(baseOptions?: Apollo.Mutat
 export type CreateWebCrawlerDataSourceMutationHookResult = ReturnType<typeof useCreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationResult = Apollo.MutationResult<CreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateWebCrawlerDataSourceMutation, CreateWebCrawlerDataSourceMutationVariables>;
+// Generated on 2023-01-13T09:25:35+01:00

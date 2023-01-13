@@ -57,7 +57,7 @@ gql`
     $id: ID
     $name: String!
     $description: String
-    $schedulable: Boolean
+    $schedulable: Boolean!
     $scheduling: String!
     $jsonConfig: String
   ) {

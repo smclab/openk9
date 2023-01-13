@@ -3,28 +3,11 @@ import ClayForm from "@clayui/form";
 import ClayLayout from "@clayui/layout";
 import ClayButton from "@clayui/button";
 import { BooleanInput, CronInput, fromFieldValidators, TextInput, useForm } from "../components/Form";
-import { gql } from "@apollo/client";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 import { useNavigate } from "react-router-dom";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
-
-gql`
-  mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean, $scheduling: String!, $jsonConfig: String) {
-    datasource(
-      datasourceDTO: { name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig }
-    ) {
-      entity {
-        id
-      }
-      fieldValidators {
-        field
-        message
-      }
-    }
-  }
-`;
 
 export function GitLabWizard() {
   const navigate = useNavigate();

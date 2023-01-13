@@ -85,5 +85,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@graphql-codegen/time": "^3.2.3"
   }
 }
