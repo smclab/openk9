@@ -24,7 +24,7 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
     }
 
     public Uni<FileResource> findByDatasourceAndFile(String datasourceId, String fileId) {
-        return withStatelessTransaction((s) -> {
+        return withTransaction((s, tr) -> {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
             Root<FileResource> root = cq.from(FileResource.class);
@@ -37,7 +37,7 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
 
 
     public Uni<FileResource> findByResourceId(String resourceId) {
-        return withStatelessTransaction((s) -> {
+        return withTransaction((s, tr) -> {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
             Root<FileResource> root = cq.from(FileResource.class);
@@ -46,9 +46,6 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
                 .getSingleResultOrNull();
         });
     }
-
-    @Inject
-    Mutiny.SessionFactory sf;
 
 
 }
