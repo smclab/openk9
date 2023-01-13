@@ -28,7 +28,7 @@ import org.mapstruct.NullValueCheckStrategy;
 @Mapper(
 	componentModel = "cdi"
 )
-public interface FileResourceMapper {
+public interface FileResourceMapper extends K9EntityMapper<FileResource, FileResourceDTO> {
 
 	FileResourceDTO toFileResourceDTO(FileResourceRequest fileResourceRequest);
 

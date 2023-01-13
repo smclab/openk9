@@ -1,5 +1,6 @@
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.mapper.FileResourceMapper;
 import io.openk9.datasource.model.FileResource;
 import io.openk9.datasource.model.FileResource_;
 import io.openk9.datasource.model.dto.FileResourceDTO;
@@ -19,6 +20,7 @@ import javax.persistence.criteria.Root;
 @ApplicationScoped
 public class FileResourceService extends BaseK9EntityService<FileResource, FileResourceDTO> {
 
+    FileResourceService(FileResourceMapper mapper) {this.mapper = mapper;};
     @Override
     public Class<FileResource> getEntityClass() {
         return FileResource.class;
