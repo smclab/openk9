@@ -12,6 +12,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 
@@ -28,11 +29,14 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
             Root<FileResource> root = cq.from(FileResource.class);
-            cq.where(cb.equal(root.get(FileResource_.datasourceId), datasourceId));
-            cq.where(cb.equal(root.get(FileResource_.fileId), fileId));
+            Predicate predicateResult = cb.and(
+                cb.equal(root.get(FileResource_.fileId), fileId),
+                cb.equal(root.get(FileResource_.datasourceId), datasourceId));
+            cq.where(predicateResult);
             return s.createQuery(cq)
                 .getSingleResultOrNull();
         });
+
     }
 
 
