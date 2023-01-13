@@ -7,6 +7,12 @@
 
 	<changeSet id="1673543649792-1" author="openk9">
 		<createTable tableName="file_resource">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+						 primaryKeyName="file_resource_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
 			<column name="fileId" type="VARCHAR(255)">
 				<constraints nullable="false"/>
 			</column>
