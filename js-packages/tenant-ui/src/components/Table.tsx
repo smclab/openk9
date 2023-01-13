@@ -6,13 +6,14 @@ import ClayLayout from "@clayui/layout";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import useDebounced from "./useDebounced";
 import { ClayDropDownWithItems } from "@clayui/drop-down";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ClayEmptyState from "@clayui/empty-state";
 import { ClayCheckbox } from "@clayui/form";
 import useMap from "./useMap";
 import ClayModal, { useModal } from "@clayui/modal";
 import { useRestClient } from "./queryClient";
 import ClayToolbar from "@clayui/toolbar";
+import { useToast } from "./ToastProvider";
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
   return value?.id && <Link to={value.id}>{value.name}</Link>;
 }
@@ -84,8 +85,9 @@ export function Table<
   React.useEffect(() => {
     refetch({ searchText: searchTextDebounced } as any);
   }, [refetch, searchTextDebounced]);
-
+  const navigate = useNavigate();
   const scrollerRef = React.useRef<HTMLElement>();
+  const toast = useToast();
   return (
     <React.Fragment>
       <ClayToolbar light>
@@ -149,7 +151,17 @@ export function Table<
             last={
               <ClayButton
                 onClick={async () => {
-                  await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({ virtualHost: valueModal });
+                  const response = await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({
+                    virtualHost: valueModal,
+                  });
+                  if (response.requestId) {
+                    toast({ displayType: "success", title: "tenant create", content: "" });
+                    onOpenChange(false);
+                    navigate(`/process/`, { replace: true });
+                  } else {
+                    toast({ displayType: "danger", title: "tenant error", content: "" });
+                    onOpenChange(false);
+                  }
                 }}
               >
                 {"Create"}

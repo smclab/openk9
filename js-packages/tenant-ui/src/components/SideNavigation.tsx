@@ -1,4 +1,3 @@
-import ClayIcon from "@clayui/icon";
 import React, { Dispatch, SetStateAction } from "react";
 import { NavLink } from "react-router-dom";
 import { BrandLogo } from "./BrandLogo";
