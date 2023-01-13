@@ -8,9 +8,24 @@ import "google/protobuf/empty.proto";
 package grpc;
 
 service FileManager {
-  rpc FindFileResource(FileResourceRequest) returns (FileResourceRequest) {}
-  rpc FindFileResourceByResourceId(FileResourceRequest) returns (FileResourceRequest) {}
-  rpc CreateFileResource(FileResourceRequest) returns (FileResourceRequest) {}
+  rpc FindFileResourceByResourceId(FindFileResourceByResourceIdRequest) returns (FileResourceResponse) {}
+  rpc FindFileResourceByDatasourceIdAndFileId(FindFileResourceByDatasourceIdFileIdRequest) returns (FileResourceResponse) {}
+  rpc CreateFileResource(FileResourceRequest) returns (FileResourceResponse) {}
+}
+
+message FindFileResourceByResourceIdRequest {
+  string resourceId = 1;
+}
+
+message FindFileResourceByDatasourceIdFileIdRequest {
+  string datasourceId = 1;
+  string fileId = 2;
+}
+
+message FileResourceResponse {
+  string fileId = 1;
+  string datasourceId = 2;
+  string resourceId = 3;
 }
 
 message FileResourceRequest {

@@ -25,6 +25,9 @@ import io.minio.errors.MinioException;
 import io.openk9.filemanager.grpc.FileManagerGrpc;
 import io.openk9.filemanager.grpc.FileManager;
 import io.openk9.filemanager.grpc.FileResourceRequest;
+import io.openk9.filemanager.grpc.FileResourceResponse;
+import io.openk9.filemanager.grpc.FindFileResourceByDatasourceIdFileIdRequest;
+import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -77,18 +80,16 @@ public class UploadService {
 
 			logger.info("Upload done");
 
-			FileResourceRequest fileResourceRequest = FileResourceRequest.newBuilder()
-				.setDatasourceId(datasourceId)
-				.setFileId(fileId).setResourceId("test").build();
+			FindFileResourceByDatasourceIdFileIdRequest findFileResourceByDatasourceIdFileIdRequest =
+				FindFileResourceByDatasourceIdFileIdRequest
+				.newBuilder().setDatasourceId(datasourceId).setFileId(fileId).build();
 
-			logger.info(fileResourceRequest.toString());
-
-			FileResourceRequest fileResourceRequest_ =
-				filemanager.findFileResourceByResourceId(fileResourceRequest);
+			FileResourceResponse fileResourceResponse =
+				filemanager.findFileResourceByDatasourceIdAndFileId(findFileResourceByDatasourceIdFileIdRequest);
 
 			String resourceId;
 
-			if (fileResourceRequest_ == null) {
+			if (fileResourceResponse == null) {
 
 				logger.info("Resource not exist. Creating in database.");
 
@@ -105,10 +106,10 @@ public class UploadService {
 
 				logger.info("Resource already exist. Skip persist.");
 
-				resourceId = fileResourceRequest.getResourceId();
+				resourceId = fileResourceResponse.getResourceId();
 			}
 
-			return null;
+			return resourceId;
 
 
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {

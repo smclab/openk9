@@ -5,10 +5,12 @@ import io.openk9.datasource.model.dto.FileResourceDTO;
 import io.openk9.datasource.service.FileResourceService;
 import io.openk9.filemanager.grpc.FileManager;
 import io.openk9.filemanager.grpc.FileResourceRequest;
+import io.openk9.filemanager.grpc.FileResourceResponse;
+import io.openk9.filemanager.grpc.FindFileResourceByDatasourceIdFileIdRequest;
+import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
 
-import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 
 @GrpcService
@@ -21,30 +23,32 @@ public class FileManagerGrpcService implements FileManager {
 	FileResourceMapper fileResourceMapper;
 
 	@Override
-	public Uni<FileResourceRequest> findFileResource(
-		FileResourceRequest request) {
-
-		return fileResourceService.findByDatasourceAndFile(
-			request.getDatasourceId(), request.getFileId())
-			.onItem()
-			.ifNotNull()
-			.transform(fileResourceMapper::toFileResourceRequest);
-	}
-
-	@Override
-	public Uni<FileResourceRequest> findFileResourceByResourceId(
-		FileResourceRequest request) {
+	public Uni<FileResourceResponse> findFileResourceByResourceId(
+		FindFileResourceByResourceIdRequest request) {
 
 		return fileResourceService.findByResourceId(
-			request.getResourceId()
+				request.getResourceId()
 			)
 			.onItem()
 			.ifNotNull()
-			.transform(fileResourceMapper::toFileResourceRequest);
+			.transform(fileResourceMapper::toFileResourceResponse);
+
 	}
 
 	@Override
-	public Uni<FileResourceRequest> createFileResource(
+	public Uni<FileResourceResponse> findFileResourceByDatasourceIdAndFileId(
+		FindFileResourceByDatasourceIdFileIdRequest request) {
+
+		return fileResourceService.findByDatasourceAndFile(
+				request.getDatasourceId(), request.getFileId()
+			)
+			.onItem()
+			.ifNotNull()
+			.transform(fileResourceMapper::toFileResourceResponse);
+	}
+
+	@Override
+	public Uni<FileResourceResponse> createFileResource(
 		FileResourceRequest request) {
 
 		FileResourceDTO fileResourceDTO = fileResourceMapper.toFileResourceDTO(request);
@@ -52,6 +56,6 @@ public class FileManagerGrpcService implements FileManager {
 		return fileResourceService.create(fileResourceDTO)
 			.onItem()
 			.ifNotNull()
-			.transform(fileResourceMapper::toFileResourceRequest);
+			.transform(fileResourceMapper::toFileResourceResponse);
 	}
 }

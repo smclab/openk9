@@ -22,6 +22,8 @@ import io.minio.RemoveObjectArgs;
 import io.minio.errors.MinioException;
 import io.openk9.filemanager.grpc.FileManagerGrpc;
 import io.openk9.filemanager.grpc.FileResourceRequest;
+import io.openk9.filemanager.grpc.FileResourceResponse;
+import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
 import io.openk9.filemanager.model.Resource;
 import io.quarkus.grpc.GrpcClient;
 
@@ -40,12 +42,14 @@ public class DeleteService {
 
 	public void deleteObject(String resourceId) {
 
-		FileResourceRequest fileResourceRequest = filemanager.findFileResourceByResourceId(
-			FileResourceRequest.newBuilder()
-				.setResourceId(resourceId).build());
+		FindFileResourceByResourceIdRequest findFileResourceByResourceIdRequest =
+			FindFileResourceByResourceIdRequest.newBuilder().setResourceId(resourceId).build();
 
-		String datasourceId = fileResourceRequest.getDatasourceId();
-		String fileId = fileResourceRequest.getFileId();
+		FileResourceResponse fileResourceResponse =
+			filemanager.findFileResourceByResourceId(findFileResourceByResourceIdRequest);
+
+		String datasourceId = fileResourceResponse.getDatasourceId();
+		String fileId = fileResourceResponse.getFileId();
 
 		String bucketName = "datasource" + datasourceId;
 

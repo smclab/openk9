@@ -164,23 +164,23 @@ public class KeycloakBehavior extends AbstractBehavior<KeycloakMessage> {
 		this.realmName = realmRepresentation.getRealm();
 	}
 
-	private UserRepresentation _createAdminUserRepresentation() {
-		UserRepresentation userRepresentation = new UserRepresentation();
-		userRepresentation.setUsername("k9admin");
-		userRepresentation.setFirstName("k9admin");
-		userRepresentation.setLastName("k9admin");
-		userRepresentation.setEmail("k9admin@openk9.io");
-		userRepresentation.setRealmRoles(
-			List.of("k9-admin", "k9-write", "k9-read")
-		);
-		userRepresentation.setEnabled(true);
-		userRepresentation.setCredentials(
-			List.of(
-				_createAdminCredentialRepresentation()
-			)
-		);
-		return userRepresentation;
-	}
+		private UserRepresentation _createAdminUserRepresentation() {
+			UserRepresentation userRepresentation = new UserRepresentation();
+			userRepresentation.setUsername("k9admin");
+			userRepresentation.setFirstName("k9admin");
+			userRepresentation.setLastName("k9admin");
+			userRepresentation.setEmail("k9admin@openk9.io");
+			userRepresentation.setRealmRoles(
+				List.of("k9-admin", "k9-write", "k9-read")
+			);
+			userRepresentation.setEnabled(true);
+			userRepresentation.setCredentials(
+				List.of(
+					_createAdminCredentialRepresentation()
+				)
+			);
+			return userRepresentation;
+		}
 
 	private CredentialRepresentation _createAdminCredentialRepresentation() {
 		CredentialRepresentation credentialRepresentation = new CredentialRepresentation();

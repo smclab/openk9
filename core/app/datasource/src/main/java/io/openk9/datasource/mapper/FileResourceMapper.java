@@ -20,6 +20,7 @@ package io.openk9.datasource.mapper;
 import io.openk9.datasource.model.FileResource;
 import io.openk9.datasource.model.dto.FileResourceDTO;
 import io.openk9.filemanager.grpc.FileResourceRequest;
+import io.openk9.filemanager.grpc.FileResourceResponse;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValueCheckStrategy;
@@ -29,10 +30,8 @@ import org.mapstruct.NullValueCheckStrategy;
 )
 public interface FileResourceMapper {
 
-	@BeanMapping(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 	FileResourceDTO toFileResourceDTO(FileResourceRequest fileResourceRequest);
 
 
-	@BeanMapping(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
-	FileResourceRequest toFileResourceRequest(FileResource fileResource);
+	FileResourceResponse toFileResourceResponse(FileResource fileResource);
 }
