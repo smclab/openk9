@@ -15,10 +15,10 @@ import javax.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "file_resource", uniqueConstraints = {
-    @UniqueConstraint(name = "uc_fileresource_resourceid", columnNames = {
-        "resourceId"}),
-    @UniqueConstraint(name = "uc_fileresource_fileid_datasourceId", columnNames = {
-        "fileId", "datasourceId"})
+    @UniqueConstraint(name = "uc_fileresource_resource_id", columnNames = {
+        "resource_id"}),
+    @UniqueConstraint(name = "uc_fileresource_fileid_datasource_id", columnNames = {
+        "file_id", "datasource_id"})
 })
 @Getter
 @Setter
@@ -28,13 +28,13 @@ import javax.persistence.UniqueConstraint;
 @Cacheable
 public class FileResource extends K9Entity {
 
-    @Column(name = "resourceId", nullable = false)
+    @Column(name = "resource_id", nullable = false)
     private String resourceId;
 
-    @Column(name = "fileId", nullable = false)
+    @Column(name = "file_id", nullable = false)
     private String fileId;
 
-    @Column(name = "datasourceId", nullable = false)
+    @Column(name = "datasource_id", nullable = false)
     private String datasourceId;
 
 }

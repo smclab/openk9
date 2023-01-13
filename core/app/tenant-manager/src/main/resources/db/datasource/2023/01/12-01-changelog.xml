@@ -13,27 +13,27 @@
 			</column>
 			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
 			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
-			<column name="fileId" type="VARCHAR(255)">
+			<column name="file_id" type="VARCHAR(255)">
 				<constraints nullable="false"/>
 			</column>
-			<column name="resourceId" type="VARCHAR(255)">
+			<column name="resource_id" type="VARCHAR(255)">
 				<constraints nullable="false"/>
 			</column>
-			<column name="datasourceId" type="VARCHAR(255)">
+			<column name="datasource_id" type="VARCHAR(255)">
 				<constraints nullable="false"/>
 			</column>
 		</createTable>
 	</changeSet>
 	<changeSet id="1673543649792-2" author="openk9">
 		<addUniqueConstraint
-			columnNames="fileId, datasourceId"
-			constraintName="uc_fileresource_fileid_datasourceId"
+			columnNames="file_id, datasource_id"
+			constraintName="uc_fileresource_fileid_datasource_id"
 			tableName="file_resource"/>
 	</changeSet>
 	<changeSet id="1673543649792-3" author="openk9">
 		<addUniqueConstraint
-			columnNames="resourceId"
-			constraintName="uc_fileresource_resourceid"
+			columnNames="resource_id"
+			constraintName="uc_fileresource_resource_id"
 			tableName="file_resource"/>
 	</changeSet>
 	
