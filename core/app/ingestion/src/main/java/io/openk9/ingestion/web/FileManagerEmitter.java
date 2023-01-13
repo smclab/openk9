@@ -48,6 +48,8 @@ public class FileManagerEmitter {
                 String datasourceId =
                     Long.toString(ingestionDTO.getDatasourceId());
 
+                String schemaName = ingestionDTO.getTenantId();
+
                 List<BinaryDTO> binaries =
                     ingestionDTO.getResources().getBinaries();
 
@@ -74,7 +76,9 @@ public class FileManagerEmitter {
                                 fileManagerClient.upload(
                                     datasourceId,
                                     fileId,
-                                    inputStream);
+                                    schemaName,
+                                    inputStream
+                                    );
 
                             BinaryDTO newBinaryDTO = new BinaryDTO();
                             newBinaryDTO.setId(fileId);

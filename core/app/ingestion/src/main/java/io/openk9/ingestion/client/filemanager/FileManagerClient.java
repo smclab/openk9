@@ -28,19 +28,10 @@ import java.io.InputStream;
 @RegisterRestClient(configKey = "file-manager")
 public interface FileManagerClient {
 
-	@GET
-	@Path("/download/{resourceId}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	InputStream download(@PathParam("resourceId") String resourceId);
-
 	@POST
-	@Path("/delete/{resourceId}")
-	void delete(@PathParam("resourceId") String resourceId);
-
-	@POST
-	@Path("/upload/{datasourceId}/{fileId}")
+	@Path("/upload/{datasourceId}/{fileId}/{schemaName}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.TEXT_PLAIN)
 	String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
-				InputStream inputStream);
+				  @PathParam("schemaName") String schemaName, InputStream inputStream);
 }
