@@ -89,6 +89,8 @@ public class UploadService {
 
 			String resourceId;
 
+			logger.info(fileResourceResponse);
+
 			if (fileResourceResponse == null) {
 
 				logger.info("Resource not exist. Creating in database.");
