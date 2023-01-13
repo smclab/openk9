@@ -29,12 +29,12 @@ import java.io.InputStream;
 public interface FileManagerClient {
 
 	@GET
-	@Path("/download/{resourceId}")
+	@Path("/download/{resourceId}/{schemaName}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	InputStream download(@PathParam("resourceId") String resourceId);
+	InputStream download(@PathParam("resourceId") String resourceId, @PathParam("schemaName") String schemaName);
 
 	@POST
-	@Path("/delete/{resourceId}")
-	void delete(@PathParam("resourceId") String resourceId);
+	@Path("/delete/{resourceId}/{schemaName}")
+	void delete(@PathParam("resourceId") String resourceId, @PathParam("schemaName") String schemaName);
 	
 }

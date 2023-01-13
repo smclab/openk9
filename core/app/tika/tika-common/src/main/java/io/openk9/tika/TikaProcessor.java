@@ -49,6 +49,8 @@ public class TikaProcessor {
 
         String replyTo = jsonObject.getString("replyTo");
 
+        String schemaName = jsonObject.getString("tenantId");
+
         JsonArray binaries =
             payload
                 .getJsonObject("resources")
@@ -83,7 +85,7 @@ public class TikaProcessor {
 
             boolean retainBinaries = enrichItemConfig.getBoolean("retain_binaries");
 
-            try(InputStream inputStream = new BufferedInputStream(fileManagerClient.download(resourceId));) {
+            try(InputStream inputStream = new BufferedInputStream(fileManagerClient.download(resourceId, schemaName));) {
 
                 try {
 
@@ -230,7 +232,7 @@ public class TikaProcessor {
 
                         if (!retainBinaries) {
                             logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                            fileManagerClient.delete(resourceId);
+                            fileManagerClient.delete(resourceId, schemaName);
                         }
 
                         return Tuple2.of(replyTo, response);
@@ -239,14 +241,14 @@ public class TikaProcessor {
                     else {
                         if (!retainBinaries) {
                             logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                            fileManagerClient.delete(resourceId);
+                            fileManagerClient.delete(resourceId, schemaName);
                         }
                     }
 
                 } catch (Exception e) {
                     if (!retainBinaries) {
                         logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                        fileManagerClient.delete(resourceId);
+                        fileManagerClient.delete(resourceId, schemaName);
                     }
                     logger.error(e.getMessage(), e);
                 }
@@ -255,7 +257,7 @@ public class TikaProcessor {
             } catch (IOException e) {
                 if (!retainBinaries) {
                     logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                    fileManagerClient.delete(resourceId);
+                    fileManagerClient.delete(resourceId, schemaName);
                 }
                 logger.error(e.getMessage(), e);
             }

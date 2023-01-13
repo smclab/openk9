@@ -28,7 +28,7 @@ import java.io.InputStream;
 public class DownloadEndpoint {
 
 	@GET
-	@Path("/{resourceId}")
+	@Path("/{resourceId}/{schemaName}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public InputStream download(@PathParam("resourceId") String resourceId) {
 

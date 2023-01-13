@@ -26,7 +26,7 @@ import javax.ws.rs.*;
 public class DeleteEndpoint {
 
 	@POST
-	@Path("/{resourceId}")
+	@Path("/{resourceId}/{schemaName}")
 	public void delete(@PathParam("resourceId") String resourceId) {
 
 		deleteService.deleteObject(resourceId);
