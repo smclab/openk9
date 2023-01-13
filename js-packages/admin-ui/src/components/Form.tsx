@@ -707,6 +707,8 @@ export function AssociatedEntities<Q>({
                 onChange={(event) => setModalSearchText(event.currentTarget.value)}
               />
             </ClayForm.Group>
+          </ClayModal.Body>
+          <ClayModal.Body scrollable={true}>
             {(field(unassociatedListQuery.data)?.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
               <ClayEmptyState
                 description="There are no matching unassociated entities"
