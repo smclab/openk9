@@ -27,9 +27,10 @@ public class DeleteEndpoint {
 
 	@POST
 	@Path("/{resourceId}/{schemaName}")
-	public void delete(@PathParam("resourceId") String resourceId) {
+	public void delete(@PathParam("resourceId") String resourceId,
+					   @PathParam("schemaName") String schemaName) {
 
-		deleteService.deleteObject(resourceId);
+		deleteService.deleteObject(resourceId, schemaName);
 
 	}
 

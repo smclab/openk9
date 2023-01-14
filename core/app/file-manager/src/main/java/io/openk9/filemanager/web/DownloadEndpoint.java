@@ -30,9 +30,10 @@ public class DownloadEndpoint {
 	@GET
 	@Path("/{resourceId}/{schemaName}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public InputStream download(@PathParam("resourceId") String resourceId) {
+	public InputStream download(@PathParam("resourceId") String resourceId,
+								@PathParam("schemaName") String schemaName) {
 
-		return downloadService.downloadObject(resourceId);
+		return downloadService.downloadObject(resourceId, schemaName);
 
 	}
 

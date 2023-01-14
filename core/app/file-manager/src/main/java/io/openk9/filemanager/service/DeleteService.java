@@ -38,10 +38,12 @@ public class DeleteService {
 	MinioClient minioClient;
 
 
-	public void deleteObject(String resourceId) {
+	public void deleteObject(String resourceId, String schemaName) {
 
 		FindFileResourceByResourceIdRequest findFileResourceByResourceIdRequest =
-			FindFileResourceByResourceIdRequest.newBuilder().setResourceId(resourceId).build();
+			FindFileResourceByResourceIdRequest.newBuilder()
+				.setResourceId(resourceId)
+				.setSchemaName(schemaName).build();
 
 		FileResourceResponse fileResourceResponse =
 			filemanager.findFileResourceByResourceId(findFileResourceByResourceIdRequest);

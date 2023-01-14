@@ -38,12 +38,14 @@ public class DownloadService {
 	MinioClient minioClient;
 
 
-	public InputStream downloadObject(String resourceId) {
+	public InputStream downloadObject(String resourceId, String schemaName) {
 
 		try {
 
 			FindFileResourceByResourceIdRequest findFileResourceByResourceIdRequest =
-				FindFileResourceByResourceIdRequest.newBuilder().setResourceId(resourceId).build();
+				FindFileResourceByResourceIdRequest.newBuilder()
+					.setResourceId(resourceId)
+					.setSchemaName(schemaName).build();
 
 			FileResourceResponse fileResourceResponse =
 				filemanager.findFileResourceByResourceId(findFileResourceByResourceIdRequest);

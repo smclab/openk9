@@ -34,11 +34,13 @@ import org.apache.commons.io.IOUtils;
 public class DownloadAsBase64Endpoint {
 
 	@GET
-	@Path("/{resourceId}")
+	@Path("/{resourceId}/{schemaName}")
 	@Produces(MediaType.TEXT_PLAIN)
-	public String downloadAsBase64(@PathParam("resourceId") String resourceId) {
+	public String downloadAsBase64(@PathParam("resourceId") String resourceId,
+								   @PathParam("schemaName") String schemaName) {
 
-		InputStream inputStream = downloadService.downloadObject(resourceId);
+		InputStream inputStream = downloadService.
+			downloadObject(resourceId, schemaName);
 
 		byte[] sourceBytes;
 
