@@ -49,7 +49,7 @@ public class TikaProcessor {
 
         String replyTo = jsonObject.getString("replyTo");
 
-        String schemaName = jsonObject.getString("tenantId");
+        String schemaName = payload.getString("tenantId");
 
         JsonArray binaries =
             payload
