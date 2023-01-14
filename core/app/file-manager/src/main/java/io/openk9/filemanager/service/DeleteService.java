@@ -21,10 +21,8 @@ import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
 import io.minio.errors.MinioException;
 import io.openk9.filemanager.grpc.FileManagerGrpc;
-import io.openk9.filemanager.grpc.FileResourceRequest;
 import io.openk9.filemanager.grpc.FileResourceResponse;
 import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
-import io.openk9.filemanager.model.Resource;
 import io.quarkus.grpc.GrpcClient;
 
 import javax.enterprise.context.ApplicationScoped;

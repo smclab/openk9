@@ -13,13 +13,14 @@ Build Latest Tika No Ocr Docker Images:
     refs:
       - main
       - tags
+      - 324-fix-resource-entity-file-manager
     changes:
       - core/app/tika/tika-no-ocr/ci.properties
   except:
     - schedules
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-no-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-no-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=324-fix-resource-entity-file-manager
   cache:
     key: tika-no-ocr
     paths:

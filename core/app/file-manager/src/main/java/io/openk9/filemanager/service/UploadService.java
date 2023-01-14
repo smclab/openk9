@@ -23,13 +23,10 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.MinioException;
 import io.openk9.filemanager.grpc.FileManagerGrpc;
-import io.openk9.filemanager.grpc.FileManager;
 import io.openk9.filemanager.grpc.FileResourceRequest;
 import io.openk9.filemanager.grpc.FileResourceResponse;
 import io.openk9.filemanager.grpc.FindFileResourceByDatasourceIdFileIdRequest;
-import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
 import io.quarkus.grpc.GrpcClient;
-import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
