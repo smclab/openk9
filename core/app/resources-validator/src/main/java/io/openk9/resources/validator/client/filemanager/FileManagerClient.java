@@ -27,17 +27,19 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 
-@Path("/v1/file-manager")
+@Path("/api/file-manager/v1")
 @RegisterRestClient(configKey = "file-manager")
 public interface FileManagerClient {
 
 	@GET
-	@Path("/download/{resourceId}")
+	@Path("/download/{resourceId}/{schemaName}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	InputStream download(@PathParam("resourceId") String resourceId);
+	InputStream download(@PathParam("resourceId") String resourceId,
+						 @PathParam("schemaName") String schemaName);
 
 	@POST
-	@Path("/delete/{resourceId}")
-	void delete(@javax.ws.rs.PathParam("resourceId") String resourceId);
+	@Path("/delete/{resourceId}/{schemaName}")
+	void delete(@javax.ws.rs.PathParam("resourceId") String resourceId,
+				@PathParam("schemaName") String schemaName);
 
 }

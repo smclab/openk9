@@ -48,6 +48,7 @@ import java.util.concurrent.CompletionStage;
 
 import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.scriptQuery;
 
 @ApplicationScoped
 @Startup
@@ -67,7 +68,9 @@ public class ResourcesValidatorProcessor {
 
 		JsonObject payload = jsonObject.getJsonObject("payload");
 
-		Long tenantId = payload.getLong("tenantId");
+		String schemaName = payload.getString("tenantId");
+
+		String indexName = payload.getString("indexName");
 
 		Long datasourceId = payload.getLong("datasourceId");
 
@@ -81,7 +84,7 @@ public class ResourcesValidatorProcessor {
 
 		boolQueryBuilder.must(existsQuery("hashCodes"));
 
-		SearchRequest searchRequest = new SearchRequest(tenantId + "-*-data");
+		SearchRequest searchRequest = new SearchRequest(indexName);
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -98,7 +101,7 @@ public class ResourcesValidatorProcessor {
 
 		String rawContent = payload.getString("rawContent");
 
-		List<Integer> hashCodes = _getHashCodes(rawContent, binaries);
+		List<Integer> hashCodes = _getHashCodes(rawContent, binaries, schemaName);
 
 		try {
 
@@ -125,7 +128,7 @@ public class ResourcesValidatorProcessor {
 							String resourceId =
 									binaries.getJsonObject(i).getString("resourceId");
 
-							fileManagerClient.delete(resourceId);
+							fileManagerClient.delete(resourceId, schemaName);
 						}
 
 						logger.info(
@@ -162,7 +165,7 @@ public class ResourcesValidatorProcessor {
 
 	}
 
-	private List<Integer> _getHashCodes(String rawContent, JsonArray binaries) {
+	private List<Integer> _getHashCodes(String rawContent, JsonArray binaries, String schemaName) {
 
 		if (rawContent == null && (binaries == null || binaries.isEmpty())) {
 			return List.of();
@@ -179,7 +182,7 @@ public class ResourcesValidatorProcessor {
 						binaries.getJsonObject(i).getString("resourceId");
 
 					InputStream inputStream =
-						fileManagerClient.download(resourceId);
+						fileManagerClient.download(resourceId, schemaName);
 
 					byte[] sourceBytes;
 
