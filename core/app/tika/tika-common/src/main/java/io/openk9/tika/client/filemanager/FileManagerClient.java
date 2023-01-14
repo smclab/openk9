@@ -24,7 +24,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 
-@Path("/v1/file-manager")
+@Path("/api/file-manager/v1")
 @RegisterRestClient(configKey = "file-manager")
 public interface FileManagerClient {
 
