@@ -32,6 +32,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -147,7 +148,7 @@ public class ResourcesValidatorProcessor {
 				}
 
 			}
-			catch (IndexNotFoundException e) {
+			catch (ResponseException e) {
 				logger.info("Index wit name: " + indexName + " not exist. Item go to next enrich step.");
 			}
 
