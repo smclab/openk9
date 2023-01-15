@@ -34,6 +34,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -107,7 +108,12 @@ public class ResourcesValidatorProcessor {
 
 		try {
 
-			try {
+			GetIndexRequest request = new GetIndexRequest(indexName);
+
+			boolean exists = restHighLevelClient.indices().exists(request,
+				RequestOptions.DEFAULT);
+
+			if (exists) {
 
 				SearchResponse searchResponse =
 					restHighLevelClient.search(
@@ -146,9 +152,8 @@ public class ResourcesValidatorProcessor {
 					}
 
 				}
-
 			}
-			catch (ResponseException e) {
+			else {
 				logger.info("Index wit name: " + indexName + " not exist. Item go to next enrich step.");
 			}
 
