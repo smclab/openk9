@@ -33,6 +33,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -105,40 +106,49 @@ public class ResourcesValidatorProcessor {
 
 		try {
 
-			SearchResponse searchResponse =
-				restHighLevelClient.search(
-					searchRequest, RequestOptions.DEFAULT);
+			try {
 
-			for (SearchHit hit : searchResponse.getHits()) {
+				SearchResponse searchResponse =
+					restHighLevelClient.search(
+						searchRequest, RequestOptions.DEFAULT);
 
-				Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+				for (SearchHit hit : searchResponse.getHits()) {
 
-				Object documentHashCodes = sourceAsMap.get("hashCodes");
+					Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 
-				if (documentHashCodes instanceof Collection) {
+					Object documentHashCodes = sourceAsMap.get("hashCodes");
 
-					Collection<Integer> documentHashCodesList =
-						(Collection<Integer>)documentHashCodes;
+					if (documentHashCodes instanceof Collection) {
 
-					if (hashCodes.size() == documentHashCodesList.size() &&
-						hashCodes.containsAll(documentHashCodesList)) {
+						Collection<Integer> documentHashCodesList =
+							(Collection<Integer>) documentHashCodes;
 
-						for (int i = 0; i < binaries.size(); i++) {
+						if (hashCodes.size() == documentHashCodesList.size() &&
+							hashCodes.containsAll(documentHashCodesList)) {
 
-							String resourceId =
-									binaries.getJsonObject(i).getString("resourceId");
+							for (int i = 0; i < binaries.size(); i++) {
 
-							fileManagerClient.delete(resourceId, schemaName);
+								String resourceId =
+									binaries.getJsonObject(i).getString(
+										"resourceId");
+
+								fileManagerClient.delete(
+									resourceId, schemaName);
+							}
+
+							logger.info(
+								"document found. dropped message with contentId: "
+								+ contentId);
+							return message.ack();
 						}
 
-						logger.info(
-							"document found. dropped message with contentId: "
-							+ contentId);
-						return message.ack();
 					}
 
 				}
 
+			}
+			catch (IndexNotFoundException e) {
+				logger.info("Index wit name: " + indexName + " not exist. Item go to next enrich step.");
 			}
 
 			payload.put("hashCodes", hashCodes);
