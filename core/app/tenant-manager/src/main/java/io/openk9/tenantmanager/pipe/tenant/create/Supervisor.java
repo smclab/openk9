@@ -9,11 +9,16 @@ import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 
 public class Supervisor {
 	public sealed interface Command {}
+
 	public record Start(
 		String virtualHost, String schemaName,
 		DatasourceLiquibaseService service,
 		KeycloakAdminClientConfig keycloakAdminClientConfig,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
+	public record Rollback(
+		String schemaName, DatasourceLiquibaseService service,
+		KeycloakAdminClientConfig keycloakAdminClientConfig
+	) implements Command {}
 	public record ResponseWrapper(
 		Manager.Response response,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
@@ -38,7 +43,7 @@ public class Supervisor {
 						Manager.Response.class,
 						param -> new ResponseWrapper(param, start.replyTo));
 
-				ActorRef<Manager.Command> managerRef = context.spawn(
+				context.spawn(
 					Manager.create(
 						start.virtualHost(),
 						start.schemaName(),
@@ -48,6 +53,19 @@ public class Supervisor {
 					),
 					"manager-" + start.schemaName()
 				);
+				return Behaviors.same();
+			})
+			.onMessage(Rollback.class, rollback -> {
+
+				context.spawn(
+					Manager.createRollback(
+						rollback.schemaName(),
+						rollback.service(),
+						rollback.keycloakAdminClientConfig()
+					),
+					"rollback-" + rollback.schemaName()
+				);
+
 				return Behaviors.same();
 			})
 			.onMessage(ResponseWrapper.class, responseWrapper -> {

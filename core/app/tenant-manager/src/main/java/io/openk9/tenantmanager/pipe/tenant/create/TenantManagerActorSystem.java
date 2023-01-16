@@ -3,12 +3,15 @@ package io.openk9.tenantmanager.pipe.tenant.create;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
+import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.AskPattern;
+import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -24,7 +27,10 @@ public class TenantManagerActorSystem {
 	@PostConstruct
 	public void init() {
 		_actorSystem = ActorSystem.create(
-			Supervisor.create(), "tenant-manager-creator"
+			Behaviors
+				.supervise(Supervisor.create())
+				.onFailure(SupervisorStrategy.resume()),
+			"tenant-manager-creator"
 		);
 	}
 
@@ -41,17 +47,29 @@ public class TenantManagerActorSystem {
 						config,
 						actorRef
 					),
-				Duration.ofSeconds(10),
+				requestTimeout,
 				_actorSystem.scheduler()
 			);
 
 		return Uni
 			.createFrom()
 			.completionStage(ask)
-			.onItem()
-			.transformToUni(response -> {
-				if (response instanceof Supervisor.Success) {
-					Supervisor.Success success = (Supervisor.Success) response;
+			.onItemOrFailure()
+			.transformToUni((res, t) -> {
+
+				if (t != null) {
+					_actorSystem.tell(
+						new Supervisor.Rollback(
+							realmName,
+							liquibaseService,
+							config
+						)
+					);
+					return Uni.createFrom().failure(t);
+				}
+
+				if (res instanceof Supervisor.Success) {
+					Supervisor.Success success = (Supervisor.Success)res;
 					Tenant tenant = new Tenant();
 					tenant.setVirtualHost(success.virtualHost());
 					tenant.setSchemaName(success.schemaName());
@@ -91,5 +109,11 @@ public class TenantManagerActorSystem {
 
 	@Inject
 	KeycloakAdminClientConfig config;
+
+	@ConfigProperty(
+		name = "openk9.tenant-manager.create-tenant-timeout",
+		defaultValue = "45s"
+	)
+	Duration requestTimeout;
 
 }
