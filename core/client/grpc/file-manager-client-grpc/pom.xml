@@ -21,11 +21,15 @@
 	<parent>
 		<groupId>io.openk9.client.grpc</groupId>
 		<artifactId>grpc</artifactId>
-		<version>1.3.0-SNAPSHOT</version>
+		<version>1.3.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<name>OpenK9 :: Client :: Grpc :: File Manager Client Grpc</name>
 	<artifactId>file-manager-client-grpc</artifactId>
 	<packaging>jar</packaging>
 
+
+  <scm>
+    <tag>v1.3.0</tag>
+  </scm>
 </project>

@@ -6,13 +6,13 @@
 	<parent>
 		<artifactId>common</artifactId>
 		<groupId>io.openk9.common</groupId>
-		<version>1.3.0-SNAPSHOT</version>
+		<version>1.3.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<name>OpenK9 :: Common :: Resources Common</name>
 	<artifactId>resources-common</artifactId>
-	<version>1.3.0-SNAPSHOT</version>
+	<version>1.3.0</version>
 	<packaging>jar</packaging>
 
 	<build>
@@ -78,4 +78,8 @@
 			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
 		</dependency>
 	</dependencies>
+
+  <scm>
+    <tag>v1.3.0</tag>
+  </scm>
 </project>
