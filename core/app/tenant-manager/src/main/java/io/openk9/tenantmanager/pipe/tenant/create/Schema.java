@@ -34,6 +34,7 @@ public class Schema {
 
 				try {
 					service.rollbackRunLiquibaseMigration(schemaName);
+					context.getLog().info("schema {} rollback", schemaName);
 				}
 				catch (Exception e) {
 					context.getLog().error(e.getMessage(), e);

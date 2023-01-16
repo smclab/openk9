@@ -139,25 +139,39 @@ public class Manager {
 					clientId, clientSecret));
 		}
 		else {
-			for (Object o : errorList) {
-				if (o instanceof Keycloak.Error) {
-					Keycloak.Error error =(Keycloak.Error)o;
-					context.getLog().error("Keycloak: " + error);
-					ActorRef<Keycloak.Command> keycloakRollbackRef =
-						context.spawn(
-							Keycloak.createRollback(
-								keycloakAdminClientConfig, schemaName), "keycloak-rollback-" + schemaName);
-					keycloakRollbackRef.tell(Keycloak.Start.INSTANCE);
-				}
-				else if (o instanceof Schema.Error) {
-					Schema.Error error =(Schema.Error)o;
-					context.getLog().error("Schema: " + error);
+
+			if (errorList.size() == 1) {
+
+				Object errorResponse = errorList.get(0);
+
+				if (errorResponse instanceof Keycloak.Error) {
 					ActorRef<Schema.Command> schemaRollbackRef =
 						context.spawn(
 							Schema.createRollback(
 								service, schemaName), "schema-rollback-" + schemaName);
 					schemaRollbackRef.tell(Schema.Start.INSTANCE);
 				}
+				else if (errorResponse instanceof Schema.Error) {
+					ActorRef<Keycloak.Command> keycloakRollbackRef =
+						context.spawn(
+							Keycloak.createRollback(
+								keycloakAdminClientConfig, schemaName), "keycloak-rollback-" + schemaName);
+					keycloakRollbackRef.tell(Keycloak.Start.INSTANCE);
+				}
+
+			}
+
+			for (Object o : errorList) {
+
+				if (o instanceof Keycloak.Error) {
+					Keycloak.Error error =(Keycloak.Error)o;
+					context.getLog().error("Keycloak: " + error);
+				}
+				else if (o instanceof Schema.Error) {
+					Schema.Error error =(Schema.Error)o;
+					context.getLog().error("Schema: " + error);
+				}
+
 			}
 		}
 

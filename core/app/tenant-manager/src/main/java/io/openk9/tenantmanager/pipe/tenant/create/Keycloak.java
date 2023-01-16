@@ -52,6 +52,7 @@ public class Keycloak {
 
 				try {
 					keycloakClient.realms().realm(realmName).remove();
+					context.getLog().info("realm {} rollback", realmName);
 				}
 				catch (Exception e) {
 					context.getLog().error(e.getMessage(), e);
