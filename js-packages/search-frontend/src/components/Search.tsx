@@ -81,6 +81,7 @@ export function Search({
         icon={faSearch}
         style={{
           paddingLeft: "16px",
+          opacity: 0.5,
           color: "--openk9-embeddable-search--secondary-text-color",
         }}
       />
@@ -159,6 +160,7 @@ export function Search({
         </div>
         <input
           ref={inputRef}
+          placeholder="Cerca contenuti..."
           value={selectionsState.text}
           onChange={(event) => {
             selectionsDispatch({

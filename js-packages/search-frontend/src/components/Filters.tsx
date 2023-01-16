@@ -38,7 +38,7 @@ function Filters({
         css={css`
           position: absolute;
           width: calc(100% - 32px);
-          padding: 16px 16px 0px 16px;
+          padding: 16px 16px 0px 0px;
         `}
       >
         {suggestionCategories.data?.map((suggestionCategory) => {

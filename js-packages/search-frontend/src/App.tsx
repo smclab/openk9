@@ -71,7 +71,7 @@ export function App() {
         ref={(element) => openk9.updateConfiguration({ tabs: element })}
         css={css`
           grid-area: tabs;
-          padding: 8px 16px 0px 16px;
+          padding: 8px 16px 0px 0px;
           margin-bottom: -16px;
         `}
       ></div>
