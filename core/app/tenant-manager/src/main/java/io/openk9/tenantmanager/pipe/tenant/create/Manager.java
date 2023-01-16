@@ -7,6 +7,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ public class Manager {
 
 	public sealed interface Command {}
 	private record ResponseWrapper(Object response) implements Command {}
+	private enum Delay implements Command {INSTANCE}
 
 	public sealed interface Response {}
 	public record Success(
@@ -63,6 +65,42 @@ public class Manager {
 			keycloakRef.tell(Keycloak.Start.INSTANCE);
 
 			return initial(context, responseActorRef, service, keycloakAdminClientConfig, schemaName, List.of(), 2);
+
+		});
+
+	}
+
+	public static Behavior<Command> createRollback(
+		String schemaName,
+		DatasourceLiquibaseService service,
+		KeycloakAdminClientConfig keycloakAdminClientConfig) {
+
+		return Behaviors.setup(context -> {
+
+			ActorRef<Keycloak.Command> keycloakRef =
+				context.spawn(
+					Keycloak.createRollback(
+						keycloakAdminClientConfig,
+						schemaName
+					),
+					"keycloak-rollback-" + schemaName
+				);
+
+			ActorRef<Schema.Command> schemaRef =
+				context.spawn(
+					Schema.createRollback(
+						service,
+						schemaName
+					),
+					"schema-rollback-" + schemaName
+				);
+
+			schemaRef.tell(Schema.Start.INSTANCE);
+			keycloakRef.tell(Keycloak.Start.INSTANCE);
+
+			context.scheduleOnce(Duration.ofSeconds(5), context.getSelf(), Delay.INSTANCE);
+
+			return Behaviors.receiveMessage(msg -> Behaviors.stopped());
 
 		});
 
