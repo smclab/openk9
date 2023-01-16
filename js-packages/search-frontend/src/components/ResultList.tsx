@@ -64,9 +64,18 @@ function ResultCount({ children }: ResultCountProps) {
       css={css`
         padding: 8px 16px;
         border-bottom: 1px solid var(--openk9-embeddable-search--border-color);
+        font-weight: bold;
       `}
     >
-      {children} results
+      Result:
+      <span
+        css={css`
+          color: var(--openk9-embeddable-search--active-color);
+          margin-left: 5px;
+        `}
+      >
+        {children?.toLocaleString("it")}
+      </span>
     </div>
   );
 }
