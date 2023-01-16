@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>io.openk9.service</groupId>
 		<artifactId>service</artifactId>
-		<version>1.3.0</version>
+		<version>1.3.1-SNAPSHOT</version>
 	</parent>
 	<name>OpenK9 :: Service :: Auth Service</name>
 	<artifactId>auth-service</artifactId>
@@ -76,8 +76,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-  <scm>
-    <tag>v1.3.0</tag>
-  </scm>
 </project>
