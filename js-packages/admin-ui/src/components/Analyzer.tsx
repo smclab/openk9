@@ -170,6 +170,7 @@ export function Analyzer() {
           <TextArea label="Description" {...form.inputProps("description")} />
           <MultiSelectForDinamicallyFieldsWithoutType
             id={analyzerId}
+            setTitle={form.inputProps("name").onChange}
             type={type}
             setIsCustom={setIsCustom}
             template={TemplateAnalyzers}

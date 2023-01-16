@@ -128,6 +128,7 @@ export function Tokenizer() {
         <TextArea label="Description" {...form.inputProps("description")} />
         <MultiSelectForDinamicFields
           id={tokenizerId}
+          setTitle={form.inputProps("name").onChange}
           templates={TokenizerFilters}
           onChangeDescription={form.inputProps("description").onChange}
           templateChoice={templateChoice}

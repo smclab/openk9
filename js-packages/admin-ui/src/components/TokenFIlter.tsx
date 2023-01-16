@@ -130,6 +130,7 @@ export function TokenFilter() {
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
           <MultiSelectForDinamicFields
+            setTitle={form.inputProps("name").onChange}
             id={tokenFilterId}
             templates={Filters}
             onChangeDescription={form.inputProps("description").onChange}

@@ -62,7 +62,7 @@ export function CharFilter() {
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
-        name: "",
+        name: Filters[0].title,
         description: Filters[0].description,
         jsonConfig: "{}",
       }),
@@ -119,6 +119,7 @@ export function CharFilter() {
         <TextArea label="Description" {...form.inputProps("description")} />
         <MultiSelectForDinamicFields
           id={charFilterId}
+          setTitle={form.inputProps("name").onChange}
           templates={Filters}
           onChangeDescription={form.inputProps("description").onChange}
           templateChoice={templateChoice}

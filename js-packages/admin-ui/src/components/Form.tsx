@@ -1225,11 +1225,13 @@ export function MultiSelectSimple({
 
 export function MultiSelectForDinamicFields({
   id,
+  setTitle,
   templates,
   onChangeDescription,
   templateChoice,
   setTemplateChoice,
 }: {
+  setTitle?: (value: string) => void;
   id: string;
   templates: any;
   onChangeDescription: any;
@@ -1254,6 +1256,9 @@ export function MultiSelectForDinamicFields({
                     }
                   });
                   const dataSelect = templates.find((element: any) => element.title === event.currentTarget.value);
+                  if (setTitle) {
+                    setTitle(dataSelect.title);
+                  }
                   onChangeDescription(dataSelect!.description);
                 }}
               >
@@ -1271,6 +1276,7 @@ export function MultiSelectForDinamicFields({
 
 export function MultiSelectForDinamicallyFieldsWithoutType({
   id,
+  setTitle,
   type,
   setIsCustom,
   template,
@@ -1279,6 +1285,7 @@ export function MultiSelectForDinamicallyFieldsWithoutType({
   onChangeType,
 }: {
   id: string;
+  setTitle?: (value: string) => void;
   type: string;
   setIsCustom: any;
   template: any;
@@ -1310,6 +1317,7 @@ export function MultiSelectForDinamicallyFieldsWithoutType({
                     }
                   });
                   const dataSelect = template.find((element: any) => element.title === event.currentTarget.value);
+                  if (setTitle) setTitle(dataSelect.title);
                   onChangeDescription(dataSelect!.description);
                 }}
               >
