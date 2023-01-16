@@ -31,6 +31,7 @@ public class Tenant implements GraphqlId {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id", nullable = false)
+	@Setter(AccessLevel.NONE)
 	private Long id;
 
 	@Setter(AccessLevel.NONE)

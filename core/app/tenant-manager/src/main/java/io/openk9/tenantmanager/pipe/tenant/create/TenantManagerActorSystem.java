@@ -1,38 +1,70 @@
 package io.openk9.tenantmanager.pipe.tenant.create;
 
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
-import io.openk9.tenantmanager.pipe.tenant.create.message.TenantMessage;
-import io.openk9.tenantmanager.service.BackgroundProcessService;
+import akka.actor.typed.javadsl.AskPattern;
+import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
+import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 import io.smallrye.mutiny.Uni;
-import org.keycloak.admin.client.Keycloak;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.UUID;
+import java.time.Duration;
+import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class TenantManagerActorSystem {
 
-	public Uni<UUID> startCreateTenant(String virtualHost, String realmName) {
+	private ActorSystem<Supervisor.Command> _actorSystem;
+
+	@PostConstruct
+	public void init() {
+		_actorSystem = ActorSystem.create(
+			Supervisor.create(), "tenant-manager-creator"
+		);
+	}
+
+	public Uni<Tenant> startCreateTenant(String virtualHost, String realmName) {
+
+		CompletionStage<Supervisor.Response> ask =
+			AskPattern.ask(
+				_actorSystem,
+				(ActorRef<Supervisor.Response> actorRef) ->
+					new Supervisor.Start(
+						virtualHost,
+						realmName,
+						liquibaseService,
+						config,
+						actorRef
+					),
+				Duration.ofSeconds(10),
+				_actorSystem.scheduler()
+			);
 
 		return Uni
 			.createFrom()
-			.item(UUID::randomUUID)
-			.invoke(requestId -> {
-
-				ActorSystem<TenantMessage> actorSystem =
-					ActorSystem.create(
-						TenantBehavior.create(
-							requestId, virtualHost,
-							keycloak, tenantService, backgroundProcessService,
-							liquibaseService),
-						"tenant-manager");
-
-				actorSystem.tell(new TenantMessage.Start(realmName));
-
+			.completionStage(ask)
+			.onItem()
+			.transformToUni(response -> {
+				if (response instanceof Supervisor.Success) {
+					Supervisor.Success success = (Supervisor.Success) response;
+					Tenant tenant = new Tenant();
+					tenant.setVirtualHost(success.virtualHost());
+					tenant.setSchemaName(success.schemaName());
+					tenant.setRealmName(success.realmName());
+					tenant.setClientId(success.clientId());
+					tenant.setClientSecret(success.clientSecret());
+					tenant.setLiquibaseSchemaName(
+						success.liquibaseSchemaName());
+					return tenantService.persist(tenant);
+				}
+				else {
+					throw new RuntimeException("error");
+				}
 			});
 
 	}
@@ -52,15 +84,12 @@ public class TenantManagerActorSystem {
 	}
 
 	@Inject
-	Keycloak keycloak;
-
-	@Inject
 	TenantService tenantService;
 
 	@Inject
-	BackgroundProcessService backgroundProcessService;
+	DatasourceLiquibaseService liquibaseService;
 
 	@Inject
-	DatasourceLiquibaseService liquibaseService;
+	KeycloakAdminClientConfig config;
 
 }

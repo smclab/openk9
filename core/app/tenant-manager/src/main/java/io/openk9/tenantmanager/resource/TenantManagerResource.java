@@ -1,6 +1,7 @@
 package io.openk9.tenantmanager.resource;
 
 import io.openk9.common.util.RandomGenerator;
+import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
 import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
 import io.openk9.tenantmanager.service.TenantService;
@@ -25,7 +26,7 @@ public class TenantManagerResource {
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<RequestId> createTenant(CreateTenantRequest createTenantRequest) {
+	public Uni<Tenant> createTenant(CreateTenantRequest createTenantRequest) {
 
 		String virtualHost = createTenantRequest.virtualHost();
 
@@ -41,8 +42,7 @@ public class TenantManagerResource {
 								schemaNames.toArray(String[]::new));
 
 							return tenantManagerActorSystem
-								.startCreateTenant(virtualHost, newSchemaName)
-								.map(RequestId::new);
+								.startCreateTenant(virtualHost, newSchemaName);
 
 						});
 				}
