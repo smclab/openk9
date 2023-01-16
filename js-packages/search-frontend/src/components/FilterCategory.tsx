@@ -171,18 +171,25 @@ function FilterCategory({
             );
           })}
           {suggestions.hasNextPage && (
-            <button
-              css={css`
-                width: 100%;
-                ${buttonStyle}
-              `}
-              disabled={suggestions.isFetching}
-              onClick={() => {
-                suggestions.fetchNextPage();
-              }}
+            <div
+              style={{ textAlign: "center", width: "100%", marginTop: "10px" }}
             >
-              load more
-            </button>
+              <button
+                css={css`
+                  border-bottom: 5px solid red;
+                  width: 150px;
+                  border-radius: 80px !important;
+                  height: 30px;
+                  ${buttonStyle};
+                `}
+                // disabled={suggestions.isFetching}
+                onClick={() => {
+                  suggestions.fetchNextPage();
+                }}
+              >
+                Load more
+              </button>
+            </div>
           )}
         </React.Fragment>
       )}
@@ -193,18 +200,22 @@ export const FilterCategoryMemo = React.memo(FilterCategory);
 
 const buttonStyle = css`
   color: inherit;
+  font-weight: bold;
   background: none;
   appearance: none;
   font-family: inherit;
   font-size: inherit;
   border: 1px solid var(--openk9-embeddable-search--primary-color);
+  color: var(--openk9-embeddable-search--primary-color);
   border-radius: 4px;
   :hover {
     color: var(--openk9-embeddable-search--primary-color);
+    cursor: pointer;
   }
   :disabled {
     border: 1px solid var(--openk9-embeddable-search--border-color);
-    color: var(--openk9-embeddable-search--secondary-text-color);
+    color: var(--openk9-embeddable-search--border-color);
+    cursor: not-allowed;
   }
 `;
 

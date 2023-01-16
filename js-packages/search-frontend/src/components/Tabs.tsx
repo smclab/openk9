@@ -31,7 +31,6 @@ function Tabs({
         css={css`
           position: absolute;
           display: flex;
-          padding: 0px 16px;
         `}
       >
         {tabs.map((tab, index) => {
@@ -40,17 +39,20 @@ function Tabs({
             <div
               key={index}
               css={css`
-                padding: 8px 16px;
+                padding-left: ${index == 0 ? "0px" : "20px"};
+                padding-top: 8px;
+                font-weight: bold;
+                text-decoration: ${isSelected
+                  ? "underline; text-underline-offset: 6px;"
+                  : ""};
                 color: ${isSelected
                   ? "var(--openk9-embeddable-search--active-color)"
                   : "var(--openk9-embeddable-search--secondary-text-color)"};
-                border-bottom: 2px solid
-                  ${isSelected
-                    ? "var(--openk9-embeddable-search--active-color)"
-                    : "transparent"};
+                ${isSelected
+                  ? "var(--openk9-embeddable-search--active-color)"
+                  : "transparent"};
                 cursor: pointer;
                 user-select: none;
-                /* font-weight: ${isSelected ? "bold" : "normal"}; */
               `}
               onClick={() => {
                 onSelectedTabIndexChange(index);
