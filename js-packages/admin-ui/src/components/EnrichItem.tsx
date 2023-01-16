@@ -68,12 +68,7 @@ export function EnrichItem() {
     skip: !enrichItemId || enrichItemId === "new",
   });
   const [createOrUpdateEnrichItemMutate, createOrUpdateEnrichItemMutation] = useCreateOrUpdateEnrichItemMutation({
-    refetchQueries: [
-      EnrichItemQuery,
-      EnrichItemsQuery,
-      AssociatedEnrichPipelineEnrichItemsQuery,
-      UnassociatedEnrichPipelineEnrichItemsQuery,
-    ],
+    refetchQueries: [EnrichItemsQuery, AssociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQuery],
     onCompleted(data) {
       if (data.enrichItem?.entity) {
         if (enrichItemId === "new") {
