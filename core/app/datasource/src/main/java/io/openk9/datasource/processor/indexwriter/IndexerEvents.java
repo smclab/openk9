@@ -388,9 +388,13 @@ public class IndexerEvents {
 			DocTypeField docTypeField = new DocTypeField();
 			docTypeField.setName(fieldName);
 			docTypeField.setFieldName(fieldName);
-			docTypeField.setFieldType(FieldType.fromString(type));
 			docTypeField.setBoost(1.0);
-			docTypeField.setSearchable(false);
+			FieldType fieldType = FieldType.fromString(type);
+			docTypeField.setFieldType(fieldType);
+			switch (fieldType) {
+				case TEXT, KEYWORD, WILDCARD, CONSTANT_KEYWORD -> docTypeField.setSearchable(true);
+				default -> docTypeField.setSearchable(false);
+			}
 			docTypeField.setDescription("auto-generated");
 			docTypeField.setSubDocTypeFields(new LinkedHashSet<>());
 			if (root.getExtra() != null && !root.getExtra().isEmpty()) {
