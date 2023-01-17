@@ -1009,11 +1009,11 @@ export function CronInput(props: BaseInputProps<string>) {
               <label>Preset</label>
               <ClaySelect value={value} onChange={(event) => onChange(event.currentTarget.value)}>
                 <ClaySelect.Option label="Custom" value="" />
-                <ClaySelect.Option label="Every 5 Minutes" value="* */5 0 ? * * *" />
-                <ClaySelect.Option label="Every 30 Minutes" value="* */30 0 ? * * *" />
-                <ClaySelect.Option label="Every Hour" value="* 0 * ? * * *" />
-                <ClaySelect.Option label="Every Day at Midday" value="* 0 0 12 ? * * *" />
-                <ClaySelect.Option label="Every Day at Midnight" value="* 0 0 0 ? * * *" />
+                <ClaySelect.Option label="Every 5 Minutes" value="0 */5 * ? * * *" />
+                <ClaySelect.Option label="Every 30 Minutes" value="0 */30 * ? * * *" />
+                <ClaySelect.Option label="Every Hour" value="0 0 * ? * * *" />
+                <ClaySelect.Option label="Every Day at Midday" value="0 0 12 * * ? *" />
+                <ClaySelect.Option label="Every Day at Midnight" value="0 0 0 * * ? *" />
               </ClaySelect>
             </div>
           </ClayForm.Group>
