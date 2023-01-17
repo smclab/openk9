@@ -4,10 +4,10 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
-import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 
 public class Supervisor {
 	public sealed interface Command {}
@@ -16,11 +16,11 @@ public class Supervisor {
 		String virtualHost, String schemaName,
 		DatasourceLiquibaseService liquibaseService,
 		TenantService tenantService,
-		KeycloakAdminClientConfig keycloakAdminClientConfig,
+		KeycloakContext keycloakContext,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 	public record Rollback(
 		String schemaName, DatasourceLiquibaseService service,
-		KeycloakAdminClientConfig keycloakAdminClientConfig
+		KeycloakContext keycloakContext
 	) implements Command {}
 	public record ResponseWrapper(
 		Manager.Response response,
@@ -50,7 +50,7 @@ public class Supervisor {
 						start.schemaName(),
 						start.liquibaseService(),
 						start.tenantService(),
-						start.keycloakAdminClientConfig(),
+						start.keycloakContext(),
 						responseActorRef
 					),
 					"manager-" + start.schemaName()
@@ -63,7 +63,7 @@ public class Supervisor {
 					Manager.createRollback(
 						rollback.schemaName(),
 						rollback.service(),
-						rollback.keycloakAdminClientConfig()
+						rollback.keycloakContext()
 					),
 					"rollback-" + rollback.schemaName()
 				);
