@@ -64,7 +64,8 @@ function ResultCount({ children }: ResultCountProps) {
       css={css`
         padding: 8px 16px;
         border-bottom: 1px solid var(--openk9-embeddable-search--border-color);
-        font-weight: bold;
+        font-weight: Helvetica;
+        font-weight: 700;
       `}
     >
       Result:
