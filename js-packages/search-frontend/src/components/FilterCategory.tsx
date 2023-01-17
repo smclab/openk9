@@ -118,12 +118,14 @@ function FilterCategory({
                   return (
                     <div
                       key={index}
+                      className="form-check"
                       css={css`
-                        display: flex;
                         margin-left: 13px;
+                        margin-top: 5px;
                       `}
                     >
                       <input
+                        className="form-check-input"
                         type="checkbox"
                         checked={isChecked}
                         onChange={(event) => {
@@ -135,39 +137,34 @@ function FilterCategory({
                         }}
                         css={css`
                           width: 14px;
-                          margin: 4px;
-                          flex-shrink: 0;
                         `}
                       />
-                      <label
-                        css={css`
-                          display: block;
-                          white-space: nowrap;
-                          overflow-x: hidden;
-                          text-overflow: ellipsis;
-                          :hover {
-                            word-break: break-all;
-                            white-space: normal;
-                          }
-                        `}
-                      >
-                        {suggestion.tokenType === "ENTITY" ? (
-                          <>
-                            <strong
-                              css={css`
-                                :first-letter {
-                                  text-transform: uppercase;
-                                }
-                              `}
-                            >
-                              {suggestion.entityType}
-                            </strong>
-                            : {suggestion.entityValue}
-                          </>
-                        ) : (
-                          suggestion.value
-                        )}
-                      </label>
+                      <span>
+                        <label
+                          className="form-check-label"
+                          css={css`
+                            text-overflow: ellipsis;
+                          `}
+                        >
+                          {suggestion.tokenType === "ENTITY" ? (
+                            <>
+                              <strong
+                                css={css`
+                                  :first-letter {
+                                    text-transform: uppercase;
+                                  }
+                                  display: inline-block;
+                                `}
+                              >
+                                {suggestion.entityType}
+                              </strong>
+                              : {suggestion.entityValue}
+                            </>
+                          ) : (
+                            suggestion.value
+                          )}
+                        </label>
+                      </span>
                     </div>
                   );
                 })}

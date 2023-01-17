@@ -67,59 +67,66 @@ function LoginInfoComponent({}: LoginInfoProps) {
               border: 1px solid var(--openk9-embeddable-search--border-color);
               z-index: 1;
               border-radius: 4px;
-              width: 300px;
+              width: 245px;
+              height: 95px;
               overflow: hidden;
             `}
           >
             <div
               css={css`
-                padding: 8px 16px 8px 16px;
-                font-size: 1.5rem;
-              `}
-            >
-              {userProfileQuery.data?.name}
-            </div>
-            <div
-              css={css`
-                padding: 0px 16px 8px 16px;
+                padding: 3px 16px 0px 16px;
+                border-bottom: 1px solid
+                  var(--openk9-embeddable-search--border-color);
               `}
             >
               <FontAwesomeIcon icon={faUser} />
-              &nbsp;{userProfileQuery.data?.preferred_username}
-            </div>
-            <div
-              css={css`
-                padding: 0px 16px 8px 16px;
-              `}
-            >
-              <FontAwesomeIcon icon={faEnvelope} />
-              &nbsp;{userProfileQuery.data?.email}
-            </div>
-            <div
-              css={css`
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 8px 16px 8px 16px;
-                background-color: var(
-                  --openk9-embeddable-search--secondary-background-color
-                );
-              `}
-            >
-              <a href="/admin" target="admin" css={css``}>
-                Admin
-              </a>
-              <button
-                onClick={() => {
-                  client.deauthenticate();
-                }}
+              &nbsp;
+              <span
                 css={css`
-                  ${buttonStyle};
+                  font-family: "Helvetica";
+                  font-style: normal;
+                  font-weight: 400;
+                  font-size: 14px;
+                  line-height: 44px;
+                  margin-left: 10px;
+                  /* or 314% */
+
+                  align-items: center;
+
+                  color: #2e2f39;
                 `}
               >
-                <FontAwesomeIcon icon={faRightFromBracket} />
-                &nbsp;Logout
-              </button>
+                {userProfileQuery.data?.preferred_username}
+              </span>
+            </div>
+            <div
+              css={css`
+                padding: 3px 16px 0px 16px;
+                border-bottom: 1px solid
+                  var(--openk9-embeddable-search--border-color);
+                cursor: pointer;
+              `}
+              onClick={() => {
+                client.deauthenticate();
+              }}
+            >
+              <FontAwesomeIcon icon={faRightFromBracket} />
+              &nbsp;
+              <span
+                css={css`
+                  font-family: "Helvetica";
+                  font-style: normal;
+                  font-weight: 700;
+                  font-size: 14px;
+                  line-height: 44px;
+                  margin-left: 10px;
+                  /* or 314% */
+                  align-items: center;
+                  color: #2e2f39;
+                `}
+              >
+                Logout
+              </span>
             </div>
           </div>
         )}
