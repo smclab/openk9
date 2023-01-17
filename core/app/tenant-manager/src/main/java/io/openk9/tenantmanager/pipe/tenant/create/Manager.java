@@ -5,6 +5,7 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
+import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 
 import java.time.Duration;
@@ -17,19 +18,16 @@ public class Manager {
 
 	public sealed interface Command {}
 	private record ResponseWrapper(Object response) implements Command {}
+	private record TenantResponseWrapper(Tenant.Response response) implements Command {}
 	private enum Delay implements Command {INSTANCE}
 
 	public sealed interface Response {}
-	public record Success(
-		String virtualHost, String schemaName,
-		String liquibaseSchemaName, String realmName,
-		String clientId, String clientSecret
-	) implements Response {}
+	public record Success(io.openk9.tenantmanager.model.Tenant tenant) implements Response {}
 
 
 	public static Behavior<Command> create(
 		String virtualHost, String schemaName,
-		DatasourceLiquibaseService service,
+		DatasourceLiquibaseService liquibaseService, TenantService tenantService,
 		KeycloakAdminClientConfig keycloakAdminClientConfig,
 		ActorRef<Manager.Response> responseActorRef) {
 
@@ -54,7 +52,7 @@ public class Manager {
 			ActorRef<Schema.Command> schemaRef =
 				context.spawn(
 					Schema.create(
-						service,
+						liquibaseService,
 						new Schema.Params(virtualHost, schemaName),
 						schemaResponse
 					),
@@ -64,7 +62,9 @@ public class Manager {
 			schemaRef.tell(Schema.Start.INSTANCE);
 			keycloakRef.tell(Keycloak.Start.INSTANCE);
 
-			return initial(context, responseActorRef, service, keycloakAdminClientConfig, schemaName, List.of(), 2);
+			return initial(
+				context, responseActorRef, liquibaseService, tenantService,
+				keycloakAdminClientConfig, schemaName, List.of(), 2);
 
 		});
 
@@ -77,26 +77,7 @@ public class Manager {
 
 		return Behaviors.setup(context -> {
 
-			ActorRef<Keycloak.Command> keycloakRef =
-				context.spawn(
-					Keycloak.createRollback(
-						keycloakAdminClientConfig,
-						schemaName
-					),
-					"keycloak-rollback-" + schemaName
-				);
-
-			ActorRef<Schema.Command> schemaRef =
-				context.spawn(
-					Schema.createRollback(
-						service,
-						schemaName
-					),
-					"schema-rollback-" + schemaName
-				);
-
-			schemaRef.tell(Schema.Start.INSTANCE);
-			keycloakRef.tell(Keycloak.Start.INSTANCE);
+			_tellRollback(context, service, keycloakAdminClientConfig, schemaName);
 
 			context.scheduleOnce(Duration.ofSeconds(5), context.getSelf(), Delay.INSTANCE);
 
@@ -107,8 +88,10 @@ public class Manager {
 	}
 
 	private static Behavior<Command> initial(
-		ActorContext<Command> context, ActorRef<Manager.Response> responseActorRef, DatasourceLiquibaseService service,
-		KeycloakAdminClientConfig keycloakAdminClientConfig, String schemaName, List<ResponseWrapper> responses,
+		ActorContext<Command> context, ActorRef<Manager.Response> responseActorRef,
+		DatasourceLiquibaseService liquibaseService, TenantService tenantService,
+		KeycloakAdminClientConfig keycloakAdminClientConfig,
+		String schemaName, List<ResponseWrapper> responses,
 		int messageCount) {
 		return Behaviors.receive(Command.class)
 			.onMessage(ResponseWrapper.class, response -> {
@@ -117,13 +100,14 @@ public class Manager {
 				newResponses.add(response);
 				if (newResponses.size() == messageCount) {
 					return finalize(
-						context, responseActorRef, service, keycloakAdminClientConfig,
-						List.copyOf(newResponses), schemaName);
+						context, responseActorRef, liquibaseService, tenantService,
+						keycloakAdminClientConfig, List.copyOf(newResponses), schemaName);
 				}
 				else {
 					return initial(
-						context, responseActorRef, service, keycloakAdminClientConfig,
-						schemaName, List.copyOf(newResponses), messageCount);
+						context, responseActorRef, liquibaseService, tenantService,
+						keycloakAdminClientConfig, schemaName, List.copyOf(newResponses),
+						messageCount);
 				}
 
 			})
@@ -132,7 +116,7 @@ public class Manager {
 
 	private static Behavior<Command> finalize(
 		ActorContext<Command> context, ActorRef<Manager.Response> responseActorRef,
-		DatasourceLiquibaseService service,
+		DatasourceLiquibaseService liquibaseService, TenantService tenantService,
 		KeycloakAdminClientConfig keycloakAdminClientConfig,
 		List<ResponseWrapper> responseList, String schemaName) {
 
@@ -171,10 +155,49 @@ public class Manager {
 					context.getLog().info("Schema: " + success);
 				}
 			}
-			responseActorRef.tell(
-				new Success(
-					virtualHost, schemaName, liquibaseSchemaName, realmName,
-					clientId, clientSecret));
+
+			ActorRef<Tenant.Response> tenantResponseRef =
+				context.messageAdapter(
+					Tenant.Response.class, TenantResponseWrapper::new);
+
+			ActorRef<Tenant.Command> tenantRef =
+				context.spawn(
+					Tenant.create(
+						tenantService,
+						tenantResponseRef,
+						virtualHost,
+						schemaName,
+						liquibaseSchemaName,
+						realmName,
+						clientId,
+						clientSecret
+					),
+					"tenant-" + schemaName
+				);
+
+			tenantRef.tell(Tenant.Start.INSTANCE);
+
+			return Behaviors
+				.receive(Command.class)
+				.onMessage(TenantResponseWrapper.class, response -> {
+					Tenant.Response tenantResponse = response.response();
+					if (tenantResponse instanceof Tenant.Success) {
+						Tenant.Success success = (Tenant.Success)tenantResponse;
+						responseActorRef.tell(new Success(success.tenant()));
+					}
+					else {
+						Tenant.Error error = (Tenant.Error)tenantResponse;
+
+						context.getLog().error("Tenant: " + error);
+
+						_tellRollback(
+							context, liquibaseService,
+							keycloakAdminClientConfig, schemaName);
+
+					}
+					return Behaviors.stopped();
+				})
+				.build();
 		}
 		else {
 
@@ -186,7 +209,7 @@ public class Manager {
 					ActorRef<Schema.Command> schemaRollbackRef =
 						context.spawn(
 							Schema.createRollback(
-								service, schemaName), "schema-rollback-" + schemaName);
+								liquibaseService, schemaName), "schema-rollback-" + schemaName);
 					schemaRollbackRef.tell(Schema.Start.INSTANCE);
 				}
 				else if (errorResponse instanceof Schema.Error) {
@@ -215,4 +238,30 @@ public class Manager {
 
 		return Behaviors.stopped();
 	}
+
+	private static void _tellRollback(
+		ActorContext<Command> context,
+		DatasourceLiquibaseService liquibaseService,
+		KeycloakAdminClientConfig keycloakAdminClientConfig,
+		String schemaName) {
+
+		ActorRef<Schema.Command> schemaRollbackRef =
+			context.spawn(
+				Schema.createRollback(
+					liquibaseService, schemaName),
+				"schema-rollback-" + schemaName);
+
+		schemaRollbackRef.tell(Schema.Start.INSTANCE);
+
+		ActorRef<Keycloak.Command> keycloakRollbackRef =
+			context.spawn(
+				Keycloak.createRollback(
+					keycloakAdminClientConfig, schemaName),
+				"keycloak-rollback-" + schemaName);
+
+		keycloakRollbackRef.tell(Keycloak.Start.INSTANCE);
+
+	}
+
+
 }

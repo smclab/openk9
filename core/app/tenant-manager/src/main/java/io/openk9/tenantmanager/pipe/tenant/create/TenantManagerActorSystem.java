@@ -11,6 +11,7 @@ import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.unchecked.Unchecked;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.annotation.PostConstruct;
@@ -44,6 +45,7 @@ public class TenantManagerActorSystem {
 						virtualHost,
 						realmName,
 						liquibaseService,
+						tenantService,
 						config,
 						actorRef
 					),
@@ -54,36 +56,18 @@ public class TenantManagerActorSystem {
 		return Uni
 			.createFrom()
 			.completionStage(ask)
-			.onItemOrFailure()
-			.transformToUni((res, t) -> {
-
-				if (t != null) {
-					_actorSystem.tell(
-						new Supervisor.Rollback(
-							realmName,
-							liquibaseService,
-							config
-						)
-					);
-					return Uni.createFrom().failure(t);
-				}
+			.onItem()
+			.transform(Unchecked.function((res) -> {
 
 				if (res instanceof Supervisor.Success) {
 					Supervisor.Success success = (Supervisor.Success)res;
-					Tenant tenant = new Tenant();
-					tenant.setVirtualHost(success.virtualHost());
-					tenant.setSchemaName(success.schemaName());
-					tenant.setRealmName(success.realmName());
-					tenant.setClientId(success.clientId());
-					tenant.setClientSecret(success.clientSecret());
-					tenant.setLiquibaseSchemaName(
-						success.liquibaseSchemaName());
-					return tenantService.persist(tenant);
+					return success.tenant();
 				}
 				else {
-					throw new RuntimeException("error");
+					throw new IllegalStateException("unknown response");
 				}
-			});
+
+			}));
 
 	}
 

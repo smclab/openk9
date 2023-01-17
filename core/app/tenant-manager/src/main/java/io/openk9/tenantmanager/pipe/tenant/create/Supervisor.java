@@ -4,7 +4,9 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
+import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 
 public class Supervisor {
@@ -12,7 +14,8 @@ public class Supervisor {
 
 	public record Start(
 		String virtualHost, String schemaName,
-		DatasourceLiquibaseService service,
+		DatasourceLiquibaseService liquibaseService,
+		TenantService tenantService,
 		KeycloakAdminClientConfig keycloakAdminClientConfig,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 	public record Rollback(
@@ -24,9 +27,7 @@ public class Supervisor {
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 
 	public sealed interface Response {}
-	public record Success(
-		String virtualHost, String schemaName, String liquibaseSchemaName,
-		String realmName, String clientId, String clientSecret) implements Response {}
+	public record Success(Tenant tenant) implements Response {}
 
 	public static Behavior<Command> create() {
 		return Behaviors.setup(Supervisor::initial);
@@ -47,7 +48,8 @@ public class Supervisor {
 					Manager.create(
 						start.virtualHost(),
 						start.schemaName(),
-						start.service(),
+						start.liquibaseService(),
+						start.tenantService(),
 						start.keycloakAdminClientConfig(),
 						responseActorRef
 					),
@@ -73,15 +75,7 @@ public class Supervisor {
 					Manager.Success response =
 						(Manager.Success)responseWrapper.response;
 					responseWrapper.replyTo.tell(
-						new Success(
-							response.virtualHost(),
-							response.schemaName(),
-							response.liquibaseSchemaName(),
-							response.realmName(),
-							response.clientId(),
-							response.clientSecret()
-						)
-					);
+						new Success(response.tenant()));
 				}
 				return Behaviors.same();
 			})
