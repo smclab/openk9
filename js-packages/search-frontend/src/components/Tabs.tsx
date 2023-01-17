@@ -41,7 +41,8 @@ function Tabs({
               css={css`
                 padding-left: ${index == 0 ? "0px" : "20px"};
                 padding-top: 8px;
-                font-weight: bold;
+                font: Helvetica Neue LT Std;
+                font-style: normal;
                 text-decoration: ${isSelected
                   ? "underline; text-underline-offset: 6px;"
                   : ""};

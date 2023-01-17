@@ -46,8 +46,10 @@ function FilterCategory({
         <div
           css={css`
             user-select: none;
+            margin-left: 16px;
             display: flex;
             align-items: center;
+            width: 100% !important;
           `}
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -82,6 +84,7 @@ function FilterCategory({
               onChange={(event) => setText(event.currentTarget.value)}
               css={css`
                 flex-grow: 1;
+                margin-left: 16px;
                 margin-right: -24px;
                 padding: 8px 16px 8px 8px;
                 border-radius: 4px;
@@ -117,6 +120,7 @@ function FilterCategory({
                       key={index}
                       css={css`
                         display: flex;
+                        margin-left: 13px;
                       `}
                     >
                       <input
@@ -187,7 +191,37 @@ function FilterCategory({
                   suggestions.fetchNextPage();
                 }}
               >
-                Load more
+                <div
+                  css={css`
+                    display: flex;
+                    align-items: center;
+                    text-align: center;
+                    margin-left: 15px;
+                  `}
+                >
+                  <span
+                    css={css`
+                      font-family: "Helvetica";
+                      font-style: normal;
+                      font-weight: 400;
+                      font-size: 25px;
+                      /* or 176% */
+                      color: #c0272b;
+                    `}
+                  >
+                    +
+                  </span>
+                  <span
+                    css={css`
+                      font-family: "Helvetica";
+                      font-style: normal;
+                      color: #c0272b;
+                      margin-left: 10px;
+                    `}
+                  >
+                    Load more
+                  </span>
+                </div>
               </button>
             </div>
           )}

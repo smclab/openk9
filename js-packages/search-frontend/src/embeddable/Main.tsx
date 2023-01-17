@@ -89,6 +89,7 @@ export function Main({
           searchQuery={searchQuery}
           onAddFilterToken={addFilterToken}
           onRemoveFilterToken={removeFilterToken}
+          onConfigurationChange={onConfigurationChange}
         />,
         configuration.filters,
       )}
