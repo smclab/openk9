@@ -4,6 +4,8 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.tenantmanager.config.KeycloakContext;
+import io.openk9.tenantmanager.config.KeycloakDefaultRealmRepresentationFactory;
 import io.openk9.tenantmanager.pipe.tenant.create.factory.RealmRepresentationFactory;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfigUtil;
@@ -23,13 +25,16 @@ public class Keycloak {
 	public record Params(String virtualHost, String realmName) {}
 
 	public static Behavior<Command> create(
-		KeycloakAdminClientConfig config, Params params, ActorRef<Response> replyTo) {
+		KeycloakContext keycloakContext, Params params, ActorRef<Response> replyTo) {
 		return Behaviors.setup(context -> {
 
 			org.keycloak.admin.client.Keycloak keycloakClient =
-				createKeycloakClient(config);
+				createKeycloakClient(keycloakContext.getKeycloakAdminClientConfig());
 
-			return initial(context, replyTo, keycloakClient, params);
+			return initial(
+				context, replyTo, keycloakClient,
+				keycloakContext.getKeycloakDefaultRealmRepresentationFactory(),
+				params);
 		});
 	}
 
@@ -66,19 +71,28 @@ public class Keycloak {
 
 	private static Behavior<Command> initial(
 		ActorContext<Command> context, ActorRef<Response> replyTo,
-		org.keycloak.admin.client.Keycloak keycloakClient, Params params) {
+		org.keycloak.admin.client.Keycloak keycloakClient,
+		KeycloakDefaultRealmRepresentationFactory keycloakDefaultRealmRepresentationFactory,
+		Params params) {
 		return Behaviors.receive(Command.class)
-			.onMessageEquals(Start.INSTANCE, () -> onStart(context, replyTo, keycloakClient, params))
+			.onMessageEquals(
+				Start.INSTANCE,
+				() -> onStart(
+					context, replyTo, keycloakClient,
+					keycloakDefaultRealmRepresentationFactory, params))
 			.build();
 	}
 
 	private static Behavior<Command> onStart(
 		ActorContext<Command> context, ActorRef<Response> replyTo,
-		org.keycloak.admin.client.Keycloak keycloakClient, Params params) {
+		org.keycloak.admin.client.Keycloak keycloakClient,
+		KeycloakDefaultRealmRepresentationFactory keycloakDefaultRealmRepresentationFactory,
+		Params params) {
 
 		RealmRepresentation realmRepresentation =
 			RealmRepresentationFactory.createRealmRepresentation(
-				params.virtualHost, params.realmName);
+				params.virtualHost, params.realmName,
+				keycloakDefaultRealmRepresentationFactory.getDefaultRealmRepresentation());
 
 		try {
 			keycloakClient.realms().create(realmRepresentation);

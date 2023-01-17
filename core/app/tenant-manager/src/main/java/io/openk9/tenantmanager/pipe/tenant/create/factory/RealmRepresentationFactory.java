@@ -7,8 +7,11 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.RolesRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public class RealmRepresentationFactory {
@@ -18,25 +21,53 @@ public class RealmRepresentationFactory {
 	public static RealmRepresentation createRealmRepresentation(
 		String virtualHost, String realmName) {
 
-		RealmRepresentation realmRepresentation = new RealmRepresentation();
-		realmRepresentation.setRealm(realmName);
-		realmRepresentation.setEnabled(true);
-		realmRepresentation.setDisplayName(virtualHost);
+		return createRealmRepresentation(
+			virtualHost, realmName, new RealmRepresentation());
 
-		realmRepresentation.setClients(
-			List.of(
-				_createClientRepresentation(virtualHost, "openk9")
-			)
-		);
-		realmRepresentation.setRoles(_createRolesRepresentation());
+	}
 
-		realmRepresentation.setUsers(
+	public static RealmRepresentation createRealmRepresentation(
+		String virtualHost, String realmName, RealmRepresentation defaultRealmRepresentation) {
+
+		Objects.requireNonNull(defaultRealmRepresentation, "defaultRealmRepresentation is null");
+
+		defaultRealmRepresentation.setRealm(realmName);
+		defaultRealmRepresentation.setEnabled(true);
+		defaultRealmRepresentation.setDisplayName(virtualHost);
+
+		List<ClientRepresentation> clients =
+			defaultRealmRepresentation.getClients();
+
+		if (clients == null) {
+			clients = new ArrayList<>(1);
+			defaultRealmRepresentation.setClients(clients);
+		}
+
+		clients
+			.stream()
+			.filter(clientRepresentation -> clientRepresentation.getClientId().equals("openk9"))
+			.findFirst()
+			.or(() -> Optional.of(_createClientRepresentation("openk9")))
+			.ifPresent(
+				clientRepresentation -> {
+					clientRepresentation.setWebOrigins(List.of("+"));
+					clientRepresentation.setRedirectUris(List.of("https://" + virtualHost + "/*"));
+				}
+			);
+
+		RolesRepresentation roles = defaultRealmRepresentation.getRoles();
+
+		if (!(roles != null && (roles.getRealm() != null && !roles.getRealm().isEmpty())))  {
+			defaultRealmRepresentation.setRoles(_createRolesRepresentation());
+		}
+
+		defaultRealmRepresentation.setUsers(
 			List.of(
 				_createAdminUserRepresentation()
 			)
 		);
 
-		return realmRepresentation;
+		return defaultRealmRepresentation;
 	}
 
 	private static UserRepresentation _createAdminUserRepresentation() {
@@ -90,8 +121,7 @@ public class RealmRepresentationFactory {
 		return k9admin;
 	}
 
-	private static ClientRepresentation _createClientRepresentation(
-		String virtualHost, String clientId) {
+	private static ClientRepresentation _createClientRepresentation(String clientId) {
 		ClientRepresentation clientRepresentation = new ClientRepresentation();
 		clientRepresentation.setName(clientId);
 		clientRepresentation.setClientId(clientId);
@@ -106,25 +136,8 @@ public class RealmRepresentationFactory {
 				"login_theme", clientId
 			)
 		);
-		clientRepresentation.setRedirectUris(
-			List.of(
-				"https://" + virtualHost + "/*"
-			)
-		);
-		clientRepresentation.setWebOrigins(
-			List.of(
-				"+"
-			)
-		);
 		clientRepresentation.setPublicClient(true);
 		clientRepresentation.setStandardFlowEnabled(true);
-		clientRepresentation.setDefaultClientScopes(
-			List.of(
-				"k9-admin",
-				"k9-read",
-				"k9-write"
-			)
-		);
 
 		return clientRepresentation;
 	}

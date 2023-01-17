@@ -4,6 +4,7 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
@@ -28,7 +29,7 @@ public class Manager {
 	public static Behavior<Command> create(
 		String virtualHost, String schemaName,
 		DatasourceLiquibaseService liquibaseService, TenantService tenantService,
-		KeycloakAdminClientConfig keycloakAdminClientConfig,
+		KeycloakContext keycloakContext,
 		ActorRef<Manager.Response> responseActorRef) {
 
 		return Behaviors.setup(context -> {
@@ -39,7 +40,7 @@ public class Manager {
 			ActorRef<Keycloak.Command> keycloakRef =
 				context.spawn(
 					Keycloak.create(
-						keycloakAdminClientConfig,
+						keycloakContext,
 						new Keycloak.Params(virtualHost, schemaName),
 						keycloakResponse
 					),
@@ -64,7 +65,7 @@ public class Manager {
 
 			return initial(
 				context, responseActorRef, liquibaseService, tenantService,
-				keycloakAdminClientConfig, schemaName, List.of(), 2);
+				keycloakContext, schemaName, List.of(), 2);
 
 		});
 
@@ -73,11 +74,13 @@ public class Manager {
 	public static Behavior<Command> createRollback(
 		String schemaName,
 		DatasourceLiquibaseService service,
-		KeycloakAdminClientConfig keycloakAdminClientConfig) {
+		KeycloakContext keycloakContext) {
 
 		return Behaviors.setup(context -> {
 
-			_tellRollback(context, service, keycloakAdminClientConfig, schemaName);
+			_tellRollback(
+				context, service, keycloakContext.getKeycloakAdminClientConfig(),
+				schemaName);
 
 			context.scheduleOnce(Duration.ofSeconds(5), context.getSelf(), Delay.INSTANCE);
 
@@ -90,7 +93,7 @@ public class Manager {
 	private static Behavior<Command> initial(
 		ActorContext<Command> context, ActorRef<Manager.Response> responseActorRef,
 		DatasourceLiquibaseService liquibaseService, TenantService tenantService,
-		KeycloakAdminClientConfig keycloakAdminClientConfig,
+		KeycloakContext keycloakContext,
 		String schemaName, List<ResponseWrapper> responses,
 		int messageCount) {
 		return Behaviors.receive(Command.class)
@@ -101,12 +104,12 @@ public class Manager {
 				if (newResponses.size() == messageCount) {
 					return finalize(
 						context, responseActorRef, liquibaseService, tenantService,
-						keycloakAdminClientConfig, List.copyOf(newResponses), schemaName);
+						keycloakContext, List.copyOf(newResponses), schemaName);
 				}
 				else {
 					return initial(
 						context, responseActorRef, liquibaseService, tenantService,
-						keycloakAdminClientConfig, schemaName, List.copyOf(newResponses),
+						keycloakContext, schemaName, List.copyOf(newResponses),
 						messageCount);
 				}
 
@@ -115,9 +118,9 @@ public class Manager {
 	}
 
 	private static Behavior<Command> finalize(
-		ActorContext<Command> context, ActorRef<Manager.Response> responseActorRef,
+		ActorContext<Command> context, ActorRef<Response> responseActorRef,
 		DatasourceLiquibaseService liquibaseService, TenantService tenantService,
-		KeycloakAdminClientConfig keycloakAdminClientConfig,
+		KeycloakContext keycloakContext,
 		List<ResponseWrapper> responseList, String schemaName) {
 
 		Map<Boolean, List<Object>> responsePartitioned =
@@ -192,7 +195,8 @@ public class Manager {
 
 						_tellRollback(
 							context, liquibaseService,
-							keycloakAdminClientConfig, schemaName);
+							keycloakContext.getKeycloakAdminClientConfig(),
+							schemaName);
 
 					}
 					return Behaviors.stopped();
@@ -216,7 +220,8 @@ public class Manager {
 					ActorRef<Keycloak.Command> keycloakRollbackRef =
 						context.spawn(
 							Keycloak.createRollback(
-								keycloakAdminClientConfig, schemaName), "keycloak-rollback-" + schemaName);
+								keycloakContext.getKeycloakAdminClientConfig(),
+								schemaName), "keycloak-rollback-" + schemaName);
 					keycloakRollbackRef.tell(Keycloak.Start.INSTANCE);
 				}
 

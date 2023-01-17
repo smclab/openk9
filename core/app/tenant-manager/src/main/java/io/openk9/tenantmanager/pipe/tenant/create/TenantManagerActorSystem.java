@@ -6,10 +6,10 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.AskPattern;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
-import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -91,13 +91,13 @@ public class TenantManagerActorSystem {
 	@Inject
 	DatasourceLiquibaseService liquibaseService;
 
-	@Inject
-	KeycloakAdminClientConfig config;
-
 	@ConfigProperty(
 		name = "openk9.tenant-manager.create-tenant-timeout",
 		defaultValue = "45s"
 	)
 	Duration requestTimeout;
+
+	@Inject
+	KeycloakContext config;
 
 }
