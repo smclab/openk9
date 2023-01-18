@@ -1,4 +1,8 @@
-schema: https://tenant-manager.openk9.io/api/tenant-manager/graphql
+schema:
+  - https://tenant-manager.openk9.io/api/tenant-manager/graphql:
+      headers:
+        Authorization: "Bearer "
+
 documents: "./src/**/*.tsx"
 generates:
   src/graphql-generated.ts:
@@ -6,3 +10,4 @@ generates:
       - typescript
       - typescript-operations
       - typescript-react-apollo
+      - time

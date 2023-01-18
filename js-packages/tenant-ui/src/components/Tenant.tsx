@@ -2,13 +2,13 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import { TextInputWithoutChange } from "./Form";
+import { ClassNameButton, TextInputWithoutChange } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useTenantQuery } from "../graphql-generated";
 import ClayToolbar from "@clayui/toolbar";
 import { ClayButtonWithIcon } from "@clayui/button";
 
-const TenantQuery = gql`
+export const TenantQuery = gql`
   query Tenant($id: ID!) {
     tenant(id: $id) {
       id
@@ -38,6 +38,7 @@ export function Tenant() {
             <ClayToolbar.Item>
               <ClayButtonWithIcon
                 symbol="angle-left"
+                className={ClassNameButton}
                 aria-label=""
                 small
                 onClick={() => {

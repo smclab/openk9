@@ -100,6 +100,12 @@ export type Edge_Tenant = {
   node?: Maybe<Tenant>;
 };
 
+export type FieldValidator = {
+  __typename?: 'FieldValidator';
+  field?: Maybe<Scalars['String']>;
+  message?: Maybe<Scalars['String']>;
+};
+
 export type GraphqlId = {
   id?: Maybe<Scalars['BigInteger']>;
 };
@@ -107,7 +113,7 @@ export type GraphqlId = {
 /** Mutation root */
 export type Mutation = {
   __typename?: 'Mutation';
-  tenant?: Maybe<Tenant>;
+  tenant?: Maybe<Response_Tenant>;
 };
 
 
@@ -173,6 +179,12 @@ export type QueryTenantsArgs = {
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
+export type Response_Tenant = {
+  __typename?: 'Response_Tenant';
+  entity?: Maybe<Tenant>;
+  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
 export type SortByInput = {
   column?: InputMaybe<Scalars['String']>;
   direction?: InputMaybe<Direction>;
@@ -192,6 +204,7 @@ export type Tenant = GraphqlId & {
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   id?: Maybe<Scalars['BigInteger']>;
+  liquibaseSchemaName?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   realmName?: Maybe<Scalars['String']>;
@@ -202,6 +215,7 @@ export type Tenant = GraphqlId & {
 export type TenantDtoInput = {
   clientId: Scalars['String'];
   clientSecret?: InputMaybe<Scalars['String']>;
+  liquibaseSchemaName: Scalars['String'];
   realmName: Scalars['String'];
   schemaName: Scalars['String'];
   virtualHost: Scalars['String'];
@@ -218,6 +232,18 @@ export type TenantQueryVariables = Exact<{
 
 
 export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'Tenant', id?: any | null, realmName?: string | null, schemaName?: string | null, modifiedDate?: any | null, virtualHost?: string | null, clientSecret?: string | null, createDate?: any | null } | null };
+
+export type CreateOrUpdateTenantMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']>;
+  virtualHost: Scalars['String'];
+  schemaName: Scalars['String'];
+  liquibaseSchemaName: Scalars['String'];
+  clientId: Scalars['String'];
+  realmName: Scalars['String'];
+}>;
+
+
+export type CreateOrUpdateTenantMutation = { __typename?: 'Mutation', tenant?: { __typename?: 'Response_Tenant', fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 export type TenantsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -316,6 +342,50 @@ export function useTenantLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ten
 export type TenantQueryHookResult = ReturnType<typeof useTenantQuery>;
 export type TenantLazyQueryHookResult = ReturnType<typeof useTenantLazyQuery>;
 export type TenantQueryResult = Apollo.QueryResult<TenantQuery, TenantQueryVariables>;
+export const CreateOrUpdateTenantDocument = gql`
+    mutation CreateOrUpdateTenant($id: ID, $virtualHost: String!, $schemaName: String!, $liquibaseSchemaName: String!, $clientId: String!, $realmName: String!) {
+  tenant(
+    id: $id
+    tenantDTO: {virtualHost: $virtualHost, schemaName: $schemaName, liquibaseSchemaName: $liquibaseSchemaName, clientId: $clientId, realmName: $realmName}
+  ) {
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateOrUpdateTenantMutationFn = Apollo.MutationFunction<CreateOrUpdateTenantMutation, CreateOrUpdateTenantMutationVariables>;
+
+/**
+ * __useCreateOrUpdateTenantMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateTenantMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateTenantMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateTenantMutation, { data, loading, error }] = useCreateOrUpdateTenantMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      virtualHost: // value for 'virtualHost'
+ *      schemaName: // value for 'schemaName'
+ *      liquibaseSchemaName: // value for 'liquibaseSchemaName'
+ *      clientId: // value for 'clientId'
+ *      realmName: // value for 'realmName'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateTenantMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateTenantMutation, CreateOrUpdateTenantMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateTenantMutation, CreateOrUpdateTenantMutationVariables>(CreateOrUpdateTenantDocument, options);
+      }
+export type CreateOrUpdateTenantMutationHookResult = ReturnType<typeof useCreateOrUpdateTenantMutation>;
+export type CreateOrUpdateTenantMutationResult = Apollo.MutationResult<CreateOrUpdateTenantMutation>;
+export type CreateOrUpdateTenantMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateTenantMutation, CreateOrUpdateTenantMutationVariables>;
 export const TenantsDocument = gql`
     query Tenants($searchText: String, $cursor: String) {
   tenants(searchText: $searchText, first: 25, after: $cursor) {
@@ -359,3 +429,4 @@ export function useTenantsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Te
 export type TenantsQueryHookResult = ReturnType<typeof useTenantsQuery>;
 export type TenantsLazyQueryHookResult = ReturnType<typeof useTenantsLazyQuery>;
 export type TenantsQueryResult = Apollo.QueryResult<TenantsQuery, TenantsQueryVariables>;
+// Generated on 2023-01-18T15:33:18+01:00

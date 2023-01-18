@@ -19,6 +19,10 @@ export class BackgroundProcessResourceService {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/tenant-manager/tenant-manager/background-process/all',
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -36,6 +40,10 @@ id: number,
             path: {
                 'id': id,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -52,6 +60,10 @@ status: Status,
             url: '/api/tenant-manager/tenant-manager/background-process/status/{status}',
             path: {
                 'status': status,
+            },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
             },
         });
     }

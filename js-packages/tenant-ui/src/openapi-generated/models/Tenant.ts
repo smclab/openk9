@@ -9,6 +9,7 @@ export type Tenant = {
     createDate?: OffsetDateTime;
     modifiedDate?: OffsetDateTime;
     schemaName?: string;
+    liquibaseSchemaName?: string;
     virtualHost?: string;
     clientId?: string;
     clientSecret?: string;
