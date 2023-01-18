@@ -42,6 +42,18 @@ public class DatasourceLiquibaseService {
 	@ConfigProperty(name = "openk9.datasource.liquibase.database-change-log-table-name")
 	String changeLogTableName;
 
+	public String getChangeLogLocation() {
+		return changeLogLocation;
+	}
+
+	public String getChangeLogLockTableName() {
+		return changeLogLockTableName;
+	}
+
+	public String getChangeLogTableName() {
+		return changeLogTableName;
+	}
+
 	public void runInitialization(String schemaName, String virtualHost) throws LiquibaseException {
 		runInitialization(schemaName, virtualHost, true);
 	}
@@ -237,6 +249,10 @@ public class DatasourceLiquibaseService {
 
 		return datasourceUrl;
 
+	}
+
+	public String getDatasourceJdbcUrl() {
+		return toJdbcUrl(openk9DatasourceUrl);
 	}
 
 	@Inject
