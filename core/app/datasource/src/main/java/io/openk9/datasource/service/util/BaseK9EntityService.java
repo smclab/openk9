@@ -20,6 +20,7 @@ package io.openk9.datasource.service.util;
 
 import io.openk9.common.graphql.util.relay.DefaultPageInfo;
 import io.openk9.common.graphql.util.service.GraphQLService;
+import io.openk9.common.model.EntityServiceValidatorWrapper;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
@@ -29,7 +30,6 @@ import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.sql.TransactionInvoker;
-import io.openk9.datasource.validation.ValidatorK9EntityWrapper;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil;
 import io.smallrye.mutiny.Uni;
@@ -445,12 +445,12 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 					getClass().getSimpleName() + " not found")));
 	}
 
-	public ValidatorK9EntityWrapper<ENTITY, DTO> getValidator() {
-		ValidatorK9EntityWrapper<ENTITY, DTO> wrapper = validatorWrapper.get();
+	public EntityServiceValidatorWrapper<ENTITY, DTO> getValidator() {
+		EntityServiceValidatorWrapper<ENTITY, DTO> wrapper = validatorWrapper.get();
 
 		if (wrapper == null) {
 			validatorWrapper.set(
-				wrapper = new ValidatorK9EntityWrapper<>(this, validator));
+				wrapper = new EntityServiceValidatorWrapper<>(this, validator));
 		}
 
 		return wrapper;
@@ -531,7 +531,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Inject
 	TransactionInvoker transactionInvoker;
 
-	private AtomicReference<ValidatorK9EntityWrapper<ENTITY, DTO>> validatorWrapper =
+	private AtomicReference<EntityServiceValidatorWrapper<ENTITY, DTO>> validatorWrapper =
 		new AtomicReference<>();
 
 }

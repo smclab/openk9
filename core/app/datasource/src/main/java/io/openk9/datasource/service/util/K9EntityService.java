@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service.util;
 
+import io.openk9.common.model.EntityService;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.resource.util.Filter;
@@ -27,7 +28,8 @@ import io.smallrye.mutiny.Uni;
 import java.util.List;
 import java.util.Set;
 
-public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO> {
+public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
+	extends EntityService<ENTITY, DTO> {
 	Uni<Page<ENTITY>> findAllPaginated(
 		Pageable pageable, String searchText);
 
@@ -52,12 +54,6 @@ public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDT
 	Uni<ENTITY> findById(long id);
 
 	Uni<List<ENTITY>> findByIds(Set<Long> ids);
-
-	Uni<ENTITY> patch(long id, DTO dto);
-
-	Uni<ENTITY> update(long id, DTO dto);
-
-	Uni<ENTITY> create(DTO dto);
 
 	Uni<ENTITY> create(ENTITY entity);
 

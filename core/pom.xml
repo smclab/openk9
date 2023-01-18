@@ -191,6 +191,11 @@
 				<artifactId>graphql-util</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>model</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

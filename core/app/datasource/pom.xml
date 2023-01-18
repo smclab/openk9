@@ -141,26 +141,6 @@
       <artifactId>quarkus-keycloak-authorization</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>tenant-manager-client-grpc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>searcher-client-grpc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>file-manager-client-grpc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.service</groupId>
-      <artifactId>auth-service</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>resources-common</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
       <version>4.0.6</version>
@@ -183,8 +163,32 @@
       <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.openk9.client.grpc</groupId>
+      <artifactId>tenant-manager-client-grpc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.client.grpc</groupId>
+      <artifactId>searcher-client-grpc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.client.grpc</groupId>
+      <artifactId>file-manager-client-grpc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.service</groupId>
+      <artifactId>auth-service</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>resources-common</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.openk9.common</groupId>
       <artifactId>graphql-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>model</artifactId>
     </dependency>
   </dependencies>
   <build>

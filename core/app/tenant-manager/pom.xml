@@ -70,19 +70,6 @@
       <artifactId>quarkus-cache</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>resources-common</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>tenant-manager-client-grpc</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-stork</artifactId>
     </dependency>
@@ -124,10 +111,6 @@
       <artifactId>quarkus-smallrye-graphql</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>graphql-util</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
     </dependency>
@@ -138,6 +121,23 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-qute</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>graphql-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>resources-common</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.client.grpc</groupId>
+      <artifactId>tenant-manager-client-grpc</artifactId>
     </dependency>
   </dependencies>
   <build>

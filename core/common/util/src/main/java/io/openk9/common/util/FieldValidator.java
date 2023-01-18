@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.common.graphql.util;
+package io.openk9.common.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,9 +24,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
-public class Response {
-
+public class FieldValidator {
+	private String field;
 	private String message;
-	public static final Response INSTANCE = new Response("nothing");
-
 }

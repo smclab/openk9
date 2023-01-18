@@ -15,13 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.validation;
+package io.openk9.common.model;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.common.util.FieldValidator;
+import io.openk9.common.util.Response;
 import io.smallrye.mutiny.Uni;
-import io.vertx.pgclient.PgException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -32,10 +30,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class ValidatorK9EntityWrapper<E extends K9Entity, D extends K9EntityDTO> {
+public class EntityServiceValidatorWrapper<E, D> {
 
-	public ValidatorK9EntityWrapper(
-		BaseK9EntityService<E, D> delegate, Validator validator) {
+	public EntityServiceValidatorWrapper(
+		EntityService<E, D> delegate, Validator validator) {
 		this.delegate = delegate;
 		this.validator = validator;
 	}
@@ -72,22 +70,6 @@ public class ValidatorK9EntityWrapper<E extends K9Entity, D extends K9EntityDTO>
 							return Response.of(entity, null);
 						}
 
-						PgException pgException = _findPgException(t);
-
-						if (pgException != null) {
-
-							String detail = pgException.getDetail();
-
-							return Response.of(
-								null, List.of(
-									FieldValidator.of(
-										_findFieldName(detail),
-										detail)
-								)
-							);
-
-						}
-
 						return Response.of(
 							null, List.of(
 								FieldValidator.of(
@@ -118,16 +100,6 @@ public class ValidatorK9EntityWrapper<E extends K9Entity, D extends K9EntityDTO>
 		return "";
 	}
 
-	private PgException _findPgException(Throwable t) {
-		if (t instanceof PgException) {
-			return (PgException) t;
-		}
-		if (t.getCause() != null) {
-			return _findPgException(t.getCause());
-		}
-		return null;
-	}
-
 	private <T> List<FieldValidator> _toFieldValidators(
 		Set<ConstraintViolation<T>> constraintViolationSet) {
 		return constraintViolationSet.stream()
@@ -139,7 +111,7 @@ public class ValidatorK9EntityWrapper<E extends K9Entity, D extends K9EntityDTO>
 			.collect(Collectors.toList());
 	}
 
-	private final BaseK9EntityService<E, D> delegate;
+	private final EntityService<E, D> delegate;
 	private final Validator validator;
 
 	private static final Pattern PATTERN_FIELD_NAME = Pattern.compile(
