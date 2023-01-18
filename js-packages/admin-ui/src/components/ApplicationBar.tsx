@@ -14,7 +14,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
   return (
     <div
       className="control-menu-container"
-      style={{ paddingLeft: isSideMenuOpen ? "320px" : "", position: "sticky", top: "0px", zIndex: 1 }}
+      style={{ paddingLeft: isSideMenuOpen ? "320px" : "", position: "sticky", top: "0px", zIndex: 2 }}
     >
       <nav className="application-bar application-bar-dark navbar navbar-expand-md">
         <div className="container-fluid container-fluid-max-xl">
@@ -22,11 +22,12 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
             <li className="nav-item">
               <button
                 className="btn btn-unstyled nav-btn nav-btn-monospaced"
+                style={{ width: "50px", height: "35px" }}
                 onClick={() => {
                   onSideMenuToggle(!isSideMenuOpen);
                 }}
               >
-                <ClayIcon symbol={isSideMenuOpen ? "product-menu-open" : "product-menu-closed"} />
+                <ClayIcon style={{}} symbol={isSideMenuOpen ? "product-menu-open" : "product-menu-closed"} />
               </button>
             </li>
           </ul>
@@ -103,7 +104,10 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
               {isAuthenticated && (
                 <DropDown
                   trigger={
-                    <button className="btn btn-unstyled nav-btn nav-btn-monospaced">
+                    <button
+                      className="btn btn-unstyled nav-btn nav-btn-monospaced"
+                      style={{ border: "1px solid #8F8F8F", width: "50px", height: "35px" }}
+                    >
                       <ClayIcon symbol={"user"} style={{ color: "white" }} fontSize="25px" />
                     </button>
                   }

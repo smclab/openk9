@@ -19,7 +19,10 @@ import ClayIcon from "@clayui/icon";
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
   return (
     value?.id && (
-      <Link style={{ color: "#da1414", textDecoration: "none" }} to={value.id}>
+      <Link
+        style={{ color: "#da1414", textDecoration: "none", font: "Helvetica", fontWeight: "700", fontSize: "15px", lineHeight: "44px" }}
+        to={value.id}
+      >
         {value.name}
       </Link>
     )

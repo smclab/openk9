@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
+import { ClassNameButton } from "../App";
 
 gql`
   mutation CreateSitemapDataSource(
@@ -122,7 +123,7 @@ export function DatabaseWizard() {
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
         <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton type="submit" className={ClassNameButton} disabled={!form.canSubmit}>
             Create
           </ClayButton>
         </div>
