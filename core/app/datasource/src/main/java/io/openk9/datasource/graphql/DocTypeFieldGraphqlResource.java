@@ -1,14 +1,14 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.FieldValidator;
+import io.openk9.common.util.Response;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.common.util.SortBy;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.util.Tuple2;
-import io.openk9.datasource.validation.FieldValidator;
-import io.openk9.datasource.validation.Response;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;

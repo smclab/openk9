@@ -1,6 +1,8 @@
 package io.openk9.tenantmanager.graphql;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.model.EntityServiceValidatorWrapper;
+import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.tenantmanager.dto.TenantDTO;
 import io.openk9.tenantmanager.mapper.TenantMapper;
@@ -15,16 +17,13 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 
-import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.validation.Valid;
 import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
 @CircuitBreaker
-@RolesAllowed("admin")
 public class TenantGraphqlResource {
 
 	@Query
@@ -44,24 +43,23 @@ public class TenantGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tenant> tenant(
-		@Id Long id, @Valid TenantDTO tenantDTO,
+	public Uni<Response<Tenant>> tenant(
+		@Id Long id, TenantDTO tenantDTO,
 		@DefaultValue("false") boolean patch) {
 
+		EntityServiceValidatorWrapper<Tenant, TenantDTO> validator =
+			tenantService.getValidator();
+
 		if (id != null) {
-			Uni<Tenant> tenantUni = tenantService.findById(id);
 			if (patch) {
-				tenantUni = tenantUni.map(t -> tenantMapper.patch(t, tenantDTO));
+				return validator.patch(id, tenantDTO);
 			}
 			else {
-				tenantUni = tenantUni.map(t -> tenantMapper.map(t, tenantDTO));
+				return validator.update(id, tenantDTO);
 			}
-			return tenantUni
-				.onItem()
-				.transformToUni(tenantService::persist);
 		}
 
-		return tenantService.persist(tenantMapper.map(tenantDTO));
+		return validator.create(tenantDTO);
 
 	}
 

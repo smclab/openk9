@@ -1,7 +1,11 @@
 package io.openk9.tenantmanager.service;
 
 import io.openk9.common.graphql.util.service.GraphQLService;
+import io.openk9.common.model.EntityService;
+import io.openk9.common.model.EntityServiceValidatorWrapper;
 import io.openk9.tenantmanager.dto.SchemaTuple;
+import io.openk9.tenantmanager.dto.TenantDTO;
+import io.openk9.tenantmanager.mapper.TenantMapper;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.model.Tenant_;
 import io.smallrye.mutiny.Uni;
@@ -13,11 +17,14 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.validation.Validator;
 import java.util.List;
 import java.util.function.BiFunction;
 
 @ApplicationScoped
-public class TenantService extends GraphQLService<Tenant> {
+public class TenantService
+	extends GraphQLService<Tenant>
+	implements EntityService<Tenant, TenantDTO> {
 
 	public Uni<Tenant> findById(Long id) {
 		return sf.withStatelessTransaction(
@@ -30,6 +37,51 @@ public class TenantService extends GraphQLService<Tenant> {
 				.persist(tenant)
 				.map(__ -> tenant)
 		);
+	}
+
+	@Override
+	public Uni<Tenant> patch(long id, TenantDTO tenantDTO) {
+		return update(id, mapper.patch(tenantDTO));
+	}
+
+	@Override
+	public Uni<Tenant> update(long id, TenantDTO tenantDTO) {
+		return update(id, mapper.map(tenantDTO));
+	}
+
+	@Override
+	public Uni<Tenant> create(TenantDTO tenantDTO) {
+		return persist(mapper.map(tenantDTO));
+	}
+
+	public EntityServiceValidatorWrapper<Tenant, TenantDTO> getValidator() {
+
+		if (entityServiceValidatorWrapper == null) {
+			entityServiceValidatorWrapper =
+				new EntityServiceValidatorWrapper<>(this, validator);
+		}
+
+		return entityServiceValidatorWrapper;
+
+	}
+
+	public Uni<Tenant> update(long id, Tenant tenant) {
+		return sf.withTransaction(s -> {
+
+			Uni<Tenant> tenantUni = s.find(Tenant.class, id);
+
+			return tenantUni.flatMap(t -> {
+
+				if (t != null) {
+					return s.merge(tenant);
+				}
+				else {
+					return Uni.createFrom().failure(
+						new RuntimeException("Tenant not found with id: " + id));
+				}
+			});
+
+		});
 	}
 
 	public Uni<Void> deleteTenant(long tenantId) {
@@ -164,5 +216,14 @@ public class TenantService extends GraphQLService<Tenant> {
 
 	@Inject
 	Mutiny.SessionFactory sf;
+
+	@Inject
+	TenantMapper mapper;
+
+	@Inject
+	Validator validator;
+
+	private EntityServiceValidatorWrapper<Tenant, TenantDTO>
+		entityServiceValidatorWrapper;
 
 }
