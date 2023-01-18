@@ -14,12 +14,23 @@ import ClayModal, { useModal } from "@clayui/modal";
 import { useRestClient } from "./queryClient";
 import ClayToolbar from "@clayui/toolbar";
 import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "./Form";
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
   return value?.id && <Link to={value.id}>{value.name}</Link>;
 }
 export function formatVirtualHost(value: { id?: string | null; virtualHost?: string | null } | null | undefined) {
-  return value?.id && <Link to={"" + value.id}>{value.virtualHost}</Link>;
+  return (
+    value?.id && (
+      <Link
+        style={{ color: "#da1414", textDecoration: "none", font: "Helvetica", fontWeight: "700", fontSize: "15px", lineHeight: "44px" }}
+        to={"" + value.id}
+      >
+        {value.virtualHost}
+      </Link>
+    )
+  );
 }
+
 export function formatBoolean(value: boolean | undefined) {
   switch (value) {
     case true:
@@ -118,14 +129,17 @@ export function Table<
               </div>
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <ClayButtonWithIcon
-                aria-label=""
-                symbol="plus"
-                small
-                onClick={() => {
-                  onOpenChange(true);
-                }}
-              />
+              <Link to={"tenant-create"}>
+                <ClayButtonWithIcon
+                  aria-label=""
+                  symbol="plus"
+                  className={ClassNameButton}
+                  small
+                  onClick={() => {
+                    onOpenChange(true);
+                  }}
+                />
+              </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ClayLayout.ContainerFluid>
@@ -154,7 +168,7 @@ export function Table<
                   const response = await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({
                     virtualHost: valueModal,
                   });
-                  if (response.requestId) {
+                  if (response.id) {
                     toast({ displayType: "success", title: "tenant create", content: "" });
                     onOpenChange(false);
                     navigate(`/process/`, { replace: true });
@@ -285,6 +299,13 @@ export function Table<
                         icon: "sites",
                         onClick: () => {
                           window.location.href = "http://" + JSON.parse(JSON.stringify(row)).virtualHost + "/admin";
+                        },
+                      },
+                      {
+                        label: "Create Openk9 Tables",
+                        icon: "",
+                        onClick: async () => {
+                          await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenantTables(Number(row?.id));
                         },
                       },
                     ]}

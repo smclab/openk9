@@ -162,17 +162,28 @@ export type BaseInputProps<T> = {
   validationMessages: Array<string>;
 };
 
-export function TextInput({ id, label, value, onChange, disabled, validationMessages, item }: BaseInputProps<string> & { item?: boolean }) {
+export function TextInput({
+  id,
+  label,
+  value,
+  onChange,
+  disabled,
+  validationMessages,
+  ability,
+  item,
+}: BaseInputProps<string> & { item?: boolean; ability?: boolean }) {
   return (
     <div className={`${item ? "form-group-item" : "form-group"} ${validationMessages.length ? "has-warning" : ""}`}>
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id} style={{ color: ability === undefined || ability ? "black" : "#ECECEC" }}>
+        {label}
+      </label>
       <input
         type="text"
         className="form-control"
         id={id}
         value={value}
         onChange={(event) => onChange(event.currentTarget.value)}
-        disabled={disabled}
+        disabled={ability === undefined ? false : !ability}
       ></input>
       <div className="form-feedback-group">
         {validationMessages.map((validationMessage, index) => {
@@ -186,7 +197,22 @@ export function TextInput({ id, label, value, onChange, disabled, validationMess
     </div>
   );
 }
-
+export const StyleToggle = `
+  .toggle-switch-check:checked ~ .toggle-switch-bar::before {
+    background-color: #FFFFFF;
+    border-color: #C22525;
+  }
+  .toggle-switch-check ~ .toggle-switch-bar::before {
+    background-color: #ECECEC;
+    border-color: #ECECEC;
+  }
+  .toggle-switch-check:checked ~ .toggle-switch-bar::after {
+    background-color: #C22525;
+  }
+  .toggle-switch-check ~ .toggle-switch-bar::after {
+    background-color: #CBCBCB;
+  }
+`;
 export function TextInputWithoutChange({ id, label, value, readOnly }: { id: string; label: string; value: string; readOnly: boolean }) {
   return (
     <div className="form-group">
@@ -761,3 +787,5 @@ export function CronInput(props: BaseInputProps<string>) {
     </ClayPanel>
   );
 }
+
+export const ClassNameButton = "btn btn-danger";

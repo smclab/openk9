@@ -1501,7 +1501,7 @@
 
 "@clayui/loading-indicator@^3.60.0":
   version "3.60.0"
-  resolved "https://registry.yarnpkg.com/@clayui/loading-indicator/-/loading-indicator-3.60.0.tgz#d5573f0d391367599740fb23d1999a9064ba71b1"
+  resolved "https://registry.npmjs.org/@clayui/loading-indicator/-/loading-indicator-3.60.0.tgz#d5573f0d391367599740fb23d1999a9064ba71b1"
   integrity sha512-UpPwjJqex0tX+asB4hDRe50qJop6hvAyvDjfE6P6ivYxpuLjdTqhk7CN9QKLWSesPh8DFvmG32BYnuW9OZ59XQ==
   dependencies:
     classnames "^2.2.6"

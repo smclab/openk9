@@ -17,6 +17,7 @@
     "@clayui/icon": "^3.56.0",
     "@clayui/layout": "^3.65.1",
     "@clayui/list": "^3.69.0",
+    "@clayui/loading-indicator": "^3.60.0",
     "@clayui/multi-select": "^3.75.3",
     "@clayui/nav": "^3.69.0",
     "@clayui/panel": "^3.70.0",

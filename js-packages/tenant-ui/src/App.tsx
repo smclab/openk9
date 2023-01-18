@@ -16,6 +16,7 @@ import { AuthenticationProvider } from "./components/authentication";
 import { Process } from "./components/Process";
 import { Tenants } from "./components/Tenants";
 import { Tenant } from "./components/Tenant";
+import { TenantCreate } from "./components/TenantCreate";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -33,6 +34,7 @@ export default function App() {
                     <Route path="" element={<DashBoard />} />
                     <Route path="tenants">
                       <Route path="" element={<Tenants />} />
+                      <Route path="tenant-create" element={<TenantCreate />} />
                       <Route path=":tenantId">
                         <Route path="" element={<Tenant />}></Route>
                       </Route>

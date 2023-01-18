@@ -8,7 +8,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
   return (
     <div
       className="control-menu-container"
-      style={{ paddingLeft: isSideMenuOpen ? "320px" : "", position: "sticky", top: "0px", zIndex: 1 }}
+      style={{ paddingLeft: isSideMenuOpen ? "320px" : "", position: "sticky", top: "0px", zIndex: 3 }}
     >
       <nav className="application-bar application-bar-dark navbar navbar-expand-md">
         <div className="container-fluid container-fluid-max-xl">
