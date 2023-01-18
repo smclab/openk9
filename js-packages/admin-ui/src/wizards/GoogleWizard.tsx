@@ -9,6 +9,7 @@ import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 import { useNavigate } from "react-router-dom";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
+import { ClassNameButton } from "../App";
 
 export function GoogleWizard() {
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ export function GoogleWizard() {
         <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
         <div className="sheet-footer">
-          <ClayButton type="submit" disabled={!form.canSubmit}>
+          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             Create
           </ClayButton>
         </div>

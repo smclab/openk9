@@ -11,6 +11,7 @@ import { GitHubLogo } from "./Logo/GitHubLogo";
 import { GoogleDriveLogo } from "./Logo/GoogleDriveLogo";
 import { LiferayLogo } from "./Logo/LiferayLogo";
 import { DropBoxLogo } from "./Logo/DropBoxLogo";
+import { ClassNameButton } from "../App";
 
 const wizards = [
   {
@@ -92,7 +93,7 @@ export function Wizards() {
               />
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <ClayButtonWithIcon aria-label="" symbol="plus" small />
+              <ClayButtonWithIcon aria-label="" className={ClassNameButton} symbol="plus" small />
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ClayLayout.ContainerFluid>

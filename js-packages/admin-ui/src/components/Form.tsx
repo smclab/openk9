@@ -457,12 +457,30 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
           </ClayInput.GroupItem>
           <ClayInput.GroupItem append shrink>
             <ClayButton.Group>
-              <ClayButton displayType="secondary" onClick={() => onOpenChange(true)}>
-                Change
+              <ClayButton
+                displayType="secondary"
+                style={{
+                  border: "1px solid #393B4A",
+                  borderRadius: "3px",
+                }}
+                onClick={() => onOpenChange(true)}
+              >
+                <span
+                  style={{
+                    fontFamily: "Helvetica",
+                    fontStyle: "normal",
+                    fontWeight: "700",
+                    fontSize: "15px",
+                    color: "#393B4A",
+                  }}
+                >
+                  Change
+                </span>
               </ClayButton>
               <ClayButton
                 displayType="secondary"
                 disabled={typeof valueQuery.data?.value?.name === "string" ? false : true}
+                style={{ marginLeft: "10px", border: "1px solid #393B4A", borderRadius: "3px" }}
                 onClick={() => {
                   if (!changeMutation.loading && !removeMutation.loading)
                     removeMutate({
@@ -473,7 +491,17 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
                     });
                 }}
               >
-                Remove
+                <span
+                  style={{
+                    fontFamily: "Helvetica",
+                    fontStyle: "normal",
+                    fontWeight: "700",
+                    fontSize: "15px",
+                    color: "#393B4A",
+                  }}
+                >
+                  Remove
+                </span>
               </ClayButton>
             </ClayButton.Group>
           </ClayInput.GroupItem>
@@ -755,7 +783,17 @@ export function MainTitle({ title }: { title: string }) {
   return (
     <li className="list-group-item list-group-item-flex" style={{ overflowAnchor: "none" }}>
       <div className="autofit-col autofit-col-expand" style={{ alignItems: "center" }}>
-        <p className="navbar-title navbar-text-truncate " style={{ color: "red" }}>
+        <p
+          className="navbar-title navbar-text-truncate "
+          style={{
+            color: "#C22525",
+            fontFamily: "Helvetica",
+            fontStyle: "normal",
+            fontWeight: "700",
+            fontSize: "18px",
+            lineHeight: "44px",
+          }}
+        >
           {title}
         </p>
       </div>
@@ -1402,17 +1440,17 @@ export function CreateDinamicallyFieldWithout({
 
 export const StyleToggle = `
   .toggle-switch-check:checked ~ .toggle-switch-bar::before {
-    background-color: #da1414;
-    border-color: white;
+    background-color: #FFFFFF;
+    border-color: #C22525;
   }
   .toggle-switch-check ~ .toggle-switch-bar::before {
-    background-color: white;
-    border-color: #da1414;
+    background-color: #ECECEC;
+    border-color: #ECECEC;
   }
   .toggle-switch-check:checked ~ .toggle-switch-bar::after {
-    background-color: white;
+    background-color: #C22525;
   }
   .toggle-switch-check ~ .toggle-switch-bar::after {
-    background-color: #da1414;
+    background-color: #CBCBCB;
   }
 `;
