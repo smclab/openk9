@@ -177,10 +177,10 @@ function FilterCategory({
             >
               <button
                 css={css`
-                  border-bottom: 5px solid red;
+                  border: 2px solid #c0272b !important;
                   width: 150px;
                   border-radius: 80px !important;
-                  height: 30px;
+                  border-radius: 12px;
                   ${buttonStyle};
                 `}
                 // disabled={suggestions.isFetching}

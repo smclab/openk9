@@ -176,7 +176,6 @@ export function Search({
             border: none;
             outline: none;
             padding: var(--openk9-embeddable-search--input-padding);
-            color: ${showSyntax ? "transparent" : "inherit"};
             caret-color: black;
             font-size: inherit;
             font-family: inherit;
