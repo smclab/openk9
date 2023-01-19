@@ -18,7 +18,6 @@
 package io.openk9.datasource.listener;
 
 import io.openk9.auth.tenant.TenantResolver;
-import io.openk9.datasource.event.sender.EventSender;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
@@ -53,7 +52,6 @@ public class K9EntityListener {
 	private void _handle(K9Entity k9Entity, String create)
 		throws SchedulerException {
 
-
 		if (_isDatasource(k9Entity)) {
 			if (EventType.DELETE.equals(create)) {
 				_schedulerInitializer.get().deleteScheduler(
@@ -64,11 +62,6 @@ public class K9EntityListener {
 			}
 		}
 
-		String pk = Long.toString(k9Entity.getId());
-
-		_eventSender.sendEventAsJson(
-			create, pk, Hibernate.getClass(k9Entity).getName(),
-			pk, k9Entity);
 	}
 
 	private void _createOrUpdateScheduler(Datasource datasource)
@@ -84,9 +77,6 @@ public class K9EntityListener {
 
 	@Inject
 	Instance<SchedulerInitializer> _schedulerInitializer;
-
-	@Inject
-	EventSender _eventSender;
 
 	@Inject
 	TenantResolver tenantResolver;
