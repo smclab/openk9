@@ -14,6 +14,7 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
@@ -62,9 +63,16 @@ public class IndexerProcessor {
 			.transformToUni((response, throwable) -> {
 
 				if (response != null) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Index Response: " + response);
+
+					if (response.hasFailures()) {
+						String errorMessage = response.buildFailureMessage();
+						logger.error("Bulk request error: " + errorMessage);
+						return Uni
+							.createFrom()
+							.completionStage(
+								() -> message.nack(new RuntimeException(errorMessage)));
 					}
+
 				}
 
 				if (throwable != null) {
@@ -151,11 +159,11 @@ public class IndexerProcessor {
 	}
 
 
-	private Uni<?> _indexPayload(
+	private Uni<BulkResponse> _indexPayload(
 		DataPayload payload, Uni<DataIndex> indexNameUni) {
 
 		return indexNameUni
-			.call(indexName -> _getDocWriteRequest(payload, indexName.getName())
+			.flatMap(indexName -> _getDocWriteRequest(payload, indexName.getName())
 				.flatMap(docWriteRequest -> Uni.createFrom().emitter(sink -> {
 
 					BulkRequest bulkRequest = new BulkRequest();
