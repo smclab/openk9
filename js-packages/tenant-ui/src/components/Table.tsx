@@ -15,6 +15,8 @@ import { useRestClient } from "./queryClient";
 import ClayToolbar from "@clayui/toolbar";
 import { useToast } from "./ToastProvider";
 import { ClassNameButton } from "./Form";
+import Button from "@clayui/button";
+import ClayIcon from "@clayui/icon";
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
   return value?.id && <Link to={value.id}>{value.name}</Link>;
 }
@@ -130,15 +132,16 @@ export function Table<
             </ClayToolbar.Item>
             <ClayToolbar.Item>
               <Link to={"tenant-create"}>
-                <ClayButtonWithIcon
-                  aria-label=""
-                  symbol="plus"
+                <Button
                   className={ClassNameButton}
-                  small
                   onClick={() => {
                     onOpenChange(true);
                   }}
-                />
+                  size="sm"
+                  style={{ fontFamily: "Helvetica", fontStyle: "normal", fontWeight: "700" }}
+                >
+                  <ClayIcon symbol="plus" /> Add New
+                </Button>
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>

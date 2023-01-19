@@ -24,3 +24,7 @@ export function AuthenticationProvider({ children }: { children: React.ReactNode
 export function useAuthentication() {
   return React.useContext(AuthenticationContext);
 }
+
+export async function getUserProfile() {
+  return await keycloak.loadUserInfo();
+}
