@@ -149,7 +149,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     },
     async loadTemplate<E>(id: string): Promise<Template<E> | null> {
       try {
-        const jsURL = `/templates/${id}/compiled`;
+        const jsURL = `/api/datasource/templates/${id}/compiled`;
         // @ts-ignore
         const code = await import(/* webpackIgnore: true */ jsURL);
         return code.template;
