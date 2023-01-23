@@ -38,8 +38,7 @@ public class DateOrderQueryParser implements QueryParser {
 
 		Iterator<String> iterator =
 			Utils.getDocTypeFieldsFrom(currentTenant)
-				.filter(DocTypeField::getSearchable)
-				.filter(DocTypeField::isDate)
+				.filter(DocTypeField::isSearchableAndDate)
 				.map(DocTypeField::getFieldName)
 				.distinct()
 				.iterator();

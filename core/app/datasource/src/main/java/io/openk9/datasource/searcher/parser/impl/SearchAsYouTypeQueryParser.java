@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -56,15 +55,17 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 
 		String keywordKey = tokenText.getKeywordKey();
 
-		Predicate<DocTypeField> keywordKeyPredicate =
-			searchKeyword -> keywordKey == null || keywordKey.isEmpty() ||
-							 searchKeyword.getFieldName().equals(keywordKey);
-
 		Map<String, Float> keywordBoostMap =
 			Utils.getDocTypeFieldsFrom(datasources)
-				.filter(DocTypeField::getSearchable)
-				.filter(DocTypeField::isAutocomplete)
-				.filter(keywordKeyPredicate)
+				.filter(
+					searchKeyword ->
+						searchKeyword.isSearchableAndAutocomplete() &&
+						(
+							keywordKey == null ||
+							keywordKey.isEmpty() ||
+							searchKeyword.getFieldName().equals(keywordKey)
+						)
+				)
 				.collect(
 					Collectors.toMap(
 						DocTypeField::getFieldName,
