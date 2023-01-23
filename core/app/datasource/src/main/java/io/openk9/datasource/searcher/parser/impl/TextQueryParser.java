@@ -1,5 +1,6 @@
 package io.openk9.datasource.searcher.parser.impl;
 
+import io.openk9.common.util.function.Predicates;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
@@ -68,7 +69,7 @@ public class TextQueryParser implements QueryParser {
 					docTypeField.getFieldName().equals(keywordKey);
 			}
 			else {
-				keywordKeyPredicate = __ -> true;
+				keywordKeyPredicate = Predicates.positive();
 			}
 
 			Map<String, Float> keywordBoostMap =

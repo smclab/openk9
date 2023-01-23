@@ -18,7 +18,6 @@
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -41,9 +40,6 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static io.openk9.datasource.model.FieldType.BOOLEAN;
-import static io.openk9.datasource.model.FieldType.SEARCH_AS_YOU_TYPE;
-
 @Entity
 @Table(name = "doc_type_field", uniqueConstraints = {
 	@UniqueConstraint(name = "field_name_doc_type_id_parent_doc_type_field_id", columnNames = {
@@ -54,7 +50,7 @@ import static io.openk9.datasource.model.FieldType.SEARCH_AS_YOU_TYPE;
 @ToString
 @RequiredArgsConstructor
 @Cacheable
-public class DocTypeField extends K9Entity {
+public class DocTypeField extends BaseDocTypeField {
 
 	@Column(name = "name", nullable = false)
 	private String name;
@@ -120,56 +116,6 @@ public class DocTypeField extends K9Entity {
 		}
 		return docTypeFields;
 	}
-
-	public Float getFloatBoost() {
-		return boost.floatValue();
-	}
-
-	public boolean isKeyword() {
-		return fieldType == FieldType.KEYWORD;
-	}
-
-	public boolean isText() {
-		return switch (fieldType) {
-			case TEXT, CONSTANT_KEYWORD, ANNOTATED_TEXT, KEYWORD -> true;
-			default -> false;
-		};
-	}
-
-	public boolean isSearchableAndText() {
-		return searchable && isText();
-	}
-
-	public boolean isNumeric() {
-		return switch (fieldType) {
-			case LONG, INTEGER, SHORT, BYTE, DOUBLE, FLOAT, HALF_FLOAT, SCALED_FLOAT -> true;
-			default -> false;
-		};
-	}
-
-	public boolean isDate() {
-		return switch (fieldType) {
-			case DATE, DATE_NANOS, DATE_RANGE -> true;
-			default -> false;
-		};
-	}
-
-	public boolean isBoolean() {
-		return BOOLEAN == fieldType;
-	}
-
-	public boolean isAutocomplete() {
-		return SEARCH_AS_YOU_TYPE == fieldType;
-	}
-
-	public boolean isDefaultExclude() {
-		return exclude != null && exclude;
-	}
-
-	public boolean isSearchableAndDate() {
-		return getSearchable() && isDate();
-	}
-
 
 	@Override
 	public boolean equals(Object o) {
