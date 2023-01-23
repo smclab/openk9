@@ -148,6 +148,7 @@ function transpile(code: string) {
   return `\
 var React = window.OpenK9.dependencies.React;
 var rendererComponents = OpenK9.dependencies.SearchFrontend.rendererComponents;
+export const exports = { template };
 ${transpiled}
 `;
 }

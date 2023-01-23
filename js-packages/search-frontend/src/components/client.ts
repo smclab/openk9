@@ -139,11 +139,14 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
       return data;
     },
     async getTemplatesByVirtualHost(): Promise<Array<string>> {
-      const response = await authFetch(`/api/datasource/buckets/current/templates`, {
-        headers: {
-          Accept: "application/json",
+      const response = await authFetch(
+        `/api/datasource/buckets/current/templates`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
         },
-      });
+      );
       const data = await response.json();
       return data.map(({ id }: any) => id);
     },
@@ -151,8 +154,9 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
       try {
         const jsURL = `/api/datasource/templates/${id}/compiled`;
         // @ts-ignore
+
         const code = await import(/* webpackIgnore: true */ jsURL);
-        return code.template;
+        return code.exports.template;
       } catch (err) {
         console.warn(err);
         return null;

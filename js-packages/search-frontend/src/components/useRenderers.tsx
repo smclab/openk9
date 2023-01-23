@@ -22,7 +22,9 @@ export function useRenderers(): Renderers | undefined {
         await Promise.all(
           templateIds.map((templateId) => client.loadTemplate(templateId)),
         )
-      ).filter((template) => template !== null) as Array<Template<unknown>>;
+      ).filter((template) => {
+        return template !== null;
+      }) as Array<Template<unknown>>;
       const byResultType = groupBy(
         templates,
         (template) => template.resultType,
