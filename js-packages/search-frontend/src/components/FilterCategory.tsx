@@ -36,7 +36,60 @@ function FilterCategory({
     text ||
       (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
   );
-  if (!show) return null;
+  if (!show)
+    return (
+      <div>
+        <div>
+          <div
+            css={css`
+              user-select: none;
+              margin-left: 16px;
+              display: flex;
+              align-items: center;
+              width: 100% !important;
+              margin-bottom: 20px;
+            `}
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <div
+              css={css`
+                flex-grow: 1;
+                :first-letter {
+                  text-transform: uppercase;
+                }
+              `}
+            >
+              <strong>{suggestionCategoryName}</strong>
+            </div>
+            <FontAwesomeIcon
+              icon={isOpen ? faChevronUp : faChevronDown}
+              style={{
+                color: "var(--openk9-embeddable-search--secondary-text-color)",
+                marginRight: "8px",
+              }}
+            />
+          </div>
+        </div>
+        {isOpen && (
+          <div
+            css={css`
+              color: var(--openk9-embeddable-search--secondary-text-color);
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100%;
+              margin-top: 30px;
+              margin-left: 10px;
+            `}
+          >
+            <Logo size={80} />
+            <h3>No {suggestionCategoryName}</h3>
+            <div></div>
+          </div>
+        )}
+      </div>
+    );
   return (
     <div
       css={css`
@@ -108,7 +161,6 @@ function FilterCategory({
               }}
             />
           </div>
-
           {suggestions.data?.pages.map(({ result }, index) => {
             return (
               <React.Fragment key={index}>
