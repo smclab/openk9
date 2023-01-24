@@ -9,6 +9,7 @@ import isEqual from "lodash/isEqual";
 import { useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
 import { useOpenK9Client } from "./client";
+import { Logo } from "./Logo";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -56,6 +57,9 @@ function FilterCategory({
           <div
             css={css`
               flex-grow: 1;
+              :first-letter {
+                text-transform: uppercase;
+              }
             `}
           >
             <strong>{suggestionCategoryName}</strong>
@@ -85,7 +89,7 @@ function FilterCategory({
               css={css`
                 flex-grow: 1;
                 margin-left: 16px;
-                margin-right: -24px;
+                margin-right: -31.5px;
                 padding: 8px 16px 8px 8px;
                 border-radius: 4px;
                 border: 1px solid var(--openk9-embeddable-search--border-color);
@@ -100,10 +104,11 @@ function FilterCategory({
               icon={faSearch}
               style={{
                 color: "var(--openk9-embeddable-search--secondary-text-color)",
-                marginRight: "8px",
+                marginLeft: "8px",
               }}
             />
           </div>
+
           {suggestions.data?.pages.map(({ result }, index) => {
             return (
               <React.Fragment key={index}>
@@ -177,11 +182,14 @@ function FilterCategory({
             >
               <button
                 css={css`
-                  border: 2px solid #c0272b !important;
-                  width: 150px;
-                  border-radius: 80px !important;
+                  width: 163px;
+                  height: 32px;
+                  left: 75px;
+                  top: 730px;
+                  background: #ffffff;
+                  border: 2px solid #c0272b;
                   border-radius: 12px;
-                  ${buttonStyle};
+                  cursor: pointer;
                 `}
                 // disabled={suggestions.isFetching}
                 onClick={() => {
@@ -193,7 +201,7 @@ function FilterCategory({
                     display: flex;
                     align-items: center;
                     text-align: center;
-                    margin-left: 15px;
+                    margin-left: 25px;
                   `}
                 >
                   <span
@@ -213,7 +221,10 @@ function FilterCategory({
                       font-family: "Helvetica";
                       font-style: normal;
                       color: #c0272b;
-                      margin-left: 10px;
+                      margin-left: 8px;
+                      font-weight: 700;
+                      font-size: 14px;
+                      color: #c0272b;
                     `}
                   >
                     Load more
@@ -229,7 +240,7 @@ function FilterCategory({
 }
 export const FilterCategoryMemo = React.memo(FilterCategory);
 
-const buttonStyle = css`
+export const buttonStyle = css`
   color: inherit;
   font-weight: bold;
   background: none;

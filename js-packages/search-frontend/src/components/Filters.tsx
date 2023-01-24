@@ -1,7 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { SearchToken } from "./client";
-import { FilterCategoryMemo } from "./FilterCategory";
+import { buttonStyle, FilterCategoryMemo } from "./FilterCategory";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";
 import { useQuery } from "react-query";
