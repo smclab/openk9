@@ -47,7 +47,7 @@ function FilterCategory({
               display: flex;
               align-items: center;
               width: 100% !important;
-              margin-bottom: 20px;
+              margin-bottom: 16px;
             `}
             onClick={() => setIsOpen(!isOpen)}
           >
@@ -79,7 +79,7 @@ function FilterCategory({
               align-items: center;
               justify-content: center;
               height: 100%;
-              margin-top: 30px;
+              margin-top: 18px;
               margin-left: 10px;
             `}
           >
@@ -179,6 +179,8 @@ function FilterCategory({
                       css={css`
                         margin-left: 13px;
                         margin-top: 5px;
+                        display: flex;
+                        align-items: baseline;
                       `}
                     >
                       <input
@@ -201,6 +203,14 @@ function FilterCategory({
                           className="form-check-label"
                           css={css`
                             text-overflow: ellipsis;
+                            font-family: "Lato";
+                            font-style: normal;
+                            font-weight: 600;
+                            font-size: 15px;
+                            line-height: 22px;
+                            /* or 147% */
+
+                            color: #000000;
                           `}
                         >
                           {suggestion.tokenType === "ENTITY" ? (
