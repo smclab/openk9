@@ -136,13 +136,23 @@ function FilterCategory({
               margin-bottom: 8px;
             `}
           >
+            <FontAwesomeIcon
+              icon={faSearch}
+              style={{
+                color: "var(--openk9-embeddable-search--secondary-text-color)",
+                marginLeft: "25px",
+                opacity: "0.3",
+                zIndex: "3",
+              }}
+            />
             <input
               value={text}
               onChange={(event) => setText(event.currentTarget.value)}
               css={css`
                 flex-grow: 1;
-                margin-left: 16px;
-                margin-right: -31.5px;
+                text-indent: 25px;
+                margin-left: -23px;
+                margin-right: -9px;
                 padding: 8px 16px 8px 8px;
                 border-radius: 4px;
                 border: 1px solid var(--openk9-embeddable-search--border-color);
@@ -152,13 +162,6 @@ function FilterCategory({
                   outline: none;
                 }
               `}
-            />
-            <FontAwesomeIcon
-              icon={faSearch}
-              style={{
-                color: "var(--openk9-embeddable-search--secondary-text-color)",
-                marginLeft: "8px",
-              }}
             />
           </div>
           {suggestions.data?.pages.map(({ result }, index) => {
@@ -203,13 +206,10 @@ function FilterCategory({
                           className="form-check-label"
                           css={css`
                             text-overflow: ellipsis;
-                            font-family: "Lato";
                             font-style: normal;
                             font-weight: 600;
-                            font-size: 15px;
                             line-height: 22px;
                             /* or 147% */
-
                             color: #000000;
                           `}
                         >
