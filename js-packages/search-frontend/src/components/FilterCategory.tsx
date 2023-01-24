@@ -151,7 +151,7 @@ function FilterCategory({
               css={css`
                 flex-grow: 1;
                 text-indent: 25px;
-                margin-left: -23px;
+                margin-left: -25px;
                 margin-right: -9px;
                 padding: 8px 16px 8px 8px;
                 border-radius: 4px;
