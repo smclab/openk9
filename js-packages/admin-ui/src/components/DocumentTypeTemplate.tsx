@@ -67,6 +67,7 @@ export function DocumentTypeTemplate() {
             navigate(`/document-type-templates/`, { replace: true });
             showToast({ displayType: "success", title: "Template created", content: data.docTypeTemplate.entity.name ?? "" });
           } else {
+            navigate(`/document-type-templates/${data.docTypeTemplate?.entity?.id}`, { replace: true });
             showToast({ displayType: "info", title: "Template updated", content: data.docTypeTemplate.entity.name ?? "" });
           }
         }
