@@ -78,7 +78,7 @@ export function DocumentTypeTemplate() {
       () => ({
         name: "",
         description: "",
-        templateType: TemplateType.TypescriptSource,
+        templateType: TemplateType.JavascriptCompiled,
         source: "",
         compiled: "",
       }),
