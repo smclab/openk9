@@ -135,7 +135,7 @@ export function TableWithSubFields<
             </ClayToolbar.Item>
             <ClayToolbar.Item>
               <Link to={onCreatePath}>
-                <ClayButtonWithIcon aria-label="" symbol="plus" small />
+                <ClayButtonWithIcon aria-label="" className={` ${ClassNameButton} `} symbol="plus" small />
               </Link>
             </ClayToolbar.Item>
             {isItemsSelectable && (

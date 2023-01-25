@@ -658,7 +658,7 @@ export function AssociatedEntities<Q>({
               />
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <ClayButton className={`${ClassNameButton}`} onClick={() => onOpenChange(true)}>
+              <ClayButton className={`${ClassNameButton}  btn-sm`} onClick={() => onOpenChange(true)}>
                 <span className="inline-item inline-item-before">
                   <ClayIcon symbol="plus" />
                 </span>
@@ -868,7 +868,13 @@ export function AssociatedEntitiesWithSelect<Q>({
               />
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <ClayButtonWithIcon aria-label="" symbol="plus" small onClick={() => onOpenChange(true)} />
+              <ClayButtonWithIcon
+                aria-label=""
+                className={`${ClassNameButton} btn-sm`}
+                symbol="plus"
+                small
+                onClick={() => onOpenChange(true)}
+              />
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ClayLayout.ContainerFluid>
