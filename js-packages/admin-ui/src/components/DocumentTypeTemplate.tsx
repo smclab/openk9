@@ -126,7 +126,7 @@ export function DocumentTypeTemplate() {
               return <CodeInput label="Source" language="javascript-react" height="80vh" {...form.inputProps("source")} />;
             }
             case TemplateType.JavascriptCompiled: {
-              return <CodeInput label="Compiled" language="javascript" height="80vh" {...form.inputProps("compiled")} />;
+              return <CodeInput label="Compiled" readonly={true} language="javascript" height="80vh" {...form.inputProps("compiled")} />;
             }
           }
         })()}

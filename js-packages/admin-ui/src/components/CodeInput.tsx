@@ -112,15 +112,21 @@ export function CodeInput({
   validationMessages,
   language,
   height = "200px",
+  readonly,
 }: BaseInputProps<string> & {
   language: MonacoLanguage;
   height?: string;
+  readonly?: boolean;
 }) {
   const editorElementRef = React.useRef<HTMLDivElement>(null);
   const editorRef = React.useRef<{ editor?: monaco.editor.IStandaloneCodeEditor; model?: monaco.editor.ITextModel }>({});
   React.useEffect(() => {
     if (editorElementRef.current) {
-      const editor = monaco.editor.create(editorElementRef.current, { minimap: { enabled: false }, theme: "clayui" });
+      const editor = monaco.editor.create(
+        editorElementRef.current,
+        { readOnly: readonly },
+        { minimap: { enabled: false }, theme: "clayui" }
+      );
       editor.updateOptions({ tabSize: 2 });
       editor.onDidBlurEditorText(() => {
         if (editorRef.current.model) {
