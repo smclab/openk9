@@ -954,14 +954,6 @@ export function AssociatedEntitiesWithSelect<Q>({
         <ClayModal observer={observer}>
           <ClayModal.Header>{label}</ClayModal.Header>
           <ClayModal.Body>
-            <ClayForm.Group>
-              <ClayInput
-                type="search"
-                placeholder="search"
-                value={modalSearchText}
-                onChange={(event) => setModalSearchText(event.currentTarget.value)}
-              />
-            </ClayForm.Group>
             <EnumSelectSimple
               dict={UserField}
               disabled={false}
@@ -973,6 +965,14 @@ export function AssociatedEntitiesWithSelect<Q>({
               validationMessages={[]}
               key={""}
             ></EnumSelectSimple>
+            <ClayForm.Group>
+              <ClayInput
+                type="search"
+                placeholder="search"
+                value={modalSearchText}
+                onChange={(event) => setModalSearchText(event.currentTarget.value)}
+              />
+            </ClayForm.Group>
           </ClayModal.Body>
           <ClayModal.Body scrollable={true}>
             {(unassociatedListQuery.data?.docTypeFields.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
