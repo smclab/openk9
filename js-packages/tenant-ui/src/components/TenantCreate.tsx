@@ -141,13 +141,18 @@ export function TenantCreate() {
               !ability
                 ? async () => {
                     setLoading(true);
-                    const stato = await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({
-                      virtualHost: form.inputProps("virtualHost").value,
-                    });
-                    if (stato) {
-                      showToast({ displayType: "success", title: "Tenant created", content: "" });
+                    try {
+                      const stato = await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({
+                        virtualHost: form.inputProps("virtualHost").value,
+                      });
+                      if (stato) {
+                        showToast({ displayType: "success", title: "Tenant created", content: "" });
+                        setLoading(false);
+                        navigate(`/tenants/`, { replace: true });
+                      }
+                    } catch (error) {
                       setLoading(false);
-                      navigate(`/tenants/`, { replace: true });
+                      showToast({ displayType: "danger", title: "Tenant not created", content: "" });
                     }
                   }
                 : () => {}
