@@ -668,6 +668,7 @@ export function AssociatedEntities<Q>({
           </ClayToolbar.Nav>
         </ClayLayout.ContainerFluid>
       </ClayToolbar>
+
       <ClayLayout.ContainerFluid view>
         {(field(associatedListQuery.data)?.edges?.length ?? 0) !== 0 && <MainTitle title={label} />}
         {(field(associatedListQuery.data)?.edges?.length ?? 0) === 0 && !associatedListQuery.loading && (
@@ -726,7 +727,7 @@ export function AssociatedEntities<Q>({
       {open && (
         <ClayModal observer={observer}>
           <ClayModal.Header>{label}</ClayModal.Header>
-          <ClayModal.Body scrollable={true}>
+          <ClayModal.Body style={{ minHeight: "465px" }} scrollable={true}>
             <ClayForm.Group>
               <ClayInput
                 type="search"
@@ -735,8 +736,6 @@ export function AssociatedEntities<Q>({
                 onChange={(event) => setModalSearchText(event.currentTarget.value)}
               />
             </ClayForm.Group>
-          </ClayModal.Body>
-          <ClayModal.Body scrollable={true}>
             {(field(unassociatedListQuery.data)?.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
               <ClayEmptyState
                 description="There are no matching unassociated entities"
@@ -744,34 +743,45 @@ export function AssociatedEntities<Q>({
                 className="c-empty-state-animation"
               />
             )}
-            <ClayList showQuickActionsOnHover>
-              {
-                field(unassociatedListQuery.data)?.edges?.map((edge) => {
-                  return (
-                    <ClayList.Item flex key={edge?.node?.id}>
-                      <ClayList.ItemField expand>
-                        <ClayList.ItemTitle>{edge?.node?.name || "..."}</ClayList.ItemTitle>
-                        <ClayList.ItemText>{edge?.node?.description || "..."}</ClayList.ItemText>
-                      </ClayList.ItemField>
-                      <ClayList.ItemField>
-                        <ClayList.QuickActionMenu>
-                          {canAct && (
-                            <ClayList.QuickActionMenu.Item
-                              onClick={() => {
-                                if (edge?.node?.id) {
-                                  addMutate({ variables: { parentId, childId: edge.node.id } });
-                                }
-                              }}
-                              symbol="link"
-                            />
-                          )}
-                        </ClayList.QuickActionMenu>
-                      </ClayList.ItemField>
-                    </ClayList.Item>
-                  );
-                }) as any
-              }
-            </ClayList>
+            {(field(unassociatedListQuery.data)?.edges?.length ?? 0) !== 0 && !unassociatedListQuery.loading && (
+              <div
+                className={"formContainer"}
+                style={{
+                  width: "550px",
+                  height: "348px",
+                  overflowY: (field(unassociatedListQuery.data)?.edges?.length ?? 0) > 4 ? "scroll" : "hidden",
+                }}
+              >
+                <ClayList showQuickActionsOnHover>
+                  {
+                    field(unassociatedListQuery.data)?.edges?.map((edge) => {
+                      return (
+                        <ClayList.Item flex key={edge?.node?.id}>
+                          <ClayList.ItemField expand>
+                            <ClayList.ItemTitle>{edge?.node?.name || "..."}</ClayList.ItemTitle>
+                            <ClayList.ItemText>{edge?.node?.description || "..."}</ClayList.ItemText>
+                          </ClayList.ItemField>
+                          <ClayList.ItemField>
+                            <ClayList.QuickActionMenu>
+                              {canAct && (
+                                <ClayList.QuickActionMenu.Item
+                                  onClick={() => {
+                                    if (edge?.node?.id) {
+                                      addMutate({ variables: { parentId, childId: edge.node.id } });
+                                    }
+                                  }}
+                                  symbol="link"
+                                />
+                              )}
+                            </ClayList.QuickActionMenu>
+                          </ClayList.ItemField>
+                        </ClayList.Item>
+                      );
+                    }) as any
+                  }
+                </ClayList>
+              </div>
+            )}
           </ClayModal.Body>
         </ClayModal>
       )}
@@ -981,7 +991,7 @@ export function AssociatedEntitiesWithSelect<Q>({
               />
             )}
             <ClayList showQuickActionsOnHover>
-              <div className="formContainer" style={{ width: "550px", height: "240px", overflowY: "scroll" }}>
+              <div className="formContainer" style={{ width: "550px", height: "275px", overflowY: "scroll" }}>
                 {
                   unassociatedListQuery.data?.docTypeFields.edges?.map((edge: any) => {
                     return (
