@@ -973,8 +973,6 @@ export function AssociatedEntitiesWithSelect<Q>({
                 onChange={(event) => setModalSearchText(event.currentTarget.value)}
               />
             </ClayForm.Group>
-          </ClayModal.Body>
-          <ClayModal.Body scrollable={true}>
             {(unassociatedListQuery.data?.docTypeFields.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
               <ClayEmptyState
                 description="There are no matching unassociated entities"
@@ -983,32 +981,34 @@ export function AssociatedEntitiesWithSelect<Q>({
               />
             )}
             <ClayList showQuickActionsOnHover>
-              {
-                unassociatedListQuery.data?.docTypeFields.edges?.map((edge: any) => {
-                  return (
-                    <ClayList.Item flex key={edge?.node?.id}>
-                      <ClayList.ItemField expand>
-                        <ClayList.ItemTitle>{edge?.node?.name || "..."}</ClayList.ItemTitle>
-                        <ClayList.ItemText>{edge?.node?.description || "..."}</ClayList.ItemText>
-                      </ClayList.ItemField>
-                      <ClayList.ItemField>
-                        <ClayList.QuickActionMenu>
-                          {canAct && (
-                            <ClayList.QuickActionMenu.Item
-                              onClick={() => {
-                                if (edge?.node?.id) {
-                                  addMutate({ variables: { parentId, childId: edge.node.id, userField: userField } });
-                                }
-                              }}
-                              symbol="link"
-                            />
-                          )}
-                        </ClayList.QuickActionMenu>
-                      </ClayList.ItemField>
-                    </ClayList.Item>
-                  );
-                }) as any
-              }
+              <div className="formContainer" style={{ width: "550px", height: "240px", overflowY: "scroll" }}>
+                {
+                  unassociatedListQuery.data?.docTypeFields.edges?.map((edge: any) => {
+                    return (
+                      <ClayList.Item flex key={edge?.node?.id}>
+                        <ClayList.ItemField expand>
+                          <ClayList.ItemTitle>{edge?.node?.name || "..."}</ClayList.ItemTitle>
+                          <ClayList.ItemText>{edge?.node?.description || "..."}</ClayList.ItemText>
+                        </ClayList.ItemField>
+                        <ClayList.ItemField>
+                          <ClayList.QuickActionMenu>
+                            {canAct && (
+                              <ClayList.QuickActionMenu.Item
+                                onClick={() => {
+                                  if (edge?.node?.id) {
+                                    addMutate({ variables: { parentId, childId: edge.node.id, userField: userField } });
+                                  }
+                                }}
+                                symbol="link"
+                              />
+                            )}
+                          </ClayList.QuickActionMenu>
+                        </ClayList.ItemField>
+                      </ClayList.Item>
+                    );
+                  }) as any
+                }
+              </div>
             </ClayList>
           </ClayModal.Body>
         </ClayModal>
