@@ -7,6 +7,7 @@ import { useParams } from "react-router-dom";
 import { useRestClient } from "./queryClient";
 import { useToast } from "./ToastProvider";
 import React from "react";
+import { ClassNameButton } from "../App";
 
 export function DocumentTypeMappings() {
   const restClient = useRestClient();
@@ -31,6 +32,7 @@ export function DocumentTypeMappings() {
             <ClayToolbar.Item expand></ClayToolbar.Item>
             <ClayToolbar.Item>
               <Button
+                className={`${ClassNameButton} btn-sm`}
                 onClick={() => copy(JSON.stringify(documentTypeMappingsQuery.data, null, 2))}
                 disabled={!documentTypeMappingsQuery.data}
               >

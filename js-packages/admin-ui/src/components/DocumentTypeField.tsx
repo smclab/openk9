@@ -20,6 +20,7 @@ import ClayToolbar from "@clayui/toolbar";
 import { CodeInput } from "./CodeInput";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
 import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "../App";
 
 const DocumentTypeFieldQuery = gql`
   query DocumentTypeField($id: ID!) {
@@ -165,7 +166,7 @@ export function DocumentTypeField() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/document-types/${documentTypeId}/document-type-fields`}>
-                <ClayButtonWithIcon aria-label="" symbol="angle-left" small />
+                <ClayButtonWithIcon aria-label="" className={` ${ClassNameButton} `} symbol="angle-left" small />
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
@@ -208,7 +209,7 @@ export function DocumentTypeField() {
           )}
           <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
           <div className="sheet-footer">
-            <ClayButton type="submit" disabled={!form.canSubmit}>
+            <ClayButton className={` ${ClassNameButton} `} type="submit" disabled={!form.canSubmit}>
               {documentTypeFieldId === "new" ? "Create" : "Update"}
             </ClayButton>
           </div>
