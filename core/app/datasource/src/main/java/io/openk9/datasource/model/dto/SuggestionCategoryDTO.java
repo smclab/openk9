@@ -33,4 +33,6 @@ import javax.validation.constraints.NotNull;
 public class SuggestionCategoryDTO extends K9EntityDTO {
     @NotNull
     private Float priority;
+    @NotNull
+    private Boolean multiSelect = false;
 }
