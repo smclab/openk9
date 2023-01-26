@@ -35,6 +35,7 @@ import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
+import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
@@ -116,6 +117,12 @@ public class SuggestionCategoryGraphqlResource {
 	@Mutation
 	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeFieldFromSuggestionCategory(@Id long suggestionCategoryId, @Id long docTypeFieldId) {
 		return suggestionCategoryService.removeDocTypeField(suggestionCategoryId, docTypeFieldId);
+	}
+
+	@Mutation
+	public Uni<SuggestionCategory> setMultiSelect(
+		@Id @Name("suggestionCategoryId") long suggestionCategoryId, boolean multiSelect) {
+		return suggestionCategoryService.setMultiSelect(suggestionCategoryId, multiSelect);
 	}
 
 	@Subscription

@@ -53,6 +53,9 @@ public class SuggestionCategory extends K9Entity {
 	@Column(name = "priority", nullable = false)
 	private Float priority;
 
+	@Column(name = "multiSelect", nullable = false)
+	private boolean multiSelect = false;
+
 
 	@ManyToMany(cascade = {
 		javax.persistence.CascadeType.REFRESH,

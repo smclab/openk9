@@ -102,6 +102,16 @@ public class SuggestionCategoryService extends
 		);
 	}
 
+	public Uni<SuggestionCategory> setMultiSelect(long suggestionCategoryId, boolean multiSelect) {
+		return withTransaction(() -> findById(suggestionCategoryId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(suggestionCategory -> {
+				suggestionCategory.setMultiSelect(multiSelect);
+				return persist(suggestionCategory);
+			}));
+	}
+
 	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeField(
 		long suggestionCategoryId, long docTypeFieldId) {
 		return withTransaction((s) -> findById(suggestionCategoryId)
