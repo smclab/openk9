@@ -373,7 +373,7 @@ const TemplateQueryParser = [
   },
 
   {
-    title: "TEXT ",
+    title: "TEXT",
     description: "",
     Json: `
     {
