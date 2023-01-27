@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
 import { QueryParserConfigsQuery } from "./QueryParsers";
 import ClayPanel from "@clayui/panel";
+import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "../App";
 
 const QueryParserConfigQuery = gql`
   query QueryParserConfig($id: ID!) {
@@ -52,7 +54,7 @@ gql`
 export function QueryParserConfig() {
   const { searchConfigId, queryParserConfigId = "new" } = useParams();
   const navigate = useNavigate();
-
+  const Toast = useToast();
   const queryParserQuery = useQueryParserConfigQuery({
     variables: { id: queryParserConfigId as string },
     skip: !queryParserConfigId || queryParserConfigId === "new",
@@ -65,8 +67,13 @@ export function QueryParserConfig() {
     refetchQueries: [QueryParserConfigQuery, QueryParserConfigsQuery],
     onCompleted(data) {
       if (data.queryParserConfig?.entity) {
-        if (queryParserConfigId === "new") navigate(`/search-configs/${searchConfigId}/query-parsers`, { replace: true });
-        else navigate(`/search-configs/${searchConfigId}/query-parsers/${data.queryParserConfig.entity.id}`, { replace: true });
+        if (queryParserConfigId === "new") {
+          Toast({ content: "", displayType: "success", title: "Creat query parser" });
+          navigate(`/search-configs/${searchConfigId}/query-parsers`, { replace: true });
+        } else {
+          Toast({ content: "", displayType: "success", title: "Update query parser" });
+          navigate(`/search-configs/${searchConfigId}/query-parsers/${data.queryParserConfig.entity.id}`, { replace: true });
+        }
       }
     },
   });
@@ -129,7 +136,7 @@ export function QueryParserConfig() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/search-configs/${searchConfigId}/query-parsers`}>
-                <ClayButtonWithIcon aria-label="" symbol="angle-left" small />
+                <ClayButtonWithIcon className={ClassNameButton} aria-label="" symbol="angle-left" small />
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
@@ -295,7 +302,7 @@ export function QueryParserConfig() {
             }
           })}
           <div className="sheet-footer">
-            <ClayButton type="submit" disabled={!form.canSubmit}>
+            <ClayButton type="submit" className={ClassNameButton} disabled={!form.canSubmit}>
               {queryParserConfigId === "new" ? "Create" : "Update"}
             </ClayButton>
           </div>
@@ -322,7 +329,7 @@ const TemplateQueryParser = [
     visible: "false",
   },
   {
-    title: "dA T E",
+    title: "DATE ",
     description: "Date Template",
     Json: `
     {
