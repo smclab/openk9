@@ -1470,3 +1470,26 @@ export const StyleToggle = `
     background-color: #CBCBCB;
   }
 `;
+
+interface ParamsFormatString {
+  howFormat?: FormatType[];
+  words: string;
+}
+
+type FormatType = "uppercase" | "withoutSpace" | "upperFirstLetter";
+
+const formatFunctions: { [key in FormatType]: (str: string) => string } = {
+  uppercase: (str) => str.toUpperCase(),
+  withoutSpace: (str) => str.replace(/\s/g, ""),
+  upperFirstLetter: (str) => str.replace(/^\w/, (c) => c.toUpperCase()),
+};
+
+export function FormatString({ howFormat = ["uppercase", "withoutSpace", "upperFirstLetter"], words }: ParamsFormatString) {
+  howFormat.forEach((singleFormat) => {
+    const formatFn = formatFunctions[singleFormat];
+    if (formatFn) {
+      words = formatFn(words);
+    }
+  });
+  return words;
+}

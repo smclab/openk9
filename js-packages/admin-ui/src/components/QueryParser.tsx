@@ -3,7 +3,7 @@ import ClayForm, { ClaySelect, ClayToggle } from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery } from "../graphql-generated";
-import { fromFieldValidators, InformationField, KeyValue, StyleToggle, TextArea, TextInput, useForm } from "./Form";
+import { FormatString, fromFieldValidators, InformationField, KeyValue, StyleToggle, TextArea, TextInput, useForm } from "./Form";
 import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
 import { ClayButtonWithIcon } from "@clayui/button";
@@ -112,7 +112,9 @@ export function QueryParserConfig() {
       setIsEmpty(true);
     } catch (error) {}
   }
-
+  TemplateQueryParser.map(
+    (template) => (template.title = FormatString({ howFormat: ["upperFirstLetter", "withoutSpace"], words: template.title }))
+  );
   if (queryParserConfigId !== "new") {
     TemplateQueryParser.forEach((filter) => {
       if (filter.title === type) {
@@ -320,7 +322,7 @@ const TemplateQueryParser = [
     visible: "false",
   },
   {
-    title: "DATE",
+    title: "dA T E",
     description: "Date Template",
     Json: `
     {
