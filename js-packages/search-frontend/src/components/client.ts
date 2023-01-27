@@ -260,6 +260,7 @@ export type SearchToken =
       keywordKey?: string;
       values: string[];
       filter: boolean;
+      goToSuggestion?: boolean;
     }
   | {
       tokenType: "ENTITY";

@@ -83,8 +83,8 @@ function FilterCategory({
               margin-left: 10px;
             `}
           >
-            <Logo size={80} />
-            <h3>No {suggestionCategoryName}</h3>
+            <Logo size={100} />
+            <h4>No {suggestionCategoryName} </h4>
             <div></div>
           </div>
         )}
@@ -170,8 +170,9 @@ function FilterCategory({
                 {result.map((suggestion, index) => {
                   const asSearchToken = mapSuggestionToSearchToken(
                     suggestion,
-                    true,
+                    false,
                   );
+
                   const isChecked = tokens.some((searchToken) =>
                     isEqual(searchToken, asSearchToken),
                   );
@@ -330,6 +331,15 @@ function useInfiniteSuggestions(
 ) {
   const pageSize = 10;
   const client = useOpenK9Client();
+  // let searchQuery: SearchToken[] | null = [];
+  // if (searchQueryParams) {
+  //   if (searchQueryParams?.length > 0) {
+  //     searchQuery =
+  //       searchQueryParams?.filter(
+  //         (element) => !JSON.parse(JSON.stringify(element)).filter,
+  //       ) || null;
+  //   }
+  // }
   return useInfiniteQuery(
     [
       "suggestions",
@@ -404,6 +414,7 @@ export const mapSuggestionToSearchToken = (
         keywordKey: suggestion.keywordKey,
         values: [suggestion.value],
         filter,
+        goToSuggestion: true,
       };
     }
   }
