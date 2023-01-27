@@ -1,8 +1,14 @@
 import React from "react";
 import { gql } from "@apollo/client";
-import { useDeleteSuggestionCategoryMutation, useSuggestionCategoriesQuery } from "../graphql-generated";
+import {
+  useCreateOrUpdateSuggestionCategoryMutation,
+  useDeleteSuggestionCategoryMutation,
+  useSuggestionCategoriesQuery,
+} from "../graphql-generated";
 import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
+import { ClayToggle } from "@clayui/form";
+import { StyleToggle } from "./Form";
 
 export const SuggestionCategoriesQuery = gql`
   query SuggestionCategories($searchText: String, $cursor: String) {
@@ -13,6 +19,7 @@ export const SuggestionCategoriesQuery = gql`
           name
           description
           priority
+          multiSelect
         }
       }
       pageInfo {
@@ -46,7 +53,9 @@ export function SuggestionCategories() {
       showToast({ displayType: "danger", title: "Rule error", content: error.message ?? "" });
     },
   });
-
+  const [updateSuggestionCategoryMutate] = useCreateOrUpdateSuggestionCategoryMutation({
+    refetchQueries: [SuggestionCategoriesQuery],
+  });
   return (
     <Table
       data={{
@@ -61,6 +70,29 @@ export function SuggestionCategories() {
         { header: "Name", content: (suggestionCategory) => formatName(suggestionCategory) },
         { header: "Description", content: (suggestionCategory) => suggestionCategory?.description },
         { header: "Priority", content: (suggestionCategory) => suggestionCategory?.priority },
+        {
+          header: "Multi Select",
+          content: (suggestionCategories) => (
+            <React.Fragment>
+              <ClayToggle
+                toggled={suggestionCategories?.multiSelect ?? false}
+                onToggle={(multiSelect) => {
+                  if (suggestionCategories && suggestionCategories.id && suggestionCategories.name)
+                    updateSuggestionCategoryMutate({
+                      variables: {
+                        id: suggestionCategories?.id,
+                        multiSelect: !suggestionCategories?.multiSelect,
+                        name: suggestionCategories?.name,
+                        priority: suggestionCategories?.priority || 0,
+                        description: suggestionCategories?.description ?? "",
+                      },
+                    });
+                }}
+              />
+              <style type="text/css">{StyleToggle}</style>
+            </React.Fragment>
+          ),
+        },
       ]}
     />
   );
