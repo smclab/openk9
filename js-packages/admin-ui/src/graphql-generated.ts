@@ -4154,7 +4154,7 @@ export type SuggestionCategoriesQueryVariables = Exact<{
 }>;
 
 
-export type SuggestionCategoriesQuery = { __typename?: 'Query', suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null, priority?: number | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type SuggestionCategoriesQuery = { __typename?: 'Query', suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, multiSelect: boolean } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteSuggestionCategoryMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -10100,6 +10100,7 @@ export const SuggestionCategoriesDocument = gql`
         name
         description
         priority
+        multiSelect
       }
     }
     pageInfo {
@@ -11289,4 +11290,4 @@ export function useCreateWebCrawlerDataSourceMutation(baseOptions?: Apollo.Mutat
 export type CreateWebCrawlerDataSourceMutationHookResult = ReturnType<typeof useCreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationResult = Apollo.MutationResult<CreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateWebCrawlerDataSourceMutation, CreateWebCrawlerDataSourceMutationVariables>;
-// Generated on 2023-01-27T14:48:07+01:00
+// Generated on 2023-01-27T15:16:47+01:00
