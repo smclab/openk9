@@ -71,7 +71,7 @@ export function SuggestionCategories() {
         { header: "Description", content: (suggestionCategory) => suggestionCategory?.description },
         { header: "Priority", content: (suggestionCategory) => suggestionCategory?.priority },
         {
-          header: "Multi Select",
+          header: "Multiple Select",
           content: (suggestionCategories) => (
             <React.Fragment>
               <ClayToggle
