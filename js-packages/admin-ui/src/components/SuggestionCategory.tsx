@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { useCreateOrUpdateSuggestionCategoryMutation, useSuggestionCategoryQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, BooleanInput } from "./Form";
 import { SuggestionCategoriesQuery } from "./SuggestionCategories";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
@@ -17,13 +17,17 @@ const SuggestionCategoryQuery = gql`
       name
       description
       priority
+      multiSelect
     }
   }
 `;
 
 gql`
-  mutation CreateOrUpdateSuggestionCategory($id: ID, $name: String!, $description: String, $priority: Float!) {
-    suggestionCategory(id: $id, suggestionCategoryDTO: { name: $name, description: $description, priority: $priority }) {
+  mutation CreateOrUpdateSuggestionCategory($id: ID, $name: String!, $description: String, $priority: Float!, $multiSelect: Boolean!) {
+    suggestionCategory(
+      id: $id
+      suggestionCategoryDTO: { name: $name, description: $description, priority: $priority, multiSelect: $multiSelect }
+    ) {
       entity {
         id
         name
@@ -63,6 +67,7 @@ export function SuggestionCategory() {
         name: "",
         description: "",
         priority: 0,
+        multiSelect: false,
       }),
       []
     ),
@@ -87,6 +92,7 @@ export function SuggestionCategory() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
         <NumberInput label="Priority" {...form.inputProps("priority")} />
+        <BooleanInput label="Multi Select" {...form.inputProps("multiSelect")} />
         <div className="sheet-footer">
           <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {suggestionCategoryId === "new" ? "Create" : "Update"}

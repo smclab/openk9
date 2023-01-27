@@ -745,6 +745,7 @@ export type DocTypeField = {
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   date: Scalars['Boolean'];
+  defaultBoost: Scalars['Boolean'];
   defaultExclude: Scalars['Boolean'];
   description?: Maybe<Scalars['String']>;
   docType?: Maybe<DocType>;
@@ -761,7 +762,8 @@ export type DocTypeField = {
   name?: Maybe<Scalars['String']>;
   numeric: Scalars['Boolean'];
   parent?: Maybe<DocTypeField>;
-  searchable?: Maybe<Scalars['Boolean']>;
+  searchable: Scalars['Boolean'];
+  searchableAndAutocomplete: Scalars['Boolean'];
   searchableAndDate: Scalars['Boolean'];
   searchableAndText: Scalars['Boolean'];
   subFields?: Maybe<Connection_DocTypeField>;
@@ -1199,6 +1201,7 @@ export type Mutation = {
   enableBucket?: Maybe<Bucket>;
   enrichItem?: Maybe<Response_EnrichItem>;
   enrichPipeline?: Maybe<Response_EnrichPipeline>;
+  multiSelect?: Maybe<SuggestionCategory>;
   pluginDriver?: Maybe<Response_PluginDriver>;
   queryAnalysis?: Maybe<Response_QueryAnalysis>;
   queryParserConfig?: Maybe<Response_QueryParserConfig>;
@@ -1603,6 +1606,13 @@ export type MutationEnrichPipelineArgs = {
   enrichPipelineDTO?: InputMaybe<EnrichPipelineDtoInput>;
   id?: InputMaybe<Scalars['ID']>;
   patch?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Mutation root */
+export type MutationMultiSelectArgs = {
+  multiSelect: Scalars['Boolean'];
+  suggestionCategoryId: Scalars['ID'];
 };
 
 
@@ -2742,6 +2752,7 @@ export type SuggestionCategory = {
   id?: Maybe<Scalars['ID']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
+  multiSelect: Scalars['Boolean'];
   name?: Maybe<Scalars['String']>;
   priority?: Maybe<Scalars['Float']>;
 };
@@ -2759,6 +2770,7 @@ export type SuggestionCategoryDocTypeFieldsArgs = {
 
 export type SuggestionCategoryDtoInput = {
   description?: InputMaybe<Scalars['String']>;
+  multiSelect: Scalars['Boolean'];
   name: Scalars['String'];
   priority: Scalars['Float'];
 };
@@ -3608,7 +3620,7 @@ export type DocumentTypeFieldQueryVariables = Exact<{
 }>;
 
 
-export type DocumentTypeFieldQuery = { __typename?: 'Query', docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, analyzer?: { __typename?: 'Analyzer', id?: string | null } | null } | null };
+export type DocumentTypeFieldQuery = { __typename?: 'Query', docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, analyzer?: { __typename?: 'Analyzer', id?: string | null } | null } | null };
 
 export type CreateOrUpdateDocumentTypeFieldMutationVariables = Exact<{
   documentTypeId: Scalars['ID'];
@@ -4120,7 +4132,7 @@ export type DocumentTypeFieldsQueryVariables = Exact<{
 }>;
 
 
-export type DocumentTypeFieldsQuery = { __typename?: 'Query', docTypeFieldsFromDocType?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, subFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null } | null } | null> | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DocumentTypeFieldsQuery = { __typename?: 'Query', docTypeFieldsFromDocType?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, subFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null } | null } | null> | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type CreateDocumentTypeSubFieldsMutationVariables = Exact<{
   parentDocTypeFieldId: Scalars['ID'];
@@ -4156,13 +4168,14 @@ export type SuggestionCategoryQueryVariables = Exact<{
 }>;
 
 
-export type SuggestionCategoryQuery = { __typename?: 'Query', suggestionCategory?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null, priority?: number | null } | null };
+export type SuggestionCategoryQuery = { __typename?: 'Query', suggestionCategory?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, multiSelect: boolean } | null };
 
 export type CreateOrUpdateSuggestionCategoryMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   priority: Scalars['Float'];
+  multiSelect: Scalars['Boolean'];
 }>;
 
 
@@ -10166,6 +10179,7 @@ export const SuggestionCategoryDocument = gql`
     name
     description
     priority
+    multiSelect
   }
 }
     `;
@@ -10198,10 +10212,10 @@ export type SuggestionCategoryQueryHookResult = ReturnType<typeof useSuggestionC
 export type SuggestionCategoryLazyQueryHookResult = ReturnType<typeof useSuggestionCategoryLazyQuery>;
 export type SuggestionCategoryQueryResult = Apollo.QueryResult<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>;
 export const CreateOrUpdateSuggestionCategoryDocument = gql`
-    mutation CreateOrUpdateSuggestionCategory($id: ID, $name: String!, $description: String, $priority: Float!) {
+    mutation CreateOrUpdateSuggestionCategory($id: ID, $name: String!, $description: String, $priority: Float!, $multiSelect: Boolean!) {
   suggestionCategory(
     id: $id
-    suggestionCategoryDTO: {name: $name, description: $description, priority: $priority}
+    suggestionCategoryDTO: {name: $name, description: $description, priority: $priority, multiSelect: $multiSelect}
   ) {
     entity {
       id
@@ -10233,6 +10247,7 @@ export type CreateOrUpdateSuggestionCategoryMutationFn = Apollo.MutationFunction
  *      name: // value for 'name'
  *      description: // value for 'description'
  *      priority: // value for 'priority'
+ *      multiSelect: // value for 'multiSelect'
  *   },
  * });
  */
@@ -11274,4 +11289,4 @@ export function useCreateWebCrawlerDataSourceMutation(baseOptions?: Apollo.Mutat
 export type CreateWebCrawlerDataSourceMutationHookResult = ReturnType<typeof useCreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationResult = Apollo.MutationResult<CreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateWebCrawlerDataSourceMutation, CreateWebCrawlerDataSourceMutationVariables>;
-// Generated on 2023-01-13T09:50:37+01:00
+// Generated on 2023-01-27T14:48:07+01:00
