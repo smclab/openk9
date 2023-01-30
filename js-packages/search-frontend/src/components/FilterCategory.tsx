@@ -34,6 +34,7 @@ function FilterCategory({
     useDebounce(text, 600),
   );
   const [isOpen, setIsOpen] = React.useState(true);
+  const [singleSelect, setSingleselect] = React.useState("");
   const show = Boolean(
     text ||
       (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
@@ -189,28 +190,47 @@ function FilterCategory({
                         align-items: baseline;
                       `}
                     >
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={(event) => {
-                          if (event.currentTarget.checked) {
-                            if (multiSelect) {
-                              onAdd(asSearchToken);
-                            } else {
-                              tokens.some((searchToken) =>
-                                onRemove(searchToken),
-                              );
-                              onAdd(asSearchToken);
-                            }
-                          } else {
-                            onRemove(asSearchToken);
-                          }
-                        }}
-                        css={css`
-                          width: 14px;
-                        `}
-                      />
+                      {multiSelect ? (
+                        <React.Fragment>
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(event) => {
+                              if (event.currentTarget.checked) {
+                                if (multiSelect) {
+                                  onAdd(asSearchToken);
+                                } else {
+                                  tokens.some((searchToken) => {
+                                    if (
+                                      JSON.parse(JSON.stringify(searchToken))
+                                        ?.multiSelect
+                                    )
+                                      onRemove(searchToken);
+                                  });
+                                  onAdd(asSearchToken);
+                                }
+                              } else {
+                                onRemove(asSearchToken);
+                              }
+                            }}
+                            css={css`
+                              width: 14px;
+                            `}
+                          />
+                        </React.Fragment>
+                      ) : (
+                        <SingleSelect
+                          isChecked={isChecked}
+                          multiSelect={multiSelect}
+                          asSearchToken={asSearchToken}
+                          onAdd={onAdd}
+                          onRemove={onRemove}
+                          singleSelect={singleSelect}
+                          setSingleSelect={setSingleselect}
+                        />
+                      )}
+
                       <span>
                         <label
                           className="form-check-label"
@@ -389,6 +409,46 @@ function useInfiniteSuggestions(
       },
       suspense: true,
     },
+  );
+}
+
+function SingleSelect({
+  isChecked,
+  multiSelect,
+  asSearchToken,
+  onAdd,
+  onRemove,
+  singleSelect,
+  setSingleSelect,
+}: {
+  isChecked: boolean;
+  multiSelect: boolean;
+  asSearchToken: SearchToken;
+  onAdd: any;
+  onRemove: any;
+  singleSelect: string;
+  setSingleSelect: any;
+}) {
+  return (
+    <React.Fragment>
+      <input
+        className="form-check-input"
+        type="checkbox"
+        checked={isChecked}
+        onChange={(event) => {
+          if (event.currentTarget.checked) {
+            onRemove(singleSelect);
+            setSingleSelect(asSearchToken);
+            onAdd(asSearchToken);
+          } else {
+            onRemove(asSearchToken);
+          }
+        }}
+        css={css`
+          width: 14px;
+        `}
+      />
+    </React.Fragment>
   );
 }
 
