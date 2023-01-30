@@ -30,4 +30,8 @@ import javax.validation.constraints.NotNull;
 public class SearchConfigDTO extends K9EntityDTO {
 	@NotNull
 	private Float minScore;
+	@NotNull
+	private boolean minScoreSuggestions = false;
+	@NotNull
+	private boolean minScoreSearch = false;
 }
