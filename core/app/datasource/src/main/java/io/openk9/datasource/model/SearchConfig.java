@@ -38,6 +38,11 @@ public class SearchConfig extends K9Entity {
 	private String description;
 	@Column(name = "min_score")
 	private Float minScore;
+	@Column(name = "min_score_suggestions", nullable = false)
+	private boolean minScoreSuggestions = false;
+	@Column(name = "min_score_search", nullable = false)
+	private boolean minScoreSearch = false;
+
 	@OneToMany(
 		mappedBy = "searchConfig",
 		cascade = javax.persistence.CascadeType.ALL,
