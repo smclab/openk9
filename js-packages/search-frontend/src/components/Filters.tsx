@@ -104,6 +104,7 @@ function Filters({
               tokens={lastSearchQueryWithResults}
               onAdd={onAddFilterToken}
               onRemove={onRemoveFilterToken}
+              multiSelect={suggestionCategory?.multiSelect}
             />
           );
         })}

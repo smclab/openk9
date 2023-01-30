@@ -373,4 +373,5 @@ export type SuggestionResult =
 type SuggestionsCategoriesResult = Array<{
   name: string;
   id: number;
+  multiSelect: boolean;
 }>;

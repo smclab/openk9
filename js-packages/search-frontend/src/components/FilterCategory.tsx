@@ -17,6 +17,7 @@ type FilterCategoryProps = {
   tokens: SearchToken[];
   onAdd(searchToken: SearchToken): void;
   onRemove(searchToken: SearchToken): void;
+  multiSelect: boolean;
 };
 function FilterCategory({
   suggestionCategoryId,
@@ -24,6 +25,7 @@ function FilterCategory({
   tokens,
   onAdd,
   onRemove,
+  multiSelect,
 }: FilterCategoryProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
@@ -193,7 +195,14 @@ function FilterCategory({
                         checked={isChecked}
                         onChange={(event) => {
                           if (event.currentTarget.checked) {
-                            onAdd(asSearchToken);
+                            if (multiSelect) {
+                              onAdd(asSearchToken);
+                            } else {
+                              tokens.some((searchToken) =>
+                                onRemove(searchToken),
+                              );
+                              onAdd(asSearchToken);
+                            }
                           } else {
                             onRemove(asSearchToken);
                           }
@@ -325,21 +334,26 @@ export const buttonStyle = css`
 `;
 
 function useInfiniteSuggestions(
-  searchQuery: SearchToken[] | null,
+  searchQueryParams: SearchToken[] | null,
   activeSuggestionCategory: number,
   suggestKeyword: string,
 ) {
   const pageSize = 10;
   const client = useOpenK9Client();
-  // let searchQuery: SearchToken[] | null = [];
-  // if (searchQueryParams) {
-  //   if (searchQueryParams?.length > 0) {
-  //     searchQuery =
-  //       searchQueryParams?.filter(
-  //         (element) => !JSON.parse(JSON.stringify(element)).filter,
-  //       ) || null;
-  //   }
-  // }
+
+  let searchQuery: SearchToken[] | null = [];
+  if (
+    searchQueryParams &&
+    JSON.parse(JSON.stringify(searchQueryParams)).tokenType === "TEXT" &&
+    searchQueryParams?.length > 0
+  ) {
+    searchQuery =
+      searchQueryParams?.filter(
+        (element) => !JSON.parse(JSON.stringify(element)).goToSuggestion,
+      ) || null;
+  } else {
+    searchQuery = searchQueryParams;
+  }
   return useInfiniteQuery(
     [
       "suggestions",
