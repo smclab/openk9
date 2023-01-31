@@ -275,10 +275,10 @@ const PluginDriverOptions = [
     description: "",
     Json: `
     {
-      "host": "openk9-sogei-parser",
+      "host": "openk9-parser",
       "port": 5000,
       "secure": false,
-      "path": "/execute-entrate",
+      "path": "/execute",
       "method": "POST"
     }
     `,
