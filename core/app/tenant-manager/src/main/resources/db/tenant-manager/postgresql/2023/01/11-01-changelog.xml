@@ -5,9 +5,13 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-	<property name="dbms.name" value="oracle" dbms="oracle"/>
-	<property name="dbms.name" value="postgresql" dbms="postgresql"/>
 
-	<include file="${dbms.name}/changelog.xml" relativeToChangelogFile="true" />
-
+	<changeSet id="1673450209846-1" author="openk9">
+		<addColumn tableName="tenant">
+			<column name="liquibase_schema_name" type="VARCHAR(255)" valueComputed="CONCAT(schema_name, '_liquibase')">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+	
 </databaseChangeLog>

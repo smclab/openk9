@@ -105,8 +105,7 @@ public class CustomClassLoaderResourceAccessor extends AbstractResourceAccessor 
 //    }
 
 	@Override
-	public List<Resource> search(String path, boolean recursive) throws IOException {
-		init();
+	public List<Resource> search(String path, boolean recursive) throws IOException {init();
 
 		final LinkedHashSet<Resource> returnList = new LinkedHashSet<>();
 		PathHandlerFactory pathHandlerFactory = Scope.getCurrentScope().getSingleton(PathHandlerFactory.class);
