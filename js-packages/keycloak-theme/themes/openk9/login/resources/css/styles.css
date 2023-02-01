@@ -14,20 +14,19 @@ body {
 }
 
 body > div {
-  width: 400px;
+  width: 300px;
 }
 
 button,
 input[type="submit"] {
-  color: inherit;
-  background: none;
-  appearance: none;
-  border: 1px solid var(--openk9-embeddable-search--primary-color);
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: inherit;
-  padding: 8px 16px;
   width: 100%;
+  padding: 10px;
+  background-color: var(--openk9-embeddable-search--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
 }
 
 button,
@@ -46,8 +45,14 @@ input[type="submit"]:hover {
 }
 
 form label {
-  display: block;
   padding-left: 16px;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px !important;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+
 }
 
 input[type="text"],
@@ -56,12 +61,12 @@ input[type="password"] {
   outline: none;
   padding: 8px 16px;
   box-sizing: border-box;
-  color: inherit;
   font-size: inherit;
   font-family: inherit;
   width: 100%;
   border: 1px solid var(--openk9-embeddable-search--border-color);
   border-radius: 4px;
+  background-color: white !important;
 }
 
 input[type="text"]:focus,
@@ -71,20 +76,61 @@ input[type="password"]:focus {
 
 #kc-header {
   text-align: center;
+  visibility: hidden;
 }
 
 .alert-error {
-  padding: 8px;
-  margin-bottom: 16px;
+  visibility: hidden;
+}
+.alertError{
   color: var(--openk9-embeddable-search--primary-color);
-  border: 1px solid var(--openk9-embeddable-search--border-color);
   border-radius: 4px;
+  margin-left: 45px;
 }
 
 .logo {
   color: var(--openk9-embeddable-search--primary-color);
+  margin-top: 30px;
 }
 
 #kc-form-buttons {
   margin-top: 8px;
+}
+.container {
+      width: 300px;
+      padding: 20px;
+      margin: auto;
+      background-color: #f2f2f2;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #999;
+      justify-content: center;
+}
+
+.center{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  letter-spacing: -0.05ch;
+}
+
+.logo{
+  max-height: 100px;
+  margin-bottom: 30px;
+}
+
+.title{
+  font-weight: bold;
+  font-size: xx-large;
+ 
+}
+
+.firstTitle{
+  font-size: xx-large;
+  margin-left: 10px;
+}
+
+.containerError{
+  width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
