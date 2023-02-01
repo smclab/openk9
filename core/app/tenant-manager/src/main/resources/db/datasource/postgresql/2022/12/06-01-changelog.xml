@@ -5,9 +5,10 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-	<property name="dbms.name" value="oracle" dbms="oracle"/>
-	<property name="dbms.name" value="postgresql" dbms="postgresql"/>
-
-	<include file="${dbms.name}/changelog.xml" relativeToChangelogFile="true" />
-
+	<changeSet id="add-column-analyzer-table" author="openk9">
+		<addColumn tableName="analyzer">
+			<column name="json_config" type="TEXT" />
+		</addColumn>
+	</changeSet>
+	
 </databaseChangeLog>
