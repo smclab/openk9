@@ -75,7 +75,8 @@ input[type="password"]:focus {
 
 #kc-header {
   text-align: center;
-  visibility: hidden;
+  size: 30px;
+  font-size: 20px;
 }
 
 .alert-error {
