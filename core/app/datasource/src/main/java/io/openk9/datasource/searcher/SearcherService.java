@@ -150,11 +150,16 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					List<SearchTokenRequest> searchQuery =
 						request.getSearchQueryList();
 
-					if (!searchQuery.isEmpty() && searchQuery
-						.stream()
-						.anyMatch(st -> !st.getFilter())) {
+					SearchConfig searchConfig = tenant.getSearchConfig();
 
-						SearchConfig searchConfig = tenant.getSearchConfig();
+					if (searchConfig != null && searchConfig.isMinScoreSearch()) {
+						searchSourceBuilder.minScore(searchConfig.getMinScore());
+					}
+					else if (
+						!searchQuery.isEmpty() && searchQuery
+							.stream()
+							.anyMatch(st -> !st.getFilter())) {
+
 
 						if (searchConfig != null && searchConfig.getMinScore() != null) {
 							searchSourceBuilder.minScore(searchConfig.getMinScore());
@@ -305,6 +310,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					searchSourceBuilder.from(0);
 					searchSourceBuilder.size(0);
+
+					SearchConfig searchConfig = tenant.getSearchConfig();
+
+					if (searchConfig != null && searchConfig.isMinScoreSuggestions()) {
+						searchSourceBuilder.minScore(searchConfig.getMinScore());
+					}
 
 					searchSourceBuilder.highlighter(null);
 
