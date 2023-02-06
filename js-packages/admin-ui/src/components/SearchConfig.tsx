@@ -2,7 +2,7 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSearchConfigQuery, useCreateOrUpdateSearchConfigMutation } from "../graphql-generated";
-import { fromFieldValidators, MainTitle, NumberInput, TextArea, TextInput, useForm } from "./Form";
+import { BooleanInput, fromFieldValidators, MainTitle, NumberInput, TextArea, TextInput, useForm } from "./Form";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
@@ -17,13 +17,31 @@ const SearchConfigQuery = gql`
       name
       description
       minScore
+      minScoreSuggestions
+      minScoreSearch
     }
   }
 `;
 
 gql`
-  mutation CreateOrUpdateSearchConfig($id: ID, $name: String!, $description: String, $minScore: Float!) {
-    searchConfig(id: $id, searchConfigDTO: { name: $name, description: $description, minScore: $minScore }) {
+  mutation CreateOrUpdateSearchConfig(
+    $id: ID
+    $name: String!
+    $description: String
+    $minScore: Float!
+    $minScoreSuggestions: Boolean!
+    $minScoreSearch: Boolean!
+  ) {
+    searchConfig(
+      id: $id
+      searchConfigDTO: {
+        name: $name
+        description: $description
+        minScore: $minScore
+        minScoreSuggestions: $minScoreSuggestions
+        minScoreSearch: $minScoreSearch
+      }
+    ) {
       entity {
         id
         name
@@ -65,6 +83,8 @@ export function SearchConfig() {
         name: "",
         description: "",
         minScore: 0.0,
+        minScoreSuggestions: false,
+        minScoreSearch: false,
       }),
       []
     ),
@@ -90,6 +110,9 @@ export function SearchConfig() {
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
           <NumberInput label="minScore" {...form.inputProps("minScore")} />
+          <BooleanInput label="min Score Suggestions" {...form.inputProps("minScoreSuggestions")} />
+          <BooleanInput label="min Score Search" {...form.inputProps("minScoreSearch")} />
+
           <div className="sheet-footer">
             <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
               {searchConfigId === "new" ? "Create" : "Update"}
