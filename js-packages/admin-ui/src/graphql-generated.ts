@@ -2648,6 +2648,8 @@ export type SearchConfig = {
   description?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['ID']>;
   minScore?: Maybe<Scalars['Float']>;
+  minScoreSearch: Scalars['Boolean'];
+  minScoreSuggestions: Scalars['Boolean'];
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
@@ -2668,6 +2670,8 @@ export type SearchConfigQueryParserConfigsArgs = {
 export type SearchConfigDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   minScore: Scalars['Float'];
+  minScoreSearch: Scalars['Boolean'];
+  minScoreSuggestions: Scalars['Boolean'];
   name: Scalars['String'];
 };
 
@@ -4098,13 +4102,15 @@ export type SearchConfigQueryVariables = Exact<{
 }>;
 
 
-export type SearchConfigQuery = { __typename?: 'Query', searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null } | null };
+export type SearchConfigQuery = { __typename?: 'Query', searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null, minScoreSuggestions: boolean, minScoreSearch: boolean } | null };
 
 export type CreateOrUpdateSearchConfigMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   minScore: Scalars['Float'];
+  minScoreSuggestions: Scalars['Boolean'];
+  minScoreSearch: Scalars['Boolean'];
 }>;
 
 
@@ -9812,6 +9818,8 @@ export const SearchConfigDocument = gql`
     name
     description
     minScore
+    minScoreSuggestions
+    minScoreSearch
   }
 }
     `;
@@ -9844,10 +9852,10 @@ export type SearchConfigQueryHookResult = ReturnType<typeof useSearchConfigQuery
 export type SearchConfigLazyQueryHookResult = ReturnType<typeof useSearchConfigLazyQuery>;
 export type SearchConfigQueryResult = Apollo.QueryResult<SearchConfigQuery, SearchConfigQueryVariables>;
 export const CreateOrUpdateSearchConfigDocument = gql`
-    mutation CreateOrUpdateSearchConfig($id: ID, $name: String!, $description: String, $minScore: Float!) {
+    mutation CreateOrUpdateSearchConfig($id: ID, $name: String!, $description: String, $minScore: Float!, $minScoreSuggestions: Boolean!, $minScoreSearch: Boolean!) {
   searchConfig(
     id: $id
-    searchConfigDTO: {name: $name, description: $description, minScore: $minScore}
+    searchConfigDTO: {name: $name, description: $description, minScore: $minScore, minScoreSuggestions: $minScoreSuggestions, minScoreSearch: $minScoreSearch}
   ) {
     entity {
       id
@@ -9880,6 +9888,8 @@ export type CreateOrUpdateSearchConfigMutationFn = Apollo.MutationFunction<Creat
  *      name: // value for 'name'
  *      description: // value for 'description'
  *      minScore: // value for 'minScore'
+ *      minScoreSuggestions: // value for 'minScoreSuggestions'
+ *      minScoreSearch: // value for 'minScoreSearch'
  *   },
  * });
  */
@@ -11290,4 +11300,4 @@ export function useCreateWebCrawlerDataSourceMutation(baseOptions?: Apollo.Mutat
 export type CreateWebCrawlerDataSourceMutationHookResult = ReturnType<typeof useCreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationResult = Apollo.MutationResult<CreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateWebCrawlerDataSourceMutation, CreateWebCrawlerDataSourceMutationVariables>;
-// Generated on 2023-01-27T15:16:47+01:00
+// Generated on 2023-02-06T10:56:32+01:00
