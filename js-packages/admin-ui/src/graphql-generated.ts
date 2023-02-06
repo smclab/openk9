@@ -4122,7 +4122,7 @@ export type SearchConfigsQueryVariables = Exact<{
 }>;
 
 
-export type SearchConfigsQuery = { __typename?: 'Query', searchConfigs?: { __typename?: 'DefaultConnection_SearchConfig', edges?: Array<{ __typename?: 'DefaultEdge_SearchConfig', node?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type SearchConfigsQuery = { __typename?: 'Query', searchConfigs?: { __typename?: 'DefaultConnection_SearchConfig', edges?: Array<{ __typename?: 'DefaultEdge_SearchConfig', node?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null, minScoreSuggestions: boolean, minScoreSearch: boolean } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteSearchConfigMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -9909,6 +9909,8 @@ export const SearchConfigsDocument = gql`
         name
         description
         minScore
+        minScoreSuggestions
+        minScoreSearch
       }
     }
     pageInfo {
@@ -11300,4 +11302,4 @@ export function useCreateWebCrawlerDataSourceMutation(baseOptions?: Apollo.Mutat
 export type CreateWebCrawlerDataSourceMutationHookResult = ReturnType<typeof useCreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationResult = Apollo.MutationResult<CreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateWebCrawlerDataSourceMutation, CreateWebCrawlerDataSourceMutationVariables>;
-// Generated on 2023-02-06T10:56:32+01:00
+// Generated on 2023-02-06T12:46:20+01:00
