@@ -99,7 +99,6 @@ export function Table<
     refetch({ searchText: searchTextDebounced } as any);
   }, [refetch, searchTextDebounced]);
   const navigate = useNavigate();
-  const scrollerRef = React.useRef<HTMLElement>();
   const toast = useToast();
   return (
     <React.Fragment>
@@ -229,7 +228,6 @@ export function Table<
         <TableVirtuoso
           hidden={showSelectedItemsTable}
           totalCount={field(data)?.edges?.length}
-          scrollerRef={(element) => (scrollerRef.current = element as any)}
           style={{ height: "80vh" }}
           components={{
             Table: (props) => (
@@ -324,15 +322,6 @@ export function Table<
                   cursor: field(data)?.pageInfo?.endCursor,
                 },
               });
-            }
-          }}
-          isScrolling={(isScrolling) => {
-            if (scrollerRef.current) {
-              if (isScrolling) {
-                scrollerRef.current.style.pointerEvents = "none";
-              } else {
-                scrollerRef.current.style.pointerEvents = "auto";
-              }
             }
           }}
         />
