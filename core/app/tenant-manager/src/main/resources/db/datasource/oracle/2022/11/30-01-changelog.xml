@@ -494,7 +494,7 @@
 							 tableName="analyzer"/>
 	</changeSet>
 	<changeSet id="1669810381617-44" author="openk9">
-		<createSequence cacheSize="2" cycle="false" dataType="NUMBER(38)"
+		<createSequence cacheSize="2" cycle="false"
 						incrementBy="1" maxValue="9223372036854775807"
 						minValue="1" sequenceName="hibernate_sequence"
 						startValue="1"/>
