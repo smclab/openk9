@@ -11,6 +11,7 @@ import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -56,6 +57,7 @@ public class TenantManagerActorSystem {
 		return Uni
 			.createFrom()
 			.completionStage(ask)
+			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
 			.onItem()
 			.transform(Unchecked.function((res) -> {
 
@@ -72,7 +74,9 @@ public class TenantManagerActorSystem {
 	}
 
 	public Uni<Void> populateSchema(String schemaName, String virtualHost) {
-		return Uni.createFrom().emitter(sink -> {
+		return Uni
+			.createFrom()
+			.<Void>emitter(sink -> {
 
 			try {
 				liquibaseService.runInitialization(schemaName, virtualHost, false);
@@ -82,7 +86,8 @@ public class TenantManagerActorSystem {
 				sink.fail(e);
 			}
 
-		});
+		})
+			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 	}
 
 	@Inject
