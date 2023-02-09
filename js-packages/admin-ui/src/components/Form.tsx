@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import ClayForm, { ClayInput, ClaySelect, ClayToggle } from "@clayui/form";
 import { MutationHookOptions, MutationTuple, QueryHookOptions, QueryResult } from "@apollo/client";
 import useDebounced from "./useDebounced";
@@ -1108,83 +1108,83 @@ export function CreateFieldDinamically({
   templateChoice,
   setTemplateChoice,
 }: {
-  templates: any;
+  templates: { title: string; description: string; Json: string; descriptionAttribute: string; visible: string }[];
   templateChoice: KeyValue;
-  setTemplateChoice: any;
+  setTemplateChoice: Dispatch<SetStateAction<KeyValue>>;
 }) {
+  const createField = (key: string, value: any, description: string) => {
+    console.log(key);
+    switch (typeof value) {
+      case "string":
+        return (
+          <TextInputSimple
+            key={key}
+            keyofF={key}
+            description={description}
+            value={value}
+            isNumber={false}
+            onChange={(event) => {
+              setTemplateChoice({ ...templateChoice, [key]: event.currentTarget.value });
+            }}
+          />
+        );
+      case "number":
+        return (
+          <TextInputSimple
+            key={key}
+            keyofF={key}
+            description={description}
+            isNumber={true}
+            value={value}
+            onChange={(event) => {
+              setTemplateChoice({ ...templateChoice, [key]: event.currentTarget.value });
+            }}
+          />
+        );
+      case "boolean":
+        return (
+          <InputBooleanSimple
+            key={key}
+            keyofF={key}
+            description={description}
+            value={value}
+            onChange={(event) => {
+              setTemplateChoice({ ...templateChoice, [key]: !value });
+            }}
+          />
+        );
+      default:
+        if (Array.isArray(value)) {
+          return (
+            <MultiSelectSimple
+              key={key}
+              keyofF={key}
+              description={description}
+              items={value.map((value: any) => ({ label: value, value }))}
+              onItemchange={(value: Array<{ label?: string; value?: string }>) => {
+                setTemplateChoice({ ...templateChoice, [key]: value.map(({ value }) => value!) });
+              }}
+            />
+          );
+        }
+    }
+  };
+
   return (
     <React.Fragment>
       {templates.map((template: { title: string; description: string; Json: string; descriptionAttribute: string; visible: string }) => {
         if (template.visible === "true") {
           const keysOfFields = Object.keys(JSON.parse(template.Json));
           const descriptionsFields = JSON.parse(template.descriptionAttribute);
-          let fields: Array<any> = [];
-          let i = 0;
-          while (i < keysOfFields.length) {
-            let t = i;
-            if (keysOfFields[i] !== "type" && typeof templateChoice?.[keysOfFields[i]] === "string") {
-              fields.push(
-                <TextInputSimple
-                  key={keysOfFields[i]}
-                  keyofF={keysOfFields[i]}
-                  description={descriptionsFields[keysOfFields[i]]}
-                  value={templateChoice?.[keysOfFields[i]]}
-                  onChange={(event) => {
-                    setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: event.currentTarget.value });
-                  }}
-                />
-              );
+          const fields = keysOfFields.reduce((acc: Array<JSX.Element>, key) => {
+            if (key !== "type") {
+              acc.push(createField(key, templateChoice?.[key], descriptionsFields[key]) || <div></div>);
             }
-            if (typeof templateChoice?.[keysOfFields[i]] == "number") {
-              fields.push(
-                <NumberInputSimple
-                  key={keysOfFields[i]}
-                  keyofF={keysOfFields[i]}
-                  description={descriptionsFields[keysOfFields[i]]}
-                  value={templateChoice?.[keysOfFields[i]]}
-                  onChange={(event) => {
-                    setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: event.currentTarget.value });
-                  }}
-                />
-              );
-            }
-            if (typeof templateChoice?.[keysOfFields[i]] == "boolean") {
-              fields.push(
-                <InputBooleanSimple
-                  key={keysOfFields[i]}
-                  keyofF={keysOfFields[i]}
-                  description={descriptionsFields[keysOfFields[i]]}
-                  value={templateChoice?.[keysOfFields[i]]}
-                  onChange={(event) => {
-                    setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: !templateChoice?.[keysOfFields[t]] });
-                  }}
-                />
-              );
-            }
-            if (typeof templateChoice?.[keysOfFields[i]] === "object") {
-              if (!Array.isArray(templateChoice?.[keysOfFields[i]])) {
-              } else {
-                fields.push(
-                  <MultiSelectSimple
-                    key={keysOfFields[i]}
-                    keyofF={keysOfFields[i]}
-                    description={descriptionsFields[keysOfFields[i]]}
-                    items={templateChoice?.[keysOfFields[i]].map((value: any) => {
-                      return { label: value, value };
-                    })}
-                    onItemchange={(value: Array<{ label?: string; value?: string }>) => {
-                      setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: value.map(({ value }) => value!) });
-                    }}
-                  />
-                );
-              }
-            }
-
-            i++;
-          }
-
-          return fields;
+            return acc;
+          }, []);
+          return <div key={template.title}>{fields}</div>;
         }
+        return null;
       })}
     </React.Fragment>
   );
@@ -1195,11 +1195,13 @@ export function TextInputSimple({
   description,
   value,
   onChange,
+  isNumber,
 }: {
   keyofF: string;
   description: string;
-  value: string;
+  value: string | number;
   onChange(event: any): void;
+  isNumber: boolean;
 }) {
   return (
     <div className="form-group-item" key={keyofF + "div"}>
@@ -1207,7 +1209,7 @@ export function TextInputSimple({
         {keyofF}
       </label>
       {InformationField(description)}
-      <input type="text" id={keyofF + "input"} className="form-control" value={value} onChange={onChange}></input>
+      <input type={isNumber ? "number" : "text"} id={keyofF + "input"} className="form-control" value={value} onChange={onChange}></input>
     </div>
   );
 }
@@ -1220,7 +1222,7 @@ export function NumberInputSimple({
 }: {
   keyofF: string;
   description: string;
-  value: string;
+  value: number;
   onChange(event: any): void;
 }) {
   return (
@@ -1411,6 +1413,7 @@ export function CreateDinamicallyFieldWithout({
                 <TextInputSimple
                   key={keysOfFields[i]}
                   keyofF={keysOfFields[i]}
+                  isNumber={false}
                   description={descriptionsFields[keysOfFields[i]]}
                   value={templateChoice?.[keysOfFields[i]]}
                   onChange={(event) => {
@@ -1421,9 +1424,10 @@ export function CreateDinamicallyFieldWithout({
             }
             if (typeof templateChoice?.[keysOfFields[i]] == "number") {
               fields.push(
-                <NumberInputSimple
+                <TextInputSimple
                   key={keysOfFields[i]}
                   keyofF={keysOfFields[i]}
+                  isNumber={true}
                   description={descriptionsFields[keysOfFields[i]]}
                   value={templateChoice?.[keysOfFields[i]]}
                   onChange={(event) => {
