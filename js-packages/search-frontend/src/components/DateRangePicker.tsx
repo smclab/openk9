@@ -17,12 +17,17 @@ type DateRangePickerProps = {
   onClose(): void;
   onChange(value: SearchDateRange): void;
 };
-export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
-  const [value, setValue] = React.useState<SearchDateRange>({
-    keywordKey: undefined,
-    startDate: undefined,
-    endDate: undefined,
-  });
+export function DateRangePicker({
+  onChange,
+  onClose,
+  value,
+  setValue,
+  setJourney,
+}: DateRangePickerProps & {
+  value: { keywordKey: any; startDate: any; endDate: any };
+  setValue: any;
+  setJourney: any;
+}) {
   const adaptedValue = [
     {
       key: "selection",
@@ -30,7 +35,9 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
       endDate: value.endDate ?? null,
     },
   ];
+  const [preJourney, preSetJourney] = React.useState("");
   const adaptedOnChange = (item: any) => {
+    preSetJourney(item.selection.label);
     setValue({
       keywordKey: value.keywordKey,
       startDate: item.selection.startDate,
@@ -132,6 +139,7 @@ export function DateRangePicker({ onChange, onClose }: DateRangePickerProps) {
         <button
           disabled={!Boolean(value.startDate || value.endDate)}
           onClick={() => {
+            setJourney(preJourney);
             onChange({
               keywordKey: value.keywordKey,
               startDate: value.startDate,
@@ -155,6 +163,7 @@ const staticRanges = [
     range: () => ({
       startDate: DateTime.now().startOf("day").toJSDate(),
       endDate: DateTime.now().endOf("day").toJSDate(),
+      label: "oggi",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
@@ -168,6 +177,7 @@ const staticRanges = [
     range: () => ({
       startDate: DateTime.now().startOf("week").toJSDate(),
       endDate: DateTime.now().endOf("week").toJSDate(),
+      label: "questa settimana",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
@@ -181,6 +191,7 @@ const staticRanges = [
     range: () => ({
       startDate: DateTime.now().startOf("month").toJSDate(),
       endDate: DateTime.now().endOf("month").toJSDate(),
+      label: "questo mese",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
@@ -194,6 +205,7 @@ const staticRanges = [
     range: () => ({
       startDate: DateTime.now().startOf("year").toJSDate(),
       endDate: DateTime.now().endOf("year").toJSDate(),
+      label: "questo anno",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
