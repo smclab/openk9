@@ -20,6 +20,8 @@ import {
 import { SelectionsAction, SelectionsState } from "./useSelections";
 import { DateRangePicker } from "./DateRangePicker";
 import { SearchDateRange } from "../embeddable/Main";
+import { Logo } from "./Logo";
+import { CalendarLogo } from "./CalendarLogo";
 
 type SearchProps = {
   configuration: Configuration;
@@ -67,7 +69,12 @@ export function Search({
   }, [adjustedSelection]);
 
   const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
-
+  const [value, setValue] = React.useState<SearchDateRange>({
+    keywordKey: undefined,
+    startDate: undefined,
+    endDate: undefined,
+  });
+  const [journey, setJourney] = React.useState("");
   return (
     <div
       ref={clickAwayRef}
@@ -271,22 +278,19 @@ export function Search({
           position: relative;
         `}
       >
-        <Tooltip description="Filtro per data">
-          <FontAwesomeIcon
-            icon={faCalendar}
-            style={{
-              paddingRight: "16px",
-              color:
-                dateRange.startDate || dateRange.endDate
-                  ? "var(--openk9-embeddable-search--primary-color)"
-                  : "var(--openk9-embeddable-search--secondary-text-color)",
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              setIsDatePickerOpen(!isDatePickerOpen);
-            }}
-          />
-        </Tooltip>
+        <div
+          style={{
+            paddingRight: "16px",
+            cursor: "pointer",
+            display: "flex",
+          }}
+          onClick={() => {
+            setIsDatePickerOpen(!isDatePickerOpen);
+          }}
+        >
+          <CalendarLogo />
+          {journey && <div>{journey}</div>}
+        </div>
         <div
           hidden={!isDatePickerOpen}
           css={css`
@@ -304,39 +308,12 @@ export function Search({
           <DateRangePicker
             onChange={onDateRangeChange}
             onClose={() => setIsDatePickerOpen(false)}
+            value={value}
+            setValue={setValue}
+            setJourney={setJourney}
           />
         </div>
       </div>
-      <Tooltip description="Sostituzione del testo quando si seleziona un suggerimento">
-        <FontAwesomeIcon
-          icon={faSyncAlt}
-          style={{
-            paddingRight: "16px",
-            color: replaceText
-              ? "var(--openk9-embeddable-search--primary-color)"
-              : "var(--openk9-embeddable-search--secondary-text-color)",
-            cursor: "pointer",
-          }}
-          onClick={() => {
-            onConfigurationChange({ searchReplaceText: !replaceText });
-          }}
-        />
-      </Tooltip>
-      <Tooltip description="Seleziona automaticamente il suggerimento più pertinente">
-        <FontAwesomeIcon
-          icon={faLightbulb}
-          style={{
-            paddingRight: "16px",
-            color: autoSelect
-              ? "var(--openk9-embeddable-search--primary-color)"
-              : "var(--openk9-embeddable-search--secondary-text-color)",
-            cursor: "pointer",
-          }}
-          onClick={() => {
-            onConfigurationChange({ searchAutoselect: !autoSelect });
-          }}
-        />
-      </Tooltip>
     </div>
   );
 }
