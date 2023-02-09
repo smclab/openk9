@@ -147,6 +147,20 @@ export function Tokenizer() {
 
 const TokenizerFilters = [
   {
+    title: "thai",
+    description:
+      "The thai tokenizer segments Thai text into words, using the Thai segmentation algorithm included with Java. Text in other languages in general will be treated the same as the standard tokenizer.",
+    Json: `
+    {
+      "type": "thai"
+    }`,
+    visible: "false",
+    descriptionAttribute: `
+    {
+        "type": "type of filter "
+    }`,
+  },
+  {
     title: "classic",
     description:
       "The classic tokenizer is a grammar based tokenizer that is good for English language documents. This tokenizer has heuristics for special treatment of acronyms, company names, email addresses, and internet host names.",
@@ -257,7 +271,7 @@ const TokenizerFilters = [
       "delimiter": "/",
       "replacement": "-",
       "skip": 0,
-      "buffer_size":"The number of characters read into the term buffer in a single pass. Defaults to 1024. The term buffer will grow by this size until all the text has been consumed. It is advisable not to change this setting."
+      "buffer_size":1024
     }`,
     visible: "false",
     descriptionAttribute: `
@@ -266,7 +280,7 @@ const TokenizerFilters = [
       "delimiter": "The character to use as the path separator. Defaults to /.",
       "replacement": "An optional replacement character to use for the delimiter. Defaults to the delimiter.",
       "skip": "The number of initial tokens to skip. Defaults to 0.",
-      "buffer_size":1024
+      "buffer_size":"The number of characters read into the term buffer in a single pass. Defaults to 1024. The term buffer will grow by this size until all the text has been consumed. It is advisable not to change this setting."
     }`,
   },
   {
@@ -333,22 +347,8 @@ const TokenizerFilters = [
     visible: "false",
     descriptionAttribute: `
     {
-        "type": "type of filter ",
+        "type": "type of filter",
         "max_token_length": "The maximum token length. If a token is seen that exceeds this length then it is split at max_token_length intervals. Defaults to 255."
-    }`,
-  },
-  {
-    title: "thai",
-    description:
-      "The thai tokenizer segments Thai text into words, using the Thai segmentation algorithm included with Java. Text in other languages in general will be treated the same as the standard tokenizer.",
-    Json: `
-    {
-      "type": "thai"
-    }`,
-    visible: "false",
-    descriptionAttribute: `
-    {
-        "type": "type of filter "
     }`,
   },
   {
