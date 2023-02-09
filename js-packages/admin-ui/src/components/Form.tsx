@@ -1113,7 +1113,6 @@ export function CreateFieldDinamically({
   setTemplateChoice: Dispatch<SetStateAction<KeyValue>>;
 }) {
   const createField = (key: string, value: any, description: string) => {
-    console.log(key);
     switch (typeof value) {
       case "string":
         return (
