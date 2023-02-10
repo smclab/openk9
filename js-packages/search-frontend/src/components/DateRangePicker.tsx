@@ -131,6 +131,7 @@ export function DateRangePicker({
               startDate: undefined,
               endDate: undefined,
             });
+            setJourney("");
             onClose();
           }}
         >

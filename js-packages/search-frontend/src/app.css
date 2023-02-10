@@ -3,6 +3,7 @@
 :root {
   --openk9-embeddable-search--primary-color: #c22525;
   --openk9-embeddable-search--active-color: #c22525;
+  --openk9-embeddable-search--secondary-active-color: #c0272b;
   --openk9-embeddable-search--border-color: #ced4da;
   --openk9-embeddable-search--input-padding: 16px;
   --openk9-embeddable-search--primary-text-color: #000000;

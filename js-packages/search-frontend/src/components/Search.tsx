@@ -22,6 +22,9 @@ import { DateRangePicker } from "./DateRangePicker";
 import { SearchDateRange } from "../embeddable/Main";
 import { Logo } from "./Logo";
 import { CalendarLogo } from "./CalendarLogo";
+import { Button } from "@mui/material";
+import { DeleteLogo } from "./DeleteLogo";
+import { SeparatorLogo } from "./SeparatorLogo";
 
 type SearchProps = {
   configuration: Configuration;
@@ -281,15 +284,93 @@ export function Search({
         <div
           style={{
             paddingRight: "16px",
-            cursor: "pointer",
             display: "flex",
-          }}
-          onClick={() => {
-            setIsDatePickerOpen(!isDatePickerOpen);
+            flexDirection: "row",
+            padding: "4px 8px",
+            gap: "4px",
+            alignItems: "center",
+            marginRight: "16px",
           }}
         >
-          <CalendarLogo />
-          {journey && <div>{journey}</div>}
+          {selectionsState.text && (
+            <div>
+              <span
+                css={css`
+                  cursor: pointer;
+                `}
+                onClick={() => {
+                  selectionsDispatch({
+                    type: "set-text",
+                    text: "",
+                  });
+                }}
+              >
+                <DeleteLogo />
+              </span>
+              <span
+                css={css`
+                  margin-right: 18px;
+                  margin-left: 23px;
+                `}
+              >
+                <SeparatorLogo />
+              </span>
+            </div>
+          )}
+          <div
+            css={css`
+              cursor: pointer;
+            `}
+            onClick={() => {
+              setIsDatePickerOpen(!isDatePickerOpen);
+            }}
+          >
+            <CalendarLogo />
+          </div>
+          {journey && (
+            <div
+              css={css`
+                cursor: pointer;
+              `}
+              style={{ boxSizing: "border-box" }}
+              onClick={() => {
+                onDateRangeChange({
+                  keywordKey: undefined,
+                  startDate: undefined,
+                  endDate: undefined,
+                });
+                setIsDatePickerOpen(false);
+                setJourney("");
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "4px 8px",
+                  gap: "4px",
+                  width: "100%",
+                  height: "20px",
+                  background: "#FFFFFF",
+                  border:
+                    "1px solid var(--openk9-embeddable-search--secondary-active-color)",
+                  borderRadius: "20px",
+                }}
+              >
+                <p
+                  css={css`
+                    color: var(
+                      --openk9-embeddable-search--secondary-active-color
+                    );
+                    margin-bottom: 20px;
+                  `}
+                >
+                  {journey} x
+                </p>
+              </div>
+            </div>
+          )}
         </div>
         <div
           hidden={!isDatePickerOpen}
