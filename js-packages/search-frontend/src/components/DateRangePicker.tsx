@@ -20,14 +20,19 @@ type DateRangePickerProps = {
 export function DateRangePicker({
   onChange,
   onClose,
-  value,
-  setValue,
+  valueSelected,
+  setValueSelected,
   setJourney,
 }: DateRangePickerProps & {
-  value: { keywordKey: any; startDate: any; endDate: any };
-  setValue: any;
+  valueSelected: { keywordKey: any; startDate: any; endDate: any };
+  setValueSelected: any;
   setJourney: any;
 }) {
+  const [value, setValue] = React.useState<SearchDateRange>({
+    keywordKey: undefined,
+    startDate: undefined,
+    endDate: undefined,
+  });
   const adaptedValue = [
     {
       key: "selection",
@@ -131,7 +136,7 @@ export function DateRangePicker({
               startDate: undefined,
               endDate: undefined,
             });
-            setJourney("");
+            setJourney();
             onClose();
           }}
         >
@@ -142,6 +147,13 @@ export function DateRangePicker({
           onClick={() => {
             setJourney(preJourney);
             onChange({
+              keywordKey: value.keywordKey,
+              startDate: value.startDate,
+              endDate: value.endDate
+                ? DateTime.fromJSDate(value.endDate).endOf("day").toJSDate()
+                : undefined,
+            });
+            setValueSelected({
               keywordKey: value.keywordKey,
               startDate: value.startDate,
               endDate: value.endDate

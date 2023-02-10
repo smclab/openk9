@@ -25,6 +25,7 @@ import { CalendarLogo } from "./CalendarLogo";
 import { Button } from "@mui/material";
 import { DeleteLogo } from "./DeleteLogo";
 import { SeparatorLogo } from "./SeparatorLogo";
+import { DateTime } from "luxon";
 
 type SearchProps = {
   configuration: Configuration;
@@ -72,12 +73,12 @@ export function Search({
   }, [adjustedSelection]);
 
   const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
-  const [value, setValue] = React.useState<SearchDateRange>({
+  const [valueSelected, setValueSelected] = React.useState<SearchDateRange>({
     keywordKey: undefined,
     startDate: undefined,
     endDate: undefined,
   });
-  const [journey, setJourney] = React.useState("");
+  const [journey, setJourney] = React.useState();
   return (
     <div
       ref={clickAwayRef}
@@ -327,49 +328,28 @@ export function Search({
           >
             <CalendarLogo />
           </div>
-          {journey && (
-            <div
-              css={css`
-                cursor: pointer;
-              `}
-              style={{ boxSizing: "border-box" }}
-              onClick={() => {
-                onDateRangeChange({
-                  keywordKey: undefined,
-                  startDate: undefined,
-                  endDate: undefined,
-                });
-                setIsDatePickerOpen(false);
-                setJourney("");
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  padding: "4px 8px",
-                  gap: "4px",
-                  width: "100%",
-                  height: "20px",
-                  background: "#FFFFFF",
-                  border:
-                    "1px solid var(--openk9-embeddable-search--secondary-active-color)",
-                  borderRadius: "20px",
-                }}
-              >
-                <p
-                  css={css`
-                    color: var(
-                      --openk9-embeddable-search--secondary-active-color
-                    );
-                    margin-bottom: 20px;
-                  `}
-                >
-                  {journey} x
-                </p>
-              </div>
-            </div>
+          {journey ? (
+            <CreateDeleteFilter
+              journey={journey}
+              onDateRangeChange={onDateRangeChange}
+              setIsDatePickerOpen={setIsDatePickerOpen}
+              setJourney={setJourney}
+              isBuild={true}
+              valueOfDate={valueSelected}
+              setValueSelected={setValueSelected}
+            />
+          ) : (
+            valueSelected.startDate && (
+              <CreateDeleteFilter
+                journey={journey || ""}
+                onDateRangeChange={onDateRangeChange}
+                setIsDatePickerOpen={setIsDatePickerOpen}
+                setJourney={setJourney}
+                isBuild={false}
+                valueOfDate={valueSelected}
+                setValueSelected={setValueSelected}
+              />
+            )
           )}
         </div>
         <div
@@ -389,11 +369,97 @@ export function Search({
           <DateRangePicker
             onChange={onDateRangeChange}
             onClose={() => setIsDatePickerOpen(false)}
-            value={value}
-            setValue={setValue}
+            valueSelected={valueSelected}
+            setValueSelected={setValueSelected}
             setJourney={setJourney}
           />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateDeleteFilter({
+  onDateRangeChange,
+  setIsDatePickerOpen,
+  setJourney,
+  journey,
+  isBuild,
+  valueOfDate,
+  setValueSelected,
+}: {
+  onDateRangeChange: any;
+  setIsDatePickerOpen: any;
+  setJourney: any;
+  journey: string;
+  isBuild: boolean;
+  valueOfDate: { keywordKey: any; startDate: any; endDate: any };
+  setValueSelected: any;
+}) {
+  let data;
+  if (isBuild) {
+    data = journey;
+  } else {
+    {
+      data =
+        "Dal " +
+        valueOfDate.startDate?.toLocaleDateString("it-IT", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }) +
+        " al " +
+        valueOfDate.endDate?.toLocaleDateString("it-IT", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+    }
+  }
+  return (
+    <div
+      css={css`
+        cursor: pointer;
+      `}
+      style={{ boxSizing: "border-box" }}
+      onClick={() => {
+        onDateRangeChange({
+          keywordKey: undefined,
+          startDate: undefined,
+          endDate: undefined,
+        });
+        setValueSelected({
+          keywordKey: undefined,
+          startDate: undefined,
+          endDate: undefined,
+        });
+        setIsDatePickerOpen(false);
+        setJourney("");
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "4px 8px",
+          gap: "4px",
+          width: "100%",
+          height: "20px",
+          background: "#FFFFFF",
+          border:
+            "1px solid var(--openk9-embeddable-search--secondary-active-color)",
+          borderRadius: "20px",
+        }}
+      >
+        <p
+          css={css`
+            color: var(--openk9-embeddable-search--secondary-active-color);
+            margin-bottom: 20px;
+          `}
+        >
+          {data} x
+        </p>
       </div>
     </div>
   );
