@@ -362,14 +362,10 @@ function useInfiniteSuggestions(
   const client = useOpenK9Client();
 
   let searchQuery: SearchToken[] | null = [];
-  if (
-    searchQueryParams &&
-    JSON.parse(JSON.stringify(searchQueryParams)).tokenType === "TEXT" &&
-    searchQueryParams?.length > 0
-  ) {
+  if (searchQueryParams && searchQueryParams?.length > 0) {
     searchQuery =
       searchQueryParams?.filter(
-        (element) => !JSON.parse(JSON.stringify(element)).goToSuggestion,
+        (element) => JSON.parse(JSON.stringify(element)).goToSuggestion,
       ) || null;
   } else {
     searchQuery = searchQueryParams;
@@ -488,7 +484,7 @@ export const mapSuggestionToSearchToken = (
         keywordKey: suggestion.keywordKey,
         values: [suggestion.value],
         filter,
-        goToSuggestion: true,
+        goToSuggestion: false,
       };
     }
   }
