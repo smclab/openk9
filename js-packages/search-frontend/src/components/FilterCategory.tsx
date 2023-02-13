@@ -216,6 +216,19 @@ function FilterCategory({
                             }}
                             css={css`
                               width: 14px;
+                              appearance: none;
+                              min-width: 15px;
+                              min-height: 15px;
+                              border-radius: 4px;
+                              border: 2px solid #ccc;
+                              background-color: ${isChecked
+                                ? "var(--openk9-embeddable-search--secondary-active-color)"
+                                : "#fff"};
+                              background-size: 100%;
+                              background-position: center;
+                              background-repeat: no-repeat;
+                              cursor: pointer;
+                              margin-right: 10px;
                             `}
                           />
                         </React.Fragment>
@@ -450,7 +463,9 @@ function SingleSelect({
             height: "16px",
             borderRadius: "50%",
             border: "2px solid #ccc",
-            backgroundColor: isChecked ? "red" : "#fff",
+            backgroundColor: isChecked
+              ? "var(  --openk9-embeddable-search--secondary-active-color)"
+              : "#fff",
             marginRight: "10px",
             cursor: "pointer",
           }}
@@ -462,7 +477,9 @@ function SingleSelect({
           }}
           onMouseOut={(event) => {
             const target = event.target as HTMLInputElement;
-            target.style.backgroundColor = isChecked ? "red" : "#fff";
+            target.style.backgroundColor = isChecked
+              ? "var(--openk9-embeddable-search--secondary-active-color)"
+              : "#fff";
           }}
         />
       </div>
