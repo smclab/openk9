@@ -184,10 +184,10 @@ function FilterCategory({
                       key={index}
                       className="form-check"
                       css={css`
+                        display: flex;
+                        align-items: ${multiSelect ? "baseline" : "center"};
                         margin-left: 13px;
                         margin-top: 5px;
-                        display: flex;
-                        align-items: baseline;
                       `}
                     >
                       {multiSelect ? (
@@ -427,23 +427,45 @@ function SingleSelect({
 }) {
   return (
     <React.Fragment>
-      <input
-        className="form-check-input"
-        type="checkbox"
-        checked={isChecked}
-        onChange={(event) => {
-          if (event.currentTarget.checked) {
-            onRemove(singleSelect);
-            setSingleSelect(asSearchToken);
-            onAdd(asSearchToken);
-          } else {
-            onRemove(asSearchToken);
-          }
-        }}
-        css={css`
-          width: 14px;
-        `}
-      />
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <input
+          id="radio-button"
+          type="radio"
+          checked={isChecked}
+          onChange={(event) => {
+            if (event.currentTarget.checked) {
+              onRemove(singleSelect);
+              setSingleSelect(asSearchToken);
+              onAdd(asSearchToken);
+            } else {
+              onRemove(asSearchToken);
+            }
+          }}
+          onClick={(event) => {
+            if (isChecked) onRemove(asSearchToken);
+          }}
+          style={{
+            appearance: "none",
+            width: "16px",
+            height: "16px",
+            borderRadius: "50%",
+            border: "2px solid #ccc",
+            backgroundColor: isChecked ? "red" : "#fff",
+            marginRight: "10px",
+            cursor: "pointer",
+          }}
+          onMouseOver={(event) => {
+            if (!isChecked) {
+              const target = event.target as HTMLInputElement;
+              target.style.backgroundColor = "#e6e6e6";
+            }
+          }}
+          onMouseOut={(event) => {
+            const target = event.target as HTMLInputElement;
+            target.style.backgroundColor = isChecked ? "red" : "#fff";
+          }}
+        />
+      </div>
     </React.Fragment>
   );
 }
