@@ -34,7 +34,9 @@ function FilterCategory({
     useDebounce(text, 600),
   );
   const [isOpen, setIsOpen] = React.useState(true);
-  const [singleSelect, setSingleselect] = React.useState("");
+  const [singleSelect, setSingleselect] = React.useState<
+    SearchToken | undefined
+  >();
   const show = Boolean(
     text ||
       (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
@@ -433,10 +435,12 @@ function SingleSelect({
   isChecked: boolean;
   multiSelect: boolean;
   asSearchToken: SearchToken;
-  onAdd: any;
-  onRemove: any;
-  singleSelect: string;
-  setSingleSelect: any;
+  onAdd: (searchToken: SearchToken) => void;
+  onRemove: (searchToken: SearchToken) => void;
+  singleSelect: SearchToken | undefined;
+  setSingleSelect: React.Dispatch<
+    React.SetStateAction<SearchToken | undefined>
+  >;
 }) {
   return (
     <React.Fragment>
@@ -447,7 +451,7 @@ function SingleSelect({
           checked={isChecked}
           onChange={(event) => {
             if (event.currentTarget.checked) {
-              onRemove(singleSelect);
+              if (singleSelect) onRemove(singleSelect);
               setSingleSelect(asSearchToken);
               onAdd(asSearchToken);
             } else {
