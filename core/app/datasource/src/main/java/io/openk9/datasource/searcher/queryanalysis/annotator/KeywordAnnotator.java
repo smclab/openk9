@@ -26,6 +26,7 @@ class KeywordAnnotator extends BaseAnnotator {
 						"$QUOTE_TOKEN",
 						Map.of(
 							"tokenType", "TEXT",
+							"label", "Keyword",
 							"value", token,
 							"score", 100.0f
 						)

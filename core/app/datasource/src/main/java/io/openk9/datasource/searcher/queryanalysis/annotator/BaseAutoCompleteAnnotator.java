@@ -97,7 +97,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 								"$AUTOCOMPLETE",
 								Map.of(
 									"tokenType", "TEXT",
-									"keywordName", keyword,
+									"label", keyword,
 									"keywordKey", keyword,
 									"value", value,
 									"score", 0.1f
@@ -112,7 +112,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 									"$AUTOCOMPLETE",
 									Map.of(
 										"tokenType", "TEXT",
-										"keywordName", e2.getKey(),
+										"label", e2.getKey(),
 										"keywordKey", e2.getKey(),
 										"value", e2.getValue(),
 										"score", 0.1f
