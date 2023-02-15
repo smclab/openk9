@@ -92,6 +92,7 @@ message QueryAnalysisSearchToken {
   optional string entityType = 6;
   optional string entityName = 7;
   optional string tenantId = 8;
+  optional string label = 9;
 }
 
 message QueryAnalysisResponse {
