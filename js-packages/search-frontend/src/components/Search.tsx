@@ -290,7 +290,7 @@ export function Search({
             padding: "4px 8px",
             gap: "4px",
             alignItems: "center",
-            marginRight: "16px",
+            marginRight: "21px",
           }}
         >
           {selectionsState.text && (

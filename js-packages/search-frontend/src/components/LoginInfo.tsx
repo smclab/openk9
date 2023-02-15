@@ -8,6 +8,7 @@ import { useQuery } from "react-query";
 import { faUser } from "@fortawesome/free-solid-svg-icons/faUser";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
 import { useClickAway } from "./useClickAway";
+import { LoginLogo } from "./LogoLogin";
 
 type LoginInfoProps = {};
 function LoginInfoComponent({}: LoginInfoProps) {
@@ -47,14 +48,20 @@ function LoginInfoComponent({}: LoginInfoProps) {
         `}
       >
         <button
+          css={css`
+            ${buttonStyle};
+            background: ${"var(--openk9-embeddable-search--secondary-active-color)"};
+            cursor: pointer;
+          `}
+          style={{
+            background:
+              "var(--openk9-embeddable-search--secondary-active-color)",
+          }}
           onClick={() => {
             setIsOpen(!isOpen);
           }}
-          css={css`
-            ${buttonStyle};
-          `}
         >
-          <FontAwesomeIcon icon={faUser} />
+          <LoginLogo />
         </button>
         {isOpen && (
           <div
