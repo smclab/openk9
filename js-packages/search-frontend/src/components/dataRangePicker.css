@@ -1,0 +1,39 @@
+.rdrDay:not(.rdrDayPassive) .rdrInRange ~ .rdrDayNumber span,
+.rdrDay:not(.rdrDayPassive) .rdrStartEdge ~ .rdrDayNumber span,
+.rdrDay:not(.rdrDayPassive) .rdrEndEdge ~ .rdrDayNumber span,
+.rdrDay:not(.rdrDayPassive) .rdrSelected ~ .rdrDayNumber span {
+  color: black;
+}
+.rdrInRange {
+  color: white !important;
+  border-top: 1px solid #c0272b;
+  border-bottom: 1px solid #c0272b;
+}
+.rdrDayEndOfWeek .rdrInRange,
+.rdrDayEndOfMonth .rdrInRange {
+  border-right: 1px solid #c0272b;
+}
+.rdrDayStartOfWeek .rdrInRange,
+.rdrDayStartOfMonth .rdrInRange {
+  border-left: 1px solid #c0272b;
+}
+.rdrStaticRange:hover {
+  background-color: red !important;
+  color: red !important;
+}
+.rdrStaticRange.your-custom-class:hover {
+  background-color: red !important;
+  color: red !important;
+}
+.rdrStartSelection:hover,
+.rdrEndSelection:hover {
+  background-color: red !important;
+}
+.rdrDayHovered {
+  background-color: rgba(224, 38, 38, 0.05);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.rdrDay:focus {
+  outline: none;
+}
