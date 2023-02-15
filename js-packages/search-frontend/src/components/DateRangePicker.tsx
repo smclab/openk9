@@ -9,6 +9,7 @@ import { SearchDateRange } from "../embeddable/Main";
 import { useQuery } from "react-query";
 import Select from "react-select";
 import { useOpenK9Client } from "./client";
+import "./dataRangePicker.css";
 
 const DateRangeFix = DateRange as any;
 const DefinedRangeFix = DefinedRange as any;
@@ -30,8 +31,8 @@ export function DateRangePicker({
 }) {
   const [value, setValue] = React.useState<SearchDateRange>({
     keywordKey: undefined,
-    startDate: undefined,
-    endDate: undefined,
+    startDate: new Date(),
+    endDate: new Date(),
   });
   const adaptedValue = [
     {
@@ -105,7 +106,9 @@ export function DateRangePicker({
           ranges={adaptedValue}
           startDatePlaceholder=""
           endDatePlaceholder=""
-          rangeColors={["var(--openk9-embeddable-search--primary-color)"]}
+          rangeColors={[
+            "var(--openk9-embeddable-search--secondary-active-color)",
+          ]}
         />
       </div>
       <div
