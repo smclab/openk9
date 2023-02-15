@@ -1,5 +1,5 @@
 Build Latest Tika Ocr Docker Images:
-  image: eclipse-temurin:17-jdk
+  image: smclab/docker-java-17
   services:
     - docker:19.03.13-dind
   stage: build-docker
