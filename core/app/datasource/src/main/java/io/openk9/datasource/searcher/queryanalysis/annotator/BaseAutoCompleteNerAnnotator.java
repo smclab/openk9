@@ -96,8 +96,10 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 							case "id" -> entitySemantics.put("value", value);
 							case "name" ->
 								entitySemantics.put("entityName", value);
-							case "type" ->
+							case "type" -> {
 								entitySemantics.put("entityType", value);
+								entitySemantics.put("label", value);
+							}
 							case "tenantId" ->
 								entitySemantics.put("tenantId", value);
 						}

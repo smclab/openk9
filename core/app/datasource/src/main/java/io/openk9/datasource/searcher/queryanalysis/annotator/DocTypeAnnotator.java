@@ -23,6 +23,7 @@ public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 		return CategorySemantics.of(
 			"$DOCTYPE",
 			Map.of(
+				"label", aggregatorKey,
 				"tokenType", "DOCTYPE",
 				"value", aggregatorKey,
 				"score", 50.0f

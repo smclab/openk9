@@ -92,6 +92,7 @@ public class BaseNerAnnotator extends BaseAnnotator {
 						Map.of(
 							"tokenType", "ENTITY",
 							"entityType", senamtics.get("type"),
+							"label", senamtics.get("type"),
 							"entityName", senamtics.get("name"),
 							"tenantId", senamtics.get("tenantId"),
 							"value", senamtics.get("id"),
