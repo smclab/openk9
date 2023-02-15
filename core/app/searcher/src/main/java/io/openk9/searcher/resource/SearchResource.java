@@ -224,6 +224,10 @@ public class SearchResource {
 					token.put("tenantId", queryAnalysisSearchToken.getTenantId());
 				}
 
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getLabel())) {
+					token.put("label", queryAnalysisSearchToken.getLabel());
+				}
+
 				tokens.add(token);
 
 			}
@@ -297,6 +301,7 @@ public class SearchResource {
 				case "entityType" -> qastBuilder.setEntityType((String) value);
 				case "entityName" -> qastBuilder.setEntityName((String) value);
 				case "tenantId" -> qastBuilder.setTenantId((String) value);
+				case "label" -> qastBuilder.setLabel((String) value);
 			}
 		}
 
