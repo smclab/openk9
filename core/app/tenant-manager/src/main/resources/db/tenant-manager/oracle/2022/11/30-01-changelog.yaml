@@ -1,0 +1,122 @@
+databaseChangeLog:
+- changeSet:
+    id: 1669809781403-1
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: background_process_pkey
+            name: id
+            type: UUID
+        - column:
+            name: create_date
+            type: TIMESTAMP
+        - column:
+            name: message
+            type: CLOB
+        - column:
+            name: modified_date
+            type: TIMESTAMP
+        - column:
+            constraints:
+              nullable: false
+            name: status
+            type: VARCHAR2(255)
+        - column:
+            name: tenant_id
+            type: NUMBER(38)
+        tableName: background_process
+- changeSet:
+    id: 1669809781403-2
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: tenant_pkey
+            name: id
+            type: NUMBER(38)
+        - column:
+            constraints:
+              nullable: false
+            name: client_id
+            type: VARCHAR2(255)
+        - column:
+            name: client_secret
+            type: VARCHAR2(255)
+        - column:
+            name: create_date
+            type: TIMESTAMP
+        - column:
+            name: modified_date
+            type: TIMESTAMP
+        - column:
+            constraints:
+              nullable: false
+            name: realm_name
+            type: VARCHAR2(255)
+        - column:
+            constraints:
+              nullable: false
+            name: schema_name
+            type: VARCHAR2(255)
+        - column:
+            constraints:
+              nullable: false
+            name: virtual_host
+            type: VARCHAR2(255)
+        tableName: tenant
+- changeSet:
+    id: 1669809781403-3
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - addUniqueConstraint:
+        columnNames: tenant_id
+        constraintName: uk_db8nx111rjup8geous5f1gies
+        tableName: background_process
+- changeSet:
+    id: 1669809781403-4
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - addUniqueConstraint:
+        columnNames: virtual_host
+        constraintName: uk_ww2yffcngi9y67p35ifew6sg
+        tableName: tenant
+- changeSet:
+    id: 1669809781403-5
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - createSequence:
+        cacheSize: 2
+        cycle: false
+        incrementBy: 1
+        maxValue: 9223372036854775807
+        minValue: 1
+        sequenceName: hibernate_sequence
+        startValue: 1
+- changeSet:
+    id: 1669809781403-6
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: tenant_id
+        baseTableName: background_process
+        constraintName: fkct0m5s7sbp93ojisdindq56o6
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: tenant
+

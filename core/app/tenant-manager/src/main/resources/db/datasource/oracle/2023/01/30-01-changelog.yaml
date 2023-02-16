@@ -1,0 +1,18 @@
+databaseChangeLog:
+- changeSet:
+    id: 1675070559412-1
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: min_score_suggestions
+            type: NUMBER(1)
+            valueBoolean: false
+        - column:
+            name: min_score_search
+            type: NUMBER(1)
+            valueBoolean: false
+        tableName: search_config
+
