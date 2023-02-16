@@ -1,6 +1,7 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { AnalysisResponseEntry, AnalysisToken } from "./client";
+import { DeleteLogo } from "./DeleteLogo";
 import { TokenIcon } from "./TokenIcon";
 
 type TokenSelectProps = {
@@ -31,16 +32,24 @@ export function TokenSelect({
     : "not-interactive";
   const entryStyle = (isSelected: boolean, isHighlighted: boolean) => css`
     padding: 8px 16px;
+    border-bottom: 1px solid #b09c9c12;
     :hover {
     }
     background-color: ${isHighlighted
-      ? "var(--openk9-embeddable-search--secondary-background-color)"
+      ? " #eeeeee"
       : "var(--openk9-embeddable-search--primary-background-color)"};
     cursor: pointer;
     border-left: ${isSelected
       ? `8px solid var(--openk9-embeddable-search--active-color)`
       : "none"};
     padding-left: ${isSelected ? "8px" : "16px"};
+  `;
+  const deseleziona = () => css`
+    padding: 8px 16px;
+    :hover {
+    }
+    background-color: ${"var(--openk9-embeddable-search--secondary-background-color)"};
+    cursor: pointer;
   `;
   return (
     <div
@@ -67,12 +76,17 @@ export function TokenSelect({
             position: absolute;
             top: 100%;
             left: 0px;
-            width: 300px;
+            width: 330px;
             background-color: var(
               --openk9-embeddable-search--primary-background-color
             );
             border: 1px solid var(--openk9-embeddable-search--border-color);
             border-radius: 4px;
+            background-color: var(
+              --openk9-embeddable-search--secondary-background-color
+            );
+            margin-bottom: 1px solid red;
+
             z-index: 2; /* workaround for scrollbar overaly problem */
           `}
         >
@@ -84,10 +98,19 @@ export function TokenSelect({
               onOptionIndexChange(0);
             }}
             css={css`
-              ${entryStyle(selected === null, optionIndex === 0)};
+              ${deseleziona()};
             `}
           >
-            Deseleziona
+            <div
+              css={css`
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                color: var(--openk9-embeddable-search--secondary-text-color);
+              `}
+            >
+              Deseleziona <DeleteLogo widthParam={10} heightParam={10} />
+            </div>
           </div>
           {span.tokens.map((option, index) => {
             const isSelected =
@@ -106,6 +129,8 @@ export function TokenSelect({
                 css={css`
                   ${entryStyle(isSelected, isHighlighted)};
                   display: flex;
+                  justify-content: space-between;
+                  align-items: baseline;
                 `}
               >
                 {"keywordName" in option && (
@@ -123,8 +148,45 @@ export function TokenSelect({
                   </span>
                 ) : (
                   <React.Fragment>
-                    <TokenIcon token={option} />
-                    {getTokenLabel(option)}
+                    <div
+                      css={css`
+                        display: flex;
+                        font-family: "Helvetica";
+                        font-style: normal;
+                        font-weight: 400;
+                        font-size: 15px;
+                        line-height: 17px;
+                      `}
+                    >
+                      {getTokenLabel(option)}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        padding: "4px 8px",
+                        gap: "4px",
+                        height: "15px",
+                        background: "#FFFFFF",
+                        border:
+                          "1px solid var(--openk9-embeddable-search--secondary-active-color)",
+                        borderRadius: "20px",
+                        marginLeft: "10px",
+                      }}
+                    >
+                      <p
+                        css={css`
+                          color: var(
+                            --openk9-embeddable-search--secondary-active-color
+                          );
+                          margin-bottom: 13px;
+                          font-size: 12px;
+                        `}
+                      >
+                        {option.label}
+                      </p>
+                    </div>
                   </React.Fragment>
                 )}
               </div>

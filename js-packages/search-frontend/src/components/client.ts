@@ -261,6 +261,7 @@ export type SearchToken =
       values: string[];
       filter: boolean;
       goToSuggestion?: boolean;
+      label?: string;
     }
   | {
       tokenType: "ENTITY";
@@ -293,10 +294,12 @@ export type AnalysisToken =
   | {
       tokenType: "DOCTYPE";
       value: string;
+      label: string;
     }
   | {
       tokenType: "DATASOURCE";
       value: string;
+      label: string;
     }
   | {
       tokenType: "ENTITY";
@@ -304,16 +307,19 @@ export type AnalysisToken =
       entityName: string;
       keywordKey?: string;
       value: string;
+      label: string;
     }
   | {
       tokenType: "TEXT";
       keywordKey?: string;
       keywordName?: string;
       value: string;
+      label: string;
     }
   | {
       tokenType: "AUTOCORRECT";
       value: string;
+      label: string;
     };
 
 export type AnalysisRequest = {
