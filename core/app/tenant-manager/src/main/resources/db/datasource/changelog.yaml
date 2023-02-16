@@ -1,12 +1,4 @@
 databaseChangeLog:
- - property:
-    name: "dbms.name"
-    value: "oracle"
-    dbms: "oracle"
- - property:
-    name: "dbms.name"
-    value: "postgresql"
-    dbms: "postgresql"
  - include:
-    file: "${dbms.name}/changelog.yaml"
+    file: "${database.typeName}/changelog.yaml"
     relativeToChangelogFile: true
