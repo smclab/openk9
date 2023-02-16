@@ -9,4 +9,4 @@ databaseChangeLog:
  - property:
     name: dbms.name
     value: postgresql
-    dbms: postgresql
+    dbms: postgresql,edb
