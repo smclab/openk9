@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="db/datasource/2022/12/21-01-changelog.xml">
+
+	<changeSet id="1671629306048-1" author="openk9">
+		<createTable tableName="acl_mapping">
+			<column name="user_field" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="doc_type_field_id" type="bigint">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="pk_acl_mapping"/>
+			</column>
+			<column name="plugin_driver_id" type="bigint">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="pk_acl_mapping"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1671629306048-2" author="openk9">
+		<addForeignKeyConstraint baseColumnNames="doc_type_field_id"
+								 baseTableName="acl_mapping"
+								 constraintName="FK_ACL_MAPPING_ON_DOC_TYPE_FIELD"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="doc_type_field"/>
+	</changeSet>
+
+	<changeSet id="1671629306048-3" author="openk9">
+		<addForeignKeyConstraint baseColumnNames="plugin_driver_id"
+								 baseTableName="acl_mapping"
+								 constraintName="FK_ACL_MAPPING_ON_PLUGIN_DRIVER"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="plugin_driver"/>
+	</changeSet>
+	
+</databaseChangeLog>
