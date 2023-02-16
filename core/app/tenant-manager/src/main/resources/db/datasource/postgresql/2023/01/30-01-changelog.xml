@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="db/datasource/2023/01/30-01-changelog.xml">
+
+	<changeSet id="1675070559412-1" author="openk9">
+		<addColumn tableName="search_config">
+			<column name="min_score_suggestions" type="BOOLEAN" valueBoolean="false"/>
+			<column name="min_score_search" type="BOOLEAN" valueBoolean="false"/>
+		</addColumn>
+	</changeSet>
+
+</databaseChangeLog>

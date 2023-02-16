@@ -1,7 +1,0 @@
-databaseChangeLog:
- - includeAll:
-    path: 2022
-    relativeToChangelogFile: true
- - includeAll:
-    path: 2023
-    relativeToChangelogFile: true
