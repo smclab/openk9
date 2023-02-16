@@ -1,0 +1,16 @@
+databaseChangeLog:
+- changeSet:
+    id: 1673450209846-1
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: liquibase_schema_name
+            type: VARCHAR(255)
+            valueComputed: CONCAT(schema_name, '_liquibase')
+        tableName: tenant
+

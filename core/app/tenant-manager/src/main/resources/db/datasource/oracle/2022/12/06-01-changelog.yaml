@@ -1,0 +1,13 @@
+databaseChangeLog:
+- changeSet:
+    id: add-column-analyzer-table
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: json_config
+            type: CLOB
+        tableName: analyzer
+

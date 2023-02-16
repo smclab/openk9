@@ -1,0 +1,14 @@
+databaseChangeLog:
+- changeSet:
+    id: 1674745590142-1
+    author: openk9
+    objectQuotingStrategy: LEGACY
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: multi_select
+            type: NUMBER(1)
+            valueBoolean: false
+        tableName: suggestion_category
+
