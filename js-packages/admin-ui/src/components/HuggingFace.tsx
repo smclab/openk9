@@ -8,11 +8,10 @@ import { Trasformers } from "../wizards/Logo/Trasformers";
 import { Fastai } from "../wizards/Logo/Fastai";
 import { Flair } from "../wizards/Logo/Flair";
 import { Stanza } from "../wizards/Logo/Stanza";
-import ClayModal from "@clayui/modal";
-import ClayButtonGroup from "@clayui/button/lib/Group";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./ToastProvider";
 import { ClassNameButton } from "../App";
+import { SimpleModal } from "./Form";
 
 export function HuggingFace() {
   const [name, setName] = React.useState("");
@@ -27,52 +26,34 @@ export function HuggingFace() {
   return (
     <React.Fragment>
       {open && (
-        <ClayModal observer={observer} size="sm" status="info">
-          <ClayModal.Body>
-            <h1>{"Are you sure you want to release it?"}</h1>
-          </ClayModal.Body>
-          <ClayModal.Footer
-            last={
-              <ClayButtonGroup spaced style={{ alignItems: "center" }}>
-                <Button
-                  className={ClassNameButton}
-                  displayType="primary"
-                  onClick={() => {
-                    onOpenChange(false);
-                  }}
-                >
-                  {"no"}
-                </Button>
-                <Button
-                  className={ClassNameButton}
-                  displayType="primary"
-                  onClick={() => {
-                    const json = JSON.parse(JSON.stringify(" name: " + name + " task: " + task + " library: " + library));
-
-                    const requestOptions = {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ pipelineName: task, modelName: name, tokenizerName: "string", library: library }),
-                    };
-                    fetch("/k8s/deploy-ml-model", requestOptions)
-                      .then((response) => response.json())
-                      .then((data) => {
-                        if (data?.status === "DANGER") {
-                          showToast({ displayType: "danger", title: "error released", content: "" + data?.message });
-                        } else {
-                          showToast({ displayType: "success", title: "successfully released", content: "" });
-                        }
-                      });
-                    onOpenChange(false);
-                    navigate(`/maching-learning/hugging-face-view`, { replace: true });
-                  }}
-                >
-                  {"yes"}
-                </Button>
-              </ClayButtonGroup>
-            }
-          />
-        </ClayModal>
+        <SimpleModal
+          observer={observer}
+          labelContinue={"yes"}
+          labelCancel={"cancel"}
+          actionContinue={() => {
+            const json = JSON.parse(JSON.stringify(" name: " + name + " task: " + task + " library: " + library));
+            const requestOptions = {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ pipelineName: task, modelName: name, tokenizerName: "string", library: library }),
+            };
+            fetch("/k8s/deploy-ml-model", requestOptions)
+              .then((response) => response.json())
+              .then((data) => {
+                if (data?.status === "DANGER") {
+                  showToast({ displayType: "danger", title: "error released", content: "" + data?.message });
+                } else {
+                  showToast({ displayType: "success", title: "successfully released", content: "" });
+                }
+              });
+            onOpenChange(false);
+            navigate(`/maching-learning/hugging-face-view`, { replace: true });
+          }}
+          actionCancel={() => {
+            onOpenChange(false);
+          }}
+          description="Are you sure you want to release it?"
+        />
       )}
 
       <ClayLayout.ContainerFluid view>
