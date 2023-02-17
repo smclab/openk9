@@ -17,8 +17,7 @@ import {
   useUnbindDataIndexToDataSourceMutation,
   useUnbindEnrichPipelineToDataSourceMutation,
 } from "../graphql-generated";
-import ClayModal, { useModal } from "@clayui/modal";
-import { BooleanInput, CronInput, fromFieldValidators, SearchSelect, TextArea, TextInput, useForm } from "./Form";
+import { BooleanInput, CronInput, fromFieldValidators, SearchSelect, SimpleModal, TextArea, TextInput, useForm } from "./Form";
 import { CodeInput } from "./CodeInput";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
@@ -30,6 +29,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "./ToastProvider";
 import { AddDataSourceToBucket, BucketsdataSources, RemoveDataSourceFromBucket } from "./BucketDataSource";
 import { ClassNameButton } from "../App";
+import { useModal } from "@clayui/core";
 
 const DataSourceQuery = gql`
   query DataSource($id: ID!) {
@@ -82,6 +82,14 @@ export function DataSource() {
   const { datasourceId = "new" } = useParams();
   const navigate = useNavigate();
   const showToast = useToast();
+
+  const { observer: observerGenerate, onOpenChange: onOpenChangeGenerate, open: openGenerate } = useModal();
+  const { observer: observerTrigger, onOpenChange: onOpenChangeTrigger, open: openTrigger } = useModal();
+  const { observer: observerReindex, onOpenChange: onOpenChangeReindex, open: openReindex } = useModal();
+
+  // const { myObserver: observer, onOpenChange, open } = useModal();
+  // const { observer, onOpenChange, open } = useModal();
+
   const datasourceQuery = useDataSourceQuery({
     variables: { id: datasourceId as string },
     skip: !datasourceId || datasourceId === "new",
@@ -102,7 +110,6 @@ export function DataSource() {
   const triggerSchedulerMutation = useTriggerSchedulerMutation();
   const reindexMutation = useReindexMutation();
   const generateDocumentTypesMutation = useGenerateDocumentTypesMutation();
-  const modal = useModal();
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
@@ -124,32 +131,48 @@ export function DataSource() {
   if (!datasourceId) return null;
   return (
     <React.Fragment>
-      const content = modal.open && (
-      <ClayModal observer={modal.observer}>
-        <ClayModal.Header>Create Data Index</ClayModal.Header>
-        <ClayModal.Body>
-          <ClayForm
-            onSubmit={(event) => {
-              event.preventDefault();
-              form.submit();
-            }}
-          ></ClayForm>
-        </ClayModal.Body>
-        <ClayModal.Footer
-          last={
-            <ClayButton
-              className={ClassNameButton}
-              disabled={!form.canSubmit}
-              onClick={() => {
-                alert("ciao");
-              }}
-            >
-              Create
-            </ClayButton>
-          }
+      {openGenerate && (
+        <SimpleModal
+          observer={observerGenerate}
+          labelContinue={"yes"}
+          labelCancel={"cancel"}
+          actionContinue={() => {
+            generateDocumentTypesMutation.mutate(datasourceId);
+          }}
+          actionCancel={() => {
+            onOpenChangeGenerate(false);
+          }}
+          description="Are you sure you want to generate it?"
         />
-      </ClayModal>
-      );
+      )}
+      {openTrigger && (
+        <SimpleModal
+          observer={observerTrigger}
+          labelContinue={"yes"}
+          labelCancel={"cancel"}
+          actionContinue={() => {
+            triggerSchedulerMutation.mutate(datasourceId);
+          }}
+          actionCancel={() => {
+            onOpenChangeTrigger(false);
+          }}
+          description="Are you sure you want to trigger it?"
+        />
+      )}
+      {openReindex && (
+        <SimpleModal
+          observer={observerReindex}
+          labelContinue={"yes"}
+          labelCancel={"cancel"}
+          actionContinue={() => {
+            reindexMutation.mutate(datasourceId);
+          }}
+          actionCancel={() => {
+            onOpenChangeReindex(false);
+          }}
+          description="Are you sure you want to reindex it?"
+        />
+      )}
       {datasourceId !== "new" && (
         <ClayToolbar light>
           <ClayLayout.ContainerFluid>
@@ -159,22 +182,18 @@ export function DataSource() {
                   <ClayButton
                     displayType="secondary"
                     disabled={generateDocumentTypesMutation.isLoading}
-                    onClick={() => generateDocumentTypesMutation.mutate(datasourceId)}
+                    onClick={() => onOpenChangeGenerate(true)}
                   >
                     Generate Document Types
                   </ClayButton>
                   <ClayButton
                     displayType="secondary"
                     disabled={triggerSchedulerMutation.isLoading}
-                    onClick={() => triggerSchedulerMutation.mutate(datasourceId)}
+                    onClick={() => onOpenChangeTrigger(true)}
                   >
                     Trigger Scheduler
                   </ClayButton>
-                  <ClayButton
-                    displayType="secondary"
-                    disabled={reindexMutation.isLoading}
-                    onClick={() => reindexMutation.mutate(datasourceId)}
-                  >
+                  <ClayButton displayType="secondary" disabled={reindexMutation.isLoading} onClick={() => onOpenChangeReindex(true)}>
                     Reindex
                   </ClayButton>
                 </ClayButton.Group>
