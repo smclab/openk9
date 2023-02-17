@@ -82,14 +82,9 @@ export function DataSource() {
   const { datasourceId = "new" } = useParams();
   const navigate = useNavigate();
   const showToast = useToast();
-
   const { observer: observerGenerate, onOpenChange: onOpenChangeGenerate, open: openGenerate } = useModal();
   const { observer: observerTrigger, onOpenChange: onOpenChangeTrigger, open: openTrigger } = useModal();
   const { observer: observerReindex, onOpenChange: onOpenChangeReindex, open: openReindex } = useModal();
-
-  // const { myObserver: observer, onOpenChange, open } = useModal();
-  // const { observer, onOpenChange, open } = useModal();
-
   const datasourceQuery = useDataSourceQuery({
     variables: { id: datasourceId as string },
     skip: !datasourceId || datasourceId === "new",
