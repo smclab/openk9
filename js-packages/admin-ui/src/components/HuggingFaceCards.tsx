@@ -20,10 +20,9 @@ import { ImageClassification } from "../wizards/Logo/ImageClassification";
 import { Summarization } from "../wizards/Logo/Summarization";
 import { Translation } from "../wizards/Logo/Traslation";
 import { AudioClassification } from "../wizards/Logo/AudioClassification";
-import ClayModal from "@clayui/modal";
-import ClayButtonGroup from "@clayui/button/lib/Group";
 import { ClassNameButton } from "../App";
 import { useToast } from "./ToastProvider";
+import { SimpleModal } from "./Form";
 
 export function HuggingFaceCard() {
   const status = usePodsStatus();
@@ -35,47 +34,30 @@ export function HuggingFaceCard() {
   return (
     <React.Fragment>
       {open && (
-        <ClayModal observer={observer} size="sm" status="info">
-          <ClayModal.Body>
-            <h1>{"are you sure you want to delete it?"}</h1>
-          </ClayModal.Body>
-          <ClayModal.Footer
-            last={
-              <ClayButtonGroup spaced style={{ alignItems: "center" }}>
-                <Button
-                  displayType="primary"
-                  className={ClassNameButton}
-                  onClick={() => {
-                    onOpenChange(false);
-                  }}
-                >
-                  {"no"}
-                </Button>
-                <Button
-                  displayType="primary"
-                  className={ClassNameButton}
-                  onClick={() => {
-                    fetch(`/k8s/delete-ml-model/${name}`, { method: "DELETE" })
-                      .then((response) => {
-                        if (response.ok) {
-                          showToast({ displayType: "success", title: "delete done", content: "" });
-                        } else {
-                          showToast({ displayType: "danger", title: "Error", content: "" });
-                        }
-                      })
-                      .then((responseJson) => {})
-                      .catch((error) => {
-                        console.log(error);
-                      });
-                    onOpenChange(false);
-                  }}
-                >
-                  {"yes"}
-                </Button>
-              </ClayButtonGroup>
-            }
-          />
-        </ClayModal>
+        <SimpleModal
+          observer={observer}
+          labelContinue={"yes"}
+          labelCancel={"cancel"}
+          actionContinue={() => {
+            fetch(`/k8s/delete-ml-model/${name}`, { method: "DELETE" })
+              .then((response) => {
+                if (response.ok) {
+                  showToast({ displayType: "success", title: "delete done", content: "" });
+                } else {
+                  showToast({ displayType: "danger", title: "Error", content: "" });
+                }
+              })
+              .then((responseJson) => {})
+              .catch((error) => {
+                console.log(error);
+              });
+            onOpenChange(false);
+          }}
+          actionCancel={() => {
+            onOpenChange(false);
+          }}
+          description="Are you sure you want to cancell it?"
+        />
       )}
       <ClayToolbar light>
         <ClayLayout.ContainerFluid>
