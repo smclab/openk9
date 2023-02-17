@@ -17,6 +17,7 @@ import {
   useUnbindDataIndexToDataSourceMutation,
   useUnbindEnrichPipelineToDataSourceMutation,
 } from "../graphql-generated";
+import ClayModal, { useModal } from "@clayui/modal";
 import { BooleanInput, CronInput, fromFieldValidators, SearchSelect, TextArea, TextInput, useForm } from "./Form";
 import { CodeInput } from "./CodeInput";
 import ClayForm from "@clayui/form";
@@ -101,6 +102,7 @@ export function DataSource() {
   const triggerSchedulerMutation = useTriggerSchedulerMutation();
   const reindexMutation = useReindexMutation();
   const generateDocumentTypesMutation = useGenerateDocumentTypesMutation();
+  const modal = useModal();
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
@@ -122,6 +124,32 @@ export function DataSource() {
   if (!datasourceId) return null;
   return (
     <React.Fragment>
+      const content = modal.open && (
+      <ClayModal observer={modal.observer}>
+        <ClayModal.Header>Create Data Index</ClayModal.Header>
+        <ClayModal.Body>
+          <ClayForm
+            onSubmit={(event) => {
+              event.preventDefault();
+              form.submit();
+            }}
+          ></ClayForm>
+        </ClayModal.Body>
+        <ClayModal.Footer
+          last={
+            <ClayButton
+              className={ClassNameButton}
+              disabled={!form.canSubmit}
+              onClick={() => {
+                alert("ciao");
+              }}
+            >
+              Create
+            </ClayButton>
+          }
+        />
+      </ClayModal>
+      );
       {datasourceId !== "new" && (
         <ClayToolbar light>
           <ClayLayout.ContainerFluid>

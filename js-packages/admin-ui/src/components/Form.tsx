@@ -17,7 +17,8 @@ import { ClayTooltipProvider } from "@clayui/tooltip";
 import { UserField } from "../graphql-generated";
 import { TableRowActions } from "./Table";
 import { ClassNameButton } from "../App";
-
+import { Observer } from "@clayui/modal/lib/types";
+import { BrandLogo } from "./BrandLogo";
 type Nullable<T> = T | null | undefined;
 export const fromFieldValidators =
   (
@@ -1496,3 +1497,77 @@ export function FormatString({ howFormat = ["uppercase", "withoutSpace", "upperF
   });
   return words;
 }
+
+type PropsSimpleModal = {
+  observer: Observer;
+  description?: string;
+  labelContinue?: string;
+  labelCancel?: string;
+  actionContinue(): void;
+  actionCancel(): void;
+};
+
+export function SimpleModal({ observer, labelContinue, labelCancel, actionContinue, actionCancel, description }: PropsSimpleModal) {
+  return (
+    <ClayModal observer={observer} size="sm" status="info" className="custom-modal" center style={{ background: "#f2f2f2" }}>
+      <style>{styleModal}</style>
+      <div style={{ background: "#ff000026" }}>
+        <div style={{ background: "white", margin: "10px" }}>
+          <div className="custom-modal__content">
+            <div className="custom-modal__header">
+              <BrandLogo size={70} colorFill={"#c22525"} />
+              <p className="custom-modal__description">{description}</p>
+            </div>
+            <div className="custom-modal__footer">
+              <ClayButton onClick={actionCancel} displayType="secondary" size="sm" className="custom-modal__cancel">
+                {labelCancel}
+              </ClayButton>
+              <ClayButton onClick={actionContinue} displayType="secondary" size="sm" className="custom-modal__continue">
+                {labelContinue}
+              </ClayButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ClayModal>
+  );
+}
+
+const styleModal = `
+    .custom-modal__content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding:10px;
+    }
+    
+    .custom-modal__header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .custom-modal__header svg {
+      margin-right: 10px;
+    }
+    
+    .custom-modal__description {
+      margin: 0;
+      margin-left: 15px;
+      flex: 1;
+      font-size: 20px;
+      font-family: sans-serif;
+    }
+
+    .custom-modal__footer {
+      display: flex;
+      justify-content: flex-end;
+      width: 100%;
+      margin-right:10px;
+    }
+    
+    .custom-modal__cancel {
+      margin-right: 10px;
+    }
+  `;
