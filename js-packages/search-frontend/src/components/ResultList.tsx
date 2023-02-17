@@ -9,6 +9,7 @@ import { CustomVirtualScrollbar } from "./CustomScrollbar";
 import { useOpenK9Client } from "./client";
 import { useInfiniteQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import { ResultSvg } from "../svgElement/ResultSvg";
 
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
@@ -60,24 +61,70 @@ type ResultCountProps = {
 };
 function ResultCount({ children }: ResultCountProps) {
   return (
-    <div
-      css={css`
-        padding: 8px 16px;
-        border-bottom: 1px solid var(--openk9-embeddable-search--border-color);
-        font-weight: Helvetica;
-        font-weight: 700;
-      `}
-    >
-      Result:
-      <span
+    <React.Fragment>
+      <div
         css={css`
-          color: var(--openk9-embeddable-search--active-color);
-          margin-left: 5px;
+          padding: 0px 16px;
+          width: 100%;
+          background: #fafafa;
+          padding-top: 25px;
+          padding-bottom: 25px;
+          display: flex;
         `}
       >
-        {children?.toLocaleString("it")}
-      </span>
-    </div>
+        <span>
+          <ResultSvg />
+        </span>
+        <span
+          css={css`
+            margin-left: 5px;
+            font-family: "Nunito Sans";
+            font-style: normal;
+            font-weight: 700;
+            font-size: 17px;
+            line-height: 22px;
+            align-items: center;
+            color: #3f3f46;
+            margin-left: 8px;
+          `}
+        >
+          Risultati
+        </span>
+      </div>
+      <div
+        css={css`
+          padding: 8px 16px;
+          font-weight: Helvetica;
+          font-weight: 700;
+        `}
+      >
+        <div
+          css={css`
+            padding: 8px 5px;
+            border: 1px solid var(--openk9-embeddable-search--border-color);
+            display: flex;
+            justify-content: space-between;
+            border-radius: 8px;
+          `}
+        >
+          <span
+            css={css`
+              color: var(--openk9-embeddable-search--active-color);
+              margin-left: 5px;
+            `}
+          >
+            {children?.toLocaleString("it")}
+          </span>
+          <span
+            css={css`
+              margin-rigth: 10px;
+            `}
+          >
+            ordina per "spazio per select"
+          </span>
+        </div>
+      </div>
+    </React.Fragment>
   );
 }
 
