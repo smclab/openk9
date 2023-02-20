@@ -140,8 +140,7 @@ function FilterCategory({
             css={css`
               display: flex;
               align-items: center;
-              margin-top: 8px;
-              margin-bottom: 8px;
+              margin-bottom: 10px;
             `}
           >
             <FontAwesomeIcon
@@ -151,12 +150,16 @@ function FilterCategory({
                 marginLeft: "25px",
                 opacity: "0.3",
                 zIndex: "3",
+                marginTop: "16px",
+                height: "15px",
               }}
             />
             <input
               value={text}
+              placeholder="Cerca contenuti..."
               onChange={(event) => setText(event.currentTarget.value)}
               css={css`
+                margin-top: 17px;
                 flex-grow: 1;
                 text-indent: 25px;
                 margin-left: -25px;
@@ -164,10 +167,17 @@ function FilterCategory({
                 padding: 8px 16px 8px 8px;
                 border-radius: 4px;
                 border: 1px solid var(--openk9-embeddable-search--border-color);
+                border-radius: 20px;
+                background: #fafafa;
                 :focus {
                   border: 1px solid
                     var(--openk9-embeddable-search--active-color);
                   outline: none;
+                }
+                ::placeholder {
+                  font-style: normal;
+                  font-weight: 400;
+                  font-size: 15px;
                 }
               `}
             />
@@ -296,10 +306,11 @@ function FilterCategory({
                   suggestions.fetchNextPage();
                 }}
                 svgIcon={<PlusSvg size={12} />}
-                sizeHeight="20px"
+                sizeHeight="22px"
                 sizeFont="16px"
                 margBottom="18px"
                 marginOfSvg="5px"
+                marginTop="20px"
               />
             </div>
           )}

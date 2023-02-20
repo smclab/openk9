@@ -70,6 +70,7 @@ function ResultCount({ children }: ResultCountProps) {
           padding-top: 25px;
           padding-bottom: 25px;
           display: flex;
+          margin-bottom: 8px;
         `}
       >
         <span>
@@ -81,7 +82,8 @@ function ResultCount({ children }: ResultCountProps) {
             font-family: "Nunito Sans";
             font-style: normal;
             font-weight: 700;
-            font-size: 17px;
+            font-size: 20px;
+            height: 18px;
             line-height: 22px;
             align-items: center;
             color: #3f3f46;

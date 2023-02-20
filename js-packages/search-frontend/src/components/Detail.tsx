@@ -8,6 +8,8 @@ import { useRenderers } from "./useRenderers";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { Logo } from "./Logo";
+import { ResultSvg } from "../svgElement/ResultSvg";
+import { PreviewSvg } from "../svgElement/PreviewSvg";
 
 type DetailProps<E> = {
   result: GenericResultItem<E> | null;
@@ -28,6 +30,36 @@ function Detail<E>(props: DetailProps<E>) {
         overflow: "auto",
       }}
     >
+      <div
+        css={css`
+          padding: 0px 16px;
+          width: 100%;
+          background: #fafafa;
+          padding-top: 20px;
+          padding-bottom: 12px;
+          display: flex;
+        `}
+      >
+        <span>
+          <PreviewSvg />
+        </span>
+        <span
+          css={css`
+            margin-left: 5px;
+            font-family: "Nunito Sans";
+            font-style: normal;
+            font-weight: 700;
+            font-size: 20px;
+            height: 18px;
+            line-height: 22px;
+            align-items: center;
+            color: #3f3f46;
+            margin-left: 8px;
+          `}
+        >
+          Anteprima
+        </span>
+      </div>
       <div
         css={css`
           position: absolute;
@@ -63,19 +95,51 @@ export const DetailMemo = React.memo(Detail);
 
 function NoDetail() {
   return (
-    <div
-      css={css`
-        color: var(--openk9-embeddable-search--secondary-text-color);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-      `}
-    >
-      <Logo size={128} />
-      <h3>No details</h3>
-      <div>Move the mouse over a result to see details about it</div>
-    </div>
+    <React.Fragment>
+      <div
+        css={css`
+          padding: 0px 16px;
+          width: 100%;
+          background: #fafafa;
+          padding-top: 20px;
+          padding-bottom: 12px;
+          display: flex;
+        `}
+      >
+        <span>
+          <PreviewSvg />
+        </span>
+        <span
+          css={css`
+            margin-left: 5px;
+            font-family: "Nunito Sans";
+            font-style: normal;
+            font-weight: 700;
+            font-size: 20px;
+            height: 18px;
+            line-height: 22px;
+            align-items: center;
+            color: #3f3f46;
+            margin-left: 8px;
+          `}
+        >
+          Anteprima
+        </span>
+      </div>
+      <div
+        css={css`
+          color: var(--openk9-embeddable-search--secondary-text-color);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+        `}
+      >
+        <Logo size={128} />
+        <h3>No details</h3>
+        <div>Move the mouse over a result to see details about it</div>
+      </div>
+    </React.Fragment>
   );
 }
