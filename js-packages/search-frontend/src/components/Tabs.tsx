@@ -40,20 +40,26 @@ function Tabs({
               key={index}
               css={css`
                 padding-left: ${index == 0 ? "0px" : "20px"};
+                margin-left: ${index == 0 ? "0px" : "14px"};
                 padding-top: 8px;
+                padding: 4px 10px;
+                background: ${isSelected
+                  ? "var(--openk9-embeddable-search--primary-background-tab-color)"
+                  : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
+                border-radius: 8px;
                 font: Helvetica Neue LT Std;
                 font-style: normal;
-                text-decoration: ${isSelected
-                  ? "underline; text-underline-offset: 6px;"
-                  : ""};
                 color: ${isSelected
-                  ? "var(--openk9-embeddable-search--active-color)"
-                  : "var(--openk9-embeddable-search--secondary-text-color)"};
+                  ? "var(--openk9-embeddable-search--primary-background-color)"
+                  : "var(--openk9-embeddable-tabs--primary-color)"};
                 ${isSelected
                   ? "var(--openk9-embeddable-search--active-color)"
                   : "transparent"};
-                cursor: pointer;
+                cursor: ${isSelected ? "" : "pointer"};
                 user-select: none;
+                :hover {
+                  ${isSelected ? "" : "text-decoration: underline;"}
+                }
               `}
               onClick={() => {
                 onSelectedTabIndexChange(index);

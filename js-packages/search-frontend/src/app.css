@@ -10,6 +10,9 @@
   --openk9-embeddable-search--secondary-text-color: #62696e;
   --openk9-embeddable-search--primary-background-color: #ffffff;
   --openk9-embeddable-search--secondary-background-color: #EEEEEE;
+  --openk9-embeddable-search--secondary-background-tab-color: #fafafa;
+  --openk9-embeddable-search--primary-background-tab-color:   #d54949;
+  --openk9-embeddable-tabs--primary-color:    #3F3F46;
 }
 
 .openk9-embeddable-search--input-container {
