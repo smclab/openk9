@@ -40,20 +40,39 @@ function Filters({
     >
       <div
         css={css`
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          padding: 8px 24px;
-          gap: 16px;
+          padding: 0px 16px;
+          width: 100%;
           background: #fafafa;
-          border-radius: 8px 8px 0px 0px;
-          height: 48px;
+          padding-top: 20px;
+          padding-bottom: 12px;
+          display: flex;
         `}
       >
-        <span>
-          <FilterSvg />
-        </span>
-        <span>Filtri</span>
+        <div
+          css={css`
+            display: flex;
+          `}
+        >
+          <span>
+            <FilterSvg />
+          </span>
+          <span
+            css={css`
+              margin-left: 10px;
+              font-family: "Nunito Sans";
+              font-style: normal;
+              font-weight: 700;
+              font-size: 20px;
+              height: 18px;
+              line-height: 22px;
+              display: flex;
+              align-items: center;
+              color: #3f3f46;
+            `}
+          >
+            Filtri
+          </span>
+        </div>
       </div>
       <div
         css={css`
@@ -69,6 +88,8 @@ function Filters({
             border-radius: 8px;
             align-items: flex-start;
             margin-left: -8px;
+            width: 100%;
+            margin-top: 8px;
           `}
         >
           <div>
@@ -142,6 +163,7 @@ type createLabel = {
   sizeFont?: string;
   margBottom?: string;
   marginOfSvg?: string;
+  marginTop?: string;
 };
 export function CreateLabel({
   label,
@@ -151,6 +173,7 @@ export function CreateLabel({
   sizeFont = "12px",
   margBottom = "13px",
   marginOfSvg = "0px",
+  marginTop = "0px",
 }: createLabel) {
   return (
     <div
@@ -166,6 +189,7 @@ export function CreateLabel({
           var(--openk9-embeddable-search--secondary-active-color);
         border-radius: 20px;
         margin-left: 10px;
+        margin-top: ${marginTop};
         cursor: pointer;
       `}
       onClick={action}
