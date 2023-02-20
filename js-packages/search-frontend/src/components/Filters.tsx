@@ -7,6 +7,7 @@ import { useOpenK9Client } from "./client";
 import { useQuery } from "react-query";
 import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
+import { FilterSvg } from "../svgElement/FiltersSvg";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -39,53 +40,57 @@ function Filters({
     >
       <div
         css={css`
-          margin-bottom: 16px;
-          border-bottom: 1px solid var(--openk9-embeddable-search--border-color);
           display: flex;
+          flex-direction: row;
+          align-items: center;
+          padding: 8px 24px;
+          gap: 16px;
+          background: #fafafa;
+          border-radius: 8px 8px 0px 0px;
+          height: 48px;
         `}
       >
-        <strong
-          css={css`
-            margin-left: 16px;
-            font-family: "Helvetica";
-            font-style: normal;
-            font-weight: 700;
-            font-size: 16px;
-            line-height: 44px;
-            display: flex;
-            align-items: center;
-          `}
-        >
-          Filters
-        </strong>
-        <span
-          css={css`
-            margin-left: auto;
-            margin-right: 20px;
-            font-family: "Helvetica";
-            font-style: normal;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 44px;
-            display: flex;
-            align-items: center;
-            color: #000000;
-            cursor: pointer;
-          `}
-          onClick={() => {
-            onConfigurationChange({ filterTokens: [] });
-          }}
-        >
-          Cancel
-          <span
-            css={css`
-              opacity: 0.5;
-              margin-left: 5px;
-            `}
-          >
-            X
-          </span>
+        <span>
+          <FilterSvg />
         </span>
+        <span>Filtri</span>
+      </div>
+      <div
+        css={css`
+          padding: 8px 24px;
+        `}
+      >
+        <div
+          css={css`
+            display: flex;
+            padding: 8px 8px;
+            justify-content: space-between;
+            border: 1px solid var(--openk9-embeddable-search--border-color);
+            border-radius: 8px;
+            align-items: flex-start;
+            margin-left: -8px;
+          `}
+        >
+          <div>
+            <span
+              css={css`
+                color: var(--openk9-embeddable-search--active-color);
+                font-weight: 700;
+              `}
+            >
+              2
+            </span>
+            <span> filtri applicati</span>
+          </div>
+          <div>
+            <CreateLabel
+              label="Rimuovi filtri"
+              action={() => {
+                onConfigurationChange({ filterTokens: [] });
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <div
@@ -126,5 +131,62 @@ function useSuggestionCategories() {
       suspense: true,
       keepPreviousData: true,
     },
+  );
+}
+
+type createLabel = {
+  label: string;
+  action?(): void;
+  svgIcon?: React.ReactNode;
+  sizeHeight?: string;
+  sizeFont?: string;
+  margBottom?: string;
+  marginOfSvg?: string;
+};
+export function CreateLabel({
+  label,
+  action,
+  svgIcon,
+  sizeHeight = "15px",
+  sizeFont = "12px",
+  margBottom = "13px",
+  marginOfSvg = "0px",
+}: createLabel) {
+  return (
+    <div
+      css={css`
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4px 8px;
+        gap: 4px;
+        height: ${sizeHeight};
+        background: #ffffff;
+        border: 1px solid
+          var(--openk9-embeddable-search--secondary-active-color);
+        border-radius: 20px;
+        margin-left: 10px;
+        cursor: pointer;
+      `}
+      onClick={action}
+    >
+      <p
+        css={css`
+          color: var(--openk9-embeddable-search--secondary-active-color);
+          margin-bottom: ${margBottom};
+          font-size: ${sizeFont};
+          font-weight: 700;
+        `}
+      >
+        {svgIcon}
+        <span
+          css={css`
+            margin-left: ${marginOfSvg};
+          `}
+        >
+          {label}
+        </span>
+      </p>
+    </div>
   );
 }

@@ -10,6 +10,9 @@ import { useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
 import { useOpenK9Client } from "./client";
 import { Logo } from "./Logo";
+import { CreateLabel } from "./Filters";
+import { FilterSvg } from "../svgElement/FiltersSvg";
+import { PlusSvg } from "../svgElement/PlusSvg";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -287,57 +290,17 @@ function FilterCategory({
             <div
               style={{ textAlign: "center", width: "100%", marginTop: "10px" }}
             >
-              <button
-                css={css`
-                  width: 163px;
-                  height: 32px;
-                  left: 75px;
-                  top: 730px;
-                  background: #ffffff;
-                  border: 2px solid #c0272b;
-                  border-radius: 12px;
-                  cursor: pointer;
-                `}
-                // disabled={suggestions.isFetching}
-                onClick={() => {
+              <CreateLabel
+                label=" Mostra Altro"
+                action={() => {
                   suggestions.fetchNextPage();
                 }}
-              >
-                <div
-                  css={css`
-                    display: flex;
-                    align-items: center;
-                    text-align: center;
-                    margin-left: 25px;
-                  `}
-                >
-                  <span
-                    css={css`
-                      font-family: "Helvetica";
-                      font-style: normal;
-                      font-weight: 400;
-                      font-size: 25px;
-                      /* or 176% */
-                      color: #c0272b;
-                    `}
-                  >
-                    +
-                  </span>
-                  <span
-                    css={css`
-                      font-family: "Helvetica";
-                      font-style: normal;
-                      color: #c0272b;
-                      margin-left: 8px;
-                      font-weight: 700;
-                      font-size: 14px;
-                      color: #c0272b;
-                    `}
-                  >
-                    Load more
-                  </span>
-                </div>
-              </button>
+                svgIcon={<PlusSvg size={12} />}
+                sizeHeight="20px"
+                sizeFont="16px"
+                margBottom="18px"
+                marginOfSvg="5px"
+              />
             </div>
           )}
         </React.Fragment>
