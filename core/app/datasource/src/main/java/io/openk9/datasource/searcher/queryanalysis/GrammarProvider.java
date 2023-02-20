@@ -136,8 +136,6 @@ public class GrammarProvider {
 						)
 					);
 
-					query.distinct(true);
-
 					return s
 						.createQuery(query)
 						.setCacheable(true)
