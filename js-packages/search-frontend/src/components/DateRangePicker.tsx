@@ -179,7 +179,7 @@ const staticRanges = [
     range: () => ({
       startDate: DateTime.now().startOf("day").toJSDate(),
       endDate: DateTime.now().endOf("day").toJSDate(),
-      label: "oggi",
+      label: "Oggi",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
@@ -193,7 +193,7 @@ const staticRanges = [
     range: () => ({
       startDate: DateTime.now().startOf("week").toJSDate(),
       endDate: DateTime.now().endOf("week").toJSDate(),
-      label: "questa settimana",
+      label: "Questa settimana",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
@@ -207,7 +207,7 @@ const staticRanges = [
     range: () => ({
       startDate: DateTime.now().startOf("month").toJSDate(),
       endDate: DateTime.now().endOf("month").toJSDate(),
-      label: "questo mese",
+      label: "Questo mese",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
@@ -221,7 +221,7 @@ const staticRanges = [
     range: () => ({
       startDate: DateTime.now().startOf("year").toJSDate(),
       endDate: DateTime.now().endOf("year").toJSDate(),
-      label: "questo anno",
+      label: "Quest'anno",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
