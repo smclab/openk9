@@ -96,7 +96,11 @@ export function Search({
           display: flex;
           align-items: center;
           border-radius: 40px;
-          width: ${journey ? "85%" : valueSelected.startDate ? "79%" : "95%"};
+          width: ${journey
+            ? CalculateSpaceCalendar({ journey })
+            : valueSelected.startDate
+            ? "79%"
+            : "95%"};
         `}
       >
         <FontAwesomeIcon
@@ -447,30 +451,6 @@ function CreateDeleteFilter({
         setJourney("");
       }}
     >
-      {/* <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "4px 8px",
-          gap: "4px",
-          width: "100%",
-          height: "20px",
-          background: "#FFFFFF",
-          border:
-            "1px solid var(--openk9-embeddable-search--secondary-active-color)",
-          borderRadius: "20px",
-        }}
-      >
-        <p
-          css={css`
-            color: var(--openk9-embeddable-search--secondary-active-color);
-            margin-bottom: 20px;
-          `}
-        >
-          {data} x
-        </p>
-      </div> */}
       <CreateLabel
         label={data}
         marginTop="5px"
@@ -485,75 +465,17 @@ function CreateDeleteFilter({
   );
 }
 
-{
-  /* <div
-style={{
-  paddingRight: "16px",
-  display: "flex",
-  flexDirection: "row",
-  padding: "4px 8px",
-  gap: "4px",
-  alignItems: "center",
-  marginRight: "21px",
-}}
->
-{selectionsState.text && (
-  <div>
-    <span
-      css={css`
-        cursor: pointer;
-      `}
-      onClick={() => {
-        selectionsDispatch({
-          type: "set-text",
-          text: "",
-        });
-      }}
-    >
-      <DeleteLogo />
-    </span>
-    <span
-      css={css`
-        margin-right: 18px;
-        margin-left: 23px;
-      `}
-    >
-      <SeparatorLogo />
-    </span>
-  </div>
-)}
-<div
-  css={css`
-    cursor: pointer;
-  `}
-  onClick={() => {
-    setIsDatePickerOpen(!isDatePickerOpen);
-  }}
->
-  <CalendarLogo />
-</div>
-{journey ? (
-  <CreateDeleteFilter
-    journey={journey}
-    onDateRangeChange={onDateRangeChange}
-    setIsDatePickerOpen={setIsDatePickerOpen}
-    setJourney={setJourney}
-    isBuild={true}
-    valueOfDate={valueSelected}
-    setValueSelected={setValueSelected}
-  />
-) : (
-  valueSelected.startDate && (
-    <CreateDeleteFilter
-      journey={journey || ""}
-      onDateRangeChange={onDateRangeChange}
-      setIsDatePickerOpen={setIsDatePickerOpen}
-      setJourney={setJourney}
-      isBuild={false}
-      valueOfDate={valueSelected}
-      setValueSelected={setValueSelected}
-    />
-  )
-)}
-</div> */
+function CalculateSpaceCalendar({ journey }: { journey: string }) {
+  if (journey) {
+    switch (journey.toLowerCase()) {
+      case "oggi":
+        return "90%";
+      case "questa settimana":
+        return "85%";
+      case "questo mese":
+        return "87%";
+      case "quest'anno":
+        return "87%";
+    }
+  }
 }
