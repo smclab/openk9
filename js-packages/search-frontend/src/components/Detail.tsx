@@ -46,10 +46,9 @@ function Detail<E>(props: DetailProps<E>) {
         <span
           css={css`
             margin-left: 5px;
-            font-family: "Nunito Sans";
             font-style: normal;
             font-weight: 700;
-            font-size: 20px;
+            font-size: 18px;
             height: 18px;
             line-height: 22px;
             align-items: center;

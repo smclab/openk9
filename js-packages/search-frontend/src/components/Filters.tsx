@@ -8,6 +8,7 @@ import { useQuery } from "react-query";
 import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { FilterSvg } from "../svgElement/FiltersSvg";
+import { DeleteLogo } from "./DeleteLogo";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -59,10 +60,9 @@ function Filters({
           <span
             css={css`
               margin-left: 10px;
-              font-family: "Nunito Sans";
               font-style: normal;
               font-weight: 700;
-              font-size: 20px;
+              font-size: 18px;
               height: 18px;
               line-height: 22px;
               display: flex;
@@ -109,6 +109,14 @@ function Filters({
               action={() => {
                 onConfigurationChange({ filterTokens: [] });
               }}
+              svgIconRight={
+                <DeleteLogo
+                  heightParam={8}
+                  widthParam={8}
+                  colorSvg={"#C0272B"}
+                />
+              }
+              marginRigthOfSvg={"6px"}
             />
           </div>
         </div>
@@ -164,6 +172,9 @@ type createLabel = {
   margBottom?: string;
   marginOfSvg?: string;
   marginTop?: string;
+  hasBorder?: boolean;
+  svgIconRight?: React.ReactNode;
+  marginRigthOfSvg?: string;
 };
 export function CreateLabel({
   label,
@@ -174,6 +185,9 @@ export function CreateLabel({
   margBottom = "13px",
   marginOfSvg = "0px",
   marginTop = "0px",
+  marginRigthOfSvg = "0px",
+  hasBorder = true,
+  svgIconRight,
 }: createLabel) {
   return (
     <div
@@ -185,12 +199,14 @@ export function CreateLabel({
         gap: 4px;
         height: ${sizeHeight};
         background: #ffffff;
-        border: 1px solid
-          var(--openk9-embeddable-search--secondary-active-color);
+        border: ${hasBorder
+          ? "1px solid  var(--openk9-embeddable-search--secondary-active-color);"
+          : ""};
         border-radius: 20px;
         margin-left: 10px;
         margin-top: ${marginTop};
         cursor: pointer;
+        white-space: nowrap;
       `}
       onClick={action}
     >
@@ -202,14 +218,23 @@ export function CreateLabel({
           font-weight: 700;
         `}
       >
-        {svgIcon}
-        <span
+        <div
           css={css`
-            margin-left: ${marginOfSvg};
+            display: flex;
+            align-items: baseline;
           `}
         >
-          {label}
-        </span>
+          {svgIcon}
+          <span
+            css={css`
+              margin-left: ${marginOfSvg};
+              margin-right: ${marginRigthOfSvg};
+            `}
+          >
+            {label}
+          </span>
+          {svgIconRight}
+        </div>
       </p>
     </div>
   );
