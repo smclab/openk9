@@ -12,7 +12,9 @@
   --openk9-embeddable-search--secondary-background-color: #EEEEEE;
   --openk9-embeddable-search--secondary-background-tab-color: #fafafa;
   --openk9-embeddable-search--primary-background-tab-color:   #d54949;
-  --openk9-embeddable-tabs--primary-color:    #3F3F46;
+  --openk9-embeddable-tabs--primary-color: #3F3F46;
+  --openk9-embeddable-active-border-card--primary-color: #A1A1AA;
+  --openk9-embeddable-not-active-border-card--primary-color: #E4E4E7;
 }
 
 .openk9-embeddable-search--input-container {
@@ -23,12 +25,12 @@
 
 .openk9-embeddable-search--result-container {
   margin: 16px 16px 0px 16px;
-  border: 1px solid var(--openk9-embeddable-search--border-color);
+  border: 1px solid var(--openk9-embeddable-not-active-border-card--primary-color);
   border-radius: 4px;
 }
 
 .openk9-embeddable-search--result-container:hover {
-  border: 1px solid var(--openk9-embeddable-search--active-color);
+  border: 2px solid var(--openk9-embeddable-active-border-card--primary-color);
 }
 
 .openk9-embeddable-search--result-badge {

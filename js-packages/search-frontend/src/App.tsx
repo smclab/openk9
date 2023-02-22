@@ -129,7 +129,7 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
-          border-radius: 4px;
+          border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
           @media (min-width: 320px) and (max-width: 480px) {
             display: none;
@@ -147,7 +147,7 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
-          border-radius: 4px;
+          border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
       ></div>
@@ -159,7 +159,7 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
-          border-radius: 4px;
+          border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
           @media (min-width: 320px) and (max-width: 480px) {
             display: none;
