@@ -108,6 +108,10 @@ public class DocTypeField extends BaseDocTypeField {
 	@JsonIgnore
 	private Set<AclMapping> aclMappings = new LinkedHashSet<>();
 
+	public Set<DocTypeField> getChildren() {
+		return subDocTypeFields;
+	}
+
 	public Set<DocTypeField> getDocTypeFieldAndChildren() {
 		Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 		docTypeFields.add(this);
