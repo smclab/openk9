@@ -140,6 +140,11 @@ export function DateRangePicker({
               endDate: undefined,
             });
             setJourney();
+            setValueSelected({
+              keywordKey: undefined,
+              startDate: undefined,
+              endDate: undefined,
+            });
             onClose();
           }}
         >
