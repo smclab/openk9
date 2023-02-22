@@ -21,6 +21,12 @@ type FilterCategoryProps = {
   onAdd(searchToken: SearchToken): void;
   onRemove(searchToken: SearchToken): void;
   multiSelect: boolean;
+  setCoutFilterSelected: React.Dispatch<
+    React.SetStateAction<{
+      single: number;
+      multiple: number;
+    }>
+  >;
 };
 function FilterCategory({
   suggestionCategoryId,
@@ -29,6 +35,7 @@ function FilterCategory({
   onAdd,
   onRemove,
   multiSelect,
+  setCoutFilterSelected,
 }: FilterCategoryProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
@@ -70,7 +77,7 @@ function FilterCategory({
               <strong>{suggestionCategoryName}</strong>
             </div>
             <FontAwesomeIcon
-              icon={isOpen ? faChevronUp : faChevronDown}
+              icon={isOpen ? faChevronDown : faChevronUp}
               style={{
                 color: "var(--openk9-embeddable-search--secondary-text-color)",
                 marginRight: "8px",
@@ -126,7 +133,7 @@ function FilterCategory({
             <strong>{suggestionCategoryName}</strong>
           </div>
           <FontAwesomeIcon
-            icon={isOpen ? faChevronUp : faChevronDown}
+            icon={isOpen ? faChevronDown : faChevronUp}
             style={{
               color: "var(--openk9-embeddable-search--secondary-text-color)",
               marginRight: "8px",
@@ -214,6 +221,10 @@ function FilterCategory({
                             onChange={(event) => {
                               if (event.currentTarget.checked) {
                                 if (multiSelect) {
+                                  setCoutFilterSelected((countFilter) => ({
+                                    ...countFilter,
+                                    multiple: countFilter.multiple + 1,
+                                  }));
                                   onAdd(asSearchToken);
                                 } else {
                                   tokens.some((searchToken) => {
@@ -227,6 +238,10 @@ function FilterCategory({
                                 }
                               } else {
                                 onRemove(asSearchToken);
+                                setCoutFilterSelected((countFilter) => ({
+                                  ...countFilter,
+                                  multiple: countFilter.multiple - 1,
+                                }));
                               }
                             }}
                             css={css`
@@ -256,6 +271,7 @@ function FilterCategory({
                           onRemove={onRemove}
                           singleSelect={singleSelect}
                           setSingleSelect={setSingleselect}
+                          setCoutFilterSelected={setCoutFilterSelected}
                         />
                       )}
 
@@ -405,6 +421,7 @@ function SingleSelect({
   onRemove,
   singleSelect,
   setSingleSelect,
+  setCoutFilterSelected,
 }: {
   isChecked: boolean;
   multiSelect: boolean;
@@ -414,6 +431,12 @@ function SingleSelect({
   singleSelect: SearchToken | undefined;
   setSingleSelect: React.Dispatch<
     React.SetStateAction<SearchToken | undefined>
+  >;
+  setCoutFilterSelected: React.Dispatch<
+    React.SetStateAction<{
+      single: number;
+      multiple: number;
+    }>
   >;
 }) {
   return (
@@ -428,12 +451,22 @@ function SingleSelect({
               if (singleSelect) onRemove(singleSelect);
               setSingleSelect(asSearchToken);
               onAdd(asSearchToken);
+              setCoutFilterSelected((countFilter) => ({
+                ...countFilter,
+                single: 1,
+              }));
             } else {
               onRemove(asSearchToken);
             }
           }}
           onClick={(event) => {
-            if (isChecked) onRemove(asSearchToken);
+            if (isChecked) {
+              onRemove(asSearchToken);
+              setCoutFilterSelected((countFilter) => ({
+                ...countFilter,
+                single: 0,
+              }));
+            }
           }}
           style={{
             appearance: "none",

@@ -31,6 +31,10 @@ function Filters({
       setLastSearchQueryWithResults(searchQuery);
     }
   }, [data?.pages, isPreviousData, searchQuery]);
+  const [countFilterSelected, setCoutFilterSelected] = React.useState({
+    single: 0,
+    multiple: 0,
+  });
   return (
     <OverlayScrollbarsComponent
       style={{
@@ -99,15 +103,19 @@ function Filters({
                 font-weight: 700;
               `}
             >
-              2
+              {countFilterSelected.multiple + countFilterSelected.single}{" "}
             </span>
-            <span> filtri applicati</span>
+            <span>filtri applicati</span>
           </div>
           <div>
             <CreateLabel
               label="Rimuovi filtri"
               action={() => {
                 onConfigurationChange({ filterTokens: [] });
+                setCoutFilterSelected((countFilter) => ({
+                  single: 0,
+                  multiple: 0,
+                }));
               }}
               svgIconRight={
                 <DeleteLogo
@@ -139,6 +147,7 @@ function Filters({
               onAdd={onAddFilterToken}
               onRemove={onRemoveFilterToken}
               multiSelect={suggestionCategory?.multiSelect}
+              setCoutFilterSelected={setCoutFilterSelected}
             />
           );
         })}
