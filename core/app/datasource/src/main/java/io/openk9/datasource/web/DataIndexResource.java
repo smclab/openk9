@@ -14,6 +14,7 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.processor.indexwriter.IndexerEvents;
+import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.unchecked.Unchecked;
@@ -206,10 +207,7 @@ public class DataIndexResource {
 		List<Analyzer> analyzers =
 			docTypes
 				.stream()
-				.map(DocType::getDocTypeFields)
-				.flatMap(Collection::stream)
-				.map(DocTypeField::getDocTypeFieldAndChildren)
-				.flatMap(Collection::stream)
+				.flatMap(Utils::getDocTypeFieldsAndChildrenFrom)
 				.map(DocTypeField::getAnalyzer)
 				.filter(Objects::nonNull)
 				.distinct()

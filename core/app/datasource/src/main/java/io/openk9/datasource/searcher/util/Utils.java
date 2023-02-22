@@ -18,7 +18,9 @@
 package io.openk9.datasource.searcher.util;
 
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 
 import java.util.Collection;
@@ -39,17 +41,42 @@ public class Utils {
 	public static Stream<DocTypeField> getDocTypeFieldsFrom(
 		Collection<Datasource> datasources) {
 		return datasources.stream()
-			.flatMap(d -> d == null
-				? Stream.empty()
-				: d.getDataIndex() == null
-					? Stream.empty()
-					: d.getDataIndex().getDocTypes().stream())
-			.flatMap(dts -> dts == null
-				? Stream.empty()
-				: dts.getDocTypeFields().stream())
-			.flatMap(dtf -> dtf == null
-				? Stream.empty()
-				: dtf.getDocTypeFieldAndChildren().stream());
+			.flatMap(Utils::getDocTypesFrom)
+			.flatMap(Utils::getDocTypeFieldsAndChildrenFrom);
+	}
+
+	public static Stream<DocType> getDocTypesFrom(Datasource datasource) {
+		if (datasource == null) {
+			return Stream.empty();
+		}
+
+		DataIndex dataIndex = datasource.getDataIndex();
+
+		if (dataIndex == null) {
+			return Stream.empty();
+		}
+
+		return dataIndex.getDocTypes().stream();
+
+	}
+
+	public static Stream<DocTypeField> getDocTypeFieldsAndChildrenFrom(DocType docType) {
+
+		if (docType == null) {
+			return Stream.empty();
+		}
+
+		Stream.Builder<DocTypeField> builder = Stream.builder();
+
+		for (DocTypeField docTypeField : docType.getDocTypeFields()) {
+			builder.accept(docTypeField);
+			for (DocTypeField docTypeFieldAndChild : docTypeField.getChildren()) {
+				builder.accept(docTypeFieldAndChild);
+			}
+		}
+
+		return builder.build();
+
 	}
 
 	public static Map<Integer, ? extends TokenIndex> toTokenIndexMap(

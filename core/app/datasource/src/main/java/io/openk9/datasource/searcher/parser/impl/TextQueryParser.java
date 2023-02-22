@@ -1,6 +1,5 @@
 package io.openk9.datasource.searcher.parser.impl;
 
-import io.openk9.common.util.function.Predicates;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
@@ -19,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -62,20 +60,11 @@ public class TextQueryParser implements QueryParser {
 			boolean keywordKeyIsPresent =
 				keywordKey != null && !keywordKey.isBlank();
 
-			Predicate<DocTypeField> keywordKeyPredicate;
-
-			if (keywordKeyIsPresent) {
-				keywordKeyPredicate = docTypeField ->
-					docTypeField.getFieldName().equals(keywordKey);
-			}
-			else {
-				keywordKeyPredicate = Predicates.positive();
-			}
-
 			Map<String, Float> keywordBoostMap =
 				docTypeFieldList
 					.stream()
-					.filter(keywordKeyPredicate)
+					.filter(docTypeField ->
+						!keywordKeyIsPresent || docTypeField.getFieldName().equals(keywordKey))
 					.collect(
 						Collectors.toMap(
 							DocTypeField::getFieldName,
