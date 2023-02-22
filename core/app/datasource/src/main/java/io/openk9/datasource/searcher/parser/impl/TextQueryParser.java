@@ -89,6 +89,8 @@ public class TextQueryParser implements QueryParser {
 
 			boolQueryBuilder.boost(getBoost(queryParserConfig));
 
+			QueryType valuesQueryType = getValuesQueryType(queryParserConfig);
+
 			for (String value : values) {
 
 				boolean inQuote = Utils.inQuote(value);
@@ -97,7 +99,7 @@ public class TextQueryParser implements QueryParser {
 					value = Utils.removeQuote(value);
 				}
 
-				int length = value.split("\\s+").length;
+				int length = Utils.countWords(value);
 
 				if (!inQuote || length == 1) {
 
@@ -106,7 +108,9 @@ public class TextQueryParser implements QueryParser {
 
 					multiMatchQueryBuilder.fields(keywordBoostMap);
 
-					boolQueryBuilder.should(multiMatchQueryBuilder);
+					valuesQueryType
+						.useConfiguredQueryType(
+							boolQueryBuilder, multiMatchQueryBuilder);
 
 				}
 
@@ -126,7 +130,7 @@ public class TextQueryParser implements QueryParser {
 
 					multiMatchQueryBuilder.boost(2.0f);
 
-					getValuesQueryType(queryParserConfig)
+					valuesQueryType
 						.useConfiguredQueryType(
 							boolQueryBuilder, multiMatchQueryBuilder);
 
