@@ -18,9 +18,7 @@
 package io.openk9.datasource.searcher.util;
 
 import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 
 import java.util.Collection;
@@ -41,13 +39,17 @@ public class Utils {
 	public static Stream<DocTypeField> getDocTypeFieldsFrom(
 		Collection<Datasource> datasources) {
 		return datasources.stream()
-			.map(Datasource::getDataIndex)
-			.map(DataIndex::getDocTypes)
-			.flatMap(Collection::stream)
-			.map(DocType::getDocTypeFields)
-			.flatMap(Collection::stream)
-			.map(DocTypeField::getDocTypeFieldAndChildren)
-			.flatMap(Collection::stream);
+			.flatMap(d -> d == null
+				? Stream.empty()
+				: d.getDataIndex() == null
+					? Stream.empty()
+					: d.getDataIndex().getDocTypes().stream())
+			.flatMap(dts -> dts == null
+				? Stream.empty()
+				: dts.getDocTypeFields().stream())
+			.flatMap(dtf -> dtf == null
+				? Stream.empty()
+				: dtf.getDocTypeFieldAndChildren().stream());
 	}
 
 	public static Map<Integer, ? extends TokenIndex> toTokenIndexMap(
@@ -217,6 +219,24 @@ public class Utils {
 			}
 		}
 		return countQuote;
+	}
+
+	public static int countWords(String value) {
+
+		if (value == null || value.isBlank()) {
+			return 0;
+		}
+
+		int c = 1;
+
+		for (int i = 0; i < value.length(); i++) {
+			if (Character.isWhitespace(value.charAt(i))) {
+				c++;
+			}
+		}
+
+		return c;
+
 	}
 
 	private static class StringBuilderTokenIndex
