@@ -29,8 +29,17 @@ public class AggregatorAnnotator extends BaseAggregatorAnnotator {
 			semantics.put("keywordKey", aggregatorName);
 		}
 
+		String label;
+
+		if (annotator.getDocTypeField().getParentDocTypeField() == null) {
+			label = annotator.getDocTypeField().getName();
+		}
+		else {
+			label = annotator.getDocTypeField().getParentDocTypeField().getName();
+		}
+
 		semantics.put("tokenType", "TEXT");
-		semantics.put("label", fieldName);
+		semantics.put("label", label);
 		semantics.put("keywordKey", aggregatorName);
 		semantics.put("value", aggregatorKey);
 		semantics.put("score", 50.0f);

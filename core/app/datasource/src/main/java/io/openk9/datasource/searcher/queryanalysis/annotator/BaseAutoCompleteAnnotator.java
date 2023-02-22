@@ -91,13 +91,22 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 					String keyword = entry.getKey();
 					Object value = entry.getValue();
 
+					String label;
+
+					if (annotator.getDocTypeField().getParentDocTypeField() == null) {
+						label = annotator.getDocTypeField().getName();
+					}
+					else {
+						label = annotator.getDocTypeField().getParentDocTypeField().getName();
+					}
+
 					if (value instanceof String) {
 						categorySemantics.add(
 							CategorySemantics.of(
 								"$AUTOCOMPLETE",
 								Map.of(
 									"tokenType", "TEXT",
-									"label", keyword,
+									"label", label,
 									"keywordKey", keyword,
 									"value", value,
 									"score", 0.1f
@@ -112,7 +121,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 									"$AUTOCOMPLETE",
 									Map.of(
 										"tokenType", "TEXT",
-										"label", e2.getKey(),
+										"label", label,
 										"keywordKey", e2.getKey(),
 										"value", e2.getValue(),
 										"score", 0.1f
