@@ -41,6 +41,7 @@ function Filters({
         overflowY: "auto",
         position: "relative",
         height: "100%",
+        borderRadius: "8px",
       }}
     >
       <div
