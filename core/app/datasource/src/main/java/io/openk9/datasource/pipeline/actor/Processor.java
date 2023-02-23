@@ -10,6 +10,7 @@ import com.typesafe.config.Config;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Duration;
+import java.util.Map;
 
 public class Processor extends AbstractBehavior<Processor.Command> {
 
@@ -103,12 +104,7 @@ public class Processor extends AbstractBehavior<Processor.Command> {
 		ActorRef<Http.Command> commandActorRef =
 			getContext().spawnAnonymous(Http.create());
 
-		commandActorRef.tell(
-			new Http.POST(
-				responseActorRef, url,
-				jsonObject
-			)
-		);
+		commandActorRef.tell(new Http.POST(responseActorRef, url, jsonObject));
 
 		return newReceiveBuilder()
 			.onMessage(ResponseWrapper.class, this::onResponseWrapper)
@@ -130,23 +126,29 @@ public class Processor extends AbstractBehavior<Processor.Command> {
 
 		}
 
-		return started(start.url, JsonObject.of("body", start.jsonObject), start.replyTo());
+		return started(start.url, start.jsonObject, start.replyTo());
 
 	}
 
 	private Behavior<Command> waitGenerateToken(
 		String url, JsonObject jsonObject, ActorRef<Response> replyTo) {
+
 		return Behaviors.receive(Command.class)
 			.onMessage(
 				TokenResponseWrapper.class,
-				wrapper -> started(
-					url,
-					JsonObject.of(
-						"replyTo", wrapper.response.token(),
-						"body", jsonObject
-					),
-					replyTo
-				)
+				wrapper -> {
+
+					JsonObject newJson = new JsonObject();
+
+					for (Map.Entry<String, Object> entry : jsonObject) {
+						newJson.put(entry.getKey(), entry.getValue());
+					}
+
+					newJson.put("replyTo", wrapper.response.token());
+
+					return started(url, newJson, replyTo);
+
+				}
 			)
 			.build();
 	}

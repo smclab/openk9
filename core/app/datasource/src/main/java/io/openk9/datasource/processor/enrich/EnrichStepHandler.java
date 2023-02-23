@@ -109,21 +109,23 @@ public class EnrichStepHandler {
 
 					boolean async = type == EnrichItem.EnrichItemType.ASYNC;
 
+					Map<String, Object> enrichItemJsonConfig =
+						new JsonObject(jsonConfig).getMap();
+
 					return enrichPipelineActorSystem.call(
 						async,
 						serviceName,
-						EnrichPipelinePayload.of(
-							enrichStep.getPayload(),
-							new JsonObject(jsonConfig).getMap(),
-							replayTo
-						).toJson()
+						JsonObject.of(
+							"payload", enrichStep.getPayload(),
+							"enrichItemConfig", enrichItemJsonConfig
+						)
 					)
 						.invoke(response ->
 							enrichPipelineEmitter.send(
 								Message.of(
 									EnrichPipelinePayload.of(
-										enrichStep.getPayload(),
-										response.getMap(),
+										response.mapTo(DataPayload.class),
+										enrichItemJsonConfig,
 										replayTo
 									),
 									Metadata.of(
