@@ -58,7 +58,7 @@ export function App() {
             "search search"
             "filters result";
         }
-        grid-template-columns: 1fr 2fr 2fr;
+        grid-template-columns: 1fr 2.9fr 2fr;
         grid-template-rows: auto auto auto 1fr;
         grid-template-areas:
           "dockbar dockbar dockbar"

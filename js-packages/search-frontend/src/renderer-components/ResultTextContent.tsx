@@ -26,10 +26,14 @@ export function ResultTextContent<E>({
       ) : (
         <div
           css={css`
-            max-height: calc(21px * 5);
+            height: calc(17.2px * 2);
             overflow: hidden;
             word-wrap: break-word;
             word-break: break-word;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
           `}
         >
           {text}
