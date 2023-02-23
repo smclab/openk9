@@ -29,6 +29,7 @@ import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.openk9.searcher.grpc.TokenType;
+import io.openk9.searcher.grpc.Value;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
@@ -95,8 +96,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.build();
 					}
 
+					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
+
 					BoolQueryBuilder boolQueryBuilder =
-						createBoolQuery(tokenGroup, tenant, JWT.of(request.getJwt()));
+						createBoolQuery(tokenGroup, tenant, JWT.of(request.getJwt()), extraParams);
 
 					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -191,6 +194,21 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	}
 
+	private Map<String, List<String>> _getExtraParams(Map<String, Value> extraMap) {
+
+		if (extraMap == null || extraMap.isEmpty()) {
+			return Map.of();
+		}
+
+		Map<String, List<String>> extraParams = new HashMap<>(extraMap.size());
+
+		for (Map.Entry<String, Value> kv : extraMap.entrySet()) {
+			extraParams.put(kv.getKey(), new ArrayList<>(kv.getValue().getValueList()));
+		}
+
+		return extraParams;
+	}
+
 	@Override
 	public Uni<SuggestionsResponse> suggestionsQueryParser(QueryParserRequest request) {
 		return Uni.createFrom().deferred(() -> {
@@ -221,8 +239,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						);
 					}
 
+					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
+
 					BoolQueryBuilder boolQueryBuilder =
-						createBoolQuery(tokenGroup, tenant, JWT.of(request.getJwt()));
+						createBoolQuery(tokenGroup, tenant, JWT.of(request.getJwt()), extraParams);
 
 					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 

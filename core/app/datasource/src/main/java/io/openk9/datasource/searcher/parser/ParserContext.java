@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor(staticName = "of")
@@ -22,4 +23,5 @@ public class ParserContext {
 	private Bucket currentTenant;
 	private JsonObject queryParserConfig;
 	private JWT jwt;
+	private Map<String, List<String>> extraParams;
 }

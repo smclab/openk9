@@ -12,6 +12,7 @@ import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.TokenType;
+import io.openk9.searcher.grpc.Value;
 import io.openk9.searcher.mapper.InternalSearcherMapper;
 import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
@@ -22,6 +23,7 @@ import io.vertx.core.http.HttpServerRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.elasticsearch.action.search.SearchResponse;
@@ -45,6 +47,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -308,14 +311,23 @@ public class SearchResource {
 		return qastBuilder;
 	}
 
-	private QueryParserRequest getQueryParserRequest(
-		SearchRequest searchRequest) {
+	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
+
+		Map<String, Value> extra = new HashMap<>();
+
+		for (String headerName : supportedHeadersName) {
+			List<String> requestHeader = headers.getRequestHeader(headerName);
+			if (requestHeader != null && !requestHeader.isEmpty()) {
+				extra.put(headerName, Value.newBuilder().addAllValue(requestHeader).build());
+			}
+		}
 
 		return searcherMapper
 			.toQueryParserRequest(searchRequest)
 			.toBuilder()
 			.setVirtualHost(request.host())
 			.setJwt(rawToken == null ? "" : rawToken)
+			.putAllExtra(extra)
 			.build();
 
 	}
@@ -435,6 +447,12 @@ public class SearchResource {
 	@Context
 	HttpServerRequest request;
 
+	@Context
+	HttpHeaders
+	headers;
+
+	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
+	List<String> supportedHeadersName;
 
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
 		Collections.synchronizedMap(new IdentityHashMap<>());
