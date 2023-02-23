@@ -165,7 +165,7 @@ public abstract class BaseSearchService {
 
 	protected BoolQueryBuilder createBoolQuery(
 		Map<String, List<ParserSearchToken>> tokenGroup, Bucket bucket,
-		JWT jwt) {
+		JWT jwt, Map<String, List<String>> extraParams) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -190,6 +190,7 @@ public abstract class BaseSearchService {
 									getQueryParserConfig(
 										bucket, tokenType))
 								.jwt(jwt)
+								.extraParams(extraParams)
 								.build()
 						);
 					}
@@ -226,6 +227,7 @@ public abstract class BaseSearchService {
 							getQueryParserConfig(
 								bucket, queryParser.getType()))
 						.jwt(jwt)
+						.extraParams(extraParams)
 						.build()
 				);
 

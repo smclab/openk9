@@ -47,6 +47,11 @@ message QueryParserRequest {
   int64 suggestionCategoryId = 5;
   string virtualHost = 6;
   optional string jwt = 7;
+  map<string, Value> extra = 8;
+}
+
+message Value {
+  repeated string value = 1;
 }
 
 message SearchTokenRequest {

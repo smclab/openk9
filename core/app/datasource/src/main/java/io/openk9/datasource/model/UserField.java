@@ -86,7 +86,7 @@ public enum UserField {
 	public abstract void apply(
 		DocTypeField docTypeField, JWT jwt, BoolQueryBuilder boolQueryBuilder);
 
-	private static void apply(
+	public static void apply(
 		DocTypeField docTypeField,
 		String value,
 		BoolQueryBuilder boolQueryBuilder) {
@@ -98,7 +98,7 @@ public enum UserField {
 
 	}
 
-	private static void apply(
+	public static void apply(
 		DocTypeField docTypeField,
 		List<String> values,
 		BoolQueryBuilder boolQueryBuilder) {
