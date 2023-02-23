@@ -1,6 +1,7 @@
 package io.openk9.datasource.processor.enrich;
 
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.pipeline.actor.EnrichPipelineActorSystem;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
 import io.openk9.datasource.script.GroovyService;
@@ -106,40 +107,35 @@ public class EnrichStepHandler {
 
 					EnrichItem.EnrichItemType type = enrichItem.getType();
 
-					switch (type) {
-						case SYNC:
-							logger.warn("SYNC type to be implemented, fallback to ASYNC");
-						case ASYNC:
-						default:
-							return Uni
-								.createFrom()
-								.emitter((emitter) -> {
-									try {
-										enrichPipelineEmitter.send(
-											Message.of(
-												EnrichPipelinePayload.of(
-													enrichStep.getPayload(),
-													new JsonObject(jsonConfig).getMap(),
-													replayTo
-												),
-												Metadata.of(
-													OutgoingRabbitMQMetadata
-														.builder()
-														.withRoutingKey(serviceName)
-														.withDeliveryMode(2)
-														.build()
-												)
-											)
-										);
-										emitter.complete(null);
-									}
-									catch (Exception e) {
-										emitter.fail(e);
-									}
+					boolean async = type == EnrichItem.EnrichItemType.ASYNC;
 
-								});
-					}
-
+					return enrichPipelineActorSystem.call(
+						async,
+						serviceName,
+						EnrichPipelinePayload.of(
+							enrichStep.getPayload(),
+							new JsonObject(jsonConfig).getMap(),
+							replayTo
+						).toJson()
+					)
+						.invoke(response ->
+							enrichPipelineEmitter.send(
+								Message.of(
+									EnrichPipelinePayload.of(
+										enrichStep.getPayload(),
+										response.getMap(),
+										replayTo
+									),
+									Metadata.of(
+										OutgoingRabbitMQMetadata
+											.builder()
+											.withRoutingKey(replayTo)
+											.withDeliveryMode(2)
+											.build()
+									)
+								)
+							)
+						).replaceWithVoid();
 
 				});
 		});
@@ -191,6 +187,9 @@ public class EnrichStepHandler {
 
 	@Inject
 	GroovyService groovyService;
+
+	@Inject
+	EnrichPipelineActorSystem enrichPipelineActorSystem;
 
 
 	public static final String ROUTING_KEY_PREFIX = "io.openk9.enrich.pipeline.";

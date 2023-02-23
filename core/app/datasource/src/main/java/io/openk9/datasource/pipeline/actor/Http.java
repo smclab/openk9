@@ -1,0 +1,101 @@
+package io.openk9.datasource.pipeline.actor;
+
+import akka.actor.typed.ActorRef;
+import akka.actor.typed.Behavior;
+import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.Behaviors;
+import com.typesafe.config.Config;
+import io.quarkus.arc.Arc;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
+import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
+import io.vertx.mutiny.ext.web.client.WebClient;
+
+public class Http {
+
+	public sealed interface Command {}
+	public record GET(ActorRef<Response> replyTo, String url)
+		implements Command {}
+	public record POST(ActorRef<Response> replyTo, String url, JsonObject body)
+		implements Command {}
+	public sealed interface Response { byte[] body();}
+	public record OK(byte[] body) implements Response {}
+	public record ERROR(int statusCode, String statusMessage, byte[] body) implements Response {}
+
+	public static Behavior<Command> create() {
+		return Behaviors.setup(
+			ctx -> initial(Arc.container().select(WebClient.class).get(), ctx));
+	}
+
+	public static Behavior<Command> create(WebClient webClient) {
+		return Behaviors.setup(ctx -> initial(webClient, ctx));
+	}
+
+	private static Behavior<Command> initial(WebClient webClient, ActorContext<Command> ctx) {
+
+		Config config = ctx.getSystem().settings().config();
+
+		boolean isNull = config.getIsNull("openk9.pipeline.http.timeout");
+		
+		long timeout = isNull ? 10_000L : config.getLong("openk9.pipeline.http.timeout");
+
+		return Behaviors
+			.receive(Command.class)
+			.onMessage(GET.class, get -> onGet(webClient, timeout, get, ctx))
+			.onMessage(POST.class, post -> onPost(webClient, timeout, post, ctx))
+			.build();
+	}
+
+	private static Behavior<Command> onPost(
+		WebClient webClient, long timeout, POST post, 
+		ActorContext<Command> ctx) {
+
+		_handleResponse(
+			ctx, post.replyTo(),
+			webClient
+				.post(post.url())
+				.timeout(timeout)
+				.sendJsonObject(post.body())
+		);
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onGet(
+		WebClient webClient, long timeout, GET get, ActorContext<Command> ctx) {
+
+		_handleResponse(
+			ctx, get.replyTo(), 
+			webClient
+				.get(get.url())
+				.timeout(timeout)
+				.send()
+		);
+
+		return Behaviors.same();
+
+	}
+
+	private static void _handleResponse(
+		ActorContext<Command> ctx, ActorRef<Response> responseActorRef,
+		Uni<HttpResponse<Buffer>> httpResponseUni) {
+
+		httpResponseUni
+			.onItem()
+			.transform(resp -> {
+				if (resp.statusCode() == 200) {
+					return new OK(resp.body().getBytes());
+				}
+				else {
+					return new ERROR(resp.statusCode(), resp.statusMessage(), resp.body().getBytes());
+				}
+			})
+			.onFailure()
+			.invoke(t -> responseActorRef.tell(new ERROR(500, t.getMessage(), t.getMessage().getBytes())))
+			.subscribe()
+			.with(responseActorRef::tell);
+
+	}
+
+}

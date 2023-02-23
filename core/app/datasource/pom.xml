@@ -190,6 +190,10 @@
       <groupId>io.openk9.common</groupId>
       <artifactId>model</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor-typed_${scala.version}</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
