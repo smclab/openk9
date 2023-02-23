@@ -185,6 +185,7 @@ type createLabel = {
   hasBorder?: boolean;
   svgIconRight?: React.ReactNode;
   marginRigthOfSvg?: string;
+  colorLabel?: string;
 };
 export function CreateLabel({
   label,
@@ -198,6 +199,7 @@ export function CreateLabel({
   marginRigthOfSvg = "0px",
   hasBorder = true,
   svgIconRight,
+  colorLabel = "var(--openk9-embeddable-search--secondary-active-color)",
 }: createLabel) {
   return (
     <div
@@ -222,7 +224,7 @@ export function CreateLabel({
     >
       <p
         css={css`
-          color: var(--openk9-embeddable-search--secondary-active-color);
+          color: ${colorLabel};
           margin-bottom: ${margBottom};
           font-size: ${sizeFont};
           font-weight: 700;

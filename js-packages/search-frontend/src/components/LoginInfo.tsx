@@ -9,6 +9,7 @@ import { faUser } from "@fortawesome/free-solid-svg-icons/faUser";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
 import { useClickAway } from "./useClickAway";
 import { LoginLogo } from "./LogoLogin";
+import { CreateLabel } from "./Filters";
 
 type LoginInfoProps = {};
 function LoginInfoComponent({}: LoginInfoProps) {
@@ -27,17 +28,17 @@ function LoginInfoComponent({}: LoginInfoProps) {
   });
   if (!authenticated) {
     return (
-      <button
-        onClick={() => {
+      <CreateLabel
+        svgIcon={<LoginLogo colorFill="#000000" />}
+        label="Login"
+        marginOfSvg="10px"
+        sizeFont="16px"
+        colorLabel={"black"}
+        sizeHeight={"24px"}
+        action={() => {
           client.authenticate();
         }}
-        css={css`
-          ${buttonStyle};
-        `}
-      >
-        <FontAwesomeIcon icon={faRightToBracket} />
-        &nbsp;Login
-      </button>
+      />
     );
   } else {
     return (
