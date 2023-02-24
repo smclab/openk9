@@ -9,18 +9,22 @@ import {
   HighlightableText,
   ResultLink,
   ResultTextContent,
+  FileIcon,
 } from "../../../renderer-components";
+import { ResultTitleTwo } from "../../../renderer-components/ResultTitleTwo";
+import { ResultContainerTwo } from "../../../renderer-components/ResultContainerTwo";
+import { ResultLinkTwo } from "../../../renderer-components/ResultLinkTwo";
+import { MoreDetailCard } from "../../../renderer-components/MoreDetailCard";
+import { ResultTextContentTwo } from "../../../renderer-components/ResultTextContentTwo";
 
 type PdfResultProps = { result: GenericResultItem<PdfResultItem> };
 export function PdfResult({ result }: PdfResultProps) {
+  console.log(result);
   return (
-    <ResultContainer icon={<FontAwesomeIcon icon={faFilePdf} />}>
-      <ResultTitle>
+    <ResultContainerTwo>
+      <ResultTitleTwo>
         <HighlightableText result={result} path="document.title" />
-      </ResultTitle>
-      <ResultLink href={result.source.document.url}>
-        <HighlightableText result={result} path="document.url" />
-      </ResultLink>
+      </ResultTitleTwo>
       {"document.content" in result.highlight ? (
         <div
           style={{
@@ -32,6 +36,9 @@ export function PdfResult({ result }: PdfResultProps) {
             textOverflow: "ellipsis",
             wordWrap: "break-word",
             wordBreak: "break-word",
+            fontWeight: "400",
+            fontSize: "15px",
+            color: "#71717A",
           }}
         >
           <HighlightableText result={result} path="document.content" />
@@ -47,11 +54,18 @@ export function PdfResult({ result }: PdfResultProps) {
             textOverflow: "ellipsis",
             wordWrap: "break-word",
             wordBreak: "break-word",
+            fontWeight: "400",
+            fontSize: "15px",
+            color: "#71717A",
           }}
         >
-          <ResultTextContent result={result} path="document.summary" />
+          <ResultTextContentTwo result={result} path="document.summary" />
         </div>
       )}
-    </ResultContainer>
+      <MoreDetailCard icon={<FontAwesomeIcon icon={faFilePdf} />} />
+      <ResultLinkTwo href={result.source.document.url}>
+        <HighlightableText result={result} path="document.url" />
+      </ResultLinkTwo>
+    </ResultContainerTwo>
   );
 }

@@ -25,7 +25,7 @@
 
 .openk9-embeddable-search--result-container {
   margin: 16px 16px 0px 16px;
-  border: 1px solid var(--openk9-embeddable-not-active-border-card--primary-color);
+  border: 2px solid var(--openk9-embeddable-not-active-border-card--primary-color);
   border-radius: 4px;
 }
 
