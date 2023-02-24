@@ -1137,7 +1137,7 @@ export function CreateFieldDinamically({
             isNumber={true}
             value={value}
             onChange={(event) => {
-              setTemplateChoice({ ...templateChoice, [key]: event.currentTarget.value });
+              setTemplateChoice({ ...templateChoice, [key]: parseFloat(event.currentTarget.value) });
             }}
           />
         );
