@@ -123,11 +123,7 @@ public class EnrichStepHandler {
 						.invoke(response ->
 							enrichPipelineEmitter.send(
 								Message.of(
-									EnrichPipelinePayload.of(
-										response.mapTo(DataPayload.class),
-										enrichItemJsonConfig,
-										replayTo
-									),
+									response.mapTo(EnrichPipelinePayload.class),
 									Metadata.of(
 										OutgoingRabbitMQMetadata
 											.builder()
