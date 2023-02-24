@@ -20,16 +20,16 @@ export function App() {
   return (
     <div
       css={css`
-        width: 100vw;
-        height: 100vh;
         background-color: var(
           --openk9-embeddable-search--secondary-background-color
         );
+        width: 100vw;
+        height: 100vh;
         display: grid;
-        grid-column-gap: 23px;
-        padding-bottom: 16px;
-        padding-left: 16px;
-        padding-right: 16px;
+        grid-column-gap: 30px;
+        padding-bottom: 30px;
+        padding-left: 50px;
+        padding-right: 50px;
         box-sizing: border-box;
         @media (min-width: 320px) and (max-width: 480px) {
           grid-template-columns: 1fr;
@@ -58,7 +58,7 @@ export function App() {
             "search search"
             "filters result";
         }
-        grid-template-columns: 1fr 2.9fr 2fr;
+        grid-template-columns: 1fr 2.5fr 1.8fr;
         grid-template-rows: auto auto auto 1fr;
         grid-template-areas:
           "dockbar dockbar dockbar"
@@ -78,8 +78,8 @@ export function App() {
       <div
         css={css`
           grid-area: dockbar;
-          padding: 8px 16px;
-          margin: 0px -16px;
+          padding: 8px 50px;
+          margin: 0px -50px;
           box-shadow: 0 1px 2px 0 rgb(0 0 0 / 10%);
           display: flex;
           align-items: center;

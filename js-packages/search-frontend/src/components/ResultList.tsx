@@ -142,6 +142,7 @@ function ResultCount({ children }: ResultCountProps) {
                     border: 1px solid #a292926b;
                     outline: none;
                   }
+                  background: transparent;
                 `}
               >
                 <option>Data Crescente</option>

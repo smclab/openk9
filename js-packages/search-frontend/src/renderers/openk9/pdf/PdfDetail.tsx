@@ -10,8 +10,13 @@ import {
   DetailTextContent,
   DetailTitle,
   HighlightableText,
+  ResultTextContentTwo,
+  DetailTextContentTwo,
+  MoreDetailCard,
+  ResultLinkTwo,
 } from "../../../renderer-components";
 import { GenericResultItem } from "../../../components/client";
+import { css } from "styled-components/macro";
 
 type PdfDetailProps = {
   result: GenericResultItem<PdfResultItem>;
@@ -19,21 +24,56 @@ type PdfDetailProps = {
 export function PdfDetail({ result }: PdfDetailProps) {
   return (
     <DetailContainer>
-      <DetailIconContainer>
-        <FontAwesomeIcon icon={faFilePdf} />
-      </DetailIconContainer>
-      <DetailTitle>
+      <DetailTitle fontSize="19px" fontweigth="600">
         <HighlightableText result={result} path="document.title" />
       </DetailTitle>
-      <DetailLink href={result.source.document.url}>
-        <HighlightableText result={result} path="document.url" />
-      </DetailLink>
+      {"document.content" in result.highlight ? (
+        <div
+          css={css`
+            margin-top: 8px;
+            max-width: 100%;
+            line-height: 1em;
+            max-height: 6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-word;
+          `}
+        >
+          <HighlightableText result={result} path="document.content" />
+        </div>
+      ) : (
+        <div
+          css={css`
+            margin-top: 8px;
+            max-width: 100%;
+            line-height: 1em;
+            max-height: 6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-word;
+            font-style: normal;
+            font-weight: 400;
+            font-size: 15px;
+            color: #71717a;
+          `}
+        >
+          <DetailTextContent result={result} path="document.summary" />
+        </div>
+      )}
+      <MoreDetailCard icon={<FontAwesomeIcon icon={faFilePdf} />} />
+      <div style={{ marginTop: "10px", marginLeft: "5px" }}>
+        <DetailLink href={result.source.document.url}>
+          <HighlightableText result={result} path="document.url" />
+        </DetailLink>
+      </div>
       {result.source.file.lastModifiedDate && (
         <DetailAttribute label="Last modified">
           {new Date(result.source.file.lastModifiedDate).toLocaleString()}
         </DetailAttribute>
       )}
-      <div>
+      <div style={{ marginTop: "15px" }}>
         {result.source.resources.binaries.map((binary) => {
           const url = `/api/searcher/resources/${result.source.datasourceId}/${result.source.id}/${binary.id}`;
           return (
@@ -54,37 +94,6 @@ export function PdfDetail({ result }: PdfDetailProps) {
           );
         })}
       </div>
-      {"document.content" in result.highlight ? (
-        <div
-          style={{
-            marginTop: "8px",
-            maxWidth: "100%",
-            lineHeight: "1em",
-            maxHeight: "6em",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            wordWrap: "break-word",
-            wordBreak: "break-word",
-          }}
-        >
-          <HighlightableText result={result} path="document.content" />
-        </div>
-      ) : (
-        <div
-          style={{
-            marginTop: "8px",
-            maxWidth: "100%",
-            lineHeight: "1em",
-            maxHeight: "6em",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            wordWrap: "break-word",
-            wordBreak: "break-word",
-          }}
-        >
-          <DetailTextContent result={result} path="document.summary" />
-        </div>
-      )}
     </DetailContainer>
   );
 }

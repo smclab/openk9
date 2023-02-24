@@ -20,3 +20,7 @@ export * from "./DownloadButton";
 export * from "./ImagesViewer";
 export * from "./truncatedLineStyle";
 export * from "./FileIcon";
+export * from "./ResultTextContentTwo";
+export * from "./DetailTextContentTwo";
+export * from "./MoreDetailCard";
+export * from "./ResultLinkTwo";
