@@ -26,7 +26,7 @@ export function App() {
           --openk9-embeddable-search--secondary-background-color
         );
         display: grid;
-        grid-column-gap: 16px;
+        grid-column-gap: 23px;
         padding-bottom: 16px;
         padding-left: 16px;
         padding-right: 16px;

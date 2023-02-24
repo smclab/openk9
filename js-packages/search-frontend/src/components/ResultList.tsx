@@ -119,9 +119,35 @@ function ResultCount({ children }: ResultCountProps) {
           <span
             css={css`
               margin-rigth: 10px;
+              display: flex;
             `}
           >
-            ordina per "spazio per select"
+            <span>ordina per </span>
+            <div
+              className="form-group"
+              css={css`
+                margin-left: 8px;
+              `}
+            >
+              <select
+                className="form-control"
+                id="regularSelectElement"
+                css={css`
+                  border-radius: 34px;
+                  max-width: 122px;
+                  border: 1px solid #a292926b;
+                  height: 30px;
+                  cursor: pointer;
+                  :focus {
+                    border: 1px solid #a292926b;
+                    outline: none;
+                  }
+                `}
+              >
+                <option>Data Crescente</option>
+                <option>Data Decrescente</option>
+              </select>
+            </div>
           </span>
         </div>
       </div>

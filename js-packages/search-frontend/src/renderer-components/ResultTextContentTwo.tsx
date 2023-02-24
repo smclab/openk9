@@ -5,7 +5,7 @@ import { css } from "styled-components/macro";
 import { truncatedLineStyle } from "./truncatedLineStyle";
 import { HighlightableTextProps } from "./HighlightableText";
 
-export function ResultTextContent<E>({
+export function ResultTextContentTwo<E>({
   result,
   path,
 }: HighlightableTextProps<E>) {
@@ -26,11 +26,14 @@ export function ResultTextContent<E>({
       ) : (
         <div
           css={css`
-            height: calc(21px * 5);
+            height: calc(15.5px * 3);
             overflow: hidden;
             word-wrap: break-word;
             word-break: break-word;
             text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
           `}
         >
           {text}

@@ -5,7 +5,7 @@ type ResultContainerProps = {
   icon?: React.ReactNode;
   children: React.ReactNode;
 };
-export function ResultContainer({ icon, children }: ResultContainerProps) {
+export function ResultContainerTwo({ icon, children }: ResultContainerProps) {
   return (
     <div
       css={css`
@@ -21,20 +21,7 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
           width: 30px;
           margin-right: 8px;
         `}
-      >
-        <div
-          css={css`
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--openk9-embeddable-search--primary-color);
-          `}
-        >
-          {icon}
-        </div>
-      </div>
+      ></div>
       <div
         css={css`
           margin-left: 8px;
