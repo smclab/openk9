@@ -17,6 +17,7 @@ export function DetailLink({ href, children }: DetailLinkProps) {
         word-wrap: break-word;
         word-break: break-word;
         display: block;
+        color: #c0272b;
       `}
     >
       {children}

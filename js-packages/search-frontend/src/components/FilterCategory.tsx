@@ -363,7 +363,7 @@ function useInfiniteSuggestions(
   activeSuggestionCategory: number,
   suggestKeyword: string,
 ) {
-  const pageSize = 10;
+  const pageSize = 5;
   const client = useOpenK9Client();
 
   let searchQuery: SearchToken[] | null = [];

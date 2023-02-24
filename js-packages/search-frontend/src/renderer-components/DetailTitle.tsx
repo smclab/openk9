@@ -3,14 +3,22 @@ import { css } from "styled-components/macro";
 
 type DetailTitleProps = {
   children: React.ReactNode;
+  fontSize?: string;
+  fontweigth?: string;
+  marginBottom?: string;
 };
-export function DetailTitle({ children }: DetailTitleProps) {
+export function DetailTitle({
+  children,
+  fontSize = "1.5em",
+  fontweigth = "500",
+  marginBottom = "8px",
+}: DetailTitleProps) {
   return (
     <div
       css={css`
-        font-size: 1.5em;
-        font-weight: 500;
-        margin-bottom: 8px;
+        font-size: ${fontSize};
+        font-weight: ${fontweigth};
+        margin-bottom: ${marginBottom};
       `}
     >
       {children}

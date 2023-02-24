@@ -9,7 +9,7 @@ export function ResultTitleTwo({ children }: ResultTitleProps) {
       css={css`
         font-weight: 500;
         margin-bottom: 8px;
-        font-weight: 700;
+        font-weight: 600;
         font-size: 19px;
         line-height: 26px;
         ${truncatedLineStyle}
