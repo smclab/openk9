@@ -7,6 +7,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import com.typesafe.config.Config;
+import io.openk9.datasource.pipeline.util.Util;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Duration;
@@ -159,26 +160,9 @@ public class Processor extends AbstractBehavior<Processor.Command> {
 
 	private long _getTimeout(Config config) {
 
-		String timeoutText = "PT10m";
-
-		String path = "openk9.pipeline.http.timeout";
-
-		if (config.hasPathOrNull(path) && !config.getIsNull(path)) {
-			timeoutText = config.getString(path);
-			if (!timeoutText.startsWith("PT")) {
-				timeoutText = "PT" + timeoutText;
-			}
-		}
-
-		try {
-			return Duration.parse(timeoutText).toMillis();
-		}
-		catch (Exception e) {
-			getContext().getLog().warn(
-				"Invalid timeout value: {}", timeoutText);
-			return Duration.ofMinutes(10).toMillis();
-		}
-
+		return Util.getDurationFromActorContext(
+			getContext(), "openk9.pipeline.http.timeout", () -> Duration.ofSeconds(10))
+			.toMillis();
 	}
 
 	public static Behavior<Command> create(boolean async) {

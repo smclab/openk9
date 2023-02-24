@@ -4,13 +4,15 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
-import com.typesafe.config.Config;
+import io.openk9.datasource.pipeline.util.Util;
 import io.quarkus.arc.Arc;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+
+import java.time.Duration;
 
 public class Http {
 
@@ -34,11 +36,12 @@ public class Http {
 
 	private static Behavior<Command> initial(WebClient webClient, ActorContext<Command> ctx) {
 
-		Config config = ctx.getSystem().settings().config();
+		Duration durationFromActorContext =
+			Util.getDurationFromActorContext(
+				ctx, "openk9.pipeline.http.timeout",
+				() -> Duration.ofSeconds(10));
 
-		boolean isNull = config.getIsNull("openk9.pipeline.http.timeout");
-		
-		long timeout = isNull ? 10_000L : config.getLong("openk9.pipeline.http.timeout");
+		long timeout = durationFromActorContext.toMillis();
 
 		return Behaviors
 			.receive(Command.class)
