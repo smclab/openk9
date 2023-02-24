@@ -57,7 +57,7 @@ public class Http {
 		_handleResponse(
 			ctx, post.replyTo(),
 			webClient
-				.post(post.url())
+				.postAbs(post.url())
 				.timeout(timeout)
 				.sendJsonObject(post.body())
 		);
@@ -71,7 +71,7 @@ public class Http {
 		_handleResponse(
 			ctx, get.replyTo(), 
 			webClient
-				.get(get.url())
+				.getAbs(get.url())
 				.timeout(timeout)
 				.send()
 		);
