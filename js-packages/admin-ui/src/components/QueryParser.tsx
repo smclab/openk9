@@ -252,7 +252,7 @@ export function QueryParserConfig() {
                         className="form-control"
                         value={templateChoice?.[keysOfFields[i]]}
                         onChange={(event) => {
-                          setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: event.currentTarget.value });
+                          setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: parseFloat(event.currentTarget.value) });
                         }}
                       ></input>
                     </div>
@@ -319,12 +319,12 @@ const TemplateQueryParser = [
     Json: `
   {
     "scale": "",
-     "boost": 50
+     "boost": 50.0
   }`,
     descriptionAttribute: `
   {
     "scale": "string",
-    "boost": "long"
+    "boost": "float"
   }`,
     visible: "false",
   },
@@ -368,14 +368,14 @@ const TemplateQueryParser = [
     description: "",
     Json: `
     {
-      "boost": 50,
+      "boost": 50.0,
        "queryCondition": "string",
        "manageEntityName": true
     }`,
     visible: "false",
     descriptionAttribute: `
     {
-      "boost": "long", 
+      "boost": "float", 
       "queryCondition": "string",
       "manageEntityName": "boolean"
     }`,
@@ -386,14 +386,14 @@ const TemplateQueryParser = [
     description: "",
     Json: `
     {
-      "boost": 50,
+      "boost": 50.0,
        "valuesQueryType": {"key":"MUST","key2":"SHOULD","key3":"MIN_SHOULD_1","key4":"MIN_SHOULD_2","key5":"MIN_SHOULD_3","key6":"MUST_NOT","key7":"FILTER"}, 
        "globalQueryType": {"key":"MUST","key2":"SHOULD","key3":"MIN_SHOULD_1","key4":"MIN_SHOULD_2","key5":"MIN_SHOULD_3","key6":"MUST_NOT","key7":"FILTER"}
     }`,
     visible: "false",
     descriptionAttribute: `
     {
-      "boost": "50",
+      "boost": "float",
       "valuesQueryType": "string", 
       "globalQueryType": "string"
     }`,
