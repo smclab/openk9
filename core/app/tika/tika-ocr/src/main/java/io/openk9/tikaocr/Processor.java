@@ -45,19 +45,7 @@ public class Processor {
 			tikaProcessor.process(
 				json, false, 0, null);
 
-		emitter.send(
-			Message.of(
-				response.getItem2(),
-				Metadata.of(
-					OutgoingRabbitMQMetadata
-						.builder()
-						.withRoutingKey(response.getItem1())
-						.withDeliveryMode(2)
-						.build()
-				)
-		));
-
-		return message.ack();
+		return null;
 
 	}
 

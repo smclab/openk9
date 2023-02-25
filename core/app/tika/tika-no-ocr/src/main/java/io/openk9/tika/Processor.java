@@ -17,6 +17,7 @@
 
 package io.openk9.tika;
 
+import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
 import io.openk9.tika.config.TikaConfiguration;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.smallrye.reactive.messaging.annotations.Blocking;
@@ -30,6 +31,7 @@ import org.eclipse.microprofile.reactive.messaging.Metadata;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
@@ -37,17 +39,18 @@ public class Processor {
 
 	@Incoming("tika-no-ocr")
 	@Blocking
-	public CompletionStage<Void> process(Message<?> message) {
-
-		JsonObject json = _messagePayloadToJson(message);
+	public CompletionStage<Void> process(EnrichPipelinePayload enrichPipelinePayload) {
 
 		Tuple2<String, JsonObject> response =
 			tikaProcessor.process(
-				json, true, tikaConfiguration.getCharacterLength(),
+				enrichPipelinePayload.toJson(), true, tikaConfiguration.getCharacterLength(),
 				tikaConfiguration.getOcrRoutingKey());
 
-		emitter.send(
-			Message.of(
+		if (Objects.equals(
+			response.getItem1(),
+			tikaConfiguration.getOcrRoutingKey())) {
+
+			Message<JsonObject> message = Message.of(
 				response.getItem2(),
 				Metadata.of(
 					OutgoingRabbitMQMetadata
@@ -56,19 +59,14 @@ public class Processor {
 						.withDeliveryMode(2)
 						.build()
 				)
-		));
+			);
 
-		return message.ack();
+			emitter.send(message);
 
-	}
+			return message.ack();
+		}
 
-	private JsonObject _messagePayloadToJson(Message<?> message) {
-		Object obj = message.getPayload();
-
-		return obj instanceof JsonObject
-			? (JsonObject) obj
-			: new JsonObject(new String((byte[]) obj));
-
+		return null;
 	}
 
 	@Channel("tika-sender")

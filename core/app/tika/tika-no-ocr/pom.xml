@@ -57,6 +57,12 @@
 			<groupId>io.openk9.common</groupId>
 			<artifactId>resources-common</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.openk9.app</groupId>
+			<artifactId>datasource</artifactId>
+			<version>1.4.0-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 
 

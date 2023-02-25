@@ -17,6 +17,7 @@
 
 package io.openk9.tika;
 
+import io.openk9.tika.client.datasource.DatasourceClient;
 import io.openk9.tika.client.filemanager.FileManagerClient;
 import io.openk9.tika.util.Detectors;
 import io.quarkus.tika.TikaContent;
@@ -233,6 +234,8 @@ public class TikaProcessor {
                             fileManagerClient.delete(resourceId, schemaName);
                         }
 
+                        datasourceClient.send(replyTo, jsonObject);
+
                         return Tuple2.of(replyTo, response);
 
                     }
@@ -262,6 +265,8 @@ public class TikaProcessor {
 
         }
 
+        datasourceClient.send(replyTo, jsonObject);
+
         return Tuple2.of(replyTo, jsonObject);
 
     }
@@ -278,5 +283,9 @@ public class TikaProcessor {
     @Inject
     @RestClient
     FileManagerClient fileManagerClient;
+
+    @Inject
+    @RestClient
+    DatasourceClient datasourceClient;
 
 }
