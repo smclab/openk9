@@ -181,6 +181,7 @@ export function Search({
                     selected={selected}
                     onSelect={onSelect}
                     isAutoSlected={isAutoSelected}
+                    setOpenedDropdown={setOpenedDropdown}
                   />
                 );
               })}
