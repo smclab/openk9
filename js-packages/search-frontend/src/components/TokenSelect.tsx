@@ -44,12 +44,12 @@ export function TokenSelect({
       : "none"};
     padding-left: ${isSelected ? "8px" : "16px"};
   `;
-  const deseleziona = () => css`
+  const deseleziona = (isSelected: boolean) => css`
     padding: 8px 16px;
     :hover {
     }
     background-color: ${"var(--openk9-embeddable-search--secondary-background-color)"};
-    cursor: pointer;
+    cursor: ${!isSelected ? "pointer" : "not-allowed"};
   `;
   return (
     <div
@@ -92,13 +92,13 @@ export function TokenSelect({
         >
           <div
             onClick={() => {
-              onSelect(null);
+              if (selected) onSelect(null);
             }}
             onMouseEnter={() => {
               onOptionIndexChange(0);
             }}
             css={css`
-              ${deseleziona()};
+              ${deseleziona(selected === null)};
             `}
           >
             <div
@@ -204,7 +204,7 @@ type Status =
   | "not-interactive";
 const statusStyles: Record<Status, any> = {
   "can-select": css`
-    color: deeppink;
+    color: var(--openk9-embeddable-search--primary-color);
   `,
   "auto-selected": css`
     color: lightseagreen;
