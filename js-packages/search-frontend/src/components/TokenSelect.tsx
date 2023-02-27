@@ -12,6 +12,12 @@ type TokenSelectProps = {
   optionIndex: number | null;
   onOptionIndexChange(optionIndex: number): void;
   isAutoSlected: boolean;
+  setOpenedDropdown: React.Dispatch<
+    React.SetStateAction<{
+      textPosition: number;
+      optionPosition: number;
+    } | null>
+  >;
 };
 export function TokenSelect({
   span,
@@ -21,6 +27,7 @@ export function TokenSelect({
   optionIndex,
   onOptionIndexChange,
   isAutoSlected,
+  setOpenedDropdown,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const status: Status = isInteractive
@@ -109,7 +116,15 @@ export function TokenSelect({
                 color: var(--openk9-embeddable-search--secondary-text-color);
               `}
             >
-              Deseleziona <DeleteLogo widthParam={10} heightParam={10} />
+              Deseleziona
+              <div
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setOpenedDropdown(null);
+                }}
+              >
+                <DeleteLogo widthParam={10} heightParam={10} />
+              </div>
             </div>
           </div>
           {span.tokens.map((option, index) => {
