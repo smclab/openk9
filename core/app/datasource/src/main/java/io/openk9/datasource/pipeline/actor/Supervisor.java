@@ -8,13 +8,11 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Supervisor extends AbstractBehavior<Supervisor.Command> {
 
 	public Supervisor(ActorContext<Command> context) {
 		super(context);
+		this.tokenActorRef = context.spawn(Token.create(), "token-actor");
 	}
 
 	@Override
@@ -45,27 +43,14 @@ public class Supervisor extends AbstractBehavior<Supervisor.Command> {
 
 	private Behavior<Command> onCall(Call call) {
 
-		boolean async = call.async;
-
-		ActorRef<Processor.Command> actorRef;
-
-		if (async) {
-
-			int size = asyncProcessorActorRefList.size();
-
-			actorRef = getContext().spawn(
-				Processor.create(true), "processor-async-" + size);
-
-			asyncProcessorActorRefList.add(actorRef);
-
-		}
-		else {
-			actorRef = getContext().spawnAnonymous(Processor.create(false));
-		}
+		ActorRef<Processor.Command> actorRef =
+			getContext().spawnAnonymous(
+				Processor.create(call.async, tokenActorRef));
 
 		ActorRef<Processor.Response> responseActorRef =
 			getContext().messageAdapter(
-				Processor.Response.class, response -> new ResponseWrapper(response, call.replyTo));
+				Processor.Response.class,
+				response -> new ResponseWrapper(response, call.replyTo));
 
 		actorRef.tell(new Processor.Start(call.url, call.jsonObject, responseActorRef));
 
@@ -78,21 +63,11 @@ public class Supervisor extends AbstractBehavior<Supervisor.Command> {
 	}
 
 	private Behavior<Command> onCallback(Callback callback) {
-
-		for (ActorRef<Processor.Command> processorRef : asyncProcessorActorRefList) {
-
-			processorRef.tell(
-				new Processor.Callback(callback.tokenId, callback.jsonObject));
-
-		}
-
+		tokenActorRef.tell(new Token.Callback(callback.tokenId, callback.jsonObject));
 		return Behaviors.same();
 	}
 
-
-	private final List<ActorRef<Processor.Command>> asyncProcessorActorRefList =
-		new ArrayList<>();
-
+	private final ActorRef<Token.Command> tokenActorRef;
 	public sealed interface Command {}
 	public record Call(
 		boolean async, String url, JsonObject jsonObject, ActorRef<Response> replyTo) implements Command {}

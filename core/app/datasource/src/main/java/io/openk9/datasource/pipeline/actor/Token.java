@@ -1,9 +1,11 @@
 package io.openk9.datasource.pipeline.actor;
 
+import akka.actor.Cancellable;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import io.vertx.core.json.JsonObject;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -15,98 +17,139 @@ import java.util.UUID;
 public class Token {
 
 	public sealed interface Command {}
-	public record Generate(ActorRef<TokenResponse> replyTo) implements Command {}
-	public record Validate(String token, ActorRef<TokenValidationResponse> replyTo) implements Command {}
+	public record Generate(ActorRef<Response> replyTo) implements Command {}
+	public record Callback(String token, JsonObject jsonObject) implements Command {}
 	private enum Tick implements Command {INSTANCE}
 	public sealed interface Response {}
-	public record TokenResponse(String token) implements Response {}
-	public record TokenValidationResponse(boolean valid) implements Response {}
+	public record TokenGenerated(String token) implements Response {}
+	public record TokenCallback(JsonObject jsonObject) implements Response {}
+	public enum TokenState implements Response {EXPIRED, VALID}
+
+	private record TokenInfo(LocalDateTime creationDate, ActorRef<Response> replyTo) {}
+
+	public static Behavior<Command> create() {
+		return create(-1);
+	}
 
 	public static Behavior<Command> create(long validityTokenMillis) {
-		return Behaviors.setup(ctx -> initial(validityTokenMillis, new HashMap<>(), ctx));
+		return Behaviors.setup(ctx -> initial(validityTokenMillis, new HashMap<>(), ctx, null));
 	}
 
 	private static Behavior<Command> initial(
-		long validityTokenMillis, Map<String, LocalDateTime> tokens,
-		ActorContext<Command> ctx) {
+		long validityTokenMillis, Map<String, TokenInfo> tokens,
+		ActorContext<Command> ctx, Cancellable cancellable) {
 
-		ctx.scheduleOnce(Duration.ofSeconds(1), ctx.getSelf(), Tick.INSTANCE);
+		Cancellable newCancellable;
+
+		if (cancellable == null) {
+			if (validityTokenMillis == -1) {
+				newCancellable = ctx.scheduleOnce(
+					Duration.ofSeconds(1), ctx.getSelf(), Tick.INSTANCE);
+			}
+			else {
+				newCancellable = ctx.scheduleOnce(
+					Duration.ofMinutes(15), ctx.getSelf(), Tick.INSTANCE);
+			}
+		}
+		else {
+			newCancellable = cancellable;
+		}
 
 		return Behaviors
 			.receive(Command.class)
-			.onMessage(Generate.class, generate -> onGenerate(validityTokenMillis, generate.replyTo(), tokens, ctx))
-			.onMessage(Validate.class, validate -> onValidate(
-				validityTokenMillis, validate.token(), validate.replyTo(), tokens, ctx))
-			.onMessage(Tick.class, tick -> onTick(validityTokenMillis, tokens, ctx))
+			.onMessage(Generate.class, generate -> onGenerate(
+				validityTokenMillis, generate.replyTo(), tokens, ctx, newCancellable))
+			.onMessage(Callback.class, callback -> onCallback(
+				validityTokenMillis, callback.token(), callback.jsonObject, tokens, ctx, newCancellable))
+			.onMessage(Tick.class, tick -> onTick(validityTokenMillis, tokens, ctx, newCancellable))
 			.build();
 	}
 
-	private static Behavior<Command> onValidate(
-		long validityTokenMillis, String token,
-		ActorRef<TokenValidationResponse> replyTo,
-		Map<String, LocalDateTime> tokens, ActorContext<Command> ctx) {
+	private static Behavior<Command> onCallback(
+		long validityTokenMillis, String token, JsonObject jsonObject,
+		Map<String, TokenInfo> tokens, ActorContext<Command> ctx,
+		Cancellable cancellable) {
 
-		replyTo.tell(
-			new TokenValidationResponse(
-				isValid(validityTokenMillis, token, tokens)));
+		TokenInfo tokenInfo = tokens.get(token);
+
+		if (tokenInfo == null) {
+			ctx.getLog().warn("Token not found: {}", token);
+			return Behaviors.same();
+		}
+
+		if (isValid(validityTokenMillis, tokenInfo)) {
+			tokenInfo.replyTo.tell(new TokenCallback(jsonObject));
+		}
+		else {
+			Map<String, TokenInfo> newMap = new HashMap<>(tokens);
+			newMap.remove(token, tokenInfo);
+			tokenInfo.replyTo.tell(TokenState.EXPIRED);
+			return initial(validityTokenMillis, newMap, ctx, cancellable);
+		}
 
 		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onTick(
-		long validityTokenMillis, Map<String, LocalDateTime> tokens,
-		ActorContext<Command> ctx) {
+		long validityTokenMillis, Map<String, TokenInfo> tokens,
+		ActorContext<Command> ctx, Cancellable cancellable) {
 
 		if (tokens.isEmpty()) {
 			return Behaviors.same();
 		}
 
-		Map<String, LocalDateTime> newTokens = new HashMap<>();
+		Map<String, TokenInfo> newTokens = new HashMap<>();
 
-		for (Map.Entry<String, LocalDateTime> entry : tokens.entrySet()) {
-			if (isValid(validityTokenMillis, entry.getValue())) {
-				newTokens.put(entry.getKey(), entry.getValue());
+		for (Map.Entry<String, TokenInfo> entry : tokens.entrySet()) {
+			TokenInfo value = entry.getValue();
+			if (isValid(validityTokenMillis, value)) {
+				newTokens.put(entry.getKey(), value);
+			}
+			else {
+				value.replyTo.tell(TokenState.EXPIRED);
 			}
 		}
 
-		return initial(validityTokenMillis, newTokens, ctx);
+		return initial(validityTokenMillis, newTokens, ctx, cancellable);
 	}
 
 	private static Behavior<Command> onGenerate(
-		long validityTokenMillis, ActorRef<TokenResponse> replyTo,
-		Map<String, LocalDateTime> tokens, ActorContext<Command> ctx) {
+		long validityTokenMillis, ActorRef<Response> replyTo,
+		Map<String, TokenInfo> tokens, ActorContext<Command> ctx,
+		Cancellable cancellable) {
 
 		String token = generateToken();
 
-		Map<String, LocalDateTime> newTokens = new HashMap<>(tokens);
+		Map<String, TokenInfo> newTokens = new HashMap<>(tokens);
 
-		newTokens.put(token, LocalDateTime.now());
+		newTokens.put(token, new TokenInfo(LocalDateTime.now(), replyTo));
 
-		replyTo.tell(new TokenResponse(token));
+		replyTo.tell(new TokenGenerated(token));
 
-		return initial(validityTokenMillis, newTokens, ctx);
+		return initial(validityTokenMillis, newTokens, ctx, cancellable);
 	}
 
 	private static boolean isValid(
 		long validityTokenMillis, String token,
-		Map<String, LocalDateTime> tokens) {
+		Map<String, TokenInfo> tokens) {
 
-		LocalDateTime createDate = tokens.get(token);
+		TokenInfo tokenInfo = tokens.get(token);
 
-		if (createDate == null) {
+		if (tokenInfo == null) {
 			return false;
 		}
 
-		return isValid(validityTokenMillis, createDate);
+		return isValid(validityTokenMillis, tokenInfo);
 
 	}
 
 	private static boolean isValid(
-		long validityTokenMillis, LocalDateTime createDate) {
+		long validityTokenMillis, TokenInfo createDate) {
 
-		return LocalDateTime
-			.now()
-			.isBefore(createDate.plus(validityTokenMillis, ChronoUnit.MILLIS));
+		return validityTokenMillis != -1 &&
+			   LocalDateTime
+				   .now()
+				   .isBefore(createDate.creationDate.plus(validityTokenMillis, ChronoUnit.MILLIS));
 
 	}
 
