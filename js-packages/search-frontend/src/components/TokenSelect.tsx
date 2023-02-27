@@ -30,6 +30,7 @@ export function TokenSelect({
   setOpenedDropdown,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
+  const [subtitle, setSubtitle] = React.useState(false);
   const status: Status = isInteractive
     ? selected !== null
       ? isAutoSlected
@@ -56,7 +57,7 @@ export function TokenSelect({
     :hover {
     }
     background-color: ${"var(--openk9-embeddable-search--secondary-background-color)"};
-    cursor: ${!isSelected ? "pointer" : "not-allowed"};
+    cursor: ${!isSelected ? "" : "not-allowed"};
   `;
   return (
     <div
@@ -98,9 +99,6 @@ export function TokenSelect({
           `}
         >
           <div
-            onClick={() => {
-              if (selected) onSelect(null);
-            }}
             onMouseEnter={() => {
               onOptionIndexChange(0);
             }}
@@ -114,9 +112,23 @@ export function TokenSelect({
                 justify-content: space-between;
                 align-items: baseline;
                 color: var(--openk9-embeddable-search--secondary-text-color);
+                text-decoration: ${selected && subtitle ? "underline" : ""};
+                cursor: ${selected && subtitle ? "pointer" : ""};
               `}
             >
-              Deseleziona
+              <div
+                onClick={() => {
+                  if (selected) onSelect(null);
+                }}
+                onMouseEnter={() => {
+                  setSubtitle(true);
+                }}
+                onMouseLeave={() => {
+                  setSubtitle(false);
+                }}
+              >
+                Deseleziona
+              </div>
               <div
                 style={{ cursor: "pointer" }}
                 onClick={() => {
