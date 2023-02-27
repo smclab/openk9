@@ -77,7 +77,7 @@ public class Token {
 			return Behaviors.same();
 		}
 
-		if (isValid(validityTokenMillis, tokenInfo)) {
+		if (validityTokenMillis == -1 || isValid(validityTokenMillis, tokenInfo)) {
 			tokenInfo.replyTo.tell(new TokenCallback(jsonObject));
 		}
 		else {
