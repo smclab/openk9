@@ -282,8 +282,8 @@ function FilterCategory({
                             text-overflow: ellipsis;
                             font-style: normal;
                             font-weight: 600;
+                            font-size: 15px;
                             line-height: 22px;
-                            /* or 147% */
                             color: #000000;
                           `}
                         >
