@@ -165,12 +165,23 @@ export type BaseInputProps<T> = {
   onChange(value: T): void;
   disabled: boolean;
   validationMessages: Array<string>;
+  description?: string;
 };
 
-export function TextInput({ id, label, value, onChange, disabled, validationMessages, item }: BaseInputProps<string> & { item?: boolean }) {
+export function TextInput({
+  id,
+  label,
+  value,
+  onChange,
+  disabled,
+  validationMessages,
+  item,
+  description,
+}: BaseInputProps<string> & { item?: boolean }) {
   return (
     <div className={`${item ? "form-group-item" : "form-group"} ${validationMessages.length ? "has-warning" : ""}`}>
       <label htmlFor={id}>{label}</label>
+      {description && InformationField(description)}
       <div style={{ position: "relative" }}>
         <input
           type="text"
@@ -205,10 +216,11 @@ export function TextInput({ id, label, value, onChange, disabled, validationMess
   );
 }
 
-export function TextArea({ id, label, value, onChange, disabled, validationMessages }: BaseInputProps<string>) {
+export function TextArea({ id, label, value, onChange, disabled, validationMessages, description }: BaseInputProps<string>) {
   return (
     <div className={`form-group ${validationMessages.length ? "has-warning" : ""}`}>
       <label htmlFor={id}>{label}</label>
+      {description && InformationField(description)}
       <textarea
         className="form-control"
         id={id}
@@ -336,11 +348,12 @@ export function EnumSelectSimple<E extends Record<string, any>>({
     </div>
   );
 }
-export function BooleanInput({ id, label, value, onChange, disabled, validationMessages }: BaseInputProps<boolean>) {
+export function BooleanInput({ id, label, value, onChange, disabled, validationMessages, description }: BaseInputProps<boolean>) {
   return (
-    <div className={`form-group ${validationMessages.length ? "has-warning" : ""}`}>
+    <div className={`form-group ${validationMessages.length ? "has-warning" : ""}`} style={{ display: "flex" }}>
       <style type="text/css">{StyleToggle}</style>
       <ClayToggle id={id} label={label} toggled={value} onToggle={onChange} disabled={disabled} />
+      {description && InformationField(description)}
       <div className="form-feedback-group">
         {validationMessages.map((validationMessage, index) => {
           return (
@@ -1035,7 +1048,7 @@ export function AssociatedEntitiesWithSelect<Q>({
 }
 
 export function CronInput(props: BaseInputProps<string>) {
-  const { label, value, onChange, validationMessages, disabled } = props;
+  const { label, value, onChange, validationMessages, disabled, description } = props;
   const scheduling = useCompoundFormField({
     ...props,
     initialValues: {
@@ -1056,43 +1069,45 @@ export function CronInput(props: BaseInputProps<string>) {
     }, []),
   });
   return (
-    <ClayPanel displayTitle={label} displayType="secondary">
-      <ClayPanel.Body>
-        <fieldset disabled={disabled}>
-          <ClayForm.Group>
-            <div className="form-group-item">
-              <label>Preset</label>
-              <ClaySelect value={value} onChange={(event) => onChange(event.currentTarget.value)}>
-                <ClaySelect.Option label="Custom" value="" />
-                <ClaySelect.Option label="Every 5 Minutes" value="0 */5 * ? * * *" />
-                <ClaySelect.Option label="Every 30 Minutes" value="0 */30 * ? * * *" />
-                <ClaySelect.Option label="Every Hour" value="0 0 * ? * * *" />
-                <ClaySelect.Option label="Every Day at Midday" value="0 0 12 * * ? *" />
-                <ClaySelect.Option label="Every Day at Midnight" value="0 0 0 * * ? *" />
-              </ClaySelect>
-            </div>
-          </ClayForm.Group>
-          <ClayForm.Group className="form-group-autofit">
-            <TextInput item label="Second" {...scheduling.inputProps("second")} />
-            <TextInput item label="Minutes" {...scheduling.inputProps("minutes")} />
-            <TextInput item label="Hours" {...scheduling.inputProps("hours")} />
-            <TextInput item label="Days of Month" {...scheduling.inputProps("daysOfMonth")} />
-            <TextInput item label="Month" {...scheduling.inputProps("month")} />
-            <TextInput item label="Days of Week" {...scheduling.inputProps("daysOfWeek")} />
-            <TextInput item label="Year" {...scheduling.inputProps("year")} />
-          </ClayForm.Group>
-        </fieldset>
-      </ClayPanel.Body>
-      {validationMessages.length > 0 && (
-        <ClayPanel.Footer className="has-warning">
-          <ClayForm.FeedbackGroup>
-            {validationMessages.map((validationMessage, index) => {
-              return <ClayForm.FeedbackItem key={index}>{validationMessage}</ClayForm.FeedbackItem>;
-            })}
-          </ClayForm.FeedbackGroup>
-        </ClayPanel.Footer>
-      )}
-    </ClayPanel>
+    <React.Fragment>
+      <ClayPanel displayTitle={label} displayType="secondary">
+        <ClayPanel.Body>
+          <fieldset disabled={disabled}>
+            <ClayForm.Group>
+              <div className="form-group-item">
+                <label>Preset</label>
+                <ClaySelect value={value} onChange={(event) => onChange(event.currentTarget.value)}>
+                  <ClaySelect.Option label="Custom" value="" />
+                  <ClaySelect.Option label="Every 5 Minutes" value="0 */5 * ? * * *" />
+                  <ClaySelect.Option label="Every 30 Minutes" value="0 */30 * ? * * *" />
+                  <ClaySelect.Option label="Every Hour" value="0 0 * ? * * *" />
+                  <ClaySelect.Option label="Every Day at Midday" value="0 0 12 * * ? *" />
+                  <ClaySelect.Option label="Every Day at Midnight" value="0 0 0 * * ? *" />
+                </ClaySelect>
+              </div>
+            </ClayForm.Group>
+            <ClayForm.Group className="form-group-autofit">
+              <TextInput item label="Second" {...scheduling.inputProps("second")} />
+              <TextInput item label="Minutes" {...scheduling.inputProps("minutes")} />
+              <TextInput item label="Hours" {...scheduling.inputProps("hours")} />
+              <TextInput item label="Days of Month" {...scheduling.inputProps("daysOfMonth")} />
+              <TextInput item label="Month" {...scheduling.inputProps("month")} />
+              <TextInput item label="Days of Week" {...scheduling.inputProps("daysOfWeek")} />
+              <TextInput item label="Year" {...scheduling.inputProps("year")} />
+            </ClayForm.Group>
+          </fieldset>
+        </ClayPanel.Body>
+        {validationMessages.length > 0 && (
+          <ClayPanel.Footer className="has-warning">
+            <ClayForm.FeedbackGroup>
+              {validationMessages.map((validationMessage, index) => {
+                return <ClayForm.FeedbackItem key={index}>{validationMessage}</ClayForm.FeedbackItem>;
+              })}
+            </ClayForm.FeedbackGroup>
+          </ClayPanel.Footer>
+        )}
+      </ClayPanel>
+    </React.Fragment>
   );
 }
 
