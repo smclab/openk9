@@ -108,7 +108,7 @@ export function Search({
           style={{
             paddingLeft: "16px",
             opacity: 0.5,
-            color: "--openk9-embeddable-search--secondary-text-color",
+            color: "var(--openk9-embeddable-search--secondary-text-color)",
           }}
         />
         <div
@@ -207,6 +207,7 @@ export function Search({
               font-size: inherit;
               font-family: inherit;
               background-color: inherit;
+              color: ${showSyntax ? "transparent" : "inherit"};
             `}
             spellCheck="false"
             onSelect={(event) => {
