@@ -220,7 +220,10 @@ public class DatasourceActor {
 				}
 				else if (response instanceof Supervisor.Error) {
 					Supervisor.Error error = (Supervisor.Error) response;
-					logger.error(error.error());
+					logger.error("enrichItem: " + enrichItem.getId() + " occurred error: " + error.error());
+					logger.error("terminating pipeline");
+					replyTo.tell(new Failure(new RuntimeException(error.error())));
+					return Behaviors.stopped();
 				}
 
 				return Behaviors.same();
