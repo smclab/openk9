@@ -195,7 +195,8 @@ public class DatasourceActor {
 
 					ctx.getLog().info("enrichItem: " + enrichItem.getName() + " OK ");
 
-					DataPayload newDataPayload = result.mapTo(DataPayload.class);
+					DataPayload newDataPayload = result.getJsonObject("payload").mapTo(DataPayload.class);
+
 					return initPipeline(ctx, supervisorActorRef,
 						responseActorRef, replyTo, newDataPayload,
 						datasourceModel, tail);
