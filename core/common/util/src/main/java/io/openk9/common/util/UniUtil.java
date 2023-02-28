@@ -1,4 +1,4 @@
-package io.openk9.tenantmanager.util;
+package io.openk9.common.util;
 
 import io.smallrye.mutiny.Uni;
 

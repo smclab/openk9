@@ -47,6 +47,21 @@ public class DataPayload {
 	private Map<String, List<String>> acl;
 	private Map<String, Object> rest = new HashMap<>();
 
+	public static DataPayload copy(DataPayload dataPayload) {
+		return DataPayload.builder()
+			.ingestionId(dataPayload.ingestionId)
+			.datasourceId(dataPayload.datasourceId)
+			.contentId(dataPayload.contentId)
+			.parsingDate(dataPayload.parsingDate)
+			.rawContent(dataPayload.rawContent)
+			.tenantId(dataPayload.tenantId)
+			.documentTypes(dataPayload.documentTypes)
+			.resources(dataPayload.resources)
+			.acl(dataPayload.acl)
+			.rest(dataPayload.rest)
+			.build();
+	}
+
 	@JsonAnySetter
 	public void addRest(String key, Object value) {
 

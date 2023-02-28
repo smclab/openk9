@@ -8,7 +8,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.vertx.core.json.JsonObject;
 
-import java.time.Duration;
 import java.util.Map;
 
 public class Processor extends AbstractBehavior<Processor.Command> {
@@ -43,13 +42,8 @@ public class Processor extends AbstractBehavior<Processor.Command> {
 
 			if (async) {
 
-				getContext().scheduleOnce(
-					Duration.ofSeconds(30), getContext().getSelf(),
-					CallbackExpired.INSTANCE);
-
 				return Behaviors.receive(Command.class)
 					.onMessage(TokenResponseWrapper.class, wrapper -> onTokenResponseWrapper(wrapper, replyTo))
-					.onMessageEquals(CallbackExpired.INSTANCE, Behaviors::stopped)
 					.build();
 
 			}
@@ -165,8 +159,6 @@ public class Processor extends AbstractBehavior<Processor.Command> {
 	public sealed interface Command {}
 	public record Start(
 		String url, JsonObject jsonObject, ActorRef<Response> replyTo) implements Command {}
-	public record Callback(String tokenId, JsonObject jsonObject) implements Command {}
-	private enum CallbackExpired implements Command {INSTANCE}
 	private record TokenResponseWrapper(Token.Response response) implements Command {}
 	private record ResponseWrapper(Http.Response response, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}

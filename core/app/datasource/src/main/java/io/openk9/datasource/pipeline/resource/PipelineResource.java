@@ -1,6 +1,6 @@
 package io.openk9.datasource.pipeline.resource;
 
-import io.openk9.datasource.pipeline.actor.EnrichPipelineActorSystem;
+import io.openk9.datasource.pipeline.actor.IngestionActorSystem;
 import io.vertx.core.json.JsonObject;
 
 import javax.inject.Inject;
@@ -16,11 +16,11 @@ public class PipelineResource {
 	public void callback(
 		@PathParam("token-id")String tokenId, JsonObject body) {
 
-		enrichPipelineActorSystem.callback(tokenId, body);
+		actorSystem.callback(tokenId, body);
 
 	}
 
 	@Inject
-	private EnrichPipelineActorSystem enrichPipelineActorSystem;
+	IngestionActorSystem actorSystem;
 
 }

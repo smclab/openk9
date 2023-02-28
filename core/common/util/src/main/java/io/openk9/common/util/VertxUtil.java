@@ -1,4 +1,4 @@
-package io.openk9.tenantmanager.util;
+package io.openk9.common.util;
 
 import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
 import io.smallrye.common.vertx.VertxContext;

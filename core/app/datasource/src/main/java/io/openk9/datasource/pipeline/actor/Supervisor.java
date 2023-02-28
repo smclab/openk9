@@ -2,6 +2,7 @@ package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -59,7 +60,9 @@ public class Supervisor extends AbstractBehavior<Supervisor.Command> {
 	}
 
 	public static Behavior<Command> create() {
-		return Behaviors.setup(Supervisor::new);
+		return Behaviors
+			.supervise(Behaviors.setup(Supervisor::new))
+			.onFailure(SupervisorStrategy.resume());
 	}
 
 	private Behavior<Command> onCallback(Callback callback) {

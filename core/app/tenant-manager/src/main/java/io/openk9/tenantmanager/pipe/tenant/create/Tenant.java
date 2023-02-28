@@ -4,8 +4,8 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.common.util.VertxUtil;
 import io.openk9.tenantmanager.service.TenantService;
-import io.openk9.tenantmanager.util.VertxUtil;
 
 public class Tenant {
 

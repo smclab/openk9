@@ -1,12 +1,12 @@
 package io.openk9.tenantmanager.pipe.tenant.delete;
 
+import io.openk9.common.util.UniUtil;
+import io.openk9.common.util.VertxUtil;
 import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteGroupMessage;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteMessage;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
-import io.openk9.tenantmanager.util.UniUtil;
-import io.openk9.tenantmanager.util.VertxUtil;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import org.jboss.logging.Logger;
