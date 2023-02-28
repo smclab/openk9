@@ -266,7 +266,7 @@ public class DatasourceActor {
 			transactionInvoker.withStatelessTransaction(tenantId, s ->
 				s.createQuery(
 					"select d from Datasource d " +
-					"left join d.dataIndex di " +
+					"left join fetch d.dataIndex di " +
 					"join fetch d.enrichPipeline ep " +
 					"join fetch ep.enrichPipelineItems epi " +
 					"join fetch epi.enrichItem ei " +
