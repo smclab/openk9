@@ -42,7 +42,7 @@ public class Token {
 		Cancellable newCancellable;
 
 		if (cancellable == null) {
-			if (validityTokenMillis == -1) {
+			if (validityTokenMillis != -1) {
 				newCancellable = ctx.scheduleOnce(
 					Duration.ofSeconds(1), ctx.getSelf(), Tick.INSTANCE);
 			}
@@ -130,20 +130,6 @@ public class Token {
 	}
 
 	private static boolean isValid(
-		long validityTokenMillis, String token,
-		Map<String, TokenInfo> tokens) {
-
-		TokenInfo tokenInfo = tokens.get(token);
-
-		if (tokenInfo == null) {
-			return false;
-		}
-
-		return isValid(validityTokenMillis, tokenInfo);
-
-	}
-
-	private static boolean isValid(
 		long validityTokenMillis, TokenInfo createDate) {
 
 		return validityTokenMillis != -1 &&
@@ -156,6 +142,5 @@ public class Token {
 	private static String generateToken() {
 		return UUID.randomUUID().toString();
 	}
-
 
 }
