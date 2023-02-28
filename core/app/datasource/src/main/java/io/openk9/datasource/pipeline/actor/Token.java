@@ -78,6 +78,15 @@ public class Token {
 		}
 
 		if (validityTokenMillis == -1 || isValid(validityTokenMillis, tokenInfo)) {
+
+			ctx.getLog()
+				.info(
+					"Token found: {}, elapsed: {} ms",
+					token, Duration.between(
+						tokenInfo.creationDate,
+						LocalDateTime.now()
+					).toMillis());
+
 			tokenInfo.replyTo.tell(new TokenCallback(jsonObject));
 		}
 		else {
