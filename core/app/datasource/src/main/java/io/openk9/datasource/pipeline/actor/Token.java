@@ -88,6 +88,7 @@ public class Token {
 					).toMillis());
 
 			tokenInfo.replyTo.tell(new TokenCallback(jsonObject));
+
 		}
 		else {
 			Map<String, TokenInfo> newMap = new HashMap<>(tokens);

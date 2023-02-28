@@ -4,6 +4,7 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import com.google.common.collect.Maps;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.DataIndex;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -211,7 +213,11 @@ public class DatasourceActor {
 						logger.info("call next enrichItem");
 					}
 
-					DataPayload newDataPayload = result.getJsonObject("payload").mapTo(DataPayload.class);
+					JsonObject newJsonPayload = result.getJsonObject("payload");
+
+					DataPayload newDataPayload = newJsonPayload.mapTo(DataPayload.class);
+
+					printDiff(ctx.getLog(), enrichItem, dataPayload, newDataPayload);
 
 					return initPipeline(
 						ctx, supervisorActorRef,
@@ -230,6 +236,22 @@ public class DatasourceActor {
 
 			})
 			.build();
+
+	}
+
+	private static void printDiff(
+		Logger log, EnrichItem enrichItem,
+		DataPayload dataPayload, DataPayload newDataPayload) {
+
+		Map<String, Object> initial = dataPayload.getRest();
+		Map<String, Object> enrichResponse = newDataPayload.getRest();
+
+		Map<String, Object> diff =
+			Maps.difference(initial, enrichResponse).entriesOnlyOnRight();
+
+		if (!diff.isEmpty()) {
+			log.info("enrichItem: " + enrichItem.getId() + " diff: " + new JsonObject(diff));
+		}
 
 	}
 

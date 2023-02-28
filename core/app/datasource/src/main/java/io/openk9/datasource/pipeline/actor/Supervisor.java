@@ -9,11 +9,14 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.vertx.core.json.JsonObject;
 
+import java.time.Duration;
+
 public class Supervisor extends AbstractBehavior<Supervisor.Command> {
 
 	public Supervisor(ActorContext<Command> context) {
 		super(context);
-		this.tokenActorRef = context.spawn(Token.create(), "token-actor");
+		this.tokenActorRef = context.spawn(
+			Token.create(Duration.ofMinutes(15).toMillis()), "token-actor");
 	}
 
 	@Override
