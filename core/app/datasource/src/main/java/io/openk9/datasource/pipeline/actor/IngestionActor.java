@@ -2,6 +2,8 @@ package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.PostStop;
+import akka.actor.typed.PreRestart;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -10,6 +12,8 @@ import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IngestionActor {
 	public sealed interface Command {}
@@ -20,22 +24,30 @@ public class IngestionActor {
 
 	public static Behavior<Command> create() {
 		return Behaviors
-			.supervise(Behaviors.setup(IngestionActor::initial))
+			.supervise(Behaviors.<Command>setup(ctx -> {
+
+				ActorRef<Supervisor.Command> supervisorActorRef =
+					ctx.spawn(
+						Supervisor.create(),
+						"enrich-pipeline-supervisor");
+
+				return initial(ctx, supervisorActorRef, new ArrayList<>());
+
+			}))
 			.onFailure(SupervisorStrategy.restartWithBackoff(
 				Duration.ofMillis(500), Duration.ofSeconds(5), 0.1));
 	}
 
-	private static Behavior<Command> initial(ActorContext<Command> ctx) {
-
-		ActorRef<Supervisor.Command> supervisorActorRef =
-			ctx.spawn(
-				Supervisor.create(),
-				"enrich-pipeline-supervisor");
+	private static Behavior<Command> initial(
+		ActorContext<Command> ctx,
+		ActorRef<Supervisor.Command> supervisorActorRef,
+		List<Message<?>> messages) {
 
 		return Behaviors.receive(Command.class)
 			.onMessage(IngestionMessage.class, ingestionMessage -> {
 
 				DataPayload dataPayload = ingestionMessage.dataPayload;
+				Message<?> message = ingestionMessage.message;
 				String ingestionId = dataPayload.getIngestionId();
 
 				ctx.getLog().info(
@@ -45,7 +57,7 @@ public class IngestionActor {
 				ActorRef<DatasourceActor.Response> responseActorRef =
 					ctx.messageAdapter(
 						DatasourceActor.Response.class,
-						param -> new DatasourceResponseWrapper(ingestionMessage.message(), param)
+						param -> new DatasourceResponseWrapper(message, param)
 					);
 
 				ActorRef<DatasourceActor.Command> datasourceActorRef =
@@ -55,25 +67,33 @@ public class IngestionActor {
 
 				datasourceActorRef.tell(DatasourceActor.Start.INSTANCE);
 
-				return Behaviors.same();
+				List<Message<?>> newMessages = new ArrayList<>(messages);
+				newMessages.add(message);
+
+				return initial(ctx, supervisorActorRef, newMessages);
+
 			})
 			.onMessage(DatasourceResponseWrapper.class, drw -> {
 
 				DatasourceActor.Response response = drw.response;
+				Message<?> message = drw.message;
 
 				if (response instanceof DatasourceActor.Success) {
 					ctx.getLog().info("enrich pipeline success, ack message");
-					drw.message.ack();
+					message.ack();
 				}
 				else if (response instanceof DatasourceActor.Failure) {
 					Throwable exception =
 						((DatasourceActor.Failure) response).exception();
 					ctx.getLog().error(
 						"enrich pipeline failure, nack message", exception);
-					drw.message.nack(exception);
+					message.nack(exception);
 				}
 
-				return Behaviors.same();
+				List<Message<?>> newMessages = new ArrayList<>(messages);
+				newMessages.remove(message);
+
+				return initial(ctx, supervisorActorRef, newMessages);
 
 			})
 			.onMessage(Callback.class, callback -> {
@@ -87,7 +107,23 @@ public class IngestionActor {
 				return Behaviors.same();
 
 			})
+			.onSignal(PreRestart.class, signal -> onSignal(ctx, "ingestion actor restarting", messages))
+			.onSignal(PostStop.class, signal -> onSignal(ctx, "ingestion actor stopped", messages))
 			.build();
+	}
+
+	private static Behavior<Command> onSignal(
+		ActorContext<Command> ctx, String signalMessage, List<Message<?>> messages) {
+
+		ctx.getLog().error(signalMessage);
+
+		RuntimeException runtimeException = new RuntimeException(signalMessage);
+
+		for (Message<?> message : messages) {
+			message.nack(runtimeException);
+		}
+
+		return Behaviors.same();
 	}
 
 }
