@@ -127,6 +127,7 @@ export function Bucket() {
               useRemoveMutation={useUnbindQueryAnalysisFromBucketMutation}
               mapValueToRemoveMutationVariables={() => ({ bucketId })}
               invalidate={() => bucketQuery.refetch()}
+              description={"Query Analysis configuration for current bucket"}
             />
 
             <SearchSelect
@@ -139,6 +140,7 @@ export function Bucket() {
               useRemoveMutation={useUnbindSearchConfigFromBucketMutation}
               mapValueToRemoveMutationVariables={() => ({ bucketId })}
               invalidate={() => bucketQuery.refetch()}
+              description={"Search Configuration for current bucket"}
             />
           </ClayForm>
         )}

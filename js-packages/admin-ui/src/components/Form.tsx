@@ -427,9 +427,11 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
   useRemoveMutation,
   mapValueToRemoveMutationVariables,
   invalidate,
+  description,
 }: {
   label: string;
   value: Value | null | undefined;
+  description?: string;
   useValueQuery: QueryHook<{ value?: { id?: string | null; name?: string | null; description?: string | null } | null }, { id: Value }>;
   useOptionsQuery: QueryHook<
     {
@@ -458,6 +460,7 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
     <React.Fragment>
       <ClayForm.Group>
         <label>{label}</label>
+        {description && InformationField(description)}
         <ClayInput.Group>
           <ClayInput.GroupItem>
             <ClayInput
