@@ -89,6 +89,7 @@ public class IndexWriterActor {
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
 		DataIndex dataIndex, DataPayload dataPayload, Logger logger,
 		SearchResponseCommand src) {
+
 		Exception exception = src.exception;
 
 		if (exception != null) {
@@ -121,7 +122,8 @@ public class IndexWriterActor {
 	private static Behavior<Command> onStart(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
 		DataIndex dataIndex, DataPayload dataPayload) {
-		ctx.getLog().info("IndexWriter start for content: " + dataPayload.getContentId());
+
+		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
 
 		SearchRequest searchRequest = new SearchRequest(dataIndex.getName());
 

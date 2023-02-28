@@ -9,6 +9,8 @@ import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
+import java.time.Duration;
+
 public class IngestionActor {
 	public sealed interface Command {}
 	public record IngestionMessage(DataPayload dataPayload, Message<?> message) implements Command {}
@@ -19,11 +21,11 @@ public class IngestionActor {
 	public static Behavior<Command> create() {
 		return Behaviors
 			.supervise(Behaviors.setup(IngestionActor::initial))
-			.onFailure(SupervisorStrategy.resume());
+			.onFailure(SupervisorStrategy.restartWithBackoff(
+				Duration.ofMillis(500), Duration.ofSeconds(5), 0.1));
 	}
 
 	private static Behavior<Command> initial(ActorContext<Command> ctx) {
-
 
 		ActorRef<Supervisor.Command> supervisorActorRef =
 			ctx.spawn(
@@ -60,16 +62,23 @@ public class IngestionActor {
 				DatasourceActor.Response response = drw.response;
 
 				if (response instanceof DatasourceActor.Success) {
+					ctx.getLog().info("enrich pipeline success, ack message");
 					drw.message.ack();
 				}
 				else if (response instanceof DatasourceActor.Failure) {
-					drw.message.nack(((DatasourceActor.Failure) response).exception());
+					Throwable exception =
+						((DatasourceActor.Failure) response).exception();
+					ctx.getLog().error(
+						"enrich pipeline failure, nack message", exception);
+					drw.message.nack(exception);
 				}
 
 				return Behaviors.same();
 
 			})
 			.onMessage(Callback.class, callback -> {
+
+				ctx.getLog().info("callback with tokenId: {}", callback.tokenId());
 
 				supervisorActorRef.tell(
 					new Supervisor.Callback(

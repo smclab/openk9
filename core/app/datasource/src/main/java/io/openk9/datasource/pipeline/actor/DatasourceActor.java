@@ -12,6 +12,7 @@ import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.util.LinkedHashSet;
@@ -100,13 +101,18 @@ public class DatasourceActor {
 
 		DataIndex dataIndex = datasource.getDataIndex();
 
+		Logger log = ctx.getLog();
+
 		if (dataIndex == null) {
+			log.info("datasource with id {} has no dataIndex, start random creation", datasource.getId());
 			ctx.getSelf().tell(new CreateRandomDataIndex(datasource));
 			return Behaviors.same();
 		}
 
 		Set<EnrichPipelineItem> enrichPipelineItems =
 			datasource.getEnrichPipeline().getEnrichPipelineItems();
+
+		log.info("start pipeline for datasource with id {}", datasource.getId());
 
 		return initPipeline(
 			ctx, supervisorActorRef, responseActorRef, replyTo, dataPayload,
@@ -120,7 +126,11 @@ public class DatasourceActor {
 		ActorRef<Response> replyTo, DataPayload dataPayload,
 		DatasourceModel datasourceModel, Set<EnrichPipelineItem> enrichPipelineItems) {
 
+		Logger logger = ctx.getLog();
+
 		if (enrichPipelineItems.isEmpty()) {
+
+			logger.info("pipeline is empty, start index writer");
 
 			String contentId = dataPayload.getContentId();
 
@@ -159,6 +169,8 @@ public class DatasourceActor {
 
 		EnrichItem enrichItem = enrichPipelineItem.getEnrichItem();
 
+		logger.info("start enrich for enrichItem with id {}", enrichItem.getId());
+
 		String serviceName = enrichItem.getServiceName();
 		String jsonConfig = enrichItem.getJsonConfig();
 		EnrichItem.EnrichItemType type = enrichItem.getType();
@@ -193,17 +205,22 @@ public class DatasourceActor {
 					Supervisor.Body body = (Supervisor.Body) response;
 					JsonObject result = body.jsonObject();
 
-					ctx.getLog().info("enrichItem: " + enrichItem.getName() + " OK ");
+					logger.info("enrichItem: " + enrichItem.getId() + " OK ");
+
+					if (!tail.isEmpty()) {
+						logger.info("call next enrichItem");
+					}
 
 					DataPayload newDataPayload = result.getJsonObject("payload").mapTo(DataPayload.class);
 
-					return initPipeline(ctx, supervisorActorRef,
+					return initPipeline(
+						ctx, supervisorActorRef,
 						responseActorRef, replyTo, newDataPayload,
 						datasourceModel, tail);
 				}
 				else if (response instanceof Supervisor.Error) {
 					Supervisor.Error error = (Supervisor.Error) response;
-					ctx.getLog().error(error.error());
+					logger.error(error.error());
 				}
 
 				return Behaviors.same();
@@ -228,6 +245,9 @@ public class DatasourceActor {
 			new LinkedHashSet<>());
 
 		datasource.setDataIndex(dataIndex);
+
+		ctx.getLog().info(
+			"creating random dataIndex: {} for datasource: {}", indexName, datasource.getId());
 
 		VertxUtil.runOnContext(() ->
 			transactionInvoker
