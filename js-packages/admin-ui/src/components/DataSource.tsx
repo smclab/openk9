@@ -210,8 +210,12 @@ export function DataSource() {
         >
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-          <BooleanInput label="Schedulable" {...form.inputProps("schedulable")} />
-          <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
+          <BooleanInput
+            label="Schedulable"
+            {...form.inputProps("schedulable")}
+            description={"If datasource is automatically schedulable"}
+          />
+          <CronInput label="Scheduling" {...form.inputProps("scheduling")} description={"Cron Quartz expression to specify "} />
           {datasourceId !== "new" && (
             <ClayForm
               onSubmit={(event) => {
@@ -228,6 +232,7 @@ export function DataSource() {
                 useRemoveMutation={useUnbindPluginDriverFromDataSourceMutation}
                 mapValueToRemoveMutationVariables={() => ({ datasourceId })}
                 invalidate={() => datasourceQuery.refetch()}
+                description={"Plugin driver definition for external parser connection"}
               />
               <SearchSelect
                 label="Data Index"
@@ -239,6 +244,7 @@ export function DataSource() {
                 useRemoveMutation={useUnbindDataIndexToDataSourceMutation}
                 mapValueToRemoveMutationVariables={() => ({ datasourceId })}
                 invalidate={() => datasourceQuery.refetch()}
+                description={"Name of current data elasticsearch index"}
               />
               <SearchSelect
                 label="Enrich Pipeline"
@@ -250,6 +256,7 @@ export function DataSource() {
                 useRemoveMutation={useUnbindEnrichPipelineToDataSourceMutation}
                 mapValueToRemoveMutationVariables={() => ({ datasourceId })}
                 invalidate={() => datasourceQuery.refetch()}
+                description={"Simple Text"}
               />
             </ClayForm>
           )}
