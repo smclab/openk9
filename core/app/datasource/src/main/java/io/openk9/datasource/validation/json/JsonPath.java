@@ -22,6 +22,6 @@ public @interface JsonPath {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@interface List {
-		Json[] value();
+		JsonPath[] value();
 	}
 }
