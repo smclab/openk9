@@ -5,6 +5,7 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.VertxUtil;
+import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection;
 import io.openk9.datasource.sql.TransactionInvoker;
 
@@ -35,17 +36,16 @@ public class EnrichItemActor {
 
 				VertxUtil.runOnContext(
 					() -> transactionInvoker.withStatelessTransaction(
-						tenantId, s ->
-							s.createQuery(
-								"select distinct new io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection(d.id, ei.id, ei.type, ei.serviceName, ei.jsonConfig) " +
-								"from Datasource d " +
-								"join d.enrichPipeline ep " +
-								"join ep.enrichPipelineItems epi " +
-								"join epi.enrichItem ei " +
-								"where ei.id = :enrichItemId", EnrichItemProjection.class)
-								.setParameter("enrichItemId", enrichItemId)
-								.getSingleResult()
-					), eip -> replyTo.tell(new EnrichItemCallbackResponse(eip)));
+						tenantId, s -> s.get(EnrichItem.class, enrichItemId)),
+					ei -> replyTo.tell(
+						new EnrichItemCallbackResponse(
+							new EnrichItemProjection(
+								-1, ei.getId(), ei.getType(), ei.getServiceName(),
+								ei.getJsonConfig()
+							)
+						)
+					)
+				);
 
 				return Behaviors.same();
 
