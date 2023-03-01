@@ -27,9 +27,12 @@ import io.openk9.ingestion.dto.ResourcesPayload;
 import io.openk9.ingestion.grpc.Binary;
 import io.openk9.ingestion.grpc.IngestionRequest;
 import io.openk9.ingestion.grpc.Resources;
+import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Message;
+import org.eclipse.microprofile.reactive.messaging.Metadata;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.jboss.logging.Logger;
 
@@ -39,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
@@ -47,13 +51,27 @@ public class IngestionEmitter {
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
-		return _emitter.send(_of(ingestionRequest));
+		_emitter.send(Message.of(_of(ingestionRequest), Metadata.of(
+			OutgoingRabbitMQMetadata
+				.builder()
+				.withDeliveryMode(2)
+				.build()
+		)));
+
+		return CompletableFuture.completedStage(null);
 
 	}
 
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
 
-		return _emitter.send(_of(ingestionDTO));
+		_emitter.send(Message.of(_of(ingestionDTO), Metadata.of(
+			OutgoingRabbitMQMetadata
+				.builder()
+				.withDeliveryMode(2)
+				.build()
+		)));
+
+		return CompletableFuture.completedStage(null);
 	}
 
 	private IngestionPayloadWrapper _of(IngestionRequest dto) {
