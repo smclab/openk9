@@ -15,11 +15,12 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 
@@ -100,6 +101,7 @@ public class IndexWriterActor {
 			createDocWriteRequest(dataIndex, dataPayload, logger, src.searchResponse);
 
 		BulkRequest bulkRequest = new BulkRequest();
+		bulkRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
 		bulkRequest.add(docWriteRequest);
 
 		restHighLevelClient.bulkAsync(
@@ -127,13 +129,13 @@ public class IndexWriterActor {
 
 		SearchRequest searchRequest = new SearchRequest(dataIndex.getName());
 
-		MatchQueryBuilder matchQueryBuilder =
-			QueryBuilders.matchQuery("contentId", dataPayload.getContentId());
+		TermQueryBuilder termQueryBuilder =
+			QueryBuilders.termQuery("contentId", dataPayload.getContentId());
 
 		SearchSourceBuilder searchSourceBuilder =
 			new SearchSourceBuilder();
 
-		searchSourceBuilder.query(matchQueryBuilder);
+		searchSourceBuilder.query(termQueryBuilder);
 
 		searchRequest.source(searchSourceBuilder);
 
