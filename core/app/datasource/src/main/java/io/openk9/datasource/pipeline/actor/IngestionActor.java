@@ -10,7 +10,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection;
 import io.openk9.datasource.processor.payload.DataPayload;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
@@ -197,7 +196,7 @@ public class IngestionActor {
 				async,
 				serviceName,
 				JsonObject.of(
-					"payload", Json.encode(dataPayload),
+					"payload", dataPayload,
 					"enrichItemConfig", jsonConfig == null || jsonConfig.isBlank()
 						? new JsonObject()
 						: new JsonObject(jsonConfig)),
