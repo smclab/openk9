@@ -133,6 +133,7 @@ export function DataSource() {
           labelCancel={"cancel"}
           actionContinue={() => {
             generateDocumentTypesMutation.mutate(datasourceId);
+            onOpenChangeGenerate(false);
           }}
           actionCancel={() => {
             onOpenChangeGenerate(false);
@@ -147,6 +148,7 @@ export function DataSource() {
           labelCancel={"cancel"}
           actionContinue={() => {
             triggerSchedulerMutation.mutate(datasourceId);
+            onOpenChangeTrigger(false);
           }}
           actionCancel={() => {
             onOpenChangeTrigger(false);
@@ -161,6 +163,7 @@ export function DataSource() {
           labelCancel={"cancel"}
           actionContinue={() => {
             reindexMutation.mutate(datasourceId);
+            onOpenChangeReindex(false);
           }}
           actionCancel={() => {
             onOpenChangeReindex(false);
