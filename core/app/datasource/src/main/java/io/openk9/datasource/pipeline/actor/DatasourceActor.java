@@ -218,6 +218,10 @@ public class DatasourceActor {
 
 					JsonObject newJsonPayload = result.getJsonObject("payload");
 
+					if (newJsonPayload == null) {
+						newJsonPayload = result;
+					}
+
 					DataPayload newDataPayload =
 						mergeResponse(
 							ctx.getLog(), jsonPath, behaviorMergeType, dataPayload,
