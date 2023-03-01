@@ -8,6 +8,7 @@ import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -159,7 +160,7 @@ public class IngestionActor {
 		EnrichItemActor.EnrichItemCallbackResponse response = eirw.response;
 		Map<String, Object> datasourcePayload = eirw.datasourcePayload;
 
-		EnrichItemActor.EnrichItemProjection enrichItemProjection =
+		EnrichItemProjection enrichItemProjection =
 			response.enrichItemProjection();
 		String jsonConfig = enrichItemProjection.jsonConfig();
 		EnrichItem.EnrichItemType enrichItemType =

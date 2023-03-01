@@ -5,7 +5,7 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.VertxUtil;
-import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection;
 import io.openk9.datasource.sql.TransactionInvoker;
 
 import javax.enterprise.inject.spi.CDI;
@@ -15,9 +15,6 @@ public class EnrichItemActor {
 	public record EnrichItemCallback(long enrichItemId, String tenantId, ActorRef<EnrichItemCallbackResponse> replyTo) implements Command {}
 	public sealed interface Response {}
 	public record EnrichItemCallbackResponse(EnrichItemProjection enrichItemProjection) implements Response {}
-	public record EnrichItemProjection(
-		long datasourceId, long enrichItemId, EnrichItem.EnrichItemType enrichItemType,
-		String serviceName, String jsonConfig) implements Response {}
 
 	public static Behavior<Command> create() {
 		TransactionInvoker transactionInvoker =
@@ -40,7 +37,7 @@ public class EnrichItemActor {
 					() -> transactionInvoker.withStatelessTransaction(
 						tenantId, s ->
 							s.createQuery(
-								"select new io.openk9.datasource.pipeline.actor.EnrichItemActor.EnrichItemProjection(d.id, ei.id, ei.type, ei.serviceName, ei.jsonConfig) " +
+								"select new io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection(d.id, ei.id, ei.type, ei.serviceName, ei.jsonConfig) " +
 								"from Datasource d " +
 								"join d.enrichPipeline ep " +
 								"join ep.enrichPipelineItems epi " +
