@@ -258,6 +258,8 @@ public class DatasourceActor {
 			behaviorMergeType = EnrichItem.BehaviorMergeType.REPLACE;
 		}
 
+		boolean isJsonPathRoot = "$".equals(jsonPath);
+
 		JsonPath jsonPathObject = JsonPath.compile(jsonPath);
 
 		Object prevRead = jsonPathObject.read(prevJsonObject);
@@ -272,8 +274,14 @@ public class DatasourceActor {
 			switch (behaviorMergeType) {
 				case REPLACE -> {
 					log.info("replacing jsonPath: {} in prevJsonObject", jsonPath);
-					jsonPathObject.set(
-						prevJsonObject, newJsonObject, VertxJsonNodeJsonProvider.CONFIGURATION);
+					if (!isJsonPathRoot) {
+						jsonPathObject.set(
+							prevJsonObject, newJsonObject,
+							VertxJsonNodeJsonProvider.CONFIGURATION);
+					}
+					else {
+						prevJsonObject = newJsonObject;
+					}
 				}
 				case MERGE -> {
 
@@ -281,10 +289,22 @@ public class DatasourceActor {
 
 						log.info("merging jsonPath: {} in prevJsonObject", jsonPath);
 
-						jsonPathObject.set(
-							prevJsonObject,
-							new JsonObject().mergeIn((JsonObject) prevRead).mergeIn(newJsonObject, true),
-							VertxJsonNodeJsonProvider.CONFIGURATION);
+						JsonObject merged =
+							new JsonObject()
+								.mergeIn((JsonObject) prevRead)
+								.mergeIn(newJsonObject, true);
+
+						if (!isJsonPathRoot) {
+
+							jsonPathObject.set(
+								prevJsonObject,
+								merged,
+								VertxJsonNodeJsonProvider.CONFIGURATION);
+
+						}
+						else {
+							prevJsonObject = merged;
+						}
 
 					}
 
