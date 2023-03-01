@@ -7,12 +7,17 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 
 import javax.enterprise.inject.spi.CDI;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class VertxUtil {
 
 	public static void runOnContext(Supplier<Uni<?>> supplier) {
 		runOnContext(() -> supplier.get().subscribe().with(__ -> {}));
+	}
+
+	public static <T> void runOnContext(Supplier<Uni<T>> supplier, Consumer<T> consumer) {
+		runOnContext(() -> supplier.get().subscribe().with(consumer));
 	}
 	public static void runOnContext(Runnable runnable) {
 		runOnContext(CDI.current().select(Vertx.class).get(), runnable);
