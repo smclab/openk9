@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="db/datasource/2023/03/01-01-changelog.xml">
+
+	<changeSet id="1677676535139-1" author="openk9">
+		<addColumn tableName="enrich_item">
+			<column name="behavior_merge_type" type="VARCHAR2(255)" value="MERGE"/>
+			<column name="json_path" type="VARCHAR2(255)" value="$" />
+		</addColumn>
+	</changeSet>
+
+</databaseChangeLog>

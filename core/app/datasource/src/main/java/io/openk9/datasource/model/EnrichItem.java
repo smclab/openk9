@@ -60,8 +60,19 @@ public class EnrichItem extends K9Entity {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
+	@Column(name = "json_path", nullable = false)
+	private String jsonPath;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "behavior_merge_type", nullable = false)
+	private BehaviorMergeType behaviorMergeType;
+
 	public enum EnrichItemType {
 		ASYNC, SYNC
+	}
+
+	public enum BehaviorMergeType {
+		MERGE, REPLACE
 	}
 
 }

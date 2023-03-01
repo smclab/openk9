@@ -4,7 +4,7 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
-import com.google.common.collect.Maps;
+import com.jayway.jsonpath.JsonPath;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.DataIndex;
@@ -12,12 +12,13 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.sql.TransactionInvoker;
+import io.openk9.datasource.util.VertxJsonNodeJsonProvider;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.spi.CDI;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -177,6 +178,8 @@ public class DatasourceActor {
 		String jsonConfig = enrichItem.getJsonConfig();
 		EnrichItem.EnrichItemType type = enrichItem.getType();
 		String validationScript = enrichItem.getValidationScript();
+		String jsonPath = enrichItem.getJsonPath();
+		EnrichItem.BehaviorMergeType behaviorMergeType = enrichItem.getBehaviorMergeType();
 
 		JsonObject enrichItemConfig =
 			jsonConfig == null || jsonConfig.isBlank()
@@ -217,7 +220,7 @@ public class DatasourceActor {
 
 					DataPayload newDataPayload = newJsonPayload.mapTo(DataPayload.class);
 
-					printDiff(ctx.getLog(), enrichItem, dataPayload, newDataPayload);
+					mergeResponse(ctx.getLog(), jsonPath, behaviorMergeType, dataPayload, newDataPayload);
 
 					return initPipeline(
 						ctx, supervisorActorRef,
@@ -239,19 +242,56 @@ public class DatasourceActor {
 
 	}
 
-	private static void printDiff(
-		Logger log, EnrichItem enrichItem,
-		DataPayload dataPayload, DataPayload newDataPayload) {
+	private static DataPayload mergeResponse(
+		Logger log, String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
+		DataPayload prevDataPayload, DataPayload newDataPayload) {
 
-		Map<String, Object> initial = dataPayload.getRest();
-		Map<String, Object> enrichResponse = newDataPayload.getRest();
+		JsonObject prevJsonObject = new JsonObject(new LinkedHashMap<>(prevDataPayload.getRest()));
+		JsonObject newJsonObject = new JsonObject(new LinkedHashMap<>(newDataPayload.getRest()));
 
-		Map<String, Object> diff =
-			Maps.difference(initial, enrichResponse).entriesOnlyOnRight();
-
-		if (!diff.isEmpty()) {
-			log.info("enrichItem: " + enrichItem.getId() + " diff: " + new JsonObject(diff));
+		if (jsonPath == null || jsonPath.isBlank()) {
+			jsonPath = "$";
 		}
+
+		if (behaviorMergeType == null) {
+			behaviorMergeType = EnrichItem.BehaviorMergeType.REPLACE;
+		}
+
+		JsonPath jsonPathObject = JsonPath.compile(jsonPath);
+
+		Object prevRead = jsonPathObject.read(prevJsonObject);
+
+		if (prevRead == null) {
+			log.info("jsonPath: {} not found in prevJsonObject", jsonPath);
+			log.info("setting new value without merge");
+			jsonPathObject.set(
+				prevJsonObject, newJsonObject, VertxJsonNodeJsonProvider.CONFIGURATION);
+		}
+		else {
+			switch (behaviorMergeType) {
+				case REPLACE -> {
+					log.info("replacing jsonPath: {} in prevJsonObject", jsonPath);
+					jsonPathObject.set(
+						prevJsonObject, newJsonObject, VertxJsonNodeJsonProvider.CONFIGURATION);
+				}
+				case MERGE -> {
+
+					if (prevRead instanceof JsonObject) {
+
+						log.info("merging jsonPath: {} in prevJsonObject", jsonPath);
+
+						jsonPathObject.set(
+							prevJsonObject,
+							new JsonObject().mergeIn((JsonObject) prevRead).mergeIn(newJsonObject, true),
+							VertxJsonNodeJsonProvider.CONFIGURATION);
+
+					}
+
+				}
+			};
+		}
+
+		return prevDataPayload.rest(prevJsonObject.getMap());
 
 	}
 
@@ -312,6 +352,5 @@ public class DatasourceActor {
 
 		return Behaviors.same();
 	}
-
 
 }

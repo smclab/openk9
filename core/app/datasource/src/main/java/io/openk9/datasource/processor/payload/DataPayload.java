@@ -62,6 +62,21 @@ public class DataPayload {
 			.build();
 	}
 
+	public DataPayload rest(Map<String, Object> rest) {
+		return DataPayload.builder()
+			.ingestionId(ingestionId)
+			.datasourceId(datasourceId)
+			.contentId(contentId)
+			.parsingDate(parsingDate)
+			.rawContent(rawContent)
+			.tenantId(tenantId)
+			.documentTypes(documentTypes)
+			.resources(resources)
+			.acl(acl)
+			.rest(rest)
+			.build();
+	}
+
 	@JsonAnySetter
 	public void addRest(String key, Object value) {
 
