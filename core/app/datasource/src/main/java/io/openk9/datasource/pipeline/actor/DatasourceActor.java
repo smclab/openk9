@@ -218,9 +218,10 @@ public class DatasourceActor {
 
 					JsonObject newJsonPayload = result.getJsonObject("payload");
 
-					DataPayload newDataPayload = newJsonPayload.mapTo(DataPayload.class);
-
-					mergeResponse(ctx.getLog(), jsonPath, behaviorMergeType, dataPayload, newDataPayload);
+					DataPayload newDataPayload =
+						mergeResponse(
+							ctx.getLog(), jsonPath, behaviorMergeType, dataPayload,
+							newJsonPayload.mapTo(DataPayload.class));
 
 					return initPipeline(
 						ctx, supervisorActorRef,
