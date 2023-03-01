@@ -25,13 +25,14 @@ public class PipelineResource {
 
 	@POST
 	@RolesAllowed("k9-admin")
-	@Path("/enrich-item/{enrich-item-id}")
+	@Path("/datasource/{datasource-id}/enrich-item/{enrich-item-id}")
 	public Uni<JsonObject> callEnrichItem(
+		@PathParam("datasource-id") long datasourceId,
 		@PathParam("enrich-item-id") long enrichItemId,
 		JsonObject datasourcePayload) {
 
 		return actorSystem.callEnrichItem(
-			enrichItemId, tenantResolver.getTenantName(),
+			datasourceId, enrichItemId, tenantResolver.getTenantName(),
 			datasourcePayload.getMap());
 
 	}

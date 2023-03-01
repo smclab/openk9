@@ -12,7 +12,7 @@ import javax.enterprise.inject.spi.CDI;
 
 public class EnrichItemActor {
 	public sealed interface Command {}
-	public record EnrichItemCallback(long enrichItemId, String tenantId, ActorRef<EnrichItemCallbackResponse> replyTo) implements Command {}
+	public record EnrichItemCallback(long datasourceId, long enrichItemId, String tenantId, ActorRef<EnrichItemCallbackResponse> replyTo) implements Command {}
 	public sealed interface Response {}
 	public record EnrichItemCallbackResponse(EnrichItemProjection enrichItemProjection) implements Response {}
 
@@ -32,6 +32,7 @@ public class EnrichItemActor {
 				String tenantId = enrichItemCallback.tenantId;
 				long enrichItemId = enrichItemCallback.enrichItemId;
 				ActorRef<EnrichItemCallbackResponse> replyTo = enrichItemCallback.replyTo;
+				long datasourceId = enrichItemCallback.datasourceId;
 
 				VertxUtil.runOnContext(
 					() -> transactionInvoker.withStatelessTransaction(
@@ -42,9 +43,10 @@ public class EnrichItemActor {
 								"join d.enrichPipeline ep " +
 								"join ep.enrichPipelineItems epi " +
 								"join epi.enrichItem ei " +
-								"where ei.id = :enrichItemId",
+								"where d.id = :datasourceId and ei.id = :enrichItemId",
 									EnrichItemProjection.class
 								)
+								.setParameter("datasourceId", datasourceId)
 								.setParameter("enrichItemId", enrichItemId)
 								.getSingleResult()
 					), eip -> replyTo.tell(new EnrichItemCallbackResponse(eip)));
