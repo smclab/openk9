@@ -12,7 +12,7 @@ import javax.enterprise.inject.spi.CDI;
 
 public class EnrichItemActor {
 	public sealed interface Command {}
-	public record EnrichItemCallback(long datasourceId, long enrichItemId, String tenantId, ActorRef<EnrichItemCallbackResponse> replyTo) implements Command {}
+	public record EnrichItemCallback(long enrichItemId, String tenantId, ActorRef<EnrichItemCallbackResponse> replyTo) implements Command {}
 	public sealed interface Response {}
 	public record EnrichItemCallbackResponse(EnrichItemProjection enrichItemProjection) implements Response {}
 
@@ -32,21 +32,17 @@ public class EnrichItemActor {
 				String tenantId = enrichItemCallback.tenantId;
 				long enrichItemId = enrichItemCallback.enrichItemId;
 				ActorRef<EnrichItemCallbackResponse> replyTo = enrichItemCallback.replyTo;
-				long datasourceId = enrichItemCallback.datasourceId;
 
 				VertxUtil.runOnContext(
 					() -> transactionInvoker.withStatelessTransaction(
 						tenantId, s ->
 							s.createQuery(
-								"select new io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection(d.id, ei.id, ei.type, ei.serviceName, ei.jsonConfig) " +
+								"select distinct new io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection(d.id, ei.id, ei.type, ei.serviceName, ei.jsonConfig) " +
 								"from Datasource d " +
 								"join d.enrichPipeline ep " +
 								"join ep.enrichPipelineItems epi " +
 								"join epi.enrichItem ei " +
-								"where d.id = :datasourceId and ei.id = :enrichItemId",
-									EnrichItemProjection.class
-								)
-								.setParameter("datasourceId", datasourceId)
+								"where ei.id = :enrichItemId", EnrichItemProjection.class)
 								.setParameter("enrichItemId", enrichItemId)
 								.getSingleResult()
 					), eip -> replyTo.tell(new EnrichItemCallbackResponse(eip)));

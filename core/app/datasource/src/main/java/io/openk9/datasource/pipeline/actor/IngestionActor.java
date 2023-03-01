@@ -28,7 +28,7 @@ public class IngestionActor {
 	private record DatasourceResponseWrapper(Message<?> message, DatasourceActor.Response response) implements Command {}
 	private record EnrichItemResponseWrapper(EnrichItemActor.EnrichItemCallbackResponse response, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command {}
 	private record SupervisorResponseWrapper(Supervisor.Response response, ActorRef<Response> replyTo) implements Command {}
-	public record EnrichItemCallback(long datasourceId, long enrichItemId, String tenantId, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command { }
+	public record EnrichItemCallback(long enrichItemId, String tenantId, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command { }
 	public sealed interface Response {}
 	public record EnrichItemCallbackResponse(JsonObject jsonObject) implements Response {}
 	public record EnrichItemCallbackError(String message) implements Response {}
@@ -222,7 +222,7 @@ public class IngestionActor {
 
 		enrichItemActorRef.tell(
 			new EnrichItemActor.EnrichItemCallback(
-				eic.datasourceId, eic.enrichItemId, eic.tenantId, enrichItemCallbackResponseActorRef));
+				eic.enrichItemId, eic.tenantId, enrichItemCallbackResponseActorRef));
 
 		return Behaviors.same();
 

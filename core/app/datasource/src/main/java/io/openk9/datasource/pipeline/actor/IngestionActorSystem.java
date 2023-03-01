@@ -32,14 +32,13 @@ public class IngestionActorSystem {
 	}
 
 	public Uni<JsonObject> callEnrichItem(
-		long datasourceId, long enrichItemId, String tenantId,
-		Map<String, Object> datasourcePayload) {
+		long enrichItemId, String tenantId, Map<String, Object> datasourcePayload) {
 
 		CompletionStage<IngestionActor.Response> future =
 			AskPattern.ask(
 				actorSystem,
 				(ActorRef<IngestionActor.Response> replyTo) ->
-					new IngestionActor.EnrichItemCallback(datasourceId, enrichItemId, tenantId, datasourcePayload, replyTo),
+					new IngestionActor.EnrichItemCallback(enrichItemId, tenantId, datasourcePayload, replyTo),
 				Duration.ofSeconds(30),
 				actorSystem.scheduler());
 
