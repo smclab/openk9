@@ -3,6 +3,7 @@ package io.openk9.datasource.index;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
@@ -81,38 +82,44 @@ public class IndexService {
 
 	public Uni<List<CatResponse>> get_catIndices(String...indexNames) {
 
-		String indexName =
-			indexNames == null || indexNames.length == 0
-				? ""
-				: String.join(",", indexNames);
+		return getOnlyExistsIndexNames(List.of(indexNames))
+			.flatMap(existIndexNames -> {
 
-		return Uni
-			.createFrom()
-			.<Response>emitter((sink) -> {
+				if (existIndexNames.isEmpty()) {
+					return Uni.createFrom().item(List.of());
+				}
 
-				RestClient lowLevelClient = client.getLowLevelClient();
+				String indexName = String.join(",", existIndexNames);
 
-				Request
-					catRequest = new Request("GET", "/_cat/indices/" + indexName);
+				return Uni
+						.createFrom()
+						.<Response>emitter((sink) -> {
 
-				catRequest.addParameter("format", "JSON");
-				catRequest.addParameter("v", "true");
+							RestClient lowLevelClient = client.getLowLevelClient();
 
-				lowLevelClient.performRequestAsync(
-					catRequest,
-					new ResponseListener() {
-						@Override
-						public void onSuccess(Response response) {
-							sink.complete(response);
-						}
+							Request
+								catRequest = new Request("GET", "/_cat/indices/" + indexName);
 
-						@Override
-						public void onFailure(Exception exception) {
-							sink.fail(exception);
-						}
-					});
-			})
-			.map(IndexService::responseToCatResponses);
+							catRequest.addParameter("format", "JSON");
+							catRequest.addParameter("v", "true");
+
+							lowLevelClient.performRequestAsync(
+								catRequest,
+								new ResponseListener() {
+									@Override
+									public void onSuccess(Response response) {
+										sink.complete(response);
+									}
+
+									@Override
+									public void onFailure(Exception exception) {
+										sink.fail(exception);
+									}
+								});
+						})
+						.map(IndexService::responseToCatResponses);
+				}
+			);
 	}
 
 	private static List<CatResponse> responseToCatResponses(Response response) {
@@ -178,6 +185,50 @@ public class IndexService {
 				}
 				return Uni.createFrom().item(countResponse.getCount());
 			});
+	}
+
+	public Uni<List<String>> getOnlyExistsIndexNames(List<String> indexNames) {
+		return getExistsAndIndexNames(indexNames)
+			.onItem()
+			.transformToUni(existsAndIndexNames -> {
+				List<String> onlyExistsIndexNames = new ArrayList<>();
+				for (Tuple2<Boolean, String> existsAndIndexName : existsAndIndexNames) {
+					if (existsAndIndexName.getItem1()) {
+						onlyExistsIndexNames.add(existsAndIndexName.getItem2());
+					}
+				}
+				return Uni.createFrom().item(onlyExistsIndexNames);
+			});
+	}
+
+
+	public Uni<List<Tuple2<Boolean, String>>> getExistsAndIndexNames(List<String> indexNames) {
+
+		List<Uni<Tuple2<Boolean, String>>> existIndexNames =
+			new ArrayList<>(indexNames.size());
+
+		for (String indexName : indexNames) {
+			Uni<Tuple2<Boolean, String>> existIndexName =
+				indexExist(indexName)
+					.onItemOrFailure()
+					.transform((exist, t) -> {
+
+						if (t != null) {
+							logger.error("Error while checking index exist", t);
+							return false;
+						}
+
+						return exist;
+
+					})
+					.map(exist -> Tuple2.of(exist, indexName));
+			existIndexNames.add(existIndexName);
+		}
+		return Uni
+			.join()
+			.all(existIndexNames)
+			.andCollectFailures();
+
 	}
 
 	public Uni<Boolean> indexExist(String name) {

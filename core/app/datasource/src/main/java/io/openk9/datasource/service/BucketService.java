@@ -404,7 +404,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			Uni<? extends T>> mapper) {
 
 		return withStatelessTransaction(s -> getDataIndexNames(bucketId, s))
-			.flatMap(this::getExistsAndIndexNames)
+			.flatMap(indexService::getExistsAndIndexNames)
 			.flatMap(mapper);
 
 	}
@@ -426,37 +426,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		}
 
 		return mapper.apply(existIndexName);
-	}
-
-	private Uni<List<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>>> getExistsAndIndexNames(
-		List<String> indexnames) {
-
-		 List<Uni<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>>> existIndexNames =
-			new ArrayList<>(indexnames.size());
-
-		for (String indexname : indexnames) {
-			Uni<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>> existIndexName =
-				indexService
-					.indexExist(indexname)
-					.onItemOrFailure()
-					.transform((exist, t) -> {
-
-						if (t != null) {
-							logger.error("Error while checking index exist", t);
-							return false;
-						}
-
-						return exist;
-
-					})
-					.map(exist -> io.smallrye.mutiny.tuples.Tuple2.of(exist, indexname));
-			existIndexNames.add(existIndexName);
-		}
-		return Uni
-			.join()
-			.all(existIndexNames)
-			.andCollectFailures();
-
 	}
 
 	private Uni<List<String>> getDataIndexNames(Long bucketId, Mutiny.StatelessSession s) {
