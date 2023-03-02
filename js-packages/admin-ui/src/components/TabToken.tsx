@@ -129,9 +129,9 @@ export function TabToken() {
             form.submit();
           }}
         >
-          <TextInput label="Name" {...form.inputProps("name")} />
+          <TextInput label="Name" {...form.inputProps("name")}/>
           <TextArea label="Description" {...form.inputProps("description")} />
-          <TextInput label="Value" {...form.inputProps("value")} />
+          <TextInput label="Value" {...form.inputProps("value")} description="Value it must match for this token"/>
           <EnumSelect label="Token Type" dict={TokenType} {...form.inputProps("tokenType")} />
           <BooleanInput label="Filter" {...form.inputProps("filter")} />
           {tabTokenId !== "new" && (
@@ -153,6 +153,7 @@ export function TabToken() {
                   documentTypeFieldId: tabTokenTabQuery.data?.tokenTab?.docTypeField?.id!,
                 })}
                 invalidate={() => tabTokenTabQuery.refetch()}
+                description={"Document Type Field associated to this token"}
               />
             </ClayForm>
           )}

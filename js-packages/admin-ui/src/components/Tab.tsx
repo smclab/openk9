@@ -85,9 +85,11 @@ export function Tab() {
           form.submit();
         }}
       >
-        <TextInput label="Name" {...form.inputProps("name")} />
+        <TextInput label="Name" {...form.inputProps("name")} description="Name used to render tab in search frontend"/>
         <TextArea label="Description" {...form.inputProps("description")} />
-        <NumberInput label="Priority" {...form.inputProps("priority")} />
+        <NumberInput label="Priority" {...form.inputProps("priority")} 
+        description="Define priority according to which tabs are
+        orderder by search frontend during rendering" />
         <div className="sheet-footer">
           <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {tabId === "new" ? "Create" : "Update"}

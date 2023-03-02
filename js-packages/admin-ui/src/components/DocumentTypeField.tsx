@@ -181,12 +181,15 @@ export function DocumentTypeField() {
           }}
         >
           <TextInput label="Name" {...form.inputProps("name")} />
-          <TextInput label="Field Name" {...form.inputProps("fieldName")} />
+          <TextInput label="Field Name" {...form.inputProps("fieldName")} 
+          description="Name used to retrive field mapping, composed of Document Type and the name of indexed field"/>
           <TextArea label="Description" {...form.inputProps("description")} />
-          <EnumSelect label="Field Type" dict={FieldType} {...form.inputProps("fieldType")} />
-          <NumberInput label="Boost" {...form.inputProps("boost")} />
-          <BooleanInput label="Searchable" {...form.inputProps("searchable")} />
-          <BooleanInput label="Exclude" {...form.inputProps("exclude")} />
+          <EnumSelect label="Field Type" dict={FieldType} {...form.inputProps("fieldType")}
+          description={"Type associated to field. See Elasticsearch documentation for field data types"}/>
+          <NumberInput label="Boost" {...form.inputProps("boost")} 
+          description="Define how much score is boosted in case of match on this field"/>
+          <BooleanInput label="Searchable" {...form.inputProps("searchable")} description="If field is searchable or not"/>
+          <BooleanInput label="Exclude" {...form.inputProps("exclude")} description="If field need to be excluded from search response or not"/>
           {documentTypeFieldId !== "new" && (
             <ClayForm
               className="sheet"
@@ -204,6 +207,7 @@ export function DocumentTypeField() {
                 useRemoveMutation={useUnbindnAlyzerToDocTypeFieldMutation}
                 mapValueToRemoveMutationVariables={() => ({ documentTypeFieldId })}
                 invalidate={() => documentTypeFieldQuery.refetch()}
+                description={"Analyzer associated to this Document Type Field"}
               />
             </ClayForm>
           )}

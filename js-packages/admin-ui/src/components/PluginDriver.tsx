@@ -285,11 +285,11 @@ const PluginDriverOptions = [
 
     descriptionAttribute: `
     {
-      "host": "",
-      "port": "",
-      "secure": "",
-      "path": "",
-      "method": ""
+      "host": "Host of external parser to use for data extraction",
+      "port": "Port where external parser listen",
+      "secure": "If the host is exposed is secure way or not",
+      "path": "Api call used to trigger data extraction",
+      "method": "Http method corrisponding to api path"
     }
     `,
     visible: "false",

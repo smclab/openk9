@@ -208,14 +208,14 @@ export function DataSource() {
             form.submit();
           }}
         >
-          <TextInput label="Name" {...form.inputProps("name")} />
+          <TextInput label="Name" {...form.inputProps("name")}/>
           <TextArea label="Description" {...form.inputProps("description")} />
           <BooleanInput
             label="Schedulable"
             {...form.inputProps("schedulable")}
             description={"If datasource is automatically schedulable"}
           />
-          <CronInput label="Scheduling" {...form.inputProps("scheduling")} description={"Cron Quartz expression to specify "} />
+          <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
           {datasourceId !== "new" && (
             <ClayForm
               onSubmit={(event) => {
@@ -256,11 +256,12 @@ export function DataSource() {
                 useRemoveMutation={useUnbindEnrichPipelineToDataSourceMutation}
                 mapValueToRemoveMutationVariables={() => ({ datasourceId })}
                 invalidate={() => datasourceQuery.refetch()}
-                description={"Simple Text"}
+                description={"Definition of enrich pipeline applied to Datasource's data during processing"}
               />
             </ClayForm>
           )}
-          <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
+          <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} 
+          description="Json configuration sended to corresponding external parser when execution start" />
 
           <div className="sheet-footer">
             <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>

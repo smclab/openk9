@@ -115,11 +115,11 @@ export function Annotator() {
         }}
       >
         <TextInput label="Name" {...form.inputProps("name")} />
-        <TextInput label="Field Name" {...form.inputProps("fieldName")} />
-        <EnumSelect label="Fuziness" dict={Fuzziness} {...form.inputProps("fuziness")} />
-        <EnumSelect label="Type" dict={AnnotatorType} {...form.inputProps("type")} />
+        <TextInput label="Field Name" {...form.inputProps("fieldName")} description="Field name used by annotator to get result"/>
+        <EnumSelect label="Fuziness" dict={Fuzziness} {...form.inputProps("fuziness")} description="Fuzziness used by annotator to search result"/>
+        <EnumSelect label="Type" dict={AnnotatorType} {...form.inputProps("type")} description="Annotator type. Read documentation for more information"/>
         <TextArea label="Description" {...form.inputProps("description")} />
-        <NumberInput label="Size" {...form.inputProps("size")} />
+        <NumberInput label="Size" {...form.inputProps("size")} description="Size for result retrieved by annotator"/>
         {annotatorId !== "new" && (
           <ClayForm
             onSubmit={(event) => {
