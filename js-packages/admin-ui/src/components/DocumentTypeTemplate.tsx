@@ -117,7 +117,8 @@ export function DocumentTypeTemplate() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <EnumSelect label="Template Type" dict={TemplateType} {...form.inputProps("templateType")} />
+        <EnumSelect label="Template Type" dict={TemplateType} {...form.inputProps("templateType")} 
+        description={"If template is written in Typescript or Javascript"}/>
         {(() => {
           switch (form.inputProps("templateType").value) {
             case TemplateType.TypescriptSource: {

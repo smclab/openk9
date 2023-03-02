@@ -287,10 +287,12 @@ export function EnumSelect<E extends Record<string, any>>({
   disabled,
   validationMessages,
   dict,
+  description
 }: BaseInputProps<E[string]> & { dict: E }) {
   return (
     <div className={`form-group ${validationMessages.length ? "has-warning" : ""}`}>
       <label htmlFor={id}>{label}</label>
+      {description && InformationField(description)}
       <select
         className="form-control"
         id={id}
@@ -375,6 +377,7 @@ export function NumberInput({
   disabled,
   validationMessages,
   item,
+  description
 }: BaseInputProps<number> & { item?: boolean }) {
   const ref = React.useRef<HTMLInputElement | null>(null);
   React.useLayoutEffect(() => {
@@ -385,6 +388,7 @@ export function NumberInput({
   return (
     <div className={`${item ? "form-group-item" : "form-group"} ${validationMessages.length ? "has-warning" : ""}`}>
       <label htmlFor={id}>{label}</label>
+      {description && InformationField(description)}
       <input
         ref={ref}
         type="number"
@@ -1079,6 +1083,7 @@ export function CronInput(props: BaseInputProps<string>) {
             <ClayForm.Group>
               <div className="form-group-item">
                 <label>Preset</label>
+                {description && InformationField(description)}
                 <ClaySelect value={value} onChange={(event) => onChange(event.currentTarget.value)}>
                   <ClaySelect.Option label="Custom" value="" />
                   <ClaySelect.Option label="Every 5 Minutes" value="0 */5 * ? * * *" />

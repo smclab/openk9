@@ -91,8 +91,10 @@ export function SuggestionCategory() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <NumberInput label="Priority" {...form.inputProps("priority")} />
-        <BooleanInput label="Multi Select" {...form.inputProps("multiSelect")} />
+        <NumberInput label="Priority" {...form.inputProps("priority")} description="Define priority according to which suggestion cateogories are
+        orderder by search frontend during rendering"/>
+        <BooleanInput label="Multi Select" {...form.inputProps("multiSelect")} 
+        description="If currente Suggestion Category is rendered as multi label filter or not"/>
         <div className="sheet-footer">
           <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {suggestionCategoryId === "new" ? "Create" : "Update"}

@@ -11,42 +11,43 @@ import { GitHubLogo } from "./Logo/GitHubLogo";
 import { GoogleDriveLogo } from "./Logo/GoogleDriveLogo";
 import { LiferayLogo } from "./Logo/LiferayLogo";
 import { DropBoxLogo } from "./Logo/DropBoxLogo";
+import { YouTubeLogo } from "./Logo/YouTubeLogo";
 import { ClassNameButton } from "../App";
 
 const wizards = [
   {
     title: "Web Crawler",
-    description: "This is a test",
+    description: "Configure a classic Web Crawler to get contents from public sites",
     path: "web-crawler",
     icon: <ClayIcon symbol={"globe"} />,
   },
   {
     title: "Sitemap",
-    description: "This is a test",
+    description: "Configure a Web Crawler to get contents using Sitemap",
     path: "sitemap",
     icon: <ClayIcon symbol={"organizations"} />,
   },
   {
     title: "Database",
-    description: "This is a test",
+    description: "Define a datasource to get data from different databases",
     path: "database",
     icon: <ClayIcon symbol={"archive"} />,
   },
   {
     title: "Server email",
-    description: "This is a test",
+    description: "Connect your Imap server and index emails",
     path: "server-email",
     icon: <ClayIcon symbol={"envelope-open"} />,
   },
   {
     title: "GitHub",
-    description: "This is a test",
+    description: "Index inside Openk9 your repos, issues and objects coming from Github",
     path: "github",
     icon: <GitHubLogo height={100} weigth={250} />,
   },
   {
     title: "GitLab",
-    description: "This is a test",
+    description: "Index inside Openk9 your repos, issues and objects coming from Gitlab",
     path: "gitlab",
     icon: <GitLabLogo height={150} weigth={100} />,
   },
@@ -58,15 +59,21 @@ const wizards = [
   },
   {
     title: "Google Drive",
-    description: "This is a test",
+    description: "Index inside Openk9 documents and other files coming from Google Drive",
     path: "google-drive",
     icon: <GoogleDriveLogo height={150} weigth={100} />,
   },
   {
     title: "DropBox",
-    description: "This is a test",
+    description: "Index inside Openk9 documents and other files coming from Dropbox",
     path: "dropbox",
     icon: <DropBoxLogo height={150} weigth={100} />,
+  },
+  {
+    title: "YouTube",
+    description: "Retrieve videos with metadata from your YouTube channel",
+    path: "youtube",
+    icon: <YouTubeLogo height={150} weigth={100} />,
   },
 ];
 

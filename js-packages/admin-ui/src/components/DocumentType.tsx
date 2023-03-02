@@ -108,6 +108,7 @@ export function DocumentType() {
               useRemoveMutation={useUnbindDocumentTypeTemplateFromDocumentTypeMutation}
               mapValueToRemoveMutationVariables={() => ({ documentTypeId })}
               invalidate={() => documentTypeQuery.refetch()}
+              description={"Javascript template for card and detail rendering associated to current Document Type"}
             />
           </ClayForm>
         )}

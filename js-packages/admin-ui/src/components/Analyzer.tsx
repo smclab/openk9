@@ -199,6 +199,7 @@ export function Analyzer() {
                 useRemoveMutation={useUnbindnTokenizerToAnalyzerMutation}
                 mapValueToRemoveMutationVariables={() => ({ analyzerId })}
                 invalidate={() => analyzerQuery.refetch()}
+                description={"Tokenizer associated to Analyzer"}
               />
             </ClayForm>
           )}
@@ -268,7 +269,7 @@ gql`
 const TemplateAnalyzers = [
   {
     title: "select-type",
-    description: "custom template.",
+    description: "custom analyzer.",
     Json: `
   {
    
@@ -281,7 +282,7 @@ const TemplateAnalyzers = [
   },
   {
     title: "custom",
-    description: "custom template.",
+    description: "custom analyzer.",
     Json: `
   {
    
