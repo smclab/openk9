@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
@@ -31,22 +32,23 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.elasticsearch.client.RestHighLevelClient;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Set;
 
-;
-
 @ApplicationScoped
-public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDTO> {
+public class DataIndexService
+	extends BaseK9EntityService<DataIndex, DataIndexDTO> {
+
 	DataIndexService(DataIndexMapper mapper) {
-		 this.mapper = mapper;
+		this.mapper = mapper;
 	}
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {DataIndex_.NAME, DataIndex_.DESCRIPTION};
+		return new String[]{DataIndex_.NAME, DataIndex_.DESCRIPTION};
 	}
 
 	public Uni<Set<DocType>> getDocTypes(
@@ -63,48 +65,37 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean not) {
 		return findJoinConnection(
-			id, DataIndex_.DOC_TYPES, DocType.class, docTypeService.getSearchFields(),
+			id, DataIndex_.DOC_TYPES, DocType.class,
+			docTypeService.getSearchFields(),
 			after, before, first, last, searchText, sortByList, not);
+	}
+
+	public Uni<Long> getCountIndexDocuments(String name) {
+		return indexService.indexCount(name);
 	}
 
 	public Uni<Page<DocType>> getDocTypes(
 		long dataIndexId, Pageable pageable, String searchText) {
 
 		return findAllPaginatedJoin(
-			new Long[] {dataIndexId}, DataIndex_.DOC_TYPES, DocType.class, pageable.getLimit(),
-			pageable.getSortBy().name(), pageable.getAfterId(), pageable.getBeforeId(), searchText);
+			new Long[]{dataIndexId}, DataIndex_.DOC_TYPES, DocType.class,
+			pageable.getLimit(),
+			pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), searchText);
 	}
 
 	public Uni<Page<DocType>> getDocTypes(
 		long dataIndexId, Pageable pageable, Filter filter) {
 
 		return findAllPaginatedJoin(
-			new Long[] {dataIndexId}, DataIndex_.DOC_TYPES, DocType.class, pageable.getLimit(),
-			pageable.getSortBy().name(), pageable.getAfterId(), pageable.getBeforeId(), filter);
+			new Long[]{dataIndexId}, DataIndex_.DOC_TYPES, DocType.class,
+			pageable.getLimit(),
+			pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), filter);
 	}
 
-	public Uni<Tuple2<DataIndex, DocType>> addDocType(long dataIndexId, long docTypeId) {
-		return withTransaction((s) -> findById(dataIndexId)
-			 .onItem()
-			 .ifNotNull()
-			 .transformToUni(dataIndex ->
-				 docTypeService.findById(docTypeId)
-					 .onItem()
-					 .ifNotNull()
-					 .transformToUni(docType -> Mutiny2.fetch(s, dataIndex.getDocTypes())
-						 .flatMap(dts -> {
-							 if (dts.add(docType)) {
-								 dataIndex.setDocTypes(dts);
-								 return create(dataIndex)
-									 .map(di -> Tuple2.of(di, docType));
-							 }
-							 return Uni.createFrom().nullItem();
-						 })
-					 )
-			 ));
-	}
-
-	public Uni<Tuple2<DataIndex, DocType>> removeDocType(long dataIndexId, long docTypeId) {
+	public Uni<Tuple2<DataIndex, DocType>> addDocType(
+		long dataIndexId, long docTypeId) {
 		return withTransaction((s) -> findById(dataIndexId)
 			.onItem()
 			.ifNotNull()
@@ -112,25 +103,55 @@ public class DataIndexService extends BaseK9EntityService<DataIndex, DataIndexDT
 				docTypeService.findById(docTypeId)
 					.onItem()
 					.ifNotNull()
-					.transformToUni(docType -> Mutiny2.fetch(s, dataIndex.getDocTypes())
-						.flatMap(dts -> {
-							if (dts.remove(docType)) {
-								dataIndex.setDocTypes(dts);
-								return create(dataIndex)
-									.map(di -> Tuple2.of(di, docType));
-							}
-							return Uni.createFrom().nullItem();
-						})
+					.transformToUni(
+						docType -> Mutiny2.fetch(s, dataIndex.getDocTypes())
+							.flatMap(dts -> {
+								if (dts.add(docType)) {
+									dataIndex.setDocTypes(dts);
+									return create(dataIndex)
+										.map(di -> Tuple2.of(di, docType));
+								}
+								return Uni.createFrom().nullItem();
+							})
 					)
 			));
 	}
 
-	@Inject
-	DocTypeService docTypeService;
+	public Uni<Tuple2<DataIndex, DocType>> removeDocType(
+		long dataIndexId, long docTypeId) {
+		return withTransaction((s) -> findById(dataIndexId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(dataIndex ->
+				docTypeService.findById(docTypeId)
+					.onItem()
+					.ifNotNull()
+					.transformToUni(
+						docType -> Mutiny2.fetch(s, dataIndex.getDocTypes())
+							.flatMap(dts -> {
+								if (dts.remove(docType)) {
+									dataIndex.setDocTypes(dts);
+									return create(dataIndex)
+										.map(di -> Tuple2.of(di, docType));
+								}
+								return Uni.createFrom().nullItem();
+							})
+					)
+			));
+	}
 
 	@Override
 	public Class<DataIndex> getEntityClass() {
 		return DataIndex.class;
 	}
+
+	@Inject
+	DocTypeService docTypeService;
+
+	@Inject
+	IndexService indexService;
+
+	@Inject
+	RestHighLevelClient client;
 
 }

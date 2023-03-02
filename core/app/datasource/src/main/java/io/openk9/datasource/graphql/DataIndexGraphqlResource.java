@@ -21,6 +21,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
+import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
@@ -72,6 +73,15 @@ public class DataIndexGraphqlResource {
 		return dataIndexService.getDocTypesConnection(
 			dataIndex.getId(), after, before, first, last, searchText, sortByList,
 			notEqual);
+	}
+
+
+	public Uni<Long> getDocCount(@Source DataIndex dataIndex) {
+		return dataIndexService.getCountIndexDocuments(dataIndex.getName());
+	}
+
+	public Uni<CatResponse> getCat(@Source DataIndex dataIndex){
+		return indexService.get_catIndicesFirst(dataIndex.getName());
 	}
 
 	@Query

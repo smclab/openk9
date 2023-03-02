@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.QueryAnalysis;
@@ -44,6 +45,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -110,6 +112,18 @@ public class BucketGraphqlResource {
 
 	public Uni<QueryAnalysis> queryAnalysis(@Source Bucket bucket) {
 		return bucketService.getQueryAnalysis(bucket.getId());
+	}
+
+	public Uni<Long> getDocCount(@Source Bucket bucket){
+		return bucketService.getDocCountFromBucket(bucket.getId());
+	}
+
+	public Uni<Long> getIndexCount(@Source Bucket bucket){
+		return bucketService.getCountIndexFromBucket(bucket.getId());
+	}
+
+	public Uni<List<CatResponse>> getCatIndices(@Source Bucket bucket) {
+		return bucketService.get_catIndices(bucket.getId());
 	}
 
 	@Query

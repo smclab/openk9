@@ -19,10 +19,15 @@ package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.index.IndexService;
+import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.mapper.BucketMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -36,13 +41,20 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
 import javax.ws.rs.NotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 ;
 
@@ -361,13 +373,108 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			}));
 	}
 
+	public Uni<Long> getDocCountFromBucket(Long bucketId) {
+		 return consumeExistedIndexNames(bucketId, indexService::indexCount, 0L);
+	}
+
+	public Uni<List<CatResponse>> get_catIndices(Long bucketId){
+		 return consumeExistedIndexNames(bucketId, indexService::get_catIndices, List.of());
+	}
+
+	public Uni<Long> getCountIndexFromBucket(Long bucketId) {
+		return withTransaction(s ->
+			getDataIndexNames(bucketId, s)
+				.flatMap(this::getExistsAndIndexNames)
+				.map(list -> list.stream().filter(io.smallrye.mutiny.tuples.Tuple2::getItem1).count())
+		);
+	}
+
+	private <T> Uni<T> consumeExistedIndexNames(
+		Long bucketId, Function<List<String>, Uni<T>> mapper, T defaultValue) {
+
+		return withTransaction(s ->
+			getDataIndexNames(bucketId, s)
+				.flatMap(indexNames ->
+					getExistsAndIndexNames(indexNames)
+						.flatMap(listT -> {
+
+							List<String> existIndexName = new ArrayList<>();
+
+							for (io.smallrye.mutiny.tuples.Tuple2<Boolean, String> t2 : listT) {
+								if (t2.getItem1()) {
+									existIndexName.add(t2.getItem2());
+								}
+							}
+
+							if (existIndexName.isEmpty()) {
+								return Uni.createFrom().item(defaultValue);
+							}
+
+							return mapper.apply(existIndexName);
+
+						})
+				)
+		);
+
+	}
+
+	private Uni<List<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>>> getExistsAndIndexNames(
+		List<String> indexnames) {
+
+		 List<Uni<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>>> existIndexNames =
+			new ArrayList<>(indexnames.size());
+
+		for (String indexname : indexnames) {
+			Uni<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>> existIndexName =
+				indexService
+					.indexExist(indexname)
+					.onItemOrFailure()
+					.transform((exist, t) -> t == null && exist)
+					.map(exist -> io.smallrye.mutiny.tuples.Tuple2.of(exist, indexname));
+			existIndexNames.add(existIndexName);
+		}
+		return Uni
+			.join()
+			.all(existIndexNames)
+			.andCollectFailures();
+
+	}
+
+	private Uni<List<String>> getDataIndexNames(Long bucketId, Mutiny.Session s) {
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+
+		Root<Bucket> bucketRoot = criteriaQuery.from(Bucket.class);
+
+		Join<Bucket, Datasource> datasourceJoin = bucketRoot.join(Bucket_.datasources);
+
+		Join<Datasource, DataIndex> dataIndexJoin =
+			datasourceJoin.join(Datasource_.dataIndex);
+
+		criteriaQuery.select(dataIndexJoin.get(DataIndex_.name));
+		criteriaQuery.where(cb.equal(bucketRoot.get(Bucket_.id), bucketId));
+
+		criteriaQuery.distinct(true);
+
+		return s.createQuery(criteriaQuery).getResultList();
+	}
+
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {Bucket_.NAME, Bucket_.DESCRIPTION};
 	}
 
+	@Override
+	public Class<Bucket> getEntityClass() {
+		return Bucket.class;
+	}
+
 	@Inject
 	DatasourceService datasourceService;
+
+	 @Inject
+	IndexService indexService;
 
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
@@ -381,9 +488,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	@Inject
 	TabService tabService;
 
-	@Override
-	public Class<Bucket> getEntityClass() {
-		return Bucket.class;
-	}
+	@Inject
+	RestHighLevelClient client;
 
 }
