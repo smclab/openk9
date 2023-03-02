@@ -41,8 +41,8 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -374,48 +374,58 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Long> getDocCountFromBucket(Long bucketId) {
-		 return consumeExistedIndexNames(bucketId, indexService::indexCount, 0L);
+		return consumeExistedIndexNames(
+			bucketId, l -> consumeExistedIndexNames(indexService::indexCount, 0L, l));
 	}
 
 	public Uni<List<CatResponse>> get_catIndices(Long bucketId){
-		 return consumeExistedIndexNames(bucketId, indexService::get_catIndices, List.of());
+		 return consumeExistedIndexNames(
+			 bucketId, l -> consumeExistedIndexNames(indexService::get_catIndices, List.of(), l));
 	}
 
 	public Uni<Long> getCountIndexFromBucket(Long bucketId) {
-		return withTransaction(s ->
-			getDataIndexNames(bucketId, s)
-				.flatMap(this::getExistsAndIndexNames)
-				.map(list -> list.stream().filter(io.smallrye.mutiny.tuples.Tuple2::getItem1).count())
+		return consumeExistedIndexNames(
+			bucketId, list ->
+				Uni
+					.createFrom()
+					.item(
+						list
+							.stream()
+							.filter(io.smallrye.mutiny.tuples.Tuple2::getItem1)
+							.count()
+					)
 		);
 	}
 
 	private <T> Uni<T> consumeExistedIndexNames(
-		Long bucketId, Function<List<String>, Uni<T>> mapper, T defaultValue) {
+		Long bucketId,
+		Function<
+			List<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>>,
+			Uni<? extends T>> mapper) {
 
-		return withTransaction(s ->
-			getDataIndexNames(bucketId, s)
-				.flatMap(indexNames ->
-					getExistsAndIndexNames(indexNames)
-						.flatMap(listT -> {
+		return withStatelessTransaction(s -> getDataIndexNames(bucketId, s))
+			.flatMap(this::getExistsAndIndexNames)
+			.flatMap(mapper);
 
-							List<String> existIndexName = new ArrayList<>();
+	}
 
-							for (io.smallrye.mutiny.tuples.Tuple2<Boolean, String> t2 : listT) {
-								if (t2.getItem1()) {
-									existIndexName.add(t2.getItem2());
-								}
-							}
+	private static <T> Uni<T> consumeExistedIndexNames(
+		Function<List<String>, Uni<T>> mapper, T defaultValue,
+		List<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>> listT) {
 
-							if (existIndexName.isEmpty()) {
-								return Uni.createFrom().item(defaultValue);
-							}
+		List<String> existIndexName = new ArrayList<>();
 
-							return mapper.apply(existIndexName);
+		for (io.smallrye.mutiny.tuples.Tuple2<Boolean, String> t2 : listT) {
+			if (t2.getItem1()) {
+				existIndexName.add(t2.getItem2());
+			}
+		}
 
-						})
-				)
-		);
+		if (existIndexName.isEmpty()) {
+			return Uni.createFrom().item(defaultValue);
+		}
 
+		return mapper.apply(existIndexName);
 	}
 
 	private Uni<List<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>>> getExistsAndIndexNames(
@@ -429,7 +439,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				indexService
 					.indexExist(indexname)
 					.onItemOrFailure()
-					.transform((exist, t) -> t == null && exist)
+					.transform((exist, t) -> {
+
+						if (t != null) {
+							logger.error("Error while checking index exist", t);
+							return false;
+						}
+
+						return exist;
+
+					})
 					.map(exist -> io.smallrye.mutiny.tuples.Tuple2.of(exist, indexname));
 			existIndexNames.add(existIndexName);
 		}
@@ -440,7 +459,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	}
 
-	private Uni<List<String>> getDataIndexNames(Long bucketId, Mutiny.Session s) {
+	private Uni<List<String>> getDataIndexNames(Long bucketId, Mutiny.StatelessSession s) {
 
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
@@ -489,6 +508,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	TabService tabService;
 
 	@Inject
-	RestHighLevelClient client;
+	Logger logger;
 
 }

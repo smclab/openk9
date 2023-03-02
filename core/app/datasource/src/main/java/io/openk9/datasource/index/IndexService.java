@@ -170,20 +170,35 @@ public class IndexService {
 						UniActionListener.of(emitter)
 					)
 			)
-			.map(CountResponse::getCount);
+			.onItemOrFailure()
+			.transformToUni((countResponse, throwable) -> {
+				if (throwable != null) {
+					logger.error("Error getting index count", throwable);
+					return Uni.createFrom().nullItem();
+				}
+				return Uni.createFrom().item(countResponse.getCount());
+			});
 	}
 
 	public Uni<Boolean> indexExist(String name) {
 		return Uni
 			.createFrom()
-			.emitter(
+			.<Boolean>emitter(
 				emitter -> client
 					.indices()
 					.existsAsync(
 						new GetIndexRequest(name), RequestOptions.DEFAULT,
 						UniActionListener.of(emitter)
 					)
-			);
+			)
+			.onItemOrFailure()
+			.transformToUni((response, throwable) -> {
+				if (throwable != null) {
+					logger.error("Error getting index exist", throwable);
+					return Uni.createFrom().nullItem();
+				}
+				return Uni.createFrom().item(response);
+			});
 	}
 
 	@Inject
