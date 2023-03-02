@@ -82,7 +82,7 @@ public class QueryAnalysis extends K9Entity {
 	public List<String> getStopWordsList() {
 		List<String> stopWordsList = new LinkedList<>();
 		if (stopWords != null) {
-			String[] split = stopWords.split(",");
+			String[] split = stopWords.split(" ");
 			for (String s : split) {
 				stopWordsList.add(s.strip());
 			}
