@@ -35,6 +35,10 @@ public class DatasourceActor {
 		Supervisor.Response response) implements Command {}
 	private record IndexWriterResponseWrapper(
 		IndexWriterActor.Response response) implements Command {}
+	private record GroovyActorResponseWrapper(
+		GroovyActor.Response response) implements Command {}
+	private record InternalResponseWrapper(JsonObject jsonObject) implements Command {}
+	private record InternalError(String error) implements Command {}
 	public sealed interface Response {}
 	public enum Success implements Response {INSTANCE}
 	public record Failure(Throwable exception) implements Response {}
@@ -191,56 +195,104 @@ public class DatasourceActor {
 			"enrichItemConfig", enrichItemConfig
 		);
 
-		boolean async = type == EnrichItem.EnrichItemType.ASYNC;
+		if (type == EnrichItem.EnrichItemType.HTTP_ASYNC || type == EnrichItem.EnrichItemType.HTTP_SYNC) {
 
-		ActorRef<Supervisor.Response> supervisorAdapter =
-			ctx.messageAdapter(
-				Supervisor.Response.class,
-				SupervisorResponseWrapper::new);
+			boolean async = type == EnrichItem.EnrichItemType.HTTP_ASYNC;
 
-		supervisorActorRef.tell(
-			new Supervisor.Call(async, serviceName, payload, supervisorAdapter));
+			ActorRef<Supervisor.Response> supervisorAdapter =
+				ctx.messageAdapter(
+					Supervisor.Response.class,
+					SupervisorResponseWrapper::new);
+
+			supervisorActorRef.tell(
+				new Supervisor.Call(async, serviceName, payload, supervisorAdapter));
+
+		}
+		else if (type == EnrichItem.EnrichItemType.GROOVY_SCRIPT) {
+
+			ActorRef<GroovyActor.Command> groovyActorRef =
+				ctx.spawnAnonymous(GroovyActor.create());
+
+			ActorRef<GroovyActor.Response> groovyActorAdapter =
+				ctx.messageAdapter(
+					GroovyActor.Response.class,
+					GroovyActorResponseWrapper::new);
+
+			groovyActorRef.tell(
+				new GroovyActor.Execute(
+					dataPayload, validationScript, groovyActorAdapter));
+
+		}
+		else {
+			throw new RuntimeException("invalid type: " + type);
+		}
 
 		return Behaviors.receive(Command.class)
-			.onMessage(SupervisorResponseWrapper.class, srw -> {
+			.onMessage(GroovyActorResponseWrapper.class, garw -> {
+				GroovyActor.Response response = garw.response;
 
-				Supervisor.Response response = srw.response();
-
-				if (response instanceof Supervisor.Body) {
-					Supervisor.Body body = (Supervisor.Body) response;
-					JsonObject result = body.jsonObject();
-
-					logger.info("enrichItem: " + enrichItem.getId() + " OK ");
-
-					if (!tail.isEmpty()) {
-						logger.info("call next enrichItem");
-					}
-
-					JsonObject newJsonPayload = result.getJsonObject("payload");
-
-					if (newJsonPayload == null) {
-						newJsonPayload = result;
-					}
-
-					DataPayload newDataPayload =
-						mergeResponse(
-							ctx.getLog(), jsonPath, behaviorMergeType, dataPayload,
-							newJsonPayload.mapTo(DataPayload.class));
-
-					return initPipeline(
-						ctx, supervisorActorRef,
-						responseActorRef, replyTo, newDataPayload,
-						datasourceModel, tail);
+				if (response instanceof GroovyActor.GroovyResponse) {
+					GroovyActor.GroovyResponse groovyResponse =(GroovyActor.GroovyResponse)response;
+					ctx.getSelf().tell(new InternalResponseWrapper(groovyResponse.response()));
 				}
-				else if (response instanceof Supervisor.Error) {
-					Supervisor.Error error = (Supervisor.Error) response;
-					logger.error("enrichItem: " + enrichItem.getId() + " occurred error: " + error.error());
-					logger.error("terminating pipeline");
-					replyTo.tell(new Failure(new RuntimeException(error.error())));
-					return Behaviors.stopped();
+				else {
+					GroovyActor.GroovyError groovyError = (GroovyActor.GroovyError) response;
+					ctx.getSelf().tell(new InternalError(groovyError.error()));
 				}
 
 				return Behaviors.same();
+
+			})
+			.onMessage(SupervisorResponseWrapper.class, srw -> {
+				Supervisor.Response response = srw.response;
+
+				if (response instanceof Supervisor.Body) {
+					Supervisor.Body body = (Supervisor.Body) response;
+					ctx.getSelf().tell(new InternalResponseWrapper(body.jsonObject()));
+				}
+				else {
+					Supervisor.Error error = (Supervisor.Error) response;
+					ctx.getSelf().tell(new InternalError(error.error()));
+				}
+
+				return Behaviors.same();
+			})
+			.onMessage(InternalResponseWrapper.class, srw -> {
+
+				JsonObject result = srw.jsonObject();
+
+				logger.info("enrichItem: " + enrichItem.getId() + " OK ");
+
+				if (!tail.isEmpty()) {
+					logger.info("call next enrichItem");
+				}
+
+				JsonObject newJsonPayload = result.getJsonObject("payload");
+
+				if (newJsonPayload == null) {
+					newJsonPayload = result;
+				}
+
+				DataPayload newDataPayload =
+					mergeResponse(
+						ctx.getLog(), jsonPath, behaviorMergeType, dataPayload,
+						newJsonPayload.mapTo(DataPayload.class));
+
+				return initPipeline(
+					ctx, supervisorActorRef,
+					responseActorRef, replyTo, newDataPayload,
+					datasourceModel, tail);
+
+			})
+			.onMessage(InternalError.class, srw -> {
+
+				String error = srw.error();
+
+				logger.error("enrichItem: " + enrichItem.getId() + " occurred error: " + error);
+				logger.error("terminating pipeline");
+				replyTo.tell(new Failure(new RuntimeException(error)));
+
+				return Behaviors.stopped();
 
 			})
 			.build();

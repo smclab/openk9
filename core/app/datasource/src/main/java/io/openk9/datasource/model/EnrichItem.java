@@ -68,7 +68,7 @@ public class EnrichItem extends K9Entity {
 	private BehaviorMergeType behaviorMergeType;
 
 	public enum EnrichItemType {
-		ASYNC, SYNC
+		HTTP_ASYNC, HTTP_SYNC, GROOVY_SCRIPT
 	}
 
 	public enum BehaviorMergeType {

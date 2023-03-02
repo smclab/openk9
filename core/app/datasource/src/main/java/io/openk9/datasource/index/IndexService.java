@@ -142,6 +142,7 @@ public class IndexService {
 	}
 
 	private static JsonArray parseEntity(final HttpEntity entity) {
+
 		if (entity == null) {
 			throw new IllegalStateException("Response body expected but not returned");
 		}
