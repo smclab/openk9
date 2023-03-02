@@ -35,7 +35,7 @@ public class AggregatorAnnotator extends BaseAggregatorAnnotator {
 			label = annotator.getDocTypeField().getName();
 		}
 		else {
-			label = annotator.getDocTypeField().getParentDocTypeField().getFieldName();
+			label = annotator.getDocTypeField().getParentDocTypeField().getName();
 		}
 
 		semantics.put("tokenType", "TEXT");
