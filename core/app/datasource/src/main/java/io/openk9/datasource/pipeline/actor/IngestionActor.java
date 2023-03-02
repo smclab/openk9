@@ -167,7 +167,7 @@ public class IngestionActor {
 		String serviceName = enrichItemProjection.serviceName();
 		long datasourceId = enrichItemProjection.datasourceId();
 
-		boolean async = enrichItemType == EnrichItem.EnrichItemType.ASYNC;
+		boolean async = enrichItemType == EnrichItem.EnrichItemType.HTTP_ASYNC;
 
 		JsonObject datasourcePayloadJson = new JsonObject(datasourcePayload);
 
