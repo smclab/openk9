@@ -69,10 +69,10 @@ public class BucketResource {
 			String query =
 				"select new io.openk9.datasource.service.util.Tuple(dtf.fieldName, sdtf.fieldName) " +
 				"from TenantBinding tb " +
-				"join tb.bucket b " +
-				"join b.datasources d " +
-				"join d.dataIndex di " +
-				"join di.docTypes dt " +
+				"join fetch tb.bucket b " +
+				"join fetch b.datasources d " +
+				"join fetch d.dataIndex di " +
+				"join fetch di.docTypes dt " +
 				"join fetch dt.docTypeFields dtf " +
 				"left join fetch dtf.subDocTypeFields sdtf " +
 				"where tb.virtualHost = :virtualhost " +
