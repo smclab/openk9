@@ -7,6 +7,8 @@ import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -26,6 +28,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
@@ -54,6 +57,56 @@ public class BucketResource {
 	@GET
 	public Uni<List<SuggestionCategory>> getSuggestionCategories() {
 		return getSuggestionCategoryList(request.host());
+	}
+
+	@Path("/current/doc-type-fields-sorteable")
+	@GET
+	public Uni<List<DocTypeField>> getDocTypeFields(){
+		return getDocTypeFieldsList(request.host());
+	}
+
+	private Uni<List<DocTypeField>> getDocTypeFieldsList(String virtualhost) {
+		return transactionInvoker.withTransaction(session -> {
+
+			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+
+			CriteriaQuery<DocTypeField> query = cb.createQuery(DocTypeField.class);
+
+			Root<Bucket> from = query.from(Bucket.class);
+
+			Join<Bucket, TenantBinding> tenantBindingJoin =
+				from.join(Bucket_.tenantBinding);
+
+			Join<DocType, DocTypeField> fetch =
+				from.join(Bucket_.datasources)
+					.join(Datasource_.dataIndex)
+					.join(DataIndex_.docTypes)
+					.join(DocType_.docTypeFields);
+
+			SetJoin<DocTypeField, DocTypeField > subDocTypeFieldFetch =
+				fetch.join(DocTypeField_.subDocTypeFields, JoinType.LEFT);
+
+			fetch.on(
+				cb.equal(fetch.get(DocTypeField_.sorteable), true));
+
+			subDocTypeFieldFetch.on(
+				cb.equal(subDocTypeFieldFetch.get(DocTypeField_.sorteable), true));
+
+			query.multiselect(fetch, subDocTypeFieldFetch);
+
+			query.where(
+				cb.equal(
+					tenantBindingJoin.get(TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
+
+			return session
+				.createQuery(query)
+				.setCacheable(true)
+				.getResultList();
+		});
+
 	}
 
 	private Uni<List<TemplateResponseDto>> getDocTypeTemplateList(String virtualhost) {
