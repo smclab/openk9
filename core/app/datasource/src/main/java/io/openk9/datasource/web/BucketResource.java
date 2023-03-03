@@ -7,7 +7,6 @@ import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -16,6 +15,7 @@ import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
+import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
@@ -31,6 +31,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import java.util.List;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 @Path("/buckets")
@@ -59,31 +60,41 @@ public class BucketResource {
 
 	@Path("/current/doc-type-fields-sorteable")
 	@GET
-	public Uni<List<DocTypeField>> getDocTypeFieldsSortable(){
+	public Uni<List<String>> getDocTypeFieldsSortable(){
 		return getDocTypeFieldsSortableList(request.host());
 	}
 
-	private Uni<List<DocTypeField>> getDocTypeFieldsSortableList(String virtualhost) {
+	private Uni<List<String>> getDocTypeFieldsSortableList(String virtualhost) {
 		return transactionInvoker.withStatelessTransaction(session -> {
 
 			String query =
-				"select dtf " +
+				"select new io.openk9.datasource.service.util.Tuple2(dtf.fieldName, sdtf.fieldName) " +
 				"from TenantBinding tb " +
 				"join tb.bucket b " +
 				"join b.datasources d " +
 				"join d.dataIndex di " +
 				"join di.docTypes dt " +
-				"join dt.docTypeFields dtf " +
+				"join fetch dt.docTypeFields dtf " +
 				"left join fetch dtf.subDocTypeFields sdtf " +
 				"where tb.virtualHost = :virtualhost " +
 				"and dtf.sorteable = true " +
-				"and (sdtf.id is null or sdtf.sorteable = true)";
+				"or (sdtf.id is not null AND sdtf.sorteable = true)";
 
-			return session
-				.createQuery(query, DocTypeField.class)
-				.setParameter("virtualhost", virtualhost)
-				.setCacheable(true)
-				.getResultList();
+			Uni<List<Tuple2<String, String>>> result =
+				session
+					.<Tuple2<String, String>>createQuery(query)
+					.setParameter("virtualhost", virtualhost)
+					.setCacheable(true)
+					.getResultList();
+
+			return result
+				.map(tlist -> tlist
+					.stream()
+					.flatMap(t2 -> t2.right == null
+						? Stream.of(t2.left)
+						: Stream.of(t2.left, t2.right)
+					).toList()
+				);
 
 		});
 
