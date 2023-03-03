@@ -41,6 +41,7 @@ public class DocTypeFieldDTO extends K9EntityDTO {
 	private Boolean searchable = false;
 
 	@NotNull
+	@Description("If true field is used for sorting during search")
 	private Boolean sorteable = false;
 
 	@Description("Value to define boost on score in case of matches on current field")
