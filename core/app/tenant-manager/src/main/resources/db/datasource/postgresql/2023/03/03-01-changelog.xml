@@ -8,7 +8,7 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 
 	<changeSet id="1677831817838-1" author="openk9">
 		<addColumn tableName="doc_type_field">
-			<column name="sorteable" type="NUMBER(1)" valueBoolean="false" />
+			<column name="sorteable" type="BOOLEAN" valueBoolean="false" />
 		</addColumn>
 	</changeSet>
 
