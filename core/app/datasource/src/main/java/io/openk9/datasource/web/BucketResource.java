@@ -15,7 +15,7 @@ import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.service.util.Tuple;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
@@ -31,7 +31,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import java.util.List;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 @Path("/buckets")
@@ -68,7 +67,7 @@ public class BucketResource {
 		return transactionInvoker.withStatelessTransaction(session -> {
 
 			String query =
-				"select new io.openk9.datasource.service.util.Tuple2(dtf.fieldName, sdtf.fieldName) " +
+				"select new io.openk9.datasource.service.util.Tuple(dtf.fieldName, sdtf.fieldName) " +
 				"from TenantBinding tb " +
 				"join tb.bucket b " +
 				"join b.datasources d " +
@@ -80,9 +79,9 @@ public class BucketResource {
 				"and dtf.sorteable = true " +
 				"or (sdtf.id is not null AND sdtf.sorteable = true)";
 
-			Uni<List<Tuple2<String, String>>> result =
+			Uni<List<Tuple<String>>> result =
 				session
-					.<Tuple2<String, String>>createQuery(query)
+					.<Tuple<String>>createQuery(query)
 					.setParameter("virtualhost", virtualhost)
 					.setCacheable(true)
 					.getResultList();
@@ -90,10 +89,8 @@ public class BucketResource {
 			return result
 				.map(tlist -> tlist
 					.stream()
-					.flatMap(t2 -> t2.right == null
-						? Stream.of(t2.left)
-						: Stream.of(t2.left, t2.right)
-					).toList()
+					.flatMap(Tuple::stream)
+					.toList()
 				);
 
 		});
