@@ -67,15 +67,17 @@ public class BucketResource {
 		return transactionInvoker.withStatelessTransaction(session -> {
 
 			String query =
-				"SELECT dtf " +
-				"FROM TenantBinding tb " +
+				"select dtf " +
+				"from TenantBinding tb " +
 				"join tb.bucket b " +
 				"join b.datasources d " +
 				"join d.dataIndex di " +
 				"join di.docTypes dt " +
-				"join dt.docTypeFields dtf on dtf.sorteable = true " +
-				"left join fetch dtf.subDocTypeFields sdtf on sdtf.sorteable = true " +
-				"where tb.virtualHost = :virtualhost ";
+				"join dt.docTypeFields dtf " +
+				"left join fetch dtf.subDocTypeFields sdtf " +
+				"where tb.virtualHost = :virtualhost " +
+				"and dtf.sorteable = true " +
+				"and (sdtf.id is null or sdtf.sorteable = true)";
 
 			return session
 				.createQuery(query, DocTypeField.class)
