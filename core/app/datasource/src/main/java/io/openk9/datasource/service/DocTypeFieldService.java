@@ -49,7 +49,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {DocTypeField_.NAME, DocTypeField_.FIELD_TYPE};
+		return new String[] {DocTypeField_.NAME, DocTypeField_.FIELD_TYPE, DocTypeField_.SORTEABLE};
 	}
 
 	public Uni<Analyzer> getAnalyzer(DocTypeField docTypeField) {

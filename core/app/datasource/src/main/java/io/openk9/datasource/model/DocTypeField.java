@@ -70,6 +70,9 @@ public class DocTypeField extends BaseDocTypeField {
 	@Column(name = "searchable")
 	private Boolean searchable = false;
 
+	@Column(name = "sorteable")
+	private Boolean sorteable = false;
+
 	@Column(name = "boost")
 	private Double boost;
 
