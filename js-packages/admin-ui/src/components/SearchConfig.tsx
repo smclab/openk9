@@ -109,9 +109,12 @@ export function SearchConfig() {
         >
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-          <NumberInput label="minScore" {...form.inputProps("minScore")} />
-          <BooleanInput label="min Score Suggestions" {...form.inputProps("minScoreSuggestions")} />
-          <BooleanInput label="min Score Search" {...form.inputProps("minScoreSearch")} />
+          <NumberInput label="minScore" {...form.inputProps("minScore")} 
+          description="Define score threshold used to filter results after query has been done"/>
+          <BooleanInput label="min Score Suggestions" {...form.inputProps("minScoreSuggestions")} 
+          description="If use configured min score to filter search results"/>
+          <BooleanInput label="min Score Search" {...form.inputProps("minScoreSearch")} 
+          description="If use configured min score to filter suggestions"/>
 
           <div className="sheet-footer">
             <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>

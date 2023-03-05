@@ -323,8 +323,8 @@ const TemplateQueryParser = [
   }`,
     descriptionAttribute: `
   {
-    "scale": "string",
-    "boost": "float"
+    "scale": "Scale used to order by date",
+    "boost": "Boost applied by this query parser to order result"
   }`,
     visible: "false",
   },
@@ -375,9 +375,9 @@ const TemplateQueryParser = [
     visible: "false",
     descriptionAttribute: `
     {
-      "boost": "float", 
-      "queryCondition": "string",
-      "manageEntityName": "boolean"
+      "boost": "Boost applied in case of match of Entity query parser", 
+      "queryCondition": "Query Type applied in case of match of Entity query parser",
+      "manageEntityName": "sample"
     }`,
   },
 
@@ -393,9 +393,9 @@ const TemplateQueryParser = [
     visible: "false",
     descriptionAttribute: `
     {
-      "boost": "float",
-      "valuesQueryType": "string", 
-      "globalQueryType": "string"
+      "boost": "Boost applied in case of match of Text query parser",
+      "valuesQueryType": "Query type applied in case of match inside values array", 
+      "globalQueryType": "Query type applied in case of match betweem different Text query parser"
     }`,
   },
 ];
