@@ -27,10 +27,10 @@ function Filters({
     React.useState(searchQuery);
   const { data, isPreviousData } = useInfiniteResults(searchQuery);
   React.useEffect(() => {
-    if (!isPreviousData && data?.pages[0].result.length) {
+    if (!isPreviousData) {
       setLastSearchQueryWithResults(searchQuery);
     }
-  }, [data?.pages, isPreviousData, searchQuery]);
+  }, [isPreviousData, searchQuery]);
   const [countFilterSelected, setCoutFilterSelected] = React.useState({
     single: 0,
     multiple: 0,
