@@ -57,9 +57,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Path("/v1")
 @RequestScoped
@@ -341,7 +343,7 @@ public class SearchResource {
 			return List.of();
 		}
 
-		List<Sort> sortList = new ArrayList<>(sort.size());
+		Set<Sort> sortList = new HashSet<>(sort.size());
 
 		for (Map<String, Map<String, String>> map : sort) {
 
