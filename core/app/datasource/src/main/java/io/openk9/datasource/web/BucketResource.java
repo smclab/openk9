@@ -7,6 +7,8 @@ import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -15,22 +17,24 @@ import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.service.util.Tuple;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import java.util.List;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 @Path("/buckets")
@@ -66,33 +70,69 @@ public class BucketResource {
 	private Uni<List<String>> getDocTypeFieldsSortableList(String virtualhost) {
 		return transactionInvoker.withStatelessTransaction(session -> {
 
-			String query =
-				"select new io.openk9.datasource.service.util.Tuple(dtf.fieldName, sdtf.fieldName) " +
-				"from TenantBinding tb " +
-				"join tb.bucket b " +
-				"join fetch b.datasources d " +
-				"join fetch d.dataIndex di " +
-				"join fetch di.docTypes dt " +
-				"join fetch dt.docTypeFields dtf " +
-				"left join fetch dtf.subDocTypeFields sdtf " +
-				"where tb.virtualHost = :virtualhost " +
-				"and dtf.sorteable = true " +
-				"or (sdtf.id is not null AND sdtf.sorteable = true)";
+			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 
-			Uni<List<Tuple<String>>> result =
-				session
-					.<Tuple<String>>createQuery(query)
-					.setParameter("virtualhost", virtualhost)
-					.setCacheable(true)
-					.getResultList();
+			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 
-			return result
-				.map(tlist -> tlist
-					.stream()
-					.flatMap(Tuple::stream)
-					.toList()
+			Root<Bucket> from = query.from(Bucket.class);
+
+			Join<Bucket, TenantBinding> tenantBindingFetch =
+				from.join(Bucket_.tenantBinding);
+
+			Join<DocType, DocTypeField> fetch =
+				from.join(Bucket_.datasources)
+					.join(Datasource_.dataIndex)
+					.join(DataIndex_.docTypes)
+					.join(DocType_.docTypeFields);
+
+			fetch.on(cb.isTrue(fetch.get(DocTypeField_.sorteable)));
+
+			SetJoin<DocTypeField, DocTypeField> subDocTypeFieldJoin =
+				fetch.join(DocTypeField_.subDocTypeFields, JoinType.LEFT);
+
+			subDocTypeFieldJoin.on(
+				cb.isTrue(subDocTypeFieldJoin.get(DocTypeField_.sorteable)));
+
+			query.multiselect(fetch, subDocTypeFieldJoin);
+
+			query.where(
+				cb.equal(
+					tenantBindingFetch.get(
+						TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
+
+			return session
+				.createQuery(query)
+				.setCacheable(true)
+				.getResultList()
+				.map(tList ->
+					tList
+						.stream()
+						.flatMap(t -> {
+
+							Stream.Builder<String> builder =
+								Stream.builder();
+
+							DocTypeField docTypeField1 =
+								t.get(0, DocTypeField.class);
+
+							if (docTypeField1 != null) {
+								builder.add(docTypeField1.getFieldName());
+							}
+
+							DocTypeField docTypeField2 =
+								t.get(1, DocTypeField.class);
+
+							if (docTypeField2 != null) {
+								builder.add(docTypeField2.getFieldName());
+							}
+
+							return builder.build();
+						})
+						.toList()
 				);
-
 		});
 
 	}
