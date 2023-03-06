@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -16,4 +17,5 @@ public class SearchRequest {
 	private String suggestKeyword;
 	private Long suggestionCategoryId;
 	private String order = "asc";
+	private List<Map<String, Map<String, String>>> sort;
 }

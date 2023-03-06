@@ -11,6 +11,7 @@ public abstract class BaseDocTypeField extends K9Entity {
 	public abstract Double getBoost();
 	public abstract FieldType getFieldType();
 	public abstract Boolean getExclude();
+	public abstract Boolean getSortable();
 
 	public Float getFloatBoost() {
 		return getBoost().floatValue();
@@ -59,6 +60,10 @@ public abstract class BaseDocTypeField extends K9Entity {
 
 	public boolean isSearchable() {
 		return getSearchable() != null && getSearchable();
+	}
+
+	public boolean isSortable() {
+		return getSortable() != null && getSortable();
 	}
 
 	public boolean isSearchableAnd(FieldType fieldType) {

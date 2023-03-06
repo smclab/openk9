@@ -26,6 +26,7 @@ import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
+import io.openk9.searcher.grpc.Sort;
 import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.openk9.searcher.grpc.TokenType;
@@ -57,6 +58,9 @@ import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuil
 import org.elasticsearch.search.aggregations.bucket.filter.ParsedFilter;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.control.ActivateRequestContext;
@@ -116,6 +120,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						Utils
 							.getDocTypeFieldsFrom(tenant)
 							.toList();
+
+					applySort(docTypeFieldList, request.getSortList(), searchSourceBuilder);
 
 					Set<String> includes = new HashSet<>();
 					Set<String> excludes = new HashSet<>();
@@ -191,6 +197,56 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				});
 
 		});
+
+	}
+
+	private void applySort(
+		List<DocTypeField> docTypeFieldList, List<Sort> sortList, SearchSourceBuilder searchSourceBuilder) {
+
+		if (sortList == null || sortList.isEmpty()) {
+			return;
+		}
+
+		List<String> docTypeFieldNameSortable =
+			docTypeFieldList
+				.stream()
+				.filter(DocTypeField::isSortable)
+				.map(DocTypeField::getFieldName)
+				.toList();
+
+		if (docTypeFieldNameSortable.isEmpty()) {
+			logger.warn("No sortable fields found");
+			return;
+		}
+
+		for (Sort sort : sortList) {
+
+			String field = sort.getField();
+
+			if (!docTypeFieldNameSortable.contains(field)) {
+				logger.warn("Field " + field + " is not sortable");
+				continue;
+			}
+
+			FieldSortBuilder fieldSortBuilder = SortBuilders.fieldSort(field);
+
+			Map<String, String> extrasMap = sort.getExtrasMap();
+
+			String sortValue = extrasMap.get("sort");
+
+			if (sortValue != null && (sortValue.equalsIgnoreCase("asc") || sortValue.equalsIgnoreCase("desc"))) {
+				fieldSortBuilder.order(SortOrder.fromString(sortValue));
+			}
+
+			String missingValue = extrasMap.get("missing");
+
+			if (missingValue != null && (missingValue.equals("_last") || missingValue.equals("_first"))) {
+				fieldSortBuilder.missing(missingValue);
+			}
+
+			searchSourceBuilder.sort(fieldSortBuilder);
+
+		}
 
 	}
 
