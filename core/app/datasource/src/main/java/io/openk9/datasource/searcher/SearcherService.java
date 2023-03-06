@@ -123,61 +123,14 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					applySort(docTypeFieldList, request.getSortList(), searchSourceBuilder);
 
-					Set<String> includes = new HashSet<>();
-					Set<String> excludes = new HashSet<>();
-					Set<HighlightBuilder.Field> highlightFields = new HashSet<>();
-
-					for (DocTypeField docTypeField : docTypeFieldList) {
-						String name = docTypeField.getFieldName();
-						if (docTypeField.isDefaultExclude()) {
-							excludes.add(name);
-						}
-						else {
-							includes.add(name);
-							if (docTypeField.isSearchableAndText()) {
-								highlightFields.add(new HighlightBuilder.Field(name));
-							}
-						}
-
-					}
-
-					HighlightBuilder highlightBuilder = new HighlightBuilder();
-
-					highlightBuilder.forceSource(true);
-
-					highlightBuilder.tagsSchema("default");
-
-					highlightBuilder.fields().addAll(highlightFields);
-
-					searchSourceBuilder.highlighter(highlightBuilder);
-
-					searchSourceBuilder.fetchSource(
-						includes.toArray(String[]::new),
-						excludes.toArray(String[]::new)
-					);
+					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList);
 
 					List<SearchTokenRequest> searchQuery =
 						request.getSearchQueryList();
 
 					SearchConfig searchConfig = tenant.getSearchConfig();
 
-					if (searchConfig != null && searchConfig.isMinScoreSearch()) {
-						searchSourceBuilder.minScore(searchConfig.getMinScore());
-					}
-					else if (
-						!searchQuery.isEmpty() && searchQuery
-							.stream()
-							.anyMatch(st -> !st.getFilter())) {
-
-
-						if (searchConfig != null && searchConfig.getMinScore() != null) {
-							searchSourceBuilder.minScore(searchConfig.getMinScore());
-						}
-						else {
-							searchSourceBuilder.minScore(0.5f);
-						}
-
-					}
+					applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
 
 					String[] indexNames =
 						tenant
@@ -198,71 +151,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		});
 
-	}
-
-	private void applySort(
-		List<DocTypeField> docTypeFieldList, List<Sort> sortList, SearchSourceBuilder searchSourceBuilder) {
-
-		if (sortList == null || sortList.isEmpty()) {
-			return;
-		}
-
-		List<String> docTypeFieldNameSortable =
-			docTypeFieldList
-				.stream()
-				.filter(DocTypeField::isSortable)
-				.map(DocTypeField::getFieldName)
-				.toList();
-
-		if (docTypeFieldNameSortable.isEmpty()) {
-			logger.warn("No sortable fields found");
-			return;
-		}
-
-		for (Sort sort : sortList) {
-
-			String field = sort.getField();
-
-			if (!docTypeFieldNameSortable.contains(field)) {
-				logger.warn("Field " + field + " is not sortable");
-				continue;
-			}
-
-			FieldSortBuilder fieldSortBuilder = SortBuilders.fieldSort(field);
-
-			Map<String, String> extrasMap = sort.getExtrasMap();
-
-			String sortValue = extrasMap.get("sort");
-
-			if (sortValue != null && (sortValue.equalsIgnoreCase("asc") || sortValue.equalsIgnoreCase("desc"))) {
-				fieldSortBuilder.order(SortOrder.fromString(sortValue));
-			}
-
-			String missingValue = extrasMap.get("missing");
-
-			if (missingValue != null && (missingValue.equals("_last") || missingValue.equals("_first"))) {
-				fieldSortBuilder.missing(missingValue);
-			}
-
-			searchSourceBuilder.sort(fieldSortBuilder);
-
-		}
-
-	}
-
-	private Map<String, List<String>> _getExtraParams(Map<String, Value> extraMap) {
-
-		if (extraMap == null || extraMap.isEmpty()) {
-			return Map.of();
-		}
-
-		Map<String, List<String>> extraParams = new HashMap<>(extraMap.size());
-
-		for (Map.Entry<String, Value> kv : extraMap.entrySet()) {
-			extraParams.put(kv.getKey(), new ArrayList<>(kv.getValue().getValueList()));
-		}
-
-		return extraParams;
 	}
 
 	@Override
@@ -809,6 +697,133 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		map.put("keywordKey", token.getKeywordKey());
 		map.put("keywordName", token.getKeywordName());
 		return map;
+	}
+
+
+	private static void applyHighlightAndIncludeExclude(
+		SearchSourceBuilder searchSourceBuilder,
+		List<DocTypeField> docTypeFieldList) {
+		Set<String> includes = new HashSet<>();
+		Set<String> excludes = new HashSet<>();
+		Set<HighlightBuilder.Field> highlightFields = new HashSet<>();
+
+		for (DocTypeField docTypeField : docTypeFieldList) {
+			String name = docTypeField.getFieldName();
+			if (docTypeField.isDefaultExclude()) {
+				excludes.add(name);
+			}
+			else {
+				includes.add(name);
+				if (docTypeField.isSearchableAndText()) {
+					highlightFields.add(new HighlightBuilder.Field(name));
+				}
+			}
+
+		}
+
+		HighlightBuilder highlightBuilder = new HighlightBuilder();
+
+		highlightBuilder.forceSource(true);
+
+		highlightBuilder.tagsSchema("default");
+
+		highlightBuilder.fields().addAll(highlightFields);
+
+		searchSourceBuilder.highlighter(highlightBuilder);
+
+		searchSourceBuilder.fetchSource(
+			includes.toArray(String[]::new),
+			excludes.toArray(String[]::new)
+		);
+
+	}
+
+	private static void applyMinScore(
+		SearchSourceBuilder searchSourceBuilder,
+		List<SearchTokenRequest> searchQuery, SearchConfig searchConfig) {
+
+		if (searchConfig != null && searchConfig.isMinScoreSearch()) {
+			searchSourceBuilder.minScore(searchConfig.getMinScore());
+		}
+		else if (
+			!searchQuery.isEmpty() && searchQuery
+				.stream()
+				.anyMatch(st -> !st.getFilter())) {
+
+
+			if (searchConfig != null && searchConfig.getMinScore() != null) {
+				searchSourceBuilder.minScore(searchConfig.getMinScore());
+			}
+			else {
+				searchSourceBuilder.minScore(0.5f);
+			}
+
+		}
+	}
+
+	private void applySort(
+		List<DocTypeField> docTypeFieldList, List<Sort> sortList, SearchSourceBuilder searchSourceBuilder) {
+
+		if (sortList == null || sortList.isEmpty()) {
+			return;
+		}
+
+		List<String> docTypeFieldNameSortable =
+			docTypeFieldList
+				.stream()
+				.filter(DocTypeField::isSortable)
+				.map(DocTypeField::getFieldName)
+				.toList();
+
+		if (docTypeFieldNameSortable.isEmpty()) {
+			logger.warn("No sortable doc type field found");
+			return;
+		}
+
+		for (Sort sort : sortList) {
+
+			String field = sort.getField();
+
+			if (!docTypeFieldNameSortable.contains(field)) {
+				logger.warn("Field " + field + " is not sortable");
+				continue;
+			}
+
+			FieldSortBuilder fieldSortBuilder = SortBuilders.fieldSort(field);
+
+			Map<String, String> extrasMap = sort.getExtrasMap();
+
+			String sortValue = extrasMap.get("sort");
+
+			if (sortValue != null && (sortValue.equalsIgnoreCase("asc") || sortValue.equalsIgnoreCase("desc"))) {
+				fieldSortBuilder.order(SortOrder.fromString(sortValue));
+			}
+
+			String missingValue = extrasMap.get("missing");
+
+			if (missingValue != null && (missingValue.equals("_last") || missingValue.equals("_first"))) {
+				fieldSortBuilder.missing(missingValue);
+			}
+
+			searchSourceBuilder.sort(fieldSortBuilder);
+
+		}
+
+	}
+
+	private Map<String, List<String>> _getExtraParams(Map<String, Value> extraMap) {
+
+		if (extraMap == null || extraMap.isEmpty()) {
+			return Map.of();
+		}
+
+		Map<String, List<String>> extraParams = new HashMap<>(extraMap.size());
+
+		for (Map.Entry<String, Value> kv : extraMap.entrySet()) {
+			extraParams.put(kv.getKey(), new ArrayList<>(kv.getValue().getValueList()));
+		}
+
+		return extraParams;
 	}
 
 	@Inject
