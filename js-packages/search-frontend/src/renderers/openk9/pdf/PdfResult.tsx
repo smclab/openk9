@@ -19,7 +19,6 @@ import { ResultTextContentTwo } from "../../../renderer-components/ResultTextCon
 
 type PdfResultProps = { result: GenericResultItem<PdfResultItem> };
 export function PdfResult({ result }: PdfResultProps) {
-  console.log(result);
   return (
     <ResultContainerTwo>
       <ResultTitleTwo>
