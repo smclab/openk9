@@ -282,8 +282,8 @@ function FilterCategory({
                             text-overflow: ellipsis;
                             font-style: normal;
                             font-weight: 600;
-                            font-size: 15px;
                             line-height: 22px;
+                            /* or 147% */
                             color: #000000;
                           `}
                         >
@@ -365,13 +365,21 @@ function useInfiniteSuggestions(
 ) {
   const pageSize = 5;
   const client = useOpenK9Client();
-
   let searchQuery: SearchToken[] | null = [];
   if (searchQueryParams && searchQueryParams?.length > 0) {
-    searchQuery =
-      searchQueryParams?.filter(
-        (element) => JSON.parse(JSON.stringify(element)).goToSuggestion,
-      ) || null;
+    searchQueryParams.forEach((singleSearchQuery) => {
+      if (
+        singleSearchQuery?.tokenType !== "TEXT" ||
+        !("goToSuggestion" in JSON.parse(JSON.stringify(singleSearchQuery)))
+      ) {
+        searchQuery?.push(singleSearchQuery);
+      }
+      if (
+        singleSearchQuery?.tokenType === "TEXT" &&
+        JSON.parse(JSON.stringify(singleSearchQuery)).goToSuggestion
+      )
+        searchQuery?.push(singleSearchQuery);
+    });
   } else {
     searchQuery = searchQueryParams;
   }
