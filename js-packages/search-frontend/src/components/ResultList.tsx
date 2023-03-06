@@ -106,6 +106,7 @@ function ResultCount({ children }: ResultCountProps) {
             display: flex;
             justify-content: space-between;
             border-radius: 8px;
+            align-items: center;
           `}
         >
           <span
@@ -118,37 +119,32 @@ function ResultCount({ children }: ResultCountProps) {
           </span>
           <span
             css={css`
-              margin-rigth: 10px;
-              display: flex;
+              margin-left: auto;
+              margin-right: 2%;
             `}
           >
-            <span>ordina per </span>
-            <div
-              className="form-group"
+            Ordina per
+          </span>
+          <span>
+            <select
+              className="form-control"
+              id="regularSelectElement"
               css={css`
-                margin-left: 8px;
+                border-radius: 34px;
+                max-width: 130px;
+                border: 1px solid #a292926b;
+                height: 30px;
+                cursor: pointer;
+                :focus {
+                  border: 1px solid #a292926b;
+                  outline: none;
+                }
+                background: transparent;
               `}
             >
-              <select
-                className="form-control"
-                id="regularSelectElement"
-                css={css`
-                  border-radius: 34px;
-                  max-width: 122px;
-                  border: 1px solid #a292926b;
-                  height: 30px;
-                  cursor: pointer;
-                  :focus {
-                    border: 1px solid #a292926b;
-                    outline: none;
-                  }
-                  background: transparent;
-                `}
-              >
-                <option>Data Crescente</option>
-                <option>Data Decrescente</option>
-              </select>
-            </div>
+              <option>Data Crescente</option>
+              <option>Data Decrescente</option>
+            </select>
           </span>
         </div>
       </div>
