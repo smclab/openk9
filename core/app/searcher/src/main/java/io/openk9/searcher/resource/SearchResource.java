@@ -11,6 +11,7 @@ import io.openk9.searcher.grpc.QueryAnalysisTokens;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.Searcher;
+import io.openk9.searcher.grpc.Sort;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
 import io.openk9.searcher.mapper.InternalSearcherMapper;
@@ -328,7 +329,44 @@ public class SearchResource {
 			.setVirtualHost(request.host())
 			.setJwt(rawToken == null ? "" : rawToken)
 			.putAllExtra(extra)
+			.addAllSort(mapToGrpc(searchRequest.getSort()))
 			.build();
+
+	}
+
+	private Iterable<Sort> mapToGrpc(
+		List<Map<String, Map<String, String>>> sort) {
+
+		if (sort == null || sort.isEmpty()) {
+			return List.of();
+		}
+
+		List<Sort> sortList = new ArrayList<>(sort.size());
+
+		for (Map<String, Map<String, String>> map : sort) {
+
+			for (Map.Entry<String, Map<String, String>> entry : map.entrySet()) {
+
+				String fieldName = entry.getKey();
+
+				Sort.Builder builder =
+					Sort
+						.newBuilder()
+						.setField(fieldName);
+
+				Map<String, String> value = entry.getValue();
+
+				if (value != null && !value.isEmpty()) {
+					builder.putAllExtras(value);
+				}
+
+				sortList.add(builder.build());
+
+			}
+
+		}
+
+		return sortList;
 
 	}
 

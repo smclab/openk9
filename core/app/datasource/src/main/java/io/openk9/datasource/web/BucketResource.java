@@ -61,7 +61,7 @@ public class BucketResource {
 		return getSuggestionCategoryList(request.host());
 	}
 
-	@Path("/current/doc-type-fields-sorteable")
+	@Path("/current/doc-type-fields-sortable")
 	@GET
 	public Uni<List<String>> getDocTypeFieldsSortable(){
 		return getDocTypeFieldsSortableList(request.host());
@@ -85,13 +85,13 @@ public class BucketResource {
 					.join(DataIndex_.docTypes)
 					.join(DocType_.docTypeFields);
 
-			fetch.on(cb.isTrue(fetch.get(DocTypeField_.sorteable)));
+			fetch.on(cb.isTrue(fetch.get(DocTypeField_.sortable)));
 
 			SetJoin<DocTypeField, DocTypeField> subDocTypeFieldJoin =
 				fetch.join(DocTypeField_.subDocTypeFields, JoinType.LEFT);
 
 			subDocTypeFieldJoin.on(
-				cb.isTrue(subDocTypeFieldJoin.get(DocTypeField_.sorteable)));
+				cb.isTrue(subDocTypeFieldJoin.get(DocTypeField_.sortable)));
 
 			query.multiselect(fetch, subDocTypeFieldJoin);
 
