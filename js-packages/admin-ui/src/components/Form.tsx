@@ -287,7 +287,7 @@ export function EnumSelect<E extends Record<string, any>>({
   disabled,
   validationMessages,
   dict,
-  description
+  description,
 }: BaseInputProps<E[string]> & { dict: E }) {
   return (
     <div className={`form-group ${validationMessages.length ? "has-warning" : ""}`}>
@@ -377,7 +377,7 @@ export function NumberInput({
   disabled,
   validationMessages,
   item,
-  description
+  description,
 }: BaseInputProps<number> & { item?: boolean }) {
   const ref = React.useRef<HTMLInputElement | null>(null);
   React.useLayoutEffect(() => {

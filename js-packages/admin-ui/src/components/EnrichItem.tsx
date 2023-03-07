@@ -2,7 +2,7 @@ import React from "react";
 import { gql } from "@apollo/client";
 import ClayForm from "@clayui/form";
 import { useNavigate, useParams } from "react-router-dom";
-import { EnrichItemType, useCreateOrUpdateEnrichItemMutation, useEnrichItemQuery } from "../graphql-generated";
+import { BehaviorMergeType, EnrichItemType, useCreateOrUpdateEnrichItemMutation, useEnrichItemQuery } from "../graphql-generated";
 import { EnrichItemsQuery } from "./EnrichItems";
 import { EnumSelect, fromFieldValidators, TextArea, TextInput, useForm } from "./Form";
 import { CodeInput } from "./CodeInput";
@@ -22,6 +22,8 @@ const EnrichItemQuery = gql`
       serviceName
       jsonConfig
       validationScript
+      behaviorMergeType
+      jsonPath
     }
   }
 `;
@@ -35,6 +37,8 @@ gql`
     $serviceName: String!
     $jsonConfig: String
     $validationScript: String
+    $behaviorMergeType: BehaviorMergeType!
+    $jsonPath: String!
   ) {
     enrichItem(
       id: $id
@@ -45,6 +49,8 @@ gql`
         serviceName: $serviceName
         jsonConfig: $jsonConfig
         validationScript: $validationScript
+        behaviorMergeType: $behaviorMergeType
+        jsonPath: $jsonPath
       }
     ) {
       entity {
@@ -85,10 +91,12 @@ export function EnrichItem() {
       () => ({
         name: name ?? "",
         description: "",
-        type: EnrichItemType.Async,
+        type: EnrichItemType.HttpAsync,
         serviceName: name ?? "",
         jsonConfig: "{}",
         validationScript: "",
+        behaviorMergeType: BehaviorMergeType.Merge,
+        jsonPath: "",
       }),
       []
     ),
@@ -113,8 +121,8 @@ export function EnrichItem() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
         <EnumSelect label="Type" dict={EnrichItemType} {...form.inputProps("type")} />
-        <TextInput label="Service Name" {...form.inputProps("serviceName") } description={"Url where enrich service listen"}/>
-        <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")}/>
+        <TextInput label="Service Name" {...form.inputProps("serviceName")} description={"Url where enrich service listen"} />
+        <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
         <CodeInput language="javascript" label="Validation Script" {...form.inputProps("validationScript")} />
         <div className="sheet-footer">
           <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>

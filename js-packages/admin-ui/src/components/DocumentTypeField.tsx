@@ -34,46 +34,9 @@ const DocumentTypeFieldQuery = gql`
       exclude
       fieldName
       jsonConfig
+      sortable
       analyzer {
         id
-      }
-    }
-  }
-`;
-
-gql`
-  mutation CreateOrUpdateDocumentTypeField(
-    $documentTypeId: ID!
-    $documentTypeFieldId: ID
-    $name: String!
-    $fieldName: String!
-    $description: String
-    $fieldType: FieldType!
-    $boost: Float
-    $searchable: Boolean!
-    $exclude: Boolean
-    $jsonConfig: String
-  ) {
-    docTypeField(
-      docTypeId: $documentTypeId
-      docTypeFieldId: $documentTypeFieldId
-      docTypeFieldDTO: {
-        name: $name
-        description: $description
-        fieldType: $fieldType
-        boost: $boost
-        searchable: $searchable
-        exclude: $exclude
-        fieldName: $fieldName
-        jsonConfig: $jsonConfig
-      }
-    ) {
-      entity {
-        id
-      }
-      fieldValidators {
-        field
-        message
       }
     }
   }
@@ -88,6 +51,7 @@ gql`
     $searchable: Boolean!
     $boost: Float
     $fieldType: FieldType!
+    $sortable: Boolean!
   ) {
     createSubField(
       parentDocTypeFieldId: $parentDocTypeFieldId
@@ -98,6 +62,7 @@ gql`
         searchable: $searchable
         boost: $boost
         fieldType: $fieldType
+        sortable: $sortable
       }
     ) {
       entity {
@@ -143,6 +108,7 @@ export function DocumentTypeField() {
         searchable: false,
         exclude: false,
         jsonConfig: "{}",
+        sortable: false,
       }),
       []
     ),
@@ -181,15 +147,30 @@ export function DocumentTypeField() {
           }}
         >
           <TextInput label="Name" {...form.inputProps("name")} />
-          <TextInput label="Field Name" {...form.inputProps("fieldName")} 
-          description="Name used to retrive field mapping, composed of Document Type and the name of indexed field"/>
+          <TextInput
+            label="Field Name"
+            {...form.inputProps("fieldName")}
+            description="Name used to retrive field mapping, composed of Document Type and the name of indexed field"
+          />
           <TextArea label="Description" {...form.inputProps("description")} />
-          <EnumSelect label="Field Type" dict={FieldType} {...form.inputProps("fieldType")}
-          description={"Type associated to field. See Elasticsearch documentation for field data types"}/>
-          <NumberInput label="Boost" {...form.inputProps("boost")} 
-          description="Define how much score is boosted in case of match on this field"/>
-          <BooleanInput label="Searchable" {...form.inputProps("searchable")} description="If field is searchable or not"/>
-          <BooleanInput label="Exclude" {...form.inputProps("exclude")} description="If field need to be excluded from search response or not"/>
+          <EnumSelect
+            label="Field Type"
+            dict={FieldType}
+            {...form.inputProps("fieldType")}
+            description={"Type associated to field. See Elasticsearch documentation for field data types"}
+          />
+          <NumberInput
+            label="Boost"
+            {...form.inputProps("boost")}
+            description="Define how much score is boosted in case of match on this field"
+          />
+          <BooleanInput label="Searchable" {...form.inputProps("searchable")} description="If field is searchable or not" />
+          <BooleanInput
+            label="Exclude"
+            {...form.inputProps("exclude")}
+            description="If field need to be excluded from search response or not"
+          />
+          <BooleanInput label="Sortable" {...form.inputProps("sortable")} description="If field is searchable or not" />
           {documentTypeFieldId !== "new" && (
             <ClayForm
               className="sheet"

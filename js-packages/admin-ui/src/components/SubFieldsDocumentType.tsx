@@ -24,6 +24,7 @@ export const DocumentTypeFieldsQuery = gql`
           searchable
           exclude
           fieldName
+          sortable
           subFields {
             edges {
               node {
@@ -35,6 +36,7 @@ export const DocumentTypeFieldsQuery = gql`
                 searchable
                 exclude
                 fieldName
+                sortable
               }
             }
           }
@@ -60,6 +62,7 @@ gql`
     $searchable: Boolean!
     $exclude: Boolean
     $jsonConfig: String
+    $sortable: Boolean!
   ) {
     docTypeField(
       docTypeId: $documentTypeId
@@ -73,6 +76,7 @@ gql`
         exclude: $exclude
         fieldName: $fieldName
         jsonConfig: $jsonConfig
+        sortable: $sortable
       }
     ) {
       entity {
@@ -96,6 +100,7 @@ gql`
     $boost: Float
     $fieldType: FieldType!
     $description: String
+    $sortable: Boolean!
   ) {
     createSubField(
       parentDocTypeFieldId: $parentDocTypeFieldId
@@ -107,6 +112,7 @@ gql`
         boost: $boost
         fieldType: $fieldType
         description: $description
+        sortable: $sortable
       }
     ) {
       entity {
@@ -148,6 +154,7 @@ export function SubFieldsDocumentType() {
         searchable: false,
         exclude: false,
         jsonConfig: "{}",
+        sortable: false,
       }),
       []
     ),
@@ -191,6 +198,7 @@ export function SubFieldsDocumentType() {
           <NumberInput label="Boost" {...form.inputProps("boost")} />
           <BooleanInput label="Searchable" {...form.inputProps("searchable")} />
           <BooleanInput label="Exclude" {...form.inputProps("exclude")} />
+          <BooleanInput label="Sortable" {...form.inputProps("sortable")} />
           <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
           <div className="sheet-footer">
             <ClayButton type="submit" disabled={!form.canSubmit}>
