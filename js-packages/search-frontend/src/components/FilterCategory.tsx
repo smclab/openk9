@@ -21,6 +21,7 @@ type FilterCategoryProps = {
   onAdd(searchToken: SearchToken): void;
   onRemove(searchToken: SearchToken): void;
   multiSelect: boolean;
+  searchQuery: SearchToken[];
   setCoutFilterSelected: React.Dispatch<
     React.SetStateAction<{
       single: number;
@@ -36,6 +37,7 @@ function FilterCategory({
   onRemove,
   multiSelect,
   setCoutFilterSelected,
+  searchQuery,
 }: FilterCategoryProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
@@ -192,6 +194,49 @@ function FilterCategory({
           {suggestions.data?.pages.map(({ result }, index) => {
             return (
               <React.Fragment key={index}>
+                <div
+                  key={index}
+                  className="form-check"
+                  css={css`
+                    display: flex;
+                    align-items: "center";
+                    margin-left: 13px;
+                    margin-top: 5px;
+                  `}
+                >
+                  {searchQuery.map((searchToken: SearchToken) => {
+                    if (!("goToSuggestion" in searchToken)) return null;
+                    if (result[0]?.keywordKey === searchToken.keywordKey)
+                      return (
+                        <React.Fragment>
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={true}
+                            onChange={(event) => {
+                              onRemove(searchToken);
+                              setCoutFilterSelected((countFilter) => ({
+                                ...countFilter,
+                                single: countFilter.single - 1,
+                              }));
+                            }}
+                            style={{
+                              appearance: "none",
+                              width: "16px",
+                              height: "16px",
+                              borderRadius: "50%",
+                              border: "2px solid #ccc",
+                              backgroundColor:
+                                "var(  --openk9-embeddable-search--secondary-active-color)",
+                              marginRight: "10px",
+                              cursor: "pointer",
+                            }}
+                          />
+                          {searchToken?.values}
+                        </React.Fragment>
+                      );
+                  })}
+                </div>
                 {result.map((suggestion, index) => {
                   const asSearchToken = mapSuggestionToSearchToken(
                     suggestion,
@@ -202,111 +247,119 @@ function FilterCategory({
                     isEqual(searchToken, asSearchToken),
                   );
                   return (
-                    <div
-                      key={index}
-                      className="form-check"
-                      css={css`
-                        display: flex;
-                        align-items: ${multiSelect ? "baseline" : "center"};
-                        margin-left: 13px;
-                        margin-top: 5px;
-                      `}
-                    >
-                      {multiSelect ? (
-                        <React.Fragment>
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(event) => {
-                              if (event.currentTarget.checked) {
-                                if (multiSelect) {
-                                  setCoutFilterSelected((countFilter) => ({
-                                    ...countFilter,
-                                    multiple: countFilter.multiple + 1,
-                                  }));
-                                  onAdd(asSearchToken);
-                                } else {
-                                  tokens.some((searchToken) => {
-                                    if (
-                                      JSON.parse(JSON.stringify(searchToken))
-                                        ?.multiSelect
-                                    )
-                                      onRemove(searchToken);
-                                  });
-                                  onAdd(asSearchToken);
-                                }
-                              } else {
-                                onRemove(asSearchToken);
-                                setCoutFilterSelected((countFilter) => ({
-                                  ...countFilter,
-                                  multiple: countFilter.multiple - 1,
-                                }));
-                              }
-                            }}
-                            css={css`
-                              width: 14px;
-                              appearance: none;
-                              min-width: 15px;
-                              min-height: 15px;
-                              border-radius: 4px;
-                              border: 2px solid #ccc;
-                              background-color: ${isChecked
-                                ? "var(--openk9-embeddable-search--secondary-active-color)"
-                                : "#fff"};
-                              background-size: 100%;
-                              background-position: center;
-                              background-repeat: no-repeat;
-                              cursor: pointer;
-                              margin-right: 10px;
-                            `}
-                          />
-                        </React.Fragment>
-                      ) : (
-                        <SingleSelect
-                          isChecked={isChecked}
-                          multiSelect={multiSelect}
-                          asSearchToken={asSearchToken}
-                          onAdd={onAdd}
-                          onRemove={onRemove}
-                          singleSelect={singleSelect}
-                          setSingleSelect={setSingleselect}
-                          setCoutFilterSelected={setCoutFilterSelected}
-                        />
-                      )}
-
-                      <span>
-                        <label
-                          className="form-check-label"
+                    <React.Fragment>
+                      {isDifferent({
+                        singleToken: suggestion.value,
+                        tokensSelect: searchQuery,
+                      }) && (
+                        <div
+                          key={index}
+                          className="form-check"
                           css={css`
-                            text-overflow: ellipsis;
-                            font-style: normal;
-                            font-weight: 600;
-                            line-height: 22px;
-                            /* or 147% */
-                            color: #000000;
+                            display: flex;
+                            align-items: ${multiSelect ? "baseline" : "center"};
+                            margin-left: 13px;
+                            margin-top: 5px;
                           `}
                         >
-                          {suggestion.tokenType === "ENTITY" ? (
-                            <>
-                              <strong
-                                css={css`
-                                  :first-letter {
-                                    text-transform: uppercase;
+                          {multiSelect ? (
+                            <React.Fragment>
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(event) => {
+                                  if (event.currentTarget.checked) {
+                                    if (multiSelect) {
+                                      setCoutFilterSelected((countFilter) => ({
+                                        ...countFilter,
+                                        multiple: countFilter.multiple + 1,
+                                      }));
+                                      onAdd(asSearchToken);
+                                    } else {
+                                      tokens.some((searchToken) => {
+                                        if (
+                                          JSON.parse(
+                                            JSON.stringify(searchToken),
+                                          )?.multiSelect
+                                        )
+                                          onRemove(searchToken);
+                                      });
+                                      onAdd(asSearchToken);
+                                    }
+                                  } else {
+                                    onRemove(asSearchToken);
+                                    setCoutFilterSelected((countFilter) => ({
+                                      ...countFilter,
+                                      multiple: countFilter.multiple - 1,
+                                    }));
                                   }
-                                  display: inline-block;
+                                }}
+                                css={css`
+                                  width: 14px;
+                                  appearance: none;
+                                  min-width: 15px;
+                                  min-height: 15px;
+                                  border-radius: 4px;
+                                  border: 2px solid #ccc;
+                                  background-color: ${isChecked
+                                    ? "var(--openk9-embeddable-search--secondary-active-color)"
+                                    : "#fff"};
+                                  background-size: 100%;
+                                  background-position: center;
+                                  background-repeat: no-repeat;
+                                  cursor: pointer;
+                                  margin-right: 10px;
                                 `}
-                              >
-                                {suggestion.entityType}
-                              </strong>
-                              : {suggestion.entityValue}
-                            </>
+                              />
+                            </React.Fragment>
                           ) : (
-                            suggestion.value
+                            <SingleSelect
+                              isChecked={isChecked}
+                              multiSelect={multiSelect}
+                              asSearchToken={asSearchToken}
+                              onAdd={onAdd}
+                              onRemove={onRemove}
+                              singleSelect={singleSelect}
+                              setSingleSelect={setSingleselect}
+                              setCoutFilterSelected={setCoutFilterSelected}
+                            />
                           )}
-                        </label>
-                      </span>
-                    </div>
+
+                          <span>
+                            <label
+                              className="form-check-label"
+                              css={css`
+                                text-overflow: ellipsis;
+                                font-style: normal;
+                                font-weight: 600;
+                                line-height: 22px;
+                                /* or 147% */
+                                color: #000000;
+                              `}
+                            >
+                              {suggestion.tokenType === "ENTITY" ? (
+                                <>
+                                  <strong
+                                    css={css`
+                                      :first-letter {
+                                        text-transform: uppercase;
+                                      }
+                                      display: inline-block;
+                                    `}
+                                  >
+                                    {suggestion.entityType}
+                                  </strong>
+                                  : {suggestion.entityValue}
+                                </>
+                              ) : (
+                                suggestion.value
+                              )}
+                            </label>
+                          </span>
+                        </div>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </React.Fragment>
@@ -334,6 +387,25 @@ function FilterCategory({
       )}
     </div>
   );
+}
+
+function isDifferent({
+  tokensSelect,
+  singleToken,
+}: {
+  tokensSelect: SearchToken[];
+  singleToken: string;
+}) {
+  let result = true;
+  tokensSelect.forEach((singleChoice: SearchToken) => {
+    if (
+      singleChoice.tokenType === "TEXT" &&
+      singleChoice?.values[0] === singleToken
+    ) {
+      result = false;
+    }
+  });
+  return result;
 }
 export const FilterCategoryMemo = React.memo(FilterCategory);
 

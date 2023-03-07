@@ -355,6 +355,7 @@ export type SuggestionResult =
       tokenType: "DATASOURCE";
       suggestionCategoryId: number;
       value: string;
+      keywordKey?: string;
     }
   | {
       tokenType: "TEXT";
@@ -374,6 +375,7 @@ export type SuggestionResult =
       tokenType: "DOCTYPE";
       suggestionCategoryId: number;
       value: string;
+      keywordKey?: string;
     };
 
 type SuggestionsCategoriesResult = Array<{

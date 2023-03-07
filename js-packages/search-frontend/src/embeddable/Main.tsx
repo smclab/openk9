@@ -90,6 +90,7 @@ export function Main({
           onAddFilterToken={addFilterToken}
           onRemoveFilterToken={removeFilterToken}
           onConfigurationChange={onConfigurationChange}
+          filtersSelect={configuration.filterTokens}
         />,
         configuration.filters,
       )}
@@ -232,6 +233,8 @@ function useFilters({
   const filterTokens = configuration.filterTokens;
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
+      console.log(configuration.filterTokens, searchToken);
+
       onConfigurationChange((configuration) => ({
         filterTokens: [...configuration.filterTokens, searchToken],
       }));

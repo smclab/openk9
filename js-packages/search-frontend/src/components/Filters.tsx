@@ -15,12 +15,14 @@ type FiltersProps = {
   onAddFilterToken(searchToke: SearchToken): void;
   onRemoveFilterToken(searchToken: SearchToken): void;
   onConfigurationChange: ConfigurationUpdateFunction;
+  filtersSelect: SearchToken[];
 };
 function Filters({
   searchQuery,
   onAddFilterToken,
   onConfigurationChange,
   onRemoveFilterToken,
+  filtersSelect,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -149,6 +151,7 @@ function Filters({
               onRemove={onRemoveFilterToken}
               multiSelect={suggestionCategory?.multiSelect}
               setCoutFilterSelected={setCoutFilterSelected}
+              searchQuery={searchQuery}
             />
           );
         })}
