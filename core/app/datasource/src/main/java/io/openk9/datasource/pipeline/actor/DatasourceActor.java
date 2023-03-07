@@ -4,7 +4,6 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
-import com.jayway.jsonpath.JsonPath;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.DataIndex;
@@ -12,7 +11,7 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.sql.TransactionInvoker;
-import io.openk9.datasource.util.VertxJsonNodeJsonProvider;
+import io.openk9.datasource.util.JsonMerge;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
@@ -275,7 +274,7 @@ public class DatasourceActor {
 
 				DataPayload newDataPayload =
 					mergeResponse(
-						ctx.getLog(), jsonPath, behaviorMergeType, dataPayload,
+						jsonPath, behaviorMergeType, dataPayload,
 						newJsonPayload.mapTo(DataPayload.class));
 
 				return initPipeline(
@@ -300,7 +299,7 @@ public class DatasourceActor {
 	}
 
 	private static DataPayload mergeResponse(
-		Logger log, String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
+		String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
 		DataPayload prevDataPayload, DataPayload newDataPayload) {
 
 		JsonObject prevJsonObject = new JsonObject(new LinkedHashMap<>(prevDataPayload.getRest()));
@@ -314,61 +313,12 @@ public class DatasourceActor {
 			behaviorMergeType = EnrichItem.BehaviorMergeType.REPLACE;
 		}
 
-		boolean isJsonPathRoot = "$".equals(jsonPath);
+		JsonMerge jsonMerge = JsonMerge.of(
+			behaviorMergeType == EnrichItem.BehaviorMergeType.REPLACE,
+			prevJsonObject, newJsonObject);
 
-		JsonPath jsonPathObject = JsonPath.compile(jsonPath);
+		return prevDataPayload.rest(jsonMerge.merge(jsonPath).getMap());
 
-		Object prevRead = jsonPathObject.read(prevJsonObject);
-
-		if (prevRead == null) {
-			log.info("jsonPath: {} not found in prevJsonObject", jsonPath);
-			log.info("setting new value without merge");
-			jsonPathObject.set(
-				prevJsonObject, newJsonObject, VertxJsonNodeJsonProvider.CONFIGURATION);
-		}
-		else {
-			switch (behaviorMergeType) {
-				case REPLACE -> {
-					log.info("replacing jsonPath: {} in prevJsonObject", jsonPath);
-					if (!isJsonPathRoot) {
-						jsonPathObject.set(
-							prevJsonObject, newJsonObject,
-							VertxJsonNodeJsonProvider.CONFIGURATION);
-					}
-					else {
-						prevJsonObject = newJsonObject;
-					}
-				}
-				case MERGE -> {
-
-					if (prevRead instanceof JsonObject) {
-
-						log.info("merging jsonPath: {} in prevJsonObject", jsonPath);
-
-						JsonObject merged =
-							new JsonObject()
-								.mergeIn((JsonObject) prevRead)
-								.mergeIn(newJsonObject, true);
-
-						if (!isJsonPathRoot) {
-
-							jsonPathObject.set(
-								prevJsonObject,
-								merged,
-								VertxJsonNodeJsonProvider.CONFIGURATION);
-
-						}
-						else {
-							prevJsonObject = merged;
-						}
-
-					}
-
-				}
-			};
-		}
-
-		return prevDataPayload.rest(prevJsonObject.getMap());
 
 	}
 
