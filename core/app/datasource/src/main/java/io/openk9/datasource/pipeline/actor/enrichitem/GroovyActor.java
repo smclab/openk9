@@ -1,4 +1,4 @@
-package io.openk9.datasource.pipeline.actor;
+package io.openk9.datasource.pipeline.actor.enrichitem;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
@@ -7,7 +7,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
-import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Map;
@@ -15,7 +14,7 @@ import java.util.Map;
 public class GroovyActor {
 	public sealed interface Command {}
 	public record Execute(
-		DataPayload dataPayload, String groovyScript, ActorRef<Response> replyTo) implements Command {}
+		JsonObject jsonObject, String groovyScript, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}
 	public record GroovyResponse(JsonObject response) implements Response {}
 	public record GroovyError(String error) implements Response {}
@@ -41,11 +40,11 @@ public class GroovyActor {
 		GroovyShell groovyShell, Execute execute, ActorContext<Command> ctx) {
 
 		String groovyScript = execute.groovyScript;
-		DataPayload dataPayload = execute.dataPayload;
+		JsonObject dataPayload = execute.jsonObject;
 
 		Script parse = groovyShell.parse(groovyScript);
 
-		parse.setBinding(new Binding(Map.of("payload", dataPayload)));
+		parse.setBinding(new Binding(Map.copyOf(dataPayload.getMap())));
 
 		try {
 

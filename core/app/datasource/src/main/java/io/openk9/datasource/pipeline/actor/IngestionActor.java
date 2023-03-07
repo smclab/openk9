@@ -9,6 +9,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection;
+import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -26,7 +27,7 @@ public class IngestionActor {
 	public record Callback(String tokenId, JsonObject body) implements Command { }
 	private record DatasourceResponseWrapper(Message<?> message, DatasourceActor.Response response) implements Command {}
 	private record EnrichItemResponseWrapper(EnrichItemActor.EnrichItemCallbackResponse response, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command {}
-	private record SupervisorResponseWrapper(Supervisor.Response response, ActorRef<Response> replyTo) implements Command {}
+	private record SupervisorResponseWrapper(HttpSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	public record EnrichItemCallback(long enrichItemId, String tenantId, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command { }
 	public sealed interface Response {}
 	public record EnrichItemCallbackResponse(JsonObject jsonObject) implements Response {}
@@ -37,9 +38,9 @@ public class IngestionActor {
 		return Behaviors
 			.supervise(Behaviors.<Command>setup(ctx -> {
 
-				ActorRef<Supervisor.Command> supervisorActorRef =
+				ActorRef<HttpSupervisor.Command> supervisorActorRef =
 					ctx.spawn(
-						Supervisor.create(),
+						HttpSupervisor.create(),
 						"enrich-pipeline-supervisor");
 
 				ActorRef<EnrichItemActor.Command> enrichItemActorRef =
@@ -57,7 +58,7 @@ public class IngestionActor {
 
 	private static Behavior<Command> initial(
 		ActorContext<Command> ctx,
-		ActorRef<Supervisor.Command> supervisorActorRef,
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<EnrichItemActor.Command> enrichItemActorRef,
 		List<Message<?>> messages) {
 
@@ -119,7 +120,7 @@ public class IngestionActor {
 				ctx.getLog().info("callback with tokenId: {}", callback.tokenId());
 
 				supervisorActorRef.tell(
-					new Supervisor.Callback(
+					new HttpSupervisor.Callback(
 						callback.tokenId(), callback.body()));
 
 				return Behaviors.same();
@@ -136,14 +137,14 @@ public class IngestionActor {
 	private static Behavior<Command> onSupervisorResponseWrapper(
 		ActorContext<Command> ctx, SupervisorResponseWrapper srw) {
 
-		Supervisor.Response response = srw.response;
+		HttpSupervisor.Response response = srw.response;
 		ActorRef<Response> replyTo = srw.replyTo;
 
-		if (response instanceof Supervisor.Body) {
-			replyTo.tell(new EnrichItemCallbackResponse(((Supervisor.Body)response).jsonObject()));
+		if (response instanceof HttpSupervisor.Body) {
+			replyTo.tell(new EnrichItemCallbackResponse(((HttpSupervisor.Body)response).jsonObject()));
 		}
 		else {
-			replyTo.tell(new EnrichItemCallbackError(((Supervisor.Error)response).error()));
+			replyTo.tell(new EnrichItemCallbackError(((HttpSupervisor.Error)response).error()));
 		}
 
 		return Behaviors.same();
@@ -152,7 +153,7 @@ public class IngestionActor {
 
 	private static Behavior<Command> onEnrichItemResponseWrapper(
 		ActorContext<Command> ctx,
-		ActorRef<Supervisor.Command> supervisorActorRef,
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		EnrichItemResponseWrapper eirw) {
 
 		ActorRef<Response> replyTo = eirw.replyTo;
@@ -185,14 +186,14 @@ public class IngestionActor {
 				.rest(datasourcePayload)
 				.build();
 
-		ActorRef<Supervisor.Response> responseActorRef =
+		ActorRef<HttpSupervisor.Response> responseActorRef =
 			ctx.messageAdapter(
-				Supervisor.Response.class,
+				HttpSupervisor.Response.class,
 				param -> new SupervisorResponseWrapper(param, replyTo)
 			);
 
 		supervisorActorRef.tell(
-			new Supervisor.Call(
+			new HttpSupervisor.Call(
 				async,
 				serviceName,
 				JsonObject.of(

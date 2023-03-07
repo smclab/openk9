@@ -1,4 +1,4 @@
-package io.openk9.datasource.pipeline.actor;
+package io.openk9.datasource.pipeline.actor.enrichitem;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
@@ -6,13 +6,14 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import io.openk9.datasource.pipeline.actor.common.Http;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Map;
 
-public class Processor extends AbstractBehavior<Processor.Command> {
+public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
-	public Processor(
+	public HttpProcessor(
 		ActorContext<Command> context,
 		ActorRef<Token.Command> tokenActorRef, boolean async) {
 		super(context);
@@ -149,7 +150,7 @@ public class Processor extends AbstractBehavior<Processor.Command> {
 	}
 
 	public static Behavior<Command> create(boolean async, ActorRef<Token.Command> tokenActorRef) {
-		return Behaviors.setup(param -> new Processor(param, tokenActorRef, async));
+		return Behaviors.setup(param -> new HttpProcessor(param, tokenActorRef, async));
 	}
 
 	private final boolean async;

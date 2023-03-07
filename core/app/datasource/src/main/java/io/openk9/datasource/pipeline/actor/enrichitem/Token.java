@@ -1,4 +1,4 @@
-package io.openk9.datasource.pipeline.actor;
+package io.openk9.datasource.pipeline.actor.enrichitem;
 
 import akka.actor.Cancellable;
 import akka.actor.typed.ActorRef;

@@ -9,6 +9,9 @@ import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
+import io.openk9.datasource.pipeline.actor.enrichitem.GroovyActor;
+import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.JsonMerge;
@@ -31,11 +34,13 @@ public class DatasourceActor {
 	private record CreateRandomDataIndex(
 		io.openk9.datasource.model.Datasource datasource) implements Command {}
 	private record SupervisorResponseWrapper(
-		Supervisor.Response response) implements Command {}
+		HttpSupervisor.Response response) implements Command {}
 	private record IndexWriterResponseWrapper(
 		IndexWriterActor.Response response) implements Command {}
 	private record GroovyActorResponseWrapper(
 		GroovyActor.Response response) implements Command {}
+	private record EnrichItemSupervisorResponseWrapper(
+		EnrichItemSupervisor.Response response) implements Command {}
 	private record InternalResponseWrapper(JsonObject jsonObject) implements Command {}
 	private record InternalError(String error) implements Command {}
 	public sealed interface Response {}
@@ -45,7 +50,7 @@ public class DatasourceActor {
 
 	public static Behavior<Command> create(
 		DataPayload dataPayload,
-		ActorRef<Supervisor.Command> supervisorActorRef,
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<Response> replyTo) {
 		return Behaviors.setup(ctx -> {
 
@@ -65,7 +70,7 @@ public class DatasourceActor {
 
 	private static Behavior<Command> initial(
 		ActorContext<Command> ctx,
-		ActorRef<Supervisor.Command> supervisorActorRef,
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<IndexWriterActor.Response> responseActorRef,
 		ActorRef<Response> replyTo, DataPayload dataPayload,
 		TransactionInvoker transactionInvoker) {
@@ -97,7 +102,7 @@ public class DatasourceActor {
 
 	private static Behavior<Command> onDatasourceModel(
 		ActorContext<Command> ctx,
-		ActorRef<Supervisor.Command> supervisorActorRef,
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<IndexWriterActor.Response> responseActorRef,
 		ActorRef<Response> replyTo, DataPayload dataPayload,
 		DatasourceModel datasourceModel) {
@@ -127,7 +132,7 @@ public class DatasourceActor {
 
 	private static Behavior<Command> initPipeline(
 		ActorContext<Command> ctx,
-		ActorRef<Supervisor.Command> supervisorActorRef,
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<IndexWriterActor.Response> responseActorRef,
 		ActorRef<Response> replyTo, DataPayload dataPayload,
 		DatasourceModel datasourceModel, Set<EnrichPipelineItem> enrichPipelineItems) {
@@ -177,84 +182,36 @@ public class DatasourceActor {
 
 		logger.info("start enrich for enrichItem with id {}", enrichItem.getId());
 
-		String serviceName = enrichItem.getServiceName();
-		String jsonConfig = enrichItem.getJsonConfig();
-		EnrichItem.EnrichItemType type = enrichItem.getType();
-		String validationScript = enrichItem.getValidationScript();
 		String jsonPath = enrichItem.getJsonPath();
 		EnrichItem.BehaviorMergeType behaviorMergeType = enrichItem.getBehaviorMergeType();
 
-		JsonObject enrichItemConfig =
-			jsonConfig == null || jsonConfig.isBlank()
-				? new JsonObject()
-				: new JsonObject(jsonConfig);
+		ActorRef<EnrichItemSupervisor.Response> enrichItemSupervisorWrapper =
+			ctx.messageAdapter(
+				EnrichItemSupervisor.Response.class,
+				EnrichItemSupervisorResponseWrapper::new);
 
-		JsonObject payload = JsonObject.of(
-			"payload", dataPayload,
-			"enrichItemConfig", enrichItemConfig
-		);
+		ActorRef<EnrichItemSupervisor.Command> enrichItemSupervisorRef =
+			ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
 
-		if (type == EnrichItem.EnrichItemType.HTTP_ASYNC || type == EnrichItem.EnrichItemType.HTTP_SYNC) {
-
-			boolean async = type == EnrichItem.EnrichItemType.HTTP_ASYNC;
-
-			ActorRef<Supervisor.Response> supervisorAdapter =
-				ctx.messageAdapter(
-					Supervisor.Response.class,
-					SupervisorResponseWrapper::new);
-
-			supervisorActorRef.tell(
-				new Supervisor.Call(async, serviceName, payload, supervisorAdapter));
-
-		}
-		else if (type == EnrichItem.EnrichItemType.GROOVY_SCRIPT) {
-
-			ActorRef<GroovyActor.Command> groovyActorRef =
-				ctx.spawnAnonymous(GroovyActor.create());
-
-			ActorRef<GroovyActor.Response> groovyActorAdapter =
-				ctx.messageAdapter(
-					GroovyActor.Response.class,
-					GroovyActorResponseWrapper::new);
-
-			groovyActorRef.tell(
-				new GroovyActor.Execute(
-					dataPayload, validationScript, groovyActorAdapter));
-
-		}
-		else {
-			throw new RuntimeException("invalid type: " + type);
-		}
+		enrichItemSupervisorRef.tell(
+			new EnrichItemSupervisor.Execute(
+				enrichItem, dataPayload, enrichItemSupervisorWrapper));
 
 		return Behaviors.receive(Command.class)
-			.onMessage(GroovyActorResponseWrapper.class, garw -> {
-				GroovyActor.Response response = garw.response;
+			.onMessage(EnrichItemSupervisorResponseWrapper.class, garw -> {
+				EnrichItemSupervisor.Response response = garw.response;
 
-				if (response instanceof GroovyActor.GroovyResponse) {
-					GroovyActor.GroovyResponse groovyResponse =(GroovyActor.GroovyResponse)response;
-					ctx.getSelf().tell(new InternalResponseWrapper(groovyResponse.response()));
+				if (response instanceof EnrichItemSupervisor.Body) {
+					EnrichItemSupervisor.Body body =(EnrichItemSupervisor.Body)response;
+					ctx.getSelf().tell(new InternalResponseWrapper(body.body()));
 				}
 				else {
-					GroovyActor.GroovyError groovyError = (GroovyActor.GroovyError) response;
-					ctx.getSelf().tell(new InternalError(groovyError.error()));
-				}
-
-				return Behaviors.same();
-
-			})
-			.onMessage(SupervisorResponseWrapper.class, srw -> {
-				Supervisor.Response response = srw.response;
-
-				if (response instanceof Supervisor.Body) {
-					Supervisor.Body body = (Supervisor.Body) response;
-					ctx.getSelf().tell(new InternalResponseWrapper(body.jsonObject()));
-				}
-				else {
-					Supervisor.Error error = (Supervisor.Error) response;
+					EnrichItemSupervisor.Error error =(EnrichItemSupervisor.Error)response;
 					ctx.getSelf().tell(new InternalError(error.error()));
 				}
 
 				return Behaviors.same();
+
 			})
 			.onMessage(InternalResponseWrapper.class, srw -> {
 
