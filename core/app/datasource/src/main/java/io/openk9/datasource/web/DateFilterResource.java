@@ -29,6 +29,7 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.sql.TransactionInvoker;
+import io.openk9.datasource.web.dto.PartialDocTypeFieldDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import lombok.AllArgsConstructor;
@@ -57,11 +58,11 @@ public class DateFilterResource {
 	HttpServerRequest request;
 
 	@GET
-	public Uni<List<DateFilterResponseDto>> getFields() {
+	public Uni<List<PartialDocTypeFieldDTO>> getFields() {
 		return getDocTypeFieldList(request.host());
 	}
 
-	private Uni<List<DateFilterResponseDto>> getDocTypeFieldList(String virtualhost) {
+	private Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldList(String virtualhost) {
 		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
@@ -135,14 +136,9 @@ public class DateFilterResource {
 				)
 				.map(docTypeFields ->
 					docTypeFields
-						.map(docTypeField ->
-							DateFilterResponseDto.builder()
-								.id(docTypeField.getId())
-								.field(docTypeField.getFieldName())
-								.label(docTypeField.getName())
-								.build()
-						)
-						.toList());
+						.map(PartialDocTypeFieldDTO::of)
+						.toList()
+				);
 		});
 	}
 
