@@ -3,7 +3,9 @@ package io.openk9.datasource.mapper;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
-import io.openk9.datasource.web.BucketResource;
+import io.openk9.datasource.web.dto.TabResponseDTO;
+import io.openk9.datasource.web.dto.TemplateResponseDTO;
+import io.openk9.datasource.web.dto.TokenTabResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -14,13 +16,13 @@ import java.util.List;
 )
 public interface BucketResourceMapper {
 
-	List<BucketResource.TemplateResponseDto> toTemplateResponseDtoList(
+	List<TemplateResponseDTO> toTemplateResponseDtoList(
 		List<DocTypeTemplate> docTypeTemplateList);
 
-	BucketResource.TemplateResponseDto toTemplateResponseDto(
+	TemplateResponseDTO toTemplateResponseDto(
 		DocTypeTemplate docTypeTemplate);
 
-	List<BucketResource.TabResponseDto> toTabResponseDtoList(List<Tab> tabList);
+	List<TabResponseDTO> toTabResponseDtoList(List<Tab> tabList);
 
 	@Mapping(
 		target = "label", source = "name"
@@ -28,7 +30,7 @@ public interface BucketResourceMapper {
 	@Mapping(
 		target = "tokens", source = "tokenTabs"
 	)
-	BucketResource.TabResponseDto toTabResponseDto(Tab tab);
+	TabResponseDTO toTabResponseDto(Tab tab);
 
 	@Mapping(
 		target = "keywordKey", source = "docTypeField.fieldName"
@@ -36,7 +38,7 @@ public interface BucketResourceMapper {
 	@Mapping(
 		target = "values", source = "value"
 	)
-	BucketResource.TokenTabResponseDto toTokenTabResponseDto(TokenTab tokenTab);
+	TokenTabResponseDTO toTokenTabResponseDto(TokenTab tokenTab);
 
 	static List<String> toValues(String value) {
 		return value == null ? List.of() : List.of(value);

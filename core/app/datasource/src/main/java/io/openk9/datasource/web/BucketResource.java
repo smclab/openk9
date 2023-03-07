@@ -18,6 +18,9 @@ import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.sql.TransactionInvoker;
+import io.openk9.datasource.web.dto.PartialDocTypeFieldDTO;
+import io.openk9.datasource.web.dto.TabResponseDTO;
+import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 
@@ -45,13 +48,13 @@ public class BucketResource {
 
 	@Path("/current/templates")
 	@GET
-	public Uni<List<TemplateResponseDto>> getTemplates() {
+	public Uni<List<TemplateResponseDTO>> getTemplates() {
 		return getDocTypeTemplateList(request.host());
 	}
 
 	@Path("/current/tabs")
 	@GET
-	public Uni<List<TabResponseDto>> getTabs() {
+	public Uni<List<TabResponseDTO>> getTabs() {
 		return getTabList(request.host());
 	}
 
@@ -63,11 +66,11 @@ public class BucketResource {
 
 	@Path("/current/doc-type-fields-sortable")
 	@GET
-	public Uni<List<String>> getDocTypeFieldsSortable(){
+	public Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortable(){
 		return getDocTypeFieldsSortableList(request.host());
 	}
 
-	private Uni<List<String>> getDocTypeFieldsSortableList(String virtualhost) {
+	private Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortableList(String virtualhost) {
 		return transactionInvoker.withStatelessTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
@@ -79,27 +82,32 @@ public class BucketResource {
 			Join<Bucket, TenantBinding> tenantBindingFetch =
 				from.join(Bucket_.tenantBinding);
 
-			Join<DocType, DocTypeField> fetch =
+			Join<DocType, DocTypeField> parentDocTypeFieldJoin =
 				from.join(Bucket_.datasources)
 					.join(Datasource_.dataIndex)
 					.join(DataIndex_.docTypes)
 					.join(DocType_.docTypeFields);
 
-			fetch.on(cb.isTrue(fetch.get(DocTypeField_.sortable)));
-
 			SetJoin<DocTypeField, DocTypeField> subDocTypeFieldJoin =
-				fetch.join(DocTypeField_.subDocTypeFields, JoinType.LEFT);
+				parentDocTypeFieldJoin.join(DocTypeField_.subDocTypeFields, JoinType.LEFT);
 
-			subDocTypeFieldJoin.on(
-				cb.isTrue(subDocTypeFieldJoin.get(DocTypeField_.sortable)));
-
-			query.multiselect(fetch, subDocTypeFieldJoin);
+			query.multiselect(parentDocTypeFieldJoin, subDocTypeFieldJoin);
 
 			query.where(
-				cb.equal(
-					tenantBindingFetch.get(
-						TenantBinding_.virtualHost),
-					virtualhost
+				cb.and(
+					cb.equal(
+						tenantBindingFetch.get(
+							TenantBinding_.virtualHost),
+						virtualhost
+					),
+					cb.or(
+						cb.isTrue(
+							parentDocTypeFieldJoin.get(DocTypeField_.sortable)
+						),
+						cb.isTrue(
+							subDocTypeFieldJoin.get(DocTypeField_.sortable)
+						)
+					)
 				)
 			);
 
@@ -112,32 +120,33 @@ public class BucketResource {
 						.stream()
 						.flatMap(t -> {
 
-							Stream.Builder<String> builder =
+							Stream.Builder<DocTypeField> builder =
 								Stream.builder();
 
 							DocTypeField docTypeField1 =
 								t.get(0, DocTypeField.class);
 
-							if (docTypeField1 != null) {
-								builder.add(docTypeField1.getFieldName());
+							if (docTypeField1 != null && docTypeField1.isSortable()) {
+								builder.add(docTypeField1);
 							}
 
 							DocTypeField docTypeField2 =
 								t.get(1, DocTypeField.class);
 
-							if (docTypeField2 != null) {
-								builder.add(docTypeField2.getFieldName());
+							if (docTypeField2 != null && docTypeField2.isSortable()) {
+								builder.add(docTypeField2);
 							}
 
 							return builder.build();
 						})
+						.map(PartialDocTypeFieldDTO::of)
 						.toList()
 				);
 		});
 
 	}
 
-	private Uni<List<TemplateResponseDto>> getDocTypeTemplateList(String virtualhost) {
+	private Uni<List<TemplateResponseDTO>> getDocTypeTemplateList(String virtualhost) {
 		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
@@ -174,7 +183,7 @@ public class BucketResource {
 
 	}
 
-	private Uni<List<TabResponseDto>> getTabList(String virtualhost) {
+	private Uni<List<TabResponseDTO>> getTabList(String virtualhost) {
 		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
@@ -243,12 +252,6 @@ public class BucketResource {
 		});
 
 	}
-	public record TabResponseDto(String label, List<TokenTabResponseDto> tokens) {}
-
-	public record TokenTabResponseDto(
-		String tokenType, String keywordKey, boolean filter, List<String> values) {}
-
-	public record TemplateResponseDto(String name, Long id) {}
 
 	@Inject
 	BucketResourceMapper mapper;
