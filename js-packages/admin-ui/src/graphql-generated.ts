@@ -119,14 +119,22 @@ export enum AnnotatorType {
   Token = 'TOKEN'
 }
 
+export enum BehaviorMergeType {
+  Merge = 'MERGE',
+  Replace = 'REPLACE'
+}
+
 export type Bucket = {
   __typename?: 'Bucket';
+  catIndices?: Maybe<Array<Maybe<CatResponse>>>;
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   datasources?: Maybe<Connection_Datasource>;
   description?: Maybe<Scalars['String']>;
+  docCount?: Maybe<Scalars['BigInteger']>;
   enabled?: Maybe<Scalars['Boolean']>;
   id?: Maybe<Scalars['ID']>;
+  indexCount?: Maybe<Scalars['BigInteger']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
@@ -172,6 +180,20 @@ export type BucketTabsArgs = {
 export type BucketDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+};
+
+export type CatResponse = {
+  __typename?: 'CatResponse';
+  docsCount?: Maybe<Scalars['String']>;
+  docsDeleted?: Maybe<Scalars['String']>;
+  health?: Maybe<Scalars['String']>;
+  index?: Maybe<Scalars['String']>;
+  pri?: Maybe<Scalars['String']>;
+  priStoreSize?: Maybe<Scalars['String']>;
+  rep?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['String']>;
+  storeSize?: Maybe<Scalars['String']>;
+  uuid?: Maybe<Scalars['String']>;
 };
 
 export type CharFilter = {
@@ -370,9 +392,11 @@ export type Connection_Tokenizer = {
 
 export type DataIndex = {
   __typename?: 'DataIndex';
+  cat?: Maybe<CatResponse>;
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   description?: Maybe<Scalars['String']>;
+  docCount?: Maybe<Scalars['BigInteger']>;
   docTypes?: Maybe<Connection_DocType>;
   id?: Maybe<Scalars['ID']>;
   mappings?: Maybe<Scalars['String']>;
@@ -742,6 +766,7 @@ export type DocTypeField = {
   autocomplete: Scalars['Boolean'];
   boolean: Scalars['Boolean'];
   boost?: Maybe<Scalars['Float']>;
+  children?: Maybe<Array<Maybe<DocTypeField>>>;
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   date: Scalars['Boolean'];
@@ -766,6 +791,7 @@ export type DocTypeField = {
   searchableAndAutocomplete: Scalars['Boolean'];
   searchableAndDate: Scalars['Boolean'];
   searchableAndText: Scalars['Boolean'];
+  sortable: Scalars['Boolean'];
   subFields?: Maybe<Connection_DocTypeField>;
   text: Scalars['Boolean'];
 };
@@ -794,6 +820,8 @@ export type DocTypeFieldDtoInput = {
   name: Scalars['String'];
   /** If true field is used for matches during search */
   searchable: Scalars['Boolean'];
+  /** If true field is used for sorting during search */
+  sortable: Scalars['Boolean'];
 };
 
 export type DocTypeTemplate = {
@@ -996,11 +1024,13 @@ export type Edge_Tokenizer = {
 
 export type EnrichItem = {
   __typename?: 'EnrichItem';
+  behaviorMergeType?: Maybe<BehaviorMergeType>;
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   description?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['ID']>;
   jsonConfig?: Maybe<Scalars['String']>;
+  jsonPath?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
@@ -1010,8 +1040,10 @@ export type EnrichItem = {
 };
 
 export type EnrichItemDtoInput = {
+  behaviorMergeType: BehaviorMergeType;
   description?: InputMaybe<Scalars['String']>;
   jsonConfig?: InputMaybe<Scalars['String']>;
+  jsonPath: Scalars['String'];
   name: Scalars['String'];
   serviceName: Scalars['String'];
   type: EnrichItemType;
@@ -1019,8 +1051,9 @@ export type EnrichItemDtoInput = {
 };
 
 export enum EnrichItemType {
-  Async = 'ASYNC',
-  Sync = 'SYNC'
+  GroovyScript = 'GROOVY_SCRIPT',
+  HttpAsync = 'HTTP_ASYNC',
+  HttpSync = 'HTTP_SYNC'
 }
 
 export type EnrichPipeline = {
@@ -3624,23 +3657,7 @@ export type DocumentTypeFieldQueryVariables = Exact<{
 }>;
 
 
-export type DocumentTypeFieldQuery = { __typename?: 'Query', docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, analyzer?: { __typename?: 'Analyzer', id?: string | null } | null } | null };
-
-export type CreateOrUpdateDocumentTypeFieldMutationVariables = Exact<{
-  documentTypeId: Scalars['ID'];
-  documentTypeFieldId?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  fieldName: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  fieldType: FieldType;
-  boost?: InputMaybe<Scalars['Float']>;
-  searchable: Scalars['Boolean'];
-  exclude?: InputMaybe<Scalars['Boolean']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-}>;
-
-
-export type CreateOrUpdateDocumentTypeFieldMutation = { __typename?: 'Mutation', docTypeField?: { __typename?: 'Response_DocTypeField', entity?: { __typename?: 'DocTypeField', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type DocumentTypeFieldQuery = { __typename?: 'Query', docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable: boolean, analyzer?: { __typename?: 'Analyzer', id?: string | null } | null } | null };
 
 export type CreateOrUpdateDocumentTypeSubFieldsMutationVariables = Exact<{
   parentDocTypeFieldId: Scalars['ID'];
@@ -3650,6 +3667,7 @@ export type CreateOrUpdateDocumentTypeSubFieldsMutationVariables = Exact<{
   searchable: Scalars['Boolean'];
   boost?: InputMaybe<Scalars['Float']>;
   fieldType: FieldType;
+  sortable: Scalars['Boolean'];
 }>;
 
 
@@ -3747,7 +3765,7 @@ export type EnrichItemQueryVariables = Exact<{
 }>;
 
 
-export type EnrichItemQuery = { __typename?: 'Query', enrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null, jsonConfig?: string | null, validationScript?: string | null } | null };
+export type EnrichItemQuery = { __typename?: 'Query', enrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null, jsonConfig?: string | null, validationScript?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null } | null };
 
 export type CreateOrUpdateEnrichItemMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -3757,6 +3775,8 @@ export type CreateOrUpdateEnrichItemMutationVariables = Exact<{
   serviceName: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
   validationScript?: InputMaybe<Scalars['String']>;
+  behaviorMergeType: BehaviorMergeType;
+  jsonPath: Scalars['String'];
 }>;
 
 
@@ -4138,7 +4158,24 @@ export type DocumentTypeFieldsQueryVariables = Exact<{
 }>;
 
 
-export type DocumentTypeFieldsQuery = { __typename?: 'Query', docTypeFieldsFromDocType?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, subFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null } | null } | null> | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DocumentTypeFieldsQuery = { __typename?: 'Query', docTypeFieldsFromDocType?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, sortable: boolean, subFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, sortable: boolean } | null } | null> | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
+export type CreateOrUpdateDocumentTypeFieldMutationVariables = Exact<{
+  documentTypeId: Scalars['ID'];
+  documentTypeFieldId?: InputMaybe<Scalars['ID']>;
+  name: Scalars['String'];
+  fieldName: Scalars['String'];
+  description?: InputMaybe<Scalars['String']>;
+  fieldType: FieldType;
+  boost?: InputMaybe<Scalars['Float']>;
+  searchable: Scalars['Boolean'];
+  exclude?: InputMaybe<Scalars['Boolean']>;
+  jsonConfig?: InputMaybe<Scalars['String']>;
+  sortable: Scalars['Boolean'];
+}>;
+
+
+export type CreateOrUpdateDocumentTypeFieldMutation = { __typename?: 'Mutation', docTypeField?: { __typename?: 'Response_DocTypeField', entity?: { __typename?: 'DocTypeField', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 export type CreateDocumentTypeSubFieldsMutationVariables = Exact<{
   parentDocTypeFieldId: Scalars['ID'];
@@ -4149,6 +4186,7 @@ export type CreateDocumentTypeSubFieldsMutationVariables = Exact<{
   boost?: InputMaybe<Scalars['Float']>;
   fieldType: FieldType;
   description?: InputMaybe<Scalars['String']>;
+  sortable: Scalars['Boolean'];
 }>;
 
 
@@ -4391,6 +4429,17 @@ export type CreateWebCrawlerDataSourceMutationVariables = Exact<{
 
 
 export type CreateWebCrawlerDataSourceMutation = { __typename?: 'Mutation', datasource?: { __typename?: 'Response_Datasource', entity?: { __typename?: 'Datasource', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+
+export type CreateYouTubeDataSourceMutationVariables = Exact<{
+  name: Scalars['String'];
+  description?: InputMaybe<Scalars['String']>;
+  schedulable: Scalars['Boolean'];
+  scheduling: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type CreateYouTubeDataSourceMutation = { __typename?: 'Mutation', datasource?: { __typename?: 'Response_Datasource', entity?: { __typename?: 'Datasource', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 
 export const AnalyzerDocument = gql`
@@ -7365,6 +7414,7 @@ export const DocumentTypeFieldDocument = gql`
     exclude
     fieldName
     jsonConfig
+    sortable
     analyzer {
       id
     }
@@ -7399,63 +7449,11 @@ export function useDocumentTypeFieldLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type DocumentTypeFieldQueryHookResult = ReturnType<typeof useDocumentTypeFieldQuery>;
 export type DocumentTypeFieldLazyQueryHookResult = ReturnType<typeof useDocumentTypeFieldLazyQuery>;
 export type DocumentTypeFieldQueryResult = Apollo.QueryResult<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>;
-export const CreateOrUpdateDocumentTypeFieldDocument = gql`
-    mutation CreateOrUpdateDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID, $name: String!, $fieldName: String!, $description: String, $fieldType: FieldType!, $boost: Float, $searchable: Boolean!, $exclude: Boolean, $jsonConfig: String) {
-  docTypeField(
-    docTypeId: $documentTypeId
-    docTypeFieldId: $documentTypeFieldId
-    docTypeFieldDTO: {name: $name, description: $description, fieldType: $fieldType, boost: $boost, searchable: $searchable, exclude: $exclude, fieldName: $fieldName, jsonConfig: $jsonConfig}
-  ) {
-    entity {
-      id
-    }
-    fieldValidators {
-      field
-      message
-    }
-  }
-}
-    `;
-export type CreateOrUpdateDocumentTypeFieldMutationFn = Apollo.MutationFunction<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>;
-
-/**
- * __useCreateOrUpdateDocumentTypeFieldMutation__
- *
- * To run a mutation, you first call `useCreateOrUpdateDocumentTypeFieldMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateOrUpdateDocumentTypeFieldMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createOrUpdateDocumentTypeFieldMutation, { data, loading, error }] = useCreateOrUpdateDocumentTypeFieldMutation({
- *   variables: {
- *      documentTypeId: // value for 'documentTypeId'
- *      documentTypeFieldId: // value for 'documentTypeFieldId'
- *      name: // value for 'name'
- *      fieldName: // value for 'fieldName'
- *      description: // value for 'description'
- *      fieldType: // value for 'fieldType'
- *      boost: // value for 'boost'
- *      searchable: // value for 'searchable'
- *      exclude: // value for 'exclude'
- *      jsonConfig: // value for 'jsonConfig'
- *   },
- * });
- */
-export function useCreateOrUpdateDocumentTypeFieldMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>(CreateOrUpdateDocumentTypeFieldDocument, options);
-      }
-export type CreateOrUpdateDocumentTypeFieldMutationHookResult = ReturnType<typeof useCreateOrUpdateDocumentTypeFieldMutation>;
-export type CreateOrUpdateDocumentTypeFieldMutationResult = Apollo.MutationResult<CreateOrUpdateDocumentTypeFieldMutation>;
-export type CreateOrUpdateDocumentTypeFieldMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>;
 export const CreateOrUpdateDocumentTypeSubFieldsDocument = gql`
-    mutation createOrUpdateDocumentTypeSubFields($parentDocTypeFieldId: ID!, $name: String!, $fieldName: String!, $jsonConfig: String, $searchable: Boolean!, $boost: Float, $fieldType: FieldType!) {
+    mutation createOrUpdateDocumentTypeSubFields($parentDocTypeFieldId: ID!, $name: String!, $fieldName: String!, $jsonConfig: String, $searchable: Boolean!, $boost: Float, $fieldType: FieldType!, $sortable: Boolean!) {
   createSubField(
     parentDocTypeFieldId: $parentDocTypeFieldId
-    docTypeFieldDTO: {name: $name, fieldName: $fieldName, jsonConfig: $jsonConfig, searchable: $searchable, boost: $boost, fieldType: $fieldType}
+    docTypeFieldDTO: {name: $name, fieldName: $fieldName, jsonConfig: $jsonConfig, searchable: $searchable, boost: $boost, fieldType: $fieldType, sortable: $sortable}
   ) {
     entity {
       id
@@ -7489,6 +7487,7 @@ export type CreateOrUpdateDocumentTypeSubFieldsMutationFn = Apollo.MutationFunct
  *      searchable: // value for 'searchable'
  *      boost: // value for 'boost'
  *      fieldType: // value for 'fieldType'
+ *      sortable: // value for 'sortable'
  *   },
  * });
  */
@@ -7962,6 +7961,8 @@ export const EnrichItemDocument = gql`
     serviceName
     jsonConfig
     validationScript
+    behaviorMergeType
+    jsonPath
   }
 }
     `;
@@ -7994,10 +7995,10 @@ export type EnrichItemQueryHookResult = ReturnType<typeof useEnrichItemQuery>;
 export type EnrichItemLazyQueryHookResult = ReturnType<typeof useEnrichItemLazyQuery>;
 export type EnrichItemQueryResult = Apollo.QueryResult<EnrichItemQuery, EnrichItemQueryVariables>;
 export const CreateOrUpdateEnrichItemDocument = gql`
-    mutation CreateOrUpdateEnrichItem($id: ID, $name: String!, $description: String, $type: EnrichItemType!, $serviceName: String!, $jsonConfig: String, $validationScript: String) {
+    mutation CreateOrUpdateEnrichItem($id: ID, $name: String!, $description: String, $type: EnrichItemType!, $serviceName: String!, $jsonConfig: String, $validationScript: String, $behaviorMergeType: BehaviorMergeType!, $jsonPath: String!) {
   enrichItem(
     id: $id
-    enrichItemDTO: {name: $name, description: $description, type: $type, serviceName: $serviceName, jsonConfig: $jsonConfig, validationScript: $validationScript}
+    enrichItemDTO: {name: $name, description: $description, type: $type, serviceName: $serviceName, jsonConfig: $jsonConfig, validationScript: $validationScript, behaviorMergeType: $behaviorMergeType, jsonPath: $jsonPath}
   ) {
     entity {
       id
@@ -8032,6 +8033,8 @@ export type CreateOrUpdateEnrichItemMutationFn = Apollo.MutationFunction<CreateO
  *      serviceName: // value for 'serviceName'
  *      jsonConfig: // value for 'jsonConfig'
  *      validationScript: // value for 'validationScript'
+ *      behaviorMergeType: // value for 'behaviorMergeType'
+ *      jsonPath: // value for 'jsonPath'
  *   },
  * });
  */
@@ -10001,6 +10004,7 @@ export const DocumentTypeFieldsDocument = gql`
         searchable
         exclude
         fieldName
+        sortable
         subFields {
           edges {
             node {
@@ -10012,6 +10016,7 @@ export const DocumentTypeFieldsDocument = gql`
               searchable
               exclude
               fieldName
+              sortable
             }
           }
         }
@@ -10054,11 +10059,64 @@ export function useDocumentTypeFieldsLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type DocumentTypeFieldsQueryHookResult = ReturnType<typeof useDocumentTypeFieldsQuery>;
 export type DocumentTypeFieldsLazyQueryHookResult = ReturnType<typeof useDocumentTypeFieldsLazyQuery>;
 export type DocumentTypeFieldsQueryResult = Apollo.QueryResult<DocumentTypeFieldsQuery, DocumentTypeFieldsQueryVariables>;
+export const CreateOrUpdateDocumentTypeFieldDocument = gql`
+    mutation CreateOrUpdateDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID, $name: String!, $fieldName: String!, $description: String, $fieldType: FieldType!, $boost: Float, $searchable: Boolean!, $exclude: Boolean, $jsonConfig: String, $sortable: Boolean!) {
+  docTypeField(
+    docTypeId: $documentTypeId
+    docTypeFieldId: $documentTypeFieldId
+    docTypeFieldDTO: {name: $name, description: $description, fieldType: $fieldType, boost: $boost, searchable: $searchable, exclude: $exclude, fieldName: $fieldName, jsonConfig: $jsonConfig, sortable: $sortable}
+  ) {
+    entity {
+      id
+    }
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateOrUpdateDocumentTypeFieldMutationFn = Apollo.MutationFunction<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>;
+
+/**
+ * __useCreateOrUpdateDocumentTypeFieldMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateDocumentTypeFieldMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateDocumentTypeFieldMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateDocumentTypeFieldMutation, { data, loading, error }] = useCreateOrUpdateDocumentTypeFieldMutation({
+ *   variables: {
+ *      documentTypeId: // value for 'documentTypeId'
+ *      documentTypeFieldId: // value for 'documentTypeFieldId'
+ *      name: // value for 'name'
+ *      fieldName: // value for 'fieldName'
+ *      description: // value for 'description'
+ *      fieldType: // value for 'fieldType'
+ *      boost: // value for 'boost'
+ *      searchable: // value for 'searchable'
+ *      exclude: // value for 'exclude'
+ *      jsonConfig: // value for 'jsonConfig'
+ *      sortable: // value for 'sortable'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateDocumentTypeFieldMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>(CreateOrUpdateDocumentTypeFieldDocument, options);
+      }
+export type CreateOrUpdateDocumentTypeFieldMutationHookResult = ReturnType<typeof useCreateOrUpdateDocumentTypeFieldMutation>;
+export type CreateOrUpdateDocumentTypeFieldMutationResult = Apollo.MutationResult<CreateOrUpdateDocumentTypeFieldMutation>;
+export type CreateOrUpdateDocumentTypeFieldMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>;
 export const CreateDocumentTypeSubFieldsDocument = gql`
-    mutation createDocumentTypeSubFields($parentDocTypeFieldId: ID!, $name: String!, $fieldName: String!, $jsonConfig: String, $searchable: Boolean!, $boost: Float, $fieldType: FieldType!, $description: String) {
+    mutation createDocumentTypeSubFields($parentDocTypeFieldId: ID!, $name: String!, $fieldName: String!, $jsonConfig: String, $searchable: Boolean!, $boost: Float, $fieldType: FieldType!, $description: String, $sortable: Boolean!) {
   createSubField(
     parentDocTypeFieldId: $parentDocTypeFieldId
-    docTypeFieldDTO: {name: $name, fieldName: $fieldName, jsonConfig: $jsonConfig, searchable: $searchable, boost: $boost, fieldType: $fieldType, description: $description}
+    docTypeFieldDTO: {name: $name, fieldName: $fieldName, jsonConfig: $jsonConfig, searchable: $searchable, boost: $boost, fieldType: $fieldType, description: $description, sortable: $sortable}
   ) {
     entity {
       id
@@ -10093,6 +10151,7 @@ export type CreateDocumentTypeSubFieldsMutationFn = Apollo.MutationFunction<Crea
  *      boost: // value for 'boost'
  *      fieldType: // value for 'fieldType'
  *      description: // value for 'description'
+ *      sortable: // value for 'sortable'
  *   },
  * });
  */
@@ -11302,4 +11361,49 @@ export function useCreateWebCrawlerDataSourceMutation(baseOptions?: Apollo.Mutat
 export type CreateWebCrawlerDataSourceMutationHookResult = ReturnType<typeof useCreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationResult = Apollo.MutationResult<CreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateWebCrawlerDataSourceMutation, CreateWebCrawlerDataSourceMutationVariables>;
-// Generated on 2023-02-06T12:46:20+01:00
+export const CreateYouTubeDataSourceDocument = gql`
+    mutation CreateYouTubeDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String) {
+  datasource(
+    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig}
+  ) {
+    entity {
+      id
+    }
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateYouTubeDataSourceMutationFn = Apollo.MutationFunction<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
+
+/**
+ * __useCreateYouTubeDataSourceMutation__
+ *
+ * To run a mutation, you first call `useCreateYouTubeDataSourceMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateYouTubeDataSourceMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createYouTubeDataSourceMutation, { data, loading, error }] = useCreateYouTubeDataSourceMutation({
+ *   variables: {
+ *      name: // value for 'name'
+ *      description: // value for 'description'
+ *      schedulable: // value for 'schedulable'
+ *      scheduling: // value for 'scheduling'
+ *      jsonConfig: // value for 'jsonConfig'
+ *   },
+ * });
+ */
+export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.MutationHookOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>(CreateYouTubeDataSourceDocument, options);
+      }
+export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
+export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
+export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
+// Generated on 2023-03-07T15:17:52+01:00

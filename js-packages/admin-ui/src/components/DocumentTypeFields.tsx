@@ -73,7 +73,9 @@ export function DocumentTypeFields() {
                           documentTypeFieldId: documentTypeField.id,
                           documentTypeId: documentTypeId,
                           searchable,
+                          sortable: documentTypeField.sortable ?? false,
                           fieldType: documentTypeField.fieldType,
+                          boost: documentTypeField.boost,
                           name: documentTypeField.name,
                           description: documentTypeField.description,
                           fieldName: documentTypeField.fieldName,
@@ -106,9 +108,44 @@ export function DocumentTypeFields() {
                         documentTypeId: documentTypeId,
                         exclude,
                         description: documentTypeField.description,
+                        boost: documentTypeField.boost,
                         fieldType: documentTypeField.fieldType,
                         name: documentTypeField.name,
+                        sortable: documentTypeField.sortable ?? false,
                         searchable: documentTypeField.searchable,
+                        fieldName: documentTypeField.fieldName,
+                      },
+                    });
+                  }
+                }}
+              />
+            ),
+          },
+          {
+            header: "Sortable",
+            content: (documentTypeField) => (
+              <ClayToggle
+                toggled={documentTypeField?.sortable ?? false}
+                onToggle={(sortable) => {
+                  if (
+                    documentTypeField &&
+                    documentTypeField.id &&
+                    documentTypeField.fieldType &&
+                    documentTypeField.name &&
+                    documentTypeField.fieldName &&
+                    typeof documentTypeField.searchable === "boolean"
+                  ) {
+                    updateDocumentTypeFieldMutate({
+                      variables: {
+                        documentTypeFieldId: documentTypeField.id,
+                        documentTypeId: documentTypeId,
+                        exclude: documentTypeField.exclude,
+                        description: documentTypeField.description,
+                        fieldType: documentTypeField.fieldType,
+                        name: documentTypeField.name,
+                        sortable,
+                        searchable: documentTypeField.searchable,
+                        boost: documentTypeField.boost,
                         fieldName: documentTypeField.fieldName,
                       },
                     });
