@@ -139,6 +139,7 @@ public class BucketResource {
 
 							return builder.build();
 						})
+						.distinct()
 						.map(PartialDocTypeFieldDTO::of)
 						.toList()
 				);
