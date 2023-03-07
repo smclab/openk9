@@ -8,7 +8,7 @@ import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.pipeline.actor.dto.EnrichItemProjection;
+import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.json.JsonObject;
@@ -19,7 +19,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class IngestionActor {
 	public sealed interface Command {}
@@ -27,12 +26,11 @@ public class IngestionActor {
 	public record Callback(String tokenId, JsonObject body) implements Command { }
 	private record DatasourceResponseWrapper(Message<?> message, DatasourceActor.Response response) implements Command {}
 	private record EnrichItemResponseWrapper(EnrichItemActor.EnrichItemCallbackResponse response, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command {}
-	private record SupervisorResponseWrapper(HttpSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
+	private record SupervisorResponseWrapper(EnrichItemSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	public record EnrichItemCallback(long enrichItemId, String tenantId, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command { }
 	public sealed interface Response {}
 	public record EnrichItemCallbackResponse(JsonObject jsonObject) implements Response {}
 	public record EnrichItemCallbackError(String message) implements Response {}
-
 
 	public static Behavior<Command> create() {
 		return Behaviors
@@ -137,14 +135,14 @@ public class IngestionActor {
 	private static Behavior<Command> onSupervisorResponseWrapper(
 		ActorContext<Command> ctx, SupervisorResponseWrapper srw) {
 
-		HttpSupervisor.Response response = srw.response;
+		EnrichItemSupervisor.Response response = srw.response;
 		ActorRef<Response> replyTo = srw.replyTo;
 
-		if (response instanceof HttpSupervisor.Body) {
-			replyTo.tell(new EnrichItemCallbackResponse(((HttpSupervisor.Body)response).jsonObject()));
+		if (response instanceof EnrichItemSupervisor.Body) {
+			replyTo.tell(new EnrichItemCallbackResponse(((EnrichItemSupervisor.Body)response).body()));
 		}
 		else {
-			replyTo.tell(new EnrichItemCallbackError(((HttpSupervisor.Error)response).error()));
+			replyTo.tell(new EnrichItemCallbackError(((EnrichItemSupervisor.Error)response).error()));
 		}
 
 		return Behaviors.same();
@@ -160,48 +158,37 @@ public class IngestionActor {
 		EnrichItemActor.EnrichItemCallbackResponse response = eirw.response;
 		Map<String, Object> datasourcePayload = eirw.datasourcePayload;
 
-		EnrichItemProjection enrichItemProjection =
-			response.enrichItemProjection();
-		String jsonConfig = enrichItemProjection.jsonConfig();
-		EnrichItem.EnrichItemType enrichItemType =
-			enrichItemProjection.enrichItemType();
-		String serviceName = enrichItemProjection.serviceName();
-		long datasourceId = enrichItemProjection.datasourceId();
-
-		boolean async = enrichItemType == EnrichItem.EnrichItemType.HTTP_ASYNC;
+		EnrichItem enrichItem = response.enrichItem();
 
 		JsonObject datasourcePayloadJson = new JsonObject(datasourcePayload);
 
 		DataPayload dataPayload =
 			DataPayload
 				.builder()
-				.ingestionId(UUID.randomUUID().toString())
-				.contentId(UUID.randomUUID().toString())
-				.datasourceId(datasourceId)
 				.acl(Map.of())
 				.rawContent(datasourcePayloadJson.toString())
 				.parsingDate(Instant.now().toEpochMilli())
-				.documentTypes(datasourcePayloadJson.fieldNames().toArray(
-					new String[0]))
+				.documentTypes(
+					datasourcePayloadJson
+						.fieldNames()
+						.toArray(new String[0])
+				)
 				.rest(datasourcePayload)
 				.build();
 
-		ActorRef<HttpSupervisor.Response> responseActorRef =
+		ActorRef<EnrichItemSupervisor.Response> responseActorRef =
 			ctx.messageAdapter(
-				HttpSupervisor.Response.class,
+				EnrichItemSupervisor.Response.class,
 				param -> new SupervisorResponseWrapper(param, replyTo)
 			);
 
-		supervisorActorRef.tell(
-			new HttpSupervisor.Call(
-				async,
-				serviceName,
-				JsonObject.of(
-					"payload", dataPayload,
-					"enrichItemConfig", jsonConfig == null || jsonConfig.isBlank()
-						? new JsonObject()
-						: new JsonObject(jsonConfig)),
-				responseActorRef)
+		ActorRef<EnrichItemSupervisor.Command> enrichItemActorRef =
+			ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
+
+		enrichItemActorRef.tell(
+			new EnrichItemSupervisor.Execute(
+				enrichItem, dataPayload, responseActorRef
+			)
 		);
 
 		return Behaviors.same();
