@@ -13,6 +13,7 @@ import { Logo } from "./Logo";
 import { CreateLabel } from "./Filters";
 import { FilterSvg } from "../svgElement/FiltersSvg";
 import { PlusSvg } from "../svgElement/PlusSvg";
+import { display } from "@mui/system";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -191,52 +192,135 @@ function FilterCategory({
               `}
             />
           </div>
+          <div
+            className="form-check"
+            css={css`
+              display: flex;
+              align-items: "center";
+              margin-left: 2px;
+              margin-top: 5px;
+              flex-direction: column;
+            `}
+          >
+            {searchQuery.map((searchToken: SearchToken, index: number) => {
+              if (!("goToSuggestion" in searchToken)) return null;
+              console.log(
+                suggestionCategoryId,
+                searchToken.suggestionCategoryId,
+              );
+
+              if (suggestionCategoryId === searchToken.suggestionCategoryId)
+                return (
+                  <React.Fragment>
+                    {!multiSelect ? (
+                      <div
+                        key={index}
+                        className="form-check"
+                        css={css`
+                          display: flex;
+                          align-items: ${multiSelect ? "baseline" : "center"};
+                          margin-left: 13px;
+                          margin-top: 5px;
+                        `}
+                      >
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={true}
+                          onChange={(event) => {
+                            onRemove(searchToken);
+                            setCoutFilterSelected((countFilter) => ({
+                              ...countFilter,
+                              single: countFilter.single - 1,
+                            }));
+                          }}
+                          style={{
+                            appearance: "none",
+                            width: "16px",
+                            height: "16px",
+                            borderRadius: "50%",
+                            border: "2px solid #ccc",
+                            backgroundColor:
+                              "var(--openk9-embeddable-search--secondary-active-color)",
+                            marginRight: "10px",
+                            cursor: "pointer",
+                          }}
+                        />
+                        <label
+                          className="form-check-label"
+                          css={css`
+                            text-overflow: ellipsis;
+                            font-style: normal;
+                            font-weight: 600;
+                            line-height: 22px;
+                            /* or 147% */
+                            color: #000000;
+                          `}
+                        >
+                          {searchToken.values}
+                        </label>
+                      </div>
+                    ) : (
+                      <div
+                        key={index}
+                        className="form-check"
+                        css={css`
+                          display: flex;
+                          align-items: ${multiSelect ? "baseline" : "center"};
+                          margin-left: 12px;
+                          margin-top: 5px;
+                        `}
+                      >
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={true}
+                          onChange={(event) => {
+                            onRemove(searchToken);
+                            setCoutFilterSelected((countFilter) => ({
+                              ...countFilter,
+                              multiple: countFilter.multiple - 1,
+                            }));
+                          }}
+                          css={css`
+                            width: 14px;
+                            appearance: none;
+                            min-width: 15px;
+                            min-height: 15px;
+                            border-radius: 4px;
+                            border: 2px solid #ccc;
+                            background-color: var(
+                              --openk9-embeddable-search--secondary-active-color
+                            );
+                            background-size: 100%;
+                            background-position: center;
+                            background-repeat: no-repeat;
+                            cursor: pointer;
+                            margin-right: 10px;
+                          `}
+                        />
+                        <label
+                          className="form-check-label"
+                          css={css`
+                            text-overflow: ellipsis;
+                            font-style: normal;
+                            font-weight: 600;
+                            line-height: 22px;
+                            /* or 147% */
+                            color: #000000;
+                          `}
+                        >
+                          {searchToken.values}
+                        </label>
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+            })}
+          </div>
           {suggestions.data?.pages.map(({ result }, index) => {
             return (
               <React.Fragment key={index}>
-                <div
-                  key={index}
-                  className="form-check"
-                  css={css`
-                    display: flex;
-                    align-items: "center";
-                    margin-left: 13px;
-                    margin-top: 5px;
-                  `}
-                >
-                  {searchQuery.map((searchToken: SearchToken) => {
-                    if (!("goToSuggestion" in searchToken)) return null;
-                    if (result[0]?.keywordKey === searchToken.keywordKey)
-                      return (
-                        <React.Fragment>
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={true}
-                            onChange={(event) => {
-                              onRemove(searchToken);
-                              setCoutFilterSelected((countFilter) => ({
-                                ...countFilter,
-                                single: countFilter.single - 1,
-                              }));
-                            }}
-                            style={{
-                              appearance: "none",
-                              width: "16px",
-                              height: "16px",
-                              borderRadius: "50%",
-                              border: "2px solid #ccc",
-                              backgroundColor:
-                                "var(  --openk9-embeddable-search--secondary-active-color)",
-                              marginRight: "10px",
-                              cursor: "pointer",
-                            }}
-                          />
-                          {searchToken?.values}
-                        </React.Fragment>
-                      );
-                  })}
-                </div>
                 {result.map((suggestion, index) => {
                   const asSearchToken = mapSuggestionToSearchToken(
                     suggestion,
@@ -615,6 +699,7 @@ export const mapSuggestionToSearchToken = (
         values: [suggestion.value],
         filter,
         goToSuggestion: false,
+        suggestionCategoryId: suggestion.suggestionCategoryId,
       };
     }
   }

@@ -248,12 +248,14 @@ export type SearchToken =
       keywordKey?: undefined;
       values: string[];
       filter: boolean;
+      suggestionCategoryId?: number;
     }
   | {
       tokenType: "DOCTYPE";
       keywordKey: "type";
       values: string[];
       filter: boolean;
+      suggestionCategoryId?: number;
     }
   | {
       tokenType: "TEXT";
@@ -262,6 +264,7 @@ export type SearchToken =
       filter: boolean;
       goToSuggestion?: boolean;
       label?: string;
+      suggestionCategoryId?: number;
     }
   | {
       tokenType: "ENTITY";
@@ -270,6 +273,7 @@ export type SearchToken =
       entityName: string;
       values: string[];
       filter: boolean;
+      suggestionCategoryId?: number;
     }
   | {
       tokenType: "DATE";
@@ -278,6 +282,7 @@ export type SearchToken =
         gte: number;
         lte: number;
       };
+      suggestionCategoryId?: number;
     };
 
 type SearchRequest = {
