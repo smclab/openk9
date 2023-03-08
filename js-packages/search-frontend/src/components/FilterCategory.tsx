@@ -56,57 +56,11 @@ function FilterCategory({
   );
   if (!show)
     return (
-      <div>
-        <div>
-          <div
-            css={css`
-              user-select: none;
-              margin-left: 16px;
-              display: flex;
-              align-items: center;
-              width: 100% !important;
-              margin-bottom: 16px;
-            `}
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            <div
-              css={css`
-                flex-grow: 1;
-                :first-letter {
-                  text-transform: uppercase;
-                }
-              `}
-            >
-              <strong>{suggestionCategoryName}</strong>
-            </div>
-            <FontAwesomeIcon
-              icon={isOpen ? faChevronDown : faChevronUp}
-              style={{
-                color: "var(--openk9-embeddable-search--secondary-text-color)",
-                marginRight: "8px",
-              }}
-            />
-          </div>
-        </div>
-        {isOpen && (
-          <div
-            css={css`
-              color: var(--openk9-embeddable-search--secondary-text-color);
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              height: 100%;
-              margin-top: 18px;
-              margin-left: 10px;
-            `}
-          >
-            <Logo size={100} />
-            <h4>No {suggestionCategoryName} </h4>
-            <div></div>
-          </div>
-        )}
-      </div>
+      <NoFilter
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        suggestionCategoryName={suggestionCategoryName}
+      />
     );
   return (
     <div
@@ -204,117 +158,15 @@ function FilterCategory({
           >
             {searchQuery.map((searchToken: SearchToken, index: number) => {
               if (!("goToSuggestion" in searchToken)) return null;
-              console.log(
-                suggestionCategoryId,
-                searchToken.suggestionCategoryId,
-              );
-
               if (suggestionCategoryId === searchToken.suggestionCategoryId)
                 return (
-                  <React.Fragment>
-                    {!multiSelect ? (
-                      <div
-                        key={index}
-                        className="form-check"
-                        css={css`
-                          display: flex;
-                          align-items: ${multiSelect ? "baseline" : "center"};
-                          margin-left: 12px;
-                          margin-top: 5px;
-                        `}
-                      >
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={true}
-                          onChange={(event) => {
-                            onRemove(searchToken);
-                            setCoutFilterSelected((countFilter) => ({
-                              ...countFilter,
-                              single: countFilter.single - 1,
-                            }));
-                          }}
-                          style={{
-                            appearance: "none",
-                            width: "18px",
-                            height: "17px",
-                            borderRadius: "50%",
-                            border: "2px solid #ccc",
-                            backgroundColor:
-                              "var(--openk9-embeddable-search--secondary-active-color)",
-                            marginRight: "10px",
-                            cursor: "pointer",
-                          }}
-                        />
-                        <label
-                          className="form-check-label"
-                          css={css`
-                            text-overflow: ellipsis;
-                            font-style: normal;
-                            font-weight: 600;
-                            line-height: 22px;
-                            /* or 147% */
-                            color: #000000;
-                          `}
-                        >
-                          {searchToken.values}
-                        </label>
-                      </div>
-                    ) : (
-                      <div
-                        key={index}
-                        className="form-check"
-                        css={css`
-                          display: flex;
-                          align-items: ${multiSelect ? "baseline" : "center"};
-                          margin-left: 12px;
-                          margin-top: 5px;
-                        `}
-                      >
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={true}
-                          onChange={(event) => {
-                            onRemove(searchToken);
-                            setCoutFilterSelected((countFilter) => ({
-                              ...countFilter,
-                              multiple: countFilter.multiple - 1,
-                            }));
-                          }}
-                          css={css`
-                            width: 14px;
-                            appearance: none;
-                            min-width: 15px;
-                            min-height: 15px;
-                            border-radius: 4px;
-                            border: 2px solid #ccc;
-                            background-color: var(
-                              --openk9-embeddable-search--secondary-active-color
-                            );
-                            background-size: 100%;
-                            background-position: center;
-                            background-repeat: no-repeat;
-                            cursor: pointer;
-                            margin-right: 10px;
-                          `}
-                        />
-                        <label
-                          className="form-check-label"
-                          css={css`
-                            text-overflow: ellipsis;
-                            font-style: normal;
-                            font-weight: 600;
-                            line-height: 22px;
-                            /* or 147% */
-                            color: #000000;
-                          `}
-                        >
-                          {searchToken.values}
-                        </label>
-                      </div>
-                    )}
-                  </React.Fragment>
+                  <TokensSelected
+                    index={index}
+                    multiSelect={multiSelect}
+                    onRemove={onRemove}
+                    searchToken={searchToken}
+                    setCoutFilterSelected={setCoutFilterSelected}
+                  />
                 );
             })}
           </div>
@@ -704,3 +556,201 @@ export const mapSuggestionToSearchToken = (
     }
   }
 };
+
+function NoFilter({
+  setIsOpen,
+  isOpen,
+  suggestionCategoryName,
+}: {
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isOpen: Boolean;
+  suggestionCategoryName: string;
+}) {
+  return (
+    <div>
+      <div>
+        <div
+          css={css`
+            user-select: none;
+            margin-left: 16px;
+            display: flex;
+            align-items: center;
+            width: 100% !important;
+            margin-bottom: 16px;
+          `}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <div
+            css={css`
+              flex-grow: 1;
+              :first-letter {
+                text-transform: uppercase;
+              }
+            `}
+          >
+            <strong>{suggestionCategoryName}</strong>
+          </div>
+          <FontAwesomeIcon
+            icon={isOpen ? faChevronDown : faChevronUp}
+            style={{
+              color: "var(--openk9-embeddable-search--secondary-text-color)",
+              marginRight: "8px",
+            }}
+          />
+        </div>
+      </div>
+      {isOpen && (
+        <div
+          css={css`
+            color: var(--openk9-embeddable-search--secondary-text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            margin-top: 18px;
+            margin-left: 10px;
+          `}
+        >
+          <Logo size={100} />
+          <h4>No {suggestionCategoryName} </h4>
+          <div></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TokensSelected({
+  multiSelect,
+  onRemove,
+  searchToken,
+  setCoutFilterSelected,
+  index,
+}: {
+  multiSelect: Boolean;
+  onRemove: (searchToken: SearchToken) => void;
+  searchToken: {
+    tokenType: "TEXT";
+    keywordKey?: string | undefined;
+    values: string[];
+    filter: boolean;
+    goToSuggestion?: boolean | undefined;
+    label?: string | undefined;
+    suggestionCategoryId?: number | undefined;
+  };
+  setCoutFilterSelected: React.Dispatch<
+    React.SetStateAction<{
+      single: number;
+      multiple: number;
+    }>
+  >;
+  index: number;
+}) {
+  return (
+    <React.Fragment>
+      {!multiSelect ? (
+        <div
+          key={index}
+          className="form-check"
+          css={css`
+            display: flex;
+            align-items: ${multiSelect ? "baseline" : "center"};
+            margin-left: 12px;
+            margin-top: 5px;
+          `}
+        >
+          <input
+            className="form-check-input"
+            type="checkbox"
+            checked={true}
+            onChange={(event) => {
+              onRemove(searchToken);
+              setCoutFilterSelected((countFilter) => ({
+                ...countFilter,
+                single: countFilter.single - 1,
+              }));
+            }}
+            style={{
+              appearance: "none",
+              width: "18px",
+              height: "17px",
+              borderRadius: "50%",
+              border: "2px solid #ccc",
+              backgroundColor:
+                "var(--openk9-embeddable-search--secondary-active-color)",
+              marginRight: "10px",
+              cursor: "pointer",
+            }}
+          />
+          <label
+            className="form-check-label"
+            css={css`
+              text-overflow: ellipsis;
+              font-style: normal;
+              font-weight: 600;
+              line-height: 22px;
+              /* or 147% */
+              color: #000000;
+            `}
+          >
+            {searchToken.values}
+          </label>
+        </div>
+      ) : (
+        <div
+          key={index}
+          className="form-check"
+          css={css`
+            display: flex;
+            align-items: ${multiSelect ? "baseline" : "center"};
+            margin-left: 12px;
+            margin-top: 5px;
+          `}
+        >
+          <input
+            className="form-check-input"
+            type="checkbox"
+            checked={true}
+            onChange={(event) => {
+              onRemove(searchToken);
+              setCoutFilterSelected((countFilter) => ({
+                ...countFilter,
+                multiple: countFilter.multiple - 1,
+              }));
+            }}
+            css={css`
+              width: 14px;
+              appearance: none;
+              min-width: 15px;
+              min-height: 15px;
+              border-radius: 4px;
+              border: 2px solid #ccc;
+              background-color: var(
+                --openk9-embeddable-search--secondary-active-color
+              );
+              background-size: 100%;
+              background-position: center;
+              background-repeat: no-repeat;
+              cursor: pointer;
+              margin-right: 10px;
+            `}
+          />
+          <label
+            className="form-check-label"
+            css={css`
+              text-overflow: ellipsis;
+              font-style: normal;
+              font-weight: 600;
+              line-height: 22px;
+              /* or 147% */
+              color: #000000;
+            `}
+          >
+            {searchToken.values}
+          </label>
+        </div>
+      )}
+    </React.Fragment>
+  );
+}
