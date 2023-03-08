@@ -22,6 +22,9 @@ type PdfDetailProps = {
   result: GenericResultItem<PdfResultItem>;
 };
 export function PdfDetail({ result }: PdfDetailProps) {
+  const lastEdit = new Date(result.source.file.lastModifiedDate)
+    .toLocaleString()
+    .replace(",", " |");
   return (
     <DetailContainer>
       <DetailTitle fontSize="19px" fontweigth="600">
@@ -62,17 +65,15 @@ export function PdfDetail({ result }: PdfDetailProps) {
           <DetailTextContent result={result} path="document.summary" />
         </div>
       )}
-      <MoreDetailCard icon={<FontAwesomeIcon icon={faFilePdf} />} />
+      <MoreDetailCard
+        icon={<FontAwesomeIcon icon={faFilePdf} />}
+        date={lastEdit}
+      />
       <div style={{ marginTop: "10px", marginLeft: "5px" }}>
         <DetailLink href={result.source.document.url}>
           <HighlightableText result={result} path="document.url" />
         </DetailLink>
       </div>
-      {result.source.file.lastModifiedDate && (
-        <DetailAttribute label="Last modified">
-          {new Date(result.source.file.lastModifiedDate).toLocaleString()}
-        </DetailAttribute>
-      )}
       <div style={{ marginTop: "15px" }}>
         {result.source.resources.binaries.map((binary) => {
           const url = `/api/searcher/resources/${result.source.datasourceId}/${result.source.id}/${binary.id}`;

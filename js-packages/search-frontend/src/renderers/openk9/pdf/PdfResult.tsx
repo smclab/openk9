@@ -19,6 +19,9 @@ import { ResultTextContentTwo } from "../../../renderer-components/ResultTextCon
 
 type PdfResultProps = { result: GenericResultItem<PdfResultItem> };
 export function PdfResult({ result }: PdfResultProps) {
+  const lastEdit = new Date(result.source.file.lastModifiedDate)
+    .toLocaleString()
+    .replace(",", " |");
   return (
     <ResultContainerTwo>
       <ResultTitleTwo>
@@ -61,7 +64,10 @@ export function PdfResult({ result }: PdfResultProps) {
           <ResultTextContentTwo result={result} path="document.summary" />
         </div>
       )}
-      <MoreDetailCard icon={<FontAwesomeIcon icon={faFilePdf} />} />
+      <MoreDetailCard
+        icon={<FontAwesomeIcon icon={faFilePdf} />}
+        date={lastEdit}
+      />
       <ResultLinkTwo href={result.source.document.url}>
         <HighlightableText result={result} path="document.url" />
       </ResultLinkTwo>

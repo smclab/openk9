@@ -2,8 +2,8 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { truncatedLineStyle } from "./truncatedLineStyle";
 
-type MoreDetailCars = { icon: React.ReactNode };
-export function MoreDetailCard({ icon }: MoreDetailCars) {
+type MoreDetailCars = { icon: React.ReactNode; date?: string };
+export function MoreDetailCard({ icon, date }: MoreDetailCars) {
   return (
     <div>
       <div
@@ -38,7 +38,19 @@ export function MoreDetailCard({ icon }: MoreDetailCars) {
             margin-left: 20px;
           `}
         >
-          Last Edit
+          Last Edit:
+          <span
+            css={css`
+              font-style: normal;
+              font-weight: 600;
+              font-size: 14px;
+              line-height: 19px;
+              margin-left: 7px;
+              color: #3f3f46;
+            `}
+          >
+            {date}
+          </span>
         </span>
       </div>
     </div>
