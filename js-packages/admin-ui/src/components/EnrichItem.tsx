@@ -121,7 +121,9 @@ export function EnrichItem() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
         <EnumSelect label="Type" dict={EnrichItemType} {...form.inputProps("type")} />
+        <EnumSelect label="Behavior Merge Type" dict={BehaviorMergeType} {...form.inputProps("behaviorMergeType")} />
         <TextInput label="Service Name" {...form.inputProps("serviceName")} description={"Url where enrich service listen"} />
+        <TextInput label="Json Path" {...form.inputProps("jsonPath")} />
         <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
         <CodeInput language="javascript" label="Validation Script" {...form.inputProps("validationScript")} />
         <div className="sheet-footer">
