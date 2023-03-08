@@ -9,6 +9,7 @@ import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { FilterSvg } from "../svgElement/FiltersSvg";
 import { DeleteLogo } from "./DeleteLogo";
+import { Logo } from "./Logo";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -140,6 +141,22 @@ function Filters({
           width: calc(100% - 32px);
         `}
       >
+        {suggestionCategories.data?.length === 0 && (
+          <div
+            css={css`
+              color: var(--openk9-embeddable-search--secondary-text-color);
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 50vh;
+              margin-left: 30px;
+            `}
+          >
+            <Logo size={100} />
+            <h4>No Filter </h4>
+          </div>
+        )}
         {suggestionCategories.data?.map((suggestionCategory) => {
           return (
             <FilterCategoryMemo

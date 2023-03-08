@@ -219,7 +219,7 @@ function FilterCategory({
                         css={css`
                           display: flex;
                           align-items: ${multiSelect ? "baseline" : "center"};
-                          margin-left: 13px;
+                          margin-left: 12px;
                           margin-top: 5px;
                         `}
                       >
@@ -236,8 +236,8 @@ function FilterCategory({
                           }}
                           style={{
                             appearance: "none",
-                            width: "16px",
-                            height: "16px",
+                            width: "18px",
+                            height: "17px",
                             borderRadius: "50%",
                             border: "2px solid #ccc",
                             backgroundColor:
@@ -634,7 +634,7 @@ function SingleSelect({
           }}
           style={{
             appearance: "none",
-            width: "16px",
+            width: "17px",
             height: "16px",
             borderRadius: "50%",
             border: "2px solid #ccc",
