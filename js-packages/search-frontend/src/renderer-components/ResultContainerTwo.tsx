@@ -19,12 +19,13 @@ export function ResultContainerTwo({ icon, children }: ResultContainerProps) {
             display: none;
           }
           width: 30px;
-          margin-right: 8px;
+          margin-right: 7px;
         `}
       ></div>
       <div
         css={css`
-          margin-left: 8px;
+          margin-left: 2px;
+          margin-right: 5px;
           overflow: hidden;
         `}
       >
