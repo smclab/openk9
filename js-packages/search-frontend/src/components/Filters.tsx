@@ -205,6 +205,7 @@ type createLabel = {
   svgIconRight?: React.ReactNode;
   marginRigthOfSvg?: string;
   colorLabel?: string;
+  align?: string;
 };
 export function CreateLabel({
   label,
@@ -219,6 +220,7 @@ export function CreateLabel({
   hasBorder = true,
   svgIconRight,
   colorLabel = "var(--openk9-embeddable-search--secondary-active-color)",
+  align = "baseline",
 }: createLabel) {
   return (
     <div
@@ -252,7 +254,7 @@ export function CreateLabel({
         <div
           css={css`
             display: flex;
-            align-items: baseline;
+            align-items: ${align};
           `}
         >
           {svgIcon}

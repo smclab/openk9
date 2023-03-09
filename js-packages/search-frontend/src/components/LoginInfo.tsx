@@ -35,6 +35,7 @@ function LoginInfoComponent({}: LoginInfoProps) {
         sizeFont="16px"
         colorLabel={"black"}
         sizeHeight={"24px"}
+        align={"center"}
         action={() => {
           client.authenticate();
         }}
