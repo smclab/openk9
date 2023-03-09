@@ -195,7 +195,7 @@ function FilterCategory({
                               <input
                                 className="form-check-input"
                                 type="checkbox"
-                                checked={isChecked}
+                                checked={false}
                                 onChange={(event) => {
                                   if (event.currentTarget.checked) {
                                     if (multiSelect) {
@@ -222,9 +222,7 @@ function FilterCategory({
                                   min-height: 15px;
                                   border-radius: 4px;
                                   border: 2px solid #ccc;
-                                  background-color: ${isChecked
-                                    ? "var(--openk9-embeddable-search--secondary-active-color)"
-                                    : "#fff"};
+                                  background-color: "#fff";
                                   background-size: 100%;
                                   background-position: center;
                                   background-repeat: no-repeat;
@@ -437,7 +435,7 @@ function SingleSelect({
         <input
           id="radio-button"
           type="radio"
-          checked={isChecked}
+          checked={false}
           onChange={(event) => {
             if (event.currentTarget.checked) {
               if (singleSelect) onRemove(singleSelect);
@@ -458,9 +456,7 @@ function SingleSelect({
             height: "16px",
             borderRadius: "50%",
             border: "2px solid #ccc",
-            backgroundColor: isChecked
-              ? "var(  --openk9-embeddable-search--secondary-active-color)"
-              : "#fff",
+            backgroundColor: "#fff",
             marginRight: "10px",
             cursor: "pointer",
           }}
@@ -661,7 +657,7 @@ function TokensSelected({
           css={css`
             display: flex;
             align-items: ${multiSelect ? "baseline" : "center"};
-            margin-left: 12px;
+            margin-left: 11px;
             margin-top: 5px;
           `}
         >
@@ -673,7 +669,7 @@ function TokensSelected({
               onRemove(searchToken);
             }}
             css={css`
-              width: 14px;
+              width: 15px;
               appearance: none;
               min-width: 15px;
               min-height: 15px;

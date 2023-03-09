@@ -109,8 +109,6 @@ export function Search({
             paddingLeft: "16px",
             opacity: 0.5,
             color: "var(--openk9-embeddable-search--secondary-text-color)",
-            width: "24px",
-            height: "24px",
           }}
         />
         <div
