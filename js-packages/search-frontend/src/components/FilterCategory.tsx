@@ -23,12 +23,6 @@ type FilterCategoryProps = {
   onRemove(searchToken: SearchToken): void;
   multiSelect: boolean;
   searchQuery: SearchToken[];
-  setCoutFilterSelected: React.Dispatch<
-    React.SetStateAction<{
-      single: number;
-      multiple: number;
-    }>
-  >;
 };
 function FilterCategory({
   suggestionCategoryId,
@@ -37,7 +31,6 @@ function FilterCategory({
   onAdd,
   onRemove,
   multiSelect,
-  setCoutFilterSelected,
   searchQuery,
 }: FilterCategoryProps) {
   const [text, setText] = React.useState("");
@@ -165,7 +158,6 @@ function FilterCategory({
                     multiSelect={multiSelect}
                     onRemove={onRemove}
                     searchToken={searchToken}
-                    setCoutFilterSelected={setCoutFilterSelected}
                   />
                 );
             })}
@@ -207,10 +199,6 @@ function FilterCategory({
                                 onChange={(event) => {
                                   if (event.currentTarget.checked) {
                                     if (multiSelect) {
-                                      setCoutFilterSelected((countFilter) => ({
-                                        ...countFilter,
-                                        multiple: countFilter.multiple + 1,
-                                      }));
                                       onAdd(asSearchToken);
                                     } else {
                                       tokens.some((searchToken) => {
@@ -225,10 +213,6 @@ function FilterCategory({
                                     }
                                   } else {
                                     onRemove(asSearchToken);
-                                    setCoutFilterSelected((countFilter) => ({
-                                      ...countFilter,
-                                      multiple: countFilter.multiple - 1,
-                                    }));
                                   }
                                 }}
                                 css={css`
@@ -258,7 +242,6 @@ function FilterCategory({
                               onRemove={onRemove}
                               singleSelect={singleSelect}
                               setSingleSelect={setSingleselect}
-                              setCoutFilterSelected={setCoutFilterSelected}
                             />
                           )}
 
@@ -437,7 +420,6 @@ function SingleSelect({
   onRemove,
   singleSelect,
   setSingleSelect,
-  setCoutFilterSelected,
 }: {
   isChecked: boolean;
   multiSelect: boolean;
@@ -447,12 +429,6 @@ function SingleSelect({
   singleSelect: SearchToken | undefined;
   setSingleSelect: React.Dispatch<
     React.SetStateAction<SearchToken | undefined>
-  >;
-  setCoutFilterSelected: React.Dispatch<
-    React.SetStateAction<{
-      single: number;
-      multiple: number;
-    }>
   >;
 }) {
   return (
@@ -467,10 +443,6 @@ function SingleSelect({
               if (singleSelect) onRemove(singleSelect);
               setSingleSelect(asSearchToken);
               onAdd(asSearchToken);
-              setCoutFilterSelected((countFilter) => ({
-                ...countFilter,
-                single: 1,
-              }));
             } else {
               onRemove(asSearchToken);
             }
@@ -478,10 +450,6 @@ function SingleSelect({
           onClick={(event) => {
             if (isChecked) {
               onRemove(asSearchToken);
-              setCoutFilterSelected((countFilter) => ({
-                ...countFilter,
-                single: 0,
-              }));
             }
           }}
           style={{
@@ -625,7 +593,6 @@ function TokensSelected({
   multiSelect,
   onRemove,
   searchToken,
-  setCoutFilterSelected,
   index,
 }: {
   multiSelect: Boolean;
@@ -639,12 +606,6 @@ function TokensSelected({
     label?: string | undefined;
     suggestionCategoryId?: number | undefined;
   };
-  setCoutFilterSelected: React.Dispatch<
-    React.SetStateAction<{
-      single: number;
-      multiple: number;
-    }>
-  >;
   index: number;
 }) {
   return (
@@ -666,10 +627,6 @@ function TokensSelected({
             checked={true}
             onChange={(event) => {
               onRemove(searchToken);
-              setCoutFilterSelected((countFilter) => ({
-                ...countFilter,
-                single: countFilter.single - 1,
-              }));
             }}
             style={{
               appearance: "none",
@@ -714,10 +671,6 @@ function TokensSelected({
             checked={true}
             onChange={(event) => {
               onRemove(searchToken);
-              setCoutFilterSelected((countFilter) => ({
-                ...countFilter,
-                multiple: countFilter.multiple - 1,
-              }));
             }}
             css={css`
               width: 14px;

@@ -34,10 +34,14 @@ function Filters({
       setLastSearchQueryWithResults(searchQuery);
     }
   }, [isPreviousData, searchQuery]);
-  const [countFilterSelected, setCoutFilterSelected] = React.useState({
-    single: 0,
-    multiple: 0,
-  });
+  const [count, setCount] = React.useState(0);
+  React.useEffect(() => {
+    const count = searchQuery.filter(
+      (search) => "goToSuggestion" in search,
+    ).length;
+    setCount(count);
+  }, [searchQuery]);
+
   return (
     <OverlayScrollbarsComponent
       style={{
@@ -107,7 +111,7 @@ function Filters({
                 font-weight: 700;
               `}
             >
-              {countFilterSelected.multiple + countFilterSelected.single}{" "}
+              {count}{" "}
             </span>
             <span>filtri applicati</span>
           </div>
@@ -116,10 +120,6 @@ function Filters({
               label="Rimuovi filtri"
               action={() => {
                 onConfigurationChange({ filterTokens: [] });
-                setCoutFilterSelected((countFilter) => ({
-                  single: 0,
-                  multiple: 0,
-                }));
               }}
               svgIconRight={
                 <DeleteLogo
@@ -167,7 +167,6 @@ function Filters({
               onAdd={onAddFilterToken}
               onRemove={onRemoveFilterToken}
               multiSelect={suggestionCategory?.multiSelect}
-              setCoutFilterSelected={setCoutFilterSelected}
               searchQuery={searchQuery}
             />
           );
