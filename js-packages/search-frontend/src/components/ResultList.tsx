@@ -67,8 +67,8 @@ function ResultCount({ children }: ResultCountProps) {
           padding: 0px 16px;
           width: 100%;
           background: #fafafa;
-          padding-top: 25px;
-          padding-bottom: 25px;
+          padding-top: 20.7px;
+          padding-bottom: 12.7px;
           display: flex;
           margin-bottom: 8px;
         `}

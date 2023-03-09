@@ -35,8 +35,8 @@ function Detail<E>(props: DetailProps<E>) {
           padding: 0px 16px;
           width: 100%;
           background: #fafafa;
-          padding-top: 20px;
-          padding-bottom: 12px;
+          padding-top: 17px;
+          padding-bottom: 8px;
           display: flex;
         `}
       >
@@ -100,8 +100,8 @@ function NoDetail() {
           padding: 0px 16px;
           width: 100%;
           background: #fafafa;
-          padding-top: 20px;
-          padding-bottom: 12px;
+          padding-top: 17px;
+          padding-bottom: 8px;
           display: flex;
         `}
       >

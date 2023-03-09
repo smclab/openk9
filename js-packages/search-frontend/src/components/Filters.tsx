@@ -57,7 +57,7 @@ function Filters({
           width: 100%;
           background: #fafafa;
           padding-top: 20px;
-          padding-bottom: 12px;
+          padding-bottom: 13px;
           display: flex;
         `}
       >
