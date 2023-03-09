@@ -113,7 +113,7 @@ function FilterCategory({
             />
             <input
               value={text}
-              placeholder="Cerca contenuti..."
+              placeholder="Search filters..."
               onChange={(event) => setText(event.currentTarget.value)}
               css={css`
                 margin-top: 17px;

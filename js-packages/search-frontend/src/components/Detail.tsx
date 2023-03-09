@@ -56,7 +56,7 @@ function Detail<E>(props: DetailProps<E>) {
             margin-left: 8px;
           `}
         >
-          Anteprima
+          Preview
         </span>
       </div>
       <div
@@ -122,7 +122,7 @@ function NoDetail() {
             margin-left: 8px;
           `}
         >
-          Anteprima
+          Preview
         </span>
       </div>
       <div

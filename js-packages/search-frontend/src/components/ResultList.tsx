@@ -89,7 +89,7 @@ function ResultCount({ children }: ResultCountProps) {
             margin-left: 8px;
           `}
         >
-          Risultati
+          Result
         </span>
       </div>
       <div

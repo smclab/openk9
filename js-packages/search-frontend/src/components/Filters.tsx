@@ -82,7 +82,7 @@ function Filters({
               color: #3f3f46;
             `}
           >
-            Filtri
+            Filters
           </span>
         </div>
       </div>
@@ -98,7 +98,7 @@ function Filters({
             justify-content: space-between;
             border: 1px solid var(--openk9-embeddable-search--border-color);
             border-radius: 8px;
-            align-items: flex-start;
+            align-items: center;
             margin-left: -8px;
             width: 100%;
             margin-top: 8px;
@@ -113,11 +113,11 @@ function Filters({
             >
               {count}{" "}
             </span>
-            <span>filtri applicati</span>
+            <span>active filters</span>
           </div>
           <div>
             <CreateLabel
-              label="Rimuovi filtri"
+              label="remove filters"
               action={() => {
                 onConfigurationChange({ filterTokens: [] });
               }}
