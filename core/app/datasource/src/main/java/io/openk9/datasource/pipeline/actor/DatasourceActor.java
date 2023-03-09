@@ -8,6 +8,7 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.GroovyActor;
@@ -120,8 +121,16 @@ public class DatasourceActor {
 			return Behaviors.same();
 		}
 
-		Set<EnrichPipelineItem> enrichPipelineItems =
-			datasource.getEnrichPipeline().getEnrichPipelineItems();
+		EnrichPipeline enrichPipeline = datasource.getEnrichPipeline();
+
+		Set<EnrichPipelineItem> enrichPipelineItems;
+
+		if (enrichPipeline == null) {
+			enrichPipelineItems = Set.of();
+		}
+		else {
+			enrichPipelineItems = enrichPipeline.getEnrichPipelineItems();
+		}
 
 		log.info("start pipeline for datasource with id {}", datasource.getId());
 
@@ -316,12 +325,12 @@ public class DatasourceActor {
 				s.createQuery(
 					"select d from Datasource d " +
 					"left join fetch d.dataIndex di " +
-					"join fetch d.enrichPipeline ep " +
-					"join fetch ep.enrichPipelineItems epi " +
-					"join fetch epi.enrichItem ei " +
+					"left join fetch d.enrichPipeline ep " +
+					"left join fetch ep.enrichPipelineItems epi " +
+					"left join fetch epi.enrichItem ei " +
 					"where d.id = :datasourceId ", io.openk9.datasource.model.Datasource.class)
 					.setParameter("datasourceId", datasourceId)
-					.getSingleResult()
+					.getSingleResultOrNull()
 					.onItemOrFailure()
 					.invoke((d, t) -> {
 						if (t != null) {
