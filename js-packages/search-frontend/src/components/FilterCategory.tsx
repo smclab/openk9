@@ -147,6 +147,7 @@ function FilterCategory({
               margin-left: 2px;
               margin-top: 5px;
               flex-direction: column;
+              margin-bottom: 5px;
             `}
           >
             {searchQuery.map((searchToken: SearchToken, index: number) => {
@@ -162,126 +163,132 @@ function FilterCategory({
                 );
             })}
           </div>
-          {suggestions.data?.pages.map(({ result }, index) => {
-            return (
-              <React.Fragment key={index}>
-                {result.map((suggestion, index) => {
-                  const asSearchToken = mapSuggestionToSearchToken(
-                    suggestion,
-                    false,
-                  );
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+            {suggestions.data?.pages.map(({ result }, index) => {
+              return (
+                <React.Fragment key={index}>
+                  {result.map((suggestion, index) => {
+                    const asSearchToken = mapSuggestionToSearchToken(
+                      suggestion,
+                      false,
+                    );
 
-                  const isChecked = tokens.some((searchToken) =>
-                    isEqual(searchToken, asSearchToken),
-                  );
-                  return (
-                    <React.Fragment>
-                      {isDifferent({
-                        singleToken: suggestion.value,
-                        tokensSelect: searchQuery,
-                      }) && (
-                        <div
-                          key={index}
-                          className="form-check"
-                          css={css`
-                            display: flex;
-                            align-items: ${multiSelect ? "baseline" : "center"};
-                            margin-left: 13px;
-                            margin-top: 5px;
-                          `}
-                        >
-                          {multiSelect ? (
-                            <React.Fragment>
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={false}
-                                onChange={(event) => {
-                                  if (event.currentTarget.checked) {
-                                    if (multiSelect) {
-                                      onAdd(asSearchToken);
+                    const isChecked = tokens.some((searchToken) =>
+                      isEqual(searchToken, asSearchToken),
+                    );
+                    return (
+                      <React.Fragment>
+                        {isDifferent({
+                          singleToken: suggestion.value,
+                          tokensSelect: searchQuery,
+                        }) && (
+                          <div
+                            key={index}
+                            className="form-check"
+                            css={css`
+                              display: flex;
+                              align-items: ${multiSelect
+                                ? "baseline"
+                                : "stretch"};
+                              margin-left: 13px;
+                            `}
+                          >
+                            {multiSelect ? (
+                              <React.Fragment>
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  checked={false}
+                                  onChange={(event) => {
+                                    if (event.currentTarget.checked) {
+                                      if (multiSelect) {
+                                        onAdd(asSearchToken);
+                                      } else {
+                                        tokens.some((searchToken) => {
+                                          if (
+                                            JSON.parse(
+                                              JSON.stringify(searchToken),
+                                            )?.multiSelect
+                                          )
+                                            onRemove(searchToken);
+                                        });
+                                        onAdd(asSearchToken);
+                                      }
                                     } else {
-                                      tokens.some((searchToken) => {
-                                        if (
-                                          JSON.parse(
-                                            JSON.stringify(searchToken),
-                                          )?.multiSelect
-                                        )
-                                          onRemove(searchToken);
-                                      });
-                                      onAdd(asSearchToken);
+                                      onRemove(asSearchToken);
                                     }
-                                  } else {
-                                    onRemove(asSearchToken);
-                                  }
-                                }}
-                                css={css`
-                                  width: 14px;
-                                  appearance: none;
-                                  min-width: 15px;
-                                  min-height: 15px;
-                                  border-radius: 4px;
-                                  border: 2px solid #ccc;
-                                  background-color: "#fff";
-                                  background-size: 100%;
-                                  background-position: center;
-                                  background-repeat: no-repeat;
-                                  cursor: pointer;
-                                  margin-right: 10px;
-                                `}
+                                  }}
+                                  css={css`
+                                    width: 14px;
+                                    appearance: none;
+                                    min-width: 15px;
+                                    min-height: 15px;
+                                    border-radius: 4px;
+                                    border: 2px solid #ccc;
+                                    background-color: "#fff";
+                                    background-size: 100%;
+                                    background-position: center;
+                                    background-repeat: no-repeat;
+                                    cursor: pointer;
+                                    margin-right: 10px;
+                                  `}
+                                />
+                              </React.Fragment>
+                            ) : (
+                              <SingleSelect
+                                isChecked={isChecked}
+                                multiSelect={multiSelect}
+                                asSearchToken={asSearchToken}
+                                onAdd={onAdd}
+                                onRemove={onRemove}
+                                singleSelect={singleSelect}
+                                setSingleSelect={setSingleselect}
                               />
-                            </React.Fragment>
-                          ) : (
-                            <SingleSelect
-                              isChecked={isChecked}
-                              multiSelect={multiSelect}
-                              asSearchToken={asSearchToken}
-                              onAdd={onAdd}
-                              onRemove={onRemove}
-                              singleSelect={singleSelect}
-                              setSingleSelect={setSingleselect}
-                            />
-                          )}
-
-                          <span>
-                            <label
-                              className="form-check-label"
+                            )}
+                            <span
                               css={css`
-                                text-overflow: ellipsis;
-                                font-style: normal;
-                                font-weight: 600;
-                                line-height: 22px;
-                                /* or 147% */
-                                color: #000000;
+                                margin-left: 5px;
                               `}
                             >
-                              {suggestion.tokenType === "ENTITY" ? (
-                                <>
-                                  <strong
-                                    css={css`
-                                      :first-letter {
-                                        text-transform: uppercase;
-                                      }
-                                      display: inline-block;
-                                    `}
-                                  >
-                                    {suggestion.entityType}
-                                  </strong>
-                                  : {suggestion.entityValue}
-                                </>
-                              ) : (
-                                suggestion.value
-                              )}
-                            </label>
-                          </span>
-                        </div>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </React.Fragment>
-            );
-          })}
+                              <label
+                                className="form-check-label"
+                                css={css`
+                                  text-overflow: ellipsis;
+                                  font-style: normal;
+                                  font-weight: 600;
+                                  line-height: 22px;
+                                  /* or 147% */
+                                  color: #000000;
+                                `}
+                              >
+                                {suggestion.tokenType === "ENTITY" ? (
+                                  <>
+                                    <strong
+                                      css={css`
+                                        :first-letter {
+                                          text-transform: uppercase;
+                                        }
+                                        display: inline-block;
+                                      `}
+                                    >
+                                      {suggestion.entityType}
+                                    </strong>
+                                    : {suggestion.entityValue}
+                                  </>
+                                ) : (
+                                  suggestion.value
+                                )}
+                              </label>
+                            </span>
+                          </div>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
+          </div>
           {suggestions.hasNextPage && (
             <div
               style={{ textAlign: "center", width: "100%", marginTop: "10px" }}
@@ -431,7 +438,7 @@ function SingleSelect({
 }) {
   return (
     <React.Fragment>
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div>
         <input
           id="radio-button"
           type="radio"
@@ -457,7 +464,6 @@ function SingleSelect({
             borderRadius: "50%",
             border: "2px solid #ccc",
             backgroundColor: "#fff",
-            marginRight: "10px",
             cursor: "pointer",
           }}
           onMouseOver={(event) => {
@@ -612,8 +618,8 @@ function TokensSelected({
           className="form-check"
           css={css`
             display: flex;
-            align-items: ${multiSelect ? "baseline" : "center"};
-            margin-left: 12px;
+            align-items: ${multiSelect ? "baseline" : "stretch"};
+            margin-left: 11px;
             margin-top: 5px;
           `}
         >
@@ -626,29 +632,29 @@ function TokensSelected({
             }}
             style={{
               appearance: "none",
-              width: "18px",
+              width: searchToken.values[0].length > 21 ? "20px" : "18px",
               height: "17px",
               borderRadius: "50%",
               border: "2px solid #ccc",
               backgroundColor:
                 "var(--openk9-embeddable-search--secondary-active-color)",
-              marginRight: "10px",
               cursor: "pointer",
             }}
           />
-          <label
-            className="form-check-label"
-            css={css`
-              text-overflow: ellipsis;
-              font-style: normal;
-              font-weight: 600;
-              line-height: 22px;
-              /* or 147% */
-              color: #000000;
-            `}
-          >
-            {searchToken.values}
-          </label>
+          <span style={{ marginLeft: "5px" }}>
+            <label
+              className="form-check-label"
+              css={css`
+                text-overflow: ellipsis;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 22px;
+                color: #000000;
+              `}
+            >
+              {searchToken.values}
+            </label>
+          </span>
         </div>
       ) : (
         <div
@@ -685,19 +691,20 @@ function TokensSelected({
               margin-right: 10px;
             `}
           />
-          <label
-            className="form-check-label"
-            css={css`
-              text-overflow: ellipsis;
-              font-style: normal;
-              font-weight: 600;
-              line-height: 22px;
-              /* or 147% */
-              color: #000000;
-            `}
-          >
-            {searchToken.values}
-          </label>
+          <span style={{ marginLeft: "5px" }}>
+            <label
+              className="form-check-label"
+              css={css`
+                text-overflow: ellipsis;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 22px;
+                color: #000000;
+              `}
+            >
+              {searchToken.values}
+            </label>
+          </span>
         </div>
       )}
     </React.Fragment>
