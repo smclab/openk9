@@ -99,7 +99,7 @@ export function Search({
           width: ${journey
             ? CalculateSpaceCalendar({ journey })
             : valueSelected.startDate
-            ? "79%"
+            ? "77%"
             : "95%"};
         `}
       >
@@ -332,7 +332,7 @@ export function Search({
           padding: 9px 11px;
           border-radius: 50px;
           cursor: pointer;
-          max-width: 19%;
+          max-width: 20%;
         `}
         onClick={() => {
           setIsDatePickerOpen(!isDatePickerOpen);
@@ -418,13 +418,13 @@ function CreateDeleteFilter({
   } else {
     {
       data =
-        "Dal " +
+        "From " +
         valueOfDate.startDate?.toLocaleDateString("it-IT", {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
         }) +
-        " al " +
+        " to " +
         valueOfDate.endDate?.toLocaleDateString("it-IT", {
           day: "2-digit",
           month: "2-digit",
@@ -470,14 +470,14 @@ function CreateDeleteFilter({
 function CalculateSpaceCalendar({ journey }: { journey: string }) {
   if (journey) {
     switch (journey.toLowerCase()) {
-      case "oggi":
+      case "today":
         return "90%";
-      case "questa settimana":
-        return "85%";
-      case "questo mese":
+      case "this week":
+        return "88%";
+      case "this month":
         return "87%";
-      case "quest'anno":
-        return "87%";
+      case "this year":
+        return "88%";
     }
   }
 }

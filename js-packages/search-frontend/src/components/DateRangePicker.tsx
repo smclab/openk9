@@ -4,7 +4,7 @@ import "react-date-range/dist/styles.css"; // main css file
 import "react-date-range/dist/theme/default.css"; // theme css file
 import { css } from "styled-components/macro";
 import { DateTime } from "luxon";
-import { it } from "date-fns/locale";
+import { enIN } from "date-fns/locale";
 import { SearchDateRange } from "../embeddable/Main";
 import { useQuery } from "react-query";
 import Select from "react-select";
@@ -95,13 +95,13 @@ export function DateRangePicker({
         `}
       >
         <DefinedRangeFix
-          locale={it}
+          locale={enIN}
           onChange={adaptedOnChange}
           ranges={adaptedValue}
           staticRanges={staticRanges}
         />
         <DateRangeFix
-          locale={it}
+          locale={enIN}
           onChange={adaptedOnChange}
           ranges={adaptedValue}
           startDatePlaceholder=""
@@ -148,7 +148,7 @@ export function DateRangePicker({
             onClose();
           }}
         >
-          Non filtrare per data
+          Don't filter by date
         </button>
         <button
           disabled={!Boolean(value.startDate || value.endDate)}
@@ -171,7 +171,7 @@ export function DateRangePicker({
             onClose();
           }}
         >
-          Filtra
+          Filter
         </button>
       </div>
     </div>
@@ -180,11 +180,11 @@ export function DateRangePicker({
 
 const staticRanges = [
   {
-    label: "Oggi",
+    label: "Today",
     range: () => ({
       startDate: DateTime.now().startOf("day").toJSDate(),
       endDate: DateTime.now().endOf("day").toJSDate(),
-      label: "Oggi",
+      label: "Today",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
@@ -194,11 +194,11 @@ const staticRanges = [
     },
   },
   {
-    label: "Questa settimana",
+    label: "This week",
     range: () => ({
       startDate: DateTime.now().startOf("week").toJSDate(),
       endDate: DateTime.now().endOf("week").toJSDate(),
-      label: "Questa settimana",
+      label: "This week",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
@@ -208,11 +208,11 @@ const staticRanges = [
     },
   },
   {
-    label: "Questo Mese",
+    label: "This month",
     range: () => ({
       startDate: DateTime.now().startOf("month").toJSDate(),
       endDate: DateTime.now().endOf("month").toJSDate(),
-      label: "Questo mese",
+      label: "This month",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
@@ -222,11 +222,11 @@ const staticRanges = [
     },
   },
   {
-    label: "Quest' Anno",
+    label: "This year",
     range: () => ({
       startDate: DateTime.now().startOf("year").toJSDate(),
       endDate: DateTime.now().endOf("year").toJSDate(),
-      label: "Quest'anno",
+      label: "This year",
     }),
     isSelected({ startDate, endDate }: any) {
       return (
