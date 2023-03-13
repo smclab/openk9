@@ -1,6 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { SearchToken } from "./client";
+import { SearchToken, SortField } from "./client";
 import { buttonStyle, FilterCategoryMemo } from "./FilterCategory";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";
@@ -17,6 +17,7 @@ type FiltersProps = {
   onRemoveFilterToken(searchToken: SearchToken): void;
   onConfigurationChange: ConfigurationUpdateFunction;
   filtersSelect: SearchToken[];
+  sortResult: SortField[];
 };
 function Filters({
   searchQuery,
@@ -24,11 +25,12 @@ function Filters({
   onConfigurationChange,
   onRemoveFilterToken,
   filtersSelect,
+  sortResult,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const { data, isPreviousData } = useInfiniteResults(searchQuery);
+  const { data, isPreviousData } = useInfiniteResults(searchQuery, sortResult);
   React.useEffect(() => {
     if (!isPreviousData) {
       setLastSearchQueryWithResults(searchQuery);

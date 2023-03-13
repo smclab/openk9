@@ -52,7 +52,6 @@ export function Search({
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
-
   const [openedDropdown, setOpenedDropdown] = React.useState<{
     textPosition: number;
     optionPosition: number;

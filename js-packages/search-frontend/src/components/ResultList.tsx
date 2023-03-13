@@ -2,12 +2,12 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { Virtuoso } from "react-virtuoso";
 import { ResultMemo } from "./Result";
-import { GenericResultItem, SearchToken } from "./client";
+import { GenericResultItem, SearchToken, SortField } from "./client";
 import { Logo } from "./Logo";
 import { Renderers, useRenderers } from "./useRenderers";
 import { CustomVirtualScrollbar } from "./CustomScrollbar";
 import { useOpenK9Client } from "./client";
-import { useInfiniteQuery } from "react-query";
+import { useInfiniteQuery, useQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
 
@@ -22,9 +22,18 @@ type ResultsProps<E> = {
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E>): void;
   displayMode: ResultsDisplayMode;
+  sortResult: SortField[];
+  setSortResult: (sortResultNew: SortField) => void;
 };
-function Results<E>({ displayMode, onDetail, searchQuery }: ResultsProps<E>) {
+function Results<E>({
+  displayMode,
+  onDetail,
+  searchQuery,
+  sortResult,
+  setSortResult,
+}: ResultsProps<E>) {
   const renderers = useRenderers();
+
   if (!renderers) return null;
   switch (displayMode.type) {
     case "finite":
@@ -33,6 +42,8 @@ function Results<E>({ displayMode, onDetail, searchQuery }: ResultsProps<E>) {
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
+          sortResult={sortResult}
+          setSortResult={setSortResult}
         />
       );
     case "infinite":
@@ -41,6 +52,8 @@ function Results<E>({ displayMode, onDetail, searchQuery }: ResultsProps<E>) {
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
+          sortResult={sortResult}
+          setSortResult={setSortResult}
         />
       );
     case "virtual":
@@ -49,6 +62,8 @@ function Results<E>({ displayMode, onDetail, searchQuery }: ResultsProps<E>) {
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
+          sortResult={sortResult}
+          setSortResult={setSortResult}
         />
       );
   }
@@ -58,8 +73,14 @@ export const ResultsMemo = React.memo(Results);
 
 type ResultCountProps = {
   children: number | undefined;
+  setSortResult: (sortResultNew: SortField) => void;
 };
-function ResultCount({ children }: ResultCountProps) {
+
+function ResultCount({ children, setSortResult }: ResultCountProps) {
+  const client = useOpenK9Client();
+  const options = useQuery(["date-label-sort-options", {}], async () => {
+    return await client.getLabelSort();
+  });
   return (
     <React.Fragment>
       <div
@@ -123,7 +144,7 @@ function ResultCount({ children }: ResultCountProps) {
               margin-right: 2%;
             `}
           >
-            Ordina per
+            Sort by
           </span>
           <span>
             <select
@@ -131,7 +152,6 @@ function ResultCount({ children }: ResultCountProps) {
               id="regularSelectElement"
               css={css`
                 border-radius: 34px;
-                max-width: 130px;
                 border: 1px solid #a292926b;
                 height: 30px;
                 cursor: pointer;
@@ -141,9 +161,52 @@ function ResultCount({ children }: ResultCountProps) {
                 }
                 background: transparent;
               `}
+              onChange={(event) => {
+                if (
+                  JSON.parse(event.currentTarget.value)?.label === "relevance"
+                ) {
+                  setSortResult({});
+                } else {
+                  setSortResult({
+                    [JSON.parse(event.currentTarget.value)?.label]: {
+                      sort: JSON.parse(event.currentTarget.value)?.sort,
+                      missing: "_last",
+                    },
+                  });
+                }
+              }}
             >
-              <option>Data Crescente</option>
-              <option>Data Decrescente</option>
+              <option
+                value={JSON.stringify({
+                  label: "relevance",
+                })}
+              >
+                relevance
+              </option>
+              {options.data?.map((option) => {
+                return (
+                  <React.Fragment>
+                    <option
+                      key={option.id + "asc"}
+                      value={JSON.stringify({
+                        label: option.label,
+                        sort: "asc",
+                      })}
+                    >
+                      {option.label} asc
+                    </option>
+                    <option
+                      key={option.id + "desc"}
+                      value={JSON.stringify({
+                        label: option.label,
+                        sort: "desc",
+                      })}
+                    >
+                      {option.label} desc
+                    </option>
+                  </React.Fragment>
+                );
+              })}
             </select>
           </span>
         </div>
@@ -156,6 +219,8 @@ type ResulListProps<E> = {
   renderers: Renderers;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E> | null): void;
+  sortResult: SortField[];
+  setSortResult: (sortResultNew: SortField) => void;
 };
 
 type FiniteResultsProps<E> = ResulListProps<E> & {};
@@ -163,8 +228,10 @@ export function FiniteResults<E>({
   renderers,
   searchQuery,
   onDetail,
+  sortResult,
+  setSortResult,
 }: FiniteResultsProps<E>) {
-  const results = useInfiniteResults<E>(searchQuery);
+  const results = useInfiniteResults<E>(searchQuery, sortResult);
   return (
     <div style={{ height: "100%", overflowY: "auto", position: "relative" }}>
       {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
@@ -174,7 +241,9 @@ export function FiniteResults<E>({
             width: 100%;
           `}
         >
-          <ResultCount>{results.data?.pages[0].total}</ResultCount>
+          <ResultCount setSortResult={setSortResult}>
+            {results.data?.pages[0].total}
+          </ResultCount>
           {results.data?.pages[0].result.map((result, index) => {
             return (
               <ResultMemo<E>
@@ -198,8 +267,13 @@ export function InfiniteResults<E>({
   renderers,
   searchQuery,
   onDetail,
+  sortResult,
+  setSortResult,
 }: InfiniteResultsProps<E>) {
-  const results = useInfiniteResults<E>(searchQuery);
+  const [results, setResult] = React.useState(
+    useInfiniteResults<E>(searchQuery, sortResult),
+  );
+
   return (
     <OverlayScrollbarsComponentDockerFix
       style={{
@@ -208,7 +282,7 @@ export function InfiniteResults<E>({
         position: "relative",
       }}
     >
-      {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
+      {results?.data?.pages[0].total && results.data.pages[0].total > 0 ? (
         <div
           css={css`
             position: absolute;
@@ -216,7 +290,9 @@ export function InfiniteResults<E>({
             padding-bottom: 16px;
           `}
         >
-          <ResultCount>{results.data?.pages[0].total}</ResultCount>
+          <ResultCount setSortResult={setSortResult}>
+            {results.data?.pages[0].total}
+          </ResultCount>
           {results.data?.pages.map((page, pageIndex) => {
             return (
               <React.Fragment key={pageIndex}>
@@ -269,8 +345,10 @@ export function VirtualResults<E>({
   renderers,
   searchQuery,
   onDetail,
+  sortResult,
+  setSortResult,
 }: VirtualResultsProps<E>) {
-  const results = useInfiniteResults<E>(searchQuery);
+  const results = useInfiniteResults<E>(searchQuery, sortResult);
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
   const thereAreResults = Boolean(
     results.data?.pages[0].total && results.data.pages[0].total > 0,
@@ -284,7 +362,9 @@ export function VirtualResults<E>({
       `}
     >
       {thereAreResults && (
-        <ResultCount>{results.data?.pages[0].total}</ResultCount>
+        <ResultCount setSortResult={setSortResult}>
+          {results.data?.pages[0].total}
+        </ResultCount>
       )}
       <Virtuoso
         hidden={!thereAreResults}
@@ -352,15 +432,20 @@ function NoResults() {
   );
 }
 
-export function useInfiniteResults<E>(searchQuery: Array<SearchToken>) {
+export function useInfiniteResults<E>(
+  searchQuery: Array<SearchToken>,
+  sortResult: SortField[],
+) {
   const pageSize = 25;
   const client = useOpenK9Client();
+
   return useInfiniteQuery(
-    ["results", searchQuery] as const,
-    async ({ queryKey: [, searchQuery], pageParam = 0 }) => {
+    ["results", searchQuery, sortResult] as const,
+    async ({ queryKey: [, searchQuery, sortResult], pageParam = 0 }) => {
       return client.doSearch<E>({
         range: [pageParam * pageSize, pageParam * pageSize + pageSize],
         searchQuery,
+        sortResult,
       });
     },
     {

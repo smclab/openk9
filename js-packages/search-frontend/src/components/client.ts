@@ -82,6 +82,21 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
         await response.json();
       return data;
     },
+    async getLabelSort() {
+      const response = await authFetch(
+        `api/datasource/buckets/current/doc-type-fields-sortable`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        },
+      );
+      if (!response.ok) {
+        throw new Error();
+      }
+      const data: Array<{ field: string; id: number; label: string }> =
+        await response.json();
+      return data;
+    },
     async getSuggestions({
       searchQuery,
       suggestionCategoryId,
@@ -285,9 +300,17 @@ export type SearchToken =
       suggestionCategoryId?: number;
     };
 
+export type SortField = {
+  [key: string]: {
+    sort: "asc" | "desc";
+    missing: "_last";
+  };
+};
+
 type SearchRequest = {
   searchQuery: Array<SearchToken>;
   range: [number, number];
+  sortResult: SortField[];
 };
 
 type SearchResult<E> = {

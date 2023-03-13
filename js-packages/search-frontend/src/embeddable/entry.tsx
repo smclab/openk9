@@ -163,15 +163,20 @@ export type Configuration = {
   searchAutoselect: boolean;
   searchReplaceText: boolean;
   filterTokens: Array<SearchToken>;
+  sortResult: Array<RestApi.SortField>;
   defaultTokens: Array<SearchToken>;
   resultsDisplayMode: ResultsDisplayMode;
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
+  changeSortResult: (
+    sortResult: Array<RestApi.SortField>,
+  ) => Array<RestApi.SortField>;
 };
 
 const defaultConfiguration: Configuration = {
   enabled: false,
   search: null,
   tabs: null,
+  sortResult: [],
   filters: null,
   results: null,
   details: null,
@@ -182,6 +187,7 @@ const defaultConfiguration: Configuration = {
   defaultTokens: [],
   resultsDisplayMode: { type: "infinite" },
   overrideTabs: (tabs) => tabs,
+  changeSortResult: (sortResult) => sortResult,
 };
 
 export type ConfigurationUpdateFunction = (

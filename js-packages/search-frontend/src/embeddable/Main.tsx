@@ -17,6 +17,7 @@ import {
   AnalysisToken,
   GenericResultItem,
   SearchToken,
+  SortField,
 } from "../components/client";
 import isEqual from "lodash/isEqual";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
@@ -26,7 +27,6 @@ import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 import { Search } from "../components/Search";
 import { useOpenK9Client } from "../components/client";
 import { useQuery } from "react-query";
-
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -40,6 +40,10 @@ export function Main({
   const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
     configuration.overrideTabs,
   );
+  const { sortResult, setSortResult } = useSortResult({
+    configuration,
+    onConfigurationChange,
+  });
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
     configuration,
     onConfigurationChange,
@@ -51,6 +55,7 @@ export function Main({
     selectionsState,
     selectionsDispatch,
     isQueryAnalysisComplete,
+    completelySort,
   } = useSearch({
     configuration,
     tabTokens,
@@ -91,6 +96,7 @@ export function Main({
           onRemoveFilterToken={removeFilterToken}
           onConfigurationChange={onConfigurationChange}
           filtersSelect={configuration.filterTokens}
+          sortResult={completelySort}
         />,
         configuration.filters,
       )}
@@ -99,6 +105,8 @@ export function Main({
           displayMode={configuration.resultsDisplayMode}
           searchQuery={searchQuery}
           onDetail={setDetail}
+          sortResult={completelySort}
+          setSortResult={setSortResult}
         />,
         configuration.results,
       )}
@@ -121,7 +129,8 @@ function useSearch({
   dateTokens: SearchToken[];
   onQueryStateChange(queryState: QueryState): void;
 }) {
-  const { searchAutoselect, searchReplaceText, defaultTokens } = configuration;
+  const { searchAutoselect, searchReplaceText, defaultTokens, sortResult } =
+    configuration;
   const [selectionsState, selectionsDispatch] = useSelections();
   const debounced = useDebounce(selectionsState, 600);
   const queryAnalysis = useQueryAnalysis({
@@ -144,6 +153,7 @@ function useSearch({
       ),
     [spans, selectionsState.selection],
   );
+  const completelySort = React.useMemo(() => sortResult, [sortResult]);
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
@@ -152,7 +162,14 @@ function useSearch({
       ...searchTokens,
       ...dateTokens,
     ],
-    [defaultTokens, tabTokens, filterTokens, searchTokens, dateTokens],
+    [
+      defaultTokens,
+      tabTokens,
+      sortResult,
+      filterTokens,
+      searchTokens,
+      dateTokens,
+    ],
   );
   const searchQuery = useDebounce(searchQueryMemo, 600);
   const isQueryAnalysisComplete =
@@ -206,6 +223,7 @@ function useSearch({
     selectionsState,
     selectionsDispatch,
     isQueryAnalysisComplete,
+    completelySort,
   };
 }
 
@@ -233,8 +251,6 @@ function useFilters({
   const filterTokens = configuration.filterTokens;
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
-      console.log(configuration.filterTokens, searchToken);
-
       onConfigurationChange((configuration) => ({
         filterTokens: [...configuration.filterTokens, searchToken],
       }));
@@ -253,6 +269,26 @@ function useFilters({
   );
   const defaultTokens = configuration.defaultTokens;
   return { defaultTokens, filterTokens, addFilterToken, removeFilterToken };
+}
+
+function useSortResult({
+  configuration,
+  onConfigurationChange,
+}: {
+  configuration: Configuration;
+  onConfigurationChange: ConfigurationUpdateFunction;
+}) {
+  const sortResult = configuration.sortResult;
+  const setSortResult = React.useCallback(
+    (sortResultNew: SortField) => {
+      onConfigurationChange((configuration) => ({
+        sortResult: [sortResultNew],
+      }));
+    },
+    [onConfigurationChange, sortResult],
+  );
+
+  return { sortResult, setSortResult };
 }
 
 export type SearchDateRange = {
