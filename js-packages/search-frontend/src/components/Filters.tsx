@@ -156,7 +156,7 @@ function Filters({
             `}
           >
             <Logo size={100} />
-            <h4>No Filter </h4>
+            <h4>No Filters </h4>
           </div>
         )}
         {suggestionCategories.data?.map((suggestionCategory) => {

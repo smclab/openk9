@@ -162,14 +162,7 @@ function useSearch({
       ...searchTokens,
       ...dateTokens,
     ],
-    [
-      defaultTokens,
-      tabTokens,
-      sortResult,
-      filterTokens,
-      searchTokens,
-      dateTokens,
-    ],
+    [defaultTokens, tabTokens, filterTokens, searchTokens, dateTokens],
   );
   const searchQuery = useDebounce(searchQueryMemo, 600);
   const isQueryAnalysisComplete =
