@@ -149,6 +149,17 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			 }));
 	}
 
+	public Uni<Datasource> findDatasourceByIdWithPluginDriver(long datasourceId) {
+		return withTransaction(
+			(s) -> s.createQuery(
+				"select d " +
+				"from Datasource d " +
+				"left join fetch d.pluginDriver where d.id = :id", Datasource.class)
+			.setParameter("id", datasourceId)
+			.getSingleResult()
+		);
+	}
+
 	@Inject
 	DataIndexService dataIndexService;
 
