@@ -2,9 +2,11 @@ package io.openk9.datasource.listener;
 
 import akka.actor.typed.ActorSystem;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class SchedulerInitializerActor {
@@ -12,7 +14,7 @@ public class SchedulerInitializerActor {
 	@PostConstruct
 	public void init() {
 		this.actorSystem = ActorSystem.apply(
-			Scheduler.create(), "datasource-scheduler");
+			Scheduler.create(httpPluginDriverClient), "datasource-scheduler");
 	}
 
 	public void scheduleDataSource(String tenantName, Datasource datasource) {
@@ -28,5 +30,8 @@ public class SchedulerInitializerActor {
 	}
 
 	private ActorSystem<Scheduler.Command> actorSystem;
+
+	@Inject
+	HttpPluginDriverClient httpPluginDriverClient;
 
 }

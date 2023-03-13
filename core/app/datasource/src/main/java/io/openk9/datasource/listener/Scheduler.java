@@ -29,13 +29,13 @@ public class Scheduler {
 	public record UnScheduleDatasource(String tenantName, Datasource datasource) implements Command {}
 	public record TriggerDatasource(String tenantName, Datasource datasource) implements Command {}
 
-	public static Behavior<Command> create() {
+	public static Behavior<Command> create(HttpPluginDriverClient httpPluginDriverClient) {
 		return Behaviors.setup(ctx -> {
 
 			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
 				QuartzSchedulerTypedExtension.get(ctx.getSystem());
 
-			return initial(ctx, quartzSchedulerTypedExtension, new ArrayList<>());
+			return initial(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, new ArrayList<>());
 
 		});
 	}
@@ -43,18 +43,20 @@ public class Scheduler {
 	private static Behavior<Command> initial(
 		ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		HttpPluginDriverClient httpPluginDriverClient,
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(ScheduleDatasource.class, addDatasource -> onAddDatasource(addDatasource, ctx, quartzSchedulerTypedExtension, jobNames))
-			.onMessage(UnScheduleDatasource.class, removeDatasource -> onRemoveDatasource(removeDatasource, ctx, quartzSchedulerTypedExtension, jobNames))
-			.onMessage(TriggerDatasource.class, jobMessage -> onJobMessage(jobMessage, ctx))
+			.onMessage(ScheduleDatasource.class, addDatasource -> onAddDatasource(addDatasource, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, jobNames))
+			.onMessage(UnScheduleDatasource.class, removeDatasource -> onRemoveDatasource(removeDatasource, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, jobNames))
+			.onMessage(TriggerDatasource.class, jobMessage -> onJobMessage(jobMessage, ctx, httpPluginDriverClient))
 			.build();
 
 	}
 
 	private static Behavior<Command> onJobMessage(
-		TriggerDatasource jobMessage, ActorContext<Command> ctx) {
+		TriggerDatasource jobMessage, ActorContext<Command> ctx,
+		HttpPluginDriverClient httpPluginDriverClient) {
 
 		Datasource datasource = jobMessage.datasource;
 		String tenantName = jobMessage.tenantName;
@@ -83,8 +85,6 @@ public class Scheduler {
 		UUID uuid = UUID.randomUUID();
 
 		String scheduleId = uuid.toString();
-
-		HttpPluginDriverClient httpPluginDriverClient = findHttpPluginDriverClient();
 
 		switch (pluginDriver.getType()) {
 			case HTTP: {
@@ -117,7 +117,7 @@ public class Scheduler {
 	private static Behavior<Command> onRemoveDatasource(
 		UnScheduleDatasource removeDatasource, ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		List<String> jobNames) {
+		HttpPluginDriverClient httpPluginDriverClient, List<String> jobNames) {
 
 		Datasource datasource = removeDatasource.datasource;
 		String tenantName = removeDatasource.tenantName;
@@ -129,7 +129,7 @@ public class Scheduler {
 			List<String> newJobNames = new ArrayList<>(jobNames);
 			newJobNames.remove(jobName);
 			ctx.getLog().info("Job removed: {}", jobName);
-			return initial(ctx, quartzSchedulerTypedExtension, newJobNames);
+			return initial(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, newJobNames);
 		}
 
 		ctx.getLog().info("Job not found: {}", jobName);
@@ -141,7 +141,7 @@ public class Scheduler {
 	private static Behavior<Command> onAddDatasource(
 		ScheduleDatasource addDatasource, ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		List<String> jobNames) {
+		HttpPluginDriverClient httpPluginDriverClient, List<String> jobNames) {
 
 		Datasource datasource = addDatasource.datasource;
 		String tenantName = addDatasource.tenantName;
@@ -184,7 +184,7 @@ public class Scheduler {
 
 				newJobNames.add(jobName);
 
-				return initial(ctx, quartzSchedulerTypedExtension, newJobNames);
+				return initial(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, newJobNames);
 
 			}
 		}
