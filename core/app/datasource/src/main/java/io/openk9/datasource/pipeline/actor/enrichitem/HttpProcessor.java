@@ -9,6 +9,8 @@ import akka.actor.typed.javadsl.Receive;
 import io.openk9.datasource.pipeline.actor.common.Http;
 import io.vertx.core.json.JsonObject;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 
 public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
@@ -106,16 +108,36 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
 	private Behavior<Command> onStart(Start start) {
 
+		String url = start.url;
+		ActorRef<Response> replyTo = start.replyTo;
+
+		if (!isValidUrl(url)) {
+			replyTo.tell(new Error("Invalid URL: " + url));
+			return Behaviors.stopped();
+		}
+
+		JsonObject jsonObject = start.jsonObject;
+
 		if (async) {
 
 			tokenActorRef.tell(new Token.Generate(tokenResponseAdapter));
 
-			return waitGenerateToken(start.url, start.jsonObject, start.replyTo());
+			return waitGenerateToken(url, jsonObject, replyTo);
 
 		}
 
-		return started(start.url, start.jsonObject, start.replyTo());
+		return started(url, jsonObject, replyTo);
 
+	}
+
+	private boolean isValidUrl(String url) {
+		try {
+			new URL(url);
+			return true;
+		}
+		catch (MalformedURLException e) {
+			return false;
+		}
 	}
 
 	private Behavior<Command> waitGenerateToken(
