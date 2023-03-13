@@ -22,14 +22,14 @@ type ResultsProps<E> = {
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E>): void;
   displayMode: ResultsDisplayMode;
-  sortResult: SortField[];
+  sort: SortField[];
   setSortResult: (sortResultNew: SortField) => void;
 };
 function Results<E>({
   displayMode,
   onDetail,
   searchQuery,
-  sortResult,
+  sort,
   setSortResult,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
@@ -42,7 +42,7 @@ function Results<E>({
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
-          sortResult={sortResult}
+          sort={sort}
           setSortResult={setSortResult}
         />
       );
@@ -52,7 +52,7 @@ function Results<E>({
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
-          sortResult={sortResult}
+          sort={sort}
           setSortResult={setSortResult}
         />
       );
@@ -62,7 +62,7 @@ function Results<E>({
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
-          sortResult={sortResult}
+          sort={sort}
           setSortResult={setSortResult}
         />
       );
@@ -189,7 +189,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
                     <option
                       key={option.id + "asc"}
                       value={JSON.stringify({
-                        label: option.label,
+                        label: option.field,
                         sort: "asc",
                       })}
                     >
@@ -198,7 +198,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
                     <option
                       key={option.id + "desc"}
                       value={JSON.stringify({
-                        label: option.label,
+                        label: option.field,
                         sort: "desc",
                       })}
                     >
@@ -219,7 +219,7 @@ type ResulListProps<E> = {
   renderers: Renderers;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E> | null): void;
-  sortResult: SortField[];
+  sort: SortField[];
   setSortResult: (sortResultNew: SortField) => void;
 };
 
@@ -228,10 +228,10 @@ export function FiniteResults<E>({
   renderers,
   searchQuery,
   onDetail,
-  sortResult,
+  sort,
   setSortResult,
 }: FiniteResultsProps<E>) {
-  const results = useInfiniteResults<E>(searchQuery, sortResult);
+  const results = useInfiniteResults<E>(searchQuery, sort);
   return (
     <div style={{ height: "100%", overflowY: "auto", position: "relative" }}>
       {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
@@ -267,12 +267,10 @@ export function InfiniteResults<E>({
   renderers,
   searchQuery,
   onDetail,
-  sortResult,
+  sort,
   setSortResult,
 }: InfiniteResultsProps<E>) {
-  const [results, setResult] = React.useState(
-    useInfiniteResults<E>(searchQuery, sortResult),
-  );
+  const results = useInfiniteResults<E>(searchQuery, sort);
 
   return (
     <OverlayScrollbarsComponentDockerFix
@@ -345,10 +343,10 @@ export function VirtualResults<E>({
   renderers,
   searchQuery,
   onDetail,
-  sortResult,
+  sort,
   setSortResult,
 }: VirtualResultsProps<E>) {
-  const results = useInfiniteResults<E>(searchQuery, sortResult);
+  const results = useInfiniteResults<E>(searchQuery, sort);
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
   const thereAreResults = Boolean(
     results.data?.pages[0].total && results.data.pages[0].total > 0,
@@ -434,18 +432,18 @@ function NoResults() {
 
 export function useInfiniteResults<E>(
   searchQuery: Array<SearchToken>,
-  sortResult: SortField[],
+  sort: SortField[],
 ) {
   const pageSize = 25;
   const client = useOpenK9Client();
 
   return useInfiniteQuery(
-    ["results", searchQuery, sortResult] as const,
-    async ({ queryKey: [, searchQuery, sortResult], pageParam = 0 }) => {
+    ["results", searchQuery, sort] as const,
+    async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
       return client.doSearch<E>({
         range: [pageParam * pageSize, pageParam * pageSize + pageSize],
         searchQuery,
-        sortResult,
+        sort,
       });
     },
     {

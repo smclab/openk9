@@ -40,7 +40,7 @@ export function Main({
   const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
     configuration.overrideTabs,
   );
-  const { sortResult, setSortResult } = useSortResult({
+  const { sort, setSortResult } = useSortResult({
     configuration,
     onConfigurationChange,
   });
@@ -96,7 +96,7 @@ export function Main({
           onRemoveFilterToken={removeFilterToken}
           onConfigurationChange={onConfigurationChange}
           filtersSelect={configuration.filterTokens}
-          sortResult={completelySort}
+          sort={completelySort}
         />,
         configuration.filters,
       )}
@@ -105,7 +105,7 @@ export function Main({
           displayMode={configuration.resultsDisplayMode}
           searchQuery={searchQuery}
           onDetail={setDetail}
-          sortResult={completelySort}
+          sort={completelySort}
           setSortResult={setSortResult}
         />,
         configuration.results,
@@ -129,7 +129,7 @@ function useSearch({
   dateTokens: SearchToken[];
   onQueryStateChange(queryState: QueryState): void;
 }) {
-  const { searchAutoselect, searchReplaceText, defaultTokens, sortResult } =
+  const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const [selectionsState, selectionsDispatch] = useSelections();
   const debounced = useDebounce(selectionsState, 600);
@@ -153,7 +153,7 @@ function useSearch({
       ),
     [spans, selectionsState.selection],
   );
-  const completelySort = React.useMemo(() => sortResult, [sortResult]);
+  const completelySort = React.useMemo(() => sort, [sort]);
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
@@ -271,17 +271,17 @@ function useSortResult({
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
 }) {
-  const sortResult = configuration.sortResult;
+  const sort = configuration.sort;
   const setSortResult = React.useCallback(
     (sortResultNew: SortField) => {
       onConfigurationChange((configuration) => ({
-        sortResult: [sortResultNew],
+        sort: [sortResultNew],
       }));
     },
-    [onConfigurationChange, sortResult],
+    [onConfigurationChange, sort],
   );
 
-  return { sortResult, setSortResult };
+  return { sort, setSortResult };
 }
 
 export type SearchDateRange = {

@@ -310,7 +310,7 @@ export type SortField = {
 type SearchRequest = {
   searchQuery: Array<SearchToken>;
   range: [number, number];
-  sortResult: SortField[];
+  sort: SortField[];
 };
 
 type SearchResult<E> = {

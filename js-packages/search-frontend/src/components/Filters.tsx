@@ -17,7 +17,7 @@ type FiltersProps = {
   onRemoveFilterToken(searchToken: SearchToken): void;
   onConfigurationChange: ConfigurationUpdateFunction;
   filtersSelect: SearchToken[];
-  sortResult: SortField[];
+  sort: SortField[];
 };
 function Filters({
   searchQuery,
@@ -25,12 +25,12 @@ function Filters({
   onConfigurationChange,
   onRemoveFilterToken,
   filtersSelect,
-  sortResult,
+  sort,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const { data, isPreviousData } = useInfiniteResults(searchQuery, sortResult);
+  const { data, isPreviousData } = useInfiniteResults(searchQuery, sort);
   React.useEffect(() => {
     if (!isPreviousData) {
       setLastSearchQueryWithResults(searchQuery);
