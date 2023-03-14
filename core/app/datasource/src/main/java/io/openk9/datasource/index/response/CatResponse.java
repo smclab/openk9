@@ -19,8 +19,8 @@ public class CatResponse {
 	private String rep;
 	private String docsCount;
 	private String docsDeleted;
-	private String storeSize;
-	private String priStoreSize;
+	private long storeSize;
+	private long priStoreSize;
 
 	@JsonProperty(value = "docs.count")
 	public void setDocsCount(String docsCount) {
@@ -33,12 +33,12 @@ public class CatResponse {
 	}
 
 	@JsonProperty(value = "store.size")
-	public void setStoreSize(String storeSize) {
+	public void setStoreSize(long storeSize) {
 		this.storeSize = storeSize;
 	}
 
 	@JsonProperty(value = "pri.store.size")
-	public void setPriStoreSize(String priStoreSize) {
+	public void setPriStoreSize(long priStoreSize) {
 		this.priStoreSize = priStoreSize;
 	}
 

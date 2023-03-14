@@ -102,6 +102,7 @@ public class IndexService {
 
 							catRequest.addParameter("format", "JSON");
 							catRequest.addParameter("v", "true");
+							catRequest.addParameter("bytes", "b");
 
 							lowLevelClient.performRequestAsync(
 								catRequest,
