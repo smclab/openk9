@@ -29,18 +29,14 @@ import io.openk9.entity.manager.cache.model.Entity;
 import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.EntityRelation;
 import io.openk9.entity.manager.cache.model.EntityRelationKey;
+import io.openk9.entity.manager.client.datasource.DatasourceClient;
 import io.openk9.entity.manager.dto.EntityManagerRequest;
 import io.openk9.entity.manager.dto.EntityRequest;
 import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.LoggerAggregator;
 import io.smallrye.reactive.messaging.annotations.Blocking;
-import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Message;
-import org.eclipse.microprofile.reactive.messaging.Metadata;
-import org.eclipse.microprofile.reactive.messaging.Outgoing;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -48,7 +44,6 @@ import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -84,19 +79,11 @@ public class EntityManagerConsumer {
 			.collect(Collectors.toList());
 	}
 
-	@Incoming("entity-manager-request")
-	@Outgoing("entity-manager-response")
+
 	@Blocking
-	public Message<JsonObject> consume(Message<Object> message) {
+	public void consume(JsonObject entityManagerPayload) {
 
-		Object obj = message.getPayload();
-
-		JsonObject jsonObject =
-			obj instanceof JsonObject
-				? (JsonObject)obj
-				: new JsonObject(new String((byte[])obj));
-
-		Payload request = jsonObject.mapTo(Payload.class);
+		Payload request = entityManagerPayload.mapTo(Payload.class);
 
 		TransactionContext transactionContext =
 			_hazelcastInstance.newTransactionContext();
@@ -216,27 +203,15 @@ public class EntityManagerConsumer {
 
 			transactionContext.commitTransaction();
 
+			String replyTo = request.getReplyTo();
+
+			datasourceClient.sentToPipeline(replyTo);
+
 		}
 		catch (Exception e) {
 			transactionContext.rollbackTransaction();
-			if (e instanceof RuntimeException) {
-				throw (RuntimeException)e;
-			}
-			throw new RuntimeException(e);
+			throw (RuntimeException) e;
 		}
-
-		String replyTo = request.getReplyTo();
-
-		message.ack();
-
-		return Message.of(
-			jsonObject, Metadata.of(
-				new OutgoingRabbitMQMetadata.Builder()
-					.withRoutingKey(replyTo)
-					.withTimestamp(ZonedDateTime.now())
-					.build()
-			)
-		);
 
 	}
 
@@ -247,6 +222,10 @@ public class EntityManagerConsumer {
 	LoggerAggregator _loggerAggregator;
 
 	private FlakeIdGenerator _entityFlakeId;
+
 	private FlakeIdGenerator _entityRelationFlakeId;
+
+	@Inject
+	DatasourceClient datasourceClient;
 
 }
