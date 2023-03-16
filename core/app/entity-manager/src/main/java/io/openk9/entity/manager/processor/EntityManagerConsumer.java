@@ -203,7 +203,7 @@ public class EntityManagerConsumer {
 
 			String replyTo = request.getReplyTo();
 
-			datasourceClient.sentToPipeline(replyTo);
+			datasourceClient.sentToPipeline(replyTo, entityManagerPayload);
 
 		}
 		catch (Exception e) {

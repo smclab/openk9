@@ -17,6 +17,7 @@
 
 package io.openk9.entity.manager.client.datasource;
 
+import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.ws.rs.Consumes;
@@ -32,5 +33,5 @@ public interface DatasourceClient {
 	@POST
 	@Path("/pipeline/callback/{token-id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	String sentToPipeline(@PathParam("token-id") String tokenId);
+	String sentToPipeline(@PathParam("token-id") String tokenId, JsonObject payload);
 }
