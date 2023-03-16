@@ -51,7 +51,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-@Path("/")
 public class EntityManagerConsumer {
 
 	@PostConstruct
@@ -80,7 +79,6 @@ public class EntityManagerConsumer {
 	}
 
 
-	@Blocking
 	public void consume(JsonObject entityManagerPayload) {
 
 		Payload request = entityManagerPayload.mapTo(Payload.class);
