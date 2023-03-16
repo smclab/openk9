@@ -47,14 +47,46 @@ function FilterCategory({
     text ||
       (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
   );
+  const isMatchFound = searchQuery.some(
+    (searchToken) =>
+      "goToSuggestion" in searchToken &&
+      suggestionCategoryId === searchToken.suggestionCategoryId,
+  );
+
+  if (!show && isMatchFound)
+    return (
+      <>
+        {searchQuery.map((searchToken: SearchToken, index: number) => {
+          if (!("goToSuggestion" in searchToken)) return null;
+          if (suggestionCategoryId === searchToken.suggestionCategoryId)
+            return (
+              <FiltersNotDisappearing
+                index={index}
+                isOpen={isOpen}
+                multiSelect={multiSelect}
+                onRemove={onRemove}
+                searchToken={searchToken}
+                setIsOpen={setIsOpen}
+                suggestionCategoryName={suggestionCategoryName}
+                setText={setText}
+                text={text}
+              />
+            );
+        })}
+      </>
+    );
+
   if (!show)
     return (
-      <NoFilter
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
-        suggestionCategoryName={suggestionCategoryName}
-      />
+      <React.Fragment>
+        <NoFilter
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          suggestionCategoryName={suggestionCategoryName}
+        />
+      </React.Fragment>
     );
+
   return (
     <div
       css={css`
@@ -588,6 +620,148 @@ function NoFilter({
         </div>
       )}
     </div>
+  );
+}
+
+type FiltersNotDisappearingProps = {
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isOpen: boolean;
+  suggestionCategoryName: string;
+  index: number;
+  multiSelect: boolean;
+  onRemove: (searchToken: SearchToken) => void;
+  searchToken: {
+    tokenType: "TEXT";
+    keywordKey?: string | undefined;
+    values: string[];
+    filter: boolean;
+    goToSuggestion?: boolean | undefined;
+    label?: string | undefined;
+    suggestionCategoryId?: number | undefined;
+  };
+  text: string;
+  setText: React.Dispatch<React.SetStateAction<string>>;
+};
+function FiltersNotDisappearing({
+  setIsOpen,
+  isOpen,
+  suggestionCategoryName,
+  index,
+  multiSelect,
+  onRemove,
+  searchToken,
+  text,
+  setText,
+}: FiltersNotDisappearingProps) {
+  return (
+    <React.Fragment>
+      <div
+        css={css`
+          margin-bottom: 16px;
+        `}
+      >
+        <div>
+          <div
+            css={css`
+              user-select: none;
+              margin-left: 16px;
+              display: flex;
+              align-items: center;
+              width: 100% !important;
+            `}
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <div
+              css={css`
+                flex-grow: 1;
+                :first-letter {
+                  text-transform: uppercase;
+                }
+              `}
+            >
+              <strong>{suggestionCategoryName}</strong>
+            </div>
+            <FontAwesomeIcon
+              icon={isOpen ? faChevronDown : faChevronUp}
+              style={{
+                color: "var(--openk9-embeddable-search--secondary-text-color)",
+                marginRight: "8px",
+              }}
+            />
+          </div>
+        </div>
+        {isOpen && (
+          <React.Fragment>
+            <div
+              css={css`
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+              `}
+            >
+              <FontAwesomeIcon
+                icon={faSearch}
+                style={{
+                  color:
+                    "var(--openk9-embeddable-search--secondary-text-color)",
+                  marginLeft: "25px",
+                  opacity: "0.3",
+                  zIndex: "3",
+                  marginTop: "16px",
+                  height: "15px",
+                }}
+              />
+              <input
+                value={text}
+                placeholder="Search filters..."
+                onChange={(event) => setText(event.currentTarget.value)}
+                css={css`
+                  margin-top: 17px;
+                  flex-grow: 1;
+                  text-indent: 25px;
+                  margin-left: -25px;
+                  margin-right: -9px;
+                  padding: 8px 16px 8px 8px;
+                  border-radius: 4px;
+                  border: 1px solid
+                    var(--openk9-embeddable-search--border-color);
+                  border-radius: 20px;
+                  background: #fafafa;
+                  :focus {
+                    border: 1px solid
+                      var(--openk9-embeddable-search--active-color);
+                    outline: none;
+                  }
+                  ::placeholder {
+                    font-style: normal;
+                    font-weight: 400;
+                    font-size: 15px;
+                  }
+                `}
+              />
+            </div>
+            <div
+              className="form-check"
+              css={css`
+                display: flex;
+                align-items: "center";
+                margin-left: 2px;
+                margin-top: 5px;
+                flex-direction: column;
+                margin-bottom: 5px;
+              `}
+            >
+              <TokensSelected
+                index={index}
+                multiSelect={multiSelect}
+                onRemove={onRemove}
+                searchToken={searchToken}
+              />
+            </div>
+          </React.Fragment>
+        )}
+      </div>
+    </React.Fragment>
   );
 }
 
