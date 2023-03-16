@@ -1498,6 +1498,23 @@ export const StyleToggle = `
   }
 `;
 
+export const StyleToggleDisabled = `
+.toggle-switch-check:checked ~ .toggle-switch-bar::before {
+  background-color: black;
+  border-color: black;
+}
+.toggle-switch-check ~ .toggle-switch-bar::before {
+  background-color: black;
+  border-color: black;
+}
+.toggle-switch-check:checked ~ .toggle-switch-bar::after {
+  background-color: black;
+}
+.toggle-switch-check ~ .toggle-switch-bar::after {
+  background-color: black;
+}
+`;
+
 interface ParamsFormatString {
   howFormat?: FormatType[];
   words: string;

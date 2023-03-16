@@ -1,6 +1,7 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import {
+  FieldType,
   useCreateOrUpdateDocumentTypeFieldMutation,
   useDeleteDocumentTypeFieldMutation,
   useDocumentTypeFieldsQuery,
@@ -9,7 +10,8 @@ import { formatName, TableWithSubFields } from "./Table";
 import { useParams } from "react-router-dom";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
 import { ClayToggle } from "@clayui/form";
-import { StyleToggle } from "./Form";
+import { StyleToggle, StyleToggleDisabled } from "./Form";
+import { ClayTooltipProvider } from "@clayui/tooltip";
 
 gql`
   mutation DeleteDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID!) {
@@ -84,7 +86,7 @@ export function DocumentTypeFields() {
                     }
                   }}
                 />
-                <style type="text/css">{StyleToggle}</style>
+                <style type="text/css">{documentTypeField?.fieldType === FieldType.Text ? StyleToggle : StyleToggleDisabled}</style>
               </React.Fragment>
             ),
           },
@@ -124,34 +126,75 @@ export function DocumentTypeFields() {
           {
             header: "Sortable",
             content: (documentTypeField) => (
-              <ClayToggle
-                toggled={documentTypeField?.sortable ?? false}
-                onToggle={(sortable) => {
-                  if (
-                    documentTypeField &&
-                    documentTypeField.id &&
-                    documentTypeField.fieldType &&
-                    documentTypeField.name &&
-                    documentTypeField.fieldName &&
-                    typeof documentTypeField.searchable === "boolean"
-                  ) {
-                    updateDocumentTypeFieldMutate({
-                      variables: {
-                        documentTypeFieldId: documentTypeField.id,
-                        documentTypeId: documentTypeId,
-                        exclude: documentTypeField.exclude,
-                        description: documentTypeField.description,
-                        fieldType: documentTypeField.fieldType,
-                        name: documentTypeField.name,
-                        sortable,
-                        searchable: documentTypeField.searchable,
-                        boost: documentTypeField.boost,
-                        fieldName: documentTypeField.fieldName,
-                      },
-                    });
-                  }
-                }}
-              />
+              <React.Fragment>
+                {documentTypeField?.fieldType !== FieldType.Date && documentTypeField?.fieldType !== FieldType.Keyword ? (
+                  <ClayTooltipProvider autoAlign>
+                    <span title={"Only Document Type Fields of type Keyword or Date are sortable."}>
+                      <ClayToggle
+                        toggled={documentTypeField?.sortable ?? false}
+                        style={{
+                          cursor: "not-allowed",
+                        }}
+                        onToggle={(sortable) => {
+                          if (
+                            (documentTypeField?.fieldType === FieldType.Date || documentTypeField?.fieldType === FieldType.Keyword) &&
+                            documentTypeField &&
+                            documentTypeField.id &&
+                            documentTypeField.fieldType &&
+                            documentTypeField.name &&
+                            documentTypeField.fieldName &&
+                            typeof documentTypeField.searchable === "boolean"
+                          ) {
+                            updateDocumentTypeFieldMutate({
+                              variables: {
+                                documentTypeFieldId: documentTypeField.id,
+                                documentTypeId: documentTypeId,
+                                exclude: documentTypeField.exclude,
+                                description: documentTypeField.description,
+                                fieldType: documentTypeField.fieldType,
+                                name: documentTypeField.name,
+                                sortable,
+                                searchable: documentTypeField.searchable,
+                                boost: documentTypeField.boost,
+                                fieldName: documentTypeField.fieldName,
+                              },
+                            });
+                          }
+                        }}
+                      />
+                    </span>
+                  </ClayTooltipProvider>
+                ) : (
+                  <ClayToggle
+                    toggled={documentTypeField?.sortable ?? false}
+                    onToggle={(sortable) => {
+                      if (
+                        documentTypeField &&
+                        documentTypeField.id &&
+                        documentTypeField.fieldType &&
+                        documentTypeField.name &&
+                        documentTypeField.fieldName &&
+                        typeof documentTypeField.searchable === "boolean"
+                      ) {
+                        updateDocumentTypeFieldMutate({
+                          variables: {
+                            documentTypeFieldId: documentTypeField.id,
+                            documentTypeId: documentTypeId,
+                            exclude: documentTypeField.exclude,
+                            description: documentTypeField.description,
+                            fieldType: documentTypeField.fieldType,
+                            name: documentTypeField.name,
+                            sortable,
+                            searchable: documentTypeField.searchable,
+                            boost: documentTypeField.boost,
+                            fieldName: documentTypeField.fieldName,
+                          },
+                        });
+                      }
+                    }}
+                  />
+                )}
+              </React.Fragment>
             ),
           },
         ]}
