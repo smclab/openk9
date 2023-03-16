@@ -22,6 +22,7 @@ import io.vertx.core.json.JsonObject;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -30,6 +31,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@ApplicationScoped
 public class EntityManagerEndpoint {
 
 	@PostConstruct
