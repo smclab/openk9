@@ -35,7 +35,6 @@ import io.openk9.entity.manager.dto.EntityRequest;
 import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.LoggerAggregator;
-import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 
 import javax.annotation.PostConstruct;
