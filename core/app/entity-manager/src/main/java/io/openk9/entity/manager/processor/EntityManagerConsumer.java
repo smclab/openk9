@@ -36,6 +36,7 @@ import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.LoggerAggregator;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -223,6 +224,7 @@ public class EntityManagerConsumer {
 	private FlakeIdGenerator _entityRelationFlakeId;
 
 	@Inject
+	@RestClient
 	DatasourceClient datasourceClient;
 
 }

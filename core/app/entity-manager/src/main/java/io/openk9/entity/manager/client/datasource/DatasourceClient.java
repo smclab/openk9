@@ -23,7 +23,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path("/api/datasource")
@@ -32,7 +31,6 @@ public interface DatasourceClient {
 
 	@POST
 	@Path("/pipeline/callback/{token-id}")
-	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	@Produces(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	String sentToPipeline(@PathParam("token-id") String tokenId);
 }
