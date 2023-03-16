@@ -806,7 +806,7 @@ function TokensSelected({
             }}
             style={{
               appearance: "none",
-              width: searchToken.values[0].length > 21 ? "20px" : "18px",
+              width: searchToken.values[0].length > 23 ? "20px" : "18px",
               height: "17px",
               borderRadius: "50%",
               border: "2px solid #ccc",
