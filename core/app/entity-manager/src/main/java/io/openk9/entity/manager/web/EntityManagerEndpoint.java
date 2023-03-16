@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@ApplicationScoped
+@Path("/consume")
 public class EntityManagerEndpoint {
 
 	@PostConstruct
@@ -46,7 +46,6 @@ public class EntityManagerEndpoint {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/consume")
 	public void consume(JsonObject payload) {
 
 		_executorService.submit(() -> {
