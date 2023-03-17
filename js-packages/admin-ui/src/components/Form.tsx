@@ -1496,6 +1496,11 @@ export const StyleToggle = `
   .toggle-switch-check ~ .toggle-switch-bar::after {
     background-color: #CBCBCB;
   }
+
+  .toggle-switch-check:focus ~ .toggle-switch-bar::before {
+    border-color: trasparent;
+    box-shadow: 0 0 0 0px rgba(74, 144, 226, 0.5);
+  }
 `;
 
 interface ParamsFormatString {
