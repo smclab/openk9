@@ -92,7 +92,7 @@ public class Http {
 
 				byte[] bytes = body == null ? new byte[0] : body.getBytes();
 
-				if (resp.statusCode() == 200) {
+				if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
 					return new OK(bytes);
 				}
 				else {
