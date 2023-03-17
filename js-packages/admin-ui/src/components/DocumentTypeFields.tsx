@@ -86,7 +86,7 @@ export function DocumentTypeFields() {
                     }
                   }}
                 />
-                <style type="text/css">{documentTypeField?.fieldType === FieldType.Text ? StyleToggle : StyleToggleDisabled}</style>
+                <style type="text/css">{StyleToggle}</style>
               </React.Fragment>
             ),
           },
