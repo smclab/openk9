@@ -5,6 +5,7 @@ import ClayToolbar from "@clayui/toolbar";
 import { useLocation } from "react-router-dom";
 import { useToast } from "./ToastProvider";
 import React from "react";
+import { ClassNameButton } from "../App";
 
 export function DocumentTypesSettings() {
   const showToast = useToast();
@@ -25,7 +26,7 @@ export function DocumentTypesSettings() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand></ClayToolbar.Item>
             <ClayToolbar.Item>
-              <Button onClick={() => copy(JSON.stringify(data, null, 2))} disabled={!data}>
+              <Button className={`${ClassNameButton} btn-sm`} onClick={() => copy(JSON.stringify(data, null, 2))} disabled={!data}>
                 Copy To Clipboard
               </Button>
             </ClayToolbar.Item>
