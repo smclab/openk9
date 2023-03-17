@@ -84,6 +84,8 @@ public class EntityManagerConsumer {
 
 		Payload request = entityManagerPayload.mapTo(Payload.class);
 
+		_logger.info(request.toString());
+
 		TransactionContext transactionContext =
 			_hazelcastInstance.newTransactionContext();
 
