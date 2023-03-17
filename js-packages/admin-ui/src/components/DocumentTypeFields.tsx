@@ -10,7 +10,7 @@ import { formatName, TableWithSubFields } from "./Table";
 import { useParams } from "react-router-dom";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
 import { ClayToggle } from "@clayui/form";
-import { StyleToggle, StyleToggleDisabled } from "./Form";
+import { StyleToggle } from "./Form";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 
 gql`
@@ -86,7 +86,7 @@ export function DocumentTypeFields() {
                     }
                   }}
                 />
-                <style type="text/css">{documentTypeField?.fieldType === FieldType.Text ? StyleToggle : StyleToggleDisabled}</style>
+                <style type="text/css"> {StyleToggle}</style>
               </React.Fragment>
             ),
           },
