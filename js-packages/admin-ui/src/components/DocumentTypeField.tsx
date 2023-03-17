@@ -164,16 +164,8 @@ export function DocumentTypeField() {
             {...form.inputProps("boost")}
             description="Define how much score is boosted in case of match on this field"
           />
-          <BooleanInput label="Searchable" {...form.inputProps("searchable")} description="If field is searchable or not" />
-          <BooleanInput
-            label="Exclude"
-            {...form.inputProps("exclude")}
-            description="If field need to be excluded from search response or not"
-          />
-          <BooleanInput label="Sortable" {...form.inputProps("sortable")} description="If field is searchable or not" />
           {documentTypeFieldId !== "new" && (
             <ClayForm
-              className="sheet"
               onSubmit={(event) => {
                 event.preventDefault();
               }}
@@ -192,6 +184,13 @@ export function DocumentTypeField() {
               />
             </ClayForm>
           )}
+          <BooleanInput label="Searchable" {...form.inputProps("searchable")} description="If field is searchable or not" />
+          <BooleanInput
+            label="Exclude"
+            {...form.inputProps("exclude")}
+            description="If field need to be excluded from search response or not"
+          />
+          <BooleanInput label="Sortable" {...form.inputProps("sortable")} description="If field is searchable or not" />
           <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
           <div className="sheet-footer">
             <ClayButton className={` ${ClassNameButton} `} type="submit" disabled={!form.canSubmit}>
