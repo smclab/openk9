@@ -37,6 +37,7 @@ import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.LoggerAggregator;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -203,6 +204,8 @@ public class EntityManagerConsumer {
 
 			String replyTo = request.getReplyTo();
 
+			_logger.info(entityManagerPayload.toString());
+
 			datasourceClient.sentToPipeline(replyTo, entityManagerPayload);
 
 		}
@@ -226,5 +229,8 @@ public class EntityManagerConsumer {
 	@Inject
 	@RestClient
 	DatasourceClient datasourceClient;
+
+	@Inject
+	Logger _logger;
 
 }
