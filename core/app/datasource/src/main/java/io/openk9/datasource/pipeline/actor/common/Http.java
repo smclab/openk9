@@ -87,11 +87,16 @@ public class Http {
 		httpResponseUni
 			.onItem()
 			.transform(resp -> {
+
+				Buffer body = resp.body();
+
+				byte[] bytes = body == null ? new byte[0] : body.getBytes();
+
 				if (resp.statusCode() == 200) {
-					return new OK(resp.body().getBytes());
+					return new OK(bytes);
 				}
 				else {
-					return new ERROR(resp.statusCode(), resp.statusMessage(), resp.body().getBytes());
+					return new ERROR(resp.statusCode(), resp.statusMessage(), bytes);
 				}
 			})
 			.onFailure()
