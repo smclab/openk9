@@ -132,9 +132,6 @@ export function PluginDriver() {
                       case "HTTP":
                         form.inputProps("type").onChange(PluginDriverType.Http);
                         break;
-                      case "Custom":
-                        setType("Custom");
-                        break;
                     }
                     PluginDriverOptions.map((element) => {
                       element.visible = "false";
@@ -256,20 +253,6 @@ export function useWizardPluginDriverBinding(name: string) {
 }
 
 const PluginDriverOptions = [
-  {
-    title: "Custom",
-    description: "",
-    Json: `
-    {
-    }
-    `,
-
-    descriptionAttribute: `
-    {
-    }
-    `,
-    visible: "false",
-  },
   {
     title: "HTTP",
     description: "",
