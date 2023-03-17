@@ -3,6 +3,7 @@ package io.openk9.datasource.pipeline.actor.enrichitem;
 import akka.actor.Cancellable;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.vertx.core.json.JsonObject;
@@ -32,7 +33,10 @@ public class Token {
 	}
 
 	public static Behavior<Command> create(long validityTokenMillis) {
-		return Behaviors.setup(ctx -> initial(validityTokenMillis, new HashMap<>(), ctx, null));
+		return Behaviors.<Command>supervise(
+			Behaviors
+				.setup(ctx -> initial(validityTokenMillis, new HashMap<>(), ctx, null)))
+			.onFailure(SupervisorStrategy.resume());
 	}
 
 	private static Behavior<Command> initial(
