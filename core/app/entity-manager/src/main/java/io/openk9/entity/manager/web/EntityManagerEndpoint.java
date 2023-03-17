@@ -51,7 +51,7 @@ public class EntityManagerEndpoint {
 
 		_logger.debug(payload.toString());
 
-		_executorService.submit(() -> {
+		_executorService.execute(() -> {
 			entityManagerConsumer.consume(payload);
 		});
 
