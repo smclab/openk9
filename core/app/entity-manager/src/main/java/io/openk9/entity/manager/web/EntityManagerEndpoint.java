@@ -19,6 +19,7 @@ package io.openk9.entity.manager.web;
 
 import io.openk9.entity.manager.processor.EntityManagerConsumer;
 import io.vertx.core.json.JsonObject;
+import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -48,6 +49,8 @@ public class EntityManagerEndpoint {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void consume(JsonObject payload) {
 
+		_logger.debug(payload.toString());
+
 		_executorService.submit(() -> {
 			entityManagerConsumer.consume(payload);
 		});
@@ -58,4 +61,7 @@ public class EntityManagerEndpoint {
 	EntityManagerConsumer entityManagerConsumer;
 
 	private ExecutorService _executorService;
+
+	@Inject
+	Logger _logger;
 }
