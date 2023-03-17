@@ -208,7 +208,7 @@ export function DataSource() {
             form.submit();
           }}
         >
-          <TextInput label="Name" {...form.inputProps("name")}/>
+          <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
           <BooleanInput
             label="Schedulable"
@@ -260,8 +260,12 @@ export function DataSource() {
               />
             </ClayForm>
           )}
-          <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} 
-          description="Json configuration sended to corresponding external parser when execution start" />
+          <CodeInput
+            language="json"
+            label="Configuration"
+            {...form.inputProps("jsonConfig")}
+            description="Json configuration sended to corresponding external parser when execution start"
+          />
 
           <div className="sheet-footer">
             <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>

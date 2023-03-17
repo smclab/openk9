@@ -1,6 +1,6 @@
 import React from "react";
 import * as monaco from "monaco-editor";
-import { BaseInputProps } from "./Form";
+import { BaseInputProps, InformationField } from "./Form";
 import prettier from "prettier/standalone";
 import parserTypeScript from "prettier/parser-typescript";
 
@@ -113,10 +113,12 @@ export function CodeInput({
   language,
   height = "200px",
   readonly,
+  description,
 }: BaseInputProps<string> & {
   language: MonacoLanguage;
   height?: string;
   readonly?: boolean;
+  description?: string;
 }) {
   const editorElementRef = React.useRef<HTMLDivElement>(null);
   const editorRef = React.useRef<{ editor?: monaco.editor.IStandaloneCodeEditor; model?: monaco.editor.ITextModel }>({});
@@ -156,9 +158,14 @@ export function CodeInput({
   }, [language, value, onChange]);
   return (
     <div className={`form-group ${validationMessages.length ? "has-warning" : ""}`}>
-      <label htmlFor={id}>
-        {label} {labelPostfix(language)}
-      </label>
+      <div style={{ display: "flex" }}>
+        <div>
+          <label htmlFor={id}>
+            {label} {labelPostfix(language)}
+          </label>
+        </div>
+        <div>{description && InformationField(description)}</div>
+      </div>
       <div className="form-control">
         <div ref={editorElementRef} style={{ height }} />
       </div>
