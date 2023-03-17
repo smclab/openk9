@@ -84,6 +84,13 @@ public class EntityManagerConsumer {
 
 		_logger.info(entityManagerPayload.toString());
 
+		JsonObject responsePayload =
+			entityManagerPayload.getJsonObject("payload");
+
+		JsonObject entitiesPayload = responsePayload.getJsonObject("entities");
+
+		entityManagerPayload.put("entities", entitiesPayload.getValue("entities"));
+
 		Payload request = entityManagerPayload.mapTo(Payload.class);
 
 		_logger.info(request.toString());
