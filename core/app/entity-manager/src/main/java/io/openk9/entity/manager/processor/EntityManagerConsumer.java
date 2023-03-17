@@ -222,6 +222,7 @@ public class EntityManagerConsumer {
 		}
 		catch (Exception e) {
 			transactionContext.rollbackTransaction();
+			_logger.error(e.getMessage(), e);
 			throw (RuntimeException) e;
 		}
 
