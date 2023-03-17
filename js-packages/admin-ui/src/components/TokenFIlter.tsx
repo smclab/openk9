@@ -71,7 +71,7 @@ export function TokenFilter() {
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
-        name: "",
+        name: Filters[0].title,
         description: Filters[0].description,
         jsonConfig: "",
       }),

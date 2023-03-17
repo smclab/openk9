@@ -70,7 +70,7 @@ export function Tokenizer() {
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
-        name: "",
+        name: TokenizerFilters[0].title,
         description: TokenizerFilters[0].description,
         jsonConfig: "",
       }),
