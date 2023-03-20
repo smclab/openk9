@@ -1087,7 +1087,7 @@ export function CronInput(props: BaseInputProps<string>) {
                 <label>Preset</label>
                 {description && InformationField(description)}
                 <ClaySelect value={value} onChange={(event) => onChange(event.currentTarget.value)}>
-                  <ClaySelect.Option label="Custom" value="" />
+                  <ClaySelect.Option label="Custom" value="      " />
                   <ClaySelect.Option label="Every 5 Minutes" value="0 */5 * ? * * *" />
                   <ClaySelect.Option label="Every 30 Minutes" value="0 */30 * ? * * *" />
                   <ClaySelect.Option label="Every Hour" value="0 0 * ? * * *" />
@@ -1113,13 +1113,13 @@ export function CronInput(props: BaseInputProps<string>) {
                 item
                 label="Hours"
                 {...scheduling.inputProps("hours")}
-                value={scheduling.inputProps("hours").value !== "undefined" ? scheduling.inputProps("hours").value : ""}
+                value={typeof scheduling.inputProps("hours").value !== "undefined" ? scheduling.inputProps("hours").value : ""}
               />
               <TextInput
                 item
                 label="Days of Month"
                 {...scheduling.inputProps("daysOfMonth")}
-                value={scheduling.inputProps("daysOfMonth").value !== "undefined" ? scheduling.inputProps("daysOfMonth").value : ""}
+                value={typeof scheduling.inputProps("daysOfMonth").value !== "undefined" ? scheduling.inputProps("daysOfMonth").value : ""}
               />
               <TextInput
                 item
@@ -1131,13 +1131,13 @@ export function CronInput(props: BaseInputProps<string>) {
                 item
                 label="Days of Week"
                 {...scheduling.inputProps("daysOfWeek")}
-                value={scheduling.inputProps("daysOfWeek").value !== "undefined" ? scheduling.inputProps("daysOfWeek").value : ""}
+                value={typeof scheduling.inputProps("daysOfWeek").value !== "undefined" ? scheduling.inputProps("daysOfWeek").value : ""}
               />
               <TextInput
                 item
                 label="Year"
                 {...scheduling.inputProps("year")}
-                value={scheduling.inputProps("year").value !== "undefined" ? scheduling.inputProps("year").value : ""}
+                value={typeof scheduling.inputProps("year").value !== "undefined" ? scheduling.inputProps("year").value : ""}
               />
             </ClayForm.Group>
           </fieldset>
