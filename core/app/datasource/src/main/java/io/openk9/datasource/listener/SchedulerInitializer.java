@@ -137,7 +137,7 @@ public class SchedulerInitializer {
 
 	public void createOrUpdateScheduler(String tenantName, Datasource datasource) {
 
-		schedulerInitializerActor.scheduleDataSource(tenantName, datasource);
+		schedulerInitializerActor.scheduleDataSource(tenantName, datasource.getId());
 
 	}
 
@@ -147,7 +147,7 @@ public class SchedulerInitializer {
 			schemaName,
 			s -> datasourceService
 				.findDatasourceByIdWithPluginDriver(datasourceId)
-				.invoke(d -> schedulerInitializerActor.triggerDataSource(schemaName, d))
+				.invoke(d -> schedulerInitializerActor.triggerDataSource(schemaName, d.getId()))
 				.replaceWithVoid()
 		);
 
@@ -155,7 +155,7 @@ public class SchedulerInitializer {
 
 	public void deleteScheduler(Datasource datasource) {
 		schedulerInitializerActor.unScheduleDataSource(
-			tenantResolver.getTenantName(), datasource);
+			tenantResolver.getTenantName(), datasource.getId());
 	}
 
 	@GrpcClient("tenantmanager")

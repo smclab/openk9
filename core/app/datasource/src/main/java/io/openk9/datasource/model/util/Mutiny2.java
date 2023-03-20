@@ -28,11 +28,7 @@ public class Mutiny2 {
 
 	public static <T> Uni<T> fetch(Mutiny.Session mutinySession, T association) {
 
-		if ( association == null ) {
-			return Uni.createFrom().nullItem();
-		}
-
-		if (mutinySession == null) {
+		if ( association == null || mutinySession == null) {
 			return Mutiny.fetch(association);
 		}
 
@@ -41,11 +37,7 @@ public class Mutiny2 {
 
 	public static <T> Uni<T> fetch(Mutiny.StatelessSession mutinySession, T association) {
 
-		if ( association == null ) {
-			return Uni.createFrom().nullItem();
-		}
-
-		if (mutinySession == null) {
+		if ( association == null || mutinySession == null) {
 			return Mutiny.fetch(association);
 		}
 
