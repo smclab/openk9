@@ -1598,4 +1598,8 @@ const styleModal = `
     .custom-modal__cancel {
       margin-right: 10px;
     }
+
+    :focus-visible {
+      outline: none;
+  }
   `;
