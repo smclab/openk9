@@ -39,4 +39,17 @@ public class Mutiny2 {
 		return mutinySession.fetch(association);
 	}
 
+	public static <T> Uni<T> fetch(Mutiny.StatelessSession mutinySession, T association) {
+
+		if ( association == null ) {
+			return Uni.createFrom().nullItem();
+		}
+
+		if (mutinySession == null) {
+			return Mutiny.fetch(association);
+		}
+
+		return mutinySession.fetch(association);
+	}
+
 }

@@ -137,8 +137,7 @@ public class SchedulerInitializer {
 
 	public void createOrUpdateScheduler(String tenantName, Datasource datasource) {
 
-		schedulerInitializerActor.scheduleDataSource(
-			tenantName, datasource);
+		schedulerInitializerActor.scheduleDataSource(tenantName, datasource);
 
 	}
 
