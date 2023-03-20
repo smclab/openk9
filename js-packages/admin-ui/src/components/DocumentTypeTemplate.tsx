@@ -117,15 +117,27 @@ export function DocumentTypeTemplate() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <EnumSelect label="Template Type" dict={TemplateType} {...form.inputProps("templateType")} 
-        description={"If template is written in Typescript or Javascript"}/>
+        <EnumSelect
+          label="Template Type"
+          dict={TemplateType}
+          {...form.inputProps("templateType")}
+          description={"If template is written in Typescript or Javascript"}
+        />
         {(() => {
           switch (form.inputProps("templateType").value) {
             case TemplateType.TypescriptSource: {
-              return <CodeInput label="Source" language="typescript-react" height="80vh" {...form.inputProps("source")} />;
+              return documentTypeTemplateQuery.data?.docTypeTemplate?.templateType === TemplateType.TypescriptSource ? (
+                <CodeInput label="Source" language="typescript-react" height="80vh" {...form.inputProps("source")} />
+              ) : (
+                <CodeInput label="Source" language="typescript-react" height="80vh" {...form.inputProps("source")} value="" />
+              );
             }
             case TemplateType.JavascriptSource: {
-              return <CodeInput label="Source" language="javascript-react" height="80vh" {...form.inputProps("source")} />;
+              return documentTypeTemplateQuery.data?.docTypeTemplate?.templateType === TemplateType.JavascriptCompiled ? (
+                <CodeInput label="Source" language="javascript-react" height="80vh" {...form.inputProps("source")} />
+              ) : (
+                <CodeInput label="Source" language="javascript-react" height="80vh" {...form.inputProps("source")} value="" />
+              );
             }
             case TemplateType.JavascriptCompiled: {
               return <CodeInput label="Compiled" readonly={true} language="javascript" height="80vh" {...form.inputProps("compiled")} />;
