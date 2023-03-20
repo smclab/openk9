@@ -1059,13 +1059,13 @@ export function CronInput(props: BaseInputProps<string>) {
   const scheduling = useCompoundFormField({
     ...props,
     initialValues: {
-      second: "",
-      minutes: "",
-      hours: "",
-      daysOfMonth: "",
-      month: "",
-      daysOfWeek: "",
-      year: "",
+      second: "0",
+      minutes: "0",
+      hours: "*",
+      daysOfMonth: "?",
+      month: "*",
+      daysOfWeek: "*",
+      year: "*",
     },
     serialize: React.useCallback(({ second, minutes, hours, daysOfMonth, month, daysOfWeek, year }) => {
       return `${second} ${minutes} ${hours} ${daysOfMonth} ${month} ${daysOfWeek} ${year}`;
@@ -1075,6 +1075,8 @@ export function CronInput(props: BaseInputProps<string>) {
       return { second, minutes, hours, daysOfMonth, month, daysOfWeek, year };
     }, []),
   });
+  if (value === "") onChange("0 0 * ? * * *");
+
   return (
     <React.Fragment>
       <ClayPanel displayTitle={label} displayType="secondary">
@@ -1095,13 +1097,48 @@ export function CronInput(props: BaseInputProps<string>) {
               </div>
             </ClayForm.Group>
             <ClayForm.Group className="form-group-autofit">
-              <TextInput item label="Second" {...scheduling.inputProps("second")} />
-              <TextInput item label="Minutes" {...scheduling.inputProps("minutes")} />
-              <TextInput item label="Hours" {...scheduling.inputProps("hours")} />
-              <TextInput item label="Days of Month" {...scheduling.inputProps("daysOfMonth")} />
-              <TextInput item label="Month" {...scheduling.inputProps("month")} />
-              <TextInput item label="Days of Week" {...scheduling.inputProps("daysOfWeek")} />
-              <TextInput item label="Year" {...scheduling.inputProps("year")} />
+              <TextInput
+                item
+                label="Second"
+                {...scheduling.inputProps("second")}
+                value={typeof scheduling.inputProps("second").value !== "undefined" ? scheduling.inputProps("second").value : ""}
+              />
+              <TextInput
+                item
+                label="Minutes"
+                {...scheduling.inputProps("minutes")}
+                value={typeof scheduling.inputProps("minutes").value !== "undefined" ? scheduling.inputProps("minutes").value : ""}
+              />
+              <TextInput
+                item
+                label="Hours"
+                {...scheduling.inputProps("hours")}
+                value={scheduling.inputProps("hours").value !== "undefined" ? scheduling.inputProps("hours").value : ""}
+              />
+              <TextInput
+                item
+                label="Days of Month"
+                {...scheduling.inputProps("daysOfMonth")}
+                value={scheduling.inputProps("daysOfMonth").value !== "undefined" ? scheduling.inputProps("daysOfMonth").value : ""}
+              />
+              <TextInput
+                item
+                label="Month"
+                {...scheduling.inputProps("month")}
+                value={scheduling.inputProps("month").value !== "undefined" ? scheduling.inputProps("month").value : ""}
+              />
+              <TextInput
+                item
+                label="Days of Week"
+                {...scheduling.inputProps("daysOfWeek")}
+                value={scheduling.inputProps("daysOfWeek").value !== "undefined" ? scheduling.inputProps("daysOfWeek").value : ""}
+              />
+              <TextInput
+                item
+                label="Year"
+                {...scheduling.inputProps("year")}
+                value={scheduling.inputProps("year").value !== "undefined" ? scheduling.inputProps("year").value : ""}
+              />
             </ClayForm.Group>
           </fieldset>
         </ClayPanel.Body>
