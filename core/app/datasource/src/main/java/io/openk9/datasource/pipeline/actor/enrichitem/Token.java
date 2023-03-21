@@ -97,6 +97,7 @@ public class Token {
 		else {
 			Map<String, TokenInfo> newMap = new HashMap<>(tokens);
 			newMap.remove(token, tokenInfo);
+			ctx.getLog().warn("Token expired: {}", token);
 			tokenInfo.replyTo.tell(TokenState.EXPIRED);
 			return initial(validityTokenMillis, newMap, ctx, cancellable);
 		}
@@ -107,6 +108,8 @@ public class Token {
 	private static Behavior<Command> onTick(
 		long validityTokenMillis, Map<String, TokenInfo> tokens,
 		ActorContext<Command> ctx, Cancellable cancellable) {
+
+		ctx.getLog().info("Start token cleanup");
 
 		if (tokens.isEmpty()) {
 			return Behaviors.same();
@@ -120,9 +123,12 @@ public class Token {
 				newTokens.put(entry.getKey(), value);
 			}
 			else {
+				ctx.getLog().warn("Token expired: {}", entry.getKey());
 				value.replyTo.tell(TokenState.EXPIRED);
 			}
 		}
+
+		ctx.getLog().info("token expire count: {}", tokens.size() - newTokens.size());
 
 		return initial(validityTokenMillis, newTokens, ctx, cancellable);
 	}
