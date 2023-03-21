@@ -45,6 +45,7 @@ import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -83,6 +84,10 @@ public class EntityManagerConsumer {
 	public void consume(JsonObject entityManagerPayload) {
 
 		Payload request = entityManagerPayload.mapTo(Payload.class);
+
+		if (request.getEntities() == null){
+			request.setEntities(new ArrayList<>());
+		}
 
 		_logger.info(request.toString());
 
