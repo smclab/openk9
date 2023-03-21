@@ -251,7 +251,7 @@ public class Scheduler {
 		String tenantName, long datasourceId, TransactionInvoker transactionInvoker,
 		ActorContext<Command> ctx, BiFunction<String, Datasource, Command> selfMessageCreator) {
 		VertxUtil.runOnContext(() ->
-			transactionInvoker.withStatelessTransaction(s ->
+			transactionInvoker.withStatelessTransaction(tenantName, s ->
 				s.createQuery(
 						"select d " +
 						"from Datasource d " +
