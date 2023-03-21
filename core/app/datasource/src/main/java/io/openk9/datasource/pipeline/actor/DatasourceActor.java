@@ -20,6 +20,7 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.spi.CDI;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -42,6 +43,7 @@ public class DatasourceActor {
 		GroovyActor.Response response) implements Command {}
 	private record EnrichItemSupervisorResponseWrapper(
 		EnrichItemSupervisor.Response response) implements Command {}
+	private record EnrichItemError(EnrichItem enrichItem, Throwable exception) implements Command {}
 	private record InternalResponseWrapper(JsonObject jsonObject) implements Command {}
 	private record InternalError(String error) implements Command {}
 	public sealed interface Response {}
@@ -202,11 +204,49 @@ public class DatasourceActor {
 		ActorRef<EnrichItemSupervisor.Command> enrichItemSupervisorRef =
 			ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
 
+
+		ctx.ask(
+			EnrichItemSupervisor.Response.class,
+			enrichItemSupervisorRef,
+			Duration.ofMinutes(5),
+			enrichItemReplyTo ->
+				new EnrichItemSupervisor.Execute(
+					enrichItem, dataPayload, enrichItemReplyTo),
+			(r, t) -> {
+				if (t != null) {
+					return new EnrichItemError(enrichItem, t);
+				}
+				else if (r instanceof EnrichItemSupervisor.Error) {
+					EnrichItemSupervisor.Error error =(EnrichItemSupervisor.Error)r;
+					return new EnrichItemError(enrichItem, new RuntimeException(error.error()));
+				}
+				else {
+					return new EnrichItemSupervisorResponseWrapper(r);
+				}
+			}
+		);
+
 		enrichItemSupervisorRef.tell(
 			new EnrichItemSupervisor.Execute(
 				enrichItem, dataPayload, enrichItemSupervisorWrapper));
 
 		return Behaviors.receive(Command.class)
+			.onMessage(EnrichItemError.class, param -> {
+
+				EnrichItem enrichItemError = param.enrichItem();
+
+				ctx.getLog().error("enrichItem: " + enrichItemError.getId() + " ERROR " + param.exception.getMessage());
+				ctx.getLog().warn("implement policy management, default policy is jump in next enrichItem");
+
+				if (!tail.isEmpty()) {
+					ctx.getLog().info("call next enrichItem");
+				}
+
+				return initPipeline(
+					ctx, supervisorActorRef, responseActorRef, replyTo,
+					dataPayload, datasourceModel, tail);
+
+			})
 			.onMessage(EnrichItemSupervisorResponseWrapper.class, garw -> {
 				EnrichItemSupervisor.Response response = garw.response;
 

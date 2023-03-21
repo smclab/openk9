@@ -35,8 +35,6 @@ public class OIDCTenantResolver implements TenantConfigResolver {
                     return null;
                 }
 
-                logger.info("tenant: " + tenantName);
-
                 final OidcTenantConfig config = new OidcTenantConfig();
 
                 config.setTenantId(tenant.realmName());
