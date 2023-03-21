@@ -202,7 +202,7 @@ function FilterCategory({
                   {result.map((suggestion, index) => {
                     const asSearchToken = mapSuggestionToSearchToken(
                       suggestion,
-                      false,
+                      true,
                     );
 
                     const isChecked = tokens.some((searchToken) =>
