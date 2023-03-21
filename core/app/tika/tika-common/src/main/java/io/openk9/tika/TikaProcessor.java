@@ -34,7 +34,6 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
@@ -86,180 +85,173 @@ public class TikaProcessor {
 
             boolean retainBinaries = enrichItemConfig.getBoolean("retain_binaries");
 
-            try(InputStream inputStream = new BufferedInputStream(fileManagerClient.download(resourceId, schemaName));) {
+            try {
 
-                try {
+                InputStream inputStream = new BufferedInputStream(fileManagerClient.download(resourceId, schemaName));
 
-                    MediaType mediaType = _detectors.detect(inputStream);
+                MediaType mediaType = _detectors.detect(inputStream);
 
-                    String metaTypeString = mediaType.toString();
+                String metaTypeString = mediaType.toString();
 
-                    logger.info("Detected type : " + metaTypeString + " for file: " + name);
+                logger.info("Detected type : " + metaTypeString + " for file: " + name);
 
-                    if (typeMapping != null &&
-                            typeMapping.containsKey(metaTypeString)) {
+                if (typeMapping != null &&
+                        typeMapping.containsKey(metaTypeString)) {
 
-                        String typeMappingValue =
-                                typeMapping.getString(metaTypeString);
+                    String typeMappingValue =
+                            typeMapping.getString(metaTypeString);
 
-                        Instant start = Instant.now();
+                    Instant start = Instant.now();
 
-                        TikaContent tikaContent = _tikaParser.parse(inputStream);
+                    TikaContent tikaContent = _tikaParser.parse(inputStream);
 
-                        Duration end =
-                                Duration.between(start, Instant.now());
+                    Duration end =
+                            Duration.between(start, Instant.now());
 
-                        logger.info("duration: " + end + " name: " + name);
+                    logger.info("duration: " + end + " name: " + name);
 
-                        TikaMetadata metadata = tikaContent.getMetadata();
+                    TikaMetadata metadata = tikaContent.getMetadata();
 
-                        String lastModified =
-                                metadata.getSingleValue("Last-Modified");
+                    String lastModified =
+                            metadata.getSingleValue("Last-Modified");
 
-                        String xParsedBy =
-                                metadata.getSingleValue("X-Parsed-By");
+                    String xParsedBy =
+                            metadata.getSingleValue("X-Parsed-By");
 
-                        String title =
-                            metadata.getSingleValue("title");
+                    String title =
+                        metadata.getSingleValue("title");
 
-                        if (xParsedBy != null) {
-                            logger.info(
-                                    "document parsed by: " + xParsedBy +
-                                            " name: " + name);
-                        }
-
-                        JsonObject responsePayload =
-                                response.getJsonObject("payload");
-
-                        JsonArray documentTypes =
-                                responsePayload.getJsonArray("documentTypes");
-
-                        if (documentTypes == null) {
-                            documentTypes = new JsonArray();
-                            responsePayload.put(
-                                    "documentTypes", documentTypes);
-                        }
-
-                        documentTypes.add(typeMappingValue);
-
-                        Boolean includeLastModified =
-                                enrichItemConfig.getBoolean("include_last_modified_date", true);
-
-                        if (lastModified != null && includeLastModified) {
-
-                            JsonObject file =
-                                    responsePayload.getJsonObject("file");
-
-                            if (file != null) {
-                                file.put("lastModifiedDate", lastModified);
-                            } else {
-                                responsePayload
-                                        .put(
-                                                "file",
-                                                new JsonObject()
-                                                        .put(
-                                                                "lastModifiedDate",
-                                                                lastModified));
-                            }
-                        }
-
-                        String contentType =
-                                metadata.getSingleValue(
-                                        HttpHeaders.CONTENT_TYPE);
-
-                        JsonObject document =
-                                responsePayload.getJsonObject("document");
-
-                        if (document == null) {
-                            document = new JsonObject();
-                            responsePayload.put("document", document);
-                            documentTypes.add("document");
-                        }
-
-                        Boolean includeContentType =
-                                enrichItemConfig.getBoolean("include_content_type", true);
-
-                        if (contentType != null && includeContentType) {
-                            document.put("contentType", contentType);
-                        }
-
-                        String text = tikaContent.getText();
-
-                        if (isOcr) {
-
-                            if (text.length() < characterLength) {
-                                return Tuple2.of(ocrReplyTo, jsonObject);
-                            }
-
-                        }
-
-                        text = text.replaceAll("\\s+", " ");
-
-                        document.put("content", text);
-
-                        if (text.length() > summaryLength && summaryLength > 0) {
-
-                            document.put("summary", text.substring(0, summaryLength));
-                        } else {
-                            document.put("summary", text);
-                        }
-
-                        text = text.replaceAll("\\n", " ");
-                        text = text.replaceAll("\\t", " ");
-
-                        if (document.getString("title") == null) {
-                            document.put("title", title);
-                        }
-
-                        if (text.length() > maxLength && maxLength > 0) {
-
-                            responsePayload.put(
-                                    "rawContent", text.substring(0, maxLength));
-
-                        } else {
-                            responsePayload.put("rawContent", text);
-                        }
-
-                        JsonObject resources =
-                                responsePayload.getJsonObject("resources");
-
-                        JsonArray binariesArray =
-                                resources.getJsonArray("binaries");
-                        binariesArray
-                                .getJsonObject(internalIndex)
-                                .put("contentType", contentType);
-
-                        if (!retainBinaries) {
-                            logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                            fileManagerClient.delete(resourceId, schemaName);
-                        }
-
-                        datasourceClient.sentToPipeline(replyTo, jsonObject);
-
-                        return Tuple2.of(replyTo, response);
-
+                    if (xParsedBy != null) {
+                        logger.info(
+                                "document parsed by: " + xParsedBy +
+                                        " name: " + name);
                     }
-                    else {
-                        if (!retainBinaries) {
-                            logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                            fileManagerClient.delete(resourceId, schemaName);
+
+                    JsonObject responsePayload =
+                            response.getJsonObject("payload");
+
+                    JsonArray documentTypes =
+                            responsePayload.getJsonArray("documentTypes");
+
+                    if (documentTypes == null) {
+                        documentTypes = new JsonArray();
+                        responsePayload.put(
+                                "documentTypes", documentTypes);
+                    }
+
+                    documentTypes.add(typeMappingValue);
+
+                    Boolean includeLastModified =
+                            enrichItemConfig.getBoolean("include_last_modified_date", true);
+
+                    if (lastModified != null && includeLastModified) {
+
+                        JsonObject file =
+                                responsePayload.getJsonObject("file");
+
+                        if (file != null) {
+                            file.put("lastModifiedDate", lastModified);
+                        } else {
+                            responsePayload
+                                    .put(
+                                            "file",
+                                            new JsonObject()
+                                                    .put(
+                                                            "lastModifiedDate",
+                                                            lastModified));
                         }
                     }
 
-                } catch (Exception e) {
+                    String contentType =
+                            metadata.getSingleValue(
+                                    HttpHeaders.CONTENT_TYPE);
+
+                    JsonObject document =
+                            responsePayload.getJsonObject("document");
+
+                    if (document == null) {
+                        document = new JsonObject();
+                        responsePayload.put("document", document);
+                        documentTypes.add("document");
+                    }
+
+                    Boolean includeContentType =
+                            enrichItemConfig.getBoolean("include_content_type", true);
+
+                    if (contentType != null && includeContentType) {
+                        document.put("contentType", contentType);
+                    }
+
+                    String text = tikaContent.getText();
+
+                    if (isOcr) {
+
+                        if (text.length() < characterLength) {
+                            return Tuple2.of(ocrReplyTo, jsonObject);
+                        }
+
+                    }
+
+                    text = text.replaceAll("\\s+", " ");
+
+                    document.put("content", text);
+
+                    if (text.length() > summaryLength && summaryLength > 0) {
+
+                        document.put("summary", text.substring(0, summaryLength));
+                    } else {
+                        document.put("summary", text);
+                    }
+
+                    text = text.replaceAll("\\n", " ");
+                    text = text.replaceAll("\\t", " ");
+
+                    if (document.getString("title") == null) {
+                        document.put("title", title);
+                    }
+
+                    if (text.length() > maxLength && maxLength > 0) {
+
+                        responsePayload.put(
+                                "rawContent", text.substring(0, maxLength));
+
+                    } else {
+                        responsePayload.put("rawContent", text);
+                    }
+
+                    JsonObject resources =
+                            responsePayload.getJsonObject("resources");
+
+                    JsonArray binariesArray =
+                            resources.getJsonArray("binaries");
+                    binariesArray
+                            .getJsonObject(internalIndex)
+                            .put("contentType", contentType);
+
                     if (!retainBinaries) {
                         logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
                         fileManagerClient.delete(resourceId, schemaName);
                     }
-                    logger.error(e.getMessage(), e);
+
+                    datasourceClient.sentToPipeline(replyTo, jsonObject);
+
+                    return Tuple2.of(replyTo, response);
+
+                }
+                else {
+                    if (!retainBinaries) {
+                        logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
+                        fileManagerClient.delete(resourceId, schemaName);
+                    }
                 }
 
+            } catch (Exception e) {
 
-            } catch (IOException e) {
                 if (!retainBinaries) {
                     logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
                     fileManagerClient.delete(resourceId, schemaName);
                 }
+
                 logger.error(e.getMessage(), e);
             }
 
