@@ -2,7 +2,7 @@ package io.openk9.auth.tenant.impl;
 
 import io.openk9.auth.tenant.TenantResolver;
 import io.vertx.core.Vertx;
-import org.slf4j.Logger;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,7 +20,7 @@ public class DefaultTenantResolver implements TenantResolver {
 		String tenantName = Vertx.currentContext().getLocal(TENANT_ID);
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("get tenant: {}", tenantName);
+			logger.debugf("get tenant: {}", tenantName);
 		}
 
 		return tenantName;
@@ -31,7 +31,7 @@ public class DefaultTenantResolver implements TenantResolver {
 	public void setTenant(String name) {
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("set tenant: {}" + name);
+			logger.debugf("set tenant: {}", name);
 		}
 
 		Vertx.currentContext().putLocal(TENANT_ID, name);
