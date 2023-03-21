@@ -226,10 +226,6 @@ public class DatasourceActor {
 			}
 		);
 
-		enrichItemSupervisorRef.tell(
-			new EnrichItemSupervisor.Execute(
-				enrichItem, dataPayload, enrichItemSupervisorWrapper));
-
 		return Behaviors.receive(Command.class)
 			.onMessage(EnrichItemError.class, param -> {
 
