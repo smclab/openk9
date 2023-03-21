@@ -36,6 +36,5 @@ public interface DatasourceClient {
 	@POST
 	@Path("/pipeline/callback/{token-id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	void send(@PathParam("token-id") String tokenId, JsonObject jsonObject);
-	
+	String sentToPipeline(@PathParam("token-id")String tokenId, JsonObject body);
 }

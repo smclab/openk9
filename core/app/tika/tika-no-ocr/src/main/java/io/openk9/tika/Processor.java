@@ -18,6 +18,7 @@
 package io.openk9.tika;
 
 import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
+import io.openk9.tika.client.datasource.DatasourceClient;
 import io.openk9.tika.config.TikaConfiguration;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.smallrye.reactive.messaging.annotations.Blocking;
@@ -37,13 +38,11 @@ import java.util.concurrent.CompletionStage;
 @ApplicationScoped
 public class Processor {
 
-	@Incoming("tika-no-ocr")
-	@Blocking
-	public CompletionStage<Void> process(EnrichPipelinePayload enrichPipelinePayload) {
+	public void process(JsonObject tikaPayload) {
 
 		Tuple2<String, JsonObject> response =
 			tikaProcessor.process(
-				enrichPipelinePayload.toJson(), true, tikaConfiguration.getCharacterLength(),
+				tikaPayload, true, tikaConfiguration.getCharacterLength(),
 				tikaConfiguration.getOcrRoutingKey());
 
 		if (Objects.equals(
@@ -62,12 +61,12 @@ public class Processor {
 			);
 
 			emitter.send(message);
-
-			return message.ack();
 		}
 
-		return null;
 	}
+
+	@Inject
+	DatasourceClient datasourceClient;
 
 	@Channel("tika-sender")
 	Emitter<JsonObject> emitter;

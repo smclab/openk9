@@ -20,28 +20,46 @@ package io.openk9.tika.web;
 import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
 import io.openk9.tika.Processor;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import io.vertx.core.json.JsonObject;
 
-@Path("/v1/process")
+@Path("/process")
 public class ProcessEndpoint {
+
+	@PostConstruct
+	public void init() {
+		_executorService = Executors.newFixedThreadPool(4);
+	}
+
+	@PreDestroy
+	public void destroy(){
+		_executorService.shutdown();
+	}
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.TEXT_PLAIN)
+
 	@Path("/process")
-	public String process(EnrichPipelinePayload enrichPipelinePayload) {
+	public void process(JsonObject payload) {
 
-		_processor.process(enrichPipelinePayload);
-
-		return "Processing started";
+		_executorService.execute(() -> {
+			_processor.process(payload);
+		});
 
 	}
 
 	@Inject
 	Processor _processor;
+
+	private ExecutorService _executorService;
+
 
 }

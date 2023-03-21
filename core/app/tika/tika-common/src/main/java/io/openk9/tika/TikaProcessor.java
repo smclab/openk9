@@ -234,7 +234,7 @@ public class TikaProcessor {
                             fileManagerClient.delete(resourceId, schemaName);
                         }
 
-                        datasourceClient.send(replyTo, jsonObject);
+                        datasourceClient.sentToPipeline(replyTo, jsonObject);
 
                         return Tuple2.of(replyTo, response);
 
@@ -265,7 +265,7 @@ public class TikaProcessor {
 
         }
 
-        datasourceClient.send(replyTo, jsonObject);
+        datasourceClient.sentToPipeline(replyTo, jsonObject);
 
         return Tuple2.of(replyTo, jsonObject);
 
