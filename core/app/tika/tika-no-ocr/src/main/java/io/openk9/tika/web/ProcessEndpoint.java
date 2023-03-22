@@ -46,7 +46,6 @@ public class ProcessEndpoint {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 
-	@Path("/process")
 	public void process(JsonObject payload) {
 
 		_executorService.execute(() -> {
