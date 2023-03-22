@@ -35,6 +35,7 @@ import io.openk9.entity.manager.dto.EntityRequest;
 import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.LoggerAggregator;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -86,10 +87,10 @@ public class EntityManagerConsumer {
 		JsonObject responsePayload =
 			entityManagerPayload.getJsonObject("payload");
 
-		JsonObject entitiesPayload = responsePayload.getJsonObject("entities");
+		JsonArray entitiesPayload = responsePayload.getJsonArray("entities");
 
 		if (entitiesPayload != null) {
-			entityManagerPayload.put("entities", entitiesPayload.getValue("entities"));
+			entityManagerPayload.put("entities", entitiesPayload);
 		}
 		else {
 			entityManagerPayload.put("entities", new ArrayList<>());
