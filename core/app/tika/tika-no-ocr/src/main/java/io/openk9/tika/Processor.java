@@ -65,9 +65,6 @@ public class Processor {
 
 	}
 
-	@Inject
-	DatasourceClient datasourceClient;
-
 	@Channel("tika-sender")
 	Emitter<JsonObject> emitter;
 
