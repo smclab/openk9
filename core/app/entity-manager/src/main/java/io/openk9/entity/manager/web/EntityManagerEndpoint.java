@@ -17,6 +17,7 @@
 
 package io.openk9.entity.manager.web;
 
+import io.openk9.entity.manager.dto.EntityManagerDataPayload;
 import io.openk9.entity.manager.processor.EntityManagerConsumer;
 import io.vertx.core.json.JsonObject;
 import org.jboss.logging.Logger;
@@ -47,7 +48,7 @@ public class EntityManagerEndpoint {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	public void consume(JsonObject payload) {
+	public void consume(EntityManagerDataPayload payload) {
 
 		_logger.debug(payload.toString());
 

@@ -30,6 +30,8 @@ import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.cache.model.EntityRelation;
 import io.openk9.entity.manager.cache.model.EntityRelationKey;
 import io.openk9.entity.manager.client.datasource.DatasourceClient;
+import io.openk9.entity.manager.dto.DataPayload;
+import io.openk9.entity.manager.dto.EntityManagerDataPayload;
 import io.openk9.entity.manager.dto.EntityManagerRequest;
 import io.openk9.entity.manager.dto.EntityRequest;
 import io.openk9.entity.manager.dto.Payload;
@@ -82,23 +84,16 @@ public class EntityManagerConsumer {
 	}
 
 
-	public void consume(JsonObject entityManagerPayload) {
+	public void consume(EntityManagerDataPayload entityManagerPayload) {
 
-		JsonObject responsePayload =
-			entityManagerPayload.getJsonObject("payload");
+		/*Payload request = entityManagerPayload.mapTo(Payload.class);
 
-		JsonArray entitiesPayload = responsePayload.getJsonArray("entities");
+		Object entitiesPayload =
+			entityManagerPayload.getPayload().getRest().get("entities");
 
-		if (entitiesPayload != null) {
-			entityManagerPayload.put("entities", entitiesPayload);
-		}
-		else {
-			entityManagerPayload.put("entities", new ArrayList<>());
-		}
+		DataPayload payload = entityManagerPayload.getPayload();
 
-		Payload request = entityManagerPayload.mapTo(Payload.class);
-
-		_logger.info(request.toString());
+		_logger.info(request.toString());*/
 
 		TransactionContext transactionContext =
 			_hazelcastInstance.newTransactionContext();
@@ -115,13 +110,13 @@ public class EntityManagerConsumer {
 			TransactionalMultiMap<DocumentKey, String> documentEntityMap =
 				transactionContext.getMultiMap("documentEntityMap");
 
-			EntityManagerRequest payload = request.getPayload();
+			DataPayload payload = entityManagerPayload.getPayload();
 			_loggerAggregator.emitLog(
 				"process ingestionId", payload.getIngestionId());
 
 			String tenantId = payload.getTenantId();
 			String ingestionId = payload.getIngestionId();
-			List<EntityRequest> entities = request.getEntities();
+			List<EntityRequest> entities = payload.getEntities();
 
 			Map<EntityKey, Entity> localEntityMap =
 				new HashMap<>(entities.size());
@@ -218,11 +213,11 @@ public class EntityManagerConsumer {
 
 			transactionContext.commitTransaction();
 
-			String replyTo = request.getReplyTo();
+			String replyTo = entityManagerPayload.getReplyTo();
 
 			_logger.info(entityManagerPayload.toString());
 
-			datasourceClient.sentToPipeline(replyTo, entityManagerPayload);
+			datasourceClient.sentToPipeline(replyTo, "{}");
 
 		}
 		catch (Exception e) {
