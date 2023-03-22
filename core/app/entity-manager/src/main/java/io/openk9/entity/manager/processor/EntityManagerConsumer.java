@@ -86,15 +86,6 @@ public class EntityManagerConsumer {
 
 	public void consume(EntityManagerDataPayload entityManagerPayload) {
 
-		/*Payload request = entityManagerPayload.mapTo(Payload.class);
-
-		Object entitiesPayload =
-			entityManagerPayload.getPayload().getRest().get("entities");
-
-		DataPayload payload = entityManagerPayload.getPayload();
-
-		_logger.info(request.toString());*/
-
 		TransactionContext transactionContext =
 			_hazelcastInstance.newTransactionContext();
 
@@ -116,7 +107,12 @@ public class EntityManagerConsumer {
 
 			String tenantId = payload.getTenantId();
 			String ingestionId = payload.getIngestionId();
+
 			List<EntityRequest> entities = payload.getEntities();
+
+			if (entities == null) {
+				entities = new ArrayList<>();
+			}
 
 			Map<EntityKey, Entity> localEntityMap =
 				new HashMap<>(entities.size());
@@ -214,8 +210,6 @@ public class EntityManagerConsumer {
 			transactionContext.commitTransaction();
 
 			String replyTo = entityManagerPayload.getReplyTo();
-
-			_logger.info(entityManagerPayload.toString());
 
 			datasourceClient.sentToPipeline(replyTo, "{}");
 
