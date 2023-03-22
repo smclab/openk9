@@ -60,6 +60,7 @@ public class DataPayload {
 			.resources(dataPayload.resources)
 			.acl(dataPayload.acl)
 			.rest(dataPayload.rest)
+			.indexName(dataPayload.indexName)
 			.build();
 	}
 
@@ -75,6 +76,7 @@ public class DataPayload {
 			.resources(resources)
 			.acl(acl)
 			.rest(rest)
+			.indexName(indexName)
 			.build();
 	}
 
