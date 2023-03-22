@@ -30,6 +30,7 @@ import { useToast } from "./ToastProvider";
 import { AddDataSourceToBucket, BucketsdataSources, RemoveDataSourceFromBucket } from "./BucketDataSource";
 import { ClassNameButton } from "../App";
 import { useModal } from "@clayui/core";
+import ClayLoadingIndicator from "@clayui/loading-indicator";
 
 const DataSourceQuery = gql`
   query DataSource($id: ID!) {
@@ -82,6 +83,7 @@ export function DataSource() {
   const { datasourceId = "new" } = useParams();
   const navigate = useNavigate();
   const showToast = useToast();
+  const [loading, setLoading] = React.useState(false);
   const { observer: observerGenerate, onOpenChange: onOpenChangeGenerate, open: openGenerate } = useModal();
   const { observer: observerTrigger, onOpenChange: onOpenChangeTrigger, open: openTrigger } = useModal();
   const { observer: observerReindex, onOpenChange: onOpenChangeReindex, open: openReindex } = useModal();
@@ -126,6 +128,33 @@ export function DataSource() {
   if (!datasourceId) return null;
   return (
     <React.Fragment>
+      {loading && (
+        <div
+          style={{
+            position: "absolute",
+            top: "0",
+            left: "0",
+            width: "100%",
+            height: "100%",
+            background: "rgb(0 0 0 / 0.3)",
+            zIndex: "2",
+          }}
+        >
+          <ClayLoadingIndicator
+            shape="squares"
+            style={{
+              position: "fixed",
+              zIndex: "2",
+              margin: "auto",
+              top: "50%",
+              left: "55%",
+              cursor: "wait",
+            }}
+            displayType="primary"
+            size="lg"
+          />
+        </div>
+      )}
       {openGenerate && (
         <SimpleModal
           observer={observerGenerate}
@@ -164,6 +193,17 @@ export function DataSource() {
           actionContinue={() => {
             reindexMutation.mutate(datasourceId);
             onOpenChangeReindex(false);
+            let count = 0;
+            setLoading(true);
+            const result = refetchDataIndex({
+              dataIndex: datasourceQuery.data?.datasource?.dataIndex?.id,
+              datasourceQuery,
+              count,
+              setLoading,
+            });
+            if (!result) {
+              showToast({ displayType: "danger", title: "error reindex", content: "" });
+            }
           }}
           actionCancel={() => {
             onOpenChangeReindex(false);
@@ -474,4 +514,29 @@ export function useGenerateDocumentTypesMutation() {
       },
     }
   );
+}
+
+function refetchDataIndex({
+  dataIndex,
+  datasourceQuery,
+  count,
+  setLoading,
+}: {
+  dataIndex: string | null | undefined;
+  datasourceQuery: any;
+  count: number;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+}): boolean {
+  if (dataIndex && count < 3) {
+    count++;
+    window.setTimeout(() => datasourceQuery.refetch(), 1000);
+    return refetchDataIndex({ dataIndex, datasourceQuery, count, setLoading });
+  } else {
+    if (count > 3) {
+      setLoading(false);
+      return false;
+    }
+    setLoading(false);
+    return true;
+  }
 }
