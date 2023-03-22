@@ -17,7 +17,6 @@
 
 package io.openk9.tika.web;
 
-import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
 import io.openk9.tika.Processor;
 
 import javax.annotation.PostConstruct;

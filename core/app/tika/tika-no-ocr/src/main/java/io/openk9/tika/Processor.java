@@ -17,23 +17,19 @@
 
 package io.openk9.tika;
 
-import io.openk9.datasource.processor.payload.EnrichPipelinePayload;
-import io.openk9.tika.client.datasource.DatasourceClient;
+
 import io.openk9.tika.config.TikaConfiguration;
 import io.smallrye.mutiny.tuples.Tuple2;
-import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Metadata;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Objects;
-import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class Processor {
