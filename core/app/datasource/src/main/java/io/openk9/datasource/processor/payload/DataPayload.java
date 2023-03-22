@@ -46,6 +46,7 @@ public class DataPayload {
 	private ResourcesPayload resources;
 	private Map<String, List<String>> acl;
 	private Map<String, Object> rest = new HashMap<>();
+	private String indexName;
 
 	public static DataPayload copy(DataPayload dataPayload) {
 		return DataPayload.builder()

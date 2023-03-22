@@ -123,6 +123,8 @@ public class DatasourceActor {
 			return Behaviors.same();
 		}
 
+		dataPayload.setIndexName(dataIndex.getName());
+
 		EnrichPipeline enrichPipeline = datasource.getEnrichPipeline();
 
 		Set<EnrichPipelineItem> enrichPipelineItems;
