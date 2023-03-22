@@ -83,11 +83,19 @@ public class EntityManagerConsumer {
 
 	public void consume(JsonObject entityManagerPayload) {
 
-		Payload request = entityManagerPayload.mapTo(Payload.class);
+		JsonObject responsePayload =
+			entityManagerPayload.getJsonObject("payload");
 
-		if (request.getEntities() == null){
-			request.setEntities(new ArrayList<>());
+		JsonObject entitiesPayload = responsePayload.getJsonObject("entities");
+
+		if (entitiesPayload != null) {
+			entityManagerPayload.put("entities", entitiesPayload.getValue("entities"));
 		}
+		else {
+			entityManagerPayload.put("entities", new ArrayList<>());
+		}
+
+		Payload request = entityManagerPayload.mapTo(Payload.class);
 
 		_logger.info(request.toString());
 
