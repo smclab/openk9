@@ -198,19 +198,15 @@ public class DatasourceActor {
 		String jsonPath = enrichItem.getJsonPath();
 		EnrichItem.BehaviorMergeType behaviorMergeType = enrichItem.getBehaviorMergeType();
 
-		ActorRef<EnrichItemSupervisor.Response> enrichItemSupervisorWrapper =
-			ctx.messageAdapter(
-				EnrichItemSupervisor.Response.class,
-				EnrichItemSupervisorResponseWrapper::new);
-
 		ActorRef<EnrichItemSupervisor.Command> enrichItemSupervisorRef =
 			ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
 
+		Long requestTimeout = enrichItem.getRequestTimeout();
 
 		ctx.ask(
 			EnrichItemSupervisor.Response.class,
 			enrichItemSupervisorRef,
-			Duration.ofMinutes(5),
+			Duration.ofMillis(requestTimeout),
 			enrichItemReplyTo ->
 				new EnrichItemSupervisor.Execute(
 					enrichItem, dataPayload, enrichItemReplyTo),
@@ -233,16 +229,46 @@ public class DatasourceActor {
 
 				EnrichItem enrichItemError = param.enrichItem();
 
-				ctx.getLog().error("enrichItem: " + enrichItemError.getId() + " ERROR " + param.exception.getMessage());
-				ctx.getLog().warn("implement policy management, default policy is jump in next enrichItem");
+				EnrichItem.BehaviorOnError behaviorOnError =
+					enrichItem.getBehaviorOnError();
 
-				if (!tail.isEmpty()) {
-					ctx.getLog().info("call next enrichItem");
+				switch (behaviorOnError) {
+					case SKIP -> {
+
+						logger.info(
+							"behaviorOnError is SKIP, call next enrichItem: " + enrichItemError.getId());
+
+						if (!tail.isEmpty()) {
+							ctx.getLog().info("call next enrichItem");
+						}
+
+						return initPipeline(
+							ctx, supervisorActorRef, responseActorRef, replyTo,
+							dataPayload, datasourceModel, tail);
+
+					}
+					case FAIL -> {
+
+						logger.info(
+							"behaviorOnError is FAIL, stop pipeline: " + enrichItemError.getId());
+
+						Throwable throwable = param.exception;
+
+						ctx.getSelf().tell(
+							new InternalError(throwable.getMessage()));
+
+						return Behaviors.same();
+					}
+					default -> {
+
+						ctx.getSelf().tell(
+							new InternalError(
+								"behaviorOnError is not valid: " + behaviorOnError));
+
+						return Behaviors.same();
+
+					}
 				}
-
-				return initPipeline(
-					ctx, supervisorActorRef, responseActorRef, replyTo,
-					dataPayload, datasourceModel, tail);
 
 			})
 			.onMessage(EnrichItemSupervisorResponseWrapper.class, garw -> {

@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -52,4 +53,10 @@ public class EnrichItemDTO extends K9EntityDTO {
 	private String jsonPath;
 	@NotNull
 	private EnrichItem.BehaviorMergeType behaviorMergeType;
+	@Min(1_000)
+	@NotNull
+	private Long requestTimeout;
+	@NotNull
+	private EnrichItem.BehaviorOnError behaviorOnError;
+
 }

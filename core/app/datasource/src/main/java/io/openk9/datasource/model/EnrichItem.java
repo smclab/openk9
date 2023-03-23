@@ -67,8 +67,20 @@ public class EnrichItem extends K9Entity {
 	@Column(name = "behavior_merge_type", nullable = false)
 	private BehaviorMergeType behaviorMergeType;
 
+	@Column(name = "request_timeout", nullable = false)
+	private Long requestTimeout;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "behavior_on_error", nullable = false)
+	private BehaviorOnError behaviorOnError;
+
+
 	public enum EnrichItemType {
 		HTTP_ASYNC, HTTP_SYNC, GROOVY_SCRIPT
+	}
+
+	public enum BehaviorOnError {
+		SKIP, FAIL
 	}
 
 	public enum BehaviorMergeType {
