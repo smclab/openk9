@@ -15,6 +15,12 @@ export const EnrichItemsQuery = gql`
           description
           type
           serviceName
+          jsonConfig
+          validationScript
+          behaviorMergeType
+          jsonPath
+          behaviorOnError
+          requestTimeout
         }
       }
       pageInfo {

@@ -2,9 +2,15 @@ import React from "react";
 import { gql } from "@apollo/client";
 import ClayForm from "@clayui/form";
 import { useNavigate, useParams } from "react-router-dom";
-import { BehaviorMergeType, EnrichItemType, useCreateOrUpdateEnrichItemMutation, useEnrichItemQuery } from "../graphql-generated";
+import {
+  BehaviorMergeType,
+  BehaviorOnError,
+  EnrichItemType,
+  useCreateOrUpdateEnrichItemMutation,
+  useEnrichItemQuery,
+} from "../graphql-generated";
 import { EnrichItemsQuery } from "./EnrichItems";
-import { EnumSelect, fromFieldValidators, TextArea, TextInput, useForm } from "./Form";
+import { EnumSelect, fromFieldValidators, NumberInput, TextArea, TextInput, useForm } from "./Form";
 import { CodeInput } from "./CodeInput";
 import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
@@ -24,6 +30,8 @@ const EnrichItemQuery = gql`
       validationScript
       behaviorMergeType
       jsonPath
+      behaviorOnError
+      requestTimeout
     }
   }
 `;
@@ -39,6 +47,8 @@ gql`
     $validationScript: String
     $behaviorMergeType: BehaviorMergeType!
     $jsonPath: String!
+    $behaviorOnError: BehaviorOnError!
+    $requestTimeout: BigInteger!
   ) {
     enrichItem(
       id: $id
@@ -51,6 +61,8 @@ gql`
         validationScript: $validationScript
         behaviorMergeType: $behaviorMergeType
         jsonPath: $jsonPath
+        behaviorOnError: $behaviorOnError
+        requestTimeout: $requestTimeout
       }
     ) {
       entity {
@@ -74,7 +86,12 @@ export function EnrichItem() {
     skip: !enrichItemId || enrichItemId === "new",
   });
   const [createOrUpdateEnrichItemMutate, createOrUpdateEnrichItemMutation] = useCreateOrUpdateEnrichItemMutation({
-    refetchQueries: [EnrichItemsQuery, AssociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQuery],
+    refetchQueries: [
+      EnrichItemQuery,
+      EnrichItemsQuery,
+      AssociatedEnrichPipelineEnrichItemsQuery,
+      UnassociatedEnrichPipelineEnrichItemsQuery,
+    ],
     onCompleted(data) {
       if (data.enrichItem?.entity) {
         if (enrichItemId === "new") {
@@ -97,6 +114,8 @@ export function EnrichItem() {
         validationScript: "",
         behaviorMergeType: BehaviorMergeType.Merge,
         jsonPath: "",
+        requestTimeout: 0,
+        behaviorOnError: BehaviorOnError.Skip,
       }),
       []
     ),
@@ -120,10 +139,16 @@ export function EnrichItem() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <EnumSelect label="Type" dict={EnrichItemType} {...form.inputProps("type")} />
-        <EnumSelect label="Behavior Merge Type" dict={BehaviorMergeType} {...form.inputProps("behaviorMergeType")} />
+        <NumberInput
+          label="Request Timeout"
+          {...form.inputProps("requestTimeout")}
+          description={"the value is expressed in milliseconds"}
+        />
         <TextInput label="Service Name" {...form.inputProps("serviceName")} description={"Url where enrich service listen"} />
         <TextInput label="Json Path" {...form.inputProps("jsonPath")} />
+        <EnumSelect label="Type" dict={EnrichItemType} {...form.inputProps("type")} />
+        <EnumSelect label="Behavior Merge Type" dict={BehaviorMergeType} {...form.inputProps("behaviorMergeType")} />
+        <EnumSelect label="Behavior On Error" dict={BehaviorOnError} {...form.inputProps("behaviorOnError")} />
         <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
         <CodeInput language="javascript" label="Validation Script" {...form.inputProps("validationScript")} />
         <div className="sheet-footer">
