@@ -235,7 +235,7 @@ public class TikaProcessor {
 
                     logger.debug(response.toString());
 
-                    datasourceClient.sentToPipeline(replyTo, response);
+                    datasourceClient.sentToPipeline(replyTo, response.toString());
 
                     return Tuple2.of(replyTo, response);
 
@@ -259,7 +259,7 @@ public class TikaProcessor {
 
         }
 
-        datasourceClient.sentToPipeline(replyTo, jsonObject);
+        datasourceClient.sentToPipeline(replyTo, jsonObject.toString());
 
         return Tuple2.of(replyTo, jsonObject);
 
