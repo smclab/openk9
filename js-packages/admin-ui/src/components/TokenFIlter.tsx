@@ -418,4 +418,24 @@ const Filters = [
 
     }`,
   },
+  {
+    title: "synonym",
+    description:
+      "The synonym token filter allows to easily handle synonyms during the analysis process. Synonyms are configured using a configuration file.",
+    Json: `
+    {
+      "type": "synonym",
+      "expand": true,
+      "lenient": false,
+      "synonyms": []
+    }`,
+    visible: "false",
+    descriptionAttribute: `
+    {
+      "type":"type of filter",
+      "expand": "Expand",
+      "lenient": "If true ignores exceptions while parsing the synonym configuration. It is important to note that only those synonym rules which cannot get parsed are ignored.",
+      "synonyms": "Synonyms based on WordNet format can be declared using format: s(100000001,1,'abstain',v,1,0)."
+    }`,
+  },
 ];
