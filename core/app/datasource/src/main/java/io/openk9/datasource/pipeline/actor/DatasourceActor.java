@@ -7,6 +7,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
