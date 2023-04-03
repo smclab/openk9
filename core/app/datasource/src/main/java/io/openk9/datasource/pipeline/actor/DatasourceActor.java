@@ -259,6 +259,15 @@ public class DatasourceActor {
 
 						return Behaviors.same();
 					}
+					case REJECT -> {
+
+						logger.error(
+							"behaviorOnError is REJECT, stop pipeline: " + enrichItemError.getId(), param.exception);
+
+						replyTo.tell(Success.INSTANCE);
+
+						return Behaviors.stopped();
+					}
 					default -> {
 
 						ctx.getSelf().tell(

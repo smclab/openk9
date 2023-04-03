@@ -80,7 +80,7 @@ public class EnrichItem extends K9Entity {
 	}
 
 	public enum BehaviorOnError {
-		SKIP, FAIL
+		SKIP, FAIL, REJECT
 	}
 
 	public enum BehaviorMergeType {
