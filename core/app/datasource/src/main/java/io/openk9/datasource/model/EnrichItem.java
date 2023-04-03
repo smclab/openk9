@@ -53,8 +53,8 @@ public class EnrichItem extends K9Entity {
 	private String serviceName;
 
 	@Lob
-	@Column(name = "validation_script")
-	private String validationScript;
+	@Column(name = "script")
+	private String script;
 
 	@Lob
 	@Column(name = "json_config")

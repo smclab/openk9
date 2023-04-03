@@ -19,7 +19,6 @@ package io.openk9.datasource.model.dto;
 
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.validation.js.JavascriptScript;
 import io.openk9.datasource.validation.json.Json;
 import io.openk9.datasource.validation.json.JsonPath;
 import lombok.EqualsAndHashCode;
@@ -43,8 +42,7 @@ public class EnrichItemDTO extends K9EntityDTO {
 	@NotNull
 	@NotEmpty
 	private String serviceName;
-	@JavascriptScript
-	private String validationScript;
+	private String script;
 	@Json
 	private String jsonConfig;
 	@NotNull
