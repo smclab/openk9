@@ -11,7 +11,6 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
-import io.openk9.datasource.pipeline.actor.enrichitem.GroovyActor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -21,6 +20,9 @@ import org.slf4j.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -35,12 +37,8 @@ public class DatasourceActor {
 	private record DatasourceModelError(Throwable exception) implements Command {}
 	private record CreateRandomDataIndex(
 		io.openk9.datasource.model.Datasource datasource) implements Command {}
-	private record SupervisorResponseWrapper(
-		HttpSupervisor.Response response) implements Command {}
 	private record IndexWriterResponseWrapper(
 		IndexWriterActor.Response response) implements Command {}
-	private record GroovyActorResponseWrapper(
-		GroovyActor.Response response) implements Command {}
 	private record EnrichItemSupervisorResponseWrapper(
 		EnrichItemSupervisor.Response response) implements Command {}
 	private record EnrichItemError(EnrichItem enrichItem, Throwable exception) implements Command {}
@@ -99,7 +97,8 @@ public class DatasourceActor {
 
 			})
 			.onMessage(DatasourceModel.class, datasourceModel -> onDatasourceModel(
-				ctx, supervisorActorRef, responseActorRef, replyTo, dataPayload, datasourceModel))
+				ctx, supervisorActorRef, responseActorRef, replyTo, dataPayload, transactionInvoker,
+				datasourceModel))
 			.build();
 	}
 
@@ -108,7 +107,7 @@ public class DatasourceActor {
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<IndexWriterActor.Response> responseActorRef,
 		ActorRef<Response> replyTo, DataPayload dataPayload,
-		DatasourceModel datasourceModel) {
+		TransactionInvoker transactionInvoker, DatasourceModel datasourceModel) {
 
 		io.openk9.datasource.model.Datasource datasource =
 			datasourceModel.datasource;
@@ -120,6 +119,21 @@ public class DatasourceActor {
 		if (dataIndex == null) {
 			log.info("datasource with id {} has no dataIndex, start random creation", datasource.getId());
 			ctx.getSelf().tell(new CreateRandomDataIndex(datasource));
+			return Behaviors.same();
+		}
+
+		OffsetDateTime lastIngestionDate = datasource.getLastIngestionDate();
+		long parsingDate = dataPayload.getParsingDate();
+
+		OffsetDateTime offsetDateTime =
+			OffsetDateTime.ofInstant(Instant.ofEpochMilli(parsingDate),
+				ZoneOffset.UTC);
+
+		if (lastIngestionDate == null || !lastIngestionDate.isEqual(offsetDateTime)) {
+			log.info("update last ingestion date for datasource with id {}", datasource.getId());
+			datasource.setLastIngestionDate(offsetDateTime);
+			mergeDatasource(
+				ctx.getSelf(), dataPayload.getTenantId(), transactionInvoker, datasource);
 			return Behaviors.same();
 		}
 
@@ -380,13 +394,19 @@ public class DatasourceActor {
 		ctx.getLog().info(
 			"creating random dataIndex: {} for datasource: {}", indexName, datasource.getId());
 
+		mergeDatasource(ctx.getSelf(), tenantId, transactionInvoker, datasource);
+
+		return Behaviors.same();
+	}
+
+	private static void mergeDatasource(
+		ActorRef<Command> self, String tenantId,
+		TransactionInvoker transactionInvoker, Datasource datasource) {
 		VertxUtil.runOnContext(() ->
 			transactionInvoker
 				.withTransaction(tenantId, s -> s.merge(datasource))
-				.invoke(d -> ctx.getSelf().tell(new DatasourceModel(d)))
+				.invoke(d -> self.tell(new DatasourceModel(d)))
 		);
-
-		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onCreatePipelineContext(
