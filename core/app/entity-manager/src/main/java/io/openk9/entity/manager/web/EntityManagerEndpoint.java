@@ -19,12 +19,9 @@ package io.openk9.entity.manager.web;
 
 import io.openk9.entity.manager.dto.EntityManagerDataPayload;
 import io.openk9.entity.manager.processor.EntityManagerConsumer;
-import io.vertx.core.json.JsonObject;
-import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -61,6 +58,4 @@ public class EntityManagerEndpoint {
 
 	private ExecutorService _executorService;
 
-	@Inject
-	Logger _logger;
 }

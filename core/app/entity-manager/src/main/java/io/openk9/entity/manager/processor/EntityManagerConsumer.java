@@ -32,13 +32,9 @@ import io.openk9.entity.manager.cache.model.EntityRelationKey;
 import io.openk9.entity.manager.client.datasource.DatasourceClient;
 import io.openk9.entity.manager.dto.DataPayload;
 import io.openk9.entity.manager.dto.EntityManagerDataPayload;
-import io.openk9.entity.manager.dto.EntityManagerRequest;
 import io.openk9.entity.manager.dto.EntityRequest;
-import io.openk9.entity.manager.dto.Payload;
 import io.openk9.entity.manager.dto.RelationRequest;
 import io.openk9.entity.manager.util.LoggerAggregator;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
