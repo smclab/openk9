@@ -18,6 +18,7 @@
 package io.openk9.resources.validator.web;
 
 import io.openk9.resources.validator.ResourcesValidatorProcessor;
+import io.openk9.resources.validator.dto.ResourcesValidatorDataPayload;
 import io.vertx.core.json.JsonObject;
 
 import javax.annotation.PostConstruct;
@@ -46,7 +47,7 @@ public class ProcessEndpoint {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 
-	public void process(JsonObject payload) {
+	public void process(ResourcesValidatorDataPayload payload) {
 
 		_executorService.execute(() -> {
 			_processor.consume(payload);

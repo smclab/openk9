@@ -19,9 +19,10 @@ package io.openk9.resources.validator;
 
 import io.openk9.resources.validator.client.datasource.DatasourceClient;
 import io.openk9.resources.validator.client.filemanager.FileManagerClient;
+import io.openk9.resources.validator.dto.BinaryPayload;
+import io.openk9.resources.validator.dto.DataPayload;
+import io.openk9.resources.validator.dto.ResourcesValidatorDataPayload;
 import io.quarkus.runtime.Startup;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.search.SearchRequest;
@@ -48,20 +49,20 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 @Startup
 public class ResourcesValidatorProcessor {
 
-	public void consume(JsonObject resourcesValidatorPayload) {
+	public void consume(ResourcesValidatorDataPayload resourcesValidatorPayload) {
 
 
-		String replyTo = resourcesValidatorPayload.getString("replyTo");
+		String replyTo = resourcesValidatorPayload.getReplyTo();
 
-		JsonObject payload = resourcesValidatorPayload.getJsonObject("payload");
+		DataPayload payload = resourcesValidatorPayload.getPayload();
 
-		String schemaName = payload.getString("tenantId");
+		String schemaName = payload.getTenantId();
 
-		String indexName = payload.getString("indexName");
+		String indexName = payload.getIndexName();
 
-		Long datasourceId = payload.getLong("datasourceId");
+		Long datasourceId = payload.getDatasourceId();
 
-		String contentId = payload.getString("contentId");
+		String contentId = payload.getContentId();
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -81,12 +82,11 @@ public class ResourcesValidatorProcessor {
 
 		searchRequest.source(searchSourceBuilder);
 
-		JsonArray binaries =
+		List<BinaryPayload> binaries =
 			payload
-				.getJsonObject("resources")
-				.getJsonArray("binaries");
+				.getResources().getBinaries();
 
-		String rawContent = payload.getString("rawContent");
+		String rawContent = payload.getRawContent();
 
 		List<Integer> hashCodes = _getHashCodes(rawContent, binaries, schemaName);
 
@@ -117,15 +117,14 @@ public class ResourcesValidatorProcessor {
 						if (hashCodes.size() == documentHashCodesList.size() &&
 							hashCodes.containsAll(documentHashCodesList)) {
 
-							for (int i = 0; i < binaries.size(); i++) {
+							binaries.forEach(binaryPayload -> {
 
 								String resourceId =
-									binaries.getJsonObject(i).getString(
-										"resourceId");
+									binaryPayload.getResourceId();
 
 								fileManagerClient.delete(
 									resourceId, schemaName);
-							}
+							});
 
 							logger.info(
 								"document found. dropped message with contentId: "
@@ -146,7 +145,7 @@ public class ResourcesValidatorProcessor {
 				logger.info("Index wit name: " + indexName + " not exist. Item go to next enrich step.");
 			}
 
-			payload.put("hashCodes", hashCodes);
+			payload.setHashCodes(hashCodes);
 
 			datasourceClient.sentToPipeline(replyTo, payload.toString());
 
@@ -159,7 +158,7 @@ public class ResourcesValidatorProcessor {
 
 	}
 
-	private List<Integer> _getHashCodes(String rawContent, JsonArray binaries, String schemaName) {
+	private List<Integer> _getHashCodes(String rawContent,  List<BinaryPayload> binaries, String schemaName) {
 
 		if (rawContent == null && (binaries == null || binaries.isEmpty())) {
 			return List.of();
@@ -169,11 +168,10 @@ public class ResourcesValidatorProcessor {
 
 		if (binaries != null) {
 
-			for (int i = 0; i < binaries.size(); i++) {
+			binaries.forEach(binaryPayload -> {
 
 				try {
-					String resourceId =
-						binaries.getJsonObject(i).getString("resourceId");
+					String resourceId = binaryPayload.getResourceId();
 
 					InputStream inputStream =
 						fileManagerClient.download(resourceId, schemaName);
@@ -195,8 +193,8 @@ public class ResourcesValidatorProcessor {
 				catch (Exception e) {
 					logger.error(e.getMessage(), e);
 				}
-			}
 
+			});
 		}
 
 		if (rawContent != null) {

@@ -26,6 +26,11 @@
       <artifactId>quarkus-arc</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>io.openk9.common</groupId>
       <artifactId>resources-common</artifactId>
     </dependency>
