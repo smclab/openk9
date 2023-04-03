@@ -50,8 +50,6 @@ public class EntityManagerEndpoint {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void consume(EntityManagerDataPayload payload) {
 
-		_logger.debug(payload.toString());
-
 		_executorService.execute(() -> {
 			entityManagerConsumer.consume(payload);
 		});

@@ -237,6 +237,8 @@ public class TikaProcessor {
 
                     datasourceClient.sentToPipeline(replyTo, response.toString());
 
+                    logger.info("Send message to datasource with token: " + replyTo);
+
                     return Tuple2.of(replyTo, response);
 
                 }
@@ -260,6 +262,8 @@ public class TikaProcessor {
         }
 
         datasourceClient.sentToPipeline(replyTo, jsonObject.toString());
+
+        logger.info("Send message to datasource with token: " + replyTo);
 
         return Tuple2.of(replyTo, jsonObject);
 

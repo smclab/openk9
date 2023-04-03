@@ -213,6 +213,8 @@ public class EntityManagerConsumer {
 
 			datasourceClient.sentToPipeline(replyTo, "{}");
 
+			_logger.info("Send message to datasource with token: " + replyTo);
+
 		}
 		catch (Exception e) {
 			transactionContext.rollbackTransaction();
