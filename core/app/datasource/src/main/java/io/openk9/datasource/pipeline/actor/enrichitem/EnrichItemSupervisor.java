@@ -109,7 +109,7 @@ public class EnrichItemSupervisor {
 
 		groovyActor.tell(
 			new GroovyActor.Execute(
-				dataPayload, enrichItem.getValidationScript(),
+				dataPayload, enrichItem.getScript(),
 				responseActorRef)
 		);
 
