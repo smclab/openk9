@@ -160,30 +160,26 @@ public class ResourcesValidatorProcessor {
 
 	private List<Integer> _getHashCodes(String rawContent,  List<BinaryPayload> binaries, String schemaName) {
 
-		if (rawContent == null && (binaries == null || binaries.isEmpty())) {
+		if (rawContent == null && binaries == null) {
 			return List.of();
 		}
 
 		List<Integer> hashCodes = new ArrayList<>();
 
+		if (rawContent != null) {
+			hashCodes.add(rawContent.hashCode());
+		}
+
 		if (binaries != null) {
 
-			binaries.forEach(binaryPayload -> {
+			for (BinaryPayload binaryPayload : binaries) {
 
-				try {
-					String resourceId = binaryPayload.getResourceId();
+				String resourceId = binaryPayload.getResourceId();
 
-					InputStream inputStream =
-						fileManagerClient.download(resourceId, schemaName);
+				try (InputStream inputStream =
+						 fileManagerClient.download(resourceId, schemaName);) {
 
-					byte[] sourceBytes;
-
-					try {
-						sourceBytes = IOUtils.toByteArray(inputStream);
-					}
-					catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+					byte[] sourceBytes = IOUtils.toByteArray(inputStream);
 
 					String encodedString =
 						Base64.getEncoder().encodeToString(sourceBytes);
@@ -193,12 +189,8 @@ public class ResourcesValidatorProcessor {
 				catch (Exception e) {
 					logger.error(e.getMessage(), e);
 				}
+			}
 
-			});
-		}
-
-		if (rawContent != null) {
-			hashCodes.add(rawContent.hashCode());
 		}
 
 		return hashCodes;
