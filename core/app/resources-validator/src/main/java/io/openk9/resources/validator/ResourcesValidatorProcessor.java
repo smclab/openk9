@@ -17,25 +17,18 @@
 
 package io.openk9.resources.validator;
 
+import io.openk9.resources.validator.client.datasource.DatasourceClient;
 import io.openk9.resources.validator.client.filemanager.FileManagerClient;
 import io.quarkus.runtime.Startup;
-import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Message;
-import org.eclipse.microprofile.reactive.messaging.Metadata;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -47,29 +40,20 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.CompletionStage;
 
 import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.scriptQuery;
 
 @ApplicationScoped
 @Startup
 public class ResourcesValidatorProcessor {
 
-	@Incoming("resources-validator-incoming")
-	public CompletionStage<Void> consume(Message<?> message) {
+	public void consume(JsonObject resourcesValidatorPayload) {
 
-		Object obj = message.getPayload();
 
-		JsonObject jsonObject =
-			obj instanceof JsonObject
-				? (JsonObject) obj
-				: new JsonObject(new String((byte[]) obj));
+		String replyTo = resourcesValidatorPayload.getString("replyTo");
 
-		String replyTo = jsonObject.getString("replyTo");
-
-		JsonObject payload = jsonObject.getJsonObject("payload");
+		JsonObject payload = resourcesValidatorPayload.getJsonObject("payload");
 
 		String schemaName = payload.getString("tenantId");
 
@@ -146,7 +130,12 @@ public class ResourcesValidatorProcessor {
 							logger.info(
 								"document found. dropped message with contentId: "
 								+ contentId);
-							return message.ack();
+
+							datasourceClient.sentToPipeline(replyTo, "{}");
+
+							logger.info("Send message to datasource with token: " + replyTo);
+
+							return;
 						}
 
 					}
@@ -159,24 +148,13 @@ public class ResourcesValidatorProcessor {
 
 			payload.put("hashCodes", hashCodes);
 
-			emitter.send(
-				Message.of(
-					jsonObject,
-					Metadata.of(
-						new OutgoingRabbitMQMetadata.Builder()
-							.withRoutingKey(replyTo)
-							.withContentType("application/json")
-							.build()
-					)
-				)
-			);
+			datasourceClient.sentToPipeline(replyTo, payload.toString());
 
-			return message.ack();
+			logger.info("Send message to datasource with token: " + replyTo);
 
 		}
 		catch (IOException e) {
-			// logger.error(e.getMessage(), e);
-			return message.nack(e);
+			logger.error(e.getMessage(), e);
 		}
 
 	}
@@ -229,10 +207,6 @@ public class ResourcesValidatorProcessor {
 	}
 
 	@Inject
-	@Channel("resources-validator-outgoing")
-	Emitter<JsonObject> emitter;
-
-	@Inject
 	RestHighLevelClient restHighLevelClient;
 
 	@Inject
@@ -241,5 +215,9 @@ public class ResourcesValidatorProcessor {
 
 	@Inject
 	Logger logger;
+
+	@Inject
+	@RestClient
+	DatasourceClient datasourceClient;
 
 }
