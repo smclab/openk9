@@ -17,7 +17,6 @@
 
 package io.openk9.resources.validator;
 
-import io.openk9.resources.validator.client.datasource.DatasourceClient;
 import io.openk9.resources.validator.client.filemanager.FileManagerClient;
 import io.openk9.resources.validator.dto.BinaryPayload;
 import io.openk9.resources.validator.dto.DataPayload;
@@ -130,11 +129,9 @@ public class ResourcesValidatorProcessor {
 								"document found. dropped message with contentId: "
 								+ contentId);
 
-							datasourceClient.sentToPipeline(replyTo, "{}");
+							logger.info("Rejected correctly message with token: " + replyTo);
 
-							logger.info("Send message to datasource with token: " + replyTo);
-
-							return;
+							throw new RuntimeException();
 						}
 
 					}
@@ -147,9 +144,7 @@ public class ResourcesValidatorProcessor {
 
 			payload.setHashCodes(hashCodes);
 
-			datasourceClient.sentToPipeline(replyTo, payload.toString());
-
-			logger.info("Send message to datasource with token: " + replyTo);
+			logger.info("Go ahead message with token: " + replyTo);
 
 		}
 		catch (IOException e) {
@@ -205,9 +200,5 @@ public class ResourcesValidatorProcessor {
 
 	@Inject
 	Logger logger;
-
-	@Inject
-	@RestClient
-	DatasourceClient datasourceClient;
 
 }

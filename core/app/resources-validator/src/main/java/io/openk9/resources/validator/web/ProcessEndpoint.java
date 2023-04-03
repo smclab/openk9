@@ -19,46 +19,26 @@ package io.openk9.resources.validator.web;
 
 import io.openk9.resources.validator.ResourcesValidatorProcessor;
 import io.openk9.resources.validator.dto.ResourcesValidatorDataPayload;
-import io.vertx.core.json.JsonObject;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Path("/process")
 public class ProcessEndpoint {
-
-	@PostConstruct
-	public void init() {
-		_executorService = Executors.newFixedThreadPool(4);
-	}
-
-	@PreDestroy
-	public void destroy(){
-		_executorService.shutdown();
-	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 
 	public void process(ResourcesValidatorDataPayload payload) {
 
-		_executorService.execute(() -> {
-			_processor.consume(payload);
-		});
+		_processor.consume(payload);
 
 	}
 
 	@Inject
 	ResourcesValidatorProcessor _processor;
-
-	private ExecutorService _executorService;
-
 
 }
