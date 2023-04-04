@@ -19,12 +19,14 @@ package io.openk9.resources.validator.web;
 
 import io.openk9.resources.validator.ResourcesValidatorProcessor;
 import io.openk9.resources.validator.dto.ResourcesValidatorDataPayload;
+import io.vertx.core.json.JsonObject;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
+import java.util.Map;
 
 @Path("/process")
 public class ProcessEndpoint {
@@ -32,9 +34,9 @@ public class ProcessEndpoint {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 
-	public void process(ResourcesValidatorDataPayload payload) {
+	public Map<String, Object> process(ResourcesValidatorDataPayload payload) {
 
-		_processor.consume(payload);
+		return _processor.consume(payload).getMap();
 
 	}
 

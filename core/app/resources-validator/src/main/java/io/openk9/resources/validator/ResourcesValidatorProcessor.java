@@ -22,6 +22,7 @@ import io.openk9.resources.validator.dto.BinaryPayload;
 import io.openk9.resources.validator.dto.DataPayload;
 import io.openk9.resources.validator.dto.ResourcesValidatorDataPayload;
 import io.quarkus.runtime.Startup;
+import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.elasticsearch.action.search.SearchRequest;
@@ -48,7 +49,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 @Startup
 public class ResourcesValidatorProcessor {
 
-	public void consume(ResourcesValidatorDataPayload resourcesValidatorPayload) {
+	public JsonObject consume(ResourcesValidatorDataPayload resourcesValidatorPayload) {
 
 
 		String replyTo = resourcesValidatorPayload.getReplyTo();
@@ -142,13 +143,12 @@ public class ResourcesValidatorProcessor {
 				logger.info("Index wit name: " + indexName + " not exist. Item go to next enrich step.");
 			}
 
-			payload.setHashCodes(hashCodes);
-
-			logger.info("Go ahead message with token: " + replyTo);
+			return JsonObject.of("hashCodes", hashCodes);
 
 		}
 		catch (IOException e) {
 			logger.error(e.getMessage(), e);
+			throw new RuntimeException();
 		}
 
 	}
