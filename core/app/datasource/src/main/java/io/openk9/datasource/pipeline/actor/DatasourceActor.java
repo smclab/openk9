@@ -178,7 +178,7 @@ public class DatasourceActor {
 					IndexWriterActor.create(
 						datasourceModel.datasource.getDataIndex(),
 						dataPayload, responseActorRef),
-					"index-writer-" + contentId);
+					"index-writer_" + normalize(contentId));
 
 			indexWriterActorRef.tell(IndexWriterActor.Start.INSTANCE);
 
@@ -350,6 +350,10 @@ public class DatasourceActor {
 			})
 			.build();
 
+	}
+
+	private static int normalize(String contentId) {
+		return contentId.hashCode();
 	}
 
 	private static DataPayload mergeResponse(
