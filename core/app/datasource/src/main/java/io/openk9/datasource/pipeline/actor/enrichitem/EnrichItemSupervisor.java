@@ -74,6 +74,9 @@ public class EnrichItemSupervisor {
 		DataPayload dataPayload = execute.dataPayload;
 		ActorRef<Response> replyTo = execute.replyTo;
 
+		ctx.getLog().info(
+			"Execute enrichItemId: {}, type: {}, replyTo: {}", enrichItem.getId(), enrichItem.getType(), replyTo);
+
 		String jsonConfig = enrichItem.getJsonConfig();
 
 		JsonObject enrichItemConfig =

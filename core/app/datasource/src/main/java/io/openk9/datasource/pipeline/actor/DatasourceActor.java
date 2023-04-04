@@ -250,8 +250,8 @@ public class DatasourceActor {
 				switch (behaviorOnError) {
 					case SKIP -> {
 
-						logger.info(
-							"behaviorOnError is SKIP, call next enrichItem: " + enrichItemError.getId());
+						logger.error(
+							"behaviorOnError is SKIP, call next enrichItem: " + enrichItemError.getId(), param.exception);
 
 						if (!tail.isEmpty()) {
 							ctx.getLog().info("call next enrichItem");
@@ -265,7 +265,7 @@ public class DatasourceActor {
 					case FAIL -> {
 
 						logger.info(
-							"behaviorOnError is FAIL, stop pipeline: " + enrichItemError.getId());
+							"behaviorOnError is FAIL, stop pipeline: " + enrichItemError.getId(), param.exception);
 
 						Throwable throwable = param.exception;
 
