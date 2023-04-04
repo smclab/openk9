@@ -53,8 +53,18 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 			else {
 				Http.OK ok = (Http.OK) response;
 				byte[] body = ok.body();
-				replyTo.tell(
-					new Body(new JsonObject(new String(body))));
+
+				Body bodyResponse;
+
+				if (body == null || body.length == 0) {
+					bodyResponse = new Body(new JsonObject());
+				}
+				else {
+					bodyResponse = new Body(new JsonObject(new String(body)));
+				}
+
+				replyTo.tell(bodyResponse);
+
 			}
 
 		}
