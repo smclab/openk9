@@ -16,7 +16,7 @@ export const EnrichItemsQuery = gql`
           type
           serviceName
           jsonConfig
-          validationScript
+          script
           behaviorMergeType
           jsonPath
           behaviorOnError

@@ -126,6 +126,7 @@ export enum BehaviorMergeType {
 
 export enum BehaviorOnError {
   Fail = 'FAIL',
+  Reject = 'REJECT',
   Skip = 'SKIP'
 }
 
@@ -1041,9 +1042,9 @@ export type EnrichItem = {
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   requestTimeout?: Maybe<Scalars['BigInteger']>;
+  script?: Maybe<Scalars['String']>;
   serviceName?: Maybe<Scalars['String']>;
   type?: Maybe<EnrichItemType>;
-  validationScript?: Maybe<Scalars['String']>;
 };
 
 export type EnrichItemDtoInput = {
@@ -1054,9 +1055,9 @@ export type EnrichItemDtoInput = {
   jsonPath: Scalars['String'];
   name: Scalars['String'];
   requestTimeout: Scalars['BigInteger'];
+  script?: InputMaybe<Scalars['String']>;
   serviceName: Scalars['String'];
   type: EnrichItemType;
-  validationScript?: InputMaybe<Scalars['String']>;
 };
 
 export enum EnrichItemType {
@@ -3774,7 +3775,7 @@ export type EnrichItemQueryVariables = Exact<{
 }>;
 
 
-export type EnrichItemQuery = { __typename?: 'Query', enrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null, jsonConfig?: string | null, validationScript?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null } | null };
+export type EnrichItemQuery = { __typename?: 'Query', enrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null, jsonConfig?: string | null, script?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null } | null };
 
 export type CreateOrUpdateEnrichItemMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -3783,7 +3784,7 @@ export type CreateOrUpdateEnrichItemMutationVariables = Exact<{
   type: EnrichItemType;
   serviceName: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
-  validationScript?: InputMaybe<Scalars['String']>;
+  script?: InputMaybe<Scalars['String']>;
   behaviorMergeType: BehaviorMergeType;
   jsonPath: Scalars['String'];
   behaviorOnError: BehaviorOnError;
@@ -3799,7 +3800,7 @@ export type EnrichItemsQueryVariables = Exact<{
 }>;
 
 
-export type EnrichItemsQuery = { __typename?: 'Query', enrichItems?: { __typename?: 'DefaultConnection_EnrichItem', edges?: Array<{ __typename?: 'DefaultEdge_EnrichItem', node?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type EnrichItemsQuery = { __typename?: 'Query', enrichItems?: { __typename?: 'DefaultConnection_EnrichItem', edges?: Array<{ __typename?: 'DefaultEdge_EnrichItem', node?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null, jsonConfig?: string | null, script?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteEnrichItemMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -7971,7 +7972,7 @@ export const EnrichItemDocument = gql`
     type
     serviceName
     jsonConfig
-    validationScript
+    script
     behaviorMergeType
     jsonPath
     behaviorOnError
@@ -8008,10 +8009,10 @@ export type EnrichItemQueryHookResult = ReturnType<typeof useEnrichItemQuery>;
 export type EnrichItemLazyQueryHookResult = ReturnType<typeof useEnrichItemLazyQuery>;
 export type EnrichItemQueryResult = Apollo.QueryResult<EnrichItemQuery, EnrichItemQueryVariables>;
 export const CreateOrUpdateEnrichItemDocument = gql`
-    mutation CreateOrUpdateEnrichItem($id: ID, $name: String!, $description: String, $type: EnrichItemType!, $serviceName: String!, $jsonConfig: String, $validationScript: String, $behaviorMergeType: BehaviorMergeType!, $jsonPath: String!, $behaviorOnError: BehaviorOnError!, $requestTimeout: BigInteger!) {
+    mutation CreateOrUpdateEnrichItem($id: ID, $name: String!, $description: String, $type: EnrichItemType!, $serviceName: String!, $jsonConfig: String, $script: String, $behaviorMergeType: BehaviorMergeType!, $jsonPath: String!, $behaviorOnError: BehaviorOnError!, $requestTimeout: BigInteger!) {
   enrichItem(
     id: $id
-    enrichItemDTO: {name: $name, description: $description, type: $type, serviceName: $serviceName, jsonConfig: $jsonConfig, validationScript: $validationScript, behaviorMergeType: $behaviorMergeType, jsonPath: $jsonPath, behaviorOnError: $behaviorOnError, requestTimeout: $requestTimeout}
+    enrichItemDTO: {name: $name, description: $description, type: $type, serviceName: $serviceName, jsonConfig: $jsonConfig, script: $script, behaviorMergeType: $behaviorMergeType, jsonPath: $jsonPath, behaviorOnError: $behaviorOnError, requestTimeout: $requestTimeout}
   ) {
     entity {
       id
@@ -8045,7 +8046,7 @@ export type CreateOrUpdateEnrichItemMutationFn = Apollo.MutationFunction<CreateO
  *      type: // value for 'type'
  *      serviceName: // value for 'serviceName'
  *      jsonConfig: // value for 'jsonConfig'
- *      validationScript: // value for 'validationScript'
+ *      script: // value for 'script'
  *      behaviorMergeType: // value for 'behaviorMergeType'
  *      jsonPath: // value for 'jsonPath'
  *      behaviorOnError: // value for 'behaviorOnError'
@@ -8070,6 +8071,12 @@ export const EnrichItemsDocument = gql`
         description
         type
         serviceName
+        jsonConfig
+        script
+        behaviorMergeType
+        jsonPath
+        behaviorOnError
+        requestTimeout
       }
     }
     pageInfo {
@@ -11421,4 +11428,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-03-24T10:00:16+01:00
+// Generated on 2023-04-04T10:19:03+02:00

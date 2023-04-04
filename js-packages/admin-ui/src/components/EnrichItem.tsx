@@ -27,7 +27,7 @@ const EnrichItemQuery = gql`
       type
       serviceName
       jsonConfig
-      validationScript
+      script
       behaviorMergeType
       jsonPath
       behaviorOnError
@@ -44,7 +44,7 @@ gql`
     $type: EnrichItemType!
     $serviceName: String!
     $jsonConfig: String
-    $validationScript: String
+    $script: String
     $behaviorMergeType: BehaviorMergeType!
     $jsonPath: String!
     $behaviorOnError: BehaviorOnError!
@@ -58,7 +58,7 @@ gql`
         type: $type
         serviceName: $serviceName
         jsonConfig: $jsonConfig
-        validationScript: $validationScript
+        script: $script
         behaviorMergeType: $behaviorMergeType
         jsonPath: $jsonPath
         behaviorOnError: $behaviorOnError
@@ -111,7 +111,7 @@ export function EnrichItem() {
         type: EnrichItemType.HttpAsync,
         serviceName: name ?? "",
         jsonConfig: "{}",
-        validationScript: "",
+        script: "",
         behaviorMergeType: BehaviorMergeType.Merge,
         jsonPath: "",
         requestTimeout: 0,
@@ -123,7 +123,7 @@ export function EnrichItem() {
     isLoading: enrichItemQuery.loading || createOrUpdateEnrichItemMutation.loading,
     onSubmit(data) {
       createOrUpdateEnrichItemMutate({
-        variables: { id: enrichItemId !== "new" ? enrichItemId : undefined, ...data, validationScript: data.validationScript || undefined },
+        variables: { id: enrichItemId !== "new" ? enrichItemId : undefined, ...data },
       });
     },
     getValidationMessages: fromFieldValidators(createOrUpdateEnrichItemMutation.data?.enrichItem?.fieldValidators),
@@ -150,7 +150,7 @@ export function EnrichItem() {
         <EnumSelect label="Behavior Merge Type" dict={BehaviorMergeType} {...form.inputProps("behaviorMergeType")} />
         <EnumSelect label="Behavior On Error" dict={BehaviorOnError} {...form.inputProps("behaviorOnError")} />
         <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
-        <CodeInput language="javascript" label="Validation Script" {...form.inputProps("validationScript")} />
+        <CodeInput language="javascript" label="Script" {...form.inputProps("script")} />
         <div className="sheet-footer">
           <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
             {enrichItemId === "new" ? "Create" : "Update"}
