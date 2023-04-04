@@ -130,8 +130,6 @@ public class ResourcesValidatorProcessor {
 								"document found. dropped message with contentId: "
 								+ contentId);
 
-							logger.info("Rejected correctly message with token: " + replyTo);
-
 							throw new RuntimeException();
 						}
 
