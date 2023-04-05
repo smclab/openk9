@@ -308,10 +308,7 @@ function FilterCategory({
                                     : {suggestion.entityValue}
                                   </>
                                 ) : (
-                                  <div>
-                                    {suggestion.value} (
-                                    {suggestion.count || "0"})
-                                  </div>
+                                  suggestion.value
                                 )}
                               </label>
                             </span>
@@ -832,7 +829,7 @@ function TokensSelected({
                 color: #000000;
               `}
             >
-              {searchToken.values} ({searchToken?.count || "0"})
+              {searchToken.values}
             </label>
           </span>
         </div>
@@ -882,7 +879,7 @@ function TokensSelected({
                 color: #000000;
               `}
             >
-              {searchToken.values} ({searchToken?.count || "0"})
+              {searchToken.values}
             </label>
           </span>
         </div>
