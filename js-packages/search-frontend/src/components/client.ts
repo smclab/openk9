@@ -264,6 +264,7 @@ export type SearchToken =
       values: string[];
       filter: boolean;
       suggestionCategoryId?: number;
+      count?: string;
     }
   | {
       tokenType: "DOCTYPE";
@@ -271,6 +272,7 @@ export type SearchToken =
       values: string[];
       filter: boolean;
       suggestionCategoryId?: number;
+      count?: string;
     }
   | {
       tokenType: "TEXT";
@@ -280,6 +282,7 @@ export type SearchToken =
       goToSuggestion?: boolean;
       label?: string;
       suggestionCategoryId?: number;
+      count?: string;
     }
   | {
       tokenType: "ENTITY";
@@ -289,6 +292,7 @@ export type SearchToken =
       values: string[];
       filter: boolean;
       suggestionCategoryId?: number;
+      count?: string;
     }
   | {
       tokenType: "DATE";
@@ -298,6 +302,7 @@ export type SearchToken =
         lte: number;
       };
       suggestionCategoryId?: number;
+      count?: string;
     };
 
 export type SortField = {
@@ -384,12 +389,14 @@ export type SuggestionResult =
       suggestionCategoryId: number;
       value: string;
       keywordKey?: string;
+      count?: string;
     }
   | {
       tokenType: "TEXT";
       suggestionCategoryId: number;
       keywordKey?: string;
       value: string;
+      count?: string;
     }
   | {
       tokenType: "ENTITY";
@@ -398,12 +405,14 @@ export type SuggestionResult =
       entityValue: string;
       keywordKey?: string;
       value: string;
+      count?: string;
     }
   | {
       tokenType: "DOCTYPE";
       suggestionCategoryId: number;
       value: string;
       keywordKey?: string;
+      count?: string;
     };
 
 type SuggestionsCategoriesResult = Array<{

@@ -308,7 +308,10 @@ function FilterCategory({
                                     : {suggestion.entityValue}
                                   </>
                                 ) : (
-                                  suggestion.value
+                                  <div>
+                                    {suggestion.value} (
+                                    {suggestion.count || "0"})
+                                  </div>
                                 )}
                               </label>
                             </span>
@@ -553,6 +556,7 @@ export const mapSuggestionToSearchToken = (
         values: [suggestion.value],
         filter,
         goToSuggestion: false,
+        count: suggestion.count,
         suggestionCategoryId: suggestion.suggestionCategoryId,
       };
     }
@@ -637,6 +641,7 @@ type FiltersNotDisappearingProps = {
     filter: boolean;
     goToSuggestion?: boolean | undefined;
     label?: string | undefined;
+    count?: string | undefined;
     suggestionCategoryId?: number | undefined;
   };
   text: string;
@@ -778,6 +783,7 @@ function TokensSelected({
     keywordKey?: string | undefined;
     values: string[];
     filter: boolean;
+    count?: string | undefined;
     goToSuggestion?: boolean | undefined;
     label?: string | undefined;
     suggestionCategoryId?: number | undefined;
@@ -826,7 +832,7 @@ function TokensSelected({
                 color: #000000;
               `}
             >
-              {searchToken.values}
+              {searchToken.values} ({searchToken?.count || "0"})
             </label>
           </span>
         </div>
@@ -876,7 +882,7 @@ function TokensSelected({
                 color: #000000;
               `}
             >
-              {searchToken.values}
+              {searchToken.values} ({searchToken?.count || "0"})
             </label>
           </span>
         </div>
