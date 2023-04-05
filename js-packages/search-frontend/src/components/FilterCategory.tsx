@@ -329,7 +329,7 @@ function FilterCategory({
               style={{ textAlign: "center", width: "100%", marginTop: "10px" }}
             >
               <CreateLabel
-                label=" Mostra Altro"
+                label=" Load More"
                 action={() => {
                   suggestions.fetchNextPage();
                 }}
