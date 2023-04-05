@@ -84,7 +84,7 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 
 					Map<String, Object> entitySemantics = new HashMap<>();
 
-					entitySemantics.put("tokenType", "ENTITY");
+					entitySemantics.put("tokenType", "AUTOCOMPLETE");
 
 					entitySemantics.put("score", hit.getScore());
 
