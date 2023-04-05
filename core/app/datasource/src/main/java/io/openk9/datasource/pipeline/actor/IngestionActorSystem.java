@@ -33,7 +33,7 @@ public class IngestionActorSystem {
 			);
 
 		actorSystem.eventStream().tell(
-			new EventStream.Subscribe<>(DeadLetter.class, allDeadLettersActorRef));
+			new EventStream.Subscribe(DeadLetter.class, allDeadLettersActorRef));
 
 	}
 
