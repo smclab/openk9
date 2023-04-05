@@ -82,6 +82,8 @@ public class EntityManagerConsumer {
 
 	public void consume(EntityManagerDataPayload entityManagerPayload) {
 
+		long startTime = System.currentTimeMillis();
+
 		TransactionContext transactionContext =
 			_hazelcastInstance.newTransactionContext();
 
@@ -210,6 +212,9 @@ public class EntityManagerConsumer {
 			datasourceClient.sentToPipeline(replyTo, "{}");
 
 			_logger.info("Send message to datasource with token: " + replyTo);
+
+			long estimatedTime = System.currentTimeMillis() - startTime;
+			_logger.info(estimatedTime);
 
 		}
 		catch (Exception e) {

@@ -45,6 +45,8 @@ public class TikaProcessor {
         JsonObject jsonObject, boolean isOcr, int characterLength,
         String ocrReplyTo) {
 
+        long startTime = System.currentTimeMillis();
+
         JsonObject payload = jsonObject.getJsonObject("payload");
 
         String replyTo = jsonObject.getString("replyTo");
@@ -239,6 +241,9 @@ public class TikaProcessor {
 
                     logger.info("Send message to datasource with token: " + replyTo);
 
+                    long estimatedTime = System.currentTimeMillis() - startTime;
+                    logger.info(estimatedTime);
+
                     return Tuple2.of(replyTo, response);
 
                 }
@@ -264,6 +269,9 @@ public class TikaProcessor {
         datasourceClient.sentToPipeline(replyTo, jsonObject.toString());
 
         logger.info("Send message to datasource with token: " + replyTo);
+
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        logger.info(estimatedTime);
 
         return Tuple2.of(replyTo, jsonObject);
 
