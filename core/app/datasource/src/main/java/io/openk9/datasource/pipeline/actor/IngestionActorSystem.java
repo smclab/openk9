@@ -1,7 +1,11 @@
 package io.openk9.datasource.pipeline.actor;
 
+import akka.actor.AllDeadLetters;
+import akka.actor.DeadLetter;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
+import akka.actor.typed.Props;
+import akka.actor.typed.eventstream.EventStream;
 import akka.actor.typed.javadsl.AskPattern;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.smallrye.mutiny.Uni;
@@ -21,6 +25,16 @@ public class IngestionActorSystem {
 	public void init() {
 		this.actorSystem = ActorSystem.apply(
 			IngestionActor.create(), "enrich-pipeline");
+
+		ActorRef<AllDeadLetters> allDeadLettersActorRef =
+			actorSystem.systemActorOf(
+				DeadLetterListener.create(), "dead-letter-monitor",
+				Props.empty()
+			);
+
+		actorSystem.eventStream().tell(
+			new EventStream.Subscribe<>(DeadLetter.class, allDeadLettersActorRef));
+
 	}
 
 	public void startEnrichPipeline(DataPayload dataPayload, Message<?> message) {
