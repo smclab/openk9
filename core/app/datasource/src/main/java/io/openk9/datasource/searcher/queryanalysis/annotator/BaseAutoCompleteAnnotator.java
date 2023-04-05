@@ -108,7 +108,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 									"tokenType", "AUTOCOMPLETE",
 									"label", label,
 									"value", value,
-									"score", 0.0f
+									"score", 0.1f
 								)
 							)
 						);
@@ -122,7 +122,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 										"tokenType", "AUTOCOMPLETE",
 										"label", label,
 										"value", e2.getValue(),
-										"score", 0.0f
+										"score", 0.1f
 									)
 								)
 							);
