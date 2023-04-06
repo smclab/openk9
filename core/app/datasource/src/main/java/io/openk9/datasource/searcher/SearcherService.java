@@ -480,17 +480,25 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				}
 			}
 
+			logger.debug(list.toString());
+
 			list.sort(SemanticsPos::compareTo);
+
+			logger.debug("Sorted list: " + list);
 
 			Set<SemanticsPos> set = new TreeSet<>(
 				SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
 
 			set.addAll(list);
 
+			logger.debug("Set: " + set);
+
 			Set<SemanticsPos> scoreOrderedSet = set.stream().sorted(SemanticsPos::compareTo).collect(
 				Collectors.toCollection(LinkedHashSet::new));
 
 			scoreOrderedSet.addAll(set);
+
+			logger.debug("scoreOrderedSet: " + set);
 
 			List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
