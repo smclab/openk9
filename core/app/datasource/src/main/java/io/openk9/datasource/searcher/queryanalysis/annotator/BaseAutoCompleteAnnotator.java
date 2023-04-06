@@ -100,32 +100,36 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 						label = annotator.getDocTypeField().getParentDocTypeField().getName();
 					}
 
+
 					if (value instanceof String) {
-						categorySemantics.add(
-							CategorySemantics.of(
-								"$AUTOCOMPLETE",
-								Map.of(
-									"tokenType", "AUTOCOMPLETE",
-									"label", label,
-									"value", value,
-									"score", 0.1f
-								)
-							)
-						);
-					}
-					else if (value instanceof Map) {
-						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
+						if (!value.equals(token)) {
 							categorySemantics.add(
 								CategorySemantics.of(
 									"$AUTOCOMPLETE",
 									Map.of(
 										"tokenType", "AUTOCOMPLETE",
 										"label", label,
-										"value", e2.getValue(),
+										"value", value,
 										"score", 0.1f
 									)
-								)
-							);
+								));
+						}
+					}
+					else if (value instanceof Map) {
+						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
+							if (!e2.getValue().equals(token)) {
+								categorySemantics.add(
+									CategorySemantics.of(
+										"$AUTOCOMPLETE",
+										Map.of(
+											"tokenType", "AUTOCOMPLETE",
+											"label", label,
+											"value", e2.getValue(),
+											"score", 0.1f
+										)
+									)
+								);
+							}
 						}
 					}
 
