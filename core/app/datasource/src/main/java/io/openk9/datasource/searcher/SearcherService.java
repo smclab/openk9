@@ -487,7 +487,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			logger.debug("Sorted list: " + list);
 
 			Set<SemanticsPos> set = new TreeSet<>(
-				SemanticsPos.TOKEN_TYPE_VALUE_COMPARATOR);
+				SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
 
 			set.addAll(list);
 
@@ -857,7 +857,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 
 		public static final Comparator<SemanticsPos>
-			TOKEN_TYPE_VALUE_COMPARATOR = new TokenTypeValueComparator();
+			TOKEN_TYPE_VALUE_SCORE_COMPARATOR = new TokenTypeValueComparator();
 
 		public static final Comparator<SemanticsPos>
 			SCORE_COMPARATOR = new ScoreComparator();
@@ -884,21 +884,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			String tokenType1 =(String)o1.get("tokenType");
 			String tokenType2 =(String)o2.get("tokenType");
 
-			// int res = tokenType1.compareTo(tokenType2);
+			int res = tokenType1.compareTo(tokenType2);
 
 			String value1 =(String)o1.get("value");
 			String value2 =(String)o2.get("value");
 
-			if (value1.equals(value2)) {
-				if (tokenType1.equals("TEXT") && tokenType2.equals("AUTOCOMPLETE")) {
-					return 0;
-				}
-				else {
-					return 1;
-				}
-			}
-
-			return -1;
+			return res != 0 ? res : value1.compareTo(value2);
 
 		}
 
