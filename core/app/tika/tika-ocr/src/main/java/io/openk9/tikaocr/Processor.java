@@ -45,7 +45,7 @@ public class Processor {
 			tikaProcessor.process(
 				json, false, 0, null);
 
-		return null;
+		return message.ack();
 
 	}
 
