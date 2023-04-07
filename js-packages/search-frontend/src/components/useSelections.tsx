@@ -188,6 +188,8 @@ function getTokenText(token: AnalysisToken) {
       return token.value;
     case "AUTOCORRECT":
       return token.value;
+    case "AUTOCOMPLETE":
+      return token.value;
   }
 }
 
@@ -214,7 +216,8 @@ export function getAutoSelections(
 function getAutoSelection(entry: AnalysisResponseEntry) {
   const [first, second] = [...entry.tokens].sort((a, b) => a.score - b.score);
   if (first) {
-    if (first.tokenType === "AUTOCORRECT") return null;
+    if (first.tokenType === "AUTOCOMPLETE" || first.tokenType === "AUTOCORRECT")
+      return null;
     if (!second || first.score >= second.score * 2) {
       return {
         text: entry.text,

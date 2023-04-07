@@ -406,6 +406,8 @@ function analysisTokenToSearchToken(token: AnalysisToken): SearchToken | null {
         values: [token.value],
         filter: false,
       };
+    case "AUTOCOMPLETE":
+      return null;
     case "AUTOCORRECT":
       return null;
   }

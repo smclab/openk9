@@ -162,6 +162,23 @@ export function Search({
                   }
                   setOpenedDropdown(null);
                 };
+                const onSelectText = (token: AnalysisToken | null): void => {
+                  if (token)
+                    selectionsDispatch({
+                      type: "set-text",
+                      text: token.value,
+                    });
+                  if (
+                    inputRef.current?.selectionStart &&
+                    inputRef.current?.selectionEnd
+                  ) {
+                    setAdjustedSelection({
+                      selectionStart: inputRef.current.selectionStart,
+                      selectionEnd: inputRef.current.selectionEnd,
+                    });
+                  }
+                  setOpenedDropdown(null);
+                };
                 const isAutoSelected = selection?.isAuto ?? false;
                 const onOptionIndexChange = (optionIndex: number) => {
                   setOpenedDropdown((openedDropdown) =>
@@ -179,8 +196,10 @@ export function Search({
                     optionIndex={optionIndex}
                     selected={selected}
                     onSelect={onSelect}
+                    onSelectText={onSelectText}
                     isAutoSlected={isAutoSelected}
                     setOpenedDropdown={setOpenedDropdown}
+                    selectionsDispatch={selectionsDispatch}
                   />
                 );
               })}

@@ -353,6 +353,11 @@ export type AnalysisToken =
       tokenType: "AUTOCORRECT";
       value: string;
       label: string;
+    }
+  | {
+      tokenType: "AUTOCOMPLETE";
+      value: string;
+      label: string;
     };
 
 export type AnalysisRequest = {

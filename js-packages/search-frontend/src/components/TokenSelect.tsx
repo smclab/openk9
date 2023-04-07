@@ -3,12 +3,15 @@ import { css } from "styled-components/macro";
 import { AnalysisResponseEntry, AnalysisToken } from "./client";
 import { DeleteLogo } from "./DeleteLogo";
 import { TokenIcon } from "./TokenIcon";
+import { SelectionsAction } from "./useSelections";
 
 type TokenSelectProps = {
   span: AnalysisResponseEntry;
   onSelect(token: AnalysisToken | null): void;
+  onSelectText(token: AnalysisToken | null): void;
   selected: AnalysisToken | null;
   isOpen: boolean;
+  selectionsDispatch: (action: SelectionsAction) => void;
   optionIndex: number | null;
   onOptionIndexChange(optionIndex: number): void;
   isAutoSlected: boolean;
@@ -28,6 +31,8 @@ export function TokenSelect({
   onOptionIndexChange,
   isAutoSlected,
   setOpenedDropdown,
+  onSelectText,
+  selectionsDispatch,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const [subtitle, setSubtitle] = React.useState(false);
@@ -148,7 +153,11 @@ export function TokenSelect({
               <div
                 key={index}
                 onClick={() => {
-                  onSelect(option);
+                  if (option.tokenType === "AUTOCOMPLETE") {
+                    onSelectText(option);
+                  } else {
+                    onSelect(option);
+                  }
                 }}
                 onMouseEnter={() => {
                   onOptionIndexChange(index + 1);
@@ -169,53 +178,7 @@ export function TokenSelect({
                     {option.keywordName}:
                   </strong>
                 )}
-                {option.tokenType === "AUTOCORRECT" ? (
-                  <span>
-                    Did you mean? <strong>{option.value}</strong>
-                  </span>
-                ) : (
-                  <React.Fragment>
-                    <div
-                      css={css`
-                        display: flex;
-                        font-family: "Helvetica";
-                        font-style: normal;
-                        font-weight: 400;
-                        font-size: 15px;
-                        line-height: 17px;
-                      `}
-                    >
-                      {getTokenLabel(option)}
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        padding: "4px 8px",
-                        gap: "4px",
-                        height: "15px",
-                        background: "#FFFFFF",
-                        border:
-                          "1px solid var(--openk9-embeddable-search--secondary-active-color)",
-                        borderRadius: "20px",
-                        marginLeft: "10px",
-                      }}
-                    >
-                      <p
-                        css={css`
-                          color: var(
-                            --openk9-embeddable-search--secondary-active-color
-                          );
-                          margin-bottom: 13px;
-                          font-size: 12px;
-                        `}
-                      >
-                        {option.label}
-                      </p>
-                    </div>
-                  </React.Fragment>
-                )}
+                <FactoryTokenType option={option} />
               </div>
             );
           })}
@@ -253,5 +216,83 @@ function getTokenLabel(token: AnalysisToken) {
       return token.entityName;
     case "TEXT":
       return token.value;
+  }
+}
+
+function FactoryTokenType({
+  option,
+}: {
+  option: AnalysisToken & {
+    score: number;
+  };
+}) {
+  switch (option.tokenType) {
+    case "AUTOCOMPLETE":
+      return (
+        <React.Fragment>
+          <div
+            css={css`
+              display: flex;
+              font-family: "Helvetica";
+              font-style: normal;
+              font-weight: 400;
+              font-size: 15px;
+              line-height: 17px;
+            `}
+          >
+            {option.value}
+          </div>
+        </React.Fragment>
+      );
+      break;
+    case "AUTOCORRECT":
+      return (
+        <span>
+          Did you mean? <strong>{option.value}</strong>
+        </span>
+      );
+    default:
+      return (
+        <React.Fragment>
+          <div
+            css={css`
+              display: flex;
+              font-family: "Helvetica";
+              font-style: normal;
+              font-weight: 400;
+              font-size: 15px;
+              line-height: 17px;
+            `}
+          >
+            {getTokenLabel(option)}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "4px 8px",
+              gap: "4px",
+              height: "15px",
+              background: "#FFFFFF",
+              border:
+                "1px solid var(--openk9-embeddable-search--secondary-active-color)",
+              borderRadius: "20px",
+              marginLeft: "10px",
+            }}
+          >
+            <p
+              css={css`
+                color: var(--openk9-embeddable-search--secondary-active-color);
+                margin-bottom: 13px;
+                font-size: 12px;
+              `}
+            >
+              {option.label}
+            </p>
+          </div>
+        </React.Fragment>
+      );
+      break;
   }
 }
