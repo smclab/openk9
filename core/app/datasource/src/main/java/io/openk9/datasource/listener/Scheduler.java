@@ -132,7 +132,7 @@ public class Scheduler {
 		Datasource datasource = scheduleDatasourceInternal.datasource;
 		String tenantName = scheduleDatasourceInternal.tenantName;
 
-		String jobName = tenantName + "-" + datasource.getId() + "-" + datasource.getName();
+		String jobName = tenantName + "-" + datasource.getId();
 
 		if (datasource.getSchedulable()) {
 
