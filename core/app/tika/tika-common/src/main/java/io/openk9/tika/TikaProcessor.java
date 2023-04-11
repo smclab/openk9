@@ -189,6 +189,7 @@ public class TikaProcessor {
                     if (isOcr) {
 
                         if (text.length() < characterLength) {
+                            logger.info("Send message to ocr processing");
                             return Tuple2.of(ocrReplyTo, jsonObject);
                         }
 
