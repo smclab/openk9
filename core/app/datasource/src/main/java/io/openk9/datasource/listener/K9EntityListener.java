@@ -21,6 +21,7 @@ import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
+import oracle.jdbc.proxy.annotation.Post;
 import org.hibernate.Hibernate;
 import org.quartz.SchedulerException;
 
@@ -29,6 +30,7 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.PostPersist;
 import javax.persistence.PostRemove;
+import javax.persistence.PostUpdate;
 import javax.persistence.PreUpdate;
 
 @ApplicationScoped
@@ -39,10 +41,11 @@ public class K9EntityListener {
 		_handle(k9Entity, EventType.CREATE);
 	}
 
-	@PreUpdate
+	@PostUpdate
 	public void beforeUpdate(K9Entity k9Entity) throws SchedulerException {
 		_handle(k9Entity, EventType.UPDATE);
 	}
+
 
 	@PostRemove
 	public void postRemove(K9Entity k9Entity) throws SchedulerException {
