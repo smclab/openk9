@@ -35,31 +35,14 @@ import java.util.concurrent.CompletionStage;
 @ApplicationScoped
 public class Processor {
 
-	@Incoming("tika-ocr")
-	@Blocking
-	public CompletionStage<Void> process(Message<?> message) {
+	public void process(JsonObject tikaPayload) {
 
-		JsonObject json = _messagePayloadToJson(message);
 
-		Tuple2<String, JsonObject> response =
-			tikaProcessor.process(
-				json, false, 0, null);
+		tikaProcessor.process(tikaPayload);
 
-		return message.ack();
 
 	}
 
-	private JsonObject _messagePayloadToJson(Message<?> message) {
-		Object obj = message.getPayload();
-
-		return obj instanceof JsonObject
-			? (JsonObject) obj
-			: new JsonObject(new String((byte[]) obj));
-
-	}
-
-	@Channel("tika-sender")
-	Emitter<JsonObject> emitter;
 
 	@Inject
 	TikaProcessor tikaProcessor;

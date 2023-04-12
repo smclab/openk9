@@ -15,24 +15,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tika;
+package io.openk9.tikaocr.web;
 
-
+import io.openk9.tikaocr.Processor;
 import io.vertx.core.json.JsonObject;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-@ApplicationScoped
-public class Processor {
+@Path("/process")
+public class ProcessEndpoint {
 
-	public void process(JsonObject tikaPayload) {
+	@PostConstruct
+	public void init() {
+		_executorService = Executors.newFixedThreadPool(4);
+	}
 
-		tikaProcessor.process(tikaPayload);
+	@PreDestroy
+	public void destroy(){
+		_executorService.shutdown();
+	}
+
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+
+	public void process(JsonObject payload) {
+
+		_executorService.execute(() -> {
+			_processor.process(payload);
+		});
 
 	}
 
 	@Inject
-	TikaProcessor tikaProcessor;
+	Processor _processor;
+
+	private ExecutorService _executorService;
+
 
 }

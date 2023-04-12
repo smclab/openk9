@@ -12,6 +12,8 @@ import { Main, QueryState } from "./Main";
 import { ResultsDisplayMode } from "../components/ResultList";
 import { Tab } from "../components/Tabs";
 
+export * from "./ImagesViewer";
+
 export const rendererComponents = RendererComponents;
 
 export class OpenK9 {

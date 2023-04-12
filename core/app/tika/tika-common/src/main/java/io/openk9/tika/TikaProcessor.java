@@ -23,7 +23,6 @@ import io.openk9.tika.util.Detectors;
 import io.quarkus.tika.TikaContent;
 import io.quarkus.tika.TikaMetadata;
 import io.quarkus.tika.TikaParser;
-import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.tika.metadata.HttpHeaders;
@@ -41,9 +40,7 @@ import java.time.Instant;
 @ApplicationScoped
 public class TikaProcessor {
 
-    public Tuple2<String, JsonObject> process(
-        JsonObject jsonObject, boolean isOcr, int characterLength,
-        String ocrReplyTo) {
+    public void process(JsonObject jsonObject) {
 
         long startTime = System.currentTimeMillis();
 
@@ -186,15 +183,6 @@ public class TikaProcessor {
 
                     String text = tikaContent.getText();
 
-                    if (isOcr) {
-
-                        if (text.length() < characterLength) {
-                            logger.info("Send message to ocr processing");
-                            return Tuple2.of(ocrReplyTo, jsonObject);
-                        }
-
-                    }
-
                     text = text.replaceAll("\\s+", " ");
 
                     document.put("content", text);
@@ -245,7 +233,7 @@ public class TikaProcessor {
                     long estimatedTime = System.currentTimeMillis() - startTime;
                     logger.info(estimatedTime);
 
-                    return Tuple2.of(replyTo, response);
+                    return;
 
                 }
                 else {
@@ -274,7 +262,7 @@ public class TikaProcessor {
         long estimatedTime = System.currentTimeMillis() - startTime;
         logger.info(estimatedTime);
 
-        return Tuple2.of(replyTo, jsonObject);
+        return;
 
     }
 
