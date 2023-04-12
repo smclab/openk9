@@ -37,9 +37,7 @@ public class Processor {
 
 	public void process(JsonObject tikaPayload) {
 
-
 		tikaProcessor.process(tikaPayload);
-
 
 	}
 
