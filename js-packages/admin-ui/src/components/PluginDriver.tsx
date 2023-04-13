@@ -110,6 +110,15 @@ export function PluginDriver() {
     });
   }
 
+  if (pluginDriverId === "new" && JSON.stringify(templateChoice) === "{}") {
+    try {
+      const value = JSON.parse(PluginDriverOptions[0].Json);
+      setTemplateChoice(value);
+    } catch (error) {}
+  }
+  if (pluginDriverId === "new") {
+    PluginDriverOptions[0].visible = "" + true;
+  }
   return (
     <ClayLayout.ContainerFluid view>
       <ClayForm
@@ -131,6 +140,9 @@ export function PluginDriver() {
                     switch (event.currentTarget.value) {
                       case "HTTP":
                         form.inputProps("type").onChange(PluginDriverType.Http);
+                        break;
+                      case "Custom":
+                        setType("Custom");
                         break;
                     }
                     PluginDriverOptions.map((element) => {
