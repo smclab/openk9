@@ -141,9 +141,6 @@ export function PluginDriver() {
                       case "HTTP":
                         form.inputProps("type").onChange(PluginDriverType.Http);
                         break;
-                      case "Custom":
-                        setType("Custom");
-                        break;
                     }
                     PluginDriverOptions.map((element) => {
                       element.visible = "false";
