@@ -17,8 +17,8 @@ public class SchedulerInitializerActor {
 			Scheduler.create(httpPluginDriverClient, transactionInvoker), "datasource-scheduler");
 	}
 
-	public void scheduleDataSource(String tenantName, long datasourceId) {
-		actorSystem.tell(new Scheduler.ScheduleDatasource(tenantName, datasourceId));
+	public void scheduleDataSource(String tenantName, long datasourceId, boolean schedulable, String cron) {
+		actorSystem.tell(new Scheduler.ScheduleDatasource(tenantName, datasourceId, schedulable, cron));
 	}
 
 	public void unScheduleDataSource(String tenantName, long datasourceId) {

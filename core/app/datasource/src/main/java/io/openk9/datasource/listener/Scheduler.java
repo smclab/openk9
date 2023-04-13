@@ -26,10 +26,10 @@ import java.util.function.BiFunction;
 public class Scheduler {
 
 	public sealed interface Command {}
-	public record ScheduleDatasource(String tenantName, long datasourceId) implements Command {}
-	private record ScheduleDatasourceInternal(String tenantName, Datasource datasource) implements Command {}
+	public record ScheduleDatasource(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 	public record TriggerDatasource(String tenantName, long datasourceId) implements Command {}
+	private record ScheduleDatasourceInternal(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	private record TriggerDatasourceInternal(String tenantName, Datasource datasource) implements Command {}
 
 	public static Behavior<Command> create(
@@ -55,7 +55,7 @@ public class Scheduler {
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(ScheduleDatasource.class, addDatasource -> onAddDatasource(addDatasource, ctx, transactionInvoker))
+			.onMessage(ScheduleDatasource.class, addDatasource -> onAddDatasource(addDatasource, ctx))
 			.onMessage(UnScheduleDatasource.class, removeDatasource -> onRemoveDatasource(removeDatasource, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
 			.onMessage(TriggerDatasource.class, jobMessage -> onTriggerDatasource(jobMessage, ctx, transactionInvoker))
 			.onMessage(ScheduleDatasourceInternal.class, scheduleDatasourceInternal -> onScheduleDatasourceInternal(scheduleDatasourceInternal, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
@@ -129,26 +129,28 @@ public class Scheduler {
 		TransactionInvoker transactionInvoker,
 		List<String> jobNames) {
 
-		Datasource datasource = scheduleDatasourceInternal.datasource;
-		String tenantName = scheduleDatasourceInternal.tenantName;
+		String tenantName = scheduleDatasourceInternal.tenantName();
+		long datasourceId = scheduleDatasourceInternal.datasourceId();
+		String cron = scheduleDatasourceInternal.cron();
+		boolean schedulable = scheduleDatasourceInternal.schedulable();
 
-		String jobName = tenantName + "-" + datasource.getId();
+		String jobName = tenantName + "-" + datasourceId;
 
-		if (datasource.getSchedulable()) {
+		if (schedulable) {
 
 			if (jobNames.contains(jobName)) {
 
 				quartzSchedulerTypedExtension.updateTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasource.getId()),
+					new TriggerDatasource(tenantName, datasourceId),
 					Option.empty(),
-					datasource.getScheduling(),
+					cron,
 					Option.empty(),
 					quartzSchedulerTypedExtension.defaultTimezone()
 				);
 
-				ctx.getLog().info("Job updated: {} datasourceId: {}", jobName, datasource.getId());
+				ctx.getLog().info("Job updated: {} datasourceId: {}", jobName, datasourceId);
 
 				return Behaviors.same();
 			}
@@ -157,14 +159,14 @@ public class Scheduler {
 				quartzSchedulerTypedExtension.createTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasource.getId()),
+					new TriggerDatasource(tenantName, datasourceId),
 					Option.empty(),
-					datasource.getScheduling(),
+					cron,
 					Option.empty(),
 					quartzSchedulerTypedExtension.defaultTimezone()
 				);
 
-				ctx.getLog().info("Job created: {} datasourceId: {}", jobName, datasource.getId());
+				ctx.getLog().info("Job created: {} datasourceId: {}", jobName, datasourceId);
 
 				List<String> newJobNames = new ArrayList<>(jobNames);
 
@@ -177,12 +179,12 @@ public class Scheduler {
 			}
 		}
 		else if (jobNames.contains(jobName)) {
-			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasource.getId()));
+			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasourceId));
 			ctx.getLog().info("job is not schedulable, removing job: {}", jobName);
 			return Behaviors.same();
 		}
 
-		ctx.getLog().info("Job not created: datasourceId: {}, the datasource is not schedulable", datasource.getId());
+		ctx.getLog().info("Job not created: datasourceId: {}, the datasource is not schedulable", datasourceId);
 
 		return Behaviors.same();
 
@@ -232,15 +234,16 @@ public class Scheduler {
 	}
 
 	private static Behavior<Command> onAddDatasource(
-		ScheduleDatasource addDatasource, ActorContext<Command> ctx,
-		TransactionInvoker transactionInvoker) {
+		ScheduleDatasource addDatasource, ActorContext<Command> ctx) {
 
 		long datasourceId = addDatasource.datasourceId;
 		String tenantName = addDatasource.tenantName;
 
-		loadDatasourceAndCreateSelfMessage(
-			tenantName, datasourceId, transactionInvoker, ctx,
-			ScheduleDatasourceInternal::new
+		ctx.getSelf().tell(
+			new ScheduleDatasourceInternal(
+				tenantName, datasourceId, addDatasource.schedulable,
+				addDatasource.cron
+			)
 		);
 
 		return Behaviors.same();
