@@ -353,7 +353,9 @@ export function Search({
           max-width: 20%;
         `}
         onClick={() => {
-          setIsDatePickerOpen(!isDatePickerOpen);
+          !journey &&
+            !valueSelected.startDate &&
+            setIsDatePickerOpen(!isDatePickerOpen);
         }}
       >
         <CalendarLogo />
