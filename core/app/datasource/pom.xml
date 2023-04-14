@@ -11,6 +11,7 @@
   <properties>
     <cron-utils.version>9.2.0</cron-utils.version>
     <zstd-jni.version>1.5.2-3</zstd-jni.version>
+    <akka.management.version>1.1.4</akka.management.version>
   </properties>
   <dependencies>
     <dependency>
@@ -189,6 +190,24 @@
     <dependency>
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-actor-typed_${scala.version}</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-cluster-typed_${scala.version}</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lightbend.akka.management</groupId>
+      <artifactId>akka-management_${scala.version}</artifactId>
+      <version>${akka.management.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.lightbend.akka.management</groupId>
+      <artifactId>akka-management-cluster-bootstrap_${scala.version}</artifactId>
+      <version>${akka.management.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-discovery_${scala.version}</artifactId>
     </dependency>
     <dependency>
       <groupId>com.jayway.jsonpath</groupId>
