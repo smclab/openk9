@@ -24,6 +24,7 @@ import io.openk9.filemanager.grpc.FileManagerGrpc;
 import io.openk9.filemanager.grpc.FileResourceResponse;
 import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
 import io.quarkus.grpc.GrpcClient;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -40,32 +41,36 @@ public class DeleteService {
 
 	public void deleteObject(String resourceId, String schemaName) {
 
-		FindFileResourceByResourceIdRequest findFileResourceByResourceIdRequest =
-			FindFileResourceByResourceIdRequest.newBuilder()
-				.setResourceId(resourceId)
-				.setSchemaName(schemaName).build();
-
-		FileResourceResponse fileResourceResponse =
-			filemanager.findFileResourceByResourceId(findFileResourceByResourceIdRequest);
-
-		String datasourceId = fileResourceResponse.getDatasourceId();
-		String fileId = fileResourceResponse.getFileId();
-
-		String bucketName = "datasource" + datasourceId;
-
 		try {
+
+			FindFileResourceByResourceIdRequest findFileResourceByResourceIdRequest =
+				FindFileResourceByResourceIdRequest.newBuilder()
+					.setResourceId(resourceId)
+					.setSchemaName(schemaName).build();
+
+			FileResourceResponse fileResourceResponse =
+				filemanager.findFileResourceByResourceId(findFileResourceByResourceIdRequest);
+
+			String datasourceId = fileResourceResponse.getDatasourceId();
+			String fileId = fileResourceResponse.getFileId();
+
+			String bucketName = "datasource" + datasourceId;
+
 			minioClient.removeObject(
 					RemoveObjectArgs.builder()
 							.bucket(bucketName)
 							.object(fileId)
 							.build());
 
-		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
 		}
 	}
 
 	@GrpcClient("filemanager")
 	FileManagerGrpc.FileManagerBlockingStub filemanager;
+
+	@Inject
+	Logger logger;
 
 }
