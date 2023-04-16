@@ -35,7 +35,7 @@ public class EntityManagerEndpoint {
 
 	@PostConstruct
 	public void init() {
-		_executorService = Executors.newFixedThreadPool(4);
+		_executorService = Executors.newFixedThreadPool(1);
 	}
 
 	@PreDestroy
