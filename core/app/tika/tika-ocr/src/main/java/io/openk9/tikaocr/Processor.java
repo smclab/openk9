@@ -18,19 +18,10 @@
 package io.openk9.tikaocr;
 
 import io.openk9.tika.TikaProcessor;
-import io.smallrye.mutiny.tuples.Tuple2;
-import io.smallrye.reactive.messaging.annotations.Blocking;
-import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Message;
-import org.eclipse.microprofile.reactive.messaging.Metadata;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class Processor {
@@ -40,7 +31,6 @@ public class Processor {
 		tikaProcessor.process(tikaPayload);
 
 	}
-
 
 	@Inject
 	TikaProcessor tikaProcessor;

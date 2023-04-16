@@ -17,7 +17,6 @@
 
 package io.openk9.tika;
 
-
 import io.vertx.core.json.JsonObject;
 
 import javax.enterprise.context.ApplicationScoped;
