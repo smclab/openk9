@@ -14,6 +14,9 @@ public class EnrichItemSupervisor {
 	public record Execute(EnrichItem enrichItem, DataPayload dataPayload, ActorRef<Response> replyTo) implements Command {}
 	private record HttpSupervisorWrapper(HttpSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	private record GroovySupervisorWrapper(GroovyActor.Response response, ActorRef<Response> replyTo) implements Command {}
+	private record GroovyValidatorWrapper(
+		GroovyActor.Response response, EnrichItem enrichItem,
+		JsonObject dataPayload, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}
 	public record Body(JsonObject body) implements Response {}
 	public record Error(String error) implements Response {}
@@ -29,7 +32,55 @@ public class EnrichItemSupervisor {
 			.onMessage(Execute.class, execute -> onExecute(httpSupervisor, execute, ctx))
 			.onMessage(HttpSupervisorWrapper.class, hrw -> onHttpResponse(hrw, ctx))
 			.onMessage(GroovySupervisorWrapper.class, grw -> onGroovyResponse(grw, ctx))
+			.onMessage(GroovyValidatorWrapper.class, gvw -> onGroovyValidatorResponse(gvw, httpSupervisor, ctx))
 			.build();
+	}
+
+	private static Behavior<Command> onGroovyValidatorResponse(
+		GroovyValidatorWrapper gvw,
+		ActorRef<HttpSupervisor.Command> httpSupervisor,
+		ActorContext<Command> ctx) {
+
+		GroovyActor.Response response = gvw.response;
+		EnrichItem enrichItem = gvw.enrichItem;
+		JsonObject dataPayload = gvw.dataPayload;
+
+		if (response instanceof GroovyActor.GroovyValidateResponse) {
+			GroovyActor.GroovyValidateResponse groovyValidateResponse =
+				(GroovyActor.GroovyValidateResponse)response;
+
+			if (groovyValidateResponse.valid()) {
+
+				ActorRef<HttpSupervisor.Response> responseActorRef =
+					ctx.messageAdapter(
+						HttpSupervisor.Response.class,
+						hsr -> new HttpSupervisorWrapper(hsr, gvw.replyTo)
+					);
+
+				httpSupervisor.tell(
+					new HttpSupervisor.Call(
+						enrichItem.getType() == EnrichItem.EnrichItemType.HTTP_ASYNC,
+						enrichItem.getServiceName(),
+						dataPayload,
+						responseActorRef
+					)
+				);
+
+				return Behaviors.same();
+
+			}
+
+		}
+		else if (response instanceof GroovyActor.GroovyError groovyError) {
+			gvw.replyTo.tell(new Error(groovyError.error()));
+		}
+		else {
+			gvw.replyTo.tell(new Error("Unexpected Groovy Response"));
+		}
+
+
+		return Behaviors.stopped();
+
 	}
 
 	private static Behavior<Command> onGroovyResponse(
@@ -128,6 +179,25 @@ public class EnrichItemSupervisor {
 				HttpSupervisor.Response.class,
 				response -> new HttpSupervisorWrapper(response, replyTo)
 			);
+
+		String validationScript = enrichItem.getScript();
+
+		if (validationScript != null && !validationScript.isBlank()) {
+
+			ActorRef<GroovyActor.Response> groovyValidatorRef =
+				ctx.messageAdapter(
+					GroovyActor.Response.class,
+					response -> new GroovyValidatorWrapper(response, enrichItem, dataPayload, replyTo)
+				);
+
+			ActorRef<GroovyActor.Command> groovyActor =
+				ctx.spawnAnonymous(GroovyActor.create());
+
+			groovyActor.tell(new GroovyActor.Validate(dataPayload, validationScript, groovyValidatorRef));
+
+			return;
+
+		}
 
 		httpSupervisor.tell(
 			new HttpSupervisor.Call(
