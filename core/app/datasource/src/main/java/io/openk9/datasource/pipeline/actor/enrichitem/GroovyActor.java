@@ -57,9 +57,9 @@ public class GroovyActor {
 			if (response instanceof Boolean) {
 				validate.replyTo.tell(new GroovyValidateResponse((Boolean)response));
 			}
-
-			validate.replyTo.tell(new GroovyError("Invalid return type: " + response.getClass()));
-
+			else {
+				validate.replyTo.tell(new GroovyError("Invalid return type: " + response.getClass()));
+			}
 
 		}
 		catch (Exception e) {
