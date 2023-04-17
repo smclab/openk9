@@ -56,13 +56,18 @@ public class DeleteService {
 
 			String bucketName = "datasource" + datasourceId;
 
+			logger.info("Removing object with fileId " + fileId + " in bucket " + bucketName);
+
 			minioClient.removeObject(
 					RemoveObjectArgs.builder()
 							.bucket(bucketName)
 							.object(fileId)
 							.build());
 
+			logger.info("Removed object with resourceId: " + resourceId);
+
 		} catch (Exception e) {
+
 			logger.info("Delete failed with exception: " + e.getMessage());
 		}
 	}

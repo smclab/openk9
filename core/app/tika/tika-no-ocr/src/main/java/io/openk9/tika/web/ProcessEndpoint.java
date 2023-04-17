@@ -35,7 +35,11 @@ public class ProcessEndpoint {
 
 	@PostConstruct
 	public void init() {
-		_executorService = Executors.newFixedThreadPool(1);
+		_executorService = Executors.newFixedThreadPool(1, r -> {
+			Thread t = new Thread(r);
+			t.setName("tika-thread");
+			return t;
+		});
 	}
 
 	@PreDestroy

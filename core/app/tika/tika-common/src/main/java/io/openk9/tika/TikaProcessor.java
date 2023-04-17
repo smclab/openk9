@@ -84,9 +84,7 @@ public class TikaProcessor {
 
             boolean retainBinaries = enrichItemConfig.getBoolean("retain_binaries");
 
-            try {
-
-                InputStream inputStream = new BufferedInputStream(fileManagerClient.download(resourceId, schemaName));
+            try (InputStream inputStream = new BufferedInputStream(fileManagerClient.download(resourceId, schemaName))) {
 
                 MediaType mediaType = _detectors.detect(inputStream);
 
