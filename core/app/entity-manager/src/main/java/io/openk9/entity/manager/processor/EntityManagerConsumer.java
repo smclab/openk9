@@ -215,6 +215,7 @@ public class EntityManagerConsumer {
 
 			long estimatedTime = System.currentTimeMillis() - startTime;
 			_logger.info(estimatedTime);
+			_logger.info("Completed processing for message with ingestioId: " + ingestionId);
 
 		}
 		catch (Exception e) {

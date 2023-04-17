@@ -110,6 +110,7 @@ public class UploadService {
 
 
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+			logger.info("Upload failed with exception: " + e.getMessage());
 			return null;
 		}
 

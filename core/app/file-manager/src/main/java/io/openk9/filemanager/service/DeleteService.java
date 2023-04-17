@@ -63,7 +63,7 @@ public class DeleteService {
 							.build());
 
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.info("Delete failed with exception: " + e.getMessage());
 		}
 	}
 

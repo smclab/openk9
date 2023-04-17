@@ -23,6 +23,7 @@ import io.openk9.filemanager.grpc.FileManagerGrpc;
 import io.openk9.filemanager.grpc.FileResourceResponse;
 import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
 import io.quarkus.grpc.GrpcClient;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -67,7 +68,8 @@ public class DownloadService {
 				return InputStream.nullInputStream();
 			}
 		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
-				return InputStream.nullInputStream();
+			logger.info("Download failed with exception: " + e.getMessage());
+			return InputStream.nullInputStream();
 		}
 	}
 
@@ -90,4 +92,6 @@ public class DownloadService {
 		}
 	}*/
 
+	@Inject
+	Logger logger;
 }
