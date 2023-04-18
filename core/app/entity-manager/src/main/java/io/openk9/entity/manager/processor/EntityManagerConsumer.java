@@ -207,21 +207,14 @@ public class EntityManagerConsumer {
 
 			transactionContext.commitTransaction();
 
-			String replyTo = entityManagerPayload.getReplyTo();
-
-			datasourceClient.sentToPipeline(replyTo, "{}");
-
-			_logger.info("Send message to datasource with token: " + replyTo);
-
 			long estimatedTime = System.currentTimeMillis() - startTime;
 			_logger.info(estimatedTime);
-			_logger.info("Completed processing for message with ingestioId: " + ingestionId);
+			_logger.info("Completed processing for message with ingestionId: " + ingestionId);
 
 		}
 		catch (Exception e) {
 			transactionContext.rollbackTransaction();
 			_logger.error(e.getMessage(), e);
-			throw (RuntimeException) e;
 		}
 
 	}
