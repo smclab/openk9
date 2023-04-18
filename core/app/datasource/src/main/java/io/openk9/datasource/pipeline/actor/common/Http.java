@@ -7,6 +7,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.pipeline.util.Util;
 import io.quarkus.arc.Arc;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
@@ -58,7 +59,7 @@ public class Http {
 			webClient
 				.postAbs(post.url())
 				.timeout(timeout)
-				.sendJson(post.body())
+				.sendJson(new JsonObject(new String(post.body())))
 		);
 
 		return Behaviors.same();
