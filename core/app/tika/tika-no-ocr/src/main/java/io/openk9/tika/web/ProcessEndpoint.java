@@ -28,16 +28,24 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Path("/process")
 public class ProcessEndpoint {
 
+	@ConfigProperty(name = "tika.pool.size", defaultValue = "4")
+	int tikaPoolSize;
+
 	@PostConstruct
 	public void init() {
-		_executorService = Executors.newFixedThreadPool(1, r -> {
+		AtomicInteger atomicInteger = new AtomicInteger(0);
+
+		_executorService = Executors.newFixedThreadPool(tikaPoolSize, r -> {
 			Thread t = new Thread(r);
-			t.setName("tika-thread");
+			t.setName("tika-thread-" + atomicInteger.getAndIncrement());
 			return t;
 		});
 	}
