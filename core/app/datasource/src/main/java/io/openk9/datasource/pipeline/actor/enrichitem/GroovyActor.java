@@ -17,7 +17,7 @@ public class GroovyActor {
 		JsonObject jsonObject, String groovyScript, ActorRef<Response> replyTo) implements Command {}
 	public record Validate(JsonObject jsonObject, String groovyScript, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}
-	public record GroovyResponse(JsonObject response) implements Response {}
+	public record GroovyResponse(byte[] response) implements Response {}
 	public record GroovyError(String error) implements Response {}
 	public record GroovyValidateResponse(boolean valid) implements Response {}
 
@@ -76,6 +76,7 @@ public class GroovyActor {
 
 		String groovyScript = execute.groovyScript;
 		JsonObject dataPayload = execute.jsonObject;
+		ActorRef<Response> replyTo = execute.replyTo;
 
 		Script parse = groovyShell.parse(groovyScript);
 
@@ -86,17 +87,20 @@ public class GroovyActor {
 			Object response = parse.run();
 
 			if (response instanceof Map) {
-				execute.replyTo.tell(new GroovyResponse(new JsonObject((Map<String, Object>) response)));
+				JsonObject jsonResponse = new JsonObject((Map<String, Object>) response);
+				replyTo.tell(new GroovyResponse(jsonResponse.toBuffer().getBytes()));
 			}
 			else if (response instanceof JsonObject) {
-				execute.replyTo.tell(new GroovyResponse((JsonObject)response));
+				JsonObject jsonResponse = (JsonObject)response;
+				replyTo.tell(new GroovyResponse(jsonResponse.toBuffer().getBytes()));
 			}
-
-			execute.replyTo.tell(new GroovyError("Invalid return type: " + response.getClass()));
+			else {
+				replyTo.tell(new GroovyError("Invalid return type: " + response.getClass()));
+			}
 
 		}
 		catch (Exception e) {
-			execute.replyTo.tell(new GroovyError(e.getMessage()));
+			replyTo.tell(new GroovyError(e.getMessage()));
 			ctx.getLog().error(e.getMessage(), e);
 		}
 

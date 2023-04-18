@@ -7,7 +7,6 @@ import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.util.CborSerializable;
-import io.vertx.core.json.JsonObject;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -20,11 +19,11 @@ public class Token {
 
 	public sealed interface Command extends CborSerializable {}
 	public record Generate(ActorRef<Response> replyTo) implements Command {}
-	public record Callback(String token, JsonObject jsonObject) implements Command {}
+	public record Callback(String token, byte[] jsonObject) implements Command {}
 	private enum Tick implements Command {INSTANCE}
 	public sealed interface Response extends CborSerializable {}
 	public record TokenGenerated(String token) implements Response {}
-	public record TokenCallback(JsonObject jsonObject) implements Response {}
+	public record TokenCallback(byte[] jsonObject) implements Response {}
 	public enum TokenState implements Response {EXPIRED, VALID}
 
 	private record TokenInfo(LocalDateTime creationDate, ActorRef<Response> replyTo) implements CborSerializable {}
@@ -71,7 +70,7 @@ public class Token {
 	}
 
 	private static Behavior<Command> onCallback(
-		long validityTokenMillis, String token, JsonObject jsonObject,
+		long validityTokenMillis, String token, byte[] jsonObject,
 		Map<String, TokenInfo> tokens, ActorContext<Command> ctx,
 		Cancellable cancellable) {
 

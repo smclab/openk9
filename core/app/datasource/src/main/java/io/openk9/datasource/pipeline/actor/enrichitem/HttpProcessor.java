@@ -57,10 +57,10 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 				Body bodyResponse;
 
 				if (body == null || body.length == 0) {
-					bodyResponse = new Body(new JsonObject());
+					bodyResponse = new Body(EMPTY_JSON);
 				}
 				else {
-					bodyResponse = new Body(new JsonObject(new String(body)));
+					bodyResponse = new Body(body);
 				}
 
 				replyTo.tell(bodyResponse);
@@ -83,7 +83,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
 		if (response instanceof Token.TokenCallback) {
 			Token.TokenCallback tokenCallback =(Token.TokenCallback)response;
-			JsonObject jsonObject = tokenCallback.jsonObject();
+			byte[] jsonObject = tokenCallback.jsonObject();
 			replyTo.tell(new Body(jsonObject));
 		}
 		else if (response instanceof Token.TokenState) {
@@ -98,7 +98,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 	}
 
 	private Behavior<Command> started(
-		String url, JsonObject jsonObject, ActorRef<Response> replyTo) {
+		String url, byte[] body, ActorRef<Response> replyTo) {
 
 		ActorRef<Http.Response> responseActorRef =
 			getContext().messageAdapter(
@@ -109,7 +109,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 		ActorRef<Http.Command> commandActorRef =
 			getContext().spawnAnonymous(Http.create());
 
-		commandActorRef.tell(new Http.POST(responseActorRef, url, jsonObject));
+		commandActorRef.tell(new Http.POST(responseActorRef, url, body));
 
 		return newReceiveBuilder()
 			.onMessage(ResponseWrapper.class, this::onResponseWrapper)
@@ -126,17 +126,17 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 			return Behaviors.stopped();
 		}
 
-		JsonObject jsonObject = start.jsonObject;
+		byte[] body = start.body;
 
 		if (async) {
 
 			tokenActorRef.tell(new Token.Generate(tokenResponseAdapter));
 
-			return waitGenerateToken(url, jsonObject, replyTo);
+			return waitGenerateToken(url, body, replyTo);
 
 		}
 
-		return started(url, jsonObject, replyTo);
+		return started(url, body, replyTo);
 
 	}
 
@@ -151,7 +151,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 	}
 
 	private Behavior<Command> waitGenerateToken(
-		String url, JsonObject jsonObject, ActorRef<Response> replyTo) {
+		String url, byte[] bytes, ActorRef<Response> replyTo) {
 
 		return Behaviors.receive(Command.class)
 			.onMessage(
@@ -165,13 +165,15 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 							(Token.TokenGenerated) response;
 						JsonObject newJson = new JsonObject();
 
+						JsonObject jsonObject = new JsonObject(new String(bytes));
+
 						for (Map.Entry<String, Object> entry : jsonObject) {
 							newJson.put(entry.getKey(), entry.getValue());
 						}
 
 						newJson.put("replyTo", tokenGenerated.token());
 
-						return started(url, newJson, replyTo);
+						return started(url, newJson.toBuffer().getBytes(), replyTo);
 					}
 					else {
 						return Behaviors.same();
@@ -191,11 +193,13 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
 	public sealed interface Command {}
 	public record Start(
-		String url, JsonObject jsonObject, ActorRef<Response> replyTo) implements Command {}
+		String url, byte[] body, ActorRef<Response> replyTo) implements Command {}
 	private record TokenResponseWrapper(Token.Response response) implements Command {}
 	private record ResponseWrapper(Http.Response response, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}
 	public record Error(String message) implements Response {}
-	public record Body(JsonObject jsonObject) implements Response {}
+	public record Body(byte[] body) implements Response {}
+
+	private static final byte[] EMPTY_JSON = new byte[] {123, 125}; // "{}";
 
 }

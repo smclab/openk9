@@ -18,7 +18,7 @@ public class EnrichItemSupervisor {
 		GroovyActor.Response response, EnrichItem enrichItem,
 		JsonObject dataPayload, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}
-	public record Body(JsonObject body) implements Response {}
+	public record Body(byte[] body) implements Response {}
 	public record Error(String error) implements Response {}
 
 	public static Behavior<Command> create(ActorRef<HttpSupervisor.Command> httpSupervisor) {
@@ -61,7 +61,7 @@ public class EnrichItemSupervisor {
 					new HttpSupervisor.Call(
 						enrichItem.getType() == EnrichItem.EnrichItemType.HTTP_ASYNC,
 						enrichItem.getServiceName(),
-						dataPayload,
+						dataPayload.toBuffer().getBytes(),
 						responseActorRef
 					)
 				);
@@ -203,7 +203,7 @@ public class EnrichItemSupervisor {
 			new HttpSupervisor.Call(
 				enrichItem.getType() == EnrichItem.EnrichItemType.HTTP_ASYNC,
 				enrichItem.getServiceName(),
-				dataPayload,
+				dataPayload.toBuffer().getBytes(),
 				responseActorRef
 			)
 		);

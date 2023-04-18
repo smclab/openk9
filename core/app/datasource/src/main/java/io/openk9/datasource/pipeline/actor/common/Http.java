@@ -7,7 +7,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.pipeline.util.Util;
 import io.quarkus.arc.Arc;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
@@ -19,7 +18,7 @@ public class Http {
 	public sealed interface Command {}
 	public record GET(ActorRef<Response> replyTo, String url)
 		implements Command {}
-	public record POST(ActorRef<Response> replyTo, String url, JsonObject body)
+	public record POST(ActorRef<Response> replyTo, String url, byte[] body)
 		implements Command {}
 	public sealed interface Response { byte[] body();}
 	public record OK(byte[] body) implements Response {}
@@ -59,7 +58,7 @@ public class Http {
 			webClient
 				.postAbs(post.url())
 				.timeout(timeout)
-				.sendJsonObject(post.body())
+				.sendJson(post.body())
 		);
 
 		return Behaviors.same();

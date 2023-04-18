@@ -9,7 +9,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
-import io.vertx.core.json.JsonObject;
 
 import java.time.Duration;
 
@@ -40,7 +39,7 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
 				if (response instanceof HttpProcessor.Body) {
 					HttpProcessor.Body ok = (HttpProcessor.Body) response;
-					replyTo.tell(new Body(ok.jsonObject()));
+					replyTo.tell(new Body(ok.body()));
 				}
 				else {
 					HttpProcessor.Error error = (HttpProcessor.Error) response;
@@ -84,11 +83,11 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 	private final ActorRef<Token.Command> tokenActorRef;
 	public sealed interface Command {}
 	public record Call(
-		boolean async, String url, JsonObject jsonObject, ActorRef<Response> replyTo) implements Command {}
-	public record Callback(String tokenId, JsonObject jsonObject) implements Command {}
+		boolean async, String url, byte[] jsonObject, ActorRef<Response> replyTo) implements Command {}
+	public record Callback(String tokenId, byte[] jsonObject) implements Command {}
 	private record ResponseWrapper(HttpProcessor.Response response, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}
-	public record Body(JsonObject jsonObject) implements Response {}
+	public record Body(byte[] jsonObject) implements Response {}
 	public record Error(String error) implements Response {}
 
 

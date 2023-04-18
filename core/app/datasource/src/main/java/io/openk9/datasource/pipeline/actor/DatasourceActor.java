@@ -45,7 +45,7 @@ public class DatasourceActor {
 	private record EnrichItemSupervisorResponseWrapper(
 		EnrichItemSupervisor.Response response) implements Command {}
 	private record EnrichItemError(EnrichItem enrichItem, Throwable exception) implements Command {}
-	private record InternalResponseWrapper(JsonObject jsonObject) implements Command {}
+	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
 	private record InternalError(String error) implements Command {}
 	public sealed interface Response {}
 	public enum Success implements Response {INSTANCE}
@@ -318,7 +318,7 @@ public class DatasourceActor {
 			})
 			.onMessage(InternalResponseWrapper.class, srw -> {
 
-				JsonObject result = srw.jsonObject();
+				JsonObject result = new JsonObject(new String(srw.jsonObject()));
 
 				logger.info("enrichItem: " + enrichItem.getId() + " OK ");
 

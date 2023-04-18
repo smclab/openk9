@@ -23,13 +23,13 @@ import java.util.Map;
 public class IngestionActor {
 	public sealed interface Command {}
 	public record IngestionMessage(DataPayload dataPayload, Message<?> message) implements Command {}
-	public record Callback(String tokenId, JsonObject body) implements Command { }
+	public record Callback(String tokenId, byte[] body) implements Command { }
 	private record DatasourceResponseWrapper(Message<?> message, DatasourceActor.Response response) implements Command {}
 	private record EnrichItemResponseWrapper(EnrichItemActor.EnrichItemCallbackResponse response, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command {}
 	private record SupervisorResponseWrapper(EnrichItemSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	public record EnrichItemCallback(long enrichItemId, String tenantId, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command { }
 	public sealed interface Response {}
-	public record EnrichItemCallbackResponse(JsonObject jsonObject) implements Response {}
+	public record EnrichItemCallbackResponse(byte[] jsonObject) implements Response {}
 	public record EnrichItemCallbackError(String message) implements Response {}
 
 	public static Behavior<Command> create() {

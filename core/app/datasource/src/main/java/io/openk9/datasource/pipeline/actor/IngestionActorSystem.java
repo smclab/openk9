@@ -31,7 +31,7 @@ public class IngestionActorSystem {
 	}
 
 	public void callback(String tokenId, JsonObject body) {
-		actorSystem.tell(new IngestionActor.Callback(tokenId, body));
+		actorSystem.tell(new IngestionActor.Callback(tokenId, body.toBuffer().getBytes()));
 	}
 
 	public Uni<JsonObject> callEnrichItem(
@@ -49,7 +49,11 @@ public class IngestionActorSystem {
 			.completionStage(future)
 			.map(response -> {
 				if (response instanceof IngestionActor.EnrichItemCallbackResponse) {
-					return ((IngestionActor.EnrichItemCallbackResponse) response).jsonObject();
+
+					byte[] bytes =
+						((IngestionActor.EnrichItemCallbackResponse) response).jsonObject();
+
+					return new JsonObject(new String(bytes));
 				}
 				else {
 					return JsonObject.of("error", ((IngestionActor.EnrichItemCallbackError) response).message());
