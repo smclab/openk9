@@ -40,10 +40,14 @@ public class IndexWriterActor {
 
 	public static Behavior<Command> create() {
 
-		RestHighLevelClient restHighLevelClient =
-			CDI.current().select(RestHighLevelClient.class).get();
+		return Behaviors.setup(ctx -> {
 
-		return Behaviors.setup(ctx -> initial(ctx, restHighLevelClient));
+			RestHighLevelClient restHighLevelClient =
+				CDI.current().select(RestHighLevelClient.class).get();
+
+			return initial(ctx, restHighLevelClient);
+
+		});
 	}
 
 	private static Behavior<Command> initial(
