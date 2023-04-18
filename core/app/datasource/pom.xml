@@ -206,6 +206,11 @@
       <version>${akka.management.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.lightbend.akka.management</groupId>
+      <artifactId>akka-management-cluster-http_${scala.version}</artifactId>
+      <version>${akka.management.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-discovery_${scala.version}</artifactId>
     </dependency>
@@ -218,6 +223,10 @@
       <groupId>com.enragedginger</groupId>
       <artifactId>akka-quartz-scheduler_2.13</artifactId>
       <version>1.9.3-akka-2.6.x</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-serialization-jackson_${scala.version}</artifactId>
     </dependency>
   </dependencies>
   <build>

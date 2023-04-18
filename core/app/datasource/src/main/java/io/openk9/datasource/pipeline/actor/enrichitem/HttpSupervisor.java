@@ -7,6 +7,8 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import akka.cluster.typed.ClusterSingleton;
+import akka.cluster.typed.SingletonActor;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Duration;
@@ -15,8 +17,14 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
 	public HttpSupervisor(ActorContext<Command> context) {
 		super(context);
-		this.tokenActorRef = context.spawn(
-			Token.create(Duration.ofMinutes(15).toMillis()), "token-actor");
+		ClusterSingleton clusterSingleton =
+			ClusterSingleton.get(context.getSystem());
+
+		this.tokenActorRef = clusterSingleton.init(
+			SingletonActor.of(
+				Token.create(Duration.ofMinutes(15).toMillis()),
+				"token")
+		);
 	}
 
 	@Override

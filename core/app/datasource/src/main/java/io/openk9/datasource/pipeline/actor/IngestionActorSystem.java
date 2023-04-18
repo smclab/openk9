@@ -1,12 +1,9 @@
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.AllDeadLetters;
-import akka.actor.DeadLetter;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
-import akka.actor.typed.Props;
-import akka.actor.typed.eventstream.EventStream;
 import akka.actor.typed.javadsl.AskPattern;
+import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
@@ -14,6 +11,7 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -23,18 +21,9 @@ public class IngestionActorSystem {
 
 	@PostConstruct
 	public void init() {
-		this.actorSystem = ActorSystem.apply(
-			IngestionActor.create(), "enrich-pipeline");
-
-		ActorRef<AllDeadLetters> allDeadLettersActorRef =
-			actorSystem.systemActorOf(
-				DeadLetterListener.create(), "dead-letter-monitor",
-				Props.empty()
-			);
-
-		actorSystem.eventStream().tell(
-			new EventStream.Subscribe(DeadLetter.class, allDeadLettersActorRef));
-
+		this.actorSystem =
+			(ActorSystem<IngestionActor.Command>)
+				actorSystemProvider.getActorSystem();
 	}
 
 	public void startEnrichPipeline(DataPayload dataPayload, Message<?> message) {
@@ -70,5 +59,8 @@ public class IngestionActorSystem {
 	}
 
 	private ActorSystem<IngestionActor.Command> actorSystem;
+
+	@Inject
+	ActorSystemProvider actorSystemProvider;
 
 }

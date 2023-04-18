@@ -1,9 +1,12 @@
 package io.openk9.datasource.actor;
 
 import akka.actor.typed.ActorSystem;
-import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.typed.ClusterSingleton;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import io.openk9.datasource.pipeline.actor.IngestionActor;
 import io.quarkus.runtime.Startup;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -18,7 +21,10 @@ public class ActorSystemProvider {
 	@PostConstruct
 	void init() {
 
-		actorSystem = ActorSystem.create(Behaviors.empty(), "datasource");
+		Config defaultConfig = ConfigFactory.load(clusterFile);
+		Config config = defaultConfig.withFallback(ConfigFactory.load());
+
+		actorSystem = ActorSystem.create(IngestionActor.create(), "datasource", config);
 
 		for (ActorSystemInitializer actorSystemInitializer : actorSystemInitializerInstance) {
 			actorSystemInitializer.init(actorSystem);
@@ -43,5 +49,8 @@ public class ActorSystemProvider {
 
 	@Inject
 	Instance<ActorSystemInitializer> actorSystemInitializerInstance;
+
+	@ConfigProperty(name = "akka.cluster.file")
+	String clusterFile;
 
 }

@@ -4,6 +4,8 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import akka.cluster.typed.ClusterSingleton;
+import akka.cluster.typed.SingletonActor;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.DataIndex;
@@ -171,16 +173,20 @@ public class DatasourceActor {
 
 			logger.info("pipeline is empty, start index writer");
 
-			String contentId = dataPayload.getContentId();
+			ClusterSingleton clusterSingleton =
+				ClusterSingleton.get(ctx.getSystem());
 
 			ActorRef<IndexWriterActor.Command> indexWriterActorRef =
-				ctx.spawn(
-					IndexWriterActor.create(
-						datasourceModel.datasource.getDataIndex(),
-						dataPayload, responseActorRef),
-					"index-writer_" + normalize(contentId));
+				clusterSingleton.init(
+					SingletonActor.of(
+						IndexWriterActor.create(), "index-writer")
+				);
 
-			indexWriterActorRef.tell(IndexWriterActor.Start.INSTANCE);
+			indexWriterActorRef.tell(
+				new IndexWriterActor.Start(
+					datasourceModel.datasource.getDataIndex(),
+					dataPayload, responseActorRef)
+			);
 
 			return Behaviors.receive(Command.class)
 				.onMessage(

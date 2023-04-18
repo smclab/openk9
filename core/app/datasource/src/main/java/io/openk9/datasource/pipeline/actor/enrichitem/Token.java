@@ -6,6 +6,7 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Duration;
@@ -17,16 +18,16 @@ import java.util.UUID;
 
 public class Token {
 
-	public sealed interface Command {}
+	public sealed interface Command extends CborSerializable {}
 	public record Generate(ActorRef<Response> replyTo) implements Command {}
 	public record Callback(String token, JsonObject jsonObject) implements Command {}
 	private enum Tick implements Command {INSTANCE}
-	public sealed interface Response {}
+	public sealed interface Response extends CborSerializable {}
 	public record TokenGenerated(String token) implements Response {}
 	public record TokenCallback(JsonObject jsonObject) implements Response {}
 	public enum TokenState implements Response {EXPIRED, VALID}
 
-	private record TokenInfo(LocalDateTime creationDate, ActorRef<Response> replyTo) {}
+	private record TokenInfo(LocalDateTime creationDate, ActorRef<Response> replyTo) implements CborSerializable {}
 
 	public static Behavior<Command> create() {
 		return create(-1);

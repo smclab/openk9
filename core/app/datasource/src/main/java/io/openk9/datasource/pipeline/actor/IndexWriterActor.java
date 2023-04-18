@@ -6,6 +6,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;
@@ -29,41 +30,41 @@ import java.util.Map;
 
 public class IndexWriterActor {
 
-	public sealed interface Command {}
-	public enum Start implements Command {INSTANCE}
-	private record SearchResponseCommand(SearchResponse searchResponse, Exception exception) implements Command {}
-	private record BulkResponseCommand(BulkResponse bulkResponse, Exception exception) implements Command {}
-	public sealed interface Response {}
+	public sealed interface Command extends CborSerializable {}
+	public record Start(DataIndex dataIndex, DataPayload dataPayload, ActorRef<Response> replyTo) implements Command {}
+	private record SearchResponseCommand(DataIndex dataIndex, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
+	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, Exception exception) implements Command {}
+	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
 	public record Failure(Exception exception) implements Response {}
 
-	public static Behavior<Command> create(DataIndex dataIndex, DataPayload dataPayload, ActorRef<Response> replyTo) {
+	public static Behavior<Command> create() {
 
 		RestHighLevelClient restHighLevelClient =
 			CDI.current().select(RestHighLevelClient.class).get();
 
-		return Behaviors.setup(ctx -> initial(ctx, restHighLevelClient, dataIndex, dataPayload, replyTo));
+		return Behaviors.setup(ctx -> initial(ctx, restHighLevelClient));
 	}
 
 	private static Behavior<Command> initial(
-		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		DataIndex dataIndex, DataPayload dataPayload,
-		ActorRef<Response> replyTo) {
+		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient) {
 
 		Logger logger = ctx.getLog();
 
 		return Behaviors.receive(Command.class)
-			.onMessageEquals(Start.INSTANCE, () -> onStart(ctx, restHighLevelClient, dataIndex, dataPayload))
+			.onMessage(Start.class, (start) -> onStart(ctx, restHighLevelClient, start.dataIndex, start.dataPayload, start.replyTo))
 			.onMessage(SearchResponseCommand.class, src -> onSearchResponseCommand(
-				ctx, restHighLevelClient, dataIndex, dataPayload, logger, src))
-			.onMessage(BulkResponseCommand.class, brc -> onBulkResponseCommand(replyTo, logger, brc))
+				ctx, restHighLevelClient, src, logger))
+			.onMessage(BulkResponseCommand.class, brc -> onBulkResponseCommand(logger, brc))
 			.build();
 	}
 
 	private static Behavior<Command> onBulkResponseCommand(
-		ActorRef<Response> replyTo, Logger logger, BulkResponseCommand brc) {
+		Logger logger, BulkResponseCommand brc) {
+
 		BulkResponse response = brc.bulkResponse;
 		Exception throwable = brc.exception;
+		ActorRef<Response> replyTo = brc.replyTo;
 
 		if (response != null) {
 
@@ -83,22 +84,25 @@ public class IndexWriterActor {
 			replyTo.tell(Success.INSTANCE);
 		}
 
-		return Behaviors.stopped();
+		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onSearchResponseCommand(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		DataIndex dataIndex, DataPayload dataPayload, Logger logger,
-		SearchResponseCommand src) {
+		SearchResponseCommand src, Logger logger) {
 
 		Exception exception = src.exception;
+		DataIndex dataIndex = src.dataIndex;
+		DataPayload dataPayload = src.dataPayload;
+		SearchResponse searchResponse = src.searchResponse;
+		ActorRef<Response> replyTo = src.replyTo;
 
 		if (exception != null) {
 			logger.error("Error on search", exception);
 		}
 
 		DocWriteRequest docWriteRequest =
-			createDocWriteRequest(dataIndex, dataPayload, logger, src.searchResponse);
+			createDocWriteRequest(dataIndex, dataPayload, logger, searchResponse);
 
 		BulkRequest bulkRequest = new BulkRequest();
 		bulkRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
@@ -109,12 +113,16 @@ public class IndexWriterActor {
 			new ActionListener<>() {
 				@Override
 				public void onResponse(BulkResponse bulkResponse) {
-					ctx.getSelf().tell(new BulkResponseCommand(bulkResponse, null));
+					ctx.getSelf().tell(
+						new BulkResponseCommand(
+							replyTo, bulkResponse, null));
 				}
 
 				@Override
 				public void onFailure(Exception e) {
-					ctx.getSelf().tell(new BulkResponseCommand(null, e));
+					ctx.getSelf().tell(
+						new BulkResponseCommand(
+							replyTo, null, e));
 				}
 			});
 
@@ -123,7 +131,8 @@ public class IndexWriterActor {
 
 	private static Behavior<Command> onStart(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		DataIndex dataIndex, DataPayload dataPayload) {
+		DataIndex dataIndex, DataPayload dataPayload,
+		ActorRef<Response> replyTo) {
 
 		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
 
@@ -144,12 +153,16 @@ public class IndexWriterActor {
 			new ActionListener<>() {
 				@Override
 				public void onResponse(SearchResponse searchResponse) {
-					ctx.getSelf().tell(new SearchResponseCommand(searchResponse, null));
+					ctx.getSelf().tell(
+						new SearchResponseCommand(
+							dataIndex, dataPayload, replyTo, searchResponse, null));
 				}
 
 				@Override
 				public void onFailure(Exception e) {
-					ctx.getSelf().tell(new SearchResponseCommand(null, e));
+					ctx.getSelf().tell(
+						new SearchResponseCommand(
+							dataIndex, dataPayload, replyTo, null, e));
 				}
 			});
 
