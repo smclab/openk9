@@ -38,6 +38,7 @@ function Result<E>(props: ResultProps<E>) {
         }
         return (
           <pre
+            className="openk9-embeddable-search--no-result-container"
             css={css`
               height: 100px;
               overflow: hidden;

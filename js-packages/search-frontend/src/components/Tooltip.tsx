@@ -18,6 +18,7 @@ export function Tooltip({ children, description }: TooltipProps) {
       {children}
       {isOpen && (
         <div
+          className="openk9-tooltip"
           css={css`
             position: absolute;
             z-index: 1;

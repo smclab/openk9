@@ -81,6 +81,7 @@ export function Search({
   const [journey, setJourney] = React.useState();
   return (
     <div
+      className="openk9--search-container"
       css={css`
         margin-top: 12px;
         display: flex;
@@ -103,6 +104,7 @@ export function Search({
         `}
       >
         <FontAwesomeIcon
+          className="openk9--search-icon"
           icon={faSearch}
           style={{
             paddingLeft: "16px",
@@ -111,6 +113,7 @@ export function Search({
           }}
         />
         <div
+          className="openk9--search-container-show-syntax"
           css={css`
             flex-grow: 1;
             position: relative;
@@ -118,6 +121,7 @@ export function Search({
           `}
         >
           <div
+            className="openk9--search-show-syntax"
             css={css`
               top: 0px;
               left: 0px;
@@ -205,6 +209,7 @@ export function Search({
               })}
           </div>
           <input
+            className="openk9--input-search"
             ref={inputRef}
             placeholder="Search..."
             value={selectionsState.text}
@@ -315,6 +320,7 @@ export function Search({
           ></input>
         </div>
         <div
+          className="openk9--search-delete-container-icon"
           style={{
             paddingRight: "16px",
             display: "flex",
@@ -327,6 +333,7 @@ export function Search({
         >
           <div>
             <span
+              className="openk9--search-delete-span-icon"
               css={css`
                 cursor: pointer;
               `}
@@ -343,6 +350,7 @@ export function Search({
         </div>
       </div>
       <div
+        className="openk9--search-calendar-container"
         css={css`
           margin-left: auto;
           display: flex;
@@ -384,6 +392,7 @@ export function Search({
         )}
       </div>
       <div
+        className="openk9--search-calendar-open"
         css={css`
           position: relative;
         `}

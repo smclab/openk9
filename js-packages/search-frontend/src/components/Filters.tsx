@@ -46,6 +46,7 @@ function Filters({
 
   return (
     <OverlayScrollbarsComponent
+      className="openk9-filter-overlay-scrollbars"
       style={{
         overflowY: "auto",
         position: "relative",
@@ -54,6 +55,7 @@ function Filters({
       }}
     >
       <div
+        className="openk9-filter-list-container-title box-title"
         css={css`
           padding: 0px 16px;
           width: 100%;
@@ -64,6 +66,7 @@ function Filters({
         `}
       >
         <div
+          className="openk9-filter-list-container-internal-title "
           css={css`
             display: flex;
           `}
@@ -72,6 +75,7 @@ function Filters({
             <FilterSvg />
           </span>
           <span
+            className="openk9-filters-list-title title"
             css={css`
               margin-left: 10px;
               font-style: normal;
@@ -89,11 +93,13 @@ function Filters({
         </div>
       </div>
       <div
+        className="openk9-number-filter-list-container-wrapper"
         css={css`
           padding: 8px 24px;
         `}
       >
         <div
+          className="openk9-number-filters-list-container more-detail-content"
           css={css`
             display: flex;
             padding: 8px 8px;
@@ -108,6 +114,7 @@ function Filters({
         >
           <div>
             <span
+              className="openk9-number-filters-list-number-of-results"
               css={css`
                 color: var(--openk9-embeddable-search--active-color);
                 font-weight: 700;
@@ -117,7 +124,7 @@ function Filters({
             </span>
             <span>active filters</span>
           </div>
-          <div>
+          <div className="openk9-active-container-number-filters-list-number-of-results">
             <CreateLabel
               label="remove filters"
               action={() => {
@@ -137,6 +144,7 @@ function Filters({
       </div>
 
       <div
+        className="openk9-filters-container-internal"
         css={css`
           position: absolute;
           padding: 16px 16px 0px 0px;
@@ -145,6 +153,7 @@ function Filters({
       >
         {suggestionCategories.data?.length === 0 && (
           <div
+            className="openk9-filters-container-internal-no-filters"
             css={css`
               color: var(--openk9-embeddable-search--secondary-text-color);
               display: flex;
@@ -226,6 +235,7 @@ export function CreateLabel({
 }: createLabel) {
   return (
     <div
+      className="openk9-create-label-container-wrapper"
       css={css`
         display: flex;
         justify-content: center;
@@ -246,6 +256,7 @@ export function CreateLabel({
       onClick={action}
     >
       <p
+        className="openk9-create-label-container-text-style"
         css={css`
           color: ${colorLabel};
           margin-bottom: ${margBottom};
@@ -254,6 +265,7 @@ export function CreateLabel({
         `}
       >
         <div
+          className="openk9-create-label-container-internal-create"
           css={css`
             display: flex;
             align-items: ${align};
@@ -261,6 +273,7 @@ export function CreateLabel({
         >
           {svgIcon}
           <span
+            className="openk9-create-label-container-internal-space"
             css={css`
               margin-left: ${marginOfSvg};
               margin-right: ${marginRigthOfSvg};

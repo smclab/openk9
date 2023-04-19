@@ -13,6 +13,7 @@ type TokenIconProps = { token: AnalysisToken };
 export function TokenIcon({ token }: TokenIconProps) {
   return (
     <div
+      className="openk9-token-icon"
       css={css`
         width: 16px;
         display: flex;

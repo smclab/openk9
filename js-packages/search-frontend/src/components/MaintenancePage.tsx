@@ -5,6 +5,7 @@ import { Logo } from "./Logo";
 export function MaintenancePage() {
   return (
     <div
+      className="openk9--maintenance-page"
       css={css`
         width: 100vw;
         height: 100vh;

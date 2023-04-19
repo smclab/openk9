@@ -84,6 +84,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
   return (
     <React.Fragment>
       <div
+        className="openk9-result-list-container-title box-title"
         css={css`
           padding: 0px 16px;
           width: 100%;
@@ -98,6 +99,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
           <ResultSvg />
         </span>
         <span
+          className="openk9-result-list-title title"
           css={css`
             margin-left: 5px;
             font-style: normal;
@@ -114,6 +116,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
         </span>
       </div>
       <div
+        className="openk9-number-result-list-container-wrapper "
         css={css`
           padding: 8px 16px;
           font-weight: Helvetica;
@@ -121,6 +124,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
         `}
       >
         <div
+          className="openk9-number-result-list-container more-detail-content"
           css={css`
             padding: 8px 5px;
             border: 1px solid var(--openk9-embeddable-search--border-color);
@@ -131,6 +135,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
           `}
         >
           <span
+            className="openk9-number-result-list-number-of-results "
             css={css`
               color: var(--openk9-embeddable-search--active-color);
               margin-left: 5px;
@@ -139,6 +144,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
             {children?.toLocaleString("it")}
           </span>
           <span
+            className="openk9-number-result-list-label "
             css={css`
               margin-left: auto;
               margin-right: 2%;
@@ -233,9 +239,13 @@ export function FiniteResults<E>({
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery, sort);
   return (
-    <div style={{ height: "100%", overflowY: "auto", position: "relative" }}>
+    <div
+      className="openk9-finite-result-container"
+      style={{ height: "100%", overflowY: "auto", position: "relative" }}
+    >
       {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
         <div
+          className="openk9-finite-result"
           css={css`
             position: absolute;
             width: 100%;
@@ -274,6 +284,7 @@ export function InfiniteResults<E>({
 
   return (
     <OverlayScrollbarsComponentDockerFix
+      className="openk9-infinite-results-overlay-scrollbars"
       style={{
         height: "100%",
         overflowY: "auto",
@@ -282,6 +293,7 @@ export function InfiniteResults<E>({
     >
       {results?.data?.pages[0].total && results.data.pages[0].total > 0 ? (
         <div
+          className="openk9-infinite-results-container-wrapper"
           css={css`
             position: absolute;
             width: 100%;
@@ -353,6 +365,7 @@ export function VirtualResults<E>({
   );
   return (
     <div
+      className="openk9-virtual-results-container"
       css={css`
         display: flex;
         flex-direction: column;
@@ -391,6 +404,7 @@ export function VirtualResults<E>({
           Footer() {
             return (
               <div
+                className="openk9-virtual-results-footer"
                 css={css`
                   padding: 16px;
                   display: flex;
@@ -414,6 +428,7 @@ export function VirtualResults<E>({
 function NoResults() {
   return (
     <div
+      className="openk9-no-results-container"
       css={css`
         color: var(--openk9-embeddable-search--secondary-text-color);
         display: flex;

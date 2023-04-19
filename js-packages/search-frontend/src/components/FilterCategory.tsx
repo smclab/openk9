@@ -89,12 +89,14 @@ function FilterCategory({
 
   return (
     <div
+      className="openk9-filter-category-container"
       css={css`
         margin-bottom: 16px;
       `}
     >
       <div>
         <div
+          className="openk9-filter-category-title"
           css={css`
             user-select: none;
             margin-left: 16px;
@@ -126,6 +128,7 @@ function FilterCategory({
       {isOpen && (
         <React.Fragment>
           <div
+            className="openk9-filter-category-container-search"
             css={css`
               display: flex;
               align-items: center;
@@ -144,6 +147,7 @@ function FilterCategory({
               }}
             />
             <input
+              className="openk9-filter-category-search"
               value={text}
               placeholder="Search filters..."
               onChange={(event) => setText(event.currentTarget.value)}
@@ -296,6 +300,7 @@ function FilterCategory({
                                 {suggestion.tokenType === "ENTITY" ? (
                                   <>
                                     <strong
+                                      className="openk9-filter-category-suggestion-value"
                                       css={css`
                                         :first-letter {
                                           text-transform: uppercase;
@@ -573,6 +578,7 @@ function NoFilter({
     <div>
       <div>
         <div
+          className="openk9-filter-category-no-results-container"
           css={css`
             user-select: none;
             margin-left: 16px;
@@ -584,6 +590,7 @@ function NoFilter({
           onClick={() => setIsOpen(!isOpen)}
         >
           <div
+            className="openk9-filter-category-no-results-category-name"
             css={css`
               flex-grow: 1;
               :first-letter {
@@ -604,6 +611,7 @@ function NoFilter({
       </div>
       {isOpen && (
         <div
+          className="openk9-filter-category-no-results-is-open"
           css={css`
             color: var(--openk9-embeddable-search--secondary-text-color);
             display: flex;
