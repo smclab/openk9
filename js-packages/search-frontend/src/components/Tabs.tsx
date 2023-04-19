@@ -21,6 +21,7 @@ function Tabs({
 }: TabsProps) {
   return (
     <OverlayScrollbarsComponentDockerFix
+      className="openk9-tabs-overlay-scrollbars"
       style={{
         position: "relative",
         overflowX: "auto",
@@ -28,6 +29,7 @@ function Tabs({
       }}
     >
       <div
+        className="openk9-tabs-container-internal"
         css={css`
           position: absolute;
           display: flex;
@@ -37,12 +39,14 @@ function Tabs({
           const isSelected = index === selectedTabIndex;
           return (
             <div
+              className="openk9-single-tab-container"
               css={css`
                 padding-top: 8px;
               `}
             >
               <div
                 key={index}
+                className="openk9-single-tab"
                 css={css`
                   padding-left: ${index == 0 ? "0px" : "20px"};
                   margin-left: ${index == 0 ? "0px" : "14px"};

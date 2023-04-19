@@ -22,6 +22,7 @@ function Detail<E>(props: DetailProps<E>) {
   }
   return (
     <OverlayScrollbarsComponent
+      className="openk9-detail-overlay-scrollbars-component"
       style={{
         position: "relative",
         width: "100%",
@@ -31,6 +32,7 @@ function Detail<E>(props: DetailProps<E>) {
       }}
     >
       <div
+        className="openk9-detail-container-title box-title"
         css={css`
           padding: 0px 16px;
           width: 100%;
@@ -44,6 +46,7 @@ function Detail<E>(props: DetailProps<E>) {
           <PreviewSvg />
         </span>
         <span
+          className="openk9-detail-title title"
           css={css`
             margin-left: 5px;
             font-style: normal;
@@ -60,6 +63,7 @@ function Detail<E>(props: DetailProps<E>) {
         </span>
       </div>
       <div
+        className="openk9-detail-container-card "
         css={css`
           position: absolute;
           width: 100%;
@@ -96,6 +100,7 @@ function NoDetail() {
   return (
     <React.Fragment>
       <div
+        className="openk9-no-detail-container-title box-title"
         css={css`
           padding: 0px 16px;
           width: 100%;
@@ -109,6 +114,7 @@ function NoDetail() {
           <PreviewSvg />
         </span>
         <span
+          className="openk9-no-detail-title title"
           css={css`
             margin-left: 5px;
             font-style: normal;
@@ -125,6 +131,7 @@ function NoDetail() {
         </span>
       </div>
       <div
+        className="openk9-no-detail-content "
         css={css`
           color: var(--openk9-embeddable-search--secondary-text-color);
           display: flex;
