@@ -19,6 +19,7 @@ export function App() {
   }
   return (
     <div
+      className="openk9-body"
       css={css`
         background-color: var(
           --openk9-embeddable-search--secondary-background-color
@@ -69,6 +70,7 @@ export function App() {
     >
       <div
         ref={(element) => openk9.updateConfiguration({ tabs: element })}
+        className="openk9-container-tabs"
         css={css`
           grid-area: tabs;
           padding: 8px 16px 0px 0px;
@@ -76,6 +78,7 @@ export function App() {
         `}
       ></div>
       <div
+        className="openk9-navbar"
         css={css`
           grid-area: dockbar;
           padding: 8px 50px;
@@ -89,6 +92,7 @@ export function App() {
         `}
       >
         <div
+          className="openk9-navbar-container-logo"
           css={css`
             font-size: 20;
             color: #1e1c21;
@@ -97,6 +101,7 @@ export function App() {
           `}
         >
           <span
+            className="openk9-navbar-logo"
             css={css`
               color: var(--openk9-embeddable-search--primary-color);
               margin-right: 8px;
@@ -106,6 +111,7 @@ export function App() {
           </span>
           <span>Open</span>
           <span
+            className="openk9-navbar-name-logo"
             css={css`
               font-weight: 700;
             `}
@@ -114,6 +120,7 @@ export function App() {
           </span>
         </div>
         <div
+          className="openk9-navbar-login"
           ref={(element) => openk9.updateConfiguration({ login: element })}
           css={css`
             flex-grow: 1;
@@ -123,6 +130,7 @@ export function App() {
         ></div>
       </div>
       <div
+        className="openk9-filters-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ filters: element })}
         css={css`
           grid-area: filters;
@@ -140,6 +148,7 @@ export function App() {
         `}
       ></div>
       <div
+        className="openk9-results-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ results: element })}
         css={css`
           grid-area: result;
@@ -152,6 +161,7 @@ export function App() {
         `}
       ></div>
       <div
+        className="openk9-preview-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ details: element })}
         css={css`
           grid-area: detail;
@@ -173,6 +183,7 @@ export function App() {
         `}
       ></div>
       <div
+        className="openk9-update-configuration"
         ref={(element) => openk9.updateConfiguration({ search: element })}
         css={css`
           grid-area: search;
