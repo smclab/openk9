@@ -11,6 +11,7 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.sql.TransactionInvoker;
+import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import scala.Option;
@@ -25,7 +26,7 @@ import java.util.function.BiFunction;
 
 public class Scheduler {
 
-	public sealed interface Command {}
+	public sealed interface Command extends CborSerializable {}
 	public record ScheduleDatasource(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 	public record TriggerDatasource(String tenantName, long datasourceId) implements Command {}
