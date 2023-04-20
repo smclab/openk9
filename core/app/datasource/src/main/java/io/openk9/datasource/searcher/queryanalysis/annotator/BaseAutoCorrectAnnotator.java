@@ -86,16 +86,18 @@ public class BaseAutoCorrectAnnotator extends BaseAnnotator {
 
 						String text = option.getText().string();
 
-						categorySemantics.add(
-							CategorySemantics.of(
-								"$AUTOCORRECT",
-								Map.of(
-									"tokenType", "AUTOCORRECT",
-									"value", text,
-									"score", 0.0f
+						if (text.startsWith(token)) {
+							categorySemantics.add(
+								CategorySemantics.of(
+									"$AUTOCORRECT",
+									Map.of(
+										"tokenType", "AUTOCORRECT",
+										"value", text,
+										"score", 0.0f
+									)
 								)
-							)
-						);
+							);
+						}
 
 					}
 
