@@ -66,11 +66,13 @@ export function TokenSelect({
   `;
   return (
     <div
+      className="openk9-token-select-container"
       css={css`
         position: relative;
       `}
     >
       <div
+        className="openk9-token-select"
         css={css`
           white-space: pre;
           ${statusStyles[status]};
@@ -85,6 +87,7 @@ export function TokenSelect({
       </div>
       {isOpen && isInteractive && (
         <div
+          className="openk9-token-select-is-open"
           css={css`
             position: absolute;
             top: 100%;
@@ -112,6 +115,7 @@ export function TokenSelect({
             `}
           >
             <div
+              className="openk9-token-select-uncheck"
               css={css`
                 display: flex;
                 justify-content: space-between;
@@ -132,7 +136,7 @@ export function TokenSelect({
                   setSubtitle(false);
                 }}
               >
-                Deseleziona
+                Uncheck
               </div>
               <div
                 style={{ cursor: "pointer" }}
@@ -162,6 +166,7 @@ export function TokenSelect({
                 onMouseEnter={() => {
                   onOptionIndexChange(index + 1);
                 }}
+                className="openk9-token-select-container-highlighted"
                 css={css`
                   ${entryStyle(isSelected, isHighlighted)};
                   display: flex;
@@ -171,6 +176,7 @@ export function TokenSelect({
               >
                 {"keywordName" in option && (
                   <strong
+                    className="openk9-token-select-highlighted"
                     css={css`
                       margin-right: 8px;
                     `}
@@ -231,6 +237,7 @@ function FactoryTokenType({
       return (
         <React.Fragment>
           <div
+            className="openk9-token-select-factory-autocomplete"
             css={css`
               display: flex;
               font-family: "Helvetica";
@@ -247,7 +254,7 @@ function FactoryTokenType({
       break;
     case "AUTOCORRECT":
       return (
-        <span>
+        <span className="openk9-token-select-factory-autocorrect">
           Did you mean? <strong>{option.value}</strong>
         </span>
       );
@@ -255,6 +262,7 @@ function FactoryTokenType({
       return (
         <React.Fragment>
           <div
+            className="openk9-token-select-factory-create"
             css={css`
               display: flex;
               font-family: "Helvetica";
@@ -267,6 +275,7 @@ function FactoryTokenType({
             {getTokenLabel(option)}
           </div>
           <div
+            className="openk9-token-select-factory-container-option-label"
             style={{
               display: "flex",
               justifyContent: "center",
@@ -282,6 +291,7 @@ function FactoryTokenType({
             }}
           >
             <p
+              className="openk9-token-select-factory-option-label"
               css={css`
                 color: var(--openk9-embeddable-search--secondary-active-color);
                 margin-bottom: 13px;

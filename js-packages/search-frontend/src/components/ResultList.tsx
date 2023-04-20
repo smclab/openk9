@@ -10,6 +10,7 @@ import { useOpenK9Client } from "./client";
 import { useInfiniteQuery, useQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
+import { SortResultList } from "./SortResultList";
 
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
@@ -152,69 +153,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
           >
             Sort by
           </span>
-          <span>
-            <select
-              className="form-control"
-              id="regularSelectElement"
-              css={css`
-                border-radius: 34px;
-                border: 1px solid #a292926b;
-                height: 30px;
-                cursor: pointer;
-                :focus {
-                  border: 1px solid #a292926b;
-                  outline: none;
-                }
-                background: transparent;
-              `}
-              onChange={(event) => {
-                if (
-                  JSON.parse(event.currentTarget.value)?.label === "relevance"
-                ) {
-                  setSortResult({});
-                } else {
-                  setSortResult({
-                    [JSON.parse(event.currentTarget.value)?.label]: {
-                      sort: JSON.parse(event.currentTarget.value)?.sort,
-                      missing: "_last",
-                    },
-                  });
-                }
-              }}
-            >
-              <option
-                value={JSON.stringify({
-                  label: "relevance",
-                })}
-              >
-                relevance
-              </option>
-              {options.data?.map((option) => {
-                return (
-                  <React.Fragment>
-                    <option
-                      key={option.id + "asc"}
-                      value={JSON.stringify({
-                        label: option.field,
-                        sort: "asc",
-                      })}
-                    >
-                      {option.label} asc
-                    </option>
-                    <option
-                      key={option.id + "desc"}
-                      value={JSON.stringify({
-                        label: option.field,
-                        sort: "desc",
-                      })}
-                    >
-                      {option.label} desc
-                    </option>
-                  </React.Fragment>
-                );
-              })}
-            </select>
-          </span>
+          <SortResultList options={options} setSortResult={setSortResult} />
         </div>
       </div>
     </React.Fragment>
