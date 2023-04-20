@@ -594,3 +594,67 @@ function TableRowsActions({ actions }: { actions: Array<{ label: string; disable
     </ClayButton.Group>
   );
 }
+
+export function DashBoardTable() {
+  return (
+    <React.Fragment>
+      <div
+        style={{
+          fontSize: "24px",
+          lineHeight: "32px",
+          fontWeight: "600",
+          fontFamily: "bold",
+          marginLeft: "10px",
+        }}
+      >
+        Recent Ingestion Activities:
+      </div>
+      <table className="table table-striped">
+        <thead>
+          <tr>
+            <th>Request Id</th>
+            <th>Created</th>
+            <th>Crawl type</th>
+            <th>Domains</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div className="table-title">
+                <a href="#1">FirstId</a>
+              </div>
+            </td>
+            <td>22/03/2022</td>
+            <td>String</td>
+            <td>Openk9.prova.it</td>
+            <td>Running</td>
+          </tr>
+          <tr>
+            <td>
+              <div className="table-title">
+                <a href="#1">SecondId</a>
+              </div>
+            </td>
+            <td>25/03/2022</td>
+            <td>Int</td>
+            <td>Openk9.prova.it</td>
+            <td>Running</td>
+          </tr>
+          <tr>
+            <td>
+              <div className="table-title">
+                <a href="#1">aszsfesees</a>
+              </div>
+            </td>
+            <td>22/11/2022</td>
+            <td>String</td>
+            <td>Openk9.prova.it</td>
+            <td>Running</td>
+          </tr>
+        </tbody>
+      </table>
+    </React.Fragment>
+  );
+}

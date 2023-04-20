@@ -3492,6 +3492,11 @@ export type DeleteCharFiltersMutationVariables = Exact<{
 
 export type DeleteCharFiltersMutation = { __typename?: 'Mutation', deleteCharFilter?: { __typename?: 'CharFilter', id?: string | null, name?: string | null } | null };
 
+export type DataIndexInformationQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type DataIndexInformationQuery = { __typename?: 'Query', buckets?: { __typename?: 'DefaultConnection_Bucket', edges?: Array<{ __typename?: 'DefaultEdge_Bucket', node?: { __typename?: 'Bucket', datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', dataIndex?: { __typename?: 'DataIndex', cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, health?: string | null, index?: string | null, pri?: string | null, priStoreSize: any, rep?: string | null, status?: string | null, storeSize: any, uuid?: string | null } | null } | null } | null } | null> | null } | null } | null } | null> | null } | null };
+
 export type DataSourceQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -3878,6 +3883,20 @@ export type DeleteEnrichPipelineMutationVariables = Exact<{
 
 
 export type DeleteEnrichPipelineMutation = { __typename?: 'Mutation', deleteEnrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null } | null };
+
+export type DataIndexSingleInformationQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DataIndexSingleInformationQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', dataIndex?: { __typename?: 'DataIndex', cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, health?: string | null, index?: string | null, pri?: string | null, priStoreSize: any, rep?: string | null, status?: string | null, storeSize: any, uuid?: string | null } | null } | null } | null } | null> | null } | null } | null };
+
+export type DataSourceInformationQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DataSourceInformationQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', dataIndex?: { __typename?: 'DataIndex', cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, health?: string | null, index?: string | null, pri?: string | null, priStoreSize: any, rep?: string | null, status?: string | null, storeSize: any, uuid?: string | null } | null } | null } | null };
 
 export type MonitoringEventsQueryVariables = Exact<{
   field?: InputMaybe<EventSortable>;
@@ -6499,6 +6518,63 @@ export function useDeleteCharFiltersMutation(baseOptions?: Apollo.MutationHookOp
 export type DeleteCharFiltersMutationHookResult = ReturnType<typeof useDeleteCharFiltersMutation>;
 export type DeleteCharFiltersMutationResult = Apollo.MutationResult<DeleteCharFiltersMutation>;
 export type DeleteCharFiltersMutationOptions = Apollo.BaseMutationOptions<DeleteCharFiltersMutation, DeleteCharFiltersMutationVariables>;
+export const DataIndexInformationDocument = gql`
+    query dataIndexInformation {
+  buckets {
+    edges {
+      node {
+        datasources {
+          edges {
+            node {
+              dataIndex {
+                cat {
+                  docsCount
+                  docsDeleted
+                  health
+                  index
+                  pri
+                  priStoreSize
+                  rep
+                  status
+                  storeSize
+                  uuid
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useDataIndexInformationQuery__
+ *
+ * To run a query within a React component, call `useDataIndexInformationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDataIndexInformationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDataIndexInformationQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useDataIndexInformationQuery(baseOptions?: Apollo.QueryHookOptions<DataIndexInformationQuery, DataIndexInformationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DataIndexInformationQuery, DataIndexInformationQueryVariables>(DataIndexInformationDocument, options);
+      }
+export function useDataIndexInformationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataIndexInformationQuery, DataIndexInformationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DataIndexInformationQuery, DataIndexInformationQueryVariables>(DataIndexInformationDocument, options);
+        }
+export type DataIndexInformationQueryHookResult = ReturnType<typeof useDataIndexInformationQuery>;
+export type DataIndexInformationLazyQueryHookResult = ReturnType<typeof useDataIndexInformationLazyQuery>;
+export type DataIndexInformationQueryResult = Apollo.QueryResult<DataIndexInformationQuery, DataIndexInformationQueryVariables>;
 export const DataSourceDocument = gql`
     query DataSource($id: ID!) {
   datasource(id: $id) {
@@ -8538,6 +8614,108 @@ export function useDeleteEnrichPipelineMutation(baseOptions?: Apollo.MutationHoo
 export type DeleteEnrichPipelineMutationHookResult = ReturnType<typeof useDeleteEnrichPipelineMutation>;
 export type DeleteEnrichPipelineMutationResult = Apollo.MutationResult<DeleteEnrichPipelineMutation>;
 export type DeleteEnrichPipelineMutationOptions = Apollo.BaseMutationOptions<DeleteEnrichPipelineMutation, DeleteEnrichPipelineMutationVariables>;
+export const DataIndexSingleInformationDocument = gql`
+    query dataIndexSingleInformation($id: ID!) {
+  bucket(id: $id) {
+    datasources {
+      edges {
+        node {
+          dataIndex {
+            cat {
+              docsCount
+              docsDeleted
+              health
+              index
+              pri
+              priStoreSize
+              rep
+              status
+              storeSize
+              uuid
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useDataIndexSingleInformationQuery__
+ *
+ * To run a query within a React component, call `useDataIndexSingleInformationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDataIndexSingleInformationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDataIndexSingleInformationQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDataIndexSingleInformationQuery(baseOptions: Apollo.QueryHookOptions<DataIndexSingleInformationQuery, DataIndexSingleInformationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DataIndexSingleInformationQuery, DataIndexSingleInformationQueryVariables>(DataIndexSingleInformationDocument, options);
+      }
+export function useDataIndexSingleInformationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataIndexSingleInformationQuery, DataIndexSingleInformationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DataIndexSingleInformationQuery, DataIndexSingleInformationQueryVariables>(DataIndexSingleInformationDocument, options);
+        }
+export type DataIndexSingleInformationQueryHookResult = ReturnType<typeof useDataIndexSingleInformationQuery>;
+export type DataIndexSingleInformationLazyQueryHookResult = ReturnType<typeof useDataIndexSingleInformationLazyQuery>;
+export type DataIndexSingleInformationQueryResult = Apollo.QueryResult<DataIndexSingleInformationQuery, DataIndexSingleInformationQueryVariables>;
+export const DataSourceInformationDocument = gql`
+    query DataSourceInformation($id: ID!) {
+  datasource(id: $id) {
+    dataIndex {
+      cat {
+        docsCount
+        docsDeleted
+        health
+        index
+        pri
+        priStoreSize
+        rep
+        status
+        storeSize
+        uuid
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useDataSourceInformationQuery__
+ *
+ * To run a query within a React component, call `useDataSourceInformationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDataSourceInformationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDataSourceInformationQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDataSourceInformationQuery(baseOptions: Apollo.QueryHookOptions<DataSourceInformationQuery, DataSourceInformationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DataSourceInformationQuery, DataSourceInformationQueryVariables>(DataSourceInformationDocument, options);
+      }
+export function useDataSourceInformationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataSourceInformationQuery, DataSourceInformationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DataSourceInformationQuery, DataSourceInformationQueryVariables>(DataSourceInformationDocument, options);
+        }
+export type DataSourceInformationQueryHookResult = ReturnType<typeof useDataSourceInformationQuery>;
+export type DataSourceInformationLazyQueryHookResult = ReturnType<typeof useDataSourceInformationLazyQuery>;
+export type DataSourceInformationQueryResult = Apollo.QueryResult<DataSourceInformationQuery, DataSourceInformationQueryVariables>;
 export const MonitoringEventsDocument = gql`
     query MonitoringEvents($field: EventSortable, $ordering: String) {
   event(sortBy: $field, sortType: $ordering, from: 0, size: 10) {
@@ -11428,4 +11606,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-04-04T10:19:03+02:00
+// Generated on 2023-04-20T10:25:14+02:00

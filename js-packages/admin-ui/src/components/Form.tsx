@@ -19,6 +19,9 @@ import { TableRowActions } from "./Table";
 import { ClassNameButton } from "../App";
 import { Observer } from "@clayui/modal/lib/types";
 import { BrandLogo } from "./BrandLogo";
+import ClayCard from "@clayui/card";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+
 type Nullable<T> = T | null | undefined;
 export const fromFieldValidators =
   (
@@ -1595,6 +1598,66 @@ export function SimpleModal({ observer, labelContinue, labelCancel, actionContin
         </div>
       </div>
     </ClayModal>
+  );
+}
+
+export function CreateGraphic({
+  data,
+  width = 500,
+  height = 500,
+  labelInformationRigth,
+  Information,
+}: {
+  data: any;
+  width: number;
+  height: number;
+  labelInformationRigth: string;
+  Information: string;
+}) {
+  return (
+    <ClayCard>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+          <label style={{ marginLeft: "20px", marginTop: "10px" }}>{Information}</label>
+          <label style={{ marginRight: "20px" }}>{labelInformationRigth}</label>
+        </div>
+        <div>
+          <label style={{ marginLeft: "20px", marginTop: "3px", color: "#27283330" }}>{"Last 7 days"}</label>
+        </div>
+      </div>
+      <ClayCard.Body>
+        <LineChart width={width} height={height} data={data}>
+          <XAxis dataKey="name" />
+          <YAxis tickCount={11} />
+          <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+          <Line type="monotone" dataKey="query" stroke="#c0272b" />
+          <Tooltip />
+          <Legend />
+        </LineChart>
+      </ClayCard.Body>
+    </ClayCard>
+  );
+}
+
+export function LabelNumber({ label, number, unity }: { label: string; number: number; unity?: string }) {
+  return (
+    <React.Fragment>
+      <ClayCard style={{ maxHeight: "307px", maxWidth: "400px" }}>
+        <div style={{ margin: "16px", height: "85px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <div style={{ fontSize: "24px", lineHeight: "32px", fontWeight: "600", fontFamily: "bold" }}>{label}:</div>
+          <div
+            style={{
+              color: "#c0272b",
+              display: "flex",
+              fontSize: "24px",
+              lineHeight: "32px",
+              fontWeight: "600",
+              fontFamily: "bold",
+            }}
+          >{`${number} ${unity || ""}`}</div>
+        </div>
+      </ClayCard>
+    </React.Fragment>
   );
 }
 

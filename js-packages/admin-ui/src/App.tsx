@@ -82,8 +82,8 @@ import { MachingLearning } from "./components/MachingLearning";
 import { HuggingFaceCard } from "./components/HuggingFaceCards";
 import { HuggingFace } from "./components/HuggingFace";
 import { PluginDriverToAcl } from "./components/PluginDriverToAcl";
-import styled from "styled-components";
-import Button from "@clayui/button";
+import { InformationBuckets } from "./components/InformationBuckets";
+import { InformationDataSource } from "./components/InformationDataSource";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -101,6 +101,30 @@ export default function App() {
                     <Route path="" element={<DashBoard />} />
                     <Route path="data-sources" element={<DataSources />} />
                     <Route path="data-sources/:datasourceId" element={<DataSource />} />
+                    <Route path="data-sources">
+                      <Route path="" element={<DataSources />} />
+                      <Route path="new" element={<DataSource />} />
+                      <Route
+                        path=":datasourceId"
+                        element={
+                          <React.Fragment>
+                            <NavTabs
+                              tabs={[
+                                { label: "Attributes", path: "" },
+                                {
+                                  label: "Label Metrics",
+                                  path: "label-metrics-data-source",
+                                },
+                              ]}
+                            />
+                            <Outlet />
+                          </React.Fragment>
+                        }
+                      >
+                        <Route path="" element={<DataSource />} />
+                        <Route path="label-metrics-data-source" element={<InformationDataSource />} />
+                      </Route>
+                    </Route>
                     <Route path="plugin-drivers">
                       <Route path="" element={<PluginDrivers />} />
                       <Route path="new" element={<PluginDriver />} />
@@ -154,6 +178,7 @@ export default function App() {
                                   path: "suggestion-categories",
                                 },
                                 { label: "Associated Tabs", path: "tabs" },
+                                { label: "Label Metrics", path: "label-metrics-buckets" },
                               ]}
                             />
                             <Outlet />
@@ -164,6 +189,7 @@ export default function App() {
                         <Route path="data-sources" element={<BucketDataSources />} />
                         <Route path="suggestion-categories" element={<BucketSuggestionCategories />} />
                         <Route path="tabs" element={<BucketTabs />} />
+                        <Route path="label-metrics-buckets" element={<InformationBuckets />} />
                       </Route>
                     </Route>
                     <Route path="enrich-items" element={<EnrichItems />} />
