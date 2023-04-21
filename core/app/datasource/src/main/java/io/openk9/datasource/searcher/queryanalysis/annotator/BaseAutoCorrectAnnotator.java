@@ -86,7 +86,7 @@ public class BaseAutoCorrectAnnotator extends BaseAnnotator {
 
 						String text = option.getText().string();
 
-						if (text.startsWith(token)) {
+						if (!text.startsWith(token)) {
 							categorySemantics.add(
 								CategorySemantics.of(
 									"$AUTOCORRECT",
