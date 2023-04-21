@@ -1,5 +1,4 @@
 package io.openk9.datasource.searcher.parser.impl;
-
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UserField;
@@ -59,21 +58,28 @@ public class AclQueryParser implements QueryParser {
 
 				userField.apply(docTypeField, jwt, innerQuery);
 
-				if (extraParamsEnabled && userField == UserField.ROLES) {
-
-					Map<String, List<String>> extraParams = parserContext.getExtraParams();
-
-					if (extraParams != null && !extraParams.isEmpty()) {
-						List<String> roles = extraParams.get(extraParamsKey);
-						if (roles != null && !roles.isEmpty()) {
-							UserField.apply(docTypeField, roles, innerQuery);
-						}
-					}
-
-				}
-
 			}
 
+		}else{
+
+			if (extraParamsEnabled) {
+
+				Map<String, List<String>> extraParams = parserContext.getExtraParams();
+
+				if (extraParams != null && !extraParams.isEmpty()) {
+					List<String> roles = extraParams.get(extraParamsKey);
+					if (roles != null && !roles.isEmpty()) {
+						parserContext
+							.getCurrentTenant()
+							.getDatasources()
+							.stream()
+							.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
+							.filter(aclMapping -> aclMapping.getUserField() == UserField.ROLES )
+							.findFirst()
+							.ifPresent((aclMapping)-> UserField.apply(aclMapping.getDocTypeField(), roles, innerQuery));
+					}
+				}
+			}
 		}
 
 		parserContext.getMutableQuery().filter(innerQuery);
