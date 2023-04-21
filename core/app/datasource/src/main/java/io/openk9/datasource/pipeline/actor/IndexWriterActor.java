@@ -143,7 +143,7 @@ public class IndexWriterActor {
 		SearchRequest searchRequest = new SearchRequest(dataIndex.getName());
 
 		TermQueryBuilder termQueryBuilder =
-			QueryBuilders.termQuery("contentId", dataPayload.getContentId());
+			QueryBuilders.termQuery("contentId.keyword", dataPayload.getContentId());
 
 		SearchSourceBuilder searchSourceBuilder =
 			new SearchSourceBuilder();
