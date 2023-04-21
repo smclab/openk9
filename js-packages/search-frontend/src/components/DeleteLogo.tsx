@@ -7,6 +7,7 @@ export function DeleteLogo({
 }) {
   return (
     <svg
+      className="openk9-delete-logo"
       width={widthParam}
       height={heightParam}
       viewBox="0 0 14 14"

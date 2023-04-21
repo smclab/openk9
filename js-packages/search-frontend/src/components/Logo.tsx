@@ -2,7 +2,7 @@ import React from "react";
 
 export function Logo({ size = 26 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 97 94">
+    <svg className="openk9-logo" width={size} height={size} viewBox="0 0 97 94">
       <g transform="translate(-273 -246)">
         <path
           d="M326.332,285.609a2.026,2.026,0,0,0,1.539-.645,2.111,2.111,0,0,0,.645-1.539,2.023,2.023,0,0,0-.645-1.535,2.115,2.115,0,0,0-1.539-.648,2.057,2.057,0,0,0-1.535.648,2.091,2.091,0,0,0-.648,1.535,2.057,2.057,0,0,0,.648,1.539,2.017,2.017,0,0,0,1.535.645"

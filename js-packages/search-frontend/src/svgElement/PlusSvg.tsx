@@ -3,6 +3,7 @@ import React from "react";
 export function PlusSvg({ size = 26 }) {
   return (
     <svg
+      className="openk9-icon-plus"
       width={size}
       height={size}
       fontWeight="200"

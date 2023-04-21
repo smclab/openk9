@@ -46,7 +46,10 @@ function Tabs({
             >
               <div
                 key={index}
-                className="openk9-single-tab"
+                className={
+                  "openk9-single-tab " +
+                  (isSelected ? "openk9-active-tab" : "openk9-not-active")
+                }
                 css={css`
                   padding-left: ${index == 0 ? "0px" : "20px"};
                   margin-left: ${index == 0 ? "0px" : "14px"};
