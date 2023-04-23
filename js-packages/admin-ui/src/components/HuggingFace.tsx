@@ -193,7 +193,7 @@ export function HuggingFace() {
               }}
             >
               <ClaySelect.Option label={"select task"} value={""} />
-              <ClaySelect.Option label={"text-classification"} value={"text-classification"} />
+              <ClaySelect.Option label={"text-classification"} value={"text classification"} />
               <ClaySelect.Option label={"token classification"} value={"token classification"} />
               <ClaySelect.Option label={"object detection"} value={"object detection"} />
               <ClaySelect.Option label={"image classifcation"} value={"image classifcation"} />
