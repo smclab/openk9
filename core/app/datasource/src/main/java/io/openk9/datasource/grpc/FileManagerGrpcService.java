@@ -68,4 +68,16 @@ public class FileManagerGrpcService implements FileManager {
 			.ifNotNull()
 			.transform(fileResourceMapper::toFileResourceResponse);
 	}
+
+	@Override
+	public Uni<FileResourceResponse> deleteFileResource(
+		FindFileResourceByResourceIdRequest request) {
+
+		_tenantResolver.setTenant(request.getSchemaName());
+
+		return fileResourceService.deleteFileResource(request.getResourceId())
+			.onItem()
+			.ifNotNull()
+			.transform(fileResourceMapper::toFileResourceResponse);
+	}
 }

@@ -53,5 +53,18 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
         });
     }
 
+    public Uni<FileResource> deleteFileResource(String resourceId) {
+        return withTransaction((s) -> {
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
+            Root<FileResource> root = cq.from(FileResource.class);
+            cq.where(cb.equal(root.get(FileResource_.resourceId), resourceId));
+            return s.createQuery(cq)
+                .getSingleResultOrNull().invoke(fileResource -> {
+                    this.deleteById(fileResource.getId());
+                });
+        });
+    }
+
 
 }

@@ -66,6 +66,11 @@ public class DeleteService {
 
 			logger.info("Removed object with resourceId: " + resourceId);
 
+			filemanager.deleteFileResource(findFileResourceByResourceIdRequest);
+
+			logger.info("Removed entity with resourceId: " + resourceId);
+
+
 		} catch (Exception e) {
 
 			logger.info("Delete failed with exception: " + e.getMessage());

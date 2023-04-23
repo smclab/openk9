@@ -11,6 +11,7 @@ service FileManager {
   rpc FindFileResourceByResourceId(FindFileResourceByResourceIdRequest) returns (FileResourceResponse) {}
   rpc FindFileResourceByDatasourceIdAndFileId(FindFileResourceByDatasourceIdFileIdRequest) returns (FileResourceResponse) {}
   rpc CreateFileResource(FileResourceRequest) returns (FileResourceResponse) {}
+  rpc DeleteFileResource(FindFileResourceByResourceIdRequest) returns (FileResourceResponse) {}
 }
 
 message FindFileResourceByResourceIdRequest {
