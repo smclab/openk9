@@ -52,7 +52,7 @@ export function Logs() {
 function useLogs(podName: string) {
   const [logs, setLogs] = React.useState<Array<string>>([]);
   React.useEffect(() => {
-    const eventSource = new EventSource(`/k8s/log/sse/${podName}?tail=200`);
+    const eventSource = new EventSource(`/api/k8s-client/k8s/log/sse/${podName}?tail=200`);
     eventSource.addEventListener("message", (event) => {
       setLogs((logs) => [...logs, event.data]);
     });

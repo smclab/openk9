@@ -37,7 +37,7 @@ export function HuggingFace() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ pipelineName: task, modelName: name, tokenizerName: "string", library: library }),
             };
-            fetch("/k8s/deploy-ml-model", requestOptions)
+            fetch("/api/k8s-client/k8s/deploy-ml-model", requestOptions)
               .then((response) => response.json())
               .then((data) => {
                 if (data?.status === "DANGER") {

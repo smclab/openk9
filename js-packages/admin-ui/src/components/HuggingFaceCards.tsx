@@ -39,7 +39,7 @@ export function HuggingFaceCard() {
           labelContinue={"yes"}
           labelCancel={"cancel"}
           actionContinue={() => {
-            fetch(`/k8s/delete-ml-model/${name}`, { method: "DELETE" })
+            fetch(`/api/k8s-client/k8s/delete-ml-model/${name}`, { method: "DELETE" })
               .then((response) => {
                 if (response.ok) {
                   showToast({ displayType: "success", title: "delete done", content: "" });
@@ -185,7 +185,7 @@ function usePodsStatus() {
     }, [run]);
   };
   const updateState = React.useCallback(async () => {
-    const response = await fetch("/k8s/get/pods/ml");
+    const response = await fetch("/api/k8s-client/k8s/get/pods/ml");
     const data = await response.json();
     setStatus(data);
   }, []);
