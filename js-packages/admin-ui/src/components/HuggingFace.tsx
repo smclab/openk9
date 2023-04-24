@@ -193,13 +193,13 @@ export function HuggingFace() {
               }}
             >
               <ClaySelect.Option label={"select task"} value={""} />
-              <ClaySelect.Option label={"text-classification"} value={"text classification"} />
-              <ClaySelect.Option label={"token classification"} value={"token classification"} />
-              <ClaySelect.Option label={"object detection"} value={"object detection"} />
-              <ClaySelect.Option label={"image classifcation"} value={"image classifcation"} />
+              <ClaySelect.Option label={"text classification"} value={"text-classification"} />
+              <ClaySelect.Option label={"token classification"} value={"token-classification"} />
+              <ClaySelect.Option label={"object detection"} value={"object-detection"} />
+              <ClaySelect.Option label={"image classifcation"} value={"image-classifcation"} />
               <ClaySelect.Option label={"summarizzation"} value={"summarizzation"} />
               <ClaySelect.Option label={"translation"} value={"translation"} />
-              <ClaySelect.Option label={"audio classification"} value={"audio classification"} />
+              <ClaySelect.Option label={"audio classification"} value={"audio-classification"} />
             </ClaySelect>
           </div>
           {isInvalidateTask && (
