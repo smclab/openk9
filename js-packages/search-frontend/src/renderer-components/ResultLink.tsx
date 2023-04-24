@@ -6,6 +6,7 @@ type ResultLinkProps = { href: string; children: React.ReactNode };
 export function ResultLink({ href, children }: ResultLinkProps) {
   return (
     <a
+      className="openk9-embeddable--result-link"
       href={href}
       target="_blank"
       rel="noreferrer"

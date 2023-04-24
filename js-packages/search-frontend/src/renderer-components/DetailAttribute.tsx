@@ -8,6 +8,7 @@ type DetailAttributeProps = {
 export function DetailAttribute({ label, children }: DetailAttributeProps) {
   return (
     <div
+      className="openk9-embeddable--detail-attribute"
       css={css`
         margin-bottom: 8px;
       `}

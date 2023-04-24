@@ -5,6 +5,7 @@ type ResultFaviconProps = { src: string };
 export function ResultFavicon({ src }: ResultFaviconProps) {
   return (
     <img
+      className="openk9-result-favicon"
       src={src}
       alt=""
       css={css`

@@ -8,6 +8,7 @@ type ResultAttributeProps = {
 export function ResultAttribute({ label, children }: ResultAttributeProps) {
   return (
     <div
+      className="openk9-embeddable-result-attribute--container"
       css={css`
         margin-bottom: 8px;
       `}

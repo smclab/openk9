@@ -8,6 +8,7 @@ type DetailLinkProps = {
 export function DetailLink({ href, children }: DetailLinkProps) {
   return (
     <a
+      className="openk9-embeddable-detail-link"
       href={href}
       target="_blank"
       rel="noreferrer"

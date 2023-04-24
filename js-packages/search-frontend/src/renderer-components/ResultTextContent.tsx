@@ -13,6 +13,7 @@ export function ResultTextContent<E>({
   const text = get(result.source, path);
   return (
     <div
+      className="openk9--result-text-content"
       css={css`
         ${hihglithTextLines ? truncatedLineStyle : ""};
       `}
@@ -25,6 +26,7 @@ export function ResultTextContent<E>({
         ))
       ) : (
         <div
+          className="openk9-embeddable--result-text-content"
           css={css`
             height: calc(21px * 5);
             overflow: hidden;

@@ -25,6 +25,7 @@ export function HighlightedText({
 function HighLight({ children }: { children?: React.ReactNode }) {
   return (
     <span
+      className="openk9-embeddable-high-light"
       css={css`
         color: var(--openk9-embeddable-search--primary-color);
       `}

@@ -15,11 +15,13 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   return (
     <div
+      className="openk9-embeddable-image-viewer--container"
       css={css`
         position: relative;
       `}
     >
       <div
+        className="openk9-embeddable-image-viewer--detail"
         style={{
           display: "flex",
           alignItems: "baseline",
@@ -31,6 +33,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
         }}
       >
         <a
+          className="openk9-embeddable-image-viewer--a"
           href="javascript:void(0)"
           onClick={() => setSelectedIndex(Math.max(0, selectedIndex - 1))}
         >
@@ -38,6 +41,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
         </a>
         {showPagination && (
           <div
+            className="openk9-embeddable-image-viewer--show-pagination"
             css={css`
               flex-grow: 1;
               display: flex;
@@ -51,6 +55,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
               return (
                 <React.Fragment key={index}>
                   <a
+                    className="openk9-embeddable-image-viewer--show-pagination-a"
                     href={
                       index === selectedIndex ? undefined : "javascript:void(0)"
                     }
@@ -68,6 +73,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
                     `}
                   >
                     <FontAwesomeIcon
+                      className="openk9-embeddable-image-viewer--show-pagination-font-awesome-icon-fa-circle"
                       icon={faCircle}
                       color={
                         isSelected
@@ -89,6 +95,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
           }
         >
           <FontAwesomeIcon
+            className="openk9-embeddable-image-viewer--show-pagination-font-awesome-icon-fa-chevron-circle"
             icon={faChevronCircleRight}
             color="black"
             size="lg"
@@ -96,6 +103,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
         </a>
       </div>
       <div
+        className="openk9-embeddable-image-viewer--show-pagination-border"
         style={{
           width: "100%",
           paddingTop: "40px",
@@ -108,6 +116,7 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
       >
         {images[selectedIndex] && (
           <img
+            className="openk9-embeddable-image-viewer--show-pagination-border-img"
             src={images[selectedIndex]}
             alt="preview"
             style={{ maxWidth: "100%", maxHeight: "100%" }}

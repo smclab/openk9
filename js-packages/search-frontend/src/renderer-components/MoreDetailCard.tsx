@@ -7,6 +7,7 @@ export function MoreDetailCard({ icon, date }: MoreDetailCars) {
   return (
     <div>
       <div
+        className="openk9-embeddable-more-detail-card-icon"
         css={css`
           margin-top: 11px;
           color: #c0272b;
@@ -17,6 +18,7 @@ export function MoreDetailCard({ icon, date }: MoreDetailCars) {
       >
         {icon}
         <span
+          className="openk9-embeddable-more-detail-card-container-title"
           css={css`
             color: #71717a;
             font-style: normal;
@@ -29,6 +31,7 @@ export function MoreDetailCard({ icon, date }: MoreDetailCars) {
           PDF
         </span>
         <span
+          className="openk9-embeddable-more-detail-card-container-last-edit"
           css={css`
             color: #71717a;
             font-style: normal;
@@ -40,6 +43,7 @@ export function MoreDetailCard({ icon, date }: MoreDetailCars) {
         >
           Last Edit:
           <span
+            className="openk9-embeddable-more-detail-card-container-date"
             css={css`
               font-style: normal;
               font-weight: 600;

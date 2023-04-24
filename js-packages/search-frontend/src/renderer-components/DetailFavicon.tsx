@@ -7,6 +7,7 @@ type DetailFaviconProps = {
 export function DetailFavicon({ src }: DetailFaviconProps) {
   return (
     <img
+      className="openk9-embeddable-detail-favicon"
       src={src}
       alt=""
       css={css`

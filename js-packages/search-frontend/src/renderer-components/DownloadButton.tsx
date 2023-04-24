@@ -13,6 +13,7 @@ export function DownloadButton({
 }: DownloadButtonProps) {
   return (
     <button
+      className="openk9-embeddable-download-button"
       onClick={() => window.open(location)}
       css={css`
         width: 100%;

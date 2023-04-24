@@ -15,6 +15,7 @@ export function DetailTitle({
 }: DetailTitleProps) {
   return (
     <div
+      className="openk9-embeddable-detail-title"
       css={css`
         font-size: ${fontSize};
         font-weight: ${fontweigth};

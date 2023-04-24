@@ -7,6 +7,7 @@ type DetailHeaderImageProps = {
 export function DetailHeaderImage({ src }: DetailHeaderImageProps) {
   return (
     <img
+      className="openk9-embeddable-detail-header-images"
       src={src}
       alt=""
       css={css`

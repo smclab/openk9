@@ -7,6 +7,7 @@ type BadgeContainerProps = {
 export function BadgeContainer({ children }: BadgeContainerProps) {
   return (
     <div
+      className="openk9-embeddable-card--badge-container"
       css={css`
         display: flex;
         margin-bottom: 8px;

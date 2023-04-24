@@ -8,12 +8,14 @@ type ResultContainerProps = {
 export function ResultContainer({ icon, children }: ResultContainerProps) {
   return (
     <div
+      className="openk9-embeddable-result-container"
       css={css`
         display: flex;
         padding: 8px 16px;
       `}
     >
       <div
+        className="openk9-embeddable-result-container-media"
         css={css`
           @media (min-width: 320px) and (max-width: 480px) {
             display: none;
@@ -23,6 +25,7 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
         `}
       >
         <div
+          className="openk9-embeddable-result--icon"
           css={css`
             width: 30px;
             height: 30px;
@@ -36,6 +39,7 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
         </div>
       </div>
       <div
+        className="openk9-embeddable-result--children"
         css={css`
           margin-left: 8px;
           overflow: hidden;

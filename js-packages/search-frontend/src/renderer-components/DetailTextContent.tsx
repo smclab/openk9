@@ -18,9 +18,9 @@ export function DetailTextContent<E>({
   const text = get(result.source, path);
   if (hihglithTextLines) {
     return (
-      <div>
+      <div className="openk9-embeddable-detail-text-content">
         {hihglithTextLines.map((text, index) => (
-          <div key={index}>
+          <div className="openk9-embeddable-hihglith-text-lines" key={index}>
             <HighlightedText text={text} />
           </div>
         ))}
