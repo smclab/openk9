@@ -6,12 +6,10 @@ import io.openk9.datasource.model.FileResource_;
 import io.openk9.datasource.model.dto.FileResourceDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.FlushMode;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -56,13 +54,11 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
     public Uni<FileResource> deleteFileResource(String resourceId) {
         return withTransaction((s) -> {
             CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
-            Root<FileResource> root = cq.from(FileResource.class);
-            cq.where(cb.equal(root.get(FileResource_.resourceId), resourceId));
-            return s.createQuery(cq)
-                .getSingleResultOrNull().invoke(fileResource -> {
-                    this.deleteById(fileResource.getId());
-                });
+            CriteriaDelete<FileResource> delete = cb.
+                createCriteriaDelete(FileResource.class);
+            Root<FileResource> root = delete.from(FileResource.class);
+            delete.where(cb.equal(root.get(FileResource_.resourceId), resourceId));
+            return s.createQuery(delete).getSingleResultOrNull();
         });
     }
 
