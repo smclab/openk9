@@ -3,12 +3,10 @@ package io.openk9.datasource.service;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.TabMapper;
-import io.openk9.datasource.mapper.TokenTabMapper;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TabDTO;
-import io.openk9.datasource.model.dto.TokenTabDTO;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
@@ -78,37 +76,39 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 		return withTransaction(s -> Mutiny2.fetch(s, tab.getTokenTabs()));
 	}
 
-	public Uni<Tuple2<Tab, TokenTab>> addTokenTab(
-		long id, TokenTabDTO tokenTabDTO) {
+	public Uni<Tuple2<Tab, TokenTab>> addTokenTabToTab(long tabId, long tokenTabId) {
 
-		TokenTab tokenTab =
-			_tokenTabMapper.create(tokenTabDTO);
-
-		return withTransaction((s) -> findById(id)
+		return withTransaction((s, tr) -> findById(tabId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(tab -> Mutiny2.fetch(s, tab.getTokenTabs()).flatMap(
-				tokenTabs -> {
-					if (tab.addTokenTab(tokenTabs, tokenTab)) {
-						return persist(tokenTab)
-							.map(dt -> Tuple2.of(tab, tokenTab));
+			.transformToUni(tab -> _tokenTabService.findById(tokenTabId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(tokenTab -> Mutiny2.fetch(s, tab.getTokenTabs()).flatMap(tokenTabs -> {
+					if (tokenTabs.add(tokenTab)) {
+						tab.setTokenTabs(tokenTabs);
+						return persist(tab).map(newD -> Tuple2.of(newD, tokenTab));
 					}
 					return Uni.createFrom().nullItem();
-				})));
+				}))));
+
 	}
 
-	public Uni<Tuple2<Tab, Long>> removeTokenTab(long id, long tokenTabId) {
-		return withTransaction((s) -> findById(id)
+	public Uni<Tuple2<Tab, TokenTab>> removeTokenTabToTab(long tabId, long tokenTabId) {
+
+		return withTransaction((s, tr) -> findById(tabId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(tab -> Mutiny2.fetch(s, tab.getTokenTabs()).flatMap(
-				tokenTabs -> {
+			.transformToUni(tab -> _tokenTabService.findById(tokenTabId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(tokenTab -> Mutiny2.fetch(s, tab.getTokenTabs()).flatMap(tokenTabs -> {
 					if (tab.removeTokenTab(tokenTabs, tokenTabId)) {
-						return persist(tab)
-							.map(dt -> Tuple2.of(dt, tokenTabId));
+						return persist(tab).map(newD -> Tuple2.of(newD, tokenTab));
 					}
 					return Uni.createFrom().nullItem();
-				})));
+				}))));
+
 	}
 
 	public Uni<List<TokenTab>> getTokenTabsByName(String tabName) {
@@ -182,9 +182,6 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 
 	@Inject
 	TokenTabService _tokenTabService;
-
-	@Inject
-	TokenTabMapper _tokenTabMapper;
 
 	@Override
 	public Class<Tab> getEntityClass() {

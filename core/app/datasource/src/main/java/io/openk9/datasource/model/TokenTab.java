@@ -14,19 +14,17 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
 
 @Entity
-@Table(name = "token_tab", uniqueConstraints = {
+@Table(name = "token_tab")/*, uniqueConstraints = {
 	@UniqueConstraint(
 		name = "uc_tokentab_name_tab_id",
 		columnNames = {"name", "tab_id"}
 	)
-})
+})*/
 @Getter
 @Setter
 @ToString
@@ -49,12 +47,6 @@ public class TokenTab extends K9Entity {
 
 	@Column(name ="filter", nullable = false)
 	private Boolean filter;
-
-	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
-	@JoinColumn(name = "tab_id")
-	@JsonIgnore
-	private Tab tab;
 
 	@OneToOne(
 		fetch = FetchType.LAZY

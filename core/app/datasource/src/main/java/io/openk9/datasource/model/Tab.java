@@ -10,8 +10,9 @@ import lombok.ToString;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import java.util.Collection;
 import java.util.Iterator;
@@ -36,37 +37,20 @@ public class Tab extends K9Entity {
 	@Column(name = "priority", nullable = false)
 	private Integer priority;
 
-	@OneToMany(
-		mappedBy = "tab",
-		cascade = javax.persistence.CascadeType.ALL,
-		fetch = FetchType.LAZY
-	)
+	@ManyToMany(cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.DETACH,
+		javax.persistence.CascadeType.REFRESH})
+	@JoinTable(name = "tab_token_tab",
+		joinColumns = @JoinColumn(name = "tab_id", referencedColumnName = "id"),
+		inverseJoinColumns = @JoinColumn(name = "token_tabs_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<TokenTab> tokenTabs = new LinkedHashSet<>();
 
-	public boolean addTokenTab(
-		Collection<TokenTab> tokenTabs, TokenTab tokenTab) {
-		if (tokenTabs.add(tokenTab)) {
-			tokenTab.setTab(this);
-			return true;
-		}
-		return false;
-	}
-
 	public boolean removeTokenTab(
-		Collection<TokenTab> tokenTabs, TokenTab tokenTab) {
-
-		if (tokenTabs.remove(tokenTab)) {
-			tokenTab.setTab(null);
-			return true;
-		}
-
-		return false;
-
-	}
-
-	public boolean removeTokenTab(Collection<TokenTab> tokenTabs, long tokenTabId) {
+		Collection<TokenTab> tokenTabs, long tokenTabId) {
 
 		Iterator<TokenTab> iterator = tokenTabs.iterator();
 
@@ -74,11 +58,12 @@ public class Tab extends K9Entity {
 			TokenTab tokenTab = iterator.next();
 			if (tokenTab.getId() == tokenTabId) {
 				iterator.remove();
-				tokenTab.setTab(null);
 				return true;
 			}
 		}
+
 		return false;
+
 	}
 
 }

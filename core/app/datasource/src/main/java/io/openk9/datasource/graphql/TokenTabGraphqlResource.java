@@ -1,9 +1,11 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.Response;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.TokenTab;
-import io.openk9.common.util.SortBy;
+import io.openk9.datasource.model.dto.TokenTabDTO;
 import io.openk9.datasource.service.TokenTabService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -25,6 +27,17 @@ import java.util.Set;
 @CircuitBreaker
 public class TokenTabGraphqlResource {
 
+	@Query
+	public Uni<Connection<TokenTab>> getTotalTokenTabs(
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return tokenTabService.findConnection(
+			after, before, first, last, searchText, sortByList);
+	}
+
 	public Uni<DocTypeField> docTypeField(@Source TokenTab tokenTab) {
 		return tokenTabService.getDocTypeField(tokenTab.getId());
 	}
@@ -39,6 +52,38 @@ public class TokenTabGraphqlResource {
 	public Uni<Tuple2<TokenTab, DocTypeField>> unbindDocTypeFieldFromTokenTab(
 		@Id long id, @Id long docTypeFieldId) {
 		return tokenTabService.unbindDocTypeFieldFromTokenTab(id, docTypeFieldId);
+	}
+
+	@Mutation
+	public Uni<TokenTab> deleteTokenTab(@Id long tokenTabId) {
+		return tokenTabService.deleteById(tokenTabId);
+	}
+
+	@Mutation
+	public Uni<Response<TokenTab>> tokenTab(
+		@Id Long id, TokenTabDTO tokenTabDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createTokenTab(tokenTabDTO);
+		} else {
+			return patch
+				? tokenTab(id, tokenTabDTO)
+				: updateTokenTab(id, tokenTabDTO);
+		}
+
+	}
+
+	public Uni<Response<TokenTab>> createTokenTab(TokenTabDTO tokenTabDTO) {
+		return tokenTabService.getValidator().create(tokenTabDTO);
+	}
+
+	public Uni<Response<TokenTab>> tokenTab(@Id long id, TokenTabDTO tokenTabDTO) {
+		return tokenTabService.getValidator().patch(id, tokenTabDTO);
+	}
+
+	public Uni<Response<TokenTab>> updateTokenTab(@Id long id, TokenTabDTO tokenTabDTO) {
+		return tokenTabService.getValidator().update(id, tokenTabDTO);
 	}
 
 	public Uni<Connection<DocTypeField>> docTypeFieldsNotInTokenTab(

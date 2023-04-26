@@ -1,15 +1,12 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.TokenTabMapper;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TabDTO;
-import io.openk9.datasource.model.dto.TokenTabDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TokenTabService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -30,7 +27,6 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -98,11 +94,6 @@ public class TabGraphqlResource {
 		return _tokenTabService.findById(id);
 	}
 
-	public Uni<Tab> tab(@Source TokenTab tokenTab) {
-		return transactionInvoker.withTransaction(
-			(s) -> Mutiny2.fetch(s, tokenTab.getTab()));
-	}
-
 	public Uni<Response<Tab>> patchTab(@Id long id, TabDTO tabDTO) {
 		return _tabService.getValidator().patch(id, tabDTO);
 	}
@@ -136,40 +127,17 @@ public class TabGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Response<TokenTab>> tokenTab(
-		@Id long tabId, @Id Long tokenTabId, TokenTabDTO tokenTabDTO,
-		@DefaultValue("false") boolean patch) {
-
-		return Uni.createFrom().deferred(() -> {
-
-			List<FieldValidator> validatorList =
-				_tokenTabService.getValidator().validate(tokenTabDTO);
-
-			if (validatorList.isEmpty()) {
-
-				if (tokenTabId == null) {
-					return _tabService.addTokenTab(tabId, tokenTabDTO)
-						.map(e -> Response.of(e.right, null));
-				} else {
-					return (
-						patch
-							? _tokenTabService.patch(tokenTabId, tokenTabDTO)
-							: _tokenTabService.update(tokenTabId, tokenTabDTO)
-					).map(e -> Response.of(e, null));
-				}
-
-			}
-
-			return Uni.createFrom().item(Response.of(null, validatorList));
-		});
-
+	public Uni<Tuple2<Tab, TokenTab>> addTokenTabToTab(
+		@Id long id, @Id long tokenTabId) {
+		return _tabService.addTokenTabToTab(id, tokenTabId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Tab, Long>> removeTokenTab(
-		@Id long tabId, @Id Long tokenTabId) {
-		return _tabService.removeTokenTab(tabId, tokenTabId);
+	public Uni<Tuple2<Tab, TokenTab>> removeTokenTabToTab(
+		@Id long id, @Id long tokenTabId ) {
+		return _tabService.removeTokenTabToTab(id, tokenTabId);
 	}
+
 
 	@Subscription
 	public Multi<Tab> tabCreated() {

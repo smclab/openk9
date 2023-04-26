@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="db/datasource/2023/04/26-01-changelog.xml">
+
+	<changeSet id="1682504012273-1" author="openk9">
+		<createTable tableName="tab_token_tab">
+			<column name="tab_id" type="NUMBER(38)">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="tab_token_tab_pkey"/>
+			</column>
+			<column name="token_tab_id" type="NUMBER(38)">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="tab_token_tab_pkey"/>
+			</column>
+		</createTable>
+		<sql>
+			INSERT INTO tab_token_tab(tab_id, token_tab_id)
+			SELECT tab_id,id FROM token_tab;
+		</sql>
+		<dropForeignKeyConstraint baseTableName="token_tab" constraintName="fkiyk7xhe4lx9pbr64vv2yit6jd" />
+		<dropColumn tableName="token_tab" columnName="tab_id"></dropColumn>
+
+	</changeSet>
+
+	<changeSet id="1682504012273-2" author="openk9">
+	<addForeignKeyConstraint baseColumnNames="tab_id"
+							 baseTableName="tab_token_tab"
+							 constraintName="fk_tab_token_tab"
+							 onDelete="NO ACTION" onUpdate="NO ACTION"
+							 referencedColumnNames="id"
+							 referencedTableName="tab"/>
+	</changeSet>
+
+	<changeSet id="1682504012273-3" author="openk9">
+		<addForeignKeyConstraint baseColumnNames="token_tab_id"
+								 baseTableName="tab_token_tab"
+								 constraintName="fk_token_tab_tab"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="token_tab"/>
+	</changeSet>
+</databaseChangeLog>
