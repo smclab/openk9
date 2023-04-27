@@ -187,7 +187,7 @@ public class IngestionActor {
 
 		enrichItemActorRef.tell(
 			new EnrichItemSupervisor.Execute(
-				enrichItem, JsonObject.mapFrom(dataPayload), responseActorRef
+				enrichItem, dataPayload, responseActorRef
 			)
 		);
 

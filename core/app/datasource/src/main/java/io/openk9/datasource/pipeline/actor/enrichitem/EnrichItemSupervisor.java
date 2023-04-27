@@ -5,12 +5,13 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.json.JsonObject;
 
 public class EnrichItemSupervisor {
 
 	public sealed interface Command {}
-	public record Execute(EnrichItem enrichItem, JsonObject dataPayload, ActorRef<Response> replyTo) implements Command {}
+	public record Execute(EnrichItem enrichItem, DataPayload dataPayload, ActorRef<Response> replyTo) implements Command {}
 	private record HttpSupervisorWrapper(HttpSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	private record GroovySupervisorWrapper(GroovyActor.Response response, ActorRef<Response> replyTo) implements Command {}
 	private record GroovyValidatorWrapper(
@@ -121,7 +122,7 @@ public class EnrichItemSupervisor {
 		Execute execute, ActorContext<Command> ctx) {
 
 		EnrichItem enrichItem = execute.enrichItem;
-		JsonObject dataPayload = execute.dataPayload;
+		DataPayload dataPayload = execute.dataPayload;
 		ActorRef<Response> replyTo = execute.replyTo;
 
 		ctx.getLog().info(
