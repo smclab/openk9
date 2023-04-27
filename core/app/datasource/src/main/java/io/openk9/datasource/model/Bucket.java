@@ -58,7 +58,7 @@ public class Bucket extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Column(name = "handleDynamicFilters", nullable = false)
+	@Column(name = "handle_dynamic_filters", nullable = false)
 	private Boolean handleDynamicFilters = false;
 
 	@ManyToMany(mappedBy = "buckets", cascade = {
