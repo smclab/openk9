@@ -5,8 +5,8 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;
@@ -31,8 +31,8 @@ import java.util.Map;
 public class IndexWriterActor {
 
 	public sealed interface Command extends CborSerializable {}
-	public record Start(DataIndex dataIndex, DataPayload dataPayload, ActorRef<Response> replyTo) implements Command {}
-	private record SearchResponseCommand(DataIndex dataIndex, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
+	public record Start(DataIndex dataIndex, JsonObject dataPayload, ActorRef<Response> replyTo) implements Command {}
+	private record SearchResponseCommand(DataIndex dataIndex, JsonObject dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
 	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, Exception exception) implements Command {}
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
@@ -97,7 +97,7 @@ public class IndexWriterActor {
 
 		Exception exception = src.exception;
 		DataIndex dataIndex = src.dataIndex;
-		DataPayload dataPayload = src.dataPayload;
+		JsonObject dataPayload = src.dataPayload;
 		SearchResponse searchResponse = src.searchResponse;
 		ActorRef<Response> replyTo = src.replyTo;
 
@@ -135,15 +135,17 @@ public class IndexWriterActor {
 
 	private static Behavior<Command> onStart(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		DataIndex dataIndex, DataPayload dataPayload,
+		DataIndex dataIndex, JsonObject dataPayload,
 		ActorRef<Response> replyTo) {
 
-		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
+		String contentId = dataPayload.getString("contentId");
+
+		ctx.getLog().info("index writer start for content: " + contentId);
 
 		SearchRequest searchRequest = new SearchRequest(dataIndex.getName());
 
 		TermQueryBuilder termQueryBuilder =
-			QueryBuilders.termQuery("contentId.keyword", dataPayload.getContentId());
+			QueryBuilders.termQuery("contentId.keyword", contentId);
 
 		SearchSourceBuilder searchSourceBuilder =
 			new SearchSourceBuilder();
@@ -174,24 +176,27 @@ public class IndexWriterActor {
 	}
 
 	private static DocWriteRequest createDocWriteRequest(
-		DataIndex dataIndex, DataPayload dataPayload, Logger logger,
+		DataIndex dataIndex, JsonObject dataPayload, Logger logger,
 		SearchResponse searchResponse) {
 
 		String indexName = dataIndex.getName();
 
 		IndexRequest indexRequest = new IndexRequest(indexName);
 
+		String contentId = dataPayload.getString("contentId");
+
 		if (searchResponse != null && searchResponse.getHits().getHits().length > 0) {
 
-			logger.info("found document for contentId: " + dataPayload.getContentId());
+			logger.info("found document for contentId: " + contentId);
 
 			String documentId = searchResponse.getHits().getAt(0).getId();
 
-			String[] documentTypes = dataPayload.getDocumentTypes();
+			JsonArray documentTypes =
+				dataPayload.getJsonArray("documentTypes");
 
-			if (documentTypes == null || documentTypes.length == 0) {
+			if (documentTypes == null || documentTypes.size() == 0) {
 
-				logger.info("delete document for contentId: " + dataPayload.getContentId());
+				logger.info("delete document for contentId: " + contentId);
 
 				return new DeleteRequest(indexName, documentId);
 			}
@@ -199,18 +204,16 @@ public class IndexWriterActor {
 			indexRequest.id(documentId);
 		}
 
-		logger.info("index document for contentId: " + dataPayload.getContentId());
-
-		JsonObject jsonObject = JsonObject.mapFrom(dataPayload);
+		logger.info("index document for contentId: " + contentId);
 
 		JsonObject acl =
-			jsonObject.getJsonObject("acl");
+			dataPayload.getJsonObject("acl");
 
 		if (acl == null || acl.isEmpty()) {
-			jsonObject.put("acl", Map.of("public", true));
+			dataPayload.put("acl", Map.of("public", true));
 		}
 
-		indexRequest.source(jsonObject.toString(), XContentType.JSON);
+		indexRequest.source(dataPayload.toString(), XContentType.JSON);
 
 		return indexRequest;
 	}

@@ -26,7 +26,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -155,8 +154,10 @@ public class DatasourceActor {
 
 		log.info("start pipeline for datasource with id {}", datasource.getId());
 
+		JsonObject jsonObject = JsonObject.mapFrom(dataPayload);
+
 		return initPipeline(
-			ctx, supervisorActorRef, responseActorRef, replyTo, dataPayload,
+			ctx, supervisorActorRef, responseActorRef, replyTo, jsonObject,
 			datasourceModel, enrichPipelineItems);
 	}
 
@@ -164,7 +165,7 @@ public class DatasourceActor {
 		ActorContext<Command> ctx,
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<IndexWriterActor.Response> responseActorRef,
-		ActorRef<Response> replyTo, DataPayload dataPayload,
+		ActorRef<Response> replyTo, JsonObject dataPayload,
 		DatasourceModel datasourceModel, Set<EnrichPipelineItem> enrichPipelineItems) {
 
 		Logger logger = ctx.getLog();
@@ -332,10 +333,10 @@ public class DatasourceActor {
 					newJsonPayload = result;
 				}
 
-				DataPayload newDataPayload =
+				JsonObject newDataPayload =
 					mergeResponse(
 						jsonPath, behaviorMergeType, dataPayload,
-						newJsonPayload.mapTo(DataPayload.class));
+						newJsonPayload);
 
 				return initPipeline(
 					ctx, supervisorActorRef,
@@ -362,12 +363,12 @@ public class DatasourceActor {
 		return contentId.hashCode();
 	}
 
-	private static DataPayload mergeResponse(
+	private static JsonObject mergeResponse(
 		String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
-		DataPayload prevDataPayload, DataPayload newDataPayload) {
+		JsonObject prevDataPayload, JsonObject newDataPayload) {
 
-		JsonObject prevJsonObject = new JsonObject(new LinkedHashMap<>(prevDataPayload.getRest()));
-		JsonObject newJsonObject = new JsonObject(new LinkedHashMap<>(newDataPayload.getRest()));
+		JsonObject prevJsonObject = prevDataPayload.copy();
+		JsonObject newJsonObject = newDataPayload.copy();
 
 		if (jsonPath == null || jsonPath.isBlank()) {
 			jsonPath = "$";
@@ -381,7 +382,7 @@ public class DatasourceActor {
 			behaviorMergeType == EnrichItem.BehaviorMergeType.REPLACE,
 			prevJsonObject, newJsonObject);
 
-		return prevDataPayload.rest(jsonMerge.merge(jsonPath).getMap());
+		return jsonMerge.merge(jsonPath);
 
 
 	}
