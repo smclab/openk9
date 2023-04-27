@@ -44,7 +44,7 @@ public class Tab extends K9Entity {
 		javax.persistence.CascadeType.REFRESH})
 	@JoinTable(name = "tab_token_tab",
 		joinColumns = @JoinColumn(name = "tab_id", referencedColumnName = "id"),
-		inverseJoinColumns = @JoinColumn(name = "token_tabs_id", referencedColumnName = "id"))
+		inverseJoinColumns = @JoinColumn(name = "token_tab_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<TokenTab> tokenTabs = new LinkedHashSet<>();
