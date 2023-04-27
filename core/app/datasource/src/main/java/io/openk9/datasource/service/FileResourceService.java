@@ -1,5 +1,6 @@
 package io.openk9.datasource.service;
 
+import com.google.protobuf.Empty;
 import io.openk9.datasource.mapper.FileResourceMapper;
 import io.openk9.datasource.model.FileResource;
 import io.openk9.datasource.model.FileResource_;
@@ -58,9 +59,9 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
                 createCriteriaDelete(FileResource.class);
             Root<FileResource> root = delete.from(FileResource.class);
             delete.where(cb.equal(root.get(FileResource_.resourceId), resourceId));
-            s.createQuery(delete).executeUpdate();
-            return null;
-        });
+            return s.createQuery(delete).executeUpdate();
+        })
+            .replaceWith(Empty.getDefaultInstance());
     }
 
 
