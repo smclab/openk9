@@ -70,14 +70,11 @@ public class FileManagerGrpcService implements FileManager {
 	}
 
 	@Override
-	public Uni<FileResourceResponse> deleteFileResource(
+	public Uni<com.google.protobuf.Empty> deleteFileResource(
 		FindFileResourceByResourceIdRequest request) {
 
 		_tenantResolver.setTenant(request.getSchemaName());
 
-		return fileResourceService.deleteFileResource(request.getResourceId())
-			.onItem()
-			.ifNotNull()
-			.transform(fileResourceMapper::toFileResourceResponse);
+		return fileResourceService.deleteFileResource(request.getResourceId());
 	}
 }
