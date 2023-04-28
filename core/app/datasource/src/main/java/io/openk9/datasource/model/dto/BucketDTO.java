@@ -24,10 +24,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import javax.validation.constraints.NotNull;
+
 @NoArgsConstructor
 @SuperBuilder
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class BucketDTO extends K9EntityDTO {
+
+	@NotNull
+	private Boolean handleDynamicFilters = false;
+
 }
