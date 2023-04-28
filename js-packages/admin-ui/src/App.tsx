@@ -84,6 +84,7 @@ import { HuggingFace } from "./components/HuggingFace";
 import { PluginDriverToAcl } from "./components/PluginDriverToAcl";
 import { InformationBuckets } from "./components/InformationBuckets";
 import { InformationDataSource } from "./components/InformationDataSource";
+import { TabTokenTabsAssociation } from "./components/TabTokenTabs";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -302,7 +303,10 @@ export default function App() {
                             <NavTabs
                               tabs={[
                                 { label: "Attributes", path: "" },
-                                { label: "Token Tabs", path: "tab-tokens" },
+                                {
+                                  label: "Token Tabs ",
+                                  path: "token-tabs",
+                                },
                               ]}
                             />
                             <Outlet />
@@ -310,9 +314,26 @@ export default function App() {
                         }
                       >
                         <Route path="" element={<Tab />} />
-                        <Route path="tab-tokens" element={<TabTokenTabs />} />
+                        <Route path="token-tabs" element={<TabTokenTabsAssociation />} />
                       </Route>
                     </Route>
+                    <Route path="token-tabs">
+                      <Route path="" element={<TabTokenTabs />} />
+                      <Route path=":tabId/tab-tokens/:tabTokenId" element={<TabToken />} />
+                      <Route path="new" element={<TabToken />} />
+                      <Route
+                        path=":tabTokenId"
+                        element={
+                          <React.Fragment>
+                            <NavTabs tabs={[{ label: "Attributes", path: "" }]} />
+                            <Outlet />
+                          </React.Fragment>
+                        }
+                      >
+                        <Route path="" element={<TabToken />} />
+                      </Route>
+                    </Route>
+                    {/* <Route path="tab-tokens" element={<TabTokenTabs />} /> */}
                     <Route path="query-analyses">
                       <Route path="" element={<QueryAnalyses />} />
                       <Route path="new" element={<QueryAnalysis />} />

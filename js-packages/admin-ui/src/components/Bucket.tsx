@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 
-import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, BooleanInput, MainTitle } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import {
@@ -29,6 +29,7 @@ const BucketQuery = gql`
       name
       description
       enabled
+      handleDynamicFilters
       queryAnalysis {
         id
       }

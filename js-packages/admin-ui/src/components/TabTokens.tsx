@@ -1,14 +1,15 @@
 import React from "react";
 import { gql } from "@apollo/client";
-import { useCreateOrUpdateTabTokenMutation, useDeleteTabTokenTabMutation, useTabTokensQuery } from "../graphql-generated";
+import { useCreateOrUpdateTabTokenMutation, useDeleteTabTokenMutation, useTabTokensQuery } from "../graphql-generated";
 import { formatName, Table } from "./Table";
 import { useParams } from "react-router-dom";
 import { ClayToggle } from "@clayui/form";
 import { StyleToggle } from "./Form";
+import { useToast } from "./ToastProvider";
 
 export const TabTokens = gql`
-  query TabTokens($tabId: ID!, $searchText: String, $cursor: String) {
-    tokenTabs(tabId: $tabId, searchText: $searchText, first: 25, after: $cursor) {
+  query TabTokens($searchText: String, $cursor: String) {
+    totalTokenTabs(searchText: $searchText, first: 25, after: $cursor) {
       edges {
         node {
           id
@@ -27,67 +28,44 @@ export const TabTokens = gql`
 `;
 
 gql`
-  mutation DeleteTabTokenTab($tabId: ID!, $TabTokenTabs: ID!) {
-    removeTokenTab(tabId: $tabId, tokenTabId: $TabTokenTabs) {
-      right
+  mutation DeleteTabToken($id: ID!) {
+    deleteTokenTab(tokenTabId: $id) {
+      id
+      name
     }
   }
 `;
 
 export function TabTokenTabs() {
-  const { tabId } = useParams();
-  const tabTokensQuery = useTabTokensQuery({
-    variables: { tabId: tabId! },
-    skip: !tabId,
-  });
-  const [deleteTabTokenMutate] = useDeleteTabTokenTabMutation({
+  const showToast = useToast();
+  const tabTokensQuery = useTabTokensQuery();
+
+  const [deleteTokenTabMutate] = useDeleteTabTokenMutation({
     refetchQueries: [TabTokens],
+    onCompleted(data) {
+      if (data.deleteTokenTab?.id) {
+        showToast({ displayType: "success", title: "Token Tab deleted", content: data.deleteTokenTab.name ?? "" });
+      }
+    },
+    onError(error) {
+      showToast({ displayType: "danger", title: "Rule error", content: error.message ?? "" });
+    },
   });
-  const [updateTabTokenMutate] = useCreateOrUpdateTabTokenMutation({
-    refetchQueries: [TabTokens],
-  });
-  if (!tabId) throw new Error();
   return (
     <Table
       data={{
         queryResult: tabTokensQuery,
-        field: (data) => data?.tokenTabs,
+        field: (data) => data?.totalTokenTabs,
       }}
       label="Tab Tokens"
       onCreatePath="new"
       onDelete={(tabToken) => {
-        if (tabToken?.id) deleteTabTokenMutate({ variables: { tabId: tabId, TabTokenTabs: tabToken.id } });
+        if (tabToken?.id) deleteTokenTabMutate({ variables: { id: tabToken.id } });
       }}
       columns={[
         { header: "Name", content: (tabToken) => formatName(tabToken) },
         { header: "Token Type", content: (tabToken) => tabToken?.tokenType },
         { header: "Value", content: (tabToken) => tabToken?.value },
-        {
-          header: "Filter",
-          content: (tabToken) => (
-            <React.Fragment>
-              {" "}
-              <ClayToggle
-                toggled={tabToken?.filter ?? false}
-                onToggle={(filter) => {
-                  if (tabToken && tabToken.id && tabToken.name && tabToken.tokenType && tabToken.value) {
-                    updateTabTokenMutate({
-                      variables: {
-                        tabId,
-                        tabTokenId: tabToken.id,
-                        filter,
-                        name: tabToken.name,
-                        tokenType: tabToken.tokenType,
-                        value: tabToken.value,
-                      },
-                    });
-                  }
-                }}
-              />{" "}
-              <style type="text/css">{StyleToggle}</style>
-            </React.Fragment>
-          ),
-        },
       ]}
     />
   );

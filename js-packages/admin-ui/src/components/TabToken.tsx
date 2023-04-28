@@ -19,6 +19,7 @@ import {
   useUnbindDocTypeFieldToTabTokenMutation,
 } from "../graphql-generated";
 import { useToast } from "./ToastProvider";
+import { ClassNameButton } from "../App";
 
 const TabTokenQuery = gql`
   query TabTokenTab($id: ID!) {
@@ -28,7 +29,6 @@ const TabTokenQuery = gql`
       description
       value
       filter
-      tokenType
       docTypeField {
         id
       }
@@ -38,7 +38,6 @@ const TabTokenQuery = gql`
 
 gql`
   mutation CreateOrUpdateTabToken(
-    $tabId: ID!
     $tabTokenId: ID
     $name: String!
     $description: String
@@ -47,8 +46,7 @@ gql`
     $tokenType: TokenType!
   ) {
     tokenTab(
-      tabId: $tabId
-      tokenTabId: $tabTokenId
+      id: $tabTokenId
       tokenTabDTO: { name: $name, description: $description, filter: $filter, tokenType: $tokenType, value: $value }
     ) {
       entity {
@@ -75,10 +73,10 @@ export function TabToken() {
     onCompleted(data: any) {
       if (data.tokenTab?.entity) {
         if (tabTokenId === "new") {
-          navigate(`/tabs/${tabId}/tab-tokens`, { replace: true });
+          navigate(`/token-tabs`, { replace: true });
           showToast({ displayType: "success", title: "Token Tab created", content: "" });
         } else {
-          navigate(`/tabs/${tabId}/tab-tokens/${data.tokenTab.entity.id}`, { replace: true });
+          navigate(`/token-tabs/${data.tokenTab.entity.id}`, { replace: true });
           showToast({ displayType: "success", title: "Token Tab update", content: "" });
         }
       }
@@ -100,7 +98,6 @@ export function TabToken() {
     onSubmit(data) {
       createOrUpdateTabTokenMutate({
         variables: {
-          tabId: tabId as string,
           tabTokenId: tabTokenId !== "new" ? tabTokenId : undefined,
           ...data,
         },
@@ -110,17 +107,6 @@ export function TabToken() {
   });
   return (
     <React.Fragment>
-      <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
-          <ClayToolbar.Nav>
-            <ClayToolbar.Item>
-              <Link to={`/tabs/${tabId}/tab-tokens`}>
-                <ClayButtonWithIcon aria-label="" symbol="angle-left" small />
-              </Link>
-            </ClayToolbar.Item>
-          </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
-      </ClayToolbar>
       <ClayLayout.ContainerFluid view>
         <ClayForm
           className="sheet"
@@ -129,9 +115,9 @@ export function TabToken() {
             form.submit();
           }}
         >
-          <TextInput label="Name" {...form.inputProps("name")}/>
+          <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-          <TextInput label="Value" {...form.inputProps("value")} description="Value it must match for this token"/>
+          <TextInput label="Value" {...form.inputProps("value")} description="Value it must match for this token" />
           <EnumSelect label="Token Type" dict={TokenType} {...form.inputProps("tokenType")} />
           <BooleanInput label="Filter" {...form.inputProps("filter")} />
           {tabTokenId !== "new" && (
@@ -158,7 +144,7 @@ export function TabToken() {
             </ClayForm>
           )}
           <div className="sheet-footer">
-            <ClayButton type="submit" disabled={!form.canSubmit}>
+            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
               {tabTokenId === "new" ? "Create" : "Update"}
             </ClayButton>
           </div>

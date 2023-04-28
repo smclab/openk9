@@ -139,6 +139,7 @@ export type Bucket = {
   description?: Maybe<Scalars['String']>;
   docCount?: Maybe<Scalars['BigInteger']>;
   enabled?: Maybe<Scalars['Boolean']>;
+  handleDynamicFilters?: Maybe<Scalars['Boolean']>;
   id?: Maybe<Scalars['ID']>;
   indexCount?: Maybe<Scalars['BigInteger']>;
   /** ISO-8601 */
@@ -1202,6 +1203,7 @@ export type Mutation = {
   addSuggestionCategoryToBucket?: Maybe<Tuple2_Bucket_SuggestionCategory>;
   addTabToBucket?: Maybe<Tuple2_Bucket_Tab>;
   addTokenFilterToAnalyzer?: Maybe<Tuple2_Analyzer_TokenFilter>;
+  addTokenTabToTab?: Maybe<Tuple2_Tab_TokenTab>;
   analyzer?: Maybe<Response_Analyzer>;
   annotator?: Maybe<Response_Annotator>;
   bindAnalyzerToDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
@@ -1237,6 +1239,7 @@ export type Mutation = {
   deleteSuggestionCategory?: Maybe<SuggestionCategory>;
   deleteTab?: Maybe<Tab>;
   deleteTokenFilter?: Maybe<TokenFilter>;
+  deleteTokenTab?: Maybe<TokenTab>;
   deleteTokenizer?: Maybe<Tokenizer>;
   docType?: Maybe<Response_DocType>;
   docTypeField?: Maybe<Response_DocTypeField>;
@@ -1263,7 +1266,7 @@ export type Mutation = {
   removeTabFromBucket?: Maybe<Tuple2_Bucket_Tab>;
   removeTokenFilterFromAnalyzer?: Maybe<Tuple2_Analyzer_TokenFilter>;
   removeTokenFilterListFromAnalyzer?: Maybe<Analyzer>;
-  removeTokenTab?: Maybe<Tuple2_Tab_BigInteger>;
+  removeTokenTabToTab?: Maybe<Tuple2_Tab_TokenTab>;
   rule?: Maybe<Response_Rule>;
   searchConfig?: Maybe<Response_SearchConfig>;
   sortEnrichItems?: Maybe<EnrichPipeline>;
@@ -1362,6 +1365,13 @@ export type MutationAddTabToBucketArgs = {
 export type MutationAddTokenFilterToAnalyzerArgs = {
   id: Scalars['ID'];
   tokenFilterId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationAddTokenTabToTabArgs = {
+  id: Scalars['ID'];
+  tokenTabId: Scalars['ID'];
 };
 
 
@@ -1600,6 +1610,12 @@ export type MutationDeleteTokenFilterArgs = {
 
 
 /** Mutation root */
+export type MutationDeleteTokenTabArgs = {
+  tokenTabId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationDeleteTokenizerArgs = {
   tokenizerId: Scalars['ID'];
 };
@@ -1788,9 +1804,9 @@ export type MutationRemoveTokenFilterListFromAnalyzerArgs = {
 
 
 /** Mutation root */
-export type MutationRemoveTokenTabArgs = {
-  tabId: Scalars['ID'];
-  tokenTabId?: InputMaybe<Scalars['ID']>;
+export type MutationRemoveTokenTabToTabArgs = {
+  id: Scalars['ID'];
+  tokenTabId: Scalars['ID'];
 };
 
 
@@ -1843,10 +1859,9 @@ export type MutationTokenFilterArgs = {
 
 /** Mutation root */
 export type MutationTokenTabArgs = {
+  id?: InputMaybe<Scalars['ID']>;
   patch?: InputMaybe<Scalars['Boolean']>;
-  tabId: Scalars['ID'];
   tokenTabDTO?: InputMaybe<TokenTabDtoInput>;
-  tokenTabId?: InputMaybe<Scalars['ID']>;
 };
 
 
@@ -2042,6 +2057,7 @@ export type Query = {
   tokenTabs?: Maybe<Connection_TokenTab>;
   tokenizer?: Maybe<Tokenizer>;
   tokenizers?: Maybe<Connection_Tokenizer>;
+  totalTokenTabs?: Maybe<Connection_TokenTab>;
 };
 
 
@@ -2475,6 +2491,17 @@ export type QueryTokenizersArgs = {
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
+
+/** Query root */
+export type QueryTotalTokenTabsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
 export type QueryAnalysis = {
   __typename?: 'QueryAnalysis';
   annotators?: Maybe<Connection_Annotator>;
@@ -2900,7 +2927,6 @@ export type TokenTab = {
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
-  tab?: Maybe<Tab>;
   tokenType?: Maybe<TokenType>;
   value?: Maybe<Scalars['String']>;
 };
@@ -3081,10 +3107,10 @@ export type Tuple2_SuggestionCategory_DocTypeField = {
   right?: Maybe<DocTypeField>;
 };
 
-export type Tuple2_Tab_BigInteger = {
-  __typename?: 'Tuple2_Tab_BigInteger';
+export type Tuple2_Tab_TokenTab = {
+  __typename?: 'Tuple2_Tab_TokenTab';
   left?: Maybe<Tab>;
-  right?: Maybe<Scalars['BigInteger']>;
+  right?: Maybe<TokenTab>;
 };
 
 export type Tuple2_TokenTab_DocTypeField = {
@@ -3289,7 +3315,7 @@ export type BucketQueryVariables = Exact<{
 }>;
 
 
-export type BucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled?: boolean | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null } | null } | null };
+export type BucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled?: boolean | null, handleDynamicFilters?: boolean | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null } | null } | null };
 
 export type EnableBucketMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -4304,10 +4330,9 @@ export type TabTokenTabQueryVariables = Exact<{
 }>;
 
 
-export type TabTokenTabQuery = { __typename?: 'Query', tokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null, value?: string | null, filter?: boolean | null, tokenType?: TokenType | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+export type TabTokenTabQuery = { __typename?: 'Query', tokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null, value?: string | null, filter?: boolean | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
 
 export type CreateOrUpdateTabTokenMutationVariables = Exact<{
-  tabId: Scalars['ID'];
   tabTokenId?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
@@ -4343,22 +4368,46 @@ export type UnbindDocTypeFieldToTabTokenMutationVariables = Exact<{
 
 export type UnbindDocTypeFieldToTabTokenMutation = { __typename?: 'Mutation', unbindDocTypeFieldFromTokenTab?: { __typename?: 'Tuple2_TokenTab_DocTypeField', left?: { __typename?: 'TokenTab', id?: string | null } | null } | null };
 
+export type TabTokenTabsQueryVariables = Exact<{
+  parentId: Scalars['ID'];
+  searchText?: InputMaybe<Scalars['String']>;
+  unassociated: Scalars['Boolean'];
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type TabTokenTabsQuery = { __typename?: 'Query', tab?: { __typename?: 'Tab', id?: string | null, tokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+
+export type AddTokenTabToTabMutationVariables = Exact<{
+  childId: Scalars['ID'];
+  parentId: Scalars['ID'];
+}>;
+
+
+export type AddTokenTabToTabMutation = { __typename?: 'Mutation', addTokenTabToTab?: { __typename?: 'Tuple2_Tab_TokenTab', left?: { __typename?: 'Tab', id?: string | null } | null, right?: { __typename?: 'TokenTab', id?: string | null } | null } | null };
+
+export type RemoveTokenTabToTabMutationVariables = Exact<{
+  childId: Scalars['ID'];
+  parentId: Scalars['ID'];
+}>;
+
+
+export type RemoveTokenTabToTabMutation = { __typename?: 'Mutation', removeTokenTabToTab?: { __typename?: 'Tuple2_Tab_TokenTab', left?: { __typename?: 'Tab', id?: string | null } | null, right?: { __typename?: 'TokenTab', id?: string | null } | null } | null };
+
 export type TabTokensQueryVariables = Exact<{
-  tabId: Scalars['ID'];
   searchText?: InputMaybe<Scalars['String']>;
   cursor?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type TabTokensQuery = { __typename?: 'Query', tokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, tokenType?: TokenType | null, value?: string | null, filter?: boolean | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type TabTokensQuery = { __typename?: 'Query', totalTokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, tokenType?: TokenType | null, value?: string | null, filter?: boolean | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
-export type DeleteTabTokenTabMutationVariables = Exact<{
-  tabId: Scalars['ID'];
-  TabTokenTabs: Scalars['ID'];
+export type DeleteTabTokenMutationVariables = Exact<{
+  id: Scalars['ID'];
 }>;
 
 
-export type DeleteTabTokenTabMutation = { __typename?: 'Mutation', removeTokenTab?: { __typename?: 'Tuple2_Tab_BigInteger', right?: any | null } | null };
+export type DeleteTabTokenMutation = { __typename?: 'Mutation', deleteTokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null } | null };
 
 export type TabsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -5428,6 +5477,7 @@ export const BucketDocument = gql`
     name
     description
     enabled
+    handleDynamicFilters
     queryAnalysis {
       id
     }
@@ -10765,7 +10815,6 @@ export const TabTokenTabDocument = gql`
     description
     value
     filter
-    tokenType
     docTypeField {
       id
     }
@@ -10801,10 +10850,9 @@ export type TabTokenTabQueryHookResult = ReturnType<typeof useTabTokenTabQuery>;
 export type TabTokenTabLazyQueryHookResult = ReturnType<typeof useTabTokenTabLazyQuery>;
 export type TabTokenTabQueryResult = Apollo.QueryResult<TabTokenTabQuery, TabTokenTabQueryVariables>;
 export const CreateOrUpdateTabTokenDocument = gql`
-    mutation CreateOrUpdateTabToken($tabId: ID!, $tabTokenId: ID, $name: String!, $description: String, $value: String!, $filter: Boolean!, $tokenType: TokenType!) {
+    mutation CreateOrUpdateTabToken($tabTokenId: ID, $name: String!, $description: String, $value: String!, $filter: Boolean!, $tokenType: TokenType!) {
   tokenTab(
-    tabId: $tabId
-    tokenTabId: $tabTokenId
+    id: $tabTokenId
     tokenTabDTO: {name: $name, description: $description, filter: $filter, tokenType: $tokenType, value: $value}
   ) {
     entity {
@@ -10832,7 +10880,6 @@ export type CreateOrUpdateTabTokenMutationFn = Apollo.MutationFunction<CreateOrU
  * @example
  * const [createOrUpdateTabTokenMutation, { data, loading, error }] = useCreateOrUpdateTabTokenMutation({
  *   variables: {
- *      tabId: // value for 'tabId'
  *      tabTokenId: // value for 'tabTokenId'
  *      name: // value for 'name'
  *      description: // value for 'description'
@@ -10979,9 +11026,143 @@ export function useUnbindDocTypeFieldToTabTokenMutation(baseOptions?: Apollo.Mut
 export type UnbindDocTypeFieldToTabTokenMutationHookResult = ReturnType<typeof useUnbindDocTypeFieldToTabTokenMutation>;
 export type UnbindDocTypeFieldToTabTokenMutationResult = Apollo.MutationResult<UnbindDocTypeFieldToTabTokenMutation>;
 export type UnbindDocTypeFieldToTabTokenMutationOptions = Apollo.BaseMutationOptions<UnbindDocTypeFieldToTabTokenMutation, UnbindDocTypeFieldToTabTokenMutationVariables>;
+export const TabTokenTabsDocument = gql`
+    query TabTokenTabs($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
+  tab(id: $parentId) {
+    id
+    tokenTabs(
+      searchText: $searchText
+      notEqual: $unassociated
+      first: 25
+      after: $cursor
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useTabTokenTabsQuery__
+ *
+ * To run a query within a React component, call `useTabTokenTabsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTabTokenTabsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTabTokenTabsQuery({
+ *   variables: {
+ *      parentId: // value for 'parentId'
+ *      searchText: // value for 'searchText'
+ *      unassociated: // value for 'unassociated'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useTabTokenTabsQuery(baseOptions: Apollo.QueryHookOptions<TabTokenTabsQuery, TabTokenTabsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TabTokenTabsQuery, TabTokenTabsQueryVariables>(TabTokenTabsDocument, options);
+      }
+export function useTabTokenTabsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TabTokenTabsQuery, TabTokenTabsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TabTokenTabsQuery, TabTokenTabsQueryVariables>(TabTokenTabsDocument, options);
+        }
+export type TabTokenTabsQueryHookResult = ReturnType<typeof useTabTokenTabsQuery>;
+export type TabTokenTabsLazyQueryHookResult = ReturnType<typeof useTabTokenTabsLazyQuery>;
+export type TabTokenTabsQueryResult = Apollo.QueryResult<TabTokenTabsQuery, TabTokenTabsQueryVariables>;
+export const AddTokenTabToTabDocument = gql`
+    mutation AddTokenTabToTab($childId: ID!, $parentId: ID!) {
+  addTokenTabToTab(id: $parentId, tokenTabId: $childId) {
+    left {
+      id
+    }
+    right {
+      id
+    }
+  }
+}
+    `;
+export type AddTokenTabToTabMutationFn = Apollo.MutationFunction<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>;
+
+/**
+ * __useAddTokenTabToTabMutation__
+ *
+ * To run a mutation, you first call `useAddTokenTabToTabMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddTokenTabToTabMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addTokenTabToTabMutation, { data, loading, error }] = useAddTokenTabToTabMutation({
+ *   variables: {
+ *      childId: // value for 'childId'
+ *      parentId: // value for 'parentId'
+ *   },
+ * });
+ */
+export function useAddTokenTabToTabMutation(baseOptions?: Apollo.MutationHookOptions<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>(AddTokenTabToTabDocument, options);
+      }
+export type AddTokenTabToTabMutationHookResult = ReturnType<typeof useAddTokenTabToTabMutation>;
+export type AddTokenTabToTabMutationResult = Apollo.MutationResult<AddTokenTabToTabMutation>;
+export type AddTokenTabToTabMutationOptions = Apollo.BaseMutationOptions<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>;
+export const RemoveTokenTabToTabDocument = gql`
+    mutation RemoveTokenTabToTab($childId: ID!, $parentId: ID!) {
+  removeTokenTabToTab(id: $parentId, tokenTabId: $childId) {
+    left {
+      id
+    }
+    right {
+      id
+    }
+  }
+}
+    `;
+export type RemoveTokenTabToTabMutationFn = Apollo.MutationFunction<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>;
+
+/**
+ * __useRemoveTokenTabToTabMutation__
+ *
+ * To run a mutation, you first call `useRemoveTokenTabToTabMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveTokenTabToTabMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeTokenTabToTabMutation, { data, loading, error }] = useRemoveTokenTabToTabMutation({
+ *   variables: {
+ *      childId: // value for 'childId'
+ *      parentId: // value for 'parentId'
+ *   },
+ * });
+ */
+export function useRemoveTokenTabToTabMutation(baseOptions?: Apollo.MutationHookOptions<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>(RemoveTokenTabToTabDocument, options);
+      }
+export type RemoveTokenTabToTabMutationHookResult = ReturnType<typeof useRemoveTokenTabToTabMutation>;
+export type RemoveTokenTabToTabMutationResult = Apollo.MutationResult<RemoveTokenTabToTabMutation>;
+export type RemoveTokenTabToTabMutationOptions = Apollo.BaseMutationOptions<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>;
 export const TabTokensDocument = gql`
-    query TabTokens($tabId: ID!, $searchText: String, $cursor: String) {
-  tokenTabs(tabId: $tabId, searchText: $searchText, first: 25, after: $cursor) {
+    query TabTokens($searchText: String, $cursor: String) {
+  totalTokenTabs(searchText: $searchText, first: 25, after: $cursor) {
     edges {
       node {
         id
@@ -11011,13 +11192,12 @@ export const TabTokensDocument = gql`
  * @example
  * const { data, loading, error } = useTabTokensQuery({
  *   variables: {
- *      tabId: // value for 'tabId'
  *      searchText: // value for 'searchText'
  *      cursor: // value for 'cursor'
  *   },
  * });
  */
-export function useTabTokensQuery(baseOptions: Apollo.QueryHookOptions<TabTokensQuery, TabTokensQueryVariables>) {
+export function useTabTokensQuery(baseOptions?: Apollo.QueryHookOptions<TabTokensQuery, TabTokensQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<TabTokensQuery, TabTokensQueryVariables>(TabTokensDocument, options);
       }
@@ -11028,40 +11208,40 @@ export function useTabTokensLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type TabTokensQueryHookResult = ReturnType<typeof useTabTokensQuery>;
 export type TabTokensLazyQueryHookResult = ReturnType<typeof useTabTokensLazyQuery>;
 export type TabTokensQueryResult = Apollo.QueryResult<TabTokensQuery, TabTokensQueryVariables>;
-export const DeleteTabTokenTabDocument = gql`
-    mutation DeleteTabTokenTab($tabId: ID!, $TabTokenTabs: ID!) {
-  removeTokenTab(tabId: $tabId, tokenTabId: $TabTokenTabs) {
-    right
+export const DeleteTabTokenDocument = gql`
+    mutation DeleteTabToken($id: ID!) {
+  deleteTokenTab(tokenTabId: $id) {
+    id
+    name
   }
 }
     `;
-export type DeleteTabTokenTabMutationFn = Apollo.MutationFunction<DeleteTabTokenTabMutation, DeleteTabTokenTabMutationVariables>;
+export type DeleteTabTokenMutationFn = Apollo.MutationFunction<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>;
 
 /**
- * __useDeleteTabTokenTabMutation__
+ * __useDeleteTabTokenMutation__
  *
- * To run a mutation, you first call `useDeleteTabTokenTabMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useDeleteTabTokenTabMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useDeleteTabTokenMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteTabTokenMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [deleteTabTokenTabMutation, { data, loading, error }] = useDeleteTabTokenTabMutation({
+ * const [deleteTabTokenMutation, { data, loading, error }] = useDeleteTabTokenMutation({
  *   variables: {
- *      tabId: // value for 'tabId'
- *      TabTokenTabs: // value for 'TabTokenTabs'
+ *      id: // value for 'id'
  *   },
  * });
  */
-export function useDeleteTabTokenTabMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTabTokenTabMutation, DeleteTabTokenTabMutationVariables>) {
+export function useDeleteTabTokenMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTabTokenTabMutation, DeleteTabTokenTabMutationVariables>(DeleteTabTokenTabDocument, options);
+        return Apollo.useMutation<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>(DeleteTabTokenDocument, options);
       }
-export type DeleteTabTokenTabMutationHookResult = ReturnType<typeof useDeleteTabTokenTabMutation>;
-export type DeleteTabTokenTabMutationResult = Apollo.MutationResult<DeleteTabTokenTabMutation>;
-export type DeleteTabTokenTabMutationOptions = Apollo.BaseMutationOptions<DeleteTabTokenTabMutation, DeleteTabTokenTabMutationVariables>;
+export type DeleteTabTokenMutationHookResult = ReturnType<typeof useDeleteTabTokenMutation>;
+export type DeleteTabTokenMutationResult = Apollo.MutationResult<DeleteTabTokenMutation>;
+export type DeleteTabTokenMutationOptions = Apollo.BaseMutationOptions<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>;
 export const TabsDocument = gql`
     query Tabs($searchText: String, $cursor: String) {
   tabs(searchText: $searchText, first: 25, after: $cursor) {
@@ -11606,4 +11786,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-04-20T10:25:14+02:00
+// Generated on 2023-04-28T12:35:30+02:00
