@@ -79,9 +79,7 @@ type ResultCountProps = {
 
 function ResultCount({ children, setSortResult }: ResultCountProps) {
   const client = useOpenK9Client();
-  const options = useQuery(["date-label-sort-options", {}], async () => {
-    return await client.getLabelSort();
-  });
+
   return (
     <React.Fragment>
       <div
@@ -153,7 +151,7 @@ function ResultCount({ children, setSortResult }: ResultCountProps) {
           >
             Sort by
           </span>
-          <SortResultList options={options} setSortResult={setSortResult} />
+          <SortResultList setSortResult={setSortResult} />
         </div>
       </div>
     </React.Fragment>

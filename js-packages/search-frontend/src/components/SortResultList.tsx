@@ -2,21 +2,18 @@ import { css } from "styled-components/macro";
 import { UseQueryResult } from "react-query";
 import React from "react";
 import { SortField } from "./client";
+import { useQuery } from "react-query";
+import { useOpenK9Client } from "./client";
 
 export function SortResultList({
   setSortResult,
-  options,
 }: {
   setSortResult: (sortResultNew: SortField) => void;
-  options: UseQueryResult<
-    {
-      field: string;
-      id: number;
-      label: string;
-    }[],
-    unknown
-  >;
 }) {
+  const client = useOpenK9Client();
+  const options = useQuery(["date-label-sort-options", {}], async () => {
+    return await client.getLabelSort();
+  });
   return (
     <span className="openk9-container-sort-result-list-component">
       <select
