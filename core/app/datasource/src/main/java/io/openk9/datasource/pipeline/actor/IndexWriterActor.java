@@ -217,14 +217,14 @@ public class IndexWriterActor {
 
 		ObjectMapper objectMapper =
 			JacksonObjectMapperProvider.get(ctx.getSystem()).getOrCreate(
-				"jackson-cbor",
+				"jackson-json",
 				Optional.of(new CBORFactory())
 			);
 
 		try {
 			indexRequest.source(
 				objectMapper.writeValueAsBytes(dataPayload),
-				XContentType.CBOR);
+				XContentType.JSON);
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException(e);
