@@ -4,6 +4,10 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import akka.serialization.jackson.JacksonObjectMapperProvider;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
@@ -27,6 +31,7 @@ import org.slf4j.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.util.Map;
+import java.util.Optional;
 
 public class IndexWriterActor {
 
@@ -106,7 +111,7 @@ public class IndexWriterActor {
 		}
 
 		DocWriteRequest docWriteRequest =
-			createDocWriteRequest(dataIndex, dataPayload, logger, searchResponse);
+			createDocWriteRequest(ctx, dataIndex, dataPayload, logger, searchResponse);
 
 		BulkRequest bulkRequest = new BulkRequest();
 		bulkRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
@@ -174,7 +179,7 @@ public class IndexWriterActor {
 	}
 
 	private static DocWriteRequest createDocWriteRequest(
-		DataIndex dataIndex, DataPayload dataPayload, Logger logger,
+		ActorContext<?> ctx, DataIndex dataIndex, DataPayload dataPayload, Logger logger,
 		SearchResponse searchResponse) {
 
 		String indexName = dataIndex.getName();
@@ -210,7 +215,20 @@ public class IndexWriterActor {
 			jsonObject.put("acl", Map.of("public", true));
 		}
 
-		indexRequest.source(jsonObject.toString(), XContentType.JSON);
+		ObjectMapper objectMapper =
+			JacksonObjectMapperProvider.get(ctx.getSystem()).getOrCreate(
+				"jackson-cbor",
+				Optional.of(new CBORFactory())
+			);
+
+		try {
+			indexRequest.source(
+				objectMapper.writeValueAsBytes(dataPayload),
+				XContentType.CBOR);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
 
 		return indexRequest;
 	}
