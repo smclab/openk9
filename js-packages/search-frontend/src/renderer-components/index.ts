@@ -24,3 +24,4 @@ export * from "./ResultTextContentTwo";
 export * from "./DetailTextContentTwo";
 export * from "./MoreDetailCard";
 export * from "./ResultLinkTwo";
+export * from "./SortResultList";
