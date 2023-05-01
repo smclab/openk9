@@ -33,6 +33,8 @@ export function App() {
         padding-right: 50px;
         box-sizing: border-box;
         @media (min-width: 320px) and (max-width: 480px) {
+          padding-left: 0px;
+          padding-right: 0px;
           grid-template-columns: 1fr;
           grid-template-rows: auto auto auto 1fr;
           grid-template-areas:
@@ -89,6 +91,9 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
+          @media (min-width: 320px) and (max-width: 480px) {
+            margin: 0px -30px;
+          }
         `}
       >
         <div

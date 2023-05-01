@@ -54,23 +54,31 @@ function Tabs({
                   padding-left: ${index == 0 ? "0px" : "20px"};
                   margin-left: ${index == 0 ? "0px" : "14px"};
                   padding: 4px 10px;
-                  background: ${isSelected
-                    ? "var(--openk9-embeddable-search--primary-background-tab-color)"
-                    : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
+                  background: ${
+                    isSelected
+                      ? "var(--openk9-embeddable-search--primary-background-tab-color)"
+                      : "var(--openk9-embeddable-search--secondary-background-tab-color)"
+                  };
                   border-radius: 8px;
                   font: Helvetica Neue LT Std;
                   font-style: normal;
-                  color: ${isSelected
-                    ? "var(--openk9-embeddable-search--primary-background-color)"
-                    : "var(--openk9-embeddable-tabs--primary-color)"};
-                  ${isSelected
-                    ? "var(--openk9-embeddable-search--active-color)"
-                    : "transparent"};
+                  color: ${
+                    isSelected
+                      ? "var(--openk9-embeddable-search--primary-background-color)"
+                      : "var(--openk9-embeddable-tabs--primary-color)"
+                  };
+                  ${
+                    isSelected
+                      ? "var(--openk9-embeddable-search--active-color)"
+                      : "transparent"
+                  };
                   cursor: ${isSelected ? "" : "pointer"};
                   user-select: none;
                   :hover {
                     ${isSelected ? "" : "text-decoration: underline;"}
                   }
+                  @media (min-width: 320px) and (max-width: 480px) {
+                    margin-left: 14px;
                 `}
                 onClick={() => {
                   onSelectedTabIndexChange(index);

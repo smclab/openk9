@@ -27,6 +27,7 @@ import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 import { Search } from "../components/Search";
 import { useOpenK9Client } from "../components/client";
 import { useQuery } from "react-query";
+import { SortResultList } from "../components/SortResultList";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -112,6 +113,10 @@ export function Main({
       )}
       {renderPortal(<DetailMemo result={detail} />, configuration.details)}
       {renderPortal(<LoginInfoComponentMemo />, configuration.login)}
+      {renderPortal(
+        <SortResultList setSortResult={setSortResult} />,
+        configuration.sortable,
+      )}
     </React.Fragment>
   );
 }

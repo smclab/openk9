@@ -101,6 +101,9 @@ export function Search({
             : valueSelected.startDate
             ? "77%"
             : "95%"};
+          @media (min-width: 320px) and (max-width: 480px) {
+            width: 100%;
+          }
         `}
       >
         <FontAwesomeIcon
@@ -359,6 +362,9 @@ export function Search({
           border-radius: 50px;
           cursor: pointer;
           max-width: 20%;
+          @media (min-width: 320px) and (max-width: 480px) {
+            display: none;
+          }
         `}
         onClick={() => {
           !journey &&

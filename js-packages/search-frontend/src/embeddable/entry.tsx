@@ -157,6 +157,7 @@ export type Configuration = {
   search: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
+  sortable: Element | string | null;
   results: Element | string | null;
   details: Element | string | null;
   login: Element | string | null;
@@ -176,6 +177,7 @@ const defaultConfiguration: Configuration = {
   enabled: false,
   search: null,
   tabs: null,
+  sortable: null,
   sort: [],
   filters: null,
   results: null,
