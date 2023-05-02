@@ -18,6 +18,8 @@ import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.JsonMerge;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
@@ -182,10 +184,12 @@ public class DatasourceActor {
 						IndexWriterActor.create(), "index-writer")
 				);
 
+			Buffer buffer = Json.encodeToBuffer(dataPayload);
+
 			indexWriterActorRef.tell(
 				new IndexWriterActor.Start(
 					datasourceModel.datasource.getDataIndex(),
-					dataPayload, responseActorRef)
+					buffer.getBytes(), responseActorRef)
 			);
 
 			return Behaviors.receive(Command.class)

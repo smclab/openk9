@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;
@@ -38,7 +40,7 @@ import java.util.Optional;
 public class IndexWriterActor {
 
 	public sealed interface Command extends CborSerializable {}
-	public record Start(DataIndex dataIndex, DataPayload dataPayload, ActorRef<Response> replyTo) implements Command {}
+	public record Start(DataIndex dataIndex, byte[] dataPayload, ActorRef<Response> replyTo) implements Command {}
 	private record SearchResponseCommand(DataIndex dataIndex, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
 	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, Exception exception) implements Command {}
 	public sealed interface Response extends CborSerializable {}
@@ -142,8 +144,10 @@ public class IndexWriterActor {
 
 	private static Behavior<Command> onStart(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		DataIndex dataIndex, DataPayload dataPayload,
+		DataIndex dataIndex, byte[] data,
 		ActorRef<Response> replyTo) {
+
+		DataPayload dataPayload = Json.decodeValue(Buffer.buffer(data), DataPayload.class);
 
 		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
 
