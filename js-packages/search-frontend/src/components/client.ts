@@ -84,7 +84,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     },
     async getLabelSort() {
       const response = await authFetch(
-        `api/datasource/buckets/current/doc-type-fields-sortable`,
+        `/api/datasource/buckets/current/doc-type-fields-sortable`,
         {
           method: "GET",
           headers: { Accept: "application/json" },
