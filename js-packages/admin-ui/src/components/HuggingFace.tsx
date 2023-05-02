@@ -199,7 +199,7 @@ export function HuggingFace() {
               <ClaySelect.Option label={"image classifcation"} value={"image-classifcation"} />
               <ClaySelect.Option label={"summarizzation"} value={"summarizzation"} />
               <ClaySelect.Option label={"translation"} value={"translation"} />
-              <ClaySelect.Option label={"audio classification"} value={"audio-classification"} />
+              <ClaySelect.Option label={"audio speech recognition"} value={"audio-speech-recognition"} />
             </ClaySelect>
           </div>
           {isInvalidateTask && (
