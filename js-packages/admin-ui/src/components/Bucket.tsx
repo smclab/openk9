@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 
-import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle, BooleanInput } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import {
@@ -48,8 +48,8 @@ gql`
   }
 `;
 gql`
-  mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String) {
-    bucket(id: $id, bucketDTO: { name: $name, description: $description }) {
+  mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $handleDynamicFilters: Boolean!) {
+    bucket(id: $id, bucketDTO: { name: $name, description: $description, handleDynamicFilters: $handleDynamicFilters }) {
       entity {
         id
         name
@@ -90,6 +90,7 @@ export function Bucket() {
         name: "",
         description: "",
         enable: false,
+        handleDynamicFilters: false,
       }),
       []
     ),
@@ -144,6 +145,13 @@ export function Bucket() {
               description={"Search Configuration for current bucket"}
             />
           </ClayForm>
+        )}
+        {bucketId !== "new" && (
+          <BooleanInput
+            label="Dynamic Filters"
+            description=" Allow to handle filter in dynamic way. Filters will change base to current query."
+            {...form.inputProps("handleDynamicFilters")}
+          />
         )}
         <div className="sheet-footer">
           <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>

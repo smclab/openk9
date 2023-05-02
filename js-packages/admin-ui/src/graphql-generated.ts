@@ -186,6 +186,7 @@ export type BucketTabsArgs = {
 
 export type BucketDtoInput = {
   description?: InputMaybe<Scalars['String']>;
+  handleDynamicFilters: Scalars['Boolean'];
   name: Scalars['String'];
 };
 
@@ -3328,6 +3329,7 @@ export type CreateOrUpdateBucketMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
+  handleDynamicFilters: Scalars['Boolean'];
 }>;
 
 
@@ -5550,8 +5552,11 @@ export type EnableBucketMutationHookResult = ReturnType<typeof useEnableBucketMu
 export type EnableBucketMutationResult = Apollo.MutationResult<EnableBucketMutation>;
 export type EnableBucketMutationOptions = Apollo.BaseMutationOptions<EnableBucketMutation, EnableBucketMutationVariables>;
 export const CreateOrUpdateBucketDocument = gql`
-    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String) {
-  bucket(id: $id, bucketDTO: {name: $name, description: $description}) {
+    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $handleDynamicFilters: Boolean!) {
+  bucket(
+    id: $id
+    bucketDTO: {name: $name, description: $description, handleDynamicFilters: $handleDynamicFilters}
+  ) {
     entity {
       id
       name
@@ -5582,6 +5587,7 @@ export type CreateOrUpdateBucketMutationFn = Apollo.MutationFunction<CreateOrUpd
  *      id: // value for 'id'
  *      name: // value for 'name'
  *      description: // value for 'description'
+ *      handleDynamicFilters: // value for 'handleDynamicFilters'
  *   },
  * });
  */
@@ -11786,4 +11792,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-04-28T12:35:30+02:00
+// Generated on 2023-05-02T12:36:14+02:00
