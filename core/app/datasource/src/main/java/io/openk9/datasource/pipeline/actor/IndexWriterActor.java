@@ -1,13 +1,14 @@
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
+import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.serialization.jackson.JacksonObjectMapperProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
@@ -30,6 +31,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.spi.CDI;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -218,7 +220,7 @@ public class IndexWriterActor {
 		ObjectMapper objectMapper =
 			JacksonObjectMapperProvider.get(ctx.getSystem()).getOrCreate(
 				"jackson-json",
-				Optional.of(new CBORFactory())
+				Optional.empty()
 			);
 
 		try {

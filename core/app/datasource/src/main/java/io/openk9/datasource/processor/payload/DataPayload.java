@@ -19,11 +19,14 @@ package io.openk9.datasource.processor.payload;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -45,6 +48,8 @@ public class DataPayload {
 	private String[] documentTypes;
 	private ResourcesPayload resources;
 	private Map<String, List<String>> acl;
+	@Setter(AccessLevel.NONE)
+	@JsonIgnore
 	private Map<String, Object> rest = new HashMap<>();
 	private String indexName;
 
@@ -105,4 +110,5 @@ public class DataPayload {
 	public Map<String, Object> getRest() {
 		return rest;
 	}
+
 }
