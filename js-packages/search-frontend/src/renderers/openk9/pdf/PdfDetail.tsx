@@ -70,9 +70,9 @@ export function PdfDetail({ result }: PdfDetailProps) {
         date={lastEdit}
       />
       <div style={{ marginTop: "10px", marginLeft: "5px" }}>
-        <DetailLink href={result.source.document.url}>
+        <ResultLinkTwo href={result.source.document.url}>
           <HighlightableText result={result} path="document.url" />
-        </DetailLink>
+        </ResultLinkTwo>
       </div>
       <div style={{ marginTop: "15px" }}>
         {result.source.resources.binaries.map((binary) => {
