@@ -70,6 +70,40 @@ public class BucketResource {
 		return getDocTypeFieldsSortableList(request.host());
 	}
 
+	@Path("/current")
+	@GET
+	public Uni<BucketResponse> getCurrentBucket() {
+		return getBucket(request.host());
+	}
+
+	private Uni<BucketResponse> getBucket(String host) {
+		return transactionInvoker.withStatelessTransaction(session -> {
+
+			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+
+			CriteriaQuery<Boolean> query = cb.createQuery(Boolean.class);
+
+			Root<Bucket> from = query.from(Bucket.class);
+
+			Join<Bucket, TenantBinding> tenantBindingFetch =
+				from.join(Bucket_.tenantBinding);
+
+			tenantBindingFetch.on(
+				cb.equal(
+					tenantBindingFetch.get(TenantBinding_.virtualHost),
+					host
+				)
+			);
+
+			query.select(from.get(Bucket_.handleDynamicFilters));
+
+			return session.createQuery(query)
+				.getSingleResult()
+				.map(BucketResponse::new);
+
+		});
+	}
+
 	private Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortableList(String virtualhost) {
 		return transactionInvoker.withStatelessTransaction(session -> {
 
@@ -259,5 +293,7 @@ public class BucketResource {
 
 	@Inject
 	TransactionInvoker transactionInvoker;
+
+	public record BucketResponse(boolean handleDynamicFilters) {}
 
 }
