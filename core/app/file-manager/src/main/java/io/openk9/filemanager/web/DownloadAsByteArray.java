@@ -56,7 +56,7 @@ public class DownloadAsByteArray {
 
 		return RestResponse.ResponseBuilder.ok(sourceBytes)
 			// set a response header
-			.header("Content-Type", "Camembert")
+			.header("Content-Type", "application/pdf")
 			// end of builder API
 			.build();
 
