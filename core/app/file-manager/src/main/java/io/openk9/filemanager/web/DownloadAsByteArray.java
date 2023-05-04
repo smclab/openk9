@@ -34,8 +34,8 @@ public class DownloadAsByteArray {
 
 	@GET
 	@Path("/{resourceId}/{schemaName}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public byte[] downloadAsBase64(@PathParam("resourceId") String resourceId,
+	@Produces(MediaType.MEDIA_TYPE_WILDCARD)
+	public byte[] downloadAsByte(@PathParam("resourceId") String resourceId,
 								   @PathParam("schemaName") String schemaName) {
 
 		InputStream inputStream = downloadService.
