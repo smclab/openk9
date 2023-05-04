@@ -19,6 +19,8 @@ package io.openk9.filemanager.web;
 
 import io.openk9.filemanager.service.DownloadService;
 import org.apache.commons.io.IOUtils;
+import org.jboss.resteasy.reactive.ResponseHeader;
+import org.jboss.resteasy.reactive.RestResponse;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -26,17 +28,20 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
+import java.time.Instant;
 
 @Path("/v1/download/byte")
 public class DownloadAsByteArray {
 
 	@GET
 	@Path("/{resourceId}/{schemaName}")
-	@Produces(MediaType.MEDIA_TYPE_WILDCARD)
-	public byte[] downloadAsByte(@PathParam("resourceId") String resourceId,
-								   @PathParam("schemaName") String schemaName) {
+	public RestResponse<byte[]> downloadAsByte(@PathParam("resourceId") String resourceId,
+											   @PathParam("schemaName") String schemaName) {
 
 		InputStream inputStream = downloadService.
 			downloadObject(resourceId, schemaName);
@@ -49,7 +54,11 @@ public class DownloadAsByteArray {
 			throw new RuntimeException(e);
 		}
 
-		return sourceBytes;
+		return RestResponse.ResponseBuilder.ok(sourceBytes)
+			// set a response header
+			.header("Content-Type", "Camembert")
+			// end of builder API
+			.build();
 
 	}
 
