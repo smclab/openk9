@@ -157,6 +157,7 @@ export type Configuration = {
   search: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
+  filtersHorizontal: Element | string | null;
   sortable: Element | string | null;
   results: Element | string | null;
   details: Element | string | null;
@@ -180,6 +181,7 @@ const defaultConfiguration: Configuration = {
   sortable: null,
   sort: [],
   filters: null,
+  filtersHorizontal: null,
   results: null,
   details: null,
   login: null,

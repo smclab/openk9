@@ -13,7 +13,6 @@ import { Logo } from "./Logo";
 import { CreateLabel } from "./Filters";
 import { FilterSvg } from "../svgElement/FiltersSvg";
 import { PlusSvg } from "../svgElement/PlusSvg";
-import { display } from "@mui/system";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -23,6 +22,10 @@ type FilterCategoryProps = {
   onRemove(searchToken: SearchToken): void;
   multiSelect: boolean;
   searchQuery: SearchToken[];
+  isCollapsable?: boolean;
+  isUniqueLoadMore?: boolean;
+  loadAll?: boolean;
+  setHasMoreSuggestionsCategories?: React.Dispatch<React.SetStateAction<boolean>>;
 };
 function FilterCategory({
   suggestionCategoryId,
@@ -32,13 +35,24 @@ function FilterCategory({
   onRemove,
   multiSelect,
   searchQuery,
+  isCollapsable = true,
+  isUniqueLoadMore = false,
+  loadAll = false,
+  setHasMoreSuggestionsCategories = undefined
 }: FilterCategoryProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
     tokens,
     suggestionCategoryId,
     useDebounce(text, 600),
+    loadAll
   );
+
+  React.useEffect(() => {
+    if (setHasMoreSuggestionsCategories && suggestions && suggestions.hasNextPage)
+      setHasMoreSuggestionsCategories(suggestions.hasNextPage); 
+  }, []);
+
   const [isOpen, setIsOpen] = React.useState(true);
   const [singleSelect, setSingleselect] = React.useState<
     SearchToken | undefined
@@ -64,6 +78,7 @@ function FilterCategory({
                 index={index}
                 isOpen={isOpen}
                 multiSelect={multiSelect}
+                isUniqueLoadMore={isUniqueLoadMore}
                 onRemove={onRemove}
                 searchToken={searchToken}
                 setIsOpen={setIsOpen}
@@ -92,6 +107,7 @@ function FilterCategory({
       className="openk9-filter-category-container"
       css={css`
         margin-bottom: 16px;
+        ${isUniqueLoadMore ? 'width: 50%' : null}
       `}
     >
       <div>
@@ -104,7 +120,7 @@ function FilterCategory({
             align-items: center;
             width: 100% !important;
           `}
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => isCollapsable ? setIsOpen(!isOpen) : null}
         >
           <div
             css={css`
@@ -116,75 +132,85 @@ function FilterCategory({
           >
             <strong>{suggestionCategoryName}</strong>
           </div>
-          <FontAwesomeIcon
-            icon={isOpen ? faChevronDown : faChevronUp}
-            style={{
-              color: "var(--openk9-embeddable-search--secondary-text-color)",
-              marginRight: "8px",
-            }}
-          />
+          {isCollapsable && 
+            <FontAwesomeIcon
+              icon={isOpen ? faChevronDown : faChevronUp}
+              style={{
+                color: "var(--openk9-embeddable-search--secondary-text-color)",
+                marginRight: "8px",
+              }}
+            />
+          }
         </div>
       </div>
       {isOpen && (
         <React.Fragment>
-          <div
-            className="openk9-filter-category-container-search"
-            css={css`
-              display: flex;
-              align-items: center;
-              margin-bottom: 10px;
-            `}
-          >
-            <FontAwesomeIcon
-              icon={faSearch}
-              style={{
-                color: "var(--openk9-embeddable-search--secondary-text-color)",
-                marginLeft: "25px",
-                opacity: "0.3",
-                zIndex: "3",
-                marginTop: "16px",
-                height: "15px",
-              }}
-            />
-            <input
-              className="openk9-filter-category-search"
-              value={text}
-              placeholder="Search filters..."
-              onChange={(event) => setText(event.currentTarget.value)}
+          {!isUniqueLoadMore && 
+            <div
+              className="openk9-filter-category-container-search"
               css={css`
-                margin-top: 17px;
-                flex-grow: 1;
-                text-indent: 25px;
-                margin-left: -25px;
-                margin-right: -9px;
-                padding: 8px 16px 8px 8px;
-                border-radius: 4px;
-                border: 1px solid var(--openk9-embeddable-search--border-color);
-                border-radius: 20px;
-                background: #fafafa;
-                :focus {
-                  border: 1px solid
-                    var(--openk9-embeddable-search--active-color);
-                  outline: none;
-                }
-                ::placeholder {
-                  font-style: normal;
-                  font-weight: 400;
-                  font-size: 15px;
-                }
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
               `}
-            />
-          </div>
+            >
+              <FontAwesomeIcon
+                icon={faSearch}
+                style={{
+                  color: "var(--openk9-embeddable-search--secondary-text-color)",
+                  marginLeft: "25px",
+                  opacity: "0.3",
+                  zIndex: "3",
+                  marginTop: "16px",
+                  height: "15px",
+                }}
+              />
+              <input
+                className="openk9-filter-category-search"
+                value={text}
+                placeholder="Search filters..."
+                onChange={(event) => setText(event.currentTarget.value)}
+                css={css`
+                  margin-top: 17px;
+                  flex-grow: 1;
+                  text-indent: 25px;
+                  margin-left: -25px;
+                  margin-right: -9px;
+                  padding: 8px 16px 8px 8px;
+                  border-radius: 4px;
+                  border: 1px solid var(--openk9-embeddable-search--border-color);
+                  border-radius: 20px;
+                  background: #fafafa;
+                  :focus {
+                    border: 1px solid
+                      var(--openk9-embeddable-search--active-color);
+                    outline: none;
+                  }
+                  ::placeholder {
+                    font-style: normal;
+                    font-weight: 400;
+                    font-size: 15px;
+                  }
+                `}
+              />
+            </div>
+          }
           <div
-            className="form-check"
-            css={css`
-              display: flex;
-              align-items: "center";
-              margin-left: 2px;
-              margin-top: 5px;
-              flex-direction: column;
-              margin-bottom: 5px;
-            `}
+            style={{
+              display: "flex",
+              flexDirection: isUniqueLoadMore ? "row" : "column",
+              gap: isUniqueLoadMore ? "0" : "5px",
+              flexWrap: isUniqueLoadMore ? "wrap" : "initial",
+              paddingLeft: "13px"
+            }}
+            // css={css`
+            //   display: flex;
+            //   align-items: "center";
+            //   margin-left: 2px;
+            //   margin-top: 5px;
+            //   flex-direction: column;
+            //   margin-bottom: 5px;
+            // `}
           >
             {searchQuery.map((searchToken: SearchToken, index: number) => {
               if (!("goToSuggestion" in searchToken)) return null;
@@ -195,11 +221,18 @@ function FilterCategory({
                     multiSelect={multiSelect}
                     onRemove={onRemove}
                     searchToken={searchToken}
+                    isUniqueLoadMore={isUniqueLoadMore}
                   />
                 );
             })}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+          <div style={{
+            display: "flex",
+            flexDirection: isUniqueLoadMore ? "row" : "column",
+            gap: isUniqueLoadMore ? "0" : "5px",
+            flexWrap: isUniqueLoadMore ? "wrap" : "initial",
+            paddingLeft: "13px"
+          }}>
             {suggestions.data?.pages.map(({ result }, index) => {
               return (
                 <React.Fragment key={index}>
@@ -226,7 +259,12 @@ function FilterCategory({
                               align-items: ${multiSelect
                                 ? "baseline"
                                 : "stretch"};
-                              margin-left: 13px;
+                              width: ${isUniqueLoadMore
+                                ? "50%"
+                                : "auto"};
+                              margin-bottom: ${isUniqueLoadMore
+                                ? "8px"
+                                : "0"};
                             `}
                           >
                             {multiSelect ? (
@@ -326,7 +364,7 @@ function FilterCategory({
               );
             })}
           </div>
-          {suggestions.hasNextPage && (
+          {!isUniqueLoadMore && suggestions.hasNextPage && (
             <div
               style={{ textAlign: "center", width: "100%", marginTop: "10px" }}
             >
@@ -395,8 +433,9 @@ function useInfiniteSuggestions(
   searchQueryParams: SearchToken[] | null,
   activeSuggestionCategory: number,
   suggestKeyword: string,
+  loadAll: boolean
 ) {
-  const pageSize = suggestKeyword === "" ? 5 : 19;
+  const pageSize = loadAll ? 19 : (suggestKeyword === "" ? 7 : 19);
   const client = useOpenK9Client();
   let searchQuery: SearchToken[] | null = [];
   if (searchQueryParams && searchQueryParams?.length > 0) {
@@ -416,12 +455,13 @@ function useInfiniteSuggestions(
   } else {
     searchQuery = searchQueryParams;
   }
-  return useInfiniteQuery(
+  const suggestionCategories = useInfiniteQuery(
     [
       "suggestions",
       searchQuery,
       activeSuggestionCategory,
       suggestKeyword,
+      loadAll
     ] as const,
     async ({
       queryKey: [_, searchQuery, activeSuggestionCategory, suggestKeyword],
@@ -452,6 +492,8 @@ function useInfiniteSuggestions(
       suspense: true,
     },
   );
+
+  return suggestionCategories;
 }
 
 function SingleSelect({
@@ -638,6 +680,7 @@ type FiltersNotDisappearingProps = {
   suggestionCategoryName: string;
   index: number;
   multiSelect: boolean;
+  isUniqueLoadMore: boolean;
   onRemove: (searchToken: SearchToken) => void;
   searchToken: {
     tokenType: "TEXT";
@@ -662,6 +705,7 @@ function FiltersNotDisappearing({
   searchToken,
   text,
   setText,
+  isUniqueLoadMore
 }: FiltersNotDisappearingProps) {
   return (
     <React.Fragment>
@@ -766,6 +810,7 @@ function FiltersNotDisappearing({
                 multiSelect={multiSelect}
                 onRemove={onRemove}
                 searchToken={searchToken}
+                isUniqueLoadMore={isUniqueLoadMore}
               />
             </div>
           </React.Fragment>
@@ -780,8 +825,10 @@ function TokensSelected({
   onRemove,
   searchToken,
   index,
+  isUniqueLoadMore
 }: {
   multiSelect: Boolean;
+  isUniqueLoadMore: boolean;
   onRemove: (searchToken: SearchToken) => void;
   searchToken: {
     tokenType: "TEXT";
@@ -804,8 +851,11 @@ function TokensSelected({
           css={css`
             display: flex;
             align-items: ${multiSelect ? "baseline" : "stretch"};
-            margin-left: 11px;
             margin-top: 5px;
+            width: ${isUniqueLoadMore ? "50%" : "auto"};
+            margin-bottom: ${isUniqueLoadMore
+              ? "8px"
+              : "0"};
           `}
         >
           <input
@@ -848,7 +898,10 @@ function TokensSelected({
           css={css`
             display: flex;
             align-items: ${multiSelect ? "baseline" : "center"};
-            margin-left: 11px;
+            width: ${isUniqueLoadMore ? "50%" : "auto"};
+            margin-bottom: ${isUniqueLoadMore
+              ? "8px"
+              : "0"};
             margin-top: 5px;
           `}
         >

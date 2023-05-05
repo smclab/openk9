@@ -28,6 +28,7 @@ import { Search } from "../components/Search";
 import { useOpenK9Client } from "../components/client";
 import { useQuery } from "react-query";
 import { SortResultList } from "../components/SortResultList";
+import { FiltersHorizontalMemo } from "../components/FiltersHorizontal";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -100,6 +101,17 @@ export function Main({
           sort={completelySort}
         />,
         configuration.filters,
+      )}
+      {renderPortal(
+        <FiltersHorizontalMemo
+          searchQuery={searchQuery}
+          onAddFilterToken={addFilterToken}
+          onRemoveFilterToken={removeFilterToken}
+          onConfigurationChange={onConfigurationChange}
+          filtersSelect={configuration.filterTokens}
+          sort={completelySort}
+        />,
+        configuration.filtersHorizontal,
       )}
       {renderPortal(
         <ResultsMemo
