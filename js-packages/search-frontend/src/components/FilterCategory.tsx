@@ -457,18 +457,12 @@ function useInfiniteSuggestions(
   let searchQuery: SearchToken[] | null = [];
   if (searchQueryParams && searchQueryParams?.length > 0) {
     searchQueryParams.forEach((singleSearchQuery) => {
-      if (
-        singleSearchQuery?.tokenType !== "TEXT" ||
-        !("goToSuggestion" in JSON.parse(JSON.stringify(singleSearchQuery)))
-      ) {
-        searchQuery?.push(singleSearchQuery);
-      }
-      if (singleSearchQuery?.tokenType === "TEXT" && dynamicFilters)
-        searchQuery?.push(singleSearchQuery);
+      if (dynamicFilters) searchQuery?.push(singleSearchQuery);
     });
   } else {
     searchQuery = searchQueryParams;
   }
+
   const suggestionCategories = useInfiniteQuery(
     [
       "suggestions",
