@@ -65,6 +65,10 @@ export function Main({
     dateTokens,
     onQueryStateChange,
   });
+  const client = useOpenK9Client();
+  const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
+    return await client.handle_dynamic_filters();
+  });
   const { detail, setDetail } = useDetails(searchQuery);
   return (
     <React.Fragment>
@@ -99,6 +103,7 @@ export function Main({
           onConfigurationChange={onConfigurationChange}
           filtersSelect={configuration.filterTokens}
           sort={completelySort}
+          dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
         />,
         configuration.filters,
       )}

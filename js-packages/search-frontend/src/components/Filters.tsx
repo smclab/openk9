@@ -18,6 +18,7 @@ type FiltersProps = {
   onConfigurationChange: ConfigurationUpdateFunction;
   filtersSelect: SearchToken[];
   sort: SortField[];
+  dynamicFilters: boolean;
 };
 function Filters({
   searchQuery,
@@ -26,6 +27,7 @@ function Filters({
   onRemoveFilterToken,
   filtersSelect,
   sort,
+  dynamicFilters,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -179,6 +181,7 @@ function Filters({
               onRemove={onRemoveFilterToken}
               multiSelect={suggestionCategory?.multiSelect}
               searchQuery={searchQuery}
+              dynamicFilters={dynamicFilters}
             />
           );
         })}

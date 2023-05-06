@@ -25,7 +25,10 @@ type FilterCategoryProps = {
   isCollapsable?: boolean;
   isUniqueLoadMore?: boolean;
   loadAll?: boolean;
-  setHasMoreSuggestionsCategories?: React.Dispatch<React.SetStateAction<boolean>>;
+  dynamicFilters: boolean;
+  setHasMoreSuggestionsCategories?: React.Dispatch<
+    React.SetStateAction<boolean>
+  >;
 };
 function FilterCategory({
   suggestionCategoryId,
@@ -38,19 +41,25 @@ function FilterCategory({
   isCollapsable = true,
   isUniqueLoadMore = false,
   loadAll = false,
-  setHasMoreSuggestionsCategories = undefined
+  dynamicFilters,
+  setHasMoreSuggestionsCategories = undefined,
 }: FilterCategoryProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
     tokens,
     suggestionCategoryId,
     useDebounce(text, 600),
-    loadAll
+    loadAll,
+    dynamicFilters,
   );
 
   React.useEffect(() => {
-    if (setHasMoreSuggestionsCategories && suggestions && suggestions.hasNextPage)
-      setHasMoreSuggestionsCategories(suggestions.hasNextPage); 
+    if (
+      setHasMoreSuggestionsCategories &&
+      suggestions &&
+      suggestions.hasNextPage
+    )
+      setHasMoreSuggestionsCategories(suggestions.hasNextPage);
   }, []);
 
   const [isOpen, setIsOpen] = React.useState(true);
@@ -107,7 +116,7 @@ function FilterCategory({
       className="openk9-filter-category-container"
       css={css`
         margin-bottom: 16px;
-        ${isUniqueLoadMore ? 'width: 50%' : null}
+        ${isUniqueLoadMore ? "width: 50%" : null}
       `}
     >
       <div>
@@ -120,7 +129,7 @@ function FilterCategory({
             align-items: center;
             width: 100% !important;
           `}
-          onClick={() => isCollapsable ? setIsOpen(!isOpen) : null}
+          onClick={() => (isCollapsable ? setIsOpen(!isOpen) : null)}
         >
           <div
             css={css`
@@ -132,7 +141,7 @@ function FilterCategory({
           >
             <strong>{suggestionCategoryName}</strong>
           </div>
-          {isCollapsable && 
+          {isCollapsable && (
             <FontAwesomeIcon
               icon={isOpen ? faChevronDown : faChevronUp}
               style={{
@@ -140,12 +149,12 @@ function FilterCategory({
                 marginRight: "8px",
               }}
             />
-          }
+          )}
         </div>
       </div>
       {isOpen && (
         <React.Fragment>
-          {!isUniqueLoadMore && 
+          {!isUniqueLoadMore && (
             <div
               className="openk9-filter-category-container-search"
               css={css`
@@ -157,7 +166,8 @@ function FilterCategory({
               <FontAwesomeIcon
                 icon={faSearch}
                 style={{
-                  color: "var(--openk9-embeddable-search--secondary-text-color)",
+                  color:
+                    "var(--openk9-embeddable-search--secondary-text-color)",
                   marginLeft: "25px",
                   opacity: "0.3",
                   zIndex: "3",
@@ -178,7 +188,8 @@ function FilterCategory({
                   margin-right: -9px;
                   padding: 8px 16px 8px 8px;
                   border-radius: 4px;
-                  border: 1px solid var(--openk9-embeddable-search--border-color);
+                  border: 1px solid
+                    var(--openk9-embeddable-search--border-color);
                   border-radius: 20px;
                   background: #fafafa;
                   :focus {
@@ -194,14 +205,14 @@ function FilterCategory({
                 `}
               />
             </div>
-          }
+          )}
           <div
             style={{
               display: "flex",
               flexDirection: isUniqueLoadMore ? "row" : "column",
               gap: isUniqueLoadMore ? "0" : "5px",
               flexWrap: isUniqueLoadMore ? "wrap" : "initial",
-              paddingLeft: "13px"
+              paddingLeft: "13px",
             }}
             // css={css`
             //   display: flex;
@@ -226,13 +237,15 @@ function FilterCategory({
                 );
             })}
           </div>
-          <div style={{
-            display: "flex",
-            flexDirection: isUniqueLoadMore ? "row" : "column",
-            gap: isUniqueLoadMore ? "0" : "5px",
-            flexWrap: isUniqueLoadMore ? "wrap" : "initial",
-            paddingLeft: "13px"
-          }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: isUniqueLoadMore ? "row" : "column",
+              gap: isUniqueLoadMore ? "0" : "5px",
+              flexWrap: isUniqueLoadMore ? "wrap" : "initial",
+              paddingLeft: "13px",
+            }}
+          >
             {suggestions.data?.pages.map(({ result }, index) => {
               return (
                 <React.Fragment key={index}>
@@ -259,12 +272,8 @@ function FilterCategory({
                               align-items: ${multiSelect
                                 ? "baseline"
                                 : "stretch"};
-                              width: ${isUniqueLoadMore
-                                ? "50%"
-                                : "auto"};
-                              margin-bottom: ${isUniqueLoadMore
-                                ? "8px"
-                                : "0"};
+                              width: ${isUniqueLoadMore ? "50%" : "auto"};
+                              margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
                             `}
                           >
                             {multiSelect ? (
@@ -433,9 +442,10 @@ function useInfiniteSuggestions(
   searchQueryParams: SearchToken[] | null,
   activeSuggestionCategory: number,
   suggestKeyword: string,
-  loadAll: boolean
+  loadAll: boolean,
+  dynamicFilters: boolean,
 ) {
-  const pageSize = loadAll ? 19 : (suggestKeyword === "" ? 7 : 19);
+  const pageSize = loadAll ? 19 : suggestKeyword === "" ? 7 : 19;
   const client = useOpenK9Client();
   let searchQuery: SearchToken[] | null = [];
   if (searchQueryParams && searchQueryParams?.length > 0) {
@@ -446,10 +456,7 @@ function useInfiniteSuggestions(
       ) {
         searchQuery?.push(singleSearchQuery);
       }
-      if (
-        singleSearchQuery?.tokenType === "TEXT" &&
-        JSON.parse(JSON.stringify(singleSearchQuery)).goToSuggestion
-      )
+      if (singleSearchQuery?.tokenType === "TEXT" && dynamicFilters)
         searchQuery?.push(singleSearchQuery);
     });
   } else {
@@ -461,7 +468,7 @@ function useInfiniteSuggestions(
       searchQuery,
       activeSuggestionCategory,
       suggestKeyword,
-      loadAll
+      loadAll,
     ] as const,
     async ({
       queryKey: [_, searchQuery, activeSuggestionCategory, suggestKeyword],
@@ -705,7 +712,7 @@ function FiltersNotDisappearing({
   searchToken,
   text,
   setText,
-  isUniqueLoadMore
+  isUniqueLoadMore,
 }: FiltersNotDisappearingProps) {
   return (
     <React.Fragment>
@@ -825,7 +832,7 @@ function TokensSelected({
   onRemove,
   searchToken,
   index,
-  isUniqueLoadMore
+  isUniqueLoadMore,
 }: {
   multiSelect: Boolean;
   isUniqueLoadMore: boolean;
@@ -853,9 +860,7 @@ function TokensSelected({
             align-items: ${multiSelect ? "baseline" : "stretch"};
             margin-top: 5px;
             width: ${isUniqueLoadMore ? "50%" : "auto"};
-            margin-bottom: ${isUniqueLoadMore
-              ? "8px"
-              : "0"};
+            margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
           `}
         >
           <input
@@ -899,9 +904,7 @@ function TokensSelected({
             display: flex;
             align-items: ${multiSelect ? "baseline" : "center"};
             width: ${isUniqueLoadMore ? "50%" : "auto"};
-            margin-bottom: ${isUniqueLoadMore
-              ? "8px"
-              : "0"};
+            margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
             margin-top: 5px;
           `}
         >

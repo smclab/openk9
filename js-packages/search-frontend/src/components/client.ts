@@ -130,6 +130,17 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
       const response = await request.json();
       return response;
     },
+    async handle_dynamic_filters() {
+      const response = await authFetch(`/api/datasource/buckets/current`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        throw new Error();
+      }
+      const data: { handleDynamicFilters: boolean } = await response.json();
+      return data;
+    },
     async getSuggestionCategories(): Promise<SuggestionsCategoriesResult> {
       const response = await authFetch(
         `/api/datasource/buckets/current/suggestionCategories`,

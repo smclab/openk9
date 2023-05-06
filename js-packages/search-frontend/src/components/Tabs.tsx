@@ -40,6 +40,7 @@ function Tabs({
           return (
             <div
               className="openk9-single-tab-container"
+              key={index}
               css={css`
                 padding-top: 8px;
               `}
