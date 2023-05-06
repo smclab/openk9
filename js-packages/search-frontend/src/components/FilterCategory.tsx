@@ -76,7 +76,7 @@ function FilterCategory({
       suggestionCategoryId === searchToken.suggestionCategoryId,
   );
 
-  if (!show && isMatchFound)
+  if (!show && dynamicFilters && isMatchFound) {
     return (
       <>
         {searchQuery.map((searchToken: SearchToken, index: number) => {
@@ -99,7 +99,7 @@ function FilterCategory({
         })}
       </>
     );
-
+  }
   if (!show)
     return (
       <React.Fragment>
@@ -224,7 +224,8 @@ function FilterCategory({
             // `}
           >
             {searchQuery.map((searchToken: SearchToken, index: number) => {
-              if (!("goToSuggestion" in searchToken)) return null;
+              if (!("goToSuggestion" in searchToken) || !dynamicFilters)
+                return null;
               if (suggestionCategoryId === searchToken.suggestionCategoryId)
                 return (
                   <TokensSelected
@@ -263,6 +264,7 @@ function FilterCategory({
                         {isDifferent({
                           singleToken: suggestion.value,
                           tokensSelect: searchQuery,
+                          dynamicFilters: dynamicFilters,
                         }) && (
                           <div
                             key={index}
@@ -281,7 +283,7 @@ function FilterCategory({
                                 <input
                                   className="form-check-input"
                                   type="checkbox"
-                                  checked={false}
+                                  checked={isChecked}
                                   onChange={(event) => {
                                     if (event.currentTarget.checked) {
                                       if (multiSelect) {
@@ -308,7 +310,9 @@ function FilterCategory({
                                     min-height: 15px;
                                     border-radius: 4px;
                                     border: 2px solid #ccc;
-                                    background-color: "#fff";
+                                    background-color: ${isChecked
+                                      ? "var(--openk9-embeddable-search--secondary-active-color)"
+                                      : "#fff"};
                                     background-size: 100%;
                                     background-position: center;
                                     background-repeat: no-repeat;
@@ -400,15 +404,18 @@ function FilterCategory({
 function isDifferent({
   tokensSelect,
   singleToken,
+  dynamicFilters,
 }: {
   tokensSelect: SearchToken[];
   singleToken: string;
+  dynamicFilters: boolean;
 }) {
   let result = true;
   tokensSelect.forEach((singleChoice: SearchToken) => {
     if (
       singleChoice.tokenType === "TEXT" &&
-      singleChoice?.values[0] === singleToken
+      singleChoice?.values[0] === singleToken &&
+      dynamicFilters
     ) {
       result = false;
     }
@@ -549,7 +556,9 @@ function SingleSelect({
             height: "16px",
             borderRadius: "50%",
             border: "2px solid #ccc",
-            backgroundColor: "#fff",
+            backgroundColor: isChecked
+              ? "var(--openk9-embeddable-search--secondary-active-color)"
+              : "#fff",
             cursor: "pointer",
           }}
           onMouseOver={(event) => {
