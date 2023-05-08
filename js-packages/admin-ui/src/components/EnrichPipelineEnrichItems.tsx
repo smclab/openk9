@@ -152,6 +152,7 @@ export function EnrichPipelineEnrichItems() {
             </ClayToolbar.Item>
             <ClayToolbar.Item>
               <ClayButtonWithIcon
+                className={ClassNameButton}
                 aria-label=""
                 symbol="plus"
                 small

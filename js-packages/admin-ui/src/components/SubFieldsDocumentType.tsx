@@ -10,6 +10,7 @@ import { ClayButtonWithIcon } from "@clayui/button";
 import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
 import { CodeInput } from "./CodeInput";
+import { ClassNameButton } from "../App";
 
 export const DocumentTypeFieldsQuery = gql`
   query DocumentTypeFields($documentTypeId: ID!, $searchText: String, $cursor: String) {
@@ -177,7 +178,7 @@ export function SubFieldsDocumentType() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/document-types/${documentTypeId}/document-type-fields`}>
-                <ClayButtonWithIcon aria-label="" symbol="angle-left" small />
+                <ClayButtonWithIcon className={ClassNameButton} aria-label="" symbol="angle-left" small />
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
@@ -201,7 +202,7 @@ export function SubFieldsDocumentType() {
           <BooleanInput label="Sortable" {...form.inputProps("sortable")} />
           <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
           <div className="sheet-footer">
-            <ClayButton type="submit" disabled={!form.canSubmit}>
+            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
               {subFieldID === "new" ? "Create" : "Update"}
             </ClayButton>
           </div>
