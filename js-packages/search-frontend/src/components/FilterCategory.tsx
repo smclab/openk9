@@ -204,7 +204,7 @@ function FilterCategory({
                       isEqual(searchToken, asSearchToken),
                     );
                     return (
-                      <React.Fragment>
+                      <React.Fragment key={index}>
                         <div
                           key={index}
                           className="form-check"

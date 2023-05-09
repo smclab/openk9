@@ -28,12 +28,17 @@ export function ResultLinkTwo({ href, children }: ResultLinkProps) {
       `}
       onClick={handleLinkClick}
     >
-      <p
+      <div
         css={css`
           color: red;
           margin-bottom: 14px;
           font-weight: 500;
           font-size: 13px;
+          display: block;
+          margin-block-start: 1em;
+          margin-block-end: 1em;
+          margin-inline-start: 0px;
+          margin-inline-end: 0px;
         `}
       >
         <div
@@ -45,7 +50,7 @@ export function ResultLinkTwo({ href, children }: ResultLinkProps) {
         >
           Link Documento
         </div>
-      </p>
+      </div>
     </div>
   );
 }

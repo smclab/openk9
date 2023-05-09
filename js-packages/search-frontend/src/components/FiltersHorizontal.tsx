@@ -202,13 +202,18 @@ export function CreateLabel({
       `}
       onClick={action}
     >
-      <p
+      <div
         className="openk9-create-label-container-text-style"
         css={css`
           color: ${colorLabel};
           margin-bottom: ${margBottom};
           font-size: ${sizeFont};
           font-weight: 700;
+          display: block;
+          margin-block-start: 1em;
+          margin-block-end: 1em;
+          margin-inline-start: 0px;
+          margin-inline-end: 0px;
         `}
       >
         <div
@@ -230,7 +235,7 @@ export function CreateLabel({
           </span>
           {svgIconRight}
         </div>
-      </p>
+      </div>
     </div>
   );
 }

@@ -52,9 +52,8 @@ export function SortResultList({
         </option>
         {options.data?.map((option) => {
           return (
-            <React.Fragment>
+            <React.Fragment key={option.id}>
               <option
-                key={option.id + "asc"}
                 value={JSON.stringify({
                   label: option.field,
                   sort: "asc",
@@ -63,7 +62,6 @@ export function SortResultList({
                 {option.label} asc
               </option>
               <option
-                key={option.id + "desc"}
                 value={JSON.stringify({
                   label: option.field,
                   sort: "desc",

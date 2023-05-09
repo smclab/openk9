@@ -290,16 +290,21 @@ function FactoryTokenType({
               marginLeft: "10px",
             }}
           >
-            <p
+            <div
               className="openk9-token-select-factory-option-label"
               css={css`
                 color: var(--openk9-embeddable-search--secondary-active-color);
                 margin-bottom: 13px;
                 font-size: 12px;
+                display: block;
+                margin-block-start: 1em;
+                margin-block-end: 1em;
+                margin-inline-start: 0px;
+                margin-inline-end: 0px;
               `}
             >
               {option.label}
-            </p>
+            </div>
           </div>
         </React.Fragment>
       );
