@@ -107,11 +107,15 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 
 					}
 
-					categorySemantics.add(
-						CategorySemantics.of(
-							"$" + entitySemantics.get("entityType"),
-							entitySemantics)
-					);
+					Object name = entitySemantics.get("value");
+
+					if (!name.equals(token)) {
+						categorySemantics.add(
+							CategorySemantics.of(
+								"$" + entitySemantics.get("entityType"),
+								entitySemantics)
+						);
+					}
 
 				}
 			}
