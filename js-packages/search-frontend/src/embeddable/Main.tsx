@@ -115,6 +115,7 @@ export function Main({
           onConfigurationChange={onConfigurationChange}
           filtersSelect={configuration.filterTokens}
           sort={completelySort}
+          dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
         />,
         configuration.filtersHorizontal,
       )}
