@@ -316,9 +316,7 @@ function FilterCategory({
             })}
           </div>
           {!isUniqueLoadMore && suggestions.hasNextPage && (
-            <div
-              style={{ textAlign: "center", width: "100%", marginTop: "10px" }}
-            >
+            <div style={{ textAlign: "center", width: "100%" }}>
               <CreateLabel
                 label=" Load More"
                 action={() => {

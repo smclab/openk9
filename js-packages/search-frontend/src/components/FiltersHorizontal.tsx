@@ -12,6 +12,7 @@ import { DeleteLogo } from "./DeleteLogo";
 import { Logo } from "./Logo";
 import { PlusSvg } from "../svgElement/PlusSvg";
 import { useDebounce } from "./useDebounce";
+import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -20,6 +21,7 @@ type FiltersProps = {
   onConfigurationChange: ConfigurationUpdateFunction;
   filtersSelect: SearchToken[];
   sort: SortField[];
+  dynamicFilters: boolean;
 };
 function FiltersHorizontal({
   searchQuery,
@@ -28,6 +30,7 @@ function FiltersHorizontal({
   onRemoveFilterToken,
   filtersSelect,
   sort,
+  dynamicFilters,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -87,7 +90,18 @@ function FiltersHorizontal({
           </div>
         )}
         {suggestionCategories.data?.map((suggestionCategory) => {
-          return (
+          return dynamicFilters ? (
+            <FilterCategoryDynamicMemo
+              key={suggestionCategory.id}
+              suggestionCategoryName={suggestionCategory.name}
+              suggestionCategoryId={suggestionCategory.id}
+              tokens={lastSearchQueryWithResults}
+              onAdd={onAddFilterToken}
+              onRemove={onRemoveFilterToken}
+              multiSelect={suggestionCategory?.multiSelect}
+              searchQuery={searchQuery}
+            />
+          ) : (
             <FilterCategoryMemo
               key={suggestionCategory.id}
               suggestionCategoryName={suggestionCategory.name}
@@ -97,18 +111,13 @@ function FiltersHorizontal({
               onRemove={onRemoveFilterToken}
               multiSelect={suggestionCategory?.multiSelect}
               searchQuery={searchQuery}
-              isCollapsable={false}
-              isUniqueLoadMore={true}
-              loadAll={loadAll}
-              setHasMoreSuggestionsCategories={setHasMoreSuggestionsCategories}
+              dynamicFilters={dynamicFilters}
             />
           );
         })}
       </div>
       {hasMoreSuggestionsCategories && (
-        <div
-          style={{ textAlign: "center", width: "100%", marginTop: "10px" }}
-        >
+        <div style={{ textAlign: "center", width: "100%" }}>
           <CreateLabel
             label=" Load More"
             action={() => {
@@ -116,11 +125,8 @@ function FiltersHorizontal({
               setHasMoreSuggestionsCategories(false);
             }}
             svgIcon={<PlusSvg size={12} />}
-            sizeHeight="22px"
-            sizeFont="16px"
-            margBottom="18px"
             marginOfSvg="5px"
-            marginTop="20px"
+            hasBorder={false}
           />
         </div>
       )}
