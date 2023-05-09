@@ -5,16 +5,14 @@ import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { SearchToken, SuggestionResult } from "./client";
-import isEqual from "lodash/isEqual";
 import { useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
 import { useOpenK9Client } from "./client";
-import { Logo } from "./Logo";
 import { CreateLabel } from "./Filters";
-import { FilterSvg } from "../svgElement/FiltersSvg";
 import { PlusSvg } from "../svgElement/PlusSvg";
+import { NoFilter, mapSuggestionToSearchToken } from "./FilterCategory";
 
-type FilterCategoryProps = {
+type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
   suggestionCategoryName: string;
   tokens: SearchToken[];
@@ -25,12 +23,11 @@ type FilterCategoryProps = {
   isCollapsable?: boolean;
   isUniqueLoadMore?: boolean;
   loadAll?: boolean;
-  dynamicFilters: boolean;
   setHasMoreSuggestionsCategories?: React.Dispatch<
     React.SetStateAction<boolean>
   >;
 };
-function FilterCategory({
+function FilterCategoryDynamic({
   suggestionCategoryId,
   suggestionCategoryName,
   tokens,
@@ -41,18 +38,17 @@ function FilterCategory({
   isCollapsable = true,
   isUniqueLoadMore = false,
   loadAll = false,
-  dynamicFilters,
   setHasMoreSuggestionsCategories = undefined,
-}: FilterCategoryProps) {
+}: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
     tokens,
     suggestionCategoryId,
     useDebounce(text, 600),
     loadAll,
-    dynamicFilters,
   );
-
+  const test = suggestions.data?.pages[0].result || [];
+  const filters = mergeAndSortObjects(test, searchQuery, suggestionCategoryId);
   React.useEffect(() => {
     if (
       setHasMoreSuggestionsCategories &&
@@ -66,10 +62,7 @@ function FilterCategory({
   const [singleSelect, setSingleselect] = React.useState<
     SearchToken | undefined
   >();
-  const show = Boolean(
-    text ||
-      (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
-  );
+  const show = Boolean(text || (filters.length ?? 0) > 0);
   const isMatchFound = searchQuery.some(
     (searchToken) =>
       "goToSuggestion" in searchToken &&
@@ -191,126 +184,125 @@ function FilterCategory({
               paddingLeft: "13px",
             }}
           >
-            {suggestions.data?.pages.map(({ result }, index) => {
-              return (
-                <React.Fragment key={index}>
-                  {result.map((suggestion, index) => {
-                    const asSearchToken = mapSuggestionToSearchToken(
-                      suggestion,
-                      true,
-                    );
+            {filters.map((suggestion, index) => {
+              const asSearchToken = mapSuggestionToSearchToken(
+                suggestion,
+                true,
+              );
+              const isChecked = tokens.some((searchToken) => {
+                if (
+                  JSON.stringify(searchToken.values) ===
+                    JSON.stringify(asSearchToken.values) &&
+                  searchToken.suggestionCategoryId ===
+                    asSearchToken.suggestionCategoryId &&
+                  searchToken.keywordKey === asSearchToken.keywordKey
+                )
+                  return true;
+                return false;
+              });
 
-                    const isChecked = tokens.some((searchToken) =>
-                      isEqual(searchToken, asSearchToken),
-                    );
-                    return (
+              return (
+                <React.Fragment>
+                  <div
+                    key={index}
+                    className="form-check"
+                    css={css`
+                      display: flex;
+                      align-items: ${multiSelect ? "baseline" : "stretch"};
+                      width: ${isUniqueLoadMore ? "50%" : "auto"};
+                      margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
+                    `}
+                  >
+                    {multiSelect ? (
                       <React.Fragment>
-                        <div
-                          key={index}
-                          className="form-check"
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(event) => {
+                            if (event.currentTarget.checked) {
+                              if (multiSelect) {
+                                onAdd(asSearchToken);
+                              } else {
+                                tokens.some((searchToken) => {
+                                  if (
+                                    JSON.parse(JSON.stringify(searchToken))
+                                      ?.multiSelect
+                                  )
+                                    onRemove(searchToken);
+                                });
+                                onAdd(asSearchToken);
+                              }
+                            } else {
+                              onRemove(asSearchToken);
+                            }
+                          }}
                           css={css`
-                            display: flex;
-                            align-items: ${multiSelect
-                              ? "baseline"
-                              : "stretch"};
-                            width: ${isUniqueLoadMore ? "50%" : "auto"};
-                            margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
+                            width: 14px;
+                            appearance: none;
+                            min-width: 15px;
+                            min-height: 15px;
+                            border-radius: 4px;
+                            border: 2px solid #ccc;
+                            background-color: ${isChecked
+                              ? "var(--openk9-embeddable-search--secondary-active-color)"
+                              : "#fff"};
+                            background-size: 100%;
+                            background-position: center;
+                            background-repeat: no-repeat;
+                            cursor: pointer;
+                            margin-right: 10px;
                           `}
-                        >
-                          {multiSelect ? (
-                            <React.Fragment>
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={(event) => {
-                                  if (event.currentTarget.checked) {
-                                    if (multiSelect) {
-                                      onAdd(asSearchToken);
-                                    } else {
-                                      tokens.some((searchToken) => {
-                                        if (
-                                          JSON.parse(
-                                            JSON.stringify(searchToken),
-                                          )?.multiSelect
-                                        )
-                                          onRemove(searchToken);
-                                      });
-                                      onAdd(asSearchToken);
-                                    }
-                                  } else {
-                                    onRemove(asSearchToken);
-                                  }
-                                }}
-                                css={css`
-                                  width: 14px;
-                                  appearance: none;
-                                  min-width: 15px;
-                                  min-height: 15px;
-                                  border-radius: 4px;
-                                  border: 2px solid #ccc;
-                                  background-color: ${isChecked
-                                    ? "var(--openk9-embeddable-search--secondary-active-color)"
-                                    : "#fff"};
-                                  background-size: 100%;
-                                  background-position: center;
-                                  background-repeat: no-repeat;
-                                  cursor: pointer;
-                                  margin-right: 10px;
-                                `}
-                              />
-                            </React.Fragment>
-                          ) : (
-                            <SingleSelect
-                              isChecked={isChecked}
-                              multiSelect={multiSelect}
-                              asSearchToken={asSearchToken}
-                              onAdd={onAdd}
-                              onRemove={onRemove}
-                              singleSelect={singleSelect}
-                              setSingleSelect={setSingleselect}
-                            />
-                          )}
-                          <span
-                            css={css`
-                              margin-left: 5px;
-                            `}
-                          >
-                            <label
-                              className="form-check-label"
+                        />
+                      </React.Fragment>
+                    ) : (
+                      <SingleSelect
+                        isChecked={isChecked}
+                        multiSelect={multiSelect}
+                        asSearchToken={asSearchToken}
+                        onAdd={onAdd}
+                        onRemove={onRemove}
+                        singleSelect={singleSelect}
+                        setSingleSelect={setSingleselect}
+                      />
+                    )}
+                    <span
+                      css={css`
+                        margin-left: 5px;
+                      `}
+                    >
+                      <label
+                        className="form-check-label"
+                        css={css`
+                          text-overflow: ellipsis;
+                          font-style: normal;
+                          font-weight: 600;
+                          line-height: 22px;
+                          /* or 147% */
+                          color: #000000;
+                        `}
+                      >
+                        {suggestion.tokenType === "ENTITY" ? (
+                          <>
+                            <strong
+                              className="openk9-filter-category-suggestion-value"
                               css={css`
-                                text-overflow: ellipsis;
-                                font-style: normal;
-                                font-weight: 600;
-                                line-height: 22px;
-                                /* or 147% */
-                                color: #000000;
+                                :first-letter {
+                                  text-transform: uppercase;
+                                }
+                                display: inline-block;
                               `}
                             >
-                              {suggestion.tokenType === "ENTITY" ? (
-                                <>
-                                  <strong
-                                    className="openk9-filter-category-suggestion-value"
-                                    css={css`
-                                      :first-letter {
-                                        text-transform: uppercase;
-                                      }
-                                      display: inline-block;
-                                    `}
-                                  >
-                                    {suggestion.entityType}
-                                  </strong>
-                                  : {suggestion.entityValue}
-                                </>
-                              ) : (
-                                suggestion.value
-                              )}
-                            </label>
-                          </span>
-                        </div>
-                      </React.Fragment>
-                    );
-                  })}
+                              {suggestion.entityType}
+                            </strong>
+                            : {suggestion.entityValue}
+                          </>
+                        ) : (
+                          suggestion.value
+                        )}
+                      </label>
+                    </span>
+                  </div>
                 </React.Fragment>
               );
             })}
@@ -339,47 +331,16 @@ function FilterCategory({
   );
 }
 
-export const FilterCategoryMemo = React.memo(FilterCategory);
-
-export const buttonStyle = css`
-  color: inherit;
-  font-weight: bold;
-  background: none;
-  appearance: none;
-  font-family: inherit;
-  font-size: inherit;
-  border: 1px solid var(--openk9-embeddable-search--primary-color);
-  color: var(--openk9-embeddable-search--primary-color);
-  border-radius: 4px;
-  :hover {
-    color: var(--openk9-embeddable-search--primary-color);
-    cursor: pointer;
-  }
-  :disabled {
-    border: 1px solid var(--openk9-embeddable-search--border-color);
-    color: var(--openk9-embeddable-search--border-color);
-    cursor: not-allowed;
-  }
-`;
+export const FilterCategoryDynamicMemo = React.memo(FilterCategoryDynamic);
 
 function useInfiniteSuggestions(
-  searchQueryParams: SearchToken[] | null,
+  searchQuery: SearchToken[] | null,
   activeSuggestionCategory: number,
   suggestKeyword: string,
   loadAll: boolean,
-  dynamicFilters: boolean,
 ) {
   const pageSize = loadAll ? 19 : suggestKeyword === "" ? 7 : 19;
   const client = useOpenK9Client();
-  let searchQuery: SearchToken[] | null = [];
-  if (searchQueryParams && searchQueryParams?.length > 0) {
-    searchQueryParams.forEach((singleSearchQuery) => {
-      if (dynamicFilters) searchQuery?.push(singleSearchQuery);
-    });
-  } else {
-    searchQuery = searchQueryParams;
-  }
-
   const suggestionCategories = useInfiniteQuery(
     [
       "suggestions",
@@ -490,113 +451,62 @@ function SingleSelect({
   );
 }
 
-export const mapSuggestionToSearchToken = (
-  suggestion: SuggestionResult,
-  filter: boolean,
-): SearchToken => {
-  switch (suggestion.tokenType) {
-    case "DATASOURCE": {
-      return {
-        tokenType: "DATASOURCE",
-        values: [suggestion.value],
-        filter,
-      };
-    }
-    case "DOCTYPE": {
-      return {
-        tokenType: "DOCTYPE",
-        keywordKey: "type",
-        values: [suggestion.value],
-        filter: true,
-      };
-    }
-    case "ENTITY": {
-      return {
-        tokenType: "ENTITY",
-        keywordKey: suggestion.keywordKey,
-        entityType: suggestion.entityType,
-        entityName: suggestion.entityValue,
-        values: [suggestion.value],
-        filter,
-      };
-    }
-    case "TEXT": {
-      return {
+//da modificare non appena si deciderà di mettere l'opzionalità (end/or) all'interno di una stessa categoria
+function mergeAndSortObjects(
+  sortedArray: SuggestionResult[],
+  unsortedArray: SearchToken[],
+  suggestionCategoryId: number,
+): SuggestionResult[] {
+  let mergedArray = [...sortedArray];
+
+  if (mergedArray.length === 0) {
+    mergedArray = [...unsortedArray]
+      .filter(
+        (element) =>
+          element.tokenType === "TEXT" &&
+          "goToSuggestion" in element &&
+          element.suggestionCategoryId === suggestionCategoryId,
+      )
+      .map((element) => ({
         tokenType: "TEXT",
-        keywordKey: suggestion.keywordKey,
-        values: [suggestion.value],
-        filter,
-        goToSuggestion: false,
-        count: suggestion.count,
-        suggestionCategoryId: suggestion.suggestionCategoryId,
+        keywordKey: element.keywordKey,
+        value: element.values?.[0] || "",
+        suggestionCategoryId: element.suggestionCategoryId || 0,
+        count: element.count,
+      }));
+  }
+
+  for (const element of unsortedArray) {
+    const foundElement = mergedArray.find((obj) => {
+      if (
+        obj.tokenType === "TEXT" &&
+        element.tokenType === "TEXT" &&
+        element.values[0] !== obj.value &&
+        element.suggestionCategoryId === suggestionCategoryId
+      ) {
+        return (
+          obj.tokenType === element.tokenType &&
+          (obj.value?.includes(element.values[0]) ||
+            obj.value === element.values[0])
+        );
+      }
+    });
+
+    if (foundElement && element.tokenType === "TEXT") {
+      const newElement: SuggestionResult = {
+        tokenType: "TEXT",
+        keywordKey: element.keywordKey,
+        value: element.values[0],
+        suggestionCategoryId: element.suggestionCategoryId || 0,
+        count: element.count,
       };
+      mergedArray.push(newElement);
     }
   }
-};
 
-export function NoFilter({
-  setIsOpen,
-  isOpen,
-  suggestionCategoryName,
-}: {
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  isOpen: Boolean;
-  suggestionCategoryName: string;
-}) {
-  return (
-    <div>
-      <div>
-        <div
-          className="openk9-filter-category-no-results-container"
-          css={css`
-            user-select: none;
-            margin-left: 16px;
-            display: flex;
-            align-items: center;
-            width: 100% !important;
-            margin-bottom: 16px;
-          `}
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <div
-            className="openk9-filter-category-no-results-category-name"
-            css={css`
-              flex-grow: 1;
-              :first-letter {
-                text-transform: uppercase;
-              }
-            `}
-          >
-            <strong>{suggestionCategoryName}</strong>
-          </div>
-          <FontAwesomeIcon
-            icon={isOpen ? faChevronDown : faChevronUp}
-            style={{
-              color: "var(--openk9-embeddable-search--secondary-text-color)",
-              marginRight: "8px",
-            }}
-          />
-        </div>
-      </div>
-      {isOpen && (
-        <div
-          className="openk9-filter-category-no-results-is-open"
-          css={css`
-            color: var(--openk9-embeddable-search--secondary-text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            margin-top: 18px;
-            margin-left: 10px;
-          `}
-        >
-          <Logo size={100} />
-          <h4>No {suggestionCategoryName} </h4>
-          <div></div>
-        </div>
-      )}
-    </div>
-  );
+  mergedArray.sort((a, b) => {
+    return a.value.localeCompare(b.value);
+  });
+
+  return mergedArray;
 }

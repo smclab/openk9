@@ -10,6 +10,7 @@ import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { FilterSvg } from "../svgElement/FiltersSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { Logo } from "./Logo";
+import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -171,7 +172,18 @@ function Filters({
           </div>
         )}
         {suggestionCategories.data?.map((suggestionCategory) => {
-          return (
+          return dynamicFilters ? (
+            <FilterCategoryDynamicMemo
+              key={suggestionCategory.id}
+              suggestionCategoryName={suggestionCategory.name}
+              suggestionCategoryId={suggestionCategory.id}
+              tokens={lastSearchQueryWithResults}
+              onAdd={onAddFilterToken}
+              onRemove={onRemoveFilterToken}
+              multiSelect={suggestionCategory?.multiSelect}
+              searchQuery={searchQuery}
+            />
+          ) : (
             <FilterCategoryMemo
               key={suggestionCategory.id}
               suggestionCategoryName={suggestionCategory.name}
@@ -289,4 +301,18 @@ export function CreateLabel({
       </p>
     </div>
   );
+}
+
+function mergeAndSortArrays(
+  sortedArray: string[],
+  unsortedArray: string[],
+): string[] {
+  const mergedArray = [...sortedArray];
+  for (const element of unsortedArray) {
+    if (!sortedArray.includes(element)) {
+      mergedArray.push(element);
+    }
+  }
+  mergedArray.sort((a, b) => a.localeCompare(b));
+  return mergedArray;
 }

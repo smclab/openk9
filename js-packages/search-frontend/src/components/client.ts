@@ -314,6 +314,7 @@ export type SearchToken =
       };
       suggestionCategoryId?: number;
       count?: string;
+      values?: string[];
     };
 
 export type SortField = {
