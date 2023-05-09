@@ -107,9 +107,9 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 
 					}
 
-					Object name = entitySemantics.get("value");
+					String name = entitySemantics.get("value").toString();
 
-					if (!name.equals(token)) {
+					if (!name.startsWith(token) || !name.equals(token)) {
 						categorySemantics.add(
 							CategorySemantics.of(
 								"$" + entitySemantics.get("entityType"),
