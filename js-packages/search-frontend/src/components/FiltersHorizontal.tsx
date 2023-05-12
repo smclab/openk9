@@ -100,6 +100,10 @@ function FiltersHorizontal({
               onRemove={onRemoveFilterToken}
               multiSelect={suggestionCategory?.multiSelect}
               searchQuery={searchQuery}
+              isCollapsable={false}
+              isUniqueLoadMore={true}
+              loadAll={loadAll}
+              setHasMoreSuggestionsCategories={setHasMoreSuggestionsCategories}
             />
           ) : (
             <FilterCategoryMemo
@@ -112,6 +116,10 @@ function FiltersHorizontal({
               multiSelect={suggestionCategory?.multiSelect}
               searchQuery={searchQuery}
               dynamicFilters={dynamicFilters}
+              isCollapsable={false}
+              isUniqueLoadMore={true}
+              loadAll={loadAll}
+              setHasMoreSuggestionsCategories={setHasMoreSuggestionsCategories}
             />
           );
         })}
