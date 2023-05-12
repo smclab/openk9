@@ -33,6 +33,7 @@ import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -121,7 +122,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.getDocTypeFieldsFrom(tenant)
 							.toList();
 
-					applySort(docTypeFieldList, request.getSortList(), searchSourceBuilder);
+					applySort(docTypeFieldList, request.getSortList(), request.getSortAfterKey(), searchSourceBuilder);
 
 					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList);
 
@@ -770,7 +771,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	}
 
 	private void applySort(
-		List<DocTypeField> docTypeFieldList, List<Sort> sortList, SearchSourceBuilder searchSourceBuilder) {
+		List<DocTypeField> docTypeFieldList, List<Sort> sortList,
+		String sortAfterKey, SearchSourceBuilder searchSourceBuilder) {
 
 		if (sortList == null || sortList.isEmpty()) {
 			return;
@@ -814,6 +816,13 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			}
 
 			searchSourceBuilder.sort(fieldSortBuilder);
+
+			if (sortAfterKey != null && !sortAfterKey.isBlank()) {
+				byte[] decode = Base64.getDecoder().decode(sortAfterKey);
+				JsonArray objects = new JsonArray(Buffer.buffer(decode));
+				Object[] array = objects.getList().toArray();
+				searchSourceBuilder.searchAfter(array);
+			}
 
 		}
 

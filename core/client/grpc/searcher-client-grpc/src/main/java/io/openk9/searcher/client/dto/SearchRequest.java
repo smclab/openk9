@@ -18,4 +18,5 @@ public class SearchRequest {
 	private Long suggestionCategoryId;
 	private String order = "asc";
 	private List<Map<String, Map<String, String>>> sort;
+	private String sortAfterKey;
 }

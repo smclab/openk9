@@ -21,6 +21,7 @@ import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
@@ -54,6 +55,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -325,6 +327,8 @@ public class SearchResource {
 			}
 		}
 
+		String sortAfterKey = searchRequest.getSortAfterKey();
+
 		return searcherMapper
 			.toQueryParserRequest(searchRequest)
 			.toBuilder()
@@ -332,6 +336,7 @@ public class SearchResource {
 			.setJwt(rawToken == null ? "" : rawToken)
 			.putAllExtra(extra)
 			.addAllSort(mapToGrpc(searchRequest.getSort()))
+			.setSortAfterKey(sortAfterKey == null ? "" : sortAfterKey)
 			.build();
 
 	}
@@ -447,6 +452,17 @@ public class SearchResource {
 
 			hitMap.put("source", sourceMap);
 			hitMap.put("highlight", highlightMap);
+
+			Object[] sortValues = hit.getSortValues();
+
+			if (sortValues != null && sortValues.length > 0) {
+				hitMap.put(
+					"sortAfterKey",
+					Base64.getEncoder().encodeToString(
+						JsonArray.of(sortValues).toBuffer().getBytes()
+					)
+				);
+			}
 
 			result.add(hitMap);
 
