@@ -183,13 +183,14 @@ function FilterCategory({
             </div>
           )}
           <div
-            style={{
-              display: "flex",
-              flexDirection: isUniqueLoadMore ? "row" : "column",
-              gap: isUniqueLoadMore ? "0" : "5px",
-              flexWrap: isUniqueLoadMore ? "wrap" : "initial",
-              paddingLeft: "13px",
-            }}
+            className="openk9-filter-form-check-container"
+            css={css`
+              display: flex;
+              flex-direction: ${isUniqueLoadMore ? "row" : "column"};
+              gap: ${isUniqueLoadMore ? "0" : "5px"};
+              flex-wrap: ${isUniqueLoadMore ? "wrap" : "initial"};
+              padding-left: 13px;
+            `}
           >
             {suggestions.data?.pages.map(({ result }, index) => {
               return (
@@ -367,7 +368,7 @@ function useInfiniteSuggestions(
   loadAll: boolean,
   dynamicFilters: boolean,
 ) {
-  const pageSize = loadAll ? 19 : suggestKeyword === "" ? 7 : 19;
+  const pageSize = loadAll ? 19 : suggestKeyword === "" ? 8 : 19;
   const client = useOpenK9Client();
   let searchQuery: SearchToken[] | null = [];
   if (searchQueryParams && searchQueryParams?.length > 0) {
