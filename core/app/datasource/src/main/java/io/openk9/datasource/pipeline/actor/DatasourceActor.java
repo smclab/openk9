@@ -26,8 +26,10 @@ import org.slf4j.Logger;
 import javax.enterprise.inject.spi.CDI;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -228,13 +230,18 @@ public class DatasourceActor {
 
 		Long requestTimeout = enrichItem.getRequestTimeout();
 
+		LocalDateTime expiredDate =
+			LocalDateTime
+				.now()
+				.plus(requestTimeout, ChronoUnit.MILLIS);
+
 		ctx.ask(
 			EnrichItemSupervisor.Response.class,
 			enrichItemSupervisorRef,
 			Duration.ofMillis(requestTimeout),
 			enrichItemReplyTo ->
 				new EnrichItemSupervisor.Execute(
-					enrichItem, dataPayload, enrichItemReplyTo),
+					enrichItem, dataPayload, expiredDate, enrichItemReplyTo),
 			(r, t) -> {
 				if (t != null) {
 					return new EnrichItemError(enrichItem, t);

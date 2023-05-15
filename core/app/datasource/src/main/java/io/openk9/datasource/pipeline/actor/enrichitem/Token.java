@@ -10,7 +10,6 @@ import io.openk9.datasource.util.CborSerializable;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -18,7 +17,7 @@ import java.util.UUID;
 public class Token {
 
 	public sealed interface Command extends CborSerializable {}
-	public record Generate(ActorRef<Response> replyTo) implements Command {}
+	public record Generate(LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
 	public record Callback(String token, byte[] jsonObject) implements Command {}
 	private enum Tick implements Command {INSTANCE}
 	public sealed interface Response extends CborSerializable {}
@@ -26,7 +25,8 @@ public class Token {
 	public record TokenCallback(byte[] jsonObject) implements Response {}
 	public enum TokenState implements Response {EXPIRED, VALID}
 
-	private record TokenInfo(LocalDateTime creationDate, ActorRef<Response> replyTo) implements CborSerializable {}
+	private record TokenInfo(
+		LocalDateTime createDate, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements CborSerializable {}
 
 	public static Behavior<Command> create() {
 		return create(-1);
@@ -35,25 +35,19 @@ public class Token {
 	public static Behavior<Command> create(long validityTokenMillis) {
 		return Behaviors.<Command>supervise(
 			Behaviors
-				.setup(ctx -> initial(validityTokenMillis, new HashMap<>(), ctx, null)))
+				.setup(ctx -> initial(new HashMap<>(), ctx, null)))
 			.onFailure(SupervisorStrategy.resume());
 	}
 
 	private static Behavior<Command> initial(
-		long validityTokenMillis, Map<String, TokenInfo> tokens,
+		Map<String, TokenInfo> tokens,
 		ActorContext<Command> ctx, Cancellable cancellable) {
 
 		Cancellable newCancellable;
 
 		if (cancellable == null) {
-			if (validityTokenMillis != -1) {
-				newCancellable = ctx.scheduleOnce(
-					Duration.ofSeconds(1), ctx.getSelf(), Tick.INSTANCE);
-			}
-			else {
-				newCancellable = ctx.scheduleOnce(
-					Duration.ofMinutes(15), ctx.getSelf(), Tick.INSTANCE);
-			}
+			newCancellable = ctx.scheduleOnce(
+				Duration.ofMinutes(15), ctx.getSelf(), Tick.INSTANCE);
 		}
 		else {
 			newCancellable = cancellable;
@@ -62,15 +56,15 @@ public class Token {
 		return Behaviors
 			.receive(Command.class)
 			.onMessage(Generate.class, generate -> onGenerate(
-				validityTokenMillis, generate.replyTo(), tokens, ctx, newCancellable))
+				generate.replyTo(), generate.expiredDate(), tokens, ctx, newCancellable))
 			.onMessage(Callback.class, callback -> onCallback(
-				validityTokenMillis, callback.token(), callback.jsonObject, tokens, ctx, newCancellable))
-			.onMessage(Tick.class, tick -> onTick(validityTokenMillis, tokens, ctx, newCancellable))
+				callback.token(), callback.jsonObject, tokens, ctx, newCancellable))
+			.onMessage(Tick.class, tick -> onTick(tokens, ctx, newCancellable))
 			.build();
 	}
 
 	private static Behavior<Command> onCallback(
-		long validityTokenMillis, String token, byte[] jsonObject,
+		String token, byte[] jsonObject,
 		Map<String, TokenInfo> tokens, ActorContext<Command> ctx,
 		Cancellable cancellable) {
 
@@ -81,13 +75,13 @@ public class Token {
 			return Behaviors.same();
 		}
 
-		if (validityTokenMillis == -1 || isValid(validityTokenMillis, tokenInfo)) {
+		if (isValid(tokenInfo)) {
 
 			ctx.getLog()
 				.info(
 					"Token found: {}, elapsed: {} ms",
 					token, Duration.between(
-						tokenInfo.creationDate,
+						tokenInfo.createDate,
 						LocalDateTime.now()
 					).toMillis());
 
@@ -99,14 +93,14 @@ public class Token {
 			newMap.remove(token, tokenInfo);
 			ctx.getLog().warn("Token expired: {}", token);
 			tokenInfo.replyTo.tell(TokenState.EXPIRED);
-			return initial(validityTokenMillis, newMap, ctx, cancellable);
+			return initial(newMap, ctx, cancellable);
 		}
 
 		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onTick(
-		long validityTokenMillis, Map<String, TokenInfo> tokens,
+		Map<String, TokenInfo> tokens,
 		ActorContext<Command> ctx, Cancellable cancellable) {
 
 		ctx.getLog().info("Start token cleanup");
@@ -119,7 +113,7 @@ public class Token {
 
 		for (Map.Entry<String, TokenInfo> entry : tokens.entrySet()) {
 			TokenInfo value = entry.getValue();
-			if (isValid(validityTokenMillis, value)) {
+			if (isValid(value)) {
 				newTokens.put(entry.getKey(), value);
 			}
 			else {
@@ -130,11 +124,12 @@ public class Token {
 
 		ctx.getLog().info("token expire count: {}", tokens.size() - newTokens.size());
 
-		return initial(validityTokenMillis, newTokens, ctx, cancellable);
+		return initial(newTokens, ctx, cancellable);
+
 	}
 
 	private static Behavior<Command> onGenerate(
-		long validityTokenMillis, ActorRef<Response> replyTo,
+		ActorRef<Response> replyTo, LocalDateTime expiredDate,
 		Map<String, TokenInfo> tokens, ActorContext<Command> ctx,
 		Cancellable cancellable) {
 
@@ -142,21 +137,19 @@ public class Token {
 
 		Map<String, TokenInfo> newTokens = new HashMap<>(tokens);
 
-		newTokens.put(token, new TokenInfo(LocalDateTime.now(), replyTo));
+		newTokens.put(token, new TokenInfo(LocalDateTime.now(), expiredDate, replyTo));
 
 		replyTo.tell(new TokenGenerated(token));
 
-		return initial(validityTokenMillis, newTokens, ctx, cancellable);
+		return initial(newTokens, ctx, cancellable);
 	}
 
-	private static boolean isValid(
-		long validityTokenMillis, TokenInfo createDate) {
+	private static boolean isValid(TokenInfo tokenInfo) {
+		return tokenInfo.expiredDate().isAfter(LocalDateTime.now());
+	}
 
-		return validityTokenMillis != -1 &&
-			   LocalDateTime
-				   .now()
-				   .isBefore(createDate.creationDate.plus(validityTokenMillis, ChronoUnit.MILLIS));
-
+	private static boolean isExpired(TokenInfo tokenInfo) {
+		return tokenInfo.expiredDate().isBefore(LocalDateTime.now());
 	}
 
 	private static String generateToken() {

@@ -11,6 +11,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
@@ -130,7 +131,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
 		if (async) {
 
-			tokenActorRef.tell(new Token.Generate(tokenResponseAdapter));
+			tokenActorRef.tell(new Token.Generate(start.expiredDate, tokenResponseAdapter));
 
 			return waitGenerateToken(url, body, replyTo);
 
@@ -193,7 +194,8 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
 	public sealed interface Command {}
 	public record Start(
-		String url, byte[] body, ActorRef<Response> replyTo) implements Command {}
+		String url, byte[] body, LocalDateTime expiredDate,
+		ActorRef<Response> replyTo) implements Command {}
 	private record TokenResponseWrapper(Token.Response response) implements Command {}
 	private record ResponseWrapper(Http.Response response, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}

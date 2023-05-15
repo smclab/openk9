@@ -8,15 +8,19 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.json.JsonObject;
 
+import java.time.LocalDateTime;
+
 public class EnrichItemSupervisor {
 
 	public sealed interface Command {}
-	public record Execute(EnrichItem enrichItem, DataPayload dataPayload, ActorRef<Response> replyTo) implements Command {}
+	public record Execute(
+		EnrichItem enrichItem, DataPayload dataPayload,
+		LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
 	private record HttpSupervisorWrapper(HttpSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	private record GroovySupervisorWrapper(GroovyActor.Response response, ActorRef<Response> replyTo) implements Command {}
 	private record GroovyValidatorWrapper(
 		GroovyActor.Response response, EnrichItem enrichItem,
-		JsonObject dataPayload, ActorRef<Response> replyTo) implements Command {}
+		JsonObject dataPayload, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}
 	public record Body(byte[] body) implements Response {}
 	public record Error(String error) implements Response {}
@@ -62,7 +66,7 @@ public class EnrichItemSupervisor {
 						enrichItem.getType() == EnrichItem.EnrichItemType.HTTP_ASYNC,
 						enrichItem.getServiceName(),
 						dataPayload.toBuffer().getBytes(),
-						responseActorRef
+						gvw.expiredDate, responseActorRef
 					)
 				);
 
@@ -124,6 +128,7 @@ public class EnrichItemSupervisor {
 		EnrichItem enrichItem = execute.enrichItem;
 		DataPayload dataPayload = execute.dataPayload;
 		ActorRef<Response> replyTo = execute.replyTo;
+		LocalDateTime expiredDate = execute.expiredDate;
 
 		ctx.getLog().info(
 			"Execute enrichItemId: {}, type: {}, replyTo: {}", enrichItem.getId(), enrichItem.getType(), replyTo);
@@ -141,7 +146,7 @@ public class EnrichItemSupervisor {
 		);
 
 		switch (enrichItem.getType()) {
-			case HTTP_ASYNC, HTTP_SYNC -> onHttpEnrichItem(enrichItem, payload, replyTo, httpSupervisor, ctx);
+			case HTTP_ASYNC, HTTP_SYNC -> onHttpEnrichItem(enrichItem, payload, replyTo, httpSupervisor, expiredDate, ctx);
 			case GROOVY_SCRIPT -> onGroovyEnrichItem(enrichItem, payload, replyTo, ctx);
 		}
 
@@ -172,7 +177,7 @@ public class EnrichItemSupervisor {
 	private static void onHttpEnrichItem(
 		EnrichItem enrichItem, JsonObject dataPayload,
 		ActorRef<Response> replyTo, ActorRef<HttpSupervisor.Command> httpSupervisor,
-		ActorContext<Command> ctx) {
+		LocalDateTime expiredDate, ActorContext<Command> ctx) {
 
 		ActorRef<HttpSupervisor.Response> responseActorRef =
 			ctx.messageAdapter(
@@ -187,7 +192,7 @@ public class EnrichItemSupervisor {
 			ActorRef<GroovyActor.Response> groovyValidatorRef =
 				ctx.messageAdapter(
 					GroovyActor.Response.class,
-					response -> new GroovyValidatorWrapper(response, enrichItem, dataPayload, replyTo)
+					response -> new GroovyValidatorWrapper(response, enrichItem, dataPayload, expiredDate, replyTo)
 				);
 
 			ActorRef<GroovyActor.Command> groovyActor =
@@ -204,6 +209,7 @@ public class EnrichItemSupervisor {
 				enrichItem.getType() == EnrichItem.EnrichItemType.HTTP_ASYNC,
 				enrichItem.getServiceName(),
 				dataPayload.toBuffer().getBytes(),
+				expiredDate,
 				responseActorRef
 			)
 		);

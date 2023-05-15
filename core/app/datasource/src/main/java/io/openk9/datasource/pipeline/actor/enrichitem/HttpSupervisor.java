@@ -11,6 +11,7 @@ import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
@@ -63,7 +64,7 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 				HttpProcessor.Response.class,
 				response -> new ResponseWrapper(response, call.replyTo));
 
-		actorRef.tell(new HttpProcessor.Start(call.url, call.jsonObject, responseActorRef));
+		actorRef.tell(new HttpProcessor.Start(call.url, call.jsonObject, call.expiredDate, responseActorRef));
 
 		return Behaviors.same();
 
@@ -83,7 +84,8 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 	private final ActorRef<Token.Command> tokenActorRef;
 	public sealed interface Command {}
 	public record Call(
-		boolean async, String url, byte[] jsonObject, ActorRef<Response> replyTo) implements Command {}
+		boolean async, String url, byte[] jsonObject,
+		LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
 	public record Callback(String tokenId, byte[] jsonObject) implements Command {}
 	private record ResponseWrapper(HttpProcessor.Response response, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}

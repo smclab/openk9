@@ -16,6 +16,7 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -185,9 +186,16 @@ public class IngestionActor {
 		ActorRef<EnrichItemSupervisor.Command> enrichItemActorRef =
 			ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
 
+		Long requestTimeout = enrichItem.getRequestTimeout();
+
+		requestTimeout = requestTimeout != null && requestTimeout > 0 ? requestTimeout : 30_000;
+
+		LocalDateTime expiredDate =
+			LocalDateTime.now().plusSeconds(requestTimeout);
+
 		enrichItemActorRef.tell(
 			new EnrichItemSupervisor.Execute(
-				enrichItem, dataPayload, responseActorRef
+				enrichItem, dataPayload, expiredDate, responseActorRef
 			)
 		);
 
