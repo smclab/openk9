@@ -248,17 +248,6 @@ public abstract class BaseSearchService {
 				.collect(
 					Collectors.groupingBy(ParserSearchToken::getTokenType));
 
-		String suggestKeyword = request.getSuggestKeyword();
-
-		if (StringUtils.isNotBlank(suggestKeyword)) {
-
-			List<ParserSearchToken> textTokens = tokenGroup.computeIfAbsent(
-				ParserSearchToken.TEXT, k -> new ArrayList<>(1));
-
-			textTokens.add(ParserSearchToken.ofText(suggestKeyword));
-
-		}
-
 		return tokenGroup;
 
 	}

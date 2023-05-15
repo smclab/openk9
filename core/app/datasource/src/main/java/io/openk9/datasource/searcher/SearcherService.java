@@ -47,7 +47,6 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -252,14 +251,17 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 							if (fields.length > 0) {
 
-								QueryBuilder matchQueryBuilder =
-									QueryBuilders.multiMatchQuery(
-										suggestKeyword.toLowerCase(),
-										fields);
+								BoolQueryBuilder builder = QueryBuilders.boolQuery();
+
+								for (String field : fields) {
+									builder.should(
+										QueryBuilders.matchPhrasePrefixQuery(field, suggestKeyword)
+									);
+								}
 
 								FilterAggregationBuilder suggestions =
 									AggregationBuilders
-										.filter("suggestions", matchQueryBuilder)
+										.filter("suggestions", builder)
 										.subAggregation(compositeAggregation);
 
 								searchSourceBuilder.aggregation(suggestions);
