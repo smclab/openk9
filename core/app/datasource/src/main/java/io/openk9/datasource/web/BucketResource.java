@@ -245,6 +245,8 @@ public class BucketResource {
 
 			query.orderBy(cb.desc(fetch.get(Tab_.priority)));
 
+			query.distinct(true);
+
 			return session
 				.createQuery(query)
 				.setCacheable(true)
