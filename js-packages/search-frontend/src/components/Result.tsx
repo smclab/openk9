@@ -5,9 +5,6 @@ import { GenericResultItem, ResultRendererProps } from "./client";
 import { DocumentResult } from "../renderers/openk9/document/DocumentResult";
 import { PdfResult } from "../renderers/openk9/pdf/PdfResult";
 import { Renderers } from "./useRenderers";
-import { openk9 } from "../App";
-import { PreviewSvg } from "../svgElement/PreviewSvg";
-import { DeleteLogo } from "./DeleteLogo";
 
 type ResultProps<E> = {
   renderers: Renderers;
@@ -32,7 +29,16 @@ function Result<E>(props: ResultProps<E>) {
             .map((k: string) => renderers?.resultRenderers[k])
             .find(Boolean);
         if (Renderer) {
-          return <Renderer result={result} />;
+          return (
+            <React.Fragment>
+              <Renderer result={result} />;
+              {isMobile &&
+                CreateButton({
+                  setDetailMobile,
+                  result,
+                })}
+            </React.Fragment>
+          );
         }
         if (result.source.documentTypes.includes("pdf")) {
           return (
@@ -47,10 +53,28 @@ function Result<E>(props: ResultProps<E>) {
           );
         }
         if (result.source.documentTypes.includes("document")) {
-          return <DocumentResult result={result} />;
+          return (
+            <React.Fragment>
+              <DocumentResult result={result} />;
+              {isMobile &&
+                CreateButton({
+                  setDetailMobile,
+                  result,
+                })}
+            </React.Fragment>
+          );
         }
         if (result.source.documentTypes.includes("web")) {
-          return <WebResult result={result} />;
+          return (
+            <React.Fragment>
+              <WebResult result={result} />;
+              {isMobile &&
+                CreateButton({
+                  setDetailMobile,
+                  result,
+                })}
+            </React.Fragment>
+          );
         }
         return (
           <pre
@@ -73,7 +97,7 @@ function CreateButton({
   result,
 }: {
   setDetailMobile: (result: GenericResultItem<any> | null) => void;
-  result: any;
+  result: GenericResultItem<any>;
 }) {
   return (
     <div

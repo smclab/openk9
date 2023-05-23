@@ -101,6 +101,7 @@ export function Main({
           onDetail={setDetail}
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
+          isMobile={isMobile}
         />,
         configuration.search,
       )}

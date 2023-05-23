@@ -26,13 +26,15 @@ function Detail<E>(props: DetailProps<E>) {
   return (
     <OverlayScrollbarsComponent
       className="openk9-detail-overlay-scrollbars-component"
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        boxSizing: "border-box",
-        overflow: "auto",
-      }}
+      css={css`
+        position: relative;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: auto;
+        border-top-left-radius: ${setDetailMobile ? "20px" : "0px"};
+        border-top-right-radius: ${setDetailMobile ? "20px" : "0px"};
+      `}
     >
       <div
         className="openk9-detail-container-title box-title"
@@ -86,6 +88,8 @@ function Detail<E>(props: DetailProps<E>) {
           box-sizing: border-box;
           padding: 8px 16px;
           background: white;
+          border-bottom-left-radius: ${setDetailMobile ? "20px" : "0px"};
+          border-bottom-right-radius: ${setDetailMobile ? "20px" : "0px"};
         `}
       >
         {(() => {

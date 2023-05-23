@@ -38,6 +38,7 @@ type SearchProps = {
   showSyntax: boolean;
   dateRange: SearchDateRange;
   onDateRangeChange(dateRange: SearchDateRange): void;
+  isMobile: boolean;
 };
 export function Search({
   configuration,
@@ -48,6 +49,7 @@ export function Search({
   onDetail,
   showSyntax,
   dateRange,
+  isMobile,
   onDateRangeChange,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
@@ -367,6 +369,7 @@ export function Search({
           !journey &&
             !valueSelected.startDate &&
             setIsDatePickerOpen(!isDatePickerOpen);
+          isMobile && setIsDatePickerOpen(!isDatePickerOpen);
         }}
       >
         <CalendarLogo />
@@ -476,6 +479,9 @@ function CreateDeleteFilter({
     <div
       css={css`
         cursor: pointer;
+        @media (min-width: 320px) and (max-width: 480px) {
+          display: none;
+        }
       `}
       style={{ boxSizing: "border-box" }}
       onClick={() => {
