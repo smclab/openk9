@@ -10,12 +10,15 @@ import "overlayscrollbars/css/OverlayScrollbars.css";
 import { Logo } from "./Logo";
 import { ResultSvg } from "../svgElement/ResultSvg";
 import { PreviewSvg } from "../svgElement/PreviewSvg";
+import { DeleteLogo } from "./DeleteLogo";
 
-type DetailProps<E> = {
+export type DetailProps<E> = {
   result: GenericResultItem<E> | null;
+  setDetailMobile?: any;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
+  const setDetailMobile = props.setDetailMobile;
   const renderers = useRenderers();
   if (!result) {
     return <NoDetail />;
@@ -40,12 +43,13 @@ function Detail<E>(props: DetailProps<E>) {
           padding-top: 17px;
           padding-bottom: 8px;
           display: flex;
+          gap: 3px;
         `}
       >
-        <span>
+        <div>
           <PreviewSvg />
-        </span>
-        <span
+        </div>
+        <div
           className="openk9-detail-title title"
           css={css`
             margin-left: 5px;
@@ -60,7 +64,19 @@ function Detail<E>(props: DetailProps<E>) {
           `}
         >
           Preview
-        </span>
+        </div>
+        {setDetailMobile && (
+          <div
+            css={css`
+              cursor: pointer;
+            `}
+            onClick={() => {
+              setDetailMobile(null);
+            }}
+          >
+            <DeleteLogo />
+          </div>
+        )}
       </div>
       <div
         className="openk9-detail-container-card "
@@ -69,6 +85,7 @@ function Detail<E>(props: DetailProps<E>) {
           width: 100%;
           box-sizing: border-box;
           padding: 8px 16px;
+          background: white;
         `}
       >
         {(() => {
@@ -96,7 +113,7 @@ function Detail<E>(props: DetailProps<E>) {
 }
 export const DetailMemo = React.memo(Detail);
 
-function NoDetail() {
+export function NoDetail() {
   return (
     <React.Fragment>
       <div
@@ -108,12 +125,13 @@ function NoDetail() {
           padding-top: 17px;
           padding-bottom: 8px;
           display: flex;
+          gap: 3px;
         `}
       >
-        <span>
+        <div>
           <PreviewSvg />
-        </span>
-        <span
+        </div>
+        <div
           className="openk9-no-detail-title title"
           css={css`
             margin-left: 5px;
@@ -128,7 +146,7 @@ function NoDetail() {
           `}
         >
           Preview
-        </span>
+        </div>
       </div>
       <div
         className="openk9-no-detail-content "

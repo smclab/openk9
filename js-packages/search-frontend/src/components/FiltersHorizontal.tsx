@@ -70,6 +70,10 @@ function FiltersHorizontal({
           box-sizing: border-box;
           display: flex;
           flex-wrap: wrap;
+          @media (min-width: 320px) and (max-width: 480px) {
+            flex-direction: column;
+            padding: 0px 0px 16px 16px;
+          }
         `}
       >
         {suggestionCategories.data?.length === 0 && (

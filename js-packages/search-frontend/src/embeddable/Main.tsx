@@ -29,6 +29,7 @@ import { useOpenK9Client } from "../components/client";
 import { useQuery } from "react-query";
 import { SortResultList } from "../components/SortResultList";
 import { FiltersHorizontalMemo } from "../components/FiltersHorizontal";
+import { DetailMobileMemo } from "../components/DetailMobile";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -69,7 +70,24 @@ export function Main({
   const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
     return await client.handle_dynamic_filters();
   });
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const checkIfMobile = () => {
+      const isMobileDevice =
+        window.innerWidth <= 480 && window.innerWidth >= 320;
+      if (!isMobileDevice) setDetailMobile(null);
+      setIsMobile(isMobileDevice);
+    };
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
   const { detail, setDetail } = useDetails(searchQuery);
+  const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
+
   return (
     <React.Fragment>
       {renderPortal(
@@ -124,8 +142,10 @@ export function Main({
           displayMode={configuration.resultsDisplayMode}
           searchQuery={searchQuery}
           onDetail={setDetail}
+          setDetailMobile={setDetailMobile}
           sort={completelySort}
           setSortResult={setSortResult}
+          isMobile={isMobile}
         />,
         configuration.results,
       )}
@@ -134,6 +154,13 @@ export function Main({
       {renderPortal(
         <SortResultList setSortResult={setSortResult} />,
         configuration.sortable,
+      )}
+      {renderPortal(
+        <DetailMobileMemo
+          result={detailMobile}
+          setDetailMobile={setDetailMobile}
+        />,
+        configuration.detailMobile,
       )}
     </React.Fragment>
   );
@@ -366,6 +393,15 @@ function renderPortal(
       </React.Suspense>
     </SimpleErrorBoundary>
   );
+}
+
+function useDetailsMobile(searchQuery: Array<SearchToken>) {
+  const [detailMobile, setDetailMobile] =
+    React.useState<GenericResultItem<unknown> | null>(null);
+  React.useEffect(() => {
+    setDetailMobile(null);
+  }, [searchQuery]);
+  return { detailMobile, setDetailMobile };
 }
 
 export type QueryState = {

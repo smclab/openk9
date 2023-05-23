@@ -5,8 +5,9 @@ import { Logo } from "./components/Logo";
 import "./index.css";
 import "./app.css";
 import { MaintenancePage } from "./components/MaintenancePage";
+import "./ScrollBar.css";
 
-const openk9 = new OpenK9({
+export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
   searchReplaceText: true,
@@ -194,6 +195,10 @@ export function App() {
           grid-area: search;
           padding: 16px 0px 16px 0px;
         `}
+      ></div>
+      <div
+        className="openk9-results-container openk9-box"
+        ref={(element) => openk9.updateConfiguration({ detailMobile: element })}
       ></div>
     </div>
   );

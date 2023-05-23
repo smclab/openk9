@@ -11,7 +11,6 @@ import { useInfiniteQuery, useQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
 import { SortResultList } from "./SortResultList";
-
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 export type ResultsDisplayMode =
@@ -25,6 +24,8 @@ type ResultsProps<E> = {
   displayMode: ResultsDisplayMode;
   sort: SortField[];
   setSortResult: (sortResultNew: SortField) => void;
+  setDetailMobile(result: GenericResultItem<E>): void;
+  isMobile: boolean;
 };
 function Results<E>({
   displayMode,
@@ -32,6 +33,8 @@ function Results<E>({
   searchQuery,
   sort,
   setSortResult,
+  isMobile,
+  setDetailMobile,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -43,8 +46,10 @@ function Results<E>({
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
+          setDetailMobile={setDetailMobile}
           sort={sort}
           setSortResult={setSortResult}
+          isMobile={isMobile}
         />
       );
     case "infinite":
@@ -53,8 +58,10 @@ function Results<E>({
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
+          setDetailMobile={setDetailMobile}
           sort={sort}
           setSortResult={setSortResult}
+          isMobile={isMobile}
         />
       );
     case "virtual":
@@ -63,8 +70,10 @@ function Results<E>({
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
+          setDetailMobile={setDetailMobile}
           sort={sort}
           setSortResult={setSortResult}
+          isMobile={isMobile}
         />
       );
   }
@@ -75,9 +84,10 @@ export const ResultsMemo = React.memo(Results);
 type ResultCountProps = {
   children: number | undefined;
   setSortResult: (sortResultNew: SortField) => void;
+  isMobile: boolean;
 };
 
-function ResultCount({ children, setSortResult }: ResultCountProps) {
+function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
   const client = useOpenK9Client();
 
   return (
@@ -162,8 +172,10 @@ type ResulListProps<E> = {
   renderers: Renderers;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E> | null): void;
+  setDetailMobile(result: GenericResultItem<E> | null): void;
   sort: SortField[];
   setSortResult: (sortResultNew: SortField) => void;
+  isMobile: boolean;
 };
 
 type FiniteResultsProps<E> = ResulListProps<E> & {};
@@ -171,8 +183,10 @@ export function FiniteResults<E>({
   renderers,
   searchQuery,
   onDetail,
+  setDetailMobile,
   sort,
   setSortResult,
+  isMobile,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery, sort);
   return (
@@ -188,7 +202,7 @@ export function FiniteResults<E>({
             width: 100%;
           `}
         >
-          <ResultCount setSortResult={setSortResult}>
+          <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
             {results.data?.pages[0].total}
           </ResultCount>
           {results.data?.pages[0].result.map((result, index) => {
@@ -198,6 +212,8 @@ export function FiniteResults<E>({
                 key={index}
                 result={result}
                 onDetail={onDetail}
+                setDetailMobile={setDetailMobile}
+                isMobile={isMobile}
               />
             );
           })}
@@ -214,8 +230,10 @@ export function InfiniteResults<E>({
   renderers,
   searchQuery,
   onDetail,
+  setDetailMobile,
   sort,
   setSortResult,
+  isMobile,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery, sort);
 
@@ -226,6 +244,10 @@ export function InfiniteResults<E>({
         height: "100%",
         overflowY: "auto",
         position: "relative",
+        ".os-theme-dark.os-host-transition > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle":
+          {
+            width: "3px",
+          },
       }}
     >
       {results?.data?.pages[0].total && results.data.pages[0].total > 0 ? (
@@ -237,7 +259,7 @@ export function InfiniteResults<E>({
             padding-bottom: 16px;
           `}
         >
-          <ResultCount setSortResult={setSortResult}>
+          <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
             {results.data?.pages[0].total}
           </ResultCount>
           {results.data?.pages.map((page, pageIndex) => {
@@ -250,6 +272,8 @@ export function InfiniteResults<E>({
                       key={resultIndex}
                       result={result}
                       onDetail={onDetail}
+                      setDetailMobile={setDetailMobile}
+                      isMobile={isMobile}
                     />
                   );
                 })}
@@ -292,8 +316,10 @@ export function VirtualResults<E>({
   renderers,
   searchQuery,
   onDetail,
+  setDetailMobile,
   sort,
   setSortResult,
+  isMobile,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery, sort);
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
@@ -310,7 +336,7 @@ export function VirtualResults<E>({
       `}
     >
       {thereAreResults && (
-        <ResultCount setSortResult={setSortResult}>
+        <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
           {results.data?.pages[0].total}
         </ResultCount>
       )}
@@ -326,6 +352,8 @@ export function VirtualResults<E>({
                 renderers={renderers}
                 result={result}
                 onDetail={onDetail}
+                setDetailMobile={setDetailMobile}
+                isMobile={isMobile}
               />
             );
           }

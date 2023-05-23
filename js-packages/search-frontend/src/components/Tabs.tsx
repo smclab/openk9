@@ -26,6 +26,11 @@ function Tabs({
         position: "relative",
         overflowX: "auto",
         height: "40px",
+        ...{
+          "::-webkit-scrollbar": {
+            width: "8px",
+          },
+        },
       }}
     >
       <div
@@ -54,6 +59,7 @@ function Tabs({
                 css={css`
                   padding-left: ${index == 0 ? "0px" : "20px"};
                   margin-left: ${index == 0 ? "0px" : "14px"};
+                  white-space: nowrap; 
                   padding: 4px 10px;
                   background: ${
                     isSelected

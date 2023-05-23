@@ -162,6 +162,7 @@ export type Configuration = {
   results: Element | string | null;
   details: Element | string | null;
   login: Element | string | null;
+  detailMobile: Element | string | null;
   searchAutoselect: boolean;
   searchReplaceText: boolean;
   filterTokens: Array<SearchToken>;
@@ -179,6 +180,7 @@ const defaultConfiguration: Configuration = {
   search: null,
   tabs: null,
   sortable: null,
+  detailMobile: null,
   sort: [],
   filters: null,
   filtersHorizontal: null,

@@ -47,8 +47,12 @@ function FilterCategoryDynamic({
     useDebounce(text, 600),
     loadAll,
   );
-  const test = suggestions.data?.pages[0].result || [];
-  const filters = mergeAndSortObjects(test, searchQuery, suggestionCategoryId);
+  const resultValue = suggestions.data?.pages[0].result || [];
+  const filters = mergeAndSortObjects(
+    resultValue,
+    searchQuery,
+    suggestionCategoryId,
+  );
   React.useEffect(() => {
     if (
       setHasMoreSuggestionsCategories &&
@@ -86,6 +90,10 @@ function FilterCategoryDynamic({
       css={css`
         margin-bottom: 16px;
         ${isUniqueLoadMore ? "width: 50%" : null}
+        @media (min-width: 320px) and (max-width: 480px) {
+          width: 100%;
+          ${isUniqueLoadMore ? "height: 50%" : null}
+        }
       `}
     >
       <div>
@@ -212,6 +220,10 @@ function FilterCategoryDynamic({
                       align-items: ${multiSelect ? "baseline" : "stretch"};
                       width: ${isUniqueLoadMore ? "50%" : "auto"};
                       margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
+                      @media (min-width: 320px) and (max-width: 480px) {
+                        width: 100%;
+                        height: ${isUniqueLoadMore ? "50%" : "auto"};
+                      }
                     `}
                   >
                     {multiSelect ? (

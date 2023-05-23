@@ -37,3 +37,6 @@
 .rdrDay:focus {
   outline: none;
 }
+.rdrDefinedRangesWrapper{
+  width: 100%;
+}

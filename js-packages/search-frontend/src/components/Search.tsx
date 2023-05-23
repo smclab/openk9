@@ -362,9 +362,6 @@ export function Search({
           border-radius: 50px;
           cursor: pointer;
           max-width: 20%;
-          @media (min-width: 320px) and (max-width: 480px) {
-            display: none;
-          }
         `}
         onClick={() => {
           !journey &&
@@ -415,6 +412,14 @@ export function Search({
             padding: 16px;
             border: 1px solid var(--openk9-embeddable-search--border-color);
             z-index: 2;
+            @media (min-width: 320px) and (max-width: 480px) {
+              position: fixed;
+              top: 0px;
+              left: 0px;
+              right: 0px;
+              bottom: 0px;
+              margin-right: -5px;
+            }
           `}
         >
           <DateRangePicker
