@@ -40,7 +40,6 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
             right: 0px;
             bottom: 0px;
             padding: 8px;
-            margin-right: -5px;
             background: #89878794;
           }
         `}

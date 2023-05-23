@@ -32,8 +32,6 @@ function Detail<E>(props: DetailProps<E>) {
         height: 100%;
         box-sizing: border-box;
         overflow: auto;
-        border-top-left-radius: ${setDetailMobile ? "20px" : "0px"};
-        border-top-right-radius: ${setDetailMobile ? "20px" : "0px"};
       `}
     >
       <div
@@ -46,26 +44,36 @@ function Detail<E>(props: DetailProps<E>) {
           padding-bottom: 8px;
           display: flex;
           gap: 3px;
+          box-sizing: border-box;
+          justify-content: space-between;
+          border-top-left-radius: ${setDetailMobile ? "20px" : "0px"};
+          border-top-right-radius: ${setDetailMobile ? "20px" : "0px"};
         `}
       >
-        <div>
-          <PreviewSvg />
-        </div>
         <div
-          className="openk9-detail-title title"
           css={css`
-            margin-left: 5px;
-            font-style: normal;
-            font-weight: 700;
-            font-size: 18px;
-            height: 18px;
-            line-height: 22px;
-            align-items: center;
-            color: #3f3f46;
-            margin-left: 8px;
+            display: flex;
           `}
         >
-          Preview
+          <div>
+            <PreviewSvg />
+          </div>
+          <div
+            className="openk9-detail-title title"
+            css={css`
+              margin-left: 5px;
+              font-style: normal;
+              font-weight: 700;
+              font-size: 18px;
+              height: 18px;
+              line-height: 22px;
+              align-items: center;
+              color: #3f3f46;
+              margin-left: 8px;
+            `}
+          >
+            Preview
+          </div>
         </div>
         {setDetailMobile && (
           <div
