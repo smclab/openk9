@@ -5,6 +5,7 @@ import { GenericResultItem, ResultRendererProps } from "./client";
 import { DocumentResult } from "../renderers/openk9/document/DocumentResult";
 import { PdfResult } from "../renderers/openk9/pdf/PdfResult";
 import { Renderers } from "./useRenderers";
+import { MobileLogoSvg } from "../svgElement/MobileLogoSvg";
 
 type ResultProps<E> = {
   renderers: Renderers;
@@ -31,7 +32,7 @@ function Result<E>(props: ResultProps<E>) {
         if (Renderer) {
           return (
             <React.Fragment>
-              <Renderer result={result} />;
+              <Renderer result={result} />
               {isMobile &&
                 CreateButton({
                   setDetailMobile,
@@ -55,7 +56,7 @@ function Result<E>(props: ResultProps<E>) {
         if (result.source.documentTypes.includes("document")) {
           return (
             <React.Fragment>
-              <DocumentResult result={result} />;
+              <DocumentResult result={result} />
               {isMobile &&
                 CreateButton({
                   setDetailMobile,
@@ -67,7 +68,7 @@ function Result<E>(props: ResultProps<E>) {
         if (result.source.documentTypes.includes("web")) {
           return (
             <React.Fragment>
-              <WebResult result={result} />;
+              <WebResult result={result} />
               {isMobile &&
                 CreateButton({
                   setDetailMobile,
@@ -101,55 +102,38 @@ function CreateButton({
 }) {
   return (
     <div
+      className="openk9-wrapper-button-mobile"
       css={css`
-        padding-left: 16px;
-        padding-bottom: 8px;
+        padding: 24px;
+        padding-top: 8px;
+        @media (min-width: 320px) and (max-width: 480px) {
+          padding: 20px;
+          padding-top: 4px;
+        }
       `}
     >
-      <div
+      <button
         css={css`
           display: flex;
-          justify-content: center;
           align-items: center;
-          padding: 4px 8px;
-          gap: 4px;
-          height: 21px;
-          width: 108px;
-          background: #ffffff;
+          justify-content: center;
+          gap: 3px;
+          padding: 8px 16px;
+          background-color: #f9edee;
           border: 1px solid #f9edee;
-          background: #f9edee;
-          border-radius: 20px;
+          border-radius: 50px;
+          color: #c0272b;
+          font-weight: 500;
+          font-size: 13px;
           cursor: pointer;
-          white-space: nowrap;
         `}
         onClick={() => {
           setDetailMobile(result);
         }}
       >
-        <div
-          css={css`
-            color: red;
-            margin-bottom: 14px;
-            font-weight: 500;
-            font-size: 13px;
-            display: block;
-            margin-block-start: 1em;
-            margin-block-end: 1em;
-            margin-inline-start: 0px;
-            margin-inline-end: 0px;
-          `}
-        >
-          <div
-            css={css`
-              display: flex;
-              align-items: baseline;
-              color: #c0272b;
-            `}
-          >
-            Detail{" "}
-          </div>
-        </div>
-      </div>
+        <span>Mobile</span>
+        <MobileLogoSvg />
+      </button>
     </div>
   );
 }

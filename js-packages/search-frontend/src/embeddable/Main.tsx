@@ -74,7 +74,7 @@ export function Main({
   React.useEffect(() => {
     const checkIfMobile = () => {
       const isMobileDevice =
-        window.innerWidth <= 480 && window.innerWidth >= 320;
+        window.innerWidth <= 1024 && window.innerWidth >= 320;
       if (!isMobileDevice) setDetailMobile(null);
       setIsMobile(isMobileDevice);
     };

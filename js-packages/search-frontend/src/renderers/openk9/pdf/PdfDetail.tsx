@@ -36,11 +36,6 @@ export function PdfDetail({ result }: PdfDetailProps) {
             margin-top: 8px;
             max-width: 100%;
             line-height: 1em;
-            max-height: 6em;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            word-wrap: break-word;
-            word-break: break-word;
           `}
         >
           <HighlightableText result={result} path="document.content" />

@@ -19,13 +19,13 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
   }
   return (
     <div
-      className="openk9-modal"
+      className="openk9-modal-mobile openk9-modal"
       css={css`
         position: relative;
       `}
     >
       <div
-        className="openk9-wrapper-modal"
+        className="openk9-wrapper-modal openk9-container-modal"
         css={css`
           background-color: var(
             --openk9-embeddable-search--secondary-background-color
@@ -33,7 +33,7 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
           padding: 16px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
           z-index: 2;
-          @media (min-width: 320px) and (max-width: 480px) {
+          @media (min-width: 320px) and (max-width: 1024px) {
             position: fixed;
             top: 0px;
             left: 0px;
