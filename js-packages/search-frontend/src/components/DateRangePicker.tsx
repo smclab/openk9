@@ -92,7 +92,7 @@ export function DateRangePicker({
           border-radius: 4px;
           overflow: hidden;
           margin-top: 16px;
-          @media (min-width: 320px) and (max-width: 480px) {
+          @media (max-width: 480px) {
             flex-direction: column;
           }
         `}
@@ -116,7 +116,7 @@ export function DateRangePicker({
       </div>
       <div
         css={css`
-          @media (min-width: 320px) and (max-width: 480px) {
+          @media (max-width: 480px) {
             justify-content: flex-start;
           }
           display: flex;

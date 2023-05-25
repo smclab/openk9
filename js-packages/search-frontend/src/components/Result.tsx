@@ -106,7 +106,7 @@ function CreateButton({
       css={css`
         padding: 24px;
         padding-top: 8px;
-        @media (min-width: 320px) and (max-width: 480px) {
+        @media (max-width: 480px) {
           padding: 20px;
           padding-top: 4px;
         }
@@ -131,7 +131,7 @@ function CreateButton({
           setDetailMobile(result);
         }}
       >
-        <span>Mobile</span>
+        <span>Anteprima</span>
         <MobileLogoSvg />
       </button>
     </div>

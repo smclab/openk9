@@ -33,7 +33,7 @@ export function App() {
         padding-left: 50px;
         padding-right: 50px;
         box-sizing: border-box;
-        @media (min-width: 320px) and (max-width: 480px) {
+        @media (max-width: 480px) {
           padding-left: 0px;
           padding-right: 0px;
           grid-template-columns: 1fr;
@@ -92,7 +92,7 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
-          @media (min-width: 320px) and (max-width: 480px) {
+          @media (max-width: 480px) {
             margin: 0px -30px;
           }
         `}
@@ -145,7 +145,7 @@ export function App() {
           );
           border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
-          @media (min-width: 320px) and (max-width: 480px) {
+          @media (max-width: 480px) {
             display: none;
           }
           @media (min-width: 481px) and (max-width: 768px) {
@@ -177,7 +177,7 @@ export function App() {
           );
           border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
-          @media (min-width: 320px) and (max-width: 480px) {
+          @media (max-width: 480px) {
             display: none;
           }
           @media (min-width: 481px) and (max-width: 768px) {

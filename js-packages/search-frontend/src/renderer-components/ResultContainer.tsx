@@ -17,7 +17,7 @@ export function ResultContainer({ icon, children }: ResultContainerProps) {
       <div
         className="openk9-embeddable-result-container-media"
         css={css`
-          @media (min-width: 320px) and (max-width: 480px) {
+          @media max-width: 480px {
             display: none;
           }
           width: 30px;

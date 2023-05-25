@@ -4,6 +4,7 @@ import { GenericResultItem, DetailRendererProps } from "./client";
 import { useRenderers } from "./useRenderers";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { DetailMemo } from "./Detail";
+import { ModalDetail } from "./ModalDetail";
 
 export type DetailMobileProps<E> = {
   result: GenericResultItem<E> | null;
@@ -13,40 +14,15 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
   const result = props.result as any;
   const setDetailMobile = props.setDetailMobile as any;
   const renderers = useRenderers();
+  const componet = (
+    <DetailMemo result={result} setDetailMobile={setDetailMobile} />
+  );
 
   if (!result) {
+    document.body.style.overflow = "auto";
     return null;
   }
-  return (
-    <div
-      className="openk9-modal-mobile openk9-modal"
-      css={css`
-        position: relative;
-      `}
-    >
-      <div
-        className="openk9-wrapper-modal openk9-container-modal"
-        css={css`
-          background-color: var(
-            --openk9-embeddable-search--secondary-background-color
-          );
-          padding: 16px;
-          border: 1px solid var(--openk9-embeddable-search--border-color);
-          z-index: 2;
-          @media (min-width: 320px) and (max-width: 1024px) {
-            position: fixed;
-            top: 0px;
-            left: 0px;
-            right: 0px;
-            bottom: 0px;
-            padding: 8px;
-            background: #89878794;
-          }
-        `}
-      >
-        <DetailMemo result={result} setDetailMobile={setDetailMobile} />
-      </div>
-    </div>
-  );
+  document.body.style.overflow = "hidden";
+  return <ModalDetail content={componet} />;
 }
 export const DetailMobileMemo = React.memo(DetailMobile);

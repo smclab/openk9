@@ -1,17 +1,17 @@
 .os-theme-dark.os-host-transition>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle {
-	@media (min-width: 320px) and (max-width: 480px) {
+	@media (max-width: 480px) {
 		width: 3px;
 	}
 }
 
 .os-theme-dark>.os-scrollbar-horizontal .os-scrollbar-handle:before {
-	@media (min-width: 320px) and (max-width: 480px) {
+	@media  (max-width: 480px) {
 		height: 3px;
 	}
 }
 
 .os-theme-dark.os-host-transition>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle {
-	@media (min-width: 320px) and (max-width: 480px) {
+	@media (max-width: 480px) {
 		height: 3px;
 	}
 }

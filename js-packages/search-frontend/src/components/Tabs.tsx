@@ -84,7 +84,7 @@ function Tabs({
                   :hover {
                     ${isSelected ? "" : "text-decoration: underline;"}
                   }
-                  @media (min-width: 320px) and (max-width: 480px) {
+                  @media (max-width: 480px) {
                     margin-left: 14px;
                 `}
                 onClick={() => {

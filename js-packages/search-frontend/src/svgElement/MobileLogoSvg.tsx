@@ -1,15 +1,15 @@
 import React from "react";
 
-export function MobileLogoSvg({ size = 26 }) {
+export function MobileLogoSvg() {
   return (
     <svg
-      className="openk-9-filter-icon mobile-logo"
-      width="10"
-      height="10"
-      viewBox="0 0 18 18"
+      width="15"
+      height="16"
+      viewBox="0 0 22 16"
       fill="#C0272B"
+      className="openk9-icon openk9-mobile-logo-svg"
     >
-      <path d="M0 14V16H6V14H0ZM0 2V4H10V2H0ZM10 18V16H18V14H10V12H8V18H10ZM4 6V8H0V10H4V12H6V6H4ZM18 10V8H8V10H18ZM12 6H14V4H18V2H14V0H12V6Z" />
+      <path d="M11 0.5C6 0.5 1.73 3.61 0 8C1.73 12.39 6 15.5 11 15.5C16 15.5 20.27 12.39 22 8C20.27 3.61 16 0.5 11 0.5ZM11 13C8.24 13 6 10.76 6 8C6 5.24 8.24 3 11 3C13.76 3 16 5.24 16 8C16 10.76 13.76 13 11 13ZM11 5C9.34 5 8 6.34 8 8C8 9.66 9.34 11 11 11C12.66 11 14 9.66 14 8C14 6.34 12.66 5 11 5Z" />
     </svg>
   );
 }

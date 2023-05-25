@@ -1,17 +1,14 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { SearchToken, SortField } from "./client";
-import { buttonStyle, FilterCategoryMemo } from "./FilterCategory";
+import { FilterCategoryMemo } from "./FilterCategory";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";
 import { useQuery } from "react-query";
 import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
-import { FilterSvg } from "../svgElement/FiltersSvg";
-import { DeleteLogo } from "./DeleteLogo";
 import { Logo } from "./Logo";
 import { PlusSvg } from "../svgElement/PlusSvg";
-import { useDebounce } from "./useDebounce";
 import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
 
 type FiltersProps = {
@@ -70,7 +67,7 @@ function FiltersHorizontal({
           box-sizing: border-box;
           display: flex;
           flex-wrap: wrap;
-          @media (min-width: 320px) and (max-width: 768px) {
+          @media (max-width: 768px) {
             flex-direction: column;
             padding: 0px 0px 16px 16px;
           }

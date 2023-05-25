@@ -15,7 +15,7 @@ export function ResultContainerTwo({ icon, children }: ResultContainerProps) {
     >
       <div
         css={css`
-          @media (min-width: 320px) and (max-width: 480px) {
+          @media (max-width: 480px) {
             display: none;
           }
           width: 30px;

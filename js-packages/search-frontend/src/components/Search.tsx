@@ -103,7 +103,7 @@ export function Search({
             : valueSelected.startDate
             ? "77%"
             : "95%"};
-          @media (min-width: 320px) and (max-width: 480px) {
+          @media (max-width: 480px) {
             width: 100%;
           }
         `}
@@ -415,7 +415,7 @@ export function Search({
             padding: 16px;
             border: 1px solid var(--openk9-embeddable-search--border-color);
             z-index: 2;
-            @media (min-width: 320px) and (max-width: 480px) {
+            @media (max-width: 480px) {
               position: fixed;
               top: 0px;
               left: 0px;
@@ -479,7 +479,7 @@ function CreateDeleteFilter({
     <div
       css={css`
         cursor: pointer;
-        @media (min-width: 320px) and (max-width: 480px) {
+        @media (max-width: 480px) {
           display: none;
         }
       `}
