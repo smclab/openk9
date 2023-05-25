@@ -93,7 +93,7 @@ function FilterCategory({
       css={css`
         margin-bottom: 16px;
         ${isUniqueLoadMore ? "width: 50%" : null}
-        @media (min-width: 320px) and (max-width: 480px) {
+        @media (min-width: 320px) and (max-width: 768px) {
           ${isUniqueLoadMore ? "height: 50%" : null}
         }
       `}
@@ -219,7 +219,7 @@ function FilterCategory({
                               : "stretch"};
                             width: ${isUniqueLoadMore ? "50%" : "auto"};
                             margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
-                            @media (min-width: 320px) and (max-width: 480px) {
+                            @media (min-width: 320px) and (max-width: 768px) {
                               width: 100%;
                               height: ${isUniqueLoadMore ? "50%" : "auto"};
                             }

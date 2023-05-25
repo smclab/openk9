@@ -90,7 +90,7 @@ function FilterCategoryDynamic({
       css={css`
         margin-bottom: 16px;
         ${isUniqueLoadMore ? "width: 50%" : null}
-        @media (min-width: 320px) and (max-width: 480px) {
+        @media (min-width: 320px) and (max-width: 768px) {
           width: 100%;
           ${isUniqueLoadMore ? "height: 50%" : null}
         }
@@ -220,7 +220,7 @@ function FilterCategoryDynamic({
                       align-items: ${multiSelect ? "baseline" : "stretch"};
                       width: ${isUniqueLoadMore ? "50%" : "auto"};
                       margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
-                      @media (min-width: 320px) and (max-width: 480px) {
+                      @media (min-width: 320px) and (max-width: 768px) {
                         width: 100%;
                         height: ${isUniqueLoadMore ? "50%" : "auto"};
                       }
