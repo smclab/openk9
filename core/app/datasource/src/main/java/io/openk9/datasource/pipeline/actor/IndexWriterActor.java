@@ -4,6 +4,8 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.datasource.events.DatasourceEvent;
+import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
@@ -35,7 +37,7 @@ public class IndexWriterActor {
 	public sealed interface Command extends CborSerializable {}
 	public record Start(DataIndex dataIndex, byte[] dataPayload, ActorRef<Response> replyTo) implements Command {}
 	private record SearchResponseCommand(DataIndex dataIndex, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
-	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, Exception exception) implements Command {}
+	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, DataPayload dataPayload, Exception exception) implements Command {}
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
 	public record Failure(Exception exception) implements Response {}
@@ -47,13 +49,17 @@ public class IndexWriterActor {
 			RestHighLevelClient restHighLevelClient =
 				CDI.current().select(RestHighLevelClient.class).get();
 
-			return initial(ctx, restHighLevelClient);
+			DatasourceEventBus eventBus =
+				CDI.current().select(DatasourceEventBus.class).get();
+
+			return initial(ctx, restHighLevelClient, eventBus);
 
 		});
 	}
 
 	private static Behavior<Command> initial(
-		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient) {
+		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
+		DatasourceEventBus eventBus) {
 
 		Logger logger = ctx.getLog();
 
@@ -61,21 +67,37 @@ public class IndexWriterActor {
 			.onMessage(Start.class, (start) -> onStart(ctx, restHighLevelClient, start.dataIndex, start.dataPayload, start.replyTo))
 			.onMessage(SearchResponseCommand.class, src -> onSearchResponseCommand(
 				ctx, restHighLevelClient, src, logger))
-			.onMessage(BulkResponseCommand.class, brc -> onBulkResponseCommand(logger, brc))
+			.onMessage(BulkResponseCommand.class, brc -> onBulkResponseCommand(logger, brc, eventBus))
 			.build();
 	}
 
 	private static Behavior<Command> onBulkResponseCommand(
-		Logger logger, BulkResponseCommand brc) {
+		Logger logger, BulkResponseCommand brc, DatasourceEventBus eventBus) {
 
 		BulkResponse response = brc.bulkResponse;
 		Exception throwable = brc.exception;
 		ActorRef<Response> replyTo = brc.replyTo;
+		DataPayload dataPayload = brc.dataPayload();
 
 		if (response != null) {
 
 			if (response.hasFailures()) {
 				String errorMessage = response.buildFailureMessage();
+
+				eventBus.sendEvent(
+					new DatasourceEvent(
+						dataPayload.getIngestionId(),
+						dataPayload.getDatasourceId(),
+						dataPayload.getContentId(),
+						dataPayload.getParsingDate(),
+						dataPayload.getRawContent(),
+						dataPayload.getTenantId(),
+						dataPayload.getDocumentTypes(),
+						dataPayload.getIndexName(),
+						errorMessage
+					)
+				);
+
 				logger.error("Bulk request error: " + errorMessage);
 				replyTo.tell(new Failure(new RuntimeException(errorMessage)));
 			}
@@ -87,6 +109,21 @@ public class IndexWriterActor {
 			replyTo.tell(new Failure(throwable));
 		}
 		else {
+
+			eventBus.sendEvent(
+				new DatasourceEvent(
+					dataPayload.getIngestionId(),
+					dataPayload.getDatasourceId(),
+					dataPayload.getContentId(),
+					dataPayload.getParsingDate(),
+					dataPayload.getRawContent(),
+					dataPayload.getTenantId(),
+					dataPayload.getDocumentTypes(),
+					dataPayload.getIndexName(),
+					null
+				)
+			);
+
 			replyTo.tell(Success.INSTANCE);
 		}
 
@@ -121,14 +158,14 @@ public class IndexWriterActor {
 				public void onResponse(BulkResponse bulkResponse) {
 					ctx.getSelf().tell(
 						new BulkResponseCommand(
-							replyTo, bulkResponse, null));
+							replyTo, bulkResponse, dataPayload, null));
 				}
 
 				@Override
 				public void onFailure(Exception e) {
 					ctx.getSelf().tell(
 						new BulkResponseCommand(
-							replyTo, null, e));
+							replyTo, null, dataPayload, e));
 				}
 			});
 
