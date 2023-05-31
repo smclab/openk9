@@ -4,6 +4,7 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class DatasourceEventBus {
@@ -12,7 +13,8 @@ public class DatasourceEventBus {
 		quoteRequestEmitter.send(datasourceEvent);
 	}
 
-	@Channel("datasource-events-outgoing")
+	@Inject
+	@Channel("datasource-events-requests")
 	Emitter<DatasourceEvent> quoteRequestEmitter;
 
 

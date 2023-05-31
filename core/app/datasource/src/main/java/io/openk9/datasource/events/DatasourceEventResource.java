@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Multi;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 
 import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -29,7 +30,8 @@ public class DatasourceEventResource {
 			.where(e -> e.datasourceId() == datasourceId);
 	}
 
-	@Channel("datasource-events-incoming")
+	@Inject
+	@Channel("datasource-events")
 	Multi<DatasourceEvent> datasourceEvents;
 
 
