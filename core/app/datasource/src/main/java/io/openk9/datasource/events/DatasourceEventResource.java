@@ -29,7 +29,7 @@ public class DatasourceEventResource {
 			.where(e -> e.datasourceId() == datasourceId);
 	}
 
-	@Channel("datasource-events")
+	@Channel("datasource-events-incoming")
 	Multi<DatasourceEvent> datasourceEvents;
 
 
