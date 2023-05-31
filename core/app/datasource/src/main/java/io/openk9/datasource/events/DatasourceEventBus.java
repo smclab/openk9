@@ -12,7 +12,7 @@ public class DatasourceEventBus {
 		quoteRequestEmitter.send(datasourceEvent);
 	}
 
-	@Channel("datasource-events-outgoing")
+	@Channel("datasource-events")
 	Emitter<DatasourceEvent> quoteRequestEmitter;
 
 
