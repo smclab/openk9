@@ -10,13 +10,11 @@ import {
   useEnrichItemQuery,
 } from "../graphql-generated";
 import { EnrichItemsQuery } from "./EnrichItems";
-import { EnumSelect, fromFieldValidators, NumberInput, TextArea, TextInput, useForm } from "./Form";
+import { CustomButtom, EnumSelect, fromFieldValidators, NumberInput, TextArea, TextInput, useForm } from "./Form";
 import { CodeInput } from "./CodeInput";
-import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { AssociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQuery } from "./EnrichPipelineEnrichItems";
-import { ClassNameButton } from "../App";
 
 const EnrichItemQuery = gql`
   query EnrichItem($id: ID!) {
@@ -152,9 +150,7 @@ export function EnrichItem() {
         <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
         <CodeInput language="javascript" label="Script" {...form.inputProps("script")} />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {enrichItemId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={enrichItemId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

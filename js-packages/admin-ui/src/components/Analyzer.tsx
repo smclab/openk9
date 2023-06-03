@@ -2,7 +2,6 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import {
   useAnalyzerQuery,
   useBindTokenizerToAnalyzerMutation,
@@ -21,6 +20,7 @@ import {
   MultiSelectForDinamicallyFieldsWithoutType,
   CreateDinamicallyFieldWithout,
   MainTitle,
+  CustomButtom,
 } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
@@ -204,9 +204,7 @@ export function Analyzer() {
             </ClayForm>
           )}
           <div className="sheet-footer">
-            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-              {analyzerId === "new" ? "Create" : "Update"}
-            </ClayButton>
+            <CustomButtom nameButton={analyzerId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
         </ClayForm>
       </ClayLayout.ContainerFluid>

@@ -2,7 +2,6 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import {
   useBindDocumentTypeTemplateToDocumentTypeMutation,
   useCreateOrUpdateDocumentTypeMutation,
@@ -11,10 +10,9 @@ import {
   useDocumentTypeTemplateValueQuery,
   useUnbindDocumentTypeTemplateFromDocumentTypeMutation,
 } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle, CustomButtom } from "./Form";
 import { DocumentTypesQuery } from "./DocumentTypes";
 import ClayLayout from "@clayui/layout";
-import { ClassNameButton } from "../App";
 import { useToast } from "./ToastProvider";
 
 const DocumentTypeQuery = gql`
@@ -113,9 +111,7 @@ export function DocumentType() {
           </ClayForm>
         )}
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {documentTypeId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={documentTypeId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

@@ -2,7 +2,6 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../graphql-generated";
 import {
   useForm,
@@ -13,6 +12,7 @@ import {
   MultiSelectForDinamicFields,
   CreateFieldDinamically,
   MainTitle,
+  CustomButtom,
 } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
@@ -139,9 +139,7 @@ export function TokenFilter() {
           />
           <CreateFieldDinamically templates={Filters} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} />
           <div className="sheet-footer">
-            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-              {tokenFilterId === "new" ? "Create" : "Update"}
-            </ClayButton>
+            <CustomButtom nameButton={tokenFilterId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
         </ClayForm>
       </ClayLayout.ContainerFluid>

@@ -2,14 +2,12 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import { useCreateOrUpdateQueryAnalysisMutation, useQueryAnalysisQuery } from "../graphql-generated";
 import { QueryAnalysesQuery } from "./QueryAnalyses";
-import { useForm, fromFieldValidators, TextInput, TextArea, MainTitle } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, MainTitle, CustomButtom } from "./Form";
 import { CodeInput } from "./CodeInput";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
-import { ClassNameButton } from "../App";
 
 const QueryAnalysisQuery = gql`
   query QueryAnalysis($id: ID!) {
@@ -88,9 +86,7 @@ export function QueryAnalysis() {
         <TextArea label="Description" {...form.inputProps("description")} />
         <CodeInput label="Stop Words" language="text" {...form.inputProps("stopWords")} />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {queryAnalysisId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={queryAnalysisId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

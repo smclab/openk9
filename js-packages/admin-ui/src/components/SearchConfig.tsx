@@ -2,13 +2,11 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSearchConfigQuery, useCreateOrUpdateSearchConfigMutation } from "../graphql-generated";
-import { BooleanInput, fromFieldValidators, MainTitle, NumberInput, TextArea, TextInput, useForm } from "./Form";
+import { BooleanInput, CustomButtom, fromFieldValidators, MainTitle, NumberInput, TextArea, TextInput, useForm } from "./Form";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { SearchConfigsQuery } from "./SearchConfigs";
-import { ClassNameButton } from "../App";
 
 const SearchConfigQuery = gql`
   query SearchConfig($id: ID!) {
@@ -109,17 +107,24 @@ export function SearchConfig() {
         >
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-          <NumberInput label="minScore" {...form.inputProps("minScore")} 
-          description="Define score threshold used to filter results after query has been done"/>
-          <BooleanInput label="min Score Suggestions" {...form.inputProps("minScoreSuggestions")} 
-          description="If use configured min score to filter search results"/>
-          <BooleanInput label="min Score Search" {...form.inputProps("minScoreSearch")} 
-          description="If use configured min score to filter suggestions"/>
+          <NumberInput
+            label="minScore"
+            {...form.inputProps("minScore")}
+            description="Define score threshold used to filter results after query has been done"
+          />
+          <BooleanInput
+            label="min Score Suggestions"
+            {...form.inputProps("minScoreSuggestions")}
+            description="If use configured min score to filter search results"
+          />
+          <BooleanInput
+            label="min Score Search"
+            {...form.inputProps("minScoreSearch")}
+            description="If use configured min score to filter suggestions"
+          />
 
           <div className="sheet-footer">
-            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-              {searchConfigId === "new" ? "Create" : "Update"}
-            </ClayButton>
+            <CustomButtom nameButton={searchConfigId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
         </ClayForm>
       </ClayLayout.ContainerFluid>

@@ -4,11 +4,9 @@ import ClayForm from "@clayui/form";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateEnrichPipelineMutation, useEnrichPipelineQuery } from "../graphql-generated";
 import { EnrichPipelinesQuery } from "./EnrichPipelines";
-import { fromFieldValidators, TextArea, TextInput, useForm } from "./Form";
-import ClayButton from "@clayui/button";
+import { CustomButtom, fromFieldValidators, TextArea, TextInput, useForm } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
-import { ClassNameButton } from "../App";
 
 const EnrichPipelineQuery = gql`
   query EnrichPipeline($id: ID!) {
@@ -83,9 +81,7 @@ export function EnrichPipeline() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {enrichPipelineId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={enrichPipelineId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

@@ -2,13 +2,11 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import { useCreateOrUpdateTabMutation, useTabQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, MainTitle } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, MainTitle, CustomButtom } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { TabsQuery } from "./Tabs";
 import { useToast } from "./ToastProvider";
-import { ClassNameButton } from "../App";
 
 const TabQuery = gql`
   query Tab($id: ID!) {
@@ -85,15 +83,16 @@ export function Tab() {
           form.submit();
         }}
       >
-        <TextInput label="Name" {...form.inputProps("name")} description="Name used to render tab in search frontend"/>
+        <TextInput label="Name" {...form.inputProps("name")} description="Name used to render tab in search frontend" />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <NumberInput label="Priority" {...form.inputProps("priority")} 
-        description="Define priority according to which tabs are
-        orderder by search frontend during rendering" />
+        <NumberInput
+          label="Priority"
+          {...form.inputProps("priority")}
+          description="Define priority according to which tabs are
+        orderder by search frontend during rendering"
+        />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {tabId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={tabId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

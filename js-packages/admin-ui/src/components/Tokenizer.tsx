@@ -2,7 +2,6 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import { useCreateOrUpdateTokenizerMutation, useTokenizerQuery } from "../graphql-generated";
 import {
   useForm,
@@ -13,11 +12,11 @@ import {
   CreateFieldDinamically,
   MultiSelectForDinamicFields,
   MainTitle,
+  CustomButtom,
 } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { TokenizersQuery } from "./Tokenizers";
-import { ClassNameButton } from "../App";
 
 const TokenizerQuery = gql`
   query Tokenizer($id: ID!) {
@@ -136,9 +135,7 @@ export function Tokenizer() {
         />
         <CreateFieldDinamically templates={TokenizerFilters} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {tokenizerId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={tokenizerId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

@@ -2,12 +2,8 @@ import { gql } from "@apollo/client";
 import ClayForm from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BooleanInput, EnumSelect, fromFieldValidators, SearchSelect, TextArea, TextInput, useForm } from "./Form";
-import ClayButton from "@clayui/button";
+import { BooleanInput, CustomButtom, EnumSelect, fromFieldValidators, SearchSelect, TextArea, TextInput, useForm } from "./Form";
 import ClayLayout from "@clayui/layout";
-import { ClayButtonWithIcon } from "@clayui/button";
-import { Link } from "react-router-dom";
-import ClayToolbar from "@clayui/toolbar";
 import { TabTokens } from "./TabTokens";
 import {
   TokenType,
@@ -19,7 +15,6 @@ import {
   useUnbindDocTypeFieldToTabTokenMutation,
 } from "../graphql-generated";
 import { useToast } from "./ToastProvider";
-import { ClassNameButton } from "../App";
 
 const TabTokenQuery = gql`
   query TabTokenTab($id: ID!) {
@@ -144,9 +139,7 @@ export function TabToken() {
             </ClayForm>
           )}
           <div className="sheet-footer">
-            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-              {tabTokenId === "new" ? "Create" : "Update"}
-            </ClayButton>
+            <CustomButtom nameButton={tabTokenId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
         </ClayForm>
       </ClayLayout.ContainerFluid>

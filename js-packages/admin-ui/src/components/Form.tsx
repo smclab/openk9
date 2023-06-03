@@ -813,6 +813,28 @@ export function AssociatedEntities<Q>({
   );
 }
 
+type ButtonType = "button" | "submit" | "reset";
+
+export function CustomButtom({
+  customStyle,
+  action,
+  nameButton,
+  canSubmit = true,
+  typeSelectet,
+}: {
+  nameButton: string;
+  action?: any;
+  customStyle?: any;
+  canSubmit?: boolean;
+  typeSelectet: ButtonType;
+}) {
+  return (
+    <button className="btn btn-danger" disabled={canSubmit} type={typeSelectet}>
+      {nameButton}
+    </button>
+  );
+}
+
 export function MainTitle({ title }: { title: string }) {
   return (
     <li className="list-group-item list-group-item-flex" style={{ overflowAnchor: "none" }}>

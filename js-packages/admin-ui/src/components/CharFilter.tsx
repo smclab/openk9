@@ -2,14 +2,20 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import { useCharFilterQuery, useCreateOrUpdateCharFilterMutation } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, KeyValue, MultiSelectForDinamicFields, CreateFieldDinamically } from "./Form";
+import {
+  useForm,
+  fromFieldValidators,
+  TextInput,
+  TextArea,
+  KeyValue,
+  MultiSelectForDinamicFields,
+  CreateFieldDinamically,
+  CustomButtom,
+} from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
-import { CodeInput } from "./CodeInput";
 import { CharFiltersQuery } from "./CharFilters";
-import { ClassNameButton } from "../App";
 
 const CharFilterQuery = gql`
   query CharFilter($id: ID!) {
@@ -127,9 +133,7 @@ export function CharFilter() {
         />
         <CreateFieldDinamically templates={Filters} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {charFilterId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={charFilterId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

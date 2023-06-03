@@ -1,6 +1,5 @@
 import ClayForm, { ClaySelect } from "@clayui/form";
 import ClayLayout from "@clayui/layout";
-import ClayButton from "@clayui/button";
 import React from "react";
 import { Spacy } from "../wizards/Logo/Spacy";
 import { Button, useModal } from "@clayui/core";
@@ -10,8 +9,7 @@ import { Flair } from "../wizards/Logo/Flair";
 import { Stanza } from "../wizards/Logo/Stanza";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./ToastProvider";
-import { ClassNameButton } from "../App";
-import { SimpleModal } from "./Form";
+import { CustomButtom, SimpleModal } from "./Form";
 
 export function HuggingFace() {
   const [name, setName] = React.useState("");
@@ -208,9 +206,7 @@ export function HuggingFace() {
             </div>
           )}
           <div className="sheet-footer">
-            <ClayButton className={ClassNameButton} type="submit">
-              Deploy
-            </ClayButton>
+            <CustomButtom nameButton={"Deploy"} typeSelectet="submit" />
           </div>
         </ClayForm>
       </ClayLayout.ContainerFluid>

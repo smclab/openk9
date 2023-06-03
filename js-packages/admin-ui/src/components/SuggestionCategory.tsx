@@ -2,13 +2,11 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import { useCreateOrUpdateSuggestionCategoryMutation, useSuggestionCategoryQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, BooleanInput } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, BooleanInput, CustomButtom } from "./Form";
 import { SuggestionCategoriesQuery } from "./SuggestionCategories";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
-import { ClassNameButton } from "../App";
 
 const SuggestionCategoryQuery = gql`
   query SuggestionCategory($id: ID!) {
@@ -91,14 +89,23 @@ export function SuggestionCategory() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <NumberInput label="Priority" {...form.inputProps("priority")} description="Define priority according to which suggestion cateogories are
-        orderder by search frontend during rendering"/>
-        <BooleanInput label="Multi Select" {...form.inputProps("multiSelect")} 
-        description="If currente Suggestion Category is rendered as multi label filter or not"/>
+        <NumberInput
+          label="Priority"
+          {...form.inputProps("priority")}
+          description="Define priority according to which suggestion cateogories are
+        orderder by search frontend during rendering"
+        />
+        <BooleanInput
+          label="Multi Select"
+          {...form.inputProps("multiSelect")}
+          description="If currente Suggestion Category is rendered as multi label filter or not"
+        />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {suggestionCategoryId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom
+            nameButton={suggestionCategoryId === "new" ? "Create" : "Update"}
+            canSubmit={!form.canSubmit}
+            typeSelectet="submit"
+          />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

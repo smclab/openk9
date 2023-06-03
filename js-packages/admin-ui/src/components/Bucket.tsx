@@ -2,9 +2,7 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
-
-import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle, BooleanInput } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle, BooleanInput, CustomButtom } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import {
@@ -20,7 +18,6 @@ import {
   useUnbindSearchConfigFromBucketMutation,
 } from "../graphql-generated";
 import { BucketsQuery } from "./Buckets";
-import { ClassNameButton } from "../App";
 
 const BucketQuery = gql`
   query Bucket($id: ID!) {
@@ -154,9 +151,7 @@ export function Bucket() {
           />
         )}
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {bucketId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={bucketId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

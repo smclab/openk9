@@ -2,14 +2,12 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
-import { useCreateOrUpdateRuleQueryMutation, useQueryAnalysesRulesQuery, useRuleQuery } from "../graphql-generated";
+import { useCreateOrUpdateRuleQueryMutation, useRuleQuery } from "../graphql-generated";
 import { RulesQuery } from "./Rules";
-import { useForm, fromFieldValidators, TextInput, TextArea } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, CustomButtom } from "./Form";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { AddRuleToQueryAnalyses, QueryAnalysesRule, RemoveRuleFromQueryAnalyses } from "./QueryAnalysesRules";
-import { ClassNameButton } from "../App";
 
 const RuleQuery = gql`
   query Rule($id: ID!) {
@@ -90,9 +88,7 @@ export function Rule() {
         <TextInput label="Left Hand Side" {...form.inputProps("lhs")} />
         <TextInput label="Right Hand Side" {...form.inputProps("rhs")} />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {ruleId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={ruleId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

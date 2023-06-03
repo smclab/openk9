@@ -11,8 +11,17 @@ import {
   useDocumentTypeFieldQuery,
   useUnbindnAlyzerToDocTypeFieldMutation,
 } from "../graphql-generated";
-import { BooleanInput, EnumSelect, fromFieldValidators, NumberInput, SearchSelect, TextArea, TextInput, useForm } from "./Form";
-import ClayButton from "@clayui/button";
+import {
+  BooleanInput,
+  CustomButtom,
+  EnumSelect,
+  fromFieldValidators,
+  NumberInput,
+  SearchSelect,
+  TextArea,
+  TextInput,
+  useForm,
+} from "./Form";
 import ClayLayout from "@clayui/layout";
 import { ClayButtonWithIcon } from "@clayui/button";
 import { Link } from "react-router-dom";
@@ -193,9 +202,11 @@ export function DocumentTypeField() {
           <BooleanInput label="Sortable" {...form.inputProps("sortable")} description="If field is searchable or not" />
           <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
           <div className="sheet-footer">
-            <ClayButton className={` ${ClassNameButton} `} type="submit" disabled={!form.canSubmit}>
-              {documentTypeFieldId === "new" ? "Create" : "Update"}
-            </ClayButton>
+            <CustomButtom
+              nameButton={documentTypeFieldId === "new" ? "Create" : "Update"}
+              canSubmit={!form.canSubmit}
+              typeSelectet="submit"
+            />
           </div>
         </ClayForm>
       </ClayLayout.ContainerFluid>

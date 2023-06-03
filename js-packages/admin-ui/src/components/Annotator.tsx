@@ -2,7 +2,6 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import {
   AnnotatorType,
   Fuzziness,
@@ -13,11 +12,10 @@ import {
   useDocTypeFieldValueQuery,
   useUnbindDocTypeFieldToDataSourceMutation,
 } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, NumberInput, SearchSelect } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, NumberInput, SearchSelect, CustomButtom } from "./Form";
 import { AnnotatorsQuery } from "./Annotators";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
-import { ClassNameButton } from "../App";
 
 const AnnotatorQuery = gql`
   query Annotator($id: ID!) {
@@ -115,11 +113,21 @@ export function Annotator() {
         }}
       >
         <TextInput label="Name" {...form.inputProps("name")} />
-        <TextInput label="Field Name" {...form.inputProps("fieldName")} description="Field name used by annotator to get result"/>
-        <EnumSelect label="Fuziness" dict={Fuzziness} {...form.inputProps("fuziness")} description="Fuzziness used by annotator to search result"/>
-        <EnumSelect label="Type" dict={AnnotatorType} {...form.inputProps("type")} description="Annotator type. Read documentation for more information"/>
+        <TextInput label="Field Name" {...form.inputProps("fieldName")} description="Field name used by annotator to get result" />
+        <EnumSelect
+          label="Fuziness"
+          dict={Fuzziness}
+          {...form.inputProps("fuziness")}
+          description="Fuzziness used by annotator to search result"
+        />
+        <EnumSelect
+          label="Type"
+          dict={AnnotatorType}
+          {...form.inputProps("type")}
+          description="Annotator type. Read documentation for more information"
+        />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <NumberInput label="Size" {...form.inputProps("size")} description="Size for result retrieved by annotator"/>
+        <NumberInput label="Size" {...form.inputProps("size")} description="Size for result retrieved by annotator" />
         {annotatorId !== "new" && (
           <ClayForm
             onSubmit={(event) => {
@@ -143,9 +151,7 @@ export function Annotator() {
           </ClayForm>
         )}
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {annotatorId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={annotatorId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

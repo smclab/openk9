@@ -1,15 +1,12 @@
 import React from "react";
 import ClayForm from "@clayui/form";
 import ClayLayout from "@clayui/layout";
-import ClayButton from "@clayui/button";
-import { BooleanInput, CronInput, fromFieldValidators, StringListInput, TextInput, useForm } from "../components/Form";
-import { gql } from "@apollo/client";
+import { BooleanInput, CronInput, CustomButtom, fromFieldValidators, StringListInput, TextInput, useForm } from "../components/Form";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 import { useNavigate } from "react-router-dom";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
-import { ClassNameButton } from "../App";
 
 export function SiteMapWizard() {
   const navigate = useNavigate();
@@ -77,9 +74,7 @@ export function SiteMapWizard() {
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
         <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            Create
-          </ClayButton>
+          <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

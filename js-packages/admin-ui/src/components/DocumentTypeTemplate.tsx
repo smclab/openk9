@@ -2,15 +2,13 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import { TemplateType, useCreateOrUpdateDocumentTypeTemplateMutation, useDocumentTypeTemplateQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, CustomButtom } from "./Form";
 import { CodeInput } from "./CodeInput";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { DocumentTypeTemplatesQuery } from "./DocumentTypeTemplates";
 import { transform, availablePresets } from "@babel/standalone";
-import { ClassNameButton } from "../App";
 
 const DocumentTypeTemplateQuery = gql`
   query DocumentTypeTemplate($id: ID!) {
@@ -145,9 +143,11 @@ export function DocumentTypeTemplate() {
           }
         })()}
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {documentTypeTemplateId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom
+            nameButton={documentTypeTemplateId === "new" ? "Create" : "Update"}
+            canSubmit={!form.canSubmit}
+            typeSelectet="submit"
+          />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

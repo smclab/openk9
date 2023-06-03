@@ -2,7 +2,6 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm, { ClaySelect, ClayToggle } from "@clayui/form";
-import ClayButton from "@clayui/button";
 import {
   PluginDriverType,
   useBindPluginDriverToDataSourceMutation,
@@ -10,12 +9,21 @@ import {
   usePluginDriverByNameQuery,
   usePluginDriverQuery,
 } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, KeyValue, InformationField, StyleToggle } from "./Form";
+import {
+  useForm,
+  fromFieldValidators,
+  TextInput,
+  TextArea,
+  EnumSelect,
+  KeyValue,
+  InformationField,
+  StyleToggle,
+  CustomButtom,
+} from "./Form";
 import { PluginDriversQuery } from "./PluginDrivers";
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import ClayPanel from "@clayui/panel";
-import { ClassNameButton } from "../App";
 
 const PluginDriverQuery = gql`
   query PluginDriver($id: ID!) {
@@ -230,9 +238,7 @@ export function PluginDriver() {
           }
         })}
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            {pluginDriverId === "new" ? "Create" : "Update"}
-          </ClayButton>
+          <CustomButtom nameButton={pluginDriverId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>
