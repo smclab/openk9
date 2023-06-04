@@ -82,14 +82,14 @@ export function DashBoard() {
 
   return (
     <ClayLayout.ContainerFluid view>
-      <ClayCard>
-        <ClayCard.Body>
+      <div className="card">
+        <div className="card-body">
           <div style={{ display: "flex", gap: "23px", marginTop: "25px" }}>
             <Presentation />
             <WizardList />
           </div>
-        </ClayCard.Body>
-      </ClayCard>
+        </div>
+      </div>
       <DetailGraph
         dataGraph={data}
         secondDataGraph={dataTwo}
@@ -101,11 +101,11 @@ export function DashBoard() {
         thirdCardLabel={"store size"}
         thirdCardUnity={"byte"}
       />
-      <ClayCard>
-        <ClayCardBody>
+      <div className="card">
+        <div className="card-body">
           <DashBoardTable />
-        </ClayCardBody>
-      </ClayCard>
+        </div>
+      </div>
     </ClayLayout.ContainerFluid>
   );
 }
@@ -124,22 +124,25 @@ function Presentation() {
 
 function Card({ title, subTitle, description }: { title: string; description: string; subTitle: string }) {
   return (
-    <ClayCard style={{ marginLeft: "10px", maxHeight: "307px" }}>
-      <ClayCard.Body>
-        <ClayCard.Description
-          displayType="title"
+    <div className="card">
+      <div className="card-body">
+        <h5
+          className="card-title"
           style={{ margin: "16px", fontSize: "1.5rem", fontWeight: "bold", marginTop: "1rem", marginLeft: "1rem" }}
         >
           {title}
-        </ClayCard.Description>
-        <ClayCard.Description displayType="subtitle" style={{ margin: "16px", fontSize: "20px", lineHeight: "28px", fontWeight: "600" }}>
+        </h5>
+        <h6
+          className="card-subtitle"
+          style={{ margin: "16px", fontSize: "1.5rem", fontWeight: "bold", marginTop: "1rem", marginLeft: "1rem" }}
+        >
           {subTitle}
-        </ClayCard.Description>
-        <ClayCard.Description truncate={false} displayType="text" style={{ margin: "16px" }}>
+        </h6>
+        <div className="card-text" style={{ margin: "16px" }}>
           {description}
-        </ClayCard.Description>
-      </ClayCard.Body>
-    </ClayCard>
+        </div>
+      </div>
+    </div>
   );
 }
 

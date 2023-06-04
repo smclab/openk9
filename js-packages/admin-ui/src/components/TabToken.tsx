@@ -56,7 +56,7 @@ gql`
 `;
 
 export function TabToken() {
-  const { tabId, tabTokenId = "new" } = useParams();
+  const { tabTokenId = "new" } = useParams();
   const navigate = useNavigate();
   const showToast = useToast();
   const tabTokenTabQuery = useTabTokenTabQuery({

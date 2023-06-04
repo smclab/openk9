@@ -17,7 +17,6 @@ import {
 import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { TokenFiltersQuery } from "./TokenFilters";
-import { ClassNameButton } from "../App";
 
 const TokenFilterQuery = gql`
   query TokenFilter($id: ID!) {
