@@ -13,8 +13,8 @@ import {
   CreateFieldDinamically,
   MainTitle,
   CustomButtom,
+  ContainerFluid,
 } from "./Form";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { TokenFiltersQuery } from "./TokenFilters";
 
@@ -117,7 +117,7 @@ export function TokenFilter() {
   }
   return (
     <>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         {tokenFilterId !== "new" && <MainTitle title="Attributes" />}
         <ClayForm
           className="sheet"
@@ -141,7 +141,7 @@ export function TokenFilter() {
             <CustomButtom nameButton={tokenFilterId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
         </ClayForm>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </>
   );
 }

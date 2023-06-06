@@ -2,9 +2,18 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSearchConfigQuery, useCreateOrUpdateSearchConfigMutation } from "../graphql-generated";
-import { BooleanInput, CustomButtom, fromFieldValidators, MainTitle, NumberInput, TextArea, TextInput, useForm } from "./Form";
+import {
+  BooleanInput,
+  ContainerFluid,
+  CustomButtom,
+  fromFieldValidators,
+  MainTitle,
+  NumberInput,
+  TextArea,
+  TextInput,
+  useForm,
+} from "./Form";
 import ClayForm from "@clayui/form";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { SearchConfigsQuery } from "./SearchConfigs";
 
@@ -96,7 +105,7 @@ export function SearchConfig() {
   if (!searchConfigId) return null;
   return (
     <React.Fragment>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         {searchConfigId !== "new" && <MainTitle title="Attributes" />}
         <ClayForm
           className="sheet"
@@ -127,7 +136,7 @@ export function SearchConfig() {
             <CustomButtom nameButton={searchConfigId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
         </ClayForm>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

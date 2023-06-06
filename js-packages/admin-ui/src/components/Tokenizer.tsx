@@ -13,8 +13,8 @@ import {
   MultiSelectForDinamicFields,
   MainTitle,
   CustomButtom,
+  ContainerFluid,
 } from "./Form";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { TokenizersQuery } from "./Tokenizers";
 
@@ -114,7 +114,7 @@ export function Tokenizer() {
     return <div></div>;
   }
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       {tokenizerId !== "new" && <MainTitle title="Attributes" />}
       <ClayForm
         className="sheet"
@@ -138,7 +138,7 @@ export function Tokenizer() {
           <CustomButtom nameButton={tokenizerId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 

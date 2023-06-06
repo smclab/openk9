@@ -12,8 +12,8 @@ import {
   MultiSelectForDinamicFields,
   CreateFieldDinamically,
   CustomButtom,
+  ContainerFluid,
 } from "./Form";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { CharFiltersQuery } from "./CharFilters";
 
@@ -113,7 +113,7 @@ export function CharFilter() {
     } catch (error) {}
   }
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -136,7 +136,7 @@ export function CharFilter() {
           <CustomButtom nameButton={charFilterId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 

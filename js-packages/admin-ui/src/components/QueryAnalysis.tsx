@@ -4,9 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import { useCreateOrUpdateQueryAnalysisMutation, useQueryAnalysisQuery } from "../graphql-generated";
 import { QueryAnalysesQuery } from "./QueryAnalyses";
-import { useForm, fromFieldValidators, TextInput, TextArea, MainTitle, CustomButtom } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, MainTitle, CustomButtom, ContainerFluid } from "./Form";
 import { CodeInput } from "./CodeInput";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 
 const QueryAnalysisQuery = gql`
@@ -73,7 +72,7 @@ export function QueryAnalysis() {
     getValidationMessages: fromFieldValidators(createOrUpdateQueryAnalysisMutation.data?.queryAnalysis?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       {queryAnalysisId !== "new" && <MainTitle title="Query Analysis" />}
       <ClayForm
         className="sheet"
@@ -89,6 +88,6 @@ export function QueryAnalysis() {
           <CustomButtom nameButton={queryAnalysisId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }

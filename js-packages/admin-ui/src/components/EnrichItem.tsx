@@ -10,9 +10,8 @@ import {
   useEnrichItemQuery,
 } from "../graphql-generated";
 import { EnrichItemsQuery } from "./EnrichItems";
-import { CustomButtom, EnumSelect, fromFieldValidators, NumberInput, TextArea, TextInput, useForm } from "./Form";
+import { ContainerFluid, CustomButtom, EnumSelect, fromFieldValidators, NumberInput, TextArea, TextInput, useForm } from "./Form";
 import { CodeInput } from "./CodeInput";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { AssociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQuery } from "./EnrichPipelineEnrichItems";
 
@@ -127,7 +126,7 @@ export function EnrichItem() {
     getValidationMessages: fromFieldValidators(createOrUpdateEnrichItemMutation.data?.enrichItem?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -153,6 +152,6 @@ export function EnrichItem() {
           <CustomButtom nameButton={enrichItemId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }

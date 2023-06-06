@@ -1,6 +1,5 @@
 import Button from "@clayui/button";
 import { useModal } from "@clayui/core";
-import ClayLayout from "@clayui/layout";
 import ClayToolbar from "@clayui/toolbar";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
@@ -8,6 +7,7 @@ import { useRestClient } from "./queryClient";
 import { useToast } from "./ToastProvider";
 import React from "react";
 import { ClassNameButton } from "../App";
+import { ContainerFluid } from "./Form";
 
 export function DocumentTypeMappings() {
   const restClient = useRestClient();
@@ -27,7 +27,7 @@ export function DocumentTypeMappings() {
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluid>
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand></ClayToolbar.Item>
             <ClayToolbar.Item>
@@ -40,16 +40,16 @@ export function DocumentTypeMappings() {
               </Button>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluid>
       </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <textarea
           className="sheet form-control"
           style={{ height: "80vh" }}
           readOnly
           value={JSON.stringify(documentTypeMappingsQuery.data, null, 2)}
         />
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

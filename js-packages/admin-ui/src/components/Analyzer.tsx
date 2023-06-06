@@ -21,8 +21,8 @@ import {
   CreateDinamicallyFieldWithout,
   MainTitle,
   CustomButtom,
+  ContainerFluid,
 } from "./Form";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { AnalyzersQuery } from "./Analyzers";
 import { ClassNameButton } from "../App";
@@ -157,7 +157,7 @@ export function Analyzer() {
           </div>
         </div>
       )}
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         {analyzerId !== "new" && <MainTitle title="Attributes" />}
         <ClayForm
           className="sheet"
@@ -207,7 +207,7 @@ export function Analyzer() {
             <CustomButtom nameButton={analyzerId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
         </ClayForm>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </>
   );
 }

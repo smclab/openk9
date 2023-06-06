@@ -3,7 +3,6 @@ import { QueryResult } from "@apollo/client";
 import ClayTable from "@clayui/table";
 import { TableVirtuoso } from "react-virtuoso";
 import ClayToolbar from "@clayui/toolbar";
-import ClayLayout from "@clayui/layout";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import useDebounced from "./useDebounced";
 import { ClayDropDownWithItems } from "@clayui/drop-down";
@@ -11,7 +10,7 @@ import { Link } from "react-router-dom";
 import { ClayCheckbox } from "@clayui/form";
 import useMap from "./useMap";
 import { ClayToggle } from "@clayui/form";
-import { EmptySpace, MainTitle, StyleToggle } from "./Form";
+import { ContainerFluid, ContainerFluidWithoutView, EmptySpace, MainTitle, StyleToggle } from "./Form";
 import { ClassNameButton } from "../App";
 import ClayIcon from "@clayui/icon";
 
@@ -106,7 +105,7 @@ export function TableWithSubFields<
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluidWithoutView>
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand>
               <div style={{ position: "relative" }}>
@@ -158,9 +157,9 @@ export function TableWithSubFields<
               </React.Fragment>
             )}
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluidWithoutView>
       </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         {<MainTitle title={label} />}
         <ClayTable className="table table-list" style={{ tableLayout: "fixed" }}>
           <ClayTable.Head>
@@ -286,7 +285,7 @@ export function TableWithSubFields<
             })}
           </ClayTable.Body>
         </ClayTable>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }
@@ -335,7 +334,7 @@ export function Table<
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluidWithoutView>
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand>
               <div style={{ position: "relative" }}>
@@ -392,9 +391,9 @@ export function Table<
               </React.Fragment>
             )}
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluidWithoutView>
       </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         {label && <MainTitle title={label} />}
         <table hidden={!showSelectedItemsTable} className="table table-list" style={{ tableLayout: "fixed" }}>
           <thead>
@@ -524,7 +523,7 @@ export function Table<
             }
           }}
         />
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

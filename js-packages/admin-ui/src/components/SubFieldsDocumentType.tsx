@@ -3,8 +3,18 @@ import ClayForm from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FieldType, useCreateOrUpdateDocumentTypeSubFieldsMutation, useDocumentTypeFieldQuery } from "../graphql-generated";
-import { BooleanInput, CustomButtom, EnumSelect, fromFieldValidators, NumberInput, TextArea, TextInput, useForm } from "./Form";
-import ClayLayout from "@clayui/layout";
+import {
+  BooleanInput,
+  ContainerFluid,
+  ContainerFluidWithoutView,
+  CustomButtom,
+  EnumSelect,
+  fromFieldValidators,
+  NumberInput,
+  TextArea,
+  TextInput,
+  useForm,
+} from "./Form";
 import { ClayButtonWithIcon } from "@clayui/button";
 import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
@@ -173,7 +183,7 @@ export function SubFieldsDocumentType() {
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluidWithoutView>
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/document-types/${documentTypeId}/document-type-fields`}>
@@ -181,9 +191,9 @@ export function SubFieldsDocumentType() {
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluidWithoutView>
       </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <ClayForm
           className="sheet"
           onSubmit={(event) => {
@@ -204,7 +214,7 @@ export function SubFieldsDocumentType() {
             <CustomButtom nameButton={subFieldID === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
         </ClayForm>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

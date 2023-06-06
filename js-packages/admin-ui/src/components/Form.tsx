@@ -7,7 +7,6 @@ import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import ClayList from "@clayui/list";
 import { Virtuoso, Components as VirtuosoComponents, TableVirtuoso } from "react-virtuoso";
-import ClayLayout from "@clayui/layout";
 import ClayToolbar from "@clayui/toolbar";
 import ClayPanel from "@clayui/panel";
 import ClayMultiSelect from "@clayui/multi-select";
@@ -669,7 +668,7 @@ export function AssociatedEntities<Q>({
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluidWithoutView>
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand>
               <ClayToolbar.Input
@@ -688,10 +687,10 @@ export function AssociatedEntities<Q>({
               </ClayButton>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluidWithoutView>
       </ClayToolbar>
 
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         {(field(associatedListQuery.data)?.edges?.length ?? 0) !== 0 && <MainTitle title={label} />}
         {(field(associatedListQuery.data)?.edges?.length ?? 0) === 0 && !associatedListQuery.loading && (
           <EmptySpace description="There are no matching associated entities" title="No entities" extraClass="c-empty-state-animation" />
@@ -745,7 +744,7 @@ export function AssociatedEntities<Q>({
             }
           }}
         />
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
       {open && (
         <ClayModal observer={observer}>
           <ClayModal.Header>{label}</ClayModal.Header>
@@ -901,7 +900,7 @@ export function AssociatedEntitiesWithSelect<Q>({
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluidWithoutView>
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand>
               <ClayToolbar.Input
@@ -921,9 +920,9 @@ export function AssociatedEntitiesWithSelect<Q>({
               />
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluidWithoutView>
       </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         {(field(associatedListQuery.data)?.edges?.length ?? 0) !== 0 && <MainTitle title={label} />}
         <TableVirtuoso
           totalCount={field(associatedListQuery.data)?.edges?.length}
@@ -1009,7 +1008,7 @@ export function AssociatedEntitiesWithSelect<Q>({
             }
           }}
         />
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
       {open && (
         <ClayModal observer={observer}>
           <ClayModal.Header>{label}</ClayModal.Header>
@@ -1667,6 +1666,14 @@ export function EmptySpace({ title, description, extraClass = "" }: { title: str
       <div className="empty-state-description">{description}</div>
     </div>
   );
+}
+
+export function ContainerFluid({ children }: { children: React.ReactNode }) {
+  return <div className="container-fluid container-view ">{children}</div>;
+}
+
+export function ContainerFluidWithoutView({ children }: { children: React.ReactNode }) {
+  return <div className="container-fluid  ">{children}</div>;
 }
 
 export function DropDownCustom() {

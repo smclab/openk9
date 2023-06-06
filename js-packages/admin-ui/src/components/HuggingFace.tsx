@@ -1,5 +1,4 @@
 import ClayForm, { ClaySelect } from "@clayui/form";
-import ClayLayout from "@clayui/layout";
 import React from "react";
 import { Spacy } from "../wizards/Logo/Spacy";
 import { Button, useModal } from "@clayui/core";
@@ -9,7 +8,7 @@ import { Flair } from "../wizards/Logo/Flair";
 import { Stanza } from "../wizards/Logo/Stanza";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./ToastProvider";
-import { CustomButtom, SimpleModal } from "./Form";
+import { ContainerFluid, CustomButtom, SimpleModal } from "./Form";
 
 export function HuggingFace() {
   const [name, setName] = React.useState("");
@@ -54,7 +53,7 @@ export function HuggingFace() {
         />
       )}
 
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <ClayForm
           className="sheet"
           onSubmit={(event) => {
@@ -209,7 +208,7 @@ export function HuggingFace() {
             <CustomButtom nameButton={"Deploy"} typeSelectet="submit" />
           </div>
         </ClayForm>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

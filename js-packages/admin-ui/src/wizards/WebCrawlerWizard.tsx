@@ -1,7 +1,15 @@
 import React from "react";
 import ClayForm from "@clayui/form";
-import ClayLayout from "@clayui/layout";
-import { BooleanInput, CronInput, CustomButtom, fromFieldValidators, StringListInput, TextInput, useForm } from "../components/Form";
+import {
+  BooleanInput,
+  ContainerFluid,
+  CronInput,
+  CustomButtom,
+  fromFieldValidators,
+  StringListInput,
+  TextInput,
+  useForm,
+} from "../components/Form";
 import { gql } from "@apollo/client";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
@@ -74,7 +82,7 @@ export function WebCrawlerWizard() {
     getValidationMessages: fromFieldValidators(createWebCrawlerDataSourceMutation.data?.datasource?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -90,6 +98,6 @@ export function WebCrawlerWizard() {
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }

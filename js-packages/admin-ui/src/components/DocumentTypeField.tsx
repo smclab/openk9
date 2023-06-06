@@ -13,6 +13,7 @@ import {
 } from "../graphql-generated";
 import {
   BooleanInput,
+  ContainerFluid,
   CustomButtom,
   EnumSelect,
   fromFieldValidators,
@@ -22,7 +23,6 @@ import {
   TextInput,
   useForm,
 } from "./Form";
-import ClayLayout from "@clayui/layout";
 import { ClayButtonWithIcon } from "@clayui/button";
 import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
@@ -137,7 +137,7 @@ export function DocumentTypeField() {
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluid>
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/document-types/${documentTypeId}/document-type-fields`}>
@@ -145,9 +145,9 @@ export function DocumentTypeField() {
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluid>
       </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <ClayForm
           className="sheet"
           onSubmit={(event) => {
@@ -209,7 +209,7 @@ export function DocumentTypeField() {
             />
           </div>
         </ClayForm>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

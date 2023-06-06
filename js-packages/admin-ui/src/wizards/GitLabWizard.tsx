@@ -1,8 +1,7 @@
 import React from "react";
 import ClayForm from "@clayui/form";
-import ClayLayout from "@clayui/layout";
 import ClayButton from "@clayui/button";
-import { BooleanInput, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
+import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 import { useNavigate } from "react-router-dom";
@@ -60,7 +59,7 @@ export function GitLabWizard() {
     getValidationMessages: fromFieldValidators(createWebCrawlerDataSourceMutation.data?.datasource?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -76,6 +75,6 @@ export function GitLabWizard() {
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }

@@ -2,8 +2,17 @@ import { gql } from "@apollo/client";
 import ClayForm from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BooleanInput, CustomButtom, EnumSelect, fromFieldValidators, SearchSelect, TextArea, TextInput, useForm } from "./Form";
-import ClayLayout from "@clayui/layout";
+import {
+  BooleanInput,
+  ContainerFluid,
+  CustomButtom,
+  EnumSelect,
+  fromFieldValidators,
+  SearchSelect,
+  TextArea,
+  TextInput,
+  useForm,
+} from "./Form";
 import { TabTokens } from "./TabTokens";
 import {
   TokenType,
@@ -102,7 +111,7 @@ export function TabToken() {
   });
   return (
     <React.Fragment>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <ClayForm
           className="sheet"
           onSubmit={(event) => {
@@ -142,7 +151,7 @@ export function TabToken() {
             <CustomButtom nameButton={tabTokenId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
         </ClayForm>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

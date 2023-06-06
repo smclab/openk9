@@ -3,8 +3,7 @@ import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import { useCreateOrUpdateTabMutation, useTabQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, MainTitle, CustomButtom } from "./Form";
-import ClayLayout from "@clayui/layout";
+import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, MainTitle, CustomButtom, ContainerFluid } from "./Form";
 import { TabsQuery } from "./Tabs";
 import { useToast } from "./ToastProvider";
 
@@ -74,7 +73,7 @@ export function Tab() {
     getValidationMessages: fromFieldValidators(createOrUpdateTabMutation.data?.tab?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       {tabId !== "new" && <MainTitle title="Attributes" />}
       <ClayForm
         className="sheet"
@@ -95,6 +94,6 @@ export function Tab() {
           <CustomButtom nameButton={tabId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }

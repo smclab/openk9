@@ -1,14 +1,14 @@
 import React from "react";
-import ClayLayout from "@clayui/layout";
 import { Link } from "react-router-dom";
 import ClayLabel from "@clayui/label";
 import ClayCard from "@clayui/card";
+import { ContainerFluid } from "./Form";
 
 export function PodsStatus() {
   const status = usePodsStatus();
   const data = React.useMemo(() => Object.values(status).sort((a, b) => a.serviceName.localeCompare(b.serviceName)), [status]);
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <div className="row">
         {data.map(({ podName, serviceName, status }) => {
           return (
@@ -34,7 +34,7 @@ export function PodsStatus() {
           );
         })}
       </div>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 

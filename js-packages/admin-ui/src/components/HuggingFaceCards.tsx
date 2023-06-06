@@ -1,5 +1,4 @@
 import ClayCard from "@clayui/card";
-import ClayLayout from "@clayui/layout";
 import { Link, useNavigate } from "react-router-dom";
 import React from "react";
 import ClayToolbar from "@clayui/toolbar";
@@ -22,7 +21,7 @@ import { Translation } from "../wizards/Logo/Traslation";
 import { AudioClassification } from "../wizards/Logo/AudioClassification";
 import { ClassNameButton } from "../App";
 import { useToast } from "./ToastProvider";
-import { SimpleModal } from "./Form";
+import { ContainerFluid, ContainerFluidWithoutView, SimpleModal } from "./Form";
 
 export function HuggingFaceCard() {
   const status = usePodsStatus();
@@ -60,7 +59,7 @@ export function HuggingFaceCard() {
         />
       )}
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluidWithoutView>
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand></ClayToolbar.Item>
             <ClayToolbar.Item>
@@ -69,10 +68,10 @@ export function HuggingFaceCard() {
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluidWithoutView>
       </ClayToolbar>
       {data.length === 0 && <EmptyPage message={" Empty Configuration. Create one"} link={"configure-hugging-face"} />}
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <div className="row">
           {data.map(({ name, task, library, status }) => {
             return (
@@ -158,7 +157,7 @@ export function HuggingFaceCard() {
             );
           })}
         </div>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

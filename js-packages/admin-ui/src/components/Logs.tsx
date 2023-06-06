@@ -1,7 +1,7 @@
 import React from "react";
-import ClayLayout from "@clayui/layout";
 import { useParams } from "react-router-dom";
 import { TableVirtuoso } from "react-virtuoso";
+import { ContainerFluid } from "./Form";
 
 export function Logs() {
   const { podName } = useParams();
@@ -15,7 +15,7 @@ export function Logs() {
     return () => clearTimeout(timeoutId);
   }, []);
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <div className="text-light bg-dark text-3 text-monospace">
         <TableVirtuoso
           style={{ height: "80vh" }}
@@ -45,7 +45,7 @@ export function Logs() {
           }}
         />
       </div>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 

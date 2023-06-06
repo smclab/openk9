@@ -10,9 +10,8 @@ import {
   useDocumentTypeTemplateValueQuery,
   useUnbindDocumentTypeTemplateFromDocumentTypeMutation,
 } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle, CustomButtom } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle, CustomButtom, ContainerFluid } from "./Form";
 import { DocumentTypesQuery } from "./DocumentTypes";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 
 const DocumentTypeQuery = gql`
@@ -79,7 +78,7 @@ export function DocumentType() {
     getValidationMessages: fromFieldValidators(createOrUpdateDocumentTypeMutation.data?.docType?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       {documentTypeId !== "new" && <MainTitle title="Attributes" />}
       <ClayForm
         className="sheet"
@@ -114,7 +113,7 @@ export function DocumentType() {
           <CustomButtom nameButton={documentTypeId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 

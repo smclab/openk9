@@ -1,5 +1,4 @@
 import ClayIcon from "@clayui/icon";
-import ClayLayout from "@clayui/layout";
 import ClayList from "@clayui/list";
 import { Link } from "react-router-dom";
 import React from "react";
@@ -7,6 +6,7 @@ import { gql } from "@apollo/client";
 import { useDataIndexInformationQuery } from "../graphql-generated";
 import { DashBoardTable } from "./Table";
 import { DetailGraph } from "./Graph";
+import { ContainerFluid } from "./Form";
 
 const DataIndexInformation = gql`
   query dataIndexInformation {
@@ -79,7 +79,7 @@ export function DashBoard() {
   const byteCount = recoveryByteCount?.flat().reduce((acc, singleIndex) => acc + parseFloat(singleIndex ?? "0"), 0);
 
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <div className="card">
         <div className="card-body">
           <div style={{ display: "flex", gap: "23px", marginTop: "25px" }}>
@@ -104,7 +104,7 @@ export function DashBoard() {
           <DashBoardTable />
         </div>
       </div>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 

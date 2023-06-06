@@ -1,11 +1,11 @@
 import Button from "@clayui/button";
 import { useModal } from "@clayui/core";
-import ClayLayout from "@clayui/layout";
 import ClayToolbar from "@clayui/toolbar";
 import { useLocation } from "react-router-dom";
 import { useToast } from "./ToastProvider";
 import React from "react";
 import { ClassNameButton } from "../App";
+import { ContainerFluid, ContainerFluidWithoutView } from "./Form";
 
 export function DocumentTypesSettings() {
   const showToast = useToast();
@@ -22,7 +22,7 @@ export function DocumentTypesSettings() {
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluidWithoutView>
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand></ClayToolbar.Item>
             <ClayToolbar.Item>
@@ -31,11 +31,11 @@ export function DocumentTypesSettings() {
               </Button>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluidWithoutView>
       </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <textarea className="sheet form-control" style={{ height: "80vh" }} readOnly value={JSON.stringify(data, null, 2)} />
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

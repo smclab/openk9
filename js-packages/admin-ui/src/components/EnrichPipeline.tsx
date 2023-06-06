@@ -4,8 +4,7 @@ import ClayForm from "@clayui/form";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateEnrichPipelineMutation, useEnrichPipelineQuery } from "../graphql-generated";
 import { EnrichPipelinesQuery } from "./EnrichPipelines";
-import { CustomButtom, fromFieldValidators, TextArea, TextInput, useForm } from "./Form";
-import ClayLayout from "@clayui/layout";
+import { ContainerFluid, CustomButtom, fromFieldValidators, TextArea, TextInput, useForm } from "./Form";
 import { useToast } from "./ToastProvider";
 
 const EnrichPipelineQuery = gql`
@@ -70,7 +69,7 @@ export function EnrichPipeline() {
     getValidationMessages: fromFieldValidators(createOrUpdateEnrichPipelineMutation.data?.enrichPipeline?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -84,6 +83,6 @@ export function EnrichPipeline() {
           <CustomButtom nameButton={enrichPipelineId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }

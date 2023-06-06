@@ -12,9 +12,18 @@ import {
   useDocTypeFieldValueQuery,
   useUnbindDocTypeFieldToDataSourceMutation,
 } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, NumberInput, SearchSelect, CustomButtom } from "./Form";
+import {
+  useForm,
+  fromFieldValidators,
+  TextInput,
+  TextArea,
+  EnumSelect,
+  NumberInput,
+  SearchSelect,
+  CustomButtom,
+  ContainerFluid,
+} from "./Form";
 import { AnnotatorsQuery } from "./Annotators";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 
 const AnnotatorQuery = gql`
@@ -104,7 +113,7 @@ export function Annotator() {
     getValidationMessages: fromFieldValidators(createOrUpdateannotatorMutation.data?.annotator?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -154,7 +163,7 @@ export function Annotator() {
           <CustomButtom nameButton={annotatorId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 gql`

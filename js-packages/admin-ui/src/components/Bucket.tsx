@@ -2,8 +2,17 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
-import { useForm, fromFieldValidators, TextInput, TextArea, SearchSelect, MainTitle, BooleanInput, CustomButtom } from "./Form";
-import ClayLayout from "@clayui/layout";
+import {
+  useForm,
+  fromFieldValidators,
+  TextInput,
+  TextArea,
+  SearchSelect,
+  MainTitle,
+  BooleanInput,
+  CustomButtom,
+  ContainerFluid,
+} from "./Form";
 import { useToast } from "./ToastProvider";
 import {
   useBindQueryAnalysisToBucketMutation,
@@ -99,7 +108,7 @@ export function Bucket() {
     getValidationMessages: fromFieldValidators(createOrUpdateBucketMutation.data?.bucket?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       {bucketId !== "new" && <MainTitle title="Attribute" />}
       <ClayForm
         className="sheet"
@@ -154,7 +163,7 @@ export function Bucket() {
           <CustomButtom nameButton={bucketId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 gql`

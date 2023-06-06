@@ -4,8 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import { useCreateOrUpdateRuleQueryMutation, useRuleQuery } from "../graphql-generated";
 import { RulesQuery } from "./Rules";
-import { useForm, fromFieldValidators, TextInput, TextArea, CustomButtom } from "./Form";
-import ClayLayout from "@clayui/layout";
+import { useForm, fromFieldValidators, TextInput, TextArea, CustomButtom, ContainerFluid } from "./Form";
 import { useToast } from "./ToastProvider";
 import { AddRuleToQueryAnalyses, QueryAnalysesRule, RemoveRuleFromQueryAnalyses } from "./QueryAnalysesRules";
 
@@ -75,7 +74,7 @@ export function Rule() {
     getValidationMessages: fromFieldValidators(createOrUpdateRuleMutation.data?.rule?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -91,6 +90,6 @@ export function Rule() {
           <CustomButtom nameButton={ruleId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }

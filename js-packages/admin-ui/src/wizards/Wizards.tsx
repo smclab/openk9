@@ -1,7 +1,5 @@
 import React, { ReactNode } from "react";
-import ClayCard from "@clayui/card";
 import ClayToolbar from "@clayui/toolbar";
-import ClayLayout from "@clayui/layout";
 import { ClayButtonWithIcon } from "@clayui/button";
 import ClayIcon from "@clayui/icon";
 import { Link } from "react-router-dom";
@@ -12,7 +10,7 @@ import { LiferayLogo } from "./Logo/LiferayLogo";
 import { DropBoxLogo } from "./Logo/DropBoxLogo";
 import { YouTubeLogo } from "./Logo/YouTubeLogo";
 import { ClassNameButton } from "../App";
-import { EmptySpace } from "../components/Form";
+import { ContainerFluid, ContainerFluidWithoutView, EmptySpace } from "../components/Form";
 
 const wizards = [
   {
@@ -89,7 +87,7 @@ export function Wizards() {
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluidWithoutView>
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand>
               <ClayToolbar.Input
@@ -103,9 +101,9 @@ export function Wizards() {
               <ClayButtonWithIcon aria-label="" className={ClassNameButton} symbol="plus" small />
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluidWithoutView>
       </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <div className="row">
           {fileterdWizards.map((wizard) => (
             <div key={wizard.path} className="col-sm-6 col-md-4 col-lg-3">
@@ -116,7 +114,7 @@ export function Wizards() {
         {fileterdWizards.length === 0 && (
           <EmptySpace description="There are no matching unassociated entities" title="No entities" extraClass="c-empty-state-animation" />
         )}
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

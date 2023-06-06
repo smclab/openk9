@@ -3,9 +3,18 @@ import ClayForm, { ClaySelect, ClayToggle } from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery } from "../graphql-generated";
-import { FormatString, fromFieldValidators, InformationField, KeyValue, StyleToggle, TextArea, TextInput, useForm } from "./Form";
+import {
+  ContainerFluid,
+  FormatString,
+  fromFieldValidators,
+  InformationField,
+  KeyValue,
+  StyleToggle,
+  TextArea,
+  TextInput,
+  useForm,
+} from "./Form";
 import ClayButton from "@clayui/button";
-import ClayLayout from "@clayui/layout";
 import { ClayButtonWithIcon } from "@clayui/button";
 import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
@@ -132,7 +141,7 @@ export function QueryParserConfig() {
   return (
     <React.Fragment>
       <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluid>
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/search-configs/${searchConfigId}/query-parsers`}>
@@ -140,9 +149,9 @@ export function QueryParserConfig() {
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluid>
       </ClayToolbar>
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <ClayForm
           className="sheet"
           onSubmit={(event) => {
@@ -307,7 +316,7 @@ export function QueryParserConfig() {
             </ClayButton>
           </div>
         </ClayForm>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

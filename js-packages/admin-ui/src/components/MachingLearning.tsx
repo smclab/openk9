@@ -1,14 +1,14 @@
-import ClayLayout from "@clayui/layout";
 import ClayButton from "@clayui/button";
 import React from "react";
 import { Link } from "react-router-dom";
 import { ClassNameButton } from "../App";
+import { ContainerFluid } from "./Form";
 
 export function MachingLearning() {
   return (
     <React.Fragment>
-      <ClayLayout.ContainerFluid view>
-        <ClayLayout.Row>
+      <ContainerFluid>
+        <div className="row">
           <Card
             title="Train your model"
             description="When working on a Machine learning project flexibility and reusability are very important to make your life easier while developing the solution. Find the best way to structure your project files can be difficult when you are a beginner or when the project becomes big. Sometime you may end up duplicate or rewrite some part of your project which is not professional as a Data Scientist or Machine learning Engineer."
@@ -21,8 +21,8 @@ export function MachingLearning() {
             link="hugging-face-view"
             nameButton="Configure your model"
           />
-        </ClayLayout.Row>
-      </ClayLayout.ContainerFluid>
+        </div>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

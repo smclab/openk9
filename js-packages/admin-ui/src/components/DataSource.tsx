@@ -17,12 +17,21 @@ import {
   useUnbindDataIndexToDataSourceMutation,
   useUnbindEnrichPipelineToDataSourceMutation,
 } from "../graphql-generated";
-import { BooleanInput, CronInput, fromFieldValidators, SearchSelect, SimpleModal, TextArea, TextInput, useForm } from "./Form";
+import {
+  BooleanInput,
+  ContainerFluid,
+  CronInput,
+  fromFieldValidators,
+  SearchSelect,
+  SimpleModal,
+  TextArea,
+  TextInput,
+  useForm,
+} from "./Form";
 import { CodeInput } from "./CodeInput";
 import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { DataSourcesQuery } from "./DataSources";
-import ClayLayout from "@clayui/layout";
 import ClayToolbar from "@clayui/toolbar";
 import { useRestClient } from "./queryClient";
 import { useMutation } from "@tanstack/react-query";
@@ -213,7 +222,7 @@ export function DataSource() {
       )}
       {datasourceId !== "new" && (
         <ClayToolbar light>
-          <ClayLayout.ContainerFluid>
+          <ContainerFluid>
             <ClayToolbar.Nav className="justify-content-end">
               <ClayToolbar.Item>
                 <ClayButton.Group>
@@ -237,10 +246,10 @@ export function DataSource() {
                 </ClayButton.Group>
               </ClayToolbar.Item>
             </ClayToolbar.Nav>
-          </ClayLayout.ContainerFluid>
+          </ContainerFluid>
         </ClayToolbar>
       )}
-      <ClayLayout.ContainerFluid view>
+      <ContainerFluid>
         <ClayForm
           className="sheet"
           onSubmit={(event) => {
@@ -313,7 +322,7 @@ export function DataSource() {
             </ClayButton>
           </div>
         </ClayForm>
-      </ClayLayout.ContainerFluid>
+      </ContainerFluid>
     </React.Fragment>
   );
 }

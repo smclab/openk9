@@ -3,9 +3,8 @@ import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import { TemplateType, useCreateOrUpdateDocumentTypeTemplateMutation, useDocumentTypeTemplateQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, CustomButtom } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, CustomButtom, ContainerFluid } from "./Form";
 import { CodeInput } from "./CodeInput";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { DocumentTypeTemplatesQuery } from "./DocumentTypeTemplates";
 import { transform, availablePresets } from "@babel/standalone";
@@ -105,7 +104,7 @@ export function DocumentTypeTemplate() {
     getValidationMessages: fromFieldValidators(createOrUpdateDocumentTypeTempalteMutation.data?.docTypeTemplate?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -150,7 +149,7 @@ export function DocumentTypeTemplate() {
           />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 

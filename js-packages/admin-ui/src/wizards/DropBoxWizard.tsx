@@ -1,15 +1,13 @@
 import React from "react";
 import ClayForm from "@clayui/form";
-import ClayLayout from "@clayui/layout";
-import ClayButton from "@clayui/button";
-import { BooleanInput, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
+import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
 import { gql } from "@apollo/client";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useNavigate } from "react-router-dom";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
-import { ClassNameButton } from "../App";
+
 gql`
   mutation CreateSitemapDataSource(
     $name: String!
@@ -81,7 +79,7 @@ export function DropBoxWizard() {
     getValidationMessages: fromFieldValidators(createWebCrawlerDataSourceMutation.data?.datasource?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -97,6 +95,6 @@ export function DropBoxWizard() {
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }

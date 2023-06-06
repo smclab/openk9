@@ -3,9 +3,8 @@ import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import ClayForm from "@clayui/form";
 import { useCreateOrUpdateSuggestionCategoryMutation, useSuggestionCategoryQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, BooleanInput, CustomButtom } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, BooleanInput, CustomButtom, ContainerFluid } from "./Form";
 import { SuggestionCategoriesQuery } from "./SuggestionCategories";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 
 const SuggestionCategoryQuery = gql`
@@ -79,7 +78,7 @@ export function SuggestionCategory() {
     getValidationMessages: fromFieldValidators(createOrUpdateSuggestionCategoryMutation.data?.suggestionCategory?.fieldValidators),
   });
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -108,6 +107,6 @@ export function SuggestionCategory() {
           />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }

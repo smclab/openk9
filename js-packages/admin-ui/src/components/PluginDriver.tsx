@@ -19,9 +19,9 @@ import {
   InformationField,
   StyleToggle,
   CustomButtom,
+  ContainerFluid,
 } from "./Form";
 import { PluginDriversQuery } from "./PluginDrivers";
-import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import ClayPanel from "@clayui/panel";
 
@@ -128,7 +128,7 @@ export function PluginDriver() {
     PluginDriverOptions[0].visible = "" + true;
   }
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <ClayForm
         className="sheet"
         onSubmit={(event) => {
@@ -241,7 +241,7 @@ export function PluginDriver() {
           <CustomButtom nameButton={pluginDriverId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 

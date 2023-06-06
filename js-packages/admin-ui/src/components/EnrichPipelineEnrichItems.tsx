@@ -1,7 +1,6 @@
 import { ClayButtonWithIcon } from "@clayui/button";
 import { ClayDropDownWithItems } from "@clayui/drop-down";
 import ClayIcon from "@clayui/icon";
-import ClayLayout from "@clayui/layout";
 import ClayToolbar from "@clayui/toolbar";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -19,7 +18,7 @@ import ClayModal, { useModal } from "@clayui/modal";
 import ClayForm, { ClayInput } from "@clayui/form";
 import useDebounced from "./useDebounced";
 import { ClassNameButton } from "../App";
-import { EmptySpace } from "./Form";
+import { ContainerFluidWithoutView, EmptySpace } from "./Form";
 
 export const AssociatedEnrichPipelineEnrichItemsQuery = gql`
   query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {
@@ -141,9 +140,9 @@ export function EnrichPipelineEnrichItems() {
   const canAct = !addMutation.loading && !removeMutation.loading && !sortMutation.loading;
   if (!enrichPipelineId || enrichPipelineId === "new") return null;
   return (
-    <ClayLayout.ContainerFluid>
+    <ContainerFluidWithoutView>
       <ClayToolbar>
-        <ClayLayout.ContainerFluid>
+        <ContainerFluidWithoutView>
           <ClayToolbar.Nav>
             <ClayToolbar.Item className="text-left" expand>
               <ClayToolbar.Section>
@@ -162,7 +161,7 @@ export function EnrichPipelineEnrichItems() {
               />
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
+        </ContainerFluidWithoutView>
       </ClayToolbar>
       <ul
         className="list-group show-quick-actions-on-hover flex-grow-1"
@@ -385,7 +384,7 @@ export function EnrichPipelineEnrichItems() {
           </ClayModal.Body>
         </ClayModal>
       )}
-    </ClayLayout.ContainerFluid>
+    </ContainerFluidWithoutView>
   );
 }
 

@@ -1,6 +1,5 @@
 import React from "react";
 import { gql } from "@apollo/client";
-import ClayLayout from "@clayui/layout";
 import { EventSortable, useMonitoringEventsQuery, useMonitoringEventDataQuery } from "../graphql-generated";
 import ClayIcon from "@clayui/icon";
 import ClayDropDown from "@clayui/drop-down";
@@ -8,6 +7,7 @@ import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import { TableVirtuoso } from "react-virtuoso";
 import { ClassNameButton } from "../App";
+import { ContainerFluid } from "./Form";
 
 gql`
   query MonitoringEvents($field: EventSortable, $ordering: String) {
@@ -122,7 +122,7 @@ export function MonitoringEvents() {
   };
 
   return (
-    <ClayLayout.ContainerFluid view>
+    <ContainerFluid>
       <TableVirtuoso
         style={{ height: "80vh" }}
         data={monitoringEventsQuery.data?.event as any}
@@ -164,7 +164,7 @@ export function MonitoringEvents() {
           );
         }}
       />
-    </ClayLayout.ContainerFluid>
+    </ContainerFluid>
   );
 }
 
