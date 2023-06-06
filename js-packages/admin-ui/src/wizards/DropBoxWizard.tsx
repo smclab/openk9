@@ -2,7 +2,7 @@ import React from "react";
 import ClayForm from "@clayui/form";
 import ClayLayout from "@clayui/layout";
 import ClayButton from "@clayui/button";
-import { BooleanInput, CronInput, fromFieldValidators, TextInput, useForm } from "../components/Form";
+import { BooleanInput, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
 import { gql } from "@apollo/client";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useNavigate } from "react-router-dom";
@@ -94,9 +94,7 @@ export function DropBoxWizard() {
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
         <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">
-          <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-            Create
-          </ClayButton>
+          <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </ClayForm>
     </ClayLayout.ContainerFluid>

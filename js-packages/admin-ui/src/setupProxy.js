@@ -23,7 +23,7 @@ module.exports = function (app) {
     })
   );
   app.use(
-    "/k8s",
+    "/api/k8s-client",
     createProxyMiddleware({
       target: "https://test.openk9.io",
       changeOrigin: true,

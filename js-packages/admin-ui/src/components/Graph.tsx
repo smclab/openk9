@@ -1,4 +1,3 @@
-import ClayCard from "@clayui/card";
 import { CreateGraphic, LabelNumber } from "./Form";
 
 type detailGraphProps = {
@@ -35,8 +34,8 @@ export function DetailGraph({
   thirdCardUnity = "",
 }: detailGraphProps) {
   return (
-    <ClayCard style={{ marginTop: "20px" }}>
-      <ClayCard.Body>
+    <div className="card" style={{ marginTop: "20px" }}>
+      <div className="card-body">
         <div
           style={{
             display: "flex",
@@ -61,7 +60,7 @@ export function DetailGraph({
             <CreateGraphic data={secondDataGraph} height={210} width={350} labelInformationRigth="View Api Logs" Information="Total Api" />
           </div>
         </div>
-      </ClayCard.Body>
-    </ClayCard>
+      </div>
+    </div>
   );
 }

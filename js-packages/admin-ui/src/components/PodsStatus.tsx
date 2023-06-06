@@ -77,7 +77,7 @@ function usePodsStatus() {
     }, [run]);
   };
   const updateState = React.useCallback(async () => {
-    const response = await fetch("/k8s/get/pods");
+    const response = await fetch("/api/k8s-client/k8s/get/pods");
     const data = await response.json();
     setStatus(data);
   }, []);

@@ -19,7 +19,6 @@ import { TableRowActions } from "./Table";
 import { ClassNameButton } from "../App";
 import { Observer } from "@clayui/modal/lib/types";
 import { BrandLogo } from "./BrandLogo";
-import ClayCard from "@clayui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
 type Nullable<T> = T | null | undefined;
@@ -1637,7 +1636,7 @@ export function CreateGraphic({
   Information: string;
 }) {
   return (
-    <ClayCard>
+    <div className="card">
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
           <label style={{ marginLeft: "20px", marginTop: "10px" }}>{Information}</label>
@@ -1647,7 +1646,7 @@ export function CreateGraphic({
           <label style={{ marginLeft: "20px", marginTop: "3px", color: "#27283330" }}>{"Last 7 days"}</label>
         </div>
       </div>
-      <ClayCard.Body>
+      <div className="card-body">
         <LineChart width={width} height={height} data={data}>
           <XAxis dataKey="name" />
           <YAxis tickCount={11} />
@@ -1656,15 +1655,15 @@ export function CreateGraphic({
           <Tooltip />
           <Legend />
         </LineChart>
-      </ClayCard.Body>
-    </ClayCard>
+      </div>
+    </div>
   );
 }
 
 export function LabelNumber({ label, number, unity }: { label: string; number: number; unity?: string }) {
   return (
     <React.Fragment>
-      <ClayCard style={{ maxHeight: "307px", maxWidth: "400px" }}>
+      <div className="card" style={{ maxHeight: "307px", maxWidth: "400px" }}>
         <div style={{ margin: "16px", height: "85px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <div style={{ fontSize: "24px", lineHeight: "32px", fontWeight: "600", fontFamily: "bold" }}>{label}:</div>
           <div
@@ -1678,7 +1677,7 @@ export function LabelNumber({ label, number, unity }: { label: string; number: n
             }}
           >{`${number} ${unity || ""}`}</div>
         </div>
-      </ClayCard>
+      </div>
     </React.Fragment>
   );
 }

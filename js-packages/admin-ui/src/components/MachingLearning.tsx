@@ -1,4 +1,3 @@
-import ClayCard from "@clayui/card";
 import ClayLayout from "@clayui/layout";
 import ClayButton from "@clayui/button";
 import React from "react";
@@ -31,21 +30,21 @@ export function MachingLearning() {
 function Card({ title, description, link, nameButton }: { title: string; description: string; link: string; nameButton: string }) {
   return (
     <div className="col-md-12">
-      <ClayCard>
-        <ClayCard.Body>
-          <ClayCard.Description displayType="title" style={{ margin: "16px" }}>
+      <div className="card">
+        <div className="card-body">
+          <div className="card-title" style={{ margin: "16px" }}>
             <h1>{title}</h1>
-          </ClayCard.Description>
-          <ClayCard.Description truncate={false} displayType="text" style={{ margin: "16px" }}>
+          </div>
+          <div className="card-text" style={{ margin: "16px" }}>
             {description}
-          </ClayCard.Description>
+          </div>
           <Link to={link}>
             <ClayButton className={ClassNameButton} displayType="primary" style={{ margin: "16px" }}>
               {nameButton}
             </ClayButton>
           </Link>
-        </ClayCard.Body>
-      </ClayCard>
+        </div>
+      </div>
     </div>
   );
 }

@@ -129,18 +129,16 @@ type WizardCardProps = { title: string; description: string; path: string; icon:
 
 function WizardCard({ title, description, path, icon }: WizardCardProps) {
   return (
-    <ClayCard>
-      <ClayCard.AspectRatio className="card-item-first">
+    <div className="card">
+      <div className="aspect-ratio aspect-ratio-16-to-9 card-item-first">
         <div className="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon">{icon}</div>
-      </ClayCard.AspectRatio>
-      <ClayCard.Body>
-        <ClayCard.Description displayType="title">
+      </div>
+      <div className="card-body">
+        <div className="card-title">
           <Link to={path}>{title}</Link>
-        </ClayCard.Description>
-        <ClayCard.Description truncate={false} displayType="text">
-          {description}
-        </ClayCard.Description>
-      </ClayCard.Body>
-    </ClayCard>
+        </div>
+        <div className="card-text">{description}</div>
+      </div>
+    </div>
   );
 }

@@ -77,8 +77,8 @@ export function HuggingFaceCard() {
           {data.map(({ name, task, library, status }) => {
             return (
               <div key={name} className="col-sm-6 col-md-4 col-lg-3">
-                <ClayCard>
-                  <ClayCard.Body>
+                <div className="card">
+                  <div className="card-body">
                     <ClayCard.Row>
                       <div className="autofit-col autofit-col-expand" style={{ marginTop: "10px" }}>
                         <section className="autofit-section">
@@ -152,8 +152,8 @@ export function HuggingFaceCard() {
                         </div>
                       </div>
                     </ClayCard.Row>
-                  </ClayCard.Body>
-                </ClayCard>
+                  </div>
+                </div>
               </div>
             );
           })}

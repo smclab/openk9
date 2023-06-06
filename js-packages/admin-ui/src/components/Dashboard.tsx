@@ -1,4 +1,3 @@
-import ClayCard from "@clayui/card";
 import ClayIcon from "@clayui/icon";
 import ClayLayout from "@clayui/layout";
 import ClayList from "@clayui/list";
@@ -6,7 +5,6 @@ import { Link } from "react-router-dom";
 import React from "react";
 import { gql } from "@apollo/client";
 import { useDataIndexInformationQuery } from "../graphql-generated";
-import ClayCardBody from "@clayui/card/lib/Body";
 import { DashBoardTable } from "./Table";
 import { DetailGraph } from "./Graph";
 
