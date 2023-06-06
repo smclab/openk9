@@ -5,7 +5,6 @@ import ClayLayout from "@clayui/layout";
 import { ClayButtonWithIcon } from "@clayui/button";
 import ClayIcon from "@clayui/icon";
 import { Link } from "react-router-dom";
-import ClayEmptyState from "@clayui/empty-state";
 import { GitLabLogo } from "./Logo/GitLabLogo";
 import { GitHubLogo } from "./Logo/GitHubLogo";
 import { GoogleDriveLogo } from "./Logo/GoogleDriveLogo";
@@ -13,6 +12,7 @@ import { LiferayLogo } from "./Logo/LiferayLogo";
 import { DropBoxLogo } from "./Logo/DropBoxLogo";
 import { YouTubeLogo } from "./Logo/YouTubeLogo";
 import { ClassNameButton } from "../App";
+import { EmptySpace } from "../components/Form";
 
 const wizards = [
   {
@@ -114,11 +114,7 @@ export function Wizards() {
           ))}
         </div>
         {fileterdWizards.length === 0 && (
-          <ClayEmptyState
-            description="Try with other search term"
-            title="Did not found any connectors"
-            className="c-empty-state-animation"
-          />
+          <EmptySpace description="There are no matching unassociated entities" title="No entities" extraClass="c-empty-state-animation" />
         )}
       </ClayLayout.ContainerFluid>
     </React.Fragment>

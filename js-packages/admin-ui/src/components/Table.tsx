@@ -8,11 +8,10 @@ import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import useDebounced from "./useDebounced";
 import { ClayDropDownWithItems } from "@clayui/drop-down";
 import { Link } from "react-router-dom";
-import ClayEmptyState from "@clayui/empty-state";
 import { ClayCheckbox } from "@clayui/form";
 import useMap from "./useMap";
 import { ClayToggle } from "@clayui/form";
-import { MainTitle, StyleToggle } from "./Form";
+import { EmptySpace, MainTitle, StyleToggle } from "./Form";
 import { ClassNameButton } from "../App";
 import ClayIcon from "@clayui/icon";
 
@@ -454,7 +453,11 @@ export function Table<
               <tbody>
                 <tr>
                   <td colSpan={columns.length + 1 + (isItemsSelectable ? 1 : 0)} style={{ backgroundColor: "white" }}>
-                    <ClayEmptyState description="There are no matching entities" title="No entities" className="c-empty-state-animation" />
+                    <EmptySpace
+                      description="There are no matching unassociated entities"
+                      title="No entities"
+                      extraClass="c-empty-state-animation"
+                    />
                   </td>
                 </tr>
               </tbody>

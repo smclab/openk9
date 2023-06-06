@@ -6,7 +6,6 @@ import ClayTable from "@clayui/table";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import ClayList from "@clayui/list";
-import ClayEmptyState from "@clayui/empty-state";
 import { Virtuoso, Components as VirtuosoComponents, TableVirtuoso } from "react-virtuoso";
 import ClayLayout from "@clayui/layout";
 import ClayToolbar from "@clayui/toolbar";
@@ -695,7 +694,7 @@ export function AssociatedEntities<Q>({
       <ClayLayout.ContainerFluid view>
         {(field(associatedListQuery.data)?.edges?.length ?? 0) !== 0 && <MainTitle title={label} />}
         {(field(associatedListQuery.data)?.edges?.length ?? 0) === 0 && !associatedListQuery.loading && (
-          <ClayEmptyState description="There are no matching associated entities" title="No entities" className="c-empty-state-animation" />
+          <EmptySpace description="There are no matching associated entities" title="No entities" extraClass="c-empty-state-animation" />
         )}
         <Virtuoso
           totalCount={field(associatedListQuery.data)?.edges?.length}
@@ -760,10 +759,10 @@ export function AssociatedEntities<Q>({
               />
             </ClayForm.Group>
             {(field(unassociatedListQuery.data)?.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
-              <ClayEmptyState
+              <EmptySpace
                 description="There are no matching unassociated entities"
                 title="No entities"
-                className="c-empty-state-animation"
+                extraClass="c-empty-state-animation"
               />
             )}
             {(field(unassociatedListQuery.data)?.edges?.length ?? 0) !== 0 && !unassociatedListQuery.loading && (
@@ -945,7 +944,7 @@ export function AssociatedEntitiesWithSelect<Q>({
               <tbody>
                 <tr>
                   <td colSpan={field(associatedListQuery.data)?.edges?.length + 3} style={{ backgroundColor: "white" }}>
-                    <ClayEmptyState description="There are no matching entities" title="No entities" className="c-empty-state-animation" />
+                    <EmptySpace description="There are no matching entities" title="No entities" extraClass="c-empty-state-animation" />
                   </td>
                 </tr>
               </tbody>
@@ -1035,10 +1034,10 @@ export function AssociatedEntitiesWithSelect<Q>({
               />
             </ClayForm.Group>
             {(unassociatedListQuery.data?.docTypeFields.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
-              <ClayEmptyState
+              <EmptySpace
                 description="There are no matching unassociated entities"
                 title="No entities"
-                className="c-empty-state-animation"
+                extraClass="c-empty-state-animation"
               />
             )}
             <ClayList showQuickActionsOnHover>
@@ -1656,6 +1655,40 @@ export function CreateGraphic({
           <Legend />
         </LineChart>
       </div>
+    </div>
+  );
+}
+
+export function EmptySpace({ title, description, extraClass = "" }: { title: string; description: string; extraClass?: string }) {
+  const classNames = `empty-state ${extraClass}`;
+  return (
+    <div className={classNames}>
+      <h3 className="empty-state-title">{title}</h3>
+      <div className="empty-state-description">{description}</div>
+    </div>
+  );
+}
+
+export function DropDownCustom() {
+  return (
+    <div aria-labelledby="theDropdownToggleId" className="dropdown-menu">
+      <ul className="list-unstyled">
+        <li>
+          <a className="active dropdown-item" href="#1">
+            Selected Option
+          </a>
+        </li>
+        <li>
+          <a className="dropdown-item" href="#3">
+            Normal Option
+          </a>
+        </li>
+        <li>
+          <a className="disabled dropdown-item" href="#4">
+            Disabled Option
+          </a>
+        </li>
+      </ul>
     </div>
   );
 }

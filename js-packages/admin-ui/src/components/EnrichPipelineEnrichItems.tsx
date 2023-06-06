@@ -18,8 +18,8 @@ import ClayList from "@clayui/list";
 import ClayModal, { useModal } from "@clayui/modal";
 import ClayForm, { ClayInput } from "@clayui/form";
 import useDebounced from "./useDebounced";
-import ClayEmptyState from "@clayui/empty-state";
 import { ClassNameButton } from "../App";
+import { EmptySpace } from "./Form";
 
 export const AssociatedEnrichPipelineEnrichItemsQuery = gql`
   query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {
@@ -352,7 +352,7 @@ export function EnrichPipelineEnrichItems() {
               />
             </ClayForm.Group>
             {(unassociatedListQuery.data?.enrichPipeline?.enrichItems?.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
-              <ClayEmptyState description="There are no matching unassociated entities" title="No entities" />
+              <EmptySpace description="There are no matching unassociated entities" title="No entities" />
             )}
             <ClayList showQuickActionsOnHover>
               {

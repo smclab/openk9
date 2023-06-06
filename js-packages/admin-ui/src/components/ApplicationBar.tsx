@@ -4,6 +4,7 @@ import ClayButton from "@clayui/button";
 import { getUserProfile, keycloak, useAuthentication } from "./authentication";
 import DropDown from "@clayui/drop-down";
 import React from "react";
+import { DropDownCustom } from "./Form";
 
 export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMenuOpen: boolean; onSideMenuToggle(isOpen: boolean): void }) {
   const { isAuthenticated } = useAuthentication();
@@ -94,7 +95,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
           </div>
           <ul className="navbar-nav">
             <li className="nav-item">
-              {!isAuthenticated && (
+              {/* {!isAuthenticated && (
                 <ClayButton
                   onClick={() => {
                     keycloak.login();
@@ -135,7 +136,8 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
                     </DropDown.Item>
                   </DropDown.ItemList>
                 </DropDown>
-              )}
+              )} */}
+              <DropDownCustom />
             </li>
           </ul>
         </div>
