@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction } from "react";
-import ClayForm, { ClayInput, ClaySelect, ClayToggle } from "@clayui/form";
+import ClayForm, { ClayInput, ClayToggle } from "@clayui/form";
 import { MutationHookOptions, MutationTuple, QueryHookOptions, QueryResult } from "@apollo/client";
 import useDebounced from "./useDebounced";
 import ClayTable from "@clayui/table";
@@ -1108,14 +1108,14 @@ export function CronInput(props: BaseInputProps<string>) {
               <div className="form-group-item">
                 <label>Preset</label>
                 {description && InformationField(description)}
-                <ClaySelect value={value} onChange={(event) => onChange(event.currentTarget.value)}>
-                  <ClaySelect.Option label="Custom" value="      " />
-                  <ClaySelect.Option label="Every 5 Minutes" value="0 */5 * ? * * *" />
-                  <ClaySelect.Option label="Every 30 Minutes" value="0 */30 * ? * * *" />
-                  <ClaySelect.Option label="Every Hour" value="0 0 * ? * * *" />
-                  <ClaySelect.Option label="Every Day at Midday" value="0 0 12 * * ? *" />
-                  <ClaySelect.Option label="Every Day at Midnight" value="0 0 0 * * ? *" />
-                </ClaySelect>
+                <select value={value} onChange={(event) => onChange(event.currentTarget.value)} className="form-control">
+                  <option value="">Custom</option>
+                  <option value="0 */5 * ? * * *">Every 5 Minutes</option>
+                  <option value="0 */30 * ? * * *">Every 30 Minutes</option>
+                  <option value="0 0 * ? * * *">Every Hour</option>
+                  <option value="0 0 12 * * ? *">Every Day at Midday</option>
+                  <option value="0 0 0 * * ? *">Every Day at Midnight</option>
+                </select>
               </div>
             </ClayForm.Group>
             <ClayForm.Group className="form-group-autofit">
@@ -1382,7 +1382,7 @@ export function MultiSelectForDinamicFields({
         <ClayPanel.Body>
           <ClayForm.Group>
             <div className="form-group-item">
-              <ClaySelect
+              <select
                 defaultValue={id === "new" ? "" : templateChoice.type}
                 onChange={(event) => {
                   templates.map((element: any) => {
@@ -1399,11 +1399,12 @@ export function MultiSelectForDinamicFields({
                   }
                   onChangeDescription(dataSelect!.description);
                 }}
+                className="form-control"
               >
                 {templates.map((filter: any, index: number) => (
-                  <ClaySelect.Option key={index} label={filter.title} value={filter.title} />
+                  <option key={index} label={filter.title} value={filter.title} />
                 ))}
-              </ClaySelect>
+              </select>
             </div>
           </ClayForm.Group>
         </ClayPanel.Body>
@@ -1437,7 +1438,7 @@ export function MultiSelectForDinamicallyFieldsWithoutType({
         <ClayPanel.Body>
           <ClayForm.Group>
             <div className="form-group-item">
-              <ClaySelect
+              <select
                 defaultValue={id === "new" ? "" : type}
                 onChange={(event) => {
                   if (event.currentTarget.value === "custom") {
@@ -1458,11 +1459,12 @@ export function MultiSelectForDinamicallyFieldsWithoutType({
                   if (setTitle) setTitle(dataSelect.title);
                   onChangeDescription(dataSelect!.description);
                 }}
+                className="form-control"
               >
                 {template.map((filter: any, index: number) => (
-                  <ClaySelect.Option key={index} label={filter.title} value={filter.title} />
+                  <option key={index} label={filter.title} value={filter.title} />
                 ))}
-              </ClaySelect>
+              </select>
             </div>
           </ClayForm.Group>
         </ClayPanel.Body>

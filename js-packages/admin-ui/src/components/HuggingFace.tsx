@@ -1,4 +1,3 @@
-import { ClaySelect } from "@clayui/form";
 import React from "react";
 import { Spacy } from "../wizards/Logo/Spacy";
 import { Button, useModal } from "@clayui/core";
@@ -182,22 +181,38 @@ export function HuggingFace() {
           )}
           <div className="form-group-item">
             <label style={{ paddingTop: "18px" }}>Task</label>
-            <ClaySelect
+            <select
               defaultValue={task}
-              className={library === "task" ? "btn-info" : ""}
-              onClick={(event) => {
+              className={`clay-select form-control ${library === "task" ? "btn-info" : ""}`}
+              onChange={(event) => {
                 setTask(event.currentTarget.value);
               }}
             >
-              <ClaySelect.Option label={"select task"} value={""} />
-              <ClaySelect.Option label={"text classification"} value={"text-classification"} />
-              <ClaySelect.Option label={"token classification"} value={"token-classification"} />
-              <ClaySelect.Option label={"object detection"} value={"object-detection"} />
-              <ClaySelect.Option label={"image classifcation"} value={"image-classifcation"} />
-              <ClaySelect.Option label={"summarizzation"} value={"summarizzation"} />
-              <ClaySelect.Option label={"translation"} value={"translation"} />
-              <ClaySelect.Option label={"audio speech recognition"} value={"audio-speech-recognition"} />
-            </ClaySelect>
+              <option className="clay-dropdown-item" value="">
+                select task
+              </option>
+              <option className="clay-dropdown-item" value="text-classification">
+                text classification
+              </option>
+              <option className="clay-dropdown-item" value="token-classification">
+                token classification
+              </option>
+              <option className="clay-dropdown-item" value="object-detection">
+                object detection
+              </option>
+              <option className="clay-dropdown-item" value="image-classifcation">
+                image classification
+              </option>
+              <option className="clay-dropdown-item" value="summarizzation">
+                summarization
+              </option>
+              <option className="clay-dropdown-item" value="translation">
+                translation
+              </option>
+              <option className="clay-dropdown-item" value="audio-speech-recognition">
+                audio speech recognition
+              </option>
+            </select>
           </div>
           {isInvalidateTask && (
             <div className="form-feedback-group has-warning">

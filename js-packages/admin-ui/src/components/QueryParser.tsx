@@ -1,5 +1,5 @@
 import { gql } from "@apollo/client";
-import ClayForm, { ClaySelect, ClayToggle } from "@clayui/form";
+import ClayForm, { ClayToggle } from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery } from "../graphql-generated";
@@ -165,7 +165,7 @@ export function QueryParserConfig() {
             <ClayPanel.Body>
               <ClayForm.Group>
                 <div className="form-group-item">
-                  <ClaySelect
+                  <select
                     defaultValue={queryParserConfigId === "new" ? "" : type}
                     onChange={(event) => {
                       form.inputProps("type").onChange(event.currentTarget.value);
@@ -181,11 +181,12 @@ export function QueryParserConfig() {
                       const dataSelect = TemplateQueryParser.find((element) => element.title === event.currentTarget.value);
                       form.inputProps("description").onChange(dataSelect!.description);
                     }}
+                    className="form-control"
                   >
                     {TemplateQueryParser.map((filter, index) => (
-                      <ClaySelect.Option key={index} label={filter.title} value={filter.title} />
+                      <option key={index} label={filter.title} value={filter.title} />
                     ))}
-                  </ClaySelect>
+                  </select>
                 </div>
               </ClayForm.Group>
             </ClayPanel.Body>
@@ -210,22 +211,23 @@ export function QueryParserConfig() {
                           {keysOfFields[i]}
                         </label>
                         {InformationField(descriptionsFields[keysOfFields[i]])}
-                        <ClaySelect
+                        <select
                           defaultValue={templateChoice?.[keysOfFields[i]]}
                           aria-label="Select Label"
                           id="mySelectId"
                           onChange={(event) => {
                             setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: event.currentTarget.value });
                           }}
+                          className="form-control"
                         >
-                          <ClaySelect.Option label={"MUST"} value={"MUST"} />
-                          <ClaySelect.Option label={"SHOULD"} value={"SHOULD"} />
-                          <ClaySelect.Option label={"MIN_SHOULD_1"} value={"MIN_SHOULD_1"} />
-                          <ClaySelect.Option label={"MIN_SHOULD_2"} value={"MIN_SHOULD_2"} />
-                          <ClaySelect.Option label={"MIN_SHOULD_3"} value={"MIN_SHOULD_3"} />
-                          <ClaySelect.Option label={"MUST_NOT"} value={"MUST_NOT"} />
-                          <ClaySelect.Option label={"FILTER"} value={"FILTER"} />
-                        </ClaySelect>
+                          <option label={"MUST"} value={"MUST"} />
+                          <option label={"SHOULD"} value={"SHOULD"} />
+                          <option label={"MIN_SHOULD_1"} value={"MIN_SHOULD_1"} />
+                          <option label={"MIN_SHOULD_2"} value={"MIN_SHOULD_2"} />
+                          <option label={"MIN_SHOULD_3"} value={"MIN_SHOULD_3"} />
+                          <option label={"MUST_NOT"} value={"MUST_NOT"} />
+                          <option label={"FILTER"} value={"FILTER"} />
+                        </select>
                       </div>
                     );
                   } else {
@@ -291,17 +293,18 @@ export function QueryParserConfig() {
                         {keysOfFields[i]}
                       </label>
                       {InformationField(descriptionsFields[keysOfFields[i]])}
-                      <ClaySelect
+                      <select
                         aria-label="Select Label"
                         id="mySelectId"
                         onChange={(event) => {
                           setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: event.currentTarget.value });
                         }}
+                        className="form-control"
                       >
                         {values?.map((item: any) => (
-                          <ClaySelect.Option key={item} label={item} value={item} />
+                          <option key={item} label={item} value={item} />
                         ))}
-                      </ClaySelect>
+                      </select>
                     </div>
                   );
                 }

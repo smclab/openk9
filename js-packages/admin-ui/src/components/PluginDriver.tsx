@@ -1,7 +1,7 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm, { ClaySelect, ClayToggle } from "@clayui/form";
+import ClayForm, { ClayToggle } from "@clayui/form";
 import {
   PluginDriverType,
   useBindPluginDriverToDataSourceMutation,
@@ -142,7 +142,7 @@ export function PluginDriver() {
           <ClayPanel.Body>
             <ClayForm.Group>
               <div className="form-group-item">
-                <ClaySelect
+                <select
                   defaultValue={pluginDriverId === "new" ? "" : type}
                   onChange={(event) => {
                     switch (event.currentTarget.value) {
@@ -161,11 +161,12 @@ export function PluginDriver() {
                     const dataSelect = PluginDriverOptions.find((element) => element.title === event.currentTarget.value);
                     form.inputProps("description").onChange(dataSelect!.description);
                   }}
+                  className="form-control"
                 >
                   {PluginDriverOptions.map((filter, index) => (
-                    <ClaySelect.Option key={index} label={filter.title} value={filter.title} />
+                    <option key={index} label={filter.title} value={filter.title} />
                   ))}
-                </ClaySelect>
+                </select>
               </div>
             </ClayForm.Group>
           </ClayPanel.Body>

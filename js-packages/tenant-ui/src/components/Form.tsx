@@ -1,5 +1,5 @@
 import React from "react";
-import ClayForm, { ClayInput, ClaySelect, ClayToggle } from "@clayui/form";
+import ClayForm, { ClayInput, ClayToggle } from "@clayui/form";
 import { MutationHookOptions, MutationTuple, QueryHookOptions, QueryResult } from "@apollo/client";
 import useDebounced from "./useDebounced";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
@@ -754,14 +754,14 @@ export function CronInput(props: BaseInputProps<string>) {
           <ClayForm.Group>
             <div className="form-group-item">
               <label>Preset</label>
-              <ClaySelect value={value} onChange={(event) => onChange(event.currentTarget.value)}>
-                <ClaySelect.Option label="Custom" value="" />
-                <ClaySelect.Option label="Every 5 Minutes" value="* */5 0 ? * * *" />
-                <ClaySelect.Option label="Every 30 Minutes" value="* */30 0 ? * * *" />
-                <ClaySelect.Option label="Every Hour" value="* 0 * ? * * *" />
-                <ClaySelect.Option label="Every Day at Midday" value="* 0 0 12 ? * * *" />
-                <ClaySelect.Option label="Every Day at Midnight" value="* 0 0 0 ? * * *" />
-              </ClaySelect>
+              <select value={value} onChange={(event) => onChange(event.currentTarget.value)} className="form-control">
+                <option label="Custom" value="" />
+                <option label="Every 5 Minutes" value="* */5 0 ? * * *" />
+                <option label="Every 30 Minutes" value="* */30 0 ? * * *" />
+                <option label="Every Hour" value="* 0 * ? * * *" />
+                <option label="Every Day at Midday" value="* 0 0 12 ? * * *" />
+                <option label="Every Day at Midnight" value="* 0 0 0 ? * * *" />
+              </select>
             </div>
           </ClayForm.Group>
           <ClayForm.Group className="form-group-autofit">
