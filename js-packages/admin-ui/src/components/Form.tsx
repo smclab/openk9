@@ -1,5 +1,5 @@
 import React, { CSSProperties, Dispatch, SetStateAction, TableHTMLAttributes, TdHTMLAttributes } from "react";
-import ClayForm, { ClayInput, ClayToggle } from "@clayui/form";
+import { ClayInput, ClayToggle } from "@clayui/form";
 import { MutationHookOptions, MutationTuple, QueryHookOptions, QueryResult } from "@apollo/client";
 import useDebounced from "./useDebounced";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
@@ -461,7 +461,7 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
   const [removeMutate, removeMutation] = useRemoveMutation({});
   return (
     <React.Fragment>
-      <ClayForm.Group>
+      <CustomFormGroup>
         <label>{label}</label>
         {description && InformationField(description)}
         <ClayInput.Group>
@@ -526,19 +526,19 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
             </ClayButton.Group>
           </ClayInput.GroupItem>
         </ClayInput.Group>
-      </ClayForm.Group>
+      </CustomFormGroup>
       {open && (
         <ClayModal observer={observer}>
           <ClayModal.Header>{label}</ClayModal.Header>
           <ClayModal.Body>
-            <ClayForm.Group>
+            <CustomFormGroup>
               <ClayInput
                 type="search"
                 placeholder="search"
                 value={searchText}
                 onChange={(event) => setSearchText(event.currentTarget.value)}
               />
-            </ClayForm.Group>
+            </CustomFormGroup>
             <Virtuoso
               totalCount={optionsQuery.data?.options?.edges?.length}
               scrollerRef={(element) => (scrollerRef.current = element as any)}
@@ -748,14 +748,14 @@ export function AssociatedEntities<Q>({
         <ClayModal observer={observer}>
           <ClayModal.Header>{label}</ClayModal.Header>
           <ClayModal.Body style={{ minHeight: "465px" }} scrollable={true}>
-            <ClayForm.Group>
+            <CustomFormGroup>
               <ClayInput
                 type="search"
                 placeholder="search"
                 value={modalSearchText}
                 onChange={(event) => setModalSearchText(event.currentTarget.value)}
               />
-            </ClayForm.Group>
+            </CustomFormGroup>
             {(field(unassociatedListQuery.data)?.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
               <EmptySpace
                 description="There are no matching unassociated entities"
@@ -1050,14 +1050,14 @@ export function AssociatedEntitiesWithSelect<Q>({
               validationMessages={[]}
               key={""}
             ></EnumSelectSimple>
-            <ClayForm.Group>
+            <CustomFormGroup>
               <ClayInput
                 type="search"
                 placeholder="search"
                 value={modalSearchText}
                 onChange={(event) => setModalSearchText(event.currentTarget.value)}
               />
-            </ClayForm.Group>
+            </CustomFormGroup>
             {(unassociatedListQuery.data?.docTypeFields.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
               <EmptySpace
                 description="There are no matching unassociated entities"
@@ -1130,7 +1130,7 @@ export function CronInput(props: BaseInputProps<string>) {
       <ClayPanel displayTitle={label} displayType="secondary">
         <ClayPanel.Body>
           <fieldset disabled={disabled}>
-            <ClayForm.Group>
+            <CustomFormGroup>
               <div className="form-group-item">
                 <label>Preset</label>
                 {description && InformationField(description)}
@@ -1143,8 +1143,8 @@ export function CronInput(props: BaseInputProps<string>) {
                   <option value="0 0 0 * * ? *">Every Day at Midnight</option>
                 </select>
               </div>
-            </ClayForm.Group>
-            <ClayForm.Group className="form-group-autofit">
+            </CustomFormGroup>
+            <CustomFormGroup className="form-group-autofit">
               <TextInput
                 item
                 label="Second"
@@ -1187,22 +1187,38 @@ export function CronInput(props: BaseInputProps<string>) {
                 {...scheduling.inputProps("year")}
                 value={typeof scheduling.inputProps("year").value !== "undefined" ? scheduling.inputProps("year").value : ""}
               />
-            </ClayForm.Group>
+            </CustomFormGroup>
           </fieldset>
         </ClayPanel.Body>
         {validationMessages.length > 0 && (
           <ClayPanel.Footer className="has-warning">
-            <ClayForm.FeedbackGroup>
+            <CustomFeedbackGroup>
               {validationMessages.map((validationMessage, index) => {
-                return <ClayForm.FeedbackItem key={index}>{validationMessage}</ClayForm.FeedbackItem>;
+                return <CustomFeedbackGroup key={index}>{validationMessage}</CustomFeedbackGroup>;
               })}
-            </ClayForm.FeedbackGroup>
+            </CustomFeedbackGroup>
           </ClayPanel.Footer>
         )}
       </ClayPanel>
     </React.Fragment>
   );
 }
+
+interface CustomFeedbackGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+}
+
+export const CustomFeedbackGroup: React.FC<CustomFeedbackGroupProps> = (props) => {
+  const { children, className, ...rest } = props;
+
+  const combinedClassName = `form-feedback-group ${className || ""}`;
+
+  return (
+    <div {...rest} className={combinedClassName}>
+      {children}
+    </div>
+  );
+};
 
 export type Filter = {
   title: string;
@@ -1406,7 +1422,7 @@ export function MultiSelectForDinamicFields({
     <React.Fragment>
       <ClayPanel displayTitle="Type" displayType="secondary">
         <ClayPanel.Body>
-          <ClayForm.Group>
+          <CustomFormGroup>
             <div className="form-group-item">
               <select
                 defaultValue={id === "new" ? "" : templateChoice.type}
@@ -1432,12 +1448,28 @@ export function MultiSelectForDinamicFields({
                 ))}
               </select>
             </div>
-          </ClayForm.Group>
+          </CustomFormGroup>
         </ClayPanel.Body>
       </ClayPanel>
     </React.Fragment>
   );
 }
+
+interface CustomFormGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+}
+
+export const CustomFormGroup: React.FC<CustomFormGroupProps> = (props) => {
+  const { children, className, ...rest } = props;
+
+  const combinedClassName = `form-group ${className || ""}`;
+
+  return (
+    <div {...rest} className={combinedClassName}>
+      {children}
+    </div>
+  );
+};
 
 export function MultiSelectForDinamicallyFieldsWithoutType({
   id,
@@ -1462,7 +1494,7 @@ export function MultiSelectForDinamicallyFieldsWithoutType({
     <React.Fragment>
       <ClayPanel displayTitle="Type" displayType="secondary">
         <ClayPanel.Body>
-          <ClayForm.Group>
+          <CustomFormGroup>
             <div className="form-group-item">
               <select
                 defaultValue={id === "new" ? "" : type}
@@ -1492,7 +1524,7 @@ export function MultiSelectForDinamicallyFieldsWithoutType({
                 ))}
               </select>
             </div>
-          </ClayForm.Group>
+          </CustomFormGroup>
         </ClayPanel.Body>
       </ClayPanel>
     </React.Fragment>

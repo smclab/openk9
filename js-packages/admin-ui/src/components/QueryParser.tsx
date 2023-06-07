@@ -1,10 +1,11 @@
 import { gql } from "@apollo/client";
-import ClayForm, { ClayToggle } from "@clayui/form";
+import { ClayToggle } from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery } from "../graphql-generated";
 import {
   ContainerFluid,
+  CustomFormGroup,
   FormatString,
   fromFieldValidators,
   InformationField,
@@ -163,7 +164,7 @@ export function QueryParserConfig() {
           <TextArea label="Description" {...form.inputProps("description")} />
           <ClayPanel displayTitle="Type" displayType="secondary">
             <ClayPanel.Body>
-              <ClayForm.Group>
+              <CustomFormGroup>
                 <div className="form-group-item">
                   <select
                     defaultValue={queryParserConfigId === "new" ? "" : type}
@@ -188,7 +189,7 @@ export function QueryParserConfig() {
                     ))}
                   </select>
                 </div>
-              </ClayForm.Group>
+              </CustomFormGroup>
             </ClayPanel.Body>
           </ClayPanel>
           {TemplateQueryParser.map((template) => {

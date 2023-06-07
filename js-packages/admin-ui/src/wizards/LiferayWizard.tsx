@@ -1,6 +1,14 @@
 import React from "react";
-import ClayForm from "@clayui/form";
-import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
+import {
+  BooleanInput,
+  ContainerFluid,
+  CronInput,
+  CustomButtom,
+  CustomFormGroup,
+  fromFieldValidators,
+  TextInput,
+  useForm,
+} from "../components/Form";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 import { useNavigate } from "react-router-dom";
@@ -71,10 +79,10 @@ export function LiferayWizard() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextInput label="Domain" {...form.inputProps("domain")} />
-        <ClayForm.Group className="form-group-autofit">
+        <CustomFormGroup className="form-group-autofit">
           <TextInput label="Username" {...form.inputProps("username")} item />
           <TextInput label="Password" {...form.inputProps("password")} item />
-        </ClayForm.Group>
+        </CustomFormGroup>
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
         <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">

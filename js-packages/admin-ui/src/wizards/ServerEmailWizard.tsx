@@ -1,6 +1,14 @@
 import React from "react";
-import ClayForm from "@clayui/form";
-import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
+import {
+  BooleanInput,
+  ContainerFluid,
+  CronInput,
+  CustomButtom,
+  CustomFormGroup,
+  fromFieldValidators,
+  TextInput,
+  useForm,
+} from "../components/Form";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 import { useNavigate } from "react-router-dom";
@@ -75,10 +83,10 @@ export function ServerEmailWizard() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextInput label="Server email" {...form.inputProps("mailServer")} />
-        <ClayForm.Group className="form-group-autofit">
+        <CustomFormGroup className="form-group-autofit">
           <TextInput label="Username" {...form.inputProps("username")} item />
           <TextInput label="Password" {...form.inputProps("password")} item />
-        </ClayForm.Group>
+        </CustomFormGroup>
         <TextInput label="Folder" {...form.inputProps("folder")} />
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
         <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />

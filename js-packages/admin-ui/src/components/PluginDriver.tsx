@@ -1,7 +1,7 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm, { ClayToggle } from "@clayui/form";
+import { ClayToggle } from "@clayui/form";
 import {
   PluginDriverType,
   useBindPluginDriverToDataSourceMutation,
@@ -20,6 +20,7 @@ import {
   StyleToggle,
   CustomButtom,
   ContainerFluid,
+  CustomFormGroup,
 } from "./Form";
 import { PluginDriversQuery } from "./PluginDrivers";
 import { useToast } from "./ToastProvider";
@@ -140,7 +141,7 @@ export function PluginDriver() {
         <TextArea label="Description" {...form.inputProps("description")} />
         <ClayPanel displayTitle="Type" displayType="secondary">
           <ClayPanel.Body>
-            <ClayForm.Group>
+            <CustomFormGroup>
               <div className="form-group-item">
                 <select
                   defaultValue={pluginDriverId === "new" ? "" : type}
@@ -168,7 +169,7 @@ export function PluginDriver() {
                   ))}
                 </select>
               </div>
-            </ClayForm.Group>
+            </CustomFormGroup>
           </ClayPanel.Body>
         </ClayPanel>
         {PluginDriverOptions.map((template) => {

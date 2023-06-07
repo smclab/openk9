@@ -1,7 +1,15 @@
 import React from "react";
-import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
-import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
+import {
+  BooleanInput,
+  ContainerFluid,
+  CronInput,
+  CustomButtom,
+  CustomFormGroup,
+  fromFieldValidators,
+  TextInput,
+  useForm,
+} from "../components/Form";
 import { gql } from "@apollo/client";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useNavigate } from "react-router-dom";
@@ -105,20 +113,20 @@ export function DatabaseWizard() {
         }}
       >
         <TextInput label="Name" {...form.inputProps("name")} />
-        <ClayForm.Group className="form-group-autofit">
+        <CustomFormGroup className="form-group-autofit">
           <TextInput label="Host" {...form.inputProps("host")} item />
           <TextInput label="Port" {...form.inputProps("port")} item />
           <TextInput label="Dialect" {...form.inputProps("dialect")} item />
           <TextInput label="Driver" {...form.inputProps("driver")} item />
-        </ClayForm.Group>
-        <ClayForm.Group className="form-group-autofit">
+        </CustomFormGroup>
+        <CustomFormGroup className="form-group-autofit">
           <TextInput label="User" {...form.inputProps("user")} item />
           <TextInput label="Password" {...form.inputProps("password")} item />
-        </ClayForm.Group>
-        <ClayForm.Group className="form-group-autofit">
+        </CustomFormGroup>
+        <CustomFormGroup className="form-group-autofit">
           <TextInput label="Database" {...form.inputProps("db")} item />
           <TextInput label="Table" {...form.inputProps("table")} item />
-        </ClayForm.Group>
+        </CustomFormGroup>
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
         <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">

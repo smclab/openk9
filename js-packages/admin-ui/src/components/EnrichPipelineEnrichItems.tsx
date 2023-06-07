@@ -14,10 +14,10 @@ import {
 } from "../graphql-generated";
 import ClayList from "@clayui/list";
 import ClayModal, { useModal } from "@clayui/modal";
-import ClayForm, { ClayInput } from "@clayui/form";
+import { ClayInput } from "@clayui/form";
 import useDebounced from "./useDebounced";
 import { ClassNameButton } from "../App";
-import { ContainerFluidWithoutView, EmptySpace } from "./Form";
+import { ContainerFluidWithoutView, CustomFormGroup, EmptySpace } from "./Form";
 
 export const AssociatedEnrichPipelineEnrichItemsQuery = gql`
   query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {
@@ -341,14 +341,14 @@ export function EnrichPipelineEnrichItems() {
         <ClayModal observer={observer}>
           <ClayModal.Header>Add Enrich Item to Enrich Pipeline</ClayModal.Header>
           <ClayModal.Body>
-            <ClayForm.Group>
+            <CustomFormGroup>
               <ClayInput
                 type="search"
                 placeholder="search"
                 value={searchText}
                 onChange={(event) => setSearchText(event.currentTarget.value)}
               />
-            </ClayForm.Group>
+            </CustomFormGroup>
             {(unassociatedListQuery.data?.enrichPipeline?.enrichItems?.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
               <EmptySpace description="There are no matching unassociated entities" title="No entities" />
             )}
