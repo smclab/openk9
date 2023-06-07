@@ -7,6 +7,8 @@ import akka.actor.typed.PreRestart;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import akka.cluster.typed.ClusterSingleton;
+import akka.cluster.typed.SingletonActor;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
@@ -25,10 +27,12 @@ public class IngestionActor {
 	public sealed interface Command {}
 	public record IngestionMessage(DataPayload dataPayload, Message<?> message) implements Command {}
 	public record Callback(String tokenId, byte[] body) implements Command { }
-	private record DatasourceResponseWrapper(Message<?> message, DatasourceActor.Response response) implements Command {}
+	private record DatasourceResponseWrapper(Message<?> message, DataPayload dataPayload, Datasource.Response response) implements Command {}
 	private record EnrichItemResponseWrapper(EnrichItemActor.EnrichItemCallbackResponse response, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command {}
 	private record SupervisorResponseWrapper(EnrichItemSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	public record EnrichItemCallback(long enrichItemId, String tenantId, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command { }
+	private record InitPipeline(Message<?> message, DataPayload dataPayload, io.openk9.datasource.model.Datasource datasource) implements Command {}
+	private record EnrichPipelineResponseWrapper(Message<?> message, EnrichPipeline.Response response) implements Command {}
 	public sealed interface Response {}
 	public record EnrichItemCallbackResponse(byte[] jsonObject) implements Response {}
 	public record EnrichItemCallbackError(String message) implements Response {}
@@ -72,18 +76,20 @@ public class IngestionActor {
 					"read message ingestionId: {}, contentId: {}",
 					ingestionId, dataPayload.getContentId());
 
-				ActorRef<DatasourceActor.Response> responseActorRef =
+				ActorRef<Datasource.Response> responseActorRef =
 					ctx.messageAdapter(
-						DatasourceActor.Response.class,
-						param -> new DatasourceResponseWrapper(message, param)
+						Datasource.Response.class,
+						response -> new DatasourceResponseWrapper(message, dataPayload, response)
 					);
 
-				ActorRef<DatasourceActor.Command> datasourceActorRef =
-					ctx.spawn(
-						DatasourceActor.create(dataPayload, supervisorActorRef, responseActorRef),
-						"datasource-" + ingestionId);
+				ClusterSingleton clusterSingleton = ClusterSingleton.get(ctx.getSystem());
 
-				datasourceActorRef.tell(DatasourceActor.Start.INSTANCE);
+				ActorRef<Datasource.Command> datasource =
+					clusterSingleton.init(SingletonActor.of(Datasource.create(), "datasource"));
+
+				datasource.tell(new Datasource.GetDatasource(
+					dataPayload.getTenantId(), dataPayload.getDatasourceId(), dataPayload.getParsingDate(),
+					responseActorRef));
 
 				List<Message<?>> newMessages = new ArrayList<>(messages);
 				newMessages.add(message);
@@ -93,27 +99,31 @@ public class IngestionActor {
 			})
 			.onMessage(DatasourceResponseWrapper.class, drw -> {
 
-				DatasourceActor.Response response = drw.response;
+				Datasource.Response response = drw.response;
 				Message<?> message = drw.message;
+				DataPayload dataPayload = drw.dataPayload;
 
-				if (response instanceof DatasourceActor.Success) {
-					ctx.getLog().info("enrich pipeline success, ack message");
-					message.ack();
+				if (response instanceof Datasource.Success) {
+					io.openk9.datasource.model.Datasource datasource =
+						((Datasource.Success) response).datasource();
+					ctx.getSelf().tell(new InitPipeline(message, dataPayload, datasource));
 				}
-				else if (response instanceof DatasourceActor.Failure) {
-					Throwable exception =
-						((DatasourceActor.Failure) response).exception();
-					ctx.getLog().error(
-						"enrich pipeline failure, nack message", exception);
+				else if (response instanceof Datasource.Failure) {
+					Throwable exception = ((Datasource.Failure) response).exception();
+					ctx.getLog().error("get datasource failure, nack message", exception);
 					message.nack(exception);
+					List<Message<?>> newMessages = new ArrayList<>(messages);
+					newMessages.remove(message);
+
+					return initial(ctx, supervisorActorRef, enrichItemActorRef, newMessages);
 				}
-
-				List<Message<?>> newMessages = new ArrayList<>(messages);
-				newMessages.remove(message);
-
-				return initial(ctx, supervisorActorRef, enrichItemActorRef, newMessages);
+				return Behaviors.same();
 
 			})
+			.onMessage(InitPipeline.class, ip -> onInitPipeline(
+				ctx, ip, supervisorActorRef, enrichItemActorRef, messages))
+			.onMessage(EnrichPipelineResponseWrapper.class, eprw ->
+				onEnrichPipelineResponseWrapper(ctx, eprw, supervisorActorRef, enrichItemActorRef, messages))
 			.onMessage(Callback.class, callback -> {
 
 				ctx.getLog().info("callback with tokenId: {}", callback.tokenId());
@@ -131,6 +141,52 @@ public class IngestionActor {
 			.onSignal(PreRestart.class, signal -> onSignal(ctx, "ingestion actor restarting", messages))
 			.onSignal(PostStop.class, signal -> onSignal(ctx, "ingestion actor stopped", messages))
 			.build();
+	}
+
+	private static Behavior<Command> onEnrichPipelineResponseWrapper(
+		ActorContext<Command> ctx, EnrichPipelineResponseWrapper eprw,
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
+		ActorRef<EnrichItemActor.Command> enrichItemActorRef, List<Message<?>> messages) {
+
+		EnrichPipeline.Response response = eprw.response;
+		Message<?> message = eprw.message;
+
+		if (response instanceof EnrichPipeline.Success) {
+			ctx.getLog().info("enrich pipeline success, ack message");
+			message.ack();
+		}
+		else if (response instanceof EnrichPipeline.Failure) {
+			Throwable exception =
+				((EnrichPipeline.Failure) response).exception();
+			ctx.getLog().error(
+				"enrich pipeline failure, nack message", exception);
+			message.nack(exception);
+		}
+
+		List<Message<?>> newMessages = new ArrayList<>(messages);
+		newMessages.remove(message);
+
+		return initial(ctx, supervisorActorRef, enrichItemActorRef, newMessages);
+	}
+
+	private static Behavior<Command> onInitPipeline(
+		ActorContext<Command> ctx, InitPipeline initPipeline,
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
+		ActorRef<EnrichItemActor.Command> enrichItemActorRef, List<Message<?>> messages) {
+
+		Message<?> message = initPipeline.message;
+		DataPayload dataPayload = initPipeline.dataPayload;
+		io.openk9.datasource.model.Datasource datasource = initPipeline.datasource;
+
+		ActorRef<EnrichPipeline.Response> responseActorRef =
+			ctx.messageAdapter(EnrichPipeline.Response.class, response ->
+				new EnrichPipelineResponseWrapper(message, response));
+
+		ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = ctx.spawn(
+			EnrichPipeline.create(supervisorActorRef, responseActorRef, dataPayload, datasource),
+			"enrich-pipeline");
+
+		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onSupervisorResponseWrapper(
