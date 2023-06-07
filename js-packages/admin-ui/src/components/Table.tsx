@@ -453,7 +453,6 @@ export function Table<
                 className="table table-hover show-quick-actions-on-Hover table-list"
               />
             ),
-            TableBody: CustomTableBody,
             TableHead: CustomTableHead,
             TableRow: CustomTableRow,
             EmptyPlaceholder: () => (
@@ -472,13 +471,15 @@ export function Table<
           }}
           fixedHeaderContent={() => (
             <CustomTableRow>
-              {isItemsSelectable && <CustomTableCell style={{ width: "40px" }} />}
+              {isItemsSelectable && <CustomTableCell headingCell style={{ width: "40px" }} />}
               {columns.map((column, index) => {
                 return (
-                  <CustomTableCell key={index}>{column.header && <span className="text-truncate">{column.header}</span>}</CustomTableCell>
+                  <CustomTableCell headingCell key={index}>
+                    {column.header && <span className="text-truncate">{column.header}</span>}
+                  </CustomTableCell>
                 );
               })}
-              <CustomTableCell style={{ width: "56px" }} />
+              <CustomTableCell headingCell style={{ width: "56px" }} />
             </CustomTableRow>
           )}
           itemContent={(index) => {

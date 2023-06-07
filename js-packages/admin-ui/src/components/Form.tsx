@@ -853,32 +853,52 @@ export function MainTitle({ title }: { title: string }) {
   );
 }
 
-export const CustomTableBody = (props: any) => {
-  const { children } = props;
-  return <tbody className="table-body">{children}</tbody>;
+interface CustomTableBodyProps extends React.HTMLAttributes<HTMLTableSectionElement> {
+  className?: string;
+}
+
+export const CustomTableBody: React.FC<CustomTableBodyProps> = ({ children, className, ...rest }) => {
+  const classes = className ? `my-custom-table-body ${className}` : "my-custom-table-body";
+
+  return (
+    <tbody {...rest} className={classes}>
+      {children}
+    </tbody>
+  );
 };
 
 export const CustomTableHead = (props: any) => {
-  const { children } = props;
+  const { children, ...rest } = props;
 
-  return <thead className="table-head">{children}</thead>;
+  return (
+    <thead className="table-head" {...rest}>
+      {children}
+    </thead>
+  );
 };
 
 export const CustomTableRow = (props: any) => {
-  const { children } = props;
+  const { children, ...rest } = props;
 
-  return <tr className="table-row">{children}</tr>;
+  return (
+    <tr className="table-row" {...rest}>
+      {children}
+    </tr>
+  );
 };
 
-interface CustomTableCellProps extends TdHTMLAttributes<HTMLTableCellElement> {
-  style?: CSSProperties;
+interface CustomTableCellProps extends React.HTMLAttributes<HTMLTableCellElement> {
+  headingCell?: boolean;
+  style?: React.CSSProperties;
 }
 
 export const CustomTableCell: React.FC<CustomTableCellProps> = (props) => {
-  const { children, style, ...rest } = props;
+  const { headingCell, style, children, ...rest } = props;
+
+  const cellClassName = headingCell ? "table-heading" : "";
 
   return (
-    <td {...rest} style={{ ...style }} className="table-cell">
+    <td className={cellClassName} style={style} {...rest}>
       {children}
     </td>
   );
@@ -1127,7 +1147,7 @@ export function CronInput(props: BaseInputProps<string>) {
 
   return (
     <React.Fragment>
-      <ClayPanel displayTitle={label} displayType="secondary">
+      <CustomPanel displayTitle={label} displayType="secondary">
         <ClayPanel.Body>
           <fieldset disabled={disabled}>
             <CustomFormGroup>
@@ -1199,10 +1219,28 @@ export function CronInput(props: BaseInputProps<string>) {
             </CustomFeedbackGroup>
           </ClayPanel.Footer>
         )}
-      </ClayPanel>
+      </CustomPanel>
     </React.Fragment>
   );
 }
+
+interface CustomPanelProps extends React.HTMLAttributes<HTMLDivElement> {
+  displayTitle: string;
+  displayType: string;
+}
+
+export const CustomPanel: React.FC<CustomPanelProps> = (props) => {
+  const { displayTitle, displayType, children, className, ...rest } = props;
+
+  const panelClassName = `custom-panel panel panel-${displayType} ${className || ""}`;
+
+  return (
+    <div className={panelClassName} {...rest}>
+      {displayTitle && <div className="panel-heading">{displayTitle}</div>}
+      <div className="panel-body">{children}</div>
+    </div>
+  );
+};
 
 interface CustomFeedbackGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
