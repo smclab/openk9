@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import { useCreateOrUpdateQueryAnalysisMutation, useQueryAnalysisQuery } from "../graphql-generated";
 import { QueryAnalysesQuery } from "./QueryAnalyses";
 import { useForm, fromFieldValidators, TextInput, TextArea, MainTitle, CustomButtom, ContainerFluid } from "./Form";
@@ -74,7 +73,7 @@ export function QueryAnalysis() {
   return (
     <ContainerFluid>
       {queryAnalysisId !== "new" && <MainTitle title="Query Analysis" />}
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -87,7 +86,7 @@ export function QueryAnalysis() {
         <div className="sheet-footer">
           <CustomButtom nameButton={queryAnalysisId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

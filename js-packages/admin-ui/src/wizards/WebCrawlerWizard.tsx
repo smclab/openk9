@@ -1,5 +1,4 @@
 import React from "react";
-import ClayForm from "@clayui/form";
 import {
   BooleanInput,
   ContainerFluid,
@@ -83,7 +82,7 @@ export function WebCrawlerWizard() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -97,7 +96,7 @@ export function WebCrawlerWizard() {
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

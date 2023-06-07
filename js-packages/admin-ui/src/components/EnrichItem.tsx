@@ -1,6 +1,5 @@
 import React from "react";
 import { gql } from "@apollo/client";
-import ClayForm from "@clayui/form";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BehaviorMergeType,
@@ -127,7 +126,7 @@ export function EnrichItem() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -151,7 +150,7 @@ export function EnrichItem() {
         <div className="sheet-footer">
           <CustomButtom nameButton={enrichItemId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

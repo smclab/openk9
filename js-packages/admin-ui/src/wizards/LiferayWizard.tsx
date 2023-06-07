@@ -62,7 +62,7 @@ export function LiferayWizard() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -80,7 +80,7 @@ export function LiferayWizard() {
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

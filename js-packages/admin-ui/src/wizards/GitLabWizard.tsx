@@ -1,13 +1,10 @@
 import React from "react";
-import ClayForm from "@clayui/form";
-import ClayButton from "@clayui/button";
 import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 import { useNavigate } from "react-router-dom";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
-import { ClassNameButton } from "../App";
 
 export function GitLabWizard() {
   const navigate = useNavigate();
@@ -60,7 +57,7 @@ export function GitLabWizard() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -74,7 +71,7 @@ export function GitLabWizard() {
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

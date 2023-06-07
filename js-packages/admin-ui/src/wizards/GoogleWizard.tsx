@@ -1,13 +1,10 @@
 import React from "react";
-import ClayForm from "@clayui/form";
 import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
-import { gql } from "@apollo/client";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
 import { useNavigate } from "react-router-dom";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
-import { ClassNameButton } from "../App";
 
 export function GoogleWizard() {
   const navigate = useNavigate();
@@ -60,7 +57,7 @@ export function GoogleWizard() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -74,7 +71,7 @@ export function GoogleWizard() {
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

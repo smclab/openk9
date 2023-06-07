@@ -1,8 +1,7 @@
 import React from "react";
-import ClayAlert, { DisplayType } from "@clayui/alert";
 import "@clayui/css/lib/css/atlas.css";
 
-type ToastDefinition = { displayType: DisplayType; title: string; content: React.ReactNode };
+type ToastDefinition = { displayType: string; title: string; content: React.ReactNode };
 
 const ToastContext = React.createContext<(params: ToastDefinition) => void>(null as any);
 

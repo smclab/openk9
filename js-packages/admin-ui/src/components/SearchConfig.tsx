@@ -13,7 +13,6 @@ import {
   TextInput,
   useForm,
 } from "./Form";
-import ClayForm from "@clayui/form";
 import { useToast } from "./ToastProvider";
 import { SearchConfigsQuery } from "./SearchConfigs";
 
@@ -107,7 +106,7 @@ export function SearchConfig() {
     <React.Fragment>
       <ContainerFluid>
         {searchConfigId !== "new" && <MainTitle title="Attributes" />}
-        <ClayForm
+        <form
           className="sheet"
           onSubmit={(event) => {
             event.preventDefault();
@@ -135,7 +134,7 @@ export function SearchConfig() {
           <div className="sheet-footer">
             <CustomButtom nameButton={searchConfigId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
-        </ClayForm>
+        </form>
       </ContainerFluid>
     </React.Fragment>
   );

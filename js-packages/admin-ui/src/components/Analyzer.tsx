@@ -1,7 +1,7 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
+import form from "@clayui/form";
 import {
   useAnalyzerQuery,
   useBindTokenizerToAnalyzerMutation,
@@ -159,7 +159,7 @@ export function Analyzer() {
       )}
       <ContainerFluid>
         {analyzerId !== "new" && <MainTitle title="Attributes" />}
-        <ClayForm
+        <form
           className="sheet"
           onSubmit={(event) => {
             event.preventDefault();
@@ -184,7 +184,7 @@ export function Analyzer() {
             setTemplateChoice={setTemplateChoice}
           />
           {analyzerId !== "new" && (
-            <ClayForm
+            <form
               onSubmit={(event) => {
                 event.preventDefault();
               }}
@@ -201,12 +201,12 @@ export function Analyzer() {
                 invalidate={() => analyzerQuery.refetch()}
                 description={"Tokenizer associated to Analyzer"}
               />
-            </ClayForm>
+            </form>
           )}
           <div className="sheet-footer">
             <CustomButtom nameButton={analyzerId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
-        </ClayForm>
+        </form>
       </ContainerFluid>
     </>
   );

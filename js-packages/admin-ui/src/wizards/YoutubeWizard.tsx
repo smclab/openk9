@@ -1,5 +1,4 @@
 import React from "react";
-import ClayForm from "@clayui/form";
 import {
   BooleanInput,
   ContainerFluid,
@@ -82,7 +81,7 @@ export function YotubeWizard() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -96,7 +95,7 @@ export function YotubeWizard() {
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

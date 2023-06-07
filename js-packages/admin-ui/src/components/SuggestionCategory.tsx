@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import { useCreateOrUpdateSuggestionCategoryMutation, useSuggestionCategoryQuery } from "../graphql-generated";
 import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, BooleanInput, CustomButtom, ContainerFluid } from "./Form";
 import { SuggestionCategoriesQuery } from "./SuggestionCategories";
@@ -79,7 +78,7 @@ export function SuggestionCategory() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -106,7 +105,7 @@ export function SuggestionCategory() {
             typeSelectet="submit"
           />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

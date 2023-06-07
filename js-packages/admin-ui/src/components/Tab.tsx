@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import { useCreateOrUpdateTabMutation, useTabQuery } from "../graphql-generated";
 import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, MainTitle, CustomButtom, ContainerFluid } from "./Form";
 import { TabsQuery } from "./Tabs";
@@ -75,7 +74,7 @@ export function Tab() {
   return (
     <ContainerFluid>
       {tabId !== "new" && <MainTitle title="Attributes" />}
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -93,7 +92,7 @@ export function Tab() {
         <div className="sheet-footer">
           <CustomButtom nameButton={tabId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

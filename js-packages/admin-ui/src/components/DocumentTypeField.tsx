@@ -1,5 +1,4 @@
 import { gql } from "@apollo/client";
-import ClayForm from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -148,7 +147,7 @@ export function DocumentTypeField() {
         </ContainerFluid>
       </ClayToolbar>
       <ContainerFluid>
-        <ClayForm
+        <form
           className="sheet"
           onSubmit={(event) => {
             event.preventDefault();
@@ -174,7 +173,7 @@ export function DocumentTypeField() {
             description="Define how much score is boosted in case of match on this field"
           />
           {documentTypeFieldId !== "new" && (
-            <ClayForm
+            <form
               onSubmit={(event) => {
                 event.preventDefault();
               }}
@@ -191,7 +190,7 @@ export function DocumentTypeField() {
                 invalidate={() => documentTypeFieldQuery.refetch()}
                 description={"Analyzer associated to this Document Type Field"}
               />
-            </ClayForm>
+            </form>
           )}
           <BooleanInput label="Searchable" {...form.inputProps("searchable")} description="If field is searchable or not" />
           <BooleanInput
@@ -208,7 +207,7 @@ export function DocumentTypeField() {
               typeSelectet="submit"
             />
           </div>
-        </ClayForm>
+        </form>
       </ContainerFluid>
     </React.Fragment>
   );

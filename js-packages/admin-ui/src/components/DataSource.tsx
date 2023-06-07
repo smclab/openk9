@@ -29,7 +29,6 @@ import {
   useForm,
 } from "./Form";
 import { CodeInput } from "./CodeInput";
-import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { DataSourcesQuery } from "./DataSources";
 import ClayToolbar from "@clayui/toolbar";
@@ -250,7 +249,7 @@ export function DataSource() {
         </ClayToolbar>
       )}
       <ContainerFluid>
-        <ClayForm
+        <form
           className="sheet"
           onSubmit={(event) => {
             event.preventDefault();
@@ -266,7 +265,7 @@ export function DataSource() {
           />
           <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
           {datasourceId !== "new" && (
-            <ClayForm
+            <form
               onSubmit={(event) => {
                 event.preventDefault();
               }}
@@ -307,7 +306,7 @@ export function DataSource() {
                 invalidate={() => datasourceQuery.refetch()}
                 description={"Definition of enrich pipeline applied to Datasource's data during processing"}
               />
-            </ClayForm>
+            </form>
           )}
           <CodeInput
             language="json"
@@ -321,7 +320,7 @@ export function DataSource() {
               {datasourceId === "new" ? "Create" : "Update"}
             </ClayButton>
           </div>
-        </ClayForm>
+        </form>
       </ContainerFluid>
     </React.Fragment>
   );

@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import {
   useBindDocumentTypeTemplateToDocumentTypeMutation,
   useCreateOrUpdateDocumentTypeMutation,
@@ -80,7 +79,7 @@ export function DocumentType() {
   return (
     <ContainerFluid>
       {documentTypeId !== "new" && <MainTitle title="Attributes" />}
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -90,7 +89,7 @@ export function DocumentType() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
         {documentTypeId !== "new" && (
-          <ClayForm
+          <form
             onSubmit={(event) => {
               event.preventDefault();
             }}
@@ -107,12 +106,12 @@ export function DocumentType() {
               invalidate={() => documentTypeQuery.refetch()}
               description={"Javascript template for card and detail rendering associated to current Document Type"}
             />
-          </ClayForm>
+          </form>
         )}
         <div className="sheet-footer">
           <CustomButtom nameButton={documentTypeId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

@@ -7,7 +7,6 @@ import { useRestClient } from "./queryClient";
 import { useToast } from "./ToastProvider";
 import ClayModal, { useModal } from "@clayui/modal";
 import ClayButton from "@clayui/button";
-import ClayForm from "@clayui/form";
 import { TextInput, useForm } from "./Form";
 import { useNavigate } from "react-router-dom";
 import { ClassNameButton } from "../App";
@@ -134,14 +133,14 @@ function useCreateDataIndexModal() {
     <ClayModal observer={modal.observer}>
       <ClayModal.Header>Create Data Index</ClayModal.Header>
       <ClayModal.Body>
-        <ClayForm
+        <form
           onSubmit={(event) => {
             event.preventDefault();
             form.submit();
           }}
         >
           <TextInput label="Name" {...form.inputProps("indexName")} />
-        </ClayForm>
+        </form>
       </ClayModal.Body>
       <ClayModal.Footer
         last={

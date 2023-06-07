@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import {
   useForm,
   fromFieldValidators,
@@ -110,7 +109,7 @@ export function Bucket() {
   return (
     <ContainerFluid>
       {bucketId !== "new" && <MainTitle title="Attribute" />}
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -120,7 +119,7 @@ export function Bucket() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
         {bucketId !== "new" && (
-          <ClayForm
+          <form
             onSubmit={(event) => {
               event.preventDefault();
             }}
@@ -150,7 +149,7 @@ export function Bucket() {
               invalidate={() => bucketQuery.refetch()}
               description={"Search Configuration for current bucket"}
             />
-          </ClayForm>
+          </form>
         )}
         {bucketId !== "new" && (
           <BooleanInput
@@ -162,7 +161,7 @@ export function Bucket() {
         <div className="sheet-footer">
           <CustomButtom nameButton={bucketId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

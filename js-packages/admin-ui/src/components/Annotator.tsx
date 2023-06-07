@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import {
   AnnotatorType,
   Fuzziness,
@@ -12,19 +11,10 @@ import {
   useDocTypeFieldValueQuery,
   useUnbindDocTypeFieldToDataSourceMutation,
 } from "../graphql-generated";
-import {
-  useForm,
-  fromFieldValidators,
-  TextInput,
-  TextArea,
-  EnumSelect,
-  NumberInput,
-  SearchSelect,
-  CustomButtom,
-  ContainerFluid,
-} from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, NumberInput, SearchSelect, CustomButtom } from "./Form";
 import { AnnotatorsQuery } from "./Annotators";
 import { useToast } from "./ToastProvider";
+import { ContainerFluid } from "@clayui/layout";
 
 const AnnotatorQuery = gql`
   query Annotator($id: ID!) {
@@ -114,7 +104,7 @@ export function Annotator() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -138,7 +128,7 @@ export function Annotator() {
         <TextArea label="Description" {...form.inputProps("description")} />
         <NumberInput label="Size" {...form.inputProps("size")} description="Size for result retrieved by annotator" />
         {annotatorId !== "new" && (
-          <ClayForm
+          <form
             onSubmit={(event) => {
               event.preventDefault();
             }}
@@ -157,12 +147,12 @@ export function Annotator() {
               })}
               invalidate={() => annotatorQuery.refetch()}
             />
-          </ClayForm>
+          </form>
         )}
         <div className="sheet-footer">
           <CustomButtom nameButton={annotatorId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

@@ -152,7 +152,7 @@ export function QueryParserConfig() {
         </ContainerFluid>
       </ClayToolbar>
       <ContainerFluid>
-        <ClayForm
+        <form
           className="sheet"
           onSubmit={(event) => {
             event.preventDefault();
@@ -315,7 +315,7 @@ export function QueryParserConfig() {
               {queryParserConfigId === "new" ? "Create" : "Update"}
             </ClayButton>
           </div>
-        </ClayForm>
+        </form>
       </ContainerFluid>
     </React.Fragment>
   );

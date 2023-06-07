@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import { useCreateOrUpdateRuleQueryMutation, useRuleQuery } from "../graphql-generated";
 import { RulesQuery } from "./Rules";
 import { useForm, fromFieldValidators, TextInput, TextArea, CustomButtom, ContainerFluid } from "./Form";
@@ -75,7 +74,7 @@ export function Rule() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -89,7 +88,7 @@ export function Rule() {
         <div className="sheet-footer">
           <CustomButtom nameButton={ruleId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import { TemplateType, useCreateOrUpdateDocumentTypeTemplateMutation, useDocumentTypeTemplateQuery } from "../graphql-generated";
 import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, CustomButtom, ContainerFluid } from "./Form";
 import { CodeInput } from "./CodeInput";
@@ -105,7 +104,7 @@ export function DocumentTypeTemplate() {
   });
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -148,7 +147,7 @@ export function DocumentTypeTemplate() {
             typeSelectet="submit"
           />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

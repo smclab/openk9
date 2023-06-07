@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import { useCreateOrUpdateTokenizerMutation, useTokenizerQuery } from "../graphql-generated";
 import {
   useForm,
@@ -116,7 +115,7 @@ export function Tokenizer() {
   return (
     <ContainerFluid>
       {tokenizerId !== "new" && <MainTitle title="Attributes" />}
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -137,7 +136,7 @@ export function Tokenizer() {
         <div className="sheet-footer">
           <CustomButtom nameButton={tokenizerId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

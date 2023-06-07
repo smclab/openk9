@@ -129,7 +129,7 @@ export function PluginDriver() {
   }
   return (
     <ContainerFluid>
-      <ClayForm
+      <form
         className="sheet"
         onSubmit={(event) => {
           event.preventDefault();
@@ -240,7 +240,7 @@ export function PluginDriver() {
         <div className="sheet-footer">
           <CustomButtom nameButton={pluginDriverId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
-      </ClayForm>
+      </form>
     </ContainerFluid>
   );
 }

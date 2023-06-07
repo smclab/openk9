@@ -1,4 +1,4 @@
-import ClayForm, { ClaySelect } from "@clayui/form";
+import { ClaySelect } from "@clayui/form";
 import React from "react";
 import { Spacy } from "../wizards/Logo/Spacy";
 import { Button, useModal } from "@clayui/core";
@@ -54,7 +54,7 @@ export function HuggingFace() {
       )}
 
       <ContainerFluid>
-        <ClayForm
+        <form
           className="sheet"
           onSubmit={(event) => {
             if (name !== "" && library !== "" && task !== "") {
@@ -207,7 +207,7 @@ export function HuggingFace() {
           <div className="sheet-footer">
             <CustomButtom nameButton={"Deploy"} typeSelectet="submit" />
           </div>
-        </ClayForm>
+        </form>
       </ContainerFluid>
     </React.Fragment>
   );

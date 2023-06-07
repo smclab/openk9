@@ -1,5 +1,4 @@
 import { gql } from "@apollo/client";
-import ClayForm from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FieldType, useCreateOrUpdateDocumentTypeSubFieldsMutation, useDocumentTypeFieldQuery } from "../graphql-generated";
@@ -194,7 +193,7 @@ export function SubFieldsDocumentType() {
         </ContainerFluidWithoutView>
       </ClayToolbar>
       <ContainerFluid>
-        <ClayForm
+        <form
           className="sheet"
           onSubmit={(event) => {
             event.preventDefault();
@@ -213,7 +212,7 @@ export function SubFieldsDocumentType() {
           <div className="sheet-footer">
             <CustomButtom nameButton={subFieldID === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
-        </ClayForm>
+        </form>
       </ContainerFluid>
     </React.Fragment>
   );

@@ -1,5 +1,4 @@
 import { gql } from "@apollo/client";
-import ClayForm from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -112,7 +111,7 @@ export function TabToken() {
   return (
     <React.Fragment>
       <ContainerFluid>
-        <ClayForm
+        <form
           className="sheet"
           onSubmit={(event) => {
             event.preventDefault();
@@ -125,7 +124,7 @@ export function TabToken() {
           <EnumSelect label="Token Type" dict={TokenType} {...form.inputProps("tokenType")} />
           <BooleanInput label="Filter" {...form.inputProps("filter")} />
           {tabTokenId !== "new" && (
-            <ClayForm
+            <form
               onSubmit={(event) => {
                 event.preventDefault();
               }}
@@ -145,12 +144,12 @@ export function TabToken() {
                 invalidate={() => tabTokenTabQuery.refetch()}
                 description={"Document Type Field associated to this token"}
               />
-            </ClayForm>
+            </form>
           )}
           <div className="sheet-footer">
             <CustomButtom nameButton={tabTokenId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
-        </ClayForm>
+        </form>
       </ContainerFluid>
     </React.Fragment>
   );

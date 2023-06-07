@@ -1,7 +1,6 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm from "@clayui/form";
 import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../graphql-generated";
 import {
   useForm,
@@ -119,7 +118,7 @@ export function TokenFilter() {
     <>
       <ContainerFluid>
         {tokenFilterId !== "new" && <MainTitle title="Attributes" />}
-        <ClayForm
+        <form
           className="sheet"
           onSubmit={(event) => {
             event.preventDefault();
@@ -140,7 +139,7 @@ export function TokenFilter() {
           <div className="sheet-footer">
             <CustomButtom nameButton={tokenFilterId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
           </div>
-        </ClayForm>
+        </form>
       </ContainerFluid>
     </>
   );
