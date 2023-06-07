@@ -4,7 +4,6 @@ import React from "react";
 import ClayToolbar from "@clayui/toolbar";
 import { ClayButtonWithIcon } from "@clayui/button";
 import { EmptyPage } from "./EmptyPage";
-import ClayLabel from "@clayui/label";
 import { getStatusDisplayType } from "./PodsStatus";
 import { Button, useModal } from "@clayui/core";
 import { Trasformers } from "../wizards/Logo/Trasformers";
@@ -116,7 +115,7 @@ export function HuggingFaceCard() {
                         <section className="autofit-section">
                           <div style={{ display: "flex" }}>
                             <ClayCard.Caption>
-                              <ClayLabel displayType={getStatusDisplayType(status)}>{status}</ClayLabel>
+                              <span className={`label label-${getStatusDisplayType(status)}`}>{status}</span>
                             </ClayCard.Caption>
                           </div>
                         </section>

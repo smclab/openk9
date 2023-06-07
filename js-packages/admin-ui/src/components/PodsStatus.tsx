@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import ClayLabel from "@clayui/label";
 import ClayCard from "@clayui/card";
 import { ContainerFluid } from "./Form";
 
@@ -20,7 +19,7 @@ export function PodsStatus() {
                       <section className="autofit-section">
                         <ClayCard.Description displayType="title">{serviceName}</ClayCard.Description>
                         <ClayCard.Caption>
-                          <ClayLabel displayType={getStatusDisplayType(status)}>{status}</ClayLabel>
+                          <span className={`label label-${getStatusDisplayType(status)}`}>{status}</span>
                         </ClayCard.Caption>
                       </section>
                     </div>
