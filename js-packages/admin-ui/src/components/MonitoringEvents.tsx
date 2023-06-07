@@ -2,7 +2,6 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { EventSortable, useMonitoringEventsQuery, useMonitoringEventDataQuery } from "../graphql-generated";
 import ClayIcon from "@clayui/icon";
-import ClayDropDown from "@clayui/drop-down";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import { TableVirtuoso } from "react-virtuoso";
@@ -45,78 +44,49 @@ export function MonitoringEvents() {
   const tableHeading = (field: EventSortable, nameHeading: string, width: string) => {
     return (
       <th style={{ width }}>
-        <ClayDropDown
-          trigger={
-            <ClayButton displayType="unstyled">
-              {nameHeading}
-              {fieldOrder.field === field && fieldOrder.ordering === "ASC" && <ClayIcon className="c-ml-sm-3" symbol="angle-down" />}
-              {fieldOrder.field === field && fieldOrder.ordering === "DESC" && <ClayIcon className="c-ml-sm-3" symbol="angle-up" />}
-            </ClayButton>
-          }
-        >
-          <ClayDropDown.ItemList>
-            <ClayDropDown.Group header="ORDER BY">
-              <ClayDropDown.Item>
-                <div className="custom-control custom-radio">
-                  <label>
-                    <input
-                      className="custom-control-input"
-                      type="radio"
-                      checked={field === fieldOrder.field && fieldOrder.ordering === "ASC"}
-                      onChange={() => {
-                        setFieldOrder({ field, ordering: "ASC" });
-                      }}
-                    />
-                    <span className="custom-control-label">
-                      <span className="custom-control-label-text">Ascending</span>
-                    </span>
-                  </label>
-                </div>
-              </ClayDropDown.Item>
-              <ClayDropDown.Item>
-                <div className="custom-control custom-radio">
-                  <label>
-                    <input
-                      className="custom-control-input"
-                      type="radio"
-                      checked={field === fieldOrder.field && fieldOrder.ordering === "DESC"}
-                      onChange={() => {
-                        setFieldOrder({ field, ordering: "DESC" });
-                      }}
-                    />
-                    <span className="custom-control-label">
-                      <span className="custom-control-label-text">Descending</span>
-                    </span>
-                  </label>
-                </div>
-              </ClayDropDown.Item>
-            </ClayDropDown.Group>
-            {false && (
-              <ClayDropDown.Group header="FILTER BY">
-                <ClayDropDown.Item>
-                  <div className="custom-control custom-checkbox">
-                    <label>
-                      <input checked={true} className="custom-control-input" type="checkbox" />
-                      <span className="custom-control-label">
-                        <span className="custom-control-label-text">Ascending</span>
-                      </span>
-                    </label>
-                  </div>
-                </ClayDropDown.Item>
-                <ClayDropDown.Item>
-                  <div className="custom-control custom-checkbox">
-                    <label>
-                      <input checked={true} className="custom-control-input" type="checkbox" />
-                      <span className="custom-control-label">
-                        <span className="custom-control-label-text">Descending</span>
-                      </span>
-                    </label>
-                  </div>
-                </ClayDropDown.Item>
-              </ClayDropDown.Group>
-            )}
-          </ClayDropDown.ItemList>
-        </ClayDropDown>
+        <div className="dropdown">
+          <ClayButton displayType="unstyled">
+            {nameHeading}
+            {fieldOrder.field === field && fieldOrder.ordering === "ASC" && <ClayIcon className="c-ml-sm-3" symbol="angle-down" />}
+            {fieldOrder.field === field && fieldOrder.ordering === "DESC" && <ClayIcon className="c-ml-sm-3" symbol="angle-up" />}
+          </ClayButton>
+          <ul className="dropdown-menu">
+            <li>
+              <div className="custom-control custom-radio">
+                <label>
+                  <input
+                    className="custom-control-input"
+                    type="radio"
+                    checked={field === fieldOrder.field && fieldOrder.ordering === "ASC"}
+                    onChange={() => {
+                      setFieldOrder({ field, ordering: "ASC" });
+                    }}
+                  />
+                  <span className="custom-control-label">
+                    <span className="custom-control-label-text">Ascending</span>
+                  </span>
+                </label>
+              </div>
+            </li>
+            <li>
+              <div className="custom-control custom-radio">
+                <label>
+                  <input
+                    className="custom-control-input"
+                    type="radio"
+                    checked={field === fieldOrder.field && fieldOrder.ordering === "DESC"}
+                    onChange={() => {
+                      setFieldOrder({ field, ordering: "DESC" });
+                    }}
+                  />
+                  <span className="custom-control-label">
+                    <span className="custom-control-label-text">Descending</span>
+                  </span>
+                </label>
+              </div>
+            </li>
+          </ul>
+        </div>
       </th>
     );
   };

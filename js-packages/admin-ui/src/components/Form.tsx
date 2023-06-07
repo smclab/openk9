@@ -1,8 +1,7 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React, { CSSProperties, Dispatch, SetStateAction, TableHTMLAttributes, TdHTMLAttributes } from "react";
 import ClayForm, { ClayInput, ClayToggle } from "@clayui/form";
 import { MutationHookOptions, MutationTuple, QueryHookOptions, QueryResult } from "@apollo/client";
 import useDebounced from "./useDebounced";
-import ClayTable from "@clayui/table";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
 import ClayList from "@clayui/list";
@@ -854,6 +853,37 @@ export function MainTitle({ title }: { title: string }) {
   );
 }
 
+export const CustomTableBody = (props: any) => {
+  const { children } = props;
+  return <tbody className="table-body">{children}</tbody>;
+};
+
+export const CustomTableHead = (props: any) => {
+  const { children } = props;
+
+  return <thead className="table-head">{children}</thead>;
+};
+
+export const CustomTableRow = (props: any) => {
+  const { children } = props;
+
+  return <tr className="table-row">{children}</tr>;
+};
+
+interface CustomTableCellProps extends TdHTMLAttributes<HTMLTableCellElement> {
+  style?: CSSProperties;
+}
+
+export const CustomTableCell: React.FC<CustomTableCellProps> = (props) => {
+  const { children, style, ...rest } = props;
+
+  return (
+    <td {...rest} style={{ ...style }} className="table-cell">
+      {children}
+    </td>
+  );
+};
+
 export function AssociatedEntitiesWithSelect<Q>({
   label,
   parentId,
@@ -936,9 +966,9 @@ export function AssociatedEntitiesWithSelect<Q>({
                 className="table table-hover show-quick-actions-on-Hover table-list"
               />
             ),
-            TableBody: ClayTable.Body,
-            TableHead: ClayTable.Head,
-            TableRow: ClayTable.Row,
+            TableBody: CustomTableBody,
+            TableHead: CustomTableHead,
+            TableRow: CustomTableRow,
             EmptyPlaceholder: () => (
               <tbody>
                 <tr>
@@ -950,22 +980,18 @@ export function AssociatedEntitiesWithSelect<Q>({
             ),
           }}
           fixedHeaderContent={() => (
-            <ClayTable.Row>
-              <ClayTable.Cell headingCell headingTitle>
-                {<span className="text-truncate">Field Name</span>}
-              </ClayTable.Cell>
-              <ClayTable.Cell headingCell headingTitle>
-                {<span className="text-truncate">Userfield</span>}
-              </ClayTable.Cell>
-              <ClayTable.Cell headingCell style={{ width: "56px" }} />
-            </ClayTable.Row>
+            <CustomTableRow>
+              <CustomTableCell>{<span className="text-truncate">Field Name</span>}</CustomTableCell>
+              <CustomTableCell>{<span className="text-truncate">Userfield</span>}</CustomTableCell>
+              <CustomTableCell style={{ width: "56px" }} />
+            </CustomTableRow>
           )}
           itemContent={(index) => {
             const row = JSON.parse(JSON.stringify(associatedListQuery.data))?.pluginDriver?.aclMappings[index] ?? undefined;
             return (
               <React.Fragment>
-                <ClayTable.Cell>{row?.docTypeField?.name || "..."}</ClayTable.Cell>
-                <ClayTable.Cell>
+                <CustomTableCell>{row?.docTypeField?.name || "..."}</CustomTableCell>
+                <CustomTableCell>
                   <EnumSelectSimple
                     dict={UserField}
                     disabled={false}
@@ -979,8 +1005,8 @@ export function AssociatedEntitiesWithSelect<Q>({
                     validationMessages={[]}
                     key={""}
                   />
-                </ClayTable.Cell>
-                <ClayTable.Cell>
+                </CustomTableCell>
+                <CustomTableCell>
                   <TableRowActions
                     actions={[
                       {
@@ -994,7 +1020,7 @@ export function AssociatedEntitiesWithSelect<Q>({
                       },
                     ]}
                   />
-                </ClayTable.Cell>
+                </CustomTableCell>
               </React.Fragment>
             );
           }}
@@ -1659,6 +1685,20 @@ export function CreateGraphic({
     </div>
   );
 }
+
+interface CustomTableProps extends TableHTMLAttributes<HTMLTableElement> {
+  style?: CSSProperties;
+}
+
+export const CustomTable: React.FC<CustomTableProps> = (props) => {
+  const { children, style, ...rest } = props;
+
+  return (
+    <table {...rest} style={{ ...style }} className="table table-list">
+      {children}
+    </table>
+  );
+};
 
 export function EmptySpace({ title, description, extraClass = "" }: { title: string; description: string; extraClass?: string }) {
   const classNames = `empty-state ${extraClass}`;

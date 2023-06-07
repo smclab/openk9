@@ -1,5 +1,4 @@
 import { ClayButtonWithIcon } from "@clayui/button";
-import { ClayDropDownWithItems } from "@clayui/drop-down";
 import ClayIcon from "@clayui/icon";
 import ClayToolbar from "@clayui/toolbar";
 import React from "react";
@@ -416,13 +415,18 @@ function ItemActions({ actions }: { actions: Array<{ label: string; icon: string
           })}
         </div>
       </div>
-      <ClayDropDownWithItems
-        trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />}
-        items={actions.map((action) => ({
-          label: action.label,
-          onClick: action.onClick,
-        }))}
-      />
+      <div className="dropdown">
+        <ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />
+        <ul className="dropdown-menu">
+          {actions.map((action, index) => (
+            <li key={index}>
+              <button className="dropdown-item" onClick={action.onClick}>
+                {action.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </React.Fragment>
   );
 }
