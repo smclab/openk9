@@ -24,7 +24,6 @@ import {
 } from "./Form";
 import { PluginDriversQuery } from "./PluginDrivers";
 import { useToast } from "./ToastProvider";
-import ClayPanel from "@clayui/panel";
 
 const PluginDriverQuery = gql`
   query PluginDriver($id: ID!) {
@@ -139,8 +138,11 @@ export function PluginDriver() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <ClayPanel displayTitle="Type" displayType="secondary">
-          <ClayPanel.Body>
+        <div className="panelClass custom-panel panel panel-secondary" role="tablist">
+          <div className="panel-header">
+            <span className="panel-title">Type</span>
+          </div>
+          <div className="custom-panel-body panel-body">
             <CustomFormGroup>
               <div className="form-group-item">
                 <select
@@ -170,8 +172,8 @@ export function PluginDriver() {
                 </select>
               </div>
             </CustomFormGroup>
-          </ClayPanel.Body>
-        </ClayPanel>
+          </div>
+        </div>
         {PluginDriverOptions.map((template) => {
           if (template.visible === "true") {
             const keysOfFields = Object.keys(JSON.parse(template.Json));

@@ -7,7 +7,6 @@ import ClayModal, { useModal } from "@clayui/modal";
 import ClayList from "@clayui/list";
 import { Virtuoso, Components as VirtuosoComponents, TableVirtuoso } from "react-virtuoso";
 import ClayToolbar from "@clayui/toolbar";
-import ClayPanel from "@clayui/panel";
 import ClayMultiSelect from "@clayui/multi-select";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
@@ -1147,79 +1146,86 @@ export function CronInput(props: BaseInputProps<string>) {
 
   return (
     <React.Fragment>
-      <CustomPanel displayTitle={label} displayType="secondary">
-        <ClayPanel.Body>
-          <fieldset disabled={disabled}>
-            <CustomFormGroup>
-              <div className="form-group-item">
-                <label>Preset</label>
-                {description && InformationField(description)}
-                <select value={value} onChange={(event) => onChange(event.currentTarget.value)} className="form-control">
-                  <option value="">Custom</option>
-                  <option value="0 */5 * ? * * *">Every 5 Minutes</option>
-                  <option value="0 */30 * ? * * *">Every 30 Minutes</option>
-                  <option value="0 0 * ? * * *">Every Hour</option>
-                  <option value="0 0 12 * * ? *">Every Day at Midday</option>
-                  <option value="0 0 0 * * ? *">Every Day at Midnight</option>
-                </select>
-              </div>
-            </CustomFormGroup>
-            <CustomFormGroup className="form-group-autofit">
-              <TextInput
-                item
-                label="Second"
-                {...scheduling.inputProps("second")}
-                value={typeof scheduling.inputProps("second").value !== "undefined" ? scheduling.inputProps("second").value : ""}
-              />
-              <TextInput
-                item
-                label="Minutes"
-                {...scheduling.inputProps("minutes")}
-                value={typeof scheduling.inputProps("minutes").value !== "undefined" ? scheduling.inputProps("minutes").value : ""}
-              />
-              <TextInput
-                item
-                label="Hours"
-                {...scheduling.inputProps("hours")}
-                value={typeof scheduling.inputProps("hours").value !== "undefined" ? scheduling.inputProps("hours").value : ""}
-              />
-              <TextInput
-                item
-                label="Days of Month"
-                {...scheduling.inputProps("daysOfMonth")}
-                value={typeof scheduling.inputProps("daysOfMonth").value !== "undefined" ? scheduling.inputProps("daysOfMonth").value : ""}
-              />
-              <TextInput
-                item
-                label="Month"
-                {...scheduling.inputProps("month")}
-                value={scheduling.inputProps("month").value !== "undefined" ? scheduling.inputProps("month").value : ""}
-              />
-              <TextInput
-                item
-                label="Days of Week"
-                {...scheduling.inputProps("daysOfWeek")}
-                value={typeof scheduling.inputProps("daysOfWeek").value !== "undefined" ? scheduling.inputProps("daysOfWeek").value : ""}
-              />
-              <TextInput
-                item
-                label="Year"
-                {...scheduling.inputProps("year")}
-                value={typeof scheduling.inputProps("year").value !== "undefined" ? scheduling.inputProps("year").value : ""}
-              />
-            </CustomFormGroup>
-          </fieldset>
-        </ClayPanel.Body>
-        {validationMessages.length > 0 && (
-          <ClayPanel.Footer className="has-warning">
-            <CustomFeedbackGroup>
-              {validationMessages.map((validationMessage, index) => {
-                return <CustomFeedbackGroup key={index}>{validationMessage}</CustomFeedbackGroup>;
-              })}
-            </CustomFeedbackGroup>
-          </ClayPanel.Footer>
-        )}
-      </CustomPanel>
+      <div className="custom-panel panel" style={{ border: "1px solid #0000001a" }}>
+        <div className="panel-heading" style={{ marginLeft: "20px", marginTop: "20px" }}>
+          <div className="panel-title title">{label}</div>
+        </div>
+        <div className="panel-body">
+          <div className="my-custom-panel-body">
+            <fieldset disabled={disabled}>
+              <CustomFormGroup>
+                <div className="form-group-item">
+                  <label>Preset</label>
+                  {description && InformationField(description)}
+                  <select value={value} onChange={(event) => onChange(event.currentTarget.value)} className="form-control">
+                    <option value="">Custom</option>
+                    <option value="0 */5 * ? * * *">Every 5 Minutes</option>
+                    <option value="0 */30 * ? * * *">Every 30 Minutes</option>
+                    <option value="0 0 * ? * * *">Every Hour</option>
+                    <option value="0 0 12 * * ? *">Every Day at Midday</option>
+                    <option value="0 0 0 * * ? *">Every Day at Midnight</option>
+                  </select>
+                </div>
+              </CustomFormGroup>
+              <CustomFormGroup className="form-group-autofit">
+                <TextInput
+                  item
+                  label="Second"
+                  {...scheduling.inputProps("second")}
+                  value={typeof scheduling.inputProps("second").value !== "undefined" ? scheduling.inputProps("second").value : ""}
+                />
+                <TextInput
+                  item
+                  label="Minutes"
+                  {...scheduling.inputProps("minutes")}
+                  value={typeof scheduling.inputProps("minutes").value !== "undefined" ? scheduling.inputProps("minutes").value : ""}
+                />
+                <TextInput
+                  item
+                  label="Hours"
+                  {...scheduling.inputProps("hours")}
+                  value={typeof scheduling.inputProps("hours").value !== "undefined" ? scheduling.inputProps("hours").value : ""}
+                />
+                <TextInput
+                  item
+                  label="Days of Month"
+                  {...scheduling.inputProps("daysOfMonth")}
+                  value={
+                    typeof scheduling.inputProps("daysOfMonth").value !== "undefined" ? scheduling.inputProps("daysOfMonth").value : ""
+                  }
+                />
+                <TextInput
+                  item
+                  label="Month"
+                  {...scheduling.inputProps("month")}
+                  value={scheduling.inputProps("month").value !== "undefined" ? scheduling.inputProps("month").value : ""}
+                />
+                <TextInput
+                  item
+                  label="Days of Week"
+                  {...scheduling.inputProps("daysOfWeek")}
+                  value={typeof scheduling.inputProps("daysOfWeek").value !== "undefined" ? scheduling.inputProps("daysOfWeek").value : ""}
+                />
+                <TextInput
+                  item
+                  label="Year"
+                  {...scheduling.inputProps("year")}
+                  value={typeof scheduling.inputProps("year").value !== "undefined" ? scheduling.inputProps("year").value : ""}
+                />
+              </CustomFormGroup>
+            </fieldset>
+          </div>
+          {validationMessages.length > 0 && (
+            <div className="custom-panel-footer panel-footer has-warning">
+              <CustomFeedbackGroup>
+                {validationMessages.map((validationMessage, index) => {
+                  return <CustomFeedbackGroup key={index}>{validationMessage}</CustomFeedbackGroup>;
+                })}
+              </CustomFeedbackGroup>
+            </div>
+          )}
+        </div>
+      </div>
     </React.Fragment>
   );
 }
@@ -1458,8 +1464,11 @@ export function MultiSelectForDinamicFields({
 }) {
   return (
     <React.Fragment>
-      <ClayPanel displayTitle="Type" displayType="secondary">
-        <ClayPanel.Body>
+      <div className="panelClass custom-panel panel panel-secondary" role="tablist">
+        <div className="panel-header">
+          <span className="panel-title">Type</span>
+        </div>
+        <div className="custom-panel-body panel-body">
           <CustomFormGroup>
             <div className="form-group-item">
               <select
@@ -1487,8 +1496,8 @@ export function MultiSelectForDinamicFields({
               </select>
             </div>
           </CustomFormGroup>
-        </ClayPanel.Body>
-      </ClayPanel>
+        </div>
+      </div>
     </React.Fragment>
   );
 }
@@ -1530,8 +1539,11 @@ export function MultiSelectForDinamicallyFieldsWithoutType({
 }) {
   return (
     <React.Fragment>
-      <ClayPanel displayTitle="Type" displayType="secondary">
-        <ClayPanel.Body>
+      <div className="panelClass custom-panel panel panel-secondary" role="tablist">
+        <div className="panel-header">
+          <span className="panel-title">Type</span>
+        </div>
+        <div className="custom-panel-body panel-body">
           <CustomFormGroup>
             <div className="form-group-item">
               <select
@@ -1563,8 +1575,8 @@ export function MultiSelectForDinamicallyFieldsWithoutType({
               </select>
             </div>
           </CustomFormGroup>
-        </ClayPanel.Body>
-      </ClayPanel>
+        </div>
+      </div>
     </React.Fragment>
   );
 }

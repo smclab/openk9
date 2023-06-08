@@ -20,7 +20,6 @@ import { ClayButtonWithIcon } from "@clayui/button";
 import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
 import { QueryParserConfigsQuery } from "./QueryParsers";
-import ClayPanel from "@clayui/panel";
 import { useToast } from "./ToastProvider";
 import { ClassNameButton } from "../App";
 
@@ -162,8 +161,11 @@ export function QueryParserConfig() {
         >
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-          <ClayPanel displayTitle="Type" displayType="secondary">
-            <ClayPanel.Body>
+          <div className="panelClass custom-panel panel panel-secondary" role="tablist">
+            <div className="panel-header">
+              <span className="panel-title">Type</span>
+            </div>
+            <div className="custom-panel-body panel-body">
               <CustomFormGroup>
                 <div className="form-group-item">
                   <select
@@ -190,8 +192,8 @@ export function QueryParserConfig() {
                   </select>
                 </div>
               </CustomFormGroup>
-            </ClayPanel.Body>
-          </ClayPanel>
+            </div>
+          </div>
           {TemplateQueryParser.map((template) => {
             if (template.visible === "true") {
               const keysOfFields = Object.keys(JSON.parse(template.Json));

@@ -9,7 +9,6 @@ import ClayEmptyState from "@clayui/empty-state";
 import { Virtuoso, Components as VirtuosoComponents } from "react-virtuoso";
 import ClayLayout from "@clayui/layout";
 import ClayToolbar from "@clayui/toolbar";
-import ClayPanel from "@clayui/panel";
 import ClayMultiSelect from "@clayui/multi-select";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
@@ -748,8 +747,11 @@ export function CronInput(props: BaseInputProps<string>) {
     }, []),
   });
   return (
-    <ClayPanel displayTitle={label} displayType="secondary">
-      <ClayPanel.Body>
+    <div className="panelClass custom-panel panel panel-secondary" role="tablist">
+      <div className="panel-header">
+        <span className="panel-title">{label}</span>
+      </div>
+      <div className="custom-panel-body panel-body">
         <fieldset disabled={disabled}>
           <ClayForm.Group>
             <div className="form-group-item">
@@ -774,17 +776,19 @@ export function CronInput(props: BaseInputProps<string>) {
             <TextInput item label="Year" {...scheduling.inputProps("year")} />
           </ClayForm.Group>
         </fieldset>
-      </ClayPanel.Body>
+      </div>
       {validationMessages.length > 0 && (
-        <ClayPanel.Footer className="has-warning">
-          <ClayForm.FeedbackGroup>
-            {validationMessages.map((validationMessage, index) => {
-              return <ClayForm.FeedbackItem key={index}>{validationMessage}</ClayForm.FeedbackItem>;
-            })}
-          </ClayForm.FeedbackGroup>
-        </ClayPanel.Footer>
+        <div className="form-feedback-group">
+          {validationMessages.map((validationMessage, index) => {
+            return (
+              <div key={index} className="form-feedback-item">
+                {validationMessage}
+              </div>
+            );
+          })}
+        </div>
       )}
-    </ClayPanel>
+    </div>
   );
 }
 
