@@ -48,7 +48,7 @@ public class Datasource {
 			TransactionInvoker transactionInvoker =
 				CDI.current().select(TransactionInvoker.class).get();
 
-			DatasourceMapper datasourceMapper = CDI.current().select(DatasourceMapper.class).get();
+			DatasourceMapper datasourceMapper = DatasourceMapper.INSTANCE;
 
 			return idle(ctx, transactionInvoker, datasourceMapper);
 
