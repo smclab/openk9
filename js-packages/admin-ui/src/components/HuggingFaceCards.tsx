@@ -1,4 +1,3 @@
-import ClayCard from "@clayui/card";
 import { Link, useNavigate } from "react-router-dom";
 import React from "react";
 import ClayToolbar from "@clayui/toolbar";
@@ -77,51 +76,49 @@ export function HuggingFaceCard() {
               <div key={name} className="col-sm-6 col-md-4 col-lg-3">
                 <div className="card">
                   <div className="card-body">
-                    <ClayCard.Row>
+                    <div className="card-row">
                       <div className="autofit-col autofit-col-expand" style={{ marginTop: "10px" }}>
                         <section className="autofit-section">
-                          <ClayCard.Description displayType="title" style={{}}>
-                            {name}
-                          </ClayCard.Description>
+                          <div className="card-description card-title title">{name}</div>
                         </section>
                       </div>
-                    </ClayCard.Row>
-                    <ClayCard.Row>
+                    </div>
+                    <div className="card-row">
                       <div className="autofit-col autofit-col-expand" style={{ marginTop: "10px" }}>
                         <section className="autofit-section">
                           <div style={{ display: "flex" }}>
                             <GetIconLibrary name={library} />
-                            <ClayCard.Description displayType="subtitle" style={{ marginLeft: "7px" }}>
+                            <div className="card-description card-subtitle subtitle" style={{ marginLeft: "7px" }}>
                               {library}
-                            </ClayCard.Description>
+                            </div>
                           </div>
                         </section>
                       </div>
-                    </ClayCard.Row>
-                    <ClayCard.Row>
+                    </div>
+                    <div className="card-row">
                       <div className="autofit-col autofit-col-expand" style={{ marginTop: "10px" }}>
                         <section className="autofit-section">
                           <div style={{ display: "flex" }}>
                             <GetIconTask name={task} />
-                            <ClayCard.Description displayType="subtitle" style={{ marginLeft: "7px" }}>
+                            <div className="card-description card-subtitle subtitle" style={{ marginLeft: "7px" }}>
                               {task}
-                            </ClayCard.Description>
+                            </div>
                           </div>
                         </section>
                       </div>
-                    </ClayCard.Row>
-                    <ClayCard.Row>
+                    </div>
+                    <div className="card-row">
                       <div className="autofit-col autofit-col-expand" style={{ marginTop: "10px" }}>
                         <section className="autofit-section">
                           <div style={{ display: "flex" }}>
-                            <ClayCard.Caption>
+                            <div className="card-caption ">
                               <span className={`label label-${getStatusDisplayType(status)}`}>{status}</span>
-                            </ClayCard.Caption>
+                            </div>
                           </div>
                         </section>
                       </div>
-                    </ClayCard.Row>
-                    <ClayCard.Row style={{ marginTop: "12px" }}>
+                    </div>
+                    <div className="card-row" style={{ marginTop: "12px" }}>
                       <div className="row">
                         <div className="col-sm-6">
                           <Button
@@ -149,7 +146,7 @@ export function HuggingFaceCard() {
                           </Button>
                         </div>
                       </div>
-                    </ClayCard.Row>
+                    </div>
                   </div>
                 </div>
               </div>

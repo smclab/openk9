@@ -21,6 +21,7 @@ import {
   BooleanInput,
   ContainerFluid,
   CronInput,
+  CustomButtomClay,
   fromFieldValidators,
   SearchSelect,
   SimpleModal,
@@ -225,23 +226,24 @@ export function DataSource() {
             <ClayToolbar.Nav className="justify-content-end">
               <ClayToolbar.Item>
                 <ClayButton.Group>
-                  <ClayButton
-                    displayType="secondary"
+                  <CustomButtomClay
+                    label="Generate Document Types"
+                    action={() => onOpenChangeGenerate}
+                    color="btn-secondary"
                     disabled={generateDocumentTypesMutation.isLoading}
-                    onClick={() => onOpenChangeGenerate(true)}
-                  >
-                    Generate Document Types
-                  </ClayButton>
-                  <ClayButton
-                    displayType="secondary"
-                    disabled={triggerSchedulerMutation.isLoading}
-                    onClick={() => onOpenChangeTrigger(true)}
-                  >
-                    Trigger Scheduler
-                  </ClayButton>
-                  <ClayButton displayType="secondary" disabled={reindexMutation.isLoading} onClick={() => onOpenChangeReindex(true)}>
-                    Reindex
-                  </ClayButton>
+                  />
+                  <CustomButtomClay
+                    label="Trigger Scheduler"
+                    action={() => onOpenChangeTrigger}
+                    color="btn-secondary"
+                    disabled={generateDocumentTypesMutation.isLoading}
+                  />
+                  <CustomButtomClay
+                    label="Reindex"
+                    action={() => onOpenChangeReindex}
+                    color="btn-secondary"
+                    disabled={generateDocumentTypesMutation.isLoading}
+                  />
                 </ClayButton.Group>
               </ClayToolbar.Item>
             </ClayToolbar.Nav>
@@ -316,9 +318,7 @@ export function DataSource() {
           />
 
           <div className="sheet-footer">
-            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
-              {datasourceId === "new" ? "Create" : "Update"}
-            </ClayButton>
+            <CustomButtomClay label={datasourceId === "new" ? "Create" : "Update"} type="submit" disabled={!form.canSubmit} />
           </div>
         </form>
       </ContainerFluid>

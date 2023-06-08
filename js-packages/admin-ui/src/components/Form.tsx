@@ -1834,6 +1834,31 @@ export function LabelNumber({ label, number, unity }: { label: string; number: n
   );
 }
 
+export function CustomButtomClay({
+  label,
+  action,
+  className,
+  disabled = false,
+  color,
+  type = "button",
+  ...rest
+}: {
+  label: React.ReactNode;
+  action?: any;
+  className?: string;
+  disabled?: boolean;
+  color?: string;
+  type?: "submit" | "reset" | "button";
+}) {
+  const colorButton = color ? `btn ${color} ` : "btn btn-danger";
+  const classes = className ? `${colorButton} ${className}` : ` ${colorButton}`;
+  return (
+    <button {...rest} disabled={disabled} className={classes} type={type} onClick={action}>
+      {label}
+    </button>
+  );
+}
+
 const styleModal = `
     .custom-modal__content {
       display: flex;

@@ -17,7 +17,7 @@ import ClayModal, { useModal } from "@clayui/modal";
 import { ClayInput } from "@clayui/form";
 import useDebounced from "./useDebounced";
 import { ClassNameButton } from "../App";
-import { ContainerFluidWithoutView, CustomFormGroup, EmptySpace } from "./Form";
+import { ContainerFluidWithoutView, CustomButtomClay, CustomFormGroup, EmptySpace } from "./Form";
 
 export const AssociatedEnrichPipelineEnrichItemsQuery = gql`
   query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {
@@ -149,7 +149,16 @@ export function EnrichPipelineEnrichItems() {
               </ClayToolbar.Section>
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <ClayButtonWithIcon
+              <CustomButtomClay
+                className="btn btn-danger btn btn-monospaced btn-sm btn-primary"
+                label={
+                  <svg className="lexicon-icon lexicon-icon-plus" role="presentation">
+                    <use xlinkHref="/admin/static/media/icons.9f9b3ff4d13e0ff2f5d340dee4c72dd0.svg#plus"></use>
+                  </svg>
+                }
+                action={() => onOpenChange(true)}
+              />
+              {/* <ClayButtonWithIcon
                 className={ClassNameButton}
                 aria-label=""
                 symbol="plus"
@@ -157,7 +166,7 @@ export function EnrichPipelineEnrichItems() {
                 onClick={() => {
                   onOpenChange(true);
                 }}
-              />
+              /> */}
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ContainerFluidWithoutView>

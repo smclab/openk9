@@ -14,6 +14,7 @@ import {
   BooleanInput,
   ContainerFluid,
   CustomButtom,
+  CustomButtomClay,
   EnumSelect,
   fromFieldValidators,
   NumberInput,
@@ -22,13 +23,11 @@ import {
   TextInput,
   useForm,
 } from "./Form";
-import { ClayButtonWithIcon } from "@clayui/button";
 import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
 import { CodeInput } from "./CodeInput";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
 import { useToast } from "./ToastProvider";
-import { ClassNameButton } from "../App";
 
 const DocumentTypeFieldQuery = gql`
   query DocumentTypeField($id: ID!) {
@@ -140,7 +139,13 @@ export function DocumentTypeField() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item>
               <Link to={`/document-types/${documentTypeId}/document-type-fields`}>
-                <ClayButtonWithIcon aria-label="" className={` ${ClassNameButton} `} symbol="angle-left" small />
+                <CustomButtomClay
+                  label={
+                    <div>
+                      <svg className="angle-left" focusable="false" role="presentation"></svg>
+                    </div>
+                  }
+                />
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>

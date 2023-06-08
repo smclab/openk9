@@ -6,10 +6,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useRestClient } from "./queryClient";
 import { useToast } from "./ToastProvider";
 import ClayModal, { useModal } from "@clayui/modal";
-import ClayButton from "@clayui/button";
-import { TextInput, useForm } from "./Form";
+import { CustomButtomClay, TextInput, useForm } from "./Form";
 import { useNavigate } from "react-router-dom";
-import { ClassNameButton } from "../App";
 
 export const DocumentTypesQuery = gql`
   query DocumentTypes($searchText: String, $cursor: String) {
@@ -142,19 +140,7 @@ function useCreateDataIndexModal() {
           <TextInput label="Name" {...form.inputProps("indexName")} />
         </form>
       </ClayModal.Body>
-      <ClayModal.Footer
-        last={
-          <ClayButton
-            className={ClassNameButton}
-            disabled={!form.canSubmit}
-            onClick={() => {
-              form.submit();
-            }}
-          >
-            Create
-          </ClayButton>
-        }
-      />
+      <ClayModal.Footer last={<CustomButtomClay label="Create" action={() => form.submit()} disabled={!form.canSubmit} />} />
     </ClayModal>
   );
   return { open, content };

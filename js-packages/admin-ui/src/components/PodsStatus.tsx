@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import ClayCard from "@clayui/card";
 import { ContainerFluid } from "./Form";
 
 export function PodsStatus() {
@@ -12,23 +11,23 @@ export function PodsStatus() {
         {data.map(({ podName, serviceName, status }) => {
           return (
             <div key={serviceName} className="col-sm-6 col-md-4 col-lg-3">
-              <ClayCard>
-                <ClayCard.Body>
-                  <ClayCard.Row>
+              <div className="card">
+                <div className="card-body">
+                  <div className="card-row">
                     <div className="autofit-col autofit-col-expand">
                       <section className="autofit-section">
-                        <ClayCard.Description displayType="title">{serviceName}</ClayCard.Description>
-                        <ClayCard.Caption>
+                        <div className="card-description card-title title">{serviceName}</div>
+                        <div className="card-caption">
                           <span className={`label label-${getStatusDisplayType(status)}`}>{status}</span>
-                        </ClayCard.Caption>
+                        </div>
                       </section>
                     </div>
-                  </ClayCard.Row>
+                  </div>
                   <Link to={`/logs/${podName}`} className="card-link">
                     Logs
                   </Link>
-                </ClayCard.Body>
-              </ClayCard>
+                </div>
+              </div>
             </div>
           );
         })}
