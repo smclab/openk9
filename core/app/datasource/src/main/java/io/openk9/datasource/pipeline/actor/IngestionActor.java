@@ -9,7 +9,9 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.processor.payload.DataPayload;
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class IngestionActor {
 	public sealed interface Command {}
@@ -120,8 +123,7 @@ public class IngestionActor {
 				return Behaviors.same();
 
 			})
-			.onMessage(InitPipeline.class, ip -> onInitPipeline(
-				ctx, ip, supervisorActorRef, enrichItemActorRef, messages))
+			.onMessage(InitPipeline.class, ip -> onInitPipeline(ctx, ip, supervisorActorRef))
 			.onMessage(EnrichPipelineResponseWrapper.class, eprw ->
 				onEnrichPipelineResponseWrapper(ctx, eprw, supervisorActorRef, enrichItemActorRef, messages))
 			.onMessage(Callback.class, callback -> {
@@ -171,8 +173,7 @@ public class IngestionActor {
 
 	private static Behavior<Command> onInitPipeline(
 		ActorContext<Command> ctx, InitPipeline initPipeline,
-		ActorRef<HttpSupervisor.Command> supervisorActorRef,
-		ActorRef<EnrichItemActor.Command> enrichItemActorRef, List<Message<?>> messages) {
+		ActorRef<HttpSupervisor.Command> supervisorActorRef) {
 
 		Message<?> message = initPipeline.message;
 		DataPayload dataPayload = initPipeline.dataPayload;
@@ -182,9 +183,27 @@ public class IngestionActor {
 			ctx.messageAdapter(EnrichPipeline.Response.class, response ->
 				new EnrichPipelineResponseWrapper(message, response));
 
+		DataIndex dataIndex = datasource.getDataIndex();
+
+		dataPayload.setIndexName(dataIndex.getName());
+
+		io.openk9.datasource.model.EnrichPipeline enrichPipeline = datasource.getEnrichPipeline();
+
+		Set<EnrichPipelineItem> enrichPipelineItems;
+
+		if (enrichPipeline == null) {
+			enrichPipelineItems = Set.of();
+		}
+		else {
+			enrichPipelineItems = enrichPipeline.getEnrichPipelineItems();
+		}
+
 		ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = ctx.spawn(
-			EnrichPipeline.create(supervisorActorRef, responseActorRef, dataPayload, datasource),
+			EnrichPipeline.create(
+				supervisorActorRef, responseActorRef, dataPayload, datasource, enrichPipelineItems),
 			"enrich-pipeline");
+
+		enrichPipelineActorRef.tell(EnrichPipeline.Start.INSTANCE);
 
 		return Behaviors.same();
 	}

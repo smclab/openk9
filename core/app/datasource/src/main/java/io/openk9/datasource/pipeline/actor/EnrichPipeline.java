@@ -7,7 +7,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import io.openk9.common.util.collection.Collections;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipelineItem;
@@ -28,280 +27,272 @@ import java.util.Set;
 
 public class EnrichPipeline {
 
-  public sealed interface Command {}
-  private record IndexWriterResponseWrapper(
-    IndexWriterActor.Response response) implements Command {}
-  private record EnrichItemSupervisorResponseWrapper(
-    EnrichItemSupervisor.Response response) implements Command {}
-  private record EnrichItemError(EnrichItem enrichItem, Throwable exception) implements Command {}
-  private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
-  private record InternalError(String error) implements Command {}
-  public sealed interface Response {}
-  public enum Success implements Response {INSTANCE}
-  public record Failure(Throwable exception) implements Response {}
+	public sealed interface Command {}
+	public enum Start implements Command {INSTANCE}
+	private record IndexWriterResponseWrapper(
+		IndexWriterActor.Response response) implements Command {}
+	private record EnrichItemSupervisorResponseWrapper(
+		EnrichItemSupervisor.Response response) implements Command {}
+	private record EnrichItemError(EnrichItem enrichItem, Throwable exception) implements Command {}
+	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
+	private record InternalError(String error) implements Command {}
+	public sealed interface Response {}
+	public enum Success implements Response {INSTANCE}
+	public record Failure(Throwable exception) implements Response {}
+
+	public static Behavior<Command> create(
+			ActorRef<HttpSupervisor.Command> supervisorActorRef,
+			ActorRef<Response> replyTo, DataPayload dataPayload,
+			Datasource datasource, Set<EnrichPipelineItem> enrichPipelineItems) {
+
+		return Behaviors.setup(ctx -> {
+
+			Logger log = ctx.getLog();
+
+			ActorRef<IndexWriterActor.Response> responseActorRef =
+				ctx.messageAdapter(
+					IndexWriterActor.Response.class,
+					IndexWriterResponseWrapper::new);
+
+			log.info("start pipeline for datasource with id {}", datasource.getId());
+
+			return Behaviors.receive(Command.class)
+				.onMessageEquals(
+					Start.INSTANCE, () ->
+					initPipeline(
+						ctx, supervisorActorRef, responseActorRef, replyTo, dataPayload,
+						datasource, enrichPipelineItems)
+				)
+				.build();
+		});
+	}
+
+	private static Behavior<Command> initPipeline(
+		ActorContext<EnrichPipeline.Command> ctx,
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
+		ActorRef<IndexWriterActor.Response> responseActorRef,
+		ActorRef<Response> replyTo, DataPayload dataPayload,
+		Datasource datasource, Set<EnrichPipelineItem> enrichPipelineItems) {
+
+		Logger logger = ctx.getLog();
+
+		if (enrichPipelineItems.isEmpty()) {
+
+			logger.info("pipeline is empty, start index writer");
+
+			ClusterSingleton clusterSingleton =
+				ClusterSingleton.get(ctx.getSystem());
+
+			ActorRef<IndexWriterActor.Command> indexWriterActorRef =
+				clusterSingleton.init(
+					SingletonActor.of(
+						IndexWriterActor.create(), "index-writer")
+				);
+
+			Buffer buffer = Json.encodeToBuffer(dataPayload);
+
+			indexWriterActorRef.tell(
+				new IndexWriterActor.Start(
+					datasource.getDataIndex(),
+					buffer.getBytes(), responseActorRef)
+			);
+
+			return Behaviors.receive(Command.class)
+					.onMessage(
+						IndexWriterResponseWrapper.class,
+						indexWriterResponseWrapper -> {
+
+							IndexWriterActor.Response response =
+									indexWriterResponseWrapper.response();
+
+							if (response instanceof IndexWriterActor.Success) {
+								replyTo.tell(Success.INSTANCE);
+							}
+							else if (response instanceof IndexWriterActor.Failure) {
+								replyTo.tell(new Failure(((IndexWriterActor.Failure) response).exception()));
+							}
+
+							return Behaviors.stopped();
+						})
+				.build();
+
+		}
+
+		EnrichPipelineItem enrichPipelineItem = Collections.head(enrichPipelineItems);
+		Set<EnrichPipelineItem> tail = Collections.tail(enrichPipelineItems);
+
+		EnrichItem enrichItem = enrichPipelineItem.getEnrichItem();
+
+		logger.info("start enrich for enrichItem with id {}", enrichItem.getId());
+
+		String jsonPath = enrichItem.getJsonPath();
+		EnrichItem.BehaviorMergeType behaviorMergeType = enrichItem.getBehaviorMergeType();
+
+		ActorRef<EnrichItemSupervisor.Command> enrichItemSupervisorRef =
+			ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
 
-  public static Behavior<Command> create(
-    ActorRef<HttpSupervisor.Command> supervisorActorRef, ActorRef<Response> replyTo,
-    DataPayload dataPayload, Datasource datasource) {
+		Long requestTimeout = enrichItem.getRequestTimeout();
 
-    return Behaviors.setup(ctx -> {
+		LocalDateTime expiredDate =
+			LocalDateTime
+				.now()
+				.plus(requestTimeout, ChronoUnit.MILLIS);
 
-      Logger log = ctx.getLog();
+		ctx.ask(
+			EnrichItemSupervisor.Response.class,
+			enrichItemSupervisorRef,
+			Duration.ofMillis(requestTimeout),
+			enrichItemReplyTo ->
+				new EnrichItemSupervisor.Execute(
+					enrichItem, dataPayload, expiredDate, enrichItemReplyTo),
+			(r, t) -> {
+				if (t != null) {
+					return new EnrichItemError(enrichItem, t);
+				}
+				else if (r instanceof EnrichItemSupervisor.Error) {
+					EnrichItemSupervisor.Error error =(EnrichItemSupervisor.Error)r;
+					return new EnrichItemError(enrichItem, new RuntimeException(error.error()));
+				}
+				else {
+					return new EnrichItemSupervisorResponseWrapper(r);
+				}
+			}
+		);
 
-      ActorRef<IndexWriterActor.Response> responseActorRef =
-        ctx.messageAdapter(
-          IndexWriterActor.Response.class,
-          IndexWriterResponseWrapper::new);
+		return Behaviors.receive(Command.class)
+				.onMessage(EnrichItemError.class, param -> {
 
-      DataIndex dataIndex = datasource.getDataIndex();
+					EnrichItem enrichItemError = param.enrichItem();
 
-      dataPayload.setIndexName(dataIndex.getName());
+					EnrichItem.BehaviorOnError behaviorOnError =
+							enrichItem.getBehaviorOnError();
 
-      io.openk9.datasource.model.EnrichPipeline enrichPipeline = datasource.getEnrichPipeline();
-
-      Set<EnrichPipelineItem> enrichPipelineItems;
-
-      if (enrichPipeline == null) {
-        enrichPipelineItems = Set.of();
-      }
-      else {
-        enrichPipelineItems = enrichPipeline.getEnrichPipelineItems();
-      }
-
-      log.info("start pipeline for datasource with id {}", datasource.getId());
-
-      return initPipeline(
-        ctx, supervisorActorRef, responseActorRef, replyTo, dataPayload, datasource,
-        enrichPipelineItems);
-    });
-  }
-
-  private static Behavior<Command> initPipeline(
-      ActorContext<EnrichPipeline.Command> ctx,
-      ActorRef<HttpSupervisor.Command> supervisorActorRef,
-      ActorRef<IndexWriterActor.Response> responseActorRef,
-      ActorRef<Response> replyTo, DataPayload dataPayload,
-      Datasource datasource, Set<EnrichPipelineItem> enrichPipelineItems) {
-
-    Logger logger = ctx.getLog();
-
-    if (enrichPipelineItems.isEmpty()) {
-
-      logger.info("pipeline is empty, start index writer");
-
-      ClusterSingleton clusterSingleton =
-          ClusterSingleton.get(ctx.getSystem());
-
-      ActorRef<IndexWriterActor.Command> indexWriterActorRef =
-          clusterSingleton.init(
-              SingletonActor.of(
-                  IndexWriterActor.create(), "index-writer")
-          );
-
-      Buffer buffer = Json.encodeToBuffer(dataPayload);
+					switch (behaviorOnError) {
+						case SKIP -> {
 
-      indexWriterActorRef.tell(
-          new IndexWriterActor.Start(
-              datasource.getDataIndex(),
-              buffer.getBytes(), responseActorRef)
-      );
+							logger.error(
+									"behaviorOnError is SKIP, call next enrichItem: " + enrichItemError.getId(), param.exception);
 
-      return Behaviors.receive(Command.class)
-          .onMessage(
-              IndexWriterResponseWrapper.class,
-              indexWriterResponseWrapper -> {
+							if (!tail.isEmpty()) {
+								ctx.getLog().info("call next enrichItem");
+							}
 
-                IndexWriterActor.Response response =
-                    indexWriterResponseWrapper.response();
+							return initPipeline(
+									ctx, supervisorActorRef, responseActorRef, replyTo,
+									dataPayload, datasource, tail);
 
-                if (response instanceof IndexWriterActor.Success) {
-                  replyTo.tell(Success.INSTANCE);
-                }
-                else if (response instanceof IndexWriterActor.Failure) {
-                  replyTo.tell(new Failure(((IndexWriterActor.Failure) response).exception()));
-                }
+						}
+						case FAIL -> {
 
-                return Behaviors.stopped();
-              })
-          .build();
+							logger.info(
+									"behaviorOnError is FAIL, stop pipeline: " + enrichItemError.getId(), param.exception);
 
-    }
+							Throwable throwable = param.exception;
 
-    EnrichPipelineItem enrichPipelineItem = Collections.head(enrichPipelineItems);
-    Set<EnrichPipelineItem> tail = Collections.tail(enrichPipelineItems);
+							ctx.getSelf().tell(
+									new InternalError(throwable.getMessage()));
 
-    EnrichItem enrichItem = enrichPipelineItem.getEnrichItem();
+							return Behaviors.same();
+						}
+						case REJECT -> {
 
-    logger.info("start enrich for enrichItem with id {}", enrichItem.getId());
+							logger.error(
+									"behaviorOnError is REJECT, stop pipeline: " + enrichItemError.getId(), param.exception);
 
-    String jsonPath = enrichItem.getJsonPath();
-    EnrichItem.BehaviorMergeType behaviorMergeType = enrichItem.getBehaviorMergeType();
+							replyTo.tell(Success.INSTANCE);
 
-    ActorRef<EnrichItemSupervisor.Command> enrichItemSupervisorRef =
-        ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
+							return Behaviors.stopped();
+						}
+						default -> {
 
-    Long requestTimeout = enrichItem.getRequestTimeout();
+							ctx.getSelf().tell(
+									new InternalError(
+											"behaviorOnError is not valid: " + behaviorOnError));
 
-    LocalDateTime expiredDate =
-        LocalDateTime
-            .now()
-            .plus(requestTimeout, ChronoUnit.MILLIS);
+							return Behaviors.same();
 
-    ctx.ask(
-        EnrichItemSupervisor.Response.class,
-        enrichItemSupervisorRef,
-        Duration.ofMillis(requestTimeout),
-        enrichItemReplyTo ->
-            new EnrichItemSupervisor.Execute(
-                enrichItem, dataPayload, expiredDate, enrichItemReplyTo),
-        (r, t) -> {
-          if (t != null) {
-            return new EnrichItemError(enrichItem, t);
-          }
-          else if (r instanceof EnrichItemSupervisor.Error) {
-            EnrichItemSupervisor.Error error =(EnrichItemSupervisor.Error)r;
-            return new EnrichItemError(enrichItem, new RuntimeException(error.error()));
-          }
-          else {
-            return new EnrichItemSupervisorResponseWrapper(r);
-          }
-        }
-    );
+						}
+					}
 
-    return Behaviors.receive(Command.class)
-        .onMessage(EnrichItemError.class, param -> {
+				})
+				.onMessage(EnrichItemSupervisorResponseWrapper.class, garw -> {
+					EnrichItemSupervisor.Response response = garw.response;
 
-          EnrichItem enrichItemError = param.enrichItem();
+					if (response instanceof EnrichItemSupervisor.Body) {
+						EnrichItemSupervisor.Body body =(EnrichItemSupervisor.Body)response;
+						ctx.getSelf().tell(new InternalResponseWrapper(body.body()));
+					}
+					else {
+						EnrichItemSupervisor.Error error =(EnrichItemSupervisor.Error)response;
+						ctx.getSelf().tell(new InternalError(error.error()));
+					}
 
-          EnrichItem.BehaviorOnError behaviorOnError =
-              enrichItem.getBehaviorOnError();
+					return Behaviors.same();
 
-          switch (behaviorOnError) {
-            case SKIP -> {
+				})
+				.onMessage(InternalResponseWrapper.class, srw -> {
 
-              logger.error(
-                  "behaviorOnError is SKIP, call next enrichItem: " + enrichItemError.getId(), param.exception);
+					JsonObject result = new JsonObject(new String(srw.jsonObject()));
 
-              if (!tail.isEmpty()) {
-                ctx.getLog().info("call next enrichItem");
-              }
+					logger.info("enrichItem: " + enrichItem.getId() + " OK ");
 
-              return initPipeline(
-                  ctx, supervisorActorRef, responseActorRef, replyTo,
-                  dataPayload, datasource, tail);
+					if (!tail.isEmpty()) {
+						logger.info("call next enrichItem");
+					}
 
-            }
-            case FAIL -> {
+					JsonObject newJsonPayload = result.getJsonObject("payload");
 
-              logger.info(
-                  "behaviorOnError is FAIL, stop pipeline: " + enrichItemError.getId(), param.exception);
+					if (newJsonPayload == null) {
+						newJsonPayload = result;
+					}
 
-              Throwable throwable = param.exception;
+					DataPayload newDataPayload =
+						mergeResponse(
+							jsonPath, behaviorMergeType, dataPayload,
+							newJsonPayload.mapTo(DataPayload.class));
 
-              ctx.getSelf().tell(
-                  new InternalError(throwable.getMessage()));
+					return initPipeline(
+						ctx, supervisorActorRef,
+						responseActorRef, replyTo, newDataPayload,
+						datasource, tail);
 
-              return Behaviors.same();
-            }
-            case REJECT -> {
+				})
+				.onMessage(InternalError.class, srw -> {
 
-              logger.error(
-                  "behaviorOnError is REJECT, stop pipeline: " + enrichItemError.getId(), param.exception);
+					String error = srw.error();
 
-              replyTo.tell(Success.INSTANCE);
+					logger.error("enrichItem: " + enrichItem.getId() + " occurred error: " + error);
+					logger.error("terminating pipeline");
+					replyTo.tell(new Failure(new RuntimeException(error)));
 
-              return Behaviors.stopped();
-            }
-            default -> {
+					return Behaviors.stopped();
 
-              ctx.getSelf().tell(
-                  new InternalError(
-                      "behaviorOnError is not valid: " + behaviorOnError));
+				})
+				.build();
 
-              return Behaviors.same();
+	}
 
-            }
-          }
+	private static DataPayload mergeResponse(
+		String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
+		DataPayload prevDataPayload, DataPayload newDataPayload) {
 
-        })
-        .onMessage(EnrichItemSupervisorResponseWrapper.class, garw -> {
-          EnrichItemSupervisor.Response response = garw.response;
+		JsonObject prevJsonObject = new JsonObject(new LinkedHashMap<>(prevDataPayload.getRest()));
+		JsonObject newJsonObject = new JsonObject(new LinkedHashMap<>(newDataPayload.getRest()));
 
-          if (response instanceof EnrichItemSupervisor.Body) {
-            EnrichItemSupervisor.Body body =(EnrichItemSupervisor.Body)response;
-            ctx.getSelf().tell(new InternalResponseWrapper(body.body()));
-          }
-          else {
-            EnrichItemSupervisor.Error error =(EnrichItemSupervisor.Error)response;
-            ctx.getSelf().tell(new InternalError(error.error()));
-          }
+		if (jsonPath == null || jsonPath.isBlank()) {
+			jsonPath = "$";
+		}
 
-          return Behaviors.same();
+		if (behaviorMergeType == null) {
+			behaviorMergeType = EnrichItem.BehaviorMergeType.REPLACE;
+		}
 
-        })
-        .onMessage(InternalResponseWrapper.class, srw -> {
+		JsonMerge jsonMerge = JsonMerge.of(
+			behaviorMergeType == EnrichItem.BehaviorMergeType.REPLACE,
+			prevJsonObject, newJsonObject);
 
-          JsonObject result = new JsonObject(new String(srw.jsonObject()));
+		return prevDataPayload.rest(jsonMerge.merge(jsonPath).getMap());
 
-          logger.info("enrichItem: " + enrichItem.getId() + " OK ");
-
-          if (!tail.isEmpty()) {
-            logger.info("call next enrichItem");
-          }
-
-          JsonObject newJsonPayload = result.getJsonObject("payload");
-
-          if (newJsonPayload == null) {
-            newJsonPayload = result;
-          }
-
-          DataPayload newDataPayload =
-              mergeResponse(
-                  jsonPath, behaviorMergeType, dataPayload,
-                  newJsonPayload.mapTo(DataPayload.class));
-
-          return initPipeline(
-              ctx, supervisorActorRef,
-              responseActorRef, replyTo, newDataPayload,
-              datasource, tail);
-
-        })
-        .onMessage(InternalError.class, srw -> {
-
-          String error = srw.error();
-
-          logger.error("enrichItem: " + enrichItem.getId() + " occurred error: " + error);
-          logger.error("terminating pipeline");
-          replyTo.tell(new Failure(new RuntimeException(error)));
-
-          return Behaviors.stopped();
-
-        })
-        .build();
-
-  }
-
-  private static DataPayload mergeResponse(
-    String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
-    DataPayload prevDataPayload, DataPayload newDataPayload) {
-
-    JsonObject prevJsonObject = new JsonObject(new LinkedHashMap<>(prevDataPayload.getRest()));
-    JsonObject newJsonObject = new JsonObject(new LinkedHashMap<>(newDataPayload.getRest()));
-
-    if (jsonPath == null || jsonPath.isBlank()) {
-      jsonPath = "$";
-    }
-
-    if (behaviorMergeType == null) {
-      behaviorMergeType = EnrichItem.BehaviorMergeType.REPLACE;
-    }
-
-    JsonMerge jsonMerge = JsonMerge.of(
-      behaviorMergeType == EnrichItem.BehaviorMergeType.REPLACE,
-      prevJsonObject, newJsonObject);
-
-    return prevDataPayload.rest(jsonMerge.merge(jsonPath).getMap());
-
-  }
+	}
 
 }
