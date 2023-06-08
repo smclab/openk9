@@ -51,7 +51,7 @@ public class IngestionActor {
 						EnrichItemActor.create(),
 						"enrich-item-actor");
 
-				DatasourceMapper datasourceMapper = DatasourceMapper.INSTANCE;
+				DatasourceMapper datasourceMapper = CDI.current().select(DatasourceMapper.class).get();
 
 				return initial(
 					ctx, datasourceMapper, supervisorActorRef, enrichItemActorRef, new ArrayList<>());

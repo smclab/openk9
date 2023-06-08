@@ -8,15 +8,12 @@ import io.openk9.datasource.pipeline.actor.dto.GetDatasourceDTO;
 import io.openk9.datasource.pipeline.actor.dto.GetEnrichItemDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper
+@Mapper(componentModel = "cdi")
 public interface DatasourceMapper {
-
-	DatasourceMapper INSTANCE = Mappers.getMapper(DatasourceMapper.class);
 
 	@Mapping(source = "dataIndex.name", target = "dataIndexName")
 	@Mapping(source = "enrichPipeline", target = "enrichItems")
