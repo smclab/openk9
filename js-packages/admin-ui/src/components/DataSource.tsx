@@ -37,7 +37,6 @@ import { useRestClient } from "./queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "./ToastProvider";
 import { AddDataSourceToBucket, BucketsdataSources, RemoveDataSourceFromBucket } from "./BucketDataSource";
-import { ClassNameButton } from "../App";
 import { useModal } from "@clayui/core";
 import ClayLoadingIndicator from "@clayui/loading-indicator";
 

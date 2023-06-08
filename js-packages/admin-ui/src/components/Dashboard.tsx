@@ -1,5 +1,4 @@
 import ClayIcon from "@clayui/icon";
-import ClayList from "@clayui/list";
 import { Link } from "react-router-dom";
 import React from "react";
 import { gql } from "@apollo/client";
@@ -146,10 +145,13 @@ function Card({ title, subTitle, description }: { title: string; description: st
 
 function WizardList() {
   return (
-    <ClayList className="col-md-6">
-      <ClayList.Header>
-        <Link to="wizards">Connect your stuff</Link>
-      </ClayList.Header>
+    <div className="list-group col-md-6 show-quick-actions-on-hover">
+      <li className="list-group-header">
+        <p className="list-group-header-title">
+          <Link to="wizards">Connect your stuff</Link>
+        </p>
+      </li>
+
       <WizardListItem
         icon={<ClayIcon symbol={"globe"} />}
         to="wizards/web-crawler"
@@ -169,7 +171,7 @@ function WizardList() {
         title="Email Server"
         description="Index emails"
       />
-    </ClayList>
+    </div>
   );
 }
 
@@ -181,16 +183,16 @@ type WizardListItemProps = {
 };
 function WizardListItem({ icon, to, title, description }: WizardListItemProps) {
   return (
-    <ClayList.Item flex>
-      <ClayList.ItemField>
+    <li className="list-group-item list-group-item-flex">
+      <div className="autofit-col">
         <div className="sticker sticker-secondary">{icon}</div>
-      </ClayList.ItemField>
-      <ClayList.ItemField expand>
-        <ClayList.ItemTitle>
+      </div>
+      <div className="autofit-col autofit-col-expand">
+        <p className="list-group-title">
           <Link to={to}>{title}</Link>
-        </ClayList.ItemTitle>
-        <ClayList.ItemText>{description}</ClayList.ItemText>
-      </ClayList.ItemField>
-    </ClayList.Item>
+        </p>
+        <p className="list-group-text">{description}</p>
+      </div>
+    </li>
   );
 }

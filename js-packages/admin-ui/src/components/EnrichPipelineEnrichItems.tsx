@@ -158,15 +158,6 @@ export function EnrichPipelineEnrichItems() {
                 }
                 action={() => onOpenChange(true)}
               />
-              {/* <ClayButtonWithIcon
-                className={ClassNameButton}
-                aria-label=""
-                symbol="plus"
-                small
-                onClick={() => {
-                  onOpenChange(true);
-                }}
-              /> */}
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ContainerFluidWithoutView>
