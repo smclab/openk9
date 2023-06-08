@@ -6,6 +6,8 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.pipeline.actor.dto.GetDatasourceDTO;
+import io.openk9.datasource.pipeline.actor.mapper.DatasourceMapper;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.CborSerializable;
 import org.slf4j.Logger;
@@ -36,7 +38,7 @@ public class Datasource {
 		ActorRef<Response> replyTo) implements Command {}
 
 	public sealed interface Response extends CborSerializable {}
-	public record Success(io.openk9.datasource.model.Datasource datasource) implements Response {}
+	public record Success(GetDatasourceDTO datasource) implements Response {}
 	public record Failure(Throwable exception) implements Response {}
 
 
@@ -46,18 +48,22 @@ public class Datasource {
 			TransactionInvoker transactionInvoker =
 				CDI.current().select(TransactionInvoker.class).get();
 
-			return idle(ctx, transactionInvoker);
+			DatasourceMapper datasourceMapper = CDI.current().select(DatasourceMapper.class).get();
+
+			return idle(ctx, transactionInvoker, datasourceMapper);
 
 		});
 	}
 
 	private static Behavior<Command> idle(
-		ActorContext<Command> ctx, TransactionInvoker txInvoker) {
+		ActorContext<Command> ctx, TransactionInvoker txInvoker,
+		DatasourceMapper datasourceMapper) {
 
 		ctx.getLog().info("Start idle state");
 
 		return Behaviors.receive(Command.class)
-			.onMessage(GetDatasource.class, message -> onGetDatasource(message, ctx, txInvoker))
+			.onMessage(GetDatasource.class, message -> onGetDatasource(
+				message, ctx, txInvoker, datasourceMapper))
 			.build();
 	}
 
@@ -105,7 +111,8 @@ public class Datasource {
 	}
 
 	private static Behavior<Command> onGetDatasource(
-		GetDatasource message, ActorContext<Command> ctx, TransactionInvoker txInvoker) {
+		GetDatasource message, ActorContext<Command> ctx, TransactionInvoker txInvoker,
+		DatasourceMapper datasourceMapper) {
 
 
 		VertxUtil.runOnContext(() ->
@@ -132,21 +139,21 @@ public class Datasource {
 		);
 
 		return busy(
-			ctx, txInvoker, new ArrayList<>(),
+			ctx, txInvoker, datasourceMapper, new ArrayList<>(),
 			message.tenantId, message.parsingDate,
 			message.replyTo);
 	}
 
 	private static Behavior<Command> busy(
-		ActorContext<Command> ctx, TransactionInvoker txInvoker, List<Command> lags,
-		String tenantId, long parsingDate, ActorRef<Response> replyTo) {
+		ActorContext<Command> ctx, TransactionInvoker txInvoker, DatasourceMapper datasourceMapper,
+		List<Command> lags, String tenantId, long parsingDate, ActorRef<Response> replyTo) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(GetDatasource.class, message -> onBusyGetMessage(ctx, txInvoker, lags, message, tenantId, parsingDate, replyTo))
+			.onMessage(GetDatasource.class, message -> onBusyGetMessage(ctx, txInvoker, datasourceMapper, lags, message, tenantId, parsingDate, replyTo))
 			.onMessage(DatasourceModel.class, message -> onDatasourceModel(message, ctx, txInvoker, tenantId, parsingDate, replyTo))
 			.onMessage(DatasourceModelError.class, message -> onDatasourceModelError(ctx, message))
 			.onMessage(CreateRandomDataIndex.class, message -> onCreateRandomDataIndex(ctx, txInvoker, message))
-			.onMessage(Finished.class, (message) -> onFinished(ctx, txInvoker, lags, replyTo, message))
+			.onMessage(Finished.class, (message) -> onFinished(ctx, txInvoker, datasourceMapper, lags, replyTo, message))
 			.build();
 	}
 
@@ -178,7 +185,7 @@ public class Datasource {
 	}
 
 	private static Behavior<Command> onFinished(
-		ActorContext<Command> ctx, TransactionInvoker txInvoker, List<Command> lags,
+		ActorContext<Command> ctx, TransactionInvoker txInvoker, DatasourceMapper datasourceMapper, List<Command> lags,
 		ActorRef<Response> replyTo, Finished finished) {
 
 		Throwable throwable = finished.throwable;
@@ -187,25 +194,27 @@ public class Datasource {
 			replyTo.tell(new Failure(throwable));
 		}
 		else {
-			replyTo.tell(new Success(finished.datasource));
+			io.openk9.datasource.model.Datasource datasource = finished.datasource;
+			GetDatasourceDTO datasourceDTO = datasourceMapper.map(datasource);
+			replyTo.tell(new Success(datasourceDTO));
 		}
 
 		for (Command message : lags) {
 			ctx.getSelf().tell(message);
 		}
 
-		return idle(ctx, txInvoker);
+		return idle(ctx, txInvoker, datasourceMapper);
 	}
 
 	private static Behavior<Command> onBusyGetMessage(
 		ActorContext<Command> ctx, TransactionInvoker txInvoker,
-		List<Command> lags, Command message, String tenantId,
+		DatasourceMapper datasourceMapper, List<Command> lags, Command message, String tenantId,
 		long parsingDate, ActorRef<Response> replyTo) {
 		List<Command> newLags = new ArrayList<>(lags);
 		newLags.add(message);
 		ctx.getLog().info("Datasource actor is busy... lags count: " + newLags.size());
 		return busy(
-			ctx, txInvoker, newLags, tenantId, parsingDate, replyTo);
+			ctx, txInvoker, datasourceMapper, newLags, tenantId, parsingDate, replyTo);
 	}
 
 	private static void mergeDatasource(

@@ -1,30 +1,27 @@
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.PostStop;
-import akka.actor.typed.PreRestart;
-import akka.actor.typed.SupervisorStrategy;
+import akka.actor.typed.*;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.pipeline.actor.dto.GetDatasourceDTO;
+import io.openk9.datasource.pipeline.actor.dto.GetEnrichItemDTO;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
+import io.openk9.datasource.pipeline.actor.mapper.DatasourceMapper;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
+import javax.enterprise.inject.spi.CDI;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class IngestionActor {
 	public sealed interface Command {}
@@ -34,7 +31,7 @@ public class IngestionActor {
 	private record EnrichItemResponseWrapper(EnrichItemActor.EnrichItemCallbackResponse response, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command {}
 	private record SupervisorResponseWrapper(EnrichItemSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	public record EnrichItemCallback(long enrichItemId, String tenantId, Map<String, Object> datasourcePayload, ActorRef<Response> replyTo) implements Command { }
-	private record InitPipeline(Message<?> message, DataPayload dataPayload, io.openk9.datasource.model.Datasource datasource) implements Command {}
+	private record InitPipeline(Message<?> message, DataPayload dataPayload, GetDatasourceDTO datasource) implements Command {}
 	private record EnrichPipelineResponseWrapper(Message<?> message, EnrichPipeline.Response response) implements Command {}
 	public sealed interface Response {}
 	public record EnrichItemCallbackResponse(byte[] jsonObject) implements Response {}
@@ -54,8 +51,10 @@ public class IngestionActor {
 						EnrichItemActor.create(),
 						"enrich-item-actor");
 
+				DatasourceMapper datasourceMapper = CDI.current().select(DatasourceMapper.class).get();
+
 				return initial(
-					ctx, supervisorActorRef, enrichItemActorRef, new ArrayList<>());
+					ctx, datasourceMapper, supervisorActorRef, enrichItemActorRef, new ArrayList<>());
 
 			}))
 			.onFailure(SupervisorStrategy.restartWithBackoff(
@@ -64,6 +63,7 @@ public class IngestionActor {
 
 	private static Behavior<Command> initial(
 		ActorContext<Command> ctx,
+		DatasourceMapper datasourceMapper,
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<EnrichItemActor.Command> enrichItemActorRef,
 		List<Message<?>> messages) {
@@ -97,7 +97,8 @@ public class IngestionActor {
 				List<Message<?>> newMessages = new ArrayList<>(messages);
 				newMessages.add(message);
 
-				return initial(ctx, supervisorActorRef, enrichItemActorRef, newMessages);
+				return initial(
+					ctx, datasourceMapper, supervisorActorRef, enrichItemActorRef, newMessages);
 
 			})
 			.onMessage(DatasourceResponseWrapper.class, drw -> {
@@ -107,8 +108,7 @@ public class IngestionActor {
 				DataPayload dataPayload = drw.dataPayload;
 
 				if (response instanceof Datasource.Success) {
-					io.openk9.datasource.model.Datasource datasource =
-						((Datasource.Success) response).datasource();
+					GetDatasourceDTO datasource = ((Datasource.Success) response).datasource();
 					ctx.getSelf().tell(new InitPipeline(message, dataPayload, datasource));
 				}
 				else if (response instanceof Datasource.Failure) {
@@ -118,14 +118,15 @@ public class IngestionActor {
 					List<Message<?>> newMessages = new ArrayList<>(messages);
 					newMessages.remove(message);
 
-					return initial(ctx, supervisorActorRef, enrichItemActorRef, newMessages);
+					return initial(
+						ctx, datasourceMapper, supervisorActorRef, enrichItemActorRef, newMessages);
 				}
 				return Behaviors.same();
 
 			})
 			.onMessage(InitPipeline.class, ip -> onInitPipeline(ctx, ip, supervisorActorRef))
 			.onMessage(EnrichPipelineResponseWrapper.class, eprw ->
-				onEnrichPipelineResponseWrapper(ctx, eprw, supervisorActorRef, enrichItemActorRef, messages))
+				onEnrichPipelineResponseWrapper(ctx, datasourceMapper, eprw, supervisorActorRef, enrichItemActorRef, messages))
 			.onMessage(Callback.class, callback -> {
 
 				ctx.getLog().info("callback with tokenId: {}", callback.tokenId());
@@ -137,7 +138,7 @@ public class IngestionActor {
 				return Behaviors.same();
 
 			})
-			.onMessage(EnrichItemResponseWrapper.class, eirw -> onEnrichItemResponseWrapper(ctx, supervisorActorRef, eirw))
+			.onMessage(EnrichItemResponseWrapper.class, eirw -> onEnrichItemResponseWrapper(ctx, datasourceMapper, supervisorActorRef, eirw))
 			.onMessage(EnrichItemCallback.class, eic -> onEnrichItemCallback(ctx, enrichItemActorRef, eic))
 			.onMessage(SupervisorResponseWrapper.class, srw -> onSupervisorResponseWrapper(ctx, srw))
 			.onSignal(PreRestart.class, signal -> onSignal(ctx, "ingestion actor restarting", messages))
@@ -146,7 +147,7 @@ public class IngestionActor {
 	}
 
 	private static Behavior<Command> onEnrichPipelineResponseWrapper(
-		ActorContext<Command> ctx, EnrichPipelineResponseWrapper eprw,
+		ActorContext<Command> ctx, DatasourceMapper datasourceMapper, EnrichPipelineResponseWrapper eprw,
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<EnrichItemActor.Command> enrichItemActorRef, List<Message<?>> messages) {
 
@@ -168,7 +169,7 @@ public class IngestionActor {
 		List<Message<?>> newMessages = new ArrayList<>(messages);
 		newMessages.remove(message);
 
-		return initial(ctx, supervisorActorRef, enrichItemActorRef, newMessages);
+		return initial(ctx, datasourceMapper, supervisorActorRef, enrichItemActorRef, newMessages);
 	}
 
 	private static Behavior<Command> onInitPipeline(
@@ -177,30 +178,18 @@ public class IngestionActor {
 
 		Message<?> message = initPipeline.message;
 		DataPayload dataPayload = initPipeline.dataPayload;
-		io.openk9.datasource.model.Datasource datasource = initPipeline.datasource;
+		GetDatasourceDTO datasource = initPipeline.datasource;
 
 		ActorRef<EnrichPipeline.Response> responseActorRef =
 			ctx.messageAdapter(EnrichPipeline.Response.class, response ->
 				new EnrichPipelineResponseWrapper(message, response));
 
-		DataIndex dataIndex = datasource.getDataIndex();
 
-		dataPayload.setIndexName(dataIndex.getName());
-
-		io.openk9.datasource.model.EnrichPipeline enrichPipeline = datasource.getEnrichPipeline();
-
-		Set<EnrichPipelineItem> enrichPipelineItems;
-
-		if (enrichPipeline == null) {
-			enrichPipelineItems = Set.of();
-		}
-		else {
-			enrichPipelineItems = enrichPipeline.getEnrichPipelineItems();
-		}
+		dataPayload.setIndexName(datasource.getDataIndexName());
 
 		ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = ctx.spawn(
 			EnrichPipeline.create(
-				supervisorActorRef, responseActorRef, dataPayload, datasource, enrichPipelineItems),
+				supervisorActorRef, responseActorRef, dataPayload, datasource),
 			"enrich-pipeline");
 
 		enrichPipelineActorRef.tell(EnrichPipeline.Start.INSTANCE);
@@ -227,6 +216,7 @@ public class IngestionActor {
 
 	private static Behavior<Command> onEnrichItemResponseWrapper(
 		ActorContext<Command> ctx,
+		DatasourceMapper datasourceMapper,
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		EnrichItemResponseWrapper eirw) {
 
@@ -234,7 +224,8 @@ public class IngestionActor {
 		EnrichItemActor.EnrichItemCallbackResponse response = eirw.response;
 		Map<String, Object> datasourcePayload = eirw.datasourcePayload;
 
-		EnrichItem enrichItem = response.enrichItem();
+		EnrichItem enrichItemEntity = response.enrichItem();
+		GetEnrichItemDTO enrichItem = datasourceMapper.map(enrichItemEntity);
 
 		JsonObject datasourcePayloadJson = new JsonObject(datasourcePayload);
 

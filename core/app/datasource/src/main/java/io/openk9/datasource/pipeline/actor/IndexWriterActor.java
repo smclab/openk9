@@ -35,8 +35,8 @@ import java.util.Map;
 public class IndexWriterActor {
 
 	public sealed interface Command extends CborSerializable {}
-	public record Start(DataIndex dataIndex, byte[] dataPayload, ActorRef<Response> replyTo) implements Command {}
-	private record SearchResponseCommand(DataIndex dataIndex, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
+	public record Start(String dataIndexName, byte[] dataPayload, ActorRef<Response> replyTo) implements Command {}
+	private record SearchResponseCommand(String dataIndexName, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
 	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, DataPayload dataPayload, Exception exception) implements Command {}
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
@@ -64,7 +64,7 @@ public class IndexWriterActor {
 		Logger logger = ctx.getLog();
 
 		return Behaviors.receive(Command.class)
-			.onMessage(Start.class, (start) -> onStart(ctx, restHighLevelClient, start.dataIndex, start.dataPayload, start.replyTo))
+			.onMessage(Start.class, (start) -> onStart(ctx, restHighLevelClient, start.dataIndexName, start.dataPayload, start.replyTo))
 			.onMessage(SearchResponseCommand.class, src -> onSearchResponseCommand(
 				ctx, restHighLevelClient, src, logger))
 			.onMessage(BulkResponseCommand.class, brc -> onBulkResponseCommand(logger, brc, eventBus))
@@ -135,7 +135,7 @@ public class IndexWriterActor {
 		SearchResponseCommand src, Logger logger) {
 
 		Exception exception = src.exception;
-		DataIndex dataIndex = src.dataIndex;
+		String dataIndex = src.dataIndexName;
 		DataPayload dataPayload = src.dataPayload;
 		SearchResponse searchResponse = src.searchResponse;
 		ActorRef<Response> replyTo = src.replyTo;
@@ -174,14 +174,14 @@ public class IndexWriterActor {
 
 	private static Behavior<Command> onStart(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		DataIndex dataIndex, byte[] data,
+		String dataIndexName, byte[] data,
 		ActorRef<Response> replyTo) {
 
 		DataPayload dataPayload = Json.decodeValue(Buffer.buffer(data), DataPayload.class);
 
 		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
 
-		SearchRequest searchRequest = new SearchRequest(dataIndex.getName());
+		SearchRequest searchRequest = new SearchRequest(dataIndexName);
 
 		TermQueryBuilder termQueryBuilder =
 			QueryBuilders.termQuery("contentId.keyword", dataPayload.getContentId());
@@ -200,14 +200,14 @@ public class IndexWriterActor {
 				public void onResponse(SearchResponse searchResponse) {
 					ctx.getSelf().tell(
 						new SearchResponseCommand(
-							dataIndex, dataPayload, replyTo, searchResponse, null));
+							dataIndexName, dataPayload, replyTo, searchResponse, null));
 				}
 
 				@Override
 				public void onFailure(Exception e) {
 					ctx.getSelf().tell(
 						new SearchResponseCommand(
-							dataIndex, dataPayload, replyTo, null, e));
+							dataIndexName, dataPayload, replyTo, null, e));
 				}
 			});
 
@@ -215,10 +215,8 @@ public class IndexWriterActor {
 	}
 
 	private static DocWriteRequest createDocWriteRequest(
-		ActorContext<?> ctx, DataIndex dataIndex, DataPayload dataPayload, Logger logger,
+		ActorContext<?> ctx, String indexName, DataPayload dataPayload, Logger logger,
 		SearchResponse searchResponse) {
-
-		String indexName = dataIndex.getName();
 
 		IndexRequest indexRequest = new IndexRequest(indexName);
 
