@@ -5,6 +5,7 @@ import akka.cluster.typed.ClusterSingleton;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.openk9.datasource.pipeline.actor.IngestionActor;
+import io.openk9.datasource.pipeline.actor.mapper.DatasourceMapper;
 import io.quarkus.runtime.Startup;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -24,7 +25,7 @@ public class ActorSystemProvider {
 		Config defaultConfig = ConfigFactory.load(clusterFile);
 		Config config = defaultConfig.withFallback(ConfigFactory.load());
 
-		actorSystem = ActorSystem.create(IngestionActor.create(), "datasource", config);
+		actorSystem = ActorSystem.create(IngestionActor.create(datasourceMapper), "datasource", config);
 
 		for (ActorSystemInitializer actorSystemInitializer : actorSystemInitializerInstance) {
 			actorSystemInitializer.init(actorSystem);
@@ -49,7 +50,8 @@ public class ActorSystemProvider {
 
 	@Inject
 	Instance<ActorSystemInitializer> actorSystemInitializerInstance;
-
+	@Inject
+	DatasourceMapper datasourceMapper;
 	@ConfigProperty(name = "akka.cluster.file")
 	String clusterFile;
 

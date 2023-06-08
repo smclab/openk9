@@ -42,13 +42,11 @@ public class Datasource {
 	public record Failure(Throwable exception) implements Response {}
 
 
-	public static Behavior<Command> create() {
+	public static Behavior<Command> create(DatasourceMapper datasourceMapper) {
 		return Behaviors.setup(ctx -> {
 
 			TransactionInvoker transactionInvoker =
 				CDI.current().select(TransactionInvoker.class).get();
-
-			DatasourceMapper datasourceMapper = CDI.current().select(DatasourceMapper.class).get();
 
 			return idle(ctx, transactionInvoker, datasourceMapper);
 

@@ -37,7 +37,7 @@ public class IngestionActor {
 	public record EnrichItemCallbackResponse(byte[] jsonObject) implements Response {}
 	public record EnrichItemCallbackError(String message) implements Response {}
 
-	public static Behavior<Command> create() {
+	public static Behavior<Command> create(DatasourceMapper datasourceMapper) {
 		return Behaviors
 			.supervise(Behaviors.<Command>setup(ctx -> {
 
@@ -50,8 +50,6 @@ public class IngestionActor {
 					ctx.spawn(
 						EnrichItemActor.create(),
 						"enrich-item-actor");
-
-				DatasourceMapper datasourceMapper = CDI.current().select(DatasourceMapper.class).get();
 
 				return initial(
 					ctx, datasourceMapper, supervisorActorRef, enrichItemActorRef, new ArrayList<>());
@@ -88,7 +86,7 @@ public class IngestionActor {
 				ClusterSingleton clusterSingleton = ClusterSingleton.get(ctx.getSystem());
 
 				ActorRef<Datasource.Command> datasource =
-					clusterSingleton.init(SingletonActor.of(Datasource.create(), "datasource"));
+					clusterSingleton.init(SingletonActor.of(Datasource.create(datasourceMapper), "datasource"));
 
 				datasource.tell(new Datasource.GetDatasource(
 					dataPayload.getTenantId(), dataPayload.getDatasourceId(), dataPayload.getParsingDate(),
