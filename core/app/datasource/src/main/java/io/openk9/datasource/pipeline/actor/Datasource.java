@@ -15,7 +15,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.UUID;
 
 public class Datasource {
 
@@ -30,7 +32,8 @@ public class Datasource {
 	private record DatasourceModelError(
 		Throwable exception, ActorRef<Response> replyTo) implements Command {}
 	private record CreateRandomDataIndex(
-		io.openk9.datasource.model.Datasource datasource) implements Command {}
+		String tenantId, long parsingDate, io.openk9.datasource.model.Datasource datasource,
+		ActorRef<Response> replyTo) implements Command {}
 
 	public sealed interface Response extends CborSerializable {}
 	public record Success(io.openk9.datasource.model.Datasource datasource) implements Response {}
@@ -72,14 +75,17 @@ public class Datasource {
 
 		Logger log = ctx.getLog();
 
+		long parsingDate = message.parsingDate;
+		ActorRef<Response> replyTo = message.replyTo;
+		String tenantId = message.tenantId;
+
 		if (dataIndex == null) {
 			log.info("datasource with id {} has no dataIndex, start random creation", datasource.getId());
-			ctx.getSelf().tell(new CreateRandomDataIndex(datasource));
+			ctx.getSelf().tell(new CreateRandomDataIndex(tenantId, parsingDate, datasource, replyTo));
 			return Behaviors.same();
 		}
 
 		OffsetDateTime lastIngestionDate = datasource.getLastIngestionDate();
-		long parsingDate = message.parsingDate;
 
 		OffsetDateTime offsetDateTime =
 			OffsetDateTime.ofInstant(Instant.ofEpochMilli(parsingDate),
@@ -89,13 +95,14 @@ public class Datasource {
 			log.info("update last ingestion date for datasource with id {}", datasource.getId());
 			datasource.setLastIngestionDate(offsetDateTime);
 			mergeDatasource(
-				ctx.getSelf(), message.tenantId, txInvoker, datasource, parsingDate, message.replyTo);
+				ctx.getSelf(), tenantId, txInvoker, datasource, parsingDate,
+				replyTo);
 			return Behaviors.same();
 		}
 
 		log.info("start pipeline for datasource with id {}", datasource.getId());
 
-		message.replyTo.tell(new Success(datasource));
+		replyTo.tell(new Success(datasource));
 		ctx.getSelf().tell(BusyFinished.INSTANCE);
 
 		return Behaviors.same();
@@ -139,8 +146,37 @@ public class Datasource {
 			.onMessage(GetDatasource.class, message -> onBusyGetMessage(ctx, txInvoker, lags, message))
 			.onMessage(DatasourceModel.class, message -> onDatasourceModel(message, ctx, txInvoker))
 			.onMessage(DatasourceModelError.class, message -> onDatasourceModelError(ctx, message))
+			.onMessage(CreateRandomDataIndex.class, message -> onCreateRandomDataIndex(ctx, txInvoker, message))
 			.onMessageEquals(BusyFinished.INSTANCE, () -> onBusyFinished(ctx, txInvoker, lags))
 			.build();
+	}
+
+	private static Behavior<Command> onCreateRandomDataIndex(
+		ActorContext<Command> ctx,
+		TransactionInvoker transactionInvoker,
+		CreateRandomDataIndex createRandomDataIndex) {
+
+		io.openk9.datasource.model.Datasource datasource =
+			createRandomDataIndex.datasource;
+
+		String tenantId = createRandomDataIndex.tenantId;
+
+		String indexName = datasource.getId() + "-data-" + UUID.randomUUID();
+
+		DataIndex dataIndex = DataIndex.of(
+			indexName, "auto-generated",
+			new LinkedHashSet<>());
+
+		datasource.setDataIndex(dataIndex);
+
+		ctx.getLog().info(
+			"creating random dataIndex: {} for datasource: {}", indexName, datasource.getId());
+
+		mergeDatasource(
+			ctx.getSelf(), tenantId, transactionInvoker, datasource,
+			createRandomDataIndex.parsingDate, createRandomDataIndex.replyTo);
+
+		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onBusyFinished(
