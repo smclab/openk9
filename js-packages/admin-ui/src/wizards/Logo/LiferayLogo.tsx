@@ -2,7 +2,7 @@ import React from "react";
 
 export function LiferayLogo({ height = 150, weigth = 200, className = "" }) {
   return (
-    <svg width={height} height={weigth} className={className} viewBox="10 0 100 50">
+    <svg width={height} height={weigth} className={className} viewBox="10 0 25 50">
       <g transform="translate(0 0)">
         <path d="M16.07 29.272H9.717v-6.087c0-.265 0-.265.265-.265h6.22l-.132 6.352z" fill="#1d396b" />
         <path d="M16.07 15.113v6.352H9.717v-6.352h6.352z" fill="#0b1f3b" />

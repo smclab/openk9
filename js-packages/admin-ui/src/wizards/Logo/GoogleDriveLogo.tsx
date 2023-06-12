@@ -2,7 +2,7 @@ import React from "react";
 
 export function GoogleDriveLogo({ height = 250, weigth = 200, className = "" }) {
   return (
-    <svg width="87.3" height="78" version="1.1" viewBox="0 0 100.3 68">
+    <svg width="87.3" height="78" version="1.1" viewBox="-15 0 100.3 68">
       <g transform="translate(-308.35,-38)">
         <path d="M314.95 104.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3L335.85 91h-27.5c0 1.55.4 3.1 1.2 4.5l5.4 9.35z" fill="#0066DA" />
         <path d="M352 63l-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5L352 63z" fill="#00AC47" />

@@ -28,7 +28,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
                   onSideMenuToggle(!isSideMenuOpen);
                 }}
               >
-                <ClayIcon style={{}} symbol={isSideMenuOpen ? "product-menu-open" : "product-menu-closed"} />
+                <ClayIcon symbol={isSideMenuOpen ? "product-menu-open" : "product-menu-closed"} />
               </button>
             </li>
           </ul>

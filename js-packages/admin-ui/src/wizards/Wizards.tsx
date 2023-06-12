@@ -17,25 +17,25 @@ const wizards = [
     title: "Web Crawler",
     description: "Configure a classic Web Crawler to get contents from public sites",
     path: "web-crawler",
-    icon: <ClayIcon symbol={"globe"} />,
+    icon: <ClayIcon style={{ fontSize: "70px" }} symbol={"globe"} />,
   },
   {
     title: "Sitemap",
     description: "Configure a Web Crawler to get contents using Sitemap",
     path: "sitemap",
-    icon: <ClayIcon symbol={"organizations"} />,
+    icon: <ClayIcon style={{ fontSize: "70px" }} symbol={"organizations"} />,
   },
   {
     title: "Database",
     description: "Define a datasource to get data from different databases",
     path: "database",
-    icon: <ClayIcon symbol={"archive"} />,
+    icon: <ClayIcon style={{ fontSize: "70px" }} symbol={"archive"} />,
   },
   {
     title: "Server email",
     description: "Connect your Imap server and index emails",
     path: "server-email",
-    icon: <ClayIcon symbol={"envelope-open"} />,
+    icon: <ClayIcon style={{ fontSize: "70px" }} symbol={"envelope-open"} />,
   },
   {
     title: "GitHub",
@@ -123,7 +123,7 @@ type WizardCardProps = { title: string; description: string; path: string; icon:
 
 function WizardCard({ title, description, path, icon }: WizardCardProps) {
   return (
-    <div className="card">
+    <div className="card" style={{ minHeight: "305px" }}>
       <div className="aspect-ratio aspect-ratio-16-to-9 card-item-first">
         <div className="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon">{icon}</div>
       </div>
