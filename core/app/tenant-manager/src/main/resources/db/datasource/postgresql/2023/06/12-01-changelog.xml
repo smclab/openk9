@@ -21,12 +21,20 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	</changeSet>
 	<changeSet id="1686583762945-3" author="openk9">
 		<sql>
+			delete from data_index_doc_types didt
+			using data_index di
+			where didt.data_index_id = di.id
+			and di.datasource_id is null
+		</sql>
+	</changeSet>
+	<changeSet id="1686583762945-4" author="openk9">
+		<sql>
 			delete
 			from data_index di
 			where di.datasource_id is null
 		</sql>
 	</changeSet>
-	<changeSet id="1686583762945-4" author="openk9">
+	<changeSet id="1686583762945-5" author="openk9">
 		<addNotNullConstraint tableName="data_index" columnName="datasource_id"/>
 		<addForeignKeyConstraint baseTableName="data_index" baseColumnNames="datasource_id"
 								 constraintName="FK_data_index_datasource"
