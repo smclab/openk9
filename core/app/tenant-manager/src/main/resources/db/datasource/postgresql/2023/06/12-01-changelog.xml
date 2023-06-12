@@ -14,9 +14,9 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	<changeSet id="1686583762945-2" author="openk9">
 		<sql>
 			update data_index
-			set di.datasource_id = d.id
-			from data_index di
-			inner join datasource d on d.data_index_id = di.id
+			set datasource_id = d.id
+			from datasource d
+			where d.data_index_id = id
 		</sql>
 	</changeSet>
 	<changeSet id="1686583762945-3" author="openk9">
