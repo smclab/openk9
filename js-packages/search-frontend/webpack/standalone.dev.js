@@ -61,7 +61,12 @@ module.exports = {
         target: "https://test.openk9.io",
         changeOrigin: true,
         secure: false,
-      }
+      },
+	 	"/api/file-manager": {
+	   target: "https://test.openk9.io",
+	   changeOrigin: true,
+	   secure: false,
+	 }
     },
   },
 };
