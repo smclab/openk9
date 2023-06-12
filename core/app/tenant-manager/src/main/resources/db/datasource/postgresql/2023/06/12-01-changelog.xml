@@ -13,7 +13,7 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	</changeSet>
 	<changeSet id="1686583762945-2" author="openk9">
 		<sql>
-			update di
+			update data_index
 			set di.datasource_id = d.id
 			from data_index di
 			inner join datasource d on d.data_index_id = di.id
