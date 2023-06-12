@@ -13,10 +13,10 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	</changeSet>
 	<changeSet id="1686583762945-2" author="openk9">
 		<sql>
-			update data_index
+			update data_index di
 			set datasource_id = d.id
 			from datasource d
-			where d.data_index_id = d.id
+			where d.data_index_id = di.id
 		</sql>
 	</changeSet>
 	<changeSet id="1686583762945-3" author="openk9">
