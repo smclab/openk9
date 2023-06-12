@@ -19,19 +19,9 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -61,6 +51,12 @@ public class DataIndex extends K9Entity {
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<DocType> docTypes = new LinkedHashSet<>();
+
+	@JsonIgnore
+	@ToString.Exclude
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
+	private Datasource datasource;
 
 	public void addDocType(DocType docType) {
 		docTypes.add(docType);

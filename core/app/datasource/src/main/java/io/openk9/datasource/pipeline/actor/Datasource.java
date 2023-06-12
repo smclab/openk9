@@ -168,8 +168,7 @@ public class Datasource {
 		String indexName = datasource.getId() + "-data-" + UUID.randomUUID();
 
 		DataIndex dataIndex = DataIndex.of(
-			indexName, "auto-generated",
-			new LinkedHashSet<>());
+			indexName, "auto-generated", new LinkedHashSet<>(), datasource);
 
 		datasource.setDataIndex(dataIndex);
 

@@ -28,17 +28,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.microprofile.graphql.Description;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -77,6 +67,11 @@ public class Datasource extends K9Entity {
 	@JoinColumn(name = "data_index_id", referencedColumnName = "id")
 	@JsonIgnore
 	private DataIndex dataIndex;
+
+	@ToString.Exclude
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "datasource")
+	@JsonIgnore
+	private Set<DataIndex> dataIndexes;
 
 	@ToString.Exclude
 	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
