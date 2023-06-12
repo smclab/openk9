@@ -15,7 +15,8 @@ import { TableRowActions } from "./Table";
 import { ClassNameButton } from "../App";
 import { Observer } from "@clayui/modal/lib/types";
 import { BrandLogo } from "./BrandLogo";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import ClayCard from "@clayui/card";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as TooltipRecharts, Legend } from "recharts";
 
 type Nullable<T> = T | null | undefined;
 export const fromFieldValidators =
@@ -1712,7 +1713,7 @@ export function SimpleModal({ observer, labelContinue, labelCancel, actionContin
         <div style={{ background: "white", margin: "10px" }}>
           <div className="custom-modal__content">
             <div className="custom-modal__header">
-              <BrandLogo size={70} colorFill={"#c22525"} />
+              <BrandLogo width={70} height={70} colorFill={"#c22525"} />
               <p className="custom-modal__description">{description}</p>
             </div>
             <div className="custom-modal__footer">
@@ -1732,8 +1733,8 @@ export function SimpleModal({ observer, labelContinue, labelCancel, actionContin
 
 export function CreateGraphic({
   data,
-  width = 500,
-  height = 500,
+  width = 600,
+  height = 250,
   labelInformationRigth,
   Information,
 }: {
@@ -1744,27 +1745,31 @@ export function CreateGraphic({
   Information: string;
 }) {
   return (
-    <div className="card">
-      <div style={{ display: "flex", flexDirection: "column" }}>
+    <ClayCard style={{ flex: "1", borderRadius: "10px" }}>
+      <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-          <label style={{ marginLeft: "20px", marginTop: "10px" }}>{Information}</label>
-          <label style={{ marginRight: "20px" }}>{labelInformationRigth}</label>
+          <label style={{ marginLeft: "20px", marginTop: "10px", fontSize: "28px" }}>{Information}</label>
+          <label style={{ marginRight: "20px", color: "#9C0E10", cursor: "pointer", textDecoration: "underline" }}>
+            {labelInformationRigth}
+          </label>
         </div>
         <div>
-          <label style={{ marginLeft: "20px", marginTop: "3px", color: "#27283330" }}>{"Last 7 days"}</label>
+          <label style={{ marginLeft: "20px", marginTop: "3px", color: "#71717A", fontSize: "18px", fontWeight: "400" }}>
+            {"Last 7 days"}
+          </label>
         </div>
       </div>
-      <div className="card-body">
+      <ClayCard.Body style={{ width: "100%" }}>
         <LineChart width={width} height={height} data={data}>
           <XAxis dataKey="name" />
           <YAxis tickCount={11} />
           <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-          <Line type="monotone" dataKey="query" stroke="#c0272b" />
-          <Tooltip />
+          <Line type="monotone" dataKey="query" stroke="#C0272B" strokeWidth={2} dot={false} />
+          <TooltipRecharts />
           <Legend />
         </LineChart>
-      </div>
-    </div>
+      </ClayCard.Body>
+    </ClayCard>
   );
 }
 
@@ -1824,24 +1829,51 @@ export function DropDownCustom() {
   );
 }
 
-export function LabelNumber({ label, number, unity }: { label: string; number: number; unity?: string }) {
+export function LabelNumber({ label, number, unity, icon }: { label: string; number: number; unity?: string; icon?: React.ReactNode }) {
   return (
     <React.Fragment>
-      <div className="card" style={{ maxHeight: "307px", maxWidth: "400px" }}>
-        <div style={{ margin: "16px", height: "85px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <div style={{ fontSize: "24px", lineHeight: "32px", fontWeight: "600", fontFamily: "bold" }}>{label}:</div>
+      <ClayCard style={{ maxHeight: "307px", maxWidth: "400px", flex: "1", borderRadius: "10px" }}>
+        <div style={{ margin: "16px", height: "80px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <div
             style={{
-              color: "#c0272b",
-              display: "flex",
               fontSize: "24px",
               lineHeight: "32px",
               fontWeight: "600",
               fontFamily: "bold",
+              display: "flex",
+              gap: "10px",
+              alignItems: "center",
+            }}
+          >
+            {icon && (
+              <div
+                style={{
+                  backgroundColor: "var(--openk9-embeddable-dashboard--secondary-color)",
+                  padding: "8px",
+                  display: "flex",
+                  borderRadius: "100px",
+                  color: "#9C0E10",
+                  fontSize: "18px",
+                }}
+              >
+                {icon}
+              </div>
+            )}
+            <div>{label}:</div>
+          </div>
+          <div
+            style={{
+              color: "#c0272b",
+              display: "flex",
+              fontSize: "28px",
+              lineHeight: "38.19px",
+              fontWeight: "800",
+              marginTop: "5px",
+              fontFamily: "Nunito Sans",
             }}
           >{`${number} ${unity || ""}`}</div>
         </div>
-      </div>
+      </ClayCard>
     </React.Fragment>
   );
 }

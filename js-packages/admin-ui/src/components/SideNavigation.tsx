@@ -10,7 +10,7 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
       <div className="sidebar sidebar-dark sidenav-menu product-menu">
         <div className="sidebar-header">
           <div style={{ display: "inline-block", margin: "-16px 16px -16px 0px" }}>
-            <BrandLogo size={32} />
+            <BrandLogo height={32} width={32} />
           </div>
           OpenK9 Admin
         </div>

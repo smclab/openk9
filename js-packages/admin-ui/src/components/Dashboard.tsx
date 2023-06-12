@@ -1,11 +1,14 @@
+import ClayCard from "@clayui/card";
 import ClayIcon from "@clayui/icon";
+import ClayLayout from "@clayui/layout";
+import ClayList from "@clayui/list";
 import { Link } from "react-router-dom";
 import React from "react";
 import { gql } from "@apollo/client";
 import { useDataIndexInformationQuery } from "../graphql-generated";
-import { DashBoardTable } from "./Table";
 import { DetailGraph } from "./Graph";
-import { ContainerFluid } from "./Form";
+import { getUserProfile } from "./authentication";
+import { BrandLogo } from "./BrandLogo";
 
 const DataIndexInformation = gql`
   query dataIndexInformation {
@@ -58,6 +61,10 @@ const dataTwo = [
 ];
 export function DashBoard() {
   const dashboardQuery = useDataIndexInformationQuery();
+  const [user, setUser] = React.useState();
+  getUserProfile().then((data) => {
+    setUser(JSON.parse(JSON.stringify(data))?.name);
+  });
 
   const recoveryDocsDeleted = dashboardQuery.data?.buckets?.edges
     ?.map((edge) => edge?.node?.datasources?.edges?.map((datasource) => datasource?.node?.dataIndex?.cat?.docsDeleted))
@@ -78,14 +85,10 @@ export function DashBoard() {
   const byteCount = recoveryByteCount?.flat().reduce((acc, singleIndex) => acc + parseFloat(singleIndex ?? "0"), 0);
 
   return (
-    <ContainerFluid>
-      <div className="card">
-        <div className="card-body">
-          <div style={{ display: "flex", gap: "23px", marginTop: "25px" }}>
-            <Presentation />
-            <WizardList />
-          </div>
-        </div>
+    <ClayLayout.ContainerFluid view>
+      <div style={{ display: "flex", gap: "23px", marginTop: "25px" }}>
+        <Presentation user={user || ""} />
+        <WizardList />
       </div>
       <DetailGraph
         dataGraph={data}
@@ -93,70 +96,61 @@ export function DashBoard() {
         firstCardNumber={countSingleIndex || 0}
         secondCardNumber={docCount || 0}
         thirdCardNumber={byteCount || 0}
-        firstCardLabel={"document counts"}
-        secondCardLabel={"document deleted"}
-        thirdCardLabel={"store size"}
+        firstCardLabel={"Document counts"}
+        secondCardLabel={"Document deleted"}
+        thirdCardLabel={"Store size"}
         thirdCardUnity={"byte"}
       />
-      <div className="card">
-        <div className="card-body">
-          <DashBoardTable />
-        </div>
-      </div>
-    </ContainerFluid>
+    </ClayLayout.ContainerFluid>
   );
 }
 
-function Presentation() {
+function Presentation({ user }: { user: string }) {
   return (
     <React.Fragment>
       <Card
-        title="Welcome To Openk9"
-        subTitle="QuickStart guide"
+        title={`Welcome ${user}`}
         description="When working on a Machine learning project flexibility and reusability are very important to make your life easier while developing the solution. Find the best way to structure your project files can be difficult when you are a beginner or when the project becomes big. Sometime you may end up duplicate or rewrite some part of your project which is not professional as a Data Scientist or Machine learning Engineer."
       />
     </React.Fragment>
   );
 }
 
-function Card({ title, subTitle, description }: { title: string; description: string; subTitle: string }) {
+function Card({ title, description }: { title: string; description: string }) {
   return (
-    <div className="card">
-      <div className="card-body">
-        <h5
-          className="card-title"
+    <ClayCard style={{ marginLeft: "10px", maxHeight: "307px", borderRadius: "10px" }}>
+      <ClayCard.Body>
+        <div style={{ position: "absolute", right: "0", bottom: "0" }}>
+          <BrandLogo colorFill={"#bd61612e"} width={270} height={220} viewBox="0 0 75 73" />
+        </div>
+        <ClayCard.Description
+          displayType="title"
           style={{ margin: "16px", fontSize: "1.5rem", fontWeight: "bold", marginTop: "1rem", marginLeft: "1rem" }}
         >
           {title}
-        </h5>
-        <h6
-          className="card-subtitle"
-          style={{ margin: "16px", fontSize: "1.5rem", fontWeight: "bold", marginTop: "1rem", marginLeft: "1rem" }}
-        >
-          {subTitle}
-        </h6>
-        <div className="card-text" style={{ margin: "16px" }}>
+        </ClayCard.Description>
+        <ClayCard.Description truncate={false} displayType="text" style={{ margin: "16px" }}>
           {description}
-        </div>
-      </div>
-    </div>
+        </ClayCard.Description>
+      </ClayCard.Body>
+    </ClayCard>
   );
 }
 
 function WizardList() {
   return (
-    <div className="list-group col-md-6 show-quick-actions-on-hover">
-      <li className="list-group-header">
-        <p className="list-group-header-title">
-          <Link to="wizards">Connect your stuff</Link>
-        </p>
-      </li>
-
+    <ClayList className="col-md-6" style={{ maxWidth: "420px", paddingTop: "0px" }}>
+      <ClayList.Header style={{ backgroundColor: "white", paddingTop: "18px", borderRadius: "10px" }}>
+        <Link to="wizards" style={{ color: "inherit", textDecoration: "inherit", cursor: "pointer" }}>
+          Connect your stuff
+        </Link>
+      </ClayList.Header>
       <WizardListItem
         icon={<ClayIcon symbol={"globe"} />}
         to="wizards/web-crawler"
         title="Web Crawler"
         description="A web crawler that indexes a web-site"
+        firstElement={true}
       />
       <WizardListItem icon={<ClayIcon symbol={"archive"} />} to="wizards/database" title="Database" description="Index a database query" />
       <WizardListItem
@@ -170,8 +164,9 @@ function WizardList() {
         to="wizards/server-email"
         title="Email Server"
         description="Index emails"
+        lastElement={true}
       />
-    </div>
+    </ClayList>
   );
 }
 
@@ -180,19 +175,41 @@ type WizardListItemProps = {
   to: string;
   title: string;
   description: string;
+  firstElement?: boolean;
+  lastElement?: boolean;
 };
-function WizardListItem({ icon, to, title, description }: WizardListItemProps) {
+function WizardListItem({ icon, to, title, description, firstElement, lastElement }: WizardListItemProps) {
   return (
-    <li className="list-group-item list-group-item-flex">
-      <div className="autofit-col">
-        <div className="sticker sticker-secondary">{icon}</div>
-      </div>
-      <div className="autofit-col autofit-col-expand">
-        <p className="list-group-title">
+    <ClayList.Item
+      flex
+      style={{
+        borderTop: firstElement ? "none" : "",
+        marginTop: firstElement ? "-8px" : "",
+        borderBottomLeftRadius: lastElement ? "10px" : "",
+        borderBottomRightRadius: lastElement ? "10px" : "",
+      }}
+    >
+      <ClayList.ItemField>
+        <div className="sticker sticker-secondary">
+          <div
+            style={{
+              backgroundColor: "var(--openk9-embeddable-dashboard--secondary-color)",
+              padding: "5px",
+              display: "flex",
+              borderRadius: "100px",
+              color: "#9C0E10",
+            }}
+          >
+            {icon}
+          </div>
+        </div>
+      </ClayList.ItemField>
+      <ClayList.ItemField expand>
+        <ClayList.ItemTitle>
           <Link to={to}>{title}</Link>
-        </p>
-        <p className="list-group-text">{description}</p>
-      </div>
-    </li>
+        </ClayList.ItemTitle>
+        <ClayList.ItemText>{description}</ClayList.ItemText>
+      </ClayList.ItemField>
+    </ClayList.Item>
   );
 }

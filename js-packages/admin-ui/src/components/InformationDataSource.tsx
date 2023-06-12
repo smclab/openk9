@@ -39,9 +39,9 @@ export function InformationDataSource() {
       firstCardNumber={parseFloat(docsCount || "0") || 0}
       secondCardNumber={parseFloat(docsDeleted || "0") || 0}
       thirdCardNumber={docsStoreSize || 0}
-      firstCardLabel={"document counts"}
-      secondCardLabel={"document deleted"}
-      thirdCardLabel={"store size"}
+      firstCardLabel={"Document counts"}
+      secondCardLabel={"Document deleted"}
+      thirdCardLabel={"Store size"}
       thirdCardUnity={"byte"}
     />
   );

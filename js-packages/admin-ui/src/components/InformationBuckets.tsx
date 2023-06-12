@@ -55,9 +55,9 @@ export function InformationBuckets() {
       firstCardNumber={countDocsCount || 0}
       secondCardNumber={countDeleted || 0}
       thirdCardNumber={countByteStoresize || 0}
-      firstCardLabel={"document counts"}
-      secondCardLabel={"document deleted"}
-      thirdCardLabel={"store size"}
+      firstCardLabel={"Document counts"}
+      secondCardLabel={"Document deleted"}
+      thirdCardLabel={"Store size"}
       thirdCardUnity={"byte"}
     />
   );

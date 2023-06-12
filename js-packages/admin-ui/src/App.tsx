@@ -28,6 +28,7 @@ import { Annotator } from "./components/Annotator";
 import { EnrichPipelineEnrichItems } from "./components/EnrichPipelineEnrichItems";
 import { ApplicationBar } from "./components/ApplicationBar";
 import "./index.css";
+import "./app.css";
 import { QueryAnalysesRules } from "./components/QueryAnalysesRules";
 import { DashBoard } from "./components/Dashboard";
 import { WebCrawlerWizard } from "./wizards/WebCrawlerWizard";

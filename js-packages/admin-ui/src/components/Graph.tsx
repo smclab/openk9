@@ -1,4 +1,6 @@
 import { CreateGraphic, LabelNumber } from "./Form";
+import ClayLayout from "@clayui/layout";
+import ClayIcon from "@clayui/icon";
 
 type detailGraphProps = {
   dataGraph: {
@@ -34,33 +36,29 @@ export function DetailGraph({
   thirdCardUnity = "",
 }: detailGraphProps) {
   return (
-    <div className="card" style={{ marginTop: "20px" }}>
-      <div className="card-body">
-        <div
-          style={{
-            display: "flex",
-            fontSize: "24px",
-            lineHeight: "32px",
-            fontWeight: "600",
-            fontFamily: "bold",
-          }}
-        >
-          Engine Overview:
+    <ClayLayout.ContainerFluid view>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div style={{ color: "#27272A", fontWeight: "600", fontSize: "22px" }}>Engine Overview:</div>
+        <div style={{ display: "flex", flexDirection: "row", gap: "30px", width: "100%", alignItems: "stretch" }}>
+          <LabelNumber
+            label={firstCardLabel}
+            number={firstCardNumber || 0}
+            unity={firstCardUnity}
+            icon={<ClayIcon symbol={"document-text"} />}
+          />
+          <LabelNumber
+            label={secondCardLabel}
+            number={secondCardNumber || 0}
+            unity={secondCardUnity}
+            icon={<ClayIcon symbol={"trash"}></ClayIcon>}
+          />
+          <LabelNumber label={thirdCardLabel} number={thirdCardNumber || 0} unity={thirdCardUnity} icon={<ClayIcon symbol="ruler" />} />
         </div>
-        <div style={{ display: "flex", gap: "70px", alignItems: "flex-end" }}>
-          <div>
-            <LabelNumber label={firstCardLabel} number={firstCardNumber || 0} unity={firstCardUnity} />
-            <LabelNumber label={secondCardLabel} number={secondCardNumber || 0} unity={secondCardUnity} />
-            <LabelNumber label={thirdCardLabel} number={thirdCardNumber || 0} unity={thirdCardUnity} />
-          </div>
-          <div>
-            <CreateGraphic data={dataGraph} height={210} width={350} labelInformationRigth="View Api Logs" Information="Total Queries" />
-          </div>
-          <div>
-            <CreateGraphic data={secondDataGraph} height={210} width={350} labelInformationRigth="View Api Logs" Information="Total Api" />
-          </div>
+        <div style={{ display: "flex", gap: "30px", width: "100%" }}>
+          <CreateGraphic data={dataGraph} height={210} width={450} labelInformationRigth="View Api Logs" Information="Document Count " />
+          <CreateGraphic data={secondDataGraph} height={210} width={450} labelInformationRigth="View Api Logs" Information="Total Api" />
         </div>
       </div>
-    </div>
+    </ClayLayout.ContainerFluid>
   );
 }
