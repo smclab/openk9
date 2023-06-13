@@ -148,7 +148,4 @@
 			<artifactId>microprofile-rest-client-api</artifactId>
 		</dependency>
 	</dependencies>
-
-
-
 </project>
