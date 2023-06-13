@@ -105,5 +105,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "i18next": "^22.5.1",
+    "react-i18next": "^12.3.1"
   }
 }

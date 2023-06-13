@@ -1,0 +1,20 @@
+{
+  "translation": {
+    "filters": "Filters",
+    "preview": "Preview",
+    "result": "Result",
+    "no-filters": "No Fileters",
+    "load-more": "Load More",
+    "active-filters": "Active Filters",
+    "remove-filters": "Remove Filters",
+    "from": "From",
+    "to": "To",
+    "login": "Login",
+    "sort": "Sort",
+    "relevance": "Relevance",
+    "remove-data-filter": "remove filter",
+    "filter": "Filter",
+    "no-details": "No details",
+    "no-reult": "move the mouse over a result to see details about it"
+  }
+}

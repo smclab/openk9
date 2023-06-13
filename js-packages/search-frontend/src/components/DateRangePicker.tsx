@@ -10,6 +10,7 @@ import { useQuery } from "react-query";
 import Select from "react-select";
 import { useOpenK9Client } from "./client";
 import "./dataRangePicker.css";
+import { useTranslation } from "react-i18next";
 
 const DateRangeFix = DateRange as any;
 const DefinedRangeFix = DefinedRange as any;
@@ -58,6 +59,7 @@ export function DateRangePicker({
   const options = useQuery(["date-range-keywordkey-options", {}], async () => {
     return await client.getDateFilterFields();
   });
+  const { t } = useTranslation();
   return (
     <div>
       <Select
@@ -154,7 +156,7 @@ export function DateRangePicker({
             onClose();
           }}
         >
-          Don't filter by date
+          {t("remove-data-filter")}
         </button>
         <button
           disabled={!Boolean(value.startDate || value.endDate)}
@@ -177,7 +179,7 @@ export function DateRangePicker({
             onClose();
           }}
         >
-          Filter
+          {t("filter")}
         </button>
       </div>
     </div>

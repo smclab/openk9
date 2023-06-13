@@ -30,6 +30,9 @@ import { useQuery } from "react-query";
 import { SortResultList } from "../components/SortResultList";
 import { FiltersHorizontalMemo } from "../components/FiltersHorizontal";
 import { DetailMobileMemo } from "../components/DetailMobile";
+import "../i18n";
+import { I18nextProvider } from "react-i18next";
+import i18next from "i18next";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -91,76 +94,100 @@ export function Main({
   return (
     <React.Fragment>
       {renderPortal(
-        <Search
-          configuration={configuration}
-          onConfigurationChange={onConfigurationChange}
-          spans={spans}
-          selectionsState={selectionsState}
-          selectionsDispatch={selectionsDispatch}
-          showSyntax={isQueryAnalysisComplete}
-          onDetail={setDetail}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          isMobile={isMobile}
-        />,
+        <I18nextProvider i18n={i18next}>
+          <Search
+            configuration={configuration}
+            onConfigurationChange={onConfigurationChange}
+            spans={spans}
+            selectionsState={selectionsState}
+            selectionsDispatch={selectionsDispatch}
+            showSyntax={isQueryAnalysisComplete}
+            onDetail={setDetail}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            isMobile={isMobile}
+          />
+        </I18nextProvider>,
         configuration.search,
       )}
       {renderPortal(
-        <TabsMemo
-          tabs={tabs}
-          selectedTabIndex={selectedTabIndex}
-          onSelectedTabIndexChange={setSelectedTabIndex}
-          onConfigurationChange={onConfigurationChange}
-        />,
+        <I18nextProvider i18n={i18next}>
+          <TabsMemo
+            tabs={tabs}
+            selectedTabIndex={selectedTabIndex}
+            onSelectedTabIndexChange={setSelectedTabIndex}
+            onConfigurationChange={onConfigurationChange}
+          />
+        </I18nextProvider>,
         configuration.tabs,
       )}
       {renderPortal(
-        <FiltersMemo
-          searchQuery={searchQuery}
-          onAddFilterToken={addFilterToken}
-          onRemoveFilterToken={removeFilterToken}
-          onConfigurationChange={onConfigurationChange}
-          filtersSelect={configuration.filterTokens}
-          sort={completelySort}
-          dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
-        />,
+        <I18nextProvider i18n={i18next}>
+          <FiltersMemo
+            searchQuery={searchQuery}
+            onAddFilterToken={addFilterToken}
+            onRemoveFilterToken={removeFilterToken}
+            onConfigurationChange={onConfigurationChange}
+            filtersSelect={configuration.filterTokens}
+            sort={completelySort}
+            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+          />
+        </I18nextProvider>,
         configuration.filters,
       )}
       {renderPortal(
-        <FiltersHorizontalMemo
-          searchQuery={searchQuery}
-          onAddFilterToken={addFilterToken}
-          onRemoveFilterToken={removeFilterToken}
-          onConfigurationChange={onConfigurationChange}
-          filtersSelect={configuration.filterTokens}
-          sort={completelySort}
-          dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
-        />,
+        <I18nextProvider i18n={i18next}>
+          <FiltersHorizontalMemo
+            searchQuery={searchQuery}
+            onAddFilterToken={addFilterToken}
+            onRemoveFilterToken={removeFilterToken}
+            onConfigurationChange={onConfigurationChange}
+            filtersSelect={configuration.filterTokens}
+            sort={completelySort}
+            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+          />
+        </I18nextProvider>,
         configuration.filtersHorizontal,
       )}
       {renderPortal(
-        <ResultsMemo
-          displayMode={configuration.resultsDisplayMode}
-          searchQuery={searchQuery}
-          onDetail={setDetail}
-          setDetailMobile={setDetailMobile}
-          sort={completelySort}
-          setSortResult={setSortResult}
-          isMobile={isMobile}
-        />,
+        <I18nextProvider i18n={i18next}>
+          <ResultsMemo
+            displayMode={configuration.resultsDisplayMode}
+            searchQuery={searchQuery}
+            onDetail={setDetail}
+            setDetailMobile={setDetailMobile}
+            sort={completelySort}
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+          />
+        </I18nextProvider>,
         configuration.results,
       )}
-      {renderPortal(<DetailMemo result={detail} />, configuration.details)}
-      {renderPortal(<LoginInfoComponentMemo />, configuration.login)}
       {renderPortal(
-        <SortResultList setSortResult={setSortResult} />,
+        <I18nextProvider i18n={i18next}>
+          <DetailMemo result={detail} />
+        </I18nextProvider>,
+        configuration.details,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <LoginInfoComponentMemo />
+        </I18nextProvider>,
+        configuration.login,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <SortResultList setSortResult={setSortResult} />
+        </I18nextProvider>,
         configuration.sortable,
       )}
       {renderPortal(
-        <DetailMobileMemo
-          result={detailMobile}
-          setDetailMobile={setDetailMobile}
-        />,
+        <I18nextProvider i18n={i18next}>
+          <DetailMobileMemo
+            result={detailMobile}
+            setDetailMobile={setDetailMobile}
+          />
+        </I18nextProvider>,
         configuration.detailMobile,
       )}
     </React.Fragment>

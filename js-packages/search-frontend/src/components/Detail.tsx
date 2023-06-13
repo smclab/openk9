@@ -11,6 +11,7 @@ import { Logo } from "./Logo";
 import { ResultSvg } from "../svgElement/ResultSvg";
 import { PreviewSvg } from "../svgElement/PreviewSvg";
 import { DeleteLogo } from "./DeleteLogo";
+import { useTranslation } from "react-i18next";
 
 export type DetailProps<E> = {
   result: GenericResultItem<E> | null;
@@ -20,6 +21,8 @@ function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
   const setDetailMobile = props.setDetailMobile;
   const renderers = useRenderers();
+  const { t } = useTranslation();
+
   if (!result) {
     return <NoDetail />;
   }
@@ -72,7 +75,7 @@ function Detail<E>(props: DetailProps<E>) {
               margin-left: 8px;
             `}
           >
-            Preview
+            {t("preview")}
           </div>
         </div>
         {setDetailMobile && (
@@ -126,6 +129,7 @@ function Detail<E>(props: DetailProps<E>) {
 export const DetailMemo = React.memo(Detail);
 
 export function NoDetail() {
+  const { t } = useTranslation();
   return (
     <React.Fragment>
       <div
@@ -157,7 +161,7 @@ export function NoDetail() {
             margin-left: 8px;
           `}
         >
-          Preview
+          {t("preview")}
         </div>
       </div>
       <div
@@ -172,8 +176,9 @@ export function NoDetail() {
         `}
       >
         <Logo size={128} />
-        <h3>No details</h3>
-        <div>Move the mouse over a result to see details about it</div>
+
+        <h3>{t("no-details")}</h3>
+        <div>{t("no-reult")}</div>
       </div>
     </React.Fragment>
   );

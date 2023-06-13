@@ -10,6 +10,7 @@ import { faEnvelope } from "@fortawesome/free-solid-svg-icons/faEnvelope";
 import { useClickAway } from "./useClickAway";
 import { LoginLogo } from "./LogoLogin";
 import { CreateLabel } from "./Filters";
+import { useTranslation } from "react-i18next";
 
 type LoginInfoProps = {};
 function LoginInfoComponent({}: LoginInfoProps) {
@@ -23,6 +24,7 @@ function LoginInfoComponent({}: LoginInfoProps) {
   });
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement | null>(null);
+  const { t } = useTranslation();
   useClickAway([dropdownRef], () => {
     setIsOpen(false);
   });
@@ -30,7 +32,7 @@ function LoginInfoComponent({}: LoginInfoProps) {
     return (
       <CreateLabel
         svgIcon={<LoginLogo colorFill="#000000" />}
-        label="Login"
+        label={t("login")}
         marginOfSvg="10px"
         sizeFont="16px"
         colorLabel={"black"}

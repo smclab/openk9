@@ -1,0 +1,21 @@
+{
+  "translation": {
+    "filters": "Filtri",
+    "preview": "Anteprima",
+    "result": "Risultato",
+    "no-filters": "Nessun Filtro",
+    "load-more": "Carica Altro",
+    "login": "Accedi",
+    "active-filters": "Filtri Attivi",
+    "remove-filters": "Rimuovi Filtri",
+    "from": "Da",
+    "to": "A",
+    "sort": "Ordina per",
+    "relevance": "Rilevanza",
+    "today": "Oggi",
+    "remove-data-filter": "rimuovi il filtro",
+    "filter": "filtra",
+    "no-details": "nessun dettaglio",
+    "no-reult": "muovi il mouse su una card per vederlo"
+  }
+}

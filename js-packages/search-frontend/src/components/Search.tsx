@@ -27,6 +27,7 @@ import { DeleteLogo } from "./DeleteLogo";
 import { SeparatorLogo } from "./SeparatorLogo";
 import { DateTime } from "luxon";
 import { CreateLabel } from "./Filters";
+import { useTranslation } from "react-i18next";
 
 type SearchProps = {
   configuration: Configuration;
@@ -456,18 +457,22 @@ function CreateDeleteFilter({
   setValueSelected: any;
 }) {
   let data;
+  const { t } = useTranslation();
   if (isBuild) {
     data = journey;
   } else {
     {
       data =
-        "From " +
+        t("from") +
+        " " +
         valueOfDate.startDate?.toLocaleDateString("it-IT", {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
         }) +
-        " to " +
+        " " +
+        t("to") +
+        " " +
         valueOfDate.endDate?.toLocaleDateString("it-IT", {
           day: "2-digit",
           month: "2-digit",

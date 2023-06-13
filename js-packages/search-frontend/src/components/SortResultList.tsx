@@ -4,6 +4,7 @@ import React from "react";
 import { SortField } from "./client";
 import { useQuery } from "react-query";
 import { useOpenK9Client } from "./client";
+import { useTranslation } from "react-i18next";
 
 export function SortResultList({
   setSortResult,
@@ -14,6 +15,7 @@ export function SortResultList({
   const options = useQuery(["date-label-sort-options", {}], async () => {
     return await client.getLabelSort();
   });
+  const { t } = useTranslation();
   return (
     <span className="openk9-container-sort-result-list-component">
       <select
@@ -48,7 +50,7 @@ export function SortResultList({
             label: "relevance",
           })}
         >
-          relevance
+          {t("relevance")}
         </option>
         {options.data?.map((option) => {
           return (

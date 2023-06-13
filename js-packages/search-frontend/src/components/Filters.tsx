@@ -11,6 +11,7 @@ import { FilterSvg } from "../svgElement/FiltersSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { Logo } from "./Logo";
 import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
+import { useTranslation } from "react-i18next";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -31,6 +32,7 @@ function Filters({
   dynamicFilters,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
+  const { t } = useTranslation();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
   const { data, isPreviousData } = useInfiniteResults(searchQuery, sort);
@@ -91,7 +93,7 @@ function Filters({
               color: #3f3f46;
             `}
           >
-            Filters
+            {t("filters")}
           </span>
         </div>
       </div>
@@ -125,11 +127,11 @@ function Filters({
             >
               {count}{" "}
             </span>
-            <span>active filters</span>
+            <span>{t("active-filters")}</span>
           </div>
           <div className="openk9-active-container-number-filters-list-number-of-results">
             <CreateLabel
-              label="remove filters"
+              label={t("remove-filters")}
               action={() => {
                 onConfigurationChange({ filterTokens: [] });
               }}

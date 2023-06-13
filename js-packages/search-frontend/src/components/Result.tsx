@@ -6,6 +6,7 @@ import { DocumentResult } from "../renderers/openk9/document/DocumentResult";
 import { PdfResult } from "../renderers/openk9/pdf/PdfResult";
 import { Renderers } from "./useRenderers";
 import { MobileLogoSvg } from "../svgElement/MobileLogoSvg";
+import { useTranslation } from "react-i18next";
 
 type ResultProps<E> = {
   renderers: Renderers;
@@ -100,6 +101,7 @@ function CreateButton({
   setDetailMobile: (result: GenericResultItem<any> | null) => void;
   result: GenericResultItem<any>;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className="openk9-wrapper-button-mobile"
@@ -131,7 +133,7 @@ function CreateButton({
           setDetailMobile(result);
         }}
       >
-        <span>Anteprima</span>
+        <span> {t("preview")}</span>
         <MobileLogoSvg />
       </button>
     </div>

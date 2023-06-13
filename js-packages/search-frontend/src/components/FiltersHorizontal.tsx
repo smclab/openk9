@@ -10,6 +10,7 @@ import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { Logo } from "./Logo";
 import { PlusSvg } from "../svgElement/PlusSvg";
 import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
+import { useTranslation } from "react-i18next";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -29,6 +30,7 @@ function FiltersHorizontal({
   sort,
   dynamicFilters,
 }: FiltersProps) {
+  const { t } = useTranslation();
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
@@ -128,7 +130,7 @@ function FiltersHorizontal({
       {hasMoreSuggestionsCategories && (
         <div style={{ textAlign: "center", width: "100%" }}>
           <CreateLabel
-            label=" Load More"
+            label={t("load-more")}
             action={() => {
               setLoadAll(true);
               setHasMoreSuggestionsCategories(false);

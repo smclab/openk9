@@ -12,6 +12,7 @@ import { useOpenK9Client } from "./client";
 import { Logo } from "./Logo";
 import { CreateLabel } from "./Filters";
 import { PlusSvg } from "../svgElement/PlusSvg";
+import { useTranslation } from "react-i18next";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -51,7 +52,7 @@ function FilterCategory({
     loadAll,
     dynamicFilters,
   );
-
+  const { t } = useTranslation();
   React.useEffect(() => {
     if (
       setHasMoreSuggestionsCategories &&
@@ -325,7 +326,7 @@ function FilterCategory({
           {!isUniqueLoadMore && suggestions.hasNextPage && (
             <div style={{ textAlign: "center", width: "100%" }}>
               <CreateLabel
-                label=" Load More"
+                label={t("load-more")}
                 action={() => {
                   suggestions.fetchNextPage();
                 }}

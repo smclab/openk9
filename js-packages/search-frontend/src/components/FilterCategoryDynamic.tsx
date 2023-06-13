@@ -11,6 +11,7 @@ import { useOpenK9Client } from "./client";
 import { CreateLabel } from "./Filters";
 import { PlusSvg } from "../svgElement/PlusSvg";
 import { NoFilter, mapSuggestionToSearchToken } from "./FilterCategory";
+import { useTranslation } from "react-i18next";
 
 type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
@@ -47,6 +48,7 @@ function FilterCategoryDynamic({
     useDebounce(text, 600),
     loadAll,
   );
+  const { t } = useTranslation();
   const resultValue = suggestions.data?.pages[0].result || [];
   const filters = mergeAndSortObjects(
     resultValue,
@@ -323,7 +325,7 @@ function FilterCategoryDynamic({
           {!isUniqueLoadMore && suggestions.hasNextPage && (
             <div style={{ textAlign: "center", width: "100%" }}>
               <CreateLabel
-                label=" Load More"
+                label={t("load-more")}
                 action={() => {
                   suggestions.fetchNextPage();
                 }}

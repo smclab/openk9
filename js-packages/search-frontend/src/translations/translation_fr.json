@@ -1,0 +1,20 @@
+{
+  "translation": {
+    "filters": "Filtres",
+    "preview": "Aperçu",
+    "result": "Résultat",
+    "no-filters": "Sans Filtres",
+    "load-more": "Charger plus",
+    "active-filters": "Filtres actifs",
+    "remove-filters": "Supprimer les filtres",
+    "from": "Depuis",
+    "to": "pour",
+    "login": "Connexion",
+    "sort": "Trier par",
+    "relevance": "Pertinence",
+    "remove-data-filter": "Supprimer le filtre",
+    "filter": "Filtre",
+    "no-details": "Pas de détails",
+    "no-reult": "Déplacez la souris sur un résultat pour en voir les détails"
+  }
+}

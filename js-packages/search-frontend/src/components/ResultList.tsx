@@ -11,6 +11,7 @@ import { useInfiniteQuery, useQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
 import { SortResultList } from "./SortResultList";
+import { useTranslation } from "react-i18next";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 export type ResultsDisplayMode =
@@ -89,6 +90,7 @@ type ResultCountProps = {
 
 function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
   const client = useOpenK9Client();
+  const { t } = useTranslation();
 
   return (
     <React.Fragment>
@@ -121,7 +123,7 @@ function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
             margin-left: 8px;
           `}
         >
-          Result
+          {t("result")}
         </span>
       </div>
       <div
@@ -159,7 +161,7 @@ function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
               margin-right: 2%;
             `}
           >
-            Sort by
+            {t("sort")}
           </span>
           <SortResultList setSortResult={setSortResult} />
         </div>
@@ -236,7 +238,7 @@ export function InfiniteResults<E>({
   isMobile,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery, sort);
-
+  const { t } = useTranslation();
   return (
     <OverlayScrollbarsComponentDockerFix
       className="openk9-infinite-results-overlay-scrollbars"
@@ -298,9 +300,7 @@ export function InfiniteResults<E>({
                 display: block;
               `}
             >
-              {results.isFetching
-                ? "Loading more results..."
-                : "Load more results"}
+              {results.isFetching ? "Loading more results..." : t("load-more")}
             </button>
           )}
         </div>
