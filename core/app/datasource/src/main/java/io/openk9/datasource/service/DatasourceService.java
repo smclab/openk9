@@ -17,12 +17,10 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.DatasourceMapper;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Datasource_;
-import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.*;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.util.BaseK9EntityService;
@@ -31,6 +29,9 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class DatasourceService extends BaseK9EntityService<Datasource, DatasourceDTO> {
@@ -48,9 +49,30 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			s -> s.fetch(datasource.getDataIndex()));
 	}
 
+	public Uni<Set<DataIndex>> getDataIndexes(Datasource datasource) {
+		return withTransaction(
+			s -> s.fetch(datasource.getDataIndexes()));
+	}
+
 	public Uni<DataIndex> getDataIndex(long datasourceId) {
 		return withTransaction(
 			() -> findById(datasourceId).flatMap(this::getDataIndex));
+	}
+
+
+	public Uni<List<DataIndex>> getDataIndexes(long datasourceId) {
+		return withTransaction(
+			() -> findById(datasourceId).flatMap(this::getDataIndexes).map(ArrayList::new)
+		);
+	}
+
+	public Uni<Connection<DataIndex>> getDataIndexConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		return findJoinConnection(
+			id, Datasource_.DATA_INDEXES, DataIndex.class,
+			dataIndexService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
 	}
 
 	public Uni<EnrichPipeline> getEnrichPipeline(Datasource datasource) {

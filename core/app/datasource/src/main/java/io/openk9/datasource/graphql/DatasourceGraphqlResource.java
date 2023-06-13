@@ -43,6 +43,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -68,6 +69,20 @@ public class DatasourceGraphqlResource {
 
 	public Uni<DataIndex> dataIndex(@Source Datasource datasource) {
 		return datasourceService.getDataIndex(datasource.getId());
+	}
+
+	public Uni<Connection<DataIndex>> dataIndexes(
+		@Source Datasource datasource,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities")
+		@DefaultValue("false") boolean notEqual) {
+
+		return datasourceService.getDataIndexConnection(
+			datasource.getId(), after, before, first, last, searchText, sortByList, notEqual);
 	}
 
 	public Uni<PluginDriver> pluginDriver(@Source Datasource datasource) {
