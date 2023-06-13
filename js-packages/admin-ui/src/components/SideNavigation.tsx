@@ -218,4 +218,8 @@ export const StyleSideNavigation = `
 .sidebar-dark .nav-nested .nav-link.active {
   color: black;
 }
+
+.sidebar-dark .nav-nested .nav-link {
+  color: #686c99;
+}
 `;
