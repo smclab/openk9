@@ -41,4 +41,5 @@ public class IngestionDTO {
 	private ResourcesDTO resources;
 	private Map<String, List<String>> acl;
 	private String scheduleId;
+	private boolean last = false;
 }

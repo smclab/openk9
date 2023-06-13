@@ -52,6 +52,7 @@ public class DataPayload {
 	@JsonIgnore
 	private Map<String, Object> rest = new HashMap<>();
 	private String indexName;
+	private boolean last = false;
 
 	public static DataPayload copy(DataPayload dataPayload) {
 		return DataPayload.builder()
@@ -66,6 +67,7 @@ public class DataPayload {
 			.acl(dataPayload.acl)
 			.rest(dataPayload.rest)
 			.indexName(dataPayload.indexName)
+			.last(dataPayload.last)
 			.build();
 	}
 
@@ -82,6 +84,7 @@ public class DataPayload {
 			.acl(acl)
 			.rest(rest)
 			.indexName(indexName)
+			.last(last)
 			.build();
 	}
 
