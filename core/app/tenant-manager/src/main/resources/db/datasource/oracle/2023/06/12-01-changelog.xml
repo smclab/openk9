@@ -13,20 +13,31 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	</changeSet>
 	<changeSet id="1686583762945-2" author="openk9">
 		<sql>
-			update data_index
-			set di.datasource_id = d.id
-			from data_index di
-			inner join datasource d on d.data_index_id = di.id
+			UPDATE data_index di
+			SET datasource_id = (SELECT d.id
+				FROM datasource d
+				WHERE d.data_index_id = di.id)
+			WHERE EXISTS (SELECT d.id
+				FROM datasource d
+				WHERE d.data_index_id = di.id);
 		</sql>
 	</changeSet>
 	<changeSet id="1686583762945-3" author="openk9">
 		<sql>
-			delete
-			from data_index di
-			where di.datasource_id is null
+			DELETE FROM data_index_doc_types didt
+			WHERE didt.data_index_id IN (SELECT di.id
+				FROM data_index di
+				WHERE di.datasource_id IS null
+			)
 		</sql>
 	</changeSet>
 	<changeSet id="1686583762945-4" author="openk9">
+		<sql>
+			DELETE FROM data_index di
+			WHERE di.datasource_id IS null
+		</sql>
+	</changeSet>
+	<changeSet id="1686583762945-5" author="openk9">
 		<addNotNullConstraint tableName="data_index" columnName="datasource_id"/>
 		<addForeignKeyConstraint baseTableName="data_index" baseColumnNames="datasource_id"
 								 constraintName="FK_data_index_datasource"
