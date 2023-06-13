@@ -5,8 +5,10 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
 import io.openk9.common.util.VertxUtil;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.ScheduleId;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -32,6 +34,7 @@ public class Scheduler {
 	public record TriggerDatasource(String tenantName, long datasourceId) implements Command {}
 	private record ScheduleDatasourceInternal(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	private record TriggerDatasourceInternal(String tenantName, Datasource datasource) implements Command {}
+	private record InvokePluginDriverInternal(String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
 
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
@@ -60,7 +63,8 @@ public class Scheduler {
 			.onMessage(UnScheduleDatasource.class, removeDatasource -> onRemoveDatasource(removeDatasource, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
 			.onMessage(TriggerDatasource.class, jobMessage -> onTriggerDatasource(jobMessage, ctx, transactionInvoker))
 			.onMessage(ScheduleDatasourceInternal.class, scheduleDatasourceInternal -> onScheduleDatasourceInternal(scheduleDatasourceInternal, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
-			.onMessage(TriggerDatasourceInternal.class, triggerDatasourceInternal -> onTriggerDatasourceInternal(triggerDatasourceInternal, ctx, httpPluginDriverClient))
+			.onMessage(TriggerDatasourceInternal.class, triggerDatasourceInternal -> onTriggerDatasourceInternal(triggerDatasourceInternal, ctx, httpPluginDriverClient, transactionInvoker))
+			.onMessage(InvokePluginDriverInternal.class, invokePluginDriverInternal -> onInvokePluginDriverInternal(httpPluginDriverClient, invokePluginDriverInternal.tenantName, invokePluginDriverInternal.scheduler))
 			.build();
 
 	}
@@ -68,7 +72,7 @@ public class Scheduler {
 	private static Behavior<Command> onTriggerDatasourceInternal(
 		TriggerDatasourceInternal triggerDatasourceInternal,
 		ActorContext<Command> ctx,
-		HttpPluginDriverClient httpPluginDriverClient) {
+		HttpPluginDriverClient httpPluginDriverClient, TransactionInvoker transactionInvoker) {
 
 		Datasource datasource = triggerDatasourceInternal.datasource;
 		String tenantName = triggerDatasourceInternal.tenantName;
@@ -84,6 +88,18 @@ public class Scheduler {
 			return Behaviors.same();
 		}
 
+		startScheduler(ctx, datasource, tenantName, transactionInvoker);
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onInvokePluginDriverInternal(
+		HttpPluginDriverClient httpPluginDriverClient,
+		String tenantName, io.openk9.datasource.model.Scheduler scheduler) {
+
+		Datasource datasource = scheduler.getDatasource();
+		PluginDriver pluginDriver = datasource.getPluginDriver();
+
 		OffsetDateTime lastIngestionDate;
 
 		if (datasource.getLastIngestionDate() == null) {
@@ -93,10 +109,6 @@ public class Scheduler {
 		else {
 			lastIngestionDate = datasource.getLastIngestionDate();
 		}
-
-		UUID uuid = UUID.randomUUID();
-
-		String scheduleId = uuid.toString();
 
 		switch (pluginDriver.getType()) {
 			case HTTP: {
@@ -110,7 +122,7 @@ public class Scheduler {
 							.timestamp(lastIngestionDate)
 							.tenantId(tenantName)
 							.datasourceId(datasource.getId())
-							.scheduleId(scheduleId)
+							.scheduleId(scheduler.getScheduleId().getValue())
 							.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
 							.build()
 					), (ignore) -> {}
@@ -119,7 +131,6 @@ public class Scheduler {
 		}
 
 		return Behaviors.same();
-
 	}
 
 	private static Behavior<Command> onScheduleDatasourceInternal(
@@ -260,6 +271,7 @@ public class Scheduler {
 						"select d " +
 						"from Datasource d " +
 						"join fetch d.pluginDriver " +
+						"left join fetch d.dataIndex" +
 						"where d.id = :id", Datasource.class)
 					.setParameter("id", datasourceId)
 					.getSingleResult()
@@ -268,5 +280,24 @@ public class Scheduler {
 		);
 	}
 
+
+	private static void startScheduler(ActorContext<Command> ctx, Datasource datasource, String tenantName, TransactionInvoker transactionInvoker) {
+		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
+		ScheduleId scheduleId = new ScheduleId(UUID.randomUUID());
+		scheduler.setScheduleId(scheduleId);
+		scheduler.setDatasource(datasource);
+		scheduler.setOldDataIndex(datasource.getDataIndex());
+		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.STARTED);
+
+		DataIndex newDataIndex = new DataIndex();
+		newDataIndex.setName(datasource.getId() + "-data-" + scheduleId.getValue());
+		newDataIndex.setDatasource(datasource);
+
+		scheduler.setNewDataIndex(newDataIndex);
+
+		VertxUtil.runOnContext(() -> transactionInvoker
+			.withTransaction(tenantName, (s) -> s.persist(scheduler).invoke(() ->
+				ctx.getSelf().tell(new InvokePluginDriverInternal(tenantName, scheduler)))));
+	}
 
 }
