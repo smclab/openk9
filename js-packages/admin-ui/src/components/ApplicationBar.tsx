@@ -116,8 +116,8 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
                   }
                 >
                   <DropDown.ItemList>
-                    <DropDown.Item>
-                      <div style={{ display: "inline-block", width: "100%" }} onClick={() => {}}>
+                    <DropDown.Item style={{ outline: "none", boxShadow: "none", backgroundColor: "inherit" }}>
+                      <div style={{ display: "inline-block", width: "100%", outline: "none" }} onClick={() => {}}>
                         <ClayIcon symbol={"user"} style={{ color: "black" }} />
                         <span style={{ marginLeft: "10px" }}> {name}</span>
                       </div>
