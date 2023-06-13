@@ -10,7 +10,7 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 		<createTable tableName="scheduler">
 			<column name="id" type="BIGINT">
 				<constraints nullable="false" primaryKey="true"
-							 primaryKeyName="doc_type_field_pkey"/>
+							 primaryKeyName="scheduler_pkey"/>
 			</column>
 			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
 			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
