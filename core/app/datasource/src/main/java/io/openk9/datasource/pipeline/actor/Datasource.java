@@ -5,7 +5,6 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.VertxUtil;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.pipeline.actor.dto.GetDatasourceDTO;
 import io.openk9.datasource.pipeline.actor.mapper.DatasourceMapper;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -17,9 +16,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.UUID;
 
 public class Datasource {
 
@@ -33,9 +30,6 @@ public class Datasource {
 	) implements Command {}
 	private record DatasourceModelError(
 		Throwable exception) implements Command {}
-	private record CreateRandomDataIndex(
-		String tenantId, long parsingDate, io.openk9.datasource.model.Datasource datasource,
-		ActorRef<Response> replyTo) implements Command {}
 
 	public sealed interface Response extends CborSerializable {}
 	public record Success(GetDatasourceDTO datasource) implements Response {}
@@ -78,15 +72,7 @@ public class Datasource {
 
 		io.openk9.datasource.model.Datasource datasource = message.datasource;
 
-		DataIndex dataIndex = datasource.getDataIndex();
-
 		Logger log = ctx.getLog();
-
-		if (dataIndex == null) {
-			log.info("datasource with id {} has no dataIndex, start random creation", datasource.getId());
-			ctx.getSelf().tell(new CreateRandomDataIndex(tenantId, parsingDate, datasource, replyTo));
-			return Behaviors.same();
-		}
 
 		OffsetDateTime lastIngestionDate = datasource.getLastIngestionDate();
 
@@ -150,35 +136,8 @@ public class Datasource {
 			.onMessage(GetDatasource.class, message -> onBusyGetMessage(ctx, txInvoker, datasourceMapper, lags, message, tenantId, parsingDate, replyTo))
 			.onMessage(DatasourceModel.class, message -> onDatasourceModel(message, ctx, txInvoker, tenantId, parsingDate, replyTo))
 			.onMessage(DatasourceModelError.class, message -> onDatasourceModelError(ctx, message))
-			.onMessage(CreateRandomDataIndex.class, message -> onCreateRandomDataIndex(ctx, txInvoker, message))
 			.onMessage(Finished.class, (message) -> onFinished(ctx, txInvoker, datasourceMapper, lags, replyTo, message))
 			.build();
-	}
-
-	private static Behavior<Command> onCreateRandomDataIndex(
-		ActorContext<Command> ctx,
-		TransactionInvoker transactionInvoker,
-		CreateRandomDataIndex createRandomDataIndex) {
-
-		io.openk9.datasource.model.Datasource datasource =
-			createRandomDataIndex.datasource;
-
-		String tenantId = createRandomDataIndex.tenantId;
-
-		String indexName = datasource.getId() + "-data-" + UUID.randomUUID();
-
-		DataIndex dataIndex = DataIndex.of(
-			indexName, "auto-generated", new LinkedHashSet<>(), datasource);
-
-		datasource.setDataIndex(dataIndex);
-
-		ctx.getLog().info(
-			"creating random dataIndex: {} for datasource: {}", indexName, datasource.getId());
-
-		mergeDatasource(
-			ctx.getSelf(), tenantId, transactionInvoker, datasource);
-
-		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onFinished(
