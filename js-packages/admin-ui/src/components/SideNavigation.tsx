@@ -7,8 +7,11 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
   const [select, setSelect] = React.useState("");
   return (
     <div className={`sidenav-fixed sidenav-menu-slider ${isSideMenuOpen ? "open" : "close"}`}>
-      <div className="sidebar sidebar-dark sidenav-menu product-menu">
-        <div className="sidebar-header">
+      <div
+        className="sidebar sidebar-dark sidenav-menu product-menu"
+        style={{ backgroundColor: "white", borderRight: "1px solid #00000017" }}
+      >
+        <div className="sidebar-header" style={{ color: "black" }}>
           <div style={{ display: "inline-block", margin: "-16px 16px -16px 0px" }}>
             <BrandLogo height={32} width={32} />
           </div>
@@ -16,7 +19,7 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
         </div>
         <div className="sidebar-body">
           <nav className="menubar">
-            <ul className="nav nav-nested  ">
+            <ul className="nav nav-nested " style={{ color: "#5c5d63" }}>
               <SideNavigationItem IsChildren={false} setSelect={setSelect} elementSelect={select} label="Dashboard" path="/" />
               <SideNavigationItem
                 IsChildren={false}
@@ -140,6 +143,7 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
           </nav>
         </div>
       </div>
+      <style type="text/css"> {StyleSideNavigation}</style>
     </div>
   );
 }
@@ -205,3 +209,13 @@ function SideNavigationCollapsible({ label, children }: SideNavigationCollapsibl
     </li>
   );
 }
+
+export const StyleSideNavigation = `
+.sidebar-dark .nav-nested .nav-link:hover {
+  color: black;
+}
+
+.sidebar-dark .nav-nested .nav-link.active {
+  color: black;
+}
+`;

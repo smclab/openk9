@@ -59,6 +59,12 @@ const dataTwo = [
   { name: "10/13", query: 800 },
   { name: "10/24", query: 500 },
 ];
+
+function bytesToMegabytes(bytes: number): number {
+  const megabytes = bytes / (1024 * 1024);
+  return megabytes;
+}
+
 export function DashBoard() {
   const dashboardQuery = useDataIndexInformationQuery();
   const [user, setUser] = React.useState();
@@ -70,7 +76,7 @@ export function DashBoard() {
     ?.map((edge) => edge?.node?.datasources?.edges?.map((datasource) => datasource?.node?.dataIndex?.cat?.docsDeleted))
     .filter((arr) => arr != null && arr.length > 0);
 
-  const countSingleIndex = recoveryDocsDeleted?.flat().reduce((acc, singleIndex) => acc + parseFloat(singleIndex ?? "0"), 0);
+  const documentDeleted = recoveryDocsDeleted?.flat().reduce((acc, singleIndex) => acc + parseFloat(singleIndex ?? "0"), 0);
 
   const docsCount = dashboardQuery.data?.buckets?.edges
     ?.map((edge) => edge?.node?.datasources?.edges?.map((datasource) => datasource?.node?.dataIndex?.cat?.docsCount))
@@ -93,8 +99,8 @@ export function DashBoard() {
       <DetailGraph
         dataGraph={data}
         secondDataGraph={dataTwo}
-        firstCardNumber={countSingleIndex || 0}
-        secondCardNumber={docCount || 0}
+        firstCardNumber={docCount || 0}
+        secondCardNumber={documentDeleted || 0}
         thirdCardNumber={byteCount || 0}
         firstCardLabel={"Document counts"}
         secondCardLabel={"Document deleted"}

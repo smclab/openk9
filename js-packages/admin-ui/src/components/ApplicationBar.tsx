@@ -17,7 +17,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
       className="control-menu-container"
       style={{ paddingLeft: isSideMenuOpen ? "320px" : "", position: "sticky", top: "0px", zIndex: 2 }}
     >
-      <nav className="application-bar application-bar-dark navbar navbar-expand-md">
+      <nav className="application-bar application-bar-dark navbar navbar-expand-md" style={{ backgroundColor: "white" }}>
         <div className="container-fluid container-fluid-max-xl">
           <ul className="navbar-nav">
             <li className="nav-item">
@@ -32,7 +32,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
               </button>
             </li>
           </ul>
-          <div className="navbar-title navbar-text-truncate">
+          <div className="navbar-title navbar-text-truncate" style={{ color: "black" }}>
             <Routes>
               <Route path="" element={"Dashboard"} />
               <Route path="buckets" element={"Buckets"} />
@@ -95,7 +95,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
           </div>
           <ul className="navbar-nav">
             <li className="nav-item">
-              {/* {!isAuthenticated && (
+              {!isAuthenticated && (
                 <ClayButton
                   onClick={() => {
                     keycloak.login();
@@ -111,7 +111,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
                       className="btn btn-unstyled nav-btn nav-btn-monospaced"
                       style={{ border: "1px solid #8F8F8F", width: "50px", height: "35px" }}
                     >
-                      <ClayIcon symbol={"user"} style={{ color: "white" }} fontSize="25px" />
+                      <ClayIcon symbol={"user"} style={{ color: "black" }} fontSize="25px" />
                     </button>
                   }
                 >
@@ -136,7 +136,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
                     </DropDown.Item>
                   </DropDown.ItemList>
                 </DropDown>
-              )} */}
+              )}
               <DropDownCustom />
             </li>
           </ul>
