@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="db/datasource/2023/06/13-01-changelog.xml">
+
+	<changeSet id="1686670878042-1" author="openk9">
+		<createTable tableName="scheduler">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="doc_type_field_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+
+			<column name="schedule_id" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="datasource_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="old_data_index_id" type="BIGINT"/>
+			<column name="new_data_index_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="status" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1686670878042-2" author="openk9">
+		<addForeignKeyConstraint baseColumnNames="datasource_id"
+								 baseTableName="scheduler"
+								 constraintName="fk_scheduler_datasource"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="datasource"/>
+		<addForeignKeyConstraint baseColumnNames="old_data_index_id"
+								 baseTableName="scheduler"
+								 constraintName="fk_scheduler_old_data_index"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="data_index"/>
+		<addForeignKeyConstraint baseColumnNames="new_data_index_id"
+								 baseTableName="scheduler"
+								 constraintName="fk_scheduler_new_data_index"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="data_index"/>
+		<addUniqueConstraint
+				columnNames="schedule_id"
+				constraintName="uc_schedule_id"
+				tableName="scheduler"/>
+
+	</changeSet>
+
+
+</databaseChangeLog>
