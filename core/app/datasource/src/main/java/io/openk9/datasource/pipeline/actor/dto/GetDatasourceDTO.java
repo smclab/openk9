@@ -8,7 +8,6 @@ import java.util.Set;
 public class GetDatasourceDTO {
 
 	private Long id;
-	private String dataIndexName;
 	private Set<GetEnrichItemDTO> enrichItems;
 
 }

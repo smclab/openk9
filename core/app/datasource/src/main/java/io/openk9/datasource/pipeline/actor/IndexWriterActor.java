@@ -6,7 +6,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.events.DatasourceEvent;
 import io.openk9.datasource.events.DatasourceEventBus;
-import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.buffer.Buffer;
@@ -35,7 +35,8 @@ import java.util.Map;
 public class IndexWriterActor {
 
 	public sealed interface Command extends CborSerializable {}
-	public record Start(String dataIndexName, byte[] dataPayload, ActorRef<Response> replyTo) implements Command {}
+	public record Start(SchedulerDTO schedulerDTO, byte[] dataPayload, ActorRef<Response> replyTo)
+		implements Command {}
 	private record SearchResponseCommand(String dataIndexName, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
 	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, DataPayload dataPayload, Exception exception) implements Command {}
 	public sealed interface Response extends CborSerializable {}
@@ -64,7 +65,7 @@ public class IndexWriterActor {
 		Logger logger = ctx.getLog();
 
 		return Behaviors.receive(Command.class)
-			.onMessage(Start.class, (start) -> onStart(ctx, restHighLevelClient, start.dataIndexName, start.dataPayload, start.replyTo))
+			.onMessage(Start.class, (start) -> onStart(ctx, restHighLevelClient, start.schedulerDTO, start.dataPayload, start.replyTo))
 			.onMessage(SearchResponseCommand.class, src -> onSearchResponseCommand(
 				ctx, restHighLevelClient, src, logger))
 			.onMessage(BulkResponseCommand.class, brc -> onBulkResponseCommand(logger, brc, eventBus))
@@ -174,42 +175,49 @@ public class IndexWriterActor {
 
 	private static Behavior<Command> onStart(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		String dataIndexName, byte[] data,
+		SchedulerDTO schedulerDTO, byte[] data,
 		ActorRef<Response> replyTo) {
 
 		DataPayload dataPayload = Json.decodeValue(Buffer.buffer(data), DataPayload.class);
 
 		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
 
-		SearchRequest searchRequest = new SearchRequest(dataIndexName);
+		String oldDataIndexName = schedulerDTO.getOldDataIndexName();
+		if (oldDataIndexName != null) {
+			SearchRequest searchRequest = new SearchRequest(oldDataIndexName);
 
-		TermQueryBuilder termQueryBuilder =
-			QueryBuilders.termQuery("contentId.keyword", dataPayload.getContentId());
+			TermQueryBuilder termQueryBuilder =
+				QueryBuilders.termQuery("contentId.keyword", dataPayload.getContentId());
 
-		SearchSourceBuilder searchSourceBuilder =
-			new SearchSourceBuilder();
+			SearchSourceBuilder searchSourceBuilder =
+				new SearchSourceBuilder();
 
-		searchSourceBuilder.query(termQueryBuilder);
+			searchSourceBuilder.query(termQueryBuilder);
 
-		searchRequest.source(searchSourceBuilder);
+			searchRequest.source(searchSourceBuilder);
 
-		restHighLevelClient.searchAsync(
-			searchRequest, RequestOptions.DEFAULT,
-			new ActionListener<>() {
-				@Override
-				public void onResponse(SearchResponse searchResponse) {
-					ctx.getSelf().tell(
-						new SearchResponseCommand(
-							dataIndexName, dataPayload, replyTo, searchResponse, null));
-				}
+			restHighLevelClient.searchAsync(
+				searchRequest, RequestOptions.DEFAULT,
+				new ActionListener<>() {
+					@Override
+					public void onResponse(SearchResponse searchResponse) {
+						ctx.getSelf().tell(
+							new SearchResponseCommand(
+								oldDataIndexName, dataPayload, replyTo, searchResponse, null));
+					}
 
-				@Override
-				public void onFailure(Exception e) {
-					ctx.getSelf().tell(
-						new SearchResponseCommand(
-							dataIndexName, dataPayload, replyTo, null, e));
-				}
-			});
+					@Override
+					public void onFailure(Exception e) {
+						ctx.getSelf().tell(
+							new SearchResponseCommand(
+								oldDataIndexName, dataPayload, replyTo, null, e));
+					}
+				});
+		}
+
+		ctx.getSelf().tell(
+			new SearchResponseCommand(
+				schedulerDTO.getNewDataIndexName(), dataPayload, replyTo, null, null));
 
 		return Behaviors.same();
 	}

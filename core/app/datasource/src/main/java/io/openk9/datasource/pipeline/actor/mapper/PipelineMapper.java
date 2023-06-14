@@ -1,11 +1,9 @@
 package io.openk9.datasource.pipeline.actor.mapper;
 
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.model.*;
 import io.openk9.datasource.pipeline.actor.dto.GetDatasourceDTO;
 import io.openk9.datasource.pipeline.actor.dto.GetEnrichItemDTO;
+import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -13,11 +11,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "cdi")
-public interface DatasourceMapper {
+public interface PipelineMapper {
 
-	@Mapping(source = "dataIndex.name", target = "dataIndexName")
 	@Mapping(source = "enrichPipeline", target = "enrichItems")
 	GetDatasourceDTO map(Datasource datasource);
+
+	@Mapping(source = "scheduleId.value", target = "scheduleId")
+	SchedulerDTO map(Scheduler scheduler);
 
 	default Set<GetEnrichItemDTO> map(EnrichPipeline enrichPipeline) {
 		if (enrichPipeline == null) {

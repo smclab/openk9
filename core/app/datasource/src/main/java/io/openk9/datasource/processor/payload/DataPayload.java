@@ -53,6 +53,7 @@ public class DataPayload {
 	private Map<String, Object> rest = new HashMap<>();
 	private String indexName;
 	private boolean last = false;
+	private String scheduleId;
 
 	public static DataPayload copy(DataPayload dataPayload) {
 		return DataPayload.builder()
@@ -68,6 +69,7 @@ public class DataPayload {
 			.rest(dataPayload.rest)
 			.indexName(dataPayload.indexName)
 			.last(dataPayload.last)
+			.scheduleId(dataPayload.scheduleId)
 			.build();
 	}
 
@@ -85,6 +87,7 @@ public class DataPayload {
 			.rest(rest)
 			.indexName(indexName)
 			.last(last)
+			.scheduleId(scheduleId)
 			.build();
 	}
 

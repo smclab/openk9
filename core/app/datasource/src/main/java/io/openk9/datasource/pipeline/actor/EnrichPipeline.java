@@ -7,10 +7,10 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import io.openk9.common.util.collection.Collections;
-import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.dto.GetDatasourceDTO;
 import io.openk9.datasource.pipeline.actor.dto.GetEnrichItemDTO;
+import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.processor.payload.DataPayload;
@@ -38,13 +38,16 @@ public class EnrichPipeline {
 	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
 	private record InternalError(String error) implements Command {}
 	public sealed interface Response {}
-	public enum Success implements Response {INSTANCE}
+	public sealed interface Success extends Response {}
+	public enum AnyMessage implements Success {INSTANCE}
+	public record LastMessage(String scheduleId, String tenantId) implements Success {}
+
 	public record Failure(Throwable exception) implements Response {}
 
 	public static Behavior<Command> create(
-			ActorRef<HttpSupervisor.Command> supervisorActorRef,
-			ActorRef<Response> replyTo, DataPayload dataPayload,
-			GetDatasourceDTO datasource) {
+		ActorRef<HttpSupervisor.Command> supervisorActorRef,
+		ActorRef<Response> replyTo, DataPayload dataPayload,
+		GetDatasourceDTO datasource, SchedulerDTO scheduler) {
 
 		return Behaviors.setup(ctx -> {
 
@@ -62,18 +65,19 @@ public class EnrichPipeline {
 					Start.INSTANCE, () ->
 					initPipeline(
 						ctx, supervisorActorRef, responseActorRef, replyTo, dataPayload,
-						datasource, datasource.getEnrichItems())
+						scheduler, datasource.getEnrichItems())
 				)
 				.build();
 		});
 	}
 
 	private static Behavior<Command> initPipeline(
-		ActorContext<EnrichPipeline.Command> ctx,
+		ActorContext<Command> ctx,
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<IndexWriterActor.Response> responseActorRef,
 		ActorRef<Response> replyTo, DataPayload dataPayload,
-		GetDatasourceDTO datasource, Set<GetEnrichItemDTO> enrichPipelineItems) {
+		SchedulerDTO scheduler,
+		Set<GetEnrichItemDTO> enrichPipelineItems) {
 
 		Logger logger = ctx.getLog();
 
@@ -94,8 +98,7 @@ public class EnrichPipeline {
 
 			indexWriterActorRef.tell(
 				new IndexWriterActor.Start(
-					datasource.getDataIndexName(),
-					buffer.getBytes(), responseActorRef)
+					scheduler, buffer.getBytes(), responseActorRef)
 			);
 
 			return Behaviors.receive(Command.class)
@@ -107,7 +110,12 @@ public class EnrichPipeline {
 									indexWriterResponseWrapper.response();
 
 							if (response instanceof IndexWriterActor.Success) {
-								replyTo.tell(Success.INSTANCE);
+								if (dataPayload.isLast()) {
+									replyTo.tell(new LastMessage(scheduler.getScheduleId(), dataPayload.getTenantId()));
+								}
+								else {
+									replyTo.tell(AnyMessage.INSTANCE);
+								}
 							}
 							else if (response instanceof IndexWriterActor.Failure) {
 								replyTo.tell(new Failure(((IndexWriterActor.Failure) response).exception()));
@@ -180,7 +188,7 @@ public class EnrichPipeline {
 
 							return initPipeline(
 									ctx, supervisorActorRef, responseActorRef, replyTo,
-									dataPayload, datasource, tail);
+									dataPayload, scheduler, tail);
 
 						}
 						case FAIL -> {
@@ -200,7 +208,7 @@ public class EnrichPipeline {
 							logger.error(
 									"behaviorOnError is REJECT, stop pipeline: " + enrichItemError.getId(), param.exception);
 
-							replyTo.tell(Success.INSTANCE);
+							replyTo.tell(AnyMessage.INSTANCE);
 
 							return Behaviors.stopped();
 						}
@@ -255,7 +263,7 @@ public class EnrichPipeline {
 					return initPipeline(
 						ctx, supervisorActorRef,
 						responseActorRef, replyTo, newDataPayload,
-						datasource, tail);
+						scheduler, tail);
 
 				})
 				.onMessage(InternalError.class, srw -> {
