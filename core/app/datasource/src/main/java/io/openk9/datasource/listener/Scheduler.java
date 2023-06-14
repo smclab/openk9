@@ -271,7 +271,7 @@ public class Scheduler {
 						"select d " +
 						"from Datasource d " +
 						"join fetch d.pluginDriver " +
-						"left join fetch d.dataIndex" +
+						"left join fetch d.dataIndex " +
 						"where d.id = :id", Datasource.class)
 					.setParameter("id", datasourceId)
 					.getSingleResult()
