@@ -60,9 +60,9 @@ const dataTwo = [
   { name: "10/24", query: 500 },
 ];
 
-function bytesToMegabytes(bytes: number): number {
+export function bytesToMegabytes(bytes: number): number {
   const megabytes = bytes / (1024 * 1024);
-  return megabytes;
+  return parseFloat(megabytes.toFixed(4));
 }
 
 export function DashBoard() {
@@ -101,11 +101,11 @@ export function DashBoard() {
         secondDataGraph={dataTwo}
         firstCardNumber={docCount || 0}
         secondCardNumber={documentDeleted || 0}
-        thirdCardNumber={byteCount || 0}
+        thirdCardNumber={bytesToMegabytes(byteCount) || 0}
         firstCardLabel={"Document counts"}
         secondCardLabel={"Document deleted"}
         thirdCardLabel={"Store size"}
-        thirdCardUnity={"byte"}
+        thirdCardUnity={"Megabyte"}
       />
     </ClayLayout.ContainerFluid>
   );

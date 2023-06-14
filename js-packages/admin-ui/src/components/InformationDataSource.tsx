@@ -2,6 +2,7 @@ import { gql } from "@apollo/client";
 import { useParams } from "react-router-dom";
 import { useDataSourceInformationQuery } from "../graphql-generated";
 import { DetailGraph } from "./Graph";
+import { bytesToMegabytes } from "./Dashboard";
 
 const DataSourceInformation = gql`
   query DataSourceInformation($id: ID!) {
@@ -38,11 +39,11 @@ export function InformationDataSource() {
       secondDataGraph={dataTwo}
       firstCardNumber={parseFloat(docsCount || "0") || 0}
       secondCardNumber={parseFloat(docsDeleted || "0") || 0}
-      thirdCardNumber={docsStoreSize || 0}
+      thirdCardNumber={bytesToMegabytes(docsStoreSize) || 0}
       firstCardLabel={"Document counts"}
       secondCardLabel={"Document deleted"}
       thirdCardLabel={"Store size"}
-      thirdCardUnity={"byte"}
+      thirdCardUnity={"Megabyte"}
     />
   );
 }
