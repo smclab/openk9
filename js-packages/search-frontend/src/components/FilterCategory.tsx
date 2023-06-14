@@ -157,7 +157,7 @@ function FilterCategory({
               <input
                 className="openk9-filter-category-search"
                 value={text}
-                placeholder="Search filters..."
+                placeholder={t("search-filters") || "Search filters..."}
                 onChange={(event) => setText(event.currentTarget.value)}
                 css={css`
                   margin-top: 17px;

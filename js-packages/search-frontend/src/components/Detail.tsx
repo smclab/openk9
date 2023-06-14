@@ -178,7 +178,7 @@ export function NoDetail() {
         <Logo size={128} />
 
         <h3>{t("no-details")}</h3>
-        <div>{t("no-reult")}</div>
+        <div>{t("no-result")}</div>
       </div>
     </React.Fragment>
   );

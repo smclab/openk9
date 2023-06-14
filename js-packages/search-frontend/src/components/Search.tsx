@@ -82,6 +82,7 @@ export function Search({
     endDate: undefined,
   });
   const [journey, setJourney] = React.useState();
+  const { t } = useTranslation();
   return (
     <div
       className="openk9--search-container"
@@ -89,7 +90,7 @@ export function Search({
         margin-top: 12px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        gap: 10px;
       `}
     >
       <div
@@ -99,11 +100,7 @@ export function Search({
           display: flex;
           align-items: center;
           border-radius: 40px;
-          width: ${journey
-            ? CalculateSpaceCalendar({ journey })
-            : valueSelected.startDate
-            ? "77%"
-            : "95%"};
+          width: 100%;
           @media (max-width: 480px) {
             width: 100%;
           }
@@ -217,7 +214,7 @@ export function Search({
           <input
             className="openk9--input-search"
             ref={inputRef}
-            placeholder="Search..."
+            placeholder={t("search") || "search..."}
             value={selectionsState.text}
             onChange={(event) => {
               selectionsDispatch({
@@ -516,19 +513,4 @@ function CreateDeleteFilter({
       />
     </div>
   );
-}
-
-function CalculateSpaceCalendar({ journey }: { journey: string }) {
-  if (journey) {
-    switch (journey.toLowerCase()) {
-      case "today":
-        return "90%";
-      case "this week":
-        return "88%";
-      case "this month":
-        return "87%";
-      case "this year":
-        return "88%";
-    }
-  }
 }

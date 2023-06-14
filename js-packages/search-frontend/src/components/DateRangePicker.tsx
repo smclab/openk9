@@ -1,17 +1,23 @@
 import React from "react";
-import { DateRange, DefinedRange } from "react-date-range";
+import {
+  DateRange,
+  DefinedRange,
+  defaultInputRanges,
+  defaultStaticRanges,
+} from "react-date-range";
 import "react-date-range/dist/styles.css"; // main css file
 import "react-date-range/dist/theme/default.css"; // theme css file
 import { css } from "styled-components/macro";
 import { DateTime } from "luxon";
-import { enIN } from "date-fns/locale";
+import { enIN, it, es, fr } from "date-fns/locale";
 import { SearchDateRange } from "../embeddable/Main";
 import { useQuery } from "react-query";
 import Select from "react-select";
 import { useOpenK9Client } from "./client";
 import "./dataRangePicker.css";
 import { useTranslation } from "react-i18next";
-
+import i18next from "i18next";
+import ItLocale from "date-fns/locale/lt";
 const DateRangeFix = DateRange as any;
 const DefinedRangeFix = DefinedRange as any;
 
@@ -60,10 +66,84 @@ export function DateRangePicker({
     return await client.getDateFilterFields();
   });
   const { t } = useTranslation();
+  const currentLanguage = i18next.language;
+  const staticRanges = [
+    {
+      label: t("today"),
+      range: () => ({
+        startDate: DateTime.now().startOf("day").toJSDate(),
+        endDate: DateTime.now().endOf("day").toJSDate(),
+        label: t("today"),
+      }),
+      isSelected({ startDate, endDate }: any) {
+        return (
+          startDate === DateTime.now().startOf("day").toJSDate() &&
+          endDate === DateTime.now().endOf("day").toJSDate()
+        );
+      },
+    },
+    {
+      label: t("this-week"),
+      range: () => ({
+        startDate: DateTime.now().startOf("week").toJSDate(),
+        endDate: DateTime.now().endOf("week").toJSDate(),
+        label: t("this-week"),
+      }),
+      isSelected({ startDate, endDate }: any) {
+        return (
+          startDate === DateTime.now().startOf("week").toJSDate() &&
+          endDate === DateTime.now().endOf("week").toJSDate()
+        );
+      },
+    },
+    {
+      label: t("this-month"),
+      range: () => ({
+        startDate: DateTime.now().startOf("month").toJSDate(),
+        endDate: DateTime.now().endOf("month").toJSDate(),
+        label: t("this-month"),
+      }),
+      isSelected({ startDate, endDate }: any) {
+        return (
+          startDate === DateTime.now().startOf("month").toJSDate() &&
+          endDate === DateTime.now().endOf("month").toJSDate()
+        );
+      },
+    },
+    {
+      label: t("this-year"),
+      range: () => ({
+        startDate: DateTime.now().startOf("year").toJSDate(),
+        endDate: DateTime.now().endOf("year").toJSDate(),
+        label: t("this-year"),
+      }),
+      isSelected({ startDate, endDate }: any) {
+        return (
+          startDate === DateTime.now().startOf("year").toJSDate() &&
+          endDate === DateTime.now().endOf("year").toJSDate()
+        );
+      },
+    },
+  ];
+  const inputRangesLabels = {
+    "days up to today": t("preview-days") || "days up to today",
+    "days starting today": t("after-days") || "days starting today",
+  };
+
+  function translateRange(dictionary: any) {
+    return (item: any) =>
+      dictionary[item.label]
+        ? { ...item, label: dictionary[item.label] }
+        : item;
+  }
+
+  const ItInputRanges = defaultInputRanges.map(
+    translateRange(inputRangesLabels),
+  );
   return (
     <div>
       <Select
-        defaultValue={{ value: "" as any, label: "Any" }}
+        defaultValue={{ value: "" as any, label: t("any") }}
         onChange={(option) => {
           setSelectedOption(option);
           setValue({ ...value, keywordKey: option?.value });
@@ -71,7 +151,7 @@ export function DateRangePicker({
         isLoading={options.isFetching}
         isSearchable={true}
         options={[
-          { value: "" as any, label: "Any" },
+          { value: "" as any, label: t("any") || "any" },
           ...(options.data?.map(({ id, field, label }) => ({
             value: field,
             label,
@@ -100,13 +180,14 @@ export function DateRangePicker({
         `}
       >
         <DefinedRangeFix
-          locale={enIN}
+          locale={convert(currentLanguage)}
           onChange={adaptedOnChange}
           ranges={adaptedValue}
           staticRanges={staticRanges}
+          inputRanges={ItInputRanges}
         />
         <DateRangeFix
-          locale={enIN}
+          locale={convert(currentLanguage)}
           onChange={adaptedOnChange}
           ranges={adaptedValue}
           startDatePlaceholder=""
@@ -186,61 +267,17 @@ export function DateRangePicker({
   );
 }
 
-const staticRanges = [
-  {
-    label: "Today",
-    range: () => ({
-      startDate: DateTime.now().startOf("day").toJSDate(),
-      endDate: DateTime.now().endOf("day").toJSDate(),
-      label: "Today",
-    }),
-    isSelected({ startDate, endDate }: any) {
-      return (
-        startDate === DateTime.now().startOf("day").toJSDate() &&
-        endDate === DateTime.now().endOf("day").toJSDate()
-      );
-    },
-  },
-  {
-    label: "This week",
-    range: () => ({
-      startDate: DateTime.now().startOf("week").toJSDate(),
-      endDate: DateTime.now().endOf("week").toJSDate(),
-      label: "This week",
-    }),
-    isSelected({ startDate, endDate }: any) {
-      return (
-        startDate === DateTime.now().startOf("week").toJSDate() &&
-        endDate === DateTime.now().endOf("week").toJSDate()
-      );
-    },
-  },
-  {
-    label: "This month",
-    range: () => ({
-      startDate: DateTime.now().startOf("month").toJSDate(),
-      endDate: DateTime.now().endOf("month").toJSDate(),
-      label: "This month",
-    }),
-    isSelected({ startDate, endDate }: any) {
-      return (
-        startDate === DateTime.now().startOf("month").toJSDate() &&
-        endDate === DateTime.now().endOf("month").toJSDate()
-      );
-    },
-  },
-  {
-    label: "This year",
-    range: () => ({
-      startDate: DateTime.now().startOf("year").toJSDate(),
-      endDate: DateTime.now().endOf("year").toJSDate(),
-      label: "This year",
-    }),
-    isSelected({ startDate, endDate }: any) {
-      return (
-        startDate === DateTime.now().startOf("year").toJSDate() &&
-        endDate === DateTime.now().endOf("year").toJSDate()
-      );
-    },
-  },
-];
+function convert(label: string) {
+  console.log(label);
+
+  switch (label) {
+    case "it":
+      return it;
+    case "es":
+      return es;
+    case "en":
+      return enIN;
+    case "fr":
+      return fr;
+  }
+}
