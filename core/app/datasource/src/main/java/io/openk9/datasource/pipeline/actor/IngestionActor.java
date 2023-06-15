@@ -13,6 +13,7 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.ScheduleId;
 import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.SchedulerManager;
 import io.openk9.datasource.pipeline.actor.dto.GetDatasourceDTO;
 import io.openk9.datasource.pipeline.actor.dto.GetEnrichItemDTO;
 import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
@@ -67,12 +68,14 @@ public class IngestionActor {
 				ActorRef<Datasource.Command> datasourceActorRef =
 					clusterSingleton.init(SingletonActor.of(Datasource.create(pipelineMapper), "datasource"));
 
-
 				TransactionInvoker transactionInvoker = CDI.current().select(TransactionInvoker.class).get();
+
+				ActorRef<SchedulerManager.Command> schedulerManagerActorRef =
+					ctx.spawn(SchedulerManager.create(transactionInvoker, datasourceActorRef), "scheduler-manager");
 
 				return initial(
 					ctx, transactionInvoker, datasourceActorRef, pipelineMapper,
-					supervisorActorRef, enrichItemActorRef, new ArrayList<>());
+					supervisorActorRef, enrichItemActorRef, schedulerManagerActorRef, new ArrayList<>());
 			}))
 			.onFailure(SupervisorStrategy.restartWithBackoff(
 				Duration.ofMillis(500), Duration.ofSeconds(5), 0.1));
@@ -85,6 +88,7 @@ public class IngestionActor {
 		PipelineMapper pipelineMapper,
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<EnrichItemActor.Command> enrichItemActorRef,
+		ActorRef<SchedulerManager.Command> schedulerManagerActorRef,
 		List<Message<?>> messages) {
 
 		return Behaviors.receive(Command.class)
@@ -112,7 +116,7 @@ public class IngestionActor {
 				newMessages.add(message);
 
 				return initial(
-					ctx, transactionInvoker, datasourceActorRef, pipelineMapper, supervisorActorRef, enrichItemActorRef, newMessages);
+					ctx, transactionInvoker, datasourceActorRef, pipelineMapper, supervisorActorRef, enrichItemActorRef, schedulerManagerActorRef, newMessages);
 
 			})
 			.onMessage(DatasourceResponseWrapper.class, drw -> {
@@ -134,7 +138,7 @@ public class IngestionActor {
 
 					return initial(
 						ctx, transactionInvoker, datasourceActorRef, pipelineMapper,
-						supervisorActorRef,	enrichItemActorRef, newMessages);
+						supervisorActorRef,	enrichItemActorRef, schedulerManagerActorRef, newMessages);
 				}
 				return Behaviors.same();
 
@@ -142,7 +146,9 @@ public class IngestionActor {
 			.onMessage(InitPipeline.class, ip -> onInitPipeline(ctx, transactionInvoker, pipelineMapper, ip))
 			.onMessage(CreateEnrichPipeline.class, cep -> onCreateEnrichPipeline(ctx, supervisorActorRef, cep))
 			.onMessage(EnrichPipelineResponseWrapper.class, eprw ->
-				onEnrichPipelineResponseWrapper(ctx, transactionInvoker, datasourceActorRef, pipelineMapper, eprw, supervisorActorRef, enrichItemActorRef, messages))
+				onEnrichPipelineResponseWrapper(
+					ctx, transactionInvoker, datasourceActorRef, pipelineMapper, eprw,
+					supervisorActorRef, enrichItemActorRef, schedulerManagerActorRef, messages))
 			.onMessage(Callback.class, callback -> {
 
 				ctx.getLog().info("callback with tokenId: {}", callback.tokenId());
@@ -167,10 +173,14 @@ public class IngestionActor {
 		ActorRef<Datasource.Command> datasourceActorRef,
 		PipelineMapper pipelineMapper, EnrichPipelineResponseWrapper eprw,
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
-		ActorRef<EnrichItemActor.Command> enrichItemActorRef, List<Message<?>> messages) {
+		ActorRef<EnrichItemActor.Command> enrichItemActorRef,
+		ActorRef<SchedulerManager.Command> schedulerManagerActorRef,
+		List<Message<?>> messages) {
 
 		EnrichPipeline.Response response = eprw.response;
 		Message<?> message = eprw.message;
+
+		schedulerManagerActorRef.tell(new SchedulerManager.Ping(response.scheduleId(), response.tenantId()));
 
 		if (response instanceof EnrichPipeline.Success) {
 			ctx.getLog().info("enrich pipeline success, ack message");
@@ -178,18 +188,8 @@ public class IngestionActor {
 				ctx.getLog().info("last message processed on pipeline");
 
 				EnrichPipeline.LastMessage lastMessage = (EnrichPipeline.LastMessage) response;
-				VertxUtil.runOnContext(() -> transactionInvoker.withStatelessTransaction(lastMessage.tenantId(), s -> s
-						.createQuery("select s " +
-							"from Scheduler s " +
-							"join fetch s.datasource " +
-							"join fetch s.newDataIndex  " +
-							"where s.scheduleId = :scheduleId", Scheduler.class)
-						.setParameter("scheduleId", lastMessage.scheduleId())
-						.getSingleResult()
-						.invoke(scheduler -> datasourceActorRef.tell(new Datasource.SetDataIndex(
-							lastMessage.tenantId(), scheduler.getDatasource().getId(), scheduler.getNewDataIndex().getId())))
-					)
-				);
+
+				schedulerManagerActorRef.tell(new SchedulerManager.LastMessage(lastMessage.scheduleId(), lastMessage.tenantId()));
 			}
 			message.ack();
 		}
@@ -206,7 +206,7 @@ public class IngestionActor {
 
 		return initial(
 			ctx, transactionInvoker, datasourceActorRef, pipelineMapper, supervisorActorRef,
-			enrichItemActorRef, newMessages);
+			enrichItemActorRef, schedulerManagerActorRef, newMessages);
 	}
 
 	private static Behavior<Command> onInitPipeline(

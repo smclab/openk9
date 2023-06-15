@@ -37,12 +37,15 @@ public class EnrichPipeline {
 	private record EnrichItemError(GetEnrichItemDTO enrichItem, Throwable exception) implements Command {}
 	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
 	private record InternalError(String error) implements Command {}
-	public sealed interface Response {}
+	public sealed interface Response {
+		String scheduleId();
+		String tenantId();
+	}
 	public sealed interface Success extends Response {}
-	public enum AnyMessage implements Success {INSTANCE}
+	public record AnyMessage(String scheduleId, String tenantId) implements Success {}
 	public record LastMessage(String scheduleId, String tenantId) implements Success {}
 
-	public record Failure(Throwable exception) implements Response {}
+	public record Failure(Throwable exception, String scheduleId, String tenantId) implements Response {}
 
 	public static Behavior<Command> create(
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
@@ -114,11 +117,14 @@ public class EnrichPipeline {
 									replyTo.tell(new LastMessage(scheduler.getScheduleId(), dataPayload.getTenantId()));
 								}
 								else {
-									replyTo.tell(AnyMessage.INSTANCE);
+									replyTo.tell(new AnyMessage(scheduler.getScheduleId(), dataPayload.getTenantId()));
 								}
 							}
 							else if (response instanceof IndexWriterActor.Failure) {
-								replyTo.tell(new Failure(((IndexWriterActor.Failure) response).exception()));
+								replyTo.tell(new Failure(
+									((IndexWriterActor.Failure) response).exception(),
+									scheduler.getScheduleId(),
+									dataPayload.getTenantId()));
 							}
 
 							return Behaviors.stopped();
@@ -208,7 +214,7 @@ public class EnrichPipeline {
 							logger.error(
 									"behaviorOnError is REJECT, stop pipeline: " + enrichItemError.getId(), param.exception);
 
-							replyTo.tell(AnyMessage.INSTANCE);
+							replyTo.tell(new AnyMessage(dataPayload.getScheduleId(), dataPayload.getTenantId()));
 
 							return Behaviors.stopped();
 						}
@@ -272,7 +278,10 @@ public class EnrichPipeline {
 
 					logger.error("enrichItem: " + enrichItem.getId() + " occurred error: " + error);
 					logger.error("terminating pipeline");
-					replyTo.tell(new Failure(new RuntimeException(error)));
+					replyTo.tell(new Failure(
+						new RuntimeException(error),
+						dataPayload.getScheduleId(),
+						dataPayload.getTenantId()));
 
 					return Behaviors.stopped();
 
