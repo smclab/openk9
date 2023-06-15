@@ -7,6 +7,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.VertxUtil;
+import io.openk9.datasource.model.ScheduleId;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.Datasource;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -15,6 +16,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class SchedulerManager extends AbstractBehavior<SchedulerManager.Command> {
 
@@ -89,7 +91,7 @@ public class SchedulerManager extends AbstractBehavior<SchedulerManager.Command>
 						"join fetch s.datasource " +
 						"join fetch s.newDataIndex  " +
 						"where s.scheduleId = :scheduleId", Scheduler.class)
-					.setParameter("scheduleId", lastMessage.scheduleId())
+					.setParameter("scheduleId", new ScheduleId(UUID.fromString(lastMessage.scheduleId())))
 					.getSingleResult()
 					.invoke(scheduler -> datasourceActorRef.tell(
 						new Datasource.SetDataIndex(
