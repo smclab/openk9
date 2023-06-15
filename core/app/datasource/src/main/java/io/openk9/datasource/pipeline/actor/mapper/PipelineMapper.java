@@ -17,6 +17,9 @@ public interface PipelineMapper {
 	GetDatasourceDTO map(Datasource datasource);
 
 	@Mapping(source = "scheduleId.value", target = "scheduleId")
+	@Mapping(source = "datasource.id", target = "datasourceId")
+	@Mapping(source = "oldDataIndex.name", target = "oldDataIndexName")
+	@Mapping(source = "newDataIndex.name", target = "newDataIndexName")
 	SchedulerDTO map(Scheduler scheduler);
 
 	default Set<GetEnrichItemDTO> map(EnrichPipeline enrichPipeline) {

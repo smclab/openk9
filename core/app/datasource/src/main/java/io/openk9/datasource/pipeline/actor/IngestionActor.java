@@ -217,6 +217,9 @@ public class IngestionActor {
 			.withStatelessTransaction(dataPayload.getTenantId(), s -> s
 				.createQuery("select s " +
 					"from Scheduler s " +
+					"join fetch s.datasource " +
+					"join fetch s.oldDataIndex " +
+					"join fetch s.newDataIndex " +
 					"where s.scheduleId = :scheduleId", Scheduler.class)
 				.setParameter("scheduleId", scheduleId)
 				.getSingleResult()
