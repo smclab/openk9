@@ -18,8 +18,6 @@
 package io.openk9.datasource.web;
 
 import io.openk9.datasource.listener.SchedulerInitializer;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -33,11 +31,7 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @CircuitBreaker
 @Path("/v1/index")
@@ -49,53 +43,15 @@ public class ReindexResource {
 	@POST
 	@Path("/reindex")
 	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
-
-		return sf.withTransaction(s -> {
-
-			Uni<List<Datasource>> datasourceList =
-				s.find(
-					Datasource.class,
-					(Object[])dto.getDatasourceIds().toArray(Long[]::new)
-				);
-
-			return datasourceList
-				.flatMap(list -> {
-
-					for (Datasource datasource : list) {
-
-						datasource.setLastIngestionDate(
-							OffsetDateTime.ofInstant(
-								Instant.ofEpochMilli(0),
-								ZoneOffset.UTC
-							)
-						);
-
-						datasource.setDataIndex(null);
-					}
-
-					return s.persistAll(list.toArray(Object[]::new))
-						.flatMap(v -> s.flush())
-						.map(__ -> list);
-
-				})
-				.flatMap(list -> schedulerInitializer
-					.get()
-					.triggerJobs(
-						list
-							.stream()
-							.map(Datasource::getId)
-							.collect(Collectors.toList())))
-				.map(e -> dto.getDatasourceIds()
-					.stream()
-					.map(id -> ReindexResponseDto.of(id, true))
-					.collect(Collectors.toList()));
-
-		});
-
+		return schedulerInitializer
+			.get()
+			.triggerJobs(dto.getDatasourceIds(), true)
+			.map(list -> list
+				.stream()
+				.map(datasourceId -> ReindexResponseDto.of(datasourceId, true))
+				.toList()
+			);
 	}
-
-	@Inject
-	TransactionInvoker sf;
 
 	@Inject
 	Instance<SchedulerInitializer> schedulerInitializer;

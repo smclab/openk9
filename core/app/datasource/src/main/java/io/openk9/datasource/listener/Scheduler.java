@@ -14,6 +14,7 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.CborSerializable;
+import io.vavr.Function3;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import scala.Option;
@@ -24,17 +25,20 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.BiFunction;
 
 public class Scheduler {
 
 	public sealed interface Command extends CborSerializable {}
 	public record ScheduleDatasource(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
-	public record TriggerDatasource(String tenantName, long datasourceId) implements Command {}
+	public record TriggerDatasource(
+		String tenantName, long datasourceId, boolean startFromFirst) implements Command {}
 	private record ScheduleDatasourceInternal(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
-	private record TriggerDatasourceInternal(String tenantName, Datasource datasource) implements Command {}
-	private record InvokePluginDriverInternal(String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
+	private record TriggerDatasourceInternal(String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
+	private record InvokePluginDriverInternal(
+		String tenantName, io.openk9.datasource.model.Scheduler scheduler,
+		boolean startFromFirst) implements Command {}
+
 
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
@@ -63,7 +67,7 @@ public class Scheduler {
 			.onMessage(UnScheduleDatasource.class, removeDatasource -> onRemoveDatasource(removeDatasource, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
 			.onMessage(TriggerDatasource.class, jobMessage -> onTriggerDatasource(jobMessage, ctx, transactionInvoker))
 			.onMessage(ScheduleDatasourceInternal.class, scheduleDatasourceInternal -> onScheduleDatasourceInternal(scheduleDatasourceInternal, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
-			.onMessage(TriggerDatasourceInternal.class, triggerDatasourceInternal -> onTriggerDatasourceInternal(triggerDatasourceInternal, ctx, httpPluginDriverClient, transactionInvoker))
+			.onMessage(TriggerDatasourceInternal.class, triggerDatasourceInternal -> onTriggerDatasourceInternal(triggerDatasourceInternal, ctx, transactionInvoker))
 			.onMessage(InvokePluginDriverInternal.class, invokePluginDriverInternal -> onInvokePluginDriverInternal(httpPluginDriverClient, invokePluginDriverInternal.tenantName, invokePluginDriverInternal.scheduler))
 			.build();
 
@@ -72,10 +76,11 @@ public class Scheduler {
 	private static Behavior<Command> onTriggerDatasourceInternal(
 		TriggerDatasourceInternal triggerDatasourceInternal,
 		ActorContext<Command> ctx,
-		HttpPluginDriverClient httpPluginDriverClient, TransactionInvoker transactionInvoker) {
+		TransactionInvoker transactionInvoker) {
 
 		Datasource datasource = triggerDatasourceInternal.datasource;
 		String tenantName = triggerDatasourceInternal.tenantName;
+		boolean startFromFirst = triggerDatasourceInternal.startFromFirst;
 
 		PluginDriver pluginDriver = datasource.getPluginDriver();
 
@@ -88,7 +93,7 @@ public class Scheduler {
 			return Behaviors.same();
 		}
 
-		startScheduler(ctx, datasource, tenantName, transactionInvoker);
+		startScheduler(ctx, datasource, startFromFirst, tenantName, transactionInvoker);
 
 		return Behaviors.same();
 	}
@@ -155,7 +160,7 @@ public class Scheduler {
 				quartzSchedulerTypedExtension.updateTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId),
+					new TriggerDatasource(tenantName, datasourceId, false),
 					Option.empty(),
 					cron,
 					Option.empty(),
@@ -171,7 +176,7 @@ public class Scheduler {
 				quartzSchedulerTypedExtension.createTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId),
+					new TriggerDatasource(tenantName, datasourceId, false),
 					Option.empty(),
 					cron,
 					Option.empty(),
@@ -208,9 +213,10 @@ public class Scheduler {
 
 		long datasourceId = jobMessage.datasourceId;
 		String tenantName = jobMessage.tenantName;
+		boolean startFromFirst = jobMessage.startFromFirst;
 
 		loadDatasourceAndCreateSelfMessage(
-			tenantName, datasourceId, transactionInvoker, ctx,
+			tenantName, datasourceId, startFromFirst, transactionInvoker, ctx,
 			TriggerDatasourceInternal::new
 		);
 
@@ -263,8 +269,9 @@ public class Scheduler {
 	}
 
 	private static void loadDatasourceAndCreateSelfMessage(
-		String tenantName, long datasourceId, TransactionInvoker transactionInvoker,
-		ActorContext<Command> ctx, BiFunction<String, Datasource, Command> selfMessageCreator) {
+		String tenantName, long datasourceId, boolean startFromFirst,
+		TransactionInvoker transactionInvoker,
+		ActorContext<Command> ctx, Function3<String, Datasource, Boolean, Command> selfMessageCreator) {
 		VertxUtil.runOnContext(() ->
 			transactionInvoker.withStatelessTransaction(tenantName, s ->
 				s.createQuery(
@@ -275,13 +282,16 @@ public class Scheduler {
 						"where d.id = :id", Datasource.class)
 					.setParameter("id", datasourceId)
 					.getSingleResult()
-					.invoke(d -> ctx.getSelf().tell(selfMessageCreator.apply(tenantName, d)))
+					.invoke(d -> ctx.getSelf().tell(selfMessageCreator.apply(tenantName, d, startFromFirst)))
 			)
 		);
 	}
 
 
-	private static void startScheduler(ActorContext<Command> ctx, Datasource datasource, String tenantName, TransactionInvoker transactionInvoker) {
+	private static void startScheduler(
+		ActorContext<Command> ctx, Datasource datasource,
+		boolean startFromFirst, String tenantName, TransactionInvoker transactionInvoker) {
+
 		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
 		ScheduleId scheduleId = new ScheduleId(UUID.randomUUID());
 		scheduler.setScheduleId(scheduleId);
@@ -289,15 +299,28 @@ public class Scheduler {
 		scheduler.setOldDataIndex(datasource.getDataIndex());
 		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.STARTED);
 
-		DataIndex newDataIndex = new DataIndex();
-		newDataIndex.setName(datasource.getId() + "-data-" + scheduleId.getValue());
-		newDataIndex.setDatasource(datasource);
+		if (startFromFirst) {
 
-		scheduler.setNewDataIndex(newDataIndex);
+			DataIndex newDataIndex = new DataIndex();
+			newDataIndex.setName(
+				datasource.getId() + "-data-" + scheduleId.getValue());
+			newDataIndex.setDatasource(datasource);
+			scheduler.setNewDataIndex(newDataIndex);
 
-		VertxUtil.runOnContext(() -> transactionInvoker
-			.withTransaction(tenantName, (s) -> s.persist(scheduler).invoke(() ->
-				ctx.getSelf().tell(new InvokePluginDriverInternal(tenantName, scheduler)))));
+		}
+
+		VertxUtil.runOnContext(() ->
+			transactionInvoker
+				.withTransaction(tenantName, (s) ->
+					s
+						.persist(scheduler)
+						.invoke(() -> ctx
+							.getSelf()
+							.tell(new InvokePluginDriverInternal(tenantName, scheduler, startFromFirst))
+						)
+				)
+		);
+
 	}
 
 }

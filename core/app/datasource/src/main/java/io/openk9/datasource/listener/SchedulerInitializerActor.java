@@ -21,8 +21,9 @@ public class SchedulerInitializerActor {
 		getSchedulerRef().tell(new Scheduler.UnScheduleDatasource(tenantName, datasourceId));
 	}
 
-	public void triggerDataSource(String tenantName, long datasourceId) {
-		getSchedulerRef().tell(new Scheduler.TriggerDatasource(tenantName, datasourceId));
+	public void triggerDataSource(
+		String tenantName, long datasourceId, boolean startFromFirst) {
+		getSchedulerRef().tell(new Scheduler.TriggerDatasource(tenantName, datasourceId, startFromFirst));
 	}
 
 	private ActorRef<Scheduler.Command> getSchedulerRef() {

@@ -106,12 +106,16 @@ public class SchedulerInitializer {
 	}
 
 	public Uni<List<Long>> triggerJobs(List<Long> datasourceIds) {
+		return triggerJobs(datasourceIds, false);
+	}
+
+	public Uni<List<Long>> triggerJobs(List<Long> datasourceIds, boolean startFromFirst) {
 
 		List<Uni<Long>> triggers = new ArrayList<>(datasourceIds.size());
 
 		for (long datasourceId : datasourceIds) {
 			triggers.add(
-				triggerJob(datasourceId, String.valueOf(datasourceId))
+				triggerJob(datasourceId, String.valueOf(datasourceId), startFromFirst)
 					.map(unused -> datasourceId)
 			);
 		}
@@ -125,12 +129,13 @@ public class SchedulerInitializer {
 	}
 
 	
-	public Uni<Void> triggerJob(long datasourceId, String name) {
+	public Uni<Void> triggerJob(
+		long datasourceId, String name, boolean startFromFirst) {
 
 		return Uni.createFrom().deferred(() -> {
-			logger.info("datasourceId: " + datasourceId + " trigger: " + name);
+			logger.info("datasourceId: " + datasourceId + " trigger: " + name + " startFromFirst: " + startFromFirst);
 			return performTask(
-				tenantResolver.getTenantName(), datasourceId);
+				tenantResolver.getTenantName(), datasourceId, startFromFirst);
 		});
 
 	}
@@ -143,13 +148,14 @@ public class SchedulerInitializer {
 
 	}
 
-	public Uni<Void> performTask(String schemaName, Long datasourceId) {
+	public Uni<Void> performTask(
+		String schemaName, Long datasourceId, boolean startFromFirst) {
 
 		return transactionInvoker.withTransaction(
 			schemaName,
 			s -> datasourceService
 				.findDatasourceByIdWithPluginDriver(datasourceId)
-				.invoke(d -> schedulerInitializerActor.triggerDataSource(schemaName, d.getId()))
+				.invoke(d -> schedulerInitializerActor.triggerDataSource(schemaName, d.getId(), startFromFirst))
 				.replaceWithVoid()
 		);
 
