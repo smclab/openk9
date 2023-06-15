@@ -299,7 +299,7 @@ public class Scheduler {
 		scheduler.setOldDataIndex(datasource.getDataIndex());
 		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.STARTED);
 
-		if (startFromFirst) {
+		if (scheduler.getOldDataIndex() == null || startFromFirst) {
 
 			DataIndex newDataIndex = new DataIndex();
 			newDataIndex.setName(

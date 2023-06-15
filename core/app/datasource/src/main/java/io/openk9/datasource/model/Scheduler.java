@@ -23,7 +23,7 @@ public class Scheduler extends K9Entity {
 	@OneToOne
 	@JoinColumn(name = "old_data_index_id", referencedColumnName = "id")
 	private DataIndex oldDataIndex;
-	@OneToOne(optional = false, cascade = CascadeType.ALL)
+	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "new_data_index_id", referencedColumnName = "id")
 	private DataIndex newDataIndex;
 	@Enumerated(EnumType.STRING)

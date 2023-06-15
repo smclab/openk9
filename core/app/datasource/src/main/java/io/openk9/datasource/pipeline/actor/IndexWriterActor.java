@@ -183,6 +183,8 @@ public class IndexWriterActor {
 		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
 
 		String oldDataIndexName = schedulerDTO.getOldDataIndexName();
+		String newDataIndexName = schedulerDTO.getNewDataIndexName();
+
 		if (oldDataIndexName != null) {
 			SearchRequest searchRequest = new SearchRequest(oldDataIndexName);
 
@@ -214,11 +216,11 @@ public class IndexWriterActor {
 					}
 				});
 		}
-
-		ctx.getSelf().tell(
-			new SearchResponseCommand(
-				schedulerDTO.getNewDataIndexName(), dataPayload, replyTo, null, null));
-
+		if (newDataIndexName != null) {
+			ctx.getSelf().tell(
+				new SearchResponseCommand(
+					newDataIndexName, dataPayload, replyTo, null, null));
+		}
 		return Behaviors.same();
 	}
 

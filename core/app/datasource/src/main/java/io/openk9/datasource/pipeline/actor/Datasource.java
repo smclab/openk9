@@ -25,7 +25,7 @@ public class Datasource {
 	public record GetDatasource(
 		String tenantId, long datasourceId, long parsingDate, ActorRef<Response> replyTo)
 		implements Command {}
-	public record SetDataIndex(String tenantId, long datasourceId, long dataIndexId) implements Command {}
+	public record SetDataIndex(String tenantId, long datasourceId, Long dataIndexId) implements Command {}
 	private record Finished(io.openk9.datasource.model.Datasource datasource, Throwable throwable) implements Command {}
 	private record DatasourceModel(
 		io.openk9.datasource.model.Datasource datasource
@@ -69,8 +69,13 @@ public class Datasource {
 		SetDataIndex sdi, ActorContext<Command> ctx, TransactionInvoker txInvoker,
 		DatasourceService datasourceService) {
 
-		VertxUtil.runOnContext(() -> txInvoker.withTransaction(sdi.tenantId, s ->
-			datasourceService.setDataIndex(sdi.datasourceId, sdi.dataIndexId)));
+		if (sdi.dataIndexId != null) {
+			ctx.getLog().info(
+				"replacing dataindex {} for datasource {} on tenant {}",
+				sdi.dataIndexId, sdi.datasourceId, sdi.tenantId);
+			VertxUtil.runOnContext(() -> txInvoker.withTransaction(sdi.tenantId, s ->
+				datasourceService.setDataIndex(sdi.datasourceId, sdi.dataIndexId)));
+		}
 
 		return Behaviors.same();
 	}
