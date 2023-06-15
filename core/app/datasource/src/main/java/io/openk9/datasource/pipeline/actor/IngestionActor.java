@@ -1,6 +1,10 @@
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.*;
+import akka.actor.typed.ActorRef;
+import akka.actor.typed.Behavior;
+import akka.actor.typed.PostStop;
+import akka.actor.typed.PreRestart;
+import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.typed.ClusterSingleton;
@@ -219,7 +223,7 @@ public class IngestionActor {
 					"from Scheduler s " +
 					"join fetch s.datasource " +
 					"left join fetch s.oldDataIndex " +
-					"join fetch s.newDataIndex " +
+					"left join fetch s.newDataIndex " +
 					"where s.scheduleId = :scheduleId", Scheduler.class)
 				.setParameter("scheduleId", scheduleId)
 				.getSingleResult()
