@@ -37,7 +37,7 @@ public class IndexWriterActor {
 	public sealed interface Command extends CborSerializable {}
 	public record Start(SchedulerDTO schedulerDTO, byte[] dataPayload, ActorRef<Response> replyTo)
 		implements Command {}
-	private record SearchResponseCommand(String dataIndexName, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
+	private record SearchResponseCommand(SchedulerDTO schedulerDTO, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
 	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, DataPayload dataPayload, Exception exception) implements Command {}
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
@@ -136,21 +136,26 @@ public class IndexWriterActor {
 		SearchResponseCommand src, Logger logger) {
 
 		Exception exception = src.exception;
-		String dataIndex = src.dataIndexName;
+		SchedulerDTO schedulerDTO = src.schedulerDTO;
 		DataPayload dataPayload = src.dataPayload;
 		SearchResponse searchResponse = src.searchResponse;
 		ActorRef<Response> replyTo = src.replyTo;
+		String oldDataIndexName = schedulerDTO.getOldDataIndexName();
+		String newDataIndexName = schedulerDTO.getNewDataIndexName();
 
 		if (exception != null) {
 			logger.error("Error on search", exception);
 		}
 
-		DocWriteRequest docWriteRequest =
-			createDocWriteRequest(ctx, dataIndex, dataPayload, logger, searchResponse);
-
 		BulkRequest bulkRequest = new BulkRequest();
 		bulkRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
-		bulkRequest.add(docWriteRequest);
+
+		if (oldDataIndexName != null) {
+			bulkRequest.add(createDocWriteRequest(ctx, oldDataIndexName, dataPayload, logger, searchResponse));
+		}
+		if (newDataIndexName != null) {
+			bulkRequest.add(createDocWriteRequest(ctx, newDataIndexName, dataPayload, logger, searchResponse));
+		}
 
 		restHighLevelClient.bulkAsync(
 			bulkRequest, RequestOptions.DEFAULT,
@@ -183,7 +188,6 @@ public class IndexWriterActor {
 		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
 
 		String oldDataIndexName = schedulerDTO.getOldDataIndexName();
-		String newDataIndexName = schedulerDTO.getNewDataIndexName();
 
 		if (oldDataIndexName != null) {
 			SearchRequest searchRequest = new SearchRequest(oldDataIndexName);
@@ -205,21 +209,21 @@ public class IndexWriterActor {
 					public void onResponse(SearchResponse searchResponse) {
 						ctx.getSelf().tell(
 							new SearchResponseCommand(
-								oldDataIndexName, dataPayload, replyTo, searchResponse, null));
+								schedulerDTO, dataPayload, replyTo, searchResponse, null));
 					}
 
 					@Override
 					public void onFailure(Exception e) {
 						ctx.getSelf().tell(
 							new SearchResponseCommand(
-								oldDataIndexName, dataPayload, replyTo, null, e));
+								schedulerDTO, dataPayload, replyTo, null, e));
 					}
 				});
 		}
-		if (newDataIndexName != null) {
+		else {
 			ctx.getSelf().tell(
 				new SearchResponseCommand(
-					newDataIndexName, dataPayload, replyTo, null, null));
+					schedulerDTO, dataPayload, replyTo, null, null));
 		}
 		return Behaviors.same();
 	}
