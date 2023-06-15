@@ -98,25 +98,50 @@ public class IngestionActor {
 				Message<?> message = ingestionMessage.message;
 				String ingestionId = dataPayload.getIngestionId();
 
-				ctx.getLog().info(
-					"read message ingestionId: {}, contentId: {}",
-					ingestionId, dataPayload.getContentId());
+				String contentId = dataPayload.getContentId();
 
-				ActorRef<Datasource.Response> responseActorRef =
-					ctx.messageAdapter(
-						Datasource.Response.class,
-						response -> new DatasourceResponseWrapper(message, dataPayload, response)
-					);
+				if (contentId != null) {
 
-				datasourceActorRef.tell(new Datasource.GetDatasource(
-					dataPayload.getTenantId(), dataPayload.getDatasourceId(), dataPayload.getParsingDate(),
-					responseActorRef));
+					ctx.getLog().info(
+						"read message ingestionId: {}, contentId: {}",
+						ingestionId, contentId);
 
-				List<Message<?>> newMessages = new ArrayList<>(messages);
-				newMessages.add(message);
+					ActorRef<Datasource.Response> responseActorRef =
+						ctx.messageAdapter(
+							Datasource.Response.class,
+							response -> new DatasourceResponseWrapper(message, dataPayload, response)
+						);
 
-				return initial(
-					ctx, transactionInvoker, datasourceActorRef, pipelineMapper, supervisorActorRef, enrichItemActorRef, schedulerManagerActorRef, newMessages);
+					datasourceActorRef.tell(new Datasource.GetDatasource(
+						dataPayload.getTenantId(), dataPayload.getDatasourceId(), dataPayload.getParsingDate(),
+						responseActorRef));
+
+					List<Message<?>> newMessages = new ArrayList<>(messages);
+					newMessages.add(message);
+
+					return initial(
+						ctx, transactionInvoker, datasourceActorRef, pipelineMapper, supervisorActorRef, enrichItemActorRef, schedulerManagerActorRef, newMessages);
+
+				}
+				else {
+
+					ctx
+						.getLog()
+						.info(
+							"contentId is null for scheduleId {} and tenantId {}",
+							dataPayload.getScheduleId(), dataPayload.getTenantId());
+
+					schedulerManagerActorRef.tell(
+						new SchedulerManager.LastMessage(
+							dataPayload.getScheduleId(),
+							dataPayload.getTenantId()));
+
+					message.ack();
+
+					return Behaviors.same();
+
+				}
+
 
 			})
 			.onMessage(DatasourceResponseWrapper.class, drw -> {
