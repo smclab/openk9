@@ -268,8 +268,6 @@ export function DateRangePicker({
 }
 
 function convert(label: string) {
-  console.log(label);
-
   switch (label) {
     case "it":
       return it;
