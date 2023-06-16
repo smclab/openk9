@@ -1,5 +1,6 @@
 import React from "react";
 import Keycloak from "keycloak-js";
+import { openk9 } from "../App";
 
 export const OpenK9ClientContext = React.createContext<
   ReturnType<typeof OpenK9Client>
@@ -32,7 +33,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     if (keycloak.authenticated) {
       await keycloak.updateToken(30);
     }
-    return fetch(route, {
+    return fetch((openk9.getConfiguration().tenant || "") + route, {
       ...init,
       headers: keycloak.authenticated
         ? {
@@ -178,7 +179,9 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     },
     async loadTemplate<E>(id: string): Promise<Template<E> | null> {
       try {
-        const jsURL = `/api/datasource/templates/${id}/compiled`;
+        const jsURL =
+          (openk9.getConfiguration().tenant || "") +
+          `/api/datasource/templates/${id}/compiled`;
         // @ts-ignore
 
         const code = await import(/* webpackIgnore: true */ jsURL);

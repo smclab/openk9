@@ -169,6 +169,7 @@ export type Configuration = {
   sort: Array<RestApi.SortField>;
   defaultTokens: Array<SearchToken>;
   resultsDisplayMode: ResultsDisplayMode;
+  tenant: string | undefined;
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
   changeSortResult: (
     sort: Array<RestApi.SortField>,
@@ -187,6 +188,7 @@ const defaultConfiguration: Configuration = {
   results: null,
   details: null,
   login: null,
+  tenant: undefined,
   searchAutoselect: true,
   searchReplaceText: true,
   filterTokens: [],
