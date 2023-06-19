@@ -49,6 +49,7 @@ export class OpenK9 {
       onAuthenticated: () => {
         this.queryClient.invalidateQueries();
       },
+      tenant: this.configuration.tenant ?? "",
     });
     this.render();
   }
@@ -169,7 +170,7 @@ export type Configuration = {
   sort: Array<RestApi.SortField>;
   defaultTokens: Array<SearchToken>;
   resultsDisplayMode: ResultsDisplayMode;
-  tenant: string | undefined;
+  tenant: string | null;
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
   changeSortResult: (
     sort: Array<RestApi.SortField>,
@@ -188,7 +189,7 @@ const defaultConfiguration: Configuration = {
   results: null,
   details: null,
   login: null,
-  tenant: undefined,
+  tenant: null,
   searchAutoselect: true,
   searchReplaceText: true,
   filterTokens: [],

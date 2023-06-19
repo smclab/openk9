@@ -18,7 +18,13 @@ declare global {
   }
 }
 
-export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
+export function OpenK9Client({
+  onAuthenticated,
+  tenant,
+}: {
+  onAuthenticated(): void;
+  tenant: string;
+}) {
   const keycloak = new Keycloak({
     url: window.KEYCLOAK_URL,
     realm: window.KEYCLOAK_REALM || "openk9",
@@ -33,7 +39,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     if (keycloak.authenticated) {
       await keycloak.updateToken(30);
     }
-    return fetch((openk9.getConfiguration().tenant || "") + route, {
+    return fetch(tenant + route, {
       ...init,
       headers: keycloak.authenticated
         ? {
@@ -179,9 +185,7 @@ export function OpenK9Client({ onAuthenticated }: { onAuthenticated(): void }) {
     },
     async loadTemplate<E>(id: string): Promise<Template<E> | null> {
       try {
-        const jsURL =
-          (openk9.getConfiguration().tenant || "") +
-          `/api/datasource/templates/${id}/compiled`;
+        const jsURL = tenant + `/api/datasource/templates/${id}/compiled`;
         // @ts-ignore
 
         const code = await import(/* webpackIgnore: true */ jsURL);
