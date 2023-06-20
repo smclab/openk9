@@ -63,12 +63,12 @@ public class Scheduler {
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(ScheduleDatasource.class, addDatasource -> onAddDatasource(addDatasource, ctx))
-			.onMessage(UnScheduleDatasource.class, removeDatasource -> onRemoveDatasource(removeDatasource, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
-			.onMessage(TriggerDatasource.class, jobMessage -> onTriggerDatasource(jobMessage, ctx, transactionInvoker))
-			.onMessage(ScheduleDatasourceInternal.class, scheduleDatasourceInternal -> onScheduleDatasourceInternal(scheduleDatasourceInternal, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
-			.onMessage(TriggerDatasourceInternal.class, triggerDatasourceInternal -> onTriggerDatasourceInternal(triggerDatasourceInternal, ctx, transactionInvoker))
-			.onMessage(InvokePluginDriverInternal.class, invokePluginDriverInternal -> onInvokePluginDriverInternal(httpPluginDriverClient, invokePluginDriverInternal.tenantName, invokePluginDriverInternal.scheduler))
+			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
+			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
+			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, transactionInvoker))
+			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, jobNames))
+			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker))
+			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
 			.build();
 
 	}
@@ -100,14 +100,15 @@ public class Scheduler {
 
 	private static Behavior<Command> onInvokePluginDriverInternal(
 		HttpPluginDriverClient httpPluginDriverClient,
-		String tenantName, io.openk9.datasource.model.Scheduler scheduler) {
+		String tenantName, io.openk9.datasource.model.Scheduler scheduler,
+		boolean startFromFirst) {
 
 		Datasource datasource = scheduler.getDatasource();
 		PluginDriver pluginDriver = datasource.getPluginDriver();
 
 		OffsetDateTime lastIngestionDate;
 
-		if (datasource.getLastIngestionDate() == null) {
+		if (startFromFirst || datasource.getLastIngestionDate() == null) {
 			lastIngestionDate = OffsetDateTime.ofInstant(
 				Instant.ofEpochMilli(0), ZoneId.systemDefault());
 		}
