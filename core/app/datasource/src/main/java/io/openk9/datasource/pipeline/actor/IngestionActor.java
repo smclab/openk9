@@ -150,8 +150,8 @@ public class IngestionActor {
 				Message<?> message = drw.message;
 				DataPayload dataPayload = drw.dataPayload;
 
-				if (response instanceof Datasource.Success) {
-					GetDatasourceDTO getDatasourceDTO = ((Datasource.Success) response).datasource();
+				if (response instanceof Datasource.GetDatasourceSuccess) {
+					GetDatasourceDTO getDatasourceDTO = ((Datasource.GetDatasourceSuccess) response).datasource();
 					ctx.getSelf().tell(new InitPipeline(message, dataPayload, getDatasourceDTO));
 				}
 				else if (response instanceof Datasource.Failure) {

@@ -25,7 +25,7 @@ public class Datasource {
 	public record GetDatasource(
 		String tenantId, long datasourceId, long parsingDate, ActorRef<Response> replyTo)
 		implements Command {}
-	public record SetDataIndex(String tenantId, long datasourceId, Long dataIndexId) implements Command {}
+	public record SetDataIndex(String tenantId, long datasourceId, Long dataIndexId, ActorRef<Response> replyTo) implements Command {}
 	private record Finished(io.openk9.datasource.model.Datasource datasource, Throwable throwable) implements Command {}
 	private record DatasourceModel(
 		io.openk9.datasource.model.Datasource datasource
@@ -34,7 +34,8 @@ public class Datasource {
 		Throwable exception) implements Command {}
 
 	public sealed interface Response extends CborSerializable {}
-	public record Success(GetDatasourceDTO datasource) implements Response {}
+	public record GetDatasourceSuccess(GetDatasourceDTO datasource) implements Response {}
+	public enum SetDataIndexSuccess implements Response {INSTANCE}
 	public record Failure(Throwable exception) implements Response {}
 
 
@@ -73,8 +74,13 @@ public class Datasource {
 			ctx.getLog().info(
 				"replacing dataindex {} for datasource {} on tenant {}",
 				sdi.dataIndexId, sdi.datasourceId, sdi.tenantId);
-			VertxUtil.runOnContext(() -> txInvoker.withTransaction(sdi.tenantId, s ->
-				datasourceService.setDataIndex(sdi.datasourceId, sdi.dataIndexId)));
+			VertxUtil.runOnContext(() -> txInvoker
+				.withTransaction(
+					sdi.tenantId,
+					s -> datasourceService.setDataIndex(sdi.datasourceId, sdi.dataIndexId)
+				)
+				.invoke(() -> sdi.replyTo.tell(SetDataIndexSuccess.INSTANCE))
+			);
 		}
 
 		return Behaviors.same();
@@ -174,7 +180,7 @@ public class Datasource {
 		else {
 			io.openk9.datasource.model.Datasource datasource = finished.datasource;
 			GetDatasourceDTO datasourceDTO = pipelineMapper.map(datasource);
-			replyTo.tell(new Success(datasourceDTO));
+			replyTo.tell(new GetDatasourceSuccess(datasourceDTO));
 		}
 
 		for (Command message : lags) {
