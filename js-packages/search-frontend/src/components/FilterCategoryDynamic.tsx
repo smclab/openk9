@@ -50,6 +50,7 @@ function FilterCategoryDynamic({
   );
   const { t } = useTranslation();
   const resultValue = suggestions.data?.pages[0].result || [];
+
   const filters = mergeAndSortObjects(
     resultValue,
     searchQuery,

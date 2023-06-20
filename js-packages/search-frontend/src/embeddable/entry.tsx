@@ -156,6 +156,7 @@ export class OpenK9 {
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
+  activeFilters: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
   filtersHorizontal: Element | string | null;
@@ -180,6 +181,7 @@ export type Configuration = {
 const defaultConfiguration: Configuration = {
   enabled: false,
   search: null,
+  activeFilters: null,
   tabs: null,
   sortable: null,
   detailMobile: null,

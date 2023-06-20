@@ -33,6 +33,7 @@ import { DetailMobileMemo } from "../components/DetailMobile";
 import "../i18n";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
+import { ActiveFilter } from "../components/ActiveFilters";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -106,6 +107,8 @@ export function Main({
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             isMobile={isMobile}
+            searchQuery={searchQuery}
+            onRemoveFilterToken={removeFilterToken}
           />
         </I18nextProvider>,
         configuration.search,
@@ -134,6 +137,15 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.filters,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <ActiveFilter
+            searchQuery={searchQuery}
+            onRemoveFilterToken={removeFilterToken}
+          />
+        </I18nextProvider>,
+        configuration.activeFilters,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
