@@ -17,6 +17,7 @@ import {
   AnalysisToken,
   GenericResultItem,
   SearchToken,
+  SortField,
 } from "./client";
 import { SelectionsAction, SelectionsState } from "./useSelections";
 import { DateRangePicker } from "./DateRangePicker";
@@ -30,6 +31,8 @@ import { DateTime } from "luxon";
 import { CreateLabel } from "./Filters";
 import { useTranslation } from "react-i18next";
 import { ActiveFilter } from "./ActiveFilters";
+import { FiltersHorizontalMemo } from "./FiltersHorizontal";
+import { openk9 } from "../App";
 type SearchProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -43,6 +46,10 @@ type SearchProps = {
   isMobile: boolean;
   searchQuery: SearchToken[];
   onRemoveFilterToken: (searchToken: SearchToken) => void;
+  dynamicFilters: boolean;
+  onAddFilterToken: (searchToken: SearchToken) => void;
+  filtersSelect: SearchToken[];
+  sort: SortField[];
 };
 export function Search({
   configuration,
@@ -56,7 +63,11 @@ export function Search({
   isMobile,
   onDateRangeChange,
   searchQuery,
+  filtersSelect,
+  dynamicFilters,
   onRemoveFilterToken,
+  onAddFilterToken,
+  sort,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -88,6 +99,7 @@ export function Search({
   });
   const [journey, setJourney] = React.useState();
   const { t } = useTranslation();
+  const [isOpen, setOpen] = React.useState(false);
   return (
     <React.Fragment>
       <div
@@ -358,7 +370,7 @@ export function Search({
             </div>
           </div>
         </div>
-        <div
+        {/* <div
           className="openk9--search-calendar-container"
           css={css`
             margin-left: auto;
@@ -437,14 +449,40 @@ export function Search({
               setJourney={setJourney}
             />
           </div>
+        </div> */}
+        <button
+          style={{
+            border: " 1px solid red",
+            background: "inherit",
+            padding: "20px 20px",
+            cursor: "pointer",
+          }}
+          onClick={() => setOpen(!isOpen)}
+        >
+          Apri Filtri
+        </button>
+      </div>
+      {!isOpen && (
+        <div style={{ marginTop: "10px", overflowX: "auto" }}>
+          <ActiveFilter
+            searchQuery={searchQuery}
+            onRemoveFilterToken={onRemoveFilterToken}
+          />
         </div>
-      </div>
-      <div style={{ marginTop: "10px", overflowX: "auto" }}>
-        <ActiveFilter
-          searchQuery={searchQuery}
-          onRemoveFilterToken={onRemoveFilterToken}
-        />
-      </div>
+      )}
+      {isOpen && (
+        <div>
+          <FiltersHorizontalMemo
+            dynamicFilters={dynamicFilters}
+            filtersSelect={filtersSelect}
+            onAddFilterToken={onRemoveFilterToken}
+            onRemoveFilterToken={onRemoveFilterToken}
+            onConfigurationChange={onConfigurationChange}
+            searchQuery={searchQuery}
+            sort={sort}
+          />
+        </div>
+      )}
     </React.Fragment>
   );
 }

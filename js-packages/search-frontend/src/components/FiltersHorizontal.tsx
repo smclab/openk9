@@ -50,101 +50,45 @@ function FiltersHorizontal({
     ).length;
     setCount(count);
   }, [searchQuery]);
+  console.log(lastSearchQueryWithResults);
 
   return (
-    <OverlayScrollbarsComponent
-      className="openk9-filter-overlay-scrollbars"
-      style={{
-        overflowY: "auto",
-        position: "relative",
-        height: "100%",
-        borderRadius: "8px",
-      }}
-    >
-      <div
-        className="openk9-filters-container-internal"
-        css={css`
-          padding: 16px 16px 0px 0px;
-          width: 100%;
-          box-sizing: border-box;
-          display: flex;
-          flex-wrap: wrap;
-          @media (max-width: 768px) {
-            flex-direction: column;
-            padding: 0px 0px 16px 16px;
-          }
-        `}
-      >
-        {suggestionCategories.data?.length === 0 && (
-          <div
-            className="openk9-filters-container-internal-no-filters"
-            css={css`
-              color: var(--openk9-embeddable-search--secondary-text-color);
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              height: 50vh;
-              margin-left: 30px;
-            `}
-          >
-            <Logo size={100} />
-            <h4>No Filters </h4>
-          </div>
-        )}
-        {suggestionCategories.data?.map((suggestionCategory) => {
-          return dynamicFilters ? (
-            <FilterCategoryDynamicMemo
-              key={suggestionCategory.id}
-              suggestionCategoryName={suggestionCategory.name}
-              suggestionCategoryId={suggestionCategory.id}
-              tokens={lastSearchQueryWithResults}
-              onAdd={onAddFilterToken}
-              onRemove={onRemoveFilterToken}
-              multiSelect={suggestionCategory?.multiSelect}
-              searchQuery={searchQuery}
-              isCollapsable={false}
-              isUniqueLoadMore={true}
-              loadAll={loadAll}
-              setHasMoreSuggestionsCategories={setHasMoreSuggestionsCategories}
-            />
-          ) : (
-            <FilterCategoryMemo
-              key={suggestionCategory.id}
-              suggestionCategoryName={suggestionCategory.name}
-              suggestionCategoryId={suggestionCategory.id}
-              tokens={lastSearchQueryWithResults}
-              onAdd={onAddFilterToken}
-              onRemove={onRemoveFilterToken}
-              multiSelect={suggestionCategory?.multiSelect}
-              searchQuery={searchQuery}
-              dynamicFilters={dynamicFilters}
-              isCollapsable={false}
-              isUniqueLoadMore={true}
-              loadAll={loadAll}
-              setHasMoreSuggestionsCategories={setHasMoreSuggestionsCategories}
-            />
-          );
-        })}
-      </div>
-      {hasMoreSuggestionsCategories && (
-        <div style={{ textAlign: "center", width: "100%" }}>
-          <CreateLabel
-            label={t("load-more")}
-            action={() => {
-              setLoadAll(true);
-              setHasMoreSuggestionsCategories(false);
-            }}
-            svgIcon={<PlusSvg size={12} />}
-            marginOfSvg="5px"
-            hasBorder={false}
-          />
-        </div>
-      )}
-    </OverlayScrollbarsComponent>
+    <React.Fragment>
+      {suggestionCategories.data?.map((category) => {
+        return (
+          <React.Fragment>
+            <div style={{ marginBottom: "5px" }}>{category.name}</div>
+            <GridContainer>
+              <div></div>
+            </GridContainer>
+          </React.Fragment>
+        );
+      })}
+    </React.Fragment>
   );
 }
+
 export const FiltersHorizontalMemo = React.memo(FiltersHorizontal);
+
+const GridContainer = ({ children }: { children: any }) => (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(4, 1fr)",
+      gridGap: "10px",
+    }}
+  >
+    {children}
+  </div>
+);
+
+const GridItem = ({
+  backgroundColor,
+  height,
+}: {
+  backgroundColor: string;
+  height: string;
+}) => <div style={{ backgroundColor, height }}></div>;
 
 function useSuggestionCategories() {
   const client = useOpenK9Client();

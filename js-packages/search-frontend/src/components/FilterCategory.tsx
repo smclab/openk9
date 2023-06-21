@@ -368,7 +368,7 @@ export const buttonStyle = css`
   }
 `;
 
-function useInfiniteSuggestions(
+export function useInfiniteSuggestions(
   searchQueryParams: SearchToken[] | null,
   activeSuggestionCategory: number,
   suggestKeyword: string,
