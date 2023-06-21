@@ -42,6 +42,7 @@ public class DataPayload {
 			.documentTypes(dataPayload.documentTypes)
 			.acl(dataPayload.acl)
 			.rest(dataPayload.rest)
+			.entities(dataPayload.entities)
 			.build();
 	}
 
@@ -56,6 +57,7 @@ public class DataPayload {
 			.documentTypes(documentTypes)
 			.acl(acl)
 			.rest(rest)
+			.entities(entities)
 			.build();
 	}
 
