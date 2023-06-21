@@ -44,6 +44,7 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Comparator;
@@ -107,9 +108,10 @@ public class DataIndexResource {
 
 	}
 
-	@Path("/create-data-index-from-doc-types")
+	@Path("/create-data-index-from-doc-types/{datasourceId}")
 	@POST
 	public Uni<DataIndex> createDataIndexFromDocTypes(
+		@PathParam("datasourceId") long datasourceId,
 		CreateDataIndexFromDocTypesRequest request) {
 
 		String indexName;
@@ -145,6 +147,8 @@ public class DataIndexResource {
 					dataIndex.setName(indexName);
 
 					dataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
+
+					dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
 					return s.persist(dataIndex)
 						.map(__ -> dataIndex)
