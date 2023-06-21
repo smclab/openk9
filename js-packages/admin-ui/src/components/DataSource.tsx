@@ -21,7 +21,6 @@ import {
   BooleanInput,
   ContainerFluid,
   CronInput,
-  CustomButtomClay,
   fromFieldValidators,
   SearchSelect,
   SimpleModal,
@@ -30,6 +29,7 @@ import {
   useForm,
 } from "./Form";
 import { CodeInput } from "./CodeInput";
+import ClayForm from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { DataSourcesQuery } from "./DataSources";
 import ClayToolbar from "@clayui/toolbar";
@@ -37,6 +37,7 @@ import { useRestClient } from "./queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "./ToastProvider";
 import { AddDataSourceToBucket, BucketsdataSources, RemoveDataSourceFromBucket } from "./BucketDataSource";
+import { ClassNameButton } from "../App";
 import { useModal } from "@clayui/core";
 import ClayLoadingIndicator from "@clayui/loading-indicator";
 
@@ -225,24 +226,23 @@ export function DataSource() {
             <ClayToolbar.Nav className="justify-content-end">
               <ClayToolbar.Item>
                 <ClayButton.Group>
-                  <CustomButtomClay
-                    label="Generate Document Types"
-                    action={() => onOpenChangeGenerate}
-                    color="btn-secondary"
+                  <ClayButton
+                    displayType="secondary"
                     disabled={generateDocumentTypesMutation.isLoading}
-                  />
-                  <CustomButtomClay
-                    label="Trigger Scheduler"
-                    action={() => onOpenChangeTrigger}
-                    color="btn-secondary"
-                    disabled={generateDocumentTypesMutation.isLoading}
-                  />
-                  <CustomButtomClay
-                    label="Reindex"
-                    action={() => onOpenChangeReindex}
-                    color="btn-secondary"
-                    disabled={generateDocumentTypesMutation.isLoading}
-                  />
+                    onClick={() => onOpenChangeGenerate(true)}
+                  >
+                    Generate Document Types
+                  </ClayButton>
+                  <ClayButton
+                    displayType="secondary"
+                    disabled={triggerSchedulerMutation.isLoading}
+                    onClick={() => onOpenChangeTrigger(true)}
+                  >
+                    Trigger Scheduler
+                  </ClayButton>
+                  <ClayButton displayType="secondary" disabled={reindexMutation.isLoading} onClick={() => onOpenChangeReindex(true)}>
+                    Reindex
+                  </ClayButton>
                 </ClayButton.Group>
               </ClayToolbar.Item>
             </ClayToolbar.Nav>
@@ -250,7 +250,7 @@ export function DataSource() {
         </ClayToolbar>
       )}
       <ContainerFluid>
-        <form
+        <ClayForm
           className="sheet"
           onSubmit={(event) => {
             event.preventDefault();
@@ -266,7 +266,7 @@ export function DataSource() {
           />
           <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
           {datasourceId !== "new" && (
-            <form
+            <ClayForm
               onSubmit={(event) => {
                 event.preventDefault();
               }}
@@ -307,7 +307,7 @@ export function DataSource() {
                 invalidate={() => datasourceQuery.refetch()}
                 description={"Definition of enrich pipeline applied to Datasource's data during processing"}
               />
-            </form>
+            </ClayForm>
           )}
           <CodeInput
             language="json"
@@ -317,9 +317,11 @@ export function DataSource() {
           />
 
           <div className="sheet-footer">
-            <CustomButtomClay label={datasourceId === "new" ? "Create" : "Update"} type="submit" disabled={!form.canSubmit} />
+            <ClayButton className={ClassNameButton} type="submit" disabled={!form.canSubmit}>
+              {datasourceId === "new" ? "Create" : "Update"}
+            </ClayButton>
           </div>
-        </form>
+        </ClayForm>
       </ContainerFluid>
     </React.Fragment>
   );
