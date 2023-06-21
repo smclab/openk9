@@ -1,16 +1,16 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import { SearchToken, SortField } from "./client";
-import { FilterCategoryMemo } from "./FilterCategory";
+import { SearchToken, SortField, SuggestionResult } from "./client";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";
-import { useQuery } from "react-query";
+import { useInfiniteQuery, useQuery } from "react-query";
 import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { Logo } from "./Logo";
 import { PlusSvg } from "../svgElement/PlusSvg";
 import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
+import { mapSuggestionToSearchToken } from "./FilterCategory";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -34,8 +34,6 @@ function FiltersHorizontal({
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const [hasMoreSuggestionsCategories, setHasMoreSuggestionsCategories] =
-    React.useState(false);
   const [loadAll, setLoadAll] = React.useState(false);
   const { data, isPreviousData } = useInfiniteResults(searchQuery, sort);
   React.useEffect(() => {
@@ -50,20 +48,84 @@ function FiltersHorizontal({
     ).length;
     setCount(count);
   }, [searchQuery]);
-  console.log(lastSearchQueryWithResults);
+  const suggestions = useInfiniteSuggestions(
+    lastSearchQueryWithResults,
+    dynamicFilters,
+  );
+  const [selectedCheckboxes, setSelectedCheckboxes] =
+    React.useState<Array<SearchToken>>(searchQuery);
+  const handleCheckboxChange = (event: any, token: SearchToken) => {
+    const isChecked = event.target.checked;
+    const aggiunto = {
+      ...token,
+      attributeName: [token.values],
+    };
+
+    if (isChecked) {
+      setSelectedCheckboxes([...selectedCheckboxes, aggiunto]);
+    } else {
+      setSelectedCheckboxes(
+        selectedCheckboxes.filter(
+          (t) =>
+            t.values && aggiunto.values && t.values[0] !== aggiunto.values[0],
+        ),
+      );
+    }
+  };
 
   return (
     <React.Fragment>
-      {suggestionCategories.data?.map((category) => {
+      {suggestionCategories.data?.map((suggestion, index) => {
         return (
-          <React.Fragment>
-            <div style={{ marginBottom: "5px" }}>{category.name}</div>
+          <React.Fragment key={index}>
+            <div style={{ marginBottom: "20px" }}>{suggestion.name}</div>
             <GridContainer>
-              <div></div>
+              {suggestions.data?.pages[0].result.map((token, index) => {
+                const asSearchToken = mapSuggestionToSearchToken(token, true);
+
+                return (
+                  <React.Fragment key={index}>
+                    {asSearchToken.suggestionCategoryId === suggestion.id ? (
+                      <div
+                        style={{
+                          width: "207px",
+                          height: "87px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCheckboxes.some((element) => {
+                            return (
+                              element.values &&
+                              element.values[0] === token.value
+                            );
+                          })}
+                          onChange={(event) =>
+                            handleCheckboxChange(event, asSearchToken)
+                          }
+                        />
+
+                        {asSearchToken?.values}
+                      </div>
+                    ) : null}
+                  </React.Fragment>
+                );
+              })}
             </GridContainer>
           </React.Fragment>
         );
       })}
+      <div style={{ display: "flex" }}>
+        <button
+          onClick={() => {
+            onConfigurationChange({ filterTokens: selectedCheckboxes });
+          }}
+        >
+          Applica i Filtri
+        </button>
+      </div>
     </React.Fragment>
   );
 }
@@ -75,20 +137,12 @@ const GridContainer = ({ children }: { children: any }) => (
     style={{
       display: "grid",
       gridTemplateColumns: "repeat(4, 1fr)",
-      gridGap: "10px",
+      gridGap: "5px",
     }}
   >
     {children}
   </div>
 );
-
-const GridItem = ({
-  backgroundColor,
-  height,
-}: {
-  backgroundColor: string;
-  height: string;
-}) => <div style={{ backgroundColor, height }}></div>;
 
 function useSuggestionCategories() {
   const client = useOpenK9Client();
@@ -193,4 +247,48 @@ export function CreateLabel({
       </div>
     </div>
   );
+}
+
+export function useInfiniteSuggestions(
+  searchQueryParams: SearchToken[] | null,
+  dynamicFilters: boolean,
+) {
+  const pageSize = 30;
+  const client = useOpenK9Client();
+  let searchQuery: SearchToken[] | null = [];
+  if (searchQueryParams && searchQueryParams?.length > 0) {
+    searchQueryParams.forEach((singleSearchQuery) => {
+      if (dynamicFilters) searchQuery?.push(singleSearchQuery);
+    });
+  } else {
+    searchQuery = searchQueryParams;
+  }
+
+  const suggestionCategories = useInfiniteQuery(
+    ["suggestions", searchQuery] as const,
+    async ({ queryKey: [_, searchQuery], pageParam }) => {
+      if (!searchQuery) throw new Error();
+      const result = await client.getSuggestions({
+        searchQuery,
+        afterKey: pageParam,
+        order: "desc",
+      });
+      return {
+        result: result.result,
+        afterKey: result.afterKey,
+      };
+    },
+    {
+      enabled: searchQuery !== null,
+      keepPreviousData: true,
+      getNextPageParam(lastPage, pages) {
+        if (!lastPage.afterKey) return undefined;
+        if (pages[pages.length - 1].result.length < pageSize) return undefined;
+        return lastPage.afterKey;
+      },
+      suspense: true,
+    },
+  );
+
+  return suggestionCategories;
 }

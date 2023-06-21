@@ -475,7 +475,7 @@ export function Search({
           <FiltersHorizontalMemo
             dynamicFilters={dynamicFilters}
             filtersSelect={filtersSelect}
-            onAddFilterToken={onRemoveFilterToken}
+            onAddFilterToken={onAddFilterToken}
             onRemoveFilterToken={onRemoveFilterToken}
             onConfigurationChange={onConfigurationChange}
             searchQuery={searchQuery}
