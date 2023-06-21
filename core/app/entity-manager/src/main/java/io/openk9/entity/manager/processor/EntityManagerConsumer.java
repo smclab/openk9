@@ -82,6 +82,8 @@ public class EntityManagerConsumer {
 
 	public void consume(EntityManagerDataPayload entityManagerPayload) {
 
+		_logger.debug(entityManagerPayload.toString());
+
 		long startTime = System.currentTimeMillis();
 
 		TransactionContext transactionContext =
