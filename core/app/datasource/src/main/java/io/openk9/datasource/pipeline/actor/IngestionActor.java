@@ -271,7 +271,13 @@ public class IngestionActor {
 		GetDatasourceDTO datasource = cep.datasource;
 		SchedulerDTO scheduler = cep.scheduler;
 
-		dataPayload.setIndexName(scheduler.getNewDataIndexName());
+		String newDataIndexName = scheduler.getNewDataIndexName();
+
+		if (newDataIndexName == null) {
+			newDataIndexName = scheduler.getOldDataIndexName();
+		}
+
+		dataPayload.setIndexName(newDataIndexName);
 
 		ActorRef<EnrichPipeline.Response> responseActorRef =
 			ctx.messageAdapter(EnrichPipeline.Response.class, response ->
