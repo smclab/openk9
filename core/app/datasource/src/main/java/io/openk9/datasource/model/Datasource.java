@@ -105,6 +105,11 @@ public class Datasource extends K9Entity {
 	@JsonIgnore
 	private Set<Bucket> buckets = new LinkedHashSet<>();
 
+	@OneToMany(mappedBy = "datasource")
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<Scheduler> schedulers = new LinkedHashSet<>();
+
 	@Lob
 	@Column(name = "json_config")
 	private String jsonConfig;

@@ -75,6 +75,16 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			searchText, sortByList, notEqual);
 	}
 
+	public Uni<Connection<Scheduler>> getSchedulerConnection(
+		Long id, String after, String before, Integer first, Integer last, String searchText,
+		Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, Datasource_.SCHEDULERS, Scheduler.class,
+			schedulerService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
 	public Uni<EnrichPipeline> getEnrichPipeline(Datasource datasource) {
 		return withTransaction(
 			s -> Mutiny2.fetch(s, datasource.getEnrichPipeline()));
@@ -190,6 +200,9 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 	@Inject
 	PluginDriverService pluginDriverService;
+
+	@Inject
+	SchedulerService schedulerService;
 
 	@Override
 	public Class<Datasource> getEntityClass() {
