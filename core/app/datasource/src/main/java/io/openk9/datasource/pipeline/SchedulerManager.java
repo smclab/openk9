@@ -84,6 +84,7 @@ public class SchedulerManager extends AbstractBehavior<SchedulerManager.Command>
 			s -> {
 				CriteriaUpdate<Scheduler> criteriaUpdate =
 					transactionInvoker.getCriteriaBuilder().createCriteriaUpdate(Scheduler.class);
+				criteriaUpdate.from(Scheduler.class);
 				criteriaUpdate.set(Scheduler_.status, Scheduler.SchedulerStatus.FINISHED);
 				return s.createQuery(criteriaUpdate).executeUpdate();
 			})
