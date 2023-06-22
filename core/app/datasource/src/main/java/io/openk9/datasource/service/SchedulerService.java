@@ -100,7 +100,12 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 				.bucketSelector(
 					"count_bucket_selector",
 					Map.of("count", "_count"),
-					Script.parse("count < 2")
+					Script.parse(
+						Map.of(
+							"inline", "count < 2",
+							"lang", "expression"
+						)
+					)
 				)
 			);
 		sourceBuilder.size(0);
