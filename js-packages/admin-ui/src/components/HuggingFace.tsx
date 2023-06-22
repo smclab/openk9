@@ -1,3 +1,4 @@
+import ClayButton from "@clayui/button";
 import React from "react";
 import { Spacy } from "../wizards/Logo/Spacy";
 import { Button, useModal } from "@clayui/core";
@@ -7,7 +8,8 @@ import { Flair } from "../wizards/Logo/Flair";
 import { Stanza } from "../wizards/Logo/Stanza";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./ToastProvider";
-import { ContainerFluid, CustomButtom, SimpleModal } from "./Form";
+import { ClassNameButton } from "../App";
+import { ContainerFluid, SimpleModal } from "./Form";
 
 export function HuggingFace() {
   const [name, setName] = React.useState("");
@@ -27,7 +29,6 @@ export function HuggingFace() {
           labelContinue={"yes"}
           labelCancel={"cancel"}
           actionContinue={() => {
-            const json = JSON.parse(JSON.stringify(" name: " + name + " task: " + task + " library: " + library));
             const requestOptions = {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -98,7 +99,6 @@ export function HuggingFace() {
               </div>
             )}
           </div>
-
           <div className="form-group-item">
             <label style={{ paddingTop: "18px" }}>Library:</label>
             <div>
@@ -220,7 +220,9 @@ export function HuggingFace() {
             </div>
           )}
           <div className="sheet-footer">
-            <CustomButtom nameButton={"Deploy"} typeSelectet="submit" />
+            <ClayButton className={ClassNameButton} type="submit">
+              Deploy
+            </ClayButton>
           </div>
         </form>
       </ContainerFluid>
