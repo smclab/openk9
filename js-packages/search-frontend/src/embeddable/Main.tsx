@@ -107,12 +107,6 @@ export function Main({
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             isMobile={isMobile}
-            searchQuery={searchQuery}
-            onAddFilterToken={addFilterToken}
-            onRemoveFilterToken={removeFilterToken}
-            filtersSelect={configuration.filterTokens}
-            sort={completelySort}
-            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
           />
         </I18nextProvider>,
         configuration.search,
@@ -147,6 +141,7 @@ export function Main({
           <ActiveFilter
             searchQuery={searchQuery}
             onRemoveFilterToken={removeFilterToken}
+            onConfigurationChange={onConfigurationChange}
           />
         </I18nextProvider>,
         configuration.activeFilters,

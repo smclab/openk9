@@ -11,6 +11,7 @@ import { PlusSvg } from "../svgElement/PlusSvg";
 import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
 import { mapSuggestionToSearchToken } from "./FilterCategory";
+import { capitalize } from "lodash";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -30,44 +31,32 @@ function FiltersHorizontal({
   sort,
   dynamicFilters,
 }: FiltersProps) {
-  const { t } = useTranslation();
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const [loadAll, setLoadAll] = React.useState(false);
   const { data, isPreviousData } = useInfiniteResults(searchQuery, sort);
   React.useEffect(() => {
     if (!isPreviousData) {
       setLastSearchQueryWithResults(searchQuery);
     }
   }, [isPreviousData, searchQuery]);
-  const [count, setCount] = React.useState(0);
-  React.useEffect(() => {
-    const count = searchQuery.filter(
-      (search) => "goToSuggestion" in search,
-    ).length;
-    setCount(count);
-  }, [searchQuery]);
-  const suggestions = useInfiniteSuggestions(
-    lastSearchQueryWithResults,
-    dynamicFilters,
-  );
-  const [selectedCheckboxes, setSelectedCheckboxes] =
+
+  const [filterSelect, setFilterSelect] =
     React.useState<Array<SearchToken>>(searchQuery);
   const handleCheckboxChange = (event: any, token: SearchToken) => {
     const isChecked = event.target.checked;
-    const aggiunto = {
+    const newFilter = {
       ...token,
       attributeName: [token.values],
     };
 
     if (isChecked) {
-      setSelectedCheckboxes([...selectedCheckboxes, aggiunto]);
+      setFilterSelect([...filterSelect, newFilter]);
     } else {
-      setSelectedCheckboxes(
-        selectedCheckboxes.filter(
+      setFilterSelect(
+        filterSelect.filter(
           (t) =>
-            t.values && aggiunto.values && t.values[0] !== aggiunto.values[0],
+            t.values && newFilter.values && t.values[0] !== newFilter.values[0],
         ),
       );
     }
@@ -76,40 +65,73 @@ function FiltersHorizontal({
   return (
     <React.Fragment>
       {suggestionCategories.data?.map((suggestion, index) => {
+        const suggestions = useInfiniteSuggestions(
+          lastSearchQueryWithResults,
+          dynamicFilters,
+          suggestion.id,
+        );
         return (
           <React.Fragment key={index}>
-            <div style={{ marginBottom: "20px" }}>{suggestion.name}</div>
+            <div
+              className="openk9-filters-horizontal-category"
+              css={css`
+                margin-top: 20px;
+                margin-bottom: 20px;
+                color: #525258;
+                font-weight: 600;
+                ::first-letter {
+                  text-transform: capitalize;
+                }
+              `}
+            >
+              {suggestion.name}
+            </div>
             <GridContainer>
               {suggestions.data?.pages[0].result.map((token, index) => {
                 const asSearchToken = mapSuggestionToSearchToken(token, true);
-
+                const checked = filterSelect.some((element) => {
+                  return element.values && element.values[0] === token.value;
+                });
                 return (
                   <React.Fragment key={index}>
-                    {asSearchToken.suggestionCategoryId === suggestion.id ? (
-                      <div
-                        style={{
-                          width: "207px",
-                          height: "87px",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedCheckboxes.some((element) => {
-                            return (
-                              element.values &&
-                              element.values[0] === token.value
-                            );
-                          })}
-                          onChange={(event) =>
-                            handleCheckboxChange(event, asSearchToken)
-                          }
-                        />
+                    <div
+                      className="openk9-filter-horizontal-container-input-value"
+                      css={css`
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        color: ${checked ? "#d6012e" : "black"};
+                        display: flex;
+                        align-items: flex-start;
+                      `}
+                    >
+                      <input
+                        className="custom-checkbox openk9-filter-horizontal-input"
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(event) =>
+                          handleCheckboxChange(event, asSearchToken)
+                        }
+                        css={css`
+                          width: 14px;
+                          appearance: none;
+                          min-width: 15px;
+                          min-height: 15px;
+                          border-radius: 4px;
+                          border: 2px solid #ccc;
+                          background-color: ${checked
+                            ? "var(--openk9-embeddable-search--secondary-active-color)"
+                            : "#fff"};
+                          background-size: 100%;
+                          background-position: center;
+                          background-repeat: no-repeat;
+                          cursor: pointer;
+                          margin-right: 10px;
+                        `}
+                      />
 
-                        {asSearchToken?.values}
-                      </div>
-                    ) : null}
+                      {asSearchToken?.values &&
+                        capitalize(asSearchToken?.values[0])}
+                    </div>
                   </React.Fragment>
                 );
               })}
@@ -117,10 +139,29 @@ function FiltersHorizontal({
           </React.Fragment>
         );
       })}
-      <div style={{ display: "flex" }}>
+      <div
+        className="openk9-filter-horizontal-container-submit"
+        css={css`
+          display: flex;
+          justify-content: flex-end;
+        `}
+      >
         <button
+          className="openk9-filter-horizontal-submit"
+          css={css`
+            font-size: smaller;
+            height: 52px;
+            padding: 8px 12px;
+            white-space: nowrap;
+            border: 1px solid #d6012e;
+            background-color: #d6012e;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+          `}
           onClick={() => {
-            onConfigurationChange({ filterTokens: selectedCheckboxes });
+            onConfigurationChange({ filterTokens: filterSelect });
           }}
         >
           Applica i Filtri
@@ -134,11 +175,14 @@ export const FiltersHorizontalMemo = React.memo(FiltersHorizontal);
 
 const GridContainer = ({ children }: { children: any }) => (
   <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(4, 1fr)",
-      gridGap: "5px",
-    }}
+    className="openk9-filters-horizontal-container"
+    css={css`
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 15px;
+      grid-auto-rows: auto;
+      margin-bottom: 50px;
+    `}
   >
     {children}
   </div>
@@ -159,99 +203,10 @@ function useSuggestionCategories() {
   );
 }
 
-type createLabel = {
-  label: string;
-  action?(): void;
-  svgIcon?: React.ReactNode;
-  sizeHeight?: string;
-  sizeFont?: string;
-  margBottom?: string;
-  marginOfSvg?: string;
-  marginTop?: string;
-  hasBorder?: boolean;
-  svgIconRight?: React.ReactNode;
-  marginRigthOfSvg?: string;
-  colorLabel?: string;
-  align?: string;
-};
-export function CreateLabel({
-  label,
-  action,
-  svgIcon,
-  sizeHeight = "15px",
-  sizeFont = "12px",
-  margBottom = "13px",
-  marginOfSvg = "0px",
-  marginTop = "0px",
-  marginRigthOfSvg = "0px",
-  hasBorder = true,
-  svgIconRight,
-  colorLabel = "var(--openk9-embeddable-search--secondary-active-color)",
-  align = "baseline",
-}: createLabel) {
-  return (
-    <div
-      className="openk9-create-label-container-wrapper"
-      css={css`
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 4px 8px;
-        gap: 4px;
-        height: ${sizeHeight};
-        background: #ffffff;
-        border: ${hasBorder
-          ? "1px solid  var(--openk9-embeddable-search--secondary-active-color);"
-          : ""};
-        border-radius: 20px;
-        margin-left: 10px;
-        margin-top: ${marginTop};
-        cursor: pointer;
-        white-space: nowrap;
-      `}
-      onClick={action}
-    >
-      <div
-        className="openk9-create-label-container-text-style"
-        css={css`
-          color: ${colorLabel};
-          margin-bottom: ${margBottom};
-          font-size: ${sizeFont};
-          font-weight: 700;
-          display: block;
-          margin-block-start: 1em;
-          margin-block-end: 1em;
-          margin-inline-start: 0px;
-          margin-inline-end: 0px;
-        `}
-      >
-        <div
-          className="openk9-create-label-container-internal-create"
-          css={css`
-            display: flex;
-            align-items: ${align};
-          `}
-        >
-          {svgIcon}
-          <span
-            className="openk9-create-label-container-internal-space"
-            css={css`
-              margin-left: ${marginOfSvg};
-              margin-right: ${marginRigthOfSvg};
-            `}
-          >
-            {label}
-          </span>
-          {svgIconRight}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function useInfiniteSuggestions(
   searchQueryParams: SearchToken[] | null,
   dynamicFilters: boolean,
+  suggestionCategoryId: number,
 ) {
   const pageSize = 30;
   const client = useOpenK9Client();
@@ -265,13 +220,14 @@ export function useInfiniteSuggestions(
   }
 
   const suggestionCategories = useInfiniteQuery(
-    ["suggestions", searchQuery] as const,
+    ["suggestions", searchQuery, suggestionCategoryId] as const,
     async ({ queryKey: [_, searchQuery], pageParam }) => {
       if (!searchQuery) throw new Error();
       const result = await client.getSuggestions({
         searchQuery,
         afterKey: pageParam,
         order: "desc",
+        suggestionCategoryId: suggestionCategoryId,
       });
       return {
         result: result.result,
