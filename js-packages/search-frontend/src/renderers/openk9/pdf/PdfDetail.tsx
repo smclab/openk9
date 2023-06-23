@@ -70,7 +70,7 @@ export function PdfDetail({ result }: PdfDetailProps) {
         date={lastEdit}
       />
       <div style={{ marginTop: "10px", marginLeft: "5px" }}>
-        <ResultLinkTwo href={result.source.document.url}>
+        <ResultLinkTwo href={result.source.document.url} title="Link Documento">
           <HighlightableText result={result} path="document.url" />
         </ResultLinkTwo>
       </div>

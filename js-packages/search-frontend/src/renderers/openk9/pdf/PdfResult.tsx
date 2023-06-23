@@ -21,7 +21,7 @@ type PdfResultProps = { result: GenericResultItem<PdfResultItem> };
 export function PdfResult({ result }: PdfResultProps) {
   const lastEdit = new Date(result.source.file.lastModifiedDate)
     .toLocaleString()
-    .replace(",", " |");
+    .replace(",", "");
   return (
     <ResultContainerTwo>
       <ResultTitleTwo>
@@ -68,7 +68,7 @@ export function PdfResult({ result }: PdfResultProps) {
         icon={<FontAwesomeIcon icon={faFilePdf} />}
         date={lastEdit}
       />
-      <ResultLinkTwo href={result.source.document.url}>
+      <ResultLinkTwo href={result.source.document.url} title="Link Documento">
         <HighlightableText result={result} path="document.url" />
       </ResultLinkTwo>
     </ResultContainerTwo>

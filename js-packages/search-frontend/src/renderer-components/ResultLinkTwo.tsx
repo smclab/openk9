@@ -2,8 +2,16 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { truncatedLineStyle } from "./truncatedLineStyle";
 
-type ResultLinkProps = { href: string; children: React.ReactNode };
-export function ResultLinkTwo({ href, children }: ResultLinkProps) {
+type ResultLinkProps = {
+  href: string;
+  children: React.ReactNode;
+  title?: string;
+};
+export function ResultLinkTwo({
+  href,
+  title = "Link Documento",
+  children,
+}: ResultLinkProps) {
   const handleLinkClick = () => {
     window.open(href, "_blank");
   };
@@ -48,7 +56,7 @@ export function ResultLinkTwo({ href, children }: ResultLinkProps) {
             color: #c0272b;
           `}
         >
-          Link Documento
+          {title}
         </div>
       </div>
     </div>
