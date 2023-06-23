@@ -17,13 +17,22 @@ declare global {
   }
 }
 
-export function OpenK9Client({ onAuthenticated, tenant }: { onAuthenticated(): void, tenant: string }) {
+export function OpenK9Client({
+  onAuthenticated,
+  tenant,
+}: {
+  onAuthenticated(): void;
+  tenant: string;
+}) {
   const keycloak = new Keycloak({
     url: window.KEYCLOAK_URL,
     realm: window.KEYCLOAK_REALM || "openk9",
     clientId: window.KEYCLOAK_CLIENT_ID || "openk9",
   });
-  const keycloakInit = keycloak.init({ onLoad: "check-sso", checkLoginIframe: false });
+  const keycloakInit = keycloak.init({
+    onLoad: "check-sso",
+    checkLoginIframe: false,
+  });
   keycloakInit.then(() => {
     onAuthenticated();
   });
@@ -54,7 +63,7 @@ export function OpenK9Client({ onAuthenticated, tenant }: { onAuthenticated(): v
       return await keycloak.loadUserInfo();
     },
     async getServiceStatus(): Promise<"up" | "down"> {
-      const response = await fetch(`/api/status`);
+      const response = await fetch(tenant + `/api/status`);
       if (response.ok) return "up";
       else return "down";
     },
