@@ -153,13 +153,18 @@ export class OpenK9 {
   };
 }
 
+type FiltersHorizontalConfiguration = {
+  element: Element | string | null;
+  callback: () => void | null;
+};
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
   activeFilters: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
-  filtersHorizontal: Element | string | null;
+  filtersHorizontal: FiltersHorizontalConfiguration | null;
   sortable: Element | string | null;
   results: Element | string | null;
   details: Element | string | null;

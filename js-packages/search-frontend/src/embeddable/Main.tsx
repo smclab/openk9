@@ -153,12 +153,13 @@ export function Main({
             onAddFilterToken={addFilterToken}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
+            onConfigurationChangeExt={configuration.filtersHorizontal ? configuration.filtersHorizontal.callback : () => {}}
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
           />
         </I18nextProvider>,
-        configuration.filtersHorizontal,
+        configuration.filtersHorizontal ? configuration.filtersHorizontal.element : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

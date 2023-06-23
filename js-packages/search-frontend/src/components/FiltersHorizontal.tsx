@@ -18,6 +18,7 @@ type FiltersProps = {
   onAddFilterToken(searchToke: SearchToken): void;
   onRemoveFilterToken(searchToken: SearchToken): void;
   onConfigurationChange: ConfigurationUpdateFunction;
+  onConfigurationChangeExt: () => void | null;
   filtersSelect: SearchToken[];
   sort: SortField[];
   dynamicFilters: boolean;
@@ -26,6 +27,7 @@ function FiltersHorizontal({
   searchQuery,
   onAddFilterToken,
   onConfigurationChange,
+  onConfigurationChangeExt,
   onRemoveFilterToken,
   filtersSelect,
   sort,
@@ -162,6 +164,7 @@ function FiltersHorizontal({
           `}
           onClick={() => {
             onConfigurationChange({ filterTokens: filterSelect });
+            onConfigurationChangeExt && onConfigurationChangeExt();
           }}
         >
           Applica i Filtri
