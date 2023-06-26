@@ -9,7 +9,7 @@ export function ResultTextContent<E>({
   result,
   path,
   isTruncate = true,
-}: HighlightableTextProps<E> & { isTruncate: boolean }) {
+}: HighlightableTextProps<E> & { isTruncate?: boolean }) {
   const hihglithTextLines = result.highlight[path];
   const text = get(result.source, path);
   return (
