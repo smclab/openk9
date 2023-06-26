@@ -1,4 +1,4 @@
-import { css } from "@emotion/react";
+import { css } from "styled-components/macro";
 import {
   GenericResultItem,
   GenericResultItemFields,
@@ -29,13 +29,12 @@ export function DateCard<E>({
         css={css`
           color: #71717a;
           font-style: normal;
-          font-weight: 400;
-          font-size: 14px;
+          font-weight: 600;
+          font-size: 15px;
           line-height: 19px;
-          margin-left: 20px;
         `}
       >
-        {label}
+        {label}:
       </div>
       <div
         className="openk9-embeddable-more-detail-card-container-date"
@@ -44,7 +43,6 @@ export function DateCard<E>({
           font-weight: 600;
           font-size: 14px;
           line-height: 19px;
-          margin-left: 7px;
           color: #3f3f46;
         `}
       >
