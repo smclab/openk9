@@ -1,9 +1,23 @@
 import { css } from "@emotion/react";
+import {
+  GenericResultItem,
+  GenericResultItemFields,
+} from "../components/client";
+import { get } from "lodash";
 
-type DateCard = { date: string; label?: string };
+type DateCard<E> = {
+  result: GenericResultItem<E>;
+  label?: string;
+  path: string;
+};
 
-export function DateCard({ date, label = "Last Edit:" }: DateCard) {
-  const lastEdit = new Date(date).toLocaleString().replace(",", "");
+export function DateCard<E>({
+  result,
+  label = "Last Edit:",
+  path,
+}: DateCard<E>) {
+  const printDate = get(result.source, path);
+  const lastEdit = new Date(printDate).toLocaleString().replace(",", "");
   return (
     <div
       css={css`
