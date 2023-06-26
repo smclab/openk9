@@ -8,7 +8,8 @@ import { HighlightableTextProps } from "./HighlightableText";
 export function ResultTextContentTwo<E>({
   result,
   path,
-}: HighlightableTextProps<E>) {
+  isTruncate = true,
+}: HighlightableTextProps<E> & { isTruncate?: boolean }) {
   const hihglithTextLines = result.highlight[path];
   const text = get(result.source, path);
   return (
@@ -26,14 +27,14 @@ export function ResultTextContentTwo<E>({
       ) : (
         <div
           css={css`
-            height: calc(15.5px * 3);
-            overflow: hidden;
+            height: ${isTruncate ? "calc(15.5px * 3)" : "auto"};
+            overflow: ${isTruncate ? "hidden" : "visible"};
             word-wrap: break-word;
             word-break: break-word;
-            text-overflow: ellipsis;
+            text-overflow: ${isTruncate ? "ellipsis" : "clip"};
             display: -webkit-box;
             -webkit-box-orient: vertical;
-            -webkit-line-clamp: 3;
+            -webkit-line-clamp: ${isTruncate ? 3 : "inherit"};
           `}
         >
           {text}

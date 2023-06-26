@@ -8,7 +8,8 @@ import { HighlightableTextProps } from "./HighlightableText";
 export function ResultTextContent<E>({
   result,
   path,
-}: HighlightableTextProps<E>) {
+  isTruncate = true,
+}: HighlightableTextProps<E> & { isTruncate: boolean }) {
   const hihglithTextLines = result.highlight[path];
   const text = get(result.source, path);
   return (
@@ -27,13 +28,17 @@ export function ResultTextContent<E>({
       ) : (
         <div
           className="openk9-embeddable--result-text-content"
-          css={css`
-            height: calc(21px * 5);
-            overflow: hidden;
-            word-wrap: break-word;
-            word-break: break-word;
-            text-overflow: ellipsis;
-          `}
+          css={
+            isTruncate
+              ? css`
+                  height: calc(21px * 5);
+                  overflow: hidden;
+                  word-wrap: break-word;
+                  word-break: break-word;
+                  text-overflow: ellipsis;
+                `
+              : undefined
+          }
         >
           {text}
         </div>
