@@ -12,6 +12,7 @@ import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
 import { mapSuggestionToSearchToken } from "./FilterCategory";
 import { capitalize } from "lodash";
+import { FilterHorizontalSvg } from "../svgElement/FilterHorizontalSvg";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -161,13 +162,19 @@ function FiltersHorizontal({
             color: white;
             font-weight: 600;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
           `}
           onClick={() => {
             onConfigurationChange({ filterTokens: filterSelect });
             onConfigurationChangeExt && onConfigurationChangeExt();
           }}
         >
-          Applica i Filtri
+          <div>Applica i Filtri</div>
+          <div>
+            <FilterHorizontalSvg />
+          </div>
         </button>
       </div>
     </React.Fragment>
