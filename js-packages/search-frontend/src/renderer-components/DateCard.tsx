@@ -29,7 +29,7 @@ export function DateCard<E>({
         css={css`
           color: #71717a;
           font-style: normal;
-          font-weight: 600;
+          font-weight: 400;
           font-size: 15px;
           line-height: 19px;
         `}
