@@ -135,7 +135,30 @@ export function Analyzer() {
   return (
     <>
       {analyzerId !== "new" && (
-        <div className="navbar navbar-underline navigation-bar navigation-bar-secondary navbar-expand-md" style={{ position: "sticky" }}>
+        <div
+          className="navbar navbar-underline navigation-bar navigation-bar-secondary navbar-expand-md"
+          style={{
+            position: "sticky",
+            backgroundColor: "white",
+            boxShadow: "rgb(194 177 177 / 61%) 3px 4px 3px",
+            top: "59px",
+            zIndex: "1",
+            borderTop: "1px solid #00000024",
+          }}
+        >
+          <style type="text/css">
+            {`
+                .navbar-underline.navbar-expand-md .navbar-nav .nav-link.active:after{
+                  background-color: red;
+                }
+                .navigation-bar-secondary .navbar-nav .nav-link.active {
+                  color: black;
+                }
+                .navigation-bar-secondary .navbar-nav .nav-link:hover {
+                  color: black;
+                }
+          `}
+          </style>
           <div className="container-fluid container-fluid-max-xl">
             <ul className="navbar-nav ">
               <li className="nav-item ">
