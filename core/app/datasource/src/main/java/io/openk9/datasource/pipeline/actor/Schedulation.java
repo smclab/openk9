@@ -161,17 +161,24 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		DataPayload dataPayload = ingest.payload;
 
-		dataPayload.setIndexName(indexName);
+		if (dataPayload.getContentId() != null) {
+			dataPayload.setIndexName(indexName);
 
-		ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
-			.messageAdapter(EnrichPipeline.Response.class, EnrichPipelineResponseWrapper::new);
+			ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
+				.messageAdapter(EnrichPipeline.Response.class, EnrichPipelineResponseWrapper::new);
 
-		ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = getContext().spawnAnonymous(
-			EnrichPipeline.create(key, responseActorRef, dataPayload, scheduler));
+			ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = getContext().spawnAnonymous(
+				EnrichPipeline.create(key, responseActorRef, dataPayload, scheduler));
 
-		enrichPipelineActorRef.tell(EnrichPipeline.Start.INSTANCE);
+			enrichPipelineActorRef.tell(EnrichPipeline.Start.INSTANCE);
 
-		return this.busy();
+			return this.busy();
+		}
+		else {
+			getContext().getSelf().tell(SetDataIndex.INSTANCE);
+
+			return this.finish();
+		}
 	}
 
 	private Behavior<Command> onBusy(Command ingest) {
