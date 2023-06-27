@@ -2,6 +2,7 @@ package io.openk9.datasource.pipeline.actor.enrichitem;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.RecipientRef;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -18,7 +19,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
 	public HttpProcessor(
 		ActorContext<Command> context,
-		ActorRef<Token.Command> tokenActorRef, boolean async) {
+		RecipientRef<Token.Command> tokenActorRef, boolean async) {
 		super(context);
 		this.async = async;
 		this.tokenActorRef = tokenActorRef;
@@ -184,12 +185,12 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 			.build();
 	}
 
-	public static Behavior<Command> create(boolean async, ActorRef<Token.Command> tokenActorRef) {
+	public static Behavior<Command> create(boolean async, RecipientRef<Token.Command> tokenActorRef) {
 		return Behaviors.setup(param -> new HttpProcessor(param, tokenActorRef, async));
 	}
 
 	private final boolean async;
-	private final ActorRef<Token.Command> tokenActorRef;
+	private final RecipientRef<Token.Command> tokenActorRef;
 	private final ActorRef<Token.Response> tokenResponseAdapter;
 
 	public sealed interface Command {}

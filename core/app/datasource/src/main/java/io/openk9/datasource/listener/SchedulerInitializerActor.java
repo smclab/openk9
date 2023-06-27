@@ -14,23 +14,23 @@ import javax.inject.Inject;
 public class SchedulerInitializerActor {
 
 	public void scheduleDataSource(String tenantName, long datasourceId, boolean schedulable, String cron) {
-		getSchedulerRef().tell(new Scheduler.ScheduleDatasource(tenantName, datasourceId, schedulable, cron));
+		getSchedulerRef().tell(new JobTriggerer.ScheduleDatasource(tenantName, datasourceId, schedulable, cron));
 	}
 
 	public void unScheduleDataSource(String tenantName, long datasourceId) {
-		getSchedulerRef().tell(new Scheduler.UnScheduleDatasource(tenantName, datasourceId));
+		getSchedulerRef().tell(new JobTriggerer.UnScheduleDatasource(tenantName, datasourceId));
 	}
 
 	public void triggerDataSource(
 		String tenantName, long datasourceId, boolean startFromFirst) {
-		getSchedulerRef().tell(new Scheduler.TriggerDatasource(tenantName, datasourceId, startFromFirst));
+		getSchedulerRef().tell(new JobTriggerer.TriggerDatasource(tenantName, datasourceId, startFromFirst));
 	}
 
-	private ActorRef<Scheduler.Command> getSchedulerRef() {
+	private ActorRef<JobTriggerer.Command> getSchedulerRef() {
 		return ClusterSingleton.get(actorSystemProvider.getActorSystem())
 			.init(
 				SingletonActor.of(
-					Scheduler.create(
+					JobTriggerer.create(
 						httpPluginDriverClient, transactionInvoker
 					), "scheduler")
 				);

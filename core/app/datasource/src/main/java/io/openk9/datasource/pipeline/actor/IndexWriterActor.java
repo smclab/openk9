@@ -6,7 +6,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.events.DatasourceEvent;
 import io.openk9.datasource.events.DatasourceEventBus;
-import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
+import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.buffer.Buffer;
@@ -35,9 +35,9 @@ import java.util.Map;
 public class IndexWriterActor {
 
 	public sealed interface Command extends CborSerializable {}
-	public record Start(SchedulerDTO schedulerDTO, byte[] dataPayload, ActorRef<Response> replyTo)
+	public record Start(Scheduler scheduler, byte[] dataPayload, ActorRef<Response> replyTo)
 		implements Command {}
-	private record SearchResponseCommand(SchedulerDTO schedulerDTO, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
+	private record SearchResponseCommand(Scheduler scheduler, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
 	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, DataPayload dataPayload, Exception exception) implements Command {}
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
@@ -65,7 +65,7 @@ public class IndexWriterActor {
 		Logger logger = ctx.getLog();
 
 		return Behaviors.receive(Command.class)
-			.onMessage(Start.class, (start) -> onStart(ctx, restHighLevelClient, start.schedulerDTO, start.dataPayload, start.replyTo))
+			.onMessage(Start.class, (start) -> onStart(ctx, restHighLevelClient, start.scheduler, start.dataPayload, start.replyTo))
 			.onMessage(SearchResponseCommand.class, src -> onSearchResponseCommand(
 				ctx, restHighLevelClient, src, logger))
 			.onMessage(BulkResponseCommand.class, brc -> onBulkResponseCommand(logger, brc, eventBus))
@@ -136,12 +136,12 @@ public class IndexWriterActor {
 		SearchResponseCommand src, Logger logger) {
 
 		Exception exception = src.exception;
-		SchedulerDTO schedulerDTO = src.schedulerDTO;
+		Scheduler scheduler = src.scheduler;
 		DataPayload dataPayload = src.dataPayload;
 		SearchResponse searchResponse = src.searchResponse;
 		ActorRef<Response> replyTo = src.replyTo;
-		String oldDataIndexName = schedulerDTO.getOldDataIndexName();
-		String newDataIndexName = schedulerDTO.getNewDataIndexName();
+		String oldDataIndexName = null;
+		String newDataIndexName = null;
 
 		if (exception != null) {
 			logger.error("Error on search", exception);
@@ -149,6 +149,13 @@ public class IndexWriterActor {
 
 		BulkRequest bulkRequest = new BulkRequest();
 		bulkRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
+
+		if (scheduler.getOldDataIndex() != null) {
+			oldDataIndexName = scheduler.getOldDataIndex().getName();
+		}
+		if (scheduler.getNewDataIndex() != null) {
+			newDataIndexName = scheduler.getNewDataIndex().getName();
+		}
 
 		if (oldDataIndexName != null) {
 			bulkRequest.add(createDocWriteRequest(ctx, oldDataIndexName, dataPayload, logger, searchResponse));
@@ -180,14 +187,18 @@ public class IndexWriterActor {
 
 	private static Behavior<Command> onStart(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		SchedulerDTO schedulerDTO, byte[] data,
+		Scheduler scheduler, byte[] data,
 		ActorRef<Response> replyTo) {
 
 		DataPayload dataPayload = Json.decodeValue(Buffer.buffer(data), DataPayload.class);
 
 		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
 
-		String oldDataIndexName = schedulerDTO.getOldDataIndexName();
+		String oldDataIndexName = null;
+
+		if (scheduler.getOldDataIndex() != null) {
+			oldDataIndexName = scheduler.getOldDataIndex().getName();
+		}
 
 		if (oldDataIndexName != null) {
 			SearchRequest searchRequest = new SearchRequest(oldDataIndexName);
@@ -209,21 +220,21 @@ public class IndexWriterActor {
 					public void onResponse(SearchResponse searchResponse) {
 						ctx.getSelf().tell(
 							new SearchResponseCommand(
-								schedulerDTO, dataPayload, replyTo, searchResponse, null));
+								scheduler, dataPayload, replyTo, searchResponse, null));
 					}
 
 					@Override
 					public void onFailure(Exception e) {
 						ctx.getSelf().tell(
 							new SearchResponseCommand(
-								schedulerDTO, dataPayload, replyTo, null, e));
+								scheduler, dataPayload, replyTo, null, e));
 					}
 				});
 		}
 		else {
 			ctx.getSelf().tell(
 				new SearchResponseCommand(
-					schedulerDTO, dataPayload, replyTo, null, null));
+					scheduler, dataPayload, replyTo, null, null));
 		}
 		return Behaviors.same();
 	}

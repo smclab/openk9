@@ -1,7 +1,13 @@
 package io.openk9.datasource.pipeline.resource;
 
+import akka.actor.typed.ActorSystem;
+import akka.cluster.sharding.typed.javadsl.ClusterSharding;
+import akka.cluster.sharding.typed.javadsl.EntityRef;
 import io.openk9.auth.tenant.TenantResolver;
-import io.openk9.datasource.pipeline.actor.IngestionActorSystem;
+import io.openk9.datasource.actor.ActorSystemProvider;
+import io.openk9.datasource.pipeline.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.actor.enrichitem.Token;
+import io.openk9.datasource.pipeline.actor.enrichitem.TokenUtils;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 
@@ -19,7 +25,18 @@ public class PipelineResource {
 	public void callback(
 		@PathParam("token-id")String tokenId, JsonObject body) {
 
-		actorSystem.callback(tokenId, body);
+		ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
+
+		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
+		Token.SchedulationToken schedulationToken = TokenUtils.decode(tokenId);
+
+		EntityRef<Token.Command> tokenEntityRef = clusterSharding.entityRefFor(
+			Token.ENTITY_TYPE_KEY,
+			SchedulationKeyUtils.getValue(
+				schedulationToken.tenantId(), schedulationToken.scheduleId()));
+
+		tokenEntityRef.tell(
+			new Token.Callback(schedulationToken.token(), body.toBuffer().getBytes()));
 
 	}
 
@@ -30,14 +47,12 @@ public class PipelineResource {
 		@PathParam("enrich-item-id") long enrichItemId,
 		JsonObject datasourcePayload) {
 
-		return actorSystem.callEnrichItem(
-			enrichItemId, tenantResolver.getTenantName(),
-			datasourcePayload.getMap());
+		return Uni.createFrom().nothing();
 
 	}
 
 	@Inject
-	IngestionActorSystem actorSystem;
+	ActorSystemProvider actorSystemProvider;
 
 	@Inject
 	TenantResolver tenantResolver;

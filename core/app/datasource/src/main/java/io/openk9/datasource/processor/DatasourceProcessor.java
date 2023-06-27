@@ -18,8 +18,13 @@
 package io.openk9.datasource.processor;
 
 
+import akka.actor.typed.ActorSystem;
+import akka.cluster.sharding.typed.javadsl.ClusterSharding;
+import akka.cluster.sharding.typed.javadsl.EntityRef;
+import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
-import io.openk9.datasource.pipeline.actor.IngestionActorSystem;
+import io.openk9.datasource.pipeline.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
@@ -30,6 +35,8 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.time.Duration;
+import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class DatasourceProcessor {
@@ -45,15 +52,39 @@ public class DatasourceProcessor {
 		DataPayload dataPayload =
 			ingestionPayloadMapper.map(ingestionPayload);
 
-		ingestionActorSystem.startEnrichPipeline(
-			dataPayload, message);
+		ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
+		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-		return Uni.createFrom().voidItem();
+		String tenantId = dataPayload.getTenantId();
+		String scheduleId = dataPayload.getScheduleId();
+
+		EntityRef<Schedulation.Command> schedulationEntityRef = clusterSharding.entityRefFor(
+			Schedulation.ENTITY_TYPE_KEY, SchedulationKeyUtils.getValue(tenantId, scheduleId));
+
+		CompletionStage<Schedulation.Response> completionStage = schedulationEntityRef.ask(
+				replyTo -> new Schedulation.Ingest(dataPayload, replyTo), Duration.ofMinutes(10));
+
+		return Uni
+			.createFrom()
+			.completionStage(completionStage)
+			.onItemOrFailure()
+			.transform((response, throwable) -> {
+				if (throwable != null) {
+					return message.nack(throwable);
+				}
+				if (response instanceof Schedulation.Failure) {
+					return message.nack(new RuntimeException(((Schedulation.Failure) response).error()));
+				}
+				else {
+					return message.ack();
+				}
+			})
+			.flatMap(Uni.createFrom()::completionStage);
 
 	}
 
 	@Inject
-	IngestionActorSystem ingestionActorSystem;
+	ActorSystemProvider actorSystemProvider;
 
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;

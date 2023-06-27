@@ -7,10 +7,10 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import io.openk9.common.util.collection.Collections;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.pipeline.actor.dto.GetDatasourceDTO;
-import io.openk9.datasource.pipeline.actor.dto.GetEnrichItemDTO;
-import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
+import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.processor.payload.DataPayload;
@@ -34,7 +34,7 @@ public class EnrichPipeline {
 		IndexWriterActor.Response response) implements Command {}
 	private record EnrichItemSupervisorResponseWrapper(
 		EnrichItemSupervisor.Response response) implements Command {}
-	private record EnrichItemError(GetEnrichItemDTO enrichItem, Throwable exception) implements Command {}
+	private record EnrichItemError(EnrichItem enrichItem, Throwable exception) implements Command {}
 	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
 	private record InternalError(String error) implements Command {}
 	public sealed interface Response {
@@ -48,9 +48,9 @@ public class EnrichPipeline {
 	public record Failure(Throwable exception, String scheduleId, String tenantId) implements Response {}
 
 	public static Behavior<Command> create(
-		ActorRef<HttpSupervisor.Command> supervisorActorRef,
+		Schedulation.SchedulationKey key,
 		ActorRef<Response> replyTo, DataPayload dataPayload,
-		GetDatasourceDTO datasource, SchedulerDTO scheduler) {
+		Scheduler scheduler) {
 
 		return Behaviors.setup(ctx -> {
 
@@ -61,14 +61,20 @@ public class EnrichPipeline {
 					IndexWriterActor.Response.class,
 					IndexWriterResponseWrapper::new);
 
+			Datasource datasource = scheduler.getDatasource();
+			io.openk9.datasource.model.EnrichPipeline enrichPipeline =
+				datasource.getEnrichPipeline();
 			log.info("start pipeline for datasource with id {}", datasource.getId());
+
+			ActorRef<HttpSupervisor.Command> supervisorActorRef =
+				ctx.spawnAnonymous(HttpSupervisor.create(key));
 
 			return Behaviors.receive(Command.class)
 				.onMessageEquals(
 					Start.INSTANCE, () ->
 					initPipeline(
 						ctx, supervisorActorRef, responseActorRef, replyTo, dataPayload,
-						scheduler, datasource.getEnrichItems())
+						scheduler, enrichPipeline.getEnrichPipelineItems())
 				)
 				.build();
 		});
@@ -79,10 +85,11 @@ public class EnrichPipeline {
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<IndexWriterActor.Response> responseActorRef,
 		ActorRef<Response> replyTo, DataPayload dataPayload,
-		SchedulerDTO scheduler,
-		Set<GetEnrichItemDTO> enrichPipelineItems) {
+		Scheduler scheduler, Set<EnrichPipelineItem> enrichPipelineItems) {
 
 		Logger logger = ctx.getLog();
+
+		String scheduleId = scheduler.getScheduleId().getValue();
 
 		if (enrichPipelineItems.isEmpty()) {
 
@@ -114,16 +121,16 @@ public class EnrichPipeline {
 
 							if (response instanceof IndexWriterActor.Success) {
 								if (dataPayload.isLast()) {
-									replyTo.tell(new LastMessage(scheduler.getScheduleId(), dataPayload.getTenantId()));
+									replyTo.tell(new LastMessage(scheduleId, dataPayload.getTenantId()));
 								}
 								else {
-									replyTo.tell(new AnyMessage(scheduler.getScheduleId(), dataPayload.getTenantId()));
+									replyTo.tell(new AnyMessage(scheduleId, dataPayload.getTenantId()));
 								}
 							}
 							else if (response instanceof IndexWriterActor.Failure) {
 								replyTo.tell(new Failure(
 									((IndexWriterActor.Failure) response).exception(),
-									scheduler.getScheduleId(),
+									scheduleId,
 									dataPayload.getTenantId()));
 							}
 
@@ -133,15 +140,15 @@ public class EnrichPipeline {
 
 		}
 
-		GetEnrichItemDTO enrichItem = Collections.head(enrichPipelineItems);
-		Set<GetEnrichItemDTO> tail = Collections.tail(enrichPipelineItems);
+		EnrichPipelineItem enrichPipelineItem = Collections.head(enrichPipelineItems);
+		EnrichItem enrichItem = enrichPipelineItem.getEnrichItem();
+		Set<EnrichPipelineItem> tail = Collections.tail(enrichPipelineItems);
 
 
 		logger.info("start enrich for enrichItem with id {}", enrichItem.getId());
 
 		String jsonPath = enrichItem.getJsonPath();
-		EnrichItem.BehaviorMergeType behaviorMergeType =
-			EnrichItem.BehaviorMergeType.valueOf(enrichItem.getBehaviorMergeType());
+		EnrichItem.BehaviorMergeType behaviorMergeType = enrichItem.getBehaviorMergeType();
 
 		ActorRef<EnrichItemSupervisor.Command> enrichItemSupervisorRef =
 			ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
@@ -177,10 +184,9 @@ public class EnrichPipeline {
 		return Behaviors.receive(Command.class)
 				.onMessage(EnrichItemError.class, param -> {
 
-					GetEnrichItemDTO enrichItemError = param.enrichItem();
+					EnrichItem enrichItemError = param.enrichItem();
 
-					EnrichItem.BehaviorOnError behaviorOnError =
-						EnrichItem.BehaviorOnError.valueOf(enrichItem.getBehaviorOnError());
+					EnrichItem.BehaviorOnError behaviorOnError = enrichItemError.getBehaviorOnError();
 
 					switch (behaviorOnError) {
 						case SKIP -> {

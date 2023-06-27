@@ -2,29 +2,33 @@ package io.openk9.datasource.pipeline.actor.enrichitem;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.RecipientRef;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import akka.cluster.typed.ClusterSingleton;
-import akka.cluster.typed.SingletonActor;
+import akka.cluster.sharding.typed.javadsl.ClusterSharding;
+import io.openk9.datasource.pipeline.actor.Schedulation;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
-	public HttpSupervisor(ActorContext<Command> context) {
-		super(context);
-		ClusterSingleton clusterSingleton =
-			ClusterSingleton.get(context.getSystem());
 
-		this.tokenActorRef = clusterSingleton.init(
-			SingletonActor.of(
-				Token.create(Duration.ofMinutes(15).toMillis()),
-				"token")
-		);
+
+	public HttpSupervisor(
+		ActorContext<Command> context, Schedulation.SchedulationKey key) {
+
+		super(context);
+		ClusterSharding clusterSharding = ClusterSharding.get(context.getSystem());
+		this.tokenActorRef = clusterSharding.entityRefFor(Token.ENTITY_TYPE_KEY, key.value());
+	}
+
+	public static Behavior<Command> create(Schedulation.SchedulationKey key) {
+		return Behaviors
+			.<Command>supervise(Behaviors.setup(ctx -> new HttpSupervisor(ctx, key)))
+			.onFailure(SupervisorStrategy.resume());
 	}
 
 	@Override
@@ -70,18 +74,13 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
 	}
 
-	public static Behavior<Command> create() {
-		return Behaviors
-			.supervise(Behaviors.setup(HttpSupervisor::new))
-			.onFailure(SupervisorStrategy.resume());
-	}
-
 	private Behavior<Command> onCallback(Callback callback) {
 		tokenActorRef.tell(new Token.Callback(callback.tokenId, callback.jsonObject));
 		return Behaviors.same();
 	}
 
-	private final ActorRef<Token.Command> tokenActorRef;
+	private final RecipientRef<Token.Command> tokenActorRef;
+
 	public sealed interface Command {}
 	public record Call(
 		boolean async, String url, byte[] jsonObject,

@@ -4,8 +4,12 @@ import akka.actor.Cancellable;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.SupervisorStrategy;
+import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import akka.actor.typed.javadsl.Receive;
+import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
+import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.util.CborSerializable;
 
 import java.time.Duration;
@@ -14,7 +18,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class Token {
+public class Token extends AbstractBehavior<Token.Command> {
+
+	public static final EntityTypeKey<Token.Command> ENTITY_TYPE_KEY =
+		EntityTypeKey.create(Token.Command.class, "tokenKey");
 
 	public sealed interface Command extends CborSerializable {}
 	public record Generate(LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
@@ -25,59 +32,58 @@ public class Token {
 	public record TokenCallback(byte[] jsonObject) implements Response {}
 	public enum TokenState implements Response {EXPIRED, VALID}
 
+	public record SchedulationToken(String tenantId, String scheduleId, String token) {}
+
 	private record TokenInfo(
 		LocalDateTime createDate, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements CborSerializable {}
 
-	public static Behavior<Command> create() {
-		return create(-1);
+	private final Cancellable cancellable;
+	private final Schedulation.SchedulationKey key;
+	private final Map<String, TokenInfo> tokens = new HashMap<>();
+
+	public Token(ActorContext<Command> context, Schedulation.SchedulationKey key) {
+		super(context);
+
+		this.key = key;
+		this.cancellable = getContext()
+			.getSystem()
+			.scheduler()
+			.scheduleAtFixedRate(
+				Duration.ZERO, Duration.ofMinutes(15),
+				() -> getContext().getSelf().tell(Tick.INSTANCE),
+				getContext().getExecutionContext());
 	}
 
-	public static Behavior<Command> create(long validityTokenMillis) {
-		return Behaviors.<Command>supervise(
-			Behaviors
-				.setup(ctx -> initial(new HashMap<>(), ctx, null)))
-			.onFailure(SupervisorStrategy.resume());
-	}
-
-	private static Behavior<Command> initial(
-		Map<String, TokenInfo> tokens,
-		ActorContext<Command> ctx, Cancellable cancellable) {
-
-		Cancellable newCancellable;
-
-		if (cancellable == null) {
-			newCancellable = ctx.scheduleOnce(
-				Duration.ofMinutes(15), ctx.getSelf(), Tick.INSTANCE);
-		}
-		else {
-			newCancellable = cancellable;
-		}
-
-		return Behaviors
-			.receive(Command.class)
-			.onMessage(Generate.class, generate -> onGenerate(
-				generate.replyTo(), generate.expiredDate(), tokens, ctx, newCancellable))
-			.onMessage(Callback.class, callback -> onCallback(
-				callback.token(), callback.jsonObject, tokens, ctx, newCancellable))
-			.onMessage(Tick.class, tick -> onTick(tokens, ctx, newCancellable))
+	@Override
+	public Receive<Command> createReceive() {
+		return newReceiveBuilder()
+			.onMessage(Generate.class, this::onGenerate)
+			.onMessage(Callback.class, this::onCallback)
+			.onMessage(Tick.class, tick -> onTick())
 			.build();
 	}
 
-	private static Behavior<Command> onCallback(
-		String token, byte[] jsonObject,
-		Map<String, TokenInfo> tokens, ActorContext<Command> ctx,
-		Cancellable cancellable) {
+	public static Behavior<Command> create(Schedulation.SchedulationKey key) {
+
+		return Behaviors
+			.<Command>supervise(Behaviors.setup(ctx -> new Token(ctx, key)))
+			.onFailure(SupervisorStrategy.resume());
+	}
+
+	private Behavior<Command> onCallback(Callback callback) {
+
+		String token = callback.token;
 
 		TokenInfo tokenInfo = tokens.get(token);
 
 		if (tokenInfo == null) {
-			ctx.getLog().warn("Token not found: {}", token);
+			getContext().getLog().warn("Token not found: {}", token);
 			return Behaviors.same();
 		}
 
 		if (isValid(tokenInfo)) {
 
-			ctx.getLog()
+			getContext().getLog()
 				.info(
 					"Token found: {}, elapsed: {} ms",
 					token, Duration.between(
@@ -85,63 +91,58 @@ public class Token {
 						LocalDateTime.now()
 					).toMillis());
 
-			tokenInfo.replyTo.tell(new TokenCallback(jsonObject));
+			tokenInfo.replyTo.tell(new TokenCallback(callback.jsonObject));
 
 		}
 		else {
-			Map<String, TokenInfo> newMap = new HashMap<>(tokens);
-			newMap.remove(token, tokenInfo);
-			ctx.getLog().warn("Token expired: {}", token);
+			tokens.remove(token, tokenInfo);
+			getContext().getLog().warn("Token expired: {}", token);
 			tokenInfo.replyTo.tell(TokenState.EXPIRED);
-			return initial(newMap, ctx, cancellable);
 		}
 
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onTick(
-		Map<String, TokenInfo> tokens,
-		ActorContext<Command> ctx, Cancellable cancellable) {
+	private Behavior<Command> onTick() {
 
-		ctx.getLog().info("Start token cleanup");
+		getContext().getLog().info("Start token cleanup");
 
 		if (tokens.isEmpty()) {
 			return Behaviors.same();
 		}
 
-		Map<String, TokenInfo> newTokens = new HashMap<>();
+		int expiredCount = 0;
 
 		for (Map.Entry<String, TokenInfo> entry : tokens.entrySet()) {
 			TokenInfo value = entry.getValue();
 			if (isValid(value)) {
-				newTokens.put(entry.getKey(), value);
+				tokens.put(entry.getKey(), value);
 			}
 			else {
-				ctx.getLog().warn("Token expired: {}", entry.getKey());
+				getContext().getLog().warn("Token expired: {}", entry.getKey());
 				value.replyTo.tell(TokenState.EXPIRED);
+				expiredCount++;
 			}
 		}
 
-		ctx.getLog().info("token expire count: {}", tokens.size() - newTokens.size());
+		getContext().getLog().info("token expire count: {}", expiredCount);
 
-		return initial(newTokens, ctx, cancellable);
-
+		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onGenerate(
-		ActorRef<Response> replyTo, LocalDateTime expiredDate,
-		Map<String, TokenInfo> tokens, ActorContext<Command> ctx,
-		Cancellable cancellable) {
+	private Behavior<Command> onGenerate(Generate generate) {
 
-		String token = generateToken();
+		SchedulationToken schedulationToken = generateToken();
 
-		Map<String, TokenInfo> newTokens = new HashMap<>(tokens);
+		ActorRef<Response> replyTo = generate.replyTo;
 
-		newTokens.put(token, new TokenInfo(LocalDateTime.now(), expiredDate, replyTo));
+		tokens.put(
+			schedulationToken.token,
+			new TokenInfo(LocalDateTime.now(), generate.expiredDate, replyTo));
 
-		replyTo.tell(new TokenGenerated(token));
+		replyTo.tell(new TokenGenerated(TokenUtils.encode(schedulationToken)));
 
-		return initial(newTokens, ctx, cancellable);
+		return Behaviors.same();
 	}
 
 	private static boolean isValid(TokenInfo tokenInfo) {
@@ -152,8 +153,9 @@ public class Token {
 		return tokenInfo.expiredDate().isBefore(LocalDateTime.now());
 	}
 
-	private static String generateToken() {
-		return UUID.randomUUID().toString();
+	private SchedulationToken generateToken() {
+		return new SchedulationToken(
+			key.tenantId(), key.scheduleId().getValue(), UUID.randomUUID().toString());
 	}
 
 }

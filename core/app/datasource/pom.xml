@@ -196,6 +196,10 @@
       <artifactId>akka-cluster-typed_${scala.version}</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-cluster-sharding-typed_${scala.version}</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.lightbend.akka.management</groupId>
       <artifactId>akka-management_${scala.version}</artifactId>
       <version>${akka.management.version}</version>
