@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>io.openk9.service</groupId>
 		<artifactId>service</artifactId>
-		<version>1.4.0-SNAPSHOT</version>
+		<version>1.5.0-SNAPSHOT</version>
 	</parent>
 	<name>OpenK9 :: Service :: Auth Service</name>
 	<artifactId>auth-service</artifactId>
