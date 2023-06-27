@@ -5,7 +5,7 @@ import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { SearchToken, SuggestionResult } from "./client";
-import { useInfiniteQuery } from "react-query";
+import { InfiniteData, useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
 import { useOpenK9Client } from "./client";
 import { CreateLabel } from "./Filters";
@@ -48,8 +48,9 @@ function FilterCategoryDynamic({
     useDebounce(text, 600),
     loadAll,
   );
+
   const { t } = useTranslation();
-  const resultValue = suggestions.data?.pages[0].result || [];
+  const resultValue = suggestions.data?.pages || [];
 
   const filters = mergeAndSortObjects(
     resultValue,
@@ -467,12 +468,12 @@ function SingleSelect({
 
 //da modificare non appena si deciderà di mettere l'opzionalità (end/or) all'interno di una stessa categoria
 function mergeAndSortObjects(
-  sortedArray: SuggestionResult[],
+  sortedArra: { result: SuggestionResult[]; afterKey: string }[],
   unsortedArray: SearchToken[],
   suggestionCategoryId: number,
 ): SuggestionResult[] {
-  let mergedArray = [...sortedArray];
-
+  let sortedArray = sortedArra.flatMap((page) => page.result);
+  let mergedArray = sortedArray.concat();
   if (mergedArray.length === 0) {
     mergedArray = [...unsortedArray]
       .filter(
