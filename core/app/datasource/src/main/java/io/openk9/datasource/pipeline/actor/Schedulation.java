@@ -88,6 +88,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		return newReceiveBuilder()
 			.onMessageEquals(Start.INSTANCE, this::onStart)
 			.onMessage(SetScheduler.class, this::onSetScheduler)
+			.onAnyMessage(this::onBusy)
 			.build();
 	}
 
@@ -113,9 +114,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> next() {
-		if (currentIngest.payload.isLast()) {
+		if (currentIngest != null && currentIngest.payload.isLast()) {
 			getContext().getSelf().tell(SetDataIndex.INSTANCE);
-			return finish();
+			return this.finish();
 		}
 
 		currentIngest = null;
@@ -125,7 +126,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			getContext().getSelf().tell(command);
 		}
 
-		return ready();
+		return this.ready();
 	}
 
 	private Behavior<Command> onStart() {
@@ -150,7 +151,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	private Behavior<Command> onSetScheduler(SetScheduler setScheduler) {
 		this.scheduler = setScheduler.scheduler;
-		return this.ready();
+		return this.next();
 	}
 
 	private Behavior<Command> onIngestReady(Ingest ingest) {
@@ -192,7 +193,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			currentIngest.replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
 		}
 
-		return next();
+		return this.next();
 	}
 
 	private Behavior<Command> onSetDataIndex() {
