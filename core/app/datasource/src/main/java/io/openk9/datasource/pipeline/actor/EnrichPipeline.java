@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
@@ -64,6 +65,15 @@ public class EnrichPipeline {
 			Datasource datasource = scheduler.getDatasource();
 			io.openk9.datasource.model.EnrichPipeline enrichPipeline =
 				datasource.getEnrichPipeline();
+
+			Set<EnrichPipelineItem> items;
+
+			if (enrichPipeline != null) {
+				items = enrichPipeline.getEnrichPipelineItems();
+			} else {
+				items = new HashSet<>();
+			}
+
 			log.info("start pipeline for datasource with id {}", datasource.getId());
 
 			ActorRef<HttpSupervisor.Command> supervisorActorRef =
@@ -74,7 +84,7 @@ public class EnrichPipeline {
 					Start.INSTANCE, () ->
 					initPipeline(
 						ctx, supervisorActorRef, responseActorRef, replyTo, dataPayload,
-						scheduler, enrichPipeline.getEnrichPipelineItems())
+						scheduler, items)
 				)
 				.build();
 		});
