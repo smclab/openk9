@@ -2,6 +2,7 @@ package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -70,8 +71,11 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		SchedulationKey schedulationKey, TransactionInvoker txInvoker,
 		DatasourceService datasourceService) {
 
-		return Behaviors.setup(ctx -> new Schedulation(
-			ctx, schedulationKey, txInvoker, datasourceService));
+		return Behaviors
+			.<Command>supervise(
+				Behaviors.setup(ctx -> new Schedulation(
+					ctx, schedulationKey, txInvoker, datasourceService)))
+			.onFailure(SupervisorStrategy.restart());
 	}
 
 
@@ -129,7 +133,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			.withStatelessTransaction(key.tenantId, s -> s
 				.createQuery("select s " +
 					"from Scheduler s " +
-					"join fetch s.datasource d" +
+					"join fetch s.datasource d " +
 					"left join fetch d.enrichPipeline ep " +
 					"left join fetch ep.enrichPipelineItems epi " +
 					"left join fetch epi.enrichItem " +
