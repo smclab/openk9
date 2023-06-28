@@ -25,6 +25,7 @@ message IngestionRequest {
   map<string, Acl> acl  = 7;
   string scheduleId = 8;
   string tenantId = 9;
+  bool last = 10;
 }
 
 message Acl {

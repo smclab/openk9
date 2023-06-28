@@ -17,23 +17,13 @@
 
 package io.openk9.ingestion.web;
 
-import io.openk9.ingestion.dto.BinaryDTO;
-import io.openk9.ingestion.dto.BinaryPayload;
-import io.openk9.ingestion.dto.IngestionDTO;
-import io.openk9.ingestion.dto.IngestionPayload;
-import io.openk9.ingestion.dto.IngestionPayloadWrapper;
-import io.openk9.ingestion.dto.ResourcesDTO;
-import io.openk9.ingestion.dto.ResourcesPayload;
+import io.openk9.ingestion.dto.*;
 import io.openk9.ingestion.grpc.Binary;
 import io.openk9.ingestion.grpc.IngestionRequest;
 import io.openk9.ingestion.grpc.Resources;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.Message;
-import org.eclipse.microprofile.reactive.messaging.Metadata;
-import org.eclipse.microprofile.reactive.messaging.OnOverflow;
+import org.eclipse.microprofile.reactive.messaging.*;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -106,7 +96,8 @@ public class IngestionEmitter {
 					.toArray(new String[0]),
 				_dtoToPayload(dto.getResources()),
 				mappingAcl,
-				dto.getScheduleId()
+				dto.getScheduleId(),
+				dto.getLast()
 			)
 		);
 	}
@@ -126,7 +117,8 @@ public class IngestionEmitter {
 					.toArray(new String[0]),
 				_dtoToPayload(dto.getResources()),
 				dto.getAcl(),
-				dto.getScheduleId()
+				dto.getScheduleId(),
+				dto.isLast()
 			)
 		);
 	}
