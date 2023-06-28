@@ -5,7 +5,6 @@ import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.typed.Cluster;
 import akka.management.cluster.bootstrap.ClusterBootstrap;
 import akka.management.javadsl.AkkaManagement;
-import io.openk9.datasource.model.ScheduleId;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
 import io.openk9.datasource.service.DatasourceService;
@@ -18,7 +17,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import java.util.UUID;
 
 @Dependent
 public class ActorSystemConfig {

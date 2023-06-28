@@ -2,12 +2,18 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.model.util.ScheduleIdConverter;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 
 @Entity
 @Getter
@@ -15,9 +21,8 @@ import javax.persistence.*;
 @ToString
 public class Scheduler extends K9Entity {
 
-	@Convert(converter = ScheduleIdConverter.class)
 	@Column(name = "schedule_id", nullable = false, unique = true)
-	private ScheduleId scheduleId;
+	private String scheduleId;
 	@ManyToOne
 	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
 	@JsonIgnore

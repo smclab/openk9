@@ -8,7 +8,6 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.ScheduleId;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -128,7 +127,7 @@ public class JobTriggerer {
 							.timestamp(lastIngestionDate)
 							.tenantId(tenantName)
 							.datasourceId(datasource.getId())
-							.scheduleId(scheduler.getScheduleId().getValue())
+							.scheduleId(scheduler.getScheduleId())
 							.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
 							.build()
 					), (ignore) -> {}
@@ -294,8 +293,7 @@ public class JobTriggerer {
 		boolean startFromFirst, String tenantName, TransactionInvoker transactionInvoker) {
 
 		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
-		ScheduleId scheduleId = new ScheduleId(UUID.randomUUID());
-		scheduler.setScheduleId(scheduleId);
+		scheduler.setScheduleId(UUID.randomUUID().toString());
 		scheduler.setDatasource(datasource);
 		scheduler.setOldDataIndex(datasource.getDataIndex());
 		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.STARTED);
@@ -304,7 +302,7 @@ public class JobTriggerer {
 
 			DataIndex newDataIndex = new DataIndex();
 			newDataIndex.setName(
-				datasource.getId() + "-data-" + scheduleId.getValue());
+				datasource.getId() + "-data-" + scheduler.getScheduleId());
 			newDataIndex.setDatasource(datasource);
 			scheduler.setNewDataIndex(newDataIndex);
 
