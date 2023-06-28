@@ -1,8 +1,9 @@
 package io.openk9.common.util.collection;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.function.IntFunction;
 
 public class Collections {
 
@@ -19,15 +20,20 @@ public class Collections {
 		return null;
 	}
 
-	public static <T> Set<T> tail(Set<T> set) {
+	public static  <T> Collection<T> tail(Collection<T> collection) {
+		return tail(collection, ArrayList::new);
+	}
 
-		if (set.isEmpty()) {
-			return set;
+	public static <C extends Collection<T>, T> Collection<T> tail(
+		Collection<T> collection, IntFunction<C> collectionFactory) {
+
+		if (collection.isEmpty()) {
+			return collection;
 		}
 
-		Set<T> tail = new java.util.HashSet<>(set.size() - 1);
+		C tail = collectionFactory.apply(collection.size() - 1);
 
-		java.util.Iterator<T> iterator = set.iterator();
+		java.util.Iterator<T> iterator = collection.iterator();
 
 		if (iterator.hasNext()) {
 			iterator.next();

@@ -1,20 +1,15 @@
 package io.openk9.datasource.pipeline.actor.mapper;
 
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.EnrichPipelineItem;
-import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.model.*;
 import io.openk9.datasource.pipeline.actor.dto.GetDatasourceDTO;
 import io.openk9.datasource.pipeline.actor.dto.GetEnrichItemDTO;
 import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Mapper(componentModel = "cdi")
 public interface PipelineMapper {
@@ -28,9 +23,9 @@ public interface PipelineMapper {
 	@Mapping(source = "newDataIndex.name", target = "newDataIndexName")
 	SchedulerDTO map(Scheduler scheduler);
 
-	default Set<GetEnrichItemDTO> map(EnrichPipeline enrichPipeline) {
+	default Collection<GetEnrichItemDTO> map(EnrichPipeline enrichPipeline) {
 		if (enrichPipeline == null) {
-			return Set.of();
+			return List.of();
 		}
 		else {
 			return enrichPipeline

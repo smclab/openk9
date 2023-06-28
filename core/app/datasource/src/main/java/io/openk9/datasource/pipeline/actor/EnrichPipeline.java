@@ -23,8 +23,9 @@ import org.slf4j.Logger;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.Set;
 
 public class EnrichPipeline {
 
@@ -80,7 +81,7 @@ public class EnrichPipeline {
 		ActorRef<IndexWriterActor.Response> responseActorRef,
 		ActorRef<Response> replyTo, DataPayload dataPayload,
 		SchedulerDTO scheduler,
-		Set<GetEnrichItemDTO> enrichPipelineItems) {
+		Collection<GetEnrichItemDTO> enrichPipelineItems) {
 
 		Logger logger = ctx.getLog();
 
@@ -134,7 +135,7 @@ public class EnrichPipeline {
 		}
 
 		GetEnrichItemDTO enrichItem = Collections.head(enrichPipelineItems);
-		Set<GetEnrichItemDTO> tail = Collections.tail(enrichPipelineItems);
+		Collection<GetEnrichItemDTO> tail = Collections.tail(enrichPipelineItems, ArrayList::new);
 
 
 		logger.info("start enrich for enrichItem with id {}", enrichItem.getId());
