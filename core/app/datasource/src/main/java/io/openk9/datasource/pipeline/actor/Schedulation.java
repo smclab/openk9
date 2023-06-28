@@ -10,7 +10,6 @@ import akka.actor.typed.javadsl.Receive;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.ScheduleId;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
@@ -49,7 +48,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	public record Success() implements Response {}
 	public record Failure(String error) implements Response {}
 
-	public record SchedulationKey(String tenantId, ScheduleId scheduleId) {
+	public record SchedulationKey(String tenantId, String scheduleId) {
 		public String value() {
 			return SchedulationKeyUtils.getValue(this);
 		}

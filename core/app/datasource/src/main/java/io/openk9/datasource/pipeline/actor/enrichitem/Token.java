@@ -155,7 +155,7 @@ public class Token extends AbstractBehavior<Token.Command> {
 
 	private SchedulationToken generateToken() {
 		return new SchedulationToken(
-			key.tenantId(), key.scheduleId().getValue(), UUID.randomUUID().toString());
+			key.tenantId(), key.scheduleId(), UUID.randomUUID().toString());
 	}
 
 }

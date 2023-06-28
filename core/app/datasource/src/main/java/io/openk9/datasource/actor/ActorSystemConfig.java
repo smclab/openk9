@@ -60,9 +60,7 @@ public class ActorSystemConfig {
 				String entityId = entityCtx.getEntityId();
 				String[] strings = entityId.split("#");
 				Schedulation.SchedulationKey key =
-					new Schedulation.SchedulationKey(
-						strings[0],
-						new ScheduleId(UUID.fromString(strings[1])));
+					new Schedulation.SchedulationKey(strings[0], strings[1]);
 				return Schedulation.create(key, transactionInvoker, datasourceService);
 			}));
 
@@ -70,9 +68,7 @@ public class ActorSystemConfig {
 				String entityId = entityCtx.getEntityId();
 				String[] strings = entityId.split("#");
 				Schedulation.SchedulationKey key =
-					new Schedulation.SchedulationKey(
-						strings[0],
-						new ScheduleId(UUID.fromString(strings[1])));
+					new Schedulation.SchedulationKey(strings[0], strings[1]);
 				return Token.create(key);
 			}));
 
