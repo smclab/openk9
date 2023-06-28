@@ -38,7 +38,7 @@ public interface PipelineMapper {
 				.stream()
 				.sorted(Comparator.comparing(EnrichPipelineItem::getWeight))
 				.map(this::map)
-				.collect(Collectors.toCollection(LinkedHashSet::new));
+				.toList();
 		}
 	}
 
