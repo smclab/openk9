@@ -41,9 +41,7 @@ public class EnrichPipeline {
 		String scheduleId();
 		String tenantId();
 	}
-	public sealed interface Success extends Response {}
-	public record AnyMessage(String scheduleId, String tenantId) implements Success {}
-	public record LastMessage(String scheduleId, String tenantId) implements Success {}
+	public record Success(String scheduleId, String tenantId) implements Response {}
 
 	public record Failure(Throwable exception, String scheduleId, String tenantId) implements Response {}
 
@@ -125,12 +123,7 @@ public class EnrichPipeline {
 									indexWriterResponseWrapper.response();
 
 							if (response instanceof IndexWriterActor.Success) {
-								if (dataPayload.isLast()) {
-									replyTo.tell(new LastMessage(scheduleId, dataPayload.getTenantId()));
-								}
-								else {
-									replyTo.tell(new AnyMessage(scheduleId, dataPayload.getTenantId()));
-								}
+								replyTo.tell(new Success(scheduleId, dataPayload.getTenantId()));
 							}
 							else if (response instanceof IndexWriterActor.Failure) {
 								replyTo.tell(new Failure(
@@ -142,11 +135,10 @@ public class EnrichPipeline {
 							return Behaviors.stopped();
 						})
 				.onSignal(ChildFailed.class, childFailed -> {
-					replyTo.tell(
-						new Failure(
-							childFailed.cause(),
-							dataPayload.getTenantId(),
-							dataPayload.getScheduleId()));
+					replyTo.tell(new Failure(
+						childFailed.cause(),
+						dataPayload.getTenantId(),
+						dataPayload.getScheduleId()));
 
 					return Behaviors.stopped();
 				})
@@ -234,7 +226,7 @@ public class EnrichPipeline {
 							logger.error(
 									"behaviorOnError is REJECT, stop pipeline: " + enrichItemError.getId(), param.exception);
 
-							replyTo.tell(new AnyMessage(dataPayload.getScheduleId(), dataPayload.getTenantId()));
+							replyTo.tell(new Success(dataPayload.getScheduleId(), dataPayload.getTenantId()));
 
 							return Behaviors.stopped();
 						}
