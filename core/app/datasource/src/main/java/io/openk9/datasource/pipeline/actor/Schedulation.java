@@ -181,7 +181,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		DataPayload dataPayload = ingest.payload;
 
-		if (dataPayload.getContentId() != null) {
+		if (!dataPayload.isLast()) {
 			dataPayload.setIndexName(indexName);
 
 			ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
@@ -195,6 +195,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			return this.busy();
 		}
 		else {
+			currentIngest.replyTo.tell(new Success());
+
 			getContext().getSelf().tell(SetDataIndex.INSTANCE);
 
 			return this.finish();
