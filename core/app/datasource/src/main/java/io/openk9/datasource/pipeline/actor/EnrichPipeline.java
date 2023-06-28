@@ -4,8 +4,6 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
-import akka.cluster.typed.ClusterSingleton;
-import akka.cluster.typed.SingletonActor;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
@@ -77,7 +75,7 @@ public class EnrichPipeline {
 			log.info("start pipeline for datasource with id {}", datasource.getId());
 
 			ActorRef<HttpSupervisor.Command> supervisorActorRef =
-				ctx.spawnAnonymous(HttpSupervisor.create(key));
+				ctx.spawn(HttpSupervisor.create(key), "http-supervisor");
 
 			return Behaviors.receive(Command.class)
 				.onMessageEquals(
@@ -105,14 +103,8 @@ public class EnrichPipeline {
 
 			logger.info("pipeline is empty, start index writer");
 
-			ClusterSingleton clusterSingleton =
-				ClusterSingleton.get(ctx.getSystem());
-
 			ActorRef<IndexWriterActor.Command> indexWriterActorRef =
-				clusterSingleton.init(
-					SingletonActor.of(
-						IndexWriterActor.create(), "index-writer")
-				);
+				ctx.spawn(IndexWriterActor.create(), "index-writer");
 
 			Buffer buffer = Json.encodeToBuffer(dataPayload);
 
@@ -161,7 +153,7 @@ public class EnrichPipeline {
 		EnrichItem.BehaviorMergeType behaviorMergeType = enrichItem.getBehaviorMergeType();
 
 		ActorRef<EnrichItemSupervisor.Command> enrichItemSupervisorRef =
-			ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
+			ctx.spawn(EnrichItemSupervisor.create(supervisorActorRef), "enrich-item-supervisor");
 
 		Long requestTimeout = enrichItem.getRequestTimeout();
 
