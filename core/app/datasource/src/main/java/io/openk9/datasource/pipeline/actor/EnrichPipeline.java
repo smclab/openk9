@@ -2,6 +2,7 @@ package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.ChildFailed;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.collection.Collections;
@@ -106,6 +107,8 @@ public class EnrichPipeline {
 			ActorRef<IndexWriterActor.Command> indexWriterActorRef =
 				ctx.spawn(IndexWriterActor.create(), "index-writer");
 
+			ctx.watch(indexWriterActorRef);
+
 			Buffer buffer = Json.encodeToBuffer(dataPayload);
 
 			indexWriterActorRef.tell(
@@ -138,6 +141,15 @@ public class EnrichPipeline {
 
 							return Behaviors.stopped();
 						})
+				.onSignal(ChildFailed.class, childFailed -> {
+					replyTo.tell(
+						new Failure(
+							childFailed.cause(),
+							dataPayload.getTenantId(),
+							dataPayload.getScheduleId()));
+
+					return Behaviors.stopped();
+				})
 				.build();
 
 		}

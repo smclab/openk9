@@ -186,8 +186,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
 				.messageAdapter(EnrichPipeline.Response.class, EnrichPipelineResponseWrapper::new);
 
-			ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = getContext().spawnAnonymous(
-				EnrichPipeline.create(key, responseActorRef, dataPayload, scheduler));
+			ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = getContext()
+				.spawn(
+					EnrichPipeline.create(key, responseActorRef, dataPayload, scheduler),
+					"enrich-pipeline");
 
 			enrichPipelineActorRef.tell(EnrichPipeline.Start.INSTANCE);
 
