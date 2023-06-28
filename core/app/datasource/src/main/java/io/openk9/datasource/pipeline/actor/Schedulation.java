@@ -30,12 +30,12 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	public static final EntityTypeKey<Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Command.class, "schedulation");
 
-	private static final String INIT_BEHAVIOUR = "Init";
-	private static final String READY_BEHAVIOUR = "Ready";
-	private static final String BUSY_BEHAVIOUR = "Busy";
-	private static final String NEXT_BEHAVIOUR = "Next";
-	private static final String FINISH_BEHAVIOUR = "Finish";
-	public static final String STOPPED_BEHAVIOUR = "Stopped";
+	private static final String INIT_BEHAVIOR = "Init";
+	private static final String READY_BEHAVIOR = "Ready";
+	private static final String BUSY_BEHAVIOR = "Busy";
+	private static final String NEXT_BEHAVIOR = "Next";
+	private static final String FINISH_BEHAVIOR = "Finish";
+	private static final String STOPPED_BEHAVIOR = "Stopped";
 
 	public sealed interface Command extends CborSerializable {}
 	public enum Start implements Command {INSTANCE}
@@ -95,7 +95,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Receive<Command> init() {
-		logBehaviour(INIT_BEHAVIOUR);
+		logBehavior(INIT_BEHAVIOR);
 
 		return newReceiveBuilder()
 			.onMessageEquals(Start.INSTANCE, this::onStart)
@@ -105,7 +105,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Receive<Command> ready() {
-		logBehaviour(READY_BEHAVIOUR);
+		logBehavior(READY_BEHAVIOR);
 
 		return newReceiveBuilder()
 			.onMessage(Ingest.class, this::onIngestReady)
@@ -113,7 +113,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Receive<Command> busy() {
-		logBehaviour(BUSY_BEHAVIOUR);
+		logBehavior(BUSY_BEHAVIOR);
 
 		return newReceiveBuilder()
 			.onMessage(
@@ -123,7 +123,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Receive<Command> finish() {
-		logBehaviour(FINISH_BEHAVIOUR);
+		logBehavior(FINISH_BEHAVIOR);
 
 		return newReceiveBuilder()
 			.onMessageEquals(SetDataIndex.INSTANCE, this::onSetDataIndex)
@@ -132,7 +132,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> next() {
-		logBehaviour(NEXT_BEHAVIOUR);
+		logBehavior(NEXT_BEHAVIOR);
 
 		if (currentIngest != null && currentIngest.payload.isLast()) {
 			getContext().getSelf().tell(SetDataIndex.INSTANCE);
@@ -262,7 +262,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			})
 		);
 
-		logBehaviour(STOPPED_BEHAVIOUR);
+		logBehavior(STOPPED_BEHAVIOR);
 
 		return Behaviors.stopped();
 
@@ -282,8 +282,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		return indexName;
 	}
 
-	private void logBehaviour(String behaviour) {
-		log.info("Schedulation with key {} behaviour is {}", key, behaviour);
+	private void logBehavior(String behavior) {
+		log.info("Schedulation with key {} behavior is {}", key, behavior);
 	}
 
 }
