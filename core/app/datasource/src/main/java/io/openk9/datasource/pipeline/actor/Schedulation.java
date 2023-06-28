@@ -253,11 +253,13 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	private Behavior<Command> onSetStatusFinished() {
 		VertxUtil.runOnContext(() -> txInvoker.withTransaction(
-			key.tenantId,
-			s -> {
-				scheduler.setStatus(Scheduler.SchedulerStatus.FINISHED);
-				return s.persist(scheduler);
-			})
+			key.tenantId, s -> s
+				.find(Scheduler.class, scheduler.getId())
+				.chain(entity -> {
+					entity.setStatus(Scheduler.SchedulerStatus.FINISHED);
+					return s.persist(entity);
+				})
+			)
 		);
 
 		logBehavior(STOPPED_BEHAVIOR);
