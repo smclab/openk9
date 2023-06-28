@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class JobTriggerer {
+public class JobScheduler {
 
 	public sealed interface Command extends CborSerializable {}
 	public record ScheduleDatasource(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
