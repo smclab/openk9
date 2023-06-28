@@ -84,7 +84,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			.<Command>supervise(
 				Behaviors.setup(ctx -> new Schedulation(
 					ctx, schedulationKey, txInvoker, datasourceService)))
-			.onFailure(SupervisorStrategy.restart());
+			.onFailure(SupervisorStrategy.resume());
 	}
 
 
@@ -187,9 +187,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 				.messageAdapter(EnrichPipeline.Response.class, EnrichPipelineResponseWrapper::new);
 
 			ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = getContext()
-				.spawn(
-					EnrichPipeline.create(key, responseActorRef, dataPayload, scheduler),
-					"enrich-pipeline");
+				.spawnAnonymous(
+					EnrichPipeline.create(
+						key, responseActorRef, dataPayload, scheduler));
 
 			enrichPipelineActorRef.tell(EnrichPipeline.Start.INSTANCE);
 
