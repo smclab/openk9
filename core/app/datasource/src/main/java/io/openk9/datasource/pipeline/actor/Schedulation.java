@@ -45,7 +45,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
 
 	public sealed interface Response extends CborSerializable {}
-	public record Success() implements Response {}
+	public enum Success implements Response {INSTANCE}
 	public record Failure(String error) implements Response {}
 
 	public record SchedulationKey(String tenantId, String scheduleId) {
@@ -194,7 +194,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			return this.busy();
 		}
 		else {
-			currentIngest.replyTo.tell(new Success());
+			currentIngest.replyTo.tell(Success.INSTANCE);
 
 			getContext().getSelf().tell(SetDataIndex.INSTANCE);
 
@@ -213,7 +213,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		if (response instanceof EnrichPipeline.Success) {
 			log.info("enrich pipeline success");
-			currentIngest.replyTo.tell(new Success());
+			currentIngest.replyTo.tell(Success.INSTANCE);
 		}
 		else if (response instanceof EnrichPipeline.Failure) {
 			Throwable exception = ((EnrichPipeline.Failure) response).exception();
