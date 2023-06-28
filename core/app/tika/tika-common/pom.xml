@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>tika</artifactId>
 		<groupId>io.openk9.app.tika</groupId>
-		<version>1.4.0</version>
+		<version>1.4.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -81,8 +81,4 @@
 			<artifactId>lombok</artifactId>
 		</dependency>
 	</dependencies>
-
-  <scm>
-    <tag>v1.4.0</tag>
-  </scm>
 </project>

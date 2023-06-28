@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>common</artifactId>
 		<groupId>io.openk9.common</groupId>
-		<version>1.4.0</version>
+		<version>1.4.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -56,9 +56,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-
-  <scm>
-    <tag>v1.4.0</tag>
-  </scm>
 </project>

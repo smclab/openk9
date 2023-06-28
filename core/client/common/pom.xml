@@ -3,12 +3,12 @@
 	<parent>
 		<artifactId>client</artifactId>
 		<groupId>io.openk9.client</groupId>
-		<version>1.4.0</version>
+		<version>1.4.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<name>OpenK9 :: Client :: Common</name>
-	<version>1.4.0</version>
+	<version>1.4.1-SNAPSHOT</version>
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -18,8 +18,4 @@
 	<modules>
 		<module>tenant-manager-bridge</module>
 	</modules>
-
-  <scm>
-    <tag>v1.4.0</tag>
-  </scm>
 </project>

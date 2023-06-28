@@ -21,15 +21,10 @@
 	<parent>
 		<groupId>io.openk9.client.grpc</groupId>
 		<artifactId>grpc</artifactId>
-		<version>1.4.0</version>
+		<version>1.4.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<name>OpenK9 :: Client :: Grpc :: Tenant Manager Client Grpc</name>
 	<artifactId>tenant-manager-client-grpc</artifactId>
 	<packaging>jar</packaging>
-
-
-  <scm>
-    <tag>v1.4.0</tag>
-  </scm>
 </project>

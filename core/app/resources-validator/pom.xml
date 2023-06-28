@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.openk9.app</groupId>
     <artifactId>app</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.1-SNAPSHOT</version>
   </parent>
   <name>OpenK9 :: App :: Resources Validator</name>
   <artifactId>resources-validator</artifactId>
@@ -66,8 +66,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <scm>
-    <tag>v1.4.0</tag>
-  </scm>
 </project>
