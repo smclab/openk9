@@ -11,7 +11,6 @@ import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.service.DatasourceService;
@@ -20,7 +19,6 @@ import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
 import org.slf4j.Logger;
 
-import javax.persistence.criteria.CriteriaUpdate;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -257,11 +255,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		VertxUtil.runOnContext(() -> txInvoker.withTransaction(
 			key.tenantId,
 			s -> {
-				CriteriaUpdate<Scheduler> criteriaUpdate =
-					txInvoker.getCriteriaBuilder().createCriteriaUpdate(Scheduler.class);
-				criteriaUpdate.from(Scheduler.class);
-				criteriaUpdate.set(Scheduler_.status, Scheduler.SchedulerStatus.FINISHED);
-				return s.createQuery(criteriaUpdate).executeUpdate();
+				scheduler.setStatus(Scheduler.SchedulerStatus.FINISHED);
+				return s.persist(scheduler);
 			})
 		);
 
