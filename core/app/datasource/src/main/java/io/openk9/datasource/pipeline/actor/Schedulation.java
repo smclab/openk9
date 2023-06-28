@@ -19,6 +19,7 @@ import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
+import org.slf4j.Logger;
 
 import javax.persistence.criteria.CriteriaUpdate;
 import java.util.ArrayDeque;
@@ -28,6 +29,13 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	public static final EntityTypeKey<Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Command.class, "schedulation");
+
+	private static final String INIT_BEHAVIOUR = "Init";
+	private static final String READY_BEHAVIOUR = "Ready";
+	private static final String BUSY_BEHAVIOUR = "Busy";
+	private static final String NEXT_BEHAVIOUR = "Next";
+	private static final String FINISH_BEHAVIOUR = "Finish";
+	public static final String STOPPED_BEHAVIOUR = "Stopped";
 
 	public sealed interface Command extends CborSerializable {}
 	public enum Start implements Command {INSTANCE}
@@ -51,6 +59,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final TransactionInvoker txInvoker;
 	private final DatasourceService datasourceService;
 	private final Deque<Command> lag = new ArrayDeque<>();
+	private final Logger log;
 	private Ingest currentIngest;
 	private Scheduler scheduler;
 
@@ -64,6 +73,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		this.key = key;
 		this.txInvoker = txInvoker;
 		this.datasourceService = datasourceService;
+		this.log = context.getLog();
 		context.getSelf().tell(Start.INSTANCE);
 	}
 
@@ -85,6 +95,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Receive<Command> init() {
+		logBehaviour(INIT_BEHAVIOUR);
+
 		return newReceiveBuilder()
 			.onMessageEquals(Start.INSTANCE, this::onStart)
 			.onMessage(SetScheduler.class, this::onSetScheduler)
@@ -93,12 +105,16 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Receive<Command> ready() {
+		logBehaviour(READY_BEHAVIOUR);
+
 		return newReceiveBuilder()
 			.onMessage(Ingest.class, this::onIngestReady)
 			.build();
 	}
 
 	private Receive<Command> busy() {
+		logBehaviour(BUSY_BEHAVIOUR);
+
 		return newReceiveBuilder()
 			.onMessage(
 				EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
@@ -107,6 +123,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Receive<Command> finish() {
+		logBehaviour(FINISH_BEHAVIOUR);
+
 		return newReceiveBuilder()
 			.onMessageEquals(SetDataIndex.INSTANCE, this::onSetDataIndex)
 			.onMessageEquals(SetStatusFinished.INSTANCE, this::onSetStatusFinished)
@@ -114,6 +132,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> next() {
+		logBehaviour(NEXT_BEHAVIOUR);
+
 		if (currentIngest != null && currentIngest.payload.isLast()) {
 			getContext().getSelf().tell(SetDataIndex.INSTANCE);
 			return this.finish();
@@ -183,7 +203,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	private Behavior<Command> onBusy(Command ingest) {
 		this.lag.add(ingest);
-		getContext().getLog().info("There are {} commands waiting", lag.size());
+		log.info("There are {} commands waiting", lag.size());
 		return Behaviors.same();
 	}
 
@@ -191,12 +211,12 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		EnrichPipeline.Response response = eprw.response;
 
 		if (response instanceof EnrichPipeline.Success) {
-			getContext().getLog().info("enrich pipeline success");
+			log.info("enrich pipeline success");
 			currentIngest.replyTo.tell(new Success());
 		}
 		else if (response instanceof EnrichPipeline.Failure) {
 			Throwable exception = ((EnrichPipeline.Failure) response).exception();
-			getContext().getLog().error("enrich pipeline failure", exception);
+			log.error("enrich pipeline failure", exception);
 			currentIngest.replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
 		}
 
@@ -212,7 +232,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			Long datasourceId = datasource.getId();
 			String tenantId = key.tenantId;
 
-			getContext().getLog().info(
+			log.info(
 				"replacing dataindex {} for datasource {} on tenant {}",
 				newDataIndexId, datasourceId, tenantId);
 			VertxUtil.runOnContext(() -> txInvoker
@@ -242,7 +262,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			})
 		);
 
-		getContext().getLog().info("Stopping " + key);
+		logBehaviour(STOPPED_BEHAVIOUR);
 
 		return Behaviors.stopped();
 
@@ -261,4 +281,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		}
 		return indexName;
 	}
+
+	private void logBehaviour(String behaviour) {
+		log.info("Schedulation with key {} behaviour is {}", key, behaviour);
+	}
+
 }
