@@ -97,7 +97,7 @@ public class EnrichPipeline {
 
 		Logger logger = ctx.getLog();
 
-		String scheduleId = scheduler.getScheduleId().getValue();
+		String scheduleId = scheduler.getScheduleId();
 
 		if (enrichPipelineItems.isEmpty()) {
 
