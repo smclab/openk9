@@ -295,7 +295,6 @@ export function InfiniteResults<E>({
                 color: inherit;
                 font-family: inherit;
                 font-size: inherit;
-                padding: 8px 16px;
                 width: calc(100% - 32px);
                 display: block;
               `}
@@ -305,7 +304,43 @@ export function InfiniteResults<E>({
           )}
         </div>
       ) : (
-        <NoResults />
+        <React.Fragment>
+          <div className="openk9-container-no-results">
+            <div
+              className="openk9-result-list-container-title box-title"
+              css={css`
+                padding: 0px 16px;
+                width: 100%;
+                background: #fafafa;
+                padding-top: 20.7px;
+                padding-bottom: 12.7px;
+                display: flex;
+                margin-bottom: 8px;
+              `}
+            >
+              <span>
+                <ResultSvg />
+              </span>
+              <span
+                className="openk9-result-list-title title"
+                css={css`
+                  margin-left: 5px;
+                  font-style: normal;
+                  font-weight: 700;
+                  font-size: 18px;
+                  height: 18px;
+                  line-height: 22px;
+                  align-items: center;
+                  color: #3f3f46;
+                  margin-left: 8px;
+                `}
+              >
+                {t("result")}
+              </span>
+            </div>
+          </div>
+          <NoResults />
+        </React.Fragment>
       )}
     </OverlayScrollbarsComponentDockerFix>
   );
@@ -391,6 +426,7 @@ export function VirtualResults<E>({
 }
 
 function NoResults() {
+  const { t } = useTranslation();
   return (
     <div
       className="openk9-no-results-container"
@@ -404,8 +440,8 @@ function NoResults() {
       `}
     >
       <Logo size={128} />
-      <h3>No results were found.</h3>
-      <div>Try with another query</div>
+      <h3>{t("no-results-were-found")}</h3>
+      <div>{t("try-with-another-query")}</div>
     </div>
   );
 }

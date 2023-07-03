@@ -11,6 +11,7 @@
     "no-details": "Pas de détails",
     "no-filters": "Sans Filtres",
     "no-result": "Déplacez la souris sur un résultat pour en voir les détails",
+    "no-results-were-found": "Aucun resultat n'a été trouvé.",
     "preview": "Aperçu",
     "preview-days": "il y a quelques jours",
     "relevance": "Pertinence",
@@ -24,6 +25,7 @@
     "this-week": "Cette semaine",
     "this-year": "Cette Année",
     "to": "pour",
-    "today": "Aujourd'hui"
+    "today": "Aujourd'hui",
+    "try-with-another-query": "Essayez avec une autre requête"
   }
 }

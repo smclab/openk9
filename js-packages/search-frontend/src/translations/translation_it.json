@@ -11,6 +11,7 @@
     "no-details": "nessun dettaglio",
     "no-result": "muovi il mouse su una card per vederlo",
     "no-filters": "Nessun Filtro",
+    "no-results-were-found": "Nessun risultato trovato",
     "preview": "Anteprima",
     "preview-days": "giorni indietro",
     "relevance": "Rilevanza",
@@ -24,6 +25,7 @@
     "this-week": "Questa settimana",
     "this-year": "Quest'anno",
     "to": "A",
-    "today": "Oggi"
+    "today": "Oggi",
+    "try-with-another-query": "Prova con una nuova query"
   }
 }

@@ -15,6 +15,7 @@
     "relevance": "Relevance",
     "result": "Result",
     "no-filters": "No Fileters",
+    "no-results-were-found": "No results were found.",
     "remove-data-filter": "remove filter",
     "remove-filters": "Remove Filters",
     "search-filters": "Search Filters",
@@ -24,6 +25,7 @@
     "this-week": "This Week",
     "this-year": "This Year",
     "to": "To",
-    "today": "Today"
+    "today": "Today",
+    "try-with-another-query": "Try with another query"
   }
 }
