@@ -22,6 +22,7 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 			SELECT tab_id,id FROM token_tab;
 		</sql>
 		<dropForeignKeyConstraint baseTableName="token_tab" constraintName="fkiyk7xhe4lx9pbr64vv2yit6jd" />
+		<dropUniqueConstraint tableName="token_tab" constraintName="UC_TOKENTAB_NAME_TAB_ID" />
 		<dropColumn tableName="token_tab" columnName="tab_id"></dropColumn>
 
 	</changeSet>
