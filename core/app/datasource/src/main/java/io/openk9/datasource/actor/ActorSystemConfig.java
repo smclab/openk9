@@ -9,9 +9,9 @@ import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.actor.ChannelManager;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
+import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
-import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.quarkus.arc.Priority;
 import io.quarkus.arc.properties.IfBuildProperty;
 import org.jboss.logging.Logger;
@@ -84,7 +84,7 @@ public class ActorSystemConfig {
 	@ApplicationScoped
 	public ActorSystemBehaviorInitializer createChannelManager() {
 		return ctx -> ctx.spawnAnonymous(
-			ChannelManager.create(rabbitMQClient, ingestionPayloadMapper));
+			ChannelManager.create(queueConnectionProvider, ingestionPayloadMapper));
 	}
 
 	@Inject
@@ -94,7 +94,7 @@ public class ActorSystemConfig {
 	@Inject
 	DatasourceService datasourceService;
     @Inject
-    RabbitMQClient rabbitMQClient;
+	QueueConnectionProvider queueConnectionProvider;
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
 

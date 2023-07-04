@@ -63,7 +63,7 @@ public class JobScheduler {
 			ctx
 				.getSystem()
 				.receptionist()
-				.tell(new ReceptionistMessages.Find<>(ChannelManager.SERVICE_KEY, listingActorRef));
+				.tell(new ReceptionistMessages.Subscribe<>(ChannelManager.SERVICE_KEY, listingActorRef));
 
 			return start(
 				httpPluginDriverClient, transactionInvoker,

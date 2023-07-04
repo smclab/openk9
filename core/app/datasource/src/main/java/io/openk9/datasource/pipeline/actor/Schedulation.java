@@ -84,7 +84,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		context
 			.getSystem()
 			.receptionist()
-			.tell(new ReceptionistMessages.Find<>(ChannelManager.SERVICE_KEY, listingActorRef));
+			.tell(new ReceptionistMessages.Subscribe<>(ChannelManager.SERVICE_KEY, listingActorRef));
 	
 	}
 

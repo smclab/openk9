@@ -17,13 +17,12 @@ import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
-import io.quarkiverse.rabbitmqclient.RabbitMQClient;
+import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.slf4j.Logger;
@@ -45,7 +44,7 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 	public static final ServiceKey<Command> SERVICE_KEY = ServiceKey.create(Command.class, "channel-manager");
 
 	private static final String EXCHANGE = "amq.topic";
-	private final RabbitMQClient rabbitMQClient;
+	private final QueueConnectionProvider rabbitMQClient;
 	private final Logger log;
 	private final Map<QueueBind, List<String>> queues = new HashMap<>();
 	private Channel channel;
@@ -53,7 +52,7 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 	private final Deque<Command> lag = new ArrayDeque<>();
 
 	public ChannelManager(
-		ActorContext<Command> context, RabbitMQClient rabbitMQClient,
+		ActorContext<Command> context, QueueConnectionProvider rabbitMQClient,
 		IngestionPayloadMapper ingestionPayloadMapper) {
 		super(context);
 		this.rabbitMQClient = rabbitMQClient;
@@ -71,7 +70,7 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 	}
 
 	public static Behavior<Command> create(
-		RabbitMQClient rabbitMQClient,
+		QueueConnectionProvider rabbitMQClient,
 		IngestionPayloadMapper ingestionPayloadMapper) {
 
 		return Behaviors
@@ -159,8 +158,7 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 		if (channel != null) {
 			log.info("Destroying RabbitMQ channel");
 			try {
-				Connection connection = this.channel.getConnection();
-				connection.close();
+				this.channel.close();
 				this.channel = null;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -170,21 +168,45 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 	}
 
 	private Behavior<Command> onStart() {
-		log.info("Connect to RabbitMQ");
-		Connection connection = rabbitMQClient.connect("channel-manager-connection");
-		log.info("Create RabbitMQ channel");
 
-		try {
-			this.channel = connection.createChannel();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		log.info("Connect to RabbitMQ");
+
+		rabbitMQClient
+			.getConnectFactory()
+			.createChannel()
+			.onItemOrFailure()
+			.invoke((c, t) -> {
+
+				if (t != null) {
+					log.error(t.getMessage(), t);
+				}
+				else {
+					getContext().getSelf().tell(new ChannelInit(c));
+				}
+
+			})
+			.subscribe()
+			.with((c) -> {});
+
+		return Behaviors
+			.receive(Command.class)
+			.onMessage(ChannelInit.class, this::onChannelInit)
+			.build();
+	}
+
+
+	private Behavior<Command> onChannelInit(ChannelInit ci) {
+
+		this.channel = ci.channel;
+
+		log.info("Rabbitmq channel created.. channel number: {}", channel.getChannelNumber());
 
 		while (!lag.isEmpty()) {
 			getContext().getSelf().tell(lag.pop());
 		}
 
 		return ready();
+
 	}
 
 	private Behavior<Command> onQueueSpawn(QueueSpawn queueSpawn) {
@@ -264,4 +286,5 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 	private record SchedulationResponseWrapper(Schedulation.Response response, long deliveryTag) implements Command { }
 
 	private record QueueMessage(QueueBind queueBind, long deliveryTag, byte[] body) implements Command { }
+	private record ChannelInit(Channel channel) implements Command {}
 }
