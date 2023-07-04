@@ -41,12 +41,7 @@ public class IngestionEmitter {
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
-		_emitter.send(Message.of(_of(ingestionRequest), Metadata.of(
-			OutgoingRabbitMQMetadata
-				.builder()
-				.withDeliveryMode(2)
-				.build()
-		)));
+		_emitter.send(createMessage(_of(ingestionRequest)));
 
 		return CompletableFuture.completedStage(null);
 
@@ -54,12 +49,7 @@ public class IngestionEmitter {
 
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
 
-		_emitter.send(Message.of(_of(ingestionDTO), Metadata.of(
-			OutgoingRabbitMQMetadata
-				.builder()
-				.withDeliveryMode(2)
-				.build()
-		)));
+		_emitter.send(createMessage(_of(ingestionDTO)));
 
 		return CompletableFuture.completedStage(null);
 	}
@@ -167,6 +157,24 @@ public class IngestionEmitter {
 		}
 
 		return ResourcesPayload.of(binaryPayloadList);
+	}
+
+	private Message<IngestionPayloadWrapper> createMessage(IngestionPayloadWrapper ingestionPayloadWrapper) {
+		return Message.of(
+			ingestionPayloadWrapper,
+			Metadata.of(
+				OutgoingRabbitMQMetadata
+					.builder()
+					.withRoutingKey(_toRoutingKey(ingestionPayloadWrapper))
+					.withDeliveryMode(2)
+					.build()
+			)
+		);
+	}
+
+	private String _toRoutingKey(IngestionPayloadWrapper ingestionPayloadWrapper) {
+		IngestionPayload ingestionPayload = ingestionPayloadWrapper.getIngestionPayload();
+		return ingestionPayload.getTenantId() + "#" + ingestionPayload.getScheduleId();
 	}
 
 
