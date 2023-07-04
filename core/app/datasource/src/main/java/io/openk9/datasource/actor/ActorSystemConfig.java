@@ -5,11 +5,13 @@ import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.typed.Cluster;
 import akka.management.cluster.bootstrap.ClusterBootstrap;
 import akka.management.javadsl.AkkaManagement;
-import io.openk9.datasource.pipeline.service.ChannelManagerService;
+import io.openk9.datasource.pipeline.actor.ChannelManager;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
+import io.openk9.datasource.pipeline.service.ChannelManagerService;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
+import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.quarkus.arc.Priority;
 import io.quarkus.arc.properties.IfBuildProperty;
 import org.jboss.logging.Logger;
@@ -78,6 +80,12 @@ public class ActorSystemConfig {
 		};
 	}
 
+	@Produces
+	@ApplicationScoped
+	public ActorSystemBehaviorInitializer createChannelManager() {
+		return ctx -> ctx.spawnAnonymous(ChannelManager.create(rabbitMQClient));
+	}
+
 	@Inject
 	Logger logger;
 	@Inject
@@ -86,5 +94,7 @@ public class ActorSystemConfig {
 	DatasourceService datasourceService;
 	@Inject
 	ChannelManagerService channelManagerService;
+    @Inject
+    RabbitMQClient rabbitMQClient;
 
 }

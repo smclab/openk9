@@ -1,13 +1,17 @@
 package io.openk9.datasource.listener;
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.internal.receptionist.ReceptionistMessages;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import akka.actor.typed.receptionist.Receptionist;
 import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.pipeline.actor.ChannelManager;
 import io.openk9.datasource.pipeline.service.ChannelManagerService;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
@@ -38,23 +42,56 @@ public class JobScheduler {
 	private record InvokePluginDriverInternal(
 		String tenantName, io.openk9.datasource.model.Scheduler scheduler,
 		boolean startFromFirst) implements Command {}
+	private record ChannelManagerSubscribeResponse(Receptionist.Listing listing) implements Command {}
+	private record Start(ActorRef<ChannelManager.Command> channelManagerRef) implements Command {}
 
 
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker,
-		ChannelManagerService channelManagerService) {
+		TransactionInvoker transactionInvoker) {
 
 		return Behaviors.setup(ctx -> {
 
 			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
 				QuartzSchedulerTypedExtension.get(ctx.getSystem());
 
-			return initial(
-				ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-				transactionInvoker, channelManagerService, new ArrayList<>());
+			ActorRef<Receptionist.Listing> listingActorRef =
+				ctx.messageAdapter(
+					Receptionist.Listing.class,
+					JobScheduler.ChannelManagerSubscribeResponse::new);
+
+			ctx
+				.getSystem()
+				.receptionist()
+				.tell(new ReceptionistMessages.Find<>(ChannelManager.SERVICE_KEY, listingActorRef));
+
+			return start(
+				httpPluginDriverClient, transactionInvoker,
+				ctx, quartzSchedulerTypedExtension);
+
 
 		});
+	}
+
+	private static Behavior<Command> start(
+		HttpPluginDriverClient httpPluginDriverClient,
+		TransactionInvoker transactionInvoker, ActorContext<Command> ctx,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension) {
+
+		return Behaviors
+			.receive(Command.class)
+			.onMessage(Start.class, start ->
+				initial(
+					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
+					transactionInvoker,
+					new ChannelManagerService(start.channelManagerRef),
+					new ArrayList<>()
+				)
+			)
+			.onMessage(
+				ChannelManagerSubscribeResponse.class,
+				cmsr -> onChannelManagerSubscribeResponse(ctx, cmsr))
+			.build();
 	}
 
 	private static Behavior<Command> initial(
@@ -73,6 +110,23 @@ public class JobScheduler {
 			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, channelManagerService))
 			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
 			.build();
+
+	}
+
+	private static Behavior<Command> onChannelManagerSubscribeResponse(
+		ActorContext<Command> ctx, ChannelManagerSubscribeResponse cmsr) {
+
+		cmsr
+			.listing
+			.getServiceInstances(ChannelManager.SERVICE_KEY)
+			.stream()
+			.findFirst()
+			.map(JobScheduler.Start::new)
+			.ifPresentOrElse(
+				cmd -> ctx.getSelf().tell(cmd),
+				() -> ctx.getLog().error("ChannelManager not found"));
+
+		return Behaviors.same();
 
 	}
 

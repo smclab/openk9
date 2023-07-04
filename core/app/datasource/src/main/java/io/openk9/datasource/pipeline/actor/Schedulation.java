@@ -3,10 +3,12 @@ package io.openk9.datasource.pipeline.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.SupervisorStrategy;
+import akka.actor.typed.internal.receptionist.ReceptionistMessages;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.receptionist.Receptionist;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
@@ -36,12 +38,13 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 
 	public sealed interface Command extends CborSerializable {}
-	public enum Start implements Command {INSTANCE}
 	public enum SetDataIndex implements Command {INSTANCE}
 	public enum SetStatusFinished implements Command {INSTANCE}
 	public record Ingest(DataPayload payload, ActorRef<Response> replyTo) implements Command {}
 	private record SetScheduler(Scheduler scheduler) implements Command {}
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
+	private record ChannelManagerSubscribeResponse(Receptionist.Listing listing) implements Command {}
+	private record Start(ActorRef<ChannelManager.Command> replyTo) implements Command {}
 
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
@@ -61,6 +64,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final Logger log;
 	private Ingest currentIngest;
 	private Scheduler scheduler;
+	private ActorRef<ChannelManager.Command> channelManagerRef;
 
 	public Schedulation(
 		ActorContext<Command> context,
@@ -75,7 +79,17 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		this.datasourceService = datasourceService;
 		this.channelManagerService = channelManagerService;
 		this.log = context.getLog();
-		context.getSelf().tell(Start.INSTANCE);
+
+		ActorRef<Receptionist.Listing> listingActorRef = 
+			context.messageAdapter(
+				Receptionist.Listing.class, 
+				ChannelManagerSubscribeResponse::new);
+		
+		context
+			.getSystem()
+			.receptionist()
+			.tell(new ReceptionistMessages.Find<>(ChannelManager.SERVICE_KEY, listingActorRef));
+	
 	}
 
 	public static Behavior<Command> create(
@@ -99,10 +113,28 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		logBehavior(INIT_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessageEquals(Start.INSTANCE, this::onStart)
+			.onMessage(ChannelManagerSubscribeResponse.class, this::onChannelManagerSubscribeResponse)
+			.onMessage(Start.class, this::onStart)
 			.onMessage(SetScheduler.class, this::onSetScheduler)
 			.onAnyMessage(this::onBusy)
 			.build();
+	}
+
+
+	private Behavior<Command> onChannelManagerSubscribeResponse(ChannelManagerSubscribeResponse cmsr) {
+
+		cmsr
+			.listing
+			.getServiceInstances(ChannelManager.SERVICE_KEY)
+			.stream()
+			.findFirst()
+			.map(Start::new)
+			.ifPresentOrElse(
+				cmd -> getContext().getSelf().tell(cmd),
+				() -> log.error("ChannelManager not found"));
+
+		return Behaviors.same();
+
 	}
 
 	private Receive<Command> ready() {
@@ -150,7 +182,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		return this.ready();
 	}
 
-	private Behavior<Command> onStart() {
+	private Behavior<Command> onStart(Start start) {
+		this.channelManagerRef = start.replyTo;
 		VertxUtil.runOnContext(() -> txInvoker
 			.withStatelessTransaction(key.tenantId, s -> s
 				.createQuery("select s " +

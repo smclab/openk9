@@ -1,7 +1,6 @@
 package io.openk9.datasource.actor;
 
 import akka.actor.typed.ActorSystem;
-import akka.actor.typed.javadsl.Behaviors;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.quarkus.runtime.Startup;
@@ -23,7 +22,8 @@ public class ActorSystemProvider {
 		Config defaultConfig = ConfigFactory.load(clusterFile);
 		Config config = defaultConfig.withFallback(ConfigFactory.load());
 
-		actorSystem = ActorSystem.create(Behaviors.empty(), "datasource", config);
+		actorSystem = ActorSystem.create(
+            Initialaizer.create(actorSystemBehaviorInitializerInstance), "datasource", config);
 
 		for (ActorSystemInitializer actorSystemInitializer : actorSystemInitializerInstance) {
 			actorSystemInitializer.init(actorSystem);
@@ -44,6 +44,10 @@ public class ActorSystemProvider {
 
 	@Inject
 	Instance<ActorSystemInitializer> actorSystemInitializerInstance;
+	@Inject
+	Instance<ActorSystemBehaviorInitializer> actorSystemBehaviorInitializerInstance;
+
+
 	@ConfigProperty(name = "akka.cluster.file")
 	String clusterFile;
 

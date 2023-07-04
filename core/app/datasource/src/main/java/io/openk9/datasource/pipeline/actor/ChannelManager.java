@@ -1,28 +1,21 @@
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.PostStop;
-import akka.actor.typed.PreRestart;
-import akka.actor.typed.Signal;
-import akka.actor.typed.SupervisorStrategy;
+import akka.actor.typed.*;
+import akka.actor.typed.internal.receptionist.ReceptionistMessages;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.receptionist.ServiceKey;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.*;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.slf4j.Logger;
+import scala.Option;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,6 +28,8 @@ import java.util.function.Function;
 
 public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 
+	public static final ServiceKey<Command> SERVICE_KEY = ServiceKey.create(Command.class, "channel-manager");
+
 	private static final String EXCHANGE = "amq.topic";
 	private final RabbitMQClient rabbitMQClient;
 	private final Logger log;
@@ -46,42 +41,49 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 		this.rabbitMQClient = rabbitMQClient;
 		this.log = context.getLog();
 		context.getSelf().tell(Start.INSTANCE);
+
+		context
+			.getSystem()
+			.receptionist()
+            .tell(
+				new ReceptionistMessages.Register<>(SERVICE_KEY, context.getSelf(), Option.empty()));
+
 	}
 
 	public static Behavior<Command> create(RabbitMQClient rabbitMQClient) {
 		return Behaviors
-			.<Command>supervise(
-				Behaviors.setup(ctx -> new ChannelManager(ctx, rabbitMQClient))
-			)
-			.onFailure(
-				SupervisorStrategy.restartWithBackoff(
-					Duration.ofMillis(200), Duration.ofMinutes(2), 0.1)
-			);
+            .<Command>supervise(
+                Behaviors.setup(ctx -> new ChannelManager(ctx, rabbitMQClient))
+            )
+            .onFailure(
+                SupervisorStrategy.restartWithBackoff(
+                    Duration.ofMillis(200), Duration.ofMinutes(2), 0.1)
+            );
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessageEquals(Start.INSTANCE, this::init)
-			.onMessage(QueueSpawn.class, this::onQueueSpawn)
-			.onMessage(QueueDestroy.class, this::onQueueDestroy)
-			.onMessage(QueueMessage.class, this::onQueueMessage)
-			.onMessage(SchedulationResponseWrapper.class, this::onSchedulationResponse)
-			.onSignal(PreRestart.class, this::destroyChannel)
-			.onSignal(PostStop.class, this::destroyChannel)
-			.build();
+				.onMessageEquals(Start.INSTANCE, this::init)
+				.onMessage(QueueSpawn.class, this::onQueueSpawn)
+				.onMessage(QueueDestroy.class, this::onQueueDestroy)
+				.onMessage(QueueMessage.class, this::onQueueMessage)
+				.onMessage(SchedulationResponseWrapper.class, this::onSchedulationResponse)
+				.onSignal(PreRestart.class, this::destroyChannel)
+				.onSignal(PostStop.class, this::destroyChannel)
+				.build();
 	}
 
 	private Behavior<Command> onQueueMessage(QueueMessage queueMessage) {
 		EntityRef<Schedulation.Command> entityRef = getSchedulation(queueMessage.queueBind.routingKey);
 		DataPayload payload = Json.decodeValue(Buffer.buffer(queueMessage.body), DataPayload.class);
 		ActorRef<Schedulation.Response> replyTo = getContext()
-			.messageAdapter(
-				Schedulation.Response.class,
-				response -> new SchedulationResponseWrapper(
-					response, queueMessage.deliveryTag
-				)
-			);
+				.messageAdapter(
+						Schedulation.Response.class,
+						response -> new SchedulationResponseWrapper(
+								response, queueMessage.deliveryTag
+						)
+				);
 		entityRef.tell(new Schedulation.Ingest(payload, replyTo));
 		return Behaviors.same();
 	}
