@@ -53,6 +53,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		public String value() {
 			return SchedulationKeyUtils.getValue(this);
 		}
+
+		public int hash() {
+			return value().hashCode();
+		}
 	}
 
 	private final SchedulationKey key;

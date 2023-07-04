@@ -74,7 +74,7 @@ public class EnrichPipeline {
 			log.info("start pipeline for datasource with id {}", datasource.getId());
 
 			ActorRef<HttpSupervisor.Command> supervisorActorRef =
-				ctx.spawn(HttpSupervisor.create(key), "http-supervisor");
+				ctx.spawnAnonymous(HttpSupervisor.create(key));
 
 			return Behaviors.receive(Command.class)
 				.onMessageEquals(
@@ -103,7 +103,7 @@ public class EnrichPipeline {
 			logger.info("pipeline is empty, start index writer");
 
 			ActorRef<IndexWriterActor.Command> indexWriterActorRef =
-				ctx.spawn(IndexWriterActor.create(), "index-writer");
+				ctx.spawnAnonymous(IndexWriterActor.create());
 
 			ctx.watch(indexWriterActorRef);
 
@@ -157,7 +157,7 @@ public class EnrichPipeline {
 		EnrichItem.BehaviorMergeType behaviorMergeType = enrichItem.getBehaviorMergeType();
 
 		ActorRef<EnrichItemSupervisor.Command> enrichItemSupervisorRef =
-			ctx.spawn(EnrichItemSupervisor.create(supervisorActorRef), "enrich-item-supervisor");
+			ctx.spawnAnonymous(EnrichItemSupervisor.create(supervisorActorRef));
 
 		Long requestTimeout = enrichItem.getRequestTimeout();
 
