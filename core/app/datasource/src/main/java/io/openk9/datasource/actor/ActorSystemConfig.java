@@ -5,6 +5,7 @@ import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.typed.Cluster;
 import akka.management.cluster.bootstrap.ClusterBootstrap;
 import akka.management.javadsl.AkkaManagement;
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.actor.ChannelManager;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
@@ -82,7 +83,8 @@ public class ActorSystemConfig {
 	@Produces
 	@ApplicationScoped
 	public ActorSystemBehaviorInitializer createChannelManager() {
-		return ctx -> ctx.spawnAnonymous(ChannelManager.create(rabbitMQClient));
+		return ctx -> ctx.spawnAnonymous(
+			ChannelManager.create(rabbitMQClient, ingestionPayloadMapper));
 	}
 
 	@Inject
@@ -93,5 +95,7 @@ public class ActorSystemConfig {
 	DatasourceService datasourceService;
     @Inject
     RabbitMQClient rabbitMQClient;
+	@Inject
+	IngestionPayloadMapper ingestionPayloadMapper;
 
 }

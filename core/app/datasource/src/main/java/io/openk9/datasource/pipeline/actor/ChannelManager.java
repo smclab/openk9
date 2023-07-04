@@ -1,6 +1,12 @@
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.*;
+import akka.actor.typed.ActorRef;
+import akka.actor.typed.ActorSystem;
+import akka.actor.typed.Behavior;
+import akka.actor.typed.PostStop;
+import akka.actor.typed.PreRestart;
+import akka.actor.typed.Signal;
+import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.internal.receptionist.ReceptionistMessages;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -9,8 +15,14 @@ import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.receptionist.ServiceKey;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
@@ -35,11 +47,15 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 	private final Logger log;
 	private final Map<QueueBind, List<String>> queues = new HashMap<>();
 	private Channel channel;
+	private IngestionPayloadMapper ingestionPayloadMapper;
 
-	public ChannelManager(ActorContext<Command> context, RabbitMQClient rabbitMQClient) {
+	public ChannelManager(
+		ActorContext<Command> context, RabbitMQClient rabbitMQClient,
+		IngestionPayloadMapper ingestionPayloadMapper) {
 		super(context);
 		this.rabbitMQClient = rabbitMQClient;
 		this.log = context.getLog();
+		this.ingestionPayloadMapper = ingestionPayloadMapper;
 		context.getSelf().tell(Start.INSTANCE);
 
 		context
@@ -50,10 +66,13 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 
 	}
 
-	public static Behavior<Command> create(RabbitMQClient rabbitMQClient) {
+	public static Behavior<Command> create(
+		RabbitMQClient rabbitMQClient,
+		IngestionPayloadMapper ingestionPayloadMapper) {
+
 		return Behaviors
             .<Command>supervise(
-                Behaviors.setup(ctx -> new ChannelManager(ctx, rabbitMQClient))
+                Behaviors.setup(ctx -> new ChannelManager(ctx, rabbitMQClient, ingestionPayloadMapper))
             )
             .onFailure(
                 SupervisorStrategy.restartWithBackoff(
@@ -75,16 +94,30 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 	}
 
 	private Behavior<Command> onQueueMessage(QueueMessage queueMessage) {
-		EntityRef<Schedulation.Command> entityRef = getSchedulation(queueMessage.queueBind.routingKey);
-		DataPayload payload = Json.decodeValue(Buffer.buffer(queueMessage.body), DataPayload.class);
-		ActorRef<Schedulation.Response> replyTo = getContext()
+
+		EntityRef<Schedulation.Command> entityRef =
+			getSchedulation(queueMessage.queueBind.routingKey);
+
+		IngestionIndexWriterPayload ingestionIndexWriterPayload =
+			Json.decodeValue(
+				Buffer.buffer(queueMessage.body),
+				IngestionIndexWriterPayload.class
+			);
+
+		DataPayload payload =
+			ingestionPayloadMapper.map(
+				ingestionIndexWriterPayload.getIngestionPayload());
+
+		ActorRef<Schedulation.Response> replyTo =
+			getContext()
 				.messageAdapter(
 						Schedulation.Response.class,
-						response -> new SchedulationResponseWrapper(
-								response, queueMessage.deliveryTag
-						)
+						response ->
+							new SchedulationResponseWrapper(response, queueMessage.deliveryTag)
 				);
+
 		entityRef.tell(new Schedulation.Ingest(payload, replyTo));
+
 		return Behaviors.same();
 	}
 
@@ -107,7 +140,6 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 			log.info("Destroying RabbitMQ channel");
 			try {
 				Connection connection = this.channel.getConnection();
-				this.channel.close();
 				connection.close();
 				this.channel = null;
 			} catch (Exception e) {
@@ -119,7 +151,7 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 
 	private Behavior<Command> init() {
 		log.info("Connect to RabbitMQ");
-		Connection connection = rabbitMQClient.connect();
+		Connection connection = rabbitMQClient.connect("channel-manager-connection");
 		log.info("Create RabbitMQ channel");
 		try {
 			this.channel = connection.createChannel();
