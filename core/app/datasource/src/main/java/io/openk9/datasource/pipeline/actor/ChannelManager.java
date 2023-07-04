@@ -23,6 +23,7 @@ import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.queue.QueueConnectionProvider;
+import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.slf4j.Logger;
@@ -276,7 +277,7 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 	}
 
 
-	public sealed interface Command {}
+	public sealed interface Command extends CborSerializable {}
 	public enum Start implements Command {INSTANCE}
 	public record QueueSpawn(String entityId) implements Command {}
 	public record QueueDestroy(String entityId) implements Command {}
