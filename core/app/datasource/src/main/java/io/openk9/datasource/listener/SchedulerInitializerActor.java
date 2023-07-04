@@ -4,6 +4,7 @@ import akka.actor.typed.ActorRef;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import io.openk9.datasource.actor.ActorSystemProvider;
+import io.openk9.datasource.pipeline.service.ChannelManagerService;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.sql.TransactionInvoker;
 
@@ -31,7 +32,7 @@ public class SchedulerInitializerActor {
 			.init(
 				SingletonActor.of(
 					JobScheduler.create(
-						httpPluginDriverClient, transactionInvoker
+						httpPluginDriverClient, transactionInvoker, channelManagerService
 					), "job-scheduler")
 				);
 	}
@@ -44,5 +45,8 @@ public class SchedulerInitializerActor {
 
 	@Inject
 	ActorSystemProvider actorSystemProvider;
+
+	@Inject
+	ChannelManagerService channelManagerService;
 
 }

@@ -63,6 +63,11 @@
       <artifactId>quarkus-hibernate-validator</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkiverse.rabbitmqclient</groupId>
+      <artifactId>quarkus-rabbitmq-client</artifactId>
+      <version>0.5.3</version>
+    </dependency>
+    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-reactive-messaging-rabbitmq</artifactId>
     </dependency>

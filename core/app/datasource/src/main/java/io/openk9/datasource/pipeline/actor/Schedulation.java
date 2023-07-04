@@ -12,6 +12,7 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.service.ChannelManagerService;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -55,6 +56,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final SchedulationKey key;
 	private final TransactionInvoker txInvoker;
 	private final DatasourceService datasourceService;
+	private final ChannelManagerService channelManagerService;
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private final Logger log;
 	private Ingest currentIngest;
@@ -64,24 +66,26 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		ActorContext<Command> context,
 		SchedulationKey key,
 		TransactionInvoker txInvoker,
-		DatasourceService datasourceService) {
+		DatasourceService datasourceService,
+		ChannelManagerService channelManagerService) {
 
 		super(context);
 		this.key = key;
 		this.txInvoker = txInvoker;
 		this.datasourceService = datasourceService;
+		this.channelManagerService = channelManagerService;
 		this.log = context.getLog();
 		context.getSelf().tell(Start.INSTANCE);
 	}
 
 	public static Behavior<Command> create(
 		SchedulationKey schedulationKey, TransactionInvoker txInvoker,
-		DatasourceService datasourceService) {
+		DatasourceService datasourceService, ChannelManagerService channelManagerService) {
 
 		return Behaviors
 			.<Command>supervise(
 				Behaviors.setup(ctx -> new Schedulation(
-					ctx, schedulationKey, txInvoker, datasourceService)))
+					ctx, schedulationKey, txInvoker, datasourceService, channelManagerService)))
 			.onFailure(SupervisorStrategy.resume());
 	}
 
@@ -261,6 +265,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 				})
 			)
 		);
+
+		channelManagerService.queueDestroy(key.tenantId, key.scheduleId);
 
 		logBehavior(STOPPED_BEHAVIOR);
 

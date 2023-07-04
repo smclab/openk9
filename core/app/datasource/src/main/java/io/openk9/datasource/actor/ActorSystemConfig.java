@@ -5,6 +5,7 @@ import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.typed.Cluster;
 import akka.management.cluster.bootstrap.ClusterBootstrap;
 import akka.management.javadsl.AkkaManagement;
+import io.openk9.datasource.pipeline.service.ChannelManagerService;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
 import io.openk9.datasource.service.DatasourceService;
@@ -49,8 +50,8 @@ public class ActorSystemConfig {
 
 	@Produces
 	@ApplicationScoped
-	public ActorSystemInitializer clusterSharding() {
-		logger.info("init cluster sharding");
+	public ActorSystemInitializer schedulationSharding() {
+		logger.info("init schedulation sharding");
 		return actorSystem -> {
 			ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
@@ -59,7 +60,11 @@ public class ActorSystemConfig {
 				String[] strings = entityId.split("#");
 				Schedulation.SchedulationKey key =
 					new Schedulation.SchedulationKey(strings[0], strings[1]);
-				return Schedulation.create(key, transactionInvoker, datasourceService);
+				return Schedulation.create(
+					key,
+					transactionInvoker,
+					datasourceService,
+					channelManagerService);
 			}));
 
 			clusterSharding.init(Entity.of(Token.ENTITY_TYPE_KEY, entityCtx -> {
@@ -79,5 +84,7 @@ public class ActorSystemConfig {
 	TransactionInvoker transactionInvoker;
 	@Inject
 	DatasourceService datasourceService;
+	@Inject
+	ChannelManagerService channelManagerService;
 
 }
