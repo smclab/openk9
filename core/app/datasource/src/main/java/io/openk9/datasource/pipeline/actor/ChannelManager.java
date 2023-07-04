@@ -239,11 +239,6 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 			List<String> consumerTags = queues.get(queueBind);
 			if (consumerTags != null) {
 				log.info("unregister: {}", queueBind);
-
-				for (String consumerTag : consumerTags) {
-					channel.basicCancel(consumerTag);
-				}
-				channel.queueUnbind(queueBind.queue, queueBind.exchange, queueBind.routingKey);
 				channel.queueDelete(queueBind.queue);
 				queues.remove(queueBind);
 			}
