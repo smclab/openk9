@@ -32,7 +32,9 @@ import scala.Option;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +49,8 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 	private final Logger log;
 	private final Map<QueueBind, List<String>> queues = new HashMap<>();
 	private Channel channel;
-	private IngestionPayloadMapper ingestionPayloadMapper;
+	private final IngestionPayloadMapper ingestionPayloadMapper;
+	private final Deque<Command> lag = new ArrayDeque<>();
 
 	public ChannelManager(
 		ActorContext<Command> context, RabbitMQClient rabbitMQClient,
@@ -56,6 +59,7 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 		this.rabbitMQClient = rabbitMQClient;
 		this.log = context.getLog();
 		this.ingestionPayloadMapper = ingestionPayloadMapper;
+
 		context.getSelf().tell(Start.INSTANCE);
 
 		context
@@ -82,15 +86,31 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 
 	@Override
 	public Receive<Command> createReceive() {
+		return init();
+	}
+
+	private Receive<Command> init() {
 		return newReceiveBuilder()
-				.onMessageEquals(Start.INSTANCE, this::init)
-				.onMessage(QueueSpawn.class, this::onQueueSpawn)
-				.onMessage(QueueDestroy.class, this::onQueueDestroy)
-				.onMessage(QueueMessage.class, this::onQueueMessage)
-				.onMessage(SchedulationResponseWrapper.class, this::onSchedulationResponse)
-				.onSignal(PreRestart.class, this::destroyChannel)
-				.onSignal(PostStop.class, this::destroyChannel)
-				.build();
+			.onMessageEquals(Start.INSTANCE, this::onStart)
+			.onAnyMessage(this::onStartup)
+			.build();
+	}
+
+	private Receive<Command> ready() {
+		return newReceiveBuilder()
+			.onMessage(QueueSpawn.class, this::onQueueSpawn)
+			.onMessage(QueueDestroy.class, this::onQueueDestroy)
+			.onMessage(QueueMessage.class, this::onQueueMessage)
+			.onMessage(SchedulationResponseWrapper.class, this::onSchedulationResponse)
+			.onSignal(PreRestart.class, this::destroyChannel)
+			.onSignal(PostStop.class, this::destroyChannel)
+			.build();
+	}
+
+	private Behavior<Command> onStartup(Command command) {
+		this.lag.add(command);
+		this.log.info("there are {} commands waiting", lag.size());
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onQueueMessage(QueueMessage queueMessage) {
@@ -149,17 +169,22 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> init() {
+	private Behavior<Command> onStart() {
 		log.info("Connect to RabbitMQ");
 		Connection connection = rabbitMQClient.connect("channel-manager-connection");
 		log.info("Create RabbitMQ channel");
+
 		try {
 			this.channel = connection.createChannel();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 
-		return Behaviors.same();
+		while (!lag.isEmpty()) {
+			getContext().getSelf().tell(lag.pop());
+		}
+
+		return ready();
 	}
 
 	private Behavior<Command> onQueueSpawn(QueueSpawn queueSpawn) {
