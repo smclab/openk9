@@ -32,7 +32,7 @@ public class SchedulerInitializerActor {
 			.init(
 				SingletonActor.of(
 					JobScheduler.create(
-						httpPluginDriverClient, transactionInvoker, channelManagerService
+						httpPluginDriverClient, transactionInvoker
 					), "job-scheduler")
 				);
 	}
