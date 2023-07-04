@@ -14,7 +14,6 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
-import io.openk9.datasource.pipeline.service.ChannelManagerService;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -59,7 +58,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final SchedulationKey key;
 	private final TransactionInvoker txInvoker;
 	private final DatasourceService datasourceService;
-	private final ChannelManagerService channelManagerService;
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private final Logger log;
 	private Ingest currentIngest;
@@ -70,14 +68,12 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		ActorContext<Command> context,
 		SchedulationKey key,
 		TransactionInvoker txInvoker,
-		DatasourceService datasourceService,
-		ChannelManagerService channelManagerService) {
+		DatasourceService datasourceService) {
 
 		super(context);
 		this.key = key;
 		this.txInvoker = txInvoker;
 		this.datasourceService = datasourceService;
-		this.channelManagerService = channelManagerService;
 		this.log = context.getLog();
 
 		ActorRef<Receptionist.Listing> listingActorRef = 
@@ -94,12 +90,12 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	public static Behavior<Command> create(
 		SchedulationKey schedulationKey, TransactionInvoker txInvoker,
-		DatasourceService datasourceService, ChannelManagerService channelManagerService) {
+		DatasourceService datasourceService) {
 
 		return Behaviors
 			.<Command>supervise(
 				Behaviors.setup(ctx -> new Schedulation(
-					ctx, schedulationKey, txInvoker, datasourceService, channelManagerService)))
+					ctx, schedulationKey, txInvoker, datasourceService)))
 			.onFailure(SupervisorStrategy.resume());
 	}
 
@@ -299,7 +295,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			)
 		);
 
-		channelManagerService.queueDestroy(key.tenantId, key.scheduleId);
+		channelManagerRef.tell(
+			new ChannelManager.QueueDestroy(
+				SchedulationKeyUtils.getValue(key.tenantId, key.scheduleId)));
 
 		logBehavior(STOPPED_BEHAVIOR);
 

@@ -8,7 +8,6 @@ import akka.management.javadsl.AkkaManagement;
 import io.openk9.datasource.pipeline.actor.ChannelManager;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
-import io.openk9.datasource.pipeline.service.ChannelManagerService;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.quarkiverse.rabbitmqclient.RabbitMQClient;
@@ -65,8 +64,8 @@ public class ActorSystemConfig {
 				return Schedulation.create(
 					key,
 					transactionInvoker,
-					datasourceService,
-					channelManagerService);
+					datasourceService
+				);
 			}));
 
 			clusterSharding.init(Entity.of(Token.ENTITY_TYPE_KEY, entityCtx -> {
@@ -92,8 +91,6 @@ public class ActorSystemConfig {
 	TransactionInvoker transactionInvoker;
 	@Inject
 	DatasourceService datasourceService;
-	@Inject
-	ChannelManagerService channelManagerService;
     @Inject
     RabbitMQClient rabbitMQClient;
 
