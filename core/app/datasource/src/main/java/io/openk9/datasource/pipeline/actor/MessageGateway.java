@@ -148,6 +148,9 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 						byte[] body)
 					throws IOException {
 
+					log.info(
+						"consuming deliveryTag {} on actor {}",
+						envelope.getDeliveryTag(), getContext().getSelf());
 					getContext().getSelf().tell(
 						new Forward(queueBind, envelope.getDeliveryTag(), body));
 				}
@@ -224,12 +227,15 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 
 	private Behavior<Command> onSchedulationResponse(
 		SchedulationResponseWrapper schedulationResponseWrapper) {
+		long deliveryTag = schedulationResponseWrapper.deliveryTag;
 
 		try {
 			if (schedulationResponseWrapper.response == Schedulation.Success.INSTANCE) {
-				channel.basicAck(schedulationResponseWrapper.deliveryTag, false);
+				log.info("ack message with deliveryTag {} on actor {}", deliveryTag, getContext().getSelf());
+				channel.basicAck(deliveryTag, false);
 			} else {
-				channel.basicNack(schedulationResponseWrapper.deliveryTag, false, false);
+				log.info("nack message with deliveryTag {} on actor {}", deliveryTag, getContext().getSelf());
+				channel.basicNack(deliveryTag, false, false);
 			}
 		}
 		catch (Exception e) {
