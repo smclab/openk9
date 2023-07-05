@@ -55,7 +55,7 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 	private record ChannelInit(Channel channel) implements Command {}
 	private record ReceptionistSubscribeWrapper(Receptionist.Listing listing) implements Command {}
 
-	private final QueueConnectionProvider rabbitMQClient;
+	private final QueueConnectionProvider connectionProvider;
 	private final Logger log;
 	private final IngestionPayloadMapper ingestionPayloadMapper;
 	private final Deque<Command> lag = new ArrayDeque<>();
@@ -67,10 +67,10 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 	private ActorRef<QueueManager.Command> queueManager;
 
 	public MessageGateway(
-		ActorContext<Command> context, QueueConnectionProvider rabbitMQClient,
+		ActorContext<Command> context, QueueConnectionProvider connectionProvider,
 		IngestionPayloadMapper ingestionPayloadMapper) {
 		super(context);
-		this.rabbitMQClient = rabbitMQClient;
+		this.connectionProvider = connectionProvider;
 		this.log = context.getLog();
 		this.ingestionPayloadMapper = ingestionPayloadMapper;
 
@@ -248,7 +248,7 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 
 		log.info("Connect to RabbitMQ");
 
-		rabbitMQClient
+		connectionProvider
 			.getConnectFactory()
 			.createChannel()
 			.onItemOrFailure()
@@ -281,7 +281,7 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
 
 		this.queueManager =
-			clusterSingleton.init(SingletonActor.of(QueueManager.create(channel), "queue-manager"));
+			clusterSingleton.init(SingletonActor.of(QueueManager.create(), "queue-manager"));
 
 		while (!lag.isEmpty()) {
 			getContext().getSelf().tell(lag.pop());
