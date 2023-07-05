@@ -607,6 +607,190 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
   );
 }
 
+export function SearchSelectGraphql<Value, Change extends Record<string, any>, Remove extends Record<string, any>>({
+  label,
+  value,
+  useValueQuery,
+  useOptionsQuery,
+  useChangeMutation,
+  mapValueToMutationVariables,
+  useRemoveMutation,
+  mapValueToRemoveMutationVariables,
+  invalidate,
+  description,
+}: {
+  label: string;
+  value: Value | null | undefined;
+  description?: string;
+  useValueQuery: QueryHook<{ value?: { id?: string | null; name?: string | null; description?: string | null } | null }, { id: Value }>;
+  useOptionsQuery:
+    | {
+        __typename?: "DefaultConnection_DataIndex" | undefined;
+        edges?: Array<{
+          __typename?: "DefaultEdge_DataIndex" | undefined;
+          node?:
+            | {
+                __typename?: "DataIndex" | undefined;
+                id?: string | null | undefined;
+                name?: string | null | undefined;
+              }
+            | null
+            | undefined;
+        } | null> | null;
+      }
+    | null
+    | undefined;
+
+  mapValueToMutationVariables(id: string): Change;
+  useChangeMutation: MutationHook<any, Change>;
+  mapValueToRemoveMutationVariables(): Remove;
+  useRemoveMutation: MutationHook<any, Remove>;
+  invalidate(): void;
+}) {
+  const [searchText, setSearchText] = React.useState("");
+  const valueQuery = useValueQuery({ variables: { id: value as Value }, skip: !value });
+  const [changeMutate, changeMutation] = useChangeMutation({});
+  const { observer, onOpenChange, open } = useModal();
+  const scrollerRef = React.useRef<HTMLElement>();
+  const [removeMutate, removeMutation] = useRemoveMutation({});
+  return (
+    <React.Fragment>
+      <CustomFormGroup>
+        <label>{label}</label>
+        {description && InformationField(description)}
+        <ClayInput.Group>
+          <ClayInput.GroupItem>
+            <ClayInput
+              type="text"
+              className="form-control"
+              style={{ backgroundColor: "#f1f2f5" }}
+              readOnly
+              disabled={!value}
+              value={valueQuery.data?.value?.name ?? ""}
+            />
+          </ClayInput.GroupItem>
+          <ClayInput.GroupItem append shrink>
+            <ClayButton.Group>
+              <ClayButton
+                displayType="secondary"
+                style={{
+                  border: "1px solid #393B4A",
+                  borderRadius: "3px",
+                }}
+                onClick={() => onOpenChange(true)}
+              >
+                <span
+                  style={{
+                    fontFamily: "Helvetica",
+                    fontStyle: "normal",
+                    fontWeight: "700",
+                    fontSize: "15px",
+                    color: "#393B4A",
+                  }}
+                >
+                  Change
+                </span>
+              </ClayButton>
+              <ClayButton
+                displayType="secondary"
+                disabled={typeof valueQuery.data?.value?.name === "string" ? false : true}
+                style={{ marginLeft: "10px", border: "1px solid #393B4A", borderRadius: "3px" }}
+                onClick={() => {
+                  if (!changeMutation.loading && !removeMutation.loading)
+                    removeMutate({
+                      variables: mapValueToRemoveMutationVariables(),
+                      onCompleted() {
+                        invalidate();
+                      },
+                    });
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "Helvetica",
+                    fontStyle: "normal",
+                    fontWeight: "700",
+                    fontSize: "15px",
+                    color: "#393B4A",
+                  }}
+                >
+                  Remove
+                </span>
+              </ClayButton>
+            </ClayButton.Group>
+          </ClayInput.GroupItem>
+        </ClayInput.Group>
+      </CustomFormGroup>
+      {open && (
+        <ClayModal observer={observer}>
+          <ClayModal.Header>{label}</ClayModal.Header>
+          <ClayModal.Body>
+            <CustomFormGroup>
+              <ClayInput
+                type="search"
+                placeholder="search"
+                value={searchText}
+                onChange={(event) => setSearchText(event.currentTarget.value)}
+              />
+            </CustomFormGroup>
+            <Virtuoso
+              totalCount={useOptionsQuery?.edges?.length}
+              scrollerRef={(element) => (scrollerRef.current = element as any)}
+              style={{ height: "400px" }}
+              components={ClayListComponents}
+              itemContent={(index) => {
+                const row = useOptionsQuery?.edges?.[index]?.node ?? undefined;
+                return (
+                  <React.Fragment>
+                    <ClayList.ItemField expand>
+                      <ClayList.ItemTitle>{row?.name || "..."}</ClayList.ItemTitle>
+                      <ClayList.ItemText>{"..."}</ClayList.ItemText>
+                    </ClayList.ItemField>
+                    <ClayList.ItemField>
+                      <ClayList.QuickActionMenu>
+                        {!changeMutation.loading && !removeMutation.loading && (
+                          <ClayList.QuickActionMenu.Item
+                            onClick={() => {
+                              if (row?.id) {
+                                changeMutate({
+                                  variables: mapValueToMutationVariables(row.id),
+                                  onCompleted() {
+                                    onOpenChange(false);
+                                  },
+                                });
+                              }
+                            }}
+                            symbol="play"
+                          />
+                        )}
+                      </ClayList.QuickActionMenu>
+                    </ClayList.ItemField>
+                  </React.Fragment>
+                );
+              }}
+              isScrolling={(isScrolling) => {
+                if (scrollerRef.current) {
+                  if (isScrolling) {
+                    scrollerRef.current.style.pointerEvents = "none";
+                  } else {
+                    scrollerRef.current.style.pointerEvents = "auto";
+                  }
+                }
+              }}
+            />
+          </ClayModal.Body>
+          <ClayModal.Footer
+            first={
+              <ClayButton displayType="secondary" onClick={() => onOpenChange(false)}>
+                Cancel
+              </ClayButton>
+            }
+          />
+        </ClayModal>
+      )}
+    </React.Fragment>
+  );
+}
 const ClayListComponents: VirtuosoComponents = {
   List: React.forwardRef(({ style, children }, listRef) => (
     <ul className="list-group show-quick-actions-on-hover" style={style} ref={listRef as any}>
