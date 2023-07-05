@@ -23,6 +23,7 @@ import {
   CronInput,
   fromFieldValidators,
   SearchSelect,
+  SearchSelectGraphql,
   SimpleModal,
   TextArea,
   TextInput,
@@ -58,6 +59,14 @@ const DataSourceQuery = gql`
       }
       enrichPipeline {
         id
+      }
+      dataIndexes {
+        edges {
+          node {
+            id
+            name
+          }
+        }
       }
     }
   }
@@ -283,11 +292,11 @@ export function DataSource() {
                 invalidate={() => datasourceQuery.refetch()}
                 description={"Plugin driver definition for external parser connection"}
               />
-              <SearchSelect
+              <SearchSelectGraphql
                 label="Data Index"
                 value={datasourceQuery.data?.datasource?.dataIndex?.id}
                 useValueQuery={useDataIndexValueQuery}
-                useOptionsQuery={useDataIndexOptionsQuery}
+                useOptionsQuery={datasourceQuery.data?.datasource?.dataIndexes}
                 useChangeMutation={useBindDataIndexToDataSourceMutation}
                 mapValueToMutationVariables={(dataIndexId) => ({ datasourceId, dataIndexId })}
                 useRemoveMutation={useUnbindDataIndexToDataSourceMutation}

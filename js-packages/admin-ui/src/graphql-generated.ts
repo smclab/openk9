@@ -343,6 +343,14 @@ export type Connection_Rule = {
 };
 
 /** A connection to a list of items. */
+export type Connection_Scheduler = {
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<Edge_Scheduler>>>;
+  /** details about this specific page */
+  pageInfo?: Maybe<PageInfo>;
+};
+
+/** A connection to a list of items. */
 export type Connection_SearchConfig = {
   /** A list of edges. */
   edges?: Maybe<Array<Maybe<Edge_SearchConfig>>>;
@@ -435,6 +443,7 @@ export type Datasource = {
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   dataIndex?: Maybe<DataIndex>;
+  dataIndexes?: Maybe<Connection_DataIndex>;
   description?: Maybe<Scalars['String']>;
   enrichPipeline?: Maybe<EnrichPipeline>;
   id?: Maybe<Scalars['ID']>;
@@ -447,8 +456,31 @@ export type Datasource = {
   pluginDriver?: Maybe<PluginDriver>;
   /** If true set datasource as schedulable */
   schedulable?: Maybe<Scalars['Boolean']>;
+  schedulers?: Maybe<Connection_Scheduler>;
   /** Chron quartz expression to define scheduling of datasource */
   scheduling?: Maybe<Scalars['String']>;
+};
+
+
+export type DatasourceDataIndexesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+export type DatasourceSchedulersArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type DatasourceDtoInput = {
@@ -549,6 +581,12 @@ export type DefaultConnection_QueryParserConfig = Connection_QueryParserConfig &
 export type DefaultConnection_Rule = Connection_Rule & {
   __typename?: 'DefaultConnection_Rule';
   edges?: Maybe<Array<Maybe<Edge_Rule>>>;
+  pageInfo?: Maybe<PageInfo>;
+};
+
+export type DefaultConnection_Scheduler = Connection_Scheduler & {
+  __typename?: 'DefaultConnection_Scheduler';
+  edges?: Maybe<Array<Maybe<Edge_Scheduler>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
@@ -682,6 +720,12 @@ export type DefaultEdge_Rule = Edge_Rule & {
   __typename?: 'DefaultEdge_Rule';
   cursor?: Maybe<Scalars['String']>;
   node?: Maybe<Rule>;
+};
+
+export type DefaultEdge_Scheduler = Edge_Scheduler & {
+  __typename?: 'DefaultEdge_Scheduler';
+  cursor?: Maybe<Scalars['String']>;
+  node?: Maybe<Scheduler>;
 };
 
 export type DefaultEdge_SearchConfig = Edge_SearchConfig & {
@@ -972,6 +1016,14 @@ export type Edge_Rule = {
   cursor?: Maybe<Scalars['String']>;
   /** The item at the end of the edge */
   node?: Maybe<Rule>;
+};
+
+/** An edge in a connection */
+export type Edge_Scheduler = {
+  /** cursor marks a unique position or index into the connection */
+  cursor?: Maybe<Scalars['String']>;
+  /** The item at the end of the edge */
+  node?: Maybe<Scheduler>;
 };
 
 /** An edge in a connection */
@@ -2046,6 +2098,8 @@ export type Query = {
   queryParserConfigs?: Maybe<Connection_QueryParserConfig>;
   rule?: Maybe<Rule>;
   rules?: Maybe<Connection_Rule>;
+  scheduler?: Maybe<Scheduler>;
+  schedulers?: Maybe<Connection_Scheduler>;
   searchConfig?: Maybe<SearchConfig>;
   searchConfigs?: Maybe<Connection_SearchConfig>;
   suggestionCategories?: Maybe<Connection_SuggestionCategory>;
@@ -2390,6 +2444,23 @@ export type QueryRulesArgs = {
 
 
 /** Query root */
+export type QuerySchedulerArgs = {
+  id: Scalars['ID'];
+};
+
+
+/** Query root */
+export type QuerySchedulersArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+/** Query root */
 export type QuerySearchConfigArgs = {
   id: Scalars['ID'];
 };
@@ -2711,6 +2782,25 @@ export type RuleDtoInput = {
   name: Scalars['String'];
   rhs: Scalars['String'];
 };
+
+export type Scheduler = {
+  __typename?: 'Scheduler';
+  /** ISO-8601 */
+  createDate?: Maybe<Scalars['DateTime']>;
+  datasource?: Maybe<Datasource>;
+  id?: Maybe<Scalars['ID']>;
+  /** ISO-8601 */
+  modifiedDate?: Maybe<Scalars['DateTime']>;
+  newDataIndex?: Maybe<DataIndex>;
+  oldDataIndex?: Maybe<DataIndex>;
+  scheduleId?: Maybe<Scalars['String']>;
+  status?: Maybe<SchedulerStatus>;
+};
+
+export enum SchedulerStatus {
+  Finished = 'FINISHED',
+  Started = 'STARTED'
+}
 
 export type SearchConfig = {
   __typename?: 'SearchConfig';
@@ -3530,7 +3620,7 @@ export type DataSourceQueryVariables = Exact<{
 }>;
 
 
-export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null } | null } | null };
+export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateOrUpdateDataSourceMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -6648,6 +6738,14 @@ export const DataSourceDocument = gql`
     }
     enrichPipeline {
       id
+    }
+    dataIndexes {
+      edges {
+        node {
+          id
+          name
+        }
+      }
     }
   }
 }
@@ -11792,4 +11890,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-05-02T12:36:14+02:00
+// Generated on 2023-07-05T11:11:34+02:00
