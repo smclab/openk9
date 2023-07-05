@@ -11,4 +11,6 @@ export type SearchConfig = {
     name?: string;
     description?: string;
     minScore?: number;
+    minScoreSuggestions?: boolean;
+    minScoreSearch?: boolean;
 };

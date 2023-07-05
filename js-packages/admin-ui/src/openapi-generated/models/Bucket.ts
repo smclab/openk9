@@ -12,6 +12,7 @@ export type Bucket = {
     id?: number;
     name?: string;
     description?: string;
+    handleDynamicFilters?: boolean;
     queryAnalysis?: QueryAnalysis;
     searchConfig?: SearchConfig;
 };

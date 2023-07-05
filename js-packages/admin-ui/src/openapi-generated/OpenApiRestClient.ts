@@ -7,6 +7,7 @@ import { FetchHttpRequest } from './core/FetchHttpRequest';
 
 import { BucketResourceService } from './services/BucketResourceService';
 import { DataIndexResourceService } from './services/DataIndexResourceService';
+import { DatasourceEventResourceService } from './services/DatasourceEventResourceService';
 import { DatasourceResourceService } from './services/DatasourceResourceService';
 import { DateFilterResourceService } from './services/DateFilterResourceService';
 import { DocTypeResourceService } from './services/DocTypeResourceService';
@@ -14,8 +15,10 @@ import { EnrichItemResourceService } from './services/EnrichItemResourceService'
 import { EnrichPipelineResourceService } from './services/EnrichPipelineResourceService';
 import { MetricsResourceService } from './services/MetricsResourceService';
 import { OAuth2SettingsResourceService } from './services/OAuth2SettingsResourceService';
+import { PipelineResourceService } from './services/PipelineResourceService';
 import { PluginDriverFieldResourceService } from './services/PluginDriverFieldResourceService';
 import { ReindexResourceService } from './services/ReindexResourceService';
+import { SchedulerResourceService } from './services/SchedulerResourceService';
 import { SuggestionCategoryResourceService } from './services/SuggestionCategoryResourceService';
 import { TemplateResourceService } from './services/TemplateResourceService';
 import { TriggerResourceService } from './services/TriggerResourceService';
@@ -26,6 +29,7 @@ export class OpenApiRestClient {
 
     public readonly bucketResource: BucketResourceService;
     public readonly dataIndexResource: DataIndexResourceService;
+    public readonly datasourceEventResource: DatasourceEventResourceService;
     public readonly datasourceResource: DatasourceResourceService;
     public readonly dateFilterResource: DateFilterResourceService;
     public readonly docTypeResource: DocTypeResourceService;
@@ -33,8 +37,10 @@ export class OpenApiRestClient {
     public readonly enrichPipelineResource: EnrichPipelineResourceService;
     public readonly metricsResource: MetricsResourceService;
     public readonly oAuth2SettingsResource: OAuth2SettingsResourceService;
+    public readonly pipelineResource: PipelineResourceService;
     public readonly pluginDriverFieldResource: PluginDriverFieldResourceService;
     public readonly reindexResource: ReindexResourceService;
+    public readonly schedulerResource: SchedulerResourceService;
     public readonly suggestionCategoryResource: SuggestionCategoryResourceService;
     public readonly templateResource: TemplateResourceService;
     public readonly triggerResource: TriggerResourceService;
@@ -44,7 +50,7 @@ export class OpenApiRestClient {
     constructor(config?: Partial<OpenAPIConfig>, HttpRequest: HttpRequestConstructor = FetchHttpRequest) {
         this.request = new HttpRequest({
             BASE: config?.BASE ?? '',
-            VERSION: config?.VERSION ?? '1.3.0-SNAPSHOT',
+            VERSION: config?.VERSION ?? '1.5.0-SNAPSHOT',
             WITH_CREDENTIALS: config?.WITH_CREDENTIALS ?? false,
             CREDENTIALS: config?.CREDENTIALS ?? 'include',
             TOKEN: config?.TOKEN,
@@ -56,6 +62,7 @@ export class OpenApiRestClient {
 
         this.bucketResource = new BucketResourceService(this.request);
         this.dataIndexResource = new DataIndexResourceService(this.request);
+        this.datasourceEventResource = new DatasourceEventResourceService(this.request);
         this.datasourceResource = new DatasourceResourceService(this.request);
         this.dateFilterResource = new DateFilterResourceService(this.request);
         this.docTypeResource = new DocTypeResourceService(this.request);
@@ -63,8 +70,10 @@ export class OpenApiRestClient {
         this.enrichPipelineResource = new EnrichPipelineResourceService(this.request);
         this.metricsResource = new MetricsResourceService(this.request);
         this.oAuth2SettingsResource = new OAuth2SettingsResourceService(this.request);
+        this.pipelineResource = new PipelineResourceService(this.request);
         this.pluginDriverFieldResource = new PluginDriverFieldResourceService(this.request);
         this.reindexResource = new ReindexResourceService(this.request);
+        this.schedulerResource = new SchedulerResourceService(this.request);
         this.suggestionCategoryResource = new SuggestionCategoryResourceService(this.request);
         this.templateResource = new TemplateResourceService(this.request);
         this.triggerResource = new TriggerResourceService(this.request);

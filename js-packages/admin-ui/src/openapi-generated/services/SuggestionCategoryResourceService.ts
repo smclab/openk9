@@ -190,6 +190,10 @@ sortBy?: K9Column,
                 'searchText': searchText,
                 'sortBy': sortBy,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -210,6 +214,10 @@ id: number,
                 'docTypeFieldId': docTypeFieldId,
                 'id': id,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -229,6 +237,10 @@ id: number,
             path: {
                 'docTypeFieldId': docTypeFieldId,
                 'id': id,
+            },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
             },
         });
     }

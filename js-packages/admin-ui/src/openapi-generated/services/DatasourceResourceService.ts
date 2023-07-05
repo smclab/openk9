@@ -177,6 +177,10 @@ id: number,
             path: {
                 'id': id,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -196,6 +200,10 @@ id: number,
             path: {
                 'dataIndexId': dataIndexId,
                 'id': id,
+            },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
             },
         });
     }
@@ -217,6 +225,10 @@ id: number,
                 'dataIndexId': dataIndexId,
                 'id': id,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -234,6 +246,10 @@ id: number,
             path: {
                 'id': id,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -250,6 +266,10 @@ id: number,
             url: '/api/datasource/datasources/{id}/enrich-pipeline',
             path: {
                 'id': id,
+            },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
             },
         });
     }
@@ -271,6 +291,10 @@ id: number,
                 'enrichPipelineId': enrichPipelineId,
                 'id': id,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -288,6 +312,10 @@ id: number,
             path: {
                 'id': id,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -304,6 +332,10 @@ id: number,
             url: '/api/datasource/datasources/{id}/plugin-driver',
             path: {
                 'id': id,
+            },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
             },
         });
     }
@@ -324,6 +356,10 @@ pluginDriverId: number,
             path: {
                 'id': id,
                 'pluginDriverId': pluginDriverId,
+            },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
             },
         });
     }

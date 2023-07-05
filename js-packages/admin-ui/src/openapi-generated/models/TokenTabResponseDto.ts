@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type TokenTabResponseDto = {
+export type TokenTabResponseDTO = {
     tokenType?: string;
     keywordKey?: string;
     filter?: boolean;

@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type DateFilterResponseDto = {
+export type PartialDocTypeFieldDTO = {
     field?: string;
     id?: number;
     label?: string;

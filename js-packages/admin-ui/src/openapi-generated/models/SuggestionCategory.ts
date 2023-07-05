@@ -11,4 +11,5 @@ export type SuggestionCategory = {
     name?: string;
     description?: string;
     priority?: number;
+    multiSelect?: boolean;
 };

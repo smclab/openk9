@@ -5,4 +5,5 @@
 export type BucketDTO = {
     name: string;
     description?: string;
+    handleDynamicFilters: boolean;
 };
