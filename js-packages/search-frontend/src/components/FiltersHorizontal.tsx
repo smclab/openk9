@@ -238,6 +238,7 @@ export function useInfiniteSuggestions(
         afterKey: pageParam,
         order: "desc",
         suggestionCategoryId: suggestionCategoryId,
+        range: [0, 50]
       });
       return {
         result: result.result,
