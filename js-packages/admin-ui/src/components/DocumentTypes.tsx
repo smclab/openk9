@@ -1,6 +1,13 @@
 import React from "react";
-import { gql } from "@apollo/client";
-import { useDeleteDocumentTypeMutation, useDocumentTypesQuery } from "../graphql-generated";
+import { QueryResult, gql } from "@apollo/client";
+import {
+  DataSourcesQuery,
+  Exact,
+  InputMaybe,
+  useDataSourcesQuery,
+  useDeleteDocumentTypeMutation,
+  useDocumentTypesQuery,
+} from "../graphql-generated";
 import { formatName, Table } from "./Table";
 import { useMutation } from "@tanstack/react-query";
 import { useRestClient } from "./queryClient";
@@ -8,6 +15,8 @@ import { useToast } from "./ToastProvider";
 import ClayModal, { useModal } from "@clayui/modal";
 import { CustomButtomClay, TextInput, useForm } from "./Form";
 import { useNavigate } from "react-router-dom";
+import { CreateDataIndexFromDocTypesRequest } from "../openapi-generated";
+import { ClaySelect } from "@clayui/form";
 
 export const DocumentTypesQuery = gql`
   query DocumentTypes($searchText: String, $cursor: String) {
@@ -41,8 +50,18 @@ export function DocumentTypes() {
   const [deleteDocumentTypeMutate] = useDeleteDocumentTypeMutation({
     refetchQueries: [DocumentTypesQuery],
   });
-  const createDataIndexModal = useCreateDataIndexModal();
   const restClient = useRestClient();
+  const dataSourcesQuery = useDataSourcesQuery();
+  const [selectDatasource, setSelectDataSource] = React.useState<string | undefined | null>(
+    dataSourcesQuery?.data?.datasources?.edges?.[0]?.node?.id
+  );
+  React.useEffect(() => {
+    if (dataSourcesQuery.data?.datasources?.edges?.[0]?.node?.id) {
+      setSelectDataSource(dataSourcesQuery.data.datasources.edges[0].node.id);
+    }
+  }, [dataSourcesQuery.data]);
+  const createDataIndexModal = useCreateDataIndexModal({ dataSourcesQuery, setSelectDataSource, selectDatasource });
+  if (dataSourcesQuery.loading) return null;
   return (
     <React.Fragment>
       <Table
@@ -86,19 +105,30 @@ export function DocumentTypes() {
   );
 }
 
-function useCreateDataIndexModal() {
+function useCreateDataIndexModal({
+  dataSourcesQuery,
+  setSelectDataSource,
+  selectDatasource,
+}: {
+  dataSourcesQuery: QueryResult<
+    DataSourcesQuery,
+    Exact<{ searchText?: InputMaybe<string> | undefined; cursor?: InputMaybe<string> | undefined }>
+  >;
+  setSelectDataSource: React.Dispatch<React.SetStateAction<string | null | undefined>>;
+  selectDatasource: string | null | undefined;
+}) {
   const restClient = useRestClient();
   const showToast = useToast();
   const createDataIndexMutation = useMutation(
-    async ({ indexName, docTypeIds }: { indexName: string; docTypeIds: Array<string> }) => {
-      return await restClient.dataIndexResource.postApiDatasourceV1DataIndexCreateDataIndexFromDocTypes({
-        indexName,
-        docTypeIds: docTypeIds.map(Number),
-      });
+    async ({ datasourceId, requestBody }: { datasourceId: string; requestBody: { docTypeIds?: Array<number>; indexName?: string } }) => {
+      return await restClient.dataIndexResource.postApiDatasourceV1DataIndexCreateDataIndexFromDocTypes(
+        parseFloat(datasourceId),
+        requestBody
+      );
     },
     {
       onSuccess(data, variables, context) {
-        showToast({ displayType: "info", title: "Data Index created", content: variables.indexName });
+        showToast({ displayType: "info", title: "Data Index created", content: variables.datasourceId });
         modal.onClose();
       },
     }
@@ -115,7 +145,11 @@ function useCreateDataIndexModal() {
     originalValues: undefined,
     isLoading: createDataIndexMutation.isLoading,
     onSubmit(data) {
-      createDataIndexMutation.mutate(data);
+      const convertedData = {
+        indexName: data.indexName,
+        docTypeIds: data.docTypeIds.map((id) => parseFloat(id)),
+      };
+      if (selectDatasource) createDataIndexMutation.mutate({ datasourceId: selectDatasource, requestBody: convertedData });
     },
     getValidationMessages: () => {
       const errorText = (createDataIndexMutation as any).error?.body?.details;
@@ -123,6 +157,7 @@ function useCreateDataIndexModal() {
       return [];
     },
   });
+  const edges = dataSourcesQuery?.data?.datasources?.edges ?? [];
   const open = (documentTypes: Array<{ id?: string | null }>) => {
     form.inputProps("docTypeIds").onChange(documentTypes.flatMap((documentType) => (documentType?.id ? [documentType.id] : [])));
     modal.onOpenChange(true);
@@ -138,6 +173,17 @@ function useCreateDataIndexModal() {
           }}
         >
           <TextInput label="Name" {...form.inputProps("indexName")} />
+          <ClaySelect
+            aria-label="Select Label"
+            id="mySelectId"
+            onChange={(element) => {
+              setSelectDataSource(element.currentTarget.value);
+            }}
+          >
+            {edges.map((item) => (
+              <ClaySelect.Option key={item?.node?.id} label={item?.node?.name || "..."} value={item?.node?.id || 0} />
+            ))}
+          </ClaySelect>
         </form>
       </ClayModal.Body>
       <ClayModal.Footer last={<CustomButtomClay label="Create" action={() => form.submit()} disabled={!form.canSubmit} />} />
