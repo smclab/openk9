@@ -9,6 +9,7 @@ export function ResultTitleTwo({
 }: ResultTitleProps) {
   return (
     <div
+      className="openk9-embeddable-result-title-component"
       css={css`
         font-weight: 500;
         margin-bottom: 8px;
