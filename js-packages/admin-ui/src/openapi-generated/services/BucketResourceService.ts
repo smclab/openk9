@@ -3,14 +3,16 @@
 /* eslint-disable */
 import type { Bucket } from '../models/Bucket';
 import type { BucketDTO } from '../models/BucketDTO';
+import type { BucketResponse } from '../models/BucketResponse';
 import type { K9Column } from '../models/K9Column';
 import type { K9EntityEventBucket } from '../models/K9EntityEventBucket';
 import type { PageBucket } from '../models/PageBucket';
 import type { PageDatasource } from '../models/PageDatasource';
 import type { PageSuggestionCategory } from '../models/PageSuggestionCategory';
+import type { PartialDocTypeFieldDTO } from '../models/PartialDocTypeFieldDTO';
 import type { SuggestionCategory } from '../models/SuggestionCategory';
-import type { TabResponseDto } from '../models/TabResponseDto';
-import type { TemplateResponseDto } from '../models/TemplateResponseDto';
+import type { TabResponseDTO } from '../models/TabResponseDTO';
+import type { TemplateResponseDTO } from '../models/TemplateResponseDTO';
 import type { Tuple2BucketDatasource } from '../models/Tuple2BucketDatasource';
 import type { Tuple2BucketSuggestionCategory } from '../models/Tuple2BucketSuggestionCategory';
 
@@ -78,6 +80,28 @@ requestBody?: BucketDTO,
     }
 
     /**
+     * @returns BucketResponse OK
+     * @throws ApiError
+     */
+    public getApiDatasourceBucketsCurrent(): CancelablePromise<BucketResponse> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/datasource/buckets/current',
+        });
+    }
+
+    /**
+     * @returns PartialDocTypeFieldDTO OK
+     * @throws ApiError
+     */
+    public getApiDatasourceBucketsCurrentDocTypeFieldsSortable(): CancelablePromise<Array<PartialDocTypeFieldDTO>> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/datasource/buckets/current/doc-type-fields-sortable',
+        });
+    }
+
+    /**
      * @returns SuggestionCategory OK
      * @throws ApiError
      */
@@ -89,10 +113,10 @@ requestBody?: BucketDTO,
     }
 
     /**
-     * @returns TabResponseDto OK
+     * @returns TabResponseDTO OK
      * @throws ApiError
      */
-    public getApiDatasourceBucketsCurrentTabs(): CancelablePromise<Array<TabResponseDto>> {
+    public getApiDatasourceBucketsCurrentTabs(): CancelablePromise<Array<TabResponseDTO>> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current/tabs',
@@ -100,10 +124,10 @@ requestBody?: BucketDTO,
     }
 
     /**
-     * @returns TemplateResponseDto OK
+     * @returns TemplateResponseDTO OK
      * @throws ApiError
      */
-    public getApiDatasourceBucketsCurrentTemplates(): CancelablePromise<Array<TemplateResponseDto>> {
+    public getApiDatasourceBucketsCurrentTemplates(): CancelablePromise<Array<TemplateResponseDTO>> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current/templates',
@@ -228,6 +252,10 @@ sortBy?: K9Column,
                 'searchText': searchText,
                 'sortBy': sortBy,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -248,6 +276,10 @@ id: number,
                 'datasourceId': datasourceId,
                 'id': id,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -267,6 +299,10 @@ id: number,
             path: {
                 'datasourceId': datasourceId,
                 'id': id,
+            },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
             },
         });
     }
@@ -302,6 +338,10 @@ sortBy?: K9Column,
                 'searchText': searchText,
                 'sortBy': sortBy,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -323,6 +363,10 @@ requestBody?: number,
             },
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -344,6 +388,10 @@ requestBody?: number,
             },
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 

@@ -2,7 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type TemplateResponseDTO = {
-    name?: string;
-    id?: number;
+export type BucketResponse = {
+    handleDynamicFilters?: boolean;
 };

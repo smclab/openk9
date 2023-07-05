@@ -3,6 +3,7 @@
 /* eslint-disable */
 
 export enum EnrichItemType {
-    ASYNC = 'ASYNC',
-    SYNC = 'SYNC',
+    HTTP_ASYNC = 'HTTP_ASYNC',
+    HTTP_SYNC = 'HTTP_SYNC',
+    GROOVY_SCRIPT = 'GROOVY_SCRIPT',
 }

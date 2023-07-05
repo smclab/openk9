@@ -190,6 +190,10 @@ sortBy?: K9Column,
                 'searchText': searchText,
                 'sortBy': sortBy,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -215,6 +219,10 @@ tail: boolean = true,
             query: {
                 'tail': tail,
             },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 
@@ -234,6 +242,10 @@ id: number,
             path: {
                 'enrichItemId': enrichItemId,
                 'id': id,
+            },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
             },
         });
     }

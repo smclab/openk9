@@ -1,28 +1,27 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TriggerResourceRequest } from '../models/TriggerResourceRequest';
-
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 
-export class TriggerResourceService {
+export class SchedulerResourceService {
 
     constructor(public readonly httpRequest: BaseHttpRequest) {}
 
     /**
-     * @param requestBody 
-     * @returns number OK
+     * @param schedulerId 
+     * @returns string OK
      * @throws ApiError
      */
-    public postApiDatasourceV1Trigger(
-requestBody?: TriggerResourceRequest,
-): CancelablePromise<Array<number>> {
+    public getApiDatasourceSchedulers(
+schedulerId: number,
+): CancelablePromise<Array<string>> {
         return this.httpRequest.request({
-            method: 'POST',
-            url: '/api/datasource/v1/trigger',
-            body: requestBody,
-            mediaType: 'application/json',
+            method: 'GET',
+            url: '/api/datasource/schedulers/{schedulerId}',
+            path: {
+                'schedulerId': schedulerId,
+            },
             errors: {
                 401: `Not Authorized`,
                 403: `Not Allowed`,

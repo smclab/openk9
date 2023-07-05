@@ -24,6 +24,10 @@ requestBody?: ReindexRequestDto,
             url: '/api/datasource/v1/index/reindex',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
         });
     }
 

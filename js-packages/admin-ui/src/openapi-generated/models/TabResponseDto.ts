@@ -2,9 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { TokenTabResponseDto } from './TokenTabResponseDto';
+import type { TokenTabResponseDTO } from './TokenTabResponseDTO';
 
-export type TabResponseDto = {
+export type TabResponseDTO = {
     label?: string;
-    tokens?: Array<TokenTabResponseDto>;
+    tokens?: Array<TokenTabResponseDTO>;
 };

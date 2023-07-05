@@ -8,6 +8,7 @@ export type DocTypeFieldDTO = {
     name: string;
     description?: string;
     searchable: boolean;
+    sortable: boolean;
     boost?: number;
     fieldType: FieldType;
     exclude?: boolean;
