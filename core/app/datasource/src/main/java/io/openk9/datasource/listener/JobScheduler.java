@@ -11,8 +11,8 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.pipeline.actor.ChannelManager;
-import io.openk9.datasource.pipeline.service.ChannelManagerService;
+import io.openk9.datasource.pipeline.actor.MessageGateway;
+import io.openk9.datasource.pipeline.service.MessageGatewayService;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -43,7 +43,7 @@ public class JobScheduler {
 		String tenantName, io.openk9.datasource.model.Scheduler scheduler,
 		boolean startFromFirst) implements Command {}
 	private record ChannelManagerSubscribeResponse(Receptionist.Listing listing) implements Command {}
-	private record Start(ActorRef<ChannelManager.Command> channelManagerRef) implements Command {}
+	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
 
 
 	public static Behavior<Command> create(
@@ -63,7 +63,7 @@ public class JobScheduler {
 			ctx
 				.getSystem()
 				.receptionist()
-				.tell(new ReceptionistMessages.Subscribe<>(ChannelManager.SERVICE_KEY, listingActorRef));
+				.tell(new ReceptionistMessages.Subscribe<>(MessageGateway.SERVICE_KEY, listingActorRef));
 
 			return start(
 				httpPluginDriverClient, transactionInvoker,
@@ -84,7 +84,7 @@ public class JobScheduler {
 				initial(
 					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
 					transactionInvoker,
-					new ChannelManagerService(start.channelManagerRef),
+					new MessageGatewayService(start.channelManagerRef),
 					new ArrayList<>()
 				)
 			)
@@ -99,15 +99,15 @@ public class JobScheduler {
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
 		TransactionInvoker transactionInvoker,
-		ChannelManagerService channelManagerService,
+		MessageGatewayService messageGatewayService,
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
-			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, channelManagerService, jobNames))
+			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, messageGatewayService, jobNames))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, transactionInvoker))
-			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, channelManagerService, jobNames))
-			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, channelManagerService))
+			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, messageGatewayService, jobNames))
+			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, messageGatewayService))
 			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
 			.build();
 
@@ -118,7 +118,7 @@ public class JobScheduler {
 
 		cmsr
 			.listing
-			.getServiceInstances(ChannelManager.SERVICE_KEY)
+			.getServiceInstances(MessageGateway.SERVICE_KEY)
 			.stream()
 			.findFirst()
 			.map(JobScheduler.Start::new)
@@ -134,7 +134,7 @@ public class JobScheduler {
 		TriggerDatasourceInternal triggerDatasourceInternal,
 		ActorContext<Command> ctx,
 		TransactionInvoker transactionInvoker,
-		ChannelManagerService channelManagerService) {
+		MessageGatewayService messageGatewayService) {
 
 		Datasource datasource = triggerDatasourceInternal.datasource;
 		String tenantName = triggerDatasourceInternal.tenantName;
@@ -152,7 +152,7 @@ public class JobScheduler {
 		}
 
 		startScheduler(
-			ctx, datasource, startFromFirst, tenantName, transactionInvoker, channelManagerService);
+			ctx, datasource, startFromFirst, tenantName, transactionInvoker, messageGatewayService);
 
 		return Behaviors.same();
 	}
@@ -204,7 +204,7 @@ public class JobScheduler {
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
 		TransactionInvoker transactionInvoker,
-		ChannelManagerService channelManagerService, List<String> jobNames) {
+		MessageGatewayService messageGatewayService, List<String> jobNames) {
 
 		String tenantName = scheduleDatasourceInternal.tenantName();
 		long datasourceId = scheduleDatasourceInternal.datasourceId();
@@ -251,7 +251,7 @@ public class JobScheduler {
 
 				return initial(
 					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-					transactionInvoker, channelManagerService, newJobNames);
+					transactionInvoker, messageGatewayService, newJobNames);
 
 			}
 		}
@@ -288,7 +288,7 @@ public class JobScheduler {
 		UnScheduleDatasource removeDatasource, ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker, ChannelManagerService channelManagerService, List<String> jobNames) {
+		TransactionInvoker transactionInvoker, MessageGatewayService messageGatewayService, List<String> jobNames) {
 
 		long datasourceId = removeDatasource.datasourceId;
 		String tenantName = removeDatasource.tenantName;
@@ -302,7 +302,7 @@ public class JobScheduler {
 			ctx.getLog().info("Job removed: {}", jobName);
 			return initial(
 				ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-				transactionInvoker, channelManagerService, newJobNames);
+				transactionInvoker, messageGatewayService, newJobNames);
 		}
 
 		ctx.getLog().info("Job not found: {}", jobName);
@@ -351,7 +351,7 @@ public class JobScheduler {
 	private static void startScheduler(
 		ActorContext<Command> ctx, Datasource datasource,
 		boolean startFromFirst, String tenantName, TransactionInvoker transactionInvoker,
-		ChannelManagerService channelManagerService) {
+		MessageGatewayService messageGatewayService) {
 
 
 		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
@@ -376,7 +376,7 @@ public class JobScheduler {
 					s
 						.persist(scheduler)
 						.invoke(() -> {
-							channelManagerService
+							messageGatewayService
 								.queueSpawn(tenantName, scheduler.getScheduleId());
 							ctx
 								.getSelf()

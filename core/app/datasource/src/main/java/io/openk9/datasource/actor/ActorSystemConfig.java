@@ -6,7 +6,7 @@ import akka.cluster.typed.Cluster;
 import akka.management.cluster.bootstrap.ClusterBootstrap;
 import akka.management.javadsl.AkkaManagement;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
-import io.openk9.datasource.pipeline.actor.ChannelManager;
+import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
 import io.openk9.datasource.queue.QueueConnectionProvider;
@@ -84,7 +84,7 @@ public class ActorSystemConfig {
 	@ApplicationScoped
 	public ActorSystemBehaviorInitializer createChannelManager() {
 		return ctx -> ctx.spawnAnonymous(
-			ChannelManager.create(queueConnectionProvider, ingestionPayloadMapper));
+			MessageGateway.create(queueConnectionProvider, ingestionPayloadMapper));
 	}
 
 	@Inject

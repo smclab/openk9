@@ -12,9 +12,12 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.receptionist.Receptionist;
 import akka.actor.typed.receptionist.ServiceKey;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
+import akka.cluster.typed.ClusterSingleton;
+import akka.cluster.typed.SingletonActor;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
@@ -30,29 +33,40 @@ import org.slf4j.Logger;
 import scala.Option;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 
-public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
+public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 
-	public static final ServiceKey<Command> SERVICE_KEY = ServiceKey.create(Command.class, "channel-manager");
+	public static final ServiceKey<Command> SERVICE_KEY =
+		ServiceKey.create(Command.class, "message-gateway");
 
-	private static final String EXCHANGE = "amq.topic";
+	public sealed interface Command {}
+	public enum Start implements Command {INSTANCE}
+	public record Register(String schedulationKey) implements Command {}
+	public record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command, CborSerializable {}
+	public record Deregister(String schedulationKey) implements Command {}
+
+	private record SchedulationResponseWrapper(Schedulation.Response response, long deliveryTag) implements Command {}
+	private record QueueManagerResponseWrapper(QueueManager.Response response) implements Command {}
+	private record Forward(QueueManager.QueueBind queueBind, long deliveryTag, byte[] body) implements Command {}
+	private record ChannelInit(Channel channel) implements Command {}
+	private record ReceptionistSubscribeWrapper(Receptionist.Listing listing) implements Command {}
+
 	private final QueueConnectionProvider rabbitMQClient;
 	private final Logger log;
-	private final Map<QueueBind, List<String>> queues = new HashMap<>();
-	private Channel channel;
 	private final IngestionPayloadMapper ingestionPayloadMapper;
 	private final Deque<Command> lag = new ArrayDeque<>();
+	private final ActorRef<QueueManager.Response> queueManagerAdapter;
 
-	public ChannelManager(
+	private Channel channel;
+	private Set<ActorRef<Command>> messageGateways;
+
+	private ActorRef<QueueManager.Command> queueManager;
+
+	public MessageGateway(
 		ActorContext<Command> context, QueueConnectionProvider rabbitMQClient,
 		IngestionPayloadMapper ingestionPayloadMapper) {
 		super(context);
@@ -68,6 +82,12 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
             .tell(
 				new ReceptionistMessages.Register<>(SERVICE_KEY, context.getSelf(), Option.empty()));
 
+		ActorRef<Receptionist.Listing> receptionistAdapter = context.messageAdapter(Receptionist.Listing.class, ReceptionistSubscribeWrapper::new);
+
+		context.getSystem().receptionist().tell(new ReceptionistMessages.Subscribe<>(SERVICE_KEY, receptionistAdapter));
+
+		this.queueManagerAdapter =
+			context.messageAdapter(QueueManager.Response.class, QueueManagerResponseWrapper::new);
 	}
 
 	public static Behavior<Command> create(
@@ -76,7 +96,7 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 
 		return Behaviors
             .<Command>supervise(
-                Behaviors.setup(ctx -> new ChannelManager(ctx, rabbitMQClient, ingestionPayloadMapper))
+                Behaviors.setup(ctx -> new MessageGateway(ctx, rabbitMQClient, ingestionPayloadMapper))
             )
             .onFailure(
                 SupervisorStrategy.restartWithBackoff(
@@ -98,13 +118,67 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 
 	private Receive<Command> ready() {
 		return newReceiveBuilder()
-			.onMessage(QueueSpawn.class, this::onQueueSpawn)
-			.onMessage(QueueDestroy.class, this::onQueueDestroy)
-			.onMessage(QueueMessage.class, this::onQueueMessage)
+			.onMessage(Register.class, this::onRegister)
+			.onMessage(QueueManagerResponseWrapper.class, this::onQueueManagerResponse)
+			.onMessage(SpawnConsumer.class, this::onSpawnConsumer)
+			.onMessage(Forward.class, this::onForward)
 			.onMessage(SchedulationResponseWrapper.class, this::onSchedulationResponse)
+			.onMessage(Deregister.class, this::onDeregister)
+			.onMessage(ReceptionistSubscribeWrapper.class, this::onReceptionistSubscribe)
 			.onSignal(PreRestart.class, this::destroyChannel)
 			.onSignal(PostStop.class, this::destroyChannel)
 			.build();
+	}
+
+	private Behavior<Command> onSpawnConsumer(SpawnConsumer spawnConsumer) {
+		QueueManager.QueueBind queueBind = spawnConsumer.queueBind;
+
+		try {
+			channel.basicConsume((queueBind).queue(), false, new DefaultConsumer(channel) {
+				@Override
+				public void handleDelivery(
+						String consumerTag, Envelope envelope, AMQP.BasicProperties properties,
+						byte[] body)
+					throws IOException {
+
+					getContext().getSelf().tell(
+						new Forward(queueBind, envelope.getDeliveryTag(), body));
+				}
+			});
+		} catch (IOException e) {
+			log.error("consumer cannot be registered", e);
+			throw new RuntimeException(e);
+		}
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onReceptionistSubscribe(
+		ReceptionistSubscribeWrapper receptionistSubscribeWrapper) {
+
+		this.messageGateways = receptionistSubscribeWrapper
+			.listing()
+			.getServiceInstances(MessageGateway.SERVICE_KEY);
+
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onDeregister(Deregister deregister) {
+		queueManager.tell(new QueueManager.DestroyQueue(deregister.schedulationKey()));
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onQueueManagerResponse(
+		QueueManagerResponseWrapper queueManagerResponseWrapper) {
+
+		QueueManager.Response response = queueManagerResponseWrapper.response();
+
+		if (response instanceof QueueManager.QueueBind) {
+			for (ActorRef<Command> messageGateway : messageGateways) {
+				messageGateway.tell(new SpawnConsumer((QueueManager.QueueBind) response));
+			}
+		}
+
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onStartup(Command command) {
@@ -113,14 +187,14 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onQueueMessage(QueueMessage queueMessage) {
+	private Behavior<Command> onForward(Forward forward) {
 
 		EntityRef<Schedulation.Command> entityRef =
-			getSchedulation(queueMessage.queueBind.routingKey);
+			getSchedulation(forward.queueBind.routingKey());
 
 		IngestionIndexWriterPayload ingestionIndexWriterPayload =
 			Json.decodeValue(
-				Buffer.buffer(queueMessage.body),
+				Buffer.buffer(forward.body),
 				IngestionIndexWriterPayload.class
 			);
 
@@ -133,7 +207,7 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 				.messageAdapter(
 						Schedulation.Response.class,
 						response ->
-							new SchedulationResponseWrapper(response, queueMessage.deliveryTag)
+							new SchedulationResponseWrapper(response, forward.deliveryTag)
 				);
 
 		entityRef.tell(new Schedulation.Ingest(payload, replyTo));
@@ -141,12 +215,14 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onSchedulationResponse(SchedulationResponseWrapper cartResponse) {
+	private Behavior<Command> onSchedulationResponse(
+		SchedulationResponseWrapper schedulationResponseWrapper) {
+
 		try {
-			if (cartResponse.response == Schedulation.Success.INSTANCE) {
-				channel.basicAck(cartResponse.deliveryTag, false);
+			if (schedulationResponseWrapper.response == Schedulation.Success.INSTANCE) {
+				channel.basicAck(schedulationResponseWrapper.deliveryTag, false);
 			} else {
-				channel.basicNack(cartResponse.deliveryTag, false, false);
+				channel.basicNack(schedulationResponseWrapper.deliveryTag, false, false);
 			}
 		}
 		catch (Exception e) {
@@ -202,6 +278,11 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 
 		log.info("Rabbitmq channel created.. channel number: {}", channel.getChannelNumber());
 
+		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
+
+		this.queueManager =
+			clusterSingleton.init(SingletonActor.of(QueueManager.create(channel), "queue-manager"));
+
 		while (!lag.isEmpty()) {
 			getContext().getSelf().tell(lag.pop());
 		}
@@ -210,77 +291,20 @@ public class ChannelManager extends AbstractBehavior<ChannelManager.Command> {
 
 	}
 
-	private Behavior<Command> onQueueSpawn(QueueSpawn queueSpawn) {
-		registerQueue(queueSpawn.entityId, queueSpawn.entityId, (queueBind) -> {
-			try {
-				// register a consumer for messages
-				return channel.basicConsume(queueBind.queue, false, new DefaultConsumer(channel) {
-					@Override
-					public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-						log.info("consuming {}", Buffer.buffer(body));
-						getContext().getSelf().tell(new QueueMessage(queueBind, envelope.getDeliveryTag(), body));
-					}
-				});
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		});
+	private Behavior<Command> onRegister(Register register) {
+
+		queueManager.tell(new QueueManager.GetQueue(register.schedulationKey, queueManagerAdapter));
 
 		return Behaviors.same();
-	}
-
-	private Behavior<Command> onQueueDestroy(QueueDestroy queueDestroy) {
-		unregisterQueue(new QueueBind(queueDestroy.entityId, EXCHANGE, queueDestroy.entityId));
-		return Behaviors.same();
-	}
-
-	private void unregisterQueue(QueueBind queueBind) {
-		try {
-			List<String> consumerTags = queues.get(queueBind);
-			if (consumerTags != null) {
-				log.info("unregister: {}", queueBind);
-				channel.queueDelete(queueBind.queue);
-				queues.remove(queueBind);
-			}
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private void registerQueue(String queue, String routingKey, Function<QueueBind, String> createConsumer) {
-		QueueBind queueBind = new QueueBind(queue, EXCHANGE, routingKey);
-		if (!queues.containsKey(queueBind)) {
-			try {
-				log.info("register: {}", queueBind);
-				channel.queueDeclare(queueBind.queue, true, false, true, null);
-				channel.queueBind(queueBind.queue, queueBind.exchange, queueBind.routingKey);
-				ArrayList<String> consumerTags = new ArrayList<>();
-				consumerTags.add(createConsumer.apply(queueBind));
-				queues.put(queueBind, consumerTags);
-			}
-			catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
 	}
 
 	private EntityRef<Schedulation.Command> getSchedulation(String schedulationId) {
+
 		ActorSystem<?> actorSystem = getContext().getSystem();
+
 		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
+
 		return clusterSharding.entityRefFor(Schedulation.ENTITY_TYPE_KEY, schedulationId);
 	}
 
-
-	public sealed interface Command extends CborSerializable {}
-	public enum Start implements Command {INSTANCE}
-	public record QueueSpawn(String entityId) implements Command {}
-	public record QueueDestroy(String entityId) implements Command {}
-
-	private record QueueBind(String queue, String exchange, String routingKey) {}
-
-	private record SchedulationResponseWrapper(Schedulation.Response response, long deliveryTag) implements Command { }
-
-	private record QueueMessage(QueueBind queueBind, long deliveryTag, byte[] body) implements Command { }
-	private record ChannelInit(Channel channel) implements Command {}
 }

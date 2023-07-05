@@ -14,6 +14,7 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.service.MessageGatewayService;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -43,7 +44,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private record SetScheduler(Scheduler scheduler) implements Command {}
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
 	private record ChannelManagerSubscribeResponse(Receptionist.Listing listing) implements Command {}
-	private record Start(ActorRef<ChannelManager.Command> replyTo) implements Command {}
+	private record Start(ActorRef<MessageGateway.Command> replyTo) implements Command {}
 
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
@@ -66,7 +67,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final Logger log;
 	private Ingest currentIngest;
 	private Scheduler scheduler;
-	private ActorRef<ChannelManager.Command> channelManagerRef;
+	private MessageGatewayService messageGatewayService;
 
 	public Schedulation(
 		ActorContext<Command> context,
@@ -88,7 +89,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		context
 			.getSystem()
 			.receptionist()
-			.tell(new ReceptionistMessages.Subscribe<>(ChannelManager.SERVICE_KEY, listingActorRef));
+			.tell(new ReceptionistMessages.Subscribe<>(MessageGateway.SERVICE_KEY, listingActorRef));
 	
 	}
 
@@ -125,7 +126,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		cmsr
 			.listing
-			.getServiceInstances(ChannelManager.SERVICE_KEY)
+			.getServiceInstances(MessageGateway.SERVICE_KEY)
 			.stream()
 			.findFirst()
 			.map(Start::new)
@@ -183,7 +184,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onStart(Start start) {
-		this.channelManagerRef = start.replyTo;
+		this.messageGatewayService = new MessageGatewayService(start.replyTo);
 		VertxUtil.runOnContext(() -> txInvoker
 			.withStatelessTransaction(key.tenantId, s -> s
 				.createQuery("select s " +
@@ -299,9 +300,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			)
 		);
 
-		channelManagerRef.tell(
-			new ChannelManager.QueueDestroy(
-				SchedulationKeyUtils.getValue(key.tenantId, key.scheduleId)));
+		messageGatewayService.queueDestroy(key.tenantId, key.scheduleId);
 
 		logBehavior(STOPPED_BEHAVIOR);
 
