@@ -12,6 +12,7 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.javadsl.ReceiveBuilder;
 import akka.actor.typed.receptionist.Receptionist;
 import akka.actor.typed.receptionist.ServiceKey;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
@@ -109,6 +110,13 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 		return init();
 	}
 
+	@Override
+	public ReceiveBuilder<Command> newReceiveBuilder() {
+		return super.newReceiveBuilder()
+			.onMessage(ReceptionistSubscribeWrapper.class, this::onReceptionistSubscribe);
+
+	}
+
 	private Receive<Command> init() {
 		return newReceiveBuilder()
 			.onMessageEquals(Start.INSTANCE, this::onStart)
@@ -124,7 +132,6 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 			.onMessage(Forward.class, this::onForward)
 			.onMessage(SchedulationResponseWrapper.class, this::onSchedulationResponse)
 			.onMessage(Deregister.class, this::onDeregister)
-			.onMessage(ReceptionistSubscribeWrapper.class, this::onReceptionistSubscribe)
 			.onSignal(PreRestart.class, this::destroyChannel)
 			.onSignal(PostStop.class, this::destroyChannel)
 			.build();
@@ -265,12 +272,10 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 			.subscribe()
 			.with((c) -> {});
 
-		return Behaviors
-			.receive(Command.class)
+		return newReceiveBuilder()
 			.onMessage(ChannelInit.class, this::onChannelInit)
 			.build();
 	}
-
 
 	private Behavior<Command> onChannelInit(ChannelInit ci) {
 
