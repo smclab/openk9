@@ -197,7 +197,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			return this.next();
 		}
 		else {
-			log.info("{} ingestion is done", key);
+			log.info("{} ingestion is done, replyTo {}", key, currentIngest.replyTo);
 
 			currentIngest.replyTo.tell(Success.INSTANCE);
 
@@ -217,7 +217,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		EnrichPipeline.Response response = eprw.response;
 
 		if (response instanceof EnrichPipeline.Success) {
-			log.info("enrich pipeline success for content-id {}", currentIngest.payload.getContentId());
+			log.info("enrich pipeline success for content-id {} replyTo {}", currentIngest.payload.getContentId(), currentIngest.replyTo);
 			currentIngest.replyTo.tell(Success.INSTANCE);
 		}
 		else if (response instanceof EnrichPipeline.Failure) {
