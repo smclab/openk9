@@ -101,7 +101,9 @@ public class SchedulationConsumer extends DefaultConsumer {
 
 	private static Duration getTimeout(ActorContext<?> context) {
 		Config config = context.getSystem().settings().config();
+
 		String configPath = "io.openk9.schedulation.consumer.timeout";
+
 		if (config.hasPathOrNull(configPath)) {
 			if (config.getIsNull(configPath)) {
 				return Duration.ofMinutes(10);

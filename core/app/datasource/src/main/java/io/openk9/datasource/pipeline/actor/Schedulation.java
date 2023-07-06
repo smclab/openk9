@@ -6,9 +6,11 @@ import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.javadsl.ReceiveBuilder;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
+import com.typesafe.config.Config;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Scheduler;
@@ -20,6 +22,8 @@ import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -36,12 +40,13 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 
 	public sealed interface Command extends CborSerializable {}
-	public enum SetDataIndex implements Command {INSTANCE}
-	public enum SetStatusFinished implements Command {INSTANCE}
 	public record Ingest(DataPayload payload, ActorRef<Response> replyTo) implements Command {}
+	private enum SetDataIndex implements Command {INSTANCE}
+	private enum SetStatusFinished implements Command {INSTANCE}
 	private record SetScheduler(Scheduler scheduler) implements Command {}
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
 	private enum Start implements Command {INSTANCE}
+	private enum Tick implements Command {INSTANCE}
 
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
@@ -63,6 +68,8 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private Ingest currentIngest;
 	private Scheduler scheduler;
+	private LocalDateTime lastRequest = LocalDateTime.now();
+	private Duration timeout;
 
 	public Schedulation(
 		ActorContext<Command> context,
@@ -74,6 +81,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		this.key = key;
 		this.txInvoker = txInvoker;
 		this.datasourceService = datasourceService;
+		this.timeout = getTimeout(context);
 
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
@@ -93,6 +101,11 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	@Override
 	public Receive<Command> createReceive() {
 		return init();
+	}
+
+	@Override
+	public ReceiveBuilder<Command> newReceiveBuilder() {
+		return super.newReceiveBuilder().onMessageEquals(Tick.INSTANCE, this::onTick);
 	}
 
 	private Receive<Command> init() {
@@ -162,7 +175,11 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 				.invoke(scheduler -> getContext().getSelf().tell(new SetScheduler(scheduler)))
 			)
 		);
-		return Behaviors.same();
+
+		return Behaviors.withTimers(timer -> {
+			timer.startTimerAtFixedRate(Tick.INSTANCE, Duration.ofSeconds(1));
+			return Behaviors.same();
+		});
 	}
 
 	private Behavior<Command> onSetScheduler(SetScheduler setScheduler) {
@@ -172,6 +189,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 	private Behavior<Command> onIngestReady(Ingest ingest) {
 		this.currentIngest = ingest;
+		this.lastRequest = LocalDateTime.now();
 
 		String indexName = getIndexName();
 
@@ -281,6 +299,18 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 	}
 
+	private Behavior<Command> onTick() {
+		log.info("Check {} expiration", key);
+		if (Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0) {
+			log.info("{} ingestion is expired ", key);
+
+			getContext().getSelf().tell(SetDataIndex.INSTANCE);
+
+			return this.finish();
+		}
+		return Behaviors.same();
+	}
+
 	private String getIndexName() {
 		String indexName = null;
 		DataIndex newDataIndex = scheduler.getNewDataIndex();
@@ -297,6 +327,23 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 	private void logBehavior(String behavior) {
 		log.info("Schedulation with key {} behavior is {}", key, behavior);
+	}
+
+	private static Duration getTimeout(ActorContext<?> context) {
+		Config config = context.getSystem().settings().config();
+
+		String configPath = "io.openk9.schedulation.timeout";
+
+		if (config.hasPathOrNull(configPath)) {
+			if (config.getIsNull(configPath)) {
+				return Duration.ofHours(6);
+			} else {
+				return config.getDuration(configPath);
+			}
+		} else {
+			return Duration.ofHours(6);
+		}
+
 	}
 
 }
