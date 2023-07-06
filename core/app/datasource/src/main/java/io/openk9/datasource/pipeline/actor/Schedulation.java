@@ -3,18 +3,17 @@ package io.openk9.datasource.pipeline.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.SupervisorStrategy;
-import akka.actor.typed.internal.receptionist.ReceptionistMessages;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import akka.actor.typed.receptionist.Receptionist;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
+import akka.cluster.typed.ClusterSingleton;
+import akka.cluster.typed.SingletonActor;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
-import io.openk9.datasource.pipeline.service.MessageGatewayService;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -43,8 +42,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	public record Ingest(DataPayload payload, ActorRef<Response> replyTo) implements Command {}
 	private record SetScheduler(Scheduler scheduler) implements Command {}
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
-	private record ChannelManagerSubscribeResponse(Receptionist.Listing listing) implements Command {}
-	private record Start(ActorRef<MessageGateway.Command> replyTo) implements Command {}
+	private enum Start implements Command {INSTANCE}
 
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
@@ -67,7 +65,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final Logger log;
 	private Ingest currentIngest;
 	private Scheduler scheduler;
-	private MessageGatewayService messageGatewayService;
 
 	public Schedulation(
 		ActorContext<Command> context,
@@ -81,16 +78,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		this.datasourceService = datasourceService;
 		this.log = context.getLog();
 
-		ActorRef<Receptionist.Listing> listingActorRef = 
-			context.messageAdapter(
-				Receptionist.Listing.class, 
-				ChannelManagerSubscribeResponse::new);
-		
-		context
-			.getSystem()
-			.receptionist()
-			.tell(new ReceptionistMessages.Subscribe<>(MessageGateway.SERVICE_KEY, listingActorRef));
-	
+		getContext().getSelf().tell(Start.INSTANCE);
 	}
 
 	public static Behavior<Command> create(
@@ -114,28 +102,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		logBehavior(INIT_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessage(ChannelManagerSubscribeResponse.class, this::onChannelManagerSubscribeResponse)
 			.onMessage(Start.class, this::onStart)
 			.onMessage(SetScheduler.class, this::onSetScheduler)
 			.onAnyMessage(this::onBusy)
 			.build();
-	}
-
-
-	private Behavior<Command> onChannelManagerSubscribeResponse(ChannelManagerSubscribeResponse cmsr) {
-
-		cmsr
-			.listing
-			.getServiceInstances(MessageGateway.SERVICE_KEY)
-			.stream()
-			.findFirst()
-			.map(Start::new)
-			.ifPresentOrElse(
-				cmd -> getContext().getSelf().tell(cmd),
-				() -> log.error("ChannelManager not found"));
-
-		return Behaviors.same();
-
 	}
 
 	private Receive<Command> ready() {
@@ -168,11 +138,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> next() {
 		logBehavior(NEXT_BEHAVIOR);
 
-		if (currentIngest != null && currentIngest.payload.isLast()) {
-			getContext().getSelf().tell(SetDataIndex.INSTANCE);
-			return this.finish();
-		}
-
 		currentIngest = null;
 
 		if (!lag.isEmpty()) {
@@ -184,7 +149,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onStart(Start start) {
-		this.messageGatewayService = new MessageGatewayService(start.replyTo);
 		VertxUtil.runOnContext(() -> txInvoker
 			.withStatelessTransaction(key.tenantId, s -> s
 				.createQuery("select s " +
@@ -216,7 +180,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		DataPayload dataPayload = ingest.payload;
 
-		if (!dataPayload.isLast()) {
+		if (dataPayload.getContentId() != null) {
 			dataPayload.setIndexName(indexName);
 
 			ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
@@ -231,7 +195,13 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 			return this.busy();
 		}
+		else if (!dataPayload.isLast()) {
+			currentIngest.replyTo.tell(new Failure("content-id is null"));
+			return this.next();
+		}
 		else {
+			log.info("{} ingestion is done", key);
+
 			currentIngest.replyTo.tell(Success.INSTANCE);
 
 			getContext().getSelf().tell(SetDataIndex.INSTANCE);
@@ -250,7 +220,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		EnrichPipeline.Response response = eprw.response;
 
 		if (response instanceof EnrichPipeline.Success) {
-			log.info("enrich pipeline success");
+			log.info("enrich pipeline success for content-id {}", currentIngest.payload.getContentId());
 			currentIngest.replyTo.tell(Success.INSTANCE);
 		}
 		else if (response instanceof EnrichPipeline.Failure) {
@@ -300,7 +270,12 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			)
 		);
 
-		messageGatewayService.queueDestroy(key.tenantId, key.scheduleId);
+		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
+		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
+			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
+
+		queueManager.tell(new QueueManager.DestroyQueue(
+			SchedulationKeyUtils.getValue(key.tenantId(), key.scheduleId())));
 
 		logBehavior(STOPPED_BEHAVIOR);
 

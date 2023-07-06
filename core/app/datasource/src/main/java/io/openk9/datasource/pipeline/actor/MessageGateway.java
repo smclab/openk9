@@ -47,9 +47,8 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 	public sealed interface Command {}
 	public enum Start implements Command {INSTANCE}
 	public record Register(String schedulationKey) implements Command {}
-	public record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command, CborSerializable {}
 	public record Deregister(String schedulationKey) implements Command {}
-
+	private record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command, CborSerializable {}
 	private record SchedulationResponseWrapper(Schedulation.Response response, long deliveryTag) implements Command {}
 	private record QueueManagerResponseWrapper(QueueManager.Response response) implements Command {}
 	private record Forward(QueueManager.QueueBind queueBind, long deliveryTag, byte[] body) implements Command {}
@@ -291,8 +290,8 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 
 		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
 
-		this.queueManager =
-			clusterSingleton.init(SingletonActor.of(QueueManager.create(), "queue-manager"));
+		this.queueManager = clusterSingleton.init(
+			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
 
 		while (!lag.isEmpty()) {
 			getContext().getSelf().tell(lag.pop());

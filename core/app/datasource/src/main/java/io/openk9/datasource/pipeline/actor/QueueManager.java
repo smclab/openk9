@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class QueueManager extends AbstractBehavior<QueueManager.Command> {
+	public static final String INSTANCE_NAME = "queue-manager";
 	private static final String EXCHANGE = "amq.topic";
 
 	public sealed interface Command extends CborSerializable {}

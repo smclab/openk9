@@ -11,8 +11,8 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
-import io.openk9.datasource.pipeline.service.MessageGatewayService;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -84,7 +84,7 @@ public class JobScheduler {
 				initial(
 					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
 					transactionInvoker,
-					new MessageGatewayService(start.channelManagerRef),
+					start.channelManagerRef,
 					new ArrayList<>()
 				)
 			)
@@ -99,15 +99,15 @@ public class JobScheduler {
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
 		TransactionInvoker transactionInvoker,
-		MessageGatewayService messageGatewayService,
+		ActorRef<MessageGateway.Command> messageGateway,
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
-			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, messageGatewayService, jobNames))
+			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, messageGateway, jobNames))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, transactionInvoker))
-			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, messageGatewayService, jobNames))
-			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, messageGatewayService))
+			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, messageGateway, jobNames))
+			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, messageGateway))
 			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
 			.build();
 
@@ -134,7 +134,7 @@ public class JobScheduler {
 		TriggerDatasourceInternal triggerDatasourceInternal,
 		ActorContext<Command> ctx,
 		TransactionInvoker transactionInvoker,
-		MessageGatewayService messageGatewayService) {
+		ActorRef<MessageGateway.Command> messageGateway) {
 
 		Datasource datasource = triggerDatasourceInternal.datasource;
 		String tenantName = triggerDatasourceInternal.tenantName;
@@ -152,7 +152,7 @@ public class JobScheduler {
 		}
 
 		startScheduler(
-			ctx, datasource, startFromFirst, tenantName, transactionInvoker, messageGatewayService);
+			ctx, datasource, startFromFirst, tenantName, transactionInvoker, messageGateway);
 
 		return Behaviors.same();
 	}
@@ -204,7 +204,7 @@ public class JobScheduler {
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
 		TransactionInvoker transactionInvoker,
-		MessageGatewayService messageGatewayService, List<String> jobNames) {
+		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
 
 		String tenantName = scheduleDatasourceInternal.tenantName();
 		long datasourceId = scheduleDatasourceInternal.datasourceId();
@@ -288,7 +288,7 @@ public class JobScheduler {
 		UnScheduleDatasource removeDatasource, ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker, MessageGatewayService messageGatewayService, List<String> jobNames) {
+		TransactionInvoker transactionInvoker, ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
 
 		long datasourceId = removeDatasource.datasourceId;
 		String tenantName = removeDatasource.tenantName;
@@ -351,7 +351,7 @@ public class JobScheduler {
 	private static void startScheduler(
 		ActorContext<Command> ctx, Datasource datasource,
 		boolean startFromFirst, String tenantName, TransactionInvoker transactionInvoker,
-		MessageGatewayService messageGatewayService) {
+		ActorRef<MessageGateway.Command> messageGateway) {
 
 
 		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
@@ -376,8 +376,9 @@ public class JobScheduler {
 					s
 						.persist(scheduler)
 						.invoke(() -> {
-							messageGatewayService
-								.queueSpawn(tenantName, scheduler.getScheduleId());
+							messageGateway.tell(new MessageGateway.Register(
+								SchedulationKeyUtils.getValue(
+									tenantName, scheduler.getScheduleId())));
 							ctx
 								.getSelf()
 								.tell(new InvokePluginDriverInternal(tenantName, scheduler, startFromFirst));
