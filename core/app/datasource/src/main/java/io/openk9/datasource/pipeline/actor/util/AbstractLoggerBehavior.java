@@ -13,7 +13,7 @@ public abstract class AbstractLoggerBehavior<T> extends AbstractBehavior<T> {
 	}
 
 	private void printActorSetup() {
-		log.info("Actor {} setup with {}", this.getClass().getSimpleName(), this);
+		log.info("Actor {} setup with {}", this.getClass().getSimpleName(), getContext().getSelf());
 	}
 
 	protected final Logger log;

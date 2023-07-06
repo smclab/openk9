@@ -9,6 +9,7 @@ import akka.actor.typed.Signal;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.internal.receptionist.ReceptionistMessages;
 import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.AskPattern;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.ReceiveBuilder;
@@ -49,9 +50,7 @@ public class MessageGateway
 	public record Register(String schedulationKey) implements Command {}
 	public record Deregister(String schedulationKey) implements Command {}
 	private record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command, CborSerializable {}
-	private record SchedulationResponseWrapper(Schedulation.Response response, long deliveryTag) implements Command {}
 	private record QueueManagerResponseWrapper(QueueManager.Response response) implements Command {}
-	private record Forward(QueueManager.QueueBind queueBind, long deliveryTag, byte[] body) implements Command {}
 	private record ChannelInit(Channel channel) implements Command {}
 	private record ReceptionistSubscribeWrapper(Receptionist.Listing listing) implements Command {}
 
@@ -126,8 +125,6 @@ public class MessageGateway
 			.onMessage(Register.class, this::onRegister)
 			.onMessage(QueueManagerResponseWrapper.class, this::onQueueManagerResponse)
 			.onMessage(SpawnConsumer.class, this::onSpawnConsumer)
-			.onMessage(Forward.class, this::onForward)
-			.onMessage(SchedulationResponseWrapper.class, this::onSchedulationResponse)
 			.onMessage(Deregister.class, this::onDeregister)
 			.onSignal(PreRestart.class, this::destroyChannel)
 			.onSignal(PostStop.class, this::destroyChannel)
@@ -145,11 +142,47 @@ public class MessageGateway
 						byte[] body)
 					throws IOException {
 
+
 					log.info(
 						"consuming deliveryTag {} on actor {}",
 						envelope.getDeliveryTag(), getContext().getSelf());
-					getContext().getSelf().tell(
-						new Forward(queueBind, envelope.getDeliveryTag(), body));
+
+					EntityRef<Schedulation.Command> entityRef =
+						getSchedulation(queueBind.routingKey());
+
+					IngestionIndexWriterPayload ingestionIndexWriterPayload =
+						Json.decodeValue(
+							Buffer.buffer(body),
+							IngestionIndexWriterPayload.class
+						);
+
+					DataPayload payload =
+						ingestionPayloadMapper.map(
+							ingestionIndexWriterPayload.getIngestionPayload());
+
+					AskPattern.ask(
+						entityRef,
+						(ActorRef<Schedulation.Response> replyTo) ->
+							new Schedulation.Ingest(payload, replyTo),
+						Duration.ofSeconds(30),
+						getContext().getSystem().scheduler()
+					).whenComplete((r, t) -> {
+						try {
+							if (t != null) {
+								log.info("nack message with deliveryTag {} on actor {}", envelope.getDeliveryTag(), getContext().getSelf());
+								channel.basicNack(envelope.getDeliveryTag(), false, false);
+							} else if (r instanceof Schedulation.Failure) {
+								log.info("nack message with deliveryTag {} on actor {}", envelope.getDeliveryTag(), getContext().getSelf());
+								channel.basicNack(envelope.getDeliveryTag(), false, false);
+							} else {
+								log.info("ack message with deliveryTag {} on actor {}", envelope.getDeliveryTag(), getContext().getSelf());
+								channel.basicAck(envelope.getDeliveryTag(), false);
+							}
+						}
+						catch (Exception e) {
+							throw new RuntimeException(e);
+						}
+					});
 				}
 			});
 		} catch (IOException e) {
@@ -191,53 +224,6 @@ public class MessageGateway
 	private Behavior<Command> onStartup(Command command) {
 		this.lag.add(command);
 		this.log.info("there are {} commands waiting", lag.size());
-		return Behaviors.same();
-	}
-
-	private Behavior<Command> onForward(Forward forward) {
-
-		EntityRef<Schedulation.Command> entityRef =
-			getSchedulation(forward.queueBind.routingKey());
-
-		IngestionIndexWriterPayload ingestionIndexWriterPayload =
-			Json.decodeValue(
-				Buffer.buffer(forward.body),
-				IngestionIndexWriterPayload.class
-			);
-
-		DataPayload payload =
-			ingestionPayloadMapper.map(
-				ingestionIndexWriterPayload.getIngestionPayload());
-
-		ActorRef<Schedulation.Response> replyTo =
-			getContext()
-				.messageAdapter(
-						Schedulation.Response.class,
-						response ->
-							new SchedulationResponseWrapper(response, forward.deliveryTag)
-				);
-
-		entityRef.tell(new Schedulation.Ingest(payload, replyTo));
-
-		return Behaviors.same();
-	}
-
-	private Behavior<Command> onSchedulationResponse(
-		SchedulationResponseWrapper schedulationResponseWrapper) {
-		long deliveryTag = schedulationResponseWrapper.deliveryTag;
-
-		try {
-			if (schedulationResponseWrapper.response == Schedulation.Success.INSTANCE) {
-				log.info("ack message with deliveryTag {} on actor {}", deliveryTag, getContext().getSelf());
-				channel.basicAck(deliveryTag, false);
-			} else {
-				log.info("nack message with deliveryTag {} on actor {}", deliveryTag, getContext().getSelf());
-				channel.basicNack(deliveryTag, false, false);
-			}
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
 		return Behaviors.same();
 	}
 
