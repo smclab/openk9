@@ -8,7 +8,6 @@ import akka.actor.typed.PreRestart;
 import akka.actor.typed.Signal;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.internal.receptionist.ReceptionistMessages;
-import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
@@ -24,13 +23,13 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
+import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
-import org.slf4j.Logger;
 import scala.Option;
 
 import java.io.IOException;
@@ -39,7 +38,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Set;
 
-public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
+public class MessageGateway
+	extends AbstractLoggerBehavior<MessageGateway.Command> {
 
 	public static final ServiceKey<Command> SERVICE_KEY =
 		ServiceKey.create(Command.class, "message-gateway");
@@ -56,7 +56,6 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 	private record ReceptionistSubscribeWrapper(Receptionist.Listing listing) implements Command {}
 
 	private final QueueConnectionProvider connectionProvider;
-	private final Logger log;
 	private final IngestionPayloadMapper ingestionPayloadMapper;
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private final ActorRef<QueueManager.Response> queueManagerAdapter;
@@ -71,7 +70,6 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 		IngestionPayloadMapper ingestionPayloadMapper) {
 		super(context);
 		this.connectionProvider = connectionProvider;
-		this.log = context.getLog();
 		this.ingestionPayloadMapper = ingestionPayloadMapper;
 
 		context.getSelf().tell(Start.INSTANCE);
@@ -294,7 +292,7 @@ public class MessageGateway extends AbstractBehavior<MessageGateway.Command> {
 			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
 
 		while (!lag.isEmpty()) {
-			getContext().getSelf().tell(lag.pop());
+			getContext().getSelf().tell(lag.removeLast());
 		}
 
 		return ready();

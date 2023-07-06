@@ -3,7 +3,6 @@ package io.openk9.datasource.pipeline.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.SupervisorStrategy;
-import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
@@ -14,17 +13,17 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
-import org.slf4j.Logger;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-public class Schedulation extends AbstractBehavior<Schedulation.Command> {
+public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 	public static final EntityTypeKey<Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Command.class, "schedulation");
@@ -62,7 +61,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final TransactionInvoker txInvoker;
 	private final DatasourceService datasourceService;
 	private final Deque<Command> lag = new ArrayDeque<>();
-	private final Logger log;
 	private Ingest currentIngest;
 	private Scheduler scheduler;
 
@@ -76,7 +74,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		this.key = key;
 		this.txInvoker = txInvoker;
 		this.datasourceService = datasourceService;
-		this.log = context.getLog();
 
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
@@ -271,6 +268,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		);
 
 		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
+
 		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
 			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
 

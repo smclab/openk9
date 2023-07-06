@@ -3,20 +3,19 @@ package io.openk9.datasource.pipeline.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.SupervisorStrategy;
-import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import com.rabbitmq.client.Channel;
+import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
-import org.slf4j.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.util.HashSet;
 import java.util.Set;
 
-public class QueueManager extends AbstractBehavior<QueueManager.Command> {
+public class QueueManager extends AbstractLoggerBehavior<QueueManager.Command> {
 	public static final String INSTANCE_NAME = "queue-manager";
 	private static final String EXCHANGE = "amq.topic";
 
@@ -32,13 +31,11 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 	private Channel channel;
 	private final QueueConnectionProvider connectionProvider;
 
-	private final Logger log;
 	private final Set<QueueBind> queueBinds = new HashSet<>();
 
 	public QueueManager(ActorContext<Command> context) {
 		super(context);
 		this.connectionProvider = CDI.current().select(QueueConnectionProvider.class).get();
-		this.log = context.getLog();
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
 
