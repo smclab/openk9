@@ -16,7 +16,7 @@ import java.util.List;
 @RolesAllowed("k9-admin")
 public class SchedulerResource {
 
-	@Path("/{schedulerId}")
+	@Path("/{schedulerId}/getDiff")
 	@GET
 	public Uni<List<String>> getDeletedContentIds(@PathParam("schedulerId") long schedulerId) {
 		return schedulerService.getDiff(schedulerId);
