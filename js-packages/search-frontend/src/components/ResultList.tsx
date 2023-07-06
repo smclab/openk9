@@ -246,10 +246,11 @@ export function InfiniteResults<E>({
         height: "100%",
         overflowY: "auto",
         position: "relative",
-        ".os-theme-dark.os-host-transition > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle":
-          {
-            width: "3px",
-          },
+      }}
+      options={{
+        overflowBehavior: {
+          x: "hidden",
+        },
       }}
     >
       {results?.data?.pages[0].total && results.data.pages[0].total > 0 ? (

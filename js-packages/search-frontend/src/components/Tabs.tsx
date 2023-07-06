@@ -26,11 +26,6 @@ function Tabs({
         position: "relative",
         overflowX: "auto",
         height: "40px",
-        ...{
-          "::-webkit-scrollbar": {
-            width: "8px",
-          },
-        },
       }}
     >
       <div
