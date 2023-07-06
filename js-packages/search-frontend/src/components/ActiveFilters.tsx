@@ -27,11 +27,6 @@ export function ActiveFilter({
         position: "relative",
         overflowX: "auto",
         height: "40px",
-        ...{
-          "::-webkit-scrollbar": {
-            width: "8px",
-          },
-        },
       }}
     >
       <div
