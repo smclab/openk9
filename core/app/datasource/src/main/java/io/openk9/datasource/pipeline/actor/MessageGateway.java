@@ -1,7 +1,6 @@
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.PostStop;
 import akka.actor.typed.PreRestart;
@@ -9,28 +8,18 @@ import akka.actor.typed.Signal;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.internal.receptionist.ReceptionistMessages;
 import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.AskPattern;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.ReceiveBuilder;
 import akka.actor.typed.receptionist.Receptionist;
 import akka.actor.typed.receptionist.ServiceKey;
-import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
-import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
-import io.openk9.datasource.processor.payload.DataPayload;
-import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
 import scala.Option;
 
 import java.io.IOException;
@@ -135,56 +124,11 @@ public class MessageGateway
 		QueueManager.QueueBind queueBind = spawnConsumer.queueBind;
 
 		try {
-			channel.basicConsume((queueBind).queue(), false, new DefaultConsumer(channel) {
-				@Override
-				public void handleDelivery(
-						String consumerTag, Envelope envelope, AMQP.BasicProperties properties,
-						byte[] body)
-					throws IOException {
-
-
-					log.info(
-						"consuming deliveryTag {} on actor {}",
-						envelope.getDeliveryTag(), getContext().getSelf());
-
-					EntityRef<Schedulation.Command> entityRef =
-						getSchedulation(queueBind.routingKey());
-
-					IngestionIndexWriterPayload ingestionIndexWriterPayload =
-						Json.decodeValue(
-							Buffer.buffer(body),
-							IngestionIndexWriterPayload.class
-						);
-
-					DataPayload payload =
-						ingestionPayloadMapper.map(
-							ingestionIndexWriterPayload.getIngestionPayload());
-
-					AskPattern.ask(
-						entityRef,
-						(ActorRef<Schedulation.Response> replyTo) ->
-							new Schedulation.Ingest(payload, replyTo),
-						Duration.ofSeconds(30),
-						getContext().getSystem().scheduler()
-					).whenComplete((r, t) -> {
-						try {
-							if (t != null) {
-								log.info("nack message with deliveryTag {} on actor {}", envelope.getDeliveryTag(), getContext().getSelf());
-								channel.basicNack(envelope.getDeliveryTag(), false, false);
-							} else if (r instanceof Schedulation.Failure) {
-								log.info("nack message with deliveryTag {} on actor {}", envelope.getDeliveryTag(), getContext().getSelf());
-								channel.basicNack(envelope.getDeliveryTag(), false, false);
-							} else {
-								log.info("ack message with deliveryTag {} on actor {}", envelope.getDeliveryTag(), getContext().getSelf());
-								channel.basicAck(envelope.getDeliveryTag(), false);
-							}
-						}
-						catch (Exception e) {
-							throw new RuntimeException(e);
-						}
-					});
-				}
-			});
+			channel.basicConsume(
+				(queueBind).queue(),
+				false,
+				new SchedulationConsumer(
+					channel, getContext(), queueBind, ingestionPayloadMapper));
 		} catch (IOException e) {
 			log.error("consumer cannot be registered", e);
 			throw new RuntimeException(e);
@@ -290,15 +234,6 @@ public class MessageGateway
 		queueManager.tell(new QueueManager.GetQueue(register.schedulationKey, queueManagerAdapter));
 
 		return Behaviors.same();
-	}
-
-	private EntityRef<Schedulation.Command> getSchedulation(String schedulationId) {
-
-		ActorSystem<?> actorSystem = getContext().getSystem();
-
-		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
-
-		return clusterSharding.entityRefFor(Schedulation.ENTITY_TYPE_KEY, schedulationId);
 	}
 
 }
