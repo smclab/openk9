@@ -20,6 +20,8 @@ package io.openk9.datasource.processor.payload;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.openk9.datasource.processor.payload.util.DataPayloadRestValueDeserializer;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -92,6 +94,7 @@ public class DataPayload {
 	}
 
 	@JsonAnySetter
+	@JsonDeserialize(contentUsing = DataPayloadRestValueDeserializer.class)
 	public void addRest(String key, Object value) {
 
 		if (value == null) {
