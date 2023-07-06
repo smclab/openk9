@@ -26,5 +26,6 @@ export * from "./ResultTitleTwo";
 export * from "./ImagesViewer";
 export * from "./truncatedLineStyle";
 export * from "./ResultLinkTwo";
+export * from "./SanitizeHtml";
 export * from "./SortResultList";
 export * from "./WrapperContainer";
