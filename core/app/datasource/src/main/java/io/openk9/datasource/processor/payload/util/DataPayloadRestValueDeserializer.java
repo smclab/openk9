@@ -21,6 +21,9 @@ public class DataPayloadRestValueDeserializer extends StdDeserializer<Object> {
 	@Override
 	public Object deserialize(JsonParser p, DeserializationContext ctxt)
 		throws IOException, JacksonException {
-		return Json.decodeValue(p.getValueAsString());
+
+		String valueAsString = p.getValueAsString();
+
+		return valueAsString == null ? null : Json.decodeValue(valueAsString);
 	}
 }
