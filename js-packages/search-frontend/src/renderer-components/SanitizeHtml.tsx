@@ -3,7 +3,7 @@ import { HighlightableTextProps } from "./HighlightableText";
 import sanitizeHtml from "sanitize-html";
 import { css } from "styled-components/macro";
 import { truncatedLineStyle } from "./truncatedLineStyle";
-import { HighlightedText } from "./HighlightedText";
+import React from "react";
 
 export function SanitizeHtml<E>({ result, path }: HighlightableTextProps<E>) {
   const hihglithTextLines = result.highlight[path];
