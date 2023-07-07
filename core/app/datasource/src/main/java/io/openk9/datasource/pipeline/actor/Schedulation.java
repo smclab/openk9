@@ -22,6 +22,8 @@ import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -44,7 +46,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 
 	public sealed interface Command extends CborSerializable {}
-	public record Ingest(DataPayload payload, ActorRef<Response> replyTo) implements Command {}
+	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
 	private enum PersistDataIndex implements Command {INSTANCE}
 	private enum PersistStatusFinished implements Command {INSTANCE}
 	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
@@ -201,7 +203,10 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 		String indexName = getIndexName();
 
-		DataPayload dataPayload = ingest.payload;
+		byte[] payloadArray = ingest.payload;
+
+		DataPayload dataPayload =
+			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
 
 		if (dataPayload.getContentId() != null) {
 
@@ -246,9 +251,11 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		EnrichPipeline.Response response = eprw.response;
 
 		if (response instanceof EnrichPipeline.Success) {
+
 			log.info(
 				"enrich pipeline success for content-id {} replyTo {}",
-				currentIngest.payload.getContentId(), currentIngest.replyTo);
+				getContentId(currentIngest.payload), currentIngest.replyTo);
+
 			currentIngest.replyTo.tell(Success.INSTANCE);
 		}
 		else if (response instanceof EnrichPipeline.Failure) {
@@ -258,6 +265,10 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		}
 
 		return this.next();
+	}
+
+	private String getContentId(byte[] payload) {
+		return Json.decodeValue(Buffer.buffer(payload), DataPayload.class).getContentId();
 	}
 
 	private Behavior<Command> onPersistDataIndex() {

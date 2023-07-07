@@ -27,10 +27,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import scala.collection.IterableOnce;
-import scala.collection.JavaConverters;
-import scala.collection.Seq;
-import scala.collection.Set;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -102,22 +98,6 @@ public class DataPayload {
 
 		if (value == null) {
 			return;
-		}
-		else {
-
-			if (value instanceof Seq<?>) {
-				value = JavaConverters.asJava((Seq<?>) value);
-			}
-			else if (value instanceof scala.collection.Map) {
-				value = JavaConverters.mapAsJavaMap((scala.collection.Map<?, ?>) value);
-			}
-			else if (value instanceof Set<?>) {
-				value = JavaConverters.asJava((Set<?>) value);
-			}
-			else if (value instanceof IterableOnce) {
-				value = JavaConverters.asJava(((IterableOnce<?>) value).iterator());
-			}
-
 		}
 
 		if (value instanceof Collection) {

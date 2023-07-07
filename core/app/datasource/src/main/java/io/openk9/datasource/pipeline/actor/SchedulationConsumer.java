@@ -65,7 +65,7 @@ public class SchedulationConsumer extends DefaultConsumer {
 		AskPattern.ask(
 			entityRef,
 			(ActorRef<Schedulation.Response> replyTo) ->
-				new Schedulation.Ingest(payload, replyTo),
+				new Schedulation.Ingest(Json.encodeToBuffer(payload).getBytes(), replyTo),
 			timeout,
 			context.getSystem().scheduler()
 		).whenComplete((r, t) -> {
