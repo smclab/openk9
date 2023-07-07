@@ -36,7 +36,7 @@ public class MessageGateway
 
 	public sealed interface Command {}
 	public enum Start implements Command {INSTANCE}
-	public record Register(String schedulationKey) implements Command {}
+	public record Register(String schedulationKey) implements Command, CborSerializable {}
 	public record Deregister(String schedulationKey) implements Command {}
 	private record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command, CborSerializable {}
 	private record QueueManagerResponseWrapper(QueueManager.Response response) implements Command {}
