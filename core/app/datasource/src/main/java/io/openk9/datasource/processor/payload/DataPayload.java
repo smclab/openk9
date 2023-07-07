@@ -27,6 +27,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import scala.collection.IterableOnce;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import scala.collection.Set;
@@ -112,6 +113,9 @@ public class DataPayload {
 			}
 			else if (value instanceof Set<?>) {
 				value = JavaConverters.asJava((Set<?>) value);
+			}
+			else if (value instanceof IterableOnce) {
+				value = JavaConverters.asJava(((IterableOnce<?>) value).iterator());
 			}
 
 		}
