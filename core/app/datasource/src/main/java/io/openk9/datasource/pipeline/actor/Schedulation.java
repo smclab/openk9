@@ -13,6 +13,7 @@ import akka.cluster.typed.SingletonActor;
 import com.typesafe.config.Config;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
@@ -23,7 +24,10 @@ import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -41,8 +45,10 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 	public sealed interface Command extends CborSerializable {}
 	public record Ingest(DataPayload payload, ActorRef<Response> replyTo) implements Command {}
-	private enum SetDataIndex implements Command {INSTANCE}
-	private enum SetStatusFinished implements Command {INSTANCE}
+	private enum PersistDataIndex implements Command {INSTANCE}
+	private enum PersistStatusFinished implements Command {INSTANCE}
+	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
+	private record SetLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
 	private record SetScheduler(Scheduler scheduler) implements Command {}
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
 	private enum Start implements Command {INSTANCE}
@@ -66,10 +72,11 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private final TransactionInvoker txInvoker;
 	private final DatasourceService datasourceService;
 	private final Deque<Command> lag = new ArrayDeque<>();
+	private final Duration timeout;
 	private Ingest currentIngest;
 	private Scheduler scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
-	private Duration timeout;
+	private OffsetDateTime lastIngestionDate;
 
 	public Schedulation(
 		ActorContext<Command> context,
@@ -130,8 +137,9 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		logBehavior(BUSY_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessage(
-				EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
+			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
+			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
+			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
 			.onAnyMessage(this::onBusy)
 			.build();
 	}
@@ -140,8 +148,8 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		logBehavior(FINISH_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessageEquals(SetDataIndex.INSTANCE, this::onSetDataIndex)
-			.onMessageEquals(SetStatusFinished.INSTANCE, this::onSetStatusFinished)
+			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
+			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
 			.build();
 	}
 
@@ -196,6 +204,9 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		DataPayload dataPayload = ingest.payload;
 
 		if (dataPayload.getContentId() != null) {
+
+			updateLastIngestionDate(dataPayload);
+
 			dataPayload.setIndexName(indexName);
 
 			ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
@@ -219,7 +230,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 			currentIngest.replyTo.tell(Success.INSTANCE);
 
-			getContext().getSelf().tell(SetDataIndex.INSTANCE);
+			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
 
 			return this.finish();
 		}
@@ -235,7 +246,9 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		EnrichPipeline.Response response = eprw.response;
 
 		if (response instanceof EnrichPipeline.Success) {
-			log.info("enrich pipeline success for content-id {} replyTo {}", currentIngest.payload.getContentId(), currentIngest.replyTo);
+			log.info(
+				"enrich pipeline success for content-id {} replyTo {}",
+				currentIngest.payload.getContentId(), currentIngest.replyTo);
 			currentIngest.replyTo.tell(Success.INSTANCE);
 		}
 		else if (response instanceof EnrichPipeline.Failure) {
@@ -247,7 +260,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		return this.next();
 	}
 
-	private Behavior<Command> onSetDataIndex() {
+	private Behavior<Command> onPersistDataIndex() {
 		DataIndex newDataIndex = scheduler.getNewDataIndex();
 		io.openk9.datasource.model.Datasource datasource = scheduler.getDatasource();
 
@@ -264,17 +277,17 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 					tenantId,
 					s -> datasourceService.setDataIndex(datasourceId, newDataIndexId)
 				)
-				.invoke(() -> getContext().getSelf().tell(SetStatusFinished.INSTANCE))
+				.invoke(() -> getContext().getSelf().tell(PersistStatusFinished.INSTANCE))
 			);
 		}
 		else {
-			getContext().getSelf().tell(SetStatusFinished.INSTANCE);
+			getContext().getSelf().tell(PersistStatusFinished.INSTANCE);
 		}
 
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onSetStatusFinished() {
+	private Behavior<Command> onPersistStatusFinished() {
 		VertxUtil.runOnContext(() -> txInvoker.withTransaction(
 			key.tenantId, s -> s
 				.find(Scheduler.class, scheduler.getId())
@@ -307,10 +320,40 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		if (Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0) {
 			log.info("{} ingestion is expired ", key);
 
-			getContext().getSelf().tell(SetDataIndex.INSTANCE);
+			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
 
 			return this.finish();
 		}
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onPersistLastIngestionDate(PersistLastIngestionDate persistLastIngestionDate) {
+		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
+		Long datasourceId = scheduler.getDatasource().getId();
+		VertxUtil.runOnContext(() -> txInvoker.withTransaction(
+			key.tenantId, s -> s
+				.find(Datasource.class, datasourceId)
+				.chain(entity -> {
+					entity.setLastIngestionDate(lastIngestionDate);
+					return s.persist(entity);
+				})
+				.onItemOrFailure()
+				.invoke((r, t) -> {
+					if (t != null) {
+						log.warn("last ingestion date cannot be persisted", t);
+					}
+					else {
+						log.info("update last ingestion date for datasource with id {}", datasourceId);
+						getContext().getSelf().tell(new SetLastIngestionDate(lastIngestionDate));
+					}
+				})
+			)
+		);
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onSetLastIngestionDate(SetLastIngestionDate setLastIngestionDate) {
+		this.lastIngestionDate = setLastIngestionDate.lastIngestionDate;
 		return Behaviors.same();
 	}
 
@@ -349,4 +392,15 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 	}
 
+	private void updateLastIngestionDate(DataPayload dataPayload) {
+		OffsetDateTime parsingDate =
+			OffsetDateTime.ofInstant(
+				Instant.ofEpochMilli(dataPayload.getParsingDate()),
+				ZoneOffset.UTC
+			);
+
+		if (this.lastIngestionDate == null || !this.lastIngestionDate.isEqual(parsingDate)) {
+			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
+		}
+	}
 }
