@@ -31,7 +31,11 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -143,6 +147,23 @@ public class DataIndexService
 	@Override
 	public Class<DataIndex> getEntityClass() {
 		return DataIndex.class;
+	}
+
+	@Override
+	public Uni<DataIndex> deleteById(long entityId) {
+		return findById(entityId)
+			.onItem()
+			.transformToUni(dataIndex -> Uni.createFrom()
+				.<AcknowledgedResponse>emitter(emitter -> {
+					DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(dataIndex.getName());
+					client.indices().deleteAsync(
+						deleteIndexRequest,
+						RequestOptions.DEFAULT,
+						UniActionListener.of(emitter));
+				})
+				.onItem()
+				.transformToUni(acknowledgedResponse -> deleteById(entityId))
+			);
 	}
 
 	@Inject
