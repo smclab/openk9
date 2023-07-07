@@ -196,7 +196,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		return withTransaction((s) -> s.createQuery(
 			"select di " +
 				"from DataIndex di " +
-				"inner join di.datasource on di.datasource = d and d.dataIndex <> di " +
+				"inner join di.datasource d on di.datasource = d and d.dataIndex <> di " +
 				"where d.id = :id", DataIndex.class)
 			.setParameter("id", datasourceId)
 			.getResultList()
