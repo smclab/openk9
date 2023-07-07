@@ -120,9 +120,9 @@ public abstract class TransactionInvoker {
 
 				Context context = Vertx.currentContext();
 
-				Object flag = context.getLocal("flag");
+				String currentSchema = context.getLocal("currentSchema");
 
-				if (!multiTenancyConfig.isEnabled() || flag != null) {
+				if (!multiTenancyConfig.isEnabled() || currentSchema != null) {
 					return fun2.apply(s, t);
 				}
 
@@ -131,20 +131,28 @@ public abstract class TransactionInvoker {
 						"unexpected state: Hibernate session is not active in tenant transaction interceptor");
 				}
 
-				String sessionTenantId = schema == null
-					? tenantResolver.getTenantName()
-					: schema;
+				String sessionTenantId = tenantResolver.getTenantName();
 
-				if (!validator.validate(sessionTenantId).isEmpty()) {
+				if (sessionTenantId == null && schema != null) {
+					sessionTenantId = schema;
+					tenantResolver.setTenant(schema);
+				}
+				else if (schema != null) {
+					sessionTenantId = schema;
+				}
+
+				String newSchema = sessionTenantId;
+
+				if (!validator.validate(newSchema).isEmpty()) {
 					// double check just in case to avoid potential SQL injection
 					// (hint appreciated: how to properly escape postgres string literal here instead?)
 					throw new IllegalStateException(
 						"unexpected state: Hibernate session is not active in tenant transaction interceptor");
 				}
 
-				return createNativeQuery.apply(s, alterSchemaSession(sessionTenantId))
+				return createNativeQuery.apply(s, alterSchemaSession(newSchema))
 					.executeUpdate()
-					.invoke(() -> context.putLocal("flag", true))
+					.invoke(() -> context.putLocal("currentSchema", newSchema))
 					.flatMap((ignore) -> {
 						try {
 							return fun2.apply(s, t);
