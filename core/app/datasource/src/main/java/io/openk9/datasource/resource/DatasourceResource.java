@@ -33,6 +33,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import java.util.List;
 
 @Path("/datasources")
 @RolesAllowed("k9-admin")
@@ -111,4 +112,9 @@ public class DatasourceResource extends
 		return service.unsetPluginDriver(datasourceId);
 	}
 
+	@GET
+	@Path("/{id}/data-indexes")
+	public Uni<List<DataIndex>> getDataIndexOrphans(@PathParam("id") long datasourceId) {
+		return service.getDataIndexOrphans(datasourceId);
+	}
 }
