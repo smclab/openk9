@@ -300,7 +300,10 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onTick() {
-		log.info("Check {} expiration", key);
+		if (log.isTraceEnabled()) {
+			log.trace("Check {} expiration", key);
+		}
+
 		if (Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0) {
 			log.info("{} ingestion is expired ", key);
 
