@@ -162,7 +162,7 @@ public class DataIndexService
 						UniActionListener.of(emitter));
 				})
 				.onItem()
-				.transformToUni(acknowledgedResponse -> deleteById(entityId))
+				.transformToUni(acknowledgedResponse -> super.deleteById(entityId))
 			);
 	}
 
