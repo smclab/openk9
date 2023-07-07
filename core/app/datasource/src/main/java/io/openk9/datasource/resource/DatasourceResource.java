@@ -113,7 +113,7 @@ public class DatasourceResource extends
 	}
 
 	@GET
-	@Path("/{id}/data-indexes")
+	@Path("/{id}/data-index-orphans")
 	public Uni<List<DataIndex>> getDataIndexOrphans(@PathParam("id") long datasourceId) {
 		return service.getDataIndexOrphans(datasourceId);
 	}
