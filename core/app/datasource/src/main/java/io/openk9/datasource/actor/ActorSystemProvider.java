@@ -23,7 +23,7 @@ public class ActorSystemProvider {
 		Config config = defaultConfig.withFallback(ConfigFactory.load());
 
 		actorSystem = ActorSystem.create(
-            Initialaizer.create(actorSystemBehaviorInitializerInstance), "datasource", config);
+            Initializer.create(actorSystemBehaviorInitializerInstance), "datasource", config);
 
 		for (ActorSystemInitializer actorSystemInitializer : actorSystemInitializerInstance) {
 			actorSystemInitializer.init(actorSystem);

@@ -3,7 +3,7 @@ package io.openk9.datasource.actor;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.Behaviors;
 
-final class Initialaizer {
+final class Initializer {
 
     public sealed interface Command {}
     private record Nothing() implements Command {}
