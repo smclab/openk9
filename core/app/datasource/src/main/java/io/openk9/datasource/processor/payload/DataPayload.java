@@ -20,8 +20,6 @@ package io.openk9.datasource.processor.payload;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.openk9.datasource.processor.payload.util.DataPayloadRestValueDeserializer;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,6 +27,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
+import scala.collection.Set;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -94,13 +95,26 @@ public class DataPayload {
 	}
 
 	@JsonAnySetter
-	@JsonDeserialize(contentUsing = DataPayloadRestValueDeserializer.class)
 	public void addRest(String key, Object value) {
 
 		if (value == null) {
 			return;
 		}
-		else if (value instanceof Collection) {
+		else {
+
+			if (value instanceof Seq<?>) {
+				value = JavaConverters.asJava((Seq<?>) value);
+			}
+			else if (value instanceof scala.collection.Map) {
+				value = JavaConverters.mapAsJavaMap((scala.collection.Map<?, ?>) value);
+			}
+			else if (value instanceof Set<?>) {
+				value = JavaConverters.asJava((Set<?>) value);
+			}
+
+		}
+
+		if (value instanceof Collection) {
 			if (((Collection) value).isEmpty()) {
 				return;
 			}
