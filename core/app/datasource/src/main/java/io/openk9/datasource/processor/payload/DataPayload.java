@@ -57,6 +57,7 @@ public class DataPayload {
 	private String indexName;
 	private boolean last = false;
 	private String scheduleId;
+	private String oldIndexName = null;
 
 	public static DataPayload copy(DataPayload dataPayload) {
 		return DataPayload.builder()
@@ -73,6 +74,7 @@ public class DataPayload {
 			.indexName(dataPayload.indexName)
 			.last(dataPayload.last)
 			.scheduleId(dataPayload.scheduleId)
+			.oldIndexName(dataPayload.oldIndexName)
 			.build();
 	}
 

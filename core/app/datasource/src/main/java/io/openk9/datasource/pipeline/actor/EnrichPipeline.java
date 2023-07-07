@@ -63,6 +63,11 @@ public class EnrichPipeline {
 			io.openk9.datasource.model.EnrichPipeline enrichPipeline =
 				datasource.getEnrichPipeline();
 
+			if (scheduler.getOldDataIndex() != null) {
+				String oldDataIndex = scheduler.getOldDataIndex().getName();
+				dataPayload.setOldIndexName(oldDataIndex);
+			}
+
 			Set<EnrichPipelineItem> items;
 
 			if (enrichPipeline != null) {
