@@ -28,7 +28,19 @@ import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.microprofile.graphql.Description;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -113,5 +125,9 @@ public class Datasource extends K9Entity {
 	@Lob
 	@Column(name = "json_config")
 	private String jsonConfig;
+
+	@Description("If true execute reindex on datasource")
+	@Column(name = "reindex", nullable = false)
+	private Boolean reindex = false;
 
 }

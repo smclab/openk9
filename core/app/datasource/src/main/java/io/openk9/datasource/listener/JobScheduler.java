@@ -36,7 +36,7 @@ public class JobScheduler {
 	public record ScheduleDatasource(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 	public record TriggerDatasource(
-		String tenantName, long datasourceId, boolean startFromFirst) implements Command {}
+		String tenantName, long datasourceId, Boolean startFromFirst) implements Command {}
 	private record ScheduleDatasourceInternal(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	private record TriggerDatasourceInternal(String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
 	private record InvokePluginDriverInternal(
@@ -220,7 +220,7 @@ public class JobScheduler {
 				quartzSchedulerTypedExtension.updateTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, false),
+					new TriggerDatasource(tenantName, datasourceId, null),
 					Option.empty(),
 					cron,
 					Option.empty(),
@@ -236,7 +236,7 @@ public class JobScheduler {
 				quartzSchedulerTypedExtension.createTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, false),
+					new TriggerDatasource(tenantName, datasourceId, null),
 					Option.empty(),
 					cron,
 					Option.empty(),
@@ -273,10 +273,10 @@ public class JobScheduler {
 
 		long datasourceId = jobMessage.datasourceId;
 		String tenantName = jobMessage.tenantName;
-		boolean startFromFirst = jobMessage.startFromFirst;
+		Boolean startFromFirst = jobMessage.startFromFirst;
 
 		loadDatasourceAndCreateSelfMessage(
-			tenantName, datasourceId, startFromFirst, transactionInvoker, ctx,
+			tenantName, datasourceId, transactionInvoker, ctx, startFromFirst,
 			TriggerDatasourceInternal::new
 		);
 
@@ -329,9 +329,10 @@ public class JobScheduler {
 	}
 
 	private static void loadDatasourceAndCreateSelfMessage(
-		String tenantName, long datasourceId, boolean startFromFirst,
+		String tenantName, long datasourceId,
 		TransactionInvoker transactionInvoker,
-		ActorContext<Command> ctx, Function3<String, Datasource, Boolean, Command> selfMessageCreator) {
+		ActorContext<Command> ctx, Boolean startFromFirst,
+		Function3<String, Datasource, Boolean, Command> selfMessageCreator) {
 		VertxUtil.runOnContext(() ->
 			transactionInvoker.withStatelessTransaction(tenantName, s ->
 				s.createQuery(
@@ -342,7 +343,19 @@ public class JobScheduler {
 						"where d.id = :id", Datasource.class)
 					.setParameter("id", datasourceId)
 					.getSingleResult()
-					.invoke(d -> ctx.getSelf().tell(selfMessageCreator.apply(tenantName, d, startFromFirst)))
+					.invoke(d -> ctx
+						.getSelf()
+						.tell(
+							selfMessageCreator
+								.apply(
+									tenantName,
+									d,
+									startFromFirst == null
+										? d.getReindex()
+										: startFromFirst
+								)
+						)
+					)
 			)
 		);
 	}

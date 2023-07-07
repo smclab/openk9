@@ -50,4 +50,8 @@ public class DatasourceDTO extends K9EntityDTO {
 	@Description("Json configuration with custom fields for datasource")
 	private String jsonConfig;
 
+	@Description("If true datasource is reindexed after each ingestion")
+	@NotNull
+	private Boolean reindex = false;
+
 }
