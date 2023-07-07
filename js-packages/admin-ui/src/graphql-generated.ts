@@ -454,6 +454,8 @@ export type Datasource = {
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   pluginDriver?: Maybe<PluginDriver>;
+  /** If true execute reindex on datasource */
+  reindex?: Maybe<Scalars['Boolean']>;
   /** If true set datasource as schedulable */
   schedulable?: Maybe<Scalars['Boolean']>;
   schedulers?: Maybe<Connection_Scheduler>;
@@ -488,6 +490,8 @@ export type DatasourceDtoInput = {
   /** Json configuration with custom fields for datasource */
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  /** If true datasource is reindexed after each ingestion */
+  reindex: Scalars['Boolean'];
   /** If true datasource is scheduled based on defined scheduling expression */
   schedulable: Scalars['Boolean'];
   /** Chron quartz expression to define scheduling of datasource */
@@ -3620,7 +3624,7 @@ export type DataSourceQueryVariables = Exact<{
 }>;
 
 
-export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, reindex?: boolean | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateOrUpdateDataSourceMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -3629,6 +3633,7 @@ export type CreateOrUpdateDataSourceMutationVariables = Exact<{
   schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
+  reindex: Scalars['Boolean'];
 }>;
 
 
@@ -3730,7 +3735,7 @@ export type DataSourcesQueryVariables = Exact<{
 }>;
 
 
-export type DataSourcesQuery = { __typename?: 'Query', datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, lastIngestionDate?: any | null, scheduling?: string | null, jsonConfig?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DataSourcesQuery = { __typename?: 'Query', datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, lastIngestionDate?: any | null, scheduling?: string | null, jsonConfig?: string | null, description?: string | null, reindex?: boolean | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteDataSourceMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -4586,6 +4591,7 @@ export type CreateSitemapDataSourceMutationVariables = Exact<{
   schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
+  reindex: Scalars['Boolean'];
 }>;
 
 
@@ -4597,6 +4603,7 @@ export type CreateWebCrawlerDataSourceMutationVariables = Exact<{
   schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
+  reindex: Scalars['Boolean'];
 }>;
 
 
@@ -4608,6 +4615,7 @@ export type CreateYouTubeDataSourceMutationVariables = Exact<{
   schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
+  reindex: Scalars['Boolean'];
 }>;
 
 
@@ -6730,6 +6738,7 @@ export const DataSourceDocument = gql`
     schedulable
     scheduling
     jsonConfig
+    reindex
     pluginDriver {
       id
     }
@@ -6779,10 +6788,10 @@ export type DataSourceQueryHookResult = ReturnType<typeof useDataSourceQuery>;
 export type DataSourceLazyQueryHookResult = ReturnType<typeof useDataSourceLazyQuery>;
 export type DataSourceQueryResult = Apollo.QueryResult<DataSourceQuery, DataSourceQueryVariables>;
 export const CreateOrUpdateDataSourceDocument = gql`
-    mutation CreateOrUpdateDataSource($id: ID, $name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String) {
+    mutation CreateOrUpdateDataSource($id: ID, $name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindex: Boolean!) {
   datasource(
     id: $id
-    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig}
+    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindex: $reindex}
   ) {
     entity {
       id
@@ -6816,6 +6825,7 @@ export type CreateOrUpdateDataSourceMutationFn = Apollo.MutationFunction<CreateO
  *      schedulable: // value for 'schedulable'
  *      scheduling: // value for 'scheduling'
  *      jsonConfig: // value for 'jsonConfig'
+ *      reindex: // value for 'reindex'
  *   },
  * });
  */
@@ -7327,6 +7337,7 @@ export const DataSourcesDocument = gql`
         scheduling
         jsonConfig
         description
+        reindex
       }
     }
     pageInfo {
@@ -11756,9 +11767,9 @@ export type DeleteTokenizerMutationHookResult = ReturnType<typeof useDeleteToken
 export type DeleteTokenizerMutationResult = Apollo.MutationResult<DeleteTokenizerMutation>;
 export type DeleteTokenizerMutationOptions = Apollo.BaseMutationOptions<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>;
 export const CreateSitemapDataSourceDocument = gql`
-    mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String) {
+    mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindex: Boolean!) {
   datasource(
-    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig}
+    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindex: $reindex}
   ) {
     entity {
       id
@@ -11790,6 +11801,7 @@ export type CreateSitemapDataSourceMutationFn = Apollo.MutationFunction<CreateSi
  *      schedulable: // value for 'schedulable'
  *      scheduling: // value for 'scheduling'
  *      jsonConfig: // value for 'jsonConfig'
+ *      reindex: // value for 'reindex'
  *   },
  * });
  */
@@ -11801,9 +11813,9 @@ export type CreateSitemapDataSourceMutationHookResult = ReturnType<typeof useCre
 export type CreateSitemapDataSourceMutationResult = Apollo.MutationResult<CreateSitemapDataSourceMutation>;
 export type CreateSitemapDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateSitemapDataSourceMutation, CreateSitemapDataSourceMutationVariables>;
 export const CreateWebCrawlerDataSourceDocument = gql`
-    mutation CreateWebCrawlerDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String) {
+    mutation CreateWebCrawlerDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindex: Boolean!) {
   datasource(
-    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig}
+    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindex: $reindex}
   ) {
     entity {
       id
@@ -11835,6 +11847,7 @@ export type CreateWebCrawlerDataSourceMutationFn = Apollo.MutationFunction<Creat
  *      schedulable: // value for 'schedulable'
  *      scheduling: // value for 'scheduling'
  *      jsonConfig: // value for 'jsonConfig'
+ *      reindex: // value for 'reindex'
  *   },
  * });
  */
@@ -11846,9 +11859,9 @@ export type CreateWebCrawlerDataSourceMutationHookResult = ReturnType<typeof use
 export type CreateWebCrawlerDataSourceMutationResult = Apollo.MutationResult<CreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateWebCrawlerDataSourceMutation, CreateWebCrawlerDataSourceMutationVariables>;
 export const CreateYouTubeDataSourceDocument = gql`
-    mutation CreateYouTubeDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String) {
+    mutation CreateYouTubeDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindex: Boolean!) {
   datasource(
-    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig}
+    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindex: $reindex}
   ) {
     entity {
       id
@@ -11880,6 +11893,7 @@ export type CreateYouTubeDataSourceMutationFn = Apollo.MutationFunction<CreateYo
  *      schedulable: // value for 'schedulable'
  *      scheduling: // value for 'scheduling'
  *      jsonConfig: // value for 'jsonConfig'
+ *      reindex: // value for 'reindex'
  *   },
  * });
  */
@@ -11890,4 +11904,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-07-05T11:11:34+02:00
+// Generated on 2023-07-07T15:07:12+02:00

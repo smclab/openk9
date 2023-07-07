@@ -43,6 +43,7 @@ export function GoogleWizard() {
           scheduling: data.scheduling,
           description: "",
           schedulable: true,
+          reindex: false,
           jsonConfig: JSON.stringify(
             {
               token: data.token,

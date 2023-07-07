@@ -56,6 +56,7 @@ export function ServerEmailWizard() {
           scheduling: data.scheduling,
           description: "",
           schedulable: true,
+          reindex: false,
           jsonConfig: JSON.stringify(
             {
               mailServer: data.mailServer,

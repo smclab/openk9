@@ -16,7 +16,6 @@ import { useNavigate } from "react-router-dom";
 import { useWizardPluginDriverBinding } from "../components/PluginDriver";
 import { useTriggerSchedulerMutation } from "../components/DataSource";
 import { useCreateWebCrawlerDataSourceMutation } from "../graphql-generated";
-import { ClassNameButton } from "../App";
 
 gql`
   mutation CreateSitemapDataSource(
@@ -25,9 +24,17 @@ gql`
     $schedulable: Boolean!
     $scheduling: String!
     $jsonConfig: String
+    $reindex: Boolean!
   ) {
     datasource(
-      datasourceDTO: { name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig }
+      datasourceDTO: {
+        name: $name
+        description: $description
+        schedulable: $schedulable
+        scheduling: $scheduling
+        jsonConfig: $jsonConfig
+        reindex: $reindex
+      }
     ) {
       entity {
         id
@@ -84,6 +91,7 @@ export function DatabaseWizard() {
           scheduling: data.scheduling,
           description: "",
           schedulable: true,
+          reindex: false,
           jsonConfig: JSON.stringify(
             {
               dialect: data.dialect,

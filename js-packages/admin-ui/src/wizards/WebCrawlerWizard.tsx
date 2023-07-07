@@ -23,9 +23,17 @@ gql`
     $schedulable: Boolean!
     $scheduling: String!
     $jsonConfig: String
+    $reindex: Boolean!
   ) {
     datasource(
-      datasourceDTO: { name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig }
+      datasourceDTO: {
+        name: $name
+        description: $description
+        schedulable: $schedulable
+        scheduling: $scheduling
+        jsonConfig: $jsonConfig
+        reindex: $reindex
+      }
     ) {
       entity {
         id
@@ -75,6 +83,7 @@ export function WebCrawlerWizard() {
           description: "",
           schedulable: true,
           jsonConfig: JSON.stringify({ startUrls: [data.urls] }, null, 2),
+          reindex: false,
         },
       });
     },

@@ -53,6 +53,7 @@ export function LiferayWizard() {
           name: data.name,
           scheduling: data.scheduling,
           description: "",
+          reindex: false,
           schedulable: true,
           jsonConfig: JSON.stringify(
             {

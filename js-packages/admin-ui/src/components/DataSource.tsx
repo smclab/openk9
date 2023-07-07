@@ -51,6 +51,7 @@ const DataSourceQuery = gql`
       schedulable
       scheduling
       jsonConfig
+      reindex
       pluginDriver {
         id
       }
@@ -80,10 +81,18 @@ gql`
     $schedulable: Boolean!
     $scheduling: String!
     $jsonConfig: String
+    $reindex: Boolean!
   ) {
     datasource(
       id: $id
-      datasourceDTO: { name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig }
+      datasourceDTO: {
+        name: $name
+        description: $description
+        schedulable: $schedulable
+        scheduling: $scheduling
+        jsonConfig: $jsonConfig
+        reindex: $reindex
+      }
     ) {
       entity {
         id
@@ -133,6 +142,7 @@ export function DataSource() {
         schedulable: false,
         jsonConfig: "{}",
         scheduling: "",
+        reindex: false,
       }),
       []
     ),
@@ -273,6 +283,7 @@ export function DataSource() {
             {...form.inputProps("schedulable")}
             description={"If datasource is automatically schedulable"}
           />
+          <BooleanInput label="Reindex" {...form.inputProps("reindex")} />
           <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
           {datasourceId !== "new" && (
             <ClayForm

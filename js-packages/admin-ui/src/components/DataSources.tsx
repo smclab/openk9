@@ -19,6 +19,7 @@ export const DataSourcesQuery = gql`
           scheduling
           jsonConfig
           description
+          reindex
         }
       }
       pageInfo {
@@ -85,6 +86,7 @@ export function DataSources() {
                         scheduling: dataSource.scheduling,
                         jsonConfig: dataSource.jsonConfig ?? "{}",
                         description: dataSource.description ?? "",
+                        reindex: dataSource.reindex || false,
                       },
                     });
                 }}

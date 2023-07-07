@@ -53,6 +53,7 @@ export function SiteMapWizard() {
           scheduling: data.scheduling,
           description: "",
           schedulable: true,
+          reindex: false,
           jsonConfig: JSON.stringify(
             {
               sitemapUrls: data.sitemapUrls,
