@@ -161,9 +161,9 @@ public class DataIndexService
 						RequestOptions.DEFAULT,
 						UniActionListener.of(emitter));
 				})
-				.onItem()
-				.transformToUni(acknowledgedResponse -> super.deleteById(entityId))
-			);
+			)
+			.onItem()
+			.transformToUni(acknowledgedResponse -> super.deleteById(entityId));
 	}
 
 	@Inject
