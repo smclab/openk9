@@ -8,7 +8,7 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 
 	<changeSet id="1688720936322-1" author="openk9">
 		<addColumn tableName="datasource">
-			<column name="reindex" defaultValue="false" >
+			<column name="reindex" valueBoolean="false" type="BOOLEAN" >
 				<constraints nullable="false" />
 			</column>
 		</addColumn>
