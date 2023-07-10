@@ -10,24 +10,40 @@ import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.sql.TransactionInvoker;
+import io.openk9.datasource.util.ActorActionListener;
 import io.openk9.datasource.util.CborSerializable;
 import io.vavr.Function3;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import org.elasticsearch.client.IndicesClient;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
+import org.elasticsearch.client.indices.IndexTemplateMetadata;
+import org.elasticsearch.client.indices.PutComposableIndexTemplateRequest;
+import org.elasticsearch.cluster.metadata.ComposableIndexTemplate;
+import org.elasticsearch.cluster.metadata.Template;
+import org.elasticsearch.common.compress.CompressedXContent;
 import scala.Option;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class JobScheduler {
@@ -44,11 +60,14 @@ public class JobScheduler {
 		boolean startFromFirst) implements Command {}
 	private record ChannelManagerSubscribeResponse(Receptionist.Listing listing) implements Command {}
 	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
+	private record CopyIndexTemplate(String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
+	private record PersistSchedulerInternal(String tenantName, Scheduler scheduler) implements Command {}
 
 
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker) {
+		TransactionInvoker transactionInvoker,
+		RestHighLevelClient restHighLevelClient) {
 
 		return Behaviors.setup(ctx -> {
 
@@ -66,7 +85,7 @@ public class JobScheduler {
 				.tell(new ReceptionistMessages.Subscribe<>(MessageGateway.SERVICE_KEY, listingActorRef));
 
 			return start(
-				httpPluginDriverClient, transactionInvoker,
+				httpPluginDriverClient, transactionInvoker, restHighLevelClient,
 				ctx, quartzSchedulerTypedExtension);
 
 
@@ -75,7 +94,8 @@ public class JobScheduler {
 
 	private static Behavior<Command> start(
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker, ActorContext<Command> ctx,
+		TransactionInvoker transactionInvoker, RestHighLevelClient restHighLevelClient,
+		ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension) {
 
 		return Behaviors
@@ -83,7 +103,7 @@ public class JobScheduler {
 			.onMessage(Start.class, start ->
 				initial(
 					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-					transactionInvoker,
+					transactionInvoker, restHighLevelClient,
 					start.channelManagerRef,
 					new ArrayList<>()
 				)
@@ -99,16 +119,19 @@ public class JobScheduler {
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
 		TransactionInvoker transactionInvoker,
+		RestHighLevelClient restHighLevelClient,
 		ActorRef<MessageGateway.Command> messageGateway,
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
-			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, messageGateway, jobNames))
+			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, transactionInvoker))
-			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, messageGateway, jobNames))
+			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, messageGateway))
 			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
+			.onMessage(CopyIndexTemplate.class, cit -> onCopyIndexTemplate(ctx, restHighLevelClient, cit))
+			.onMessage(PersistSchedulerInternal.class, pndi -> onPersistSchedulerInternal(ctx, transactionInvoker, messageGateway, pndi))
 			.build();
 
 	}
@@ -204,6 +227,7 @@ public class JobScheduler {
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
 		TransactionInvoker transactionInvoker,
+		RestHighLevelClient restHighLevelClient,
 		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
 
 		String tenantName = scheduleDatasourceInternal.tenantName();
@@ -251,7 +275,7 @@ public class JobScheduler {
 
 				return initial(
 					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-					transactionInvoker, messageGatewayService, newJobNames);
+					transactionInvoker, restHighLevelClient, messageGatewayService, newJobNames);
 
 			}
 		}
@@ -288,7 +312,9 @@ public class JobScheduler {
 		UnScheduleDatasource removeDatasource, ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker, ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
+		TransactionInvoker transactionInvoker,
+		RestHighLevelClient restHighLevelClient,
+		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
 
 		long datasourceId = removeDatasource.datasourceId;
 		String tenantName = removeDatasource.tenantName;
@@ -302,7 +328,7 @@ public class JobScheduler {
 			ctx.getLog().info("Job removed: {}", jobName);
 			return initial(
 				ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-				transactionInvoker, messageGatewayService, newJobNames);
+				transactionInvoker, restHighLevelClient, messageGatewayService, newJobNames);
 		}
 
 		ctx.getLog().info("Job not found: {}", jobName);
@@ -339,7 +365,8 @@ public class JobScheduler {
 						"select d " +
 						"from Datasource d " +
 						"join fetch d.pluginDriver " +
-						"left join fetch d.dataIndex " +
+						"left join fetch d.dataIndex di " +
+						"left join fetch di.docTypes " +
 						"where d.id = :id", Datasource.class)
 					.setParameter("id", datasourceId)
 					.getSingleResult()
@@ -373,15 +400,96 @@ public class JobScheduler {
 		scheduler.setOldDataIndex(datasource.getDataIndex());
 		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.STARTED);
 
-		if (scheduler.getOldDataIndex() == null || startFromFirst) {
+		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+
+		if (oldDataIndex == null || startFromFirst) {
+
+			String newDataIndexName = datasource.getId() + "-data-" + scheduler.getScheduleId();
 
 			DataIndex newDataIndex = new DataIndex();
-			newDataIndex.setName(
-				datasource.getId() + "-data-" + scheduler.getScheduleId());
+			newDataIndex.setName(newDataIndexName);
 			newDataIndex.setDatasource(datasource);
 			scheduler.setNewDataIndex(newDataIndex);
 
+			if (oldDataIndex != null) {
+				Set<DocType> docTypes = oldDataIndex.getDocTypes();
+				if (docTypes != null && !docTypes.isEmpty()) {
+					newDataIndex.setDocTypes(new LinkedHashSet<>(docTypes));
+					ctx.getSelf().tell(new CopyIndexTemplate(tenantName, scheduler));
+				}
+				else {
+					persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, true);
+				}
+			}
+
 		}
+		else {
+			persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, false);
+		}
+
+	}
+
+	private static Behavior<Command> onCopyIndexTemplate(
+		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient, CopyIndexTemplate cit) {
+		Scheduler scheduler = cit.scheduler;
+		String tenantName = cit.tenantName;
+
+		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+		DataIndex newDataIndex = scheduler.getNewDataIndex();
+		String newDataIndexName = newDataIndex.getName();
+
+		IndicesClient indices = restHighLevelClient.indices();
+
+		try {
+			GetIndexTemplatesResponse indexTemplate = indices.getIndexTemplate(
+				new GetIndexTemplatesRequest(oldDataIndex.getName() + "-template"),
+				RequestOptions.DEFAULT);
+
+			for (IndexTemplateMetadata template : indexTemplate.getIndexTemplates()) {
+				PutComposableIndexTemplateRequest request =
+					new PutComposableIndexTemplateRequest();
+
+				ComposableIndexTemplate composableIndexTemplate = new ComposableIndexTemplate(
+						List.of(newDataIndexName),
+						new Template(
+							template.settings(),
+							new CompressedXContent(Json.encode(template.mappings().sourceAsMap())),
+							null),
+						null, null, null, null);
+
+				request.indexTemplate(composableIndexTemplate);
+
+				indices.putIndexTemplateAsync(
+					request,
+					RequestOptions.DEFAULT,
+					ActorActionListener.of(ctx.getSelf(), (r, t) -> new PersistSchedulerInternal(tenantName, scheduler))
+				);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onPersistSchedulerInternal(
+		ActorContext<Command> ctx, TransactionInvoker transactionInvoker,
+		ActorRef<MessageGateway.Command> messageGateway, PersistSchedulerInternal pndi) {
+
+		String tenantName = pndi.tenantName;
+		Scheduler scheduler = pndi.scheduler;
+
+		persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, true);
+
+		return Behaviors.same();
+	}
+
+	private static void persistScheduler(
+		ActorContext<Command> ctx, TransactionInvoker transactionInvoker,
+		ActorRef<MessageGateway.Command> messageGateway, String tenantName, Scheduler scheduler,
+		boolean startFromFirst) {
 
 		VertxUtil.runOnContext(() ->
 			transactionInvoker
@@ -398,7 +506,6 @@ public class JobScheduler {
 						})
 				)
 		);
-
 	}
 
 }
