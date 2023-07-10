@@ -1,5 +1,5 @@
 import React, { CSSProperties, Dispatch, SetStateAction, TableHTMLAttributes, TdHTMLAttributes } from "react";
-import { ClayInput, ClayToggle } from "@clayui/form";
+import { ClayInput, ClaySelect, ClayToggle } from "@clayui/form";
 import { MutationHookOptions, MutationTuple, QueryHookOptions, QueryResult } from "@apollo/client";
 import useDebounced from "./useDebounced";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
@@ -10,7 +10,7 @@ import ClayToolbar from "@clayui/toolbar";
 import ClayMultiSelect from "@clayui/multi-select";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
-import { UserField } from "../graphql-generated";
+import { AnalyzerQuery, Exact, TokenizerQuery, UserField } from "../graphql-generated";
 import { TableRowActions } from "./Table";
 import { ClassNameButton } from "../App";
 import { Observer } from "@clayui/modal/lib/types";
@@ -1457,6 +1457,126 @@ export type Filter = {
   visible: string;
 };
 
+export function CreateField({
+  templates,
+  templateChoice,
+  setTemplateChoice,
+}: {
+  templates: { title: string; description: string; Json: string; descriptionAttribute: string; visible: string; multiselect?: string }[];
+  templateChoice: KeyValue;
+  setTemplateChoice: Dispatch<SetStateAction<KeyValue>>;
+}) {
+  const keyMultiselect: [string, any][] = templates.flatMap((template) => {
+    if (template.multiselect) {
+      const templateObj = JSON.parse(template.multiselect);
+      return Object.entries(templateObj);
+    }
+    return [];
+  });
+
+  const createField = (key: string, value: any, description: string) => {
+    const indexSelect = keyMultiselect.findIndex((singleKey) => {
+      return singleKey[0] === key;
+    });
+
+    if (indexSelect !== -1) {
+      keyMultiselect[indexSelect][1].forEach((element: any) => {
+        console.log(element);
+      });
+      return (
+        <div className="form-group-item" key={key}>
+          <label id={key} style={{ paddingTop: "18px" }}>
+            {key}
+          </label>
+          {InformationField(description)}
+          <ClaySelect
+            aria-label="Select Label"
+            id="mySelectId"
+            onChange={(event) => setTemplateChoice({ ...templateChoice, [key]: event.currentTarget.value })}
+            defaultValue={templateChoice[key] || ""}
+          >
+            {keyMultiselect[indexSelect][1].map((item: any, index: number) => (
+              <ClaySelect.Option key={"item" + index} label={item} value={item} />
+            ))}
+          </ClaySelect>
+        </div>
+      );
+    } else
+      switch (typeof value) {
+        case "string":
+          return (
+            <TextInputSimple
+              key={key}
+              keyofF={key}
+              description={description}
+              value={value}
+              isNumber={false}
+              onChange={(event) => {
+                setTemplateChoice({ ...templateChoice, [key]: event.currentTarget.value });
+              }}
+            />
+          );
+        case "number":
+          return (
+            <TextInputSimple
+              key={key}
+              keyofF={key}
+              description={description}
+              isNumber={true}
+              value={value}
+              onChange={(event) => {
+                setTemplateChoice({ ...templateChoice, [key]: parseFloat(event.currentTarget.value) });
+              }}
+            />
+          );
+        case "boolean":
+          return (
+            <InputBooleanSimple
+              key={key}
+              keyofF={key}
+              description={description}
+              value={value}
+              onChange={(event) => {
+                setTemplateChoice({ ...templateChoice, [key]: !value });
+              }}
+            />
+          );
+        default:
+          if (Array.isArray(value)) {
+            return (
+              <MultiSelectSimple
+                key={key}
+                keyofF={key}
+                description={description}
+                items={value.map((value: any) => ({ label: value, value }))}
+                onItemchange={(value: Array<{ label?: string; value?: string }>) => {
+                  setTemplateChoice({ ...templateChoice, [key]: value.map(({ value }) => value!) });
+                }}
+              />
+            );
+          }
+      }
+  };
+  return (
+    <React.Fragment>
+      {templates.map((template: { title: string; description: string; Json: string; descriptionAttribute: string; visible: string }) => {
+        if (template.visible === "true") {
+          const keysOfFields = Object.keys(JSON.parse(template.Json));
+          const descriptionsFields = JSON.parse(template.descriptionAttribute);
+          const fields = keysOfFields.reduce((acc: Array<JSX.Element>, key) => {
+            if (key !== "type") {
+              acc.push(createField(key, templateChoice?.[key], descriptionsFields[key]) || <div></div>);
+            }
+            return acc;
+          }, []);
+          return <div key={template.title}>{fields}</div>;
+        }
+        return null;
+      })}
+    </React.Fragment>
+  );
+}
+
 export function CreateFieldDinamically({
   templates,
   templateChoice,
@@ -1621,6 +1741,8 @@ export function MultiSelectSimple({
   onItemchange(event: any): void;
 }) {
   const [value, setValue] = React.useState("");
+  console.log(items);
+
   return (
     <div className="form-group-item" key={keyofF}>
       <label id={keyofF} style={{ paddingTop: "18px" }}>
@@ -2010,6 +2132,106 @@ export function DropDownCustom() {
         </li>
       </ul>
     </div>
+  );
+}
+
+export function MultiSelectDynamicField({
+  id,
+  setTitle,
+  templates,
+  onChangeDescription,
+  templateChoice,
+  setTemplateChoice,
+  form,
+  excludeType,
+  query,
+  type,
+}: {
+  setTitle?: (value: string) => void;
+  id: string;
+  templates: any;
+  onChangeDescription: any;
+  templateChoice: KeyValue;
+  setTemplateChoice: any;
+  form: any;
+  excludeType: boolean;
+  query: QueryResult<
+    AnalyzerQuery | TokenizerQuery,
+    Exact<{
+      id: string;
+    }>
+  >;
+  type?: string;
+}) {
+  React.useEffect(() => {
+    if (JSON.stringify(templateChoice) !== "{}") {
+      form.inputProps("jsonConfig").onChange(JSON.stringify(templateChoice));
+    }
+  }, [templateChoice]);
+  if (query.loading) {
+    return <div></div>;
+  }
+  if (excludeType) {
+    if (id !== "new" && JSON.stringify(templateChoice) === "{}") {
+      try {
+        const value = JSON.parse(form.inputProps("jsonConfig").value);
+        setTemplateChoice(value);
+      } catch (error) {}
+    }
+    if (id === "new" && JSON.stringify(templateChoice) === "{}") {
+      try {
+        const value = JSON.parse(templates[0].Json);
+        setTemplateChoice(value);
+      } catch (error) {}
+    }
+    if (id !== "new") {
+      templates.forEach((filter: any) => {
+        if (filter.title === templateChoice.type) {
+          filter.visible = "" + true;
+        }
+      });
+    }
+    if (id === "new") {
+      templates[0].visible = "" + true;
+    }
+  }
+  return (
+    <React.Fragment>
+      <div className="panelClass custom-panel panel panel-secondary" role="tablist">
+        <div className="panel-header">
+          <span className="panel-title">Type</span>
+        </div>
+        <div className="custom-panel-body panel-body">
+          <CustomFormGroup>
+            <div className="form-group-item">
+              <select
+                defaultValue={id === "new" ? "" : templateChoice.type}
+                onChange={(event) => {
+                  templates.map((element: any) => {
+                    element.visible = "false";
+                    if (element.title === event.currentTarget.value) {
+                      element.visible = "true";
+                      setTemplateChoice(JSON.parse(element.Json));
+                      return true;
+                    }
+                  });
+                  const dataSelect = templates.find((element: any) => element.title === event.currentTarget.value);
+                  if (setTitle) {
+                    setTitle(dataSelect.title);
+                  }
+                  onChangeDescription(dataSelect!.description);
+                }}
+                className="form-control"
+              >
+                {templates.map((filter: any, index: number) => (
+                  <option key={index} label={filter.title} value={filter.title} />
+                ))}
+              </select>
+            </div>
+          </CustomFormGroup>
+        </div>
+      </div>
+    </React.Fragment>
   );
 }
 

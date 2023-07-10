@@ -5,11 +5,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery } from "../graphql-generated";
 import {
   ContainerFluid,
+  CreateField,
+  CreateFieldDinamically,
   CustomFormGroup,
   FormatString,
   fromFieldValidators,
   InformationField,
   KeyValue,
+  MultiSelectDynamicField,
   StyleToggle,
   TextArea,
   TextInput,
@@ -161,161 +164,19 @@ export function QueryParserConfig() {
         >
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-          <div className="panelClass custom-panel panel panel-secondary" role="tablist">
-            <div className="panel-header">
-              <span className="panel-title">Type</span>
-            </div>
-            <div className="custom-panel-body panel-body">
-              <CustomFormGroup>
-                <div className="form-group-item">
-                  <select
-                    defaultValue={queryParserConfigId === "new" ? "" : type}
-                    onChange={(event) => {
-                      form.inputProps("type").onChange(event.currentTarget.value);
 
-                      TemplateQueryParser.map((element) => {
-                        element.visible = "false";
-                        if (element.title === event.currentTarget.value) {
-                          element.visible = "true";
-                          setTemplateChoice(JSON.parse(element.Json));
-                          return true;
-                        }
-                      });
-                      const dataSelect = TemplateQueryParser.find((element) => element.title === event.currentTarget.value);
-                      form.inputProps("description").onChange(dataSelect!.description);
-                    }}
-                    className="form-control"
-                  >
-                    {TemplateQueryParser.map((filter, index) => (
-                      <option key={index} label={filter.title} value={filter.title} />
-                    ))}
-                  </select>
-                </div>
-              </CustomFormGroup>
-            </div>
-          </div>
-          {TemplateQueryParser.map((template) => {
-            if (template.visible === "true") {
-              const keysOfFields = Object.keys(JSON.parse(template.Json));
-              const descriptionsFields = JSON.parse(template.descriptionAttribute);
-              let fields: Array<any> = [];
-              let i = 0;
-              while (i < keysOfFields.length) {
-                let t = i;
-                if (keysOfFields[i] !== "type" && typeof templateChoice?.[keysOfFields[i]] === "string") {
-                  if (
-                    keysOfFields[i] === "valuesQueryType" ||
-                    keysOfFields[i] === "globalQueryType" ||
-                    keysOfFields[i] === "queryCondition"
-                  ) {
-                    fields.push(
-                      <div className="form-group-item" key={keysOfFields[i]}>
-                        <label id={keysOfFields[i] + i} style={{ paddingTop: "18px" }}>
-                          {keysOfFields[i]}
-                        </label>
-                        {InformationField(descriptionsFields[keysOfFields[i]])}
-                        <select
-                          defaultValue={templateChoice?.[keysOfFields[i]]}
-                          aria-label="Select Label"
-                          id="mySelectId"
-                          onChange={(event) => {
-                            setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: event.currentTarget.value });
-                          }}
-                          className="form-control"
-                        >
-                          <option label={"MUST"} value={"MUST"} />
-                          <option label={"SHOULD"} value={"SHOULD"} />
-                          <option label={"MIN_SHOULD_1"} value={"MIN_SHOULD_1"} />
-                          <option label={"MIN_SHOULD_2"} value={"MIN_SHOULD_2"} />
-                          <option label={"MIN_SHOULD_3"} value={"MIN_SHOULD_3"} />
-                          <option label={"MUST_NOT"} value={"MUST_NOT"} />
-                          <option label={"FILTER"} value={"FILTER"} />
-                        </select>
-                      </div>
-                    );
-                  } else {
-                    fields.push(
-                      <div className="form-group-item" key={keysOfFields[i]}>
-                        <label id={keysOfFields[i]} style={{ paddingTop: "18px" }}>
-                          {keysOfFields[i]}
-                        </label>
-                        {InformationField(descriptionsFields[keysOfFields[i]])}
-                        <input
-                          type="text"
-                          id={keysOfFields[i] + i}
-                          className="form-control"
-                          value={templateChoice?.[keysOfFields[i]]}
-                          onChange={(event) => {
-                            setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: event.currentTarget.value });
-                          }}
-                        ></input>
-                      </div>
-                    );
-                  }
-                }
-                if (typeof templateChoice?.[keysOfFields[i]] == "number") {
-                  fields.push(
-                    <div className="form-group-item" key={keysOfFields[i]}>
-                      <label id={keysOfFields[i] + i} style={{ paddingTop: "18px" }}>
-                        {keysOfFields[i]}
-                      </label>
-                      {InformationField(descriptionsFields[keysOfFields[i]])}
-                      <input
-                        type="number"
-                        id={keysOfFields[i] + i}
-                        className="form-control"
-                        value={templateChoice?.[keysOfFields[i]]}
-                        onChange={(event) => {
-                          setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: parseFloat(event.currentTarget.value) });
-                        }}
-                      ></input>
-                    </div>
-                  );
-                }
-                if (typeof templateChoice?.[keysOfFields[i]] == "boolean") {
-                  fields.push(
-                    <div className="form-group" style={{ paddingTop: "18px" }} key={keysOfFields[i]}>
-                      <style type="text/css">{StyleToggle}</style>
-                      <ClayToggle
-                        label={keysOfFields[i]}
-                        id={keysOfFields[i] + i}
-                        toggled={templateChoice?.[keysOfFields[i]]}
-                        onToggle={(event) => {
-                          setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: !templateChoice?.[keysOfFields[t]] });
-                        }}
-                      />
-                      {InformationField(descriptionsFields[keysOfFields[i]])}
-                    </div>
-                  );
-                }
-                if (typeof templateChoice?.[keysOfFields[i]] == "object") {
-                  const values = Object.values(templateChoice?.[keysOfFields[i]]);
-                  fields.push(
-                    <div className="form-group-item" key={keysOfFields[i]}>
-                      <label id={keysOfFields[i] + i} style={{ paddingTop: "18px" }}>
-                        {keysOfFields[i]}
-                      </label>
-                      {InformationField(descriptionsFields[keysOfFields[i]])}
-                      <select
-                        aria-label="Select Label"
-                        id="mySelectId"
-                        onChange={(event) => {
-                          setTemplateChoice({ ...templateChoice, [keysOfFields[t]]: event.currentTarget.value });
-                        }}
-                        className="form-control"
-                      >
-                        {values?.map((item: any) => (
-                          <option key={item} label={item} value={item} />
-                        ))}
-                      </select>
-                    </div>
-                  );
-                }
-                i++;
-              }
-              return fields;
-            }
-          })}
+          <MultiSelectDynamicField
+            id={queryParserConfigId}
+            setTitle={form.inputProps("name").onChange}
+            templates={TemplateQueryParser}
+            onChangeDescription={form.inputProps("description").onChange}
+            templateChoice={templateChoice}
+            setTemplateChoice={setTemplateChoice}
+            form={form}
+            excludeType={false}
+            query={queryParserQuery}
+          />
+          <CreateField templates={TemplateQueryParser} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} />
           <div className="sheet-footer">
             <ClayButton type="submit" className={ClassNameButton} disabled={!form.canSubmit}>
               {queryParserConfigId === "new" ? "Create" : "Update"}
@@ -395,15 +256,19 @@ const TemplateQueryParser = [
       "manageEntityName": "sample"
     }`,
   },
-
   {
     title: "TEXT",
     description: "",
     Json: `
     {
-      "boost": 50.0,
-       "valuesQueryType": {"key":"MUST","key2":"SHOULD","key3":"MIN_SHOULD_1","key4":"MIN_SHOULD_2","key5":"MIN_SHOULD_3","key6":"MUST_NOT","key7":"FILTER"}, 
-       "globalQueryType": {"key":"MUST","key2":"SHOULD","key3":"MIN_SHOULD_1","key4":"MIN_SHOULD_2","key5":"MIN_SHOULD_3","key6":"MUST_NOT","key7":"FILTER"}
+       "boost": 50.0,
+       "valuesQueryType": "MUST",
+       "globalQueryType": "MUST"
+    }`,
+    multiselect: `
+    {
+       "valuesQueryType": ["MUST","SHOULD","MIN_SHOULD_1","MIN_SHOULD_2","MIN_SHOULD_3","MUST_NOT","FILTER"], 
+       "globalQueryType": ["MUST","SHOULD","MIN_SHOULD_1","MIN_SHOULD_2","MIN_SHOULD_3","MUST_NOT","FILTER"]
     }`,
     visible: "false",
     descriptionAttribute: `
