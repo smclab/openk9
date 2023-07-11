@@ -56,7 +56,9 @@ public class JobScheduler {
 	private record InvokePluginDriverInternal(
 		String tenantName, io.openk9.datasource.model.Scheduler scheduler,
 		boolean startFromFirst) implements Command {}
-	private record ChannelManagerSubscribeResponse(Receptionist.Listing listing) implements Command {}
+	private record StartSubscribeResponse(Receptionist.Listing listing) implements Command {}
+	private record InitialSubscribeResponse(Receptionist.Listing listing) implements Command {}
+
 	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
 	private record CopyIndexTemplate(String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
 	private record PersistSchedulerInternal(String tenantName, Scheduler scheduler, Throwable throwable) implements Command {}
@@ -75,7 +77,7 @@ public class JobScheduler {
 			ActorRef<Receptionist.Listing> listingActorRef =
 				ctx.messageAdapter(
 					Receptionist.Listing.class,
-					JobScheduler.ChannelManagerSubscribeResponse::new);
+					StartSubscribeResponse::new);
 
 			ctx
 				.getSystem()
@@ -107,8 +109,8 @@ public class JobScheduler {
 				)
 			)
 			.onMessage(
-				ChannelManagerSubscribeResponse.class,
-				cmsr -> onChannelManagerSubscribeResponse(ctx, cmsr))
+				StartSubscribeResponse.class,
+				ssr -> onStartSubscribeResponse(ctx, ssr))
 			.build();
 	}
 
@@ -122,7 +124,7 @@ public class JobScheduler {
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(ChannelManagerSubscribeResponse.class, cmsr -> onChannelManagerSubscribeResponse(ctx, cmsr))
+			.onMessage(InitialSubscribeResponse.class, isr -> onInitialSubscribeResponse(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, jobNames, isr))
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, transactionInvoker))
@@ -135,8 +137,8 @@ public class JobScheduler {
 
 	}
 
-	private static Behavior<Command> onChannelManagerSubscribeResponse(
-		ActorContext<Command> ctx, ChannelManagerSubscribeResponse cmsr) {
+	private static Behavior<Command> onStartSubscribeResponse(
+		ActorContext<Command> ctx, StartSubscribeResponse cmsr) {
 
 		cmsr
 			.listing
@@ -151,6 +153,26 @@ public class JobScheduler {
 		return Behaviors.same();
 
 	}
+
+	private static Behavior<Command> onInitialSubscribeResponse(
+		ActorContext<Command> ctx, QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		HttpPluginDriverClient httpPluginDriverClient, TransactionInvoker transactionInvoker,
+		RestHighLevelClient restHighLevelClient, List<String> jobNames,
+		InitialSubscribeResponse isr) {
+
+		ActorRef<MessageGateway.Command> messageGateway = isr
+			.listing
+			.getServiceInstances(MessageGateway.SERVICE_KEY)
+			.stream()
+			.findFirst()
+			.orElseThrow();
+
+		return initial(
+			ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker,
+			restHighLevelClient, messageGateway, jobNames);
+
+	}
+
 
 	private static Behavior<Command> onTriggerDatasourceInternal(
 		TriggerDatasourceInternal triggerDatasourceInternal,
