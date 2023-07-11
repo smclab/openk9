@@ -27,13 +27,11 @@ import io.vertx.core.json.JsonObject;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
-import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
-import org.elasticsearch.client.indices.IndexTemplateMetadata;
+import org.elasticsearch.client.indices.GetComposableIndexTemplateRequest;
+import org.elasticsearch.client.indices.GetComposableIndexTemplatesResponse;
 import org.elasticsearch.client.indices.PutComposableIndexTemplateRequest;
 import org.elasticsearch.cluster.metadata.ComposableIndexTemplate;
 import org.elasticsearch.cluster.metadata.Template;
-import org.elasticsearch.common.compress.CompressedXContent;
 import scala.Option;
 
 import java.io.IOException;
@@ -441,33 +439,38 @@ public class JobScheduler {
 		IndicesClient indices = restHighLevelClient.indices();
 
 		try {
-			GetIndexTemplatesResponse indexTemplate = indices.getIndexTemplate(
-				new GetIndexTemplatesRequest(oldDataIndex.getName() + "-template"),
+			
+			GetComposableIndexTemplatesResponse indexTemplate = indices.getIndexTemplate(
+				new GetComposableIndexTemplateRequest(oldDataIndex.getName() + "-template"),
 				RequestOptions.DEFAULT);
 
-			for (IndexTemplateMetadata template : indexTemplate.getIndexTemplates()) {
+			for (ComposableIndexTemplate composableIndexTemplate : indexTemplate.getIndexTemplates().values()) {
+
 				PutComposableIndexTemplateRequest request =
 					new PutComposableIndexTemplateRequest();
 
-				ComposableIndexTemplate composableIndexTemplate = new ComposableIndexTemplate(
+				Template template = composableIndexTemplate.template();
+
+				ComposableIndexTemplate newComposableIndexTemplate =
+					new ComposableIndexTemplate(
 						List.of(newDataIndexName),
 						new Template(
 							template.settings(),
-							template.mappings().source(),
-							null),
-						null, null, null, null);
+							template.mappings(),
+							template.aliases()
+						),
+						composableIndexTemplate.composedOf(),
+						composableIndexTemplate.priority(),
+						composableIndexTemplate.version(),
+						composableIndexTemplate.metadata()
+					);
 
-				request.indexTemplate(composableIndexTemplate);
+				request.indexTemplate(newComposableIndexTemplate);
 
 				indices.putIndexTemplateAsync(
 					request,
 					RequestOptions.DEFAULT,
-					ActorActionListener.of(ctx.getSelf(), (r, t) -> {
-						if (t != null) {
-							ctx.getLog().error("cannot put index template", t);
-						}
-						return new PersistSchedulerInternal(tenantName, scheduler);
-					})
+					ActorActionListener.of(ctx.getSelf(), (r, t) -> new PersistSchedulerInternal(tenantName, scheduler))
 				);
 			}
 		} catch (IOException e) {
