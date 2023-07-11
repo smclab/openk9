@@ -3,6 +3,7 @@ import { gql } from "@apollo/client";
 import { useDeleteQueryParserMutation, useQueryParserConfigsQuery } from "../graphql-generated";
 import { formatName, Table } from "./Table";
 import { useParams } from "react-router-dom";
+import { useToast } from "./ToastProvider";
 
 export const QueryParserConfigsQuery = gql`
   query QueryParserConfigs($queryParserConfigId: ID!, $searchText: String, $cursor: String) {
@@ -39,8 +40,18 @@ export function QueryParsers() {
     variables: { queryParserConfigId: searchConfigId! },
     skip: !searchConfigId,
   });
+
+  const showToast = useToast();
   const [deleteQueryParserMutate] = useDeleteQueryParserMutation({
-    refetchQueries: [{ query: QueryParserConfigsQuery, variables: { queryParserConfigId: searchConfigId! } }],
+    onCompleted(data) {
+      if (data.removeQueryParserConfig?.left?.id) {
+        queryParserConfigsQuery.refetch();
+        showToast({ displayType: "success", title: "Query Parser deleted", content: "" });
+      }
+    },
+    onError(error) {
+      showToast({ displayType: "danger", title: "Data source error", content: error.message ?? "" });
+    },
   });
 
   if (!searchConfigId) throw new Error();

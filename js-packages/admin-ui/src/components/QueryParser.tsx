@@ -2,7 +2,7 @@ import { gql } from "@apollo/client";
 import { ClayToggle } from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery } from "../graphql-generated";
+import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery, useQueryParserConfigsQuery } from "../graphql-generated";
 import {
   ContainerFluid,
   CreateField,
@@ -27,6 +27,7 @@ import ClayToolbar from "@clayui/toolbar";
 import { QueryParserConfigsQuery } from "./QueryParsers";
 import { useToast } from "./ToastProvider";
 import { ClassNameButton } from "../App";
+import { CodeInput } from "./CodeInput";
 
 const QueryParserConfigQuery = gql`
   query QueryParserConfig($id: ID!) {
@@ -73,12 +74,7 @@ export function QueryParserConfig() {
     variables: { id: queryParserConfigId as string },
     skip: !queryParserConfigId || queryParserConfigId === "new",
   });
-  const [templateChoice, setTemplateChoice] = React.useState<KeyValue>(
-    JSON.parse(queryParserQuery.data?.queryParserConfig?.jsonConfig || `{}`)
-  );
   const [inputFields, setInputFields] = React.useState<InputField[]>([]);
-
-  const [IsEmpty, setIsEmpty] = React.useState(false);
   const [createOrUpdateQueryParserConfigMutate, createOrUpdateQueryParserConfigMutation] = useCreateOrUpdateQueryParserConfigMutation({
     refetchQueries: [QueryParserConfigQuery, QueryParserConfigsQuery],
     onCompleted(data) {
@@ -118,13 +114,14 @@ export function QueryParserConfig() {
   });
 
   React.useEffect(() => {
-    const keyValueArray = inputFields.map((field) => ({ [field.id]: field.value }));
-    const keyValueObject: { [key: string]: string } = {};
-    inputFields.forEach((field) => {
-      keyValueObject[field.id] = field.value;
-    });
-    const singleObject = { ...keyValueObject };
-    form.inputProps("jsonConfig").onChange(JSON.stringify(singleObject));
+    if (!queryParserQuery.loading) {
+      const keyValueObject: { [key: string]: string } = {};
+      inputFields.forEach((field) => {
+        keyValueObject[field.id] = field.value;
+      });
+      const singleObject = { ...keyValueObject };
+      form.inputProps("jsonConfig").onChange(JSON.stringify(singleObject));
+    }
   }, [inputFields]);
 
   if (queryParserQuery.loading) {
@@ -154,14 +151,17 @@ export function QueryParserConfig() {
         >
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-          <TemplateQueryComponent
-            TemplateQueryParser={TemplateQueryParser}
-            type={form.inputProps("type").value}
-            recoveryValue={form.inputProps("jsonConfig").value}
-            inputFields={inputFields}
-            setInputFields={setInputFields}
-            setType={form.inputProps("type").onChange}
-          />
+          {
+            <TemplateQueryComponent
+              TemplateQueryParser={TemplateQueryParser}
+              type={form.inputProps("type").value}
+              recoveryValue={form.inputProps("jsonConfig").value}
+              inputFields={inputFields}
+              setInputFields={setInputFields}
+              setType={form.inputProps("type").onChange}
+            />
+          }
+          <CodeInput label="test" language="json" {...form.inputProps("jsonConfig")} />
           <div className="sheet-footer">
             <ClayButton type="submit" className={ClassNameButton} disabled={!form.canSubmit}>
               {queryParserConfigId === "new" ? "Create" : "Update"}

@@ -1717,8 +1717,9 @@ export function TemplateQueryComponent({
   }, [type]);
 
   return (
-    <div>
-      <select value={type} onChange={handleTitleChange}>
+    <div className="form-group">
+      <label>Type</label>
+      <select className="form-control" id="regularSelectElement" value={type} onChange={handleTitleChange}>
         <option value="">Seleziona un titolo</option>
         {TemplateQueryParser.map((template) => (
           <option key={template.title} value={template.title}>
@@ -1745,9 +1746,11 @@ function CreateFieldF({
 
   if (field.multiselect) {
     return (
-      <div key={field.id}>
+      <div key={field.id} className="form-group">
         <label htmlFor={field.id}>{field.id}</label>
         <select
+          className="form-control"
+          id="regularSelectElement"
           defaultValue={field.value}
           onChange={(event) => {
             const value = event.target.value;
@@ -1778,9 +1781,9 @@ function CreateFieldF({
     );
   }
   return (
-    <div key={field.id}>
+    <div key={field.id} className="form-group">
       <label htmlFor={field.id}>{field.id}</label>
-      <input type="text" id={field.id} value={field.value} onChange={handleInputChange} />
+      <input className="form-control" type="text" id={field.id} value={field.value} onChange={handleInputChange} />
     </div>
   );
 }
