@@ -537,15 +537,17 @@ public class JobScheduler {
 				.withTransaction(tenantName, (s) ->  {
 					DataIndex oldDataIndex = scheduler.getOldDataIndex();
 					DataIndex newDataIndex = scheduler.getNewDataIndex();
-					Set<DocType> docTypes = oldDataIndex.getDocTypes();
 
-					if (docTypes != null && !docTypes.isEmpty()) {
-						Set<DocType> refreshed = new LinkedHashSet<>();
+					if (oldDataIndex != null) {
+						Set<DocType> docTypes = oldDataIndex.getDocTypes();
+						if (docTypes != null && !docTypes.isEmpty()) {
+							Set<DocType> refreshed = new LinkedHashSet<>();
 
-						for (DocType docType : docTypes) {
-							refreshed.add(s.getReference(docType));
+							for (DocType docType : docTypes) {
+								refreshed.add(s.getReference(docType));
+							}
+							newDataIndex.setDocTypes(refreshed);
 						}
-						newDataIndex.setDocTypes(refreshed);
 					}
 
 					return s
