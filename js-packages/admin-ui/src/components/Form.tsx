@@ -1763,6 +1763,20 @@ function CreateFieldF({
       </div>
     );
   }
+  if (field.value === "true" || field.value === "false") {
+    const value = field.value === "true" ? "false" : "true";
+    return (
+      <div style={{ display: "flex", gap: "5px" }}>
+        <ClayToggle
+          label="Checkbox"
+          onToggle={() => {
+            setInputFields((prevFields) => prevFields.map((fields) => (fields.id === field.id ? { ...fields, value } : fields)));
+          }}
+          toggled={field.value === "true" ? true : false}
+        />
+      </div>
+    );
+  }
   return (
     <div key={field.id}>
       <label htmlFor={field.id}>{field.id}</label>

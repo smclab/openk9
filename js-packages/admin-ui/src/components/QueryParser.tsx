@@ -230,7 +230,7 @@ const TemplateQueryParser = [
     Json: `
     {
       "boost": 50.0,
-       "queryCondition": "string",
+       "queryCondition": "",
        "manageEntityName": true
     }`,
     visible: "false",
