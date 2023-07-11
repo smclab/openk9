@@ -6,6 +6,7 @@ import akka.cluster.typed.SingletonActor;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.sql.TransactionInvoker;
+import org.elasticsearch.client.RestHighLevelClient;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -31,7 +32,7 @@ public class SchedulerInitializerActor {
 			.init(
 				SingletonActor.of(
 					JobScheduler.create(
-						httpPluginDriverClient, transactionInvoker
+						httpPluginDriverClient, transactionInvoker, restHighLevelClient
 					), "job-scheduler")
 				);
 	}
@@ -45,4 +46,6 @@ public class SchedulerInitializerActor {
 	@Inject
 	ActorSystemProvider actorSystemProvider;
 
+	@Inject
+	RestHighLevelClient restHighLevelClient;
 }
