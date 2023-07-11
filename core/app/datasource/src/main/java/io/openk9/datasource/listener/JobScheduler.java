@@ -470,7 +470,12 @@ public class JobScheduler {
 				indices.putIndexTemplateAsync(
 					request,
 					RequestOptions.DEFAULT,
-					ActorActionListener.of(ctx.getSelf(), (r, t) -> new PersistSchedulerInternal(tenantName, scheduler))
+					ActorActionListener.of(ctx.getSelf(), (r, t) -> {
+						if (t != null) {
+							ctx.getLog().error("cannot put index template", t);
+						}
+						return new PersistSchedulerInternal(tenantName, scheduler);
+					})
 				);
 			}
 		} catch (IOException e) {
