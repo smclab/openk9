@@ -14,6 +14,7 @@ import {
   KeyValue,
   MultiSelectDynamicField,
   StyleToggle,
+  TemplateQueryComponent,
   TextArea,
   TextInput,
   useForm,
@@ -141,6 +142,10 @@ export function QueryParserConfig() {
       }
     });
   }
+  if (queryParserConfigId === "new" && JSON.stringify(templateChoice) === "{}") {
+    TemplateQueryParser[0].visible = "true";
+    setTemplateChoice(JSON.parse(TemplateQueryParser[0].Json));
+  }
   return (
     <React.Fragment>
       <ClayToolbar light>
@@ -164,7 +169,7 @@ export function QueryParserConfig() {
         >
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-
+          {/* 
           <MultiSelectDynamicField
             id={queryParserConfigId}
             setTitle={form.inputProps("name").onChange}
@@ -176,7 +181,8 @@ export function QueryParserConfig() {
             excludeType={false}
             query={queryParserQuery}
           />
-          <CreateField templates={TemplateQueryParser} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} />
+          <CreateField templates={TemplateQueryParser} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} /> */}
+          <TemplateQueryComponent TemplateQueryParser={TemplateQueryParser} />
           <div className="sheet-footer">
             <ClayButton type="submit" className={ClassNameButton} disabled={!form.canSubmit}>
               {queryParserConfigId === "new" ? "Create" : "Update"}
@@ -205,7 +211,7 @@ const TemplateQueryParser = [
     visible: "false",
   },
   {
-    title: "DATE ",
+    title: "DATE",
     description: "Date Template",
     Json: `
     {

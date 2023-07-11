@@ -1475,93 +1475,95 @@ export function CreateField({
   });
 
   const createField = (key: string, value: any, description: string) => {
-    const indexSelect = keyMultiselect.findIndex((singleKey) => {
-      return singleKey[0] === key;
-    });
+    // const indexSelect = keyMultiselect.findIndex((singleKey) => {
+    //   return singleKey[0] === key;
+    // });
+    // if (indexSelect !== -1) {
+    //   return (
+    //     <div className="form-group-item" key={key}>
+    //       <label id={key} style={{ paddingTop: "18px" }}>
+    //         {key}
+    //       </label>
+    //       {InformationField(description)}
+    //       <ClaySelect
+    //         aria-label="Select Label"
+    //         id="mySelectId"
+    //         onChange={(event) => setTemplateChoice({ ...templateChoice, [key]: event.currentTarget.value })}
+    //         defaultValue={templateChoice[key] || ""}
+    //       >
+    //         {keyMultiselect[indexSelect][1].map((item: any, index: number) => (
+    //           <ClaySelect.Option key={"item" + index} label={item} value={item} />
+    //         ))}
+    //       </ClaySelect>
+    //     </div>
+    //   );
+    // }
+    console.log("valore " + value);
 
-    if (indexSelect !== -1) {
-      keyMultiselect[indexSelect][1].forEach((element: any) => {
-        console.log(element);
-      });
-      return (
-        <div className="form-group-item" key={key}>
-          <label id={key} style={{ paddingTop: "18px" }}>
-            {key}
-          </label>
-          {InformationField(description)}
-          <ClaySelect
-            aria-label="Select Label"
-            id="mySelectId"
-            onChange={(event) => setTemplateChoice({ ...templateChoice, [key]: event.currentTarget.value })}
-            defaultValue={templateChoice[key] || ""}
-          >
-            {keyMultiselect[indexSelect][1].map((item: any, index: number) => (
-              <ClaySelect.Option key={"item" + index} label={item} value={item} />
-            ))}
-          </ClaySelect>
-        </div>
-      );
-    } else
-      switch (typeof value) {
-        case "string":
+    switch (typeof value) {
+      case "string":
+        return (
+          <TextInputSimple
+            key={key}
+            keyofF={key}
+            description={description}
+            value={value}
+            isNumber={false}
+            onChange={(event) => {
+              setTemplateChoice({ ...templateChoice, [key]: event.currentTarget.value });
+            }}
+          />
+        );
+      case "number":
+        return (
+          <TextInputSimple
+            key={key}
+            keyofF={key}
+            description={description}
+            isNumber={true}
+            value={value}
+            onChange={(event) => {
+              setTemplateChoice({ ...templateChoice, [key]: parseFloat(event.currentTarget.value) });
+            }}
+          />
+        );
+      case "boolean":
+        return (
+          <InputBooleanSimple
+            key={key}
+            keyofF={key}
+            description={description}
+            value={value}
+            onChange={(event) => {
+              setTemplateChoice({ ...templateChoice, [key]: !value });
+            }}
+          />
+        );
+      default:
+        if (Array.isArray(value)) {
           return (
-            <TextInputSimple
+            <MultiSelectSimple
               key={key}
               keyofF={key}
               description={description}
-              value={value}
-              isNumber={false}
-              onChange={(event) => {
-                setTemplateChoice({ ...templateChoice, [key]: event.currentTarget.value });
+              items={value.map((value: any) => ({ label: value, value }))}
+              onItemchange={(value: Array<{ label?: string; value?: string }>) => {
+                setTemplateChoice({ ...templateChoice, [key]: value.map(({ value }) => value!) });
               }}
             />
           );
-        case "number":
-          return (
-            <TextInputSimple
-              key={key}
-              keyofF={key}
-              description={description}
-              isNumber={true}
-              value={value}
-              onChange={(event) => {
-                setTemplateChoice({ ...templateChoice, [key]: parseFloat(event.currentTarget.value) });
-              }}
-            />
-          );
-        case "boolean":
-          return (
-            <InputBooleanSimple
-              key={key}
-              keyofF={key}
-              description={description}
-              value={value}
-              onChange={(event) => {
-                setTemplateChoice({ ...templateChoice, [key]: !value });
-              }}
-            />
-          );
-        default:
-          if (Array.isArray(value)) {
-            return (
-              <MultiSelectSimple
-                key={key}
-                keyofF={key}
-                description={description}
-                items={value.map((value: any) => ({ label: value, value }))}
-                onItemchange={(value: Array<{ label?: string; value?: string }>) => {
-                  setTemplateChoice({ ...templateChoice, [key]: value.map(({ value }) => value!) });
-                }}
-              />
-            );
-          }
-      }
+        }
+    }
   };
+
   return (
     <React.Fragment>
       {templates.map((template: { title: string; description: string; Json: string; descriptionAttribute: string; visible: string }) => {
         if (template.visible === "true") {
+          console.log("bella");
+
           const keysOfFields = Object.keys(JSON.parse(template.Json));
+
           const descriptionsFields = JSON.parse(template.descriptionAttribute);
           const fields = keysOfFields.reduce((acc: Array<JSX.Element>, key) => {
             if (key !== "type") {
@@ -1663,6 +1665,73 @@ export function CreateFieldDinamically({
   );
 }
 
+interface Template {
+  title: string;
+  description: string;
+  Json: string;
+  descriptionAttribute: string;
+  visible: string;
+  multiselect?: string;
+}
+
+interface InputField {
+  id: string;
+  value: string;
+}
+
+export function TemplateQueryComponent({ TemplateQueryParser }: { TemplateQueryParser: Template[] }) {
+  const [selectedTitle, setSelectedTitle] = React.useState<string>("");
+  const [inputFields, setInputFields] = React.useState<InputField[]>([]);
+
+  const handleTitleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const title = event.target.value;
+    setSelectedTitle(title);
+  };
+
+  React.useEffect(() => {
+    if (selectedTitle !== "") {
+      const template = TemplateQueryParser.find((template) => template.title === selectedTitle);
+      if (template) {
+        const jsonAttributes = JSON.parse(template.descriptionAttribute);
+        const fields = Object.entries(jsonAttributes).map(([id, defaultValue]) => ({
+          id,
+          value: "" + defaultValue,
+        }));
+        setInputFields(fields);
+      } else {
+        setInputFields([]);
+      }
+    }
+  }, [selectedTitle]);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const id = event.target.id;
+    const value = event.target.value;
+
+    setInputFields((prevFields) => prevFields.map((field) => (field.id === id ? { ...field, value } : field)));
+  };
+  console.log(inputFields);
+
+  return (
+    <div>
+      <select value={selectedTitle} onChange={handleTitleChange}>
+        <option value="">Seleziona un titolo</option>
+        {TemplateQueryParser.map((template) => (
+          <option key={template.title} value={template.title}>
+            {template.title}
+          </option>
+        ))}
+      </select>
+
+      {inputFields.map((field) => (
+        <div key={field.id}>
+          <label htmlFor={field.id}>{field.id}</label>
+          <input type="text" id={field.id} value={field.value} onChange={handleInputChange} />
+        </div>
+      ))}
+    </div>
+  );
+}
 export function TextInputSimple({
   keyofF,
   description,
@@ -1741,7 +1810,6 @@ export function MultiSelectSimple({
   onItemchange(event: any): void;
 }) {
   const [value, setValue] = React.useState("");
-  console.log(items);
 
   return (
     <div className="form-group-item" key={keyofF}>
@@ -2163,38 +2231,6 @@ export function MultiSelectDynamicField({
   >;
   type?: string;
 }) {
-  React.useEffect(() => {
-    if (JSON.stringify(templateChoice) !== "{}") {
-      form.inputProps("jsonConfig").onChange(JSON.stringify(templateChoice));
-    }
-  }, [templateChoice]);
-  if (query.loading) {
-    return <div></div>;
-  }
-  if (excludeType) {
-    if (id !== "new" && JSON.stringify(templateChoice) === "{}") {
-      try {
-        const value = JSON.parse(form.inputProps("jsonConfig").value);
-        setTemplateChoice(value);
-      } catch (error) {}
-    }
-    if (id === "new" && JSON.stringify(templateChoice) === "{}") {
-      try {
-        const value = JSON.parse(templates[0].Json);
-        setTemplateChoice(value);
-      } catch (error) {}
-    }
-    if (id !== "new") {
-      templates.forEach((filter: any) => {
-        if (filter.title === templateChoice.type) {
-          filter.visible = "" + true;
-        }
-      });
-    }
-    if (id === "new") {
-      templates[0].visible = "" + true;
-    }
-  }
   return (
     <React.Fragment>
       <div className="panelClass custom-panel panel panel-secondary" role="tablist">
