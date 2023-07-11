@@ -17,6 +17,7 @@ import { Observer } from "@clayui/modal/lib/types";
 import { BrandLogo } from "./BrandLogo";
 import ClayCard from "@clayui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as TooltipRecharts, Legend } from "recharts";
+import get from "lodash/get";
 
 type Nullable<T> = T | null | undefined;
 export const fromFieldValidators =
@@ -1498,8 +1499,6 @@ export function CreateField({
     //     </div>
     //   );
     // }
-    console.log("valore " + value);
-
     switch (typeof value) {
       case "string":
         return (
@@ -1560,8 +1559,6 @@ export function CreateField({
     <React.Fragment>
       {templates.map((template: { title: string; description: string; Json: string; descriptionAttribute: string; visible: string }) => {
         if (template.visible === "true") {
-          console.log("bella");
-
           const keysOfFields = Object.keys(JSON.parse(template.Json));
 
           const descriptionsFields = JSON.parse(template.descriptionAttribute);
@@ -1665,7 +1662,7 @@ export function CreateFieldDinamically({
   );
 }
 
-interface Template {
+export interface Template {
   title: string;
   description: string;
   Json: string;
@@ -1674,47 +1671,54 @@ interface Template {
   multiselect?: string;
 }
 
-interface InputField {
+export interface InputField {
   id: string;
   value: string;
+  multiselect?: string[];
 }
 
-export function TemplateQueryComponent({ TemplateQueryParser }: { TemplateQueryParser: Template[] }) {
-  const [selectedTitle, setSelectedTitle] = React.useState<string>("");
-  const [inputFields, setInputFields] = React.useState<InputField[]>([]);
-
+export function TemplateQueryComponent({
+  TemplateQueryParser,
+  type,
+  recoveryValue,
+  inputFields,
+  setInputFields,
+  setType,
+}: {
+  TemplateQueryParser: Template[];
+  type: string;
+  recoveryValue: string;
+  inputFields: InputField[];
+  setInputFields: React.Dispatch<React.SetStateAction<InputField[]>>;
+  setType: (value: string) => void;
+}) {
+  const recoveryvalueObject = JSON.parse(recoveryValue);
   const handleTitleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const title = event.target.value;
-    setSelectedTitle(title);
+    setType(title);
   };
 
   React.useEffect(() => {
-    if (selectedTitle !== "") {
-      const template = TemplateQueryParser.find((template) => template.title === selectedTitle);
+    if (type !== "") {
+      const template = TemplateQueryParser.find((template) => template.title === type);
       if (template) {
-        const jsonAttributes = JSON.parse(template.descriptionAttribute);
+        const jsonAttributes = JSON.parse(template.Json);
+        const jsonMultiselect = template?.multiselect ? JSON.parse(template.multiselect) : "";
         const fields = Object.entries(jsonAttributes).map(([id, defaultValue]) => ({
           id,
-          value: "" + defaultValue,
+          value: recoveryvalueObject[id] ? recoveryvalueObject[id] : "" + defaultValue,
+          multiselect: jsonMultiselect.hasOwnProperty(id) ? jsonMultiselect[id] : null,
         }));
         setInputFields(fields);
       } else {
         setInputFields([]);
       }
     }
-  }, [selectedTitle]);
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const id = event.target.id;
-    const value = event.target.value;
-
-    setInputFields((prevFields) => prevFields.map((field) => (field.id === id ? { ...field, value } : field)));
-  };
-  console.log(inputFields);
+  }, [type]);
 
   return (
     <div>
-      <select value={selectedTitle} onChange={handleTitleChange}>
+      <select value={type} onChange={handleTitleChange}>
         <option value="">Seleziona un titolo</option>
         {TemplateQueryParser.map((template) => (
           <option key={template.title} value={template.title}>
@@ -1722,13 +1726,47 @@ export function TemplateQueryComponent({ TemplateQueryParser }: { TemplateQueryP
           </option>
         ))}
       </select>
+      {inputFields.map((field) => CreateFieldF({ field, setInputFields }))}
+    </div>
+  );
+}
+function CreateFieldF({
+  field,
+  setInputFields,
+}: {
+  field: InputField;
+  setInputFields: React.Dispatch<React.SetStateAction<InputField[]>>;
+}) {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const id = event.target.id;
+    const value = event.target.value;
+    setInputFields((prevFields) => prevFields.map((field) => (field.id === id ? { ...field, value } : field)));
+  };
 
-      {inputFields.map((field) => (
-        <div key={field.id}>
-          <label htmlFor={field.id}>{field.id}</label>
-          <input type="text" id={field.id} value={field.value} onChange={handleInputChange} />
-        </div>
-      ))}
+  if (field.multiselect) {
+    return (
+      <div key={field.id}>
+        <label htmlFor={field.id}>{field.id}</label>
+        <select
+          defaultValue={field.value}
+          onChange={(event) => {
+            const value = event.target.value;
+            setInputFields((prevFields) => prevFields.map((fields) => (fields.id === field.id ? { ...fields, value } : fields)));
+          }}
+        >
+          {field.multiselect.map((value: string, index: number) => (
+            <option key={value + index} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+  return (
+    <div key={field.id}>
+      <label htmlFor={field.id}>{field.id}</label>
+      <input type="text" id={field.id} value={field.value} onChange={handleInputChange} />
     </div>
   );
 }

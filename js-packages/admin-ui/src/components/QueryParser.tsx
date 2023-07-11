@@ -11,6 +11,7 @@ import {
   FormatString,
   fromFieldValidators,
   InformationField,
+  InputField,
   KeyValue,
   MultiSelectDynamicField,
   StyleToggle,
@@ -75,6 +76,8 @@ export function QueryParserConfig() {
   const [templateChoice, setTemplateChoice] = React.useState<KeyValue>(
     JSON.parse(queryParserQuery.data?.queryParserConfig?.jsonConfig || `{}`)
   );
+  const [inputFields, setInputFields] = React.useState<InputField[]>([]);
+
   const [IsEmpty, setIsEmpty] = React.useState(false);
   const [createOrUpdateQueryParserConfigMutate, createOrUpdateQueryParserConfigMutation] = useCreateOrUpdateQueryParserConfigMutation({
     refetchQueries: [QueryParserConfigQuery, QueryParserConfigsQuery],
@@ -113,39 +116,21 @@ export function QueryParserConfig() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateQueryParserConfigMutation.data?.queryParserConfig?.fieldValidators),
   });
-  const [type, setType] = React.useState("{}");
+
   React.useEffect(() => {
-    if (JSON.stringify(templateChoice) !== "{}") {
-      form.inputProps("jsonConfig").onChange(JSON.stringify(templateChoice));
-    }
-  }, [templateChoice]);
+    const keyValueArray = inputFields.map((field) => ({ [field.id]: field.value }));
+    const keyValueObject: { [key: string]: string } = {};
+    inputFields.forEach((field) => {
+      keyValueObject[field.id] = field.value;
+    });
+    const singleObject = { ...keyValueObject };
+    form.inputProps("jsonConfig").onChange(JSON.stringify(singleObject));
+  }, [inputFields]);
+
   if (queryParserQuery.loading) {
     return <div></div>;
   }
-  if (!queryParserQuery.loading && queryParserConfigId !== "new" && type === "{}") {
-    setType(form.inputProps("type").value);
-  }
-  if (queryParserConfigId !== "new" && JSON.stringify(templateChoice) === "{}" && IsEmpty === false) {
-    try {
-      const value = JSON.parse(form.inputProps("jsonConfig").value);
-      setTemplateChoice(value);
-      setIsEmpty(true);
-    } catch (error) {}
-  }
-  TemplateQueryParser.map(
-    (template) => (template.title = FormatString({ howFormat: ["upperFirstLetter", "withoutSpace"], words: template.title }))
-  );
-  if (queryParserConfigId !== "new") {
-    TemplateQueryParser.forEach((filter) => {
-      if (filter.title === type) {
-        filter.visible = "" + true;
-      }
-    });
-  }
-  if (queryParserConfigId === "new" && JSON.stringify(templateChoice) === "{}") {
-    TemplateQueryParser[0].visible = "true";
-    setTemplateChoice(JSON.parse(TemplateQueryParser[0].Json));
-  }
+
   return (
     <React.Fragment>
       <ClayToolbar light>
@@ -169,20 +154,14 @@ export function QueryParserConfig() {
         >
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-          {/* 
-          <MultiSelectDynamicField
-            id={queryParserConfigId}
-            setTitle={form.inputProps("name").onChange}
-            templates={TemplateQueryParser}
-            onChangeDescription={form.inputProps("description").onChange}
-            templateChoice={templateChoice}
-            setTemplateChoice={setTemplateChoice}
-            form={form}
-            excludeType={false}
-            query={queryParserQuery}
+          <TemplateQueryComponent
+            TemplateQueryParser={TemplateQueryParser}
+            type={form.inputProps("type").value}
+            recoveryValue={form.inputProps("jsonConfig").value}
+            inputFields={inputFields}
+            setInputFields={setInputFields}
+            setType={form.inputProps("type").onChange}
           />
-          <CreateField templates={TemplateQueryParser} setTemplateChoice={setTemplateChoice} templateChoice={templateChoice} /> */}
-          <TemplateQueryComponent TemplateQueryParser={TemplateQueryParser} />
           <div className="sheet-footer">
             <ClayButton type="submit" className={ClassNameButton} disabled={!form.canSubmit}>
               {queryParserConfigId === "new" ? "Create" : "Update"}
