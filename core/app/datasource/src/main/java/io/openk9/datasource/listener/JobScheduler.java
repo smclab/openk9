@@ -59,7 +59,7 @@ public class JobScheduler {
 	private record ChannelManagerSubscribeResponse(Receptionist.Listing listing) implements Command {}
 	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
 	private record CopyIndexTemplate(String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
-	private record PersistSchedulerInternal(String tenantName, Scheduler scheduler) implements Command {}
+	private record PersistSchedulerInternal(String tenantName, Scheduler scheduler, Throwable throwable) implements Command {}
 
 
 	public static Behavior<Command> create(
@@ -412,14 +412,15 @@ public class JobScheduler {
 			if (oldDataIndex != null) {
 				Set<DocType> docTypes = oldDataIndex.getDocTypes();
 				if (docTypes != null && !docTypes.isEmpty()) {
-					newDataIndex.setDocTypes(new LinkedHashSet<>(docTypes));
 					ctx.getSelf().tell(new CopyIndexTemplate(tenantName, scheduler));
 				}
 				else {
 					persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, true);
 				}
 			}
-
+			else {
+				persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, true);
+			}
 		}
 		else {
 			persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, false);
@@ -465,17 +466,15 @@ public class JobScheduler {
 						composableIndexTemplate.metadata()
 					);
 
-				request.indexTemplate(newComposableIndexTemplate);
+				request
+					.name(newDataIndexName + "-template")
+					.indexTemplate(newComposableIndexTemplate);
 
 				indices.putIndexTemplateAsync(
 					request,
 					RequestOptions.DEFAULT,
-					ActorActionListener.of(ctx.getSelf(), (r, t) -> {
-						if (t != null) {
-							ctx.getLog().error("cannot put index template", t);
-						}
-						return new PersistSchedulerInternal(tenantName, scheduler);
-					})
+					ActorActionListener.of(ctx.getSelf(), (r, t) ->
+						new PersistSchedulerInternal(tenantName, scheduler, t))
 				);
 			}
 		} catch (IOException e) {
@@ -493,6 +492,12 @@ public class JobScheduler {
 
 		String tenantName = pndi.tenantName;
 		Scheduler scheduler = pndi.scheduler;
+		Throwable t = pndi.throwable;
+
+		if (t != null) {
+			ctx.getLog().error("cannot create index-template", t);
+			return Behaviors.same();
+		}
 
 		persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, true);
 
@@ -506,17 +511,31 @@ public class JobScheduler {
 
 		VertxUtil.runOnContext(() ->
 			transactionInvoker
-				.withTransaction(tenantName, (s) ->
-					s
-						.persist(scheduler)
-						.invoke(() -> {
-							messageGateway.tell(new MessageGateway.Register(
-								SchedulationKeyUtils.getValue(
-									tenantName, scheduler.getScheduleId())));
-							ctx
-								.getSelf()
-								.tell(new InvokePluginDriverInternal(tenantName, scheduler, startFromFirst));
-						})
+				.withTransaction(tenantName, (s) ->  {
+					DataIndex newDataIndex = scheduler.getNewDataIndex();
+					Set<DocType> docTypes = newDataIndex.getDocTypes();
+
+					if (docTypes != null && !docTypes.isEmpty()) {
+						Set<DocType> refreshed = new LinkedHashSet<>();
+
+						for (DocType docType : docTypes) {
+							refreshed.add(s.getReference(docType));
+						}
+						newDataIndex.setDocTypes(refreshed);
+					}
+
+					return s
+							.persist(scheduler)
+							.invoke(() -> {
+								messageGateway.tell(new MessageGateway.Register(
+									SchedulationKeyUtils.getValue(
+										tenantName, scheduler.getScheduleId())));
+								ctx
+									.getSelf()
+									.tell(new InvokePluginDriverInternal(
+										tenantName, scheduler, startFromFirst));
+							});
+					}
 				)
 		);
 	}
