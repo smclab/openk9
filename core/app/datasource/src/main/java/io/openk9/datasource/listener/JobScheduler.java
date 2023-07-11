@@ -453,7 +453,7 @@ public class JobScheduler {
 						List.of(newDataIndexName),
 						new Template(
 							template.settings(),
-							new CompressedXContent(Json.encode(template.mappings().sourceAsMap())),
+							template.mappings().source(),
 							null),
 						null, null, null, null);
 
