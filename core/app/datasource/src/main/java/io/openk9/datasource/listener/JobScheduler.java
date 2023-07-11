@@ -122,6 +122,7 @@ public class JobScheduler {
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
+			.onMessage(ChannelManagerSubscribeResponse.class, cmsr -> onChannelManagerSubscribeResponse(ctx, cmsr))
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, transactionInvoker))
