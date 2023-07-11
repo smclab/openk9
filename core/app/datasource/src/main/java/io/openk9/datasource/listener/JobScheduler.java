@@ -512,8 +512,9 @@ public class JobScheduler {
 		VertxUtil.runOnContext(() ->
 			transactionInvoker
 				.withTransaction(tenantName, (s) ->  {
+					DataIndex oldDataIndex = scheduler.getOldDataIndex();
 					DataIndex newDataIndex = scheduler.getNewDataIndex();
-					Set<DocType> docTypes = newDataIndex.getDocTypes();
+					Set<DocType> docTypes = oldDataIndex.getDocTypes();
 
 					if (docTypes != null && !docTypes.isEmpty()) {
 						Set<DocType> refreshed = new LinkedHashSet<>();
