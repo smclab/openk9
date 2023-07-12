@@ -538,7 +538,7 @@ public class JobScheduler {
 					DataIndex oldDataIndex = scheduler.getOldDataIndex();
 					DataIndex newDataIndex = scheduler.getNewDataIndex();
 
-					if (oldDataIndex != null) {
+					if (oldDataIndex != null && newDataIndex != null) {
 						Set<DocType> docTypes = oldDataIndex.getDocTypes();
 						if (docTypes != null && !docTypes.isEmpty()) {
 							Set<DocType> refreshed = new LinkedHashSet<>();
