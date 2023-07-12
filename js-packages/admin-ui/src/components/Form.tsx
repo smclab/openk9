@@ -1,6 +1,6 @@
 import React, { CSSProperties, Dispatch, SetStateAction, TableHTMLAttributes, TdHTMLAttributes } from "react";
 import { ClayInput, ClaySelect, ClayToggle } from "@clayui/form";
-import { MutationHookOptions, MutationTuple, QueryHookOptions, QueryResult } from "@apollo/client";
+import { ApolloQueryResult, MutationHookOptions, MutationTuple, QueryHookOptions, QueryResult } from "@apollo/client";
 import useDebounced from "./useDebounced";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import ClayModal, { useModal } from "@clayui/modal";
@@ -10,7 +10,7 @@ import ClayToolbar from "@clayui/toolbar";
 import ClayMultiSelect from "@clayui/multi-select";
 import ClayIcon from "@clayui/icon";
 import { ClayTooltipProvider } from "@clayui/tooltip";
-import { AnalyzerQuery, Exact, TokenizerQuery, UserField } from "../graphql-generated";
+import { AnalyzerQuery, DataSourceQuery, Exact, TokenizerQuery, UserField } from "../graphql-generated";
 import { TableRowActions } from "./Table";
 import { ClassNameButton } from "../App";
 import { Observer } from "@clayui/modal/lib/types";
@@ -619,10 +619,12 @@ export function SearchSelectGraphql<Value, Change extends Record<string, any>, R
   mapValueToRemoveMutationVariables,
   invalidate,
   description,
+  refetch,
 }: {
   label: string;
   value: Value | null | undefined;
   description?: string;
+  refetch: (variables?: Partial<Exact<{ id: string }>> | undefined) => Promise<ApolloQueryResult<DataSourceQuery>>;
   useValueQuery: QueryHook<{ value?: { id?: string | null; name?: string | null; description?: string | null } | null }, { id: Value }>;
   useOptionsQuery:
     | {
@@ -654,6 +656,10 @@ export function SearchSelectGraphql<Value, Change extends Record<string, any>, R
   const { observer, onOpenChange, open } = useModal();
   const scrollerRef = React.useRef<HTMLElement>();
   const [removeMutate, removeMutation] = useRemoveMutation({});
+  const searchTextDebounced = useDebounced(searchText);
+  React.useEffect(() => {
+    refetch({ searchText: searchTextDebounced } as any);
+  }, [refetch, searchTextDebounced]);
   return (
     <React.Fragment>
       <CustomFormGroup>
@@ -1720,7 +1726,6 @@ export function TemplateQueryComponent({
     <div className="form-group">
       <label>Type</label>
       <select className="form-control" id="regularSelectElement" value={type} onChange={handleTitleChange}>
-        <option value="">Seleziona un titolo</option>
         {TemplateQueryParser.map((template) => (
           <option key={template.title} value={template.title}>
             {template.title}

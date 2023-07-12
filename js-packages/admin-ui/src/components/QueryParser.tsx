@@ -94,7 +94,7 @@ export function QueryParserConfig() {
       () => ({
         name: "",
         description: "",
-        type: "",
+        type: TemplateQueryParser[0].title,
         jsonConfig: "{}",
       }),
       []
@@ -161,7 +161,6 @@ export function QueryParserConfig() {
               setType={form.inputProps("type").onChange}
             />
           }
-          <CodeInput label="test" language="json" {...form.inputProps("jsonConfig")} />
           <div className="sheet-footer">
             <ClayButton type="submit" className={ClassNameButton} disabled={!form.canSubmit}>
               {queryParserConfigId === "new" ? "Create" : "Update"}

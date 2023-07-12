@@ -3621,6 +3621,7 @@ export type DataIndexInformationQuery = { __typename?: 'Query', buckets?: { __ty
 
 export type DataSourceQueryVariables = Exact<{
   id: Scalars['ID'];
+  searchText?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -6730,7 +6731,7 @@ export type DataIndexInformationQueryHookResult = ReturnType<typeof useDataIndex
 export type DataIndexInformationLazyQueryHookResult = ReturnType<typeof useDataIndexInformationLazyQuery>;
 export type DataIndexInformationQueryResult = Apollo.QueryResult<DataIndexInformationQuery, DataIndexInformationQueryVariables>;
 export const DataSourceDocument = gql`
-    query DataSource($id: ID!) {
+    query DataSource($id: ID!, $searchText: String) {
   datasource(id: $id) {
     id
     name
@@ -6748,7 +6749,7 @@ export const DataSourceDocument = gql`
     enrichPipeline {
       id
     }
-    dataIndexes {
+    dataIndexes(searchText: $searchText) {
       edges {
         node {
           id
@@ -6773,6 +6774,7 @@ export const DataSourceDocument = gql`
  * const { data, loading, error } = useDataSourceQuery({
  *   variables: {
  *      id: // value for 'id'
+ *      searchText: // value for 'searchText'
  *   },
  * });
  */
@@ -11904,4 +11906,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-07-07T15:07:12+02:00
+// Generated on 2023-07-11T18:42:54+02:00

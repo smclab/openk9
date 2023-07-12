@@ -43,7 +43,7 @@ import { useModal } from "@clayui/core";
 import ClayLoadingIndicator from "@clayui/loading-indicator";
 
 const DataSourceQuery = gql`
-  query DataSource($id: ID!) {
+  query DataSource($id: ID!, $searchText: String) {
     datasource(id: $id) {
       id
       name
@@ -61,7 +61,7 @@ const DataSourceQuery = gql`
       enrichPipeline {
         id
       }
-      dataIndexes {
+      dataIndexes(searchText: $searchText) {
         edges {
           node {
             id
@@ -115,7 +115,7 @@ export function DataSource() {
   const { observer: observerTrigger, onOpenChange: onOpenChangeTrigger, open: openTrigger } = useModal();
   const { observer: observerReindex, onOpenChange: onOpenChangeReindex, open: openReindex } = useModal();
   const datasourceQuery = useDataSourceQuery({
-    variables: { id: datasourceId as string },
+    variables: { id: datasourceId as string, searchText: "" },
     skip: !datasourceId || datasourceId === "new",
   });
   const [createOrUpdateDataSourceMutate, createOrUpdateDataSourceMutation] = useCreateOrUpdateDataSourceMutation({
@@ -306,6 +306,7 @@ export function DataSource() {
               <SearchSelectGraphql
                 label="Data Index"
                 value={datasourceQuery.data?.datasource?.dataIndex?.id}
+                refetch={datasourceQuery.refetch}
                 useValueQuery={useDataIndexValueQuery}
                 useOptionsQuery={datasourceQuery.data?.datasource?.dataIndexes}
                 useChangeMutation={useBindDataIndexToDataSourceMutation}
