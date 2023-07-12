@@ -4,8 +4,8 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
-import io.openk9.datasource.events.DatasourceEvent;
 import io.openk9.datasource.events.DatasourceEventBus;
+import io.openk9.datasource.events.DatasourceMessage;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
@@ -14,6 +14,8 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;
+import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -86,17 +88,16 @@ public class IndexWriterActor {
 				String errorMessage = response.buildFailureMessage();
 
 				eventBus.sendEvent(
-					new DatasourceEvent(
-						dataPayload.getIngestionId(),
-						dataPayload.getDatasourceId(),
-						dataPayload.getContentId(),
-						dataPayload.getParsingDate(),
-						dataPayload.getRawContent(),
-						dataPayload.getTenantId(),
-						dataPayload.getDocumentTypes(),
-						dataPayload.getIndexName(),
-						errorMessage
-					)
+					DatasourceMessage.Failure
+						.builder()
+						.ingestionId(dataPayload.getIngestionId())
+						.datasourceId(dataPayload.getDatasourceId())
+						.contentId(dataPayload.getContentId())
+						.parsingDate(dataPayload.getParsingDate())
+						.tenantId(dataPayload.getTenantId())
+						.indexName(dataPayload.getIndexName())
+						.error(errorMessage)
+						.build()
 				);
 
 				logger.error("Bulk request error: " + errorMessage);
@@ -111,19 +112,32 @@ public class IndexWriterActor {
 		}
 		else {
 
-			eventBus.sendEvent(
-				new DatasourceEvent(
-					dataPayload.getIngestionId(),
-					dataPayload.getDatasourceId(),
-					dataPayload.getContentId(),
-					dataPayload.getParsingDate(),
-					dataPayload.getRawContent(),
-					dataPayload.getTenantId(),
-					dataPayload.getDocumentTypes(),
-					dataPayload.getIndexName(),
-					null
-				)
-			);
+			for (BulkItemResponse item : response) {
+
+				DocWriteResponse curResponse = item.getResponse();
+				String index = curResponse.getIndex();
+				DocWriteResponse.Result result = curResponse.getResult();
+
+				DatasourceMessage.DatasourceMessageBuilder<?, ?> builder;
+
+				builder = switch (result) {
+					case CREATED -> DatasourceMessage.New.builder();
+					case UPDATED -> DatasourceMessage.Update.builder();
+					default -> DatasourceMessage.Unknown.builder();
+				};
+
+				eventBus.sendEvent(
+					builder
+						.ingestionId(dataPayload.getIngestionId())
+						.datasourceId(dataPayload.getDatasourceId())
+						.contentId(dataPayload.getContentId())
+						.parsingDate(dataPayload.getParsingDate())
+						.tenantId(dataPayload.getTenantId())
+						.indexName(index)
+						.build()
+				);
+
+			}
 
 			replyTo.tell(Success.INSTANCE);
 		}

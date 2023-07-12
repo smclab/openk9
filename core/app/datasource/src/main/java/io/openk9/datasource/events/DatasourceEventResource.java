@@ -7,7 +7,6 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -17,22 +16,13 @@ public class DatasourceEventResource {
 
 	@GET
 	@Produces(MediaType.SERVER_SENT_EVENTS)
-	public Multi<DatasourceEvent> datasourceEvents() {
+	public Multi<DatasourceMessage> datasourceEvents() {
 		return datasourceEvents;
-	}
-
-	@GET
-	@Produces(MediaType.SERVER_SENT_EVENTS)
-	@Path("/{datasourceId}")
-	public Multi<DatasourceEvent> datasourceEvents(@PathParam("datasourceId") long datasourceId) {
-		return datasourceEvents
-			.select()
-			.where(e -> e.datasourceId() == datasourceId);
 	}
 
 	@Inject
 	@Channel("datasource-events")
-	Multi<DatasourceEvent> datasourceEvents;
+	Multi<DatasourceMessage> datasourceEvents;
 
 
 }

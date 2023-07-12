@@ -11,12 +11,12 @@ import javax.inject.Inject;
 @Startup
 public class DatasourceEventBus {
 
-	public void sendEvent(DatasourceEvent datasourceEvent) {
-		quoteRequestEmitter.send(datasourceEvent);
+	public void sendEvent(DatasourceMessage datasourceMessage) {
+		quoteRequestEmitter.send(datasourceMessage);
 	}
 
 	@Inject
 	@Channel("datasource-events-requests")
-	Emitter<DatasourceEvent> quoteRequestEmitter;
+	Emitter<DatasourceMessage> quoteRequestEmitter;
 
 }
