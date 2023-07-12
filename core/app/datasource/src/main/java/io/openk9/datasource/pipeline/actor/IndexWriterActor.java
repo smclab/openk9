@@ -118,13 +118,13 @@ public class IndexWriterActor {
 				String index = curResponse.getIndex();
 				DocWriteResponse.Result result = curResponse.getResult();
 
-				DatasourceMessage.DatasourceMessageBuilder<?, ?> builder;
-
-				builder = switch (result) {
-					case CREATED -> DatasourceMessage.New.builder();
-					case UPDATED -> DatasourceMessage.Update.builder();
-					default -> DatasourceMessage.Unknown.builder();
-				};
+				DatasourceMessage.DatasourceMessageBuilder<?, ?> builder =
+					switch (result) {
+						case CREATED -> DatasourceMessage.New.builder();
+						case UPDATED -> DatasourceMessage.Update.builder();
+						case DELETED -> DatasourceMessage.Delete.builder();
+						default -> DatasourceMessage.Unknown.builder();
+					};
 
 				eventBus.sendEvent(
 					builder
