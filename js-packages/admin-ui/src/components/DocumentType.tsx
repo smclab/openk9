@@ -118,7 +118,7 @@ export function DocumentType() {
 
 gql`
   query DocumentTypeTemplateOptions($searchText: String, $cursor: String) {
-    options: docTypeTemplates(searchText: $searchText, first: 5, after: $cursor) {
+    options: docTypeTemplates(searchText: $searchText, after: $cursor) {
       edges {
         node {
           id

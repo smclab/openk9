@@ -352,34 +352,36 @@ export function EnrichPipelineEnrichItems() {
             {(unassociatedListQuery.data?.enrichPipeline?.enrichItems?.edges?.length ?? 0) === 0 && !unassociatedListQuery.loading && (
               <EmptySpace description="There are no matching unassociated entities" title="No entities" />
             )}
-            <ClayList showQuickActionsOnHover>
-              {
-                unassociatedListQuery.data?.enrichPipeline?.enrichItems?.edges?.map((edge) => {
-                  return (
-                    <ClayList.Item flex key={edge?.node?.id}>
-                      <ClayList.ItemField expand>
-                        <ClayList.ItemTitle>{edge?.node?.name || "..."}</ClayList.ItemTitle>
-                        <ClayList.ItemText>{edge?.node?.description || "..."}</ClayList.ItemText>
-                      </ClayList.ItemField>
-                      <ClayList.ItemField>
-                        <ClayList.QuickActionMenu>
-                          {canAct && (
-                            <ClayList.QuickActionMenu.Item
-                              onClick={() => {
-                                if (edge?.node?.id) {
-                                  addMutate({ variables: { parentId: enrichPipelineId, childId: edge.node.id } });
-                                }
-                              }}
-                              symbol="link"
-                            />
-                          )}
-                        </ClayList.QuickActionMenu>
-                      </ClayList.ItemField>
-                    </ClayList.Item>
-                  );
-                }) as any
-              }
-            </ClayList>
+            <div style={{ overflow: "auto", maxHeight: "400px" }}>
+              <ClayList showQuickActionsOnHover>
+                {
+                  unassociatedListQuery.data?.enrichPipeline?.enrichItems?.edges?.map((edge) => {
+                    return (
+                      <ClayList.Item flex key={edge?.node?.id}>
+                        <ClayList.ItemField expand>
+                          <ClayList.ItemTitle>{edge?.node?.name || "..."}</ClayList.ItemTitle>
+                          <ClayList.ItemText>{edge?.node?.description || "..."}</ClayList.ItemText>
+                        </ClayList.ItemField>
+                        <ClayList.ItemField>
+                          <ClayList.QuickActionMenu>
+                            {canAct && (
+                              <ClayList.QuickActionMenu.Item
+                                onClick={() => {
+                                  if (edge?.node?.id) {
+                                    addMutate({ variables: { parentId: enrichPipelineId, childId: edge.node.id } });
+                                  }
+                                }}
+                                symbol="link"
+                              />
+                            )}
+                          </ClayList.QuickActionMenu>
+                        </ClayList.ItemField>
+                      </ClayList.Item>
+                    );
+                  }) as any
+                }
+              </ClayList>
+            </div>
           </ClayModal.Body>
         </ClayModal>
       )}

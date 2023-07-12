@@ -7495,7 +7495,7 @@ export type CreateOrUpdateDocumentTypeMutationResult = Apollo.MutationResult<Cre
 export type CreateOrUpdateDocumentTypeMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateDocumentTypeMutation, CreateOrUpdateDocumentTypeMutationVariables>;
 export const DocumentTypeTemplateOptionsDocument = gql`
     query DocumentTypeTemplateOptions($searchText: String, $cursor: String) {
-  options: docTypeTemplates(searchText: $searchText, first: 5, after: $cursor) {
+  options: docTypeTemplates(searchText: $searchText, after: $cursor) {
     edges {
       node {
         id
@@ -11906,4 +11906,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-07-11T18:42:54+02:00
+// Generated on 2023-07-12T09:27:57+02:00
