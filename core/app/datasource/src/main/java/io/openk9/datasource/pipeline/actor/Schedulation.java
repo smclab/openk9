@@ -15,6 +15,7 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.NotificationSender;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
 import io.openk9.datasource.processor.payload.DataPayload;
@@ -316,6 +317,10 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 		queueManager.tell(new QueueManager.DestroyQueue(
 			SchedulationKeyUtils.getValue(key.tenantId(), key.scheduleId())));
+
+		if (scheduler.getOldDataIndex() != null && scheduler.getNewDataIndex() != null) {
+			getContext().spawnAnonymous(NotificationSender.create(scheduler, key));
+		}
 
 		logBehavior(STOPPED_BEHAVIOR);
 
