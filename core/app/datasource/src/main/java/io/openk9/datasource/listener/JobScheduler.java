@@ -60,9 +60,9 @@ public class JobScheduler {
 	private record InitialSubscribeResponse(Receptionist.Listing listing) implements Command {}
 
 	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
+	private record StartSchedulerInternal(String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
 	private record CopyIndexTemplate(String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
 	private record PersistSchedulerInternal(String tenantName, Scheduler scheduler, Throwable throwable) implements Command {}
-
 
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
@@ -131,6 +131,7 @@ public class JobScheduler {
 			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, messageGateway))
 			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
+			.onMessage(StartSchedulerInternal.class, ssi -> onStartScheduler(ctx, transactionInvoker, messageGateway, ssi))
 			.onMessage(CopyIndexTemplate.class, cit -> onCopyIndexTemplate(ctx, restHighLevelClient, cit))
 			.onMessage(PersistSchedulerInternal.class, pndi -> onPersistSchedulerInternal(ctx, transactionInvoker, messageGateway, pndi))
 			.build();
@@ -195,8 +196,30 @@ public class JobScheduler {
 			return Behaviors.same();
 		}
 
-		startScheduler(
-			ctx, datasource, startFromFirst, tenantName, transactionInvoker, messageGateway);
+		VertxUtil.runOnContext(() -> {
+			transactionInvoker.withStatelessTransaction(
+				tenantName,
+				s -> s.createQuery(
+					"select s " +
+						"from Scheduler s " +
+						"where s.datasource.id = :datasourceId " +
+						"and s.status <> 'FINISHED'",
+						Scheduler.class)
+					.setParameter("datasourceId", datasource.getId())
+					.getSingleResultOrNull()
+					.invoke(scheduler -> {
+						if (scheduler != null) {
+							ctx.getLog().warn(
+								"A Scheduler with id {} for datasource {} is running.",
+								scheduler.getId(), datasource.getId());
+						}
+						else {
+							ctx.getSelf().tell(new StartSchedulerInternal(
+								tenantName, datasource, startFromFirst));
+						}
+					})
+			);
+		});
 
 		return Behaviors.same();
 	}
@@ -409,11 +432,14 @@ public class JobScheduler {
 	}
 
 
-	private static void startScheduler(
-		ActorContext<Command> ctx, Datasource datasource,
-		boolean startFromFirst, String tenantName, TransactionInvoker transactionInvoker,
-		ActorRef<MessageGateway.Command> messageGateway) {
+	private static Behavior<Command> onStartScheduler(
+		ActorContext<Command> ctx, TransactionInvoker transactionInvoker,
+		ActorRef<MessageGateway.Command> messageGateway,
+		StartSchedulerInternal startSchedulerInternal) {
 
+		String tenantName = startSchedulerInternal.tenantName;
+		Datasource datasource = startSchedulerInternal.datasource;
+		boolean startFromFirst = startSchedulerInternal.startFromFirst;
 
 		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
 		scheduler.setScheduleId(UUID.randomUUID().toString());
@@ -422,6 +448,8 @@ public class JobScheduler {
 		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.STARTED);
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+
+		ctx.getLog().info("A Scheduler with schedule-id {} is starting", scheduler.getScheduleId());
 
 		if (oldDataIndex == null || startFromFirst) {
 
@@ -449,6 +477,7 @@ public class JobScheduler {
 			persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, false);
 		}
 
+		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onCopyIndexTemplate(
