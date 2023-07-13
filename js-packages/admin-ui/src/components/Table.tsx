@@ -5,22 +5,12 @@ import { TableVirtuoso } from "react-virtuoso";
 import ClayToolbar from "@clayui/toolbar";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import useDebounced from "./useDebounced";
+import { ClayDropDownWithItems } from "@clayui/drop-down";
 import { Link } from "react-router-dom";
 import { ClayCheckbox } from "@clayui/form";
 import useMap from "./useMap";
 import { ClayToggle } from "@clayui/form";
-import {
-  ContainerFluid,
-  ContainerFluidWithoutView,
-  CustomTable,
-  CustomTableBody,
-  CustomTableCell,
-  CustomTableHead,
-  CustomTableRow,
-  EmptySpace,
-  MainTitle,
-  StyleToggle,
-} from "./Form";
+import { ContainerFluid, ContainerFluidWithoutView, EmptySpace, MainTitle, StyleToggle } from "./Form";
 import { ClassNameButton } from "../App";
 import ClayIcon from "@clayui/icon";
 
@@ -171,41 +161,41 @@ export function TableWithSubFields<
       </ClayToolbar>
       <ContainerFluid>
         {<MainTitle title={label} />}
-        <CustomTable style={{ tableLayout: "fixed" }}>
-          <CustomTableHead>
-            <CustomTableRow>
+        <ClayTable className="table table-list" style={{ tableLayout: "fixed" }}>
+          <ClayTable.Head>
+            <ClayTable.Row>
               {columns.map((column, index) => {
                 return (
-                  <CustomTableCell key={index + "column"}>
+                  <ClayTable.Cell key={index + "column"} headingCell headingTitle>
                     <span className="text-truncate" key={"spanHead" + index}>
                       {column.header}
                     </span>
-                  </CustomTableCell>
+                  </ClayTable.Cell>
                 );
               })}
-              <CustomTableCell>
+              <ClayTable.Cell headingCell headingTitle>
                 <span className="text-truncate"></span>
-              </CustomTableCell>
-            </CustomTableRow>
-          </CustomTableHead>
-          <CustomTableBody>
+              </ClayTable.Cell>
+            </ClayTable.Row>
+          </ClayTable.Head>
+          <ClayTable.Body>
             {field(data)?.edges?.map((rows, index) => {
               const row = field(data)?.edges?.[index]?.node ?? undefined;
               return (
                 <React.Fragment key={"fragment" + index}>
-                  <CustomTableRow key={"row" + index}>
+                  <ClayTable.Row key={"row" + index}>
                     {columns.map((column, index) => {
                       return (
                         <React.Fragment key={"fragmentfirst" + index}>
-                          <CustomTableCell key={index + "printData" + row?.id}>
+                          <ClayTable.Cell key={index + "printData" + row?.id}>
                             <span key={index + "spanPrintData" + row?.id} className="text-truncate">
                               {column.content(row)}
                             </span>
-                          </CustomTableCell>
+                          </ClayTable.Cell>
                         </React.Fragment>
                       );
                     })}
-                    <CustomTableCell className="table-column-text-end" key={index + "button" + row?.id}>
+                    <ClayTable.Cell className="table-column-text-end" key={index + "button" + row?.id}>
                       <div
                         key={index + "divButton" + row?.id}
                         style={{ listStyle: "none", display: "flex", alignItems: "center", justifyContent: "right" }}
@@ -258,33 +248,33 @@ export function TableWithSubFields<
                           ]}
                         />
                       </div>
-                    </CustomTableCell>
-                  </CustomTableRow>
+                    </ClayTable.Cell>
+                  </ClayTable.Row>
                   {isSelected.id === row?.id && isSelected.selected && (
                     <React.Fragment>
                       {row?.subFields.edges.map((edge: any, index: number) => {
                         const rowFields = edge?.node ?? undefined;
                         return (
                           <React.Fragment key={"frag" + index}>
-                            <CustomTableRow key={"row" + index}>
+                            <ClayTable.Row key={"row" + index}>
                               {columns.map((column, index) => {
                                 return (
                                   <React.Fragment key={"fragment" + index}>
-                                    <CustomTableCell style={{ background: "#D6EEEE" }} key={index + "SubField" + rowFields?.name}>
+                                    <ClayTable.Cell style={{ background: "#D6EEEE" }} key={index + "SubField" + rowFields?.name}>
                                       <span key={index + "SpanSubField" + rowFields?.name} className="text-truncate">
                                         {column.content(rowFields)}
                                       </span>
-                                    </CustomTableCell>
+                                    </ClayTable.Cell>
                                   </React.Fragment>
                                 );
                               })}
 
-                              <CustomTableCell
+                              <ClayTable.Cell
                                 className="table-column-text-end"
                                 style={{ background: "#D6EEEE" }}
                                 key={index + "expand"}
-                              ></CustomTableCell>
-                            </CustomTableRow>
+                              ></ClayTable.Cell>
+                            </ClayTable.Row>
                           </React.Fragment>
                         );
                       })}
@@ -293,8 +283,8 @@ export function TableWithSubFields<
                 </React.Fragment>
               );
             })}
-          </CustomTableBody>
-        </CustomTable>
+          </ClayTable.Body>
+        </ClayTable>
       </ContainerFluid>
     </React.Fragment>
   );
@@ -408,20 +398,22 @@ export function Table<
         <table hidden={!showSelectedItemsTable} className="table table-list" style={{ tableLayout: "fixed" }}>
           <thead>
             <tr>
-              <CustomTableCell style={{ width: "40px" }} />
+              <ClayTable.Cell headingCell style={{ width: "40px" }} />
               {columns.map((column, index) => {
                 return (
-                  <CustomTableCell key={index}>{column.header && <span className="text-truncate">{column.header}</span>}</CustomTableCell>
+                  <ClayTable.Cell key={index} headingCell headingTitle>
+                    {column.header && <span className="text-truncate">{column.header}</span>}
+                  </ClayTable.Cell>
                 );
               })}
-              <CustomTableCell style={{ width: "56px" }} />
+              <ClayTable.Cell headingCell style={{ width: "56px" }} />
             </tr>
           </thead>
           <tbody>
             {selection.entries.map(([id, row]) => {
               return (
                 <tr key={id}>
-                  <CustomTableCell>
+                  <ClayTable.Cell>
                     <ClayCheckbox
                       checked={true}
                       onChange={() => {
@@ -431,11 +423,11 @@ export function Table<
                         }
                       }}
                     />
-                  </CustomTableCell>
+                  </ClayTable.Cell>
                   {columns.map((column, index) => {
-                    return <CustomTableCell key={index}>{column.content(row)}</CustomTableCell>;
+                    return <ClayTable.Cell key={index}>{column.content(row)}</ClayTable.Cell>;
                   })}
-                  <CustomTableCell style={{ height: "57px" }} />
+                  <ClayTable.Cell style={{ height: "57px" }} />
                 </tr>
               );
             })}
@@ -453,8 +445,9 @@ export function Table<
                 className="table table-hover show-quick-actions-on-Hover table-list"
               />
             ),
-            TableHead: CustomTableHead,
-            TableRow: CustomTableRow,
+            TableBody: ClayTable.Body,
+            TableHead: ClayTable.Head,
+            TableRow: ClayTable.Row,
             EmptyPlaceholder: () => (
               <tbody>
                 <tr>
@@ -470,24 +463,24 @@ export function Table<
             ),
           }}
           fixedHeaderContent={() => (
-            <CustomTableRow>
-              {isItemsSelectable && <CustomTableCell headingCell style={{ width: "40px" }} />}
+            <ClayTable.Row>
+              {isItemsSelectable && <ClayTable.Cell headingCell style={{ width: "40px" }} />}
               {columns.map((column, index) => {
                 return (
-                  <CustomTableCell headingCell key={index}>
+                  <ClayTable.Cell headingCell headingTitle key={index}>
                     {column.header && <span className="text-truncate">{column.header}</span>}
-                  </CustomTableCell>
+                  </ClayTable.Cell>
                 );
               })}
-              <CustomTableCell headingCell style={{ width: "56px" }} />
-            </CustomTableRow>
+              <ClayTable.Cell headingCell style={{ width: "56px" }} />
+            </ClayTable.Row>
           )}
           itemContent={(index) => {
             const row = field(data)?.edges?.[index]?.node ?? undefined;
             return (
               <React.Fragment>
                 {isItemsSelectable && (
-                  <CustomTableCell>
+                  <ClayTable.Cell>
                     <ClayCheckbox
                       checked={row?.id ? selection.has(row.id) : false}
                       onChange={() => {
@@ -500,12 +493,12 @@ export function Table<
                         }
                       }}
                     />
-                  </CustomTableCell>
+                  </ClayTable.Cell>
                 )}
                 {columns.map((column, index) => {
-                  return <CustomTableCell key={index}>{column.content(row)}</CustomTableCell>;
+                  return <ClayTable.Cell key={index}>{column.content(row)}</ClayTable.Cell>;
                 })}
-                <CustomTableCell>
+                <ClayTable.Cell>
                   <TableRowActions
                     actions={[
                       ...rowActions(row),
@@ -516,7 +509,7 @@ export function Table<
                       },
                     ]}
                   />
-                </CustomTableCell>
+                </ClayTable.Cell>
               </React.Fragment>
             );
           }}
@@ -536,11 +529,6 @@ export function Table<
 }
 
 export function TableRowActions({ actions }: { actions: Array<{ label: string; icon: string; onClick: () => void }> }) {
-  const [isOpen, setIsOpen] = React.useState(false);
-
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
   return (
     <React.Fragment>
       <div className="quick-action-menu" style={{ alignItems: "center" }}>
@@ -559,42 +547,18 @@ export function TableRowActions({ actions }: { actions: Array<{ label: string; i
         })}
       </div>
 
-      <div style={{ position: "relative" }}>
-        <ClayButtonWithIcon aria-label="" symbol={"ellipsis-v"} className="component-action quick-action-item" onClick={toggleMenu} />
-        {isOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: "100%",
-              right: 0,
-              maxHeight: "300px",
-              overflowY: "auto",
-              display: "block",
-              zIndex: 1,
-            }}
-          >
-            <ul className="list-unstyled" style={{ backgroundColor: "#ffffff", color: "black" }}>
-              {actions.map((action, index) => (
-                <li key={index}>
-                  <button key={index} className="dropdown-item" onClick={action.onClick}>
-                    {action.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      <ClayDropDownWithItems
+        trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />}
+        items={actions.map((action) => ({
+          label: action.label,
+          onClick: action.onClick,
+        }))}
+      />
     </React.Fragment>
   );
 }
 
 function TableRowActionsSubFields({ actions }: { actions: Array<{ label: string; icon: string; onClick: () => void }> }) {
-  const [isOpen, setIsOpen] = React.useState(false);
-
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
   return (
     <React.Fragment>
       <span>
@@ -607,42 +571,18 @@ function TableRowActionsSubFields({ actions }: { actions: Array<{ label: string;
         })}
       </span>
       <span>
-        <div style={{ position: "relative" }}>
-          <ClayButtonWithIcon aria-label="" symbol={"ellipsis-v"} className="component-action quick-action-item" onClick={toggleMenu} />
-          {isOpen && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                right: 0,
-                maxHeight: "300px",
-                overflowY: "auto",
-                display: "block",
-                zIndex: 1,
-              }}
-            >
-              <ul className="list-unstyled" style={{ backgroundColor: "#ffffff", color: "black" }}>
-                {actions.map((action, index) => (
-                  <li key={index}>
-                    <button key={index} className="dropdown-item" onClick={action.onClick}>
-                      {action.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+        <ClayDropDownWithItems
+          trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />}
+          items={actions.map((action) => ({
+            label: action.label,
+            onClick: action.onClick,
+          }))}
+        />
       </span>
     </React.Fragment>
   );
 }
 function TableRowsActions({ actions }: { actions: Array<{ label: string; disabled?: boolean; onClick: () => void }> }) {
-  const [isOpen, setIsOpen] = React.useState(false);
-
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
   return (
     <ClayButton.Group>
       {actions.map((action, index) => {
@@ -652,32 +592,7 @@ function TableRowsActions({ actions }: { actions: Array<{ label: string; disable
           </ClayButton>
         );
       })}
-      <div style={{ position: "relative" }}>
-        <ClayButtonWithIcon aria-label="" symbol={"ellipsis-v"} className="component-action quick-action-item" onClick={toggleMenu} />
-        {isOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: "100%",
-              right: 0,
-              maxHeight: "300px",
-              overflowY: "auto",
-              display: "block",
-              zIndex: 1,
-            }}
-          >
-            <ul className="list-unstyled" style={{ backgroundColor: "#ffffff", color: "black" }}>
-              {actions.map((action, index) => (
-                <li key={index}>
-                  <button key={index} className="dropdown-item" onClick={action.onClick}>
-                    {action.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      <ClayDropDownWithItems trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" displayType="secondary" />} items={actions} />
     </ClayButton.Group>
   );
 }

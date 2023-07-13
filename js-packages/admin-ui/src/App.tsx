@@ -483,7 +483,7 @@ function NavTabs({ tabs }: { tabs: Array<{ label: string; path: string }> }) {
           backgroundColor: "white",
           boxShadow: "rgb(194 177 177 / 61%) 3px 4px 3px",
           top: "59px",
-          zIndex: "1",
+          zIndex: "2",
           borderTop: "1px solid #00000024",
         }}
       >

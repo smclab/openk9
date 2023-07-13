@@ -17,7 +17,7 @@ import { Observer } from "@clayui/modal/lib/types";
 import { BrandLogo } from "./BrandLogo";
 import ClayCard from "@clayui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as TooltipRecharts, Legend } from "recharts";
-import get from "lodash/get";
+import ClayTable from "@clayui/table";
 
 type Nullable<T> = T | null | undefined;
 export const fromFieldValidators =
@@ -1177,8 +1177,8 @@ export function AssociatedEntitiesWithSelect<Q>({
                 className="table table-hover show-quick-actions-on-Hover table-list"
               />
             ),
-            TableBody: CustomTableBody,
-            TableHead: CustomTableHead,
+            TableBody: ClayTable.Body,
+            TableHead: ClayTable.Head,
             TableRow: CustomTableRow,
             EmptyPlaceholder: () => (
               <tbody>
@@ -1784,7 +1784,7 @@ function CreateFieldF({
   if (field.value === "true" || field.value === "false") {
     const value = field.value === "true" ? "false" : "true";
     return (
-      <div style={{ display: "flex", gap: "5px" }}>
+      <div style={{ display: "flex", gap: "5px" }} key={field.id}>
         <ClayToggle
           label="Checkbox"
           onToggle={() => {

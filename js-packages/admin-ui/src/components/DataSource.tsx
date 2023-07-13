@@ -286,11 +286,7 @@ export function DataSource() {
           <BooleanInput label="Reindex" {...form.inputProps("reindex")} />
           <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
           {datasourceId !== "new" && (
-            <ClayForm
-              onSubmit={(event) => {
-                event.preventDefault();
-              }}
-            >
+            <React.Fragment>
               <SearchSelect
                 label="Plugin Driver"
                 value={datasourceQuery.data?.datasource?.pluginDriver?.id}
@@ -328,7 +324,7 @@ export function DataSource() {
                 invalidate={() => datasourceQuery.refetch()}
                 description={"Definition of enrich pipeline applied to Datasource's data during processing"}
               />
-            </ClayForm>
+            </React.Fragment>
           )}
           <CodeInput
             language="json"

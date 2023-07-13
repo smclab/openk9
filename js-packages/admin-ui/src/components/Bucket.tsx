@@ -119,11 +119,7 @@ export function Bucket() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
         {bucketId !== "new" && (
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-            }}
-          >
+          <React.Fragment>
             <SearchSelect
               label="Query Analyzer"
               value={bucketQuery.data?.bucket?.queryAnalysis?.id}
@@ -149,7 +145,7 @@ export function Bucket() {
               invalidate={() => bucketQuery.refetch()}
               description={"Search Configuration for current bucket"}
             />
-          </form>
+          </React.Fragment>
         )}
         {bucketId !== "new" && (
           <BooleanInput
