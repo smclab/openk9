@@ -109,6 +109,23 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private TenantBinding tenantBinding;
 
+	@ToString.Exclude
+	@OneToMany(fetch = javax.persistence.FetchType.LAZY, cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.REFRESH,
+		javax.persistence.CascadeType.DETACH})
+	@JsonIgnore
+	private Set<Language> availableLanguages = new LinkedHashSet<>();
+
+	@OneToOne(
+		fetch = FetchType.LAZY
+	)
+	@JoinColumn(name = "language_id")
+	@JsonIgnore
+	@ToString.Exclude
+	private Language defaultLanguage;
+
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {
 
@@ -159,4 +176,36 @@ public class Bucket extends K9Entity {
 
 	}
 
+	public boolean addLanguage(
+		Collection<Language> languages,
+		Language language) {
+
+		if (language == null || languages.contains(language)) {
+			return false;
+		}
+
+		languages.add(language);
+		language.setBucket(this);
+
+		return true;
+
+	}
+
+	public boolean removeLanguage(
+		Collection<Language> languages,
+		long languageId) {
+		Iterator<Language> iterator = languages.iterator();
+
+		while (iterator.hasNext()) {
+			Language language = iterator.next();
+			if (language.getId() == languageId) {
+				iterator.remove();
+				language.setBucket(null);
+				return true;
+			}
+		}
+
+		return false;
+
+	}
 }

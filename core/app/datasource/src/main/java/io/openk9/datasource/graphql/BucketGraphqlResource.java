@@ -23,12 +23,14 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.BucketDTO;
 import io.openk9.datasource.service.BucketService;
+import io.openk9.datasource.service.LanguageService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
@@ -92,6 +94,20 @@ public class BucketGraphqlResource {
 			notEqual);
 	}
 
+	public Uni<Connection<Language>> languages(
+		@Source Bucket bucket,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
+
+		return bucketService.getLanguagesConnection(
+			bucket.getId(), after, before, first, last, searchText, sortByList,
+			notEqual);
+	}
+
 	public Uni<Connection<Tab>> tabs(
 		@Source Bucket bucket,
 		@Description("fetching only nodes after this node (exclusive)") String after,
@@ -104,6 +120,10 @@ public class BucketGraphqlResource {
 		return bucketService.getTabs(
 			bucket.getId(), after, before, first, last, searchText,
 			sortByList, notEqual);
+	}
+
+	public Uni<Language> language(@Source Bucket bucket) {
+		return bucketService.getLanguage(bucket.getId());
 	}
 
 	public Uni<Boolean> enabled(@Source Bucket bucket) {
@@ -200,6 +220,16 @@ public class BucketGraphqlResource {
 	}
 
 	@Mutation
+	public Uni<Tuple2<Bucket, Language>> addLanguageToBucket(@Id long bucketId, @Id long languageId) {
+		return bucketService.addLanguage(bucketId, languageId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Bucket, Language>> removeLanguageFromBucket(@Id long bucketId, @Id long languageId) {
+		return bucketService.removeLanguage(bucketId, languageId);
+	}
+
+	@Mutation
 	public Uni<Tuple2<Bucket, QueryAnalysis>> bindQueryAnalysisToBucket(
 		@Id long bucketId, @Id long queryAnalysisId) {
 		return bucketService.bindQueryAnalysis(bucketId, queryAnalysisId);
@@ -209,6 +239,18 @@ public class BucketGraphqlResource {
 	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysisFromBucket(
 		@Id long bucketId) {
 		return bucketService.unbindQueryAnalysis(bucketId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Bucket, Language>> bindLanguageToBucket(
+		@Id long bucketId, @Id long languageId) {
+		return bucketService.bindLanguage(bucketId, languageId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Bucket, Language>> unbindLanguageFromBucket(
+		@Id long bucketId) {
+		return bucketService.unbindLanguage(bucketId);
 	}
 
 	@Mutation
@@ -249,5 +291,8 @@ public class BucketGraphqlResource {
 
 	@Inject
 	BucketService bucketService;
+
+	@Inject
+	LanguageService languageService;
 
 }

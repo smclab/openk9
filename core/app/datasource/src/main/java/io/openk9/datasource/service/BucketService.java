@@ -28,6 +28,7 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
+import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -106,6 +107,43 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			 pageable.getBeforeId(), filter);
 	}
 
+	public Uni<Connection<Language>> getLanguagesConnection(
+		long bucketId, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			bucketId, Bucket_.AVAILABLE_LANGUAGES, Language.class,
+			languageService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
+	public Uni<Page<Language>> getLanguages(long bucketId, Pageable pageable, Filter filter) {
+		return getLanguages(new Long[] {bucketId}, pageable, filter);
+	}
+
+	public Uni<Page<Language>> getLanguages(
+		long bucketId, Pageable pageable, String searchText) {
+		return getLanguages(new Long[] {bucketId}, pageable, searchText);
+	}
+
+	public Uni<Page<Language>> getLanguages(
+		Long[] bucketIds, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			bucketIds, Bucket_.AVAILABLE_LANGUAGES, Language.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), searchText);
+	}
+
+	public Uni<Page<Language>> getLanguages(
+		Long[] bucketIds, Pageable pageable, Filter filter) {
+
+		return findAllPaginatedJoin(
+			bucketIds, Bucket_.AVAILABLE_LANGUAGES, Language.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), filter);
+	}
+
 	public Uni<Connection<Tab>> getTabs(
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
@@ -142,6 +180,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			new Long[]{bucketId}, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
 			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
 			pageable.getBeforeId(), filter);
+	}
+
+	public Uni<Language> getLanguage(Bucket bucket) {
+		return withTransaction(
+			s -> Mutiny2.fetch(s, bucket.getDefaultLanguage()));
+	}
+
+	public Uni<Language> getLanguage(long bucketId) {
+		return withTransaction(
+			() -> findById(bucketId).flatMap(this::getLanguage));
 	}
 
 	public Uni<Tuple2<Bucket, Datasource>> removeDatasource(long bucketId, long datasourceId) {
@@ -277,6 +325,54 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				})));
 	}
 
+	public Uni<Tuple2<Bucket, Language>> addLanguage(long bucketId, long languageId) {
+		return withTransaction((s, tr) -> findById(bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> languageService.findById(languageId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(language ->
+					Mutiny2.fetch(s, bucket.getAvailableLanguages())
+						.onItem()
+						.ifNotNull()
+						.transformToUni(languages -> {
+
+							if (bucket.addLanguage(
+								languages, language)) {
+
+								return persist(bucket)
+									.map(newSC -> Tuple2.of(newSC, null));
+							}
+
+							return Uni.createFrom().nullItem();
+
+						})
+				)
+			));
+	}
+
+	public Uni<Tuple2<Bucket, Language>> removeLanguage(long bucketId, long languageId) {
+		return withTransaction((s, tr) -> findById(bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> Mutiny2.fetch(s, bucket.getAvailableLanguages())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(languages -> {
+
+					if (bucket.removeLanguage(
+						languages, languageId)) {
+
+						return persist(bucket)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
 	public Uni<Tuple2<Bucket, QueryAnalysis>> bindQueryAnalysis(long bucketId, long queryAnalysisId) {
 		return withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
@@ -296,6 +392,29 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.ifNotNull()
 			.transformToUni(bucket -> {
 				bucket.setQueryAnalysis(null);
+				return persist(bucket).map(t -> Tuple2.of(t, null));
+			}));
+	}
+
+	public Uni<Tuple2<Bucket, Language>> bindLanguage(long bucketId, long languageId) {
+		return withTransaction((s, tr) -> findById(bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> languageService.findById(languageId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(language -> {
+					bucket.setDefaultLanguage(language);
+					return persist(bucket).map(t -> Tuple2.of(t, language));
+				})));
+	}
+
+	public Uni<Tuple2<Bucket, Language>> unbindLanguage(long bucketId) {
+		return withTransaction((s, tr) -> findById(bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> {
+				bucket.setDefaultLanguage(null);
 				return persist(bucket).map(t -> Tuple2.of(t, null));
 			}));
 	}
@@ -460,6 +579,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	@Inject
 	DatasourceService datasourceService;
+
+	 @Inject
+	 LanguageService languageService;
 
 	 @Inject
 	IndexService indexService;
