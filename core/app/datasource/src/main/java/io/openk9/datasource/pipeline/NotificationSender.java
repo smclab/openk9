@@ -1,5 +1,6 @@
 package io.openk9.datasource.pipeline;
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -21,28 +22,32 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 	private final DatasourceEventBus sender;
 	private final Schedulation.SchedulationKey schedulationKey;
 	private final Scheduler scheduler;
+	private final ActorRef<Response> replyTo;
 
 	public NotificationSender(
 		ActorContext<Command> context,
 		Scheduler scheduler,
-		Schedulation.SchedulationKey schedulationKey) {
+		Schedulation.SchedulationKey schedulationKey, ActorRef<Response> replyTo) {
 		super(context);
 		this.service = CDI.current().select(SchedulerService.class).get();
 		this.sender = CDI.current().select(DatasourceEventBus.class).get();
 		this.schedulationKey = schedulationKey;
 		this.scheduler = scheduler;
+		this.replyTo = replyTo;
 		context.getSelf().tell(Start.INSTANCE);
 	}
 
 	public static Behavior<Command> create(
-		Scheduler scheduler, Schedulation.SchedulationKey key) {
-		return Behaviors.setup(ctx -> new NotificationSender(ctx, scheduler, key));
+		Scheduler scheduler, Schedulation.SchedulationKey key, ActorRef<Response> replyTo) {
+
+		return Behaviors.setup(ctx -> new NotificationSender(ctx, scheduler, key, replyTo));
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessageEquals(Start.INSTANCE, this::onStart)
+			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.build();
 	}
 
@@ -75,13 +80,20 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 						.build()
 				);
 			}
-
+			getContext().getSelf().tell(Stop.INSTANCE);
 		});
 
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onStop() {
+		replyTo.tell(Success.INSTANCE);
 		return Behaviors.stopped();
 	}
 
 	public sealed interface Command {}
 	private enum Start implements Command {INSTANCE}
-
+	private enum Stop implements Command {INSTANCE}
+	public sealed interface Response {}
+	public enum Success implements Response {INSTANCE}
 }

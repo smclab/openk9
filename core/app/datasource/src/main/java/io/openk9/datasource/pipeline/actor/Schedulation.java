@@ -54,6 +54,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private record SetLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
 	private record SetScheduler(Scheduler scheduler) implements Command {}
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
+	private record NotificationSenderResponseWrapper(NotificationSender.Response response) implements Command {}
 	private enum Start implements Command {INSTANCE}
 	private enum Tick implements Command {INSTANCE}
 
@@ -153,6 +154,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		return newReceiveBuilder()
 			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
 			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
+			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
 			.build();
 	}
 
@@ -319,13 +321,25 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			SchedulationKeyUtils.getValue(key.tenantId(), key.scheduleId())));
 
 		if (scheduler.getOldDataIndex() != null && scheduler.getNewDataIndex() != null) {
-			getContext().spawnAnonymous(NotificationSender.create(scheduler, key));
+			ActorRef<NotificationSender.Response> messageAdapter = getContext().messageAdapter(
+				NotificationSender.Response.class, NotificationSenderResponseWrapper::new);
+			getContext().spawnAnonymous(
+				NotificationSender.create(scheduler, key, messageAdapter));
+			return Behaviors.same();
 		}
 
 		logBehavior(STOPPED_BEHAVIOR);
 
 		return Behaviors.stopped();
 
+	}
+
+	private Behavior<Command> onNotificationResponse(
+		NotificationSenderResponseWrapper notificationResponseWrapper) {
+
+		logBehavior(STOPPED_BEHAVIOR);
+
+		return Behaviors.stopped();
 	}
 
 	private Behavior<Command> onTick() {
