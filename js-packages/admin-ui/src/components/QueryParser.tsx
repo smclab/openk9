@@ -1,25 +1,8 @@
 import { gql } from "@apollo/client";
-import { ClayToggle } from "@clayui/form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery, useQueryParserConfigsQuery } from "../graphql-generated";
-import {
-  ContainerFluid,
-  CreateField,
-  CreateFieldDinamically,
-  CustomFormGroup,
-  FormatString,
-  fromFieldValidators,
-  InformationField,
-  InputField,
-  KeyValue,
-  MultiSelectDynamicField,
-  StyleToggle,
-  TemplateQueryComponent,
-  TextArea,
-  TextInput,
-  useForm,
-} from "./Form";
+import { useCreateOrUpdateQueryParserConfigMutation, useQueryParserConfigQuery } from "../graphql-generated";
+import { ContainerFluid, fromFieldValidators, InputField, TemplateQueryComponent, TextArea, TextInput, useForm } from "./Form";
 import ClayButton from "@clayui/button";
 import { ClayButtonWithIcon } from "@clayui/button";
 import { Link } from "react-router-dom";
@@ -27,7 +10,6 @@ import ClayToolbar from "@clayui/toolbar";
 import { QueryParserConfigsQuery } from "./QueryParsers";
 import { useToast } from "./ToastProvider";
 import { ClassNameButton } from "../App";
-import { CodeInput } from "./CodeInput";
 
 const QueryParserConfigQuery = gql`
   query QueryParserConfig($id: ID!) {
@@ -151,16 +133,14 @@ export function QueryParserConfig() {
         >
           <TextInput label="Name" {...form.inputProps("name")} />
           <TextArea label="Description" {...form.inputProps("description")} />
-          {
-            <TemplateQueryComponent
-              TemplateQueryParser={TemplateQueryParser}
-              type={form.inputProps("type").value}
-              recoveryValue={form.inputProps("jsonConfig").value}
-              inputFields={inputFields}
-              setInputFields={setInputFields}
-              setType={form.inputProps("type").onChange}
-            />
-          }
+          <TemplateQueryComponent
+            TemplateQueryParser={TemplateQueryParser}
+            type={form.inputProps("type").value}
+            recoveryValue={form.inputProps("jsonConfig").value}
+            inputFields={inputFields}
+            setInputFields={setInputFields}
+            setType={form.inputProps("type").onChange}
+          />
           <div className="sheet-footer">
             <ClayButton type="submit" className={ClassNameButton} disabled={!form.canSubmit}>
               {queryParserConfigId === "new" ? "Create" : "Update"}

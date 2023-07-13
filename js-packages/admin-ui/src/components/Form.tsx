@@ -1723,15 +1723,25 @@ export function TemplateQueryComponent({
   }, [type]);
 
   return (
-    <div className="form-group">
-      <label>Type</label>
-      <select className="form-control" id="regularSelectElement" value={type} onChange={handleTitleChange}>
-        {TemplateQueryParser.map((template) => (
-          <option key={template.title} value={template.title}>
-            {template.title}
-          </option>
-        ))}
-      </select>
+    <div>
+      <div className="panelClass custom-panel panel panel-secondary" role="tablist">
+        <div className="panel-header">
+          <span className="panel-title">Type</span>
+        </div>
+        <div className="custom-panel-body panel-body">
+          <CustomFormGroup>
+            <div className="form-group-item">
+              <select className="form-control" id="regularSelectElement" value={type} onChange={handleTitleChange}>
+                {TemplateQueryParser.map((template) => (
+                  <option key={template.title} value={template.title}>
+                    {template.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </CustomFormGroup>
+        </div>
+      </div>
       {inputFields.map((field) => CreateFieldF({ field, setInputFields }))}
     </div>
   );
@@ -1782,6 +1792,7 @@ function CreateFieldF({
           }}
           toggled={field.value === "true" ? true : false}
         />
+        <style type="text/css">{StyleToggle}</style>
       </div>
     );
   }
