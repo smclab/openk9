@@ -72,15 +72,6 @@ export function App() {
       `}
     >
       <div
-        ref={(element) => openk9.updateConfiguration({ tabs: element })}
-        className="openk9-container-tabs"
-        css={css`
-          grid-area: tabs;
-          padding: 8px 16px 0px 0px;
-          margin-bottom: -16px;
-        `}
-      ></div>
-      <div
         className="openk9-navbar"
         css={css`
           grid-area: dockbar;
@@ -135,6 +126,15 @@ export function App() {
           `}
         ></div>
       </div>
+      <div
+        ref={(element) => openk9.updateConfiguration({ tabs: element })}
+        className="openk9-container-tabs"
+        css={css`
+          grid-area: tabs;
+          padding: 8px 16px 0px 0px;
+          margin-bottom: -16px;
+        `}
+      ></div>
       <div
         className="openk9-filters-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ filters: element })}

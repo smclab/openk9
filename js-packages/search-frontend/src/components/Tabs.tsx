@@ -28,7 +28,7 @@ function Tabs({
         height: "40px",
       }}
     >
-      <div
+      <nav
         className="openk9-tabs-container-internal"
         css={css`
           position: absolute;
@@ -38,14 +38,15 @@ function Tabs({
         {tabs.map((tab, index) => {
           const isSelected = index === selectedTabIndex;
           return (
-            <div
+            <button
               className="openk9-single-tab-container"
               key={index}
               css={css`
-                padding-top: 8px;
+                padding-top: 14px;
+                border: none;
               `}
             >
-              <div
+              <span
                 key={index}
                 className={
                   "openk9-single-tab " +
@@ -55,7 +56,7 @@ function Tabs({
                   padding-left: ${index == 0 ? "0px" : "20px"};
                   margin-left: ${index == 0 ? "0px" : "14px"};
                   white-space: nowrap; 
-                  padding: 4px 10px;
+                  padding: 8px 12px;
                   background: ${
                     isSelected
                       ? "var(--openk9-embeddable-search--primary-background-tab-color)"
@@ -88,11 +89,11 @@ function Tabs({
                 }}
               >
                 {tab.label.toUpperCase()}
-              </div>
-            </div>
+              </span>
+            </button>
           );
         })}
-      </div>
+      </nav>
     </OverlayScrollbarsComponentDockerFix>
   );
 }

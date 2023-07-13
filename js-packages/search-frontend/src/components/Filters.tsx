@@ -234,6 +234,9 @@ type createLabel = {
   marginRigthOfSvg?: string;
   colorLabel?: string;
   align?: string;
+  disabled?: boolean;
+  widthLabel?: string;
+  ariaLabel?: string;
 };
 export function CreateLabel({
   label,
@@ -247,8 +250,11 @@ export function CreateLabel({
   marginRigthOfSvg = "0px",
   hasBorder = true,
   svgIconRight,
+  disabled = false,
+  widthLabel,
   colorLabel = "var(--openk9-embeddable-search--secondary-active-color)",
   align = "baseline",
+  ariaLabel,
 }: createLabel) {
   return (
     <div
@@ -261,14 +267,20 @@ export function CreateLabel({
         gap: 4px;
         height: ${sizeHeight};
         background: #ffffff;
-        border: ${hasBorder
-          ? "1px solid  var(--openk9-embeddable-search--secondary-active-color);"
-          : ""};
+        border: ${
+          hasBorder
+            ? "1px solid  var(--openk9-embeddable-search--secondary-active-color);"
+            : ""
+        };
         border-radius: 20px;
         margin-left: 10px;
         margin-top: ${marginTop};
         cursor: pointer;
+        color: ${colorLabel};
+        font-size: ${sizeFont};
+        width: ${widthLabel};
         white-space: nowrap;
+        aria-label=${ariaLabel || ""};
       `}
       onClick={action}
     >

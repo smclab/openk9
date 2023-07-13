@@ -93,9 +93,16 @@ export function Search({
         gap: 10px;
       `}
     >
+      <style type="text/css">
+        {`
+        .openk9-focusable:has(input:focus){
+          border:1px solid  var(--openk9-embeddable-search--active-color);
+        }
+    `}
+      </style>
       <div
         ref={clickAwayRef}
-        className="openk9-embeddable-search--input-container"
+        className="openk9-embeddable-search--input-container openk9-focusable"
         css={css`
           display: flex;
           align-items: center;
@@ -211,9 +218,15 @@ export function Search({
                 );
               })}
           </div>
+          <label htmlFor="search-openk9" className="visually-hidden">
+            Search
+          </label>
           <input
             className="openk9--input-search"
             ref={inputRef}
+            id="search-openk9"
+            aria-label="search"
+            type="text"
             placeholder={t("search") || "search..."}
             value={selectionsState.text}
             onChange={(event) => {
@@ -322,8 +335,10 @@ export function Search({
             }}
           ></input>
         </div>
-        <div
+        <button
           className="openk9--search-delete-container-icon"
+          title="remove text"
+          aria-label="remove-text"
           style={{
             paddingRight: "16px",
             display: "flex",
@@ -332,6 +347,8 @@ export function Search({
             gap: "4px",
             alignItems: "center",
             marginRight: "21px",
+            background: "inherit",
+            border: "none",
           }}
         >
           <div>
@@ -350,10 +367,11 @@ export function Search({
               <DeleteLogo />
             </span>
           </div>
-        </div>
+        </button>
       </div>
-      <div
+      <button
         className="openk9--search-calendar-container"
+        aria-label="calendar"
         css={css`
           margin-left: auto;
           display: flex;
@@ -362,6 +380,7 @@ export function Search({
           border-radius: 50px;
           cursor: pointer;
           max-width: 20%;
+          border: none;
         `}
         onClick={() => {
           !journey &&
@@ -394,7 +413,7 @@ export function Search({
             />
           )
         )}
-      </div>
+      </button>
       <div
         className="openk9--search-calendar-open"
         css={css`

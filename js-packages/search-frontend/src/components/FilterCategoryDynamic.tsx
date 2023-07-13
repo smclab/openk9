@@ -156,8 +156,15 @@ function FilterCategoryDynamic({
                   height: "15px",
                 }}
               />
+              <label
+                htmlFor={"search-category-" + suggestionCategoryId}
+                className="visually-hidden"
+              >
+                Search Filter
+              </label>
               <input
                 className="openk9-filter-category-search"
+                id={"search-category-" + suggestionCategoryId}
                 value={text}
                 placeholder={t("search-filters") || "Search filters..."}
                 onChange={(event) => setText(event.currentTarget.value)}
@@ -325,7 +332,15 @@ function FilterCategoryDynamic({
             })}
           </div>
           {!isUniqueLoadMore && suggestions.hasNextPage && (
-            <div style={{ textAlign: "center", width: "100%" }}>
+            <div
+              style={{
+                textAlign: "center",
+                width: "100%",
+                display: "flex",
+                marginLeft: "12px",
+                marginTop: "10px",
+              }}
+            >
               <CreateLabel
                 label={t("load-more")}
                 action={() => {
@@ -334,9 +349,9 @@ function FilterCategoryDynamic({
                 svgIcon={<PlusSvg size={12} />}
                 sizeHeight="22px"
                 sizeFont="16px"
-                margBottom="18px"
                 marginOfSvg="5px"
-                marginTop="20px"
+                disabled={!isUniqueLoadMore}
+                widthLabel={"100%"}
               />
             </div>
           )}
