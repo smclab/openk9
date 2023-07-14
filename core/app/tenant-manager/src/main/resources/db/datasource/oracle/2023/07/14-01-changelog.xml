@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2023/07/14-01-changelog.xml">
+
+
+	<changeSet id="1688630335734-1" author="openk9">
+		<createTable tableName="language">
+			<column name="id" type="NUMBER(38)" autoIncrement="true">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="language_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP"/>
+			<column name="modified_date" type="TIMESTAMP"/>
+			<column name="name" type="VARCHAR2(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="value" type="VARCHAR2(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="bucket_id" type="NUMBER(38)"/>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1688630335734-2" author="openk9">
+		<addUniqueConstraint columnNames="name"
+							 constraintName="0998a292-02a9-4930-a8ba-e31d7af5cee2"
+							 tableName="language"/>
+	</changeSet>
+
+	<changeSet id="1688630335734-3" author="openk9">
+		<createTable tableName="bucket_language">
+			<column name="language_id" type="NUMBER(38)">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="bucket_language_pkey"/>
+			</column>
+			<column name="bucket_id" type="NUMBER(38)">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="bucket_language_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1688630335734-4" author="openk9">
+		<addColumn tableName="bucket">
+			<column name="language_id" type="NUMBER(38)" />
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="1688630335734-5" author="openk9">
+		<addForeignKeyConstraint baseColumnNames="language_id"
+								 baseTableName="bucket_language"
+								 constraintName="313a9cab-a687-486d-92ae-2ce74fa89951"
+								 onDelete="NO ACTION" onUpdate="NO ACTION"
+								 referencedColumnNames="id"
+								 referencedTableName="language"/>
+	</changeSet>
+	
+	<changeSet id="1688630335734-6" author="openk9">
+		<insert tableName="language">
+			<column name="name" value="Arabic" />
+			<column name="value" value="ar_SA" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="Catalan" />
+			<column name="value" value="ca_ES" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="Chinese" />
+			<column name="value" value="zh_CN" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="Dutch" />
+			<column name="value" value="nl_NL" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="English" />
+			<column name="value" value="en_US" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="Finnish" />
+			<column name="value" value="fi_FI" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="French" />
+			<column name="value" value="fr_FR" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="German" />
+			<column name="value" value="de_DE" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="Hungarian" />
+			<column name="value" value="hu_HU" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="Japanese" />
+			<column name="value" value="ja_JP" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="Portuguese" />
+			<column name="value" value="pt_BR" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="Spanish" />
+			<column name="value" value="es_ES" />
+		</insert>
+		<insert tableName="language">
+			<column name="name" value="Swedish" />
+			<column name="value" value="sv_SE" />
+		</insert>
+	</changeSet>
+
+</databaseChangeLog>
