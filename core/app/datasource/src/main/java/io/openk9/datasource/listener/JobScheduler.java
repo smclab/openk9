@@ -196,7 +196,7 @@ public class JobScheduler {
 			return Behaviors.same();
 		}
 
-		VertxUtil.runOnContext(() -> {
+		VertxUtil.runOnContext(() ->
 			transactionInvoker.withStatelessTransaction(
 				tenantName,
 				s -> s.createQuery(
@@ -218,8 +218,8 @@ public class JobScheduler {
 								tenantName, datasource, startFromFirst));
 						}
 					})
-			);
-		});
+			)
+		);
 
 		return Behaviors.same();
 	}
