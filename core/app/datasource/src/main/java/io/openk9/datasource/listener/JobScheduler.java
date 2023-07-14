@@ -206,12 +206,16 @@ public class JobScheduler {
 						"and s.status <> 'FINISHED'",
 						Scheduler.class)
 					.setParameter("datasourceId", datasource.getId())
-					.getSingleResultOrNull()
-					.invoke(scheduler -> {
-						if (scheduler != null) {
-							ctx.getLog().warn(
-								"A Scheduler with id {} for datasource {} is running.",
-								scheduler.getId(), datasource.getId());
+					.getResultList()
+					.invoke(list -> {
+						if (list != null && !list.isEmpty()) {
+
+							for (Scheduler scheduler : list) {
+								ctx.getLog().warn(
+									"A Scheduler with id {} for datasource {} is running.",
+									scheduler.getId(), datasource.getId());
+							}
+
 						}
 						else {
 							ctx.getSelf().tell(new StartSchedulerInternal(
