@@ -18,6 +18,7 @@
 package io.openk9.datasource.listener;
 
 import com.google.protobuf.Empty;
+import io.openk9.auth.tenant.MultiTenancyConfig;
 import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.service.DatasourceService;
@@ -186,5 +187,8 @@ public class SchedulerInitializer {
 
 	@Inject
 	SchedulerInitializerActor schedulerInitializerActor;
+
+	@Inject
+	MultiTenancyConfig multiTenancyConfig;
 
 }

@@ -4,11 +4,7 @@ import io.openk9.auth.tenant.TenantResolver;
 import io.vertx.core.Vertx;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
-@ApplicationScoped
-public class DefaultTenantResolver implements TenantResolver {
+class VertxTenantResolver implements TenantResolver {
 
 	public long getTenantId() {
 		return getTenantName().hashCode();
@@ -39,7 +35,6 @@ public class DefaultTenantResolver implements TenantResolver {
 
 	public static final String TENANT_ID = "tenantId";
 
-	@Inject
-	Logger logger;
+	private static final Logger logger = Logger.getLogger(VertxTenantResolver.class);
 
 }
