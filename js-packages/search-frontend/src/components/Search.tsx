@@ -75,13 +75,6 @@ export function Search({
     }
   }, [adjustedSelection]);
 
-  const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
-  const [valueSelected, setValueSelected] = React.useState<SearchDateRange>({
-    keywordKey: undefined,
-    startDate: undefined,
-    endDate: undefined,
-  });
-  const [journey, setJourney] = React.useState();
   const { t } = useTranslation();
   return (
     <div
@@ -223,9 +216,15 @@ export function Search({
           </label>
           <input
             className="openk9--input-search"
+            autoComplete="off"
             ref={inputRef}
             id="search-openk9"
-            aria-label="search"
+            aria-label={
+              t(
+                "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
+              ) ||
+              "insert text to set the value or use up and down arrow keys to navigate the suggestion box"
+            }
             type="text"
             placeholder={t("search") || "search..."}
             value={selectionsState.text}
@@ -338,7 +337,7 @@ export function Search({
         <button
           className="openk9--search-delete-container-icon"
           title="remove text"
-          aria-label="remove-text"
+          aria-label={t("remove-text") || "Remove text"}
           style={{
             paddingRight: "16px",
             display: "flex",

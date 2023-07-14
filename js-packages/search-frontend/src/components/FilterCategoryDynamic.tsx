@@ -124,7 +124,9 @@ function FilterCategoryDynamic({
           </div>
           {isCollapsable && (
             <button
-              aria-label="openk9 collapsable filter"
+              aria-label={
+                t("openk9-collapsable-filter") || "openk9 collapsable filter"
+              }
               style={{ background: "inherit", border: "none" }}
             >
               <FontAwesomeIcon

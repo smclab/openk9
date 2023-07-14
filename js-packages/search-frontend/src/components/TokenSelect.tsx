@@ -107,14 +107,16 @@ export function TokenSelect({
           `}
         >
           <div
+            className="openk9-enter-token"
             onMouseEnter={() => {
               onOptionIndexChange(0);
             }}
             css={css`
               ${deseleziona(selected === null)};
+              padding: 0;
             `}
           >
-            <div
+            <button
               className="openk9-token-select-uncheck"
               css={css`
                 display: flex;
@@ -122,7 +124,11 @@ export function TokenSelect({
                 align-items: baseline;
                 color: var(--openk9-embeddable-search--secondary-text-color);
                 text-decoration: ${selected && subtitle ? "underline" : ""};
-                cursor: ${selected && subtitle ? "pointer" : ""};
+                cursor: ${selected && subtitle ? "pointer" : "auto"};
+                width: 100%;
+                height: 100%;
+                border: none;
+                padding: 8px 16px;
               `}
             >
               <div
@@ -146,7 +152,7 @@ export function TokenSelect({
               >
                 <DeleteLogo widthParam={10} heightParam={10} />
               </div>
-            </div>
+            </button>
           </div>
           {span.tokens.map((option, index) => {
             const isSelected =

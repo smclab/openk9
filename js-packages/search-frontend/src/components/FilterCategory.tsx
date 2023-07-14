@@ -122,7 +122,10 @@ function FilterCategory({
           </div>
           {isCollapsable && (
             <button
-              aria-label="category collapsable toggle"
+              aria-label={
+                t("category-collapsable-toggle") ||
+                "category collapsable toggle"
+              }
               style={{ background: "inherit", border: "none" }}
             >
               <FontAwesomeIcon

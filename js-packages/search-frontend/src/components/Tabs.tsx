@@ -27,11 +27,6 @@ function Tabs({
         overflowX: "auto",
         overflowY: "none",
         height: "50px",
-        ...{
-          "::-webkit-scrollbar": {
-            width: "8px",
-          },
-        },
       }}
     >
       <nav

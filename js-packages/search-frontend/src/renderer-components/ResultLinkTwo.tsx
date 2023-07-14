@@ -30,6 +30,7 @@ export function ResultLinkTwo({
         margin-top: 20px;
         cursor: pointer;
         white-space: nowrap;
+        text-decoration: none;
       `}
     >
       <div
