@@ -32,6 +32,8 @@ import org.elasticsearch.client.indices.GetComposableIndexTemplatesResponse;
 import org.elasticsearch.client.indices.PutComposableIndexTemplateRequest;
 import org.elasticsearch.cluster.metadata.ComposableIndexTemplate;
 import org.elasticsearch.cluster.metadata.Template;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Option;
 
 import java.io.IOException;
@@ -46,6 +48,8 @@ import java.util.UUID;
 
 public class JobScheduler {
 
+	private static final Logger log = LoggerFactory.getLogger(JobScheduler.class);
+	
 	public sealed interface Command extends CborSerializable {}
 	public record ScheduleDatasource(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
@@ -149,7 +153,7 @@ public class JobScheduler {
 			.map(JobScheduler.Start::new)
 			.ifPresentOrElse(
 				cmd -> ctx.getSelf().tell(cmd),
-				() -> ctx.getLog().error("ChannelManager not found"));
+				() -> log.error("ChannelManager not found"));
 
 		return Behaviors.same();
 
@@ -187,10 +191,10 @@ public class JobScheduler {
 
 		PluginDriver pluginDriver = datasource.getPluginDriver();
 
-		ctx.getLog().info("Job executed: {}", datasource.getName());
+		log.info("Job executed: {}", datasource.getName());
 
 		if (pluginDriver == null) {
-			ctx.getLog().warn(
+			log.warn(
 				"datasource with id: {} has no pluginDriver", datasource.getId());
 
 			return Behaviors.same();
@@ -211,7 +215,7 @@ public class JobScheduler {
 						if (list != null && !list.isEmpty()) {
 
 							for (Scheduler scheduler : list) {
-								ctx.getLog().warn(
+								log.warn(
 									"A Scheduler with id {} for datasource {} is running.",
 									scheduler.getId(), datasource.getId());
 							}
@@ -299,7 +303,7 @@ public class JobScheduler {
 					quartzSchedulerTypedExtension.defaultTimezone()
 				);
 
-				ctx.getLog().info("Job updated: {} datasourceId: {}", jobName, datasourceId);
+				log.info("Job updated: {} datasourceId: {}", jobName, datasourceId);
 
 				return Behaviors.same();
 			}
@@ -315,7 +319,7 @@ public class JobScheduler {
 					quartzSchedulerTypedExtension.defaultTimezone()
 				);
 
-				ctx.getLog().info("Job created: {} datasourceId: {}", jobName, datasourceId);
+				log.info("Job created: {} datasourceId: {}", jobName, datasourceId);
 
 				List<String> newJobNames = new ArrayList<>(jobNames);
 
@@ -329,11 +333,11 @@ public class JobScheduler {
 		}
 		else if (jobNames.contains(jobName)) {
 			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasourceId));
-			ctx.getLog().info("job is not schedulable, removing job: {}", jobName);
+			log.info("job is not schedulable, removing job: {}", jobName);
 			return Behaviors.same();
 		}
 
-		ctx.getLog().info("Job not created: datasourceId: {}, the datasource is not schedulable", datasourceId);
+		log.info("Job not created: datasourceId: {}, the datasource is not schedulable", datasourceId);
 
 		return Behaviors.same();
 
@@ -373,13 +377,13 @@ public class JobScheduler {
 			quartzSchedulerTypedExtension.deleteJobSchedule(jobName);
 			List<String> newJobNames = new ArrayList<>(jobNames);
 			newJobNames.remove(jobName);
-			ctx.getLog().info("Job removed: {}", jobName);
+			log.info("Job removed: {}", jobName);
 			return initial(
 				ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
 				transactionInvoker, restHighLevelClient, messageGatewayService, newJobNames);
 		}
 
-		ctx.getLog().info("Job not found: {}", jobName);
+		log.info("Job not found: {}", jobName);
 
 		return Behaviors.same();
 
@@ -453,7 +457,7 @@ public class JobScheduler {
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
 
-		ctx.getLog().info("A Scheduler with schedule-id {} is starting", scheduler.getScheduleId());
+		log.info("A Scheduler with schedule-id {} is starting", scheduler.getScheduleId());
 
 		if (oldDataIndex == null || startFromFirst) {
 
@@ -551,7 +555,7 @@ public class JobScheduler {
 		Throwable t = pndi.throwable;
 
 		if (t != null) {
-			ctx.getLog().error("cannot create index-template", t);
+			log.error("cannot create index-template", t);
 			return Behaviors.same();
 		}
 
