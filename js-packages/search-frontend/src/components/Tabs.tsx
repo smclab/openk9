@@ -25,7 +25,13 @@ function Tabs({
       style={{
         position: "relative",
         overflowX: "auto",
-        height: "40px",
+        overflowY: "none",
+        height: "50px",
+        ...{
+          "::-webkit-scrollbar": {
+            width: "8px",
+          },
+        },
       }}
     >
       <nav
@@ -33,6 +39,11 @@ function Tabs({
         css={css`
           position: absolute;
           display: flex;
+          padding-top: 14px;
+          padding: 8px 12px;
+          width: fit-content;
+          height: fit-content;
+          gap: 20px;
         `}
       >
         {tabs.map((tab, index) => {
@@ -41,8 +52,8 @@ function Tabs({
             <button
               className="openk9-single-tab-container"
               key={index}
+              tabIndex={0}
               css={css`
-                padding-top: 14px;
                 border: none;
               `}
             >
@@ -53,8 +64,6 @@ function Tabs({
                   (isSelected ? "openk9-active-tab" : "openk9-not-active")
                 }
                 css={css`
-                  padding-left: ${index == 0 ? "0px" : "20px"};
-                  margin-left: ${index == 0 ? "0px" : "14px"};
                   white-space: nowrap; 
                   padding: 8px 12px;
                   background: ${
@@ -65,6 +74,7 @@ function Tabs({
                   border-radius: 8px;
                   font: Helvetica Neue LT Std;
                   font-style: normal;
+                  display:block;
                   color: ${
                     isSelected
                       ? "var(--openk9-embeddable-search--primary-background-color)"

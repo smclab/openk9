@@ -74,26 +74,28 @@ function Filters({
           className="openk9-filter-list-container-internal-title "
           css={css`
             display: flex;
+            gap: 5px;
           `}
         >
           <span>
             <FilterSvg />
           </span>
-          <span
-            className="openk9-filters-list-title title"
-            css={css`
-              margin-left: 10px;
-              font-style: normal;
-              font-weight: 700;
-              font-size: 18px;
-              height: 18px;
-              line-height: 22px;
-              display: flex;
-              align-items: center;
-              color: #3f3f46;
-            `}
-          >
-            {t("filters")}
+          <span className="openk9-filters-list-title title">
+            <h2
+              css={css`
+                font-style: normal;
+                font-weight: 700;
+                font-size: 18px;
+                height: 18px;
+                line-height: 22px;
+                display: flex;
+                align-items: center;
+                color: #3f3f46;
+                margin: 0;
+              `}
+            >
+              {t("filters")}
+            </h2>
           </span>
         </div>
       </div>
@@ -237,6 +239,8 @@ type createLabel = {
   disabled?: boolean;
   widthLabel?: string;
   ariaLabel?: string;
+  padding?: string;
+  fontWeightLabel?: string;
 };
 export function CreateLabel({
   label,
@@ -244,81 +248,55 @@ export function CreateLabel({
   svgIcon,
   sizeHeight = "15px",
   sizeFont = "12px",
-  margBottom = "13px",
   marginOfSvg = "0px",
-  marginTop = "0px",
   marginRigthOfSvg = "0px",
   hasBorder = true,
   svgIconRight,
+  padding = "12px 8px",
+  fontWeightLabel = "500",
   disabled = false,
   widthLabel,
+  ariaLabel = "",
   colorLabel = "var(--openk9-embeddable-search--secondary-active-color)",
-  align = "baseline",
-  ariaLabel,
 }: createLabel) {
   return (
-    <div
+    <button
+      aria-label={ariaLabel || ""}
+      disabled={false}
       className="openk9-create-label-container-wrapper"
       css={css`
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 4px 8px;
+        padding: ${padding};
         gap: 4px;
         height: ${sizeHeight};
         background: #ffffff;
-        border: ${
-          hasBorder
-            ? "1px solid  var(--openk9-embeddable-search--secondary-active-color);"
-            : ""
-        };
+        border: ${hasBorder
+          ? "1px solid  var(--openk9-embeddable-search--secondary-active-color);"
+          : ""};
         border-radius: 20px;
-        margin-left: 10px;
-        margin-top: ${marginTop};
+        white-space: nowrap;
         cursor: pointer;
         color: ${colorLabel};
         font-size: ${sizeFont};
         width: ${widthLabel};
-        white-space: nowrap;
-        aria-label=${ariaLabel || ""};
       `}
       onClick={action}
     >
-      <div
-        className="openk9-create-label-container-text-style"
+      {svgIcon}
+      <span
+        className="openk9-create-label-container-internal-space"
         css={css`
-          color: ${colorLabel};
-          margin-bottom: ${margBottom};
-          font-size: ${sizeFont};
-          font-weight: 700;
-          display: block;
-          margin-block-start: 1em;
-          margin-block-end: 1em;
-          margin-inline-start: 0px;
-          margin-inline-end: 0px;
+          margin-left: ${marginOfSvg};
+          margin-right: ${marginRigthOfSvg};
+          font-weight: ${fontWeightLabel};
         `}
       >
-        <div
-          className="openk9-create-label-container-internal-create"
-          css={css`
-            display: flex;
-            align-items: ${align};
-          `}
-        >
-          {svgIcon}
-          <span
-            className="openk9-create-label-container-internal-space"
-            css={css`
-              margin-left: ${marginOfSvg};
-              margin-right: ${marginRigthOfSvg};
-            `}
-          >
-            {label}
-          </span>
-          {svgIconRight}
-        </div>
-      </div>
-    </div>
+        {label}
+      </span>
+      {svgIconRight}
+    </button>
   );
 }
 

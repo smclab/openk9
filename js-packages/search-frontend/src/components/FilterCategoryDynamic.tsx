@@ -123,13 +123,19 @@ function FilterCategoryDynamic({
             <strong>{suggestionCategoryName}</strong>
           </div>
           {isCollapsable && (
-            <FontAwesomeIcon
-              icon={isOpen ? faChevronDown : faChevronUp}
-              style={{
-                color: "var(--openk9-embeddable-search--secondary-text-color)",
-                marginRight: "8px",
-              }}
-            />
+            <button
+              aria-label="openk9 collapsable filter"
+              style={{ background: "inherit", border: "none" }}
+            >
+              <FontAwesomeIcon
+                icon={isOpen ? faChevronDown : faChevronUp}
+                style={{
+                  color:
+                    "var(--openk9-embeddable-search--secondary-text-color)",
+                  marginRight: "8px",
+                }}
+              />
+            </button>
           )}
         </div>
       </div>
@@ -164,6 +170,7 @@ function FilterCategoryDynamic({
               </label>
               <input
                 className="openk9-filter-category-search"
+                type="text"
                 id={"search-category-" + suggestionCategoryId}
                 value={text}
                 placeholder={t("search-filters") || "Search filters..."}

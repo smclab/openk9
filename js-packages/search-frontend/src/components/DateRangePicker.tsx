@@ -1,281 +1,187 @@
 import React from "react";
-import {
-  DateRange,
-  DefinedRange,
-  defaultInputRanges,
-  defaultStaticRanges,
-} from "react-date-range";
-import "react-date-range/dist/styles.css"; // main css file
-import "react-date-range/dist/theme/default.css"; // theme css file
-import { css } from "styled-components/macro";
-import { DateTime } from "luxon";
-import { enIN, it, es, fr } from "date-fns/locale";
 import { SearchDateRange } from "../embeddable/Main";
-import { useQuery } from "react-query";
-import Select from "react-select";
-import { useOpenK9Client } from "./client";
 import "./dataRangePicker.css";
 import { useTranslation } from "react-i18next";
-import i18next from "i18next";
-import ItLocale from "date-fns/locale/lt";
-const DateRangeFix = DateRange as any;
-const DefinedRangeFix = DefinedRange as any;
+import "react-dates/initialize";
+import { DateRangePicker } from "react-dates";
+import "react-dates/lib/css/_datepicker.css";
+import { CreateLabel } from "./Filters";
+import moment from "moment";
+import { DeleteLogo } from "./DeleteLogo";
+import { CalendarLogo } from "./CalendarLogo";
 
-type DateRangePickerProps = {
-  onClose(): void;
-  onChange(value: SearchDateRange): void;
-};
-export function DateRangePicker({
+export function DataRangePicker({
   onChange,
-  onClose,
-  valueSelected,
-  setValueSelected,
-  setJourney,
-}: DateRangePickerProps & {
-  valueSelected: { keywordKey: any; startDate: any; endDate: any };
-  setValueSelected: any;
-  setJourney: any;
+  calendarDate,
+}: {
+  onChange(value: SearchDateRange): void;
+  calendarDate: SearchDateRange;
 }) {
-  const [value, setValue] = React.useState<SearchDateRange>({
-    keywordKey: undefined,
-    startDate: new Date(),
-    endDate: new Date(),
-  });
-  const adaptedValue = [
-    {
-      key: "selection",
-      startDate: value.startDate ?? null,
-      endDate: value.endDate ?? null,
-    },
-  ];
-  const [preJourney, preSetJourney] = React.useState("");
-  const adaptedOnChange = (item: any) => {
-    preSetJourney(item.selection.label);
-    setValue({
-      keywordKey: value.keywordKey,
-      startDate: item.selection.startDate,
-      endDate: item.selection.endDate,
-    });
-  };
-  const [selectedOption, setSelectedOption] = React.useState<{
-    value: string;
-    label: string;
-  } | null>(null);
-  const client = useOpenK9Client();
-  const options = useQuery(["date-range-keywordkey-options", {}], async () => {
-    return await client.getDateFilterFields();
-  });
+  const [startDate, setStartDate] = React.useState<any | null>(null);
+  const [endDate, setEndDate] = React.useState<any | null>(null);
+  const [focusedInput, setFocusedInput] = React.useState(null);
   const { t } = useTranslation();
-  const currentLanguage = i18next.language;
-  const staticRanges = [
-    {
-      label: t("today"),
-      range: () => ({
-        startDate: DateTime.now().startOf("day").toJSDate(),
-        endDate: DateTime.now().endOf("day").toJSDate(),
-        label: t("today"),
-      }),
-      isSelected({ startDate, endDate }: any) {
-        return (
-          startDate === DateTime.now().startOf("day").toJSDate() &&
-          endDate === DateTime.now().endOf("day").toJSDate()
-        );
-      },
-    },
-    {
-      label: t("this-week"),
-      range: () => ({
-        startDate: DateTime.now().startOf("week").toJSDate(),
-        endDate: DateTime.now().endOf("week").toJSDate(),
-        label: t("this-week"),
-      }),
-      isSelected({ startDate, endDate }: any) {
-        return (
-          startDate === DateTime.now().startOf("week").toJSDate() &&
-          endDate === DateTime.now().endOf("week").toJSDate()
-        );
-      },
-    },
-    {
-      label: t("this-month"),
-      range: () => ({
-        startDate: DateTime.now().startOf("month").toJSDate(),
-        endDate: DateTime.now().endOf("month").toJSDate(),
-        label: t("this-month"),
-      }),
-      isSelected({ startDate, endDate }: any) {
-        return (
-          startDate === DateTime.now().startOf("month").toJSDate() &&
-          endDate === DateTime.now().endOf("month").toJSDate()
-        );
-      },
-    },
-    {
-      label: t("this-year"),
-      range: () => ({
-        startDate: DateTime.now().startOf("year").toJSDate(),
-        endDate: DateTime.now().endOf("year").toJSDate(),
-        label: t("this-year"),
-      }),
-      isSelected({ startDate, endDate }: any) {
-        return (
-          startDate === DateTime.now().startOf("year").toJSDate() &&
-          endDate === DateTime.now().endOf("year").toJSDate()
-        );
-      },
-    },
-  ];
-  const inputRangesLabels = {
-    "days up to today": t("preview-days") || "days up to today",
-    "days starting today": t("after-days") || "days starting today",
+
+  const handleDatesChange = ({
+    startDate,
+    endDate,
+  }: {
+    startDate: any;
+    endDate: any;
+  }) => {
+    setStartDate(startDate || undefined);
+    setEndDate(endDate || undefined);
   };
 
-  function translateRange(dictionary: any) {
-    return (item: any) =>
-      dictionary[item.label]
-        ? { ...item, label: dictionary[item.label] }
-        : item;
-  }
-
-  const ItInputRanges = defaultInputRanges.map(
-    translateRange(inputRangesLabels),
-  );
-  return (
-    <div>
-      <Select
-        defaultValue={{ value: "" as any, label: t("any") }}
-        onChange={(option) => {
-          setSelectedOption(option);
-          setValue({ ...value, keywordKey: option?.value });
+  const handleFocusChange = (focusedInput: any) => {
+    setFocusedInput(focusedInput);
+  };
+  const renderCalendarInfo = () => (
+    <div
+      className="custom-calendar-info"
+      style={{ display: "flex", gap: "20px", padding: "15px 20px" }}
+    >
+      <CreateLabel
+        label="today"
+        action={() => {
+          setStartDate(moment());
+          setEndDate(moment());
         }}
-        isLoading={options.isFetching}
-        isSearchable={true}
-        options={[
-          { value: "" as any, label: t("any") || "any" },
-          ...(options.data?.map(({ id, field, label }) => ({
-            value: field,
-            label,
-          })) ?? []),
-        ]}
-        theme={(theme) => ({
-          ...theme,
-          colors: {
-            ...theme.colors,
-            primary: "var(--openk9-embeddable-search--primary-color)",
-            primary25:
-              "var(--openk9-embeddable-search--secondary-background-color)",
-          },
-        })}
+      />
+      <CreateLabel
+        label="this weak"
+        action={() => {
+          setStartDate(moment().startOf("week"));
+          setEndDate(moment().endOf("week"));
+        }}
+      />
+      <CreateLabel
+        label="this month"
+        action={() => {
+          setStartDate(moment().startOf("month"));
+          setEndDate(moment().endOf("month"));
+        }}
+      />
+      <CreateLabel
+        label="this year"
+        action={() => {
+          setStartDate(moment().startOf("year"));
+          setEndDate(moment().endOf("year"));
+        }}
       />
       <div
-        css={css`
-          display: flex;
-          border: 1px solid var(--openk9-embeddable-search--border-color);
-          border-radius: 4px;
-          overflow: hidden;
-          margin-top: 16px;
-          @media (max-width: 480px) {
-            flex-direction: column;
-          }
-        `}
+        className="custom-calendar-info"
+        style={{
+          marginLeft: "auto",
+          width: "fit-content",
+          display: "flex",
+          gap: "10px",
+        }}
       >
-        <DefinedRangeFix
-          locale={convert(currentLanguage)}
-          onChange={adaptedOnChange}
-          ranges={adaptedValue}
-          staticRanges={staticRanges}
-          inputRanges={ItInputRanges}
+        <CreateLabel
+          action={() => {
+            onChange({
+              startDate: undefined,
+              endDate: undefined,
+              keywordKey: undefined,
+            });
+            setStartDate(null);
+            setEndDate(null);
+          }}
+          label="Rimuovi Filtri"
         />
-        <DateRangeFix
-          locale={convert(currentLanguage)}
-          onChange={adaptedOnChange}
-          ranges={adaptedValue}
-          startDatePlaceholder=""
-          endDatePlaceholder=""
-          rangeColors={[
-            "var(--openk9-embeddable-search--secondary-active-color)",
-          ]}
+        <CreateLabel
+          action={() =>
+            onChange({
+              startDate: startDate?._d || undefined,
+              endDate: endDate?._d || undefined,
+              keywordKey: undefined,
+            })
+          }
+          label="Applica Filtro"
+        />
+        <CreateLabel
+          action={() => {
+            document.getElementById("search-openk9")?.focus();
+          }}
+          label="Chiudi"
         />
       </div>
+    </div>
+  );
+
+  return (
+    <div>
       <div
-        css={css`
-          @media (max-width: 480px) {
-            justify-content: flex-start;
-          }
-          display: flex;
-          justify-content: flex-end;
-          & > button {
-            background-color: white;
-            &:hover {
-              background-color: var(--openk9-embeddable-search--active-color);
-              color: white;
-            }
-            outline-color: var(--openk9-embeddable-search--active-color);
-            border: 1px solid var(--openk9-embeddable-search--border-color);
-            border-radius: 4px;
-            padding: 8px 16px;
-            margin-top: 8px;
-            margin-left: 8px;
-            font-family: inherit;
-            font-size: inherit;
-          }
-        `}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          outline: "var(--openk9-embeddable-search--border-color) solid 1px",
+          borderRadius: "50px",
+          background: "white",
+          paddingInline: "10px",
+          height: "53px",
+        }}
       >
+        <div
+          style={{
+            display: "flex",
+            height: "100%",
+            background: "none",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          <CalendarLogo size={"20px"} />
+        </div>
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onDatesChange={handleDatesChange}
+          focusedInput={focusedInput}
+          onFocusChange={handleFocusChange}
+          startDateId="startDate"
+          endDateId="endDate"
+          openDirection="down"
+          hideKeyboardShortcutsPanel
+          renderCalendarInfo={renderCalendarInfo}
+          customInputIcon={null}
+          keepOpenOnDateSelect={true}
+          isOutsideRange={() => false}
+          onClose={() => {
+            if (calendarDate.startDate && calendarDate.endDate) {
+              setStartDate(moment(calendarDate.startDate));
+              setEndDate(moment(calendarDate.endDate));
+            }
+          }}
+        />
         <button
+          aria-label={t("remove-calendar-filters") || "remove calendar filters"}
+          style={{
+            zIndex: "2",
+            backgroundColor: "inherit",
+            cursor: "pointer",
+            border: "none",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            color: "black",
+            height: "100%",
+            background: "none",
+          }}
           onClick={() => {
             onChange({
               keywordKey: undefined,
               startDate: undefined,
               endDate: undefined,
             });
-            setJourney();
-            setValueSelected({
-              keywordKey: undefined,
-              startDate: undefined,
-              endDate: undefined,
-            });
-            onClose();
+            setStartDate(null);
+            setEndDate(null);
           }}
         >
-          {t("remove-data-filter")}
-        </button>
-        <button
-          disabled={!Boolean(value.startDate || value.endDate)}
-          onClick={() => {
-            setJourney(preJourney);
-            onChange({
-              keywordKey: value.keywordKey,
-              startDate: value.startDate,
-              endDate: value.endDate
-                ? DateTime.fromJSDate(value.endDate).endOf("day").toJSDate()
-                : undefined,
-            });
-            setValueSelected({
-              keywordKey: value.keywordKey,
-              startDate: value.startDate,
-              endDate: value.endDate
-                ? DateTime.fromJSDate(value.endDate).endOf("day").toJSDate()
-                : undefined,
-            });
-            onClose();
-          }}
-        >
-          {t("filter")}
+          <DeleteLogo heightParam={12} widthParam={12} />
         </button>
       </div>
     </div>
   );
-}
-
-function convert(label: string) {
-  switch (label) {
-    case "it":
-      return it;
-    case "es":
-      return es;
-    case "en":
-      return enIN;
-    case "fr":
-      return fr;
-  }
 }

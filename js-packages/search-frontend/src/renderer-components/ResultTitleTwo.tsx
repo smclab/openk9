@@ -8,7 +8,7 @@ export function ResultTitleTwo({
   isTruncate = true,
 }: ResultTitleProps) {
   return (
-    <div
+    <h3
       className="openk9-embeddable-result-title-component"
       css={css`
         font-weight: 500;
@@ -16,10 +16,11 @@ export function ResultTitleTwo({
         font-weight: 600;
         font-size: 19px;
         line-height: 26px;
+        margin-top: 0px;
         ${isTruncate ? truncatedLineStyle : ""}
       `}
     >
       {children}
-    </div>
+    </h3>
   );
 }

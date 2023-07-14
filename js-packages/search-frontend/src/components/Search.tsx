@@ -18,7 +18,6 @@ import {
   GenericResultItem,
 } from "./client";
 import { SelectionsAction, SelectionsState } from "./useSelections";
-import { DateRangePicker } from "./DateRangePicker";
 import { SearchDateRange } from "../embeddable/Main";
 import { Logo } from "./Logo";
 import { CalendarLogo } from "./CalendarLogo";
@@ -28,6 +27,7 @@ import { SeparatorLogo } from "./SeparatorLogo";
 import { DateTime } from "luxon";
 import { CreateLabel } from "./Filters";
 import { useTranslation } from "react-i18next";
+import { DataRangePicker } from "./DateRangePicker";
 
 type SearchProps = {
   configuration: Configuration;
@@ -369,167 +369,12 @@ export function Search({
           </div>
         </button>
       </div>
-      <button
-        className="openk9--search-calendar-container"
-        aria-label="calendar"
-        css={css`
-          margin-left: auto;
-          display: flex;
-          background: white;
-          padding: 9px 11px;
-          border-radius: 50px;
-          cursor: pointer;
-          max-width: 20%;
-          border: none;
-        `}
-        onClick={() => {
-          !journey &&
-            !valueSelected.startDate &&
-            setIsDatePickerOpen(!isDatePickerOpen);
-          isMobile && setIsDatePickerOpen(!isDatePickerOpen);
-        }}
-      >
-        <CalendarLogo />
-        {journey ? (
-          <CreateDeleteFilter
-            journey={journey}
-            onDateRangeChange={onDateRangeChange}
-            setIsDatePickerOpen={setIsDatePickerOpen}
-            setJourney={setJourney}
-            isBuild={true}
-            valueOfDate={valueSelected}
-            setValueSelected={setValueSelected}
-          />
-        ) : (
-          valueSelected.startDate && (
-            <CreateDeleteFilter
-              journey={journey || ""}
-              onDateRangeChange={onDateRangeChange}
-              setIsDatePickerOpen={setIsDatePickerOpen}
-              setJourney={setJourney}
-              isBuild={false}
-              valueOfDate={valueSelected}
-              setValueSelected={setValueSelected}
-            />
-          )
-        )}
-      </button>
-      <div
-        className="openk9--search-calendar-open"
-        css={css`
-          position: relative;
-        `}
-      >
-        <div
-          hidden={!isDatePickerOpen}
-          css={css`
-            position: absolute;
-            right: 20%;
-            border-radius: 4px;
-            background-color: var(
-              --openk9-embeddable-search--secondary-background-color
-            );
-            padding: 16px;
-            border: 1px solid var(--openk9-embeddable-search--border-color);
-            z-index: 2;
-            @media (max-width: 480px) {
-              position: fixed;
-              top: 0px;
-              left: 0px;
-              right: 0px;
-              bottom: 0px;
-              margin-right: -5px;
-            }
-          `}
-        >
-          <DateRangePicker
-            onChange={onDateRangeChange}
-            onClose={() => setIsDatePickerOpen(false)}
-            valueSelected={valueSelected}
-            setValueSelected={setValueSelected}
-            setJourney={setJourney}
-          />
-        </div>
+      <div>
+        <DataRangePicker
+          onChange={onDateRangeChange}
+          calendarDate={dateRange}
+        />
       </div>
-    </div>
-  );
-}
-
-function CreateDeleteFilter({
-  onDateRangeChange,
-  setIsDatePickerOpen,
-  setJourney,
-  journey,
-  isBuild,
-  valueOfDate,
-  setValueSelected,
-}: {
-  onDateRangeChange: any;
-  setIsDatePickerOpen: any;
-  setJourney: any;
-  journey: string;
-  isBuild: boolean;
-  valueOfDate: { keywordKey: any; startDate: any; endDate: any };
-  setValueSelected: any;
-}) {
-  let data;
-  const { t } = useTranslation();
-  if (isBuild) {
-    data = journey;
-  } else {
-    {
-      data =
-        t("from") +
-        " " +
-        valueOfDate.startDate?.toLocaleDateString("it-IT", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }) +
-        " " +
-        t("to") +
-        " " +
-        valueOfDate.endDate?.toLocaleDateString("it-IT", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-    }
-  }
-  return (
-    <div
-      css={css`
-        cursor: pointer;
-        @media (max-width: 480px) {
-          display: none;
-        }
-      `}
-      style={{ boxSizing: "border-box" }}
-      onClick={() => {
-        onDateRangeChange({
-          keywordKey: undefined,
-          startDate: undefined,
-          endDate: undefined,
-        });
-        setValueSelected({
-          keywordKey: undefined,
-          startDate: undefined,
-          endDate: undefined,
-        });
-        setIsDatePickerOpen(false);
-        setJourney("");
-      }}
-    >
-      <CreateLabel
-        label={data}
-        marginTop="5px"
-        hasBorder={false}
-        sizeFont="14px"
-        svgIconRight={
-          <DeleteLogo heightParam={8} widthParam={8} colorSvg={"#C0272B"} />
-        }
-        marginRigthOfSvg={"6px"}
-      />
     </div>
   );
 }

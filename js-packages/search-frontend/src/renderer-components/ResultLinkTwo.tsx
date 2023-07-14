@@ -12,12 +12,9 @@ export function ResultLinkTwo({
   title = "Link Documento",
   children,
 }: ResultLinkProps) {
-  const handleLinkClick = () => {
-    window.open(href, "_blank");
-  };
-
   return (
-    <div
+    <a
+      href={href}
       css={css`
         display: flex;
         justify-content: center;
@@ -34,7 +31,6 @@ export function ResultLinkTwo({
         cursor: pointer;
         white-space: nowrap;
       `}
-      onClick={handleLinkClick}
     >
       <div
         css={css`
@@ -59,6 +55,6 @@ export function ResultLinkTwo({
           {title}
         </div>
       </div>
-    </div>
+    </a>
   );
 }

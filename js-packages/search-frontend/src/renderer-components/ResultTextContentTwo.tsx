@@ -13,10 +13,11 @@ export function ResultTextContentTwo<E>({
   const hihglithTextLines = result.highlight[path];
   const text = get(result.source, path);
   return (
-    <div
+    <p
       className="openk9--result-text-content"
       css={css`
         ${hihglithTextLines ? truncatedLineStyle : ""};
+        margin: 0;
       `}
     >
       {hihglithTextLines ? (
@@ -42,6 +43,6 @@ export function ResultTextContentTwo<E>({
           {text}
         </div>
       )}
-    </div>
+    </p>
   );
 }

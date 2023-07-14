@@ -56,15 +56,14 @@ function Detail<E>(props: DetailProps<E>) {
         <div
           css={css`
             display: flex;
+            gap: 5px;
           `}
         >
           <div>
             <PreviewSvg />
           </div>
-          <div
-            className="openk9-detail-title title"
+          <h2
             css={css`
-              margin-left: 5px;
               font-style: normal;
               font-weight: 700;
               font-size: 18px;
@@ -72,11 +71,11 @@ function Detail<E>(props: DetailProps<E>) {
               line-height: 22px;
               align-items: center;
               color: #3f3f46;
-              margin-left: 8px;
+              margin: 0;
             `}
           >
             {t("preview")}
-          </div>
+          </h2>
         </div>
         {setDetailMobile && (
           <div
@@ -147,21 +146,21 @@ export function NoDetail() {
         <div>
           <PreviewSvg />
         </div>
-        <div
-          className="openk9-no-detail-title title"
-          css={css`
-            margin-left: 5px;
-            font-style: normal;
-            font-weight: 700;
-            font-size: 18px;
-            height: 18px;
-            line-height: 22px;
-            align-items: center;
-            color: #3f3f46;
-            margin-left: 8px;
-          `}
-        >
-          {t("preview")}
+        <div className="openk9-no-detail-title title">
+          <h2
+            css={css`
+              font-style: normal;
+              font-weight: 700;
+              font-size: 18px;
+              height: 18px;
+              line-height: 22px;
+              align-items: center;
+              color: #3f3f46;
+              margin: 0;
+            `}
+          >
+            {t("preview")}
+          </h2>
         </div>
       </div>
       <div

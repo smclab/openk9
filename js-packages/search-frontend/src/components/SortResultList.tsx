@@ -17,7 +17,17 @@ export function SortResultList({
   });
   const { t } = useTranslation();
   return (
-    <span className="openk9-container-sort-result-list-component">
+    <span
+      className="openk9-container-sort-result-list-component"
+      css={css`
+        display: flex;
+        gap: 3px;
+        align-items: baseline;
+      `}
+    >
+      <label htmlFor="regularSelectElement" className="openk9-label-sort">
+        {t("sort")}
+      </label>
       <select
         className="form-control openk9-sort-result-select"
         id="regularSelectElement"
@@ -26,11 +36,6 @@ export function SortResultList({
           border: 1px solid #a292926b;
           height: 30px;
           cursor: pointer;
-          :focus {
-            border: 1px solid #a292926b;
-            outline: none;
-          }
-          background: transparent;
         `}
         onChange={(event) => {
           if (JSON.parse(event.currentTarget.value)?.label === "relevance") {

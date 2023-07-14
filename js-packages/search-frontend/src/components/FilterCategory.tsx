@@ -121,13 +121,19 @@ function FilterCategory({
             <strong>{suggestionCategoryName}</strong>
           </div>
           {isCollapsable && (
-            <FontAwesomeIcon
-              icon={isOpen ? faChevronDown : faChevronUp}
-              style={{
-                color: "var(--openk9-embeddable-search--secondary-text-color)",
-                marginRight: "8px",
-              }}
-            />
+            <button
+              aria-label="category collapsable toggle"
+              style={{ background: "inherit", border: "none" }}
+            >
+              <FontAwesomeIcon
+                icon={isOpen ? faChevronDown : faChevronUp}
+                style={{
+                  color:
+                    "var(--openk9-embeddable-search--secondary-text-color)",
+                  marginRight: "8px",
+                }}
+              />
+            </button>
           )}
         </div>
       </div>
@@ -162,6 +168,7 @@ function FilterCategory({
               </label>
               <input
                 className="openk9-filter-category-search"
+                type="text"
                 id={"search-category-" + suggestionCategoryId}
                 value={text}
                 placeholder={t("search-filters") || "Search filters..."}
@@ -236,6 +243,11 @@ function FilterCategory({
                             <React.Fragment>
                               <input
                                 className="form-check-input"
+                                id={
+                                  "" +
+                                  index +
+                                  suggestion.value.replaceAll(" ", "")
+                                }
                                 type="checkbox"
                                 checked={isChecked}
                                 onChange={(event) => {
@@ -278,6 +290,11 @@ function FilterCategory({
                           ) : (
                             <SingleSelect
                               isChecked={isChecked}
+                              index={
+                                "" +
+                                index +
+                                suggestion.value.replaceAll(" ", "")
+                              }
                               multiSelect={multiSelect}
                               asSearchToken={asSearchToken}
                               onAdd={onAdd}
@@ -293,6 +310,11 @@ function FilterCategory({
                           >
                             <label
                               className="form-check-label"
+                              htmlFor={
+                                "" +
+                                index +
+                                suggestion.value.replaceAll(" ", "")
+                              }
                               css={css`
                                 text-overflow: ellipsis;
                                 font-style: normal;
@@ -450,6 +472,7 @@ function SingleSelect({
   onRemove,
   singleSelect,
   setSingleSelect,
+  index,
 }: {
   isChecked: boolean;
   multiSelect: boolean;
@@ -460,12 +483,13 @@ function SingleSelect({
   setSingleSelect: React.Dispatch<
     React.SetStateAction<SearchToken | undefined>
   >;
+  index: string;
 }) {
   return (
     <React.Fragment>
       <div>
         <input
-          id="radio-button"
+          id={index}
           type="radio"
           checked={false}
           onChange={(event) => {

@@ -1,11 +1,12 @@
 import React from "react";
 
-export function CalendarLogo({ size = 26 }) {
+export function CalendarLogo({ size }: { size?: string }) {
   return (
     <svg
+      aria-hidden="true"
       className="openk9-calendar-logo"
-      width="35"
-      height="35"
+      width={size ? size : "35"}
+      height={size ? size : "35"}
       viewBox="0 0 24 24"
     >
       <path d="M0 0h24v24H0z" fill="white" />

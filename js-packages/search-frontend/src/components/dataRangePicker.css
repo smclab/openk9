@@ -1,42 +1,96 @@
-.rdrDay:not(.rdrDayPassive) .rdrInRange ~ .rdrDayNumber span,
-.rdrDay:not(.rdrDayPassive) .rdrStartEdge ~ .rdrDayNumber span,
-.rdrDay:not(.rdrDayPassive) .rdrEndEdge ~ .rdrDayNumber span,
-.rdrDay:not(.rdrDayPassive) .rdrSelected ~ .rdrDayNumber span {
-  color: black;
+.DateRangePicker_picker {
+  z-index: 2 !important;
 }
-.rdrInRange {
-  color: white !important;
-  border-top: 1px solid #c0272b;
-  border-bottom: 1px solid #c0272b;
+
+.DateRangePickerInput_1 {
+  display: flex !important;
 }
-.rdrDayEndOfWeek .rdrInRange,
-.rdrDayEndOfMonth .rdrInRange {
-  border-right: 1px solid #c0272b;
+
+.DateRangePickerInput {
+  border: none !important;
+  background: none !important;
+  justify-content: space-between;
+  align-items: center;
+  padding-block: 4px !important;
+
 }
-.rdrDayStartOfWeek .rdrInRange,
-.rdrDayStartOfMonth .rdrInRange {
-  border-left: 1px solid #c0272b;
+
+.DateRangePicker {
+  width: 96%;
 }
-.rdrStaticRange:hover {
-  background-color: red !important;
-  color: red !important;
+
+.DateRangePickerInput_arrow {
+  display: none !important;
 }
-.rdrStaticRange.your-custom-class:hover {
-  background-color: red !important;
-  color: red !important;
+
+.DateInput.DateInput_1:first-child {
+  width: 110px !important;
+  border-top-left-radius: 50px !important;
+  border-bottom-left-radius: 50px !important;
 }
-.rdrStartSelection:hover,
-.rdrEndSelection:hover {
-  background-color: red !important;
+
+
+.DateInput.DateInput_1:last-child {
+  width: 110px !important;
+  border-top-right-radius: 50px !important;
+  border-bottom-right-radius: 50px !important;
 }
-.rdrDayHovered {
-  background-color: rgba(224, 38, 38, 0.05);
-  border-radius: 50%;
-  cursor: pointer;
+
+.DateInput_input {
+  width: 110px !important;
+  border-radius: 50px !important;
+  padding-right: 0 !important;
 }
-.rdrDay:focus {
-  outline: none;
+
+.DateInput_input__focused_2 {
+  width: inherit !important;
 }
-.rdrDefinedRangesWrapper{
-  width: 100%;
+
+.DateInput {
+  position: static !important;
+}
+
+.DateInput_input.DateInput_input_1:focus-visible {
+  outline: black 2px solid !important;
+  border: none !important;
+  
+}
+
+
+.DateRangePickerInput_arrow {
+  background-color: white !important;
+}
+
+.DateInput_input__focused {
+  border: 0 !important;
+}
+
+.DateInput_input__focused {
+  width: 88% !important;
+}
+
+.CalendarDay__selected,
+.CalendarDay__selected:active {
+  background: var(--openk9-embeddable-search--primary-color) !important;
+  border: 2px solid var(--openk9-embeddable-search--secondary-active-color) !important;
+}
+
+.CalendarDay__selected_span {
+  border: 2px solid var(--openk9-embeddable-search--secondary-active-color) !important;
+  background: white !important;
+  border-top: 2px solid var(--openk9-embeddable-search--secondary-active-color) !important;
+  color: black !important;
+}
+
+.CalendarDay__selected_span:active,
+.CalendarDay__selected_span:hover {
+  background: #e4e7e7 !important;
+  color: inherit !important;
+}
+
+.CalendarDay__hovered_span {
+  border: 2px solid var(--openk9-embeddable-search--secondary-active-color) !important;
+  background: white !important;
+  border-top: 2px solid var(--openk9-embeddable-search--secondary-active-color) !important;
+  color: black !important;
 }

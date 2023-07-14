@@ -136,6 +136,14 @@ export function App() {
         `}
       ></div>
       <div
+        className="openk9-update-configuration"
+        ref={(element) => openk9.updateConfiguration({ search: element })}
+        css={css`
+          grid-area: search;
+          padding: 16px 0px 16px 0px;
+        `}
+      ></div>
+      <div
         className="openk9-filters-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ filters: element })}
         css={css`
@@ -186,14 +194,6 @@ export function App() {
           @media (min-width: 769px) and (max-width: 1024px) {
             display: none;
           }
-        `}
-      ></div>
-      <div
-        className="openk9-update-configuration"
-        ref={(element) => openk9.updateConfiguration({ search: element })}
-        css={css`
-          grid-area: search;
-          padding: 16px 0px 16px 0px;
         `}
       ></div>
       <div

@@ -104,26 +104,27 @@ function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
           padding-bottom: 12.7px;
           display: flex;
           margin-bottom: 8px;
+          gap: 5px;
         `}
       >
         <span>
           <ResultSvg />
         </span>
-        <span
-          className="openk9-result-list-title title"
-          css={css`
-            margin-left: 5px;
-            font-style: normal;
-            font-weight: 700;
-            font-size: 18px;
-            height: 18px;
-            line-height: 22px;
-            align-items: center;
-            color: #3f3f46;
-            margin-left: 8px;
-          `}
-        >
-          {t("result")}
+        <span className="openk9-result-list-title title">
+          <h2
+            css={css`
+              font-style: normal;
+              font-weight: 700;
+              font-size: 18px;
+              height: 18px;
+              line-height: 22px;
+              align-items: center;
+              color: #3f3f46;
+              margin: 0;
+            `}
+          >
+            {t("result")}
+          </h2>
         </span>
       </div>
       <div
@@ -153,15 +154,6 @@ function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
             `}
           >
             {children?.toLocaleString("it")}
-          </span>
-          <span
-            className="openk9-number-result-list-label "
-            css={css`
-              margin-left: auto;
-              margin-right: 2%;
-            `}
-          >
-            {t("sort")}
           </span>
           <SortResultList setSortResult={setSortResult} />
         </div>
