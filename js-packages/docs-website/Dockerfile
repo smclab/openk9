@@ -1,5 +1,5 @@
 # Stage 1 - build environment
-FROM node:14-alpine as react-build
+FROM node:16-alpine as react-build
 
 RUN mkdir -p /app/js-packages/docs-website
 WORKDIR /app
