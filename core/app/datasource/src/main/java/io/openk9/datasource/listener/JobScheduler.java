@@ -149,6 +149,7 @@ public class JobScheduler {
 			.listing
 			.getServiceInstances(MessageGateway.SERVICE_KEY)
 			.stream()
+			.filter(JobScheduler::isLocalActorRef)
 			.findFirst()
 			.map(JobScheduler.Start::new)
 			.ifPresentOrElse(
@@ -169,6 +170,7 @@ public class JobScheduler {
 			.listing
 			.getServiceInstances(MessageGateway.SERVICE_KEY)
 			.stream()
+			.filter(JobScheduler::isLocalActorRef)
 			.findFirst()
 			.orElseThrow();
 
@@ -601,6 +603,10 @@ public class JobScheduler {
 					}
 				)
 		);
+	}
+
+	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
+		return actorRef.path().address().port().isEmpty();
 	}
 
 }
