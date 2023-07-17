@@ -84,6 +84,9 @@ export function Search({
         display: flex;
         align-items: center;
         gap: 10px;
+        @media (max-width: 480px) {
+          flex-direction: column;
+        }
       `}
     >
       <style type="text/css">
@@ -368,11 +371,30 @@ export function Search({
           </div>
         </button>
       </div>
-      <div>
-        <DataRangePicker
-          onChange={onDateRangeChange}
-          calendarDate={dateRange}
-        />
+      <div
+        css={css`
+          @media (max-width: 480px) {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+          }
+        `}
+      >
+        <div>
+          <DataRangePicker
+            onChange={onDateRangeChange}
+            calendarDate={dateRange}
+          />
+        </div>
+        <div
+          css={css`
+            @media (min-width: 480px) {
+              display: none;
+            }
+          `}
+        >
+          <CalendarLogo />
+        </div>
       </div>
     </div>
   );

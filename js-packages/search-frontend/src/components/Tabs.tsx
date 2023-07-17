@@ -39,6 +39,9 @@ function Tabs({
           width: fit-content;
           height: fit-content;
           gap: 20px;
+          @media (max-width: 480px) {
+            gap: 10px;
+          }
         `}
       >
         {tabs.map((tab, index) => {
@@ -59,34 +62,26 @@ function Tabs({
                   (isSelected ? "openk9-active-tab" : "openk9-not-active")
                 }
                 css={css`
-                  white-space: nowrap; 
+                  white-space: nowrap;
                   padding: 8px 12px;
-                  background: ${
-                    isSelected
-                      ? "var(--openk9-embeddable-search--primary-background-tab-color)"
-                      : "var(--openk9-embeddable-search--secondary-background-tab-color)"
-                  };
+                  background: ${isSelected
+                    ? "var(--openk9-embeddable-search--primary-background-tab-color)"
+                    : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
                   border-radius: 8px;
                   font: Helvetica Neue LT Std;
                   font-style: normal;
-                  display:block;
-                  color: ${
-                    isSelected
-                      ? "var(--openk9-embeddable-search--primary-background-color)"
-                      : "var(--openk9-embeddable-tabs--primary-color)"
-                  };
-                  ${
-                    isSelected
-                      ? "var(--openk9-embeddable-search--active-color)"
-                      : "transparent"
-                  };
+                  display: block;
+                  color: ${isSelected
+                    ? "var(--openk9-embeddable-search--primary-background-color)"
+                    : "var(--openk9-embeddable-tabs--primary-color)"};
+                  ${isSelected
+                    ? "var(--openk9-embeddable-search--active-color)"
+                    : "transparent"};
                   cursor: ${isSelected ? "" : "pointer"};
                   user-select: none;
                   :hover {
                     ${isSelected ? "" : "text-decoration: underline;"}
                   }
-                  @media (max-width: 480px) {
-                    margin-left: 14px;
                 `}
                 onClick={() => {
                   onSelectedTabIndexChange(index);
