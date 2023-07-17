@@ -38,6 +38,7 @@ export function App() {
           padding-right: 0px;
           grid-template-columns: 1fr;
           grid-template-rows: auto auto auto 1fr;
+          overflow: hidden;
           grid-template-areas:
             "dockbar"
             "tabs"

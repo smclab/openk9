@@ -107,6 +107,13 @@ export function Main({
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             isMobile={isMobile}
+            setSortResult={setSortResult}
+            searchQuery={searchQuery}
+            onAddFilterToken={addFilterToken}
+            onRemoveFilterToken={removeFilterToken}
+            filtersSelect={configuration.filterTokens}
+            sort={completelySort}
+            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
           />
         </I18nextProvider>,
         configuration.search,
@@ -153,13 +160,19 @@ export function Main({
             onAddFilterToken={addFilterToken}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
-            onConfigurationChangeExt={configuration.filtersHorizontal ? configuration.filtersHorizontal.callback : () => {}}
+            onConfigurationChangeExt={
+              configuration.filtersHorizontal
+                ? configuration.filtersHorizontal.callback
+                : () => {}
+            }
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
           />
         </I18nextProvider>,
-        configuration.filtersHorizontal ? configuration.filtersHorizontal.element : null,
+        configuration.filtersHorizontal
+          ? configuration.filtersHorizontal.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

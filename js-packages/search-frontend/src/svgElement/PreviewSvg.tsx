@@ -7,6 +7,7 @@ export function PreviewSvg({ size = 26 }) {
       width={size}
       height={size}
       viewBox="0 0 18 12"
+      aria-hidden="true"
       fill="none"
     >
       <path

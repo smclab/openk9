@@ -1,12 +1,8 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLightbulb } from "@fortawesome/free-solid-svg-icons/faLightbulb";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
-import { faSyncAlt } from "@fortawesome/free-solid-svg-icons/faSyncAlt";
-import { faCalendar } from "@fortawesome/free-solid-svg-icons/faCalendar";
 import { TokenSelect } from "../components/TokenSelect";
-import { Tooltip } from "../components/Tooltip";
 import {
   Configuration,
   ConfigurationUpdateFunction,
@@ -16,18 +12,18 @@ import {
   AnalysisResponseEntry,
   AnalysisToken,
   GenericResultItem,
+  SearchToken,
+  SortField,
 } from "./client";
 import { SelectionsAction, SelectionsState } from "./useSelections";
 import { SearchDateRange } from "../embeddable/Main";
-import { Logo } from "./Logo";
-import { CalendarLogo } from "./CalendarLogo";
-import { Button } from "@mui/material";
 import { DeleteLogo } from "./DeleteLogo";
-import { SeparatorLogo } from "./SeparatorLogo";
-import { DateTime } from "luxon";
-import { CreateLabel } from "./Filters";
 import { useTranslation } from "react-i18next";
-import { DataRangePicker } from "./DateRangePicker";
+import { FilterHorizontalSvg } from "../svgElement/FilterHorizontalSvg";
+import { SortResultList } from "../renderer-components";
+import { ModalDetail } from "./ModalDetail";
+import { FilterSvg } from "../svgElement/FiltersSvg";
+import { FiltersHorizontalMemo } from "./FiltersHorizontal";
 
 type SearchProps = {
   configuration: Configuration;
@@ -40,18 +36,29 @@ type SearchProps = {
   dateRange: SearchDateRange;
   onDateRangeChange(dateRange: SearchDateRange): void;
   isMobile: boolean;
+  setSortResult: (sortResultNew: SortField) => void;
+  searchQuery: SearchToken[];
+  onAddFilterToken: (searchToken: SearchToken) => void;
+  onRemoveFilterToken: (searchToken: SearchToken) => void;
+  filtersSelect: SearchToken[];
+  sort: SortField[];
+  dynamicFilters: boolean;
 };
 export function Search({
   configuration,
-  onConfigurationChange,
   spans,
   selectionsState,
   selectionsDispatch,
   onDetail,
   showSyntax,
-  dateRange,
-  isMobile,
-  onDateRangeChange,
+  setSortResult,
+  searchQuery,
+  onAddFilterToken,
+  onRemoveFilterToken,
+  onConfigurationChange,
+  sort,
+  dynamicFilters,
+  filtersSelect,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -74,7 +81,7 @@ export function Search({
       inputRef.current.selectionEnd = adjustedSelection.selectionEnd;
     }
   }, [adjustedSelection]);
-
+  const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const { t } = useTranslation();
   return (
     <div
@@ -84,6 +91,7 @@ export function Search({
         display: flex;
         align-items: center;
         gap: 10px;
+        margin-inline: 16px;
         @media (max-width: 480px) {
           flex-direction: column;
         }
@@ -104,6 +112,7 @@ export function Search({
           align-items: center;
           border-radius: 40px;
           width: 100%;
+          max-height: 45px;
           @media (max-width: 480px) {
             width: 100%;
           }
@@ -377,13 +386,27 @@ export function Search({
             display: flex;
             gap: 10px;
             align-items: center;
+            width: 100%;
+            justify-content: space-between;
           }
         `}
       >
-        <div>
-          <DataRangePicker
+        <div
+          css={css`
+            @media (max-width: 480px) {
+              width: 100%;
+            }
+          `}
+        >
+          {/* <DataRangePicker
             onChange={onDateRangeChange}
             calendarDate={dateRange}
+          /> */}
+          <SortResultList
+            setSortResult={setSortResult}
+            background="white"
+            minHeight="40px"
+            color="#7e7e7e"
           />
         </div>
         <div
@@ -393,9 +416,97 @@ export function Search({
             }
           `}
         >
-          <CalendarLogo />
+          <button
+            css={css`
+              padding: 6px 10px;
+              border: 1px solid var(--openk9-embeddable-search--border-color);
+              background: white;
+              border-radius: 50px;
+            `}
+            onClick={() => {
+              setIsVisibleFilters(true);
+            }}
+          >
+            <FilterHorizontalSvg />
+          </button>
         </div>
       </div>
+      {isVisibleFilters && (
+        <ModalDetail
+          padding="0px"
+          background="white"
+          content={
+            <React.Fragment>
+              <div
+                css={css`
+                  display: flex;
+                  justify-content: space-beetween;
+                  background: white;
+                `}
+              >
+                <div
+                  className="openk9-filter-list-container-title box-title"
+                  css={css`
+                    padding: 0px 16px;
+                    width: 100%;
+                    background: #fafafa;
+                    padding-top: 20px;
+                    padding-bottom: 13px;
+                    display: flex;
+                  `}
+                >
+                  <div
+                    className="openk9-filter-list-container-internal-title "
+                    css={css`
+                      display: flex;
+                      gap: 5px;
+                    `}
+                  >
+                    <span>
+                      <FilterSvg />
+                    </span>
+                    <span className="openk9-filters-list-title title">
+                      <h2
+                        css={css`
+                          font-style: normal;
+                          font-weight: 700;
+                          font-size: 18px;
+                          height: 18px;
+                          line-height: 22px;
+                          display: flex;
+                          align-items: center;
+                          color: #3f3f46;
+                          margin: 0;
+                        `}
+                      >
+                        {t("filters")}
+                      </h2>
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsVisibleFilters(false);
+                  }}
+                  style={{ backgroundColor: "#FAFAFA", border: "none" }}
+                >
+                  <DeleteLogo heightParam={15} widthParam={15} />
+                </button>
+              </div>
+              <FiltersHorizontalMemo
+                searchQuery={searchQuery}
+                onAddFilterToken={onAddFilterToken}
+                onRemoveFilterToken={onRemoveFilterToken}
+                onConfigurationChange={onConfigurationChange}
+                onConfigurationChangeExt={() => setIsVisibleFilters(false)}
+                filtersSelect={configuration.filterTokens}
+                sort={sort}
+                dynamicFilters={dynamicFilters}
+              />
+            </React.Fragment>
+          }
+        />
+      )}
     </div>
   );
 }

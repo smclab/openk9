@@ -6,8 +6,14 @@ import { SortField, useOpenK9Client } from "../components/client";
 
 export function SortResultList({
   setSortResult,
+  background = "trasparent",
+  minHeight = "auto",
+  color = "black",
 }: {
   setSortResult: (sortResultNew: SortField) => void;
+  background?: string;
+  minHeight?: string;
+  color?: string;
 }) {
   const client = useOpenK9Client();
   const options = useQuery(["date-label-sort-options", {}], async () => {
@@ -22,12 +28,16 @@ export function SortResultList({
           border-radius: 34px;
           border: 1px solid #a292926b;
           height: 30px;
+          width: 100%;
+          padding-inline: 10px;
           cursor: pointer;
           :focus {
             border: 1px solid #a292926b;
             outline: none;
           }
-          background: transparent;
+          background: ${background};
+          min-height: ${minHeight};
+          color: ${color};
         `}
         onChange={(event) => {
           if (JSON.parse(event.currentTarget.value)?.label === "relevance") {

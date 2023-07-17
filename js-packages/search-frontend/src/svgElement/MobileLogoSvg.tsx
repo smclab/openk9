@@ -5,6 +5,7 @@ export function MobileLogoSvg() {
     <svg
       width="15"
       height="16"
+      aria-hidden="true"
       viewBox="0 0 22 16"
       fill="#C0272B"
       className="openk9-icon openk9-mobile-logo-svg"

@@ -7,6 +7,7 @@ export function ResultSvg({ size = 26 }) {
       width="28"
       height="16"
       viewBox="0 0 28 18"
+      aria-hidden="true"
       fill="none"
     >
       <path

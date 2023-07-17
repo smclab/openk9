@@ -8,9 +8,11 @@ import { DetailMemo } from "./Detail";
 export function ModalDetail({
   content,
   padding = "8px",
+  background = "#89878794",
 }: {
   content: React.ReactNode;
   padding?: string;
+  background?: string;
 }) {
   return (
     <div
@@ -29,7 +31,7 @@ export function ModalDetail({
           left: 0px;
           right: 0px;
           bottom: 0px;
-          background: #89878794;
+          background: ${background};
         `}
       >
         {content}

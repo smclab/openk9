@@ -67,86 +67,120 @@ function FiltersHorizontal({
 
   return (
     <React.Fragment>
-      {suggestionCategories.data?.map((suggestion, index) => {
-        const suggestions = useInfiniteSuggestions(
-          lastSearchQueryWithResults,
-          dynamicFilters,
-          suggestion.id,
-        );
-        return (
-          <React.Fragment key={index}>
-            <div
-              className="openk9-filters-horizontal-category"
-              css={css`
-                margin-top: 20px;
-                margin-bottom: 20px;
-                color: #525258;
-                font-weight: 600;
-                ::first-letter {
-                  text-transform: capitalize;
-                }
-              `}
-            >
-              {suggestion.name}
-            </div>
-            <GridContainer>
-              {suggestions.data?.pages[0].result.map((token, index) => {
-                const asSearchToken = mapSuggestionToSearchToken(token, true);
-                const checked = filterSelect.some((element) => {
-                  return element.values && element.values[0] === token.value;
-                });
-                return (
-                  <React.Fragment key={index}>
-                    <div
-                      className="openk9-filter-horizontal-container-input-value"
-                      css={css`
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        color: ${checked ? "#d6012e" : "black"};
-                        display: flex;
-                        align-items: flex-start;
-                      `}
-                    >
-                      <input
-                        className="custom-checkbox openk9-filter-horizontal-input"
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(event) =>
-                          handleCheckboxChange(event, asSearchToken)
-                        }
+      <OverlayScrollbarsComponent
+        className="openk9-filter-overlay-scrollbars"
+        style={{
+          overflowY: "auto",
+          position: "relative",
+          height: "73%",
+          borderRadius: "8px",
+        }}
+      >
+        {suggestionCategories.data?.map((suggestion, index) => {
+          const suggestions = useInfiniteSuggestions(
+            lastSearchQueryWithResults,
+            dynamicFilters,
+            suggestion.id,
+          );
+          return (
+            <React.Fragment key={index}>
+              {index !== 0 && (
+                <div
+                  style={{
+                    border: "0.5px solid #8080807a",
+                    marginTop: "0px",
+                    marginBottom: "20px",
+                    marginInline: "16px",
+                  }}
+                ></div>
+              )}
+              <div
+                className="openk9-filters-horizontal-category"
+                css={css`
+                  margin-top: 20px;
+                  margin-bottom: 20px;
+                  color: #525258;
+                  font-weight: 600;
+                  ::first-letter {
+                    text-transform: capitalize;
+                  }
+                  @media (max-width: 480px) {
+                    margin-left: 16px;
+                    color: var(--openk9-embeddable-tabs--primary-color);
+                    font-weight: 700;
+                    margin-bottom: 20px;
+                  }
+                `}
+              >
+                {suggestion.name}
+              </div>
+              <GridContainer>
+                {suggestions.data?.pages[0].result.map((token, index) => {
+                  const asSearchToken = mapSuggestionToSearchToken(token, true);
+                  const checked = filterSelect.some((element) => {
+                    return element.values && element.values[0] === token.value;
+                  });
+                  return (
+                    <React.Fragment key={index}>
+                      <div
+                        className="openk9-filter-horizontal-container-input-value"
                         css={css`
-                          width: 14px;
-                          appearance: none;
-                          min-width: 15px;
-                          min-height: 15px;
-                          border-radius: 4px;
-                          border: 2px solid #ccc;
-                          background-color: ${checked
-                            ? "var(--openk9-embeddable-search--secondary-active-color)"
-                            : "#fff"};
-                          background-size: 100%;
-                          background-position: center;
-                          background-repeat: no-repeat;
-                          cursor: pointer;
-                          margin-right: 10px;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                          color: ${checked ? "#d6012e" : "black"};
+                          display: flex;
+                          align-items: flex-start;
+                          @media (max-width: 480px) {
+                            margin-left: 15px;
+                            margin-right: 15px;
+                          }
                         `}
-                      />
+                      >
+                        <input
+                          className="custom-checkbox openk9-filter-horizontal-input"
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(event) =>
+                            handleCheckboxChange(event, asSearchToken)
+                          }
+                          css={css`
+                            width: 14px;
+                            appearance: none;
+                            min-width: 15px;
+                            min-height: 15px;
+                            border-radius: 4px;
+                            border: 2px solid #ccc;
+                            background-color: ${checked
+                              ? "var(--openk9-embeddable-search--secondary-active-color)"
+                              : "#fff"};
+                            background-size: 100%;
+                            background-position: center;
+                            background-repeat: no-repeat;
+                            cursor: pointer;
+                            margin-right: 10px;
+                          `}
+                        />
 
-                      {asSearchToken?.values &&
-                        capitalize(asSearchToken?.values[0])}
-                    </div>
-                  </React.Fragment>
-                );
-              })}
-            </GridContainer>
-          </React.Fragment>
-        );
-      })}
+                        {asSearchToken?.values &&
+                          capitalize(asSearchToken?.values[0])}
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </GridContainer>
+            </React.Fragment>
+          );
+        })}
+      </OverlayScrollbarsComponent>
       <div
         className="openk9-filter-horizontal-container-submit"
         css={css`
           display: flex;
           justify-content: flex-end;
+          @media (max-width: 480px) {
+            padding-inline: 20px;
+            flex-direction: column;
+          }
         `}
       >
         <button
@@ -165,6 +199,64 @@ function FiltersHorizontal({
             display: flex;
             align-items: center;
             gap: 3px;
+            @media (max-width: 480px) {
+              background: white;
+              border: 1px solid #d6012e;
+              width: 100%;
+              height: auto;
+              margin-top: 20px;
+              color: black;
+              border-radius: 50px;
+              display: flex;
+              justify-content: center;
+              color: var(--red-tones-500, #c0272b);
+              text-align: center;
+              font-size: 16px;
+              font-style: normal;
+              font-weight: 700;
+              line-height: normal;
+            }
+          `}
+          onClick={() => {
+            onConfigurationChange({ filterTokens: [] });
+            onConfigurationChangeExt && onConfigurationChangeExt();
+          }}
+        >
+          <div>Rimuovi filtri</div>
+          <div>{/* <FilterHorizontalSvg /> */}</div>
+        </button>
+        <button
+          className="openk9-filter-horizontal-submit"
+          css={css`
+            font-size: smaller;
+            height: 52px;
+            padding: 8px 12px;
+            white-space: nowrap;
+            border: 1px solid #d6012e;
+            background-color: #d6012e;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            @media (max-width: 480px) {
+              background: #d6012e;
+              border: 1px solid #d6012e;
+              width: 100%;
+              height: auto;
+              margin-top: 20px;
+              color: white;
+              border-radius: 50px;
+              display: flex;
+              justify-content: center;
+              text-align: center;
+              font-size: 16px;
+              font-style: normal;
+              font-weight: 700;
+              line-height: normal;
+            }
           `}
           onClick={() => {
             onConfigurationChange({ filterTokens: filterSelect });
@@ -172,9 +264,7 @@ function FiltersHorizontal({
           }}
         >
           <div>Applica i Filtri</div>
-          <div>
-            <FilterHorizontalSvg />
-          </div>
+          <div>{/* <FilterHorizontalSvg /> */}</div>
         </button>
       </div>
     </React.Fragment>
@@ -192,6 +282,11 @@ const GridContainer = ({ children }: { children: any }) => (
       grid-gap: 15px;
       grid-auto-rows: auto;
       margin-bottom: 50px;
+      @media (max-width: 480px) {
+        grid-template-columns: repeat(1, 1fr);
+        overflow: auto;
+        margin-bottom: 20px;
+      }
     `}
   >
     {children}
@@ -238,7 +333,7 @@ export function useInfiniteSuggestions(
         afterKey: pageParam,
         order: "desc",
         suggestionCategoryId: suggestionCategoryId,
-        range: [0, 50]
+        range: [0, 50],
       });
       return {
         result: result.result,

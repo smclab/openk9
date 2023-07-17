@@ -1,8 +1,14 @@
 import React from "react";
 
-export function FilterHorizontalSvg({ size = "26px" }: { size?: string }) {
+export function FilterHorizontalSvg({ size = "26" }: { size?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <mask
         id="mask0_1113_6763"
         maskUnits="userSpaceOnUse"

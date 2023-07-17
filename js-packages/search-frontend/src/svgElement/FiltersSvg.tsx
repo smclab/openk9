@@ -4,6 +4,7 @@ export function FilterSvg({ size = 26 }) {
   return (
     <svg
       className="openk-9-filter-icon title-icon"
+      aria-hidden="true"
       width="18"
       height="18"
       viewBox="0 0 18 18"
