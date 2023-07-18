@@ -3,7 +3,11 @@ import { css } from "styled-components/macro";
 import { SearchToken, SortField, SuggestionResult } from "./client";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";
-import { useInfiniteQuery, useQuery } from "react-query";
+import {
+  UseInfiniteQueryResult,
+  useInfiniteQuery,
+  useQuery,
+} from "react-query";
 import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { Logo } from "./Logo";
@@ -13,6 +17,9 @@ import { useTranslation } from "react-i18next";
 import { mapSuggestionToSearchToken } from "./FilterCategory";
 import { capitalize } from "lodash";
 import { FilterHorizontalSvg } from "../svgElement/FilterHorizontalSvg";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
+import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -72,7 +79,7 @@ function FiltersHorizontal({
         style={{
           overflowY: "auto",
           position: "relative",
-          height: "73%",
+          height: "70%",
           borderRadius: "8px",
         }}
       >
@@ -82,94 +89,7 @@ function FiltersHorizontal({
             dynamicFilters,
             suggestion.id,
           );
-          return (
-            <React.Fragment key={index}>
-              {index !== 0 && (
-                <div
-                  style={{
-                    border: "0.5px solid #8080807a",
-                    marginTop: "0px",
-                    marginBottom: "20px",
-                    marginInline: "16px",
-                  }}
-                ></div>
-              )}
-              <div
-                className="openk9-filters-horizontal-category"
-                css={css`
-                  margin-top: 20px;
-                  margin-bottom: 20px;
-                  color: #525258;
-                  font-weight: 600;
-                  ::first-letter {
-                    text-transform: capitalize;
-                  }
-                  @media (max-width: 480px) {
-                    margin-left: 16px;
-                    color: var(--openk9-embeddable-tabs--primary-color);
-                    font-weight: 700;
-                    margin-bottom: 20px;
-                  }
-                `}
-              >
-                {suggestion.name}
-              </div>
-              <GridContainer>
-                {suggestions.data?.pages[0].result.map((token, index) => {
-                  const asSearchToken = mapSuggestionToSearchToken(token, true);
-                  const checked = filterSelect.some((element) => {
-                    return element.values && element.values[0] === token.value;
-                  });
-                  return (
-                    <React.Fragment key={index}>
-                      <div
-                        className="openk9-filter-horizontal-container-input-value"
-                        css={css`
-                          overflow: hidden;
-                          text-overflow: ellipsis;
-                          color: ${checked ? "#d6012e" : "black"};
-                          display: flex;
-                          align-items: flex-start;
-                          @media (max-width: 480px) {
-                            margin-left: 15px;
-                            margin-right: 15px;
-                          }
-                        `}
-                      >
-                        <input
-                          className="custom-checkbox openk9-filter-horizontal-input"
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(event) =>
-                            handleCheckboxChange(event, asSearchToken)
-                          }
-                          css={css`
-                            width: 14px;
-                            appearance: none;
-                            min-width: 15px;
-                            min-height: 15px;
-                            border-radius: 4px;
-                            border: 2px solid #ccc;
-                            background-color: ${checked
-                              ? "var(--openk9-embeddable-search--secondary-active-color)"
-                              : "#fff"};
-                            background-size: 100%;
-                            background-position: center;
-                            background-repeat: no-repeat;
-                            cursor: pointer;
-                            margin-right: 10px;
-                          `}
-                        />
-
-                        {asSearchToken?.values &&
-                          capitalize(asSearchToken?.values[0])}
-                      </div>
-                    </React.Fragment>
-                  );
-                })}
-              </GridContainer>
-            </React.Fragment>
-          );
+          return CreateSuggestion(index, suggestion, suggestions);
         })}
       </OverlayScrollbarsComponent>
       <div
@@ -185,6 +105,7 @@ function FiltersHorizontal({
       >
         <button
           className="openk9-filter-horizontal-submit"
+          aria-label="rimuovi filtri"
           css={css`
             font-size: smaller;
             height: 52px;
@@ -227,6 +148,7 @@ function FiltersHorizontal({
         </button>
         <button
           className="openk9-filter-horizontal-submit"
+          aria-label="applica filtri"
           css={css`
             font-size: smaller;
             height: 52px;
@@ -269,6 +191,150 @@ function FiltersHorizontal({
       </div>
     </React.Fragment>
   );
+
+  function CreateSuggestion(
+    index: number,
+    suggestion: { name: string; id: number; multiSelect: boolean },
+    suggestions: UseInfiniteQueryResult<
+      {
+        result: SuggestionResult[];
+        afterKey: string;
+      },
+      unknown
+    >,
+  ): JSX.Element {
+    const [isOpen, setIsOpen] = React.useState(true);
+    return (
+      <React.Fragment key={index}>
+        {index !== 0 && (
+          <div
+            style={{
+              border: "0.5px solid #8080807a",
+              marginTop: "0px",
+              marginBottom: "20px",
+              marginInline: "16px",
+            }}
+          ></div>
+        )}
+        <div
+          css={css`
+            margin-top: 20px;
+            margin-bottom: 20px;
+            @media (max-width: 480px) {
+              display: flex;
+              justify-content: space-between;
+              margin-left: 16px;
+              margin-bottom: 20px;
+            }
+          `}
+        >
+          <div
+            className="openk9-filters-horizontal-category"
+            css={css`
+              color: #525258;
+              font-weight: 600;
+              ::first-letter {
+                text-transform: capitalize;
+              }
+              @media (max-width: 480px) {
+                color: var(--openk9-embeddable-tabs--primary-color);
+                font-weight: 700;
+              }
+            `}
+          >
+            {suggestion.name}
+          </div>
+          <button
+            aria-label={isOpen ? "chiudi i filtri" : "apri i filtri"}
+            css={css`
+              margin-right: 16px;
+              background: inherit;
+              border: none;
+              @media (min-width: 480px) {
+                display: none;
+              }
+            `}
+            onClick={() => {
+              setIsOpen(!isOpen);
+            }}
+          >
+            <FontAwesomeIcon
+              icon={isOpen ? faChevronDown : faChevronUp}
+              style={{
+                color: "var(--openk9-embeddable-search--secondary-text-color)",
+                marginRight: "6px",
+              }}
+            />
+          </button>
+        </div>
+        <GridContainer>
+          {isOpen &&
+            suggestions.data?.pages[0].result.map(
+              (token: any, index: number) => {
+                const asSearchToken = mapSuggestionToSearchToken(token, true);
+                const checked = filterSelect.some((element) => {
+                  return element.values && element.values[0] === token.value;
+                });
+                return (
+                  <React.Fragment key={index}>
+                    <div
+                      className="openk9-filter-horizontal-container-input-value"
+                      css={css`
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        color: ${checked ? "#d6012e" : "black"};
+                        display: flex;
+                        align-items: flex-start;
+                        @media (max-width: 480px) {
+                          margin-left: 15px;
+                          margin-right: 15px;
+                        }
+                      `}
+                    >
+                      <input
+                        id={
+                          "filter-horizontal " + index + " " + suggestion.name
+                        }
+                        className="custom-checkbox openk9-filter-horizontal-input"
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(event) =>
+                          handleCheckboxChange(event, asSearchToken)
+                        }
+                        css={css`
+                          width: 14px;
+                          appearance: none;
+                          min-width: 15px;
+                          min-height: 15px;
+                          border-radius: 4px;
+                          border: 2px solid #ccc;
+                          background-color: ${checked
+                            ? "var(--openk9-embeddable-search--secondary-active-color)"
+                            : "#fff"};
+                          background-size: 100%;
+                          background-position: center;
+                          background-repeat: no-repeat;
+                          cursor: pointer;
+                          margin-right: 10px;
+                        `}
+                      />
+                      <label
+                        htmlFor={
+                          "filter-horizontal " + index + " " + suggestion.name
+                        }
+                      >
+                        {asSearchToken?.values &&
+                          capitalize(asSearchToken?.values[0])}
+                      </label>
+                    </div>
+                  </React.Fragment>
+                );
+              },
+            )}
+        </GridContainer>
+      </React.Fragment>
+    );
+  }
 }
 
 export const FiltersHorizontalMemo = React.memo(FiltersHorizontal);
