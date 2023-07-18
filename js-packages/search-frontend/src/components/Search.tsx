@@ -24,6 +24,8 @@ import { SortResultList } from "../renderer-components";
 import { ModalDetail } from "./ModalDetail";
 import { FilterSvg } from "../svgElement/FiltersSvg";
 import { FiltersHorizontalMemo } from "./FiltersHorizontal";
+import { FiltersMemo } from "./Filters";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 
 type SearchProps = {
   configuration: Configuration;
@@ -504,7 +506,126 @@ export function Search({
                   Chiudi <DeleteLogo heightParam={8} widthParam={8} />
                 </button>
               </div>
-              <FiltersHorizontalMemo
+              <OverlayScrollbarsComponent
+                className="openk9-filter-overlay-scrollbars"
+                style={{
+                  overflowY: "auto",
+                  position: "relative",
+                  height: "73%",
+                  borderRadius: "8px",
+                }}
+              >
+                <FiltersMemo
+                  searchQuery={searchQuery}
+                  onAddFilterToken={onAddFilterToken}
+                  onRemoveFilterToken={onRemoveFilterToken}
+                  onConfigurationChange={onConfigurationChange}
+                  filtersSelect={configuration.filterTokens}
+                  sort={sort}
+                  dynamicFilters={dynamicFilters}
+                />
+              </OverlayScrollbarsComponent>
+              <div
+                css={css`
+                  margin-top: 10px;
+                  border: 0.5px solid #d4d4d8;
+                `}
+              ></div>
+              <div
+                className="openk9-filter-horizontal-container-submit"
+                css={css`
+                  display: flex;
+                  justify-content: flex-end;
+                  @media (max-width: 480px) {
+                    padding-inline: 20px;
+                    flex-direction: column;
+                  }
+                `}
+              >
+                <button
+                  className="openk9-filter-horizontal-submit"
+                  aria-label="rimuovi filtri"
+                  css={css`
+                    font-size: smaller;
+                    height: 52px;
+                    padding: 8px 12px;
+                    white-space: nowrap;
+                    border: 1px solid #d6012e;
+                    background-color: #d6012e;
+                    border-radius: 5px;
+                    color: white;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    @media (max-width: 480px) {
+                      background: white;
+                      border: 1px solid #d6012e;
+                      width: 100%;
+                      height: auto;
+                      margin-top: 20px;
+                      color: black;
+                      border-radius: 50px;
+                      display: flex;
+                      justify-content: center;
+                      color: var(--red-tones-500, #c0272b);
+                      text-align: center;
+                      font-size: 16px;
+                      font-style: normal;
+                      font-weight: 700;
+                      line-height: normal;
+                    }
+                  `}
+                  onClick={() => {
+                    onConfigurationChange({ filterTokens: [] });
+                    setIsVisibleFilters(false);
+                  }}
+                >
+                  <div>Rimuovi filtri</div>
+                </button>
+                <button
+                  className="openk9-filter-horizontal-submit"
+                  aria-label="applica filtri"
+                  css={css`
+                    font-size: smaller;
+                    height: 52px;
+                    padding: 8px 12px;
+                    white-space: nowrap;
+                    border: 1px solid #d6012e;
+                    background-color: #d6012e;
+                    border-radius: 5px;
+                    color: white;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    @media (max-width: 480px) {
+                      background: #d6012e;
+                      border: 1px solid #d6012e;
+                      width: 100%;
+                      height: auto;
+                      margin-top: 20px;
+                      color: white;
+                      border-radius: 50px;
+                      display: flex;
+                      justify-content: center;
+                      text-align: center;
+                      font-size: 16px;
+                      font-style: normal;
+                      font-weight: 700;
+                      line-height: normal;
+                    }
+                  `}
+                  onClick={() => {
+                    setIsVisibleFilters(false);
+                  }}
+                >
+                  <div>Applica i Filtri</div>
+                </button>
+              </div>
+              {/* <FiltersHorizontalMemo
                 searchQuery={searchQuery}
                 onAddFilterToken={onAddFilterToken}
                 onRemoveFilterToken={onRemoveFilterToken}
@@ -513,7 +634,7 @@ export function Search({
                 filtersSelect={configuration.filterTokens}
                 sort={sort}
                 dynamicFilters={dynamicFilters}
-              />
+              /> */}
             </React.Fragment>
           }
         />

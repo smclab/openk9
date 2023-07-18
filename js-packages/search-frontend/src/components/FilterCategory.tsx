@@ -13,6 +13,7 @@ import { Logo } from "./Logo";
 import { CreateLabel } from "./Filters";
 import { PlusSvg } from "../svgElement/PlusSvg";
 import { useTranslation } from "react-i18next";
+import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -357,15 +358,20 @@ function FilterCategory({
           </div>
           {!isUniqueLoadMore && suggestions.hasNextPage && (
             <div
-              style={{
-                textAlign: "center",
-                width: "100%",
-                display: "flex",
-                marginLeft: "12px",
-                marginTop: "10px",
-              }}
+              className="openk9-container-load-more"
+              css={css`
+                text-align: center;
+                width: 100%;
+                display: flex;
+                margin-left: 12px;
+                margin-top: 10px;
+                justify-content: center;
+                @media (max-width: 480px) {
+                  margin-top: 15px;
+                }
+              `}
             >
-              <CreateLabel
+              {/* <CreateLabel
                 label={t("load-more")}
                 action={() => {
                   suggestions.fetchNextPage();
@@ -376,7 +382,27 @@ function FilterCategory({
                 marginOfSvg="5px"
                 disabled={!isUniqueLoadMore}
                 widthLabel={"100%"}
-              />
+              /> */}
+              <button
+                css={css`
+                  border: none;
+                  background: inherit;
+                  color: var(--openk9-embeddable-search--primary-color);
+                  font-size: 14px;
+                  font-style: normal;
+                  font-weight: 700;
+                  line-height: normal;
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                `}
+                onClick={() => {
+                  suggestions.fetchNextPage();
+                }}
+              >
+                Load More
+                <ArrowDownSvg />
+              </button>
             </div>
           )}
         </React.Fragment>

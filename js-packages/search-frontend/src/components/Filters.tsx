@@ -68,6 +68,9 @@ function Filters({
           padding-top: 20px;
           padding-bottom: 13px;
           display: flex;
+          @media (max-width: 480px) {
+            display: none;
+          }
         `}
       >
         <div
@@ -103,6 +106,9 @@ function Filters({
         className="openk9-number-filter-list-container-wrapper"
         css={css`
           padding: 8px 24px;
+          @media (max-width: 480px) {
+            display: none;
+          }
         `}
       >
         <div
