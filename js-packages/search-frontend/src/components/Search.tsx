@@ -441,7 +441,7 @@ export function Search({
                 css={css`
                   display: flex;
                   justify-content: space-beetween;
-                  background: white;
+                  background: #fafafa;
                 `}
               >
                 <div
@@ -485,12 +485,23 @@ export function Search({
                   </div>
                 </div>
                 <button
+                  css={css`
+                    color: var(--openk9-grey-stone-600);
+                    font-size: 10px;
+                    font-family: Nunito Sans;
+                    font-weight: 700;
+                    line-height: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 9px;
+                    margin-right: 21px;
+                  `}
                   onClick={() => {
                     setIsVisibleFilters(false);
                   }}
                   style={{ backgroundColor: "#FAFAFA", border: "none" }}
                 >
-                  <DeleteLogo heightParam={15} widthParam={15} />
+                  Chiudi <DeleteLogo heightParam={8} widthParam={8} />
                 </button>
               </div>
               <FiltersHorizontalMemo
