@@ -381,7 +381,14 @@ public class IndexerEvents {
 
 		String type = root.getType();
 
-		if (type != null) {
+		boolean isI18NField =
+			root
+				.getSubFields()
+				.stream()
+				.map(Field::getName)
+				.anyMatch(fieldName -> fieldName.equals("i18n"));
+
+		if (type != null || isI18NField) {
 
 			String fieldName = String.join(".", acc);
 
@@ -389,12 +396,11 @@ public class IndexerEvents {
 			docTypeField.setName(fieldName);
 			docTypeField.setFieldName(fieldName);
 			docTypeField.setBoost(1.0);
-			FieldType fieldType = FieldType.fromString(type);
+			FieldType fieldType =
+				isI18NField
+					? FieldType.I18N
+					: FieldType.fromString(type);
 			docTypeField.setFieldType(fieldType);
-			switch (fieldType) {
-				case TEXT, KEYWORD, WILDCARD, CONSTANT_KEYWORD -> docTypeField.setSearchable(true);
-				default -> docTypeField.setSearchable(false);
-			}
 			docTypeField.setDescription("auto-generated");
 			docTypeField.setSubDocTypeFields(new LinkedHashSet<>());
 			if (root.getExtra() != null && !root.getExtra().isEmpty()) {
@@ -408,10 +414,17 @@ public class IndexerEvents {
 
 			docTypeFields.add(docTypeField);
 
+			switch (fieldType) {
+				case TEXT, KEYWORD, WILDCARD, CONSTANT_KEYWORD, I18N -> docTypeField.setSearchable(true);
+				default -> docTypeField.setSearchable(false);
+			}
+
 			for (Field subField : root.getSubFields()) {
+
 				_toDocTypeFields(
 					subField, new ArrayList<>(acc), docTypeField,
 					docTypeField.getSubDocTypeFields());
+
 			}
 
 		}

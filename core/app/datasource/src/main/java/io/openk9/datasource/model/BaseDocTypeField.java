@@ -3,6 +3,7 @@ package io.openk9.datasource.model;
 import io.openk9.datasource.model.util.K9Entity;
 
 import static io.openk9.datasource.model.FieldType.BOOLEAN;
+import static io.openk9.datasource.model.FieldType.I18N;
 import static io.openk9.datasource.model.FieldType.SEARCH_AS_YOU_TYPE;
 
 public abstract class BaseDocTypeField extends K9Entity {
@@ -46,6 +47,10 @@ public abstract class BaseDocTypeField extends K9Entity {
 		return BOOLEAN == getFieldType();
 	}
 
+	public boolean isI18N() {
+		return I18N == getFieldType();
+	}
+
 	public boolean isAutocomplete() {
 		return SEARCH_AS_YOU_TYPE == getFieldType();
 	}
@@ -80,6 +85,10 @@ public abstract class BaseDocTypeField extends K9Entity {
 
 	public boolean isSearchableAndText() {
 		return isSearchable() && isText();
+	}
+
+	public boolean isSearchableAndI18N() {
+		return isSearchable() && isI18N();
 	}
 
 }

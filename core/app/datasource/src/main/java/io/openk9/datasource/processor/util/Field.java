@@ -2,8 +2,8 @@ package io.openk9.datasource.processor.util;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +31,7 @@ public class Field {
 	public void addSubFields(Collection<Field> fields) {
 
 		if (subFields == null) {
-			subFields = new ArrayList<>();
+			subFields = new LinkedList<>();
 		}
 
 		this.subFields.addAll(fields);
@@ -40,10 +40,20 @@ public class Field {
 	public void addSubField(Field field) {
 
 		if (subFields == null) {
-			subFields = new ArrayList<>();
+			subFields = new LinkedList<>();
 		}
 
 		this.subFields.add(field);
+
+	}
+
+	public void addI18NField(Field field) {
+
+		if (i18nFields == null) {
+			i18nFields = new LinkedList<>();
+		}
+
+		this.i18nFields.add(field);
 
 	}
 
@@ -57,6 +67,10 @@ public class Field {
 
 	public List<Field> getSubFields() {
 		return subFields == null ? List.of() : subFields;
+	}
+
+	public List<Field> getI18NFields() {
+		return i18nFields == null ? List.of() : i18nFields;
 	}
 
 	public Map<String, Object> getExtra() {
@@ -96,6 +110,7 @@ public class Field {
 
 	private Map<String, Object> extra;
 	private List<Field> subFields;
+	private List<Field> i18nFields;
 
 	public static final String ROOT = "root-" + UUID.randomUUID();
 

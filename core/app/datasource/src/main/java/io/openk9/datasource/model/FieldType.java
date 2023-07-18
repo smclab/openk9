@@ -72,7 +72,8 @@ public enum FieldType {
 	GEO_SHAPE("geo_shape"),
 	POINT("point"),
 	SHAPE("shape"),
-	PERCOLATOR("percolator");
+	PERCOLATOR("percolator"),
+	I18N("i18n");
 
 	FieldType(String type) {
 		this.type = type;
