@@ -30,4 +30,7 @@ public class TokenFilter extends K9Entity {
 	@Lob
 	@Column(name = "json_config")
 	private String jsonConfig;
+
+	@Column(name = "type")
+	private String type;
 }

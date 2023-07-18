@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import javax.validation.constraints.NotNull;
+
 @NoArgsConstructor
 @SuperBuilder
 @Getter
@@ -17,4 +19,7 @@ public class TokenizerDTO extends K9EntityDTO {
 
 	@Json
 	private String jsonConfig;
+
+	@NotNull
+	public String type;
 }

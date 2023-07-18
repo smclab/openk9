@@ -31,4 +31,7 @@ public class CharFilter extends K9Entity {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
+	@Column(name = "type")
+	private String type;
+
 }
