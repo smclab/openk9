@@ -26,6 +26,7 @@ import { FilterSvg } from "../svgElement/FiltersSvg";
 import { FiltersHorizontalMemo } from "./FiltersHorizontal";
 import { FiltersMemo } from "./Filters";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import { useInfiniteResults } from "./ResultList";
 
 type SearchProps = {
   configuration: Configuration;
@@ -85,6 +86,7 @@ export function Search({
   }, [adjustedSelection]);
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const { t } = useTranslation();
+  const results = useInfiniteResults<any>(searchQuery, sort);
   return (
     <div
       className="openk9--search-container"
@@ -622,7 +624,7 @@ export function Search({
                     setIsVisibleFilters(false);
                   }}
                 >
-                  <div>Applica i Filtri</div>
+                  <div>Applica i Filtri {results.data?.pages[0].total}</div>
                 </button>
               </div>
               {/* <FiltersHorizontalMemo
