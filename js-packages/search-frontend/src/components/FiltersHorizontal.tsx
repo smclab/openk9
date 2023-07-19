@@ -20,6 +20,8 @@ import { FilterHorizontalSvg } from "../svgElement/FilterHorizontalSvg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
+import { TrashSvg } from "../svgElement/TrashSvg";
+import { AddFiltersSvg } from "../svgElement/addFiltersSvg";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -136,6 +138,7 @@ function FiltersHorizontal({
               font-style: normal;
               font-weight: 700;
               line-height: normal;
+              align-items: center;
             }
           `}
           onClick={() => {
@@ -144,7 +147,7 @@ function FiltersHorizontal({
           }}
         >
           <div>Rimuovi filtri</div>
-          <div>{/* <FilterHorizontalSvg /> */}</div>
+          <TrashSvg size="18px" />
         </button>
         <button
           className="openk9-filter-horizontal-submit"
@@ -186,7 +189,9 @@ function FiltersHorizontal({
           }}
         >
           <div>Applica i Filtri</div>
-          <div>{/* <FilterHorizontalSvg /> */}</div>
+          <div>
+            <AddFiltersSvg size="22px" />
+          </div>
         </button>
       </div>
     </React.Fragment>

@@ -34,6 +34,8 @@ import "../i18n";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import { ActiveFilter } from "../components/ActiveFilters";
+import { FiltersMobileMemo } from "../components/FiltersMobile";
+import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -91,7 +93,7 @@ export function Main({
   }, []);
   const { detail, setDetail } = useDetails(searchQuery);
   const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
-
+  const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   return (
     <React.Fragment>
       {renderPortal(
@@ -114,6 +116,8 @@ export function Main({
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            isVisibleFilters={isVisibleFilters}
+            setIsVisibleFilters={setIsVisibleFilters}
           />
         </I18nextProvider>,
         configuration.search,
@@ -214,6 +218,40 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.detailMobile,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <FiltersMobileMemo
+            searchQuery={searchQuery}
+            onAddFilterToken={addFilterToken}
+            onRemoveFilterToken={removeFilterToken}
+            onConfigurationChange={onConfigurationChange}
+            filtersSelect={configuration.filterTokens}
+            sort={completelySort}
+            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            configuration={configuration}
+            isVisibleFilters={isVisibleFilters}
+            setIsVisibleFilters={setIsVisibleFilters}
+          />
+        </I18nextProvider>,
+        configuration.filtersMobile,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <FiltersMobileLiveChangeMemo
+            searchQuery={searchQuery}
+            onAddFilterToken={addFilterToken}
+            onRemoveFilterToken={removeFilterToken}
+            onConfigurationChange={onConfigurationChange}
+            filtersSelect={configuration.filterTokens}
+            sort={completelySort}
+            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            configuration={configuration}
+            isVisibleFilters={isVisibleFilters}
+            setIsVisibleFilters={setIsVisibleFilters}
+          />
+        </I18nextProvider>,
+        configuration.filtersMobileLiveChange,
       )}
     </React.Fragment>
   );

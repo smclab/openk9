@@ -150,6 +150,9 @@ function FilterCategory({
                 display: flex;
                 align-items: center;
                 margin-bottom: 10px;
+                @media (max-width: 480px) {
+                  display: none;
+                }
               `}
             >
               <FontAwesomeIcon
@@ -211,6 +214,9 @@ function FilterCategory({
               gap: ${isUniqueLoadMore ? "0" : "5px"};
               flex-wrap: ${isUniqueLoadMore ? "wrap" : "initial"};
               padding-left: 13px;
+              @media (max-width: 480px) {
+                margin-top: 15px;
+              }
             `}
           >
             {suggestions.data?.pages.map(({ result }, index) => {
@@ -371,18 +377,6 @@ function FilterCategory({
                 }
               `}
             >
-              {/* <CreateLabel
-                label={t("load-more")}
-                action={() => {
-                  suggestions.fetchNextPage();
-                }}
-                svgIcon={<PlusSvg size={12} />}
-                sizeHeight="22px"
-                sizeFont="16px"
-                marginOfSvg="5px"
-                disabled={!isUniqueLoadMore}
-                widthLabel={"100%"}
-              /> */}
               <button
                 css={css`
                   border: none;

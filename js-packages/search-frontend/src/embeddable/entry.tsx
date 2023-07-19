@@ -164,6 +164,8 @@ export type Configuration = {
   activeFilters: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
+  filtersMobile: Element | string | null;
+  filtersMobileLiveChange: Element | string | null;
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   sortable: Element | string | null;
   results: Element | string | null;
@@ -188,6 +190,8 @@ const defaultConfiguration: Configuration = {
   search: null,
   activeFilters: null,
   tabs: null,
+  filtersMobile: null,
+  filtersMobileLiveChange: null,
   sortable: null,
   detailMobile: null,
   sort: [],

@@ -9,6 +9,7 @@ import { CreateLabel } from "./Filters";
 import moment from "moment";
 import { DeleteLogo } from "./DeleteLogo";
 import { CalendarLogo } from "./CalendarLogo";
+import { css } from "styled-components/macro";
 
 export function DataRangePicker({
   onChange,
@@ -113,15 +114,18 @@ export function DataRangePicker({
   return (
     <div>
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          outline: "var(--openk9-embeddable-search--border-color) solid 1px",
-          borderRadius: "50px",
-          background: "white",
-          paddingInline: "10px",
-          height: "53px",
-        }}
+        css={css`
+          display: flex;
+          align-items: center;
+          outline: var(--openk9-embeddable-search--border-color) solid 1px;
+          border-radius: 50px;
+          background: white;
+          padding-inline: 10px;
+          height: 53px;
+          @media (max-width: 480px) {
+            height: 45px;
+          }
+        `}
       >
         <div
           style={{

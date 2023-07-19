@@ -145,6 +145,13 @@ export function App() {
         `}
       ></div>
       <div
+        className="openk9-results-container openk9-box"
+        tabIndex={-10}
+        ref={(element) =>
+          openk9.updateConfiguration({ filtersMobileLiveChange: element })
+        }
+      ></div>
+      <div
         className="openk9-filters-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ filters: element })}
         css={css`
@@ -196,10 +203,6 @@ export function App() {
             display: none;
           }
         `}
-      ></div>
-      <div
-        className="openk9-results-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ detailMobile: element })}
       ></div>
     </div>
   );

@@ -27,6 +27,8 @@ import { FiltersHorizontalMemo } from "./FiltersHorizontal";
 import { FiltersMemo } from "./Filters";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useInfiniteResults } from "./ResultList";
+import { DataRangePicker } from "./DateRangePicker";
+import { ActiveFilter } from "./ActiveFilters";
 
 type SearchProps = {
   configuration: Configuration;
@@ -46,6 +48,8 @@ type SearchProps = {
   filtersSelect: SearchToken[];
   sort: SortField[];
   dynamicFilters: boolean;
+  isVisibleFilters: boolean;
+  setIsVisibleFilters: React.Dispatch<React.SetStateAction<boolean>>;
 };
 export function Search({
   configuration,
@@ -55,13 +59,12 @@ export function Search({
   onDetail,
   showSyntax,
   setSortResult,
-  searchQuery,
-  onAddFilterToken,
-  onRemoveFilterToken,
+  onDateRangeChange,
+  dateRange,
+  setIsVisibleFilters,
   onConfigurationChange,
-  sort,
-  dynamicFilters,
-  filtersSelect,
+  onRemoveFilterToken,
+  searchQuery,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -84,317 +87,354 @@ export function Search({
       inputRef.current.selectionEnd = adjustedSelection.selectionEnd;
     }
   }, [adjustedSelection]);
-  const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const { t } = useTranslation();
-  const results = useInfiniteResults<any>(searchQuery, sort);
   return (
-    <div
-      className="openk9--search-container"
-      css={css`
-        margin-top: 12px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-inline: 16px;
-        @media (max-width: 480px) {
-          flex-direction: column;
-        }
-      `}
-    >
-      <style type="text/css">
-        {`
+    <React.Fragment>
+      <div
+        className="openk9--search-container"
+        css={css`
+          margin-top: 12px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-inline: 16px;
+          @media (max-width: 480px) {
+            flex-direction: column;
+          }
+        `}
+      >
+        <style type="text/css">
+          {`
         .openk9-focusable:has(input:focus){
           border:1px solid  var(--openk9-embeddable-search--active-color);
         }
     `}
-      </style>
-      <div
-        ref={clickAwayRef}
-        className="openk9-embeddable-search--input-container openk9-focusable"
-        css={css`
-          display: flex;
-          align-items: center;
-          border-radius: 40px;
-          width: 100%;
-          max-height: 45px;
-          @media (max-width: 480px) {
-            width: 100%;
-          }
-        `}
-      >
-        <FontAwesomeIcon
-          className="openk9--search-icon"
-          icon={faSearch}
-          style={{
-            paddingLeft: "16px",
-            opacity: 0.5,
-            color: "var(--openk9-embeddable-search--secondary-text-color)",
-          }}
-        />
+        </style>
         <div
-          className="openk9--search-container-show-syntax"
+          ref={clickAwayRef}
+          className="openk9-embeddable-search--input-container openk9-focusable"
           css={css`
-            flex-grow: 1;
-            position: relative;
             display: flex;
+            align-items: center;
+            border-radius: 40px;
+            width: 100%;
+            max-height: 45px;
+            @media (max-width: 480px) {
+              width: 100%;
+            }
+          `}
+        >
+          <FontAwesomeIcon
+            className="openk9--search-icon"
+            icon={faSearch}
+            style={{
+              paddingLeft: "16px",
+              opacity: 0.5,
+              color: "var(--openk9-embeddable-search--secondary-text-color)",
+            }}
+          />
+          <div
+            className="openk9--search-container-show-syntax"
+            css={css`
+              flex-grow: 1;
+              position: relative;
+              display: flex;
+            `}
+          >
+            <div
+              className="openk9--search-show-syntax"
+              css={css`
+                top: 0px;
+                left: 0px;
+                padding: var(--openk9-embeddable-search--input-padding);
+                display: flex;
+                position: absolute;
+              `}
+            >
+              {showSyntax &&
+                spans.map((span, index) => {
+                  const isOpen =
+                    openedDropdown !== null &&
+                    openedDropdown.textPosition > span.start &&
+                    openedDropdown.textPosition <= span.end;
+                  const optionIndex = openedDropdown?.optionPosition ?? null;
+                  const selection = selectionsState.selection.find(
+                    (selection) =>
+                      selection.start === span.start &&
+                      selection.end === span.end,
+                  );
+                  const selected = selection?.token ?? null;
+                  const onSelect = (token: AnalysisToken | null): void => {
+                    selectionsDispatch({
+                      type: "set-selection",
+                      replaceText,
+                      selection: {
+                        text: span.text,
+                        start: span.start,
+                        end: span.end,
+                        token,
+                        isAuto: false,
+                      },
+                    });
+                    if (
+                      inputRef.current?.selectionStart &&
+                      inputRef.current?.selectionEnd
+                    ) {
+                      setAdjustedSelection({
+                        selectionStart: inputRef.current.selectionStart,
+                        selectionEnd: inputRef.current.selectionEnd,
+                      });
+                    }
+                    setOpenedDropdown(null);
+                  };
+                  const onSelectText = (token: AnalysisToken | null): void => {
+                    if (token)
+                      selectionsDispatch({
+                        type: "set-text",
+                        text: token.value,
+                      });
+                    if (
+                      inputRef.current?.selectionStart &&
+                      inputRef.current?.selectionEnd
+                    ) {
+                      setAdjustedSelection({
+                        selectionStart: inputRef.current.selectionStart,
+                        selectionEnd: inputRef.current.selectionEnd,
+                      });
+                    }
+                    setOpenedDropdown(null);
+                  };
+                  const isAutoSelected = selection?.isAuto ?? false;
+                  const onOptionIndexChange = (optionIndex: number) => {
+                    setOpenedDropdown((openedDropdown) =>
+                      openedDropdown
+                        ? { ...openedDropdown, optionPosition: optionIndex }
+                        : openedDropdown,
+                    );
+                  };
+                  return (
+                    <TokenSelect
+                      key={index}
+                      span={span}
+                      isOpen={isOpen}
+                      onOptionIndexChange={onOptionIndexChange}
+                      optionIndex={optionIndex}
+                      selected={selected}
+                      onSelect={onSelect}
+                      onSelectText={onSelectText}
+                      isAutoSlected={isAutoSelected}
+                      setOpenedDropdown={setOpenedDropdown}
+                      selectionsDispatch={selectionsDispatch}
+                    />
+                  );
+                })}
+            </div>
+            <label htmlFor="search-openk9" className="visually-hidden">
+              Search
+            </label>
+            <input
+              className="openk9--input-search"
+              autoComplete="off"
+              ref={inputRef}
+              id="search-openk9"
+              aria-label={
+                t(
+                  "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
+                ) ||
+                "insert text to set the value or use up and down arrow keys to navigate the suggestion box"
+              }
+              type="text"
+              placeholder={t("search") || "search..."}
+              value={selectionsState.text}
+              onChange={(event) => {
+                selectionsDispatch({
+                  type: "set-text",
+                  text: event.currentTarget.value,
+                });
+                onDetail(null);
+                setOpenedDropdown(null);
+              }}
+              css={css`
+                position: relative;
+                flex-grow: 1;
+                border: none;
+                outline: none;
+                padding: var(--openk9-embeddable-search--input-padding);
+                caret-color: black;
+                font-size: inherit;
+                font-family: inherit;
+                background-color: inherit;
+                color: ${showSyntax ? "transparent" : "inherit"};
+              `}
+              spellCheck="false"
+              onSelect={(event) => {
+                if (
+                  (event.currentTarget.selectionDirection === "forward" ||
+                    event.currentTarget.selectionDirection === "none") &&
+                  event.currentTarget.selectionStart ===
+                    event.currentTarget.selectionEnd
+                ) {
+                  setOpenedDropdown({
+                    textPosition: event.currentTarget.selectionStart as number,
+                    optionPosition: openedDropdown?.optionPosition ?? 0,
+                  });
+                }
+              }}
+              onKeyDown={(event) => {
+                const span =
+                  openedDropdown &&
+                  spans.find(
+                    (span) =>
+                      openedDropdown.textPosition > span.start &&
+                      openedDropdown.textPosition <= span.end,
+                  );
+                const option =
+                  openedDropdown &&
+                  span?.tokens[openedDropdown.optionPosition - 1];
+                if (event.key === "ArrowDown") {
+                  event.preventDefault();
+                  if (openedDropdown && span) {
+                    setOpenedDropdown({
+                      textPosition: openedDropdown.textPosition,
+                      optionPosition:
+                        openedDropdown.optionPosition < span.tokens.length
+                          ? openedDropdown.optionPosition + 1
+                          : 0,
+                    });
+                  }
+                } else if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  if (openedDropdown && openedDropdown.optionPosition > 0) {
+                    setOpenedDropdown({
+                      textPosition: openedDropdown.textPosition,
+                      optionPosition: openedDropdown.optionPosition - 1,
+                    });
+                  }
+                } else if (event.key === "Enter") {
+                  event.preventDefault();
+                  if (span) {
+                    selectionsDispatch({
+                      type: "set-selection",
+                      replaceText,
+                      selection: {
+                        text: span.text,
+                        start: span.start,
+                        end: span.end,
+                        token: option ?? null,
+                        isAuto: false,
+                      },
+                    });
+                    if (replaceText) {
+                      const text =
+                        option &&
+                        (option.tokenType === "ENTITY"
+                          ? option.entityName
+                          : option.value);
+                      const cursorPosition = span.start + (text?.length ?? 0);
+                      setAdjustedSelection({
+                        selectionStart: cursorPosition,
+                        selectionEnd: cursorPosition,
+                      });
+                    } else if (
+                      event.currentTarget.selectionStart &&
+                      event.currentTarget.selectionEnd
+                    ) {
+                      setAdjustedSelection({
+                        selectionStart: event.currentTarget.selectionStart,
+                        selectionEnd: event.currentTarget.selectionEnd,
+                      });
+                    }
+                    setOpenedDropdown(null);
+                  }
+                } else if (event.key === "Escape") {
+                  setOpenedDropdown(null);
+                }
+              }}
+            ></input>
+          </div>
+          <button
+            className="openk9--search-delete-container-icon"
+            title="remove text"
+            aria-label={t("remove-text") || "Remove text"}
+            style={{
+              paddingRight: "16px",
+              display: "flex",
+              flexDirection: "row",
+              padding: "4px 8px",
+              gap: "4px",
+              alignItems: "center",
+              marginRight: "21px",
+              background: "inherit",
+              border: "none",
+            }}
+          >
+            <div>
+              <span
+                className="openk9--search-delete-span-icon"
+                css={css`
+                  cursor: pointer;
+                `}
+                onClick={() => {
+                  selectionsDispatch({
+                    type: "set-text",
+                    text: "",
+                  });
+                }}
+              >
+                <DeleteLogo />
+              </span>
+            </div>
+          </button>
+        </div>
+
+        <div
+          css={css`
+            display: none;
+            @media (max-width: 480px) {
+              display: flex;
+              gap: 10px;
+              align-items: center;
+              width: 100%;
+              justify-content: space-between;
+            }
           `}
         >
           <div
-            className="openk9--search-show-syntax"
             css={css`
-              top: 0px;
-              left: 0px;
-              padding: var(--openk9-embeddable-search--input-padding);
-              display: flex;
-              position: absolute;
+              @media (max-width: 480px) {
+                width: 100%;
+              }
             `}
           >
-            {showSyntax &&
-              spans.map((span, index) => {
-                const isOpen =
-                  openedDropdown !== null &&
-                  openedDropdown.textPosition > span.start &&
-                  openedDropdown.textPosition <= span.end;
-                const optionIndex = openedDropdown?.optionPosition ?? null;
-                const selection = selectionsState.selection.find(
-                  (selection) =>
-                    selection.start === span.start &&
-                    selection.end === span.end,
-                );
-                const selected = selection?.token ?? null;
-                const onSelect = (token: AnalysisToken | null): void => {
-                  selectionsDispatch({
-                    type: "set-selection",
-                    replaceText,
-                    selection: {
-                      text: span.text,
-                      start: span.start,
-                      end: span.end,
-                      token,
-                      isAuto: false,
-                    },
-                  });
-                  if (
-                    inputRef.current?.selectionStart &&
-                    inputRef.current?.selectionEnd
-                  ) {
-                    setAdjustedSelection({
-                      selectionStart: inputRef.current.selectionStart,
-                      selectionEnd: inputRef.current.selectionEnd,
-                    });
-                  }
-                  setOpenedDropdown(null);
-                };
-                const onSelectText = (token: AnalysisToken | null): void => {
-                  if (token)
-                    selectionsDispatch({
-                      type: "set-text",
-                      text: token.value,
-                    });
-                  if (
-                    inputRef.current?.selectionStart &&
-                    inputRef.current?.selectionEnd
-                  ) {
-                    setAdjustedSelection({
-                      selectionStart: inputRef.current.selectionStart,
-                      selectionEnd: inputRef.current.selectionEnd,
-                    });
-                  }
-                  setOpenedDropdown(null);
-                };
-                const isAutoSelected = selection?.isAuto ?? false;
-                const onOptionIndexChange = (optionIndex: number) => {
-                  setOpenedDropdown((openedDropdown) =>
-                    openedDropdown
-                      ? { ...openedDropdown, optionPosition: optionIndex }
-                      : openedDropdown,
-                  );
-                };
-                return (
-                  <TokenSelect
-                    key={index}
-                    span={span}
-                    isOpen={isOpen}
-                    onOptionIndexChange={onOptionIndexChange}
-                    optionIndex={optionIndex}
-                    selected={selected}
-                    onSelect={onSelect}
-                    onSelectText={onSelectText}
-                    isAutoSlected={isAutoSelected}
-                    setOpenedDropdown={setOpenedDropdown}
-                    selectionsDispatch={selectionsDispatch}
-                  />
-                );
-              })}
+            <SortResultList
+              setSortResult={setSortResult}
+              background="white"
+              minHeight="40px"
+              color="#7e7e7e"
+            />
           </div>
-          <label htmlFor="search-openk9" className="visually-hidden">
-            Search
-          </label>
-          <input
-            className="openk9--input-search"
-            autoComplete="off"
-            ref={inputRef}
-            id="search-openk9"
-            aria-label={
-              t(
-                "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
-              ) ||
-              "insert text to set the value or use up and down arrow keys to navigate the suggestion box"
-            }
-            type="text"
-            placeholder={t("search") || "search..."}
-            value={selectionsState.text}
-            onChange={(event) => {
-              selectionsDispatch({
-                type: "set-text",
-                text: event.currentTarget.value,
-              });
-              onDetail(null);
-              setOpenedDropdown(null);
-            }}
+          <div
             css={css`
-              position: relative;
-              flex-grow: 1;
-              border: none;
-              outline: none;
-              padding: var(--openk9-embeddable-search--input-padding);
-              caret-color: black;
-              font-size: inherit;
-              font-family: inherit;
-              background-color: inherit;
-              color: ${showSyntax ? "transparent" : "inherit"};
+              @media (min-width: 480px) {
+                display: none;
+              }
             `}
-            spellCheck="false"
-            onSelect={(event) => {
-              if (
-                (event.currentTarget.selectionDirection === "forward" ||
-                  event.currentTarget.selectionDirection === "none") &&
-                event.currentTarget.selectionStart ===
-                  event.currentTarget.selectionEnd
-              ) {
-                setOpenedDropdown({
-                  textPosition: event.currentTarget.selectionStart as number,
-                  optionPosition: openedDropdown?.optionPosition ?? 0,
-                });
-              }
-            }}
-            onKeyDown={(event) => {
-              const span =
-                openedDropdown &&
-                spans.find(
-                  (span) =>
-                    openedDropdown.textPosition > span.start &&
-                    openedDropdown.textPosition <= span.end,
-                );
-              const option =
-                openedDropdown &&
-                span?.tokens[openedDropdown.optionPosition - 1];
-              if (event.key === "ArrowDown") {
-                event.preventDefault();
-                if (openedDropdown && span) {
-                  setOpenedDropdown({
-                    textPosition: openedDropdown.textPosition,
-                    optionPosition:
-                      openedDropdown.optionPosition < span.tokens.length
-                        ? openedDropdown.optionPosition + 1
-                        : 0,
-                  });
-                }
-              } else if (event.key === "ArrowUp") {
-                event.preventDefault();
-                if (openedDropdown && openedDropdown.optionPosition > 0) {
-                  setOpenedDropdown({
-                    textPosition: openedDropdown.textPosition,
-                    optionPosition: openedDropdown.optionPosition - 1,
-                  });
-                }
-              } else if (event.key === "Enter") {
-                event.preventDefault();
-                if (span) {
-                  selectionsDispatch({
-                    type: "set-selection",
-                    replaceText,
-                    selection: {
-                      text: span.text,
-                      start: span.start,
-                      end: span.end,
-                      token: option ?? null,
-                      isAuto: false,
-                    },
-                  });
-                  if (replaceText) {
-                    const text =
-                      option &&
-                      (option.tokenType === "ENTITY"
-                        ? option.entityName
-                        : option.value);
-                    const cursorPosition = span.start + (text?.length ?? 0);
-                    setAdjustedSelection({
-                      selectionStart: cursorPosition,
-                      selectionEnd: cursorPosition,
-                    });
-                  } else if (
-                    event.currentTarget.selectionStart &&
-                    event.currentTarget.selectionEnd
-                  ) {
-                    setAdjustedSelection({
-                      selectionStart: event.currentTarget.selectionStart,
-                      selectionEnd: event.currentTarget.selectionEnd,
-                    });
-                  }
-                  setOpenedDropdown(null);
-                }
-              } else if (event.key === "Escape") {
-                setOpenedDropdown(null);
-              }
-            }}
-          ></input>
-        </div>
-        <button
-          className="openk9--search-delete-container-icon"
-          title="remove text"
-          aria-label={t("remove-text") || "Remove text"}
-          style={{
-            paddingRight: "16px",
-            display: "flex",
-            flexDirection: "row",
-            padding: "4px 8px",
-            gap: "4px",
-            alignItems: "center",
-            marginRight: "21px",
-            background: "inherit",
-            border: "none",
-          }}
-        >
-          <div>
-            <span
-              className="openk9--search-delete-span-icon"
+          >
+            <button
               css={css`
-                cursor: pointer;
+                padding: 6px 10px;
+                border: 1px solid var(--openk9-embeddable-search--border-color);
+                background: white;
+                border-radius: 50px;
               `}
               onClick={() => {
-                selectionsDispatch({
-                  type: "set-text",
-                  text: "",
-                });
+                setIsVisibleFilters(true);
               }}
             >
-              <DeleteLogo />
-            </span>
+              <FilterHorizontalSvg />
+            </button>
           </div>
-        </button>
-      </div>
-      <div
-        css={css`
-          @media (max-width: 480px) {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            width: 100%;
-            justify-content: space-between;
-          }
-        `}
-      >
+        </div>
         <div
           css={css`
             @media (max-width: 480px) {
@@ -402,245 +442,12 @@ export function Search({
             }
           `}
         >
-          {/* <DataRangePicker
+          <DataRangePicker
             onChange={onDateRangeChange}
             calendarDate={dateRange}
-          /> */}
-          <SortResultList
-            setSortResult={setSortResult}
-            background="white"
-            minHeight="40px"
-            color="#7e7e7e"
           />
         </div>
-        <div
-          css={css`
-            @media (min-width: 480px) {
-              display: none;
-            }
-          `}
-        >
-          <button
-            css={css`
-              padding: 6px 10px;
-              border: 1px solid var(--openk9-embeddable-search--border-color);
-              background: white;
-              border-radius: 50px;
-            `}
-            onClick={() => {
-              setIsVisibleFilters(true);
-            }}
-          >
-            <FilterHorizontalSvg />
-          </button>
-        </div>
       </div>
-      {isVisibleFilters && (
-        <ModalDetail
-          padding="0px"
-          background="white"
-          content={
-            <React.Fragment>
-              <div
-                css={css`
-                  display: flex;
-                  justify-content: space-beetween;
-                  background: #fafafa;
-                `}
-              >
-                <div
-                  className="openk9-filter-list-container-title box-title"
-                  css={css`
-                    padding: 0px 16px;
-                    width: 100%;
-                    background: #fafafa;
-                    padding-top: 20px;
-                    padding-bottom: 13px;
-                    display: flex;
-                  `}
-                >
-                  <div
-                    className="openk9-filter-list-container-internal-title "
-                    css={css`
-                      display: flex;
-                      gap: 5px;
-                    `}
-                  >
-                    <span>
-                      <FilterSvg />
-                    </span>
-                    <span className="openk9-filters-list-title title">
-                      <h2
-                        css={css`
-                          font-style: normal;
-                          font-weight: 700;
-                          font-size: 18px;
-                          height: 18px;
-                          line-height: 22px;
-                          display: flex;
-                          align-items: center;
-                          color: #3f3f46;
-                          margin: 0;
-                        `}
-                      >
-                        {t("filters")}
-                      </h2>
-                    </span>
-                  </div>
-                </div>
-                <button
-                  css={css`
-                    color: var(--openk9-grey-stone-600);
-                    font-size: 10px;
-                    font-family: Nunito Sans;
-                    font-weight: 700;
-                    line-height: 12px;
-                    display: flex;
-                    align-items: center;
-                    gap: 9px;
-                    margin-right: 21px;
-                  `}
-                  onClick={() => {
-                    setIsVisibleFilters(false);
-                  }}
-                  style={{ backgroundColor: "#FAFAFA", border: "none" }}
-                >
-                  Chiudi <DeleteLogo heightParam={8} widthParam={8} />
-                </button>
-              </div>
-              <OverlayScrollbarsComponent
-                className="openk9-filter-overlay-scrollbars"
-                style={{
-                  overflowY: "auto",
-                  position: "relative",
-                  height: "73%",
-                  borderRadius: "8px",
-                }}
-              >
-                <FiltersMemo
-                  searchQuery={searchQuery}
-                  onAddFilterToken={onAddFilterToken}
-                  onRemoveFilterToken={onRemoveFilterToken}
-                  onConfigurationChange={onConfigurationChange}
-                  filtersSelect={configuration.filterTokens}
-                  sort={sort}
-                  dynamicFilters={dynamicFilters}
-                />
-              </OverlayScrollbarsComponent>
-              <div
-                css={css`
-                  margin-top: 10px;
-                  border: 0.5px solid #d4d4d8;
-                `}
-              ></div>
-              <div
-                className="openk9-filter-horizontal-container-submit"
-                css={css`
-                  display: flex;
-                  justify-content: flex-end;
-                  @media (max-width: 480px) {
-                    padding-inline: 20px;
-                    flex-direction: column;
-                  }
-                `}
-              >
-                <button
-                  className="openk9-filter-horizontal-submit"
-                  aria-label="rimuovi filtri"
-                  css={css`
-                    font-size: smaller;
-                    height: 52px;
-                    padding: 8px 12px;
-                    white-space: nowrap;
-                    border: 1px solid #d6012e;
-                    background-color: #d6012e;
-                    border-radius: 5px;
-                    color: white;
-                    font-weight: 600;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 3px;
-                    @media (max-width: 480px) {
-                      background: white;
-                      border: 1px solid #d6012e;
-                      width: 100%;
-                      height: auto;
-                      margin-top: 20px;
-                      color: black;
-                      border-radius: 50px;
-                      display: flex;
-                      justify-content: center;
-                      color: var(--red-tones-500, #c0272b);
-                      text-align: center;
-                      font-size: 16px;
-                      font-style: normal;
-                      font-weight: 700;
-                      line-height: normal;
-                    }
-                  `}
-                  onClick={() => {
-                    onConfigurationChange({ filterTokens: [] });
-                    setIsVisibleFilters(false);
-                  }}
-                >
-                  <div>Rimuovi filtri</div>
-                </button>
-                <button
-                  className="openk9-filter-horizontal-submit"
-                  aria-label="applica filtri"
-                  css={css`
-                    font-size: smaller;
-                    height: 52px;
-                    padding: 8px 12px;
-                    white-space: nowrap;
-                    border: 1px solid #d6012e;
-                    background-color: #d6012e;
-                    border-radius: 5px;
-                    color: white;
-                    font-weight: 600;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 3px;
-                    @media (max-width: 480px) {
-                      background: #d6012e;
-                      border: 1px solid #d6012e;
-                      width: 100%;
-                      height: auto;
-                      margin-top: 20px;
-                      color: white;
-                      border-radius: 50px;
-                      display: flex;
-                      justify-content: center;
-                      text-align: center;
-                      font-size: 16px;
-                      font-style: normal;
-                      font-weight: 700;
-                      line-height: normal;
-                    }
-                  `}
-                  onClick={() => {
-                    setIsVisibleFilters(false);
-                  }}
-                >
-                  <div>Applica i Filtri {results.data?.pages[0].total}</div>
-                </button>
-              </div>
-              {/* <FiltersHorizontalMemo
-                searchQuery={searchQuery}
-                onAddFilterToken={onAddFilterToken}
-                onRemoveFilterToken={onRemoveFilterToken}
-                onConfigurationChange={onConfigurationChange}
-                onConfigurationChangeExt={() => setIsVisibleFilters(false)}
-                filtersSelect={configuration.filterTokens}
-                sort={sort}
-                dynamicFilters={dynamicFilters}
-              /> */}
-            </React.Fragment>
-          }
-        />
-      )}
-    </div>
+    </React.Fragment>
   );
 }

@@ -15,6 +15,12 @@
 
 }
 
+.DateRangePickerInput__withBorder {
+  @media (max-width: 480px) {
+    margin: 26px !important;
+  }
+}
+
 .DateRangePicker {
   width: 96%;
 }
