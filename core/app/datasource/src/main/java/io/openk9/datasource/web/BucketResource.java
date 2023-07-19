@@ -11,6 +11,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
+import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
@@ -68,6 +69,18 @@ public class BucketResource {
 	@GET
 	public Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortable(){
 		return getDocTypeFieldsSortableList(request.host());
+	}
+
+	@Path("/current/defaultLanguage")
+	@GET
+	public Uni<Language> getDefaultLanguage(){
+		return getDefaultLanguage(request.host());
+	}
+
+	@Path("/current/availableLanguage")
+	@GET
+	public Uni<List<Language>> getAvailableLanguage(){
+		return getAvailableLanguageList(request.host());
 	}
 
 	@Path("/current")
@@ -289,6 +302,69 @@ public class BucketResource {
 		});
 
 	}
+
+	private Uni<Language> getDefaultLanguage(String virtualhost) {
+		return transactionInvoker.withTransaction(session -> {
+
+			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+
+			CriteriaQuery<Language> query = cb.createQuery(Language.class);
+
+			Root<Bucket> from = query.from(Bucket.class);
+
+			Join<Bucket, TenantBinding> tenantBindingJoin =
+				from.join(Bucket_.tenantBinding);
+
+			Join<Bucket, Language> fetch = from.join(Bucket_.defaultLanguage);
+
+			query.select(fetch);
+
+			query.where(
+				cb.equal(
+					tenantBindingJoin.get(TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
+
+			return session
+				.createQuery(query)
+				.setCacheable(true)
+				.getSingleResult();
+		});
+
+	}
+
+	private Uni<List<Language>> getAvailableLanguageList(String virtualhost) {
+		return transactionInvoker.withTransaction(session -> {
+
+			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+
+			CriteriaQuery<Language> query = cb.createQuery(Language.class);
+
+			Root<Bucket> from = query.from(Bucket.class);
+
+			Join<Bucket, TenantBinding> tenantBindingJoin =
+				from.join(Bucket_.tenantBinding);
+
+			Join<Bucket, Language> fetch = from.join(Bucket_.availableLanguages);
+
+			query.select(fetch);
+
+			query.where(
+				cb.equal(
+					tenantBindingJoin.get(TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
+
+			return session
+				.createQuery(query)
+				.setCacheable(true)
+				.getResultList();
+		});
+
+	}
+
 
 	@Inject
 	BucketResourceMapper mapper;
