@@ -1,8 +1,9 @@
 package io.openk9.datasource.web;
 
+import io.openk9.datasource.index.mappings.MappingsKey;
+import io.openk9.datasource.index.mappings.MappingsUtil;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.Analyzer_;
-import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
@@ -10,20 +11,14 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
-import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.TokenFilter;
-import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.processor.indexwriter.IndexerEvents;
-import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
@@ -46,16 +41,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import java.time.OffsetDateTime;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @CircuitBreaker
 @Path("/v1/data-index")
@@ -92,7 +80,7 @@ public class DataIndexResource {
 
 	@Path("/get-mappings-from-doc-types")
 	@POST
-	public Uni<Map<String, Object>> getMappings(
+	public Uni<Map<MappingsKey, Object>> getMappings(
 		GetMappingsOrSettingsFromDocTypesRequest request) {
 
 		return getMappingsFromDocTypes(request.getDocTypeIds());
@@ -158,13 +146,13 @@ public class DataIndexResource {
 							try {
 								IndicesClient indices = client.indices();
 
-								Map<String, Object> mappings =
-									_createMappings(di.getDocTypes());
+								Map<MappingsKey, Object> mappings =
+									MappingsUtil.docTypesToMappings(di.getDocTypes());
 
 								Settings settings;
 
 								Map<String, Object> settingsMap =
-									_createSettings(di.getDocTypes());
+									MappingsUtil.docTypesToSettings(di.getDocTypes());
 
 								if (settingsMap.isEmpty()) {
 									settings = Settings.EMPTY;
@@ -206,185 +194,7 @@ public class DataIndexResource {
 
 	}
 
-	private static Map<String, Object> _createSettings(Collection<DocType> docTypes) {
-
-		List<Analyzer> analyzers =
-			docTypes
-				.stream()
-				.flatMap(Utils::getDocTypeFieldsAndChildrenFrom)
-				.map(DocTypeField::getAnalyzer)
-				.filter(Objects::nonNull)
-				.distinct()
-				.toList();
-
-		Map<String, Object> analyzerMap = _createAnalyzer(analyzers);
-
-		Map<String, Object> tokenizerMap = _createTokenizer(analyzers);
-
-		Map<String, Object> filterMap = _createFilter(analyzers);
-
-		Map<String, Object> charFilterMap = _createCharFilter(analyzers);
-
-		Map<String, Object> analysis = new LinkedHashMap<>();
-
-		Map<String, Object> index = new LinkedHashMap<>();
-
-		Map<String, Object> highlight = new LinkedHashMap<>();
-
-		highlight.put("max_analyzed_offset", "10000000");
-
-		index.put("highlight", highlight);
-
-		if (!analyzerMap.isEmpty()) {
-			analysis.put("analyzer", analyzerMap);
-		}
-
-		if (!tokenizerMap.isEmpty()) {
-			analysis.put("tokenizer", tokenizerMap);
-		}
-
-		if (!filterMap.isEmpty()) {
-			analysis.put("filter", filterMap);
-		}
-
-		if (!charFilterMap.isEmpty()) {
-			analysis.put("char_filter", charFilterMap);
-		}
-
-		if (!analysis.isEmpty() || !index.isEmpty() ) {
-			Map<String, Object> settingsMap = new LinkedHashMap<>();
-
-			settingsMap.put("analysis", analysis);
-
-			settingsMap.put("index", index);
-
-			return settingsMap;
-
-		}
-
-		return Map.of();
-
-	}
-
-	private static Map<String, Object> _createCharFilter(List<Analyzer> analyzers) {
-		return analyzers
-			.stream()
-			.map(Analyzer::getCharFilters)
-			.filter(Objects::nonNull)
-			.flatMap(Collection::stream)
-			.filter(tokenFilter -> StringUtils.isNotBlank(tokenFilter.getJsonConfig()))
-			.distinct()
-			.collect(
-				Collectors.toMap(
-					CharFilter::getName,
-					charFilter -> new JsonObject(charFilter.getJsonConfig()).getMap())
-			);
-	}
-
-	private static Map<String, Object> _createFilter(List<Analyzer> analyzers) {
-		return analyzers
-			.stream()
-			.map(Analyzer::getTokenFilters)
-			.filter(Objects::nonNull)
-			.flatMap(Collection::stream)
-			.filter(tokenFilter -> StringUtils.isNotBlank(tokenFilter.getJsonConfig()))
-			.distinct()
-			.collect(
-				Collectors.toMap(
-					TokenFilter::getName,
-					tokenFilter -> new JsonObject(tokenFilter.getJsonConfig()).getMap())
-			);
-	}
-
-	private static Map<String, Object> _createTokenizer(List<Analyzer> analyzers) {
-
-		return analyzers
-			.stream()
-			.map(Analyzer::getTokenizer)
-			.filter(tokenizer -> tokenizer != null && StringUtils.isNotBlank(tokenizer.getJsonConfig()))
-			.distinct()
-			.collect(
-				Collectors.toMap(
-					Tokenizer::getName,
-					tokenizer -> new JsonObject(tokenizer.getJsonConfig()).getMap())
-			);
-
-	}
-
-	private static Map<String, Object> _createAnalyzer(
-		List<Analyzer> analyzers) {
-
-		Map<String, Object> analyzerMap = new LinkedHashMap<>();
-
-		for (Analyzer analyzer : analyzers) {
-
-			Map<String, Object> internalSettings = new LinkedHashMap<>();
-
-			Tokenizer tokenizer = analyzer.getTokenizer();
-
-			if (tokenizer != null) {
-				internalSettings.put("tokenizer", tokenizer.getName());
-			}
-
-			Set<TokenFilter> tokenFilters = analyzer.getTokenFilters();
-
-			if (tokenFilters != null && !tokenFilters.isEmpty()) {
-				internalSettings.put(
-					"filter", tokenFilters
-						.stream()
-						.map(TokenFilter::getName)
-						.toList()
-				);
-			}
-
-			Set<CharFilter> charFilters = analyzer.getCharFilters();
-
-			if (charFilters != null && !charFilters.isEmpty()) {
-				internalSettings.put(
-					"char_filter", charFilters
-						.stream()
-						.map(CharFilter::getName)
-						.toList()
-				);
-			}
-
-			String jsonConfig = analyzer.getJsonConfig();
-
-			if (jsonConfig != null) {
-
-				JsonObject jsonObject = new JsonObject(jsonConfig);
-
-				Map<String, Object> map = jsonObject.getMap();
-
-				for (Map.Entry<String, Object> entry : map.entrySet()) {
-					if (!internalSettings.containsKey(entry.getKey())) {
-						internalSettings.put(entry.getKey(), entry.getValue());
-					}
-				}
-
-			}
-
-			analyzerMap.put(analyzer.getName(), internalSettings);
-
-		}
-
-		return analyzerMap;
-	}
-
-	private static Map<String, Object> _createMappings(
-		Collection<DocType> docTypes) {
-		return docTypes
-			.stream()
-			.map(DocType::getDocTypeFields)
-			.flatMap(Collection::stream)
-			.collect(
-				Collectors.collectingAndThen(
-					Collectors.toList(),
-					DataIndexResource::docTypeFieldsToMappings)
-			);
-	}
-
-	private Uni<Map<String, Object>> getMappingsFromDocTypes(
+	private Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(
 		List<Long> docTypeIds) {
 
 		return sf.withTransaction(session -> {
@@ -392,7 +202,7 @@ public class DataIndexResource {
 			Uni<List<DocType>> docTypeListUni =
 				_findDocTypes(docTypeIds, session, false);
 
-			return docTypeListUni.map(DataIndexResource::_createMappings);
+			return docTypeListUni.map(MappingsUtil::docTypesToMappings);
 
 		});
 	}
@@ -405,7 +215,7 @@ public class DataIndexResource {
 			Uni<List<DocType>> docTypeListUni =
 				_findDocTypes(docTypeIds, session, true);
 
-			return docTypeListUni.map(DataIndexResource::_createSettings);
+			return docTypeListUni.map(MappingsUtil::docTypesToSettings);
 
 		});
 	}
@@ -451,96 +261,6 @@ public class DataIndexResource {
 			.createQuery(query)
 			.setCacheable(true)
 			.getResultList();
-	}
-
-	public static Map<String, Object> docTypeFieldsToMappings(
-		List<DocTypeField> fieldNames) {
-
-		Map<String, Object> properties = new LinkedHashMap<>();
-
-		Iterator<DocTypeField> orderedFieldNames = fieldNames
-			.stream()
-			.sorted(Comparator.comparingInt((DocTypeField f) -> f.getFieldName().length()))
-			.iterator();
-
-		while (orderedFieldNames.hasNext()) {
-
-			DocTypeField docTypeField = orderedFieldNames.next();
-
-			String[] fieldNamesArray = docTypeField.getFieldName().split("\\.");
-
-			Map<String, Object> current = properties;
-
-			for (int i = 0; i < fieldNamesArray.length; i++) {
-
-				String fieldName = fieldNamesArray[i];
-
-				boolean isLast = i == fieldNamesArray.length - 1;
-
-				current = (Map<String, Object>) current.computeIfAbsent(
-					"properties", k -> new LinkedHashMap<>());
-
-				current =
-					(Map<String, Object>) current.computeIfAbsent(
-						fieldName, k -> new LinkedHashMap<>());
-
-				if (isLast) {
-
-					_populateDocTypeFieldMap(docTypeField, current);
-
-					Set<DocTypeField> subDocTypeFields =
-						docTypeField.getSubDocTypeFields();
-
-					if (subDocTypeFields != null) {
-						for (DocTypeField subDocTypeField : subDocTypeFields) {
-
-							Map<String, Object> fields =
-								(Map<String, Object>) current.computeIfAbsent(
-									"fields", k -> new LinkedHashMap<>());
-
-							String subFieldName =
-								subDocTypeField.getFieldName().substring(
-									docTypeField.getFieldName().length() + 1);
-
-							Map<String, Object> subFieldMap =
-								(Map<String, Object>) fields.computeIfAbsent(
-									subFieldName, k -> new LinkedHashMap<>());
-
-							_populateDocTypeFieldMap(
-								subDocTypeField, subFieldMap);
-
-						}
-					}
-				}
-			}
-		}
-
-		return properties;
-
-	}
-
-	private static void _populateDocTypeFieldMap(
-		DocTypeField docTypeField, Map<String, Object> docTypeFieldMap) {
-
-		FieldType fieldType = docTypeField.getFieldType();
-
-		docTypeFieldMap.put("type", fieldType.getType());
-
-		Analyzer analyzer = docTypeField.getAnalyzer();
-
-		if (analyzer != null) {
-			docTypeFieldMap.put("analyzer", analyzer.getName());
-		}
-
-		String fieldConfig = docTypeField.getJsonConfig();
-
-		if (fieldConfig != null) {
-			JsonObject fieldConfigJson = new JsonObject(fieldConfig);
-			for (Map.Entry<String, Object> entry : fieldConfigJson) {
-				docTypeFieldMap.putIfAbsent(entry.getKey(), entry.getValue());
-			}
-		}
-
 	}
 
 	@Data
