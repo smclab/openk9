@@ -8,25 +8,19 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 
 	<changeSet id="1689667487108-1" author="openk9">
 		<addColumn tableName="tokenizer">
-			<column name="type" type="VARCHAR(255)">
-				<constraints nullable="false"/>
-			</column>
+			<column name="type" type="VARCHAR(255)"/>
 		</addColumn>
 	</changeSet>
 
 	<changeSet id="1689667487108-2" author="openk9">
 		<addColumn tableName="token_filter">
-			<column name="type" type="VARCHAR(255)">
-				<constraints nullable="false"/>
-			</column>
+			<column name="type" type="VARCHAR(255)"/>
 		</addColumn>
 	</changeSet>
 
 	<changeSet id="1689667487108-3" author="openk9">
 		<addColumn tableName="char_filter">
-			<column name="type" type="VARCHAR(255)">
-				<constraints nullable="false"/>
-			</column>
+			<column name="type" type="VARCHAR(255)"/>
 		</addColumn>
 	</changeSet>
 
