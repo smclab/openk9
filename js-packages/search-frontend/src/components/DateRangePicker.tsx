@@ -123,7 +123,7 @@ export function DataRangePicker({
           padding-inline: 10px;
           height: 53px;
           @media (max-width: 480px) {
-            height: 45px;
+            height: 40px;
           }
         `}
       >

@@ -448,6 +448,22 @@ export function Search({
           />
         </div>
       </div>
+      <div
+        className="openk9-container-active-filters"
+        css={css`
+          padding-top: 10px;
+          padding-left: 16px;
+          @media (min-width: 480px) {
+            display: none;
+          }
+        `}
+      >
+        <ActiveFilter
+          onConfigurationChange={onConfigurationChange}
+          onRemoveFilterToken={onRemoveFilterToken}
+          searchQuery={searchQuery}
+        />
+      </div>
     </React.Fragment>
   );
 }

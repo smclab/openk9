@@ -46,6 +46,9 @@
   width: 110px !important;
   border-radius: 50px !important;
   padding-right: 0 !important;
+  @media (max-width: 480px) {
+    height: 0px!important;
+  }
 }
 
 .DateInput_input__focused_2 {

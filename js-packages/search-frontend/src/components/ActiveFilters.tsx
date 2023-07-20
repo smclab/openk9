@@ -34,6 +34,8 @@ export function ActiveFilter({
         css={css`
           display: flex;
           justify-content: space-between;
+          width: 100%;
+          position: absolute;
         `}
       >
         <div
@@ -41,6 +43,7 @@ export function ActiveFilter({
           css={css`
             display: flex;
             gap: 10px;
+            width: 100%;
           `}
         >
           {searchQuery.map((selectToken, index) => {
@@ -84,6 +87,7 @@ export function ActiveFilter({
             );
           })}
         </div>
+
         {searchQuery.length !== 0 && (
           <button
             className="openk9-active-filter"
@@ -99,6 +103,9 @@ export function ActiveFilter({
               gap: 10px;
               white-space: nowrap;
               cursor: pointer;
+              @media (max-width: 480px) {
+                display: none;
+              }
             `}
             onClick={() => onConfigurationChange({ filterTokens: [] })}
           >
