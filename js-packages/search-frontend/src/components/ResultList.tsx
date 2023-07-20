@@ -300,7 +300,7 @@ export function InfiniteResults<E>({
                 display: block;
               `}
             >
-              {results.isFetching ? "Loading more results..." : t("load-more")}
+              {results.isFetching ? t("loading-more-results") : t("load-more")}
             </button>
           )}
         </div>

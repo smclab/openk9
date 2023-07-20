@@ -8,6 +8,7 @@
     "from": "Da",
     "load-more": "Carica Altro",
     "login": "Accedi",
+    "loading-more-results": "Caricamento...",
     "no-details": "nessun dettaglio",
     "no-result": "muovi il mouse su una card per vederlo",
     "no-filters": "Nessun Filtro",
@@ -26,6 +27,7 @@
     "this-year": "Quest'anno",
     "to": "A",
     "today": "Oggi",
-    "try-with-another-query": "Prova con una nuova query"
+    "try-with-another-query": "Prova con una nuova query",
+    "uncheck": "Deseleziona"
   }
 }

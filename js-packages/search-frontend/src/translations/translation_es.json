@@ -7,6 +7,7 @@
     "filters": "Filtros",
     "from": "De",
     "load-more": "Carga Más",
+    "loading-more-results": "Cargando más resultados...",
     "login": "Acceso",
     "no-details": "Sin detalles",
     "no-result": "Mueva el mouse sobre un resultado para ver detalles al respecto",
@@ -26,6 +27,7 @@
     "this-year": "This Año",
     "to": "A",
     "today": "Hoy",
-    "try-with-another-query": "Prueba con otra consulta"
+    "try-with-another-query": "Prueba con otra consulta",
+    "uncheck": "Desmarcar"
   }
 }

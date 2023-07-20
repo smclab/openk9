@@ -7,6 +7,7 @@
     "filters": "Filters",
     "from": "From",
     "load-more": "Load More",
+    "loading-more-results": "Loading more results...",
     "login": "Login",
     "no-details": "No details",
     "no-result": "move the mouse over a result to see details about it",
@@ -26,6 +27,7 @@
     "this-year": "This Year",
     "to": "To",
     "today": "Today",
-    "try-with-another-query": "Try with another query"
+    "try-with-another-query": "Try with another query",
+    "uncheck": "Uncheck"
   }
 }

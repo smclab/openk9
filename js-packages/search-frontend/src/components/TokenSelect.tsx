@@ -4,6 +4,7 @@ import { AnalysisResponseEntry, AnalysisToken } from "./client";
 import { DeleteLogo } from "./DeleteLogo";
 import { TokenIcon } from "./TokenIcon";
 import { SelectionsAction } from "./useSelections";
+import { useTranslation } from "react-i18next";
 
 type TokenSelectProps = {
   span: AnalysisResponseEntry;
@@ -36,6 +37,7 @@ export function TokenSelect({
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const [subtitle, setSubtitle] = React.useState(false);
+  const { t } = useTranslation();
   const status: Status = isInteractive
     ? selected !== null
       ? isAutoSlected
@@ -136,7 +138,7 @@ export function TokenSelect({
                   setSubtitle(false);
                 }}
               >
-                Uncheck
+                {t("uncheck")}
               </div>
               <div
                 style={{ cursor: "pointer" }}

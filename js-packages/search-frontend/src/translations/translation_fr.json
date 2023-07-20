@@ -8,6 +8,7 @@
     "from": "Depuis",
     "load-more": "Charger plus",
     "login": "Connexion",
+    "loading-more-results": "Charger plus de résultats...",
     "no-details": "Pas de détails",
     "no-filters": "Sans Filtres",
     "no-result": "Déplacez la souris sur un résultat pour en voir les détails",
@@ -26,6 +27,7 @@
     "this-year": "Cette Année",
     "to": "pour",
     "today": "Aujourd'hui",
-    "try-with-another-query": "Essayez avec une autre requête"
+    "try-with-another-query": "Essayez avec une autre requête",
+    "uncheck": "Décochez"
   }
 }
