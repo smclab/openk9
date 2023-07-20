@@ -10,6 +10,7 @@
     "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box": "inserire il testo per impostare il valore o usa le frecce su e giù per navigare i suggerimenti all'interno del box",
     "load-more": "Carica Altro",
     "login": "Accedi",
+    "loading-more-results": "Caricamento...",
     "no-details": "nessun dettaglio",
     "no-results-were-found": "Nessun risultato trovato",
     "no-result": "muovi il mouse su una card per vederlo",
@@ -32,6 +33,7 @@
     "this-year": "Quest'anno",
     "to": "A",
     "today": "Oggi",
-    "try-with-another-query": "Prova con una nuova query"
+    "try-with-another-query": "Prova con una nuova query",
+    "uncheck": "Deseleziona"
   }
 }

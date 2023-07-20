@@ -5,7 +5,11 @@ import { css } from "styled-components/macro";
 import { truncatedLineStyle } from "./truncatedLineStyle";
 import React from "react";
 
-export function SanitizeHtml<E>({ result, path }: HighlightableTextProps<E>) {
+export function SanitizeHtml<E>({
+  result,
+  path,
+  isTruncate = true,
+}: HighlightableTextProps<E> & { isTruncate?: boolean }) {
   const hihglithTextLines = result.highlight[path];
   const text = get(result.source, path);
   const sanitizedHTML = sanitizeHtml(text);
@@ -19,15 +23,15 @@ export function SanitizeHtml<E>({ result, path }: HighlightableTextProps<E>) {
       <div
         className="openk9-container-sanitize-truncate"
         css={css`
-          ${hihglithTextLines ? truncatedLineStyle : ""};
+          ${hihglithTextLines && isTruncate ? truncatedLineStyle : ""};
         `}
       >
         <div
           className="openk9-container-sanitize-text-style"
           css={css`
             height: auto;
-            word-wrap: break-word;
-            word-break: break-word;
+            word-wrap: ${isTruncate ? "break-word" : ""};
+            word-break: ${isTruncate ? "break-word" : ""};
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: inherit;
