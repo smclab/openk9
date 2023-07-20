@@ -86,6 +86,7 @@ import { PluginDriverToAcl } from "./components/PluginDriverToAcl";
 import { InformationBuckets } from "./components/InformationBuckets";
 import { InformationDataSource } from "./components/InformationDataSource";
 import { TabTokenTabsAssociation } from "./components/TabTokenTabs";
+import { Languages } from "./components/Languages";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -441,6 +442,7 @@ export default function App() {
                         <Route path="" element={<Annotator />} />
                       </Route>
                     </Route>
+                    <Route path="languages" element={<Languages />} />
                     <Route path="wizard">
                       <Route path="web-crawler" element={<WebCrawlerWizard />} />
                     </Route>

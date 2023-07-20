@@ -24,13 +24,14 @@ const TokenizerQuery = gql`
       name
       description
       jsonConfig
+      type
     }
   }
 `;
 
 gql`
-  mutation CreateOrUpdateTokenizer($id: ID, $name: String!, $description: String, $jsonConfig: String) {
-    tokenizer(id: $id, tokenizerDTO: { name: $name, description: $description, jsonConfig: $jsonConfig }) {
+  mutation CreateOrUpdateTokenizer($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
+    tokenizer(id: $id, tokenizerDTO: { name: $name, description: $description, jsonConfig: $jsonConfig, type: $type }) {
       entity {
         id
         name
@@ -71,6 +72,7 @@ export function Tokenizer() {
         name: TokenizerFilters[0].title,
         description: TokenizerFilters[0].description,
         jsonConfig: "",
+        type: "",
       }),
       []
     ),

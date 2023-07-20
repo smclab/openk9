@@ -23,13 +23,14 @@ const CharFilterQuery = gql`
       name
       description
       jsonConfig
+      type
     }
   }
 `;
 
 gql`
-  mutation CreateOrUpdateCharFilter($id: ID, $name: String!, $description: String, $jsonConfig: String) {
-    charFilter(id: $id, charFilterDTO: { name: $name, description: $description, jsonConfig: $jsonConfig }) {
+  mutation CreateOrUpdateCharFilter($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
+    charFilter(id: $id, charFilterDTO: { name: $name, description: $description, jsonConfig: $jsonConfig, type: $type }) {
       entity {
         id
         name
@@ -70,6 +71,7 @@ export function CharFilter() {
         name: Filters[0].title,
         description: Filters[0].description,
         jsonConfig: "{}",
+        type: "",
       }),
       []
     ),

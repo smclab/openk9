@@ -24,13 +24,14 @@ const TokenFilterQuery = gql`
       name
       description
       jsonConfig
+      type
     }
   }
 `;
 
 gql`
-  mutation CreateOrUpdateTokenFilter($id: ID, $name: String!, $description: String, $jsonConfig: String) {
-    tokenFilter(id: $id, tokenFilterDTO: { name: $name, description: $description, jsonConfig: $jsonConfig }) {
+  mutation CreateOrUpdateTokenFilter($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
+    tokenFilter(id: $id, tokenFilterDTO: { name: $name, description: $description, jsonConfig: $jsonConfig, type: $type }) {
       entity {
         id
         name
@@ -72,6 +73,7 @@ export function TokenFilter() {
         name: Filters[0].title,
         description: Filters[0].description,
         jsonConfig: "",
+        type: "",
       }),
       []
     ),

@@ -75,6 +75,7 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
               <Route path="token-tabs/*" element={"Token Tabs"} />
               <Route path="document-type-templates" element={"Document Type Templates"} />
               <Route path="document-type-templates/*" element={"Document Type Template"} />
+              <Route path="languages" element={"Languages"} />
               <Route path="logs" element={"Logs"} />
               <Route path="logs/*" element={"Logs"} />
               <Route path="maching-learning" element={"Maching Learning"} />

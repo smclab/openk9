@@ -142,6 +142,8 @@ export type Bucket = {
   handleDynamicFilters?: Maybe<Scalars['Boolean']>;
   id?: Maybe<Scalars['ID']>;
   indexCount?: Maybe<Scalars['BigInteger']>;
+  language?: Maybe<Language>;
+  languages?: Maybe<Connection_Language>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
@@ -153,6 +155,17 @@ export type Bucket = {
 
 
 export type BucketDatasourcesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+export type BucketLanguagesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -214,12 +227,14 @@ export type CharFilter = {
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']>;
 };
 
 export type CharFilterDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  type: Scalars['String'];
 };
 
 /** A connection to a list of items. */
@@ -306,6 +321,14 @@ export type Connection_EnrichItem = {
 export type Connection_EnrichPipeline = {
   /** A list of edges. */
   edges?: Maybe<Array<Maybe<Edge_EnrichPipeline>>>;
+  /** details about this specific page */
+  pageInfo?: Maybe<PageInfo>;
+};
+
+/** A connection to a list of items. */
+export type Connection_Language = {
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<Edge_Language>>>;
   /** details about this specific page */
   pageInfo?: Maybe<PageInfo>;
 };
@@ -564,6 +587,12 @@ export type DefaultConnection_EnrichPipeline = Connection_EnrichPipeline & {
   pageInfo?: Maybe<PageInfo>;
 };
 
+export type DefaultConnection_Language = Connection_Language & {
+  __typename?: 'DefaultConnection_Language';
+  edges?: Maybe<Array<Maybe<Edge_Language>>>;
+  pageInfo?: Maybe<PageInfo>;
+};
+
 export type DefaultConnection_PluginDriver = Connection_PluginDriver & {
   __typename?: 'DefaultConnection_PluginDriver';
   edges?: Maybe<Array<Maybe<Edge_PluginDriver>>>;
@@ -702,6 +731,12 @@ export type DefaultEdge_EnrichPipeline = Edge_EnrichPipeline & {
   node?: Maybe<EnrichPipeline>;
 };
 
+export type DefaultEdge_Language = Edge_Language & {
+  __typename?: 'DefaultEdge_Language';
+  cursor?: Maybe<Scalars['String']>;
+  node?: Maybe<Language>;
+};
+
 export type DefaultEdge_PluginDriver = Edge_PluginDriver & {
   __typename?: 'DefaultEdge_PluginDriver';
   cursor?: Maybe<Scalars['String']>;
@@ -835,6 +870,7 @@ export type DocTypeField = {
   fieldName?: Maybe<Scalars['String']>;
   fieldType?: Maybe<FieldType>;
   floatBoost?: Maybe<Scalars['Float']>;
+  i18N: Scalars['Boolean'];
   id?: Maybe<Scalars['ID']>;
   jsonConfig?: Maybe<Scalars['String']>;
   keyword: Scalars['Boolean'];
@@ -846,6 +882,7 @@ export type DocTypeField = {
   searchable: Scalars['Boolean'];
   searchableAndAutocomplete: Scalars['Boolean'];
   searchableAndDate: Scalars['Boolean'];
+  searchableAndI18N: Scalars['Boolean'];
   searchableAndText: Scalars['Boolean'];
   sortable: Scalars['Boolean'];
   subFields?: Maybe<Connection_DocTypeField>;
@@ -988,6 +1025,14 @@ export type Edge_EnrichPipeline = {
   cursor?: Maybe<Scalars['String']>;
   /** The item at the end of the edge */
   node?: Maybe<EnrichPipeline>;
+};
+
+/** An edge in a connection */
+export type Edge_Language = {
+  /** cursor marks a unique position or index into the connection */
+  cursor?: Maybe<Scalars['String']>;
+  /** The item at the end of the edge */
+  node?: Maybe<Language>;
 };
 
 /** An edge in a connection */
@@ -1206,6 +1251,7 @@ export enum FieldType {
   GeoShape = 'GEO_SHAPE',
   HalfFloat = 'HALF_FLOAT',
   Histogram = 'HISTOGRAM',
+  I18N = 'I18N',
   Integer = 'INTEGER',
   Ip = 'IP',
   IpRange = 'IP_RANGE',
@@ -1246,6 +1292,23 @@ export enum Fuzziness {
   Zero = 'ZERO'
 }
 
+export type Language = {
+  __typename?: 'Language';
+  /** ISO-8601 */
+  createDate?: Maybe<Scalars['DateTime']>;
+  id?: Maybe<Scalars['ID']>;
+  /** ISO-8601 */
+  modifiedDate?: Maybe<Scalars['DateTime']>;
+  name?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['String']>;
+};
+
+export type LanguageDtoInput = {
+  description?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  value?: InputMaybe<Scalars['String']>;
+};
+
 /** Mutation root */
 export type Mutation = {
   __typename?: 'Mutation';
@@ -1256,6 +1319,7 @@ export type Mutation = {
   addDocTypeFieldToSuggestionCategory?: Maybe<Tuple2_SuggestionCategory_DocTypeField>;
   addDocTypeToDataIndex?: Maybe<Tuple2_DataIndex_DocType>;
   addEnrichItemToEnrichPipeline?: Maybe<Tuple2_EnrichPipeline_EnrichItem>;
+  addLanguageToBucket?: Maybe<Tuple2_Bucket_Language>;
   addRuleToQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Rule>;
   addSuggestionCategoryToBucket?: Maybe<Tuple2_Bucket_SuggestionCategory>;
   addTabToBucket?: Maybe<Tuple2_Bucket_Tab>;
@@ -1269,6 +1333,7 @@ export type Mutation = {
   bindDocTypeFieldToTokenTab?: Maybe<Tuple2_TokenTab_DocTypeField>;
   bindDocTypeToDocTypeTemplate?: Maybe<Tuple2_DocType_DocTypeTemplate>;
   bindEnrichPipelineToDatasource?: Maybe<Tuple2_Datasource_EnrichPipeline>;
+  bindLanguageToBucket?: Maybe<Tuple2_Bucket_Language>;
   bindPluginDriverToDatasource?: Maybe<Tuple2_Datasource_PluginDriver>;
   bindQueryAnalysisToBucket?: Maybe<Tuple2_Bucket_QueryAnalysis>;
   bindSearchConfigToBucket?: Maybe<Tuple2_Bucket_SearchConfig>;
@@ -1289,6 +1354,7 @@ export type Mutation = {
   deleteDocTypeTemplate?: Maybe<DocTypeTemplate>;
   deleteEnrichItem?: Maybe<EnrichItem>;
   deleteEnrichPipeline?: Maybe<EnrichPipeline>;
+  deleteLanguage?: Maybe<Language>;
   deletePluginDriver?: Maybe<PluginDriver>;
   deleteQueryAnalysis?: Maybe<QueryAnalysis>;
   deleteRule?: Maybe<Rule>;
@@ -1304,6 +1370,7 @@ export type Mutation = {
   enableBucket?: Maybe<Bucket>;
   enrichItem?: Maybe<Response_EnrichItem>;
   enrichPipeline?: Maybe<Response_EnrichPipeline>;
+  language?: Maybe<Response_Language>;
   multiSelect?: Maybe<SuggestionCategory>;
   pluginDriver?: Maybe<Response_PluginDriver>;
   queryAnalysis?: Maybe<Response_QueryAnalysis>;
@@ -1317,6 +1384,7 @@ export type Mutation = {
   removeDocTypeFieldFromSuggestionCategory?: Maybe<Tuple2_SuggestionCategory_DocTypeField>;
   removeDocTypeFromDataIndex?: Maybe<Tuple2_DataIndex_DocType>;
   removeEnrichItemFromEnrichPipeline?: Maybe<Tuple2_EnrichPipeline_EnrichItem>;
+  removeLanguageFromBucket?: Maybe<Tuple2_Bucket_Language>;
   removeQueryParserConfig?: Maybe<Tuple2_SearchConfig_BigInteger>;
   removeRuleFromQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Rule>;
   removeSuggestionCategoryFromBucket?: Maybe<Tuple2_Bucket_SuggestionCategory>;
@@ -1338,6 +1406,7 @@ export type Mutation = {
   unbindDocTypeFieldFromTokenTab?: Maybe<Tuple2_TokenTab_DocTypeField>;
   unbindDocTypeTemplateFromDocType?: Maybe<DocType>;
   unbindEnrichPipelineToDatasource?: Maybe<Datasource>;
+  unbindLanguageFromBucket?: Maybe<Tuple2_Bucket_Language>;
   unbindPluginDriverToDatasource?: Maybe<Datasource>;
   unbindQueryAnalysisFromBucket?: Maybe<Tuple2_Bucket_QueryAnalysis>;
   unbindSearchConfigFromBucket?: Maybe<Tuple2_Bucket_SearchConfig>;
@@ -1394,6 +1463,13 @@ export type MutationAddEnrichItemToEnrichPipelineArgs = {
   enrichItemId: Scalars['ID'];
   enrichPipelineId: Scalars['ID'];
   tail?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Mutation root */
+export type MutationAddLanguageToBucketArgs = {
+  bucketId: Scalars['ID'];
+  languageId: Scalars['ID'];
 };
 
 
@@ -1487,6 +1563,13 @@ export type MutationBindDocTypeToDocTypeTemplateArgs = {
 export type MutationBindEnrichPipelineToDatasourceArgs = {
   datasourceId: Scalars['ID'];
   enrichPipelineId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationBindLanguageToBucketArgs = {
+  bucketId: Scalars['ID'];
+  languageId: Scalars['ID'];
 };
 
 
@@ -1625,6 +1708,12 @@ export type MutationDeleteEnrichPipelineArgs = {
 
 
 /** Mutation root */
+export type MutationDeleteLanguageArgs = {
+  languageId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationDeletePluginDriverArgs = {
   pluginDriverId: Scalars['ID'];
 };
@@ -1726,6 +1815,14 @@ export type MutationEnrichPipelineArgs = {
 
 
 /** Mutation root */
+export type MutationLanguageArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  languageDTO?: InputMaybe<LanguageDtoInput>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Mutation root */
 export type MutationMultiSelectArgs = {
   multiSelect: Scalars['Boolean'];
   suggestionCategoryId: Scalars['ID'];
@@ -1816,6 +1913,13 @@ export type MutationRemoveDocTypeFromDataIndexArgs = {
 export type MutationRemoveEnrichItemFromEnrichPipelineArgs = {
   enrichItemId: Scalars['ID'];
   enrichPipelineId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationRemoveLanguageFromBucketArgs = {
+  bucketId: Scalars['ID'];
+  languageId: Scalars['ID'];
 };
 
 
@@ -1969,6 +2073,12 @@ export type MutationUnbindEnrichPipelineToDatasourceArgs = {
 
 
 /** Mutation root */
+export type MutationUnbindLanguageFromBucketArgs = {
+  bucketId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationUnbindPluginDriverToDatasourceArgs = {
   datasourceId: Scalars['ID'];
 };
@@ -2094,6 +2204,7 @@ export type Query = {
   eventData?: Maybe<Scalars['String']>;
   /** Returns the list of available options for the event */
   eventOptions?: Maybe<Array<Maybe<EventOption>>>;
+  languages?: Maybe<Connection_Language>;
   pluginDriver?: Maybe<PluginDriver>;
   pluginDrivers?: Maybe<Connection_PluginDriver>;
   queryAnalyses?: Maybe<Connection_QueryAnalysis>;
@@ -2374,6 +2485,17 @@ export type QueryEventOptionsArgs = {
   size?: InputMaybe<Scalars['Int']>;
   sortType?: InputMaybe<Scalars['String']>;
   sortable?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Query root */
+export type QueryLanguagesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 
@@ -2707,6 +2829,12 @@ export type Response_EnrichPipeline = {
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
+export type Response_Language = {
+  __typename?: 'Response_Language';
+  entity?: Maybe<Language>;
+  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
 export type Response_PluginDriver = {
   __typename?: 'Response_PluginDriver';
   entity?: Maybe<PluginDriver>;
@@ -3002,12 +3130,14 @@ export type TokenFilter = {
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']>;
 };
 
 export type TokenFilterDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  type: Scalars['String'];
 };
 
 export type TokenTab = {
@@ -3062,12 +3192,14 @@ export type Tokenizer = {
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']>;
 };
 
 export type TokenizerDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  type: Scalars['String'];
 };
 
 export type Tuple2_Analyzer_CharFilter = {
@@ -3098,6 +3230,12 @@ export type Tuple2_Bucket_Datasource = {
   __typename?: 'Tuple2_Bucket_Datasource';
   left?: Maybe<Bucket>;
   right?: Maybe<Datasource>;
+};
+
+export type Tuple2_Bucket_Language = {
+  __typename?: 'Tuple2_Bucket_Language';
+  left?: Maybe<Bucket>;
+  right?: Maybe<Language>;
 };
 
 export type Tuple2_Bucket_QueryAnalysis = {
@@ -3587,13 +3725,14 @@ export type CharFilterQueryVariables = Exact<{
 }>;
 
 
-export type CharFilterQuery = { __typename?: 'Query', charFilter?: { __typename?: 'CharFilter', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null } | null };
+export type CharFilterQuery = { __typename?: 'Query', charFilter?: { __typename?: 'CharFilter', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null, type?: string | null } | null };
 
 export type CreateOrUpdateCharFilterMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   jsonConfig?: InputMaybe<Scalars['String']>;
+  type: Scalars['String'];
 }>;
 
 
@@ -4021,6 +4160,28 @@ export type DataSourceInformationQueryVariables = Exact<{
 
 
 export type DataSourceInformationQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', dataIndex?: { __typename?: 'DataIndex', cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, health?: string | null, index?: string | null, pri?: string | null, priStoreSize: any, rep?: string | null, status?: string | null, storeSize: any, uuid?: string | null } | null } | null } | null };
+
+export type LanguageQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type LanguageQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled?: boolean | null, handleDynamicFilters?: boolean | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null } | null } | null };
+
+export type LanguagesQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type LanguagesQuery = { __typename?: 'Query', languages?: { __typename?: 'DefaultConnection_Language', edges?: Array<{ __typename?: 'DefaultEdge_Language', node?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
+export type DeleteLanguageMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DeleteLanguageMutation = { __typename?: 'Mutation', deleteLanguage?: { __typename?: 'Language', id?: string | null, name?: string | null } | null };
 
 export type MonitoringEventsQueryVariables = Exact<{
   field?: InputMaybe<EventSortable>;
@@ -4527,13 +4688,14 @@ export type TokenFilterQueryVariables = Exact<{
 }>;
 
 
-export type TokenFilterQuery = { __typename?: 'Query', tokenFilter?: { __typename?: 'TokenFilter', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null } | null };
+export type TokenFilterQuery = { __typename?: 'Query', tokenFilter?: { __typename?: 'TokenFilter', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null, type?: string | null } | null };
 
 export type CreateOrUpdateTokenFilterMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   jsonConfig?: InputMaybe<Scalars['String']>;
+  type: Scalars['String'];
 }>;
 
 
@@ -4559,13 +4721,14 @@ export type TokenizerQueryVariables = Exact<{
 }>;
 
 
-export type TokenizerQuery = { __typename?: 'Query', tokenizer?: { __typename?: 'Tokenizer', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null } | null };
+export type TokenizerQuery = { __typename?: 'Query', tokenizer?: { __typename?: 'Tokenizer', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null, type?: string | null } | null };
 
 export type CreateOrUpdateTokenizerMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   jsonConfig?: InputMaybe<Scalars['String']>;
+  type: Scalars['String'];
 }>;
 
 
@@ -6516,6 +6679,7 @@ export const CharFilterDocument = gql`
     name
     description
     jsonConfig
+    type
   }
 }
     `;
@@ -6548,10 +6712,10 @@ export type CharFilterQueryHookResult = ReturnType<typeof useCharFilterQuery>;
 export type CharFilterLazyQueryHookResult = ReturnType<typeof useCharFilterLazyQuery>;
 export type CharFilterQueryResult = Apollo.QueryResult<CharFilterQuery, CharFilterQueryVariables>;
 export const CreateOrUpdateCharFilterDocument = gql`
-    mutation CreateOrUpdateCharFilter($id: ID, $name: String!, $description: String, $jsonConfig: String) {
+    mutation CreateOrUpdateCharFilter($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
   charFilter(
     id: $id
-    charFilterDTO: {name: $name, description: $description, jsonConfig: $jsonConfig}
+    charFilterDTO: {name: $name, description: $description, jsonConfig: $jsonConfig, type: $type}
   ) {
     entity {
       id
@@ -6583,6 +6747,7 @@ export type CreateOrUpdateCharFilterMutationFn = Apollo.MutationFunction<CreateO
  *      name: // value for 'name'
  *      description: // value for 'description'
  *      jsonConfig: // value for 'jsonConfig'
+ *      type: // value for 'type'
  *   },
  * });
  */
@@ -8883,6 +9048,131 @@ export function useDataSourceInformationLazyQuery(baseOptions?: Apollo.LazyQuery
 export type DataSourceInformationQueryHookResult = ReturnType<typeof useDataSourceInformationQuery>;
 export type DataSourceInformationLazyQueryHookResult = ReturnType<typeof useDataSourceInformationLazyQuery>;
 export type DataSourceInformationQueryResult = Apollo.QueryResult<DataSourceInformationQuery, DataSourceInformationQueryVariables>;
+export const LanguageDocument = gql`
+    query Language($id: ID!) {
+  bucket(id: $id) {
+    id
+    name
+    description
+    enabled
+    handleDynamicFilters
+    queryAnalysis {
+      id
+    }
+    searchConfig {
+      id
+    }
+  }
+}
+    `;
+
+/**
+ * __useLanguageQuery__
+ *
+ * To run a query within a React component, call `useLanguageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLanguageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLanguageQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useLanguageQuery(baseOptions: Apollo.QueryHookOptions<LanguageQuery, LanguageQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LanguageQuery, LanguageQueryVariables>(LanguageDocument, options);
+      }
+export function useLanguageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LanguageQuery, LanguageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LanguageQuery, LanguageQueryVariables>(LanguageDocument, options);
+        }
+export type LanguageQueryHookResult = ReturnType<typeof useLanguageQuery>;
+export type LanguageLazyQueryHookResult = ReturnType<typeof useLanguageLazyQuery>;
+export type LanguageQueryResult = Apollo.QueryResult<LanguageQuery, LanguageQueryVariables>;
+export const LanguagesDocument = gql`
+    query Languages($searchText: String, $cursor: String) {
+  languages(searchText: $searchText, first: 25, after: $cursor) {
+    edges {
+      node {
+        id
+        name
+        value
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useLanguagesQuery__
+ *
+ * To run a query within a React component, call `useLanguagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLanguagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLanguagesQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useLanguagesQuery(baseOptions?: Apollo.QueryHookOptions<LanguagesQuery, LanguagesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LanguagesQuery, LanguagesQueryVariables>(LanguagesDocument, options);
+      }
+export function useLanguagesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LanguagesQuery, LanguagesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LanguagesQuery, LanguagesQueryVariables>(LanguagesDocument, options);
+        }
+export type LanguagesQueryHookResult = ReturnType<typeof useLanguagesQuery>;
+export type LanguagesLazyQueryHookResult = ReturnType<typeof useLanguagesLazyQuery>;
+export type LanguagesQueryResult = Apollo.QueryResult<LanguagesQuery, LanguagesQueryVariables>;
+export const DeleteLanguageDocument = gql`
+    mutation DeleteLanguage($id: ID!) {
+  deleteLanguage(languageId: $id) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteLanguageMutationFn = Apollo.MutationFunction<DeleteLanguageMutation, DeleteLanguageMutationVariables>;
+
+/**
+ * __useDeleteLanguageMutation__
+ *
+ * To run a mutation, you first call `useDeleteLanguageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteLanguageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteLanguageMutation, { data, loading, error }] = useDeleteLanguageMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteLanguageMutation(baseOptions?: Apollo.MutationHookOptions<DeleteLanguageMutation, DeleteLanguageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteLanguageMutation, DeleteLanguageMutationVariables>(DeleteLanguageDocument, options);
+      }
+export type DeleteLanguageMutationHookResult = ReturnType<typeof useDeleteLanguageMutation>;
+export type DeleteLanguageMutationResult = Apollo.MutationResult<DeleteLanguageMutation>;
+export type DeleteLanguageMutationOptions = Apollo.BaseMutationOptions<DeleteLanguageMutation, DeleteLanguageMutationVariables>;
 export const MonitoringEventsDocument = gql`
     query MonitoringEvents($field: EventSortable, $ordering: String) {
   event(sortBy: $field, sortType: $ordering, from: 0, size: 10) {
@@ -11447,6 +11737,7 @@ export const TokenFilterDocument = gql`
     name
     description
     jsonConfig
+    type
   }
 }
     `;
@@ -11479,10 +11770,10 @@ export type TokenFilterQueryHookResult = ReturnType<typeof useTokenFilterQuery>;
 export type TokenFilterLazyQueryHookResult = ReturnType<typeof useTokenFilterLazyQuery>;
 export type TokenFilterQueryResult = Apollo.QueryResult<TokenFilterQuery, TokenFilterQueryVariables>;
 export const CreateOrUpdateTokenFilterDocument = gql`
-    mutation CreateOrUpdateTokenFilter($id: ID, $name: String!, $description: String, $jsonConfig: String) {
+    mutation CreateOrUpdateTokenFilter($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
   tokenFilter(
     id: $id
-    tokenFilterDTO: {name: $name, description: $description, jsonConfig: $jsonConfig}
+    tokenFilterDTO: {name: $name, description: $description, jsonConfig: $jsonConfig, type: $type}
   ) {
     entity {
       id
@@ -11514,6 +11805,7 @@ export type CreateOrUpdateTokenFilterMutationFn = Apollo.MutationFunction<Create
  *      name: // value for 'name'
  *      description: // value for 'description'
  *      jsonConfig: // value for 'jsonConfig'
+ *      type: // value for 'type'
  *   },
  * });
  */
@@ -11611,6 +11903,7 @@ export const TokenizerDocument = gql`
     name
     description
     jsonConfig
+    type
   }
 }
     `;
@@ -11643,10 +11936,10 @@ export type TokenizerQueryHookResult = ReturnType<typeof useTokenizerQuery>;
 export type TokenizerLazyQueryHookResult = ReturnType<typeof useTokenizerLazyQuery>;
 export type TokenizerQueryResult = Apollo.QueryResult<TokenizerQuery, TokenizerQueryVariables>;
 export const CreateOrUpdateTokenizerDocument = gql`
-    mutation CreateOrUpdateTokenizer($id: ID, $name: String!, $description: String, $jsonConfig: String) {
+    mutation CreateOrUpdateTokenizer($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
   tokenizer(
     id: $id
-    tokenizerDTO: {name: $name, description: $description, jsonConfig: $jsonConfig}
+    tokenizerDTO: {name: $name, description: $description, jsonConfig: $jsonConfig, type: $type}
   ) {
     entity {
       id
@@ -11678,6 +11971,7 @@ export type CreateOrUpdateTokenizerMutationFn = Apollo.MutationFunction<CreateOr
  *      name: // value for 'name'
  *      description: // value for 'description'
  *      jsonConfig: // value for 'jsonConfig'
+ *      type: // value for 'type'
  *   },
  * });
  */
@@ -11906,4 +12200,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-07-12T09:27:57+02:00
+// Generated on 2023-07-20T17:15:08+02:00
