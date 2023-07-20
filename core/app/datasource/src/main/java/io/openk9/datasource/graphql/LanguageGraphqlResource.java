@@ -35,6 +35,11 @@ public class LanguageGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
+	@Query
+	public Uni<Language> getLanguage(@Id long id) {
+		return languageService.findById(id);
+	}
+
 	public Uni<Response<Language>> patchLanguage(@Id long id, LanguageDTO languageDTO) {
 		return languageService.getValidator().patch(id, languageDTO);
 	}
