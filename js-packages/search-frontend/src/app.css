@@ -55,6 +55,3 @@
   white-space: nowrap; 
   }
 
-  .os-theme-dark.os-host-transition > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle {
-    display: none !important;
-  }

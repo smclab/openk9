@@ -26,7 +26,7 @@ function Tabs({
         position: "relative",
         overflowX: "auto",
         overflowY: "none",
-        height: "50px",
+        height: "60px",
       }}
     >
       <nav
