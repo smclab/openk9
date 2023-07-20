@@ -21,7 +21,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { TrashSvg } from "../svgElement/TrashSvg";
-import { AddFiltersSvg } from "../svgElement/addFiltersSvg";
+import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -94,6 +94,14 @@ function FiltersHorizontal({
           return CreateSuggestion(index, suggestion, suggestions);
         })}
       </OverlayScrollbarsComponent>
+      <div
+        css={css`
+          @media (max-width: 480px) {
+            margin-top: 5px;
+            border: 0.5px solid rgba(128, 128, 128, 0.48);
+          }
+        `}
+      ></div>
       <div
         className="openk9-filter-horizontal-container-submit"
         css={css`

@@ -146,9 +146,8 @@ export function App() {
       ></div>
       <div
         className="openk9-results-container openk9-box"
-        tabIndex={-10}
         ref={(element) =>
-          openk9.updateConfiguration({ filtersMobileLiveChange: element })
+          openk9.updateConfiguration({ filtersMobile: element })
         }
       ></div>
       <div

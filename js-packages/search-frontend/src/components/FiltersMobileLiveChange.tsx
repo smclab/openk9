@@ -19,7 +19,7 @@ import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { FiltersMemo } from "./Filters";
 import { useInfiniteResults } from "./ResultList";
 import { TrashSvg } from "../svgElement/TrashSvg";
-import { AddFiltersSvg } from "../svgElement/addFiltersSvg";
+import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];

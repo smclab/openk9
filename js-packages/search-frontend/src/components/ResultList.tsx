@@ -155,7 +155,15 @@ function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
           >
             {children?.toLocaleString("it")}
           </span>
-          <SortResultList setSortResult={setSortResult} />
+          <span
+            css={css`
+              @media (max-width: 480px) {
+                display: none;
+              }
+            `}
+          >
+            <SortResultList setSortResult={setSortResult} />
+          </span>
         </div>
       </div>
     </React.Fragment>
