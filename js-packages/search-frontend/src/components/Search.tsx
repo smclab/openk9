@@ -97,7 +97,7 @@ export function Search({
           display: flex;
           align-items: center;
           gap: 10px;
-          margin-inline: 16px;
+          width: 100%;
           @media (max-width: 480px) {
             flex-direction: column;
           }
@@ -118,7 +118,7 @@ export function Search({
             align-items: center;
             border-radius: 40px;
             width: 100%;
-            max-height: 45px;
+            max-height: 50px;
             @media (max-width: 480px) {
               width: 100%;
             }
@@ -435,34 +435,6 @@ export function Search({
             </button>
           </div>
         </div>
-        <div
-          css={css`
-            @media (max-width: 480px) {
-              width: 100%;
-            }
-          `}
-        >
-          <DataRangePicker
-            onChange={onDateRangeChange}
-            calendarDate={dateRange}
-          />
-        </div>
-      </div>
-      <div
-        className="openk9-container-active-filters"
-        css={css`
-          padding-top: 10px;
-          padding-left: 16px;
-          @media (min-width: 480px) {
-            display: none;
-          }
-        `}
-      >
-        <ActiveFilter
-          onConfigurationChange={onConfigurationChange}
-          onRemoveFilterToken={onRemoveFilterToken}
-          searchQuery={searchQuery}
-        />
       </div>
     </React.Fragment>
   );

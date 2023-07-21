@@ -166,6 +166,7 @@ export type Configuration = {
   filters: Element | string | null;
   filtersMobile: Element | string | null;
   filtersMobileLiveChange: Element | string | null;
+  dataRangePicker: Element | string | null;
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   sortable: Element | string | null;
   results: Element | string | null;
@@ -192,6 +193,7 @@ const defaultConfiguration: Configuration = {
   tabs: null,
   filtersMobile: null,
   filtersMobileLiveChange: null,
+  dataRangePicker: null,
   sortable: null,
   detailMobile: null,
   sort: [],

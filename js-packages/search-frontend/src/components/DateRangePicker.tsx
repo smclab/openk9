@@ -121,7 +121,7 @@ export function DataRangePicker({
           border-radius: 50px;
           background: white;
           padding-inline: 10px;
-          height: 53px;
+          height: 50px;
           @media (max-width: 480px) {
             height: 40px;
           }

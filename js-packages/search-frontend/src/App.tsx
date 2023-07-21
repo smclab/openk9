@@ -6,6 +6,7 @@ import "./index.css";
 import "./app.css";
 import { MaintenancePage } from "./components/MaintenancePage";
 import "./ScrollBar.css";
+import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
 
 export const openk9 = new OpenK9({
   enabled: true,
@@ -18,6 +19,7 @@ export function App() {
   if (serviceStatus === "down") {
     return <MaintenancePage />;
   }
+  const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   return (
     <div
       className="openk9-body"
@@ -137,13 +139,98 @@ export function App() {
         `}
       ></div>
       <div
-        className="openk9-update-configuration"
-        ref={(element) => openk9.updateConfiguration({ search: element })}
         css={css`
           grid-area: search;
           padding: 16px 0px 16px 0px;
+          @media (max-width: 480px) {
+            padding-inline: 16px;
+          }
         `}
-      ></div>
+      >
+        <div
+          css={css`
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+            align-items: baseline;
+            @media (max-width: 480px) {
+              flex-direction: column;
+            }
+          `}
+        >
+          <div
+            css={css`
+              width: 100%;
+            `}
+            className="openk9-update-configuration"
+            ref={(element) => openk9.updateConfiguration({ search: element })}
+          ></div>
+          <div
+            css={css`
+              display: flex;
+              gap: 10px;
+              width: 100%;
+              justify-content: center;
+              align-items: center;
+              @media (min-width: 480px) {
+                display: none;
+              }
+            `}
+          >
+            <div
+              className="openk9-filters-container openk9-box"
+              css={css`
+                width: 100%;
+              `}
+              ref={(element) =>
+                openk9.updateConfiguration({ sortable: element })
+              }
+            />
+            <button
+              css={css`
+                padding: 6px 10px;
+                border: 1px solid var(--openk9-embeddable-search--border-color);
+                background: white;
+                border-radius: 50px;
+              `}
+              onClick={() => {
+                setIsVisibleFilters(true);
+              }}
+            >
+              <FilterHorizontalSvg />
+            </button>
+          </div>
+          <div
+            css={css`
+              @media (max-width: 480px) {
+                width: 100%;
+              }
+            `}
+            className="openk9-update-configuration"
+            ref={(element) =>
+              openk9.updateConfiguration({ dataRangePicker: element })
+            }
+          ></div>
+        </div>
+        <div
+          className="openk9-container-active-filters"
+          css={css`
+            padding-top: 10px;
+            padding-left: 16px;
+            @media (min-width: 480px) {
+              display: none;
+            }
+          `}
+        >
+          <div
+            className="openk9-filters-container openk9-box"
+            ref={(element) =>
+              openk9.updateConfiguration({ activeFilters: element })
+            }
+          />
+        </div>
+      </div>
       <div
         className="openk9-results-container openk9-box"
         ref={(element) =>

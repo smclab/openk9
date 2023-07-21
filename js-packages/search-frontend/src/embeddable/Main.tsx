@@ -36,6 +36,7 @@ import i18next from "i18next";
 import { ActiveFilter } from "../components/ActiveFilters";
 import { FiltersMobileMemo } from "../components/FiltersMobile";
 import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
+import { DataRangePicker } from "../components/DateRangePicker";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -252,6 +253,12 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.filtersMobileLiveChange,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <DataRangePicker onChange={setDateRange} calendarDate={dateRange} />
+        </I18nextProvider>,
+        configuration.dataRangePicker,
       )}
     </React.Fragment>
   );

@@ -25,7 +25,15 @@ export function SortResultList({
         align-items: baseline;
       `}
     >
-      <label htmlFor="regularSelectElement" className="openk9-label-sort">
+      <label
+        css={css`
+          @media (max-width: 480px) {
+            display: none;
+          }
+        `}
+        htmlFor="regularSelectElement"
+        className="openk9-label-sort"
+      >
         {t("sort")}
       </label>
       <select
@@ -36,6 +44,9 @@ export function SortResultList({
           border: 1px solid #a292926b;
           height: 30px;
           cursor: pointer;
+          @media (max-width: 480px) {
+            width: 100%;
+          }
         `}
         onChange={(event) => {
           if (JSON.parse(event.currentTarget.value)?.label === "relevance") {
