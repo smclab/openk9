@@ -1,6 +1,6 @@
 import React from "react";
 import Keycloak from "keycloak-js";
-
+import { useState } from "react";
 export const OpenK9ClientContext = React.createContext<
   ReturnType<typeof OpenK9Client>
 >(null as any /* must break app if not provided */);
@@ -20,22 +20,30 @@ declare global {
 export function OpenK9Client({
   onAuthenticated,
   tenant,
+  token = "",
+  useKeycloack = true,
 }: {
   onAuthenticated(): void;
   tenant: string;
+  token?: string;
+  useKeycloack?: boolean;
 }) {
   const keycloak = new Keycloak({
     url: window.KEYCLOAK_URL,
     realm: window.KEYCLOAK_REALM || "openk9",
     clientId: window.KEYCLOAK_CLIENT_ID || "openk9",
   });
-  const keycloakInit = keycloak.init({
-    onLoad: "check-sso",
-    checkLoginIframe: false,
-  });
-  keycloakInit.then(() => {
-    onAuthenticated();
-  });
+  let appendToBody = "";
+  const keycloakInit = useKeycloack
+    ? keycloak.init({
+        onLoad: "check-sso",
+        checkLoginIframe: false,
+      })
+    : null;
+  if (keycloakInit)
+    keycloakInit.then(() => {
+      onAuthenticated();
+    });
   async function authFetch(route: string, init: RequestInit = {}) {
     await keycloakInit;
     if (keycloak.authenticated) {
@@ -48,13 +56,20 @@ export function OpenK9Client({
             Authorization: `Bearer ${keycloak.token}`,
             ...init.headers,
           }
+        : !useKeycloack
+        ? {
+            Authorization: `Bearer ${token}`,
+            ...init.headers,
+          }
         : init.headers,
     });
   }
   return {
     authInit: keycloakInit,
     async authenticate() {
-      await keycloak.login();
+      if (useKeycloack) {
+        await keycloak.login();
+      }
     },
     async deauthenticate() {
       await keycloak.logout();

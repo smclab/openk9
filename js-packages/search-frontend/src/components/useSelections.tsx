@@ -15,9 +15,10 @@ export function useSelections() {
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
   React.useEffect(() => {
-    client.authInit.then(() => {
-      setCanSave(true);
-    });
+    if (client.authInit)
+      client.authInit.then(() => {
+        setCanSave(true);
+      });
   }, []);
   React.useEffect(() => {
     if (canSave) {

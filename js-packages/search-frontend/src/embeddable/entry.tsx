@@ -50,6 +50,8 @@ export class OpenK9 {
         this.queryClient.invalidateQueries();
       },
       tenant: this.configuration.tenant ?? "",
+      token: this.configuration.token ?? "token",
+      useKeycloack: this.configuration.useKeycloack ?? true,
     });
     this.render();
   }
@@ -192,6 +194,8 @@ export type Configuration = {
   defaultTokens: Array<SearchToken>;
   resultsDisplayMode: ResultsDisplayMode;
   tenant: string | null;
+  token: string | null;
+  useKeycloack: boolean;
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
   changeSortResult: (
     sort: Array<RestApi.SortField>,
@@ -215,6 +219,8 @@ const defaultConfiguration: Configuration = {
   details: null,
   login: null,
   tenant: null,
+  token: null,
+  useKeycloack: true,
   searchAutoselect: true,
   searchReplaceText: true,
   filterTokens: [],

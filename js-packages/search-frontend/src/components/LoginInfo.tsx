@@ -17,7 +17,7 @@ function LoginInfoComponent({}: LoginInfoProps) {
   const client = useOpenK9Client();
   const [authenticated, setAuthenticated] = React.useState(false);
   React.useEffect(() => {
-    client.authInit.then(setAuthenticated);
+    if (client.authInit) client.authInit.then(setAuthenticated);
   }, []);
   const userProfileQuery = useQuery(["user-profile"], async () => {
     return await client.getUserProfile();
