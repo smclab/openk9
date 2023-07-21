@@ -87,6 +87,7 @@ import { InformationBuckets } from "./components/InformationBuckets";
 import { InformationDataSource } from "./components/InformationDataSource";
 import { TabTokenTabsAssociation } from "./components/TabTokenTabs";
 import { Languages } from "./components/Languages";
+import { BucketLanguage } from "./components/BucketLanguage";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -180,6 +181,10 @@ export default function App() {
                                   label: "Associated Suggestion Categories",
                                   path: "suggestion-categories",
                                 },
+                                {
+                                  label: "Associated Languages",
+                                  path: "languages",
+                                },
                                 { label: "Associated Tabs", path: "tabs" },
                                 { label: "Label Metrics", path: "label-metrics-buckets" },
                               ]}
@@ -193,6 +198,7 @@ export default function App() {
                         <Route path="suggestion-categories" element={<BucketSuggestionCategories />} />
                         <Route path="tabs" element={<BucketTabs />} />
                         <Route path="label-metrics-buckets" element={<InformationBuckets />} />
+                        <Route path="languages" element={<BucketLanguage />} />
                       </Route>
                     </Route>
                     <Route path="enrich-items" element={<EnrichItems />} />

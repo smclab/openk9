@@ -3653,6 +3653,32 @@ export type RemoveDataSourceFromBucketMutationVariables = Exact<{
 
 export type RemoveDataSourceFromBucketMutation = { __typename?: 'Mutation', removeDatasourceFromBucket?: { __typename?: 'Tuple2_Bucket_Datasource', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Datasource', id?: string | null } | null } | null };
 
+export type BucketLanguagesQueryVariables = Exact<{
+  parentId: Scalars['ID'];
+  searchText?: InputMaybe<Scalars['String']>;
+  unassociated: Scalars['Boolean'];
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type BucketLanguagesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, languages?: { __typename?: 'DefaultConnection_Language', edges?: Array<{ __typename?: 'DefaultEdge_Language', node?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+
+export type AddLanguageToBucketMutationVariables = Exact<{
+  childId: Scalars['ID'];
+  parentId: Scalars['ID'];
+}>;
+
+
+export type AddLanguageToBucketMutation = { __typename?: 'Mutation', addLanguageToBucket?: { __typename?: 'Tuple2_Bucket_Language', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Language', id?: string | null } | null } | null };
+
+export type RemoveLanguageFromBucketMutationVariables = Exact<{
+  childId: Scalars['ID'];
+  parentId: Scalars['ID'];
+}>;
+
+
+export type RemoveLanguageFromBucketMutation = { __typename?: 'Mutation', removeLanguageFromBucket?: { __typename?: 'Tuple2_Bucket_Language', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Language', id?: string | null } | null } | null };
+
 export type BucketSuggestionCategoriesQueryVariables = Exact<{
   parentId: Scalars['ID'];
   searchText?: InputMaybe<Scalars['String']>;
@@ -4160,13 +4186,6 @@ export type DataSourceInformationQueryVariables = Exact<{
 
 
 export type DataSourceInformationQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', dataIndex?: { __typename?: 'DataIndex', cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, health?: string | null, index?: string | null, pri?: string | null, priStoreSize: any, rep?: string | null, status?: string | null, storeSize: any, uuid?: string | null } | null } | null } | null };
-
-export type LanguageQueryVariables = Exact<{
-  id: Scalars['ID'];
-}>;
-
-
-export type LanguageQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled?: boolean | null, handleDynamicFilters?: boolean | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null } | null } | null };
 
 export type LanguagesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -6317,6 +6336,135 @@ export function useRemoveDataSourceFromBucketMutation(baseOptions?: Apollo.Mutat
 export type RemoveDataSourceFromBucketMutationHookResult = ReturnType<typeof useRemoveDataSourceFromBucketMutation>;
 export type RemoveDataSourceFromBucketMutationResult = Apollo.MutationResult<RemoveDataSourceFromBucketMutation>;
 export type RemoveDataSourceFromBucketMutationOptions = Apollo.BaseMutationOptions<RemoveDataSourceFromBucketMutation, RemoveDataSourceFromBucketMutationVariables>;
+export const BucketLanguagesDocument = gql`
+    query BucketLanguages($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
+  bucket(id: $parentId) {
+    id
+    languages(searchText: $searchText, first: 25, after: $cursor, notEqual: true) {
+      edges {
+        node {
+          id
+          name
+          value
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useBucketLanguagesQuery__
+ *
+ * To run a query within a React component, call `useBucketLanguagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBucketLanguagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBucketLanguagesQuery({
+ *   variables: {
+ *      parentId: // value for 'parentId'
+ *      searchText: // value for 'searchText'
+ *      unassociated: // value for 'unassociated'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useBucketLanguagesQuery(baseOptions: Apollo.QueryHookOptions<BucketLanguagesQuery, BucketLanguagesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<BucketLanguagesQuery, BucketLanguagesQueryVariables>(BucketLanguagesDocument, options);
+      }
+export function useBucketLanguagesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BucketLanguagesQuery, BucketLanguagesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<BucketLanguagesQuery, BucketLanguagesQueryVariables>(BucketLanguagesDocument, options);
+        }
+export type BucketLanguagesQueryHookResult = ReturnType<typeof useBucketLanguagesQuery>;
+export type BucketLanguagesLazyQueryHookResult = ReturnType<typeof useBucketLanguagesLazyQuery>;
+export type BucketLanguagesQueryResult = Apollo.QueryResult<BucketLanguagesQuery, BucketLanguagesQueryVariables>;
+export const AddLanguageToBucketDocument = gql`
+    mutation AddLanguageToBucket($childId: ID!, $parentId: ID!) {
+  addLanguageToBucket(languageId: $childId, bucketId: $parentId) {
+    left {
+      id
+    }
+    right {
+      id
+    }
+  }
+}
+    `;
+export type AddLanguageToBucketMutationFn = Apollo.MutationFunction<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>;
+
+/**
+ * __useAddLanguageToBucketMutation__
+ *
+ * To run a mutation, you first call `useAddLanguageToBucketMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddLanguageToBucketMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addLanguageToBucketMutation, { data, loading, error }] = useAddLanguageToBucketMutation({
+ *   variables: {
+ *      childId: // value for 'childId'
+ *      parentId: // value for 'parentId'
+ *   },
+ * });
+ */
+export function useAddLanguageToBucketMutation(baseOptions?: Apollo.MutationHookOptions<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>(AddLanguageToBucketDocument, options);
+      }
+export type AddLanguageToBucketMutationHookResult = ReturnType<typeof useAddLanguageToBucketMutation>;
+export type AddLanguageToBucketMutationResult = Apollo.MutationResult<AddLanguageToBucketMutation>;
+export type AddLanguageToBucketMutationOptions = Apollo.BaseMutationOptions<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>;
+export const RemoveLanguageFromBucketDocument = gql`
+    mutation RemoveLanguageFromBucket($childId: ID!, $parentId: ID!) {
+  removeLanguageFromBucket(languageId: $childId, bucketId: $parentId) {
+    left {
+      id
+    }
+    right {
+      id
+    }
+  }
+}
+    `;
+export type RemoveLanguageFromBucketMutationFn = Apollo.MutationFunction<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>;
+
+/**
+ * __useRemoveLanguageFromBucketMutation__
+ *
+ * To run a mutation, you first call `useRemoveLanguageFromBucketMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveLanguageFromBucketMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeLanguageFromBucketMutation, { data, loading, error }] = useRemoveLanguageFromBucketMutation({
+ *   variables: {
+ *      childId: // value for 'childId'
+ *      parentId: // value for 'parentId'
+ *   },
+ * });
+ */
+export function useRemoveLanguageFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>(RemoveLanguageFromBucketDocument, options);
+      }
+export type RemoveLanguageFromBucketMutationHookResult = ReturnType<typeof useRemoveLanguageFromBucketMutation>;
+export type RemoveLanguageFromBucketMutationResult = Apollo.MutationResult<RemoveLanguageFromBucketMutation>;
+export type RemoveLanguageFromBucketMutationOptions = Apollo.BaseMutationOptions<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>;
 export const BucketSuggestionCategoriesDocument = gql`
     query BucketSuggestionCategories($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
   bucket(id: $parentId) {
@@ -9048,51 +9196,6 @@ export function useDataSourceInformationLazyQuery(baseOptions?: Apollo.LazyQuery
 export type DataSourceInformationQueryHookResult = ReturnType<typeof useDataSourceInformationQuery>;
 export type DataSourceInformationLazyQueryHookResult = ReturnType<typeof useDataSourceInformationLazyQuery>;
 export type DataSourceInformationQueryResult = Apollo.QueryResult<DataSourceInformationQuery, DataSourceInformationQueryVariables>;
-export const LanguageDocument = gql`
-    query Language($id: ID!) {
-  bucket(id: $id) {
-    id
-    name
-    description
-    enabled
-    handleDynamicFilters
-    queryAnalysis {
-      id
-    }
-    searchConfig {
-      id
-    }
-  }
-}
-    `;
-
-/**
- * __useLanguageQuery__
- *
- * To run a query within a React component, call `useLanguageQuery` and pass it any options that fit your needs.
- * When your component renders, `useLanguageQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useLanguageQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useLanguageQuery(baseOptions: Apollo.QueryHookOptions<LanguageQuery, LanguageQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<LanguageQuery, LanguageQueryVariables>(LanguageDocument, options);
-      }
-export function useLanguageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LanguageQuery, LanguageQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<LanguageQuery, LanguageQueryVariables>(LanguageDocument, options);
-        }
-export type LanguageQueryHookResult = ReturnType<typeof useLanguageQuery>;
-export type LanguageLazyQueryHookResult = ReturnType<typeof useLanguageLazyQuery>;
-export type LanguageQueryResult = Apollo.QueryResult<LanguageQuery, LanguageQueryVariables>;
 export const LanguagesDocument = gql`
     query Languages($searchText: String, $cursor: String) {
   languages(searchText: $searchText, first: 25, after: $cursor) {
@@ -12200,4 +12303,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-07-20T17:15:08+02:00
+// Generated on 2023-07-21T17:26:57+02:00

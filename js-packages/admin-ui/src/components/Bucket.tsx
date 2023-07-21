@@ -161,6 +161,56 @@ export function Bucket() {
     </ContainerFluid>
   );
 }
+
+// gql`
+//   query languagesOptions($searchText: String, $cursor: String) {
+//     options: languages(searchText: $searchText, first: 5, after: $cursor) {
+//       edges {
+//         node {
+//           id
+//           name
+//         }
+//       }
+//       pageInfo {
+//         hasNextPage
+//         endCursor
+//       }
+//     }
+//   }
+// `;
+// gql`
+//   query LanguagesValue($id: ID!) {
+//     value: language(id: $id) {
+//       id
+//       name
+//     }
+//   }
+// `;
+// gql`
+//   mutation BindLanguagesToBucket($bucketId: ID!, $languages: ID!) {
+//     bindLanguageToBucket(bucketId: $bucketId, languagesId: $languages) {
+//       left {
+//         id
+//         languages {
+//           id
+//         }
+//       }
+//       right {
+//         id
+//       }
+//     }
+//   }
+// `;
+// gql`
+//   mutation UnbindLanguagesFromBucket($languageId: ID!) {
+//     unbindLanguageFromBucket(languageId: $languageId) {
+//       right {
+//         id
+//       }
+//     }
+//   }
+// `;
+
 gql`
   query QueryAnalysisOptions($searchText: String, $cursor: String) {
     options: queryAnalyses(searchText: $searchText, first: 5, after: $cursor) {
