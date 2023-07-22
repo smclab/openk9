@@ -217,7 +217,6 @@ export function App() {
           className="openk9-container-active-filters"
           css={css`
             padding-top: 10px;
-            padding-left: 16px;
             @media (min-width: 480px) {
               display: none;
             }
@@ -234,7 +233,13 @@ export function App() {
       <div
         className="openk9-results-container openk9-box"
         ref={(element) =>
-          openk9.updateConfiguration({ filtersMobile: element })
+          openk9.updateConfiguration({
+            filtersMobile: {
+              element: element,
+              isVisible: isVisibleFilters,
+              setIsVisible: setIsVisibleFilters,
+            },
+          })
         }
       ></div>
       <div

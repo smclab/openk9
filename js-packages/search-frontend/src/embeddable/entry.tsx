@@ -158,13 +158,19 @@ type FiltersHorizontalConfiguration = {
   callback: () => void | null;
 };
 
+type FiltersHorizontalMobileConfiguration = {
+  element: Element | string | null;
+  isVisible: boolean;
+  setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
   activeFilters: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
-  filtersMobile: Element | string | null;
+  filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: Element | string | null;
   dataRangePicker: Element | string | null;
   filtersHorizontal: FiltersHorizontalConfiguration | null;

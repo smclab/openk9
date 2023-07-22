@@ -231,11 +231,13 @@ export function Main({
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             configuration={configuration}
-            isVisibleFilters={isVisibleFilters}
-            setIsVisibleFilters={setIsVisibleFilters}
+            isVisibleFilters={configuration.filtersMobile?.isVisible || false}
+            setIsVisibleFilters={configuration.filtersMobile?.setIsVisible}
           />
         </I18nextProvider>,
-        configuration.filtersMobile,
+        configuration.filtersMobile?.element !== undefined
+          ? configuration.filtersMobile?.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

@@ -1,15 +1,20 @@
 import { css } from "styled-components/macro";
 import { UseQueryResult } from "react-query";
 import React from "react";
-import { SortField } from "./client";
 import { useQuery } from "react-query";
-import { useOpenK9Client } from "./client";
+import { SortField, useOpenK9Client } from "../components/client";
 import { useTranslation } from "react-i18next";
 
 export function SortResultList({
   setSortResult,
+  background = "white",
+  minHeight = "40px",
+  color = "#7e7e7e",
 }: {
   setSortResult: (sortResultNew: SortField) => void;
+  background?: string;
+  minHeight?: string;
+  color?: string;
 }) {
   const client = useOpenK9Client();
   const options = useQuery(["date-label-sort-options", {}], async () => {
@@ -17,25 +22,7 @@ export function SortResultList({
   });
   const { t } = useTranslation();
   return (
-    <span
-      className="openk9-container-sort-result-list-component"
-      css={css`
-        display: flex;
-        gap: 3px;
-        align-items: baseline;
-      `}
-    >
-      <label
-        css={css`
-          @media (max-width: 480px) {
-            display: none;
-          }
-        `}
-        htmlFor="regularSelectElement"
-        className="openk9-label-sort"
-      >
-        {t("sort")}
-      </label>
+    <span className="openk9-container-sort-result-list-component">
       <select
         className="form-control openk9-sort-result-select"
         id="regularSelectElement"
@@ -43,10 +30,16 @@ export function SortResultList({
           border-radius: 34px;
           border: 1px solid #a292926b;
           height: 30px;
+          width: 100%;
+          padding-inline: 10px;
           cursor: pointer;
-          @media (max-width: 480px) {
-            width: 100%;
+          :focus {
+            border: 1px solid #a292926b;
+            outline: none;
           }
+          background: ${background};
+          min-height: ${minHeight};
+          color: ${color};
         `}
         onChange={(event) => {
           if (JSON.parse(event.currentTarget.value)?.label === "relevance") {
@@ -70,8 +63,9 @@ export function SortResultList({
         </option>
         {options.data?.map((option) => {
           return (
-            <React.Fragment key={option.id}>
+            <React.Fragment>
               <option
+                key={option.id + "asc"}
                 value={JSON.stringify({
                   label: option.field,
                   sort: "asc",
@@ -80,6 +74,7 @@ export function SortResultList({
                 {option.label} asc
               </option>
               <option
+                key={option.id + "desc"}
                 value={JSON.stringify({
                   label: option.field,
                   sort: "desc",

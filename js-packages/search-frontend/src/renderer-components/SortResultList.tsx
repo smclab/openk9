@@ -6,9 +6,9 @@ import { SortField, useOpenK9Client } from "../components/client";
 
 export function SortResultList({
   setSortResult,
-  background = "trasparent",
-  minHeight = "auto",
-  color = "black",
+  background = "white",
+  minHeight = "40px",
+  color = "#7e7e7e",
 }: {
   setSortResult: (sortResultNew: SortField) => void;
   background?: string;

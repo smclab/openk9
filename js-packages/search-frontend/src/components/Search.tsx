@@ -386,55 +386,6 @@ export function Search({
             </div>
           </button>
         </div>
-
-        <div
-          css={css`
-            display: none;
-            @media (max-width: 480px) {
-              display: flex;
-              gap: 10px;
-              align-items: center;
-              width: 100%;
-              justify-content: space-between;
-            }
-          `}
-        >
-          <div
-            css={css`
-              @media (max-width: 480px) {
-                width: 100%;
-              }
-            `}
-          >
-            <SortResultList
-              setSortResult={setSortResult}
-              background="white"
-              minHeight="40px"
-              color="#7e7e7e"
-            />
-          </div>
-          <div
-            css={css`
-              @media (min-width: 480px) {
-                display: none;
-              }
-            `}
-          >
-            <button
-              css={css`
-                padding: 6px 10px;
-                border: 1px solid var(--openk9-embeddable-search--border-color);
-                background: white;
-                border-radius: 50px;
-              `}
-              onClick={() => {
-                setIsVisibleFilters(true);
-              }}
-            >
-              <FilterHorizontalSvg />
-            </button>
-          </div>
-        </div>
       </div>
     </React.Fragment>
   );

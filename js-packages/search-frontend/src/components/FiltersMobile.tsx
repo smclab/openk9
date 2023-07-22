@@ -28,7 +28,9 @@ export type FiltersMobileProps<E> = {
   onConfigurationChange: ConfigurationUpdateFunction;
   configuration: Configuration;
   isVisibleFilters: boolean;
-  setIsVisibleFilters: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsVisibleFilters:
+    | React.Dispatch<React.SetStateAction<boolean>>
+    | undefined;
 };
 function FiltersMobile<E>({
   dynamicFilters,
@@ -103,7 +105,7 @@ function FiltersMobile<E>({
             margin-right: 21px;
           `}
           onClick={() => {
-            setIsVisibleFilters(false);
+            if (setIsVisibleFilters) setIsVisibleFilters(false);
           }}
           style={{ backgroundColor: "#FAFAFA", border: "none" }}
         >
@@ -115,7 +117,9 @@ function FiltersMobile<E>({
         onAddFilterToken={onAddFilterToken}
         onRemoveFilterToken={onRemoveFilterToken}
         onConfigurationChange={onConfigurationChange}
-        onConfigurationChangeExt={() => setIsVisibleFilters(false)}
+        onConfigurationChangeExt={() => {
+          if (setIsVisibleFilters) setIsVisibleFilters(false);
+        }}
         filtersSelect={configuration.filterTokens}
         sort={sort}
         dynamicFilters={dynamicFilters}
