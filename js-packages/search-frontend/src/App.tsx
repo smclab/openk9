@@ -234,7 +234,7 @@ export function App() {
         className="openk9-results-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
-            filtersMobile: {
+            filtersMobileLiveChange: {
               element: element,
               isVisible: isVisibleFilters,
               setIsVisible: setIsVisibleFilters,

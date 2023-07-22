@@ -31,7 +31,9 @@ export type FiltersMobileProps<E> = {
   onConfigurationChange: ConfigurationUpdateFunction;
   configuration: Configuration;
   isVisibleFilters: boolean;
-  setIsVisibleFilters: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsVisibleFilters:
+    | React.Dispatch<React.SetStateAction<boolean>>
+    | undefined;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -108,7 +110,7 @@ function FiltersMobileLiveChange<E>({
             margin-right: 21px;
           `}
           onClick={() => {
-            setIsVisibleFilters(false);
+            if (setIsVisibleFilters) setIsVisibleFilters(false);
           }}
           style={{ backgroundColor: "#FAFAFA", border: "none" }}
         >
@@ -189,7 +191,7 @@ function FiltersMobileLiveChange<E>({
           `}
           onClick={() => {
             onConfigurationChange({ filterTokens: [] });
-            setIsVisibleFilters(false);
+            if (setIsVisibleFilters) setIsVisibleFilters(false);
           }}
         >
           <div>Rimuovi filtri </div>
@@ -232,7 +234,7 @@ function FiltersMobileLiveChange<E>({
             }
           `}
           onClick={() => {
-            setIsVisibleFilters(false);
+            if (setIsVisibleFilters) setIsVisibleFilters(false);
           }}
         >
           <div>Mostra i {results.data?.pages[0].total} risultati</div>

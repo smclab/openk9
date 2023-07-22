@@ -164,6 +164,12 @@ type FiltersHorizontalMobileConfiguration = {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+type FiltersLiveMobileConfiguration = {
+  element: Element | string | null;
+  isVisible: boolean;
+  setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
@@ -171,7 +177,7 @@ export type Configuration = {
   tabs: Element | string | null;
   filters: Element | string | null;
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
-  filtersMobileLiveChange: Element | string | null;
+  filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
   dataRangePicker: Element | string | null;
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   sortable: Element | string | null;

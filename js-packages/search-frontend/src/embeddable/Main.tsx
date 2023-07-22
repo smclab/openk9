@@ -250,11 +250,17 @@ export function Main({
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             configuration={configuration}
-            isVisibleFilters={isVisibleFilters}
-            setIsVisibleFilters={setIsVisibleFilters}
+            isVisibleFilters={
+              configuration.filtersMobileLiveChange?.isVisible || false
+            }
+            setIsVisibleFilters={
+              configuration.filtersMobileLiveChange?.setIsVisible
+            }
           />
         </I18nextProvider>,
-        configuration.filtersMobileLiveChange,
+        configuration.filtersMobileLiveChange?.element !== undefined
+          ? configuration.filtersMobileLiveChange?.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
