@@ -7,6 +7,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.receptionist.Receptionist;
 import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
+import com.typesafe.config.Config;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -55,6 +56,7 @@ public class JobScheduler {
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 	public record TriggerDatasource(
 		String tenantName, long datasourceId, Boolean startFromFirst) implements Command {}
+	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
 	private record ScheduleDatasourceInternal(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	private record TriggerDatasourceInternal(String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
 	private record InvokePluginDriverInternal(
@@ -132,6 +134,7 @@ public class JobScheduler {
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, transactionInvoker))
+			.onMessage(TriggerDatasourcePurge.class, tdp -> onTriggerDatasourcePurge(tdp, ctx, restHighLevelClient, transactionInvoker))
 			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, messageGateway))
 			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
@@ -305,6 +308,16 @@ public class JobScheduler {
 					quartzSchedulerTypedExtension.defaultTimezone()
 				);
 
+				quartzSchedulerTypedExtension.updateTypedJobSchedule(
+					jobName + "-purge",
+					ctx.getSelf(),
+					new TriggerDatasourcePurge(tenantName, datasourceId),
+					Option.empty(),
+					getPurgeCron(ctx),
+					Option.empty(),
+					quartzSchedulerTypedExtension.defaultTimezone()
+				);
+
 				log.info("Job updated: {} datasourceId: {}", jobName, datasourceId);
 
 				return Behaviors.same();
@@ -320,6 +333,17 @@ public class JobScheduler {
 					Option.empty(),
 					quartzSchedulerTypedExtension.defaultTimezone()
 				);
+
+				quartzSchedulerTypedExtension.createTypedJobSchedule(
+					jobName + "-purge",
+					ctx.getSelf(),
+					new TriggerDatasourcePurge(tenantName, datasourceId),
+					Option.empty(),
+					getPurgeCron(ctx),
+					Option.empty(),
+					quartzSchedulerTypedExtension.defaultTimezone()
+				);
+
 
 				log.info("Job created: {} datasourceId: {}", jobName, datasourceId);
 
@@ -360,6 +384,18 @@ public class JobScheduler {
 
 		return Behaviors.same();
 
+	}
+
+	private static Behavior<Command> onTriggerDatasourcePurge(
+		TriggerDatasourcePurge tdp, ActorContext<Command> ctx,
+		RestHighLevelClient esClient, TransactionInvoker txInvoker) {
+
+		String tenantName = tdp.tenantName();
+		long datasourceId = tdp.datasourceId;
+
+		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId, esClient, txInvoker));
+
+		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onRemoveDatasource(
@@ -608,5 +644,24 @@ public class JobScheduler {
 	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
 		return actorRef.path().address().port().isEmpty();
 	}
+
+	private static String getPurgeCron(ActorContext<?> context) {
+		Config config = context.getSystem().settings().config();
+
+		String configPath = "io.openk9.schedulation.purge.cron";
+
+		if (config.hasPathOrNull(configPath)) {
+			if (config.getIsNull(configPath)) {
+				return EVERY_DAY_AT_1_AM;
+			} else {
+				return config.getString(configPath);
+			}
+		} else {
+			return EVERY_DAY_AT_1_AM;
+		}
+
+	}
+
+	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
 
 }
