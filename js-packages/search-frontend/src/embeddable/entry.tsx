@@ -50,8 +50,7 @@ export class OpenK9 {
         this.queryClient.invalidateQueries();
       },
       tenant: this.configuration.tenant ?? "",
-      token: this.configuration.token ?? "token",
-      useKeycloack: this.configuration.useKeycloack ?? true,
+      useKeycloack: false,
     });
     this.render();
   }
@@ -119,8 +118,8 @@ export class OpenK9 {
   }
 
   /** authenticate the user with given token */
-  authenticate = () => {
-    return this.client.authenticate();
+  authenticate = ({ token }: { token?: string }) => {
+    return this.client.authenticate({ token: token || "" });
   };
 
   /** logs out the user, all subsequent queries will be anonymous */

@@ -20,12 +20,10 @@ declare global {
 export function OpenK9Client({
   onAuthenticated,
   tenant,
-  token = "",
   useKeycloack = true,
 }: {
   onAuthenticated(): void;
   tenant: string;
-  token?: string;
   useKeycloack?: boolean;
 }) {
   const keycloak = new Keycloak({
@@ -33,7 +31,10 @@ export function OpenK9Client({
     realm: window.KEYCLOAK_REALM || "openk9",
     clientId: window.KEYCLOAK_CLIENT_ID || "openk9",
   });
-  let appendToBody = "";
+  const appendToBody = { token: "" };
+  const setToken = (newToken: string) => {
+    appendToBody.token = newToken;
+  };
   const keycloakInit = useKeycloack
     ? keycloak.init({
         onLoad: "check-sso",
@@ -58,7 +59,7 @@ export function OpenK9Client({
           }
         : !useKeycloack
         ? {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${appendToBody.token}`,
             ...init.headers,
           }
         : init.headers,
@@ -66,9 +67,11 @@ export function OpenK9Client({
   }
   return {
     authInit: keycloakInit,
-    async authenticate() {
+    async authenticate({ token = "" }: { token?: string }) {
       if (useKeycloack) {
         await keycloak.login();
+      } else {
+        setToken(token || "");
       }
     },
     async deauthenticate() {
