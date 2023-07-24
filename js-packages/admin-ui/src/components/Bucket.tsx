@@ -14,14 +14,19 @@ import {
 } from "./Form";
 import { useToast } from "./ToastProvider";
 import {
+  useBindLanguageToBucketMutation,
   useBindQueryAnalysisToBucketMutation,
   useBindSearchConfigToBucketMutation,
   useBucketQuery,
   useCreateOrUpdateBucketMutation,
+  useLanguageQuery,
+  useLanguageValueQuery,
+  useLanguagesOptionsQuery,
   useQueryAnalysisOptionsQuery,
   useQueryAnalysisValueQuery,
   useSearchConfigOptionsQuery,
   useSearchConfigValueQuery,
+  useUnbindLanguageFromBucketMutation,
   useUnbindQueryAnalysisFromBucketMutation,
   useUnbindSearchConfigFromBucketMutation,
 } from "../graphql-generated";
@@ -39,6 +44,9 @@ const BucketQuery = gql`
         id
       }
       searchConfig {
+        id
+      }
+      language {
         id
       }
     }
@@ -145,6 +153,18 @@ export function Bucket() {
               invalidate={() => bucketQuery.refetch()}
               description={"Search Configuration for current bucket"}
             />
+            <SearchSelect
+              label="Language"
+              value={bucketQuery.data?.bucket?.language?.id}
+              useValueQuery={useLanguageValueQuery}
+              useOptionsQuery={useLanguagesOptionsQuery}
+              useChangeMutation={useBindLanguageToBucketMutation}
+              mapValueToMutationVariables={(languageId) => ({ bucketId, languageId })}
+              useRemoveMutation={useUnbindLanguageFromBucketMutation}
+              mapValueToRemoveMutationVariables={() => ({ bucketId })}
+              invalidate={() => bucketQuery.refetch()}
+              description={"Language for current bucket"}
+            />
           </React.Fragment>
         )}
         {bucketId !== "new" && (
@@ -161,55 +181,6 @@ export function Bucket() {
     </ContainerFluid>
   );
 }
-
-// gql`
-//   query languagesOptions($searchText: String, $cursor: String) {
-//     options: languages(searchText: $searchText, first: 5, after: $cursor) {
-//       edges {
-//         node {
-//           id
-//           name
-//         }
-//       }
-//       pageInfo {
-//         hasNextPage
-//         endCursor
-//       }
-//     }
-//   }
-// `;
-// gql`
-//   query LanguagesValue($id: ID!) {
-//     value: language(id: $id) {
-//       id
-//       name
-//     }
-//   }
-// `;
-// gql`
-//   mutation BindLanguagesToBucket($bucketId: ID!, $languages: ID!) {
-//     bindLanguageToBucket(bucketId: $bucketId, languagesId: $languages) {
-//       left {
-//         id
-//         languages {
-//           id
-//         }
-//       }
-//       right {
-//         id
-//       }
-//     }
-//   }
-// `;
-// gql`
-//   mutation UnbindLanguagesFromBucket($languageId: ID!) {
-//     unbindLanguageFromBucket(languageId: $languageId) {
-//       right {
-//         id
-//       }
-//     }
-//   }
-// `;
 
 gql`
   query QueryAnalysisOptions($searchText: String, $cursor: String) {
@@ -306,6 +277,57 @@ gql`
 gql`
   mutation UnbindSearchConfigFromBucket($bucketId: ID!) {
     unbindSearchConfigFromBucket(bucketId: $bucketId) {
+      right {
+        id
+      }
+    }
+  }
+`;
+
+gql`
+  query LanguagesOptions($searchText: String, $cursor: String) {
+    options: languages(searchText: $searchText, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          value
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+gql`
+  query LanguageValue($id: ID!) {
+    value: language(id: $id) {
+      id
+      name
+      value
+    }
+  }
+`;
+gql`
+  mutation BindLanguageToBucket($bucketId: ID!, $languageId: ID!) {
+    bindLanguageToBucket(bucketId: $bucketId, languageId: $languageId) {
+      left {
+        id
+        language {
+          id
+        }
+      }
+      right {
+        id
+      }
+    }
+  }
+`;
+gql`
+  mutation UnbindLanguageFromBucket($bucketId: ID!) {
+    unbindLanguageFromBucket(bucketId: $bucketId) {
       right {
         id
       }

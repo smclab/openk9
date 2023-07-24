@@ -51,7 +51,7 @@ export function Languages() {
           queryResult: dataLanguagesQuery,
           field: (data) => data?.languages,
         }}
-        onCreatePath="/data-sources/new"
+        onCreatePath="/languages/new"
         onDelete={(dataLanguage) => {
           if (dataLanguage?.id) deleteDataLanguages({ variables: { id: dataLanguage.id } });
         }}

@@ -2204,6 +2204,7 @@ export type Query = {
   eventData?: Maybe<Scalars['String']>;
   /** Returns the list of available options for the event */
   eventOptions?: Maybe<Array<Maybe<EventOption>>>;
+  language?: Maybe<Language>;
   languages?: Maybe<Connection_Language>;
   pluginDriver?: Maybe<PluginDriver>;
   pluginDrivers?: Maybe<Connection_PluginDriver>;
@@ -2485,6 +2486,12 @@ export type QueryEventOptionsArgs = {
   size?: InputMaybe<Scalars['Int']>;
   sortType?: InputMaybe<Scalars['String']>;
   sortable?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Query root */
+export type QueryLanguageArgs = {
+  id: Scalars['ID'];
 };
 
 
@@ -3548,7 +3555,7 @@ export type BucketQueryVariables = Exact<{
 }>;
 
 
-export type BucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled?: boolean | null, handleDynamicFilters?: boolean | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null } | null } | null };
+export type BucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled?: boolean | null, handleDynamicFilters?: boolean | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null } | null, language?: { __typename?: 'Language', id?: string | null } | null } | null };
 
 export type EnableBucketMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -3626,6 +3633,36 @@ export type UnbindSearchConfigFromBucketMutationVariables = Exact<{
 
 
 export type UnbindSearchConfigFromBucketMutation = { __typename?: 'Mutation', unbindSearchConfigFromBucket?: { __typename?: 'Tuple2_Bucket_SearchConfig', right?: { __typename?: 'SearchConfig', id?: string | null } | null } | null };
+
+export type LanguagesOptionsQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type LanguagesOptionsQuery = { __typename?: 'Query', options?: { __typename?: 'DefaultConnection_Language', edges?: Array<{ __typename?: 'DefaultEdge_Language', node?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
+export type LanguageValueQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type LanguageValueQuery = { __typename?: 'Query', value?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null };
+
+export type BindLanguageToBucketMutationVariables = Exact<{
+  bucketId: Scalars['ID'];
+  languageId: Scalars['ID'];
+}>;
+
+
+export type BindLanguageToBucketMutation = { __typename?: 'Mutation', bindLanguageToBucket?: { __typename?: 'Tuple2_Bucket_Language', left?: { __typename?: 'Bucket', id?: string | null, language?: { __typename?: 'Language', id?: string | null } | null } | null, right?: { __typename?: 'Language', id?: string | null } | null } | null };
+
+export type UnbindLanguageFromBucketMutationVariables = Exact<{
+  bucketId: Scalars['ID'];
+}>;
+
+
+export type UnbindLanguageFromBucketMutation = { __typename?: 'Mutation', unbindLanguageFromBucket?: { __typename?: 'Tuple2_Bucket_Language', right?: { __typename?: 'Language', id?: string | null } | null } | null };
 
 export type BucketDataSourcesQueryVariables = Exact<{
   parentId: Scalars['ID'];
@@ -4186,6 +4223,22 @@ export type DataSourceInformationQueryVariables = Exact<{
 
 
 export type DataSourceInformationQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', dataIndex?: { __typename?: 'DataIndex', cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, health?: string | null, index?: string | null, pri?: string | null, priStoreSize: any, rep?: string | null, status?: string | null, storeSize: any, uuid?: string | null } | null } | null } | null };
+
+export type LanguageQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type LanguageQuery = { __typename?: 'Query', language?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null };
+
+export type CreateOrUpdateLanguageMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']>;
+  name: Scalars['String'];
+  value?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type CreateOrUpdateLanguageMutation = { __typename?: 'Mutation', language?: { __typename?: 'Response_Language', entity?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 export type LanguagesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -5767,6 +5820,9 @@ export const BucketDocument = gql`
     searchConfig {
       id
     }
+    language {
+      id
+    }
   }
 }
     `;
@@ -6199,6 +6255,166 @@ export function useUnbindSearchConfigFromBucketMutation(baseOptions?: Apollo.Mut
 export type UnbindSearchConfigFromBucketMutationHookResult = ReturnType<typeof useUnbindSearchConfigFromBucketMutation>;
 export type UnbindSearchConfigFromBucketMutationResult = Apollo.MutationResult<UnbindSearchConfigFromBucketMutation>;
 export type UnbindSearchConfigFromBucketMutationOptions = Apollo.BaseMutationOptions<UnbindSearchConfigFromBucketMutation, UnbindSearchConfigFromBucketMutationVariables>;
+export const LanguagesOptionsDocument = gql`
+    query LanguagesOptions($searchText: String, $cursor: String) {
+  options: languages(searchText: $searchText, after: $cursor) {
+    edges {
+      node {
+        id
+        name
+        value
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useLanguagesOptionsQuery__
+ *
+ * To run a query within a React component, call `useLanguagesOptionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLanguagesOptionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLanguagesOptionsQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useLanguagesOptionsQuery(baseOptions?: Apollo.QueryHookOptions<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>(LanguagesOptionsDocument, options);
+      }
+export function useLanguagesOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>(LanguagesOptionsDocument, options);
+        }
+export type LanguagesOptionsQueryHookResult = ReturnType<typeof useLanguagesOptionsQuery>;
+export type LanguagesOptionsLazyQueryHookResult = ReturnType<typeof useLanguagesOptionsLazyQuery>;
+export type LanguagesOptionsQueryResult = Apollo.QueryResult<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>;
+export const LanguageValueDocument = gql`
+    query LanguageValue($id: ID!) {
+  value: language(id: $id) {
+    id
+    name
+    value
+  }
+}
+    `;
+
+/**
+ * __useLanguageValueQuery__
+ *
+ * To run a query within a React component, call `useLanguageValueQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLanguageValueQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLanguageValueQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useLanguageValueQuery(baseOptions: Apollo.QueryHookOptions<LanguageValueQuery, LanguageValueQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LanguageValueQuery, LanguageValueQueryVariables>(LanguageValueDocument, options);
+      }
+export function useLanguageValueLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LanguageValueQuery, LanguageValueQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LanguageValueQuery, LanguageValueQueryVariables>(LanguageValueDocument, options);
+        }
+export type LanguageValueQueryHookResult = ReturnType<typeof useLanguageValueQuery>;
+export type LanguageValueLazyQueryHookResult = ReturnType<typeof useLanguageValueLazyQuery>;
+export type LanguageValueQueryResult = Apollo.QueryResult<LanguageValueQuery, LanguageValueQueryVariables>;
+export const BindLanguageToBucketDocument = gql`
+    mutation BindLanguageToBucket($bucketId: ID!, $languageId: ID!) {
+  bindLanguageToBucket(bucketId: $bucketId, languageId: $languageId) {
+    left {
+      id
+      language {
+        id
+      }
+    }
+    right {
+      id
+    }
+  }
+}
+    `;
+export type BindLanguageToBucketMutationFn = Apollo.MutationFunction<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>;
+
+/**
+ * __useBindLanguageToBucketMutation__
+ *
+ * To run a mutation, you first call `useBindLanguageToBucketMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useBindLanguageToBucketMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [bindLanguageToBucketMutation, { data, loading, error }] = useBindLanguageToBucketMutation({
+ *   variables: {
+ *      bucketId: // value for 'bucketId'
+ *      languageId: // value for 'languageId'
+ *   },
+ * });
+ */
+export function useBindLanguageToBucketMutation(baseOptions?: Apollo.MutationHookOptions<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>(BindLanguageToBucketDocument, options);
+      }
+export type BindLanguageToBucketMutationHookResult = ReturnType<typeof useBindLanguageToBucketMutation>;
+export type BindLanguageToBucketMutationResult = Apollo.MutationResult<BindLanguageToBucketMutation>;
+export type BindLanguageToBucketMutationOptions = Apollo.BaseMutationOptions<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>;
+export const UnbindLanguageFromBucketDocument = gql`
+    mutation UnbindLanguageFromBucket($bucketId: ID!) {
+  unbindLanguageFromBucket(bucketId: $bucketId) {
+    right {
+      id
+    }
+  }
+}
+    `;
+export type UnbindLanguageFromBucketMutationFn = Apollo.MutationFunction<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>;
+
+/**
+ * __useUnbindLanguageFromBucketMutation__
+ *
+ * To run a mutation, you first call `useUnbindLanguageFromBucketMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnbindLanguageFromBucketMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unbindLanguageFromBucketMutation, { data, loading, error }] = useUnbindLanguageFromBucketMutation({
+ *   variables: {
+ *      bucketId: // value for 'bucketId'
+ *   },
+ * });
+ */
+export function useUnbindLanguageFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>(UnbindLanguageFromBucketDocument, options);
+      }
+export type UnbindLanguageFromBucketMutationHookResult = ReturnType<typeof useUnbindLanguageFromBucketMutation>;
+export type UnbindLanguageFromBucketMutationResult = Apollo.MutationResult<UnbindLanguageFromBucketMutation>;
+export type UnbindLanguageFromBucketMutationOptions = Apollo.BaseMutationOptions<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>;
 export const BucketDataSourcesDocument = gql`
     query BucketDataSources($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
   bucket(id: $parentId) {
@@ -9201,6 +9417,86 @@ export function useDataSourceInformationLazyQuery(baseOptions?: Apollo.LazyQuery
 export type DataSourceInformationQueryHookResult = ReturnType<typeof useDataSourceInformationQuery>;
 export type DataSourceInformationLazyQueryHookResult = ReturnType<typeof useDataSourceInformationLazyQuery>;
 export type DataSourceInformationQueryResult = Apollo.QueryResult<DataSourceInformationQuery, DataSourceInformationQueryVariables>;
+export const LanguageDocument = gql`
+    query Language($id: ID!) {
+  language(id: $id) {
+    id
+    name
+    value
+  }
+}
+    `;
+
+/**
+ * __useLanguageQuery__
+ *
+ * To run a query within a React component, call `useLanguageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLanguageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLanguageQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useLanguageQuery(baseOptions: Apollo.QueryHookOptions<LanguageQuery, LanguageQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LanguageQuery, LanguageQueryVariables>(LanguageDocument, options);
+      }
+export function useLanguageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LanguageQuery, LanguageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LanguageQuery, LanguageQueryVariables>(LanguageDocument, options);
+        }
+export type LanguageQueryHookResult = ReturnType<typeof useLanguageQuery>;
+export type LanguageLazyQueryHookResult = ReturnType<typeof useLanguageLazyQuery>;
+export type LanguageQueryResult = Apollo.QueryResult<LanguageQuery, LanguageQueryVariables>;
+export const CreateOrUpdateLanguageDocument = gql`
+    mutation CreateOrUpdateLanguage($id: ID, $name: String!, $value: String) {
+  language(id: $id, languageDTO: {name: $name, value: $value}) {
+    entity {
+      id
+      name
+      value
+    }
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateOrUpdateLanguageMutationFn = Apollo.MutationFunction<CreateOrUpdateLanguageMutation, CreateOrUpdateLanguageMutationVariables>;
+
+/**
+ * __useCreateOrUpdateLanguageMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateLanguageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateLanguageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateLanguageMutation, { data, loading, error }] = useCreateOrUpdateLanguageMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      name: // value for 'name'
+ *      value: // value for 'value'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateLanguageMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateLanguageMutation, CreateOrUpdateLanguageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateLanguageMutation, CreateOrUpdateLanguageMutationVariables>(CreateOrUpdateLanguageDocument, options);
+      }
+export type CreateOrUpdateLanguageMutationHookResult = ReturnType<typeof useCreateOrUpdateLanguageMutation>;
+export type CreateOrUpdateLanguageMutationResult = Apollo.MutationResult<CreateOrUpdateLanguageMutation>;
+export type CreateOrUpdateLanguageMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateLanguageMutation, CreateOrUpdateLanguageMutationVariables>;
 export const LanguagesDocument = gql`
     query Languages($searchText: String, $cursor: String) {
   languages(searchText: $searchText, first: 25, after: $cursor) {
@@ -12308,4 +12604,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-07-24T10:33:53+02:00
+// Generated on 2023-07-24T16:47:12+02:00

@@ -88,6 +88,7 @@ import { InformationDataSource } from "./components/InformationDataSource";
 import { TabTokenTabsAssociation } from "./components/TabTokenTabs";
 import { Languages } from "./components/Languages";
 import { BucketLanguage } from "./components/BucketLanguage";
+import { Language } from "./components/Language";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -448,7 +449,21 @@ export default function App() {
                         <Route path="" element={<Annotator />} />
                       </Route>
                     </Route>
-                    <Route path="languages" element={<Languages />} />
+                    <Route path="languages">
+                      <Route path="" element={<Languages />} />
+                      <Route path="new" element={<Language />} />
+                      <Route
+                        path=":languageId"
+                        element={
+                          <React.Fragment>
+                            <NavTabs tabs={[{ label: "Attributes", path: "" }]} />
+                            <Outlet />
+                          </React.Fragment>
+                        }
+                      >
+                        <Route path="" element={<Language />} />
+                      </Route>
+                    </Route>
                     <Route path="wizard">
                       <Route path="web-crawler" element={<WebCrawlerWizard />} />
                     </Route>
