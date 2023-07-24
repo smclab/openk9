@@ -155,7 +155,8 @@ public class DataIndexService
 			.onItem()
 			.transformToUni(dataIndex -> Uni.createFrom()
 				.<AcknowledgedResponse>emitter(emitter -> {
-					DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(dataIndex.getName());
+					DeleteIndexRequest deleteIndexRequest =
+						new DeleteIndexRequest(dataIndex.getName());
 					try {
 						AcknowledgedResponse delete = client.indices().delete(
 							deleteIndexRequest,
@@ -168,6 +169,13 @@ public class DataIndexService
 					}
 				})
 			)
+			.onItem()
+			.transformToUni(ignore -> super.findById(entityId))
+			.onItem()
+			.transformToUni(dataIndex -> withTransaction(s -> {
+				dataIndex.getDocTypes().clear();
+				return s.persist(dataIndex);
+			}))
 			.onItem()
 			.transformToUni(ignore -> super.deleteById(entityId));
 	}
