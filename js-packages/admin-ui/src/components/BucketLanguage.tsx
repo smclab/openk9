@@ -7,7 +7,7 @@ export const Bucketslanguages = gql`
   query BucketLanguages($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     bucket(id: $parentId) {
       id
-      languages(searchText: $searchText, first: 25, after: $cursor, notEqual: true) {
+      languages(searchText: $searchText, first: 25, after: $cursor, notEqual: $unassociated) {
         edges {
           node {
             id

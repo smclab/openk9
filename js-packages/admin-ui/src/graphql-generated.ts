@@ -6340,7 +6340,12 @@ export const BucketLanguagesDocument = gql`
     query BucketLanguages($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
   bucket(id: $parentId) {
     id
-    languages(searchText: $searchText, first: 25, after: $cursor, notEqual: true) {
+    languages(
+      searchText: $searchText
+      first: 25
+      after: $cursor
+      notEqual: $unassociated
+    ) {
       edges {
         node {
           id
@@ -12303,4 +12308,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-07-21T17:26:57+02:00
+// Generated on 2023-07-24T10:33:53+02:00
