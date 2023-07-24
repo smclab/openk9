@@ -480,7 +480,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected <T> Uni<T> withTransaction(
 		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> fun) {
 
-		return transactionInvoker.withTransaction(fun);
+		return em.withTransaction(fun);
 
 	}
 
@@ -499,7 +499,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected <T> Uni<T> withStatelessTransaction(
 		BiFunction<Mutiny.StatelessSession, Mutiny.Transaction, Uni<T>> fun) {
 
-		return transactionInvoker.withStatelessTransaction(fun);
+		return em.withStatelessTransaction(fun);
 
 	}
 
@@ -510,7 +510,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	@Override
 	public final CriteriaBuilder getCriteriaBuilder() {
-		return transactionInvoker.getCriteriaBuilder();
+		return em.getCriteriaBuilder();
 	}
 
 	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>>
@@ -527,9 +527,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	@Inject
 	protected Validator validator;
-
-	@Inject
-	TransactionInvoker transactionInvoker;
 
 	private AtomicReference<EntityServiceValidatorWrapper<ENTITY, DTO>> validatorWrapper =
 		new AtomicReference<>();
