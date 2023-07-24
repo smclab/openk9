@@ -110,11 +110,17 @@ public class Bucket extends K9Entity {
 	private TenantBinding tenantBinding;
 
 	@ToString.Exclude
-	@OneToMany(fetch = javax.persistence.FetchType.LAZY, cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
+	@ManyToMany(
+		cascade = {
+			javax.persistence.CascadeType.PERSIST,
+			javax.persistence.CascadeType.MERGE,
+			javax.persistence.CascadeType.REFRESH,
+			javax.persistence.CascadeType.DETACH
+		}
+	)
+	@JoinTable(name = "bucket_language",
+		joinColumns = @JoinColumn(name = "bucket_id"),
+		inverseJoinColumns = @JoinColumn(name = "language_id"))
 	@JsonIgnore
 	private Set<Language> availableLanguages = new LinkedHashSet<>();
 
@@ -177,30 +183,27 @@ public class Bucket extends K9Entity {
 	}
 
 	public boolean addLanguage(
-		Collection<Language> languages,
-		Language language) {
+		Collection<Language> languages, Language language) {
 
 		if (language == null || languages.contains(language)) {
 			return false;
 		}
 
 		languages.add(language);
-		language.setBucket(this);
 
 		return true;
 
 	}
 
 	public boolean removeLanguage(
-		Collection<Language> languages,
-		long languageId) {
+		Collection<Language> languages, long languageId) {
+
 		Iterator<Language> iterator = languages.iterator();
 
 		while (iterator.hasNext()) {
 			Language language = iterator.next();
 			if (language.getId() == languageId) {
 				iterator.remove();
-				language.setBucket(null);
 				return true;
 			}
 		}
