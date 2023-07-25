@@ -413,11 +413,11 @@ export function NumberInput({
   );
 }
 
-type QueryHook<Query, QueryVariables extends Record<string, any>> = (
+export type QueryHook<Query, QueryVariables extends Record<string, any>> = (
   baseOptions: QueryHookOptions<Query, QueryVariables>
 ) => QueryResult<Query, QueryVariables>;
 
-type MutationHook<Mutation, MutationVariables extends Record<string, any>> = (
+export type MutationHook<Mutation, MutationVariables extends Record<string, any>> = (
   baseOptions: MutationHookOptions<Mutation, MutationVariables>
 ) => MutationTuple<Mutation, MutationVariables>;
 
@@ -798,7 +798,7 @@ export function SearchSelectGraphql<Value, Change extends Record<string, any>, R
     </React.Fragment>
   );
 }
-const ClayListComponents: VirtuosoComponents = {
+export const ClayListComponents: VirtuosoComponents = {
   List: React.forwardRef(({ style, children }, listRef) => (
     <ul className="list-group show-quick-actions-on-hover" style={style} ref={listRef as any}>
       {children}

@@ -449,21 +449,6 @@ export default function App() {
                         <Route path="" element={<Annotator />} />
                       </Route>
                     </Route>
-                    <Route path="languages">
-                      <Route path="" element={<Languages />} />
-                      <Route path="new" element={<Language />} />
-                      <Route
-                        path=":languageId"
-                        element={
-                          <React.Fragment>
-                            <NavTabs tabs={[{ label: "Attributes", path: "" }]} />
-                            <Outlet />
-                          </React.Fragment>
-                        }
-                      >
-                        <Route path="" element={<Language />} />
-                      </Route>
-                    </Route>
                     <Route path="wizard">
                       <Route path="web-crawler" element={<WebCrawlerWizard />} />
                     </Route>

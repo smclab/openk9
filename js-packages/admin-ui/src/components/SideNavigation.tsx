@@ -110,7 +110,6 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
                 />
                 <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Tabs" path="/tabs" />
                 <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Token tabs" path="/token-tabs" />
-                <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Languages" path="/languages" />
               </SideNavigationCollapsible>
               <SideNavigationCollapsible label="Query Analysis configuration">
                 <SideNavigationItem
