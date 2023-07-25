@@ -31,12 +31,13 @@ import { SortResultList } from "../components/SortResultList";
 import { FiltersHorizontalMemo } from "../components/FiltersHorizontal";
 import { DetailMobileMemo } from "../components/DetailMobile";
 import "../i18n";
-import { I18nextProvider } from "react-i18next";
+import { I18nextProvider, useTranslation } from "react-i18next";
 import i18next from "i18next";
 import { ActiveFilter } from "../components/ActiveFilters";
 import { FiltersMobileMemo } from "../components/FiltersMobile";
 import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
 import { DataRangePicker } from "../components/DateRangePicker";
+
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -77,6 +78,17 @@ export function Main({
   const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
     return await client.handle_dynamic_filters();
   });
+  const defaultLanguage = "en";
+  const language = useQuery(["language", {}], async () => {
+    return await client.getLanguageDefault();
+  });
+  const { i18n } = useTranslation();
+  React.useEffect(() => {
+    i18n.changeLanguage(
+      remappingLanguage({ language: language.data?.value || defaultLanguage }),
+    );
+  }, []);
+
   const [isMobile, setIsMobile] = React.useState(false);
   React.useEffect(() => {
     const checkIfMobile = () => {
@@ -632,4 +644,19 @@ function fixQueryAnalysisResult(data: AnalysisResponse) {
         return isValidEntry;
       }),
   };
+}
+
+function remappingLanguage({ language }: { language: string }) {
+  switch (language) {
+    case "it_IT":
+      return "it";
+    case "es_ES":
+      return "es;";
+    case "en_US":
+      return "en";
+    case "fr_FR":
+      return "fr";
+    default:
+      return "en";
+  }
 }

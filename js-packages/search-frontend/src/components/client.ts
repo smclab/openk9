@@ -106,6 +106,20 @@ export function OpenK9Client({
         await response.json();
       return data;
     },
+    async getLanguageDefault() {
+      const response = await authFetch(
+        `/api/datasource/buckets/current/defaultLanguage`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        },
+      );
+      if (!response.ok) {
+        throw new Error();
+      }
+      const data: { value: string } = await response.json();
+      return data;
+    },
     async getSuggestions({
       searchQuery,
       suggestionCategoryId,

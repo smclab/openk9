@@ -63,7 +63,7 @@ export function SortResultList({
         </option>
         {options.data?.map((option) => {
           return (
-            <React.Fragment>
+            <React.Fragment key={option.id + "fragment"}>
               <option
                 key={option.id + "asc"}
                 value={JSON.stringify({
