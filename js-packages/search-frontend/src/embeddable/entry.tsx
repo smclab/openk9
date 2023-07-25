@@ -176,6 +176,7 @@ export type Configuration = {
   activeFilters: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
+  calendarMobile: Element | string | null;
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
   dataRangePicker: Element | string | null;
@@ -206,6 +207,7 @@ const defaultConfiguration: Configuration = {
   filtersMobile: null,
   filtersMobileLiveChange: null,
   dataRangePicker: null,
+  calendarMobile: null,
   sortable: null,
   detailMobile: null,
   sort: [],
