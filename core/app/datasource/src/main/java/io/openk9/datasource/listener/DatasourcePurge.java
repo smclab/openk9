@@ -35,6 +35,17 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private record EsDeleteError(Throwable error) implements Command {}
 	private enum DeleteDataIndices implements Command {INSTANCE}
 
+	private static final String BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP =
+		"DELETE FROM data_index_doc_types t WHERE t.data_index_id IN (:ids)";
+	private static final String BULK_DELETE_DATA_INDEX =
+		"DELETE FROM data_index t WHERE t.id in (:ids)";
+	private static final String JPQL_QUERY_DATA_INDEX_ORPHANS =
+		"select di " +
+		"from DataIndex di " +
+		"inner join di.datasource d on di.datasource = d and d.dataIndex <> di " +
+		"where d.id = :id " +
+		"and di.modifiedDate < :maxAgeDate";
+
 	private final String tenantName;
 	private final long datasourceId;
 	private final RestHighLevelClient esClient;
@@ -76,31 +87,40 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	}
 
 	private Behavior<Command> onStart() {
+		getContext().getLog().info(
+			"Job DatasourcePurge started for datasource {}-{}", tenantName, datasourceId);
+
 		getContext().getSelf().tell(FetchDataIndexOrphans.INSTANCE);
 
 		return Behaviors.same();
 	}
 
 	private Behavior<Command> onFetchDataIndexOrphans() {
+		OffsetDateTime maxAgeDate = OffsetDateTime.of(
+			LocalDateTime.now().minus(maxAge), ZoneOffset.UTC);
+
+		getContext().getLog().info(
+			"Fetching DataIndex orphans for datasource {}-{}, older than {}",
+			tenantName, datasourceId, maxAgeDate);
+
 		VertxUtil.runOnContext(() -> txInvoker.withStatelessTransaction(
-			tenantName, s -> s.createQuery(
-				"select di " +
-				"from DataIndex di " +
-				"inner join di.datasource d on di.datasource = d and d.dataIndex <> di " +
-				"where d.id = :id " +
-				"and di.modifiedDate < :maxAgeDate", DataIndex.class)
+			tenantName, s -> s.createQuery(JPQL_QUERY_DATA_INDEX_ORPHANS, DataIndex.class)
 				.setParameter("id", datasourceId)
-				.setParameter("maxAgeDate", OffsetDateTime.of(
-					LocalDateTime.now().minus(maxAge), ZoneOffset.UTC)
+				.setParameter("maxAgeDate", maxAgeDate
 				)
 				.getResultList()
 		).invoke(dataIndices ->
 			getContext().getSelf().tell(new SetDataIndexOrphan(dataIndices))));
+
 		return Behaviors.same();
 	}
 
 	private Behavior<Command> onSetDataIndexOrphanIds(SetDataIndexOrphan sdioi) {
 		this.dataIndexOrphans = new HashSet<>(sdioi.dataIndices);
+
+		getContext().getLog().info(
+			"DataIndex orphans found for datasource {}-{}: {}",
+			tenantName, datasourceId, dataIndexOrphans.size());
 
 		getContext().getSelf().tell(DeleteEsIndices.INSTANCE);
 
@@ -114,6 +134,10 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 			.toArray(String[]::new);
 
 		DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(names);
+
+		getContext().getLog().info(
+			"Deleting ElasticSearch orphans indices for datasource {}-{}",
+			tenantName, datasourceId);
 
 		esClient
 			.indices()
@@ -137,6 +161,9 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 
 	private Behavior<Command> onDeleteDataIndices() {
 
+		getContext().getLog().info(
+			"Deleting DataIndex orphans for datasource {}-{}", tenantName, datasourceId);
+
 		Set<Long> ids = dataIndexOrphans
 			.stream()
 			.map(K9Entity::getId)
@@ -144,15 +171,11 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 
 		VertxUtil.runOnContext(() -> txInvoker
 			.withTransaction(tenantName, s ->  s
-				.createNativeQuery(
-					"DELETE FROM data_index_doc_types t " +
-						"WHERE t.data_index_id IN (:ids)")
+				.createNativeQuery(BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP)
 				.setParameter("ids", ids)
 				.executeUpdate()
 				.chain(ignore -> s
-					.createNativeQuery(
-					"DELETE FROM data_index t " +
-						"WHERE t.id in (:ids)")
+					.createNativeQuery(BULK_DELETE_DATA_INDEX)
 					.setParameter("ids", ids)
 					.executeUpdate()
 				)
@@ -170,6 +193,8 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 
 
 	private Behavior<Command> onStop() {
+		getContext().getLog().info(
+			"Job DatasourcePurge finished for datasource {}-{}", tenantName, datasourceId);
 		return Behaviors.stopped();
 	}
 
