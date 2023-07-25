@@ -19,16 +19,6 @@ import { SelectionsAction, SelectionsState } from "./useSelections";
 import { SearchDateRange } from "../embeddable/Main";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
-import { FilterHorizontalSvg } from "../svgElement/FilterHorizontalSvg";
-import { SortResultList } from "../renderer-components";
-import { ModalDetail } from "./ModalDetail";
-import { FilterSvg } from "../svgElement/FiltersSvg";
-import { FiltersHorizontalMemo } from "./FiltersHorizontal";
-import { FiltersMemo } from "./Filters";
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { useInfiniteResults } from "./ResultList";
-import { DataRangePicker } from "./DateRangePicker";
-import { ActiveFilter } from "./ActiveFilters";
 
 type SearchProps = {
   configuration: Configuration;
@@ -58,6 +48,7 @@ export function Search({
   selectionsDispatch,
   onDetail,
   showSyntax,
+  isMobile,
   setSortResult,
   onDateRangeChange,
   dateRange,
@@ -151,7 +142,8 @@ export function Search({
                 position: absolute;
               `}
             >
-              {showSyntax &&
+              {!isMobile &&
+                showSyntax &&
                 spans.map((span, index) => {
                   const isOpen =
                     openedDropdown !== null &&
