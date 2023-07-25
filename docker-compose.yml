@@ -57,7 +57,7 @@ services:
             - 5050:8080
     keycloak:
         image: bitnami/keycloak:20.0.5-debian-11-r4
-        hostname: keycloak
+        hostname: keycloak.openk9.local
         environment:
             KEYCLOAK_CREATE_ADMIN_USER: 'true'
             KEYCLOAK_ADMIN_USER: user
@@ -71,9 +71,13 @@ services:
             KEYCLOAK_DATABASE_PASSWORD: openk9
             KEYCLOAK_HTTP_PORT: 8081
         ports:
-            - 8081:8080
+            - 8081:8081
         depends_on:
             - postgresql
+        networks:
+            default:
+                aliases:
+                    - keycloak.openk9.local
     neo4j:
         image: neo4j:4.4.8-enterprise
         container_name: neo4j
@@ -102,10 +106,10 @@ services:
             QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: 'user'
             QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD: 'openk9'
             QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: 'http://keycloak:8081'
-            QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak:8081/realms/tenant-manager'
+            QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak.openk9.local:8081/realms/tenant-manager'
             QUARKUS_OIDC_CLIENT_ID: 'tenant-manager'
         ports:
-            - 8186:8080
+            - 8186:8081
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.api-tenant-manager.entrypoints=web"
@@ -115,7 +119,7 @@ services:
             - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=demo.openk9.local"
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
             - "traefik.http.routers.api-tenant-manager.middlewares=api-tenant-manager_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
-    #    datasource:
+#    datasource:
 #        image: smclab/openk9-datasource:1.5.0-SNAPSHOT
 #        container_name: datasource
 #        environment:
@@ -123,7 +127,7 @@ services:
 #            IO_OPENK9_SCHEDULATION_TIMEOUT: 10s
 #            JAVA_DEBUG: 'true'
 #            MP_MESSAGING_INCOMING_EVENTS_ROUTING_KEYS: noop
-#            OPENK9_AUTHSERVERURL_TEMPLATE: https://keycloak-test.openk9.io/realms/{realm}
+#            OPENK9_AUTHSERVERURL_TEMPLATE: http://keycloak.openk9.local:8081/realms/{realm}
 #            OPENK9_DATASOURCE_ACL_QUERY_EXTRA_PARAMS_ENABLED: 'true'
 #            OPENK9_DATASOURCE_MULTITENANCY_ENABLED: 'true'
 #            QUARKUS_DATASOURCE_PASSWORD: openk9
@@ -140,11 +144,11 @@ services:
 #            QUARKUS_HTTP_CORS: 'true'
 #            QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: 20480K
 #            QUARKUS_LOG_LEVEL: INFO
-#            QUARKUS_OIDC_AUTH_SERVER_URL: https://keycloak-test.openk9.io/realms/master
+#            QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak.openk9.local:8081/realms/master
 #            QUARKUS_OIDC_CLIENT_ID: openk9
-#            QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: https://keycloak-test.openk9.io
+#            QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: http://keycloak.openk9.local:8081
 #            QUARKUS_SMALLRYE_GRAPHQL_UI_ALWAYS_INCLUDE: 'true'
-#            RABBITMQ_HOST: rabbitmq-headless
+#            RABBITMQ_HOST: rabbitmq
 #            RABBITMQ_PASSWORD: openk9
 #            RABBITMQ_PORT: '5672'
 #            RABBITMQ_USERNAME: openk9
