@@ -431,7 +431,7 @@ public class IndexerEvents {
 		else {
 			for (Field subField : root.getSubFields()) {
 				_toDocTypeFields(
-					subField, new ArrayList<>(acc), null, docTypeFields);
+					subField, new ArrayList<>(acc), parent, docTypeFields);
 			}
 		}
 
