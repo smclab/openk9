@@ -264,8 +264,21 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			List<Uni<?>> unis = new ArrayList<>();
 
 			for (DocTypeField typeField : typeFields) {
-				unis.add(Mutiny2.fetch(s, typeField.getAnalyzer()).flatMap(_analyzerService::load));
-				unis.add(Mutiny2.fetch(s, typeField.getAclMappings()));
+				Analyzer analyzer = typeField.getAnalyzer();
+				if (analyzer != null) {
+					unis.add(
+						Mutiny2
+							.fetch(s, typeField.getAnalyzer())
+							.flatMap(_analyzerService::load));
+				}
+				if (typeField.getAclMappings() != null) {
+					unis.add(Mutiny2.fetch(s, typeField.getAclMappings()));
+				}
+
+			}
+
+			if (unis.isEmpty()) {
+				return Uni.createFrom().voidItem();
 			}
 
 			return Uni.combine().all().unis(unis).collectFailures().discardItems();
