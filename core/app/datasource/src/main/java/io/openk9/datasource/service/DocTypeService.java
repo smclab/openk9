@@ -222,6 +222,11 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		return findByIds(Set.copyOf(ids)).chain(dts -> docTypeFieldService.expandDocTypes(dts));
 	}
 
+	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(Collection<String> docTypeNames) {
+		return getDocTypeListByNames(docTypeNames.toArray(String[]::new))
+			.chain(dts -> docTypeFieldService.expandDocTypes(dts));
+	}
+
 	@Inject
 	DocTypeFieldService docTypeFieldService;
 

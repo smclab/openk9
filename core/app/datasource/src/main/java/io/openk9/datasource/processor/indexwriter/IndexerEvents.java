@@ -4,10 +4,9 @@ import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.DocTypeField_;
-import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.processor.util.Field;
+import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
@@ -27,11 +26,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Root;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -95,31 +89,7 @@ public class IndexerEvents {
 
 			Set<String> docTypeNames = m.keySet();
 
-			CriteriaBuilder criteriaBuilder =
-				sessionFactory.getCriteriaBuilder();
-
-			CriteriaQuery<DocType> docTypeQuery =
-				criteriaBuilder.createQuery(DocType.class);
-
-			Root<DocType> from = docTypeQuery.from(DocType.class);
-
-			Fetch<DocType, DocTypeField> docTypeFieldFetch = from
-				.fetch(DocType_.docTypeFields);
-
-			docTypeFieldFetch
-				.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
-
-			docTypeFieldFetch
-				.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
-
-			docTypeQuery.where(from.get(DocType_.name).in(docTypeNames));
-
-			Uni<List<DocType>> docTypeListUni = session
-				.createQuery(docTypeQuery)
-				.setCacheable(true)
-				.getResultList();
-
-			return docTypeListUni
+			return docTypeService.getDocTypesAndDocTypeFieldsByNames(docTypeNames)
 				.map(results -> {
 
 					Set<DocType> docTypes = new LinkedHashSet<>(docTypeNames.size());
@@ -506,5 +476,8 @@ public class IndexerEvents {
 
 	@Inject
 	IndexService indexService;
+
+	@Inject
+	DocTypeService docTypeService;
 
 }
