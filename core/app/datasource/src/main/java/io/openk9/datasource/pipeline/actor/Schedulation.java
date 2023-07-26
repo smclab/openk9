@@ -47,6 +47,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 
 	public sealed interface Command extends CborSerializable {}
+	public enum Cancel implements Command {INSTANCE}
 	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
 	private enum PersistDataIndex implements Command {INSTANCE}
 	private enum PersistStatusFinished implements Command {INSTANCE}
@@ -125,7 +126,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		return newReceiveBuilder()
 			.onMessage(Start.class, this::onStart)
 			.onMessage(SetScheduler.class, this::onSetScheduler)
-			.onAnyMessage(this::onBusy)
+			.onAnyMessage(this::enqueue)
 			.build();
 	}
 
@@ -134,6 +135,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 		return newReceiveBuilder()
 			.onMessage(Ingest.class, this::onIngestReady)
+			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
 			.build();
 	}
 
@@ -144,7 +146,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
 			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
-			.onAnyMessage(this::onBusy)
+			.onAnyMessage(this::enqueue)
 			.build();
 	}
 
@@ -244,8 +246,26 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		}
 	}
 
-	private Behavior<Command> onBusy(Command ingest) {
-		this.lag.add(ingest);
+	private Behavior<Command> onCancel() {
+
+		VertxUtil.runOnContext(() -> txInvoker
+			.withTransaction(key.tenantId, s -> s
+				.find(Scheduler.class, scheduler.getId())
+				.chain(scheduler -> {
+					scheduler.setStatus(Scheduler.SchedulerStatus.CANCELLED);
+					return s.persist(scheduler);
+				})
+				.invoke(this::destroyQueue)
+			)
+		);
+
+		logBehavior(STOPPED_BEHAVIOR);
+
+		return Behaviors.stopped();
+	}
+
+	private Behavior<Command> enqueue(Command command) {
+		this.lag.add(command);
 		log.info("There are {} commands waiting", lag.size());
 		return Behaviors.same();
 	}
@@ -309,16 +329,9 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 					entity.setStatus(Scheduler.SchedulerStatus.FINISHED);
 					return s.persist(entity);
 				})
+				.invoke(this::destroyQueue)
 			)
 		);
-
-		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
-
-		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
-			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
-
-		queueManager.tell(new QueueManager.DestroyQueue(
-			SchedulationKeyUtils.getValue(key.tenantId(), key.scheduleId())));
 
 		if (scheduler.getOldDataIndex() != null && scheduler.getNewDataIndex() != null) {
 			ActorRef<NotificationSender.Response> messageAdapter = getContext().messageAdapter(
@@ -432,5 +445,15 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		if (this.lastIngestionDate == null || !this.lastIngestionDate.isEqual(parsingDate)) {
 			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
 		}
+	}
+
+	private void destroyQueue() {
+		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
+
+		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
+			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
+
+		queueManager.tell(new QueueManager.DestroyQueue(
+			SchedulationKeyUtils.getValue(key.tenantId(), key.scheduleId())));
 	}
 }

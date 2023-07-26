@@ -6,6 +6,8 @@ import akka.actor.typed.internal.receptionist.ReceptionistMessages;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.receptionist.Receptionist;
+import akka.cluster.sharding.typed.javadsl.ClusterSharding;
+import akka.cluster.sharding.typed.javadsl.EntityRef;
 import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
 import com.typesafe.config.Config;
 import io.openk9.common.util.VertxUtil;
@@ -16,6 +18,7 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
+import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -69,6 +72,7 @@ public class JobScheduler {
 	private record StartSchedulerInternal(String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
 	private record CopyIndexTemplate(String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
 	private record PersistSchedulerInternal(String tenantName, Scheduler scheduler, Throwable throwable) implements Command {}
+	private record CancelSchedulation(String tenantName, Scheduler scheduler) implements Command {}
 
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
@@ -137,10 +141,11 @@ public class JobScheduler {
 			.onMessage(TriggerDatasourcePurge.class, tdp -> onTriggerDatasourcePurge(tdp, ctx, restHighLevelClient, transactionInvoker))
 			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, messageGateway))
-			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
+			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(ctx, httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
 			.onMessage(StartSchedulerInternal.class, ssi -> onStartScheduler(ctx, transactionInvoker, messageGateway, ssi))
 			.onMessage(CopyIndexTemplate.class, cit -> onCopyIndexTemplate(ctx, restHighLevelClient, cit))
 			.onMessage(PersistSchedulerInternal.class, pndi -> onPersistSchedulerInternal(ctx, transactionInvoker, messageGateway, pndi))
+			.onMessage(CancelSchedulation.class, cs -> onCancelSchedulation(ctx, cs))
 			.build();
 
 	}
@@ -212,7 +217,7 @@ public class JobScheduler {
 					"select s " +
 						"from Scheduler s " +
 						"where s.datasource.id = :datasourceId " +
-						"and s.status <> 'FINISHED'",
+						"and s.status = 'STARTED'",
 						Scheduler.class)
 					.setParameter("datasourceId", datasource.getId())
 					.getResultList()
@@ -238,8 +243,8 @@ public class JobScheduler {
 	}
 
 	private static Behavior<Command> onInvokePluginDriverInternal(
-		HttpPluginDriverClient httpPluginDriverClient,
-		String tenantName, io.openk9.datasource.model.Scheduler scheduler,
+		ActorContext<Command> ctx, HttpPluginDriverClient httpPluginDriverClient,
+		String tenantName, Scheduler scheduler,
 		boolean startFromFirst) {
 
 		Datasource datasource = scheduler.getDatasource();
@@ -270,7 +275,12 @@ public class JobScheduler {
 							.scheduleId(scheduler.getScheduleId())
 							.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
 							.build()
-					), (ignore) -> {}
+					)
+					.onFailure()
+					.invoke(throwable -> ctx
+						.getSelf()
+						.tell(new CancelSchedulation(tenantName, scheduler))
+					)
 				);
 			}
 		}
@@ -639,6 +649,23 @@ public class JobScheduler {
 					}
 				)
 		);
+	}
+
+	private static Behavior<Command> onCancelSchedulation(
+		ActorContext<Command> ctx, CancelSchedulation cs) {
+
+		String tenantName = cs.tenantName;
+		Scheduler scheduler = cs.scheduler;
+		String scheduleId = scheduler.getScheduleId();
+
+		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
+
+		EntityRef<Schedulation.Command> schedulationRef = clusterSharding.entityRefFor(
+			Schedulation.ENTITY_TYPE_KEY, SchedulationKeyUtils.getValue(tenantName, scheduleId));
+
+		schedulationRef.tell(Schedulation.Cancel.INSTANCE);
+
+		return Behaviors.same();
 	}
 
 	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {

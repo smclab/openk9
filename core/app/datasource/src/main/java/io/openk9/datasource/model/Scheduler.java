@@ -40,6 +40,7 @@ public class Scheduler extends K9Entity {
 
 	public enum SchedulerStatus {
 		STARTED,
-		FINISHED
+		FINISHED,
+		CANCELLED
 	}
 }
