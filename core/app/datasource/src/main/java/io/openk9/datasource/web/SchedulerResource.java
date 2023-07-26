@@ -16,10 +16,10 @@ import java.util.List;
 @RolesAllowed("k9-admin")
 public class SchedulerResource {
 
-	@Path("/{schedulerId}/getDiff")
+	@Path("/{schedulerId}/getDeletedContentIds")
 	@GET
 	public Uni<List<String>> getDeletedContentIds(@PathParam("schedulerId") long schedulerId) {
-		return schedulerService.getDiff(schedulerId);
+		return schedulerService.getDeletedContentIds(schedulerId);
 	}
 
 	@Inject

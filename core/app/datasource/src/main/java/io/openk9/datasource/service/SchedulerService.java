@@ -69,7 +69,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		return em.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getNewDataIndex()));
 	}
 
-	public Uni<List<String>> getDiff(String tenant, String schedulerId) {
+	public Uni<List<String>> getDeletedContentIds(String tenant, String schedulerId) {
 		return em.withStatelessTransaction(tenant, s -> s.createQuery(
 					"select s " +
 					"from Scheduler s " +
@@ -81,11 +81,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.flatMap(this::indexesDiff);
 	}
 
-	public Uni<List<String>> getDiff(String schedulerId) {
-		return getDiff(null, schedulerId);
+	public Uni<List<String>> getDeletedContentIds(String schedulerId) {
+		return getDeletedContentIds(null, schedulerId);
 	}
 
-	public Uni<List<String>> getDiff(long id) {
+	public Uni<List<String>> getDeletedContentIds(long id) {
 		return em.withStatelessTransaction(s -> s.createQuery(
 			"select s " +
 				"from Scheduler s " +

@@ -63,7 +63,7 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 				tenantName, scheduleId
 			);
 
-		VertxUtil.runOnContext(() -> service.getDiff(tenantName, scheduleId), list -> {
+		VertxUtil.runOnContext(() -> service.getDeletedContentIds(tenantName, scheduleId), list -> {
 
 			Long datasourceId = scheduler.getDatasource().getId();
 			DataIndex newDataIndex = scheduler.getNewDataIndex();
