@@ -57,6 +57,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
 	private record NotificationSenderResponseWrapper(NotificationSender.Response response) implements Command {}
 	private enum Start implements Command {INSTANCE}
+	private enum Stop implements Command {INSTANCE}
 	private enum Tick implements Command {INSTANCE}
 
 	public sealed interface Response extends CborSerializable {}
@@ -157,6 +158,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
 			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
 			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
+			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.build();
 	}
 
@@ -256,12 +258,11 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 					return s.persist(scheduler);
 				})
 				.invoke(this::destroyQueue)
+				.invoke(() -> getContext().getSelf().tell(Stop.INSTANCE))
 			)
 		);
 
-		logBehavior(STOPPED_BEHAVIOR);
-
-		return Behaviors.stopped();
+		return finish();
 	}
 
 	private Behavior<Command> enqueue(Command command) {
@@ -330,6 +331,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 					return s.persist(entity);
 				})
 				.invoke(this::destroyQueue)
+				.invoke(() -> getContext().getSelf().tell(Stop.INSTANCE))
 			)
 		);
 
@@ -341,18 +343,16 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			return Behaviors.same();
 		}
 
-		logBehavior(STOPPED_BEHAVIOR);
-
-		return Behaviors.stopped();
+		return Behaviors.same();
 
 	}
 
 	private Behavior<Command> onNotificationResponse(
 		NotificationSenderResponseWrapper notificationResponseWrapper) {
 
-		logBehavior(STOPPED_BEHAVIOR);
+		getContext().getSelf().tell(Stop.INSTANCE);
 
-		return Behaviors.stopped();
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onTick() {
@@ -412,6 +412,11 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			indexName = scheduler.getOldDataIndex().getName();
 		}
 		return indexName;
+	}
+
+	private Behavior<Command> onStop() {
+		logBehavior(STOPPED_BEHAVIOR);
+		return Behaviors.stopped();
 	}
 
 	private void logBehavior(String behavior) {
