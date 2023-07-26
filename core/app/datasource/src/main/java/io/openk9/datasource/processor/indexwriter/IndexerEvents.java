@@ -196,9 +196,7 @@ public class IndexerEvents {
 
 						docTypeFields.addAll(docTypeFieldList);
 
-						for (DocTypeField docTypeField : docTypeFields) {
-							docTypeField.setDocType(docType);
-						}
+						_setDocTypeToDocTypeFields(docType, docTypeFields);
 
 						docTypes.add(docType);
 
@@ -213,6 +211,20 @@ public class IndexerEvents {
 						.call(session::flush);
 				});
 		});
+	}
+
+	private static void _setDocTypeToDocTypeFields(
+		DocType docType, Set<DocTypeField> docTypeFields) {
+
+		if (docTypeFields == null) {
+			return;
+		}
+
+		for (DocTypeField docTypeField : docTypeFields) {
+			docTypeField.setDocType(docType);
+			_setDocTypeToDocTypeFields(docType, docTypeField.getSubDocTypeFields());
+		}
+
 	}
 
 	private Function<Tuple2<List<DocTypeField>, List<String>>, Map<String, List<DocTypeField>>> _toDocTypeFieldMap() {
@@ -436,6 +448,52 @@ public class IndexerEvents {
 		}
 
 	}
+
+	public static void main(String[] args) {
+
+		String json = "{\n" +
+					  "    \"properties\" : {\n" +
+					  "      \"web\" : {\n" +
+					  "        \"properties\" : {\n" +
+					  "          \"title\" : {\n" +
+					  "            \"properties\" : {\n" +
+					  "              \"i18n\" : {\n" +
+					  "                \"properties\" : {\n" +
+					  "                  \"en\" : {\n" +
+					  "                    \"type\" : \"text\",\n" +
+					  "                    \"fields\" : {\n" +
+					  "                      \"keyword\" : {\n" +
+					  "                        \"type\" : \"keyword\"\n" +
+					  "                      }\n" +
+					  "                    }\n" +
+					  "                  }\n" +
+					  "                }\n" +
+					  "              },\n" +
+					  "              \"base\" : {\n" +
+					  "                \"type\" : \"text\",\n" +
+					  "                \"fields\" : {\n" +
+					  "                  \"keyword\" : {\n" +
+					  "                    \"type\" : \"keyword\"\n" +
+					  "                  }\n" +
+					  "                }\n" +
+					  "              }\n" +
+					  "            }\n" +
+					  "          }\n" +
+					  "        }\n" +
+					  "      }\n" +
+					  "    }\n" +
+					  "  }";
+
+		;
+
+		Field field = _toFlatFields(new JsonObject(json).getMap());
+
+		List<DocTypeField> docTypeFields = _toDocTypeFields(field);
+
+		System.out.println(docTypeFields);
+
+	}
+
 
 	@Inject
 	RestHighLevelClient client;
