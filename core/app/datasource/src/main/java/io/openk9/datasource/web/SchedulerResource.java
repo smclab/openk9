@@ -7,6 +7,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import java.util.List;
@@ -20,6 +21,12 @@ public class SchedulerResource {
 	@GET
 	public Uni<List<String>> getDeletedContentIds(@PathParam("schedulerId") long schedulerId) {
 		return schedulerService.getDeletedContentIds(schedulerId);
+	}
+
+	@Path("/{schedulerId}/cancelSchedulation")
+	@POST
+	public Uni<Void> cancelSchedulation(@PathParam("schedulerId") long schedulerId) {
+		return schedulerService.cancelSchedulation(schedulerId);
 	}
 
 	@Inject

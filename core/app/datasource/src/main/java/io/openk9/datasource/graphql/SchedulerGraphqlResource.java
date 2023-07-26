@@ -64,11 +64,6 @@ public class SchedulerGraphqlResource {
 		return schedulerService.getNewDataIndex(scheduler);
 	}
 
-	@Mutation
-	public Uni<Void> cancelSchedulation(@Id long id) {
-		return schedulerService.cancelSchedulation(id);
-	}
-
 	@Inject
 	SchedulerService schedulerService;
 
